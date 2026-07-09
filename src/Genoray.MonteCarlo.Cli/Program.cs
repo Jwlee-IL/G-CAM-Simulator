@@ -40,6 +40,9 @@ if (args[0].Equals("compton", StringComparison.OrdinalIgnoreCase))
 if (args[0].Equals("compton-strip", StringComparison.OrdinalIgnoreCase))
     return RunComptonStrip(args);
 
+if (args[0].Equals("depth", StringComparison.OrdinalIgnoreCase))
+    return RunDepth(args);
+
 var config = ConfigLoader.Load(args[0]);
 Console.WriteLine($"Scenario : {config.Name}");
 Console.WriteLine($"Isotope  : {config.Source.Isotope} @ {config.Source.EnergyKeV} keV");
@@ -143,6 +146,37 @@ static int RunSweep(string[] args)
         Console.WriteLine($"CSV: {csvPath}");
         Console.WriteLine();
     }
+    return 0;
+}
+
+static int RunDepth(string[] args)
+{
+    if (args.Length < 2) { Console.Error.WriteLine("Usage: montecarlo depth <base.json>"); return 1; }
+    var baseConfig = ConfigLoader.Load(args[1]);
+
+    double[] trueDistances = [40, 60, 100, 150, 200];
+    var assumed = new List<double>();
+    for (double s = 20; s <= 260; s += 5) assumed.Add(s);
+
+    Console.WriteLine("Source-distance (z) estimation by coded-aperture refocusing");
+    Console.WriteLine($"Mask D = {baseConfig.Geometry.MaskDetectorDistanceMm} mm; sweeping assumed S over [{assumed[0]}, {assumed[^1]}] mm");
+    Console.WriteLine("On-axis source; focus metric = peak correlation of the reconstruction.");
+    Console.WriteLine();
+
+    var study = new DepthStudy(new DefaultSimulationFactory());
+    var results = trueDistances.Select(s => study.Run(baseConfig, s, assumed.ToArray())).ToArray();
+    File.WriteAllText("samples/depth.csv", DepthStudy.ToCsv(results));
+
+    Console.WriteLine("  true S    estimated S   error    (magnification M = (D+S)/S)");
+    Console.WriteLine("  ------   -----------   ------   ---------------------------");
+    foreach (var r in results)
+    {
+        double m = (baseConfig.Geometry.MaskDetectorDistanceMm + r.TrueSmm) / r.TrueSmm;
+        Console.WriteLine($"  {r.TrueSmm,4:F0}mm      {r.EstimatedSmm,6:F1}mm   {r.ErrorMm,+5:F1}mm   M = {m:F2}");
+    }
+    Console.WriteLine();
+    Console.WriteLine("Depth resolution degrades with distance (dM/dS shrinks) — the coded-aperture limit.");
+    Console.WriteLine("CSV: samples/depth.csv");
     return 0;
 }
 

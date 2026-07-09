@@ -287,3 +287,23 @@ contamination *where it actually landed*. Run: `montecarlo compton-strip samples
   So the spectral + spatial levers *together* disentangle even two isotopes at the same position.
 - Locked in by `ComptonTests.Stripping_RecoversCsCount_EvenCoLocated`.
 - Reproduce: `montecarlo compton-strip samples/scenario.json`.
+
+## 18. Source distance (z) estimation by coded-aperture refocusing — `DepthStudy`
+The pipeline had assumed the source distance S known; it can be *recovered*. The mask-shadow
+magnification **M = (D+S)/S** depends on S, and the decoder back-projects with `frac = D/(D+S)`.
+Decoding one flood map at a range of ASSUMED S, the correlation at the (on-axis) source position is
+maximal when the assumed S matches the true S — the coding and decoding align — and falls off
+otherwise. So argmax over assumed S estimates the depth (light-field-style refocusing).
+- **Focus metric = the single-point correlation at the known on-axis position** (a 1-cell recon grid),
+  which avoids the candidate-position aliasing and grid-scale artifacts that fooled a naive
+  peak-height or peak/RMS over a full grid. **Estimate = the centroid of the high-focus region** (the
+  curve develops a flat top over the band of unresolvable distances; its width IS the depth resolution
+  and its centre is the estimate — a bare argmax snaps to the plateau's leading edge).
+- **Near field accurate, far field degrades** (`depth_estimation.png`): S 40→39, 60→60, 100→97,
+  150→140, 200→214 mm (error grows −1→+14 mm), and the focus-curve width (depth resolution) grows from
+  ~50 mm at S=40 to ~240 mm at S≥150. This is the intrinsic limit: sensitivity ∝ dM/dS = −D/S², so a
+  near source resolves depth while a far one (M→1, near-parallel shadow) cannot.
+- Caveat: measured on the high-statistics mean flood map (bias-limited); with Poisson noise the broad
+  far-field focus curve makes the far depth much noisier — the plotted error bar is that resolution.
+- Reproduce: `montecarlo depth samples/scenario.json` → `samples/depth_estimation.png`, `depth.csv`
+  (plot via `plot_depth.py`). Locked in by `DepthTests`.

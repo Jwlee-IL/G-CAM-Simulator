@@ -82,9 +82,16 @@ Everything captured here has been done — the backlog is currently empty.
   `montecarlo compton-strip`. Per-pixel Compton stripping (subtract R × the pixel's Co-photopeak
   count from its 662 window), then decode. Recovers true Cs count (+74–76% raw → ~0%), removes the
   Co ghost (separated) and the inflation (co-located — which spatial decode alone can't). Theme 17.
-- Depth/z estimation; cocotb/ModelSim wrapper; trapezoidal shaping in RTL (all still open).
-- Fold multi-line isotope model into C# `SourceConfig` (still open — the combined lever above uses
-  per-line runs summed, not a real mixed-field source).
+- Depth/z estimation — **done**: `DepthStudy` + CLI `montecarlo depth`. Recovers source distance by
+  refocusing (decode at a range of assumed S, on-axis correlation peaks at true S). Near-field
+  accurate, far-field degrades (dM/dS = −D/S²). AGENTS.findings theme 18.
+
+## Still open
+- Fold multi-line isotope model into C# `SourceConfig` (the combined lever uses per-line runs summed,
+  not a real mixed-field source).
+- Depth estimation under Poisson noise (currently bias-limited on the mean flood map); joint
+  lateral+depth (off-axis + z) estimation.
+- cocotb/ModelSim wrapper; trapezoidal shaping in RTL.
 
 ## Ideas for later (not yet scoped)
 - Depth/z estimation (currently source z is assumed known).
