@@ -292,17 +292,23 @@ contamination *where it actually landed*. Run: `montecarlo compton-strip samples
 The pipeline had assumed the source distance S known; it can be *recovered*. The mask-shadow
 magnification **M = (D+S)/S** depends on S, and the decoder back-projects with `frac = D/(D+S)`.
 Decoding one flood map at a range of ASSUMED S, the correlation at the (on-axis) source position is
-maximal when the assumed S matches the true S — the coding and decoding align — and falls off
-otherwise. So argmax over assumed S estimates the depth (light-field-style refocusing).
+*sharpest near* the true S — the coding and decoding align — and falls off away from it. So the
+high-focus region of the assumed-S scan estimates the depth (light-field-style refocusing).
 - **Focus metric = the single-point correlation at the known on-axis position** (a 1-cell recon grid),
   which avoids the candidate-position aliasing and grid-scale artifacts that fooled a naive
-  peak-height or peak/RMS over a full grid. **Estimate = the centroid of the high-focus region** (the
-  curve develops a flat top over the band of unresolvable distances; its width IS the depth resolution
-  and its centre is the estimate — a bare argmax snaps to the plateau's leading edge).
+  peak-height or peak/RMS over a full grid. It is *not* fully artifact-free, though — it is a raw,
+  unnormalised cyclic MURA correlation sampled at integer mask cells, so the curve is stair-stepped and
+  its bare argmax is biased (e.g. true S=40 peaks at ~35). **Estimate = the centroid of the high-focus
+  region** (a heuristic: the curve develops a flat top over the band of unresolvable distances; its
+  width IS the depth resolution and its centre is a more robust estimate than the argmax, which snaps
+  to the plateau's leading edge). Decoder caveat: the decoder scores against a single thin mask plane,
+  so these results are for the straight, full-hole, thin mask — a focused/thick/hole mask would need
+  the decoder to model the channel.
 - **Near field accurate, far field degrades** (`depth_estimation.png`): S 40→39, 60→60, 100→97,
   150→140, 200→214 mm (error grows −1→+14 mm), and the focus-curve width (depth resolution) grows from
-  ~50 mm at S=40 to ~240 mm at S≥150. This is the intrinsic limit: sensitivity ∝ dM/dS = −D/S², so a
-  near source resolves depth while a far one (M→1, near-parallel shadow) cannot.
+  ~50 mm at S=40 to ~240 mm at S≥150. The **scaling intuition** is dM/dS = −D/S² (a near source's
+  magnification changes fast with distance, a far one's barely) — the actual resolution also depends on
+  cell pitch, detector footprint, sampling, and statistics.
 - Caveat: measured on the high-statistics mean flood map (bias-limited); with Poisson noise the broad
   far-field focus curve makes the far depth much noisier — the plotted error bar is that resolution.
 - Reproduce: `montecarlo depth samples/scenario.json` → `samples/depth_estimation.png`, `depth.csv`
@@ -322,17 +328,23 @@ assumption. Run: `montecarlo depth-joint samples/scenario.json` → `samples/dep
   lateral estimate feeds the sensitive near-field depth focus, so lateral uncertainty leaks into z.
 - Takeaway: report lateral (x,y) with confidence at any distance; treat z as a near-field-only
   estimate whose error grows with distance and with lateral uncertainty.
+- Method caveat: the joint estimator is a *simple 3-step alternating iteration* (decode lateral →
+  centroid depth → repeat) from one nominal S, with no convergence check, damping, or multi-start — it
+  can trap (a wrong assumed S rescales the lateral solution; cyclic decode can pick an alias branch).
+  This is why the on-axis cases use the direct depth-at-(0,0) method (RunNoisyDepth), not the joint.
 - Reproduce: `montecarlo depth-joint samples/scenario.json` → `samples/depth_joint.png`,
   `depth_joint.csv` (plot via `plot_depth_joint.py`). Locked in by `DepthTests`.
 
 ## 20. Mask channel geometry — hole size and focused (converging) channels — `MaskGeometryStudy`
 `CodedApertureMask` now models two channel-geometry knobs (`Mask.HoleFraction`, `Mask.FocalDistanceMm`).
 Run: `montecarlo maskgeo samples/scenario.json` → `samples/maskgeo.png`.
-- **Shrinking the hole below the cell is strictly counterproductive for a coded aperture** — it loses
-  BOTH sensitivity and resolution (efficiency 2.5e-4→0.9e-4, RMS 0.57→7.65 mm as hole 1.0→0.3). The
-  single-pinhole intuition (smaller hole = sharper) does NOT transfer: coded-aperture resolution is set
-  by the cell pitch, so shrinking the hole only dilutes the open/closed pattern contrast and throws
-  away signal. Full-open cells are optimal.
+- **Shrinking the hole below the cell only hurts, for this MURA / full-cell decoder** — it loses BOTH
+  sensitivity and localization (efficiency 2.5e-4→0.9e-4, RMS 0.57→7.65 mm as the *linear* hole fraction
+  goes 1.0→0.3; note the open AREA is HoleFraction², so 0.3 linear ≈ 9 % open area). The single-pinhole
+  intuition (smaller hole = sharper) does NOT transfer: this decoder is matched to full open cells and
+  the coded resolution is set by the cell pitch, so a smaller hole just dilutes the open/closed contrast
+  and throws away signal. Full-open cells are optimal for this design (not a universal statement about
+  intra-cell aperture / MTF).
 - **Focused (converging) channels are a focal-POINT concentrator, not a uniform gain.** Angling the
   channels to converge on a point at the focal distance (on-axis) removes the off-axis open-channel
   collimation *there*: at a 25 mm mask it gives **+35 % efficiency at the focal point**. But it is
@@ -359,12 +371,14 @@ optimum, unlike the sub-cell hole (theme 20, no interior optimum). Run: `monteca
   sampled → **collapse** (RMS 8–18 mm at 2–3 mm pitch). So "finer is always better" is wrong: the
   feature size is bounded by Nyquist below and the detector footprint above. Optimum ≈ shadow matches
   the detector pixel (≈ theme 7 from the mask side).
-- **Open fraction is optimal at ~50 %, built into MURA.** The mask's coding power scales as
-  **√(ρ(1−ρ))**, so the point-source SNR in the background-dominated regime (what coded apertures are
-  *for*) is maximised at **ρ = 0.5** — exactly where a MURA sits by construction (analytical SNR
-  `Φ_s·√(ρ(1−ρ)) / √((1−ρ)Φ_s + ρΦ_b + B_det)`). It is not a free knob: tuning ρ away from 0.5 needs a
-  random array, which is strictly worse (non-zero sidelobes). Only a source-dominated field (rare here)
-  prefers a higher ρ (less coding needed).
+- **Open fraction — ~50 % is optimal in the detector-background-limited regime, and MURA sits there.**
+  The mask's coding power scales as **√(ρ(1−ρ))** (peaks at 0.5); the full analytical SNR is
+  `Φ_s·√(ρ(1−ρ)) / √((1−ρ)Φ_s + ρΦ_b + B_det)`, so the optimum ρ depends on which noise term dominates
+  the denominator: **detector background B_det (ρ-independent) → ρ_opt = 0.5** (a MURA); **aperture-
+  transmitted background ρΦ_b → ρ_opt < 0.5** (a more closed mask admits less sky); **source counting
+  noise (1−ρ)Φ_s → ρ_opt > 0.5** (less coding needed). MURA's 50 % is optimal for the detector-limited
+  case and near-optimal when Φ_b ≈ Φ_s. It is not a free knob anyway: tuning ρ needs a random array,
+  which is worse (non-zero sidelobes).
 - Verdict: the "size" worth tuning is the **cell pitch** (bounded optimum, shadow ≈ 1–2 px); the open
   fraction is already at its optimum in MURA, and the sub-cell hole (theme 20) should stay full-open.
 - Reproduce: `montecarlo masksize samples/scenario.json` → `samples/masksize.png`, `masksize.csv`

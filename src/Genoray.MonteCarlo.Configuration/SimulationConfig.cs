@@ -108,8 +108,9 @@ public sealed class MaskConfig
     /// 0 = straight (parallel) channels.</summary>
     public double FocalDistanceMm { get; set; } = 0.0;
 
-    /// <summary>Open fraction of a cell (1 = full cell open; &lt;1 leaves a tungsten border that
-    /// sharpens the shadow but lowers sensitivity).</summary>
+    /// <summary>LINEAR open fraction of a cell — the fraction of the cell's WIDTH that is drilled
+    /// (so the open AREA is HoleFraction²; e.g. 0.5 → central 25% of the cell is open). 1 = full cell
+    /// open; &lt;1 leaves a tungsten border that lowers sensitivity.</summary>
     public double HoleFraction { get; set; } = 1.0;
 }
 

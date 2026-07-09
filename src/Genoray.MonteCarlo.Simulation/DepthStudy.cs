@@ -187,7 +187,9 @@ public sealed class DepthStudy
             double w = r.Focus - thr;
             if (w > 0.0) { num += r.AssumedSmm * w; den += w; }
         }
-        return den > 0.0 ? num / den : rows[0].AssumedSmm;
+        // Failure fallback (a flat/failed focus curve): return the scan midpoint (a neutral
+        // "no depth information" answer), NOT rows[0], which would fabricate a confident near value.
+        return den > 0.0 ? num / den : 0.5 * (rows[0].AssumedSmm + rows[^1].AssumedSmm);
     }
 
     public static string ToCsv(DepthResult[] results)

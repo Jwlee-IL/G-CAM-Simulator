@@ -40,19 +40,22 @@ axt.set_xlabel("cell shadow width (detector pixels)", fontsize=8)
 # SNR(rho) = Phi_s * sqrt(rho(1-rho)) / sqrt((1-rho)Phi_s + rho*Phi_b + B_det)
 rho = np.linspace(0.02, 0.98, 200)
 Phi_s = 1.0
-for label, Phi_b, B_det, col in [("background-dominated", 0.0, 20.0, "#c0392b"),
-                                 ("balanced", 1.0, 1.0, "#8e44ad"),
-                                 ("source-dominated", 0.0, 0.02, "#2ecc71")]:
+# SNR = Phi_s*sqrt(rho(1-rho)) / sqrt((1-rho)Phi_s + rho*Phi_b + B_det); the optimum rho depends
+# on which denominator term dominates: detector bg -> 0.5, aperture bg -> <0.5, source noise -> >0.5.
+for label, Phi_b, B_det, col in [("detector bg (ρ-indep) → 0.5", 0.0, 20.0, "#c0392b"),
+                                 ("aperture bg (ρΦ_b) → <0.5", 20.0, 0.02, "#3b6ea5"),
+                                 ("source noise → >0.5", 0.0, 0.02, "#2ecc71")]:
     snr = Phi_s * np.sqrt(rho * (1 - rho)) / np.sqrt((1 - rho) * Phi_s + rho * Phi_b + B_det)
-    ax2.plot(rho, snr / snr.max(), "-", color=col, lw=2, label=label)
+    rho_opt = rho[np.argmax(snr)]
+    ax2.plot(rho, snr / snr.max(), "-", color=col, lw=2, label=f"{label}  (ρ*={rho_opt:.2f})")
 ax2.axvline(0.5, ls="--", color="#e67e22", lw=1.5); ax2.text(0.51, 0.05, "MURA ≈ 50%", color="#e67e22", fontsize=9)
 ax2.set_xlabel("mask open fraction ρ")
 ax2.set_ylabel("point-source SNR (normalized)")
-ax2.set_title("(2) Open fraction: coding power ∝ √(ρ(1−ρ))\nbackground-dominated → optimum at ρ=0.5 (MURA)")
+ax2.set_title("(2) Open fraction: coding power ∝ √(ρ(1−ρ)); the optimum ρ\nshifts with the dominant noise — MURA's 50% fits detector-bg")
 ax2.legend(fontsize=8); ax2.grid(alpha=0.3)
 
-fig.suptitle("The two mask-size optima: cell size has a bounded sweet spot; "
-             "open fraction is optimal at ~50% (built into MURA)", fontsize=12)
+fig.suptitle("The two mask-size optima: cell size has a bounded sweet spot; open-fraction optimum "
+             "shifts with the dominant noise (MURA's 50% fits the detector-bg-limited case)", fontsize=12)
 fig.tight_layout(rect=[0, 0, 1, 0.95])
 fig.savefig(os.path.join(here, "masksize.png"), dpi=130)
 print("saved samples/masksize.png")

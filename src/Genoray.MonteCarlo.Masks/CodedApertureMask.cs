@@ -15,7 +15,7 @@ public sealed class CodedApertureMask : IMask
     private readonly double _halfWidth;   // physical half-extent along x (mm)
     private readonly double _halfHeight;  // physical half-extent along y (mm)
     private readonly double _focalMm;     // channels converge toward a source at this distance (0 = straight)
-    private readonly double _holeFraction;// open fraction of a cell (1 = full cell; <1 = tungsten border)
+    private readonly double _holeFraction;// LINEAR open fraction of a cell (open AREA = _holeFraction²)
 
     public MaskPattern Pattern { get; }
     public double PlaneZ { get; }
@@ -31,7 +31,10 @@ public sealed class CodedApertureMask : IMask
         _muPerMm = muPerMm;
         _halfWidth = pattern.Width * cellPitchMm / 2.0;
         _halfHeight = pattern.Height * cellPitchMm / 2.0;
-        _focalMm = focalDistanceMm;
+        // Focused channels need the focal point outside the slab; focal <= thickness would make the
+        // per-depth remap denominator (focal + PlaneZ - z) hit zero/flip sign inside the slab. Reject
+        // that unphysical geometry by falling back to straight channels.
+        _focalMm = focalDistanceMm > thicknessMm ? focalDistanceMm : 0.0;
         _holeFraction = holeFraction <= 0.0 ? 1.0 : Math.Min(holeFraction, 1.0);
     }
 
