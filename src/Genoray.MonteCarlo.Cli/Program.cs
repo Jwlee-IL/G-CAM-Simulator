@@ -37,6 +37,9 @@ if (args[0].Equals("antimask-scene", StringComparison.OrdinalIgnoreCase))
 if (args[0].Equals("compton", StringComparison.OrdinalIgnoreCase))
     return RunCompton(args);
 
+if (args[0].Equals("compton-strip", StringComparison.OrdinalIgnoreCase))
+    return RunComptonStrip(args);
+
 var config = ConfigLoader.Load(args[0]);
 Console.WriteLine($"Scenario : {config.Name}");
 Console.WriteLine($"Isotope  : {config.Source.Isotope} @ {config.Source.EnergyKeV} keV");
@@ -140,6 +143,41 @@ static int RunSweep(string[] args)
         Console.WriteLine($"CSV: {csvPath}");
         Console.WriteLine();
     }
+    return 0;
+}
+
+static int RunComptonStrip(string[] args)
+{
+    if (args.Length < 2) { Console.Error.WriteLine("Usage: montecarlo compton-strip <base.json>"); return 1; }
+    var baseConfig = ConfigLoader.Load(args[1]);
+    const double windowFraction = 0.10;
+    const double coScale = 8.0;    // a stronger Co-60 source, so its 662 contamination is visible
+    var study = new ComptonStudy();
+
+    // Separated: spatial decode already separates, stripping removes the Co ghost from the 662 image.
+    // Co-located: the spatial decode CANNOT separate them; only per-pixel stripping recovers Cs.
+    var scenes = new[]
+    {
+        study.RunStripping(baseConfig, "separated",  [4.0, 0.0, 0.0], [-5.0, 3.0, 0.0], windowFraction, coScale),
+        study.RunStripping(baseConfig, "co-located", [0.0, 0.0, 0.0], [ 0.0, 0.0, 0.0], windowFraction, coScale),
+    };
+
+    Console.WriteLine($"Combined lever: per-pixel Compton stripping inside the coded pipeline, then decode (Co x{coScale:F0})");
+    Console.WriteLine($"  Co downscatter-into-662 / Co-photopeak ratio R = {scenes[0].R:F3}");
+    Console.WriteLine();
+    Console.WriteLine("  scene        true Cs   raw 662   stripped   raw err / stripped err");
+    Console.WriteLine("  ----------   -------   -------   --------   ----------------------");
+    foreach (var s in scenes)
+    {
+        double rawErr = (s.RawCounts - s.TrueCsCounts) / s.TrueCsCounts * 100.0;
+        double strErr = (s.StrippedCounts - s.TrueCsCounts) / s.TrueCsCounts * 100.0;
+        Console.WriteLine($"  {s.Name,-10}   {s.TrueCsCounts,7:F0}   {s.RawCounts,7:F0}   {s.StrippedCounts,8:F0}   {rawErr,+6:F0}% / {strErr,+6:F0}%");
+        foreach (var (tag, img) in new[] { ("csonly", s.ReconCsOnly), ("raw", s.ReconRaw), ("stripped", s.ReconStripped) })
+            File.WriteAllText($"samples/strip_{s.Name}_{tag}.csv", ComptonStudy.ReconToCsv(img, s.OriginMm, s.StepMm));
+    }
+    Console.WriteLine();
+    Console.WriteLine("  Co-located: spatial decode can't separate co-located sources — only per-pixel");
+    Console.WriteLine("  stripping recovers the true Cs-137 count. Recon CSVs: samples/strip_*.csv");
     return 0;
 }
 

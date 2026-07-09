@@ -65,6 +65,19 @@ public class ComptonTests
         Assert.True(c.ContaminationFraction > 0.05);   // the contamination is non-trivial
     }
 
+    [Fact]
+    public void Stripping_RecoversCsCount_EvenCoLocated()
+    {
+        // Per-pixel Compton stripping removes a strong Co-60 source's downscatter from the Cs-137
+        // 662 window, recovering the true Cs count even when the two sources are CO-LOCATED (which
+        // the spatial decode alone cannot separate).
+        var s = new ComptonStudy().RunStripping(Baseline(), "colocated",
+                    [0.0, 0.0, 0.0], [0.0, 0.0, 0.0], windowFraction: 0.10, coPhotonScale: 8.0);
+        Assert.True(s.RawCounts > s.TrueCsCounts * 1.3, $"raw {s.RawCounts} should be heavily contaminated vs true {s.TrueCsCounts}");
+        Assert.True(Math.Abs(s.StrippedCounts - s.TrueCsCounts) < 0.15 * s.TrueCsCounts,
+                    $"stripped {s.StrippedCounts} should recover true Cs {s.TrueCsCounts}");
+    }
+
     private static (double x, double y) ArgmaxMm(DetectorImage img, double origin, double step)
     {
         double best = double.NegativeInfinity; int bx = 0, by = 0;

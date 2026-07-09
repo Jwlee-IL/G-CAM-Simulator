@@ -269,3 +269,21 @@ it from all lower channels.
   separates by direction). Use both: strip to quantify well-separated isotopes, decode to place and
   disentangle the overlapping/co-located ones.
 - Reproduce: `python rtl/compton_stripping_study.py` → `rtl/compton_stripping.png`.
+
+## 17. Combined lever — per-pixel Compton stripping inside the coded pipeline — `ComptonStudy.RunStripping`
+Themes 15 (spatial) and 16 (spectral) joined: strip the Co-60 downscatter out of the Cs-137 662 keV
+window **per pixel** (subtract `R × the pixel's Co-60-photopeak count`, R = the aggregate
+downscatter-into-662 / Co-photopeak ratio ≈ 0.15), **then decode**. Because the Co downscatter is coded
+from Co-60's direction just like its photopeak, the subtraction is spatially matched — it removes the
+contamination *where it actually landed*. Run: `montecarlo compton-strip samples/scenario.json`
+(Co-60 ×8 = a stronger dominant source, so the contamination is visible not just countable) →
+`samples/compton_strip_combined.png` (plot via `plot_compton_strip.py`).
+- **Recovers the true Cs-137 net count to ~0 %** from a **+74–76 %** raw-window over-count, in both
+  geometries.
+- **Separated sources**: the raw 662 reconstruction shows Cs *and a bright Co-60 ghost*; stripping
+  removes the ghost, leaving the clean Cs image.
+- **Co-located sources** — the case the spatial decode ALONE cannot separate (theme 15's stated
+  limit): raw 662 is one peak inflated +76 %; per-pixel stripping brings it back to the true Cs count.
+  So the spectral + spatial levers *together* disentangle even two isotopes at the same position.
+- Locked in by `ComptonTests.Stripping_RecoversCsCount_EvenCoLocated`.
+- Reproduce: `montecarlo compton-strip samples/scenario.json`.

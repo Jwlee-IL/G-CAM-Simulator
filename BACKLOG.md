@@ -78,9 +78,13 @@ Everything captured here has been done — the backlog is currently empty.
 - Fold the multi-line isotope model into C# `SourceConfig` (multi-line + cascadeCoincident) so the MC
   can emit a real multi-isotope field through the coded aperture (multi-source localization + the
   Compton contamination test at the pipeline level, not just per-line runs summed).
-- Combine both levers: per-pixel Compton stripping inside the coded pipeline, then decode — spectral
-  clean-up + spatial separation together (needs per-pixel energy spectra, not just windowed counts).
+- Combined lever (spectral + spatial) — **done**: `ComptonStudy.RunStripping` + CLI
+  `montecarlo compton-strip`. Per-pixel Compton stripping (subtract R × the pixel's Co-photopeak
+  count from its 662 window), then decode. Recovers true Cs count (+74–76% raw → ~0%), removes the
+  Co ghost (separated) and the inflation (co-located — which spatial decode alone can't). Theme 17.
 - Depth/z estimation; cocotb/ModelSim wrapper; trapezoidal shaping in RTL (all still open).
+- Fold multi-line isotope model into C# `SourceConfig` (still open — the combined lever above uses
+  per-line runs summed, not a real mixed-field source).
 
 ## Ideas for later (not yet scoped)
 - Depth/z estimation (currently source z is assumed known).
