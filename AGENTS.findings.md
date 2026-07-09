@@ -383,3 +383,76 @@ optimum, unlike the sub-cell hole (theme 20, no interior optimum). Run: `monteca
   fraction is already at its optimum in MURA, and the sub-cell hole (theme 20) should stay full-open.
 - Reproduce: `montecarlo masksize samples/scenario.json` → `samples/masksize.png`, `masksize.csv`
   (plot via `plot_masksize.py`; open-fraction panel is the analytical SNR). Locked in by `MaskGeometryTests`.
+
+---
+
+## 22. Productization — a ~3 kg handheld locator: weight, size, form, and field hardening
+A whole-instrument design pass under a "3 kg large-flashlight" constraint. Most parts are ANALYTICAL
+design models (Python) built on top of the validated MC laws; two are new MC (the recommended-config
+validation and `ShieldStudy`). Recommended baseline: **GAGG:Ce,Mg, 16×16 @1 mm, D=55 mm, 15 mm crystal,
+rank-7, non-cyclic decode.**
+- **Weight is the SHIELD, not the crystal** (`samples/handheld_design_study.py` → `handheld_design.png`).
+  At 3 kg the crystal is ~20–40 g and the mask ~40 g; the tungsten shield is ~2/3 of the mass. So the
+  crystal is chosen for **density + ruggedness** (GAGG:Ce,Mg: non-hygroscopic, SiPM low-V, dense; BGO only
+  to minimise barrel length), NOT weight. Sensitivity ∝ detector area × stopping; a 12→20 mm detector is
+  ~2.4–3.7× more sensitive but pushes 2.7→3.4 kg via the shield. **Shield thickness is the master weight
+  knob** (6 mm≈1.5 kg … 12 mm≈3 kg). Pixel vs monolithic differ ~30 g — decide on angular resolution
+  (pixel cell 2 mm→33 mrad) vs channel/power (monolithic ~30 ch) — not mass.
+- **MC validation of the recommended config** (`scenario_handheld.json`; `noise`/`sweep`;
+  `plot_handheld_validation.py` → `handheld_validation.png`). vs the original 12×12/D60/GAGG-10 mm:
+  **efficiency 2.65e-4 vs 1.08e-4 = 2.45× more sensitive** (matches the design model's 2.37× = area 1.78×
+  stopping 1.33×), **resolution floor 0.34 mm vs 0.55 mm**, sub-mm at ≥250 counts centered (~1 s @1 MBq) /
+  ≥500 edge. Fair axis is RMS-vs-TIME (efficiency folds in), where it clearly wins. Caveat: cyclic ghost
+  margin 1.35 (marginal, D=55 is short) → **run the non-cyclic finite-mask decoder** (sweep localized
+  360/625 vs cyclic 171/625).
+- **Physical envelope** (`handheld_design_study.py` → `handheld_envelope.png`). Axial stack mask 10 + gap
+  55 + crystal 15 + SiPM/FE 18 + DAQ/FPGA 55 + battery 35 + caps 18 = **~206 mm**; cross-section
+  48×48 mm (~Ø50–55 mm formed) → **~0.47 L, ~3 kg, avg density ~6.3 g/cm³** (dense for its size = the W
+  shield). ~60 % of the length is the electronics tail (relocatable to a grip). Shrinks with shield: 8 mm
+  → Ø57/0.33 L/~2 kg.
+- **Form factor: balance-first pistol grip** (`hardware_concept.py` → `hardware_concept.png`). The shield
+  mass sits forward → CoM ~89 mm from the muzzle → put the **grip under the CoM**, **battery in a rear tail
+  as counterweight**, camera+ToF on the muzzle, **display offloaded to phone/tablet over Wi-Fi**. An in-line
+  torch is nose-heavy; a rear-screen camcorder is bulky.
+- **Camera–mask parallax** (`camera_parallax_study.py` → `camera_parallax.png`). The visible camera cannot
+  be coaxial (the mask is opaque, facing the scene), so a fixed lateral baseline b gives overlay
+  misregistration **Δθ = b/z** — worst up close (b=40 mm: 7.6° @0.3 m, 2.3° @1 m; > the ~1° gamma
+  resolution for z < ~2.2 m), negligible far. "Mount as close as possible" (min b) was the right instinct.
+  **Fix: known b + measured z → reproject by b/z.** Coded-aperture depth (theme 18) ranges best in the near
+  field where parallax is worst (nice synergy); add a **cheap ToF/LiDAR** for exact correction at all ranges;
+  mount the camera on ONE axis to make parallax 1-D. The camera also earns its keep as a VIO sensor (below).
+- **DAQ thermal + motion** (`thermal_motion_study.py` → `thermal_motion.png`). *Heat*: dissipation scales
+  with channel count → monolithic (~30 ch, ~4 W) runs passive (+8 °C); pixel (~256 ch, ~12 W) needs
+  fins/airflow (+24 °C passive) — another vote for monolithic. The **2.5 kg tungsten shield is a free heat
+  sink** (335 J/K: 4 W·60 s → +0.7 °C) — route DAQ heat into it. *Motion*: pointing tolerance ≈ **0.83°**
+  (½ cell shadow smear at D=55); free-hand drift ~1°/s smears past **0.8 s** → sources < ~240 cps need help.
+  **Don't add a mechanical gimbal** (weight/power on a nose-heavy device); coded aperture is inherently
+  **list-mode**, so an **IMU + per-event de-rotation** (electronic stabilization) fixes it, with the camera
+  doing **VIO** to kill gyro drift and lock the overlay. Keep a monopod/brace as the cheap fallback for very
+  weak sources (the user's fixture-mount heritage remains valid for the hardest dwells).
+- **SiPM gain thermal drift** (`sipm_thermal_study.py` → `sipm_thermal.png`; sensor pinned to
+  `samples/sipm/hamamatsu_s13360_3050cs.json`). It is an **ENERGY-WINDOW problem, not a position one**
+  (global gain scale leaves the balanced MURA decode invariant → localization flat; the LLD/ULD window
+  walks). S13360-3050CS fixed-bias tempco **−1.8 %/°C** → a ±10 % window loses 10 % of counts at only
+  **ΔT = 3.2 °C** (why the user had to hold temperature). ① temperature-compensated bias → −0.25 %/°C
+  (holds to ΔT ≈ 25 °C); ①+② LED-pulser lock → −0.17 %/°C (ΔT ≈ 36 °C). The residual floor is the
+  **crystal light-yield drift (~−0.15 %/°C), which ① and ② cannot see (the LED bypasses the crystal)** —
+  only a **spectral reference (K-40 / reference source, ③)** removes it. So the useful order is ①(essential)
+  → ③(catches the crystal) → ②(aging backup), NOT ①→②.
+- **Optimal 5-sided shield thickness** (`ShieldStudy`, `montecarlo shield` → `samples/shield.{csv,png}`,
+  `plot_shield.py`). Side/top/bottom/rear background is pure uncoded noise; wall transmits exp(−μ·t) onto
+  the flood → localization RMS vs t vs mass. **The optimum is set by the background ENERGY**: scattered
+  ~250 keV (HVL 0.9 mm) → **~6 mm W (0.8 kg) reaches the 0.34 mm floor**; a mono-662 field needs ~15–20 mm
+  (~5 kg) OR ~12 mm + calibrated background subtraction (the software lever ≈ halves the required
+  thickness); **Co-60 ~1250 keV is unshieldable in a carriable mass** (30 mm/10.8 kg still 8 mm RMS) →
+  beat high-energy with **coded separation + Compton stripping, not lead**. Design decision: **size the
+  5-sided noise shield to ~6 mm (realistic scattered background), match only the front to the mask (10 mm);
+  this revises the device lighter (~1.5–2 kg) than the 12 mm assumed in the weight model** when the
+  environment is scattered-background-dominated. Blocking the low/mid-energy background alone already pays
+  for the shield; Co-60 being unshieldable is expected and handled in software.
+- Files: design models `samples/handheld_design_study.py`, `plot_handheld_validation.py`,
+  `camera_parallax_study.py`, `thermal_motion_study.py`, `sipm_thermal_study.py`, `plot_shield.py`,
+  `hardware_concept.py`; scenarios `samples/scenario_handheld.json`, `scenario_orig_gagg.json`; SiPM preset
+  `samples/sipm/hamamatsu_s13360_3050cs.json`; MC `ShieldStudy.cs` + `montecarlo shield`. NOTE: this theme
+  is design synthesis (weight/volume/parallax/thermal/motion are analytical on top of the validated MC);
+  only the config validation and `ShieldStudy` are new Monte-Carlo runs.

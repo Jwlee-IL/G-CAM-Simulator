@@ -1,0 +1,38 @@
+{
+  "name": "Hamamatsu_S13360-3050CS",
+  "type": "MPPC",
+  "_comment": "Reference SiPM for GCAM thermal/gain simulations. Datasheet-derived; the classic scintillation MPPC (well-documented temperature behaviour). Green-scintillator (GAGG ~520 nm) coupling.",
+
+  "activeAreaMm": 3.0,
+  "microcellPitchUm": 50,
+  "microcells": 3600,
+  "terminalCapacitancePf": 320,
+
+  "breakdownVoltageV": 53.0,
+  "recommendedOvervoltageV": 3.0,
+  "gainAtRefOvervoltage": 1.7e6,
+
+  "vbrTempCoeffMvPerC": 54.0,
+  "_gainTempCoeffNote": "at fixed bias, dG/G ≈ -vbrTempCoeff / overvoltage = -54mV / 3000mV",
+  "gainTempCoeffPctPerC_fixedBias": -1.8,
+
+  "pdePeakPct": 40.0,
+  "pdePeakWavelengthNm": 450,
+  "pdeAtGagg520nmPct": 35.0,
+
+  "darkCountRateMcps_25C": 0.5,
+  "darkCountRateMcps_max_25C": 2.0,
+  "dcrDoublingDeltaC": 8.0,
+  "crosstalkPct_at3V": 1.0,
+
+  "referenceTempC": 25.0,
+
+  "_stabilizationModel": {
+    "biasCompResidualPctPerC": -0.1,
+    "_biasCompNote": "① temperature-compensated bias: tracks vbr(T); residual from finite dV_br/dT accuracy + T-sense error",
+    "ledLockResidualPctPerC": -0.02,
+    "_ledNote": "② LED reference pulser: locks SiPM+electronics optical gain; does NOT see crystal light yield (LED bypasses the crystal)",
+    "crystalLightYieldTempCoeffPctPerC": -0.15,
+    "_crystalNote": "GAGG:Ce,Mg light-yield drift — only a spectral reference (K-40 / reference source, method ③) catches this; ①/② cannot"
+  }
+}

@@ -52,6 +52,9 @@ if (args[0].Equals("maskgeo", StringComparison.OrdinalIgnoreCase))
 if (args[0].Equals("masksize", StringComparison.OrdinalIgnoreCase))
     return RunMaskSize(args);
 
+if (args[0].Equals("shield", StringComparison.OrdinalIgnoreCase))
+    return RunShield(args);
+
 var config = ConfigLoader.Load(args[0]);
 Console.WriteLine($"Scenario : {config.Name}");
 Console.WriteLine($"Isotope  : {config.Source.Isotope} @ {config.Source.EnergyKeV} keV");
@@ -155,6 +158,58 @@ static int RunSweep(string[] args)
         Console.WriteLine($"CSV: {csvPath}");
         Console.WriteLine();
     }
+    return 0;
+}
+
+static int RunShield(string[] args)
+{
+    if (args.Length < 2) { Console.Error.WriteLine("Usage: montecarlo shield <base.json>"); return 1; }
+    var baseConfig = ConfigLoader.Load(args[1]);
+    baseConfig.Source.Position = [0, 0, 0.0];
+
+    const double nSrc = 400.0;           // fixed detected source counts
+    const double bg0 = 20.0;             // UNSHIELDED side/rear background counts/pixel (heavy env.)
+    const int repeats = 250;
+    const double failThr = 3.0;
+    double[] thick = [0, 2, 4, 6, 8, 10, 12, 15, 20, 25, 30];
+
+    // Background energies -> tungsten linear attenuation via the validated MuRel scaling.
+    double MuW(double e) => 0.178 * Math.Pow(661.7 / e, 1.56);
+    var backgrounds = new (string label, double energy)[]
+    {
+        ("scattered_250keV", 250.0),
+        ("Cs137_662keV",     661.7),
+        ("Co60_1250keV",     1250.0),
+    };
+
+    Console.WriteLine("Optimal 5-sided (side/top/bottom/rear) tungsten shield thickness");
+    Console.WriteLine($"  {nSrc:F0} source counts, unshielded background {bg0:F0} counts/px, {repeats} Poisson reps");
+    Console.WriteLine($"  detector {baseConfig.Detector.PixelsX}x{baseConfig.Detector.PixelsY}, barrel {baseConfig.Geometry.MaskDetectorDistanceMm + baseConfig.Detector.CrystalThicknessMm:F0} mm");
+    Console.WriteLine();
+
+    var study = new ShieldStudy(new DefaultSimulationFactory());
+    var csv = new System.Text.StringBuilder("bg,thickness_mm,transmission,bg_per_px,rms_raw_mm,rms_calib_mm,fail_raw,shield_kg\n");
+    foreach (var (label, energy) in backgrounds)
+    {
+        double mu = MuW(energy);
+        var rows = study.Run(baseConfig, nSrc, bg0, mu, thick, repeats, failThr);
+        csv.Append(ShieldStudy.ToCsv(label, rows).Split('\n', 2)[1]);   // drop repeated header
+
+        // knee = thinnest t whose raw RMS is within 15% of the best (thick-shield) RMS
+        double floor = rows.Min(r => r.RmsRawMm);
+        var knee = rows.FirstOrDefault(r => r.RmsRawMm <= floor * 1.15) ?? rows[^1];
+
+        Console.WriteLine($"=== background {label}  (mu_W = {mu:F3}/mm, HVL {0.6931/mu:F1} mm) ===");
+        Console.WriteLine("  t(mm)  transmit  bg/px   RMS raw   RMS calib   shield(kg)");
+        foreach (var r in rows)
+            Console.WriteLine($"  {r.ThicknessMm,4:F0}   {r.Transmission,7:F3}  {r.BgPerPixel,6:F2}  {r.RmsRawMm,6:F2}mm  {r.RmsCalibMm,7:F2}mm   {r.ShieldMassKg,7:F2}");
+        Console.WriteLine($"  -> useful thickness ~ {knee.ThicknessMm:F0} mm  (RMS {knee.RmsRawMm:F2} mm, shield {knee.ShieldMassKg:F2} kg)");
+        Console.WriteLine();
+    }
+    File.WriteAllText("samples/shield.csv", csv.ToString());
+    Console.WriteLine("Low-energy scattered background is killed by a few mm; Co-60 never reaches the knee");
+    Console.WriteLine("at a carriable mass -> shield the low-E noise, beat high-E with coded+stripping.");
+    Console.WriteLine("CSV: samples/shield.csv");
     return 0;
 }
 
