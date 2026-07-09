@@ -49,6 +49,9 @@ if (args[0].Equals("depth-joint", StringComparison.OrdinalIgnoreCase))
 if (args[0].Equals("maskgeo", StringComparison.OrdinalIgnoreCase))
     return RunMaskGeo(args);
 
+if (args[0].Equals("masksize", StringComparison.OrdinalIgnoreCase))
+    return RunMaskSize(args);
+
 var config = ConfigLoader.Load(args[0]);
 Console.WriteLine($"Scenario : {config.Name}");
 Console.WriteLine($"Isotope  : {config.Source.Isotope} @ {config.Source.EnergyKeV} keV");
@@ -152,6 +155,39 @@ static int RunSweep(string[] args)
         Console.WriteLine($"CSV: {csvPath}");
         Console.WriteLine();
     }
+    return 0;
+}
+
+static int RunMaskSize(string[] args)
+{
+    if (args.Length < 2) { Console.Error.WriteLine("Usage: montecarlo masksize <base.json>"); return 1; }
+    var baseConfig = ConfigLoader.Load(args[1]);
+    var study = new MaskGeometryStudy(new DefaultSimulationFactory());
+    const double budget = 400.0; const int repeats = 250; const double failThr = 3.0;
+    double d = baseConfig.Geometry.MaskDetectorDistanceMm, s = baseConfig.Geometry.SourceMaskDistanceMm;
+    double detPitch = baseConfig.Detector.PixelPitchMm;
+    var csv = new StringBuilder("cell_pitch_mm,shadow_per_pixel,resolution_mm,efficiency,rms_mm\n");
+
+    Console.WriteLine("Optimal mask FEATURE (cell) size: rank/detector fixed, resolution at fixed counts");
+    Console.WriteLine($"  D={d:F0} S={s:F0} mm, detector pitch {detPitch:F1} mm, {(int)budget} counts, centered source");
+    Console.WriteLine("  cell    shadow/px   resolution   efficiency   RMS@budget");
+    Console.WriteLine("  ----    ---------   ----------   ----------   ----------");
+    foreach (double pitch in new[] { 0.4, 0.5, 0.6, 0.8, 1.0, 1.25, 1.5, 2.0, 3.0 })
+    {
+        var cfg = baseConfig.Clone();
+        cfg.Mask.CellPitchMm = pitch;
+        cfg.Source.Position = [0, 0, 0.0];
+        double shadowPerPx = pitch * (d + s) / s / detPitch;    // mask-cell shadow width in detector pixels
+        double resolution = pitch * (d + s) / d;                 // projected cell size at the source plane
+        var (eff, rms) = study.EfficiencyAndResolution(cfg, budget, repeats, failThr);
+        Console.WriteLine($"  {pitch,4:F2}mm  {shadowPerPx,7:F2}     {resolution,7:F2}mm   {eff,10:E2}   {rms,6:F2}mm");
+        csv.Append($"{pitch:F2},{shadowPerPx:F3},{resolution:F3},{eff:E4},{rms:F3}\n");
+    }
+    File.WriteAllText("samples/masksize.csv", csv.ToString());
+    Console.WriteLine();
+    Console.WriteLine("Too coarse -> coarse resolution; too fine -> the cell shadow drops below a detector");
+    Console.WriteLine("pixel (aliasing) and starves per cell. Optimum ~ shadow matches the detector pixel.");
+    Console.WriteLine("CSV: samples/masksize.csv");
     return 0;
 }
 

@@ -94,8 +94,13 @@ Everything captured here has been done — the backlog is currently empty.
 ## Still open
 - Fold multi-line isotope model into C# `SourceConfig` (the combined lever uses per-line runs summed,
   not a real mixed-field source).
+- Optimal mask size (cell pitch + open fraction) — **done**: CLI `montecarlo masksize`. Cell size has
+  a bounded sweet spot (shadow ~1–2 px); open fraction optimal at ~50% (built into MURA, analytical).
+  AGENTS.findings theme 21.
 - Tapered/diverging holes (accept the FOV angular cone) as the geometry that could uniformly reduce
   off-axis collimation for thick masks — the actual "wider FOV" fix, distinct from point-focusing.
+- Empirical open-fraction sweep with random arrays + a double-valued balanced decode (would confirm
+  the analytical √(ρ(1−ρ)) optimum and show MURA beating random arrays on sidelobes).
 - Depth under Poisson noise + joint lateral+depth — **done**: `DepthStudy.RunNoisyDepth` /
   `RunNoisyJoint` + CLI `montecarlo depth-joint`. Near-field depth → sub-mm, far-field floors ~10mm;
   joint recovers lateral (x,y) to ~mm even while z is uncertain (coded aperture = strong lateral

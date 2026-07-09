@@ -347,3 +347,25 @@ Run: `montecarlo maskgeo samples/scenario.json` → `samples/maskgeo.png`.
   intuition is a pinhole idea that doesn't hold for a coded aperture.
 - Reproduce: `montecarlo maskgeo samples/scenario.json` → `samples/maskgeo.png`, `maskgeo.csv`
   (plot via `plot_maskgeo.py`). Locked in by `MaskGeometryTests`.
+
+## 21. The "right size" — cell (feature) size and open fraction — `montecarlo masksize`
+Follows theme 20 (which discarded angled channels / sub-cell holes). Two mask *sizes* DO have a real
+optimum, unlike the sub-cell hole (theme 20, no interior optimum). Run: `montecarlo masksize` →
+`samples/masksize.png`.
+- **Cell (feature) size has a BOUNDED sweet spot** (the coded-aperture analog of the optimal pinhole
+  diameter). Sweeping cell pitch (fixed rank/detector, fixed counts): localization is sub-mm for pitch
+  **~0.5–1.5 mm (cell shadow ~0.8–2.5 detector pixels)**; below it **aliases** (shadow < 1 px → RMS
+  climbs), above it the **mask outgrows the detector** so the shadow overflows and too few cells are
+  sampled → **collapse** (RMS 8–18 mm at 2–3 mm pitch). So "finer is always better" is wrong: the
+  feature size is bounded by Nyquist below and the detector footprint above. Optimum ≈ shadow matches
+  the detector pixel (≈ theme 7 from the mask side).
+- **Open fraction is optimal at ~50 %, built into MURA.** The mask's coding power scales as
+  **√(ρ(1−ρ))**, so the point-source SNR in the background-dominated regime (what coded apertures are
+  *for*) is maximised at **ρ = 0.5** — exactly where a MURA sits by construction (analytical SNR
+  `Φ_s·√(ρ(1−ρ)) / √((1−ρ)Φ_s + ρΦ_b + B_det)`). It is not a free knob: tuning ρ away from 0.5 needs a
+  random array, which is strictly worse (non-zero sidelobes). Only a source-dominated field (rare here)
+  prefers a higher ρ (less coding needed).
+- Verdict: the "size" worth tuning is the **cell pitch** (bounded optimum, shadow ≈ 1–2 px); the open
+  fraction is already at its optimum in MURA, and the sub-cell hole (theme 20) should stay full-open.
+- Reproduce: `montecarlo masksize samples/scenario.json` → `samples/masksize.png`, `masksize.csv`
+  (plot via `plot_masksize.py`; open-fraction panel is the analytical SNR). Locked in by `MaskGeometryTests`.

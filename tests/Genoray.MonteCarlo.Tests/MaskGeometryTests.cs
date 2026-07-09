@@ -40,4 +40,17 @@ public class MaskGeometryTests
         double fEdgeRatio = study.Efficiency(focusedEdge) / study.Efficiency(focusedCenter);
         Assert.True(fEdgeRatio < sEdgeRatio, "point-focusing should narrow the FOV (worse edge/center)");
     }
+
+    [Fact]
+    public void CellSize_HasABoundedOptimum()
+    {
+        // A mid-band cell pitch (shadow ~1-2 px) localizes far better than a too-coarse one (mask
+        // overflows the detector) -> the feature size has a bounded optimum, not "finer is always better".
+        var study = new MaskGeometryStudy(new DefaultSimulationFactory());
+        var mid = Baseline(); mid.Mask.CellPitchMm = 1.0;
+        var coarse = Baseline(); coarse.Mask.CellPitchMm = 3.0;
+        double rmsMid = study.EfficiencyAndResolution(mid, budget: 400, repeats: 150, failThrMm: 3.0).rmsMm;
+        double rmsCoarse = study.EfficiencyAndResolution(coarse, budget: 400, repeats: 150, failThrMm: 3.0).rmsMm;
+        Assert.True(rmsMid < rmsCoarse, $"mid-band pitch RMS {rmsMid:F2} should beat coarse {rmsCoarse:F2}");
+    }
 }
