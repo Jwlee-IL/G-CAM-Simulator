@@ -1,0 +1,10 @@
+{
+  "name": "Co-57",
+  "halfLifeDays": 271.8,
+  "cascadeCoincident": false,
+  "lines": [
+    { "keV": 122.06, "branching": 0.856 },
+    { "keV": 136.47, "branching": 0.107 }
+  ],
+  "notes": "Electron capture to Fe-57. Low-energy doublet (alternative de-excitation paths, modelled mutually exclusive per decay). THE gamma-camera flood-uniformity source. Does NOT transmute to Co-60 -- but aged Co-57 flood sheets show growing Co-60 because Co-57 (272 d) decays ~7x faster than the trace Co-60 (5.27 y) impurity."
+}

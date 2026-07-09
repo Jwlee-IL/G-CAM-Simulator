@@ -1,0 +1,24 @@
+# --- .NET build output ---
+bin/
+obj/
+*.user
+*.suo
+.vs/
+
+# --- Icarus Verilog: compiled sims + intermediate stimulus/output data (regenerable) ---
+rtl/*.vvp
+rtl/adc.txt
+rtl/peaks.txt
+rtl/peaks_int.txt
+rtl/truth.csv
+
+# --- Python ---
+__pycache__/
+*.pyc
+
+# --- OS cruft ---
+Thumbs.db
+.DS_Store
+
+# Result PNGs and CSVs are kept on purpose: they are the visual/quantitative findings
+# record referenced by AGENTS.findings.md (each finding lists its "Reproduce:" command).

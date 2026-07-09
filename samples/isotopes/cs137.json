@@ -1,0 +1,9 @@
+{
+  "name": "Cs-137",
+  "halfLifeDays": 10976.0,
+  "cascadeCoincident": false,
+  "lines": [
+    { "keV": 661.657, "branching": 0.851 }
+  ],
+  "notes": "Reference single line. Beta decay to Ba-137m -> 662 keV. The workhorse test source."
+}

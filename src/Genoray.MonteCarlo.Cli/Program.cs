@@ -1,0 +1,592 @@
+using System.Text;
+using Genoray.MonteCarlo.Configuration;
+using Genoray.MonteCarlo.Core;
+using Genoray.MonteCarlo.Simulation;
+
+if (args.Length < 1)
+{
+    Console.Error.WriteLine("Usage: montecarlo <scenario.json>");
+    Console.Error.WriteLine("       montecarlo sweep <base.json> [out.csv]");
+    return 1;
+}
+
+if (args[0].Equals("sweep", StringComparison.OrdinalIgnoreCase))
+    return RunSweep(args);
+
+if (args[0].Equals("scan", StringComparison.OrdinalIgnoreCase))
+    return RunScan(args);
+
+if (args[0].Equals("noise", StringComparison.OrdinalIgnoreCase))
+    return RunNoise(args);
+
+if (args[0].Equals("thickness", StringComparison.OrdinalIgnoreCase))
+    return RunThickness(args);
+
+if (args[0].Equals("uniformity", StringComparison.OrdinalIgnoreCase))
+    return RunUniformity(args);
+
+if (args[0].Equals("array", StringComparison.OrdinalIgnoreCase))
+    return RunArray(args);
+
+if (args[0].Equals("antimask", StringComparison.OrdinalIgnoreCase))
+    return RunAntimask(args);
+
+if (args[0].Equals("antimask-scene", StringComparison.OrdinalIgnoreCase))
+    return RunAntimaskScene(args);
+
+if (args[0].Equals("compton", StringComparison.OrdinalIgnoreCase))
+    return RunCompton(args);
+
+var config = ConfigLoader.Load(args[0]);
+Console.WriteLine($"Scenario : {config.Name}");
+Console.WriteLine($"Isotope  : {config.Source.Isotope} @ {config.Source.EnergyKeV} keV");
+Console.WriteLine($"Source   : (x={config.Source.Position[0]}, y={config.Source.Position[1]}) mm off-axis");
+Console.WriteLine($"Mask     : {config.Mask.Type} rank {config.Mask.Rank}, {config.Mask.MosaicX}x{config.Mask.MosaicY} mosaic @ z={config.Geometry.MaskDetectorDistanceMm} mm");
+Console.WriteLine($"Detector : {config.Detector.PixelsX}x{config.Detector.PixelsY} crystals @ z=0");
+Console.WriteLine($"Photons  : {config.PhotonCount:N0}");
+Console.WriteLine();
+
+var runner = new SimulationRunner(new DefaultSimulationFactory());
+var result = runner.Run(config);
+
+double efficiency = result.PhotonsEmitted > 0 ? result.DetectedWeight / result.PhotonsEmitted : 0.0;
+Console.WriteLine($"Emitted  : {result.PhotonsEmitted:N0}  ({(config.Source.DirectionalBiasing ? "detector-biased" : "4π isotropic")})");
+Console.WriteLine($"Detected : {result.DetectedWeight:N1} effective counts   (efficiency {efficiency:E2})");
+Console.WriteLine();
+Console.WriteLine("Flood map (detector, +y up):");
+RenderFloodMap(result.DetectorImage);
+
+if (result.Estimate is { } est && result.Reconstruction is { } recon)
+{
+    double trueX = config.Source.Position[0];
+    double trueY = config.Source.Position[1];
+    double err = Math.Sqrt((est.Position.X - trueX) * (est.Position.X - trueX) +
+                           (est.Position.Y - trueY) * (est.Position.Y - trueY));
+
+    Console.WriteLine();
+    Console.WriteLine($"True     : (x={trueX:F1}, y={trueY:F1}) mm");
+    Console.WriteLine($"Estimate : (x={est.Position.X:F1}, y={est.Position.Y:F1}) mm   error={err:F1} mm");
+    Console.WriteLine($"Ghost margin (primary/secondary peak): {est.Confidence:F2}   (>~1.5 clean, ~1 ambiguous)");
+    Console.WriteLine();
+    Console.WriteLine("Reconstruction (source plane, +y up)   T=truth  o=estimate:");
+    RenderReconstruction(recon, result.ReconOriginMm, result.ReconStepMm, trueX, trueY, est.Position.X, est.Position.Y);
+}
+return 0;
+
+static int RunSweep(string[] args)
+{
+    if (args.Length < 2)
+    {
+        Console.Error.WriteLine("Usage: montecarlo sweep <base.json> [out.csv]");
+        return 1;
+    }
+
+    const double halfExtentMm = 18.0;
+    const double stepMm = 1.5;
+    const double reconStepMm = 0.75;
+    const long photonsPerPoint = 300_000;   // biasing makes every photon land on the detector
+    const double ghostThresholdMm = 3.0;
+
+    var baseConfig = ConfigLoader.Load(args[1]);
+
+    // Theoretical fully-coded FOV half-width (one cyclic period / 2).
+    double frac = baseConfig.Geometry.MaskDetectorDistanceMm /
+                  (baseConfig.Geometry.MaskDetectorDistanceMm + baseConfig.Geometry.SourceMaskDistanceMm);
+    double fcfovHalf = baseConfig.Mask.Rank * baseConfig.Mask.CellPitchMm / frac / 2.0;
+
+    Console.WriteLine($"Sweep    : source over ±{halfExtentMm} mm, step {stepMm} mm, {photonsPerPoint:N0} photons/point");
+    Console.WriteLine($"Mask     : {baseConfig.Mask.Type} rank {baseConfig.Mask.Rank}, cell {baseConfig.Mask.CellPitchMm} mm");
+    Console.WriteLine($"Predicted FCFOV half-width: {fcfovHalf:F1} mm (theory)");
+    Console.WriteLine($"Both modes search the same wide grid (±{halfExtentMm} mm) for a fair comparison.");
+    Console.WriteLine();
+
+    var factory = new DefaultSimulationFactory();
+    foreach (var (label, cyclic) in new[] { ("CYCLIC (classical)", true), ("NON-CYCLIC (finite mask)", false) })
+    {
+        // Same wide reconstruction grid for both modes; only the periodicity toggles.
+        var cfg = new SimulationConfig
+        {
+            Name = baseConfig.Name,
+            PhotonCount = baseConfig.PhotonCount,
+            Seed = baseConfig.Seed,
+            Source = baseConfig.Source,
+            Mask = baseConfig.Mask,
+            Detector = baseConfig.Detector,
+            Geometry = baseConfig.Geometry,
+            Decoder = new DecoderConfig
+            {
+                Cyclic = cyclic,
+                ReconHalfExtentMm = halfExtentMm,
+                ReconStepMm = reconStepMm,
+            },
+        };
+
+        var sweep = new SourceSweep(factory).Run(cfg, halfExtentMm, stepMm, photonsPerPoint);
+        string csvPath = cyclic ? "samples/sweep_cyclic.csv" : "samples/sweep_noncyclic.csv";
+        File.WriteAllText(csvPath, SourceSweep.ToCsv(sweep));
+
+        double maxErr = 0.0;
+        int inFov = 0;
+        foreach (var p in sweep.Points)
+        {
+            if (p.ErrorMm > maxErr) maxErr = p.ErrorMm;
+            if (p.ErrorMm < ghostThresholdMm) inFov++;
+        }
+
+        Console.WriteLine($"===== {label} =====");
+        Console.WriteLine($"FCFOV map   '.'=localized (<{ghostThresholdMm} mm)   '#'=ghost   '+'=center:");
+        RenderGhostMap(sweep, ghostThresholdMm);
+        Console.WriteLine($"{inFov}/{sweep.Points.Length} points localized within {ghostThresholdMm} mm   (max error {maxErr:F1} mm)");
+        Console.WriteLine($"CSV: {csvPath}");
+        Console.WriteLine();
+    }
+    return 0;
+}
+
+static int RunCompton(string[] args)
+{
+    if (args.Length < 2) { Console.Error.WriteLine("Usage: montecarlo compton <base.json>"); return 1; }
+    var baseConfig = ConfigLoader.Load(args[1]);
+    const double windowFraction = 0.10;   // ±10% photopeak energy window
+    const double detectedBudget = 400.0;  // fixed acquisition (detected counts, ideal detector)
+    const int repeats = 200;
+    const double failThresholdMm = 3.0;
+
+    var study = new ComptonStudy();
+
+    Console.WriteLine("Crystal Compton scattering — multi-pixel positioning strategies");
+    Console.WriteLine($"Single {baseConfig.Source.EnergyKeV} keV source at ({baseConfig.Source.Position[0]},{baseConfig.Source.Position[1]}) mm, ±{windowFraction:P0} window, {repeats} reps @ {detectedBudget:F0} counts");
+    Console.WriteLine();
+    var rows = study.RunStrategies(baseConfig, windowFraction, detectedBudget, repeats, failThresholdMm);
+    File.WriteAllText("samples/compton_strategies.csv", ComptonStudy.StrategiesToCsv(rows));
+
+    Console.WriteLine("  strategy              efficiency   bias      RMS      fail%");
+    Console.WriteLine("  -------------------   ----------   ------    ------   -----");
+    foreach (var r in rows)
+        Console.WriteLine($"  {r.Strategy,-19}   {r.EfficiencyRel,9:P0}   {r.BiasMm,5:F2}mm   {r.RmsMm,5:F2}mm   {r.FailRate,5:P0}");
+    Console.WriteLine();
+
+    // Multi-isotope contamination: a Co-60 source downscatters into the Cs-137 662 window,
+    // but stays coded from ITS direction -> the decode separates the two spatially.
+    double[] csPos = [4.0, 0.0, 0.0];
+    double[] coPos = [-5.0, 3.0, 0.0];
+    var c = study.RunContamination(baseConfig, csPos, coPos, windowFraction);
+    File.WriteAllText("samples/compton_recon_cs.csv", ComptonStudy.ReconToCsv(c.ReconCs, c.OriginMm, c.StepMm));
+    File.WriteAllText("samples/compton_recon_co.csv", ComptonStudy.ReconToCsv(c.ReconContaminant, c.OriginMm, c.StepMm));
+    File.WriteAllText("samples/compton_recon_combined.csv", ComptonStudy.ReconToCsv(c.ReconCombined, c.OriginMm, c.StepMm));
+
+    Console.WriteLine("Multi-isotope contamination (the 662 keV window):");
+    Console.WriteLine($"  Cs-137 @ ({csPos[0]},{csPos[1]}) mm  +  Co-60 @ ({coPos[0]},{coPos[1]}) mm downscatter");
+    Console.WriteLine($"  Co-60 contamination fraction in the 662 window: {c.ContaminationFraction:P0}");
+    Console.WriteLine("  -> energy window alone can't remove it, but decoding the combined 662-window map");
+    Console.WriteLine("     shows BOTH sources (contamination is coded from Co-60's direction).");
+    Console.WriteLine("  Recon CSVs: samples/compton_recon_{cs,co,combined}.csv");
+    return 0;
+}
+
+static int RunAntimaskScene(string[] args)
+{
+    if (args.Length < 2) { Console.Error.WriteLine("Usage: montecarlo antimask-scene <base.json>"); return 1; }
+    var baseConfig = ConfigLoader.Load(args[1]);
+    var factory = new DefaultSimulationFactory();
+    double[] primary = [0.0, 0.0, 0.0];
+    double[] bgSource = [6.0, 4.0, 0.0];   // a second directional source in the field
+
+    DetectorImage Mean(double[] pos, bool invert)
+    {
+        var cfg = baseConfig.Clone();
+        cfg.Mask.Invert = invert;
+        cfg.Source.Position = pos;
+        return new SimulationRunner(factory).Run(cfg).DetectorImage;
+    }
+    DetectorImage Combine(DetectorImage a, DetectorImage b, double sign)
+    {
+        var r = new DetectorImage(a.Width, a.Height);
+        for (int y = 0; y < a.Height; y++)
+            for (int x = 0; x < a.Width; x++)
+                r[x, y] = a[x, y] + sign * b[x, y];
+        return r;
+    }
+
+    var sA = Mean(primary, false);
+    var sB = Mean(primary, true);
+    var bA = Mean(bgSource, false);
+    var bB = Mean(bgSource, true);
+    var decoder = factory.CreateDecoder(baseConfig.Clone());
+
+    // Diffuse background cancels in the difference -> antimask of source alone: one peak.
+    var diffuse = Combine(sA, sB, -1.0);
+    // A directional background source is coded like the source -> survives: two peaks.
+    var directional = Combine(Combine(sA, bA, 1.0), Combine(sB, bB, 1.0), -1.0);
+
+    void Dump(string path, DecodeResult d)
+    {
+        var sb = new StringBuilder("x_mm,y_mm,value\n");
+        var img = d.Reconstruction;
+        for (int gy = 0; gy < img.Height; gy++)
+            for (int gx = 0; gx < img.Width; gx++)
+                sb.Append($"{d.ReconOriginMm + gx * d.ReconStepMm:F2},{d.ReconOriginMm + gy * d.ReconStepMm:F2},{img[gx, gy]:F4}\n");
+        File.WriteAllText(path, sb.ToString());
+    }
+
+    var rDiffuse = decoder.Decode(diffuse);
+    var rDirect = decoder.Decode(directional);
+    Dump("samples/antimask_diffuse.csv", rDiffuse);
+    Dump("samples/antimask_directional.csv", rDirect);
+
+    Console.WriteLine("Antimask reconstruction scenes:");
+    Console.WriteLine($"  diffuse background   -> peak at {rDiffuse.Estimate.Position} (background cancels: one peak)");
+    Console.WriteLine($"  directional bg source-> peak at {rDirect.Estimate.Position} (both source + bg imaged: two peaks)");
+    Console.WriteLine("  true: primary (0,0), background source (6,4)");
+    Console.WriteLine("CSVs: samples/antimask_diffuse.csv, samples/antimask_directional.csv");
+    return 0;
+}
+
+static int RunAntimask(string[] args)
+{
+    if (args.Length < 2)
+    {
+        Console.Error.WriteLine("Usage: montecarlo antimask <base.json> [out.csv]");
+        return 1;
+    }
+
+    const double nSrc = 400.0;          // detected source counts
+    const int repeats = 200;
+    const double failThresholdMm = 3.0;
+    string csvPath = args.Length >= 3 ? args[2] : "samples/antimask.csv";
+
+    var baseConfig = ConfigLoader.Load(args[1]);
+    var scenarios = new (string, double, double)[]
+    {
+        ("bg=0 (ideal)",  0.0,  0.0),
+        ("bg=0.5/px",     0.5,  0.0),
+        ("bg=1/px",       1.0,  0.0),
+        ("bg=2/px",       2.0,  0.0),
+        ("bg=4/px",       4.0,  0.0),
+        ("bg=8/px",       8.0,  0.0),
+        ("gradient ~4",   4.0,  1.0),
+    };
+
+    Console.WriteLine($"Mask vs mask/antimask: {nSrc:F0} source counts, {repeats} reps, additive background scenarios");
+    Console.WriteLine("Single mask = full budget on A. Mask/antimask = half each on A and inverted-A, decode the difference.");
+    Console.WriteLine();
+
+    var rows = new MaskAntimaskStudy(new DefaultSimulationFactory())
+        .Run(baseConfig, nSrc, repeats, failThresholdMm, scenarios);
+    File.WriteAllText(csvPath, MaskAntimaskStudy.ToCsv(rows));
+
+    Console.WriteLine("  scenario     (a) flip-only   (b) flip+calib   (c) 2-exposure   | fail: a / b / c");
+    Console.WriteLine("  -----------  -------------   --------------   --------------   ------------------");
+    foreach (var r in rows)
+        Console.WriteLine($"  {r.Scenario,-11}  {r.SingleErrMm,9:F2}mm   {r.CalibErrMm,10:F2}mm   {r.AntimaskErrMm,10:F2}mm   {r.SingleFail,4:P0} / {r.CalibFail,3:P0} / {r.AntimaskFail,3:P0}");
+
+    Console.WriteLine();
+    Console.WriteLine($"CSV written: {csvPath}");
+    return 0;
+}
+
+static int RunArray(string[] args)
+{
+    if (args.Length < 2)
+    {
+        Console.Error.WriteLine("Usage: montecarlo array <base.json> [out.csv]");
+        return 1;
+    }
+
+    const double physicalSizeMm = 12.0;   // fixed detector size
+    double[] pitches = [2.0, 1.5, 1.0, 0.75, 0.6, 0.5, 0.4];
+    const double photonBudget = 300_000.0;
+    const int repeats = 250;
+    const double failThresholdMm = 3.0;
+    string csvPath = args.Length >= 3 ? args[2] : "samples/array.csv";
+
+    var baseConfig = ConfigLoader.Load(args[1]);
+
+    Console.WriteLine($"Detector array sweep: fixed {physicalSizeMm} mm size, varying pixel pitch, {repeats} Poisson reps");
+    Console.WriteLine($"Budget {photonBudget:E1}, centered source. (mask cell shadow spans 'samples/cell' pixels)");
+    Console.WriteLine();
+
+    var rows = new ArrayStudy(new DefaultSimulationFactory())
+        .Run(baseConfig, physicalSizeMm, pitches, photonBudget, repeats, failThresholdMm);
+    File.WriteAllText(csvPath, ArrayStudy.ToCsv(rows));
+
+    Console.WriteLine("  pitch   array    samples/cell   RMS err   fail%");
+    Console.WriteLine("  -----  -------  ------------   -------   -----");
+    foreach (var r in rows)
+        Console.WriteLine($"  {r.PixelPitchMm,4:F2}mm  {r.Pixels,2}x{r.Pixels,-2}   {r.SamplesPerCellShadow,8:F2}     {r.RmsMm,6:F2}mm   {r.FailRate,5:P0}");
+
+    var best = rows.Where(r => !double.IsNaN(r.RmsMm)).OrderBy(r => r.RmsMm).First();
+    Console.WriteLine();
+    Console.WriteLine($"BEST: {best.PixelPitchMm} mm pitch ({best.Pixels}x{best.Pixels}), {best.SamplesPerCellShadow:F1} samples/cell, RMS {best.RmsMm:F2} mm");
+    Console.WriteLine($"CSV written: {csvPath}");
+    return 0;
+}
+
+static int RunUniformity(string[] args)
+{
+    if (args.Length < 2)
+    {
+        Console.Error.WriteLine("Usage: montecarlo uniformity <base.json> [out.csv]");
+        return 1;
+    }
+
+    double[] levels = [0.0, 0.25, 0.5, 0.75, 1.0, 1.5, 2.0];
+    const double photonBudget = 800_000.0;
+    const int repeats = 120;
+    const double failThresholdMm = 3.0;
+    string csvPath = args.Length >= 3 ? args[2] : "samples/uniformity.csv";
+
+    var baseConfig = ConfigLoader.Load(args[1]);
+    // Activate a baseline energy-resolution non-uniformity (8% FWHM ±30%, ±10% window)
+    // so both mechanisms (gain + resolution) contribute to the flood distortion.
+    baseConfig.Detector.EnergyResolutionFwhm = 0.08;
+    baseConfig.Detector.EnergyResolutionFwhmSigma = 0.30;
+    baseConfig.Detector.EnergyWindowFraction = 0.10;
+
+    Console.WriteLine($"Crystal uniformity study: non-uniformity sweep (random gain σ=0.4·L + gradient 0.6·L)");
+    Console.WriteLine($"{repeats} Poisson reps/point, budget {photonBudget:E1}, centered source");
+    Console.WriteLine("Comparing raw decoding vs flood-corrected (÷ calibrated sensitivity).");
+    Console.WriteLine();
+
+    var rows = new UniformityStudy(new DefaultSimulationFactory())
+        .Run(baseConfig, levels, photonBudget, repeats, failThresholdMm);
+    File.WriteAllText(csvPath, UniformityStudy.ToCsv(rows));
+
+    Console.WriteLine("  level  gainσ  gradient   RMS raw    RMS corrected   fail raw   fail corr");
+    Console.WriteLine("  -----  -----  --------   ---------  -------------   --------   ---------");
+    foreach (var r in rows)
+        Console.WriteLine($"  {r.Level,5:F2}  {0.40 * r.Level,5:P0}  {0.60 * r.Level,7:P0}   {r.RmsRawMm,7:F2}mm   {r.RmsCorrectedMm,9:F2}mm      {r.FailRaw,6:P0}     {r.FailCorrected,6:P0}");
+
+    Console.WriteLine();
+    Console.WriteLine($"CSV written: {csvPath}");
+    return 0;
+}
+
+static int RunThickness(string[] args)
+{
+    if (args.Length < 2)
+    {
+        Console.Error.WriteLine("Usage: montecarlo thickness <base.json> [out.csv]");
+        return 1;
+    }
+
+    double[] thicknesses = [2, 4, 6, 8, 10, 14, 18, 24, 32];
+    const int nRadial = 13;
+    const double photonBudget = 400_000.0;  // physical emitted = activity × branching × time
+    const int repeats = 60;
+    const double failFraction = 0.5;
+    string csvPath = args.Length >= 3 ? args[2] : "samples/thickness.csv";
+
+    var baseConfig = ConfigLoader.Load(args[1]);
+    double d = baseConfig.Geometry.MaskDetectorDistanceMm;
+    double s = baseConfig.Geometry.SourceMaskDistanceMm;
+    double resolution = baseConfig.Mask.CellPitchMm * (d + s) / d;
+    // Sweep radius adapts to the config's FCFOV so wide-FOV masks reveal collimation.
+    double maxRadiusMm = 0.95 * baseConfig.Mask.Rank * baseConfig.Mask.CellPitchMm * (d + s) / d / 2.0;
+
+    Console.WriteLine($"Tungsten thickness optimization (mu={baseConfig.Mask.LinearAttenuationPerMm}/mm)");
+    Console.WriteLine($"Fixed budget {photonBudget:E1} emitted photons, radial to {maxRadiusMm} mm, {repeats} Poisson reps/point");
+    Console.WriteLine($"Localizable = median error < resolution ({resolution:F1} mm)");
+    Console.WriteLine();
+
+    var rows = new ThicknessStudy(new DefaultSimulationFactory())
+        .Run(baseConfig, thicknesses, maxRadiusMm, nRadial, photonBudget, repeats, failFraction);
+    File.WriteAllText(csvPath, ThicknessStudy.ToCsv(rows, resolution));
+
+    Console.WriteLine("  thick   usableFOV   eff@center   eff@edge   leak%");
+    Console.WriteLine("  -----  ---------  ----------  ---------  ------");
+    foreach (var r in rows)
+    {
+        double leak = Math.Exp(-baseConfig.Mask.LinearAttenuationPerMm * r.ThicknessMm) * 100.0;
+        Console.WriteLine($"  {r.ThicknessMm,4:F0}mm  ±{r.UsableRadiusMm,6:F1}mm  {r.EffCenter,10:E2}  {r.EffEdge,9:E2}  {leak,5:F1}%");
+    }
+
+    var best = rows.OrderByDescending(r => r.UsableRadiusMm).First();
+    Console.WriteLine();
+    Console.WriteLine($"BEST thickness: {best.ThicknessMm} mm -> usable FOV ±{best.UsableRadiusMm:F1} mm");
+    Console.WriteLine($"CSV written: {csvPath}");
+    return 0;
+}
+
+static int RunNoise(string[] args)
+{
+    if (args.Length < 2)
+    {
+        Console.Error.WriteLine("Usage: montecarlo noise <base.json> [out.csv]");
+        return 1;
+    }
+
+    double[] countLevels = [5, 10, 25, 50, 100, 250, 500, 1000, 2500, 5000];
+    const int repeats = 300;
+    const double failThresholdMm = 3.0;
+    string csvPath = args.Length >= 3 ? args[2] : "samples/noise.csv";
+
+    var baseConfig = ConfigLoader.Load(args[1]);
+    var positions = new (string label, double x, double y)[] { ("centered", 0.0, 0.0), ("edge_8mm", 8.0, 0.0) };
+    var factory = new DefaultSimulationFactory();
+
+    Console.WriteLine($"Noise study: {repeats} Poisson realizations per count level, failure = error > {failThresholdMm} mm");
+    Console.WriteLine($"Source activity {baseConfig.Source.ActivityBq:E1} Bq, branching {baseConfig.Source.BranchingRatio} (Cs-137 662 keV)");
+    Console.WriteLine();
+
+    var csv = new StringBuilder("source,detected_counts,rms_error_mm,mean_error_mm,failure_rate,equiv_time_s\n");
+    foreach (var pos in positions)
+    {
+        var cfg = new SimulationConfig
+        {
+            Name = baseConfig.Name,
+            PhotonCount = baseConfig.PhotonCount,
+            Seed = baseConfig.Seed,
+            Source = new SourceConfig
+            {
+                Isotope = baseConfig.Source.Isotope,
+                EnergyKeV = baseConfig.Source.EnergyKeV,
+                Position = [pos.x, pos.y, 0.0],
+                DirectionalBiasing = true,
+                ActivityBq = baseConfig.Source.ActivityBq,
+                AcquisitionTimeSeconds = baseConfig.Source.AcquisitionTimeSeconds,
+                BranchingRatio = baseConfig.Source.BranchingRatio,
+            },
+            Mask = baseConfig.Mask,
+            Detector = baseConfig.Detector,
+            Geometry = baseConfig.Geometry,
+            Decoder = baseConfig.Decoder,
+        };
+
+        var res = new NoiseStudy(factory).Run(cfg, countLevels, repeats, failThresholdMm);
+
+        Console.WriteLine($"=== source {pos.label} at ({pos.x},{pos.y}) mm   (efficiency {res.Efficiency:E2}) ===");
+        Console.WriteLine("  counts  equivTime   RMSerr   fail%");
+        Console.WriteLine("  ------  ---------  -------  -----");
+        foreach (var p in res.Points)
+        {
+            double t = NoiseStudy.EquivalentTimeSeconds(p.DetectedCounts, cfg.Source.ActivityBq, cfg.Source.BranchingRatio, res.Efficiency);
+            Console.WriteLine($"  {p.DetectedCounts,6:F0}  {t,8:F2}s  {p.RmsErrorMm,6:F2}mm  {p.FailureRate,5:P0}");
+            csv.Append($"{pos.label},{p.DetectedCounts:F0},{p.RmsErrorMm:F3},{p.MeanErrorMm:F3},{p.FailureRate:F3},{t:F3}\n");
+        }
+        Console.WriteLine();
+    }
+
+    File.WriteAllText(csvPath, csv.ToString());
+    Console.WriteLine($"CSV written: {csvPath}");
+    return 0;
+}
+
+static int RunScan(string[] args)
+{
+    if (args.Length < 2)
+    {
+        Console.Error.WriteLine("Usage: montecarlo scan <base.json> [out.csv]");
+        return 1;
+    }
+
+    int[] ranks = [7, 11, 13, 17, 19, 23];
+    double[] cellPitches = [1.0, 1.5, 2.0];
+    double[] distances = [20, 25, 30, 40, 50, 60, 70, 80];
+    const int sweepN = 11;
+    const long photonsPerPoint = 200_000;   // biasing → every photon useful
+    const double efficiencyFloor = 3e-5;    // sensitivity floor (geometric efficiency)
+    string csvPath = args.Length >= 3 ? args[2] : "samples/scan.csv";
+
+    var baseConfig = ConfigLoader.Load(args[1]);
+    int total = ranks.Length * cellPitches.Length * distances.Length;
+    Console.WriteLine($"Scanning {total} configs: rank {{{string.Join(",", ranks)}}} x pitch {{{string.Join(",", cellPitches)}}} x D {{{string.Join(",", distances)}}} mm");
+    Console.WriteLine($"Source distance S = {baseConfig.Geometry.SourceMaskDistanceMm} mm (fixed), {sweepN}x{sweepN} sweep, {photonsPerPoint:N0} photons/point");
+    Console.WriteLine($"Objective: maximize usable FOV (error < 1 resolution cell), efficiency floor = {efficiencyFloor:E1}");
+    Console.WriteLine();
+
+    var rows = new ParameterScan(new DefaultSimulationFactory())
+        .Run(baseConfig, ranks, cellPitches, distances, sweepN, photonsPerPoint);
+    File.WriteAllText(csvPath, ParameterScan.ToCsv(rows));
+
+    var ranked = rows
+        .Where(r => r.MedianEfficiency >= efficiencyFloor)
+        .OrderByDescending(r => r.UsableFovAreaMm2)
+        .ToArray();
+
+    Console.WriteLine("Top configs by usable FOV (sensitivity floor met):");
+    Console.WriteLine("  rank  pitch   D    FCFOV±  resol  medErr  usable%   FOVarea  eff(e-4)");
+    Console.WriteLine("  ----  -----  ----  ------  -----  ------  -------  --------  --------");
+    foreach (var r in ranked.Take(15))
+        Console.WriteLine($"  {r.Rank,4}  {r.CellPitchMm,5:F1}  {r.DistanceMm,4:F0}  {r.FcfovHalfMm,6:F1}  {r.ResolutionMm,5:F1}  {r.MedianErrorMm,6:F2}  {r.UsableFraction,6:P0}  {r.UsableFovAreaMm2,8:F0}  {r.MedianEfficiency * 1e4,8:F2}");
+
+    if (ranked.Length > 0)
+    {
+        var best = ranked[0];
+        Console.WriteLine();
+        Console.WriteLine($"BEST: rank {best.Rank}, cell {best.CellPitchMm} mm, D {best.DistanceMm} mm");
+        Console.WriteLine($"      usable FOV ±{Math.Sqrt(best.UsableFovAreaMm2) / 2.0:F1} mm, resolution {best.ResolutionMm:F1} mm, median error {best.MedianErrorMm:F2} mm, efficiency {best.MedianEfficiency:E2}");
+    }
+    Console.WriteLine();
+    Console.WriteLine($"CSV written: {csvPath}  ({rows.Length} configs)");
+    return 0;
+}
+
+static void RenderGhostMap(SweepResult sweep, double threshold)
+{
+    int c = sweep.N / 2;
+    for (int iy = sweep.N - 1; iy >= 0; iy--)
+    {
+        var sb = new StringBuilder();
+        for (int ix = 0; ix < sweep.N; ix++)
+        {
+            char ch = ix == c && iy == c ? '+' : sweep.At(ix, iy).ErrorMm < threshold ? '.' : '#';
+            sb.Append(ch).Append(ch);
+        }
+        Console.WriteLine(sb.ToString());
+    }
+}
+
+static void RenderReconstruction(DetectorImage recon, double origin, double step,
+                                 double trueX, double trueY, double estX, double estY)
+{
+    const string ramp = " .:-=+*#%@";
+    double min = double.PositiveInfinity, max = double.NegativeInfinity;
+    foreach (var v in recon.Raw) { if (v < min) min = v; if (v > max) max = v; }
+    double span = max - min;
+    if (span <= 0) { Console.WriteLine("(flat)"); return; }
+
+    int Idx(double phys) => (int)Math.Round((phys - origin) / step);
+    bool InGrid(int gx, int gy) => gx >= 0 && gx < recon.Width && gy >= 0 && gy < recon.Height;
+    int tGx = Idx(trueX), tGy = Idx(trueY), eGx = Idx(estX), eGy = Idx(estY);
+
+    for (int y = recon.Height - 1; y >= 0; y--)
+    {
+        var sb = new StringBuilder();
+        for (int x = 0; x < recon.Width; x++)
+        {
+            if (x == eGx && y == eGy) sb.Append('o');
+            else if (x == tGx && y == tGy) sb.Append('T');
+            else sb.Append(ramp[(int)((recon[x, y] - min) / span * (ramp.Length - 1))]);
+        }
+        Console.WriteLine(sb.ToString());
+    }
+
+    if (!InGrid(tGx, tGy))
+        Console.WriteLine("(T off-grid: true source is outside the FCFOV — expect a ghost)");
+}
+
+static void RenderFloodMap(DetectorImage img)
+{
+    const string ramp = " .:-=+*#%@";
+    double max = 0.0;
+    foreach (var v in img.Raw)
+        if (v > max) max = v;
+
+    if (max <= 0.0)
+    {
+        Console.WriteLine("(empty — no photons reached the detector)");
+        return;
+    }
+
+    for (int y = img.Height - 1; y >= 0; y--)
+    {
+        var sb = new StringBuilder();
+        for (int x = 0; x < img.Width; x++)
+        {
+            int idx = (int)(img[x, y] / max * (ramp.Length - 1));
+            sb.Append(ramp[idx]).Append(ramp[idx]); // doubled for aspect ratio
+        }
+        Console.WriteLine(sb.ToString());
+    }
+}

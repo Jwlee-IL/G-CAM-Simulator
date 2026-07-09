@@ -1,0 +1,5 @@
+{ "name":"NaI", "photonCount":500000, "seed":12345,
+  "source":{"isotope":"Cs-137","energyKeV":661.7,"position":[0,0,0]},
+  "mask":{"type":"MURA","rank":7,"mosaicX":2,"mosaicY":2,"thicknessMm":10,"linearAttenuationPerMm":0.178,"cellPitchMm":1},
+  "detector":{"pixelsX":12,"pixelsY":12,"pixelPitchMm":1,"material":"NaI","crystalThicknessMm":10,"crystalAttenuationPerMm":0.031,"energyResolutionFwhm":0.065,"decayTimeNs":230},
+  "geometry":{"maskDetectorDistanceMm":60,"sourceMaskDistanceMm":100} }

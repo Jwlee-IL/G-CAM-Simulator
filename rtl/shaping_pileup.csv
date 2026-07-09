@@ -1,0 +1,51 @@
+section,x,series,value
+rate,50000,peakhold_sumtail,0.42
+rate,50000,naive_integrate_sumtail,2.03
+rate,50000,reject_sumtail,0.52
+rate,50000,peakhold_centroid,660.9
+rate,50000,reject_centroid,660.8
+rate,100000,peakhold_sumtail,0.68
+rate,100000,naive_integrate_sumtail,3.97
+rate,100000,reject_sumtail,0.63
+rate,100000,peakhold_centroid,661.1
+rate,100000,reject_centroid,660.7
+rate,200000,peakhold_sumtail,1.67
+rate,200000,naive_integrate_sumtail,7.26
+rate,200000,reject_sumtail,0.87
+rate,200000,peakhold_centroid,661.0
+rate,200000,reject_centroid,660.7
+rate,500000,peakhold_sumtail,4.06
+rate,500000,naive_integrate_sumtail,17.65
+rate,500000,reject_sumtail,2.19
+rate,500000,peakhold_centroid,662.1
+rate,500000,reject_centroid,661.2
+rate,1000000,peakhold_sumtail,9.13
+rate,1000000,naive_integrate_sumtail,28.28
+rate,1000000,reject_sumtail,4.17
+rate,1000000,peakhold_centroid,662.7
+rate,1000000,reject_centroid,659.4
+rate,2000000,peakhold_sumtail,17.12
+rate,2000000,naive_integrate_sumtail,45.39
+rate,2000000,reject_sumtail,7.72
+rate,2000000,peakhold_centroid,664.1
+rate,2000000,reject_centroid,657.5
+tradeoff:CeBr3 (17 ns),20,fwhm,7.10
+tradeoff:CeBr3 (17 ns),20,throughput,87.00
+tradeoff:CeBr3 (17 ns),30,fwhm,7.24
+tradeoff:CeBr3 (17 ns),30,throughput,79.25
+tradeoff:CeBr3 (17 ns),50,fwhm,7.17
+tradeoff:CeBr3 (17 ns),50,throughput,65.08
+tradeoff:CeBr3 (17 ns),80,fwhm,7.60
+tradeoff:CeBr3 (17 ns),80,throughput,53.25
+tradeoff:CeBr3 (17 ns),120,fwhm,8.24
+tradeoff:CeBr3 (17 ns),120,throughput,38.42
+tradeoff:GAGG (90 ns),20,fwhm,nan
+tradeoff:GAGG (90 ns),20,throughput,33.75
+tradeoff:GAGG (90 ns),30,fwhm,9.27
+tradeoff:GAGG (90 ns),30,throughput,62.00
+tradeoff:GAGG (90 ns),50,fwhm,7.13
+tradeoff:GAGG (90 ns),50,throughput,72.33
+tradeoff:GAGG (90 ns),80,fwhm,7.11
+tradeoff:GAGG (90 ns),80,throughput,57.42
+tradeoff:GAGG (90 ns),120,fwhm,7.23
+tradeoff:GAGG (90 ns),120,throughput,42.25

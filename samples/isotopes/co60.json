@@ -1,0 +1,10 @@
+{
+  "name": "Co-60",
+  "halfLifeDays": 1925.2,
+  "cascadeCoincident": true,
+  "lines": [
+    { "keV": 1173.2, "branching": 0.9985 },
+    { "keV": 1332.5, "branching": 0.9998 }
+  ],
+  "notes": "Beta decay to Ni-60; the two gammas are a near-simultaneous CASCADE (both emitted per decay) -> true-coincidence sum at 2505 keV, present even at low activity. High energy: mask leaks more, Compton continuum (edges 963/1118 keV) buries lower lines."
+}
