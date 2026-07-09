@@ -37,6 +37,26 @@ public class DepthTests
         Assert.True(far > nearW, $"far-field focus width {far:F0} should exceed near-field {nearW:F0}");
     }
 
+    [Fact]
+    public void NearFieldDepth_ConvergesWithCounts()
+    {
+        // With enough counts the near-field depth estimate is sub-few-mm.
+        var study = new DepthStudy(new DefaultSimulationFactory());
+        var r = study.RunNoisyDepth(Baseline(), "near", trueSmm: 60.0, Assumed(), counts: 3000, repeats: 40);
+        Assert.True(r.DepthRmsMm < 5.0, $"near-field depth RMS {r.DepthRmsMm:F1} mm should be small at 3000 counts");
+    }
+
+    [Fact]
+    public void Joint_LocalizesLateralBetterThanDepth()
+    {
+        // The coded aperture constrains (x,y) much better than z: lateral RMS << depth RMS.
+        var study = new DepthStudy(new DefaultSimulationFactory());
+        var r = study.RunNoisyJoint(Baseline(), "offaxis", sx: 5.0, sy: 0.0, trueSmm: 150.0,
+                                    Assumed(), nominalSmm: 100.0, counts: 3000, repeats: 40);
+        Assert.True(r.LateralRmsMm < r.DepthRmsMm, $"lateral {r.LateralRmsMm:F1} should beat depth {r.DepthRmsMm:F1}");
+        Assert.True(r.LateralRmsMm < 5.0, $"lateral RMS {r.LateralRmsMm:F1} mm should be ~mm");
+    }
+
     private static double FocusWidth(DepthRow[] curve)
     {
         double max = double.NegativeInfinity, min = double.PositiveInfinity;

@@ -307,3 +307,20 @@ otherwise. So argmax over assumed S estimates the depth (light-field-style refoc
   far-field focus curve makes the far depth much noisier — the plotted error bar is that resolution.
 - Reproduce: `montecarlo depth samples/scenario.json` → `samples/depth_estimation.png`, `depth.csv`
   (plot via `plot_depth.py`). Locked in by `DepthTests`.
+
+## 19. Depth under Poisson noise + joint lateral–depth estimation — `DepthStudy.RunNoisyDepth/RunNoisyJoint`
+Extends theme 18 from the bias-limited mean map to noisy realizations, and drops the on-axis
+assumption. Run: `montecarlo depth-joint samples/scenario.json` → `samples/depth_joint.png`.
+- **Depth vs counts (known lateral)**: the near field converges to **sub-mm** (S=60: depth RMS
+  3.8→0.3 mm as counts 100→3000), the far field floors at **~10 mm** (S=150: 38→10.5 mm, bias ≈ −10)
+  — the broad far-field focus curve makes the depth both bias- and noise-limited, so more counts stop
+  helping. Depth is a genuine measurement near, a weak one far.
+- **Joint (x, y, z) for an off-axis source**: the **lateral position is recovered to ~mm** (RMS
+  0.6–5 mm) *even while the depth stays uncertain* — the coded aperture is a strong lateral localiser
+  but a weak rangefinder; x, y and z are not equally constrained. The joint depth carries extra
+  **coupling noise** (off-axis near depth RMS ~26 mm vs the known-lateral direct 0.3 mm): a noisy
+  lateral estimate feeds the sensitive near-field depth focus, so lateral uncertainty leaks into z.
+- Takeaway: report lateral (x,y) with confidence at any distance; treat z as a near-field-only
+  estimate whose error grows with distance and with lateral uncertainty.
+- Reproduce: `montecarlo depth-joint samples/scenario.json` → `samples/depth_joint.png`,
+  `depth_joint.csv` (plot via `plot_depth_joint.py`). Locked in by `DepthTests`.

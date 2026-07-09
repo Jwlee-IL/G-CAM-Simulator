@@ -89,9 +89,13 @@ Everything captured here has been done — the backlog is currently empty.
 ## Still open
 - Fold multi-line isotope model into C# `SourceConfig` (the combined lever uses per-line runs summed,
   not a real mixed-field source).
-- Depth estimation under Poisson noise (currently bias-limited on the mean flood map); joint
-  lateral+depth (off-axis + z) estimation.
+- Depth under Poisson noise + joint lateral+depth — **done**: `DepthStudy.RunNoisyDepth` /
+  `RunNoisyJoint` + CLI `montecarlo depth-joint`. Near-field depth → sub-mm, far-field floors ~10mm;
+  joint recovers lateral (x,y) to ~mm even while z is uncertain (coded aperture = strong lateral
+  localizer, weak rangefinder). AGENTS.findings theme 19.
 - cocotb/ModelSim wrapper; trapezoidal shaping in RTL.
+- Improve joint depth coupling (near-field off-axis depth is coupling-noise-limited); a full 3D
+  (x,y,S) likelihood search instead of the alternating iteration.
 
 ## Ideas for later (not yet scoped)
 - Depth/z estimation (currently source z is assumed known).

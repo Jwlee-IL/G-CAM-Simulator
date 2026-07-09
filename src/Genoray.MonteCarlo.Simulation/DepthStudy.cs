@@ -11,6 +11,11 @@ public sealed record DepthRow(double AssumedSmm, double Focus);
 /// <summary>Depth-from-focus result for one true source distance.</summary>
 public sealed record DepthResult(double TrueSmm, double EstimatedSmm, double ErrorMm, DepthRow[] Curve);
 
+/// <summary>Noisy joint (lateral + depth) estimation summary for one scenario/count budget.</summary>
+public sealed record JointResult(
+    string Name, double[] TruePos, double TrueSmm, double Counts,
+    double DepthBiasMm, double DepthRmsMm, double LateralRmsMm);
+
 /// <summary>
 /// Source-distance (z) estimation by coded-aperture refocusing. The mask shadow's magnification
 /// M = (D+S)/S depends on the source distance S, and the decoder back-projects with
@@ -35,21 +40,121 @@ public sealed class DepthStudy
         cfg.Source.Position = [0.0, 0.0, 0.0];        // on-axis: depth only, no FOV confusion
         var img = new SimulationRunner(_factory).Run(cfg).DetectorImage;
 
-        var rows = new List<DepthRow>();
-        foreach (double s in assumedSmm)
-        {
-            var decoder = new CrossCorrelationDecoder(MuraGenerator.DecodingArray(cfg.Mask.Rank),
-                                                      BuildGeometry(cfg, s));
-            rows.Add(new DepthRow(s, Focus(decoder.Decode(img).Reconstruction)));
-        }
+        var rows = DepthCurveAt(cfg, img, 0.0, 0.0, assumedSmm);
         double est = CentroidEstimate(rows);
         return new DepthResult(trueSmm, est, est - trueSmm, rows.ToArray());
     }
 
-    // Fixed small reconstruction grid (± the near-field half-period, same step) for every assumed S:
-    // small enough to stay inside the smallest FCFOV (no aliasing) yet wide enough to hold the peak's
-    // sidelobes, and a FIXED step so the focus metric carries no assumed-S grid-scale artifact.
-    private static CodedApertureGeometry BuildGeometry(SimulationConfig cfg, double assumedSmm)
+    /// <summary>
+    /// Noisy JOINT (lateral + depth) estimation for an off-axis source: over <paramref name="repeats"/>
+    /// Poisson realizations at <paramref name="counts"/> detected counts, estimate (x, y, S) each time
+    /// and report the depth bias/RMS and lateral RMS. Estimation iterates: decode laterally at the
+    /// current S → refine the depth focus at that lateral position → repeat (the magnification couples
+    /// lateral and depth).
+    /// </summary>
+    public JointResult RunNoisyJoint(SimulationConfig baseConfig, string name, double sx, double sy,
+                                     double trueSmm, double[] assumedSmm, double nominalSmm,
+                                     double counts, int repeats)
+    {
+        var cfg = baseConfig.Clone();
+        cfg.Geometry.SourceMaskDistanceMm = trueSmm;
+        cfg.Source.Position = [sx, sy, 0.0];
+        var mean = new SimulationRunner(_factory).Run(cfg).DetectorImage;
+        double w = 0.0; foreach (var v in mean.Raw) w += v;
+        double scale = w > 0 ? counts / w : 0.0;
+
+        var rng = _factory.CreateRandom(cfg);
+        var noisy = new DetectorImage(mean.Width, mean.Height);
+        double sumD = 0, sumDsq = 0, sumLsq = 0;
+        for (int rep = 0; rep < repeats; rep++)
+        {
+            for (int y = 0; y < mean.Height; y++)
+                for (int x = 0; x < mean.Width; x++)
+                    noisy[x, y] = Sampling.Poisson(rng, mean[x, y] * scale);
+
+            var (ex, ey, es) = EstimateJoint(cfg, noisy, assumedSmm, nominalSmm);
+            double dErr = es - trueSmm;
+            sumD += dErr; sumDsq += dErr * dErr;
+            sumLsq += (ex - sx) * (ex - sx) + (ey - sy) * (ey - sy);
+        }
+        return new JointResult(name, [sx, sy], trueSmm, counts,
+            sumD / repeats, Math.Sqrt(sumDsq / repeats), Math.Sqrt(sumLsq / repeats));
+    }
+
+    /// <summary>Depth-only estimation under Poisson noise for a KNOWN on-axis lateral position:
+    /// the depth is scanned directly at (0,0) (no lateral coupling), so this isolates how counting
+    /// noise — amplified by the broad far-field focus curve — limits the depth estimate.</summary>
+    public JointResult RunNoisyDepth(SimulationConfig baseConfig, string name, double trueSmm,
+                                     double[] assumedSmm, double counts, int repeats)
+    {
+        var cfg = baseConfig.Clone();
+        cfg.Geometry.SourceMaskDistanceMm = trueSmm;
+        cfg.Source.Position = [0.0, 0.0, 0.0];
+        var mean = new SimulationRunner(_factory).Run(cfg).DetectorImage;
+        double w = 0.0; foreach (var v in mean.Raw) w += v;
+        double scale = w > 0 ? counts / w : 0.0;
+
+        var rng = _factory.CreateRandom(cfg);
+        var noisy = new DetectorImage(mean.Width, mean.Height);
+        double sumD = 0, sumDsq = 0;
+        for (int rep = 0; rep < repeats; rep++)
+        {
+            for (int y = 0; y < mean.Height; y++)
+                for (int x = 0; x < mean.Width; x++)
+                    noisy[x, y] = Sampling.Poisson(rng, mean[x, y] * scale);
+            double es = CentroidEstimate(DepthCurveAt(cfg, noisy, 0.0, 0.0, assumedSmm));
+            double dErr = es - trueSmm;
+            sumD += dErr; sumDsq += dErr * dErr;
+        }
+        return new JointResult(name, [0.0, 0.0], trueSmm, counts,
+            sumD / repeats, Math.Sqrt(sumDsq / repeats), 0.0);
+    }
+
+    /// <summary>Iterated joint estimate: alternate lateral decode (at the current depth) and depth
+    /// focus (at the current lateral position) until they settle.</summary>
+    private (double x, double y, double s) EstimateJoint(SimulationConfig cfg, DetectorImage img,
+                                                         double[] assumedSmm, double nominalSmm)
+    {
+        double s = nominalSmm, x = 0.0, y = 0.0;
+        for (int iter = 0; iter < 3; iter++)
+        {
+            var p = new CrossCorrelationDecoder(MuraGenerator.DecodingArray(cfg.Mask.Rank),
+                                                LateralGeometry(cfg, s)).Decode(img).Estimate.Position;
+            x = p.X; y = p.Y;
+            s = CentroidEstimate(DepthCurveAt(cfg, img, x, y, assumedSmm));
+        }
+        return (x, y, s);
+    }
+
+    /// <summary>Focus curve at a fixed lateral position (sxp, syp): the single-point decoded
+    /// correlation vs assumed distance — no grid, so no candidate-position aliasing.</summary>
+    private static List<DepthRow> DepthCurveAt(SimulationConfig cfg, DetectorImage img,
+                                               double sxp, double syp, double[] assumedSmm)
+    {
+        var g = MuraGenerator.DecodingArray(cfg.Mask.Rank);
+        var rows = new List<DepthRow>(assumedSmm.Length);
+        foreach (double s in assumedSmm)
+        {
+            var dec = new CrossCorrelationDecoder(g, PointGeometry(cfg, s));
+            rows.Add(new DepthRow(s, dec.PointResponse(img, sxp, syp)));
+        }
+        return rows;
+    }
+
+    // Geometry for a single-point depth probe (the grid fields are unused by PointResponse).
+    private static CodedApertureGeometry PointGeometry(SimulationConfig cfg, double assumedSmm)
+        => Geometry(cfg, assumedSmm, halfExtent: 0.0, step: 1.0);
+
+    // Geometry with an FCFOV-sized grid for the lateral decode at a given assumed distance.
+    private static CodedApertureGeometry LateralGeometry(SimulationConfig cfg, double assumedSmm)
+    {
+        double d = cfg.Geometry.MaskDetectorDistanceMm;
+        double period = cfg.Mask.Rank * cfg.Mask.CellPitchMm * (d + assumedSmm) / d;
+        return Geometry(cfg, assumedSmm, halfExtent: period / 2.0, step: period / 48.0);
+    }
+
+    private static CodedApertureGeometry Geometry(SimulationConfig cfg, double assumedSmm,
+                                                  double halfExtent, double step)
     {
         double d = cfg.Geometry.MaskDetectorDistanceMm;
         return new CodedApertureGeometry(
@@ -61,20 +166,9 @@ public sealed class DepthStudy
             DetectorPlaneZ: 0.0,
             DetectorPitchMm: cfg.Detector.PixelPitchMm,
             SourcePlaneZ: d + assumedSmm,
-            ReconHalfExtentMm: 0.0,     // single candidate at the known on-axis source position
-            ReconStepMm: 1.0,
+            ReconHalfExtentMm: halfExtent,
+            ReconStepMm: step,
             Cyclic: cfg.Decoder.Cyclic);
-    }
-
-    /// <summary>Focus = the correlation value at the (known, on-axis) source position — evaluated on a
-    /// single-point grid so there is no candidate-position aliasing and no grid-scale artifact. When
-    /// the assumed geometry matches the true one, the decoding array aligns with the coded shadow and
-    /// this correlation is maximal; a wrong assumed S misaligns it and the value drops.</summary>
-    private static double Focus(DetectorImage img)
-    {
-        double peak = double.NegativeInfinity;
-        foreach (var v in img.Raw) if (v > peak) peak = v;
-        return peak;
     }
 
     /// <summary>Depth estimate = the centroid of the high-focus region (weight = focus above a
@@ -103,6 +197,16 @@ public sealed class DepthStudy
         foreach (var r in results)
             foreach (var row in r.Curve)
                 sb.AppendLine($"{r.TrueSmm:F1},{row.AssumedSmm:F1},{row.Focus:F1},{r.EstimatedSmm:F2},{r.ErrorMm:F2}");
+        return sb.ToString();
+    }
+
+    public static string JointToCsv(JointResult[] results)
+    {
+        var sb = new System.Text.StringBuilder();
+        sb.AppendLine("scenario,true_x_mm,true_y_mm,true_s_mm,counts,depth_bias_mm,depth_rms_mm,lateral_rms_mm");
+        foreach (var r in results)
+            sb.AppendLine($"{r.Name},{r.TruePos[0]:F1},{r.TruePos[1]:F1},{r.TrueSmm:F1},{r.Counts:F0}," +
+                          $"{r.DepthBiasMm:F2},{r.DepthRmsMm:F2},{r.LateralRmsMm:F3}");
         return sb.ToString();
     }
 }

@@ -43,6 +43,9 @@ if (args[0].Equals("compton-strip", StringComparison.OrdinalIgnoreCase))
 if (args[0].Equals("depth", StringComparison.OrdinalIgnoreCase))
     return RunDepth(args);
 
+if (args[0].Equals("depth-joint", StringComparison.OrdinalIgnoreCase))
+    return RunDepthJoint(args);
+
 var config = ConfigLoader.Load(args[0]);
 Console.WriteLine($"Scenario : {config.Name}");
 Console.WriteLine($"Isotope  : {config.Source.Isotope} @ {config.Source.EnergyKeV} keV");
@@ -146,6 +149,58 @@ static int RunSweep(string[] args)
         Console.WriteLine($"CSV: {csvPath}");
         Console.WriteLine();
     }
+    return 0;
+}
+
+static int RunDepthJoint(string[] args)
+{
+    if (args.Length < 2) { Console.Error.WriteLine("Usage: montecarlo depth-joint <base.json>"); return 1; }
+    var baseConfig = ConfigLoader.Load(args[1]);
+
+    var assumed = new List<double>();
+    for (double s = 20; s <= 260; s += 5) assumed.Add(s);
+    const double nominalS = 100.0;
+    const int repeats = 60;
+    double[] counts = [100, 300, 1000, 3000];
+
+    Console.WriteLine("Depth (and joint lateral+depth) estimation under Poisson noise");
+    Console.WriteLine($"Assumed S sweep [{assumed[0]},{assumed[^1]}] mm, nominal {nominalS}, {repeats} realizations/point");
+    Console.WriteLine();
+
+    var study = new DepthStudy(new DefaultSimulationFactory());
+    var all = new List<JointResult>();
+    Console.WriteLine("  scenario        true(x,y,S)        counts   depthBias  depthRMS  latRMS");
+    Console.WriteLine("  -------------   ---------------   ------   ---------  --------  ------");
+
+    // Part A: depth-only under noise (known on-axis), near vs far.
+    // Part B: joint (x,y,z) for an off-axis source.
+    var depthOnly = new (string name, double s)[] { ("onaxis_near", 60.0), ("onaxis_far", 150.0) };
+    var joint = new (string name, double x, double y, double s)[] { ("offaxis_near", 5.0, 0.0, 60.0), ("offaxis_far", 5.0, 0.0, 150.0) };
+
+    foreach (var sc in depthOnly)
+    {
+        foreach (double n in counts)
+        {
+            var r = study.RunNoisyDepth(baseConfig, sc.name, sc.s, assumed.ToArray(), n, repeats);
+            all.Add(r);
+            Console.WriteLine($"  {sc.name,-13}   (  0,  0,{sc.s,4:F0})mm     {n,5:F0}    {r.DepthBiasMm,6:F1}mm   {r.DepthRmsMm,5:F1}mm  {r.LateralRmsMm,5:F2}mm");
+        }
+        Console.WriteLine();
+    }
+    foreach (var sc in joint)
+    {
+        foreach (double n in counts)
+        {
+            var r = study.RunNoisyJoint(baseConfig, sc.name, sc.x, sc.y, sc.s, assumed.ToArray(), nominalS, n, repeats);
+            all.Add(r);
+            Console.WriteLine($"  {sc.name,-13}   ({sc.x,3:F0},{sc.y,3:F0},{sc.s,4:F0})mm     {n,5:F0}    {r.DepthBiasMm,6:F1}mm   {r.DepthRmsMm,5:F1}mm  {r.LateralRmsMm,5:F2}mm");
+        }
+        Console.WriteLine();
+    }
+    File.WriteAllText("samples/depth_joint.csv", DepthStudy.JointToCsv(all.ToArray()));
+    Console.WriteLine("Depth RMS blows up in the far field (broad focus curve) and at low counts;");
+    Console.WriteLine("lateral RMS stays small (the coded aperture localizes x,y well even when z is uncertain).");
+    Console.WriteLine("CSV: samples/depth_joint.csv");
     return 0;
 }
 

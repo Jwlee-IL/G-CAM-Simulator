@@ -78,6 +78,19 @@ public sealed class CrossCorrelationDecoder : IDecoder
         return new DecodeResult(estimate, recon, origin, _geo.ReconStepMm);
     }
 
+    /// <summary>The decoded correlation at a single candidate source position (sxp, syp) on this
+    /// geometry's source plane — used by depth-from-focus to score one assumed distance without a
+    /// full grid (no candidate-position aliasing).</summary>
+    public double PointResponse(DetectorImage image, double sxp, double syp)
+    {
+        double detHalfW = image.Width * _geo.DetectorPitchMm / 2.0;
+        double detHalfH = image.Height * _geo.DetectorPitchMm / 2.0;
+        double maskHalfW = _geo.MaskCellsX * _geo.MaskCellPitchMm / 2.0;
+        double maskHalfH = _geo.MaskCellsY * _geo.MaskCellPitchMm / 2.0;
+        double frac = (_geo.MaskPlaneZ - _geo.DetectorPlaneZ) / (_geo.SourcePlaneZ - _geo.DetectorPlaneZ);
+        return Correlate(image, sxp, syp, frac, detHalfW, detHalfH, maskHalfW, maskHalfH);
+    }
+
     private double Correlate(
         DetectorImage image, double sxp, double syp, double frac,
         double detHalfW, double detHalfH, double maskHalfW, double maskHalfH)
