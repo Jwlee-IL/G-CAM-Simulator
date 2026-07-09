@@ -102,6 +102,15 @@ public sealed class MaskConfig
 
     /// <summary>Use the complementary (anti-)mask: open↔closed. For mask/antimask imaging.</summary>
     public bool Invert { get; set; } = false;
+
+    /// <summary>Channels converge toward a source at this distance (mm) for a FOCUSED coded aperture
+    /// — removes off-axis open-channel collimation at the focal plane at the cost of depth of field.
+    /// 0 = straight (parallel) channels.</summary>
+    public double FocalDistanceMm { get; set; } = 0.0;
+
+    /// <summary>Open fraction of a cell (1 = full cell open; &lt;1 leaves a tungsten border that
+    /// sharpens the shadow but lowers sensitivity).</summary>
+    public double HoleFraction { get; set; } = 1.0;
 }
 
 /// <summary>The pixelated scintillator crystal array.</summary>

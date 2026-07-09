@@ -324,3 +324,26 @@ assumption. Run: `montecarlo depth-joint samples/scenario.json` → `samples/dep
   estimate whose error grows with distance and with lateral uncertainty.
 - Reproduce: `montecarlo depth-joint samples/scenario.json` → `samples/depth_joint.png`,
   `depth_joint.csv` (plot via `plot_depth_joint.py`). Locked in by `DepthTests`.
+
+## 20. Mask channel geometry — hole size and focused (converging) channels — `MaskGeometryStudy`
+`CodedApertureMask` now models two channel-geometry knobs (`Mask.HoleFraction`, `Mask.FocalDistanceMm`).
+Run: `montecarlo maskgeo samples/scenario.json` → `samples/maskgeo.png`.
+- **Shrinking the hole below the cell is strictly counterproductive for a coded aperture** — it loses
+  BOTH sensitivity and resolution (efficiency 2.5e-4→0.9e-4, RMS 0.57→7.65 mm as hole 1.0→0.3). The
+  single-pinhole intuition (smaller hole = sharper) does NOT transfer: coded-aperture resolution is set
+  by the cell pitch, so shrinking the hole only dilutes the open/closed pattern contrast and throws
+  away signal. Full-open cells are optimal.
+- **Focused (converging) channels are a focal-POINT concentrator, not a uniform gain.** Angling the
+  channels to converge on a point at the focal distance (on-axis) removes the off-axis open-channel
+  collimation *there*: at a 25 mm mask it gives **+35 % efficiency at the focal point**. But it is
+  depth-selective (the focused/straight ratio peaks at the focal distance, 1.35 @100 mm, and falls to
+  <1 by 220 mm) AND laterally selective — off-axis is **worse** (edge/center 0.49 vs straight 0.82),
+  because an edge source isn't at the on-axis focal point. So focusing trades FOV *and* depth of field
+  for on-axis focal performance; it is marginal at 10 mm (little collimation to remove) and pronounced
+  at 25 mm. Buildable via stacked-shifted tungsten laminae (a staircase channel).
+- **Verdict**: for a fixed on-axis standoff, focused channels help; for general localisation (wide FOV +
+  a depth range) straight channels win — and the straight mask's defocus-with-distance is exactly what
+  enables depth estimation (theme 18). The user's "angled channels → denser/sharper pattern everywhere"
+  intuition is a pinhole idea that doesn't hold for a coded aperture.
+- Reproduce: `montecarlo maskgeo samples/scenario.json` → `samples/maskgeo.png`, `maskgeo.csv`
+  (plot via `plot_maskgeo.py`). Locked in by `MaskGeometryTests`.

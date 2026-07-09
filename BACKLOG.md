@@ -86,9 +86,16 @@ Everything captured here has been done — the backlog is currently empty.
   refocusing (decode at a range of assumed S, on-axis correlation peaks at true S). Near-field
   accurate, far-field degrades (dM/dS = −D/S²). AGENTS.findings theme 18.
 
+- Mask channel geometry (hole size + focused/converging channels) — **done**: `CodedApertureMask`
+  `HoleFraction`/`FocalDistanceMm` + `MaskGeometryStudy` + CLI `montecarlo maskgeo`. Smaller holes are
+  strictly worse for a coded aperture; focused channels are a focal-point concentrator (+35% on-axis at
+  focal, but narrower FOV + depth-of-field). AGENTS.findings theme 20.
+
 ## Still open
 - Fold multi-line isotope model into C# `SourceConfig` (the combined lever uses per-line runs summed,
   not a real mixed-field source).
+- Tapered/diverging holes (accept the FOV angular cone) as the geometry that could uniformly reduce
+  off-axis collimation for thick masks — the actual "wider FOV" fix, distinct from point-focusing.
 - Depth under Poisson noise + joint lateral+depth — **done**: `DepthStudy.RunNoisyDepth` /
   `RunNoisyJoint` + CLI `montecarlo depth-joint`. Near-field depth → sub-mm, far-field floors ~10mm;
   joint recovers lateral (x,y) to ~mm even while z is uncertain (coded aperture = strong lateral

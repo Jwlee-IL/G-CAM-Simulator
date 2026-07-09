@@ -14,12 +14,15 @@ public sealed class CodedApertureMask : IMask
     private readonly double _muPerMm;
     private readonly double _halfWidth;   // physical half-extent along x (mm)
     private readonly double _halfHeight;  // physical half-extent along y (mm)
+    private readonly double _focalMm;     // channels converge toward a source at this distance (0 = straight)
+    private readonly double _holeFraction;// open fraction of a cell (1 = full cell; <1 = tungsten border)
 
     public MaskPattern Pattern { get; }
     public double PlaneZ { get; }
 
     public CodedApertureMask(MaskPattern pattern, double planeZ, double cellPitchMm,
-                             double thicknessMm, double muPerMm)
+                             double thicknessMm, double muPerMm,
+                             double focalDistanceMm = 0.0, double holeFraction = 1.0)
     {
         Pattern = pattern;
         PlaneZ = planeZ;
@@ -28,6 +31,8 @@ public sealed class CodedApertureMask : IMask
         _muPerMm = muPerMm;
         _halfWidth = pattern.Width * cellPitchMm / 2.0;
         _halfHeight = pattern.Height * cellPitchMm / 2.0;
+        _focalMm = focalDistanceMm;
+        _holeFraction = holeFraction <= 0.0 ? 1.0 : Math.Min(holeFraction, 1.0);
     }
 
     // Sub-steps used to ray-march the ray through the finite-thickness slab. Higher
@@ -56,8 +61,12 @@ public sealed class CodedApertureMask : IMask
             if (tRay <= 0.0) return false;              // slab behind the photon
 
             var hit = ray.At(tRay);
-            double u = hit.X + _halfWidth;
-            double v = hit.Y + _halfHeight;
+            // Focused channels: map the hit back to the mask-centre frame along a channel that
+            // converges toward a source at z = PlaneZ + focal. A ray FROM that focal point keeps a
+            // constant mapped position across the slab -> a clear channel with no oblique clipping.
+            double scale = _focalMm > 0.0 ? _focalMm / (_focalMm + PlaneZ - z) : 1.0;
+            double u = hit.X * scale + _halfWidth;
+            double v = hit.Y * scale + _halfHeight;
             bool inFrame = u >= 0.0 && v >= 0.0 && u < 2.0 * _halfWidth && v < 2.0 * _halfHeight;
             if (!inFrame)
             {
@@ -66,7 +75,15 @@ public sealed class CodedApertureMask : IMask
             }
             int cx = (int)(u / _cellPitchMm);
             int cy = (int)(v / _cellPitchMm);
-            if (!Pattern[cx, cy]) nTungsten++;          // closed cell = tungsten
+            if (!Pattern[cx, cy]) { nTungsten++; continue; }   // closed cell = tungsten
+            // Finite hole: only the central holeFraction of an open cell is drilled; the rest is
+            // a tungsten border (sharpens the shadow at the cost of open area / sensitivity).
+            if (_holeFraction < 1.0)
+            {
+                double fx = u / _cellPitchMm - cx, fy = v / _cellPitchMm - cy;
+                double b = (1.0 - _holeFraction) / 2.0;
+                if (fx < b || fx > 1.0 - b || fy < b || fy > 1.0 - b) nTungsten++;
+            }
         }
 
         if (nTungsten == 0) return true;                // clear open channel

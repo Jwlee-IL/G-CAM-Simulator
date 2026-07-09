@@ -46,6 +46,9 @@ if (args[0].Equals("depth", StringComparison.OrdinalIgnoreCase))
 if (args[0].Equals("depth-joint", StringComparison.OrdinalIgnoreCase))
     return RunDepthJoint(args);
 
+if (args[0].Equals("maskgeo", StringComparison.OrdinalIgnoreCase))
+    return RunMaskGeo(args);
+
 var config = ConfigLoader.Load(args[0]);
 Console.WriteLine($"Scenario : {config.Name}");
 Console.WriteLine($"Isotope  : {config.Source.Isotope} @ {config.Source.EnergyKeV} keV");
@@ -149,6 +152,70 @@ static int RunSweep(string[] args)
         Console.WriteLine($"CSV: {csvPath}");
         Console.WriteLine();
     }
+    return 0;
+}
+
+static int RunMaskGeo(string[] args)
+{
+    if (args.Length < 2) { Console.Error.WriteLine("Usage: montecarlo maskgeo <base.json>"); return 1; }
+    var baseConfig = ConfigLoader.Load(args[1]);
+    var study = new MaskGeometryStudy(new DefaultSimulationFactory());
+    double baseS = baseConfig.Geometry.SourceMaskDistanceMm;   // nominal source distance (focal target)
+    const double budget = 400.0; const int repeats = 200; const double failThr = 3.0;
+    var csv = new StringBuilder("experiment,x,series,efficiency,rms_mm\n");
+
+    // (A) hole size (straight channels, centered source): sensitivity vs shadow sharpness.
+    Console.WriteLine("(A) Hole size (straight channels), centered source, resolution at fixed counts:");
+    Console.WriteLine("  hole   efficiency   RMS@budget");
+    foreach (double hf in new[] { 0.3, 0.5, 0.7, 0.85, 1.0 })
+    {
+        var cfg = baseConfig.Clone();
+        cfg.Mask.FocalDistanceMm = 0.0; cfg.Mask.HoleFraction = hf;
+        cfg.Source.Position = [0, 0, 0.0];
+        var (eff, rms) = study.EfficiencyAndResolution(cfg, budget, repeats, failThr);
+        Console.WriteLine($"  {hf,4:F2}   {eff,10:E2}   {rms,6:F2}mm");
+        csv.Append($"holesize,{hf:F2},hole,{eff:E4},{rms:F3}\n");
+    }
+    Console.WriteLine();
+
+    // (B) depth of field: efficiency vs source distance, straight vs focused (focal = nominal S).
+    // Uses a THICK mask (collimation is what focusing removes; it is negligible at 10 mm).
+    const double thickMm = 25.0;
+    Console.WriteLine($"(B) Depth of field: efficiency vs source distance, straight vs focused (focal={baseS:F0}mm, {thickMm:F0}mm mask):");
+    Console.WriteLine("  S(mm)   straight     focused    focused/straight");
+    foreach (double s in new[] { 40.0, 60.0, 80.0, 100.0, 130.0, 170.0, 220.0 })
+    {
+        var cs = baseConfig.Clone(); cs.Geometry.SourceMaskDistanceMm = s; cs.Source.Position = [0, 0, 0.0];
+        cs.Mask.ThicknessMm = thickMm; cs.Mask.FocalDistanceMm = 0.0;
+        var cf = cs.Clone(); cf.Mask.FocalDistanceMm = baseS;
+        double es = study.Efficiency(cs), ef = study.Efficiency(cf);
+        Console.WriteLine($"  {s,4:F0}    {es,9:E2}   {ef,9:E2}    {(es > 0 ? ef / es : 0),6:F2}");
+        csv.Append($"dof,{s:F0},straight,{es:E4},0\n");
+        csv.Append($"dof,{s:F0},focused,{ef:E4},0\n");
+    }
+    Console.WriteLine();
+
+    // (C) off-axis uniformity: center vs edge efficiency, straight vs focused.
+    double fcfovHalf = baseConfig.Mask.Rank * baseConfig.Mask.CellPitchMm
+                       * (baseConfig.Geometry.MaskDetectorDistanceMm + baseS) / baseConfig.Geometry.MaskDetectorDistanceMm / 2.0;
+    double edge = 0.8 * fcfovHalf;
+    Console.WriteLine($"(C) Off-axis uniformity: center vs edge (x={edge:F1}mm), source at S={baseS:F0}, {thickMm:F0}mm mask:");
+    Console.WriteLine("  geometry   eff@center   eff@edge   edge/center");
+    foreach (var (name, focal) in new[] { ("straight", 0.0), ("focused", baseS) })
+    {
+        var cc = baseConfig.Clone(); cc.Mask.ThicknessMm = thickMm; cc.Mask.FocalDistanceMm = focal; cc.Source.Position = [0, 0, 0.0];
+        var ce = baseConfig.Clone(); ce.Mask.ThicknessMm = thickMm; ce.Mask.FocalDistanceMm = focal; ce.Source.Position = [edge, 0, 0.0];
+        double effC = study.Efficiency(cc), effE = study.Efficiency(ce);
+        Console.WriteLine($"  {name,-8}   {effC,10:E2}   {effE,8:E2}   {(effC > 0 ? effE / effC : 0),6:F2}");
+        csv.Append($"offaxis,{name},center,{effC:E4},0\n");
+        csv.Append($"offaxis,{name},edge,{effE:E4},0\n");
+    }
+
+    File.WriteAllText("samples/maskgeo.csv", csv.ToString());
+    Console.WriteLine();
+    Console.WriteLine("Smaller holes -> lower efficiency, sharper shadow. Focused channels peak at the focal");
+    Console.WriteLine("distance (depth of field) and hold efficiency out to the FOV edge (uniform coding).");
+    Console.WriteLine("CSV: samples/maskgeo.csv");
     return 0;
 }
 
