@@ -85,10 +85,28 @@ stripping models each line's KN continuum (net × (1−pf)/pf × shape) and subt
 accumulates error top-down (close Co-60 doublet leak → Co-57 over-corrected) — so it's complementary
 to the spatial lever, which is more robust for close/cascade/overlapping lines.
 
+## Trapezoidal shaper + cocotb co-sim (`trapezoidal_shaper.sv`)
+The noise-optimal shaper, done in RTL and verified with **cocotb** (the project's first cocotb
+co-sim — it drives the DUT directly instead of the file-I/O testbench). `trapezoidal_shaper.sv`
+is the recursive **Jordanov-Knoll** trapezoidal filter with pole-zero (decay `M`) correction:
+`d^{k,l}[n]=v[n]−v[n−RISE]−v[n−L]+v[n−RISE−L]`, `p+=d`, `r=p+M·d`, `s+=r`. The flat top ∝ energy
+(no ballistic deficit), the `M` term deconvolves the exponential tail (baseline restoration), and
+two piled-up pulses give two resolvable flat tops (`trap_shaper.png` via `trap_shaper_study.py`,
+which uses the bit-exact integer reference `trap_ref.py`).
+- `trap_ref.py` — integer reference, **bit-exact** to the RTL (Python `>>` = SV signed `>>>`).
+- `test_trap_shaper.py` — cocotb testbench: single + piled pulses, asserts RTL == reference.
+- `run_cocotb.py` — Icarus cocotb runner (`get_runner("icarus")`).
+
+Run (⚠ needs a **non-Store Python**; the Windows-Store Python's `python311.dll` is access-denied
+to Icarus's VPI loader — use the python.org 3.13 install):
+```bash
+/c/Users/leonh/AppData/Local/Programs/Python/Python313/python.exe run_cocotb.py   # TESTS=2 PASS=2
+python trap_shaper_study.py                                                        # -> trap_shaper.png
+```
+
 ## Next (not done)
-- **Crystal-internal Compton scatter** — done in C# (`ComptonCrystalDetector`); could combine with
-  per-pixel stripping inside the coded pipeline (spectral clean-up + spatial separation together).
-- Port to a **cocotb** testbench (ModelSim/Questa/Verilator) + drive from the C# MC event stream.
-- Trapezoidal / CR-RC shaping (validated in Python) as the noise-optimal refinement of the
-  fixed-window integrator.
+- Drive the cocotb testbench from the **C# MC per-event stream** (the runner is in place; feed it
+  real event times/energies instead of the synthetic stimulus).
+- **CR-RC / cusp** shaping variants for comparison; fold the trapezoid's resolution-vs-rate into the
+  material study.
 - Fold the multi-line isotope model into C# `SourceConfig` for coded-aperture multi-source imaging.

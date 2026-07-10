@@ -529,3 +529,26 @@ detection statistic (the coded matched-filter SNR ≈ a GLRT) — then take the 
 - Verdict: the 3D search is the principled, seed-free estimator and the clear winner where depth is
   recoverable (near field); the far field stays limited by the physics, not the estimator.
 - Locked in by `DepthTests.Joint3D_BeatsAlternating_OnNearFieldCoupling`. Reproduce: `montecarlo depth3d`.
+
+---
+
+## 25. Trapezoidal shaper in RTL + first cocotb co-sim — `rtl/trapezoidal_shaper.sv`
+The noise-optimal shaper, implemented as real SystemVerilog and verified with **cocotb** (the
+project's first cocotb co-simulation — it drives the DUT directly, replacing the file-I/O testbench).
+- **`trapezoidal_shaper.sv`** — the recursive **Jordanov-Knoll** trapezoidal filter with pole-zero
+  (decay) correction: `d[n]=v[n]−v[n−RISE]−v[n−L]+v[n−RISE−L]`, `p+=d`, `r=p+M·d`, `s+=r` (M in Q8
+  fixed point = the decay deconvolution constant). Icarus-friendly (no `automatic`/`void'()`).
+- **What it buys** (`rtl/trap_shaper.png` via `trap_shaper_study.py`): (1) the **flat top ∝ energy**
+  independent of ballistic deficit; (2) the **pole-zero M term deconvolves the exponential tail** so the
+  output returns to baseline (M=0 gives a rounded, no-flat-top response that builds up at rate); (3) two
+  piled-up pulses give **two resolvable flat tops** where the peak-hold merged them into a fake sum.
+- **Verification**: `trap_ref.py` is an integer reference **bit-exact** to the RTL (Python `>>` == SV
+  signed `>>>`); `test_trap_shaper.py` (cocotb) drives single + piled pulses and asserts RTL == reference;
+  `run_cocotb.py` builds/runs with the Icarus cocotb runner → **TESTS=2 PASS=2**. The plotted curves are
+  the bit-exact reference, so `trap_shaper.png` IS the RTL behaviour.
+- **Environment gotcha (documented)**: cocotb's VPI cannot dlopen the **Windows-Store Python**'s
+  `python311.dll` (access denied in the protected WindowsApps dir) → run cocotb with the **python.org 3.13**
+  install (`…/Programs/Python/Python313/python.exe`). This is why the earlier note said "no cocotb on this
+  machine"; the blocker was the Python packaging, not the tooling. Icarus needs a `` `timescale `` for the
+  cocotb clock (added to the module).
+- Reproduce: `cd rtl && <python313> run_cocotb.py` then `python trap_shaper_study.py`.

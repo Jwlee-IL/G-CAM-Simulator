@@ -12,6 +12,12 @@ rtl/peaks.txt
 rtl/peaks_int.txt
 rtl/truth.csv
 
+# --- cocotb build/run artifacts (regenerable via run_cocotb.py) ---
+rtl/sim_build/
+rtl/results.xml
+rtl/*.fst
+rtl/*.vcd
+
 # --- Python ---
 __pycache__/
 *.pyc

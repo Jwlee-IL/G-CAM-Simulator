@@ -10,9 +10,12 @@ Deferred work, captured so we don't forget. Not in current scope. See
   emits a real *mixed-isotope field* through the coded aperture. The combined lever (theme 17)
   currently sums per-line runs, not a true mixed-field source. **Highest-value open item.**
 
-### Depth / RTL
-- **cocotb / ModelSim wrapper** + drive the RTL from the C# MC's per-event stream.
-- **Trapezoidal / CR-RC shaping in RTL** (validated in Python) as the noise-optimal refinement.
+### RTL
+- **Drive the cocotb testbench from the C# MC per-event stream** — the cocotb Icarus runner is now in
+  place (theme 25); feed it real event times/energies instead of the synthetic stimulus. (The generic
+  "cocotb wrapper" and "trapezoidal shaping in RTL" items are done — theme 25.)
+- **CR-RC / cusp shaping variants** for comparison; fold the trapezoid's resolution-vs-rate into the
+  material rate study.
 
 ### Front-end integration
 - Fold `rtl/frontend_model.py` (photoelectron budget → energy resolution) into the C#
@@ -44,3 +47,5 @@ Deferred work, captured so we don't forget. Not in current scope. See
   edge/center 0.82→0.99 at ~4°), empirical open-fraction with random arrays (ρ≈0.5, MURA ~4× cleaner).
 - **24**: full 3D (x,y,S) joint depth search (peak-prominence GLRT) — removes the alternating
   iteration's near-field coupling trap (lateral RMS 3.6→0.37 mm); far field stays physics-limited.
+- **25**: trapezoidal shaper (Jordanov-Knoll) in RTL + first cocotb co-sim (bit-exact vs reference,
+  TESTS=2 PASS=2); flat-top energy, pole-zero baseline restoration, pile-up separation.
