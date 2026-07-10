@@ -32,7 +32,9 @@ module trapezoidal_shaper_pl #(
     logic signed [WACC-1:0] dkl_r, p, q, m_r, mm;   // dkl_r/m_r = feed-forward stage regs; p/q/mm = accumulators
     integer i;
 
-    logic signed [WACC-1:0] dkl_c;                  // combinational FIR
+    // FIR: dkl_c is WACC-wide, so the 4-tap sum is evaluated at WACC width (context-determined
+    // sizing per IEEE 1800) and the WIN-wide signed taps sign-extend — no WIN-width overflow.
+    logic signed [WACC-1:0] dkl_c;
     always_comb dkl_c = sample - dl[RISE-1] - dl[L-1] + dl[KL-1];
 
     always_ff @(posedge clk) begin

@@ -574,3 +574,10 @@ project's first cocotb co-simulation — it drives the DUT directly, replacing t
   so an earlier "~100 MHz from ltp" reading was retracted — cell-count is not a delay proxy here. The gain
   is real by construction (1-adder loops) but needs true STA to quantify: `vivado_trap.tcl` now takes the
   top module (`-tclargs trapezoidal_shaper_pl`) so the direct vs pipelined Fmax can be compared in Vivado.
+  **Codex-verified (round 5)**: the `s=q+mm` reformulation is bit-exact to the direct filter INCLUDING the
+  per-sample `(dkl*M_Q8)>>>8` rounding (and correctly ≠ shifting after summing); the split integrators
+  `q`,`mm` drift and can wrap past WACC individually, but the two's-complement `q+mm` recovers the correct
+  `s` whenever the true `s` fits WACC — **sound, not a bug**; +3 latency and delay-line indexing confirmed.
+  Fixes applied: documented the FIR's context-determined WACC width (the WIN-wide taps sign-extend — no
+  overflow; explicit casts avoided to keep Yosys-0.9 compatibility), and the cocotb test now asserts the
+  **contractual latency** (direct 0, pipelined 3), not just bit-exactness at some offset.

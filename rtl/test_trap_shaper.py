@@ -40,13 +40,23 @@ def _best_offset(got, ref, maxoff=6):
     return best, best_bad
 
 
+# Contractual latency: the direct shaper is +0 (its output is s[n]); the pipelined one is +3.
+EXPECTED_LATENCY = {"trapezoidal_shaper": 0, "trapezoidal_shaper_pl": 3}
+
+
+def _check(dut, got, ref, tag):
+    off, bad = _best_offset(got, ref)
+    assert bad == 0, f"{tag}: {bad} mismatches vs reference (best latency {off})"
+    exp = EXPECTED_LATENCY.get(getattr(dut, "_name", ""))
+    if exp is not None:
+        assert off == exp, f"{tag}: latency {off} != contractual {exp} for {dut._name}"
+
+
 @cocotb.test()
 async def single_pulse_matches_reference(dut):
     samples = trap_ref.exp_pulse(120, 20, 662.0)
     got = await _run(dut, samples)
-    ref = trap_shape_from_dut(dut, samples)
-    off, bad = _best_offset(got, ref)
-    assert bad == 0, f"single pulse: {bad} mismatches vs reference (latency {off})"
+    _check(dut, got, trap_shape_from_dut(dut, samples), "single pulse")
 
 
 @cocotb.test()
@@ -54,9 +64,7 @@ async def piled_pulses_match_reference(dut):
     samples = trap_ref.exp_pulse(160, 20, 662.0)
     trap_ref.add_pulse(samples, 40, 1332.0)     # a second pulse on the tail (pile-up)
     got = await _run(dut, samples)
-    ref = trap_shape_from_dut(dut, samples)
-    off, bad = _best_offset(got, ref)
-    assert bad == 0, f"piled pulses: {bad} mismatches vs reference (latency {off})"
+    _check(dut, got, trap_shape_from_dut(dut, samples), "piled pulses")
 
 
 def trap_shape_from_dut(dut, samples):

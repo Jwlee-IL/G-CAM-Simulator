@@ -37,6 +37,8 @@ module trapezoidal_shaper #(
     integer i;
 
     // Combinational recurrence for the current sample v[n] = `sample`.
+    // dkl/p_next/r are WACC-wide, so each expression evaluates at WACC width (context-determined
+    // sizing per IEEE 1800) and the WIN-wide signed taps sign-extend — no WIN-width overflow.
     logic signed [WACC-1:0] dkl, p_next, r;
     always_comb begin
         dkl    = sample - dl[RISE-1] - dl[L-1] + dl[KL-1];
