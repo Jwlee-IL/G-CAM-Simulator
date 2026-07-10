@@ -46,6 +46,9 @@ if (args[0].Equals("depth", StringComparison.OrdinalIgnoreCase))
 if (args[0].Equals("depth-joint", StringComparison.OrdinalIgnoreCase))
     return RunDepthJoint(args);
 
+if (args[0].Equals("depth3d", StringComparison.OrdinalIgnoreCase))
+    return RunDepth3D(args);
+
 if (args[0].Equals("maskgeo", StringComparison.OrdinalIgnoreCase))
     return RunMaskGeo(args);
 
@@ -351,6 +354,54 @@ static int RunMaskGeo(string[] args)
     Console.WriteLine("Smaller holes -> lower efficiency, sharper shadow. Focused channels peak at the focal");
     Console.WriteLine("distance (depth of field) and hold efficiency out to the FOV edge (uniform coding).");
     Console.WriteLine("CSV: samples/maskgeo.csv");
+    return 0;
+}
+
+static int RunDepth3D(string[] args)
+{
+    if (args.Length < 2) { Console.Error.WriteLine("Usage: montecarlo depth3d <base.json>"); return 1; }
+    var baseConfig = ConfigLoader.Load(args[1]);
+
+    var assumed = new List<double>();
+    for (double s = 20; s <= 260; s += 5) assumed.Add(s);
+    const double nominalS = 100.0;      // the alternating iteration's seed (a source of its trap)
+    const int repeats = 60;
+    double[] counts = [100, 300, 1000, 3000];
+
+    Console.WriteLine("Joint (x,y,S) depth estimation: alternating iteration vs FULL 3D search");
+    Console.WriteLine($"Assumed S [{assumed[0]},{assumed[^1]}] mm, {repeats} realizations/point, off-axis sources");
+    Console.WriteLine("The 3D search scores each S-slice by its peak prominence (cross-S comparable) and takes the");
+    Console.WriteLine("joint argmax — no nominal-S seed, no lateral<->depth alternation trap.");
+    Console.WriteLine();
+
+    var study = new DepthStudy(new DefaultSimulationFactory());
+    var scenes = new (string name, double x, double y, double s)[]
+    {
+        ("offaxis_near", 5.0, 0.0, 60.0),
+        ("offaxis_far",  5.0, 0.0, 150.0),
+    };
+    var all = new List<JointResult>();
+    var csv = new System.Text.StringBuilder("method,scenario,true_x_mm,true_y_mm,true_s_mm,counts,depth_bias_mm,depth_rms_mm,lateral_rms_mm\n");
+
+    Console.WriteLine("  scenario        counts   method        depthBias  depthRMS  latRMS");
+    Console.WriteLine("  -------------   ------   -----------   ---------  --------  ------");
+    foreach (var sc in scenes)
+    {
+        foreach (double n in counts)
+        {
+            var it = study.RunNoisyJoint(baseConfig, sc.name, sc.x, sc.y, sc.s, assumed.ToArray(), nominalS, n, repeats);
+            var d3 = study.RunNoisyJoint3D(baseConfig, sc.name, sc.x, sc.y, sc.s, assumed.ToArray(), n, repeats);
+            all.Add(it); all.Add(d3);
+            Console.WriteLine($"  {sc.name,-13}   {n,5:F0}   alternating   {it.DepthBiasMm,6:F1}mm   {it.DepthRmsMm,5:F1}mm  {it.LateralRmsMm,5:F2}mm");
+            Console.WriteLine($"  {sc.name,-13}   {n,5:F0}   3D search     {d3.DepthBiasMm,6:F1}mm   {d3.DepthRmsMm,5:F1}mm  {d3.LateralRmsMm,5:F2}mm");
+            csv.Append($"alternating,{sc.name},{sc.x:F1},{sc.y:F1},{sc.s:F1},{n:F0},{it.DepthBiasMm:F2},{it.DepthRmsMm:F2},{it.LateralRmsMm:F3}\n");
+            csv.Append($"3d,{sc.name},{sc.x:F1},{sc.y:F1},{sc.s:F1},{n:F0},{d3.DepthBiasMm:F2},{d3.DepthRmsMm:F2},{d3.LateralRmsMm:F3}\n");
+        }
+        Console.WriteLine();
+    }
+    File.WriteAllText("samples/depth3d.csv", csv.ToString());
+    Console.WriteLine("The 3D search removes the alternating iteration's start-point coupling trap; compare the");
+    Console.WriteLine("depth bias/RMS (esp. off-axis far, where the alternation was worst). CSV: samples/depth3d.csv");
     return 0;
 }
 

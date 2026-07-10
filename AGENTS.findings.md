@@ -509,3 +509,23 @@ Two backlog items closing the mask-geometry thread.
   vs random-best ~12) — its zero-sidelobe construction gives a clean single-peak reconstruction where a
   random array shows a peak buried in **sidelobe grass** (right-hand recon maps). So ρ≈0.5 is right, and
   MURA beats a random array of the same open fraction — open fraction is not a free tuning knob.
+
+---
+
+## 24. Full 3D (x,y,S) joint depth search — replaces the alternating iteration — `DepthStudy.RunNoisyJoint3D`
+Theme 19's joint estimator alternated (lateral decode at the current S → depth focus at the current x,y,
+×3, seeded at a nominal S) and stalled on near-field off-axis coupling. The 3D search (`montecarlo depth3d`
+→ `samples/depth3d.png`) evaluates every assumed S: decode the flood over the lateral FCFOV grid, score
+that slice by its **peak prominence z = (peak − grid mean)/grid std** — a dimensionless, cross-S-comparable
+detection statistic (the coded matched-filter SNR ≈ a GLRT) — then take the joint argmax over the whole
+(x,y,S) volume; depth = the plateau-robust centroid of the per-S z-profile. No nominal-S seed, no alternation.
+- **Near field (S=60, off-axis): the 3D search decisively removes the coupling trap.** Lateral RMS
+  **3.6 → 0.37 mm** and depth RMS **26 → 7.5 mm** at 3000 counts (the alternating iteration *stalled* — its
+  lateral RMS never shrank with counts). Also more robust at low counts (100–300) in both near and far.
+- **Far field (S=150): intrinsically ill-conditioned for both** (dM/dS→0). The 3D is better at low counts
+  but carries a modest persistent depth bias (~−18 mm) from the broad z-profile; the seeded alternating's
+  bias happens to be a bit smaller at high counts (its nominal-S seed sits near the truth — a seed artifact,
+  not robustness). Neither beats ~10 % of the distance far-field.
+- Verdict: the 3D search is the principled, seed-free estimator and the clear winner where depth is
+  recoverable (near field); the far field stays limited by the physics, not the estimator.
+- Locked in by `DepthTests.Joint3D_BeatsAlternating_OnNearFieldCoupling`. Reproduce: `montecarlo depth3d`.

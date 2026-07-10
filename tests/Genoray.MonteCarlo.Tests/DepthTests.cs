@@ -57,6 +57,23 @@ public class DepthTests
         Assert.True(r.LateralRmsMm < 5.0, $"lateral RMS {r.LateralRmsMm:F1} mm should be ~mm");
     }
 
+    [Fact]
+    public void Joint3D_BeatsAlternating_OnNearFieldCoupling()
+    {
+        // The alternating iteration stalls on near-field off-axis coupling (lateral RMS ~mm that
+        // doesn't shrink with counts). The full 3D (x,y,S) search removes the trap -> much lower
+        // lateral RMS at the same budget.
+        var study = new DepthStudy(new DefaultSimulationFactory());
+        var alt = study.RunNoisyJoint(Baseline(), "near", sx: 5.0, sy: 0.0, trueSmm: 60.0,
+                                      Assumed(), nominalSmm: 100.0, counts: 1000, repeats: 40);
+        var d3 = study.RunNoisyJoint3D(Baseline(), "near", sx: 5.0, sy: 0.0, trueSmm: 60.0,
+                                       Assumed(), counts: 1000, repeats: 40);
+        Assert.True(d3.LateralRmsMm < alt.LateralRmsMm,
+            $"3D lateral RMS {d3.LateralRmsMm:F2} should beat alternating {alt.LateralRmsMm:F2}");
+        Assert.True(d3.DepthRmsMm < alt.DepthRmsMm,
+            $"3D depth RMS {d3.DepthRmsMm:F1} should beat alternating {alt.DepthRmsMm:F1} near-field");
+    }
+
     private static double FocusWidth(DepthRow[] curve)
     {
         double max = double.NegativeInfinity, min = double.PositiveInfinity;

@@ -11,8 +11,6 @@ Deferred work, captured so we don't forget. Not in current scope. See
   currently sums per-line runs, not a true mixed-field source. **Highest-value open item.**
 
 ### Depth / RTL
-- **Full 3D (x,y,S) likelihood** depth search instead of the alternating iteration (near-field
-  off-axis depth is coupling-noise-limited, theme 19).
 - **cocotb / ModelSim wrapper** + drive the RTL from the C# MC's per-event stream.
 - **Trapezoidal / CR-RC shaping in RTL** (validated in Python) as the noise-optimal refinement.
 
@@ -44,3 +42,5 @@ Deferred work, captured so we don't forget. Not in current scope. See
   5-sided shield thickness.
 - **23**: mask-geometry follow-ups — tapered (hourglass) channels (wide-FOV fix for thick masks,
   edge/center 0.82→0.99 at ~4°), empirical open-fraction with random arrays (ρ≈0.5, MURA ~4× cleaner).
+- **24**: full 3D (x,y,S) joint depth search (peak-prominence GLRT) — removes the alternating
+  iteration's near-field coupling trap (lateral RMS 3.6→0.37 mm); far field stays physics-limited.

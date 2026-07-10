@@ -110,6 +110,78 @@ public sealed class DepthStudy
             sumD / repeats, Math.Sqrt(sumDsq / repeats), 0.0);
     }
 
+    /// <summary>Noisy joint estimation using the FULL 3D (x, y, S) search (no alternating iteration).
+    /// Same protocol as <see cref="RunNoisyJoint"/> so the two are directly comparable.</summary>
+    public JointResult RunNoisyJoint3D(SimulationConfig baseConfig, string name, double sx, double sy,
+                                       double trueSmm, double[] assumedSmm, double counts, int repeats)
+    {
+        var cfg = baseConfig.Clone();
+        cfg.Geometry.SourceMaskDistanceMm = trueSmm;
+        cfg.Source.Position = [sx, sy, 0.0];
+        var mean = new SimulationRunner(_factory).Run(cfg).DetectorImage;
+        double w = 0.0; foreach (var v in mean.Raw) w += v;
+        double scale = w > 0 ? counts / w : 0.0;
+
+        var rng = _factory.CreateRandom(cfg);
+        var noisy = new DetectorImage(mean.Width, mean.Height);
+        double sumD = 0, sumDsq = 0, sumLsq = 0;
+        for (int rep = 0; rep < repeats; rep++)
+        {
+            for (int y = 0; y < mean.Height; y++)
+                for (int x = 0; x < mean.Width; x++)
+                    noisy[x, y] = Sampling.Poisson(rng, mean[x, y] * scale);
+
+            var (ex, ey, es) = EstimateJoint3D(cfg, noisy, assumedSmm);
+            double dErr = es - trueSmm;
+            sumD += dErr; sumDsq += dErr * dErr;
+            sumLsq += (ex - sx) * (ex - sx) + (ey - sy) * (ey - sy);
+        }
+        return new JointResult(name, [sx, sy], trueSmm, counts,
+            sumD / repeats, Math.Sqrt(sumDsq / repeats), Math.Sqrt(sumLsq / repeats));
+    }
+
+    /// <summary>
+    /// Full 3D (x, y, S) joint estimate — replaces the alternating iteration and its start-point
+    /// trap. For each assumed S, decode the flood over the lateral FCFOV grid and score that slice by
+    /// its peak PROMINENCE z = (peak − grid mean)/grid std — a dimensionless, cross-S-comparable
+    /// detection statistic (the coded-aperture matched-filter SNR ≈ a GLRT). The lateral estimate is
+    /// the argmax over the whole volume; the depth is the centroid of the per-S peak-prominence
+    /// profile (same plateau-robust estimator as the on-axis depth). No nominal-S seed, no alternation.
+    /// </summary>
+    private (double x, double y, double s) EstimateJoint3D(SimulationConfig cfg, DetectorImage img,
+                                                           double[] assumedSmm)
+    {
+        var g = MuraGenerator.DecodingArray(cfg.Mask.Rank);
+        var profile = new List<DepthRow>(assumedSmm.Length);
+        double bestZ = double.NegativeInfinity, bx = 0.0, by = 0.0;
+
+        foreach (double s in assumedSmm)
+        {
+            var dr = new CrossCorrelationDecoder(g, LateralGeometry(cfg, s)).Decode(img);
+            var recon = dr.Reconstruction;
+            int n = recon.Width * recon.Height;
+            double mean = 0.0; foreach (var v in recon.Raw) mean += v; mean /= n;
+            double m2 = 0.0; foreach (var v in recon.Raw) m2 += (v - mean) * (v - mean);
+            double std = Math.Sqrt(m2 / n) + 1e-9;
+
+            double peak = double.NegativeInfinity; int px = 0, py = 0;
+            for (int y = 0; y < recon.Height; y++)
+                for (int x = 0; x < recon.Width; x++)
+                    if (recon[x, y] > peak) { peak = recon[x, y]; px = x; py = y; }
+
+            double z = (peak - mean) / std;              // peak prominence: comparable across S
+            profile.Add(new DepthRow(s, z));
+            if (z > bestZ)
+            {
+                bestZ = z;
+                bx = dr.ReconOriginMm + px * dr.ReconStepMm;
+                by = dr.ReconOriginMm + py * dr.ReconStepMm;
+            }
+        }
+        double sEst = CentroidEstimate(profile);          // plateau-robust depth from the z-profile
+        return (bx, by, sEst);
+    }
+
     /// <summary>Iterated joint estimate: alternate lateral decode (at the current depth) and depth
     /// focus (at the current lateral position) until they settle.</summary>
     private (double x, double y, double s) EstimateJoint(SimulationConfig cfg, DetectorImage img,
