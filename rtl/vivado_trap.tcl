@@ -1,18 +1,20 @@
 # Exact Artix-7 timing for trapezoidal_shaper.sv, in Vivado ML Standard (FREE for Artix-7).
 #
-# Run (no GUI, no paid license):
-#     vivado -mode batch -source vivado_trap.tcl
-#     vivado -mode batch -source vivado_trap.tcl -tclargs xc7a100tcsg324-1 5.0
-#            (optional: <part> <target_period_ns>)
+# Run (no GUI, no paid license). Compare the direct vs pipelined shaper to see the Fmax gain
+# the open Yosys flow cannot show (the constant multiply hides it in cell-count):
+#     vivado -mode batch -source vivado_trap.tcl                                   ;# direct, xc7a35t, 200 MHz target
+#     vivado -mode batch -source vivado_trap.tcl -tclargs trapezoidal_shaper_pl    ;# pipelined
+#     vivado -mode batch -source vivado_trap.tcl -tclargs trapezoidal_shaper_pl xc7a100tcsg324-1 3.0
+#            (optional: <top> <part> <target_period_ns>)
 #
-# It synthesizes + places + routes the shaper, constrains clk at the target period, and
-# reports the achieved Fmax = 1000 / (period - WNS). WNS>0 = met with margin; <0 = the
-# real path is slower than the target (Fmax is still computed correctly from the slack).
+# It synthesizes + places + routes, constrains clk at the target period, and reports the
+# achieved Fmax = 1000 / (period - WNS). WNS>0 = met with margin; <0 = the real path is
+# slower than the target (Fmax is still computed correctly from the slack).
 
-set part   [expr {$argc >= 1 ? [lindex $argv 0] : "xc7a35tcsg324-1"}]   ;# -1 = slowest speed grade (conservative)
-set period [expr {$argc >= 2 ? [lindex $argv 1] : 5.0}]                  ;# ns (5.0 = 200 MHz target)
-set top    trapezoidal_shaper
-set rtl    [file join [file dirname [info script]] trapezoidal_shaper.sv]
+set top    [expr {$argc >= 1 ? [lindex $argv 0] : "trapezoidal_shaper"}]
+set part   [expr {$argc >= 2 ? [lindex $argv 1] : "xc7a35tcsg324-1"}]   ;# -1 = slowest speed grade (conservative)
+set period [expr {$argc >= 3 ? [lindex $argv 2] : 5.0}]                  ;# ns (5.0 = 200 MHz target)
+set rtl    [file join [file dirname [info script]] ${top}.sv]
 
 puts "=== $top on $part, target ${period} ns ==="
 read_verilog -sv $rtl

@@ -30,7 +30,7 @@ async def _run(dut, samples):
     return got
 
 
-def _best_offset(got, ref, maxoff=3):
+def _best_offset(got, ref, maxoff=6):
     """The registered output lags the reference by a fixed latency; find it (0..maxoff)."""
     best, best_bad = 0, 10**9
     for off in range(maxoff + 1):

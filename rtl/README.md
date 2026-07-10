@@ -115,9 +115,14 @@ yosys -p "read_verilog -sv trapezoidal_shaper.sv; synth_ecp5 -top trapezoidal_sh
 One channel on Artix-7 ≈ **809 LUT / 512 FF / 0 DSP / 0 BRAM** (~4 % of an XC7A35T); the constant M
 multiply maps to LUTs, not a DSP. `ltp` longest path = 225 cells (un-pipelined accumulator chain) →
 estimated Fmax ~85–125 MHz. **Exact Artix-7 timing** needs Vivado (FREE ML Standard covers Artix-7, no
-paid licence): `vivado -mode batch -source vivado_trap.tcl [-tclargs <part> <period_ns>]` runs
+paid licence): `vivado -mode batch -source vivado_trap.tcl [-tclargs <top> <part> <period_ns>]` runs
 synth+place+route and prints Fmax. (nextpnr targets Lattice only, so the open flow's real Fmax is an
 ECP5/iCE40 proxy, not Xilinx.)
+
+`trapezoidal_shaper_pl.sv` is a **pipelined** variant (bit-exact, +3 samples latency): `s = q + mm` with
+`q=Σp`, `mm=Σm`, so every feedback loop is a single adder (the FIR/multiply/combine are feed-forward
+stages). cocotb verifies both tops against the same reference; the Fmax gain needs real STA to see (Yosys
+`ltp` cell-count is multiply/carry-chain dominated → run `vivado_trap.tcl -tclargs trapezoidal_shaper_pl`).
 
 ## Next (not done)
 - Drive the cocotb testbench from the **C# MC per-event stream** (the runner is in place; feed it

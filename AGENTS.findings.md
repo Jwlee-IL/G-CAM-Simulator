@@ -558,11 +558,19 @@ project's first cocotb co-simulation — it drives the DUT directly, replacing t
   CONSTANT → synthesized as LUTs, not a DSP48; a runtime-variable M would use 1 DSP). That is ~4 % of an
   XC7A35T (20.8 k LUT) — so a **30-channel monolithic front-end ≈ 24 k LUT (fits an A50T) while a
   256-channel pixel array ≈ 207 k LUT (needs an A200T)**: the FPGA cost favours monolithic too (a third
-  vote, after weight and thermal). Timing: `ltp` longest topological path = 225 cells — the un-pipelined
-  accumulator + constant-multiply chain (dkl → mterm/p_next → r → s+r) → **estimated Artix-7 Fmax ~85–125 MHz**
-  (borderline for a 100 MSPS ADC → pipeline the feed-forward terms for headroom). NOTE: Yosys 0.9 needs
+  vote, after weight and thermal). NOTE: Yosys 0.9 needs
   plain `parameter` (not `parameter int`) + `integer` loop vars — the module was made dual-compatible
   (cocotb still bit-exact). EXACT Artix-7 Fmax needs Vivado (not on this machine); Artix-7 is covered by the
   FREE Vivado ML Standard (no paid licence), and `rtl/vivado_trap.tcl` runs synth+place+route+timing in
-  batch (`vivado -mode batch -source vivado_trap.tcl [-tclargs <part> <period_ns>]`). nextpnr does not
+  batch (`vivado -mode batch -source vivado_trap.tcl [-tclargs <top> <part> <period_ns>]`). nextpnr does not
   target Xilinx (Lattice only), so the open flow can only give a real Fmax on an ECP5/iCE40 proxy.
+- **Pipelined variant** `trapezoidal_shaper_pl.sv` — the textbook fix for the un-pipelined critical path.
+  Reformulate `s[n] = Σ(p+m) = q[n] + mm[n]` with `q=Σp`, `mm=Σm` so every **feedback loop is a single
+  adder** (p+=dkl, q+=p, mm+=m); the FIR, the constant multiply, and the final `q+mm` combine are
+  feed-forward register stages. **Bit-exact to the direct shaper (+3 samples latency)** — cocotb runs the
+  SAME reference against both (`run_cocotb.py` → 2 tops, each TESTS=2 PASS=2). Cost measured: **512→632 FF,
+  ~809→~1056 LUT**. Its Fmax gain, however, is **NOT observable with the open flow**: Yosys 0.9's `ltp`
+  cell-count is carry-chain/constant-multiply dominated (direct 225 vs pipelined 233 — indistinguishable),
+  so an earlier "~100 MHz from ltp" reading was retracted — cell-count is not a delay proxy here. The gain
+  is real by construction (1-adder loops) but needs true STA to quantify: `vivado_trap.tcl` now takes the
+  top module (`-tclargs trapezoidal_shaper_pl`) so the direct vs pipelined Fmax can be compared in Vivado.
