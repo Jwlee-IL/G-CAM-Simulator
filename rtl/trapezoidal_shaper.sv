@@ -14,12 +14,14 @@
 //
 // Icarus-friendly: no `automatic`, no `void'()`; combinational recurrence in always_comb,
 // state in always_ff, explicit delay-line shift.
+// NOTE: plain (untyped) parameters + `integer` loop vars so BOTH the modern cocotb/Icarus
+// flow and the older Yosys 0.9 synthesis frontend parse it (Yosys 0.9 rejects `parameter int`).
 module trapezoidal_shaper #(
-    parameter int WIN   = 16,     // signed input sample width
-    parameter int RISE  = 10,     // ramp length (samples)
-    parameter int FLAT  = 8,      // flat-top length (samples)
-    parameter int M_Q8  = 1284,   // decay deconvolution constant in Q8 (= round(tau/Ts * 256))
-    parameter int WACC  = 32      // accumulator width
+    parameter WIN   = 16,     // signed input sample width
+    parameter RISE  = 10,     // ramp length (samples)
+    parameter FLAT  = 8,      // flat-top length (samples)
+    parameter M_Q8  = 1156,   // decay deconvolution constant in Q8 (= round(tau/Ts * 256))
+    parameter WACC  = 32      // accumulator width
 ) (
     input  logic                   clk,
     input  logic                   rst,
@@ -27,11 +29,12 @@ module trapezoidal_shaper #(
     input  logic signed [WIN-1:0]  sample,
     output logic signed [WACC-1:0] shaped       // s[n], registered (1-cycle latency)
 );
-    localparam int L  = RISE + FLAT;            // v[n-L] tap
-    localparam int KL = RISE + L;               // v[n-RISE-L] tap = longest delay
+    localparam L  = RISE + FLAT;                // v[n-L] tap
+    localparam KL = RISE + L;                   // v[n-RISE-L] tap = longest delay
 
     logic signed [WIN-1:0]  dl [0:KL-1];        // delay line: dl[i] = v[n-1-i]
     logic signed [WACC-1:0] p, s;
+    integer i;
 
     // Combinational recurrence for the current sample v[n] = `sample`.
     logic signed [WACC-1:0] dkl, p_next, r;
@@ -43,13 +46,13 @@ module trapezoidal_shaper #(
 
     always_ff @(posedge clk) begin
         if (rst) begin
-            for (int i = 0; i < KL; i++) dl[i] <= '0;
+            for (i = 0; i < KL; i = i + 1) dl[i] <= '0;
             p <= '0; s <= '0; shaped <= '0;
         end else if (valid) begin
             p      <= p_next;
             s      <= s + r;
             shaped <= s + r;                      // s[n]
-            for (int i = KL-1; i > 0; i--) dl[i] <= dl[i-1];
+            for (i = KL-1; i > 0; i = i - 1) dl[i] <= dl[i-1];
             dl[0] <= sample;
         end
     end

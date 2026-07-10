@@ -104,6 +104,21 @@ to Icarus's VPI loader — use the python.org 3.13 install):
 python trap_shaper_study.py                                                        # -> trap_shaper.png
 ```
 
+## FPGA synthesis (Yosys utilization + Vivado timing)
+Real target-mapped numbers, not just simulation. **Yosys** (scoop `yosys` 0.9) synthesizes the shaper
+to FPGA primitives — the module uses plain `parameter` + `integer` loops so both the cocotb/Icarus flow
+and Yosys 0.9 parse it:
+```bash
+yosys -p "read_verilog -sv trapezoidal_shaper.sv; synth_xilinx -top trapezoidal_shaper; stat"   # Artix-7
+yosys -p "read_verilog -sv trapezoidal_shaper.sv; synth_ecp5 -top trapezoidal_shaper; stat"     # Lattice ECP5
+```
+One channel on Artix-7 ≈ **809 LUT / 512 FF / 0 DSP / 0 BRAM** (~4 % of an XC7A35T); the constant M
+multiply maps to LUTs, not a DSP. `ltp` longest path = 225 cells (un-pipelined accumulator chain) →
+estimated Fmax ~85–125 MHz. **Exact Artix-7 timing** needs Vivado (FREE ML Standard covers Artix-7, no
+paid licence): `vivado -mode batch -source vivado_trap.tcl [-tclargs <part> <period_ns>]` runs
+synth+place+route and prints Fmax. (nextpnr targets Lattice only, so the open flow's real Fmax is an
+ECP5/iCE40 proxy, not Xilinx.)
+
 ## Next (not done)
 - Drive the cocotb testbench from the **C# MC per-event stream** (the runner is in place; feed it
   real event times/energies instead of the synthetic stimulus).

@@ -552,3 +552,17 @@ project's first cocotb co-simulation — it drives the DUT directly, replacing t
   machine"; the blocker was the Python packaging, not the tooling. Icarus needs a `` `timescale `` for the
   cocotb clock (added to the module).
 - Reproduce: `cd rtl && <python313> run_cocotb.py` then `python trap_shaper_study.py`.
+- **FPGA synthesis (Yosys, real numbers)**: `yosys -p "read_verilog -sv trapezoidal_shaper.sv;
+  synth_xilinx -top trapezoidal_shaper; stat"`. One channel on **Artix-7** (WIN 16, WACC 32,
+  RISE 10/FLAT 8): **~809 LUT, 512 FF, ~244 carry cells, 0 DSP, 0 BRAM** (the M multiply is a compile-time
+  CONSTANT → synthesized as LUTs, not a DSP48; a runtime-variable M would use 1 DSP). That is ~4 % of an
+  XC7A35T (20.8 k LUT) — so a **30-channel monolithic front-end ≈ 24 k LUT (fits an A50T) while a
+  256-channel pixel array ≈ 207 k LUT (needs an A200T)**: the FPGA cost favours monolithic too (a third
+  vote, after weight and thermal). Timing: `ltp` longest topological path = 225 cells — the un-pipelined
+  accumulator + constant-multiply chain (dkl → mterm/p_next → r → s+r) → **estimated Artix-7 Fmax ~85–125 MHz**
+  (borderline for a 100 MSPS ADC → pipeline the feed-forward terms for headroom). NOTE: Yosys 0.9 needs
+  plain `parameter` (not `parameter int`) + `integer` loop vars — the module was made dual-compatible
+  (cocotb still bit-exact). EXACT Artix-7 Fmax needs Vivado (not on this machine); Artix-7 is covered by the
+  FREE Vivado ML Standard (no paid licence), and `rtl/vivado_trap.tcl` runs synth+place+route+timing in
+  batch (`vivado -mode batch -source vivado_trap.tcl [-tclargs <part> <period_ns>]`). nextpnr does not
+  target Xilinx (Lattice only), so the open flow can only give a real Fmax on an ECP5/iCE40 proxy.
