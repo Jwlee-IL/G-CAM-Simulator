@@ -33,6 +33,12 @@
     "ledLockResidualPctPerC": -0.02,
     "_ledNote": "② LED reference pulser: locks SiPM+electronics optical gain; does NOT see crystal light yield (LED bypasses the crystal)",
     "crystalLightYieldTempCoeffPctPerC": -0.15,
-    "_crystalNote": "GAGG:Ce,Mg light-yield drift — only a spectral reference (K-40 / reference source, method ③) catches this; ①/② cannot"
+    "_crystalNote": "GAGG:Ce,Mg light-yield drift — only a spectral reference (K-40 / reference source, method ③) catches this; ①/② cannot",
+
+    "spectralRefResidualPctPerC": 0.0,
+    "_spectralRefNote": "③ spectral stabilization: tracks a known line in the ACTUAL scintillation spectrum → sees the WHOLE chain (crystal+SiPM+electronics), so NO temperature slope. Its residual is not a tempco but a centroid statistical jitter σ ≈ FWHM_ref/(2.35·√N_ref) plus a small energy-extrapolation term. GAGG has NO intrinsic line (unlike LYSO's Lu-176) → needs a built-in reference source or slow K-40 (1460 keV) accumulation.",
+    "spectralRefFwhmPct": 10.0,
+    "spectralRefExtrapResidualPct": 0.3,
+    "spectralRefEnergyKeV_examples": { "K40_background": 1460.0, "builtin_Am241": 59.5, "builtin_Cs137": 661.7 }
   }
 }

@@ -52,35 +52,70 @@ def retained(peak_shift_rel):
 
 R0 = retained(0.0)   # at calibration T, ~full window capture
 
-fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5.6))
+# ③ spectral stabilization: NO temperature slope (it tracks the real scintillation line, so it
+# also catches crystal light-yield). Its residual is a random centroid jitter from reference
+# statistics + a small energy-extrapolation term — set by counts, not temperature.
+def sigma3(ref_rate_cps, t_update_s):
+    n = np.maximum(ref_rate_cps * t_update_s, 1e-9)
+    stat = (sm3["spectralRefFwhmPct"] / 100.0) / 2.3548 / np.sqrt(n)   # relative centroid error
+    extrap = sm3["spectralRefExtrapResidualPct"] / 100.0
+    return np.hypot(stat, extrap)
 
-# (1) peak-position error (keV-equivalent, % of 662) vs temperature
+sm3 = sipm["_stabilizationModel"]
+REF_RATE, T_UPD = 300.0, 10.0        # a built-in reference source: ~300 cps, 10 s update
+s3 = sigma3(REF_RATE, T_UPD)
+def retained_jitter(sig):            # window counts averaged over a Gaussian peak jitter of std sig
+    d = np.linspace(-4 * sig, 4 * sig, 41) if sig > 0 else np.array([0.0])
+    wt = np.exp(-0.5 * (d / sig) ** 2) if sig > 0 else np.array([1.0])
+    return np.sum(wt * retained(d)) / np.sum(wt)
+
+fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(17.5, 5.6))
+
+# (1) peak-position error (% of 662) vs temperature — ①/② have a residual slope, ③ is flat
 for name, tc in cases.items():
     ax1.plot(T, (tc * (T - T0)) * 100.0, color=col[name], lw=2.2, label=name)
-ax1.axhspan(-WIN*100, WIN*100, color="#3498db", alpha=0.10)
-ax1.text(1, WIN*100*0.8, f"±{WIN*100:.0f}% energy window", color="#2471a3", fontsize=8)
-ax1.axvline(T0, ls=":", color="#888"); ax1.text(T0+0.4, -16, "calib T", fontsize=8, color="#888")
+ax1.plot(T, np.zeros_like(T), color="#8e44ad", lw=2.4, label="③ spectral stabilization")
+ax1.fill_between(T, -s3*100, s3*100, color="#8e44ad", alpha=0.15)
+ax1.axhspan(-WIN*100, WIN*100, color="#3498db", alpha=0.08)
+ax1.text(1, WIN*100*0.8, f"±{WIN*100:.0f}% window", color="#2471a3", fontsize=8)
+ax1.axvline(T0, ls=":", color="#888")
 ax1.set_xlabel("temperature (°C)"); ax1.set_ylabel("photopeak position error (% of 662 keV)")
-ax1.set_title("(1) Peak walk vs T\n① kills the SiPM part; crystal light-yield is the floor (needs ③)")
-ax1.legend(fontsize=8); ax1.grid(alpha=0.3)
+ax1.set_title("(1) Peak walk vs T\n③ has NO T-slope (tracks the real line → crystal too)")
+ax1.legend(fontsize=7.5); ax1.grid(alpha=0.3)
 
-# (2) window-retained effective counts (%) vs temperature  + position invariance
+# (2) window-retained counts (%) vs temperature
 for name, tc in cases.items():
     ax2.plot(T, retained(tc * (T - T0)) / R0 * 100.0, color=col[name], lw=2.2, label=name)
+ax2.plot(T, np.full_like(T, retained_jitter(s3) / R0 * 100.0), color="#8e44ad", lw=2.4,
+         label=f"③ spectral (flat, σ={s3*100:.2f}%)")
 ax2.axhline(100, ls=":", color="#888")
-ax2.axhline(98, ls="--", color="#2e8b57", lw=0.8)
-ax2.annotate("localization RMS: flat\n(gain-scale invariant — a position, not energy, story)",
-             (23, 55), (6, 40), fontsize=8, color="#555",
+ax2.annotate("localization RMS: flat\n(gain-scale invariant — position, not energy)",
+             (23, 50), (5, 34), fontsize=7.5, color="#555",
              arrowprops=dict(arrowstyle="->", color="#555"))
 ax2.set_xlabel("temperature (°C)"); ax2.set_ylabel("counts kept in the energy window (%)")
-ax2.set_title("(2) Window integrity vs T\nno-comp falls off a cliff; ①+② hold flat (multi-isotope windows survive)")
-ax2.legend(fontsize=8, loc="lower center"); ax2.grid(alpha=0.3); ax2.set_ylim(0, 105)
+ax2.set_title("(2) Window integrity vs T\n①+② slope with crystal LY; ③ removes even that")
+ax2.legend(fontsize=7.5, loc="lower center"); ax2.grid(alpha=0.3); ax2.set_ylim(0, 105)
 
-fig.suptitle("SiPM (Hamamatsu S13360-3050CS) gain drift is an ENERGY-WINDOW problem, not a position one. "
-             "① bias-comp + ② LED lock hold the window; the crystal's own light-yield drift is the ③-only residual.", fontsize=10)
+# (3) ③'s OWN limit — a counts axis, not temperature: stabilization precision vs reference rate
+rate = np.logspace(-2, 3.5, 200)
+for tu, ls in [(10.0, "-"), (60.0, "--")]:
+    ax3.loglog(rate, sigma3(rate, tu) * 100.0, ls, color="#8e44ad", lw=2, label=f"update {tu:.0f}s")
+ax3.axhline(sm3["spectralRefExtrapResidualPct"], ls=":", color="#8e44ad")
+ax3.text(0.02, sm3["spectralRefExtrapResidualPct"]*1.1, "extrapolation floor 0.3%", fontsize=7.5, color="#8e44ad")
+ax3.axhline(2.0, color="#27ae60", lw=1.2); ax3.text(0.02, 2.15, "target <2% (window-safe)", fontsize=8, color="#27ae60")
+for lbl, r, cc in [("K-40 bkg\n~0.05 cps", 0.05, "#c0392b"), ("built-in\nAm-241 ~300 cps", 300.0, "#2e8b57")]:
+    ax3.axvline(r, ls="-.", color=cc, lw=1); ax3.text(r*1.15, 6, lbl, fontsize=7, color=cc, rotation=0)
+ax3.set_xlabel("reference line count rate (cps)"); ax3.set_ylabel("③ gain-stabilization jitter σ (%)")
+ax3.set_title("(3) ③ is limited by COUNTS, not temperature\nGAGG has no intrinsic line → needs a real reference")
+ax3.legend(fontsize=8); ax3.grid(alpha=0.3, which="both"); ax3.set_ylim(0.1, 30)
+
+fig.suptitle("SiPM gain drift (S13360-3050CS): ① bias-comp + ② LED hold the window but leave the crystal light-yield "
+             "slope; ③ spectral stabilization removes even that — at the cost of a reference source (GAGG has no self-line).", fontsize=10)
 fig.tight_layout(rect=[0, 0, 1, 0.94])
 out = os.path.join(here, "sipm_thermal.png")
 fig.savefig(out, dpi=130); print("saved", out)
+print(f"\n③ spectral: ref {REF_RATE:.0f} cps, {T_UPD:.0f}s update → σ = {s3*100:.2f}% (flat vs T); "
+      f"K-40 0.05 cps/60s → σ = {sigma3(0.05,60)*100:.1f}% (too weak)")
 
 # text: how far can T drift before a ±10% window loses 10% of counts?
 print(f"\nSiPM: {sipm['name']}  fixed-bias gain tempco {sipm['gainTempCoeffPctPerC_fixedBias']}%/°C")

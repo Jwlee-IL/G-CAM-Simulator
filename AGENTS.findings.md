@@ -438,7 +438,16 @@ rank-7, non-cyclic decode.**
   (holds to ΔT ≈ 25 °C); ①+② LED-pulser lock → −0.17 %/°C (ΔT ≈ 36 °C). The residual floor is the
   **crystal light-yield drift (~−0.15 %/°C), which ① and ② cannot see (the LED bypasses the crystal)** —
   only a **spectral reference (K-40 / reference source, ③)** removes it. So the useful order is ①(essential)
-  → ③(catches the crystal) → ②(aging backup), NOT ①→②.
+  → ③(catches the crystal) → ②(aging backup), NOT ①→②. **③ modelled**: it has NO temperature slope (tracks
+  the real scintillation line → whole chain); its residual is a **counts axis, not a temperature one** —
+  σ ≈ FWHM_ref/(2.35·√N_ref) + a ~0.3 % extrapolation floor. A built-in source (~300 cps, 10 s update) →
+  σ ≈ 0.3 % (flat vs T); **K-40 background (~0.05 cps) → σ ≈ 2.5 %, too weak** → **GAGG has no intrinsic line
+  (unlike LYSO's Lu-176), so ③ costs a built-in reference source**. **Telemetry** (`sipm_stab_trend.py` →
+  `sipm_stab_trend.{png,csv}`): over a mission (DAQ warm-up +8 °C then outdoors −10 °C), an **uncompensated
+  window drops to 0 % kept counts from the board's OWN warm-up alone** (no external ΔT needed — this is the
+  cooling headache), while ①/③ hold 100 %. Log `time, T, peak-drift, window-kept` in that CSV format to
+  replay a count-rate dip later. ③ only earns its keep for wide ΔT (outdoor) or tight windows (close lines);
+  indoors ± a few °C, ① alone suffices.
 - **Optimal 5-sided shield thickness** (`ShieldStudy`, `montecarlo shield` → `samples/shield.{csv,png}`,
   `plot_shield.py`). Side/top/bottom/rear background is pure uncoded noise; wall transmits exp(−μ·t) onto
   the flood → localization RMS vs t vs mass. **The optimum is set by the background ENERGY**: scattered
@@ -451,8 +460,8 @@ rank-7, non-cyclic decode.**
   environment is scattered-background-dominated. Blocking the low/mid-energy background alone already pays
   for the shield; Co-60 being unshieldable is expected and handled in software.
 - Files: design models `samples/handheld_design_study.py`, `plot_handheld_validation.py`,
-  `camera_parallax_study.py`, `thermal_motion_study.py`, `sipm_thermal_study.py`, `plot_shield.py`,
-  `hardware_concept.py`; scenarios `samples/scenario_handheld.json`, `scenario_orig_gagg.json`; SiPM preset
+  `camera_parallax_study.py`, `thermal_motion_study.py`, `sipm_thermal_study.py`, `sipm_stab_trend.py`,
+  `plot_shield.py`, `hardware_concept.py`; scenarios `samples/scenario_handheld.json`, `scenario_orig_gagg.json`; SiPM preset
   `samples/sipm/hamamatsu_s13360_3050cs.json`; MC `ShieldStudy.cs` + `montecarlo shield`. NOTE: this theme
   is design synthesis (weight/volume/parallax/thermal/motion are analytical on top of the validated MC);
   only the config validation and `ShieldStudy` are new Monte-Carlo runs.
