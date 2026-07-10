@@ -24,6 +24,31 @@ public sealed class MaskGeometryStudy
         return r.PhotonsEmitted > 0 ? r.DetectedWeight / r.PhotonsEmitted : 0.0;
     }
 
+    /// <summary>One taper angle: center vs edge efficiency (FOV uniformity) and edge localization RMS.</summary>
+    public sealed record TaperRow(double TaperDeg, double EffCenter, double EffEdge, double EdgeRatio, double RmsEdgeMm);
+
+    /// <summary>Sweeps the channel-wall bevel for a THICK mask: does tapering recover the off-axis
+    /// efficiency a thick straight mask collimates away (a genuine wider-FOV fix), and does the code
+    /// stay sharp at the edge? Center + edge sources at a fixed thickness.</summary>
+    public TaperRow[] TaperSweep(SimulationConfig baseCfg, double thickMm, double edgeMm,
+                                 double[] taperDegs, double budget, int repeats, double failThr)
+    {
+        var rows = new List<TaperRow>();
+        foreach (double taper in taperDegs)
+        {
+            var cc = baseCfg.Clone();
+            cc.Mask.ThicknessMm = thickMm; cc.Mask.TaperAngleDeg = taper; cc.Mask.FocalDistanceMm = 0.0;
+            cc.Source.Position = [0, 0, 0.0];
+            var ce = cc.Clone(); ce.Source.Position = [edgeMm, 0, 0.0];
+
+            double effC = Efficiency(cc);
+            double effE = Efficiency(ce);
+            var (_, rmsEdge) = EfficiencyAndResolution(ce, budget, repeats, failThr);
+            rows.Add(new TaperRow(taper, effC, effE, effC > 0 ? effE / effC : 0.0, rmsEdge));
+        }
+        return rows.ToArray();
+    }
+
     /// <summary>Efficiency AND localization RMS at a fixed detected-count budget (so the shadow
     /// sharpness is isolated from the count cost).</summary>
     public (double efficiency, double rmsMm) EfficiencyAndResolution(

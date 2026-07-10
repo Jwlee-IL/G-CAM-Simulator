@@ -42,6 +42,27 @@ public class MaskGeometryTests
     }
 
     [Fact]
+    public void TaperedChannels_WidenTheFovOfAThickMask()
+    {
+        // A thick STRAIGHT mask collimates off-axis rays (edge/center efficiency < 1). Bevelling the
+        // channel walls (hourglass) recovers the edge WITHOUT the point-focusing FOV narrowing — the
+        // opposite of FocusedChannels_ConcentrateOnFocalPoint.
+        var study = new MaskGeometryStudy(new DefaultSimulationFactory());
+        double edge = 7.5;
+
+        var straightC = Baseline(); straightC.Mask.ThicknessMm = 25.0;
+        var straightE = Baseline(); straightE.Mask.ThicknessMm = 25.0; straightE.Source.Position = [edge, 0, 0.0];
+        double straightRatio = study.Efficiency(straightE) / study.Efficiency(straightC);
+
+        var taperC = Baseline(); taperC.Mask.ThicknessMm = 25.0; taperC.Mask.TaperAngleDeg = 8.0;
+        var taperE = Baseline(); taperE.Mask.ThicknessMm = 25.0; taperE.Mask.TaperAngleDeg = 8.0; taperE.Source.Position = [edge, 0, 0.0];
+        double taperRatio = study.Efficiency(taperE) / study.Efficiency(taperC);
+
+        Assert.True(straightRatio < 0.95, $"a thick straight mask should collimate the edge (ratio {straightRatio:F2})");
+        Assert.True(taperRatio > straightRatio, $"tapering should recover the edge ({taperRatio:F2} > {straightRatio:F2})");
+    }
+
+    [Fact]
     public void CellSize_HasABoundedOptimum()
     {
         // A mid-band cell pitch (shadow ~1-2 px) localizes far better than a too-coarse one (mask

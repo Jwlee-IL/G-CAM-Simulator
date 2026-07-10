@@ -16,13 +16,15 @@ public sealed class CodedApertureMask : IMask
     private readonly double _halfHeight;  // physical half-extent along y (mm)
     private readonly double _focalMm;     // channels converge toward a source at this distance (0 = straight)
     private readonly double _holeFraction;// LINEAR open fraction of a cell (open AREA = _holeFraction²)
+    private readonly double _tanTaper;    // bevel of the channel walls (0 = straight, collimating)
 
     public MaskPattern Pattern { get; }
     public double PlaneZ { get; }
 
     public CodedApertureMask(MaskPattern pattern, double planeZ, double cellPitchMm,
                              double thicknessMm, double muPerMm,
-                             double focalDistanceMm = 0.0, double holeFraction = 1.0)
+                             double focalDistanceMm = 0.0, double holeFraction = 1.0,
+                             double taperAngleDeg = 0.0)
     {
         Pattern = pattern;
         PlaneZ = planeZ;
@@ -36,6 +38,10 @@ public sealed class CodedApertureMask : IMask
         // that unphysical geometry by falling back to straight channels.
         _focalMm = focalDistanceMm > thicknessMm ? focalDistanceMm : 0.0;
         _holeFraction = holeFraction <= 0.0 ? 1.0 : Math.Min(holeFraction, 1.0);
+        // Bevelled (hourglass) channel walls: the code is defined at the slab MID-PLANE and the walls
+        // flare by this angle toward both faces, so an off-axis ray within the taper cone is not
+        // clipped. Taper is a wide-FOV device for THICK masks; it is mutually exclusive with focusing.
+        _tanTaper = (taperAngleDeg > 0.0 && _focalMm == 0.0) ? Math.Tan(taperAngleDeg * Math.PI / 180.0) : 0.0;
     }
 
     // Sub-steps used to ray-march the ray through the finite-thickness slab. Higher
@@ -54,6 +60,18 @@ public sealed class CodedApertureMask : IMask
 
         double zFront = PlaneZ + _thicknessMm / 2.0;
         double zBack = PlaneZ - _thicknessMm / 2.0;
+
+        // Bevelled walls: the code is sampled at the slab mid-plane; toward each face the wall recedes
+        // by |z - mid|·tan(taper), so a ray is de-sheared back toward its mid-plane crossing before the
+        // pattern lookup (an off-axis ray within the taper cone then sees its own open cell, uncollimated).
+        double uMid = 0.0, vMid = 0.0;
+        if (_tanTaper > 0.0)
+        {
+            double tMid = (PlaneZ - ray.Origin.Z) / dz;
+            var hitMid = ray.At(tMid);
+            uMid = hitMid.X + _halfWidth;
+            vMid = hitMid.Y + _halfHeight;
+        }
 
         int nTungsten = 0;
         for (int i = 0; i < SlabSteps; i++)
@@ -76,14 +94,23 @@ public sealed class CodedApertureMask : IMask
                 nTungsten++;                            // surrounding shield = opaque
                 continue;
             }
-            int cx = (int)(u / _cellPitchMm);
-            int cy = (int)(v / _cellPitchMm);
+            // De-shear toward the mid-plane crossing by the wall bevel at this depth.
+            double us = u, vs = v;
+            if (_tanTaper > 0.0)
+            {
+                double bevel = Math.Abs(z - PlaneZ) * _tanTaper;
+                us = DeShear(u, uMid, bevel);
+                vs = DeShear(v, vMid, bevel);
+            }
+            int cx = (int)(us / _cellPitchMm);
+            int cy = (int)(vs / _cellPitchMm);
+            if (cx < 0 || cy < 0 || cx >= Pattern.Width || cy >= Pattern.Height) { nTungsten++; continue; }
             if (!Pattern[cx, cy]) { nTungsten++; continue; }   // closed cell = tungsten
             // Finite hole: only the central holeFraction of an open cell is drilled; the rest is
             // a tungsten border (sharpens the shadow at the cost of open area / sensitivity).
             if (_holeFraction < 1.0)
             {
-                double fx = u / _cellPitchMm - cx, fy = v / _cellPitchMm - cy;
+                double fx = us / _cellPitchMm - cx, fy = vs / _cellPitchMm - cy;
                 double b = (1.0 - _holeFraction) / 2.0;
                 if (fx < b || fx > 1.0 - b || fy < b || fy > 1.0 - b) nTungsten++;
             }
@@ -96,5 +123,15 @@ public sealed class CodedApertureMask : IMask
         double tungstenPath = (double)nTungsten / SlabSteps * slant;
         double transmission = Math.Exp(-_muPerMm * tungstenPath);
         return rng.NextDouble() < transmission;
+    }
+
+    // Pull a sample position toward the mid-plane crossing by the wall bevel: if the ray's excursion
+    // from the mid-plane is within the bevel it collapses to the mid-plane cell (uncollimated),
+    // otherwise only the residual excursion is kept (still collimated beyond the taper cone).
+    private static double DeShear(double u, double uMid, double bevel)
+    {
+        double d = u - uMid;
+        double residual = Math.Abs(d) - bevel;
+        return residual <= 0.0 ? uMid : uMid + Math.Sign(d) * residual;
     }
 }

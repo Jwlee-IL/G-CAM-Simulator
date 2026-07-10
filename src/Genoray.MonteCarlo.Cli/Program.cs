@@ -55,6 +55,9 @@ if (args[0].Equals("masksize", StringComparison.OrdinalIgnoreCase))
 if (args[0].Equals("shield", StringComparison.OrdinalIgnoreCase))
     return RunShield(args);
 
+if (args[0].Equals("masktaper", StringComparison.OrdinalIgnoreCase))
+    return RunMaskTaper(args);
+
 var config = ConfigLoader.Load(args[0]);
 Console.WriteLine($"Scenario : {config.Name}");
 Console.WriteLine($"Isotope  : {config.Source.Isotope} @ {config.Source.EnergyKeV} keV");
@@ -158,6 +161,41 @@ static int RunSweep(string[] args)
         Console.WriteLine($"CSV: {csvPath}");
         Console.WriteLine();
     }
+    return 0;
+}
+
+static int RunMaskTaper(string[] args)
+{
+    if (args.Length < 2) { Console.Error.WriteLine("Usage: montecarlo masktaper <base.json>"); return 1; }
+    var baseConfig = ConfigLoader.Load(args[1]);
+    var study = new MaskGeometryStudy(new DefaultSimulationFactory());
+    const double thickMm = 25.0;      // a THICK mask (where collimation bites); taper is pointless when thin
+    const double budget = 400.0; const int repeats = 200; const double failThr = 3.0;
+    double baseS = baseConfig.Geometry.SourceMaskDistanceMm, d = baseConfig.Geometry.MaskDetectorDistanceMm;
+    double fcfovHalf = baseConfig.Mask.Rank * baseConfig.Mask.CellPitchMm * (d + baseS) / d / 2.0;
+    double edge = 0.8 * fcfovHalf;
+    // Sweep finely at low angles to catch the knee (a small bevel already de-collimates a 25mm slab).
+    double[] tapers = [0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 7.0, 10.0, 15.0, 25.0];
+
+    Console.WriteLine($"Tapered (bevelled, hourglass) channels: wider FOV for a THICK ({thickMm:F0}mm) mask");
+    Console.WriteLine($"  edge source at x={edge:F1}mm (0.8·FCFOV), {(int)budget} counts, {repeats} reps");
+    Console.WriteLine("  A thick STRAIGHT mask collimates off-axis rays (edge/center < 1); bevelling the walls");
+    Console.WriteLine("  should recover the edge efficiency while the mid-plane keeps the code sharp.");
+    Console.WriteLine();
+    Console.WriteLine("  taper   eff@center   eff@edge   edge/center   RMS@edge");
+    Console.WriteLine("  -----   ----------   --------   -----------   --------");
+    var rows = study.TaperSweep(baseConfig, thickMm, edge, tapers, budget, repeats, failThr);
+    var csv = new System.Text.StringBuilder("taper_deg,eff_center,eff_edge,edge_ratio,rms_edge_mm\n");
+    foreach (var r in rows)
+    {
+        Console.WriteLine($"  {r.TaperDeg,4:F0}°   {r.EffCenter,10:E2}   {r.EffEdge,8:E2}   {r.EdgeRatio,10:F2}    {r.RmsEdgeMm,6:F2}mm");
+        csv.Append($"{r.TaperDeg:F1},{r.EffCenter:E4},{r.EffEdge:E4},{r.EdgeRatio:F4},{r.RmsEdgeMm:F3}\n");
+    }
+    File.WriteAllText("samples/masktaper.csv", csv.ToString());
+    Console.WriteLine();
+    Console.WriteLine("If edge/center climbs toward 1 with taper while RMS@edge stays low, the bevel is a real");
+    Console.WriteLine("wide-FOV fix for thick masks (unlike focusing, theme 20, which NARROWS the FOV).");
+    Console.WriteLine("CSV: samples/masktaper.csv");
     return 0;
 }
 

@@ -484,3 +484,28 @@ rank-7, non-cyclic decode.**
   `samples/sipm/hamamatsu_s13360_3050cs.json`; MC `ShieldStudy.cs` + `montecarlo shield`. NOTE: this theme
   is design synthesis (weight/volume/parallax/thermal/motion are analytical on top of the validated MC);
   only the config validation and `ShieldStudy` are new Monte-Carlo runs.
+
+---
+
+## 23. Mask geometry follow-ups — tapered channels (wide FOV) + empirical open fraction
+Two backlog items closing the mask-geometry thread.
+- **Tapered (hourglass) channels are the REAL wide-FOV fix for a THICK mask** — `CodedApertureMask`
+  gained `TaperAngleDeg` (config `Mask.TaperAngleDeg`); `montecarlo masktaper` → `samples/masktaper.png`.
+  A thick straight mask (25 mm) collimates off-axis rays: **edge/center efficiency 0.82**. Bevelling the
+  walls (the code stays at the slab MID-PLANE, walls flare toward both faces) removes the collimation:
+  **~4° recovers edge/center to 0.99** and lifts center efficiency ~35 % (1.65→2.23e-4), while the edge
+  localization RMS stays ~0.43 mm (code stays sharp). It saturates fast (a small bevel already exceeds the
+  ray excursion of a 25 mm slab). Implemented by de-shearing each ray's per-depth sample back toward its
+  mid-plane crossing by the bevel `|z−mid|·tan(taper)`. This is the **opposite of focusing (theme 20, which
+  NARROWS the FOV to a focal point)**: a fully tapered thick mask codes like a THIN mask (wide, uniform FOV)
+  while the fully-thick closed cells keep high-energy opacity → thin-mask FOV + thick-mask shielding.
+  Mutually exclusive with `FocalDistanceMm`. Locked in by `MaskGeometryTests.TaperedChannels_WidenTheFovOfAThickMask`.
+- **Open fraction, empirically (random arrays + balanced decode)** — `samples/open_fraction_study.py`
+  (self-contained coding MC, no C# change) → `samples/open_fraction.png`. Confirms theme 21's analytical
+  claim: a periodic random binary array (rank-11, 2×2 mosaic) at open fraction ρ, decoded by a balanced
+  (mean-subtracted) cyclic cross-correlation, has **reconstruction SNR broadly maximized near ρ≈0.5**
+  (consistent with coding power ∝ √(ρ(1−ρ)); the empirical curve is flatter than the pure √ because the
+  random array's own sidelobes also scale with ρ). But at the **same ρ=0.5, MURA is ~4× cleaner** (SNR ~46
+  vs random-best ~12) — its zero-sidelobe construction gives a clean single-peak reconstruction where a
+  random array shows a peak buried in **sidelobe grass** (right-hand recon maps). So ρ≈0.5 is right, and
+  MURA beats a random array of the same open fraction — open fraction is not a free tuning knob.

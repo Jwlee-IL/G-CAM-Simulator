@@ -112,6 +112,12 @@ public sealed class MaskConfig
     /// (so the open AREA is HoleFraction²; e.g. 0.5 → central 25% of the cell is open). 1 = full cell
     /// open; &lt;1 leaves a tungsten border that lowers sensitivity.</summary>
     public double HoleFraction { get; set; } = 1.0;
+
+    /// <summary>Bevel angle (deg) of the channel walls — a wide-FOV device for THICK masks. The code
+    /// is defined at the slab mid-plane and the walls flare toward both faces (hourglass), so an
+    /// off-axis ray within the taper cone is not collimated away. 0 = straight (parallel) walls.
+    /// Mutually exclusive with FocalDistanceMm (which is a narrow-FOV concentrator).</summary>
+    public double TaperAngleDeg { get; set; } = 0.0;
 }
 
 /// <summary>The pixelated scintillator crystal array.</summary>

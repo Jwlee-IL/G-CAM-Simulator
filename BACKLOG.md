@@ -10,13 +10,6 @@ Deferred work, captured so we don't forget. Not in current scope. See
   emits a real *mixed-isotope field* through the coded aperture. The combined lever (theme 17)
   currently sums per-line runs, not a true mixed-field source. **Highest-value open item.**
 
-### Mask geometry
-- **Tapered / diverging holes** (accept the FOV angular cone) — the actual "wider FOV" fix for
-  thick masks, distinct from theme-20 point-focusing (which narrows FOV).
-- **Empirical open-fraction sweep with random arrays** + a double-valued balanced decode — confirm
-  the analytical √(ρ(1−ρ)) optimum (theme 21 was analytical) and show MURA beating random arrays
-  on sidelobes.
-
 ### Depth / RTL
 - **Full 3D (x,y,S) likelihood** depth search instead of the alternating iteration (near-field
   off-axis depth is coupling-noise-limited, theme 19).
@@ -49,3 +42,5 @@ Deferred work, captured so we don't forget. Not in current scope. See
 - **22**: handheld productization — weight/volume/form, MC validation (2.45× sensitivity),
   camera–mask parallax, DAQ thermal + motion, SiPM gain thermal drift + stabilization ①②③, optimal
   5-sided shield thickness.
+- **23**: mask-geometry follow-ups — tapered (hourglass) channels (wide-FOV fix for thick masks,
+  edge/center 0.82→0.99 at ~4°), empirical open-fraction with random arrays (ρ≈0.5, MURA ~4× cleaner).
