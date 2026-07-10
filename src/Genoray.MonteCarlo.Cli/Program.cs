@@ -383,25 +383,31 @@ static int RunDepth3D(string[] args)
     var all = new List<JointResult>();
     var csv = new System.Text.StringBuilder("method,scenario,true_x_mm,true_y_mm,true_s_mm,counts,depth_bias_mm,depth_rms_mm,lateral_rms_mm\n");
 
-    Console.WriteLine("  scenario        counts   method        depthBias  depthRMS  latRMS");
-    Console.WriteLine("  -------------   ------   -----------   ---------  --------  ------");
+    Console.WriteLine("  scenario        counts   method             depthBias  depthRMS  latRMS");
+    Console.WriteLine("  -------------   ------   ----------------   ---------  --------  ------");
     foreach (var sc in scenes)
     {
         foreach (double n in counts)
         {
+            // Fair comparison: alternating with the FIXED seed (100), alternating with an ORACLE seed
+            // (= true S, best case), and the seed-free 3D search. If alternating still stalls even with
+            // the oracle seed, the near-field win is the estimator, not just a bad seed.
             var it = study.RunNoisyJoint(baseConfig, sc.name, sc.x, sc.y, sc.s, assumed.ToArray(), nominalS, n, repeats);
+            var ito = study.RunNoisyJoint(baseConfig, sc.name, sc.x, sc.y, sc.s, assumed.ToArray(), sc.s, n, repeats);
             var d3 = study.RunNoisyJoint3D(baseConfig, sc.name, sc.x, sc.y, sc.s, assumed.ToArray(), n, repeats);
             all.Add(it); all.Add(d3);
-            Console.WriteLine($"  {sc.name,-13}   {n,5:F0}   alternating   {it.DepthBiasMm,6:F1}mm   {it.DepthRmsMm,5:F1}mm  {it.LateralRmsMm,5:F2}mm");
-            Console.WriteLine($"  {sc.name,-13}   {n,5:F0}   3D search     {d3.DepthBiasMm,6:F1}mm   {d3.DepthRmsMm,5:F1}mm  {d3.LateralRmsMm,5:F2}mm");
+            Console.WriteLine($"  {sc.name,-13}   {n,5:F0}   alt (seed 100)     {it.DepthBiasMm,6:F1}mm   {it.DepthRmsMm,5:F1}mm  {it.LateralRmsMm,5:F2}mm");
+            Console.WriteLine($"  {sc.name,-13}   {n,5:F0}   alt (oracle seed)  {ito.DepthBiasMm,6:F1}mm   {ito.DepthRmsMm,5:F1}mm  {ito.LateralRmsMm,5:F2}mm");
+            Console.WriteLine($"  {sc.name,-13}   {n,5:F0}   3D search          {d3.DepthBiasMm,6:F1}mm   {d3.DepthRmsMm,5:F1}mm  {d3.LateralRmsMm,5:F2}mm");
             csv.Append($"alternating,{sc.name},{sc.x:F1},{sc.y:F1},{sc.s:F1},{n:F0},{it.DepthBiasMm:F2},{it.DepthRmsMm:F2},{it.LateralRmsMm:F3}\n");
+            csv.Append($"alt_oracle,{sc.name},{sc.x:F1},{sc.y:F1},{sc.s:F1},{n:F0},{ito.DepthBiasMm:F2},{ito.DepthRmsMm:F2},{ito.LateralRmsMm:F3}\n");
             csv.Append($"3d,{sc.name},{sc.x:F1},{sc.y:F1},{sc.s:F1},{n:F0},{d3.DepthBiasMm:F2},{d3.DepthRmsMm:F2},{d3.LateralRmsMm:F3}\n");
         }
         Console.WriteLine();
     }
     File.WriteAllText("samples/depth3d.csv", csv.ToString());
-    Console.WriteLine("The 3D search removes the alternating iteration's start-point coupling trap; compare the");
-    Console.WriteLine("depth bias/RMS (esp. off-axis far, where the alternation was worst). CSV: samples/depth3d.csv");
+    Console.WriteLine("If 'alt (oracle seed)' still stalls near-field but the 3D search converges, the win is the");
+    Console.WriteLine("seed-free estimator, not just the seed. CSV: samples/depth3d.csv");
     return 0;
 }
 

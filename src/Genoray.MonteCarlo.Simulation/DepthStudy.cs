@@ -141,23 +141,25 @@ public sealed class DepthStudy
     }
 
     /// <summary>
-    /// Full 3D (x, y, S) joint estimate — replaces the alternating iteration and its start-point
-    /// trap. For each assumed S, decode the flood over the lateral FCFOV grid and score that slice by
-    /// its peak PROMINENCE z = (peak − grid mean)/grid std — a dimensionless, cross-S-comparable
-    /// detection statistic (the coded-aperture matched-filter SNR ≈ a GLRT). The lateral estimate is
-    /// the argmax over the whole volume; the depth is the centroid of the per-S peak-prominence
-    /// profile (same plateau-robust estimator as the on-axis depth). No nominal-S seed, no alternation.
+    /// Full 3D (x, y, S) joint estimate — replaces the alternating iteration and its start-point trap.
+    /// For each assumed S, decode the flood over the lateral FCFOV grid and score that slice by its peak
+    /// PROMINENCE z = (peak − grid mean)/grid std. NOTE: z is a HEURISTIC focus/detection score, not a
+    /// calibrated GLRT/SNR — the grid mean/std include the peak and sidelobes, so it can carry a
+    /// systematic bias across defocus (hence the far-field high-count bias). The depth is the
+    /// plateau-robust centroid of the per-S z-profile; the lateral (x, y) is taken from the slice
+    /// NEAREST that depth estimate (so (x, y, S) is self-consistent — same assumed-S plane). No
+    /// nominal-S seed, no alternation.
     /// </summary>
     private (double x, double y, double s) EstimateJoint3D(SimulationConfig cfg, DetectorImage img,
                                                            double[] assumedSmm)
     {
         var g = MuraGenerator.DecodingArray(cfg.Mask.Rank);
         var profile = new List<DepthRow>(assumedSmm.Length);
-        double bestZ = double.NegativeInfinity, bx = 0.0, by = 0.0;
+        var lateral = new (double x, double y)[assumedSmm.Length];   // per-slice argmax position
 
-        foreach (double s in assumedSmm)
+        for (int si = 0; si < assumedSmm.Length; si++)
         {
-            var dr = new CrossCorrelationDecoder(g, LateralGeometry(cfg, s)).Decode(img);
+            var dr = new CrossCorrelationDecoder(g, LateralGeometry(cfg, assumedSmm[si])).Decode(img);
             var recon = dr.Reconstruction;
             int n = recon.Width * recon.Height;
             double mean = 0.0; foreach (var v in recon.Raw) mean += v; mean /= n;
@@ -169,17 +171,19 @@ public sealed class DepthStudy
                 for (int x = 0; x < recon.Width; x++)
                     if (recon[x, y] > peak) { peak = recon[x, y]; px = x; py = y; }
 
-            double z = (peak - mean) / std;              // peak prominence: comparable across S
-            profile.Add(new DepthRow(s, z));
-            if (z > bestZ)
-            {
-                bestZ = z;
-                bx = dr.ReconOriginMm + px * dr.ReconStepMm;
-                by = dr.ReconOriginMm + py * dr.ReconStepMm;
-            }
+            profile.Add(new DepthRow(assumedSmm[si], (peak - mean) / std));
+            lateral[si] = (dr.ReconOriginMm + px * dr.ReconStepMm, dr.ReconOriginMm + py * dr.ReconStepMm);
         }
+
         double sEst = CentroidEstimate(profile);          // plateau-robust depth from the z-profile
-        return (bx, by, sEst);
+        // Lateral from the slice closest to the depth estimate -> a self-consistent (x, y, S).
+        int nearest = 0; double bestGap = double.PositiveInfinity;
+        for (int si = 0; si < assumedSmm.Length; si++)
+        {
+            double gap = Math.Abs(assumedSmm[si] - sEst);
+            if (gap < bestGap) { bestGap = gap; nearest = si; }
+        }
+        return (lateral[nearest].x, lateral[nearest].y, sEst);
     }
 
     /// <summary>Iterated joint estimate: alternate lateral decode (at the current depth) and depth

@@ -512,23 +512,27 @@ Two backlog items closing the mask-geometry thread.
 
 ---
 
-## 24. Full 3D (x,y,S) joint depth search — replaces the alternating iteration — `DepthStudy.RunNoisyJoint3D`
-Theme 19's joint estimator alternated (lateral decode at the current S → depth focus at the current x,y,
-×3, seeded at a nominal S) and stalled on near-field off-axis coupling. The 3D search (`montecarlo depth3d`
-→ `samples/depth3d.png`) evaluates every assumed S: decode the flood over the lateral FCFOV grid, score
-that slice by its **peak prominence z = (peak − grid mean)/grid std** — a dimensionless, cross-S-comparable
-detection statistic (the coded matched-filter SNR ≈ a GLRT) — then take the joint argmax over the whole
-(x,y,S) volume; depth = the plateau-robust centroid of the per-S z-profile. No nominal-S seed, no alternation.
-- **Near field (S=60, off-axis): the 3D search decisively removes the coupling trap.** Lateral RMS
-  **3.6 → 0.37 mm** and depth RMS **26 → 7.5 mm** at 3000 counts (the alternating iteration *stalled* — its
-  lateral RMS never shrank with counts). Also more robust at low counts (100–300) in both near and far.
-- **Far field (S=150): intrinsically ill-conditioned for both** (dM/dS→0). The 3D is better at low counts
-  but carries a modest persistent depth bias (~−18 mm) from the broad z-profile; the seeded alternating's
-  bias happens to be a bit smaller at high counts (its nominal-S seed sits near the truth — a seed artifact,
-  not robustness). Neither beats ~10 % of the distance far-field.
-- Verdict: the 3D search is the principled, seed-free estimator and the clear winner where depth is
-  recoverable (near field); the far field stays limited by the physics, not the estimator.
-- Locked in by `DepthTests.Joint3D_BeatsAlternating_OnNearFieldCoupling`. Reproduce: `montecarlo depth3d`.
+## 24. Joint (x,y,S) depth — the alternating trap was the SEED, not the alternation — `DepthStudy.RunNoisyJoint3D`
+Theme 19's joint estimator alternated (lateral decode at current S → depth focus at current x,y, ×3) from a
+**fixed** nominal S (100) and stalled on off-axis coupling. I built a seed-free full 3D search
+(`EstimateJoint3D`, `montecarlo depth3d` → `samples/depth3d.png`): for each assumed S, decode the lateral
+FCFOV grid and score the slice by its **peak prominence z = (peak − grid mean)/grid std**; depth = the
+plateau-robust centroid of the per-S z-profile, lateral = the argmax of the slice NEAREST that depth (so
+(x,y,S) is self-consistent). **Codex round 5 forced an honest reckoning** — a fair 3-way comparison (fixed
+seed 100 / oracle seed = true S / seed-free 3D) shows:
+- **The alternating iteration's failure was the FIXED BAD SEED, not the alternation.** With an oracle seed it
+  converges well: near-field (S=60) lateral RMS **0.42 mm**; far-field (S=150) depth RMS **1.6 mm, bias 0.1**
+  at 3000 counts — *better than the 3D search everywhere*, dramatically so far-field.
+- **The 3D search's real value is being SEED-FREE** (no initial guess). Near field it converges (lateral RMS
+  0.35 mm, comparable to oracle-alt) but its **peak-prominence z is a HEURISTIC, not a calibrated GLRT/SNR**
+  (retracted that claim): the grid mean/std include the peak+sidelobes, giving a **systematic bias (+7 mm
+  near, −18 mm far)** that the single-point calibrated focus (theme 18) avoids. So 3D is robust but biased.
+- **Best practice = hybrid**: a coarse/seed-free pass (3D or the on-axis `RunNoisyDepth`) to SEED, then the
+  alternating iteration (calibrated single-point focus) to REFINE → robust AND unbiased. Neither alone wins.
+- Far field stays physics-limited only for the *unseeded* estimators; a well-seeded refine reaches ~1 % of
+  the distance. `RunDepth3D` now runs all three methods so the seed effect is explicit.
+- `Joint3D_BeatsAlternating_OnNearFieldCoupling` still holds (3D beats the FIXED-seed alt — the original
+  documented failure). Reproduce: `montecarlo depth3d`.
 
 ---
 
