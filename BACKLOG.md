@@ -32,6 +32,10 @@ Deferred work, captured so we don't forget. Not in current scope. See
   (currently Python design layers on top of the validated MC).
 - `ShieldStudy` uses a uniform additive background; a directional / isotropic real background
   source through the geometry would be more precise than the analytical leak term.
+- **Deferred Codex cross-verification** of the remaining low-risk theme-22 pieces — weight /
+  volume / form-factor, camera parallax, DAQ thermal + motion, and the 2.45× MC-validation
+  numbers. (Round 4 verified the higher-risk ShieldStudy + SiPM-thermal + combined-lever; these
+  are simple geometry / arithmetic, so they were left for a later quota.)
 
 ## Done (summary — details in AGENTS.findings by theme)
 - **1–11**: geometry & localization, FOV÷resolution=rank, cyclic-ghost, directional biasing, noise
