@@ -38,20 +38,20 @@ for bg, (lab, c) in bgs.items():
     m = col(bg, "shield_kg")
     ax2.plot(m, col(bg, "rms_raw_mm"), "-o", color=c, lw=2, ms=4, label=lab)
 ax2.axhline(0.34, ls=":", color="#888")
-ax2.annotate("scattered: floor at ~0.8 kg (6 mm)", (0.8, 0.34), (1.5, 1.2),
+ax2.annotate("scattered: floor at ~1.2 kg (8 mm)", (1.19, 0.35), (2.0, 1.2),
              fontsize=8, color="#2e8b57", arrowprops=dict(arrowstyle="->", color="#2e8b57"))
-ax2.annotate("662: needs ~5 kg (20 mm)", (5.1, 0.36), (3.0, 3.0),
+ax2.annotate("662: needs ~5 kg (20 mm)", (5.1, 0.36), (3.2, 3.0),
              fontsize=8, color="#e67e22", arrowprops=dict(arrowstyle="->", color="#e67e22"))
-ax2.text(6.5, 8.5, "Co-60: still failing\nat 10.8 kg (30 mm)\n→ unshieldable,\nuse coded+stripping",
+ax2.text(8.5, 6.0, "Co-60: only at\n~11 kg (30 mm)\n→ not carriable,\nuse coded+stripping",
          fontsize=8, color="#c0392b", ha="center")
 ax2.set_xlabel("5-sided shield mass (kg)"); ax2.set_ylabel("localization RMS (mm)")
 ax2.set_yscale("log")
 ax2.set_title("(2) RMS vs shield WEIGHT — the design trade\nspend mass only where it buys SNR")
 ax2.legend(fontsize=8); ax2.grid(alpha=0.3, which="both")
 
-fig.suptitle("Optimal 5-sided shield: ~6 mm W (0.8 kg) kills realistic scattered background; a mono-662 field "
-             "wants ~15-20 mm; Co-60 can't be shielded in a carriable mass — beat it with coded+spectral, not lead.",
-             fontsize=10)
+fig.suptitle("Optimal 5-sided shield (NIST-mu, narrow-beam): ~8 mm W (1.2 kg) kills realistic scattered background; "
+             "a mono-662 field wants ~20 mm; Co-60 only at ~30 mm/11 kg (not carriable) — beat it with coded+spectral, not lead.",
+             fontsize=9.5)
 fig.tight_layout(rect=[0, 0, 1, 0.94])
 out = os.path.join(here, "shield.png")
 fig.savefig(out, dpi=130); print("saved", out)

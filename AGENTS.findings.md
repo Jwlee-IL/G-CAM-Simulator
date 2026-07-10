@@ -274,8 +274,8 @@ it from all lower channels.
 Themes 15 (spatial) and 16 (spectral) joined: strip the Co-60 downscatter out of the Cs-137 662 keV
 window **per pixel** (subtract `R × the pixel's Co-60-photopeak count`, R = the aggregate
 downscatter-into-662 / Co-photopeak ratio ≈ 0.15), **then decode**. Because the Co downscatter is coded
-from Co-60's direction just like its photopeak, the subtraction is spatially matched — it removes the
-contamination *where it actually landed*. Run: `montecarlo compton-strip samples/scenario.json`
+from Co-60's direction just like its photopeak, the subtraction is applied through the Co photopeak IMAGE,
+so it removes the contamination *where it actually landed*. Run: `montecarlo compton-strip samples/scenario.json`
 (Co-60 ×8 = a stronger dominant source, so the contamination is visible not just countable) →
 `samples/compton_strip_combined.png` (plot via `plot_compton_strip.py`).
 - **Recovers the true Cs-137 net count to ~0 %** from a **+74–76 %** raw-window over-count, in both
@@ -284,9 +284,17 @@ contamination *where it actually landed*. Run: `montecarlo compton-strip samples
   removes the ghost, leaving the clean Cs image.
 - **Co-located sources** — the case the spatial decode ALONE cannot separate (theme 15's stated
   limit): raw 662 is one peak inflated +76 %; per-pixel stripping brings it back to the true Cs count.
-  So the spectral + spatial levers *together* disentangle even two isotopes at the same position.
+  So the spectral + spatial levers *together* recover even two isotopes at the same position.
 - Locked in by `ComptonTests.Stripping_RecoversCsCount_EvenCoLocated`.
 - Reproduce: `montecarlo compton-strip samples/scenario.json`.
+- **Codex caveat (round 4)** — this is NOT blind, model-free separation: `R` is computed from the true
+  simulated Co contamination map (`Σ coInto662 / Σ coWindow`) and is a **single GLOBAL scalar applied per
+  pixel via the Co-window image** (not a verified per-pixel ratio). The honest claim is: *given a known Co
+  line and a calibrated downscatter/photopeak ratio, the Cs count is recovered even when co-located*. The
+  spatial matching comes from the Co photopeak image; `R` itself is assumed calibrated. Aggregate count
+  recovery can look excellent while local residuals remain (R non-uniformity from edge escape / cascade
+  positioning / broad Co window is not checked). Count evidence is printed to the console, not in
+  `strip_*.csv` (those hold only the reconstruction grids).
 
 ## 18. Source distance (z) estimation by coded-aperture refocusing — `DepthStudy`
 The pipeline had assumed the source distance S known; it can be *recovered*. The mask-shadow
@@ -443,22 +451,33 @@ rank-7, non-cyclic decode.**
   σ ≈ FWHM_ref/(2.35·√N_ref) + a ~0.3 % extrapolation floor. A built-in source (~300 cps, 10 s update) →
   σ ≈ 0.3 % (flat vs T); **K-40 background (~0.05 cps) → σ ≈ 2.5 %, too weak** → **GAGG has no intrinsic line
   (unlike LYSO's Lu-176), so ③ costs a built-in reference source**. **Telemetry** (`sipm_stab_trend.py` →
-  `sipm_stab_trend.{png,csv}`): over a mission (DAQ warm-up +8 °C then outdoors −10 °C), an **uncompensated
-  window drops to 0 % kept counts from the board's OWN warm-up alone** (no external ΔT needed — this is the
-  cooling headache), while ①/③ hold 100 %. Log `time, T, peak-drift, window-kept` in that CSV format to
-  replay a count-rate dip later. ③ only earns its keep for wide ΔT (outdoor) or tight windows (close lines);
-  indoors ± a few °C, ① alone suffices.
+  `sipm_stab_trend.{png,csv}`): over a mission (DAQ warm-up +8 °C + a small ambient swing ≈ +10 °C excursion,
+  then outdoors −10 °C), an **uncompensated window collapses to ≈0 % kept counts** — modest indoor-scale
+  heating alone is enough — while ①/③ hold 100 %. Log `time, T, peak-drift, window-kept` in that CSV format
+  to replay a count-rate dip later. ③ only earns its keep for wide ΔT (outdoor) or tight windows (close
+  lines); indoors ± a few °C, ① alone suffices. **Codex-verified (round 4)**: tempco −1.8 %/°C (Hamamatsu
+  datasheet), the 3.2 °C window-loss point, the ③ centroid-statistics formula, and the "LED bypasses the
+  crystal so only ③ catches light-yield drift" logic all check out. Caveats it added: warm-up ALONE is
+  −15.6 % → ~3 % kept (the ≈0 % needs the ambient swing too); the SiPM is modelled gain-only, but
+  overvoltage-dependent PDE makes the real fixed-bias drift slightly LARGER (conservative — strengthens the
+  "you must compensate" conclusion); K-40's σ is update-rate-dependent (~2.5 % at 60 s, ~6 % at 10 s).
 - **Optimal 5-sided shield thickness** (`ShieldStudy`, `montecarlo shield` → `samples/shield.{csv,png}`,
   `plot_shield.py`). Side/top/bottom/rear background is pure uncoded noise; wall transmits exp(−μ·t) onto
   the flood → localization RMS vs t vs mass. **The optimum is set by the background ENERGY**: scattered
-  ~250 keV (HVL 0.9 mm) → **~6 mm W (0.8 kg) reaches the 0.34 mm floor**; a mono-662 field needs ~15–20 mm
-  (~5 kg) OR ~12 mm + calibrated background subtraction (the software lever ≈ halves the required
-  thickness); **Co-60 ~1250 keV is unshieldable in a carriable mass** (30 mm/10.8 kg still 8 mm RMS) →
-  beat high-energy with **coded separation + Compton stripping, not lead**. Design decision: **size the
-  5-sided noise shield to ~6 mm (realistic scattered background), match only the front to the mask (10 mm);
-  this revises the device lighter (~1.5–2 kg) than the 12 mm assumed in the weight model** when the
+  ~250 keV (μ 0.50/mm, HVL 1.4 mm) → **~8 mm W (1.2 kg) reaches the 0.34 mm floor**; a mono-662 field needs
+  ~20 mm (~5 kg) OR ~12–15 mm + calibrated background subtraction (the software lever ≈ halves the required
+  thickness); **Co-60 ~1250 keV is shieldable only at ~30 mm / 11 kg (RMS 1.08 mm) — technically possible
+  but NOT carriable** → beat high-energy with **coded separation + Compton stripping, not lead**. Design
+  decision: **size the 5-sided noise shield to ~8 mm (realistic scattered background), match only the front
+  to the mask (10 mm); this keeps the device ~1.5–2 kg** vs the 12 mm assumed in the weight model when the
   environment is scattered-background-dominated. Blocking the low/mid-energy background alone already pays
-  for the shield; Co-60 being unshieldable is expected and handled in software.
+  for the shield; Co-60 being impractical to shield is expected and handled in software. **Codex-fixed (round
+  4)**: μ_W now uses NIST-XCOM tabulated values per line (the crystal-Compton MuRel power law
+  underestimated high-E attenuation ~40 % at 1.25 MeV → had made Co-60 too pessimistic); the knee heuristic
+  gained an absolute quality gate (RMS < fail-threshold, fail-rate < 10 %) so a never-localizing background no
+  longer reports a bogus knee; mass uses max(PixelsX,PixelsY). Model is **narrow-beam / uncollided** (single
+  exp(−μt); Compton buildup + oblique path lengths neglected → the mm/kg knees are first-order, not
+  transport-grade).
 - Files: design models `samples/handheld_design_study.py`, `plot_handheld_validation.py`,
   `camera_parallax_study.py`, `thermal_motion_study.py`, `sipm_thermal_study.py`, `sipm_stab_trend.py`,
   `plot_shield.py`, `hardware_concept.py`; scenarios `samples/scenario_handheld.json`, `scenario_orig_gagg.json`; SiPM preset

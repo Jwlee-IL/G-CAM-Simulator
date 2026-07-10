@@ -173,13 +173,16 @@ static int RunShield(string[] args)
     const double failThr = 3.0;
     double[] thick = [0, 2, 4, 6, 8, 10, 12, 15, 20, 25, 30];
 
-    // Background energies -> tungsten linear attenuation via the validated MuRel scaling.
-    double MuW(double e) => 0.178 * Math.Pow(661.7 / e, 1.56);
-    var backgrounds = new (string label, double energy)[]
+    // Tungsten linear attenuation (per mm) — from NIST XCOM total-with-coherent (mu/rho * rho).
+    // NOTE: the crystal-Compton MuRel power law (661.7/E)^1.56 is only accurate NEAR 662 keV; it
+    // underestimates high-energy attenuation badly (~40% low at 1.25 MeV), so shielding must use
+    // tabulated coefficients per line, not that scaling. Values are narrow-beam (uncollided) — a
+    // first-order model that neglects Compton buildup and oblique path lengths (knees ~ approximate).
+    var backgrounds = new (string label, double energy, double muPerMm)[]
     {
-        ("scattered_250keV", 250.0),
-        ("Cs137_662keV",     661.7),
-        ("Co60_1250keV",     1250.0),
+        ("scattered_250keV", 250.0,  0.50),    // NIST W ~0.26 cm^2/g
+        ("Cs137_662keV",     661.7,  0.178),   // ~0.093 cm^2/g (anchor)
+        ("Co60_1250keV",     1250.0, 0.112),   // ~0.058 cm^2/g
     };
 
     Console.WriteLine("Optimal 5-sided (side/top/bottom/rear) tungsten shield thickness");
@@ -189,21 +192,24 @@ static int RunShield(string[] args)
 
     var study = new ShieldStudy(new DefaultSimulationFactory());
     var csv = new System.Text.StringBuilder("bg,thickness_mm,transmission,bg_per_px,rms_raw_mm,rms_calib_mm,fail_raw,shield_kg\n");
-    foreach (var (label, energy) in backgrounds)
+    foreach (var (label, energy, mu) in backgrounds)
     {
-        double mu = MuW(energy);
         var rows = study.Run(baseConfig, nSrc, bg0, mu, thick, repeats, failThr);
         csv.Append(ShieldStudy.ToCsv(label, rows).Split('\n', 2)[1]);   // drop repeated header
 
-        // knee = thinnest t whose raw RMS is within 15% of the best (thick-shield) RMS
+        // A REAL knee: thinnest t whose raw RMS is near the best AND actually localizes well
+        // (absolute quality gate — otherwise a background that never localizes returns a bogus
+        // "knee" at the first row that merely ties the equally-bad rest).
         double floor = rows.Min(r => r.RmsRawMm);
-        var knee = rows.FirstOrDefault(r => r.RmsRawMm <= floor * 1.15) ?? rows[^1];
+        var knee = rows.FirstOrDefault(r => r.RmsRawMm <= floor * 1.15 && r.RmsRawMm < failThr && r.FailRaw < 0.10);
 
         Console.WriteLine($"=== background {label}  (mu_W = {mu:F3}/mm, HVL {0.6931/mu:F1} mm) ===");
         Console.WriteLine("  t(mm)  transmit  bg/px   RMS raw   RMS calib   shield(kg)");
         foreach (var r in rows)
             Console.WriteLine($"  {r.ThicknessMm,4:F0}   {r.Transmission,7:F3}  {r.BgPerPixel,6:F2}  {r.RmsRawMm,6:F2}mm  {r.RmsCalibMm,7:F2}mm   {r.ShieldMassKg,7:F2}");
-        Console.WriteLine($"  -> useful thickness ~ {knee.ThicknessMm:F0} mm  (RMS {knee.RmsRawMm:F2} mm, shield {knee.ShieldMassKg:F2} kg)");
+        Console.WriteLine(knee is null
+            ? $"  -> NO useful thickness in [{thick[0]:F0},{thick[^1]:F0}] mm (unshieldable at carriable mass here)"
+            : $"  -> useful thickness ~ {knee.ThicknessMm:F0} mm  (RMS {knee.RmsRawMm:F2} mm, shield {knee.ShieldMassKg:F2} kg)");
         Console.WriteLine();
     }
     File.WriteAllText("samples/shield.csv", csv.ToString());

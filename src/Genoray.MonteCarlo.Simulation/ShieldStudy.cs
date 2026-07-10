@@ -43,8 +43,10 @@ public sealed class ShieldStudy
         var rng = _factory.CreateRandom(baseConfig);
         double tx = baseConfig.Source.Position[0], ty = baseConfig.Source.Position[1];
 
-        // fixed barrel geometry the walls must enclose (mask plane -> behind the crystal)
-        double det = baseConfig.Detector.PixelsX * baseConfig.Detector.PixelPitchMm;
+        // fixed barrel geometry the walls must enclose (mask plane -> behind the crystal).
+        // Use the larger detector dimension so a rectangular array is still fully enclosed.
+        double det = Math.Max(baseConfig.Detector.PixelsX, baseConfig.Detector.PixelsY)
+                     * baseConfig.Detector.PixelPitchMm;
         double barrel = baseConfig.Geometry.MaskDetectorDistanceMm + baseConfig.Detector.CrystalThicknessMm;
 
         var raw = new DetectorImage(W, H);

@@ -79,8 +79,9 @@ def window_mask(E):
     return (ctr > E * (1 - WF)) & (ctr < E * (1 + WF))
 
 def net_area(s, E):
-    """Photopeak net area: gross window minus a linear local baseline (side-band average) —
-    standard ROI netting, so a peak riding on a residual continuum isn't over-counted."""
+    """Photopeak net area: gross window minus a FLAT baseline = the MINIMUM of the two side-band
+    means (not a linear side-band interpolation) — a robust ROI netting that avoids a neighbouring
+    photopeak inflating the baseline, at the cost of being biased low on a sloped continuum."""
     m = window_mask(E)
     lo, hi, bw = E * (1 - WF), E * (1 + WF), 0.05 * E
     left = s[(ctr > lo - bw) & (ctr < lo)]
