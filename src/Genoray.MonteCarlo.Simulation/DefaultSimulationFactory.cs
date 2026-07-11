@@ -14,20 +14,40 @@ public sealed class DefaultSimulationFactory : ISimulationFactory
 
     public ISource CreateSource(SimulationConfig config)
     {
-        // Coordinate frame: detector at z=0, mask at z=D, source at z=D+S.
-        // Source lateral position (x, y) is the "off-axis angle" knob; Position[2] is unused.
-        var p = config.Source.Position;
+        // Coordinate frame: detector at z=0, mask at z=D, all sources on the source plane z=D+S.
+        // Lateral (x, y) is the "off-axis angle" knob; Position[2] is unused (sources share one plane).
         double sourceZ = config.Geometry.MaskDetectorDistanceMm + config.Geometry.SourceMaskDistanceMm;
-        var pos = new Vector3(p[0], p[1], sourceZ);
+        double halfW = config.Detector.PixelsX * config.Detector.PixelPitchMm / 2.0;
+        double halfH = config.Detector.PixelsY * config.Detector.PixelPitchMm / 2.0;
 
-        if (config.Source.DirectionalBiasing)
+        // Mixed-isotope field: build one emitter per (source, line), weighted by activity × intensity.
+        if (config.Sources is { Length: > 0 } scene)
         {
-            double halfW = config.Detector.PixelsX * config.Detector.PixelPitchMm / 2.0;
-            double halfH = config.Detector.PixelsY * config.Detector.PixelPitchMm / 2.0;
-            return new DetectorBiasedSource(pos, config.Source.EnergyKeV, halfW, halfH, detPlaneZ: 0.0);
+            var emitters = new List<(Vector3, double, double)>();
+            foreach (var s in scene)
+            {
+                var sp = new Vector3(s.Position[0], s.Position[1], sourceZ);
+                foreach (var (energy, intensity) in LinesOf(s))
+                    emitters.Add((sp, energy, s.ActivityBq * intensity));
+            }
+            // Scene-global biasing flag lives on the primary Source.
+            return new MixedFieldSource(emitters, config.Source.DirectionalBiasing, halfW, halfH, detPlaneZ: 0.0);
         }
 
+        var p = config.Source.Position;
+        var pos = new Vector3(p[0], p[1], sourceZ);
+        if (config.Source.DirectionalBiasing)
+            return new DetectorBiasedSource(pos, config.Source.EnergyKeV, halfW, halfH, detPlaneZ: 0.0);
         return new IsotropicSource(pos, config.Source.EnergyKeV);
+    }
+
+    // The emission lines of a source: its explicit multi-line list, else the single (energy, branching).
+    private static IEnumerable<(double energy, double intensity)> LinesOf(SourceConfig s)
+    {
+        if (s.Lines is { Length: > 0 } lines)
+            foreach (var l in lines) yield return (l.EnergyKeV, l.Intensity);
+        else
+            yield return (s.EnergyKeV, s.BranchingRatio);
     }
 
     public IMask CreateMask(SimulationConfig config)

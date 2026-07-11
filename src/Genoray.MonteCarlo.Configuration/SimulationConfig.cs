@@ -15,6 +15,15 @@ public sealed class SimulationConfig
     public int? Seed { get; set; }
 
     public SourceConfig Source { get; set; } = new();
+
+    /// <summary>
+    /// Optional MIXED-ISOTOPE FIELD: several sources (each at its own position, with its own
+    /// activity and emission lines) imaged through the coded aperture in ONE run. When non-empty this
+    /// replaces the single <see cref="Source"/> for emission (Source still holds scene-global settings
+    /// like <see cref="SourceConfig.DirectionalBiasing"/>). Null/empty = the classic single source.
+    /// </summary>
+    public SourceConfig[]? Sources { get; set; }
+
     public MaskConfig Mask { get; set; } = new();
     public DetectorConfig Detector { get; set; } = new();
     public GeometryConfig Geometry { get; set; } = new();
@@ -54,7 +63,8 @@ public sealed class SourceConfig
     /// <summary>Primary gamma energy in keV.</summary>
     public double EnergyKeV { get; set; } = 661.7;
 
-    /// <summary>Source position [x, y, z] in mm.</summary>
+    /// <summary>Source position [x, y, z] in mm. Only x, y are used (the "off-axis angle"); z is
+    /// ignored — every source sits on the source plane z = MaskDetectorDistance + SourceMaskDistance.</summary>
     public double[] Position { get; set; } = [0.0, 0.0, 0.0];
 
     /// <summary>
@@ -72,6 +82,26 @@ public sealed class SourceConfig
 
     /// <summary>Gamma emission probability per decay (Cs-137 662 keV line = 0.851).</summary>
     public double BranchingRatio { get; set; } = 0.851;
+
+    /// <summary>
+    /// Optional MULTI-LINE emission: the source emits each of these lines (energy + per-decay
+    /// intensity), instead of the single <see cref="EnergyKeV"/> at <see cref="BranchingRatio"/>.
+    /// e.g. Co-60 = [{1173.2, 0.999}, {1332.5, 0.999}]. Null/empty = the single line.
+    /// </summary>
+    public EmissionLine[]? Lines { get; set; }
+}
+
+/// <summary>One gamma emission line: energy and per-decay intensity (branching).</summary>
+public sealed class EmissionLine
+{
+    public double EnergyKeV { get; set; }
+
+    /// <summary>Photons of this line emitted per decay (0..~1). Sets the relative line strength.</summary>
+    public double Intensity { get; set; } = 1.0;
+
+    /// <summary>Part of a coincident cascade (e.g. Co-60 1173+1332 both emitted per decay). Informational
+    /// for now — used by the detector's cascade/sum modelling, not by the geometric flood.</summary>
+    public bool CascadeCoincident { get; set; } = false;
 }
 
 /// <summary>The coded-aperture mask.</summary>
