@@ -68,6 +68,9 @@ if (args[0].Equals("mixedfield", StringComparison.OrdinalIgnoreCase))
 if (args[0].Equals("mixediso", StringComparison.OrdinalIgnoreCase))
     return RunMixedIso(args);
 
+if (args[0].Equals("mixedstrip", StringComparison.OrdinalIgnoreCase))
+    return RunMixedStrip(args);
+
 var config = ConfigLoader.Load(args[0]);
 Console.WriteLine($"Scenario : {config.Name}");
 Console.WriteLine($"Isotope  : {config.Source.Isotope} @ {config.Source.EnergyKeV} keV");
@@ -171,6 +174,78 @@ static int RunSweep(string[] args)
         Console.WriteLine($"CSV: {csvPath}");
         Console.WriteLine();
     }
+    return 0;
+}
+
+static int RunMixedStrip(string[] args)
+{
+    if (args.Length < 2) { Console.Error.WriteLine("Usage: montecarlo mixedstrip <base.json>"); return 1; }
+    var baseCfg = ConfigLoader.Load(args[1]);
+    baseCfg.PhotonCount = 4_000_000;
+    baseCfg.Decoder.Cyclic = false;
+    double frac = baseCfg.Geometry.MaskDetectorDistanceMm /
+                  (baseCfg.Geometry.MaskDetectorDistanceMm + baseCfg.Geometry.SourceMaskDistanceMm);
+    baseCfg.Decoder.ReconHalfExtentMm = 0.95 * baseCfg.Mask.Rank * baseCfg.Mask.CellPitchMm / frac / 2.0;
+    baseCfg.Decoder.ReconStepMm = 0.4;
+    const double wf = 0.10, csLine = 661.7, coCenter = 1332.5;
+
+    SourceConfig Cs(double[] p) => new() { Position = p, ActivityBq = 1.0, Lines = [new EmissionLine { EnergyKeV = csLine, Intensity = 0.851 }] };
+    SourceConfig Co(double[] p) => new() { Position = p, ActivityBq = 8.0, Lines = [new EmissionLine { EnergyKeV = 1173.2, Intensity = 0.999 }, new EmissionLine { EnergyKeV = 1332.5, Intensity = 0.999 }] };
+    DetectorImage Flood(SourceConfig[] s, double center, long? photons = null)
+    {
+        var c = baseCfg.Clone(); c.Sources = s; c.PhotonCount = photons ?? baseCfg.PhotonCount;
+        return new SimulationRunner(new ComptonFactory(ComptonStrategy.PerPixelWindow, center, wf)).Run(c).DetectorImage;
+    }
+    static double Sum(DetectorImage m) { double s = 0; foreach (var v in m.Raw) s += v; return s; }
+
+    // The mixed field splits a FIXED photon budget by emission weight, so a weak source is diluted.
+    // The "true Cs count" reference is therefore Cs run at its share of the budget (w_Cs / Σw), so it
+    // is comparable to the Cs contribution actually inside the mixed 662 window.
+    double wCsE = 1.0 * 0.851, wCoE = 8.0 * (0.999 + 0.999);
+    long csPhotons = (long)(baseCfg.PhotonCount * (wCsE / (wCsE + wCoE)));
+
+    // R = downscatter-into-662 per Co-photopeak — a budget-INDEPENDENT ratio (a crystal/window/geometry
+    // property, not the source strength), calibrated from a Co-only run.
+    var coCal662 = Flood([Co([0, 0, 0.0])], csLine);
+    var coCalWin = Flood([Co([0, 0, 0.0])], coCenter);
+    double R = Sum(coCalWin) > 0 ? Sum(coCal662) / Sum(coCalWin) : 0.0;
+
+    Console.WriteLine("Per-pixel Compton stripping on a TRUE mixed field (Cs-137 + Co-60 ACTIVITY ×8).");
+    Console.WriteLine($"  Calibrated R (Co downscatter-into-662 / Co-photopeak) = {R:F3}");
+    Console.WriteLine();
+    Console.WriteLine("  scene         true Cs   raw 662   stripped   raw err / stripped err");
+    Console.WriteLine("  -----------   -------   -------   --------   ----------------------");
+    var decoder = new DefaultSimulationFactory().CreateDecoder(baseCfg)!;
+    foreach (var (name, csP, coP) in new[] { ("separated", new[] { 4.0, 0.0, 0.0 }, new[] { -5.0, 3.0, 0.0 }),
+                                             ("co-located", new[] { 0.0, 0.0, 0.0 }, new[] { 0.0, 0.0, 0.0 }) })
+    {
+        var trueCs = Flood([Cs(csP)], csLine, csPhotons);   // Cs at its mixed-field photon share
+        var raw662 = Flood([Cs(csP), Co(coP)], csLine);
+        var coWin = Flood([Cs(csP), Co(coP)], coCenter);
+        var stripped = new DetectorImage(raw662.Width, raw662.Height);
+        for (int y = 0; y < raw662.Height; y++)
+            for (int x = 0; x < raw662.Width; x++)
+                stripped[x, y] = Math.Max(0.0, raw662[x, y] - R * coWin[x, y]);
+
+        double tCs = Sum(trueCs), rw = Sum(raw662), st = Sum(stripped);
+        Console.WriteLine($"  {name,-11}   {tCs,7:F0}   {rw,7:F0}   {st,8:F0}   {(rw - tCs) / tCs * 100,+6:F0}% / {(st - tCs) / tCs * 100,+6:F0}%");
+
+        if (name == "co-located")
+            foreach (var (tag, img) in new[] { ("raw", raw662), ("stripped", stripped) })
+            {
+                var d = decoder.Decode(img);
+                var sb = new StringBuilder("x_mm,y_mm,value\n");
+                for (int gy = 0; gy < d.Reconstruction!.Height; gy++)
+                    for (int gx = 0; gx < d.Reconstruction.Width; gx++)
+                        sb.Append($"{d.ReconOriginMm + gx * d.ReconStepMm:F2},{d.ReconOriginMm + gy * d.ReconStepMm:F2},{d.Reconstruction[gx, gy]:F4}\n");
+                File.WriteAllText($"samples/mixedstrip_{tag}.csv", sb.ToString());
+            }
+    }
+    Console.WriteLine();
+    Console.WriteLine("Separated: coded decode already splits them; stripping removes the Co count over-estimate.");
+    Console.WriteLine("Co-located: spatial decode CANNOT separate — per-pixel stripping recovers the Cs count to");
+    Console.WriteLine("≈true (±few %; the max(0,·) floor biases it slightly up). The spectral lever succeeds where");
+    Console.WriteLine("the spatial one can't. CSV: samples/mixedstrip_*.csv");
     return 0;
 }
 

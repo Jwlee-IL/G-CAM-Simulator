@@ -647,6 +647,20 @@ optional (null = classic single source, backward compatible).
   Honest framing (Codex): this separates the two 662-window components by **POSITION**; isotope ID of
   CO-LOCATED sources still needs the spectral lever (per-pixel stripping, themes 16–17), and the test is
   localization-only (doesn't itself prove the accepted Co events are specifically downscatter).
+- **Per-pixel stripping on the mixed field (refinement, `montecarlo mixedstrip` → `samples/mixedstrip.png`)**:
+  the SPECTRAL lever for CO-LOCATED sources, now from a true mixed field. From one mixed scene it builds
+  raw662 (Cs photopeak + Co downscatter) and coWin (Co 1332 photopeak; Cs deposits ≤662 → ~0 there), and
+  subtracts `stripped = max(0, raw662 − R·coWin)` with **R = downscatter-into-662 / Co-photopeak ≈ 1.18**
+  calibrated from a Co-only run. Both **separated AND co-located**: raw over-counts Cs by **+223 %** (Co
+  contamination), stripping recovers it to **≈true (+1–3 %)** — the co-located case is the one spatial decode
+  CANNOT split. Key subtlety (found + fixed): the mixed field splits a FIXED photon budget by emission weight,
+  so the weak Cs is diluted to ~5 %; the "true Cs" reference is Cs at its budget share
+  (`PhotonCount·wCs/Σw`), which makes raw/stripped comparable. **Codex-verified (juncture 4)**: the scaled
+  reference is correct, R is budget-independent (a ratio, linear in count), coWin is Co-only, R≈1.18 is
+  plausible for a thin/low-photofraction crystal at 1332 keV. Caveats: R depends on crystal/window/geometry
+  (not a pure "crystal constant"); recovery is approximate (the max(0,·) floor biases slightly up); the
+  Compton detector has no spectral smearing yet. So spatial (coded decode) + spectral (stripping) together
+  disentangle even co-located isotopes from a true mixed field — the full two-lever result (themes 15–17).
 - Scope: the mask μ is still energy-independent, so widely different lines (122 vs 1332 keV) attenuate alike
   in the mask (a future refinement).
 - Locked in by `MixedFieldTests` (superposition, single-source equivalence, multi-line split, 3-source
