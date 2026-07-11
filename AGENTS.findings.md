@@ -662,7 +662,7 @@ optional (null = classic single source, backward compatible).
   Compton detector has no spectral smearing yet. So spatial (coded decode) + spectral (stripping) together
   disentangle even co-located isotopes from a true mixed field — the full two-lever result (themes 15–17).
 - **Energy-dependent mask μ (final refinement)**: `CodedApertureMask` now scales its attenuation by the
-  tungsten **μ(E)/μ(662)** ratio (NIST-XCOM points 122→28.6, 250→2.82, 662→1.0, 1332→0.61, log–log
+  tungsten **μ(E)/μ(662)** ratio (NIST-XCOM points 122→28.6, 250→5.0, 662→1.0, 1332→0.55, log–log
   interpolated), so in a mixed field **low-energy Co-57 122 keV is heavily blocked by closed cells while
   Co-60 1332 keV leaks through** (verified: 1332-line detected weight > 122-line at equal emission weight).
   Anchored at 662 = 1.0 so `Mask.LinearAttenuationPerMm` keeps its meaning and all single-662 studies are

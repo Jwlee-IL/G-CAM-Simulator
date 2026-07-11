@@ -134,8 +134,9 @@ public sealed class CodedApertureMask : IMask
     // Tungsten linear-attenuation ratio μ(E)/μ(662 keV), from NIST-XCOM total-with-coherent points
     // (photoelectric-steep below ~200 keV, Compton-flat above), log–log interpolated and end-clamped.
     // Anchored at 662 keV = 1.0 so the config's LinearAttenuationPerMm keeps its meaning.
+    // Relative-to-662 tungsten total-attenuation ratios (NIST-XCOM, corrected per Codex round 6).
     private static readonly double[] _muE = { 122.0, 250.0, 400.0, 662.0, 1000.0, 1332.0 };
-    private static readonly double[] _muR = { 28.6, 2.82, 1.60, 1.00, 0.72, 0.61 };
+    private static readonly double[] _muR = { 28.6, 5.0, 1.95, 1.00, 0.67, 0.55 };
 
     private static double TungstenMuRel(double energyKeV)
     {
