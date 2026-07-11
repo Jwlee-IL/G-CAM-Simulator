@@ -611,3 +611,32 @@ project's first cocotb co-simulation — it drives the DUT directly, replacing t
   Fixes applied: documented the FIR's context-determined WACC width (the WIN-wide taps sign-extend — no
   overflow; explicit casts avoided to keep Yosys-0.9 compatibility), and the cocotb test now asserts the
   **contractual latency** (direct 0, pipelined 3), not just bit-exactness at some offset.
+
+---
+
+## 26. Mixed-isotope field imaged in one run — `MixedFieldSource` / `MixedFieldStudy`
+The core-capability gap closed: a REAL mixed field (several sources, each multi-line) imaged through the
+coded aperture in ONE Monte-Carlo run, instead of summing per-line runs. Config: `SimulationConfig.Sources[]`
+(scene) + `SourceConfig.Lines[]` (multi-line) + `EmissionLine{EnergyKeV, Intensity, CascadeCoincident}` — all
+optional (null = classic single source, backward compatible).
+- **Emission model** (`MixedFieldSource`): per photon, pick a (position, line) emitter with probability ∝
+  **activity × line-intensity**, emit from it with the `DetectorBiasedSource` importance weight. **No extra
+  reweight** — proportional photon allocation makes each emitter's contribution ∝ its weight, and the biasing
+  weight carries each source's own geometric efficiency. Validated by **superposition**:
+  mixed(A:1 + B:3) detected weight ≈ 0.25·single(A) + 0.75·single(B). **Codex-verified (juncture 1)**: the
+  proportional-allocation estimator is correct/unbiased (DetectedWeight estimates
+  `PhotonCount·Σ(activity·intensity/Σw · geo-eff)`); `Pick()`, factory weighting, `LinesOf` fallback all
+  sound. Fix: reject empty / non-finite / total-nonpositive emitter weights.
+- **Multi-source imaging** (`MixedFieldStudy`, `montecarlo mixedfield` → `samples/mixedfield.png`): a
+  **Cs-137 @(5,1) + Co-60 @(-6,3) + Co-57 @(0,-6)** field, imaged in one non-cyclic run, is decoded and the
+  K strongest peaks extracted by greedy non-max suppression → **all three localized < 1 mm**. The recon grid
+  is limited to the FCFOV (beyond it the partial-coding region throws edge artifacts that outshine the weakest
+  source — Cs here, being the lowest activity×intensity). **Codex-verified (juncture 2)**: `TopPeaks` correct;
+  FCFOV limiting legitimate for **K-known localization inside the FCFOV** (not blind source-counting). Fix:
+  **one-to-one** truth↔found matching (a single peak can no longer be reused to "cover" several truths);
+  empty-`Sources` handling aligned with the factory; parameter guards.
+- Scope: this separates POSITIONS (all sources at once); it does not yet energy-window to separate ISOTOPES
+  at the pipeline level (that combines with the crystal-Compton detector, themes 15–17 — a future step). The
+  mask μ is still energy-independent, so widely different lines (122 vs 1332 keV) attenuate alike in the mask.
+- Locked in by `MixedFieldTests` (superposition, single-source equivalence, multi-line split, 3-source
+  localization). 30 tests green. Reproduce: `montecarlo mixedfield samples/scenario.json`.

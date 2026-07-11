@@ -52,6 +52,32 @@ public class MixedFieldTests
     }
 
     [Fact]
+    public void MultiSource_AllLocalized_InOneRun()
+    {
+        // Three sources at three positions imaged in ONE mixed-field run; multi-peak extraction
+        // recovers all of them (the recon grid is kept inside the FCFOV to avoid edge artifacts).
+        var cfg = Base();
+        cfg.PhotonCount = 1_500_000;
+        cfg.Decoder.Cyclic = false;
+        double frac = cfg.Geometry.MaskDetectorDistanceMm /
+                      (cfg.Geometry.MaskDetectorDistanceMm + cfg.Geometry.SourceMaskDistanceMm);
+        cfg.Decoder.ReconHalfExtentMm = 0.95 * cfg.Mask.Rank * cfg.Mask.CellPitchMm / frac / 2.0;
+        cfg.Decoder.ReconStepMm = 0.4;
+        cfg.Sources =
+        [
+            new SourceConfig { Position = [5, 1, 0.0], ActivityBq = 1.0 },
+            new SourceConfig { Position = [-6, 3, 0.0], ActivityBq = 1.0 },
+            new SourceConfig { Position = [0, -6, 0.0], ActivityBq = 1.0 },
+        ];
+        var r = new MixedFieldStudy(new DefaultSimulationFactory())
+            .LocalizeMultiple(cfg, k: 3, minSeparationMm: 3.0);
+
+        // One-to-one matching so a single found peak can't be reused to "cover" several truths.
+        foreach (var m in MixedFieldStudy.MatchOneToOne(r.TruthXY, r.Found))
+            Assert.True(m.ErrorMm < 2.0, $"source ({m.TruthX},{m.TruthY}) matched peak {m.ErrorMm:F2} mm");
+    }
+
+    [Fact]
     public void MultiLine_SplitsByIntensity()
     {
         // A single source emitting two equal-intensity lines splits its photons ~50/50 between them;

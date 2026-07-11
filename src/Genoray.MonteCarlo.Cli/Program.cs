@@ -61,6 +61,9 @@ if (args[0].Equals("shield", StringComparison.OrdinalIgnoreCase))
 if (args[0].Equals("masktaper", StringComparison.OrdinalIgnoreCase))
     return RunMaskTaper(args);
 
+if (args[0].Equals("mixedfield", StringComparison.OrdinalIgnoreCase))
+    return RunMixedField(args);
+
 var config = ConfigLoader.Load(args[0]);
 Console.WriteLine($"Scenario : {config.Name}");
 Console.WriteLine($"Isotope  : {config.Source.Isotope} @ {config.Source.EnergyKeV} keV");
@@ -164,6 +167,55 @@ static int RunSweep(string[] args)
         Console.WriteLine($"CSV: {csvPath}");
         Console.WriteLine();
     }
+    return 0;
+}
+
+static int RunMixedField(string[] args)
+{
+    if (args.Length < 2) { Console.Error.WriteLine("Usage: montecarlo mixedfield <base.json>"); return 1; }
+    var baseConfig = ConfigLoader.Load(args[1]);
+    baseConfig.PhotonCount = 3_000_000;
+    baseConfig.Decoder.Cyclic = false;                 // finite-mask decode suppresses off-axis ghosts
+    // Keep the recon grid INSIDE the FCFOV (half = rank·cell/frac/2) — beyond it the partial-coding
+    // region throws edge artifacts that can outshine a weak source.
+    double frac = baseConfig.Geometry.MaskDetectorDistanceMm /
+                  (baseConfig.Geometry.MaskDetectorDistanceMm + baseConfig.Geometry.SourceMaskDistanceMm);
+    baseConfig.Decoder.ReconHalfExtentMm = 0.95 * baseConfig.Mask.Rank * baseConfig.Mask.CellPitchMm / frac / 2.0;
+    baseConfig.Decoder.ReconStepMm = 0.4;
+
+    // A real MIXED-ISOTOPE FIELD: three isotopes at three positions, imaged in ONE run.
+    baseConfig.Sources =
+    [
+        new SourceConfig { Position = [5.0, 1.0, 0.0], ActivityBq = 1.0, Lines = [new EmissionLine { EnergyKeV = 661.7, Intensity = 0.851 }] },                                   // Cs-137
+        new SourceConfig { Position = [-6.0, 3.0, 0.0], ActivityBq = 1.0, Lines = [new EmissionLine { EnergyKeV = 1173.2, Intensity = 0.999 }, new EmissionLine { EnergyKeV = 1332.5, Intensity = 0.999 }] }, // Co-60
+        new SourceConfig { Position = [0.0, -6.0, 0.0], ActivityBq = 1.5, Lines = [new EmissionLine { EnergyKeV = 122.1, Intensity = 0.856 }] },                                  // Co-57
+    ];
+
+    var study = new MixedFieldStudy(new DefaultSimulationFactory());
+    var r = study.LocalizeMultiple(baseConfig, k: baseConfig.Sources.Length, minSeparationMm: 3.0);
+
+    Console.WriteLine("Mixed-isotope field imaged in ONE coded-aperture run (non-cyclic decode):");
+    Console.WriteLine("  Cs-137 @ (5,1), Co-60 @ (-6,3), Co-57 @ (0,-6) mm  (K-known localization, K=3)");
+    Console.WriteLine();
+    Console.WriteLine("  true (x,y)      matched found (x,y)     error");
+    Console.WriteLine("  -------------   --------------------   -------");
+    double worst = 0.0;
+    foreach (var m in MixedFieldStudy.MatchOneToOne(r.TruthXY, r.Found))
+    {
+        worst = Math.Max(worst, m.ErrorMm);
+        Console.WriteLine($"  ({m.TruthX,4:F1},{m.TruthY,4:F1})      ({m.FoundX,5:F1},{m.FoundY,5:F1})          {m.ErrorMm,5:F2}mm");
+    }
+    File.WriteAllText("samples/mixedfield.csv", MixedFieldStudy.ToCsv(r));
+    // Dump the reconstruction grid for the plot.
+    var sb = new StringBuilder("x_mm,y_mm,value\n");
+    for (int gy = 0; gy < r.Recon.Height; gy++)
+        for (int gx = 0; gx < r.Recon.Width; gx++)
+            sb.Append($"{r.OriginMm + gx * r.StepMm:F2},{r.OriginMm + gy * r.StepMm:F2},{r.Recon[gx, gy]:F4}\n");
+    File.WriteAllText("samples/mixedfield_recon.csv", sb.ToString());
+    Console.WriteLine();
+    Console.WriteLine($"All {r.TruthXY.Length} sources localized, worst error {worst:F2} mm.");
+    Console.WriteLine("A true mixed field (not summed per-line runs) localizes every source at once.");
+    Console.WriteLine("CSV: samples/mixedfield.csv, samples/mixedfield_recon.csv");
     return 0;
 }
 
