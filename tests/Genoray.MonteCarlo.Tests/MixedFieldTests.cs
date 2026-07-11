@@ -106,8 +106,10 @@ public class MixedFieldTests
     [Fact]
     public void MultiLine_SplitsByIntensity()
     {
-        // A single source emitting two equal-intensity lines splits its photons ~50/50 between them;
-        // the total weight equals a single-line source of the same summed intensity (same geometry).
+        // A single source emitting two equal-intensity lines at the SAME energy splits its photons
+        // ~50/50 between them; the total weight equals a single-line source of the same summed
+        // intensity (same energy so the mask attenuates them identically — isolates the intensity split
+        // from the energy-dependent mask μ).
         var oneLine = Base();
         oneLine.Sources = [new SourceConfig { Position = [0, 0, 0.0], ActivityBq = 2.0,
             Lines = [new EmissionLine { EnergyKeV = 661.7, Intensity = 1.0 }] }];
@@ -115,11 +117,21 @@ public class MixedFieldTests
         var twoLine = Base();
         twoLine.Sources = [new SourceConfig { Position = [0, 0, 0.0], ActivityBq = 1.0,
             Lines = [new EmissionLine { EnergyKeV = 661.7, Intensity = 1.0 },
-                     new EmissionLine { EnergyKeV = 1332.5, Intensity = 1.0 }] }];
+                     new EmissionLine { EnergyKeV = 661.7, Intensity = 1.0 }] }];
 
-        // Both have total emission weight 2.0 from the same position, so the detected weight matches
-        // (the mask mu is energy-independent, so the two energies detect alike here).
         double w1 = Weight(oneLine), w2 = Weight(twoLine);
         Assert.True(System.Math.Abs(w2 - w1) / w1 < 0.05, $"two-line {w2:F1} vs one-line {w1:F1}");
+    }
+
+    [Fact]
+    public void MaskAttenuation_IsEnergyDependent()
+    {
+        // Low-energy Co-57 (122 keV) is far more attenuated by the closed tungsten cells than
+        // high-energy Co-60 (1332 keV), which leaks through — so, at fixed emission weight and
+        // position, the 1332 line detects MORE than the 122 line (energy-dependent mask μ).
+        SimulationConfig One(double e) { var c = Base(); c.Sources = [new SourceConfig { Position = [0, 0, 0.0],
+            ActivityBq = 1.0, Lines = [new EmissionLine { EnergyKeV = e, Intensity = 1.0 }] }]; return c; }
+        double wLow = Weight(One(122.1)), wHigh = Weight(One(1332.5));
+        Assert.True(wHigh > wLow, $"1332 keV weight {wHigh:F1} should exceed 122 keV {wLow:F1} (more leak)");
     }
 }

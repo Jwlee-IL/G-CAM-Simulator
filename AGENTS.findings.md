@@ -661,8 +661,12 @@ optional (null = classic single source, backward compatible).
   (not a pure "crystal constant"); recovery is approximate (the max(0,·) floor biases slightly up); the
   Compton detector has no spectral smearing yet. So spatial (coded decode) + spectral (stripping) together
   disentangle even co-located isotopes from a true mixed field — the full two-lever result (themes 15–17).
-- Scope: the mask μ is still energy-independent, so widely different lines (122 vs 1332 keV) attenuate alike
-  in the mask (a future refinement).
+- **Energy-dependent mask μ (final refinement)**: `CodedApertureMask` now scales its attenuation by the
+  tungsten **μ(E)/μ(662)** ratio (NIST-XCOM points 122→28.6, 250→2.82, 662→1.0, 1332→0.61, log–log
+  interpolated), so in a mixed field **low-energy Co-57 122 keV is heavily blocked by closed cells while
+  Co-60 1332 keV leaks through** (verified: 1332-line detected weight > 122-line at equal emission weight).
+  Anchored at 662 = 1.0 so `Mask.LinearAttenuationPerMm` keeps its meaning and all single-662 studies are
+  unchanged. Locked in by `MixedFieldTests.MaskAttenuation_IsEnergyDependent`.
 - Locked in by `MixedFieldTests` (superposition, single-source equivalence, multi-line split, 3-source
   localization, energy-window isotope separation). 31 tests green. Reproduce: `montecarlo mixedfield` /
   `montecarlo mixediso samples/scenario.json`.

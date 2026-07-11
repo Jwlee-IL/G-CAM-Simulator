@@ -124,8 +124,26 @@ public sealed class CodedApertureMask : IMask
         // Tungsten path = (fraction of slab in tungsten) × slant thickness.
         double slant = _thicknessMm / Math.Abs(dz);
         double tungstenPath = (double)nTungsten / SlabSteps * slant;
-        double transmission = Math.Exp(-_muPerMm * tungstenPath);
+        // Energy-dependent attenuation: _muPerMm is anchored at 662 keV; scale it by the tungsten μ(E)/μ(662)
+        // so low-energy lines (e.g. Co-57 122) are heavily blocked while high-energy lines (Co-60 1332) leak
+        // more through closed cells. For a mixed field the lines now attenuate differently in the mask.
+        double transmission = Math.Exp(-_muPerMm * TungstenMuRel(energyKeV) * tungstenPath);
         return rng.NextDouble() < transmission;
+    }
+
+    // Tungsten linear-attenuation ratio μ(E)/μ(662 keV), from NIST-XCOM total-with-coherent points
+    // (photoelectric-steep below ~200 keV, Compton-flat above), log–log interpolated and end-clamped.
+    // Anchored at 662 keV = 1.0 so the config's LinearAttenuationPerMm keeps its meaning.
+    private static readonly double[] _muE = { 122.0, 250.0, 400.0, 662.0, 1000.0, 1332.0 };
+    private static readonly double[] _muR = { 28.6, 2.82, 1.60, 1.00, 0.72, 0.61 };
+
+    private static double TungstenMuRel(double energyKeV)
+    {
+        if (energyKeV <= _muE[0]) return _muR[0];
+        if (energyKeV >= _muE[^1]) return _muR[^1];
+        int i = 1; while (energyKeV > _muE[i]) i++;
+        double t = (Math.Log(energyKeV) - Math.Log(_muE[i - 1])) / (Math.Log(_muE[i]) - Math.Log(_muE[i - 1]));
+        return Math.Exp(Math.Log(_muR[i - 1]) + t * (Math.Log(_muR[i]) - Math.Log(_muR[i - 1])));
     }
 
     // Pull a sample position toward the mid-plane crossing by the wall bevel: if the ray's excursion
