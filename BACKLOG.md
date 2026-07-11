@@ -9,9 +9,9 @@ Deferred work, captured so we don't forget. Not in current scope. See
 - Multi-line isotope model + mixed field — **DONE (theme 26, Stages 1–3)**: `SimulationConfig.Sources[]`
   + `SourceConfig.Lines[]` + `MixedFieldSource`/`MixedFieldStudy` image a real mixed field, localize all
   sources (`mixedfield`), and — through the crystal-Compton detector + a 662 window in ONE run — separate
-  Cs from Co-downscatter contamination by position (`mixediso`). Remaining refinements: **per-pixel
-  stripping on the mixed field** (isotope ID of CO-LOCATED sources, themes 16–17 wired to the mixed
-  source) and an **energy-dependent mask μ** (currently one μ for all lines).
+  Cs from Co-downscatter contamination by position (`mixediso`), and — with **per-pixel Compton stripping**
+  (`mixedstrip`) — recover the true Cs even for CO-LOCATED sources (spectral lever). Only remaining
+  refinement: an **energy-dependent mask μ** (currently one μ for all lines).
 
 ### RTL
 - **Drive the cocotb testbench from the C# MC per-event stream** — the cocotb Icarus runner is now in
