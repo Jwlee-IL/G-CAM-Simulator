@@ -573,11 +573,14 @@ project's first cocotb co-simulation — it drives the DUT directly, replacing t
   adder** (p+=dkl, q+=p, mm+=m); the FIR, the constant multiply, and the final `q+mm` combine are
   feed-forward register stages. **Bit-exact to the direct shaper (+3 samples latency)** — cocotb runs the
   SAME reference against both (`run_cocotb.py` → 2 tops, each TESTS=2 PASS=2). Cost measured: **512→632 FF,
-  ~809→~1056 LUT**. Its Fmax gain, however, is **NOT observable with the open flow**: Yosys 0.9's `ltp`
-  cell-count is carry-chain/constant-multiply dominated (direct 225 vs pipelined 233 — indistinguishable),
-  so an earlier "~100 MHz from ltp" reading was retracted — cell-count is not a delay proxy here. The gain
-  is real by construction (1-adder loops) but needs true STA to quantify: `vivado_trap.tcl` now takes the
-  top module (`-tclargs trapezoidal_shaper_pl`) so the direct vs pipelined Fmax can be compared in Vivado.
+  ~809→~1056 LUT**. **MEASURED Fmax gain (real place-and-route STA, open flow)**: Yosys 0.9's `ltp`
+  cell-count couldn't show it (carry/constant-multiply dominated, direct 225 vs pl 233 — the "~100 MHz
+  from ltp" reading was retracted, cell-count ≠ delay), so it was measured with **nextpnr on a Lattice
+  ECP5-6** (OSS CAD Suite: `yosys synth_ecp5 -json` → `nextpnr-ecp5 --25k --package CABGA381 --speed 6`):
+  **direct 59 MHz vs pipelined 119 MHz = ×2.0** (`rtl/fmax_ecp5.png`). On this ECP5 the direct shaper
+  can't meet a 100 MSPS ADC clock while the pipelined one clears it — the 1-adder-loop reformulation
+  delivers the predicted ~2× by real STA. (ECP5 is a Lattice proxy; exact Artix-7 Fmax still needs the
+  free-for-Artix-7 Vivado via `vivado_trap.tcl -tclargs trapezoidal_shaper_pl` — deferred, licence/install.)
   **Codex-verified (round 5)**: the `s=q+mm` reformulation is bit-exact to the direct filter INCLUDING the
   per-sample `(dkl*M_Q8)>>>8` rounding (and correctly ≠ shifting after summing); the split integrators
   `q`,`mm` drift and can wrap past WACC individually, but the two's-complement `q+mm` recovers the correct

@@ -121,8 +121,17 @@ ECP5/iCE40 proxy, not Xilinx.)
 
 `trapezoidal_shaper_pl.sv` is a **pipelined** variant (bit-exact, +3 samples latency): `s = q + mm` with
 `q=Σp`, `mm=Σm`, so every feedback loop is a single adder (the FIR/multiply/combine are feed-forward
-stages). cocotb verifies both tops against the same reference; the Fmax gain needs real STA to see (Yosys
-`ltp` cell-count is multiply/carry-chain dominated → run `vivado_trap.tcl -tclargs trapezoidal_shaper_pl`).
+stages). cocotb verifies both tops against the same reference. **Measured Fmax** (open flow, no Vivado) —
+OSS CAD Suite `yosys synth_ecp5` + `nextpnr-ecp5` on a Lattice ECP5-6 (needs the OSS-CAD-Suite bin+lib on
+PATH for its DLLs):
+```bash
+OSS=~/scoop/apps/oss-cad-suite-nightly/current; export PATH="$OSS/bin:$OSS/lib:$PATH"
+yosys -q -p "read_verilog -sv rtl/trapezoidal_shaper_pl.sv; synth_ecp5 -top trapezoidal_shaper_pl -json x.json"
+nextpnr-ecp5 --json x.json --25k --package CABGA381 --speed 6 --freq 250   # -> Max frequency ... MHz
+```
+Result: **direct 59 MHz vs pipelined 119 MHz (×2.0)** — `rtl/fmax_ecp5.png`; the direct shaper misses a
+100 MSPS clock on this part, the pipelined one clears it. Yosys `ltp` cell-count could NOT show this
+(multiply/carry dominated); real place-and-route STA does.
 
 ## Next (not done)
 - Drive the cocotb testbench from the **C# MC per-event stream** (the runner is in place; feed it
