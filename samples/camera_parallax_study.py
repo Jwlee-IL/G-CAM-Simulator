@@ -47,14 +47,14 @@ axg.text(b / 2, -55, "baseline b", ha="center", fontsize=8)
 axg.annotate("", (b, 0), (0, 0), arrowprops=dict(arrowstyle="<->", color="#333"))
 # parallax angle arc
 th = np.arctan2(b, zs)
-axg.text(6, zs * 0.78, f"Δθ = b/z\n≈ {np.degrees(b/zs):.1f}° @ {zs/1000:.1f} m", color="#2e8b57", fontsize=8)
+axg.text(6, zs * 0.78, f"Δθ = b/z\n≈ {np.degrees(np.arctan(b/zs)):.1f}° @ {zs/1000:.1f} m", color="#2e8b57", fontsize=8)
 axg.set_xlim(-60, 90); axg.set_ylim(-90, zs + 90)
 axg.set_title("Geometry: camera offset b from the gamma axis\n→ direction to a near source differs by Δθ = b/z", fontsize=9.5)
 axg.axis("off")
 
 # ---- (right) parallax misregistration vs distance ----
 for b, ls in zip(BASELINES, ["-", "--", ":"]):
-    axp.plot(z / 1000.0, np.degrees(b / z), ls, color="#2e8b57", lw=2, label=f"b = {b:.0f} mm")
+    axp.plot(z / 1000.0, np.degrees(np.arctan(b / z)), ls, color="#2e8b57", lw=2, label=f"b = {b:.0f} mm")
 axp.axhspan(0, gamma_res_deg, color="#3498db", alpha=0.12)
 axp.axhline(gamma_res_deg, color="#3498db", lw=1.2)
 axp.text(6.5, gamma_res_deg * 1.1, f"gamma resolution ≈ {gamma_res_deg:.1f}°\n(below = parallax invisible)", color="#2471a3", fontsize=8, va="bottom")
@@ -83,4 +83,4 @@ for b in BASELINES:
     print(f"  b={b:4.0f}mm  ->  visible (>{gamma_res_deg:.1f}°) for z < {zc/1000:.1f} m")
 print("\nΔθ at fixed distances (b=40mm):")
 for zm in (0.3, 0.5, 1.0, 2.0, 5.0):
-    print(f"  z={zm:.1f} m  ->  Δθ = {np.degrees(40.0/(zm*1000)):.1f}°")
+    print(f"  z={zm:.1f} m  ->  Δθ = {np.degrees(np.arctan(40.0/(zm*1000))):.1f}°")

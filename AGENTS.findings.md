@@ -484,6 +484,14 @@ rank-7, non-cyclic decode.**
   `samples/sipm/hamamatsu_s13360_3050cs.json`; MC `ShieldStudy.cs` + `montecarlo shield`. NOTE: this theme
   is design synthesis (weight/volume/parallax/thermal/motion are analytical on top of the validated MC);
   only the config validation and `ShieldStudy` are new Monte-Carlo runs.
+- **Codex-verified (round 6, low-risk batch)** — no unit/arithmetic bugs (tungsten density, shield volume,
+  `1−exp(−0.057·t)` stopping, mass-weighted CoM 88.8 mm, all thermal/motion numbers +8/+24 °C, 335 J/K,
+  0.83°/0.83 s/240 cps, parallax crossover 2.2 m all check out). Wording tightened: the shield is **~2/3–3/4**
+  of the mass (66 % of the 3.8 kg concept build, 78 % of the 3.04 kg analytical build); the **2.45× MC** is
+  led by area×stopping (≈2.35×) with a small **D-dependent solid-angle** factor ((160/155)²≈1.066) on top
+  (area×stopping alone is the leading term, not the whole story); the ~Ø50–55 mm "formed" diameter is the
+  equivalent-area round (the circumscribed round of the 48 mm square is Ø68). Parallax now uses exact
+  `arctan(b/z)` (was small-angle; <5 % only at the closest range).
 
 ---
 
@@ -517,6 +525,13 @@ Two backlog items closing the mask-geometry thread.
   vs random-best ~12) — its zero-sidelobe construction gives a clean single-peak reconstruction where a
   random array shows a peak buried in **sidelobe grass** (right-hand recon maps). So ρ≈0.5 is right, and
   MURA beats a random array of the same open fraction — open fraction is not a free tuning knob.
+  **Codex-verified (round 6)**: FFT cyclic-correlation convention, the Gottesman–Fenimore `mura_basic`, and
+  the mosaic/roll periodic model all check out (no bug). Wording tightened: MURA's advantage is shown under
+  the SAME generic balanced (mean-subtracted) decode — it's "much lower sidelobes", not the exact
+  zero-sidelobe MURA-`G` construction (which flips `G[0,0]`); the metric is a **source-bin prominence**
+  (peak vs off-peak, at the true bin — avoids max-selection bias); and the empirical random curve is
+  **flatter than pure √(ρ(1−ρ))** because the random array's own sidelobe RMS also scales with ρ(1−ρ)
+  (already noted). No numbers change.
 
 ---
 
