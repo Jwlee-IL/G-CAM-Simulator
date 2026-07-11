@@ -16,6 +16,10 @@ Deferred work, captured so we don't forget. Not in current scope. See
   "cocotb wrapper" and "trapezoidal shaping in RTL" items are done — theme 25.)
 - **CR-RC / cusp shaping variants** for comparison; fold the trapezoid's resolution-vs-rate into the
   material rate study.
+- **Exact Artix-7 Fmax in Vivado** — DEFERRED (Vivado licence/install friction). `rtl/vivado_trap.tcl`
+  is ready to run (`vivado -mode batch -source vivado_trap.tcl -tclargs <top> <part> <period>`) whenever
+  a Vivado is available. Meanwhile the open **nextpnr (Lattice ECP5)** flow gives a real STA Fmax as a
+  proxy — direct vs pipelined shaper — see theme 25.
 
 ### Front-end integration
 - Fold `rtl/frontend_model.py` (photoelectron budget → energy resolution) into the C#
