@@ -1,6 +1,7 @@
 using System.Text;
 using Genoray.MonteCarlo.Configuration;
 using Genoray.MonteCarlo.Core;
+using Genoray.MonteCarlo.Detector;
 using Genoray.MonteCarlo.Simulation;
 
 if (args.Length < 1)
@@ -63,6 +64,9 @@ if (args[0].Equals("masktaper", StringComparison.OrdinalIgnoreCase))
 
 if (args[0].Equals("mixedfield", StringComparison.OrdinalIgnoreCase))
     return RunMixedField(args);
+
+if (args[0].Equals("mixediso", StringComparison.OrdinalIgnoreCase))
+    return RunMixedIso(args);
 
 var config = ConfigLoader.Load(args[0]);
 Console.WriteLine($"Scenario : {config.Name}");
@@ -167,6 +171,55 @@ static int RunSweep(string[] args)
         Console.WriteLine($"CSV: {csvPath}");
         Console.WriteLine();
     }
+    return 0;
+}
+
+static int RunMixedIso(string[] args)
+{
+    if (args.Length < 2) { Console.Error.WriteLine("Usage: montecarlo mixediso <base.json>"); return 1; }
+    var cfg = ConfigLoader.Load(args[1]);
+    cfg.PhotonCount = 4_000_000;
+    cfg.Decoder.Cyclic = false;
+    double frac = cfg.Geometry.MaskDetectorDistanceMm /
+                  (cfg.Geometry.MaskDetectorDistanceMm + cfg.Geometry.SourceMaskDistanceMm);
+    cfg.Decoder.ReconHalfExtentMm = 0.95 * cfg.Mask.Rank * cfg.Mask.CellPitchMm / frac / 2.0;
+    cfg.Decoder.ReconStepMm = 0.4;
+
+    // A TRUE mixed field: Cs-137 (662) at A + a stronger Co-60 (1173+1332) at B. Imaged in ONE run
+    // through the crystal-Compton detector with a 662 keV ±10% energy window.
+    double[] csPos = [4.0, 0.0, 0.0], coPos = [-5.0, 3.0, 0.0];
+    cfg.Sources =
+    [
+        new SourceConfig { Position = csPos, ActivityBq = 1.0, Lines = [new EmissionLine { EnergyKeV = 661.7, Intensity = 0.851 }] },
+        new SourceConfig { Position = coPos, ActivityBq = 8.0, Lines = [new EmissionLine { EnergyKeV = 1173.2, Intensity = 0.999 }, new EmissionLine { EnergyKeV = 1332.5, Intensity = 0.999 }] },
+    ];
+
+    // ComptonFactory windows the flood at 662 keV; because it uses the default (now mixed-field) source,
+    // the whole scene is imaged in ONE pipeline run — no per-line summing.
+    var factory = new ComptonFactory(ComptonStrategy.PerPixelWindow, 661.7, 0.10);
+    var r = new MixedFieldStudy(factory).LocalizeMultiple(cfg, k: 2, minSeparationMm: 3.0);
+
+    Console.WriteLine("Mixed field through the 662 keV window (crystal-Compton), ONE run:");
+    Console.WriteLine($"  Cs-137 @ ({csPos[0]},{csPos[1]}) + Co-60 @ ({coPos[0]},{coPos[1]}) (Co ACTIVITY ×8)");
+    Console.WriteLine("  The 662 window can't reject Co downscatter (energy alone fails), but the coded");
+    Console.WriteLine("  decode images Cs at its position and the Co contamination at Co's — SPATIAL separation.");
+    Console.WriteLine();
+    Console.WriteLine("  true (x,y)      matched peak (x,y)      error");
+    Console.WriteLine("  -------------   -------------------    -------");
+    foreach (var m in MixedFieldStudy.MatchOneToOne(r.TruthXY, r.Found))
+        Console.WriteLine($"  ({m.TruthX,4:F1},{m.TruthY,4:F1})      ({m.FoundX,5:F1},{m.FoundY,5:F1})           {m.ErrorMm,5:F2}mm");
+
+    var sb = new StringBuilder("x_mm,y_mm,value\n");
+    for (int gy = 0; gy < r.Recon.Height; gy++)
+        for (int gx = 0; gx < r.Recon.Width; gx++)
+            sb.Append($"{r.OriginMm + gx * r.StepMm:F2},{r.OriginMm + gy * r.StepMm:F2},{r.Recon[gx, gy]:F4}\n");
+    File.WriteAllText("samples/mixediso_recon.csv", sb.ToString());
+    File.WriteAllText("samples/mixediso.csv", MixedFieldStudy.ToCsv(r));
+    Console.WriteLine();
+    Console.WriteLine("Cs and the Co-downscatter contamination land at DIFFERENT positions in the 662-window");
+    Console.WriteLine("image — the coded decode separates the two components by POSITION (theme 15, now from a");
+    Console.WriteLine("TRUE mixed field). Isotope ID of CO-LOCATED sources still needs the spectral lever");
+    Console.WriteLine("(per-pixel stripping, theme 16-17). CSV: samples/mixediso{,_recon}.csv");
     return 0;
 }
 

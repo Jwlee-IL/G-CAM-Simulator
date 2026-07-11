@@ -635,8 +635,20 @@ optional (null = classic single source, backward compatible).
   FCFOV limiting legitimate for **K-known localization inside the FCFOV** (not blind source-counting). Fix:
   **one-to-one** truth↔found matching (a single peak can no longer be reused to "cover" several truths);
   empty-`Sources` handling aligned with the factory; parameter guards.
-- Scope: this separates POSITIONS (all sources at once); it does not yet energy-window to separate ISOTOPES
-  at the pipeline level (that combines with the crystal-Compton detector, themes 15–17 — a future step). The
-  mask μ is still energy-independent, so widely different lines (122 vs 1332 keV) attenuate alike in the mask.
+- **Pipeline-level energy windowing (Stage 3, `montecarlo mixediso` → `samples/mixediso.png`)**: because
+  `ComptonFactory` delegates source creation to the default factory, driving it with `config.Sources` images
+  the mixed field through the **crystal-Compton detector + a 662 keV ±10 % window in ONE run**. Cs-137 @(4,0)
+  + a strong Co-60 @(-5,3) (activity ×8): the 662 window admits BOTH the Cs photopeak AND the Co
+  Compton-downscatter, so energy alone can't reject the Co — but the coded aperture encodes direction *before*
+  the crystal interaction, so the decode images **Cs at (3.9,−0.5) and the Co contamination at (−6.1,2.7)** —
+  theme 15's spatial separation, now from a TRUE mixed field (not summed per-line runs). **Codex-verified
+  (juncture 3)**: all four physics points confirmed (662-window flood = Cs photopeak + Co downscatter; the
+  ComptonFactory+Sources integration is sound; "Co contamination at Co's position" is the right reading).
+  Honest framing (Codex): this separates the two 662-window components by **POSITION**; isotope ID of
+  CO-LOCATED sources still needs the spectral lever (per-pixel stripping, themes 16–17), and the test is
+  localization-only (doesn't itself prove the accepted Co events are specifically downscatter).
+- Scope: the mask μ is still energy-independent, so widely different lines (122 vs 1332 keV) attenuate alike
+  in the mask (a future refinement).
 - Locked in by `MixedFieldTests` (superposition, single-source equivalence, multi-line split, 3-source
-  localization). 30 tests green. Reproduce: `montecarlo mixedfield samples/scenario.json`.
+  localization, energy-window isotope separation). 31 tests green. Reproduce: `montecarlo mixedfield` /
+  `montecarlo mixediso samples/scenario.json`.

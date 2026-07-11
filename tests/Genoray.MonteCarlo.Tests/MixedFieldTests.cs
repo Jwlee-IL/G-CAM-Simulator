@@ -1,4 +1,5 @@
 using Genoray.MonteCarlo.Configuration;
+using Genoray.MonteCarlo.Detector;
 using Genoray.MonteCarlo.Simulation;
 using Xunit;
 
@@ -75,6 +76,31 @@ public class MixedFieldTests
         // One-to-one matching so a single found peak can't be reused to "cover" several truths.
         foreach (var m in MixedFieldStudy.MatchOneToOne(r.TruthXY, r.Found))
             Assert.True(m.ErrorMm < 2.0, $"source ({m.TruthX},{m.TruthY}) matched peak {m.ErrorMm:F2} mm");
+    }
+
+    [Fact]
+    public void MixedField_ThroughEnergyWindow_SeparatesIsotopesSpatially()
+    {
+        // Cs-137 (662) + a strong Co-60 (1173+1332) imaged in ONE run through a 662 keV window +
+        // crystal Compton. The window admits both (Cs photopeak AND Co downscatter), but the coded
+        // decode puts them at different positions -> both localize near their true sources.
+        var cfg = Base();
+        cfg.PhotonCount = 3_000_000;
+        cfg.Decoder.Cyclic = false;
+        double frac = cfg.Geometry.MaskDetectorDistanceMm /
+                      (cfg.Geometry.MaskDetectorDistanceMm + cfg.Geometry.SourceMaskDistanceMm);
+        cfg.Decoder.ReconHalfExtentMm = 0.95 * cfg.Mask.Rank * cfg.Mask.CellPitchMm / frac / 2.0;
+        cfg.Decoder.ReconStepMm = 0.4;
+        cfg.Sources =
+        [
+            new SourceConfig { Position = [4, 0, 0.0], ActivityBq = 1.0, Lines = [new EmissionLine { EnergyKeV = 661.7, Intensity = 0.851 }] },
+            new SourceConfig { Position = [-5, 3, 0.0], ActivityBq = 8.0, Lines = [new EmissionLine { EnergyKeV = 1173.2, Intensity = 0.999 }, new EmissionLine { EnergyKeV = 1332.5, Intensity = 0.999 }] },
+        ];
+        var factory = new ComptonFactory(ComptonStrategy.PerPixelWindow, 661.7, 0.10);
+        var r = new MixedFieldStudy(factory).LocalizeMultiple(cfg, k: 2, minSeparationMm: 3.0);
+
+        foreach (var m in MixedFieldStudy.MatchOneToOne(r.TruthXY, r.Found))
+            Assert.True(m.ErrorMm < 2.5, $"({m.TruthX},{m.TruthY}) matched peak {m.ErrorMm:F2} mm");
     }
 
     [Fact]
