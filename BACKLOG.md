@@ -6,9 +6,13 @@ Deferred work, captured so we don't forget. Not in current scope. See
 ## Open
 
 ### Core capability
-- **Multi-line isotope model in C# `SourceConfig`** (multi-line + `cascadeCoincident`) so the MC
-  emits a real *mixed-isotope field* through the coded aperture. The combined lever (theme 17)
-  currently sums per-line runs, not a true mixed-field source. **Highest-value open item.**
+- Multi-line isotope model + mixed field — **DONE (theme 26)**: `SimulationConfig.Sources[]` +
+  `SourceConfig.Lines[]` + `MixedFieldSource`/`MixedFieldStudy` image a real mixed field (Cs+Co+Co-57)
+  in one run and localize all sources. **Remaining next step**: **energy-window the mixed field at the
+  PIPELINE level** to separate ISOTOPES (not just positions) — combine `MixedFieldSource` with the
+  crystal-Compton detector + per-pixel stripping (themes 15–17), so the 662 window shows Cs at its
+  position + Co downscatter contamination at Co's, from a true mixed source. Also: energy-dependent mask
+  μ (currently one μ for all lines).
 
 ### RTL
 - **Drive the cocotb testbench from the C# MC per-event stream** — the cocotb Icarus runner is now in
