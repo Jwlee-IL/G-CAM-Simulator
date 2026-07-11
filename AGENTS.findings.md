@@ -497,9 +497,17 @@ Two backlog items closing the mask-geometry thread.
   localization RMS stays ~0.43 mm (code stays sharp). It saturates fast (a small bevel already exceeds the
   ray excursion of a 25 mm slab). Implemented by de-shearing each ray's per-depth sample back toward its
   mid-plane crossing by the bevel `|z−mid|·tan(taper)`. This is the **opposite of focusing (theme 20, which
-  NARROWS the FOV to a focal point)**: a fully tapered thick mask codes like a THIN mask (wide, uniform FOV)
-  while the fully-thick closed cells keep high-energy opacity → thin-mask FOV + thick-mask shielding.
+  NARROWS the FOV to a focal point)**: a fully tapered thick mask codes like a THIN mask (wide, uniform FOV).
   Mutually exclusive with `FocalDistanceMm`. Locked in by `MaskGeometryTests.TaperedChannels_WidenTheFovOfAThickMask`.
+  **Codex-verified (round 6)**: the de-shear is an **idealized per-ray acceptance model** (an upper bound on
+  "does a flared channel stop clipping this ray?"), NOT a true bevel-solid — so the FOV recovery is
+  qualitatively real (and the ~4.8° saturation matches the geometry: worst edge slope (7.5+6)/160≈0.084 rad),
+  but the efficiency numbers are the ideal-taper limit. Caveat corrected: the "thin-mask FOV **+ full
+  thick-mask shielding**" claim is TOO STRONG — a real 25 mm/1 mm slab bevelled 4–5° removes tungsten from the
+  neighbouring closed-cell webs near the faces (and adjacent flared holes can overlap), so it preserves the
+  coded waist but **not full 25 mm opacity everywhere**. Bug fixed: the post-de-shear bounds guard now rejects
+  `us<0 || vs<0` before the `(int)` cast (truncation-toward-zero would have mis-mapped a slightly negative
+  de-sheared coordinate into cell 0).
 - **Open fraction, empirically (random arrays + balanced decode)** — `samples/open_fraction_study.py`
   (self-contained coding MC, no C# change) → `samples/open_fraction.png`. Confirms theme 21's analytical
   claim: a periodic random binary array (rank-11, 2×2 mosaic) at open fraction ρ, decoded by a balanced

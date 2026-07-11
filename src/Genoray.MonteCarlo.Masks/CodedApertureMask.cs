@@ -102,9 +102,12 @@ public sealed class CodedApertureMask : IMask
                 us = DeShear(u, uMid, bevel);
                 vs = DeShear(v, vMid, bevel);
             }
+            // Guard on us/vs BEFORE the cast: (int) truncates toward zero, so a slightly negative
+            // de-sheared coordinate (us = -0.1) would wrongly land in cell 0 instead of being rejected.
+            if (us < 0.0 || vs < 0.0) { nTungsten++; continue; }
             int cx = (int)(us / _cellPitchMm);
             int cy = (int)(vs / _cellPitchMm);
-            if (cx < 0 || cy < 0 || cx >= Pattern.Width || cy >= Pattern.Height) { nTungsten++; continue; }
+            if (cx >= Pattern.Width || cy >= Pattern.Height) { nTungsten++; continue; }
             if (!Pattern[cx, cy]) { nTungsten++; continue; }   // closed cell = tungsten
             // Finite hole: only the central holeFraction of an open cell is drilled; the rest is
             // a tungsten border (sharpens the shadow at the cost of open area / sensitivity).
