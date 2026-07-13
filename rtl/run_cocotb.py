@@ -40,3 +40,15 @@ blr.build(
     always=True,
 )
 print(f"results xml: {blr.test(hdl_toplevel='baseline_restorer', test_module='test_blr', test_dir=here)}")
+
+# CR-RC^4 semi-Gaussian shaper — the classic companion to the trapezoid, checked bit-exact vs the integer ref.
+print("\n===== crrc_shaper =====")
+crrc = get_runner("icarus")
+crrc.build(
+    sources=[os.path.join(here, "crrc_shaper.sv")],
+    hdl_toplevel="crrc_shaper",
+    build_args=["-g2012"],
+    parameters={"ORDER": 4, "A_Q16": 53667, "K_Q16": 26214},
+    always=True,
+)
+print(f"results xml: {crrc.test(hdl_toplevel='crrc_shaper', test_module='test_crrc', test_dir=here)}")

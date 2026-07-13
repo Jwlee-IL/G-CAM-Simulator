@@ -898,3 +898,17 @@ energy-dependent resolution instead of a hand-set number.
 - `FrontEndTests` (budget @662 = 8043 pe → 4.30 %, 1/√E scaling, unbiased smear, tight-window counts drop with
   the front-end; DCR 1/E scaling + low-energy concentration). **50 tests green.** Reproduce: `montecarlo frontend`;
   enable in a scenario via `detector.frontEnd` (with optional `darkCountRateHz`).
+
+## 33. CR-RC^4 shaper in RTL — `rtl/crrc_shaper.sv`
+The classic semi-Gaussian shaper (theme 31's Python CR-RC) now in synthesizable RTL, the companion to the
+trapezoidal shaper (theme 25). Two stages: **pole-zero deconvolution** of the exp tail (`imp = x − A·x[-1]`,
+A = exp(−1/τ) in Q16) → an impulse, then **ORDER cascaded single-pole RC low-passes** (`acc += (u−acc)·K`,
+K = 1/τ_s in Q16, each stage feeding the next same sample) → a Gamma-shaped semi-Gaussian whose PEAK ∝ energy.
+- **Bit-exact** to `trap_ref.crrc_int` (Python `>>` = SV signed `>>>`): cocotb `test_crrc.py` drives a single
+  pulse and a piled pair → **0 mismatches**, and confirms the peak is linear in energy (400→800 keV doubles).
+  Icarus/Yosys-friendly (plain parameters, `integer` loop vars). **7 cocotb tests now** (trap ×3 both tops,
+  BLR, CR-RC ×3).
+- **Cusp left as the Python theoretical benchmark** (theme 31): a digital cusp is a ~19-tap FIR (MAC + coeff
+  ROM) and is rarely used in real FPGA DAQs — the recursive shapers (trapezoid, CR-RC) are the practical ones;
+  theme 31 already establishes the cusp's near-optimal-ENC benchmark. So the RTL shaper family is
+  trapezoid + pipelined-trapezoid + CR-RC (+ baseline restorer), with the cusp as the paper reference.

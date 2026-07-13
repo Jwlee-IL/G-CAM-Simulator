@@ -57,6 +57,31 @@ def blr(xs, gate=4096, frac=12):
     return out
 
 
+# CR-RC^n shaper fixed-point constants (Q16). A = exp(-1/tau) deconvolves the exp tail (pole-zero);
+# K = 1/tau_s is the single-pole RC low-pass gain. Defaults: tau=5 (matches the trapezoid), tau_s=2.5, order 4.
+CRRC_ORDER = 4
+CRRC_A_Q16 = round(math.exp(-1.0 / TAU_SAMPLES) * 65536)   # 53667
+CRRC_K_Q16 = round((1.0 / 2.5) * 65536)                     # 26214
+
+
+def crrc_int(samples, a_q16=CRRC_A_Q16, k_q16=CRRC_K_Q16, order=CRRC_ORDER):
+    """Integer CR-RC^order reference, bit-exact to crrc_shaper.sv: deconvolve the exp tail (imp = x - A·x[-1])
+    then `order` single-pole RC low-passes (acc += (u-acc)·K, all Q16), each stage feeding the next this
+    sample. Python `>>` is arithmetic (floor), matching the SV signed `>>>`. Returns the last stage (∝ energy)."""
+    prev = 0
+    acc = [0] * order
+    out = []
+    for x in samples:
+        imp = x - ((a_q16 * prev) >> 16)
+        prev = x
+        u = imp
+        for i in range(order):
+            acc[i] = acc[i] + (((u - acc[i]) * k_q16) >> 16)
+            u = acc[i]
+        out.append(u)
+    return out
+
+
 def exp_pulse(n, n0, amp_kev, tau=TAU_SAMPLES):
     """One scintillation pulse: instantaneous rise at n0, exponential decay tau (samples). Used by the pure
     shaper unit tests (filter correctness); the realistic front-end uses biexp_pulse via the rasterizer."""

@@ -20,9 +20,10 @@ Deferred work, captured so we don't forget. Not in current scope. See
   waveform and `test_trap_shaper.mc_event_stream_matches_reference` drives BOTH shapers bit-for-bit
   (TESTS=3 PASS=3). `event_stream_study.py` shows energy recovery vs rate and surfaced the pole-zero
   baseline-walk (needs baseline restoration). Codex-verified (weighted resampling + baseline-index fixes).
-- **CR-RC / cusp shaping variants** — **DONE (theme 31)**: `rtl/shapers.py` (CR-RC^4, cusp) + `shaper_compare.py`
-  compare noise (cusp 1.02% < CR-RC 1.10% < trap 1.74% ENC) vs pile-up (∼support width; the trapezoid's flat top
-  is a ballistic-deficit feature, not a rate advantage). Codex-verified. `rtl/shaper_compare.png`.
+- **CR-RC / cusp shaping variants** — **DONE (theme 31 Python compare + theme 33 RTL)**: `rtl/shapers.py`
+  (CR-RC^4, cusp) + `shaper_compare.py` compare noise (cusp 1.02% < CR-RC 1.10% < trap 1.74% ENC) vs pile-up.
+  `rtl/crrc_shaper.sv` implements CR-RC^4 in synthesizable RTL, cocotb bit-exact. Cusp stays the Python
+  theoretical benchmark (a digital cusp is a ~19-tap FIR, rarely used in real FPGA DAQs).
 - **Baseline restoration (BLR) in the RTL** — **DONE (theme 29)**: `rtl/baseline_restorer.sv` is a gated
   leaky-integrator BLR that cancels the Q8 pole-zero baseline walk (0 → ~-42000 ADC over the MC stream);
   cocotb-verified bit-exact + walk-removed (`test_blr.py`), demonstrated in `rtl/blr.png`. Codex-verified.
