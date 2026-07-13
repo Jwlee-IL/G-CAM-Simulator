@@ -59,6 +59,35 @@ public class EventStreamTests
     }
 
     [Fact]
+    public void Background_MergesExtraUncodedEvents()
+    {
+        var clean = new EventStreamStudy().Generate(Base(), countRateCps: 500e3, adcSampleRateHz: Fs, maxEvents: 1000);
+
+        var cfg = Base();
+        cfg.Background = new BackgroundConfig { BackgroundToSignalRatio = 0.5, EnergyKeV = 200.0 };
+        var withBg = new EventStreamStudy().Generate(cfg, countRateCps: 500e3, adcSampleRateHz: Fs, maxEvents: 1000);
+
+        // BSR 0.5 adds ~0.5x as many background events on top of the 1000 source events.
+        Assert.True(withBg.Count > clean.Count + 200,
+            $"background should add events: clean {clean.Count} vs with-bg {withBg.Count}");
+        // Arrivals stay sorted after the merge.
+        for (int i = 1; i < withBg.Count; i++)
+            Assert.True(withBg[i].ArrivalSample >= withBg[i - 1].ArrivalSample);
+    }
+
+    [Fact]
+    public void DarkCounts_AddSubKeVPulses()
+    {
+        var cfg = Base();
+        cfg.Background = new BackgroundConfig { BackgroundToSignalRatio = 0.0, DarkCountRateKcps = 200.0 };
+        var events = new EventStreamStudy().Generate(cfg, countRateCps: 500e3, adcSampleRateHz: Fs, maxEvents: 1000);
+
+        int subKeV = 0;
+        foreach (var ev in events) if (ev.EnergyKeV < 10.0) subKeV++;
+        Assert.True(subKeV > 50, $"DCR should inject many sub-keV pulses, got {subKeV}");
+    }
+
+    [Fact]
     public void Text_RoundTripsHeaderAndColumns()
     {
         var events = new EventStreamStudy().Generate(Base(), countRateCps: 300e3, adcSampleRateHz: Fs, maxEvents: 200);

@@ -30,6 +30,15 @@ public sealed class SimulationConfig
     public DecoderConfig Decoder { get; set; } = new();
 
     /// <summary>
+    /// Optional AMBIENT BACKGROUND: a diffuse/isotropic radiation field that is NOT coded by the mask
+    /// (every pixel sees the mask's average transmission), so it lands as a uniform pedestal on the flood
+    /// map and as extra events in the RTL stream. Null = a clean field (all legacy scenarios/tests). The
+    /// controllable knob is <see cref="BackgroundConfig.BackgroundToSignalRatio"/>; nothing turns this on
+    /// implicitly — a scenario or study opts in.
+    /// </summary>
+    public BackgroundConfig? Background { get; set; }
+
+    /// <summary>
     /// Deep copy (via JSON round-trip). Studies clone the base config and vary one or two
     /// fields; using this avoids the field-drop bugs that hand-written clones are prone to.
     /// </summary>
@@ -102,6 +111,29 @@ public sealed class EmissionLine
     /// <summary>Part of a coincident cascade (e.g. Co-60 1173+1332 both emitted per decay). Informational
     /// for now — used by the detector's cascade/sum modelling, not by the geometric flood.</summary>
     public bool CascadeCoincident { get; set; } = false;
+}
+
+/// <summary>
+/// A diffuse ambient background field. Because an isotropic background is not directionally coded by the
+/// mask, it is modelled as an uncoded UNIFORM addition — a pedestal (+ Poisson noise) on the flood map and
+/// a second Poisson event process in the RTL stream — rather than transported photon-by-photon (which would
+/// just converge to the same uniform pedestal at huge cost). The master knob is a dimensionless
+/// background-to-signal ratio, so a study can sweep "how bad is the background" directly.
+/// </summary>
+public sealed class BackgroundConfig
+{
+    /// <summary>Total detected background counts ÷ total detected source counts (dimensionless). The
+    /// controllable master knob. 0 = no background; 1 = as many background as source counts.</summary>
+    public double BackgroundToSignalRatio { get; set; } = 0.0;
+
+    /// <summary>Representative background gamma energy (keV) — sets the crystal-deposit spectrum of a
+    /// background event. A scattered/ambient field is low-energy dominated (~200); a natural line such as
+    /// K-40 would be 1461. Used by the RTL event-stream path (the flood-map pedestal is energy-agnostic).</summary>
+    public double EnergyKeV { get; set; } = 200.0;
+
+    /// <summary>Optional SiPM dark-count rate (kcps) added to the RTL event stream as sub-keV
+    /// single-photoelectron pulses. Null = none. The flood map ignores DCR (calibrated out in imaging).</summary>
+    public double? DarkCountRateKcps { get; set; }
 }
 
 /// <summary>The coded-aperture mask.</summary>

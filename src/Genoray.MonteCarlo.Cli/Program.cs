@@ -74,6 +74,9 @@ if (args[0].Equals("mixedstrip", StringComparison.OrdinalIgnoreCase))
 if (args[0].Equals("eventstream", StringComparison.OrdinalIgnoreCase))
     return RunEventStream(args);
 
+if (args[0].Equals("background", StringComparison.OrdinalIgnoreCase))
+    return RunBackground(args);
+
 var config = ConfigLoader.Load(args[0]);
 Console.WriteLine($"Scenario : {config.Name}");
 Console.WriteLine($"Isotope  : {config.Source.Isotope} @ {config.Source.EnergyKeV} keV");
@@ -714,11 +717,21 @@ static int RunComptonStrip(string[] args)
 
 static int RunEventStream(string[] args)
 {
-    if (args.Length < 2) { Console.Error.WriteLine("Usage: montecarlo eventstream <base.json> [rateKcps] [maxEvents]"); return 1; }
+    if (args.Length < 2) { Console.Error.WriteLine("Usage: montecarlo eventstream <base.json> [rateKcps] [maxEvents] [bgRatio]"); return 1; }
     var baseConfig = ConfigLoader.Load(args[1]);
     double rateKcps = args.Length > 2 ? double.Parse(args[2]) : 500.0;
     int maxEvents = args.Length > 3 ? int.Parse(args[3]) : 1500;
     const double adcSampleRateHz = 100e6;   // 100 MSPS front-end (Ts = 10 ns; trap_ref tau = 5 samples = 50 ns)
+
+    // A background ratio on the command line opts this run into an ambient field (overrides the config's
+    // Background); without it the config's Background (if any) is used, else the stream is clean.
+    if (args.Length > 4)
+    {
+        double bgRatio = double.Parse(args[4]);
+        baseConfig.Background = bgRatio > 0.0
+            ? new BackgroundConfig { BackgroundToSignalRatio = bgRatio, EnergyKeV = baseConfig.Background?.EnergyKeV ?? 200.0 }
+            : null;
+    }
 
     var study = new EventStreamStudy();
     var events = study.Generate(baseConfig, rateKcps * 1e3, adcSampleRateHz, maxEvents);
@@ -732,11 +745,40 @@ static int RunEventStream(string[] args)
     Console.WriteLine($"  Field    : {baseConfig.Source.Isotope} @ {baseConfig.Source.EnergyKeV} keV" +
         (baseConfig.Sources is { Length: > 0 } ss ? $"  (+{ss.Length - 1} more sources / mixed field)" : ""));
     Console.WriteLine($"  Rate     : {rateKcps:F0} kcps @ {adcSampleRateHz / 1e6:F0} MSPS  ->  mean gap {meanGap:F0} samples");
-    Console.WriteLine($"  Events   : {count}   deposited energy {minKeV:F0}..{maxKeV:F0} keV (full spectrum: photopeak + Compton continuum)");
+    if (baseConfig.Background is { BackgroundToSignalRatio: > 0.0 } bgc)
+        Console.WriteLine($"  Backgrd  : BSR {bgc.BackgroundToSignalRatio:F2} @ {bgc.EnergyKeV:F0} keV" +
+            (bgc.DarkCountRateKcps is > 0.0 ? $" + DCR {bgc.DarkCountRateKcps:F0} kcps" : "") + "  (uncoded ambient events merged in)");
+    Console.WriteLine($"  Events   : {count}   deposited energy {minKeV:F0}..{maxKeV:F0} keV (photopeak + Compton continuum" +
+        (baseConfig.Background is { BackgroundToSignalRatio: > 0.0 } ? " + background)" : ")"));
     Console.WriteLine($"  Written  : {path}");
     Console.WriteLine();
     Console.WriteLine("  Drive the RTL shaper with it:  cd rtl && python run_cocotb.py   (mc_event_stream_matches_reference)");
     Console.WriteLine("  Recovery / pile-up analysis :  cd rtl && python event_stream_study.py  -> event_stream.png");
+    return 0;
+}
+
+static int RunBackground(string[] args)
+{
+    if (args.Length < 2) { Console.Error.WriteLine("Usage: montecarlo background <base.json>"); return 1; }
+    var baseConfig = ConfigLoader.Load(args[1]);
+    double[] bsr = [0.0, 0.1, 0.25, 0.5, 1.0, 2.0, 4.0, 8.0];
+    const double detectedBudget = 400.0;   // fixed acquisition (detected source counts)
+    const int repeats = 200;
+    const double failThresholdMm = 3.0;
+
+    var rows = new BackgroundStudy().RunSweep(baseConfig, bsr, detectedBudget, repeats, failThresholdMm);
+    File.WriteAllText("samples/background_sweep.csv", BackgroundStudy.ToCsv(rows));
+
+    Console.WriteLine("Ambient background vs coded-aperture localization (uncoded uniform pedestal)");
+    Console.WriteLine($"  Source @ ({baseConfig.Source.Position[0]},{baseConfig.Source.Position[1]}) mm, {detectedBudget:F0} detected counts, {repeats} Poisson reps");
+    Console.WriteLine("  The MURA decode pushes the flat pedestal into DC; its shot noise is what eventually buries the peak.");
+    Console.WriteLine();
+    Console.WriteLine("   BSR    bg/pixel   peakSNR   bias     RMS      fail%");
+    Console.WriteLine("   ----   --------   -------   ------   ------   -----");
+    foreach (var r in rows)
+        Console.WriteLine($"   {r.Bsr,4:F2}   {r.BgPerPixel,8:F2}   {r.PeakSnr,7:F1}   {r.BiasMm,5:F2}mm   {r.RmsMm,5:F2}mm   {r.FailRate,5:P0}");
+    Console.WriteLine();
+    Console.WriteLine("  CSV: samples/background_sweep.csv");
     return 0;
 }
 

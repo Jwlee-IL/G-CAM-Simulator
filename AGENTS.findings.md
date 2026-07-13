@@ -707,3 +707,42 @@ Poisson pile-up. End-to-end loop: MC physics → event stream → ADC waveform �
   arrivals monotonic, mean gap matches the requested rate, text round-trip). **37 tests green.** Reproduce:
   `montecarlo eventstream samples/scenario.json 500 1500` then `cd rtl && python run_cocotb.py` (Python 3.13)
   and `python event_stream_study.py`.
+
+## 28. Ambient background — a controllable, opt-in noise field — `BackgroundConfig` / `BackgroundStudy`
+The simulation had **no ambient/environmental background** (only source counting-noise + mask leakage +
+cross-isotope contamination); a real detector sees a diffuse field that raises the noise floor. Added it as a
+**controllable, opt-in** model, NOT a global always-on noise (which would silently move every prior baseline
+and be un-tunable). Master knob = a dimensionless **background-to-signal ratio (BSR)** = detected background
+÷ detected source counts. `SimulationConfig.Background` (nullable, default null → all legacy scenarios/tests
+unchanged); the new studies/scenarios opt in, so background is exercised without contaminating the clean runs.
+- **Key physics — a diffuse isotropic background is NOT coded.** The mask codes *direction*; an isotropic field
+  hits every pixel through the mask's average transmission, so it lands as a **uniform pedestal** on the flood
+  map, not a structured image. So modelling it as an uncoded uniform additive rate is the *correct* model, not a
+  shortcut — a full MC transport would just converge to the same pedestal at huge cost (and it's what the
+  antimask/shield studies already assumed ad hoc).
+- **Flood-map / imaging** (`Background.PedestalPerPixel` + `BackgroundStudy.RunSweep`, `montecarlo background`
+  → `samples/background_sweep.csv`, `rtl/background.png`): add a uniform Poisson pedestal (mean = BSR·budget/
+  pixels) to the source flood map, decode, sweep BSR. Result: a **cyclic MURA decode rejects the flat pedestal
+  into DC**, so localization holds far into background — RMS stays at the **0.57 mm floor up to BSR ≈ 1** (equal
+  background and source counts!), then knees up at **BSR 2 → 4** (RMS 2.95 → 7.11 mm, fail 9 % → 65 %) and is
+  buried by BSR 8. Decode contrast (noisy-realization peak SNR) falls 5.4 → 2.8. So the coded aperture is
+  **intrinsically background-robust** — its weakness is the pedestal's *shot noise*, not the pedestal itself.
+- **Event-stream / RTL** (`EventStreamStudy` background merge, `montecarlo eventstream <cfg> <rate> <max> <bgRatio>`):
+  merges a **second, uncoded Poisson event process** at rate BSR·sourceRate into the pulse train, each event's
+  deposit sampled from the crystal response to the background energy (real photopeak+continuum, built by
+  transporting background photons through the unmasked detector); optional **DCR** adds low-amplitude nuisance
+  pulses. Background raises the true count rate (mean gap 208 → 140 samples at BSR 0.5), and the RTL shaper
+  processes the background-laden stream **bit-for-bit vs reference** (cocotb PASS) — so the MC→RTL loop (theme 27)
+  now runs on a realistic field. Ships a `samples/scenario_field.json` (BSR 0.5 + DCR) as a first-class "with
+  background" case.
+- **Codex-verified (2 junctures)**. Flood-map: BSR→pedestal math correct (expected bg sum = BSR·budget) ✓,
+  uncoded-uniform model valid as a *detected*-background approximation ✓; **fix** — `PeakSnr` was computed on the
+  deterministic mean-map decode (a DC-leakage proxy, not shot-noise SNR) → moved it onto the **noisy** decodes and
+  averaged; softened the comments (BSR already folds in mask transmission; DC-rejection is the cyclic-decoder
+  reading, non-cyclic sees a mild partial-coding shape). Event-stream: BSR→rate + Poisson merge + deposit-pool
+  correct ✓, no ordering/off-by-one bug ✓; **fix** — DCR wording (a few-keV nuisance, not literally sub-keV) and
+  a normal-incidence caveat on the deposit pool.
+- Locked in by `BackgroundTests` (sweep degrades monotonically + collapses, BSR 0 = clean, pedestal math) and
+  `EventStreamTests` (background merges extra events, DCR adds sub-keV pulses). **42 tests green.** Reproduce:
+  `montecarlo background samples/scenario.json` → `cd rtl && python background_study.py`; background stream via
+  `montecarlo eventstream samples/scenario_field.json 500 1500`.

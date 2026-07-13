@@ -83,7 +83,92 @@ public sealed class EventStreamStudy
             t += -Math.Log(1.0 - timeRng.NextDouble()) * meanGapSamples;
             events.Add(new StreamEvent((long)Math.Round(t), e));
         }
+
+        // Ambient background: a SECOND, uncoded Poisson event process merged into the source train. Its
+        // rate is BSR × the source rate (so the same background-to-signal knob drives imaging and the RTL),
+        // its deposits come from the crystal response to the background energy, and optional DCR adds
+        // sub-keV nuisance pulses. Off (null / zero) leaves the clean source-only stream unchanged.
+        var bg = config.Background;
+        bool wantBg = bg is not null &&
+            (bg.BackgroundToSignalRatio > 0.0 || bg.DarkCountRateKcps is double dr && dr > 0.0);
+        if (wantBg && events.Count > 0)
+        {
+            long span = events[^1].ArrivalSample;
+            if (bg!.BackgroundToSignalRatio > 0.0)
+            {
+                double bgRateCps = bg.BackgroundToSignalRatio * countRateCps;
+                double[] pool = GenerateBackgroundDeposits(config, bg.EnergyKeV, 4096);
+                if (pool.Length > 0)
+                {
+                    var bgRng = new DefaultRandom((config.Seed ?? 0) + 909);
+                    AddPoissonEvents(events, bgRateCps, adcSampleRateHz, span, bgRng,
+                        r => pool[Math.Min(pool.Length - 1, (int)(r.NextDouble() * pool.Length))]);
+                }
+            }
+            if (bg.DarkCountRateKcps is double dcr && dcr > 0.0)
+            {
+                var dcrRng = new DefaultRandom((config.Seed ?? 0) + 1717);
+                AddPoissonEvents(events, dcr * 1e3, adcSampleRateHz, span, dcrRng, _ => SinglePeKeV);
+            }
+            events.Sort((a, b) => a.ArrivalSample.CompareTo(b.ArrivalSample));
+        }
         return events;
+    }
+
+    // A dark-count nuisance pulse in keV-equivalent: a few photoelectrons, far below any photopeak window.
+    // Kept a few keV (not literally sub-keV) so it clears the rasterizer's integer-ADC rounding floor and
+    // actually appears as a low-amplitude pulse; its only effect on the shaper is occasional small pile-up.
+    private const double SinglePeKeV = 3.0;
+
+    /// <summary>Append events of a Poisson process at <paramref name="rateCps"/> over [0, span] samples, each
+    /// with an energy from <paramref name="energyPicker"/>. Exponential inter-arrival gaps, mean fs/rate.</summary>
+    private static void AddPoissonEvents(List<StreamEvent> into, double rateCps, double adcSampleRateHz,
+        long span, IRandom rng, Func<IRandom, double> energyPicker)
+    {
+        if (!(rateCps > 0.0) || span <= 0) return;
+        double meanGap = adcSampleRateHz / rateCps;
+        double t = 0.0;
+        while (true)
+        {
+            t += -Math.Log(1.0 - rng.NextDouble()) * meanGap;
+            if (t > span) break;
+            into.Add(new StreamEvent((long)Math.Round(t), energyPicker(rng)));
+        }
+    }
+
+    /// <summary>A pool of crystal DEPOSITS for a background gamma of the given energy: transport background
+    /// photons straight down onto the (unmasked) detector and record each event's total Compton-cascade
+    /// deposit. Background events are uncoded, so they illuminate the array uniformly; the deposit spectrum
+    /// (photopeak + continuum around the background energy) is the real crystal response, sampled per event.
+    /// Simplification: normal (straight-down) incidence rather than the full isotropic angular spread — that
+    /// slightly shortens the crystal path vs oblique rays, but the deposit spectrum shape is representative.</summary>
+    private static double[] GenerateBackgroundDeposits(SimulationConfig config, double energyKeV, int count)
+    {
+        var d = config.Detector;
+        var cascadeRng = new DefaultRandom((config.Seed ?? 0) + 555);
+        var deposits = new List<double>(count);
+        var det = new ComptonCrystalDetector(d.PixelsX, d.PixelsY, d.PixelPitchMm,
+            windowCenterKeV: 661.7, windowFraction: 1.0, ComptonStrategy.Argmax, cascadeRng,
+            muAt662PerMm: 0.09, d.CrystalThicknessMm, planeZ: 0.0, sensitivity: null,
+            eventSink: (dep, _) => deposits.Add(dep));
+
+        double halfW = d.PixelsX * d.PixelPitchMm / 2.0, halfH = d.PixelsY * d.PixelPitchMm / 2.0;
+        var entryRng = new DefaultRandom((config.Seed ?? 0) + 556);
+        int tries = 0, maxTries = count * 50;
+        while (deposits.Count < count && tries < maxTries)
+        {
+            tries++;
+            double x = (entryRng.NextDouble() * 2.0 - 1.0) * halfW * 0.999;
+            double y = (entryRng.NextDouble() * 2.0 - 1.0) * halfH * 0.999;
+            var photon = new Photon
+            {
+                Ray = new Ray(new Vector3(x, y, 10.0), new Vector3(0.0, 0.0, -1.0)),
+                EnergyKeV = energyKeV,
+                Weight = 1.0,
+            };
+            det.Score(photon);
+        }
+        return deposits.ToArray();
     }
 
     /// <summary>Systematic (low-variance) resampling of the deposits with probability ∝ weight, then a

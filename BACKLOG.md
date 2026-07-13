@@ -35,11 +35,22 @@ Deferred work, captured so we don't forget. Not in current scope. See
 - Fold `rtl/frontend_model.py` (photoelectron budget → energy resolution) into the C#
   `EnergyResolutionFwhm` derivation, and model DCR-as-background.
 
+### Background (theme 28 — core model DONE, refinements open)
+- **Ambient background is now a controllable opt-in** (`SimulationConfig.Background`, BSR knob) — uncoded
+  uniform pedestal on the flood map (`BackgroundStudy`, `montecarlo background`) + merged Poisson events in the
+  RTL stream (`EventStreamStudy`, `montecarlo eventstream <cfg> <rate> <max> <bgRatio>`). Default off; opt in
+  per scenario/study (`samples/scenario_field.json`). Codex-verified. Open refinements:
+  - **Unify antimask/shield onto `Background.AddUniform`** — they still inject their own ad-hoc pedestal;
+    fold them onto the shared helper (deferred to avoid churn on verified code).
+  - **Isotropic angular background** — the event-stream deposit pool uses normal-incidence photons; a true
+    isotropic angular spread would lengthen oblique crystal paths slightly. Same for `ShieldStudy`'s analytic
+    leak term (a directional/isotropic real background through the geometry would be more precise).
+  - **Structured background** (a second directional source / non-uniform field) — currently only the diffuse
+    uniform component; a directional background is really just another source in the mixed field (theme 26).
+
 ### Productization (theme 22 — design-only; user is NOT building this now)
 - Integrate the SiPM / thermal / gain-stabilization + shield models into the C# pipeline
   (currently Python design layers on top of the validated MC).
-- `ShieldStudy` uses a uniform additive background; a directional / isotropic real background
-  source through the geometry would be more precise than the analytical leak term.
   (Codex cross-verification of all theme-22 pieces is now DONE — round 6, no bugs.)
 
 ## Done (summary — details in AGENTS.findings by theme)
