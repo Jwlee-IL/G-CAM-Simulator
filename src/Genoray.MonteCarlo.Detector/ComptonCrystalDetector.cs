@@ -36,13 +36,16 @@ public sealed class ComptonCrystalDetector : IDetector
     private readonly IRandom _rng;
     private readonly double[]? _sensitivity;
     private readonly Action<double, double>? _eventSink;
+    private readonly FrontEndModel? _frontEnd;
+    private readonly IRandom? _frontEndRng;
 
     public double PlaneZ { get; }
 
     public ComptonCrystalDetector(int pixelsX, int pixelsY, double pixelPitchMm,
         double windowCenterKeV, double windowFraction, ComptonStrategy strategy, IRandom rng,
         double muAt662PerMm = 0.09, double crystalDepthMm = 10.0, double planeZ = 0.0,
-        double[]? sensitivity = null, Action<double, double>? eventSink = null)
+        double[]? sensitivity = null, Action<double, double>? eventSink = null,
+        FrontEndModel? frontEnd = null, IRandom? frontEndRng = null)
     {
         _image = new DetectorImage(pixelsX, pixelsY);
         _pitch = pixelPitchMm;
@@ -56,12 +59,22 @@ public sealed class ComptonCrystalDetector : IDetector
         _rng = rng;
         _sensitivity = sensitivity;
         _eventSink = eventSink;
+        _frontEnd = frontEnd;
+        _frontEndRng = frontEndRng;
         PlaneZ = planeZ;
     }
 
     private bool InWindow(double e)
         => e >= _windowCenterKeV * (1.0 - _windowFraction)
         && e <= _windowCenterKeV * (1.0 + _windowFraction);
+
+    // Measured energy for the WINDOW check: smear the true deposit by the physical front-end resolution
+    // (energy-dependent 1/√E FWHM) when a model is present, else the true energy. Makes the energy
+    // discrimination realistic — a 662 photopeak event can fall out of a tight window, and continuum events
+    // near the edge fluctuate in/out — instead of every deposit being a perfect line. Uses a SEPARATE RNG
+    // (not the cascade _rng) so enabling the front-end doesn't perturb the Compton cascade stream — the
+    // strategy comparison (ComptonStudy) still replays identical cascades across strategies.
+    private double Measured(double e) => _frontEnd is null ? e : _frontEnd.Measure(e, _frontEndRng ?? _rng);
 
     private int PixelIndex(double coord, double half) => (int)((coord + half) / _pitch);
     private double PixelCenter(int i, double half) => (i + 0.5) * _pitch - half;
@@ -144,11 +157,11 @@ public sealed class ComptonCrystalDetector : IDetector
         {
             case ComptonStrategy.PerPixelWindow:
                 foreach (var (px, py, e) in _sites)
-                    if (InWindow(e * Gain(px, py))) _image.Add(px, py, weight);
+                    if (InWindow(Measured(e) * Gain(px, py))) _image.Add(px, py, weight);
                 break;
 
             case ComptonStrategy.AntiCoincidence:
-                if (_sites.Count == 1 && InWindow(_sites[0].e * Gain(_sites[0].px, _sites[0].py)))
+                if (_sites.Count == 1 && InWindow(Measured(_sites[0].e) * Gain(_sites[0].px, _sites[0].py)))
                     _image.Add(_sites[0].px, _sites[0].py, weight);
                 break;
 
@@ -160,7 +173,7 @@ public sealed class ComptonCrystalDetector : IDetector
                     total += e;
                     if (e > best) { best = e; bx = px; by = py; }
                 }
-                if (InWindow(total)) _image.Add(bx, by, weight);
+                if (InWindow(Measured(total))) _image.Add(bx, by, weight);
                 break;
             }
 
@@ -173,7 +186,7 @@ public sealed class ComptonCrystalDetector : IDetector
                     cx += e * PixelCenter(px, _halfWidth);
                     cy += e * PixelCenter(py, _halfHeight);
                 }
-                if (total > 0 && InWindow(total))
+                if (total > 0 && InWindow(Measured(total)))
                 {
                     int px = PixelIndex(cx / total, _halfWidth);
                     int py = PixelIndex(cy / total, _halfHeight);

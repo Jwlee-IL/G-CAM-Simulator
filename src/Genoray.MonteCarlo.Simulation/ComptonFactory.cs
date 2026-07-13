@@ -36,8 +36,12 @@ public sealed class ComptonFactory : ISimulationFactory
         bool nonUniform = d.GainSigma != 0.0 || d.EnergyResolutionFwhmSigma != 0.0 || d.GainGradient != 0.0;
         double[]? sensitivity = nonUniform ? new CrystalUniformity(d).Sensitivity : null;
         var cascadeRng = new DefaultRandom(config.Seed + 777);
+        var frontEnd = d.FrontEnd is null ? null : new FrontEndModel(d.FrontEnd);
+        // Separate RNG for the front-end energy smear so it never perturbs the cascade stream (keeps the
+        // strategy comparison's identical-cascade replay). Same seed across strategies -> same smear inputs.
+        var frontEndRng = frontEnd is null ? null : new DefaultRandom(config.Seed + 888);
         return new ComptonCrystalDetector(d.PixelsX, d.PixelsY, d.PixelPitchMm,
             _windowCenterKeV, _windowFraction, _strategy, cascadeRng,
-            _muAt662, d.CrystalThicknessMm, planeZ: 0.0, sensitivity);
+            _muAt662, d.CrystalThicknessMm, planeZ: 0.0, sensitivity, eventSink: null, frontEnd, frontEndRng);
     }
 }

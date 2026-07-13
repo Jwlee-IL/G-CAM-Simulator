@@ -866,3 +866,27 @@ sinh FIR, the near-optimal shape for series+parallel noise).
   pile-up ~ width; flat-top = deficit not rate) is right. Fixed stale "trapezoid holds up best" prose. The ±5 %
   metric is offline energy-recovery accuracy, not hardware dead-time throughput. Reproduce: `montecarlo
   eventstream samples/scenario.json 500 1500` then `cd rtl && python shaper_compare.py` → `rtl/shaper_compare.png`.
+
+## 32. Physical front-end folded into the C# pipeline — `FrontEndModel` / `FrontEndConfig`
+Ported `rtl/frontend_model.py` (the photoelectron-budget resolution model, until now a Python/RTL-only
+design layer) into the validated C# MC, so the pipeline's energy discrimination reflects a REAL,
+energy-dependent resolution instead of a hand-set number.
+- **`FrontEndModel`** (Detector): `N_pe(E) = lightYield·collection·PDE·E`; `R_stat(E) = 2.355·√(ENF/N_pe)`
+  (a FWHM FRACTION, so 235.5-in-% becomes 2.3548-as-fraction); `R_tot(E) = √(R_stat² + R_intrinsic²)`. The
+  statistical part scales **1/√E** (higher lines resolve better), flooring at the crystal's non-proportionality
+  `R_intrinsic`. `Measure(e, rng)` smears a true deposit by `e·(1 + N(0,1)·R_tot(E)/2.355)`. Config:
+  `DetectorConfig.FrontEnd` (`FrontEndConfig`: light yield, collection, PDE, ENF, intrinsic) — **nullable /
+  opt-in**, so every legacy scenario is byte-identical (null = no draw).
+- **Wired into `ComptonCrystalDetector`**: when a `FrontEndModel` is present, each deposit is smeared by
+  `R_tot(E)` **before the energy-window check** (per-site for PerPixelWindow/AntiCoincidence, on the total for
+  Argmax/Centroid). So a 662 photopeak event can now scatter out of a tight window and continuum events near the
+  edge fluctuate in/out — realistic energy discrimination for the Compton / mixed-field / stripping studies. The
+  smear uses a **separate RNG** (not the cascade stream) so enabling it doesn't perturb the Compton cascade —
+  the strategy comparison still replays identical cascades.
+- **`montecarlo frontend`** reproduces frontend_model.py's per-crystal table in C#: GAGG 5.7 %, CeBr3 4.3 %,
+  LaBr3 3.3 % (only photon-limited one), LYSO 7.8 %, BGO 10.3 %, NaI 6.3 % FWHM @ 662 — plus R_tot@1332 showing
+  the 1/√E improvement. **Codex-verified** (percent→fraction correct, 1/√E + intrinsic floor, unbiased smear,
+  integration before InWindow, null path byte-identical); used a separate front-end RNG per Codex's replay caveat.
+- `FrontEndTests` (budget @662 = 8043 pe → 4.30 %, 1/√E scaling, unbiased smear with FWHM spread, tight-window
+  counts drop with the front-end). **48 tests green.** Reproduce: `montecarlo frontend`; enable in a scenario via
+  `detector.frontEnd`. Still open: model DCR-as-background (the front-end DCR term isn't in the C# noise yet).

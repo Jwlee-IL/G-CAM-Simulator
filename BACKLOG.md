@@ -35,8 +35,10 @@ Deferred work, captured so we don't forget. Not in current scope. See
 - **Realistic ADC front-end DONE (theme 30)**: `rtl/event_stream.rasterize` now models intrinsic (1/√E)
   resolution, finite rise / ballistic deficit, white electronic noise, and ADC clipping → realistic ~6.4%
   photopeak, resolution budget (electronic ⊕ intrinsic), `rtl/frontend.png`. Codex-verified.
-- Still open: fold `rtl/frontend_model.py` (photoelectron budget → energy resolution) into the **C#**
-  `EnergyResolutionFwhm` derivation (the theme-30 model lives in the Python/RTL layer), and model DCR-as-background.
+- **Fold `rtl/frontend_model.py` into C# — DONE (theme 32)**: `FrontEndModel`/`FrontEndConfig` derive the
+  energy resolution from the photoelectron budget (1/√E), opt-in via `detector.frontEnd`; `ComptonCrystalDetector`
+  smears each deposit by R_tot(E) before the window. `montecarlo frontend` reproduces the Python table. Codex-verified.
+  Still open: model **DCR-as-background** (the SiPM dark-count term isn't in the C# noise yet).
 - **CR-RC / cusp shaping comparison** now has a real noise floor to be meaningful against (theme 30) — the
   natural next RTL step: sweep shaping time / compare filters on the realistic waveform for the SNR vs
   pile-up optimum (theme 30's frontend_study has the resolution machinery; a rigorous pile-up-inclusive

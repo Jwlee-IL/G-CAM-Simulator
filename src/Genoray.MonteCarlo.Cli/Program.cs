@@ -77,6 +77,9 @@ if (args[0].Equals("eventstream", StringComparison.OrdinalIgnoreCase))
 if (args[0].Equals("background", StringComparison.OrdinalIgnoreCase))
     return RunBackground(args);
 
+if (args[0].Equals("frontend", StringComparison.OrdinalIgnoreCase))
+    return RunFrontend(args);
+
 var config = ConfigLoader.Load(args[0]);
 Console.WriteLine($"Scenario : {config.Name}");
 Console.WriteLine($"Isotope  : {config.Source.Isotope} @ {config.Source.EnergyKeV} keV");
@@ -783,6 +786,39 @@ static int RunEventStream(string[] args)
     Console.WriteLine();
     Console.WriteLine("  Drive the RTL shaper with it:  cd rtl && python run_cocotb.py   (mc_event_stream_matches_reference)");
     Console.WriteLine("  Recovery / pile-up analysis :  cd rtl && python event_stream_study.py  -> event_stream.png");
+    return 0;
+}
+
+static int RunFrontend(string[] args)
+{
+    // Energy resolution from the photoelectron budget — the C# FrontEndModel (port of rtl/frontend_model.py),
+    // now folded into the pipeline (the crystal-Compton detector smears each deposit by this 1/√E FWHM).
+    Console.WriteLine("SiPM front-end — energy resolution from the photoelectron budget (collection 0.60, PDE 0.45, ENF 1.20)");
+    Console.WriteLine();
+    Console.WriteLine("  crystal   LY    N_pe@662   R_stat   R_intr   R_tot@662   R_tot@1332   regime");
+    Console.WriteLine("  -------   --   --------   ------   ------   ---------   ----------   ------");
+    // name: (light yield ph/keV, intrinsic FWHM fraction)
+    (string name, double ly, double intr)[] crystals =
+    {
+        ("GAGG", 50, 0.050), ("CeBr3", 45, 0.032), ("LaBr3", 63, 0.022),
+        ("LYSO", 30, 0.070), ("BGO", 9, 0.080), ("NaI", 38, 0.055),
+    };
+    foreach (var (name, ly, intr) in crystals)
+    {
+        var m = new FrontEndModel(new FrontEndConfig
+        {
+            LightYieldPhPerKeV = ly, CollectionEfficiency = 0.60, SipmPde = 0.45,
+            ExcessNoiseFactor = 1.20, IntrinsicResolutionFwhm = intr,
+        });
+        double npe = m.Photoelectrons(662.0);
+        double rStat = System.Math.Sqrt(System.Math.Max(0.0, m.FwhmFraction(662.0) * m.FwhmFraction(662.0) - intr * intr));
+        string regime = intr > rStat ? "crystal-limited" : "photon-limited";
+        Console.WriteLine($"  {name,-6}   {ly,2:F0}   {npe,8:F0}   {rStat,5:P1}   {intr,5:P1}   {m.FwhmFraction(662.0),8:P1}    {m.FwhmFraction(1332.0),8:P1}    {regime}");
+    }
+    Console.WriteLine();
+    Console.WriteLine("R_stat = 2.355·√(ENF/N_pe) scales 1/√E; past the knee the crystal's intrinsic floor dominates");
+    Console.WriteLine("(more PDE wasted). Enable in a scenario via detector.frontEnd — the Compton detector then");
+    Console.WriteLine("smears each deposit by R_tot(E), so energy windows / isotope separation reflect real resolution.");
     return 0;
 }
 

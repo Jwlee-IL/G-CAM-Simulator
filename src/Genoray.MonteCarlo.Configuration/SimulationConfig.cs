@@ -182,6 +182,31 @@ public sealed class MaskConfig
     public double TaperAngleDeg { get; set; } = 0.0;
 }
 
+/// <summary>
+/// Physical SiPM front-end model — energy resolution from the photoelectron budget (ported from
+/// rtl/frontend_model.py). N_pe = lightYield · E · collection · PDE; the statistical resolution
+/// R_stat(E) = 2.355·√(ENF / N_pe) scales as 1/√E, and the total is √(R_stat² + R_intrinsic²) with the
+/// crystal's non-proportionality floor. Defaults ≈ CeBr3 on a good MPPC (~4.3 % FWHM @ 662 keV).
+/// </summary>
+public sealed class FrontEndConfig
+{
+    /// <summary>Scintillator light yield in photons per keV (GAGG ~50, CeBr3 ~45, LaBr3 ~63, BGO ~9).</summary>
+    public double LightYieldPhPerKeV { get; set; } = 45.0;
+
+    /// <summary>Crystal → SiPM light collection efficiency (geometry + coupling).</summary>
+    public double CollectionEfficiency { get; set; } = 0.60;
+
+    /// <summary>SiPM photon-detection efficiency at the crystal's emission wavelength.</summary>
+    public double SipmPde { get; set; } = 0.45;
+
+    /// <summary>SiPM excess noise factor (afterpulsing/crosstalk gain variance), ≈ 1.1–1.3.</summary>
+    public double ExcessNoiseFactor { get; set; } = 1.20;
+
+    /// <summary>Crystal intrinsic (non-proportionality) resolution FWHM fraction — the photon-count-independent
+    /// floor (GAGG ~0.05, CeBr3 ~0.032, LaBr3 ~0.022).</summary>
+    public double IntrinsicResolutionFwhm { get; set; } = 0.032;
+}
+
 /// <summary>The pixelated scintillator crystal array.</summary>
 public sealed class DetectorConfig
 {
@@ -189,8 +214,15 @@ public sealed class DetectorConfig
     public int PixelsY { get; set; } = 12;
     public double PixelPitchMm { get; set; } = 1.0;
 
-    /// <summary>Mean energy resolution as FWHM fraction at the primary line (0 = ideal).</summary>
+    /// <summary>Mean energy resolution as FWHM fraction at the primary line (0 = ideal). Hand-set; a
+    /// physically-derived, ENERGY-DEPENDENT resolution can instead be supplied via <see cref="FrontEnd"/>.</summary>
     public double EnergyResolutionFwhm { get; set; } = 0.0;
+
+    /// <summary>Optional physical FRONT-END model: derive the energy resolution from the photoelectron budget
+    /// (crystal light yield × collection × SiPM PDE, + intrinsic non-proportionality floor) instead of the
+    /// hand-set <see cref="EnergyResolutionFwhm"/>. When present the crystal-Compton detector smears each
+    /// event's deposited energy by the resulting 1/√E FWHM before the energy window. Null = no smearing.</summary>
+    public FrontEndConfig? FrontEnd { get; set; }
 
     // --- Crystal non-uniformity (each crystal differs slightly) ---
 
