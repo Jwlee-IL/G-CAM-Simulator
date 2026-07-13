@@ -746,3 +746,13 @@ unchanged); the new studies/scenarios opt in, so background is exercised without
   `EventStreamTests` (background merges extra events, DCR adds sub-keV pulses). **42 tests green.** Reproduce:
   `montecarlo background samples/scenario.json` → `cd rtl && python background_study.py`; background stream via
   `montecarlo eventstream samples/scenario_field.json 500 1500`.
+- **Isotropic angular background (refinement)**: the event-stream deposit pool now samples a **cosine-weighted
+  downward hemisphere** (the flux-through-a-plane law) instead of normal incidence — the physically correct
+  angular distribution for a diffuse field entering the top (mask) face. Counter-intuitive result the finite
+  array makes: the isotropic photopeak fraction is *slightly LOWER* (90.9 % vs 92.0 % at 300 keV, 12×12×10 mm)
+  — oblique rays reach the SIDE walls and escape sooner, and that outweighs the longer 1/cosθ vertical path
+  (which would only win for an infinite lateral slab). `EventStreamStudy.BackgroundDepositSpectrum(…, isotropic)`
+  exposes both models. **Codex-verified**: cosine weighting `p(μ)=2μ` correct, origin/entry geometry correct,
+  side-escape explanation sound (fixed the doc comment that wrongly said absorption *rises*). Test
+  `IsotropicBackground_DepositsDifferFromNormalIncidence`. **43 tests green.** (Still open: `ShieldStudy`'s
+  analytic leak term is not yet a transported directional background.)

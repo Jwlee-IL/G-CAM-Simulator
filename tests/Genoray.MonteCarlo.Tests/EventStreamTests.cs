@@ -76,6 +76,26 @@ public class EventStreamTests
     }
 
     [Fact]
+    public void IsotropicBackground_DepositsDifferFromNormalIncidence()
+    {
+        // Isotropic (cosine-hemisphere) background rays hit the crystal at a spread of angles, so their
+        // path lengths differ from straight-down photons — the deposit spectrum's photopeak fraction shifts.
+        var cfg = Base();
+        double e = 300.0;
+        double[] iso = EventStreamStudy.BackgroundDepositSpectrum(cfg, e, 4000, isotropic: true);
+        double[] norm = EventStreamStudy.BackgroundDepositSpectrum(cfg, e, 4000, isotropic: false);
+
+        double PhotopeakFrac(double[] a)
+        {
+            int pp = 0; foreach (var v in a) if (v > 0.98 * e) pp++;
+            return (double)pp / a.Length;
+        }
+        double fi = PhotopeakFrac(iso), fn = PhotopeakFrac(norm);
+        Assert.True(System.Math.Abs(fi - fn) > 0.01,
+            $"angular model should shift the photopeak fraction: iso {fi:P1} vs normal {fn:P1}");
+    }
+
+    [Fact]
     public void DarkCounts_AddSubKeVPulses()
     {
         var cfg = Base();

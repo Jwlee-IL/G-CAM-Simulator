@@ -42,9 +42,10 @@ Deferred work, captured so we don't forget. Not in current scope. See
   per scenario/study (`samples/scenario_field.json`). Codex-verified. Open refinements:
   - **Unify antimask/shield onto `Background.AddUniform`** — they still inject their own ad-hoc pedestal;
     fold them onto the shared helper (deferred to avoid churn on verified code).
-  - **Isotropic angular background** — the event-stream deposit pool uses normal-incidence photons; a true
-    isotropic angular spread would lengthen oblique crystal paths slightly. Same for `ShieldStudy`'s analytic
-    leak term (a directional/isotropic real background through the geometry would be more precise).
+  - **Isotropic angular background** — DONE for the event-stream deposit pool (cosine-weighted downward
+    hemisphere; isotropic photopeak fraction is slightly LOWER than normal incidence because oblique rays
+    side-escape a finite array). STILL OPEN: `ShieldStudy`'s analytic leak term is not yet a transported
+    directional/isotropic background through the geometry.
   - **Structured background** (a second directional source / non-uniform field) — currently only the diffuse
     uniform component; a directional background is really just another source in the mixed field (theme 26).
 

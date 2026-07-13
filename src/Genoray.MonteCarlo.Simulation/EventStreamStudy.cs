@@ -137,12 +137,23 @@ public sealed class EventStreamStudy
     }
 
     /// <summary>A pool of crystal DEPOSITS for a background gamma of the given energy: transport background
-    /// photons straight down onto the (unmasked) detector and record each event's total Compton-cascade
-    /// deposit. Background events are uncoded, so they illuminate the array uniformly; the deposit spectrum
-    /// (photopeak + continuum around the background energy) is the real crystal response, sampled per event.
-    /// Simplification: normal (straight-down) incidence rather than the full isotropic angular spread — that
-    /// slightly shortens the crystal path vs oblique rays, but the deposit spectrum shape is representative.</summary>
+    /// photons onto the (unmasked) detector and record each event's total Compton-cascade deposit.
+    /// Background events are uncoded, so they illuminate the array uniformly; the deposit spectrum (photopeak
+    /// + continuum around the background energy) is the real crystal response, sampled per event.
+    /// <paramref name="isotropic"/> (the default) samples a COSINE-weighted downward hemisphere — the correct
+    /// angular distribution for an isotropic flux crossing the top face. Oblique rays traverse a longer VERTICAL
+    /// path but, in a finite-width array, also reach the SIDE walls sooner and escape — empirically the side
+    /// escape wins slightly, so the isotropic photopeak fraction is a touch LOWER than the normal-incidence
+    /// idealization (the 1/cosθ longer-path gain only dominates for an infinite lateral slab). Model: a diffuse
+    /// field entering from the (least-shielded) mask side.</summary>
     private static double[] GenerateBackgroundDeposits(SimulationConfig config, double energyKeV, int count)
+        => BackgroundDepositSpectrum(config, energyKeV, count, isotropic: true);
+
+    /// <summary>The crystal deposit spectrum for a background gamma of the given energy — exposed so the
+    /// isotropic (cosine-hemisphere) vs normal-incidence angular models can be compared. Returns up to
+    /// <paramref name="count"/> per-event total deposits.</summary>
+    public static double[] BackgroundDepositSpectrum(SimulationConfig config, double energyKeV, int count,
+                                                     bool isotropic)
     {
         var d = config.Detector;
         var cascadeRng = new DefaultRandom((config.Seed ?? 0) + 555);
@@ -160,13 +171,24 @@ public sealed class EventStreamStudy
             tries++;
             double x = (entryRng.NextDouble() * 2.0 - 1.0) * halfW * 0.999;
             double y = (entryRng.NextDouble() * 2.0 - 1.0) * halfH * 0.999;
-            var photon = new Photon
+
+            Vector3 dir;
+            if (isotropic)
             {
-                Ray = new Ray(new Vector3(x, y, 10.0), new Vector3(0.0, 0.0, -1.0)),
-                EnergyKeV = energyKeV,
-                Weight = 1.0,
-            };
-            det.Score(photon);
+                // Cosine-weighted hemisphere about -z: pdf ∝ cosθ = |dz|, the flux-through-a-plane law.
+                double u1 = entryRng.NextDouble(), u2 = entryRng.NextDouble();
+                double r = Math.Sqrt(u1), phi = 2.0 * Math.PI * u2;
+                dir = new Vector3(r * Math.Cos(phi), r * Math.Sin(phi), -Math.Sqrt(1.0 - u1));
+            }
+            else
+            {
+                dir = new Vector3(0.0, 0.0, -1.0);
+            }
+
+            // Place the origin above the top face so the ray crosses the sampled entry point (x, y, 0).
+            double lead = 10.0 / -dir.Z;                 // travel distance to reach z = 0 from z = +10
+            var origin = new Vector3(x - dir.X * lead, y - dir.Y * lead, 10.0);
+            det.Score(new Photon { Ray = new Ray(origin, dir), EnergyKeV = energyKeV, Weight = 1.0 });
         }
         return deposits.ToArray();
     }
