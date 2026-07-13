@@ -51,6 +51,33 @@ public class FrontEndTests
     }
 
     [Fact]
+    public void Dcr_IsParallelNoise_ScalingOneOverE()
+    {
+        var noDcr = new FrontEndModel(CeBr3());
+        Assert.Equal(0.0, noDcr.DcrFwhmFraction(662.0), 12);            // 0 by default (backward compatible)
+
+        var cfg = CeBr3(); cfg.DarkCountRateHz = 1.0e6; cfg.IntegrationTimeNs = 200.0;
+        var m = new FrontEndModel(cfg);
+        // Parallel-noise term scales 1/E, so the 122→662 ratio equals 662/122 (not √ of it).
+        double ratio = m.DcrFwhmFraction(122.0) / m.DcrFwhmFraction(662.0);
+        Assert.Equal(662.0 / 122.0, ratio, 2);
+    }
+
+    [Fact]
+    public void Dcr_TermConcentratesAtLowEnergy_AndRaisesTotal()
+    {
+        // A stressed DCR (10 Mcps, 1 µs window) makes the DCR term measurable at low energy — where it
+        // concentrates (1/E) — while adding in quadrature it only nudges the total (dominated by the intrinsic
+        // + statistical terms). So DCR is a low-energy / weak-source concern, not a photopeak one.
+        var clean = new FrontEndModel(CeBr3());
+        var cfg = CeBr3(); cfg.DarkCountRateHz = 10.0e6; cfg.IntegrationTimeNs = 1000.0;
+        var m = new FrontEndModel(cfg);
+        Assert.True(m.DcrFwhmFraction(122.0) > 0.005, $"DCR term should be measurable at 122 keV, got {m.DcrFwhmFraction(122.0):P2}");
+        Assert.True(m.DcrFwhmFraction(122.0) > 5.0 * m.DcrFwhmFraction(1332.0), "DCR term far larger at low energy");
+        Assert.True(m.FwhmFraction(122.0) > clean.FwhmFraction(122.0), "DCR raises the total FWHM (monotone)");
+    }
+
+    [Fact]
     public void FrontEnd_BroadensPhotopeak_ShrinkingTightWindowCounts()
     {
         // A tight ±2% window around 662: with the front-end resolution (~4.3% FWHM) many photopeak events

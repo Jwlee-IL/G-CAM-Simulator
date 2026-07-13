@@ -887,6 +887,14 @@ energy-dependent resolution instead of a hand-set number.
   LaBr3 3.3 % (only photon-limited one), LYSO 7.8 %, BGO 10.3 %, NaI 6.3 % FWHM @ 662 — plus R_tot@1332 showing
   the 1/√E improvement. **Codex-verified** (percent→fraction correct, 1/√E + intrinsic floor, unbiased smear,
   integration before InWindow, null path byte-identical); used a separate front-end RNG per Codex's replay caveat.
-- `FrontEndTests` (budget @662 = 8043 pe → 4.30 %, 1/√E scaling, unbiased smear with FWHM spread, tight-window
-  counts drop with the front-end). **48 tests green.** Reproduce: `montecarlo frontend`; enable in a scenario via
-  `detector.frontEnd`. Still open: model DCR-as-background (the front-end DCR term isn't in the C# noise yet).
+- **DCR as background** (extension): `FrontEndConfig.DarkCountRateHz` + `IntegrationTimeNs` add a SiPM
+  dark-count term. Dark p.e. accumulated in the integration window (variance = ENF·DCR·τ_int) add a
+  **PARALLEL-noise** contribution `R_dcr(E) = 2.355·√(ENF·DCR·τ_int)/N_pe(E)` that scales **1/E** — distinct
+  from the 1/√E statistical term — folded in quadrature. Honest magnitude: at 1 Mcps/200 ns it's **~0.014 %
+  @662 vs ~0.078 % @122** (negligible at the photopeak, concentrates at low energy) — matching the design-layer
+  "DCR matters only for weak/low-line sources" finding. `montecarlo frontend` prints the energy sweep.
+  Codex-verified (correct 1/E parallel-noise, units, magnitude; caveat noted — an equal-width baseline gate
+  would ×√2). Default 0 = backward compatible.
+- `FrontEndTests` (budget @662 = 8043 pe → 4.30 %, 1/√E scaling, unbiased smear, tight-window counts drop with
+  the front-end; DCR 1/E scaling + low-energy concentration). **50 tests green.** Reproduce: `montecarlo frontend`;
+  enable in a scenario via `detector.frontEnd` (with optional `darkCountRateHz`).

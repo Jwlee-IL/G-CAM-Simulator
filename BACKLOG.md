@@ -38,7 +38,8 @@ Deferred work, captured so we don't forget. Not in current scope. See
 - **Fold `rtl/frontend_model.py` into C# — DONE (theme 32)**: `FrontEndModel`/`FrontEndConfig` derive the
   energy resolution from the photoelectron budget (1/√E), opt-in via `detector.frontEnd`; `ComptonCrystalDetector`
   smears each deposit by R_tot(E) before the window. `montecarlo frontend` reproduces the Python table. Codex-verified.
-  Still open: model **DCR-as-background** (the SiPM dark-count term isn't in the C# noise yet).
+- **DCR-as-background — DONE (theme 32)**: `FrontEndConfig.DarkCountRateHz`/`IntegrationTimeNs` add the SiPM
+  dark-count parallel-noise term (R_dcr ∝ 1/E; negligible at the photopeak, concentrates at low energy). Codex-verified.
 - **CR-RC / cusp shaping comparison** now has a real noise floor to be meaningful against (theme 30) — the
   natural next RTL step: sweep shaping time / compare filters on the realistic waveform for the SNR vs
   pile-up optimum (theme 30's frontend_study has the resolution machinery; a rigorous pile-up-inclusive

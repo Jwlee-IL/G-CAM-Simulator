@@ -819,6 +819,18 @@ static int RunFrontend(string[] args)
     Console.WriteLine("R_stat = 2.355·√(ENF/N_pe) scales 1/√E; past the knee the crystal's intrinsic floor dominates");
     Console.WriteLine("(more PDE wasted). Enable in a scenario via detector.frontEnd — the Compton detector then");
     Console.WriteLine("smears each deposit by R_tot(E), so energy windows / isotope separation reflect real resolution.");
+    Console.WriteLine();
+
+    // DCR as background: dark counts add a PARALLEL-noise term that scales 1/E (worse at low energy).
+    const double dcrHz = 1.0e6, tauNs = 200.0;   // ~1 Mcps SiPM (S13360-3050CS class), 200 ns integration
+    var clean = new FrontEndModel(new FrontEndConfig { LightYieldPhPerKeV = 45, IntrinsicResolutionFwhm = 0.032 });
+    var withDcr = new FrontEndModel(new FrontEndConfig { LightYieldPhPerKeV = 45, IntrinsicResolutionFwhm = 0.032,
+        DarkCountRateHz = dcrHz, IntegrationTimeNs = tauNs });
+    Console.WriteLine($"SiPM dark counts as background (CeBr3, DCR {dcrHz / 1e6:F1} Mcps, {tauNs:F0} ns window):");
+    Console.WriteLine("  energy    R_tot(no DCR)   R_tot(+DCR)   R_dcr alone   (DCR is a 1/E parallel-noise term)");
+    foreach (double e in new[] { 122.0, 662.0, 1332.0 })
+        Console.WriteLine($"  {e,5:F0} keV   {clean.FwhmFraction(e),10:P2}    {withDcr.FwhmFraction(e),9:P2}    {withDcr.DcrFwhmFraction(e),9:P3}");
+    Console.WriteLine("  -> negligible at the photopeak, grows toward low energy: DCR matters for weak / low-line sources.");
     return 0;
 }
 

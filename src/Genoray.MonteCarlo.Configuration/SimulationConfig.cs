@@ -205,6 +205,15 @@ public sealed class FrontEndConfig
     /// <summary>Crystal intrinsic (non-proportionality) resolution FWHM fraction — the photon-count-independent
     /// floor (GAGG ~0.05, CeBr3 ~0.032, LaBr3 ~0.022).</summary>
     public double IntrinsicResolutionFwhm { get; set; } = 0.032;
+
+    /// <summary>SiPM dark-count rate per channel (Hz). Dark p.e. accumulated during the integration window add
+    /// a PARALLEL-noise variance to the measured charge → a resolution term that scales 1/E (worse at LOW
+    /// energy, unlike the 1/√E statistical term). 0 = no DCR. S13360-3050CS ≈ 0.5–1.5 Mcps.</summary>
+    public double DarkCountRateHz { get; set; } = 0.0;
+
+    /// <summary>Charge-integration / shaping window (ns) over which dark counts accumulate. Longer window =
+    /// more dark p.e. = more DCR noise (and more pile-up). Only used with <see cref="DarkCountRateHz"/>.</summary>
+    public double IntegrationTimeNs { get; set; } = 200.0;
 }
 
 /// <summary>The pixelated scintillator crystal array.</summary>
