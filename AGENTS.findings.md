@@ -774,3 +774,28 @@ unchanged); the new studies/scenarios opt in, so background is exercised without
   multi-exposure draw order), and `BackgroundStudy` all route through it instead of hand-rolling
   `Sampling.Poisson(...)`. Behavior-preserving — the background sweep CSV is **byte-identical** and
   **Codex-verified** that the RNG draw order and Poisson means are unchanged at all three sites.
+
+## 29. RTL baseline restoration — cancel the trapezoidal shaper's pole-zero walk — `rtl/baseline_restorer.sv`
+Fixes the effect theme 27 surfaced: the shaper's **Q8-quantized pole-zero** (M_Q8 = round(M·256) = 1156 vs
+exact 4.51665) cancels the exp tail only approximately, so every pulse leaves a residual step and the DC
+baseline **WALKS** over a long train (the MC stream drifts **0 → ~-42000 ADC** over 1500 events). Theme 27's
+study worked around it by reading each flat top *relative* to the local pre-pulse level; this makes the RTL's
+**absolute** output usable.
+- **`baseline_restorer.sv`** — a **gated leaky integrator**: a Q(FRAC) baseline estimate `base_acc` that
+  updates (`base_acc += x - base`) ONLY in quiet regions (`|x - base| < GATE`, so flat tops freeze it and
+  their height is preserved), and the output is `y = x - base`. The Q(FRAC=12) accumulator stops the small
+  per-sample leak from rounding to zero; the loop time constant is ~2^FRAC ≈ 4096 samples (≫ a ~28-sample
+  pulse, ≪ the train). Composable/standalone (shaper → BLR), Icarus+Yosys-friendly.
+- **cocotb** (`rtl/test_blr.py`, `trap_ref.blr`): drive the SHAPED MC stream (200 k samples) through the BLR,
+  assert it matches the integer reference **bit-for-bit** AND removes the walk — the raw shaped baseline
+  reaches < -15000 while the BLR output stays near zero (min ~-959) with the flat tops intact (max > 100000).
+- **Demonstration** (`rtl/blr_study.py` → `rtl/blr.png`): the baseline estimate walks 0 → -41550 ADC over the
+  full train; the BLR output holds a flat zero baseline with correct flat-top heights (the estimate = shaped
+  − restored). Uses the same integer reference the RTL is bit-exact to, so the curves ARE the RTL behaviour.
+- **Codex-verified**: gating freezes on pulses / tracks in quiet correctly; the Q(FRAC) accumulator is
+  necessary and correct (τ ≈ 2^FRAC); `trap_ref.blr` is bit-exact (registered output = pre-update baseline,
+  arithmetic shift); no overflow (`-47000·4096 ≈ -1.9e8` ≪ 2^43). Documented the inherent gated-BLR caveats
+  (GATE between quiet-noise and smallest pulse; a near-100%-busy train has no quiet to track; start-up offset
+  must be inside GATE — the stream starts at 0, so it acquires). **44 C# + 4 cocotb tests green.** Reproduce:
+  `montecarlo eventstream samples/scenario.json 500 1500` then `cd rtl && python run_cocotb.py` and
+  `python blr_study.py`.

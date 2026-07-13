@@ -22,10 +22,9 @@ Deferred work, captured so we don't forget. Not in current scope. See
   baseline-walk (needs baseline restoration). Codex-verified (weighted resampling + baseline-index fixes).
 - **CR-RC / cusp shaping variants** for comparison; fold the trapezoid's resolution-vs-rate into the
   material rate study.
-- **Baseline restoration (BLR) in the RTL** — theme 27 showed the Q8 pole-zero leaves a slow baseline walk
-  over a long pulse train; the study reads the flat top relative to the local baseline, but the RTL itself
-  has no BLR. A gated-baseline / moving-average restorer in `trapezoidal_shaper.sv` would make the absolute
-  output usable, not just the relative read.
+- **Baseline restoration (BLR) in the RTL** — **DONE (theme 29)**: `rtl/baseline_restorer.sv` is a gated
+  leaky-integrator BLR that cancels the Q8 pole-zero baseline walk (0 → ~-42000 ADC over the MC stream);
+  cocotb-verified bit-exact + walk-removed (`test_blr.py`), demonstrated in `rtl/blr.png`. Codex-verified.
 - **Exact Artix-7 Fmax in Vivado** — DEFERRED (Vivado licence/install friction). `rtl/vivado_trap.tcl`
   is ready to run (`vivado -mode batch -source vivado_trap.tcl -tclargs <top> <part> <period>`) whenever
   a Vivado is available. Meanwhile the open **nextpnr (Lattice ECP5)** flow gives a real STA Fmax as a

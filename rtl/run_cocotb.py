@@ -28,3 +28,15 @@ for top, src in [("trapezoidal_shaper", "trapezoidal_shaper.sv"),
         test_dir=here,
     )
     print(f"results xml: {results}")
+
+# Baseline restorer: driven by the SHAPED MC stream, checked bit-exact + that it removes the pole-zero walk.
+print("\n===== baseline_restorer =====")
+blr = get_runner("icarus")
+blr.build(
+    sources=[os.path.join(here, "baseline_restorer.sv")],
+    hdl_toplevel="baseline_restorer",
+    build_args=["-g2012"],
+    parameters={"WACC": 32, "GATE": 4096, "FRAC": 12},
+    always=True,
+)
+print(f"results xml: {blr.test(hdl_toplevel='baseline_restorer', test_module='test_blr', test_dir=here)}")

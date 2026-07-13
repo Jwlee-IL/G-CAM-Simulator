@@ -32,6 +32,22 @@ def trap_shape(samples, rise=RISE, flat=FLAT, m_q8=M_Q8):
     return out
 
 
+def blr(xs, gate=4096, frac=12):
+    """Integer reference for baseline_restorer.sv (bit-exact). A gated leaky integrator tracks the DC
+    baseline only in quiet regions (|x-base| < gate) and subtracts it, cancelling the shaper's pole-zero
+    baseline walk. Python `>>` on ints is an arithmetic (floor) shift, matching the SV signed `>>>`; the
+    estimate is carried in Q(frac) so the small per-sample step does not round away."""
+    base_acc = 0
+    out = []
+    for x in xs:
+        base = base_acc >> frac
+        diff = x - base
+        out.append(x - base)                 # registered output uses the PRE-update baseline
+        if -gate < diff < gate:
+            base_acc += diff
+    return out
+
+
 def exp_pulse(n, n0, amp_kev, tau=TAU_SAMPLES):
     """One scintillation pulse: instantaneous rise at n0, exponential decay tau (samples)."""
     w = [0] * n
