@@ -14,11 +14,18 @@ Deferred work, captured so we don't forget. Not in current scope. See
   **energy-dependent mask μ**. **Fully complete** — no remaining refinements.
 
 ### RTL
-- **Drive the cocotb testbench from the C# MC per-event stream** — the cocotb Icarus runner is now in
-  place (theme 25); feed it real event times/energies instead of the synthetic stimulus. (The generic
-  "cocotb wrapper" and "trapezoidal shaping in RTL" items are done — theme 25.)
+- **Drive the cocotb testbench from the C# MC per-event stream** — **DONE (theme 27)**: `EventStreamStudy`
+  taps the crystal-Compton total-deposit spectrum per event + a Poisson arrival overlay
+  (`montecarlo eventstream` → `rtl/event_stream.txt`); `rtl/event_stream.py` rasterizes it to an ADC
+  waveform and `test_trap_shaper.mc_event_stream_matches_reference` drives BOTH shapers bit-for-bit
+  (TESTS=3 PASS=3). `event_stream_study.py` shows energy recovery vs rate and surfaced the pole-zero
+  baseline-walk (needs baseline restoration). Codex-verified (weighted resampling + baseline-index fixes).
 - **CR-RC / cusp shaping variants** for comparison; fold the trapezoid's resolution-vs-rate into the
   material rate study.
+- **Baseline restoration (BLR) in the RTL** — theme 27 showed the Q8 pole-zero leaves a slow baseline walk
+  over a long pulse train; the study reads the flat top relative to the local baseline, but the RTL itself
+  has no BLR. A gated-baseline / moving-average restorer in `trapezoidal_shaper.sv` would make the absolute
+  output usable, not just the relative read.
 - **Exact Artix-7 Fmax in Vivado** — DEFERRED (Vivado licence/install friction). `rtl/vivado_trap.tcl`
   is ready to run (`vivado -mode batch -source vivado_trap.tcl -tclargs <top> <part> <period>`) whenever
   a Vivado is available. Meanwhile the open **nextpnr (Lattice ECP5)** flow gives a real STA Fmax as a

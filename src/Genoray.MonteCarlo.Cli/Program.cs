@@ -71,6 +71,9 @@ if (args[0].Equals("mixediso", StringComparison.OrdinalIgnoreCase))
 if (args[0].Equals("mixedstrip", StringComparison.OrdinalIgnoreCase))
     return RunMixedStrip(args);
 
+if (args[0].Equals("eventstream", StringComparison.OrdinalIgnoreCase))
+    return RunEventStream(args);
+
 var config = ConfigLoader.Load(args[0]);
 Console.WriteLine($"Scenario : {config.Name}");
 Console.WriteLine($"Isotope  : {config.Source.Isotope} @ {config.Source.EnergyKeV} keV");
@@ -706,6 +709,34 @@ static int RunComptonStrip(string[] args)
     Console.WriteLine();
     Console.WriteLine("  Co-located: spatial decode can't separate co-located sources — only per-pixel");
     Console.WriteLine("  stripping recovers the true Cs-137 count. Recon CSVs: samples/strip_*.csv");
+    return 0;
+}
+
+static int RunEventStream(string[] args)
+{
+    if (args.Length < 2) { Console.Error.WriteLine("Usage: montecarlo eventstream <base.json> [rateKcps] [maxEvents]"); return 1; }
+    var baseConfig = ConfigLoader.Load(args[1]);
+    double rateKcps = args.Length > 2 ? double.Parse(args[2]) : 500.0;
+    int maxEvents = args.Length > 3 ? int.Parse(args[3]) : 1500;
+    const double adcSampleRateHz = 100e6;   // 100 MSPS front-end (Ts = 10 ns; trap_ref tau = 5 samples = 50 ns)
+
+    var study = new EventStreamStudy();
+    var events = study.Generate(baseConfig, rateKcps * 1e3, adcSampleRateHz, maxEvents);
+    var (count, minKeV, maxKeV, meanGap) = EventStreamStudy.Summary(events);
+
+    Directory.CreateDirectory("rtl");
+    string path = "rtl/event_stream.txt";
+    File.WriteAllText(path, EventStreamStudy.ToText(events, rateKcps * 1e3, adcSampleRateHz, baseConfig.Name));
+
+    Console.WriteLine("MC -> RTL event stream (crystal-Compton deposits + Poisson arrival overlay)");
+    Console.WriteLine($"  Field    : {baseConfig.Source.Isotope} @ {baseConfig.Source.EnergyKeV} keV" +
+        (baseConfig.Sources is { Length: > 0 } ss ? $"  (+{ss.Length - 1} more sources / mixed field)" : ""));
+    Console.WriteLine($"  Rate     : {rateKcps:F0} kcps @ {adcSampleRateHz / 1e6:F0} MSPS  ->  mean gap {meanGap:F0} samples");
+    Console.WriteLine($"  Events   : {count}   deposited energy {minKeV:F0}..{maxKeV:F0} keV (full spectrum: photopeak + Compton continuum)");
+    Console.WriteLine($"  Written  : {path}");
+    Console.WriteLine();
+    Console.WriteLine("  Drive the RTL shaper with it:  cd rtl && python run_cocotb.py   (mc_event_stream_matches_reference)");
+    Console.WriteLine("  Recovery / pile-up analysis :  cd rtl && python event_stream_study.py  -> event_stream.png");
     return 0;
 }
 

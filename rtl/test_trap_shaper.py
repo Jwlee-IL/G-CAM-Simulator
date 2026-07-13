@@ -73,3 +73,28 @@ def trap_shape_from_dut(dut, samples):
     flat = int(dut.FLAT.value)
     m_q8 = int(dut.M_Q8.value)
     return trap_ref.trap_shape(samples, rise, flat, m_q8)
+
+
+@cocotb.test()
+async def mc_event_stream_matches_reference(dut):
+    """Drive the RTL shaper from the C# Monte Carlo event stream (rtl/event_stream.txt): the real
+    crystal-Compton deposit spectrum (photopeak + continuum) with a Poisson arrival overlay,
+    rasterized into an ADC waveform. Assert the RTL processes it bit-for-bit like the integer
+    reference — the closed MC->RTL loop. (Run `montecarlo eventstream <cfg>` first to write the file.)"""
+    import os
+    import event_stream
+    if not os.path.exists(os.path.join(os.path.dirname(__file__), "event_stream.txt")):
+        raise cocotb.result.SkipTest("no event_stream.txt — run `montecarlo eventstream <cfg>` first")
+
+    events, meta = event_stream.read_stream()
+    # Cap the arrival span to bound Icarus sim time; the FULL stream drives event_stream_study.py
+    # (pure-python reference, which is bit-exact to this RTL).
+    cap = 30000
+    events = [(s, e) for (s, e) in events if s < cap]
+    wave = event_stream.rasterize(events)
+    assert wave, "empty MC stream"
+    assert max(wave) < 32768, f"waveform peak {max(wave)} overflows the 16-bit ADC input at this rate"
+
+    got = await _run(dut, wave)
+    _check(dut, got, trap_shape_from_dut(dut, wave),
+           f"MC stream ({len(events)} events, {len(wave)} samples, rate={meta.get('count_rate_cps','?')})")

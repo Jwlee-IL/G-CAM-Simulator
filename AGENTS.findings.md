@@ -670,3 +670,40 @@ optional (null = classic single source, backward compatible).
 - Locked in by `MixedFieldTests` (superposition, single-source equivalence, multi-line split, 3-source
   localization, energy-window isotope separation). 31 tests green. Reproduce: `montecarlo mixedfield` /
   `montecarlo mixediso samples/scenario.json`.
+
+## 27. MC → RTL: drive the cocotb shaper from the Monte Carlo event stream — `EventStreamStudy` / `rtl/event_stream.py`
+Closed the top RTL backlog item: the trapezoidal shaper (theme 25) is no longer fed a synthetic pulse —
+it is driven by the **real crystal-Compton deposit spectrum from the validated C# MC**, with realistic
+Poisson pile-up. End-to-end loop: MC physics → event stream → ADC waveform → gate-level RTL → energy recovery.
+- **Event tap** (`ComptonCrystalDetector` optional `eventSink`): records the **total energy deposited across
+  the Compton cascade** for EVERY scored event (photopeak *and* continuum/escape), independent of the energy
+  window — that sum is the analog pulse height the SiPM/ADC/shaper actually sees. `EventStreamStudy.Generate`
+  taps it, then overlays a **Poisson arrival process** (exponential inter-arrival, mean gap `fs/rate` samples)
+  at a chosen operating count rate. Energies are MC physics; **rate is an independent operating-point knob**
+  (the MC's PhotonCount is a variance-reduction budget, not real counts — same convention as the RTL rate
+  studies). `montecarlo eventstream <cfg> [rateKcps] [maxEvents]` writes `rtl/event_stream.txt`
+  (`arrival_sample energy_keV` per line). A centered Cs-137 baseline gives ~68 % photopeak + ~31 % continuum.
+- **cocotb, driven by the stream** (`rtl/event_stream.py` rasterizer + `test_trap_shaper.mc_event_stream_matches_reference`):
+  the rasterizer sums each event's exponential pulse (amp = keV × ADC/keV, decay τ) into one ADC waveform —
+  **bit-identical** to summing full-length `exp_pulse` contributions (each pulse is walked until its rounded
+  sample first hits 0; monotone decay ⇒ the tail is exactly 0). Feeding that waveform to **both** the direct
+  and pipelined shapers matches the integer reference **bit-for-bit** (TESTS=3 PASS=3 each): the RTL processes
+  the real MC stream identically to `trap_ref`. **This is the deliverable — the closed MC→RTL loop.**
+- **Energy recovery & the baseline-walk finding** (`rtl/event_stream_study.py` → `rtl/event_stream.png`):
+  reading each event's flat top recovers deposited energy. The MC stream exposed a real effect a single
+  synthetic pulse never shows — the **Q8-quantized pole-zero constant** (M_Q8=1156/256=4.5156 vs exact 4.5167)
+  leaves a tiny residual per pulse, so over a 1500-event train the shaper **baseline WALKS by ~−47 000 ADC**
+  (monotone). The fix is what real trapezoidal DAQs do — **baseline restoration**: read the flat top RELATIVE
+  to the local pre-ramp level, which rejects the slow walk and isolates genuine pile-up. Recovery then degrades
+  cleanly with rate: **±5 % recovery 92 % → 78 % → 44 %** at **100 / 500 / 2000 kcps** (pile-up fraction
+  11 % → 40 % → 89 %); the recovered spectrum's 662 photopeak shrinks and a sum tail grows past 662 as rate climbs.
+- **Codex-verified (2 junctures)**. C# side: sink records total cascade energy before the window ✓, Poisson mean
+  gap `fs/rate` correct ✓; **fix** — the sink ignored the directional-biasing `Photon.Weight`, so the raw list
+  sampled the *biased proposal*, not the physical spectrum → added **weighted (systematic) resampling** back to
+  the physical detected-event distribution (identity for analog/centered runs, matters off-axis). Python side:
+  rasterize early-break is truly lossless ✓, baseline subtraction is the right pole-zero-walk correction ✓,
+  calibration unaffected ✓; **fix** — baseline index guarded so a first event at sample 0 uses baseline 0.
+- Locked in by `EventStreamTests` (deposit bounded by the line energy, photopeak+continuum both present,
+  arrivals monotonic, mean gap matches the requested rate, text round-trip). **37 tests green.** Reproduce:
+  `montecarlo eventstream samples/scenario.json 500 1500` then `cd rtl && python run_cocotb.py` (Python 3.13)
+  and `python event_stream_study.py`.

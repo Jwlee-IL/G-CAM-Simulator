@@ -35,13 +35,14 @@ public sealed class ComptonCrystalDetector : IDetector
     private readonly ComptonStrategy _strategy;
     private readonly IRandom _rng;
     private readonly double[]? _sensitivity;
+    private readonly Action<double, double>? _eventSink;
 
     public double PlaneZ { get; }
 
     public ComptonCrystalDetector(int pixelsX, int pixelsY, double pixelPitchMm,
         double windowCenterKeV, double windowFraction, ComptonStrategy strategy, IRandom rng,
         double muAt662PerMm = 0.09, double crystalDepthMm = 10.0, double planeZ = 0.0,
-        double[]? sensitivity = null)
+        double[]? sensitivity = null, Action<double, double>? eventSink = null)
     {
         _image = new DetectorImage(pixelsX, pixelsY);
         _pitch = pixelPitchMm;
@@ -54,6 +55,7 @@ public sealed class ComptonCrystalDetector : IDetector
         _strategy = strategy;
         _rng = rng;
         _sensitivity = sensitivity;
+        _eventSink = eventSink;
         PlaneZ = planeZ;
     }
 
@@ -103,6 +105,20 @@ public sealed class ComptonCrystalDetector : IDetector
             dir = newDir; e = newE;
         }
         if (_sites.Count == 0) return false;
+
+        // The analog scintillation pulse the SiPM/ADC would see is proportional to the TOTAL energy
+        // deposited in the crystal (summed over the Compton cascade sites), BEFORE any energy window —
+        // this is the physical pulse height the RTL shaper works on, so the event sink (used to build the
+        // MC→RTL event stream) records it for every scored event, photopeak and Compton-continuum alike.
+        // The photon's importance-sampling weight goes with it, so a directional-biased run can be
+        // resampled back to the physical detected-event spectrum (unweighted would over-represent the
+        // biased proposal at positions/angles where deposit/escape probability differs).
+        if (_eventSink is not null)
+        {
+            double total = 0.0;
+            foreach (var (_, _, dep) in _sites) total += dep;
+            _eventSink(total, photon.Weight);
+        }
 
         Deposit(photon.Weight);
         return true;
