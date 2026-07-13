@@ -12,10 +12,35 @@ and pile-up analysis). The rasterizer truncates each pulse at the sample where i
 contribution first reaches 0 — those samples add nothing, so the waveform is bit-identical to a
 full-length exp_pulse while keeping the build O(events x pulse_support) instead of O(events x length).
 """
+import json
 import math
 import os
 import random
 import trap_ref
+
+_ADC_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "samples", "adc")
+DEFAULT_ADC = "ad9648"
+
+
+def load_adc(name=DEFAULT_ADC):
+    """Load an ADC preset (samples/adc/<name>.json) and derive the model quantities from datasheet specs:
+    the signed full-scale code (from bits), the codes-per-keV gain (full scale mapped to fullScaleKeV so the
+    lines sit well up the range), and the ADC's own input-referred noise in codes (from ENOB via
+    SNR = 6.02*ENOB + 1.76 dB, ENOB taken as the SINAD-equivalent broadband ADC noise). The analog/preamp
+    noise (noise_kev) is a SEPARATE, usually larger term added in quadrature by the rasterizer."""
+    with open(os.path.join(_ADC_DIR, name + ".json")) as f:
+        d = json.load(f)
+    bits = int(d["bits"])
+    adc_max = (1 << (bits - 1)) - 1                       # signed full scale, e.g. 14-bit -> 8191
+    adc_per_kev = adc_max / float(d["fullScaleKeV"])
+    snr_db = 6.02 * float(d["enob"]) + 1.76
+    adc_noise_codes = (adc_max / math.sqrt(2.0)) / (10.0 ** (snr_db / 20.0))
+    return {"name": d["name"], "bits": bits, "adc_max": adc_max, "adc_per_kev": adc_per_kev,
+            "adc_noise_codes": adc_noise_codes, "full_scale_kev": float(d["fullScaleKeV"]),
+            "sample_rate_msps": d.get("sampleRateMsps")}
+
+
+ADC = load_adc()   # the active ADC preset (module default); swap by passing adc=load_adc("...") to rasterize
 
 
 def read_stream(path=None):
@@ -41,8 +66,7 @@ def read_stream(path=None):
 
 
 def rasterize(events, tau=trap_ref.TAU_SAMPLES, tau_rise=trap_ref.TAU_RISE_SAMPLES,
-              adc_per_kev=trap_ref.ADC_PER_KEV, noise_kev=trap_ref.NOISE_KEV,
-              adc_max=trap_ref.ADC_MAX, intrinsic_fwhm=trap_ref.INTRINSIC_FWHM,
+              adc=None, noise_kev=trap_ref.NOISE_KEV, intrinsic_fwhm=trap_ref.INTRINSIC_FWHM,
               intrinsic_ref_kev=trap_ref.INTRINSIC_REF_KEV, seed=1, tail_pad=128):
     """Build the realistic ADC waveform for the event stream (list of ints). Real front-end effects, so
     the shaper is not fed an idealized noiseless step train:
@@ -50,13 +74,18 @@ def rasterize(events, tau=trap_ref.TAU_SAMPLES, tau_rise=trap_ref.TAU_RISE_SAMPL
       * per-event INTRINSIC resolution — each pulse's amplitude fluctuates by the scintillator+SiPM
         photostatistics (intrinsic_fwhm FWHM at intrinsic_ref_kev, scaling 1/sqrt(E));
       * FINITE RISE — a bi-exponential pulse (rise tau_rise, fall tau) → ballistic deficit;
-      * white ELECTRONIC noise (noise_kev keV-equivalent RMS) on every sample — the floor the shaper fights;
-      * ADC CLIP + quantize to +/- adc_max (16-bit), so pile-up stacks saturate.
+      * NOISE — the analog/preamp floor (noise_kev keV-equivalent RMS) in quadrature with the chosen ADC's
+        OWN input-referred noise (from its ENOB); the floor the shaper fights;
+      * ADC CLIP + quantize to the ADC's signed full scale (from its bit depth), so pile-up stacks saturate.
 
-    Set intrinsic_fwhm=0, noise_kev=0, tau_rise=0 to recover the old ideal waveform. `seed` fixes both the
-    amplitude and the sample-noise RNG streams (reproducible)."""
+    `adc` is an ADC preset dict from load_adc() (defaults to the module ADC = AD9648 14-bit); it sets the
+    codes-per-keV gain, the full-scale clip, and the ADC's own noise. Set intrinsic_fwhm=0, noise_kev=0,
+    tau_rise=0 for the old ideal shape. `seed` fixes the amplitude and sample-noise RNG streams."""
     if not events:
         return []
+    a_adc = adc or ADC
+    adc_per_kev = a_adc["adc_per_kev"]
+    adc_max = a_adc["adc_max"]
     length = max(s for s, _ in events) + tail_pad
     wave = [0.0] * length
     amp_rng = random.Random(seed + 777)     # per-event amplitude (intrinsic resolution) — its own stream
@@ -79,7 +108,8 @@ def rasterize(events, tau=trap_ref.TAU_SAMPLES, tau_rise=trap_ref.TAU_RISE_SAMPL
             rise = math.exp(-dt / tau_rise) if tau_rise > 0.0 else 0.0
             wave[t] += a * (fall - rise)
 
-    sigma = noise_kev * adc_per_kev
+    # per-sample noise = analog/preamp (noise_kev -> codes) in quadrature with the ADC's own input-referred noise
+    sigma = math.sqrt((noise_kev * adc_per_kev) ** 2 + a_adc["adc_noise_codes"] ** 2)
     noise_rng = random.Random(seed)
     out = [0] * length
     for i in range(length):
@@ -94,10 +124,11 @@ def rasterize(events, tau=trap_ref.TAU_SAMPLES, tau_rise=trap_ref.TAU_RISE_SAMPL
 
 def calibrate_flat_per_kev(rise=trap_ref.RISE, flat=trap_ref.FLAT, m_q8=trap_ref.M_Q8,
                            tau=trap_ref.TAU_SAMPLES, tau_rise=trap_ref.TAU_RISE_SAMPLES,
-                           adc_per_kev=trap_ref.ADC_PER_KEV, ref_kev=662.0):
+                           adc=None, ref_kev=662.0):
     """Flat-top height the shaper produces per keV, from ONE isolated NOISELESS reference pulse (so
-    recovered energy = flat_top / this). Uses the SAME finite-rise pulse model as the rasterizer, so the
-    gain already includes the ballistic deficit; noise is excluded (it is a deterministic gain)."""
+    recovered energy = flat_top / this). Uses the SAME finite-rise pulse model and the SAME ADC gain as the
+    rasterizer, so the gain already includes the ballistic deficit; noise is excluded (deterministic gain)."""
+    adc_per_kev = (adc or ADC)["adc_per_kev"]
     n0 = 4 * rise
     length = n0 + rise + flat + 8 * int(math.ceil(tau)) + 8
     pulse = [int(round(v)) for v in trap_ref.biexp_pulse(length, n0, ref_kev, tau, tau_rise, adc_per_kev)]

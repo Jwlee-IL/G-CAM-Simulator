@@ -1,0 +1,9 @@
+{
+  "name": "AD9235 (12-bit, 65 MSPS)",
+  "part": "Analog Devices AD9235",
+  "bits": 12,
+  "sampleRateMsps": 65,
+  "enob": 11.1,
+  "fullScaleKeV": 2000,
+  "note": "Budget 12-bit pipeline ADC (older, low power). Coarser LSB but still below a few-keV analog noise floor at this gain. Sample rate is informational; the shaper operating point (tau in samples) is held fixed for the demo."
+}

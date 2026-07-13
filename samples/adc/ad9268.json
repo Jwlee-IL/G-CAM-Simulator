@@ -1,0 +1,9 @@
+{
+  "name": "AD9268 (16-bit, 125 MSPS)",
+  "part": "Analog Devices AD9268",
+  "bits": 16,
+  "sampleRateMsps": 125,
+  "enob": 12.3,
+  "fullScaleKeV": 2000,
+  "note": "Dual 16-bit pipeline ADC, SNR ~78 dBFS. Higher bit depth / dynamic range for the same gain; quantization even further below the analog noise floor."
+}

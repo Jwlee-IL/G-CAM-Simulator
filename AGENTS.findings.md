@@ -827,3 +827,16 @@ nothing to fight (its whole purpose is to maximize SNR against a noise floor). M
   budget checks; calibration is the noiseless deficit-corrected mean gain. **Fix**: `calibrate_flat_per_kev`
   ignored its `adc_per_kev` arg (biexp_pulse hardcoded the constant) → threaded it through. 44 C# + 4 cocotb
   tests green. Reproduce: `montecarlo eventstream samples/scenario.json 500 1500` then `cd rtl && python frontend_study.py`.
+- **ADC grounded in a real part, swappable preset** (`samples/adc/*.json`, `event_stream.load_adc`): the ADC
+  was a generic 16-bit/gain-4 model — the 662 photopeak sat at only ~3-8 % of full scale (looked
+  low-resolution because the gain under-used the range, not because the physics needed it). Now a datasheet
+  preset sets everything: `adc_max = 2^{bits-1}-1` (signed FS), `adc_per_kev = adc_max / fullScaleKeV` (gain so
+  the highest line reaches near FS), and the ADC's OWN input-referred noise from ENOB (SNR = 6.02·ENOB+1.76,
+  noise_codes = FS_rms/10^{SNR/20}) added in **quadrature** with the analog/preamp noise. Presets: **AD9648**
+  (14-bit/125 MSPS, default), **AD9268** (16-bit), **AD9235** (12-bit). With AD9648 + fullScaleKeV 2000, the
+  662 line sits at **33 % FS** (~12 effective bits) and the ADC's own noise is only **~1.3 codes RMS** (≪ the
+  ~12 codes analog floor) — so the part choice barely moves the energy resolution (6.41 % vs 6.40 %), which is
+  exactly right: in a well-set-up system the analog chain, not the ADC, sets resolution. `montecarlo eventstream`
+  + `python adc_study.py` → `rtl/adc.png` shows the waveform titled with the active part. **Codex-verified** (ENOB
+  →noise, gain, quadrature, signed-FS all correct; note: ENOB is SINAD-derived, used as broadband ADC noise).
+  Swap with `rasterize(..., adc=event_stream.load_adc("ad9268"))`.
