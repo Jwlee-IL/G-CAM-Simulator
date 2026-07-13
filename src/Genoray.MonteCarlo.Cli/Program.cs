@@ -417,11 +417,14 @@ static int RunShield(string[] args)
     Console.WriteLine($"  detector {baseConfig.Detector.PixelsX}x{baseConfig.Detector.PixelsY}, barrel {baseConfig.Geometry.MaskDetectorDistanceMm + baseConfig.Detector.CrystalThicknessMm:F0} mm");
     Console.WriteLine();
 
+    const double sideFrac = 0.8;          // 4 side walls vs 1 rear -> ~80% of the leak is edge-weighted
     var study = new ShieldStudy(new DefaultSimulationFactory());
     var csv = new System.Text.StringBuilder("bg,thickness_mm,transmission,bg_per_px,rms_raw_mm,rms_calib_mm,fail_raw,shield_kg\n");
+    ShieldRow[]? scatteredUniform = null;
     foreach (var (label, energy, mu) in backgrounds)
     {
         var rows = study.Run(baseConfig, nSrc, bg0, mu, thick, repeats, failThr);
+        if (label == "scattered_250keV") scatteredUniform = rows;
         csv.Append(ShieldStudy.ToCsv(label, rows).Split('\n', 2)[1]);   // drop repeated header
 
         // A REAL knee: thinnest t whose raw RMS is near the best AND actually localizes well
@@ -439,9 +442,35 @@ static int RunShield(string[] args)
             : $"  -> useful thickness ~ {knee.ThicknessMm:F0} mm  (RMS {knee.RmsRawMm:F2} mm, shield {knee.ShieldMassKg:F2} kg)");
         Console.WriteLine();
     }
+    // Directional-leak comparison (scattered background): the SAME total leak, but re-shaped so 80% enters
+    // edge-weighted through the side walls instead of a flat pedestal. The coded decode rejects the flat
+    // pedestal into DC but not the edge structure, so localization degrades more per count -> a thicker knee.
+    if (scatteredUniform is not null)
+    {
+        var dir = study.Run(baseConfig, nSrc, bg0, backgrounds[0].muPerMm, thick, repeats, failThr, sideFrac);
+        for (int i = 0; i < dir.Length; i++)   // both drop repeated header; tag the directional rows
+            csv.Append(ShieldStudy.ToCsv("scattered_250keV_dir", new[] { dir[i] }).Split('\n', 2)[1]);
+
+        double Knee(ShieldRow[] rr)
+        {
+            double floor = rr.Min(r => r.RmsRawMm);
+            var k = rr.FirstOrDefault(r => r.RmsRawMm <= floor * 1.15 && r.RmsRawMm < failThr && r.FailRaw < 0.10);
+            return k?.ThicknessMm ?? double.NaN;
+        }
+        Console.WriteLine($"=== directional leak (scattered_250keV, {sideFrac:P0} side-wall, same total) ===");
+        Console.WriteLine("  t(mm)   RMS uniform   RMS directional");
+        for (int i = 0; i < dir.Length; i++)
+            Console.WriteLine($"  {dir[i].ThicknessMm,4:F0}   {scatteredUniform[i].RmsRawMm,9:F2}mm   {dir[i].RmsRawMm,11:F2}mm");
+        Console.WriteLine($"  -> useful thickness: uniform ~{Knee(scatteredUniform):F0} mm  vs  directional ~{Knee(dir):F0} mm" +
+                          "  (structured leak needs a bit more shield)");
+        Console.WriteLine();
+    }
+
     File.WriteAllText("samples/shield.csv", csv.ToString());
     Console.WriteLine("Low-energy scattered background is killed by a few mm; Co-60 never reaches the knee");
     Console.WriteLine("at a carriable mass -> shield the low-E noise, beat high-E with coded+stripping.");
+    Console.WriteLine("A directional (side-wall) leak of the SAME total degrades localization more than a flat");
+    Console.WriteLine("pedestal (the decode only rejects the uniform DC part) -> the real knee is a bit thicker.");
     Console.WriteLine("CSV: samples/shield.csv");
     return 0;
 }

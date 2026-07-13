@@ -52,4 +52,25 @@ public class BackgroundTests
         Assert.Equal(0.5 * 400.0 / 144.0, p, 6);
         Assert.Equal(0.0, Background.PedestalPerPixel(0.0, 400.0, 144), 6);
     }
+
+    [Fact]
+    public void SideLeakProfile_IsMeanOneAndEdgeWeighted()
+    {
+        int W = 12, H = 12;
+
+        // sideFraction 0 = flat uniform pedestal (the unchanged model).
+        var flat = Background.SideLeakProfile(W, H, 0.0);
+        foreach (var v in flat) Assert.Equal(1.0, v, 9);
+
+        // Directional: mean stays exactly 1 (same TOTAL leak), but edges exceed the centre.
+        var prof = Background.SideLeakProfile(W, H, 0.8);
+        double mean = 0.0; foreach (var v in prof) mean += v;
+        mean /= prof.Length;
+        Assert.Equal(1.0, mean, 6);
+
+        double corner = prof[0];                       // (0,0) — nearest two walls
+        double centre = prof[(H / 2) * W + (W / 2)];   // middle — farthest from all walls
+        Assert.True(corner > centre * 1.2,
+            $"edge leak should exceed centre: corner {corner:F3} vs centre {centre:F3}");
+    }
 }

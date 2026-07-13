@@ -46,8 +46,12 @@ Deferred work, captured so we don't forget. Not in current scope. See
     outputs, Codex-verified RNG order).
   - **Isotropic angular background** — DONE for the event-stream deposit pool (cosine-weighted downward
     hemisphere; isotropic photopeak fraction is slightly LOWER than normal incidence because oblique rays
-    side-escape a finite array). STILL OPEN: `ShieldStudy`'s analytic leak term is not yet a transported
-    directional/isotropic background through the geometry.
+    side-escape a finite array).
+  - **Directional shield leak** — DONE (the pragmatic piece): `Background.SideLeakProfile` shapes the leaked
+    background across the array (edge-weighted side walls + uniform rear, same total), and `ShieldStudy` shows
+    the knee shifts 6→8 mm vs a flat pedestal → the uniform model is an optimistic lower bound. Full photon
+    transport through the walls was deliberately SKIPPED (buildup + directional harm only bite where the
+    conclusion is already robust; not worth the MC cost for a design tool).
   - **Structured background** (a second directional source / non-uniform field) — currently only the diffuse
     uniform component; a directional background is really just another source in the mixed field (theme 26).
 

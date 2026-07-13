@@ -40,6 +40,37 @@ public static class Background
             for (int x = 0; x < dst.Width; x++)
                 dst[x, y] = RealizePixel(rng, sourceMean[x, y] * sourceScale, pedestalPerPixel);
     }
+
+    /// <summary>A per-pixel multiplier (MEAN exactly 1) for background leaking through a 5-sided shield:
+    /// <paramref name="sideFraction"/> of the leak enters through the 4 SIDE walls — edge-weighted, since a
+    /// pixel near a wall sees more of that (finite) wall's diffuse leak (modelled ∝ Σ 1/(1+distanceToWall)) —
+    /// and the rest through the REAR wall (uniform). The mean is normalized to 1 so the TOTAL leaked counts
+    /// match the uniform model: this isolates the harm of the background's SPATIAL STRUCTURE from its level.
+    /// <paramref name="sideFraction"/> 0 returns the flat uniform pedestal. Heuristic edge-weighting, not a
+    /// solid-angle transport (that would be the full-MC option we deliberately skipped as not worth it).</summary>
+    public static double[] SideLeakProfile(int width, int height, double sideFraction)
+    {
+        int n = width * height;
+        var profile = new double[n];
+        double f = Math.Clamp(sideFraction, 0.0, 1.0);
+        if (f == 0.0) { Array.Fill(profile, 1.0); return profile; }
+
+        var side = new double[n];
+        double sum = 0.0;
+        for (int y = 0; y < height; y++)
+            for (int x = 0; x < width; x++)
+            {
+                double dl = x + 0.5, dr = (width - 0.5) - x;    // distance to left/right walls (pixels)
+                double db = y + 0.5, dt = (height - 0.5) - y;   // distance to bottom/top walls
+                double s = 1.0 / (1.0 + dl) + 1.0 / (1.0 + dr) + 1.0 / (1.0 + db) + 1.0 / (1.0 + dt);
+                side[y * width + x] = s;
+                sum += s;
+            }
+        double mean = sum / n;
+        for (int i = 0; i < n; i++)
+            profile[i] = f * (side[i] / mean) + (1.0 - f);      // mean = f·1 + (1-f)·1 = 1
+        return profile;
+    }
 }
 
 /// <summary>One background level: the uniform pedestal it puts on the flood map and what it does to

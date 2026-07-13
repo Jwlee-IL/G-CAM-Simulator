@@ -754,8 +754,20 @@ unchanged); the new studies/scenarios opt in, so background is exercised without
   (which would only win for an infinite lateral slab). `EventStreamStudy.BackgroundDepositSpectrum(…, isotropic)`
   exposes both models. **Codex-verified**: cosine weighting `p(μ)=2μ` correct, origin/entry geometry correct,
   side-escape explanation sound (fixed the doc comment that wrongly said absorption *rises*). Test
-  `IsotropicBackground_DepositsDifferFromNormalIncidence`. **43 tests green.** (Still open: `ShieldStudy`'s
-  analytic leak term is not yet a transported directional background.)
+  `IsotropicBackground_DepositsDifferFromNormalIncidence`. **43 tests green.**
+- **Directional shield leak (refinement)**: a full photon transport through the shield walls was judged **not
+  worth it** — buildup and directional-harm both only bite where the conclusion is already robust (buildup is
+  small at the low energy where shielding works, large only at Co-60 which is already unshieldable; directional
+  structure hurts most at thin shields where localization already fails). The valuable, cheap piece is the
+  **spatial profile** of the leak: `Background.SideLeakProfile(W, H, sideFraction)` gives a mean-1 multiplier
+  that puts `sideFraction` of the (same total) leak through the 4 side walls edge-weighted (∝ Σ1/(1+dist)) and
+  the rest uniform through the rear. `ShieldStudy.Run` takes `sideLeakFraction` (0 = the old uniform pedestal,
+  byte-identical). Result: at the SAME total leak, an 80 %-side-wall directional background degrades
+  localization more than a flat pedestal (t=2 mm: RMS 5.3 → 8.3 mm; t=4: 1.0 → 1.7 mm), because the coded
+  decode rejects only the uniform DC part — so the **useful knee shifts 6 mm → 8 mm** for the scattered field.
+  The uniform model is therefore an *optimistic lower bound* on shield thickness. **Codex-verified** (mean-1
+  exact, edge-weighting monotone, sideFraction=0 byte-identical). Test `SideLeakProfile_IsMeanOneAndEdgeWeighted`.
+  Regenerated `samples/shield.{csv,png}` (the committed CSV was stale — older geometry; conclusions unchanged).
 - **Unification (refactor)**: the "source mean + uncoded pedestal → Poisson" counting primitive now lives in
   one place — `Background.RealizePixel(rng, sourceMean, ped)` and the row-major `Background.Realize(dst, src,
   scale, ped, rng)`. `ShieldStudy`, `MaskAntimaskStudy` (per-pixel, keeps its gradient option + interleaved

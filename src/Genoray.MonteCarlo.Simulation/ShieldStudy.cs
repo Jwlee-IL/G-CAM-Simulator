@@ -31,8 +31,12 @@ public sealed class ShieldStudy
 
     public ShieldStudy(ISimulationFactory factory) => _factory = factory;
 
+    /// <param name="sideLeakFraction">how much of the leaked background enters through the 4 SIDE walls
+    /// (edge-weighted spatial profile) vs the rear wall (uniform). 0 = the uniform pedestal (unchanged);
+    /// higher = more directional/structured leak, which the coded decode rejects less well.</param>
     public ShieldRow[] Run(SimulationConfig baseConfig, double nSrc, double bg0PerPixel,
-                           double muBgPerMm, double[] thicknesses, int repeats, double failThrMm)
+                           double muBgPerMm, double[] thicknesses, int repeats, double failThrMm,
+                           double sideLeakFraction = 0.0)
     {
         var mean = new SimulationRunner(_factory).Run(baseConfig);
         double w = mean.DetectedWeight;
@@ -52,6 +56,11 @@ public sealed class ShieldStudy
         var raw = new DetectorImage(W, H);
         var calib = new DetectorImage(W, H);
 
+        // Spatial profile of the leaked background across the array (mean 1): uniform for the rear-wall
+        // component, edge-weighted for the side walls. The coded decode rejects a flat pedestal into DC but
+        // not this structure, so a directional leak degrades localization more per count than a uniform one.
+        var profile = Background.SideLeakProfile(W, H, sideLeakFraction);
+
         var rows = new List<ShieldRow>();
         foreach (double t in thicknesses)
         {
@@ -61,11 +70,15 @@ public sealed class ShieldStudy
             double rSq = 0, cSq = 0; int fail = 0;
             for (int r = 0; r < repeats; r++)
             {
-                // Source (scaled to the fixed budget) + the leaked uniform background pedestal.
-                Background.Realize(raw, img, nSrc / w, bg, rng);
+                // Source (scaled to the fixed budget) + the leaked background pedestal (mean bg, shaped by
+                // the wall profile). calib subtracts the KNOWN mean profile (a calibrated shield map).
                 for (int y = 0; y < H; y++)
                     for (int x = 0; x < W; x++)
-                        calib[x, y] = raw[x, y] - bg;          // subtract the known mean background
+                    {
+                        double ped = bg * profile[y * W + x];
+                        raw[x, y] = Background.RealizePixel(rng, nSrc / w * img[x, y], ped);
+                        calib[x, y] = raw[x, y] - ped;
+                    }
                 double eR = Dist(decoder.Decode(raw).Estimate, tx, ty);
                 double eC = Dist(decoder.Decode(calib).Estimate, tx, ty);
                 rSq += eR * eR; cSq += eC * eC;
