@@ -14,7 +14,9 @@ M_Q8 = round(M * 256)                               # 1156
 ADC_PER_KEV = 4.0
 
 # --- realistic front-end parameters (used by the MC-stream rasterizer, not the pure shaper unit tests) ---
-TAU_RISE_SAMPLES = 2.0     # finite pulse rise (scint + SiPM + preamp) ~ 20 ns at 100 MSPS -> ballistic deficit
+TAU_RISE_SAMPLES = 1.0     # finite pulse rise ~ 8-10 ns: the fastest an ADC can cleanly sample (BW ~39 MHz <
+                           # Nyquist at 125 MSPS, ~3 samples on the rising edge). Faster aliases; slower over-
+                           # suppresses the peak (ballistic deficit). Bounded BELOW by the anti-alias / Nyquist limit.
 NOISE_KEV = 3.0            # white electronic noise floor, keV-equivalent RMS at the ADC input (ENC)
 ADC_MAX = 32767            # 16-bit signed ADC full scale — the shaper input port width (pile-up stacks clip)
 INTRINSIC_FWHM = 0.06      # scintillator+SiPM photostatistical resolution (FWHM fraction) at INTRINSIC_REF_KEV

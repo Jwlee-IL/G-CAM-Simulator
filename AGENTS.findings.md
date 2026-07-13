@@ -809,8 +809,13 @@ nothing to fight (its whole purpose is to maximize SNR against a noise floor). M
   light statistics, relative FWHM ∝ 1/√E (`intrinsic_fwhm` at `intrinsic_ref_kev`, default 6 % @ 662, GAGG-ish).
 - **Finite rise (ballistic deficit)** — a bi-exponential pulse `a·(e^{-t/τ} − e^{-t/τ_rise})` (`trap_ref.biexp_pulse`).
   Its TAIL is still `a·e^{-t/τ}`, so the single-τ pole-zero and the energy calibration are unchanged; the rise
-  is the realistic part. (Side effect: the un-cancelled rise term enlarges the pole-zero **baseline walk** to
-  ~-150000 ADC over the stream, from ~-47000 with ideal pulses — so theme 29's BLR matters more, not less.)
+  is the realistic part (it suppresses the VISIBLE peak — τ_rise=1 → peak ≈ 53 % of the tail amplitude). **τ_rise
+  is bounded BELOW by the ADC/Nyquist limit** (`tau_rise_study.py`): a rise faster than ~0.6 samples has a signal
+  bandwidth above the 62.5 MHz Nyquist (at 125 MSPS) and ALIASES — the FPGA can't faithfully sample it — so
+  τ_rise=1 (BW ~39 MHz, ~3 samples on the rising edge) is the fastest realistic value; a real anti-alias filter
+  enforces this floor. **Correction of an earlier claim**: τ_rise does NOT change the baseline walk — the walk
+  (~-150000 ADC over the stream vs ~-47000 for the theme-29 setup) comes from the pole-zero on the exponential
+  TAIL and is flat across τ_rise (and independent of bit depth / clipping); measured, not the rise term.
 - **White electronic noise** — a Gaussian floor (`noise_kev` keV-equivalent RMS, default 3) on every sample:
   the noise the shaper actually averages against.
 - **ADC clip + quantize** — to ±`adc_max` (16-bit), so pile-up stacks saturate (honours the shaper's input port).
