@@ -856,6 +856,25 @@ static int RunBackground(string[] args)
         Console.WriteLine($"   {r.Bsr,4:F2}   {r.BgPerPixel,8:F2}   {r.PeakSnr,7:F1}   {r.BiasMm,5:F2}mm   {r.RmsMm,5:F2}mm   {r.FailRate,5:P0}");
     Console.WriteLine();
     Console.WriteLine("  CSV: samples/background_sweep.csv");
+
+    // Structured (graded) background: same TOTAL level, but stronger on one side (a nearer contaminated wall).
+    // A flat pedestal is rejected to DC; a gradient is diffuse yet NOT flat, so a low-frequency residual
+    // survives the decode and BIASES the estimate. Same BSR grid, contrast 0 vs 0.6 along +x.
+    const double gradContrast = 0.6;
+    var graded = new BackgroundStudy().RunSweep(baseConfig, bsr, detectedBudget, repeats, failThresholdMm,
+                                                gradientContrast: gradContrast, gradientAngleDeg: 0.0);
+    File.WriteAllText("samples/background_gradient.csv", BackgroundStudy.ToCsv(graded));
+    Console.WriteLine();
+    Console.WriteLine($"Structured background — a {gradContrast:P0} spatial gradient (same total level, stronger on +x side):");
+    Console.WriteLine("  While the source peak wins, flat and graded are IDENTICAL (the gradient's low-frequency");
+    Console.WriteLine("  residual doesn't move the argmax). At the knee the gradient drags the estimate to its");
+    Console.WriteLine("  strong side -> a systematic bias where a flat pedestal only fails randomly.");
+    Console.WriteLine("   BSR    bias(flat)   bias(grad)   RMS(grad)");
+    Console.WriteLine("   ----   ----------   ----------   ---------");
+    for (int i = 0; i < rows.Length; i++)
+        Console.WriteLine($"   {rows[i].Bsr,4:F2}   {rows[i].BiasMm,7:F2}mm   {graded[i].BiasMm,7:F2}mm   {graded[i].RmsMm,6:F2}mm");
+    Console.WriteLine();
+    Console.WriteLine("  CSV: samples/background_gradient.csv");
     return 0;
 }
 

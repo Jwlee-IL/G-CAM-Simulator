@@ -68,8 +68,13 @@ mixed-field source); integrate the theme-22 SiPM/thermal/shield productization m
     the knee shifts 6→8 mm vs a flat pedestal → the uniform model is an optimistic lower bound. Full photon
     transport through the walls was deliberately SKIPPED (buildup + directional harm only bite where the
     conclusion is already robust; not worth the MC cost for a design tool).
-  - **Structured background** (a second directional source / non-uniform field) — currently only the diffuse
-    uniform component; a directional background is really just another source in the mixed field (theme 26).
+  - **Structured background — spatial gradient DONE**: `Background.GradientProfile` (mean-1 linear ramp,
+    any direction, Codex-verified exact) shapes the pedestal, opt-in via `RunSweep(gradientContrast, angle)`.
+    Sim-revealed result: a gradient is *harmless while the source peak wins* (identical bias to a flat
+    pedestal — the low-frequency residual doesn't move the argmax), then at the background knee it drags the
+    estimate systematically toward its strong side (BSR 4: flat 1.1 mm → graded 9.2 mm) where a flat pedestal
+    only fails randomly. The remaining structured case — a *directional discrete* background — is not new
+    work: it is just another off-axis source in the mixed field (theme 26).
 
 ### Productization (theme 22 — design-only; user is NOT building this now)
 - Integrate the SiPM / thermal / gain-stabilization + shield models into the C# pipeline

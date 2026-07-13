@@ -73,4 +73,52 @@ public class BackgroundTests
         Assert.True(corner > centre * 1.2,
             $"edge leak should exceed centre: corner {corner:F3} vs centre {centre:F3}");
     }
+
+    [Fact]
+    public void GradientProfile_IsMeanOneAndRampsAlongDirection()
+    {
+        int W = 12, H = 12;
+
+        // contrast 0 = flat uniform pedestal (the unchanged model).
+        var flat = Background.GradientProfile(W, H, 0.0, 0.0);
+        foreach (var v in flat) Assert.Equal(1.0, v, 9);
+
+        // +x ramp, contrast 0.6: mean stays exactly 1 (same total leak), left column < right column,
+        // and the swing hits ±contrast at the extreme columns.
+        var prof = Background.GradientProfile(W, H, 0.0, 0.6);
+        double mean = 0.0; foreach (var v in prof) mean += v;
+        mean /= prof.Length;
+        Assert.Equal(1.0, mean, 6);
+
+        int midRow = (H / 2) * W;
+        Assert.True(prof[midRow + (W - 1)] > prof[midRow + 0],
+            $"+x gradient should rise left->right: {prof[midRow + 0]:F3} -> {prof[midRow + (W - 1)]:F3}");
+        Assert.Equal(1.0 - 0.6, prof[midRow + 0], 6);          // leftmost column = 1 - contrast
+        Assert.Equal(1.0 + 0.6, prof[midRow + (W - 1)], 6);    // rightmost column = 1 + contrast
+
+        // A +y ramp is constant across each row (no x-dependence), rising bottom->top instead.
+        var profY = Background.GradientProfile(W, H, 90.0, 0.6);
+        Assert.Equal(profY[midRow + 0], profY[midRow + (W - 1)], 6);
+        Assert.True(profY[(H - 1) * W] > profY[0]);
+    }
+
+    [Fact]
+    public void GradedBackground_IsHarmlessWhileSourceWins_ThenBiasesAtTheKnee()
+    {
+        // The honest, sim-revealed behaviour: a flat pedestal and a same-level gradient are IDENTICAL while the
+        // source peak still wins the argmax (the gradient's low-frequency residual doesn't move it) — then, once
+        // the background competes (heavy BSR), the gradient drags the estimate hard toward its strong side while
+        // a flat pedestal only fails randomly. BiasMm is the deterministic mean-map decode, so these are stable.
+        double[] bsr = [1.0, 4.0];
+        var flat = new BackgroundStudy().RunSweep(Base(), bsr, detectedBudget: 400.0, repeats: 30, failThrMm: 3.0);
+        var grad = new BackgroundStudy().RunSweep(Base(), bsr, detectedBudget: 400.0, repeats: 30, failThrMm: 3.0,
+                                                  gradientContrast: 0.6, gradientAngleDeg: 0.0);
+
+        // While the source wins (BSR 1), the gradient adds NO bias over flat.
+        Assert.Equal(flat[0].BiasMm, grad[0].BiasMm, 3);
+
+        // At the knee (BSR 4) the gradient biases far more than the flat pedestal.
+        Assert.True(grad[1].BiasMm > flat[1].BiasMm + 2.0,
+            $"gradient should dominate the bias at the knee: flat {flat[1].BiasMm:F2} mm vs grad {grad[1].BiasMm:F2} mm");
+    }
 }

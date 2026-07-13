@@ -71,6 +71,46 @@ public static class Background
             profile[i] = f * (side[i] / mean) + (1.0 - f);      // mean = f·1 + (1-f)·1 = 1
         return profile;
     }
+
+    /// <summary>A per-pixel multiplier (MEAN exactly 1) for a spatially GRADED diffuse background — a field
+    /// that is stronger on one side of the array (a nearer contaminated wall, ground/sky asymmetry, scatter
+    /// off an adjacent surface). Unlike a flat pedestal — which a cyclic MURA decode pushes to DC and rejects —
+    /// a linear gradient carries a low-spatial-frequency component the decode does NOT fully reject, so it
+    /// leaves a small localization BIAS (this is the one genuinely-diffuse case that survives DC rejection).
+    /// The ramp runs along <paramref name="angleDeg"/> (0 = +x / rightward, 90 = +y / up) with a half-swing of
+    /// <paramref name="contrast"/>: values run linearly to 1±contrast at the extreme corner pixel, mean
+    /// normalized to exactly 1 so the TOTAL leaked counts match the uniform model — isolating the harm of the
+    /// gradient's STRUCTURE from its level. <paramref name="contrast"/> 0 returns the flat uniform pedestal;
+    /// clamped to [0, 0.999) so the pedestal stays non-negative. Like <see cref="SideLeakProfile"/> this is a
+    /// heuristic spatial shape, not a transported flux.</summary>
+    public static double[] GradientProfile(int width, int height, double angleDeg, double contrast)
+    {
+        int n = width * height;
+        var profile = new double[n];
+        double c = Math.Clamp(contrast, 0.0, 0.999);
+        if (c == 0.0) { Array.Fill(profile, 1.0); return profile; }
+
+        double rad = angleDeg * Math.PI / 180.0;
+        double ux = Math.Cos(rad), uy = Math.Sin(rad);
+        double cx = (width - 1) / 2.0, cy = (height - 1) / 2.0;   // grid centroid
+
+        // Projection onto the ramp direction, centred on the centroid: its mean over the array is exactly 0,
+        // so ANY scaling of it keeps the profile mean at 1. Normalize by the largest |projection| (a corner
+        // pixel) so the swing is exactly ±contrast at the extremes.
+        double maxAbs = 0.0;
+        for (int y = 0; y < height; y++)
+            for (int x = 0; x < width; x++)
+            {
+                double p = (x - cx) * ux + (y - cy) * uy;
+                profile[y * width + x] = p;                       // stash raw projection
+                double a = Math.Abs(p);
+                if (a > maxAbs) maxAbs = a;
+            }
+        if (maxAbs == 0.0) { Array.Fill(profile, 1.0); return profile; }
+        for (int i = 0; i < n; i++)
+            profile[i] = 1.0 + c * (profile[i] / maxAbs);
+        return profile;
+    }
 }
 
 /// <summary>One background level: the uniform pedestal it puts on the flood map and what it does to
@@ -93,8 +133,13 @@ public sealed record BackgroundRow(
 /// </summary>
 public sealed class BackgroundStudy
 {
+    /// <param name="gradientContrast">half-swing of a spatial gradient on the pedestal (0 = flat uniform,
+    /// the unchanged model). A gradient is diffuse yet NOT flat, so the decode leaves a residual bias the
+    /// uniform pedestal does not — compare the BiasMm column at contrast 0 vs &gt;0.</param>
+    /// <param name="gradientAngleDeg">direction the gradient runs (0 = +x, 90 = +y).</param>
     public BackgroundRow[] RunSweep(SimulationConfig baseConfig, double[] bsrValues,
-                                    double detectedBudget, int repeats, double failThrMm)
+                                    double detectedBudget, int repeats, double failThrMm,
+                                    double gradientContrast = 0.0, double gradientAngleDeg = 0.0)
     {
         var cfg = baseConfig.Clone();
         double tx = cfg.Source.Position[0], ty = cfg.Source.Position[1];
@@ -110,17 +155,22 @@ public sealed class BackgroundStudy
         int pixels = srcMap.Width * srcMap.Height;
         var rng = new DefaultRandom((cfg.Seed ?? 0) + 3210);
 
+        // Spatial shape of the pedestal (mean 1): flat when gradientContrast==0 (identical to the old uniform
+        // model), a linear ramp otherwise. Applied to BOTH the deterministic mean map (bias) and every Poisson
+        // realization, so the gradient's low-frequency residual shows up in BiasMm while the total level is
+        // unchanged (mean-1 profile).
+        var profile = Background.GradientProfile(srcMap.Width, srcMap.Height, gradientAngleDeg, gradientContrast);
+
         var rows = new List<BackgroundRow>();
         foreach (double bsr in bsrValues)
         {
             double bgPerPixel = Background.PedestalPerPixel(bsr, detectedBudget, pixels);
 
-            // Combined MEAN map = scaled source + uniform pedestal (deterministic, for the bias/contrast decode).
+            // Combined MEAN map = scaled source + pedestal·profile (deterministic, for the bias/contrast decode).
             var mean = new DetectorImage(srcMap.Width, srcMap.Height);
             for (int y = 0; y < srcMap.Height; y++)
                 for (int x = 0; x < srcMap.Width; x++)
-                    mean[x, y] = srcMap[x, y] * scale;
-            Background.AddUniform(mean, bgPerPixel);
+                    mean[x, y] = srcMap[x, y] * scale + bgPerPixel * profile[y * srcMap.Width + x];
 
             double bias = Dist(decoder.Decode(mean).Estimate, tx, ty);
 
@@ -132,7 +182,10 @@ public sealed class BackgroundStudy
             var noisy = new DetectorImage(srcMap.Width, srcMap.Height);
             for (int rep = 0; rep < repeats; rep++)
             {
-                Background.Realize(noisy, srcMap, scale, bgPerPixel, rng);
+                for (int y = 0; y < srcMap.Height; y++)
+                    for (int x = 0; x < srcMap.Width; x++)
+                        noisy[x, y] = Background.RealizePixel(rng, srcMap[x, y] * scale,
+                                                             bgPerPixel * profile[y * srcMap.Width + x]);
                 var dNoisy = decoder.Decode(noisy);
                 double err = Dist(dNoisy.Estimate, tx, ty);
                 sumSq += err * err;

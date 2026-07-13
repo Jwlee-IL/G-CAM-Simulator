@@ -774,6 +774,20 @@ unchanged); the new studies/scenarios opt in, so background is exercised without
   multi-exposure draw order), and `BackgroundStudy` all route through it instead of hand-rolling
   `Sampling.Poisson(...)`. Behavior-preserving — the background sweep CSV is **byte-identical** and
   **Codex-verified** that the RNG draw order and Poisson means are unchanged at all three sites.
+- **Structured background — spatial gradient**: `Background.GradientProfile(W, H, angleDeg, contrast)` gives a
+  mean-1 *linear* ramp (the diffuse-but-not-flat case: a field stronger on one side — a nearer contaminated
+  wall, ground/sky asymmetry). Centroid-centred projection onto the ramp direction, normalized by max|proj| →
+  values in [1−c, 1+c], mean **exactly 1 for ANY angle** (**Codex-verified** the projection sums to zero;
+  no pixel negative for c∈[0,0.999]). `BackgroundStudy.RunSweep` takes `gradientContrast`/`gradientAngleDeg`
+  (0 = the old flat pedestal, byte-identical) and applies the profile to both the deterministic mean map (bias)
+  and every Poisson realization. **Sim-revealed result (corrected my framing):** a gradient is NOT a small
+  steady bias — while the source peak wins the argmax it is *identical to a flat pedestal* (BSR ≤ 2: bias
+  0.55 mm either way; the low-frequency residual doesn't move the peak), then at the background knee it drags
+  the estimate systematically toward its strong side (BSR 4: flat 1.1 mm → **graded 9.2 mm**) where a flat
+  pedestal only fails *randomly*. So the harm is *negligible-then-catastrophic*, and the flat-pedestal sweep
+  is an optimistic model near the knee. The remaining structured case — a *directional discrete* background —
+  is not new work: it is just another off-axis source in the mixed field (theme 26). Tests
+  `GradientProfile_IsMeanOneAndRampsAlongDirection`, `GradedBackground_IsHarmlessWhileSourceWins_ThenBiasesAtTheKnee`.
 
 ## 29. RTL baseline restoration — cancel the trapezoidal shaper's pole-zero walk — `rtl/baseline_restorer.sv`
 Fixes the effect theme 27 surfaced: the shaper's **Q8-quantized pole-zero** (M_Q8 = round(M·256) = 1156 vs
