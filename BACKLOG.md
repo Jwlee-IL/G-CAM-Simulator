@@ -31,8 +31,15 @@ Deferred work, captured so we don't forget. Not in current scope. See
   proxy — direct vs pipelined shaper — see theme 25.
 
 ### Front-end integration
-- Fold `rtl/frontend_model.py` (photoelectron budget → energy resolution) into the C#
-  `EnergyResolutionFwhm` derivation, and model DCR-as-background.
+- **Realistic ADC front-end DONE (theme 30)**: `rtl/event_stream.rasterize` now models intrinsic (1/√E)
+  resolution, finite rise / ballistic deficit, white electronic noise, and ADC clipping → realistic ~6.4%
+  photopeak, resolution budget (electronic ⊕ intrinsic), `rtl/frontend.png`. Codex-verified.
+- Still open: fold `rtl/frontend_model.py` (photoelectron budget → energy resolution) into the **C#**
+  `EnergyResolutionFwhm` derivation (the theme-30 model lives in the Python/RTL layer), and model DCR-as-background.
+- **CR-RC / cusp shaping comparison** now has a real noise floor to be meaningful against (theme 30) — the
+  natural next RTL step: sweep shaping time / compare filters on the realistic waveform for the SNR vs
+  pile-up optimum (theme 30's frontend_study has the resolution machinery; a rigorous pile-up-inclusive
+  photopeak-fit is the missing piece).
 
 ### Background (theme 28 — core model DONE, refinements open)
 - **Ambient background is now a controllable opt-in** (`SimulationConfig.Background`, BSR knob) — uncoded

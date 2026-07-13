@@ -13,6 +13,13 @@ M = 1.0 / (math.exp(1.0 / TAU_SAMPLES) - 1.0)      # pole-zero deconvolution con
 M_Q8 = round(M * 256)                               # 1156
 ADC_PER_KEV = 4.0
 
+# --- realistic front-end parameters (used by the MC-stream rasterizer, not the pure shaper unit tests) ---
+TAU_RISE_SAMPLES = 2.0     # finite pulse rise (scint + SiPM + preamp) ~ 20 ns at 100 MSPS -> ballistic deficit
+NOISE_KEV = 3.0            # white electronic noise floor, keV-equivalent RMS at the ADC input (ENC)
+ADC_MAX = 32767            # 16-bit signed ADC full scale — the shaper input port width (pile-up stacks clip)
+INTRINSIC_FWHM = 0.06      # scintillator+SiPM photostatistical resolution (FWHM fraction) at INTRINSIC_REF_KEV
+INTRINSIC_REF_KEV = 662.0  # ... scaling as 1/sqrt(E) (Poisson photoelectron statistics). GAGG ~6-9% @ 662.
+
 
 def trap_shape(samples, rise=RISE, flat=FLAT, m_q8=M_Q8):
     """s[n] sequence for the recursive trapezoidal filter (matches trapezoidal_shaper.sv)."""
@@ -49,11 +56,25 @@ def blr(xs, gate=4096, frac=12):
 
 
 def exp_pulse(n, n0, amp_kev, tau=TAU_SAMPLES):
-    """One scintillation pulse: instantaneous rise at n0, exponential decay tau (samples)."""
+    """One scintillation pulse: instantaneous rise at n0, exponential decay tau (samples). Used by the pure
+    shaper unit tests (filter correctness); the realistic front-end uses biexp_pulse via the rasterizer."""
     w = [0] * n
     a = amp_kev * ADC_PER_KEV
     for t in range(n0, n):
         w[t] += int(round(a * math.exp(-(t - n0) / tau)))
+    return w
+
+
+def biexp_pulse(n, n0, amp_kev, tau=TAU_SAMPLES, tau_rise=TAU_RISE_SAMPLES, adc_per_kev=ADC_PER_KEV):
+    """One scintillation + front-end pulse with a FINITE rise: a*(exp(-t/tau) - exp(-t/tau_rise)). The
+    tail is a*exp(-t/tau) so the shaper's pole-zero and the energy calibration are unchanged; the rise
+    (tau_rise < tau) is the realistic part — it introduces a small ballistic deficit in the flat top.
+    Returns a float array (the caller adds noise, clips and quantizes)."""
+    w = [0.0] * n
+    a = amp_kev * adc_per_kev
+    for t in range(n0, n):
+        dt = t - n0
+        w[t] = a * (math.exp(-dt / tau) - math.exp(-dt / tau_rise))
     return w
 
 

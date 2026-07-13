@@ -799,3 +799,31 @@ study worked around it by reading each flat top *relative* to the local pre-puls
   must be inside GATE — the stream starts at 0, so it acquires). **44 C# + 4 cocotb tests green.** Reproduce:
   `montecarlo eventstream samples/scenario.json 500 1500` then `cd rtl && python run_cocotb.py` and
   `python blr_study.py`.
+
+## 30. Realistic ADC front-end — the shaper stops seeing an idealized signal — `rtl/event_stream.py`
+The waveform driving the RTL (theme 27) was near-ideal: instantaneous-rise single-exponential pulses,
+**zero noise**, no clipping — so the recovered photopeak was a delta function and the trapezoidal shaper had
+nothing to fight (its whole purpose is to maximize SNR against a noise floor). Made the front-end realistic
+(user: "the sim only means something if the front-end is realistic"). `rasterize` now models, all controllable:
+- **Intrinsic (photostatistical) resolution** — each pulse's amplitude fluctuates by the scintillator+SiPM
+  light statistics, relative FWHM ∝ 1/√E (`intrinsic_fwhm` at `intrinsic_ref_kev`, default 6 % @ 662, GAGG-ish).
+- **Finite rise (ballistic deficit)** — a bi-exponential pulse `a·(e^{-t/τ} − e^{-t/τ_rise})` (`trap_ref.biexp_pulse`).
+  Its TAIL is still `a·e^{-t/τ}`, so the single-τ pole-zero and the energy calibration are unchanged; the rise
+  is the realistic part. (Side effect: the un-cancelled rise term enlarges the pole-zero **baseline walk** to
+  ~-150000 ADC over the stream, from ~-47000 with ideal pulses — so theme 29's BLR matters more, not less.)
+- **White electronic noise** — a Gaussian floor (`noise_kev` keV-equivalent RMS, default 3) on every sample:
+  the noise the shaper actually averages against.
+- **ADC clip + quantize** — to ±`adc_max` (16-bit), so pile-up stacks saturate (honours the shaper's input port).
+- **Result** (`rtl/frontend_study.py` → `rtl/frontend.png`): the recovered Cs-137 spectrum now has a **realistic
+  ~6.4 % FWHM photopeak** (was a delta) plus the Compton continuum and a pile-up tail. The resolution **budget**
+  splits cleanly — electronic-only **2.3 %**, intrinsic-only **6.0 %**, FULL **6.4 %** — and the two add in
+  **quadrature** (√(6.0²+2.3²)=6.43 %), exactly as they should. The recovery-vs-rate study now reflects real
+  resolution (±5 % recovery 79/67/36 % at 100/500/2000 kcps, down from the noiseless 92/78/44 %).
+- Bit-exactness is untouched: rasterize is called once and its (noisy, clipped) waveform is fed to BOTH the RTL
+  and the integer reference, so the cocotb shaper + BLR tests stay **bit-for-bit** (the noise is identical on
+  both sides). Set `intrinsic_fwhm=0, noise_kev=0, tau_rise=0` to recover the old ideal waveform.
+- **Codex-verified**: bi-exp preserves the pole-zero tail + ballistic deficit; 1/√E intrinsic scaling on the
+  deposited energy is correct photostatistics; white-noise + clip is a sound simplified ADC model; quadrature
+  budget checks; calibration is the noiseless deficit-corrected mean gain. **Fix**: `calibrate_flat_per_kev`
+  ignored its `adc_per_kev` arg (biexp_pulse hardcoded the constant) → threaded it through. 44 C# + 4 cocotb
+  tests green. Reproduce: `montecarlo eventstream samples/scenario.json 500 1500` then `cd rtl && python frontend_study.py`.

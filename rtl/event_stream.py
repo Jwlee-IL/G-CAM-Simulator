@@ -14,6 +14,7 @@ full-length exp_pulse while keeping the build O(events x pulse_support) instead 
 """
 import math
 import os
+import random
 import trap_ref
 
 
@@ -39,34 +40,67 @@ def read_stream(path=None):
     return events, meta
 
 
-def rasterize(events, tau=trap_ref.TAU_SAMPLES, adc_per_kev=trap_ref.ADC_PER_KEV, tail_pad=128):
-    """Sum every event's exponential pulse into one ADC waveform (list of ints).
+def rasterize(events, tau=trap_ref.TAU_SAMPLES, tau_rise=trap_ref.TAU_RISE_SAMPLES,
+              adc_per_kev=trap_ref.ADC_PER_KEV, noise_kev=trap_ref.NOISE_KEV,
+              adc_max=trap_ref.ADC_MAX, intrinsic_fwhm=trap_ref.INTRINSIC_FWHM,
+              intrinsic_ref_kev=trap_ref.INTRINSIC_REF_KEV, seed=1, tail_pad=128):
+    """Build the realistic ADC waveform for the event stream (list of ints). Real front-end effects, so
+    the shaper is not fed an idealized noiseless step train:
 
-    Bit-identical to summing full-length trap_ref.exp_pulse/add_pulse contributions: each pulse is
-    walked from its arrival until its rounded sample first hits 0 (monotone decay => all later
-    samples are 0 too). tail_pad leaves room after the last arrival for its flat top to form."""
+      * per-event INTRINSIC resolution — each pulse's amplitude fluctuates by the scintillator+SiPM
+        photostatistics (intrinsic_fwhm FWHM at intrinsic_ref_kev, scaling 1/sqrt(E));
+      * FINITE RISE — a bi-exponential pulse (rise tau_rise, fall tau) → ballistic deficit;
+      * white ELECTRONIC noise (noise_kev keV-equivalent RMS) on every sample — the floor the shaper fights;
+      * ADC CLIP + quantize to +/- adc_max (16-bit), so pile-up stacks saturate.
+
+    Set intrinsic_fwhm=0, noise_kev=0, tau_rise=0 to recover the old ideal waveform. `seed` fixes both the
+    amplitude and the sample-noise RNG streams (reproducible)."""
     if not events:
         return []
     length = max(s for s, _ in events) + tail_pad
-    wave = [0] * length
+    wave = [0.0] * length
+    amp_rng = random.Random(seed + 777)     # per-event amplitude (intrinsic resolution) — its own stream
+    inv2355 = 1.0 / 2.3548
     for n0, e_kev in events:
-        a = e_kev * adc_per_kev
-        t = n0
-        while t < length:
-            val = int(round(a * math.exp(-(t - n0) / tau)))
-            if val == 0 and t > n0:
-                break                       # decayed below 0.5 ADC — rest is exactly 0
-            wave[t] += val
-            t += 1
-    return wave
+        e_eff = e_kev
+        if intrinsic_fwhm > 0.0 and e_kev > 0.0:
+            # relative sigma grows as 1/sqrt(E): rel_FWHM(E) = intrinsic_fwhm * sqrt(ref/E).
+            rel_sigma = intrinsic_fwhm * inv2355 * math.sqrt(intrinsic_ref_kev / e_kev)
+            e_eff = e_kev * (1.0 + amp_rng.gauss(0.0, rel_sigma))
+            if e_eff < 0.0:
+                e_eff = 0.0
+        a = e_eff * adc_per_kev
+        # bounded support: the fall term a*exp(-dt/tau) drops below ~0.5 ADC by here (rise term is smaller)
+        support = int(math.ceil(tau * math.log(2.0 * abs(a) + 2.0))) + 4
+        end = min(length, n0 + support)
+        for t in range(n0, end):
+            dt = t - n0
+            fall = math.exp(-dt / tau)
+            rise = math.exp(-dt / tau_rise) if tau_rise > 0.0 else 0.0
+            wave[t] += a * (fall - rise)
+
+    sigma = noise_kev * adc_per_kev
+    noise_rng = random.Random(seed)
+    out = [0] * length
+    for i in range(length):
+        v = wave[i] + (noise_rng.gauss(0.0, sigma) if sigma > 0.0 else 0.0)
+        if v > adc_max:
+            v = adc_max
+        elif v < -adc_max:
+            v = -adc_max
+        out[i] = int(round(v))
+    return out
 
 
 def calibrate_flat_per_kev(rise=trap_ref.RISE, flat=trap_ref.FLAT, m_q8=trap_ref.M_Q8,
-                           tau=trap_ref.TAU_SAMPLES, adc_per_kev=trap_ref.ADC_PER_KEV, ref_kev=662.0):
-    """Flat-top height the shaper produces per keV, from ONE isolated reference pulse (so recovered
-    energy = flat_top / this). Uses the same integer reference as the RTL, so it IS the RTL gain."""
+                           tau=trap_ref.TAU_SAMPLES, tau_rise=trap_ref.TAU_RISE_SAMPLES,
+                           adc_per_kev=trap_ref.ADC_PER_KEV, ref_kev=662.0):
+    """Flat-top height the shaper produces per keV, from ONE isolated NOISELESS reference pulse (so
+    recovered energy = flat_top / this). Uses the SAME finite-rise pulse model as the rasterizer, so the
+    gain already includes the ballistic deficit; noise is excluded (it is a deterministic gain)."""
     n0 = 4 * rise
-    pulse = trap_ref.exp_pulse(n0 + rise + flat + 8 * int(math.ceil(tau)) + 8, n0, ref_kev, tau)
+    length = n0 + rise + flat + 8 * int(math.ceil(tau)) + 8
+    pulse = [int(round(v)) for v in trap_ref.biexp_pulse(length, n0, ref_kev, tau, tau_rise, adc_per_kev)]
     shaped = trap_ref.trap_shape(pulse, rise, flat, m_q8)
     return max(shaped) / ref_kev
 
