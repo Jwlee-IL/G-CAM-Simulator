@@ -845,3 +845,24 @@ nothing to fight (its whole purpose is to maximize SNR against a noise floor). M
   + `python adc_study.py` → `rtl/adc.png` shows the waveform titled with the active part. **Codex-verified** (ENOB
   →noise, gain, quadrature, signed-FS all correct; note: ENOB is SINAD-derived, used as broadband ADC noise).
   Swap with `rasterize(..., adc=event_stream.load_adc("ad9268"))`.
+
+## 31. Pulse-shaper comparison — CR-RC vs trapezoidal vs cusp — `rtl/shapers.py` / `rtl/shaper_compare.py`
+With a real electronic-noise floor + realistic pile-up (theme 30) the shaper comparison finally MEANS something
+(on a noiseless input every filter gives perfect resolution). All three run on the same ADC stream: each
+deconvolves the exp tail (`imp[n]=x[n]-e^{-1/τ}x[n-1]`, pole-zero) then applies its weighting —
+**CR-RC^4** (4 single-pole RC low-passes → semi-Gaussian), **trapezoidal** (flat-top), **cusp** (symmetric
+sinh FIR, the near-optimal shape for series+parallel noise).
+- **Noise (electronic-only photopeak FWHM, isolated events, low rate)**: **cusp 1.02 % < CR-RC 1.10 % <
+  trapezoid 1.74 %** — the cusp is near-optimal ENC; the trapezoid pays a little noise for its flat top. (Total
+  resolution barely differs — the 6 % intrinsic dominates — so this is visible only with intrinsic OFF.)
+- **Pile-up (662 recovered within ±5 %, full front-end, no isolation cut) vs rate**: set by the total SUPPORT
+  WIDTH — the flat-top trapezoid, being WIDEST here, degrades FASTEST (40 % @ 2 Mcps vs ~65 % for CR-RC/cusp).
+  **This corrected a common misconception** I'd encoded: the trapezoid is NOT "best at high rate" — its flat top
+  is a **ballistic-deficit** feature (accurate energy despite variable charge-collection time), which costs both
+  noise and width; for pure pile-up a NARROWER filter always wins. This model has a fixed rise, so the
+  trapezoid's real deficit-immunity advantage isn't exercised (why real scintillator DAQs still prefer it).
+- **Codex-verified**: deconv is the correct exp pole-zero; CR-RC^n cascade is a valid semi-Gaussian (RC coeff is
+  Euler-approx, fine); sinh cusp is a defensible finite near-optimal cusp; the physics reading (cusp best ENC;
+  pile-up ~ width; flat-top = deficit not rate) is right. Fixed stale "trapezoid holds up best" prose. The ±5 %
+  metric is offline energy-recovery accuracy, not hardware dead-time throughput. Reproduce: `montecarlo
+  eventstream samples/scenario.json 500 1500` then `cd rtl && python shaper_compare.py` → `rtl/shaper_compare.png`.
