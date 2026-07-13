@@ -23,6 +23,23 @@ public static class Background
             for (int x = 0; x < map.Width; x++)
                 map.Add(x, y, meanPerPixel);
     }
+
+    /// <summary>Poisson-realize one pixel as (source mean + uncoded background pedestal) — the shared
+    /// "signal + ambient" counting primitive behind every study that injects a background. Keeping it in
+    /// one place means antimask (per-pixel, possibly graded), shield, and the background sweep all realize
+    /// their noise identically.</summary>
+    public static double RealizePixel(IRandom rng, double sourceMean, double pedestalPerPixel)
+        => Sampling.Poisson(rng, sourceMean + pedestalPerPixel);
+
+    /// <summary>Poisson-realize a whole noisy flood map from a source MEAN map scaled to a detected budget
+    /// plus a uniform uncoded pedestal (row-major, so the RNG draw order matches a hand-rolled y,x loop).</summary>
+    public static void Realize(DetectorImage dst, DetectorImage sourceMean, double sourceScale,
+                               double pedestalPerPixel, IRandom rng)
+    {
+        for (int y = 0; y < dst.Height; y++)
+            for (int x = 0; x < dst.Width; x++)
+                dst[x, y] = RealizePixel(rng, sourceMean[x, y] * sourceScale, pedestalPerPixel);
+    }
 }
 
 /// <summary>One background level: the uniform pedestal it puts on the flood map and what it does to
@@ -67,11 +84,12 @@ public sealed class BackgroundStudy
         {
             double bgPerPixel = Background.PedestalPerPixel(bsr, detectedBudget, pixels);
 
-            // Combined MEAN map = scaled source + uniform pedestal.
+            // Combined MEAN map = scaled source + uniform pedestal (deterministic, for the bias/contrast decode).
             var mean = new DetectorImage(srcMap.Width, srcMap.Height);
             for (int y = 0; y < srcMap.Height; y++)
                 for (int x = 0; x < srcMap.Width; x++)
-                    mean[x, y] = srcMap[x, y] * scale + bgPerPixel;
+                    mean[x, y] = srcMap[x, y] * scale;
+            Background.AddUniform(mean, bgPerPixel);
 
             double bias = Dist(decoder.Decode(mean).Estimate, tx, ty);
 
@@ -83,9 +101,7 @@ public sealed class BackgroundStudy
             var noisy = new DetectorImage(srcMap.Width, srcMap.Height);
             for (int rep = 0; rep < repeats; rep++)
             {
-                for (int y = 0; y < srcMap.Height; y++)
-                    for (int x = 0; x < srcMap.Width; x++)
-                        noisy[x, y] = Sampling.Poisson(rng, mean[x, y]);
+                Background.Realize(noisy, srcMap, scale, bgPerPixel, rng);
                 var dNoisy = decoder.Decode(noisy);
                 double err = Dist(dNoisy.Estimate, tx, ty);
                 sumSq += err * err;

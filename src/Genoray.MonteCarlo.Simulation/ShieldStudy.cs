@@ -61,12 +61,11 @@ public sealed class ShieldStudy
             double rSq = 0, cSq = 0; int fail = 0;
             for (int r = 0; r < repeats; r++)
             {
+                // Source (scaled to the fixed budget) + the leaked uniform background pedestal.
+                Background.Realize(raw, img, nSrc / w, bg, rng);
                 for (int y = 0; y < H; y++)
                     for (int x = 0; x < W; x++)
-                    {
-                        raw[x, y] = Sampling.Poisson(rng, nSrc / w * img[x, y] + bg);
                         calib[x, y] = raw[x, y] - bg;          // subtract the known mean background
-                    }
                 double eR = Dist(decoder.Decode(raw).Estimate, tx, ty);
                 double eC = Dist(decoder.Decode(calib).Estimate, tx, ty);
                 rSq += eR * eR; cSq += eC * eC;

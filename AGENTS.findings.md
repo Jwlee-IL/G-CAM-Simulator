@@ -756,3 +756,9 @@ unchanged); the new studies/scenarios opt in, so background is exercised without
   side-escape explanation sound (fixed the doc comment that wrongly said absorption *rises*). Test
   `IsotropicBackground_DepositsDifferFromNormalIncidence`. **43 tests green.** (Still open: `ShieldStudy`'s
   analytic leak term is not yet a transported directional background.)
+- **Unification (refactor)**: the "source mean + uncoded pedestal → Poisson" counting primitive now lives in
+  one place — `Background.RealizePixel(rng, sourceMean, ped)` and the row-major `Background.Realize(dst, src,
+  scale, ped, rng)`. `ShieldStudy`, `MaskAntimaskStudy` (per-pixel, keeps its gradient option + interleaved
+  multi-exposure draw order), and `BackgroundStudy` all route through it instead of hand-rolling
+  `Sampling.Poisson(...)`. Behavior-preserving — the background sweep CSV is **byte-identical** and
+  **Codex-verified** that the RNG draw order and Poisson means are unchanged at all three sites.

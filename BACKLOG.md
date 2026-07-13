@@ -40,8 +40,10 @@ Deferred work, captured so we don't forget. Not in current scope. See
   uniform pedestal on the flood map (`BackgroundStudy`, `montecarlo background`) + merged Poisson events in the
   RTL stream (`EventStreamStudy`, `montecarlo eventstream <cfg> <rate> <max> <bgRatio>`). Default off; opt in
   per scenario/study (`samples/scenario_field.json`). Codex-verified. Open refinements:
-  - **Unify antimask/shield onto `Background.AddUniform`** — they still inject their own ad-hoc pedestal;
-    fold them onto the shared helper (deferred to avoid churn on verified code).
+  - **Unify antimask/shield onto the shared background helper** — DONE: `Background.RealizePixel` /
+    `Background.Realize` now own the "source mean + uncoded pedestal → Poisson" primitive; ShieldStudy,
+    MaskAntimaskStudy, and BackgroundStudy all route through it (behavior-preserving — byte-identical
+    outputs, Codex-verified RNG order).
   - **Isotropic angular background** — DONE for the event-stream deposit pool (cosine-weighted downward
     hemisphere; isotropic photopeak fraction is slightly LOWER than normal incidence because oblique rays
     side-escape a finite array). STILL OPEN: `ShieldStudy`'s analytic leak term is not yet a transported

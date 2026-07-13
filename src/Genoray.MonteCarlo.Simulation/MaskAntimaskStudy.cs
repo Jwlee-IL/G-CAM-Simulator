@@ -71,13 +71,13 @@ public sealed class MaskAntimaskStudy
                     for (int x = 0; x < W; x++)
                     {
                         double b = Bg(x);
-                        // (a) Single mask: full source budget + full background.
-                        single[x, y] = Sampling.Poisson(rng, nSrc / wA * imgA[x, y] + b);
+                        // (a) Single mask: full source budget + full (uncoded) background pedestal.
+                        single[x, y] = Background.RealizePixel(rng, nSrc / wA * imgA[x, y], b);
                         // (b) Same exposure, subtract the CALIBRATED (known, mean) background.
                         calib[x, y] = single[x, y] - b;
                         // (c) Mask/antimask: half budget + half background each exposure.
-                        expA[x, y] = Sampling.Poisson(rng, 0.5 * nSrc / wA * imgA[x, y] + 0.5 * b);
-                        expB[x, y] = Sampling.Poisson(rng, 0.5 * nSrc / wB * imgB[x, y] + 0.5 * b);
+                        expA[x, y] = Background.RealizePixel(rng, 0.5 * nSrc / wA * imgA[x, y], 0.5 * b);
+                        expB[x, y] = Background.RealizePixel(rng, 0.5 * nSrc / wB * imgB[x, y], 0.5 * b);
                         diff[x, y] = expA[x, y] - expB[x, y];
                     }
 
