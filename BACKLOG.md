@@ -1,7 +1,12 @@
 # Backlog
 
 Deferred work, captured so we don't forget. Not in current scope. See
-`AGENTS.findings.md` (themes 1–22) for everything that IS done.
+`AGENTS.findings.md` (themes 1–33) for everything that IS done.
+
+**Genuinely open** (most "Open" items below are now marked DONE inline): exact Artix-7 Fmax in Vivado
+(deferred — install friction; `vivado_trap.tcl` ready); structured/directional background (minor — ≈ another
+mixed-field source); integrate the theme-22 SiPM/thermal/shield productization models into the C# pipeline
+(design-only, user isn't building it).
 
 ## Open
 
