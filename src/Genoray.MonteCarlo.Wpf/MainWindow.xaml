@@ -2,7 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:sp="clr-namespace:ScottPlot.WPF;assembly=ScottPlot.WPF"
-        Title="GCAM — coded-aperture gamma-camera simulator" Height="760" Width="1160">
+        Title="GCAM — coded-aperture gamma-camera simulator" Height="880" Width="1180">
     <Window.Resources>
         <Style TargetType="Label">
             <Setter Property="VerticalAlignment" Value="Center" />
@@ -10,88 +10,142 @@
         </Style>
         <Style TargetType="TextBox">
             <Setter Property="VerticalAlignment" Value="Center" />
-            <Setter Property="Width" Value="64" />
+            <Setter Property="Width" Value="72" />
             <Setter Property="Margin" Value="0,0,4,0" />
         </Style>
         <Style TargetType="Button">
-            <Setter Property="Padding" Value="12,3" />
-            <Setter Property="Margin" Value="10,0,6,0" />
+            <Setter Property="Padding" Value="10,3" />
+            <Setter Property="Margin" Value="4,2" />
         </Style>
     </Window.Resources>
 
-    <TabControl Margin="6">
-        <!-- ============================ WAVEFORM ============================ -->
-        <TabItem Header="Waveform">
-            <DockPanel>
-                <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="4,6">
-                    <Label Content="Energy (keV)" />
-                    <TextBox x:Name="WfEnergy" Text="661.7" />
-                    <Label Content="Rate (kcps)" />
-                    <TextBox x:Name="WfRate" Text="50" />
-                    <Label Content="Events" />
-                    <TextBox x:Name="WfEvents" Text="40" />
-                    <Label Content="Shaper" />
-                    <ComboBox x:Name="WfShaper" Width="120" VerticalAlignment="Center" SelectedIndex="0">
-                        <ComboBoxItem Content="Trapezoidal" />
-                        <ComboBoxItem Content="CR-RC^4" />
-                    </ComboBox>
-                    <CheckBox x:Name="WfRealistic" Content="Realistic front-end" IsChecked="True"
-                              VerticalAlignment="Center" Margin="10,0,0,0" />
-                    <Button x:Name="WfRun" Content="Run" Click="RunWaveform_Click" />
-                    <TextBlock x:Name="WfStatus" VerticalAlignment="Center" Margin="8,0" Foreground="#555" />
-                </StackPanel>
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="*" />
-                        <RowDefinition Height="*" />
-                    </Grid.RowDefinitions>
-                    <sp:WpfPlot x:Name="WfAdcPlot" Grid.Row="0" />
-                    <sp:WpfPlot x:Name="WfShapedPlot" Grid.Row="1" />
-                </Grid>
-            </DockPanel>
-        </TabItem>
+    <DockPanel>
+        <!-- ============================ SCENE EDITOR (above the tabs) ============================ -->
+        <Border DockPanel.Dock="Top" BorderBrush="#BBB" BorderThickness="1" Margin="6,6,6,3" Padding="6"
+                Background="#FAFAFA">
+            <Grid Height="270">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
 
-        <!-- ============================ IMAGING ============================ -->
-        <TabItem Header="Imaging">
-            <DockPanel>
-                <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="4,6">
-                    <Label Content="Source X (mm)" />
-                    <TextBox x:Name="ImgX" Text="2" />
-                    <Label Content="Y (mm)" />
-                    <TextBox x:Name="ImgY" Text="0" />
-                    <Label Content="Photons" />
-                    <TextBox x:Name="ImgPhotons" Text="500000" Width="90" />
-                    <Label Content="Background BSR" />
-                    <TextBox x:Name="ImgBsr" Text="0" />
-                    <Button x:Name="ImgRun" Content="Run" Click="RunImaging_Click" />
-                    <TextBlock x:Name="ImgStatus" VerticalAlignment="Center" Margin="8,0" Foreground="#555" />
+                <!-- 2D lateral canvas: place sources by X,Y. The detector footprint sits at the centre. -->
+                <StackPanel Grid.Column="0">
+                    <TextBlock Text="Scene  (click to add / select a source · x,y lateral, mm)"
+                               FontWeight="Bold" Margin="2,0,0,4" />
+                    <Border BorderBrush="#999" BorderThickness="1" Background="White">
+                        <Canvas x:Name="SceneCanvas" Width="380" Height="230"
+                                Background="Transparent" MouseLeftButtonDown="SceneCanvas_MouseDown" />
+                    </Border>
                 </StackPanel>
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
-                    <sp:WpfPlot x:Name="ImgFloodPlot" Grid.Column="0" />
-                    <sp:WpfPlot x:Name="ImgReconPlot" Grid.Column="1" />
-                </Grid>
-            </DockPanel>
-        </TabItem>
 
-        <!-- ============================ SPECTRUM ============================ -->
-        <TabItem Header="Spectrum">
-            <DockPanel>
-                <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="4,6">
-                    <Label Content="Energy (keV)" />
-                    <TextBox x:Name="SpEnergy" Text="661.7" />
-                    <Label Content="Events" />
-                    <TextBox x:Name="SpEvents" Text="4000" Width="80" />
-                    <Label Content="Window ±%" />
-                    <TextBox x:Name="SpWindow" Text="10" />
-                    <Button x:Name="SpRun" Content="Run" Click="RunSpectrum_Click" />
-                    <TextBlock x:Name="SpStatus" VerticalAlignment="Center" Margin="8,0" Foreground="#555" />
+                <!-- Per-source properties + the single Simulate button. -->
+                <StackPanel Grid.Column="1" Margin="12,18,4,0">
+                    <TextBlock Text="Sources" FontWeight="Bold" />
+                    <ListBox x:Name="SourceList" Height="78" Margin="0,2,0,4"
+                             SelectionChanged="SourceList_SelectionChanged" />
+                    <StackPanel Orientation="Horizontal">
+                        <Button Content="Add source" Click="AddSource_Click" />
+                        <Button Content="Remove" Click="RemoveSource_Click" />
+                    </StackPanel>
+
+                    <Grid Margin="0,8,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <Label Grid.Row="0" Grid.Column="0" Content="Decay (isotope)" />
+                        <ComboBox x:Name="PropIsotope" Grid.Row="0" Grid.Column="1" Width="120"
+                                  HorizontalAlignment="Left" VerticalAlignment="Center"
+                                  SelectionChanged="PropIsotope_Changed" />
+
+                        <Label Grid.Row="1" Grid.Column="0" Content="Activity (µCi)" />
+                        <TextBox x:Name="PropActivity" Grid.Row="1" Grid.Column="1" HorizontalAlignment="Left"
+                                 LostFocus="PropActivity_Changed" />
+
+                        <Label Grid.Row="2" Grid.Column="0" Content="Distance (mm)" />
+                        <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal">
+                            <Slider x:Name="PropDistance" Minimum="50" Maximum="400" Width="180"
+                                    VerticalAlignment="Center" TickFrequency="10" IsSnapToTickEnabled="True"
+                                    ValueChanged="PropDistance_Changed" />
+                            <TextBlock x:Name="PropDistanceLabel" VerticalAlignment="Center" Margin="8,0" />
+                        </StackPanel>
+                    </Grid>
+
+                    <TextBlock x:Name="PropXY" Foreground="#666" Margin="2,6,0,0" />
+                    <Button Content="◀  SIMULATE  ▶" Click="Simulate_Click" FontWeight="Bold"
+                            Padding="14,6" Margin="0,10,0,0" HorizontalAlignment="Left" />
                 </StackPanel>
-                <sp:WpfPlot x:Name="SpPlot" />
-            </DockPanel>
-        </TabItem>
-    </TabControl>
+            </Grid>
+        </Border>
+
+        <!-- ============================ ANALYSIS TABS ============================ -->
+        <TabControl x:Name="MainTabs" Margin="6,3,6,6">
+            <TabItem Header="Waveform">
+                <DockPanel>
+                    <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="4,6">
+                        <Label Content="Display rate (kcps)" />
+                        <TextBox x:Name="WfRate" Text="50" />
+                        <Label Content="Events" />
+                        <TextBox x:Name="WfEvents" Text="40" />
+                        <Label Content="Shaper" />
+                        <ComboBox x:Name="WfShaper" Width="120" VerticalAlignment="Center" SelectedIndex="0">
+                            <ComboBoxItem Content="Trapezoidal" />
+                            <ComboBoxItem Content="CR-RC^4" />
+                        </ComboBox>
+                        <CheckBox x:Name="WfRealistic" Content="Realistic front-end" IsChecked="True"
+                                  VerticalAlignment="Center" Margin="10,0,0,0" />
+                        <TextBlock x:Name="WfStatus" VerticalAlignment="Center" Margin="12,0" Foreground="#555" />
+                    </StackPanel>
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+                        <sp:WpfPlot x:Name="WfAdcPlot" Grid.Row="0" />
+                        <sp:WpfPlot x:Name="WfShapedPlot" Grid.Row="1" />
+                    </Grid>
+                </DockPanel>
+            </TabItem>
+
+            <TabItem Header="Imaging">
+                <DockPanel>
+                    <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="4,6">
+                        <Label Content="Photons (MC budget)" />
+                        <TextBox x:Name="ImgPhotons" Text="500000" Width="90" />
+                        <Label Content="Background BSR" />
+                        <TextBox x:Name="ImgBsr" Text="0" />
+                        <TextBlock x:Name="ImgStatus" VerticalAlignment="Center" Margin="12,0" Foreground="#555" />
+                    </StackPanel>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <sp:WpfPlot x:Name="ImgFloodPlot" Grid.Column="0" />
+                        <sp:WpfPlot x:Name="ImgReconPlot" Grid.Column="1" />
+                    </Grid>
+                </DockPanel>
+            </TabItem>
+
+            <TabItem Header="Spectrum">
+                <DockPanel>
+                    <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="4,6">
+                        <Label Content="Acquisition time (s)" />
+                        <TextBox x:Name="SpTime" Text="60" />
+                        <Label Content="Window ±%" />
+                        <TextBox x:Name="SpWindow" Text="10" />
+                        <TextBlock x:Name="SpStatus" VerticalAlignment="Center" Margin="12,0" Foreground="#555" />
+                    </StackPanel>
+                    <sp:WpfPlot x:Name="SpPlot" />
+                </DockPanel>
+            </TabItem>
+        </TabControl>
+    </DockPanel>
 </Window>
