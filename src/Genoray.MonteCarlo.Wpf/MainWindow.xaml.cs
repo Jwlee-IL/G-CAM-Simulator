@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using Genoray.MonteCarlo.Configuration;
 using Genoray.MonteCarlo.Core;
@@ -20,12 +21,15 @@ public partial class MainWindow : Window
 {
     private const double AdcSampleRateHz = 125e6;   // AD9648 125 MSPS
     private const double MmSpan = 60.0;             // ±30 mm visible on the canvas
-    private const double DetectorSizeMm = 12.0;     // 12×12 mm detector footprint
 
     private readonly List<SceneSource> _scene = [];
     private SceneSource? _selected;
     private SceneSource? _dragging;
     private bool _syncing;                          // guard property write-back while the UI is being synced
+
+    // Last decoded reconstruction, painted onto the scene canvas as a background heatmap (truth vs decode).
+    private WriteableBitmap? _reconBmp;
+    private double _reconLeftMm, _reconRightMm, _reconBottomMm, _reconTopMm;
 
     public MainWindow()
     {
@@ -167,23 +171,47 @@ public partial class MainWindow : Window
 
     private void RedrawScene()
     {
-        var (s, cw, ch) = CanvasMetrics();
+        var (_, cw, ch) = CanvasMetrics();
         if (cw <= 0 || ch <= 0) return;
         SceneCanvas.Children.Clear();
 
+        // 1. Reconstruction heatmap (behind everything): the decoder's view of the field, in the SAME x,y mm
+        //    space as the placed sources — so the overlaid dots show truth vs decode directly.
+        if (_reconBmp != null)
+        {
+            var rtl = MmToPx(_reconLeftMm, _reconTopMm);
+            var rbr = MmToPx(_reconRightMm, _reconBottomMm);
+            var im = new Image
+            {
+                Source = _reconBmp,
+                Width = Math.Max(1, rbr.X - rtl.X),
+                Height = Math.Max(1, rbr.Y - rtl.Y),
+                Stretch = Stretch.Fill,
+            };
+            RenderOptions.SetBitmapScalingMode(im, BitmapScalingMode.Linear);
+            Canvas.SetLeft(im, rtl.X);
+            Canvas.SetTop(im, rtl.Y);
+            SceneCanvas.Children.Add(im);
+        }
+
+        // 2. Axes through the origin (on-axis).
         AddLine(cw / 2, 0, cw / 2, ch, Brushes.Gainsboro);
         AddLine(0, ch / 2, cw, ch / 2, Brushes.Gainsboro);
 
-        double dpx = DetectorSizeMm * s;
-        var det = new Rectangle
+        // 3. Fully-coded FOV boundary (NOT the detector — the detector sits at z=0, a different plane). A source
+        //    inside this box decodes to a single clean peak; outside it aliases into a ghost.
+        double half = FcfovHalfMm();
+        var tl = MmToPx(-half, half);
+        var br = MmToPx(half, -half);
+        var fov = new Rectangle
         {
-            Width = dpx, Height = dpx, Stroke = Brushes.SteelBlue, StrokeThickness = 1.5,
-            Fill = new SolidColorBrush(Color.FromArgb(40, 70, 130, 180)),
+            Width = Math.Max(1, br.X - tl.X), Height = Math.Max(1, br.Y - tl.Y),
+            Stroke = Brushes.SteelBlue, StrokeThickness = 1.5, StrokeDashArray = [4, 3],
         };
-        Canvas.SetLeft(det, cw / 2 - dpx / 2);
-        Canvas.SetTop(det, ch / 2 - dpx / 2);
-        SceneCanvas.Children.Add(det);
-        AddText("detector", cw / 2 - dpx / 2, ch / 2 - dpx / 2 - 14, Brushes.SteelBlue);
+        Canvas.SetLeft(fov, tl.X);
+        Canvas.SetTop(fov, tl.Y);
+        SceneCanvas.Children.Add(fov);
+        AddText($"FCFOV ±{half:F0}mm (clean-decode region)", tl.X, tl.Y - 14, Brushes.SteelBlue);
 
         foreach (var src in _scene)
         {
@@ -211,6 +239,60 @@ public partial class MainWindow : Window
         Canvas.SetLeft(t, left);
         Canvas.SetTop(t, top);
         SceneCanvas.Children.Add(t);
+    }
+
+    /// <summary>Fully-coded FOV half-extent at the nominal source plane, from the same geometry the decoder
+    /// uses to size its reconstruction grid: period = rank·cellPitch / (maskZ/sourceZ), half = period/2.</summary>
+    private static double FcfovHalfMm()
+    {
+        var d = new SimulationConfig();   // scene runs use the default geometry/mask
+        double maskZ = d.Geometry.MaskDetectorDistanceMm;
+        double sourceZ = maskZ + d.Geometry.SourceMaskDistanceMm;
+        double period = d.Mask.Rank * d.Mask.CellPitchMm / (maskZ / sourceZ);
+        return period / 2.0;
+    }
+
+    /// <summary>Rasterize a reconstruction image to a canvas-overlay bitmap (viridis, semi-transparent). Row 0
+    /// of the bitmap is the TOP of the screen, so the recon is flipped vertically (its gy=0 is the min-y row).</summary>
+    private void SetReconOverlay(DetectorImage recon, double originMm, double stepMm)
+    {
+        int w = recon.Width, h = recon.Height;
+        double min = double.MaxValue, max = double.MinValue;
+        foreach (var v in recon.Raw) { if (v < min) min = v; if (v > max) max = v; }
+        double range = max - min > 0 ? max - min : 1.0;
+
+        var bmp = new WriteableBitmap(w, h, 96, 96, PixelFormats.Bgra32, null);
+        var px = new byte[w * h * 4];
+        for (int r = 0; r < h; r++)
+            for (int x = 0; x < w; x++)
+            {
+                double t = (recon[x, h - 1 - r] - min) / range;   // flip: screen-top = max y
+                var (rr, gg, bb) = Viridis(t);
+                int i = (r * w + x) * 4;
+                px[i + 0] = bb; px[i + 1] = gg; px[i + 2] = rr; px[i + 3] = 215;
+            }
+        bmp.WritePixels(new Int32Rect(0, 0, w, h), px, w * 4, 0);
+
+        _reconBmp = bmp;
+        _reconLeftMm = originMm;
+        _reconBottomMm = originMm;
+        _reconRightMm = originMm + (w - 1) * stepMm;
+        _reconTopMm = originMm + (h - 1) * stepMm;
+    }
+
+    private static readonly (double R, double G, double B)[] ViridisStops =
+        [(68, 1, 84), (59, 82, 139), (33, 145, 140), (94, 201, 98), (253, 231, 37)];
+
+    private static (byte r, byte g, byte b) Viridis(double t)
+    {
+        t = Math.Clamp(t, 0.0, 1.0);
+        double f = t * (ViridisStops.Length - 1);
+        int i = Math.Min((int)f, ViridisStops.Length - 2);
+        double u = f - i;
+        var a = ViridisStops[i];
+        var c = ViridisStops[i + 1];
+        byte L(double lo, double hi) => (byte)Math.Round(lo + (hi - lo) * u);
+        return (L(a.R, c.R), L(a.G, c.G), L(a.B, c.B));
     }
 
     private SceneSource? HitTest(Point p)
@@ -366,6 +448,10 @@ public partial class MainWindow : Window
             DrawHeatmap(ImgReconPlot, ToGrid(recon), left, right, bottom, top,
                 "Decoded reconstruction (× sources, ○ estimate)", "x (mm)", "y (mm)",
                 truePos, (dec.Estimate.Position.X, dec.Estimate.Position.Y));
+
+            // Paint the same reconstruction onto the scene canvas, under the placed sources (truth vs decode).
+            SetReconOverlay(recon, dec.ReconOriginMm, dec.ReconStepMm);
+            RedrawScene();
 
             ImgStatus.Text = $"peak estimate ({dec.Estimate.Position.X:F2}, {dec.Estimate.Position.Y:F2}) mm" +
                              (_scene.Count > 1 ? $"  ·  {_scene.Count} sources" : "") +
