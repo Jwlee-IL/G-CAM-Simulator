@@ -402,6 +402,7 @@ public partial class MainWindow : Window
         long photons = tab == 1 ? (long)ParseD(ImgPhotons.Text, 500_000) : 400_000;
         double bsr = tab == 1 ? ParseD(ImgBsr.Text, 0) : 0.0;
         double windowFrac = ParseD(SpWindow.Text, 10) / 100.0;
+        double resPct = ParseD(SpResolution.Text, 6);
         var cfg = ConfigFromScene(photons, bsr);
         double emissionRate = EmissionRatePerSec();
         _liveTruePos = _scene.Select(s => (s.X, s.Y)).ToList();
@@ -411,7 +412,7 @@ public partial class MainWindow : Window
 
         SimulateButton.Content = "■  STOP";
         LiveStatus.Text = "preparing…";
-        bool ok = await Task.Run(() => PrepareLive(tab, cfg, bsr, emissionRate, windowFrac, energyRef, maxE));
+        bool ok = await Task.Run(() => PrepareLive(tab, cfg, bsr, emissionRate, windowFrac, energyRef, maxE, resPct));
         if (!ok)
         {
             SimulateButton.Content = "▶  SIMULATE";
@@ -430,7 +431,7 @@ public partial class MainWindow : Window
 
     // Off the UI thread: one MC run fixes the accumulation SHAPE (normalized) and the detected count rate.
     private bool PrepareLive(int tab, SimulationConfig cfg, double bsr, double emissionRate,
-                             double windowFrac, double energyRef, double maxE)
+                             double windowFrac, double energyRef, double maxE, double resPct)
     {
         var factory = new DefaultSimulationFactory();
         var res = new SimulationRunner(factory).Run(cfg);
@@ -455,9 +456,12 @@ public partial class MainWindow : Window
             return _liveDecoder != null;
         }
 
-        var pool = new EventStreamStudy().Generate(cfg, Math.Max(_liveRateCps, 1.0), AdcSampleRateHz, 20000)
-                       .Select(ev => ev.EnergyKeV).ToArray();
-        if (pool.Length == 0) return false;
+        var rawPool = new EventStreamStudy().Generate(cfg, Math.Max(_liveRateCps, 1.0), AdcSampleRateHz, 20000)
+                          .Select(ev => ev.EnergyKeV).ToArray();
+        if (rawPool.Length == 0) return false;
+        // Detector energy resolution: smear each true deposit by the front-end's photostatistics (1/√E), so
+        // the spectrum shows realistic Gaussian-broadened photopeaks instead of artificially sharp lines.
+        var pool = ApplyResolution(rawPool, resPct, seed: 909);
         const int bins = 128;
         double bw = maxE / bins;
         var pdf = new double[bins];
@@ -512,7 +516,7 @@ public partial class MainWindow : Window
                 if (_specCenters[i] >= _specWindowLo && _specCenters[i] <= _specWindowHi) win += _specCounts[i];
             }
             DrawSpectrum(SpPlot, _specCenters, _specCounts, _specWindowLo, _specWindowHi,
-                "Deposited-energy spectrum (accumulating)", "deposited energy (keV)", "counts");
+                "Energy spectrum — detector resolution applied (accumulating)", "measured energy (keV)", "counts");
             SpStatus.Text = _liveTotalCounts > 0
                 ? $"±window holds {win / _liveTotalCounts:P0} of {_liveTotalCounts:N0} counts"
                 : "";
@@ -527,6 +531,26 @@ public partial class MainWindow : Window
         _liveTimer = null;
         _liveRunning = false;
         SimulateButton.Content = "▶  SIMULATE";
+    }
+
+    /// <summary>Smear each true deposit by the detector energy resolution — photostatistics give a Gaussian
+    /// whose FWHM fraction scales as √(662/E) (broader, relatively, at low energy), the same 1/√E model the
+    /// waveform rasterizer uses. <paramref name="fwhmAt662Pct"/> is the % FWHM at 662 keV (≈6% for GAGG).</summary>
+    private static double[] ApplyResolution(double[] deposits, double fwhmAt662Pct, int seed)
+    {
+        if (!(fwhmAt662Pct > 0.0)) return deposits;
+        double relSigmaRef = fwhmAt662Pct / 100.0 / 2.3548;   // FWHM% → σ fraction at 662 keV
+        var rng = new DefaultRandom(seed);
+        var outp = new double[deposits.Length];
+        for (int i = 0; i < deposits.Length; i++)
+        {
+            double e = deposits[i];
+            if (e <= 0.0) { outp[i] = e; continue; }
+            double relSigma = relSigmaRef * Math.Sqrt(662.0 / e);
+            double m = e * (1.0 + Sampling.Gaussian(rng) * relSigma);
+            outp[i] = m < 0.0 ? 0.0 : m;
+        }
+        return outp;
     }
 
     private async Task RunWaveform()

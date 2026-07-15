@@ -144,7 +144,9 @@
                     <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="4,6">
                         <Label Content="Window ±%" />
                         <TextBox x:Name="SpWindow" Text="10" />
-                        <TextBlock Text="(press Simulate to accumulate; acquisition time runs live above)"
+                        <Label Content="Resolution %@662" />
+                        <TextBox x:Name="SpResolution" Text="6" />
+                        <TextBlock Text="(press Simulate to accumulate; time runs live above)"
                                    VerticalAlignment="Center" Margin="10,0" Foreground="#888" />
                         <TextBlock x:Name="SpStatus" VerticalAlignment="Center" Margin="12,0" Foreground="#555" />
                     </StackPanel>
