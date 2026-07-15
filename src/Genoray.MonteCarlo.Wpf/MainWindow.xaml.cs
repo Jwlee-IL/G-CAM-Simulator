@@ -694,13 +694,17 @@ public partial class MainWindow : Window
         // Auto-focus: every ~2 s, refocus the decoder to the plane that best focuses the strongest source, so
         // a source at any distance is caught without knowing its depth (the fixed default plane misses far ones).
         if (AutoFocus.IsChecked == true && _liveCfg != null && _floodAccum != null &&
-            _liveTotalCounts > 200 && _liveTickCount % 8 == 0)
+            _liveTotalCounts > 500 && _liveTickCount % 8 == 0)
         {
-            double best = MixedFieldStudy.BestFocalMm(_floodAccum, _liveCfg, new DefaultSimulationFactory(),
-                OptFocal.Minimum, OptFocal.Maximum, 18);
-            double snapped = Math.Clamp(Math.Round(best / 10.0) * 10.0, OptFocal.Minimum, OptFocal.Maximum);
-            if (Math.Abs(snapped - OptFocal.Value) >= 10.0)
-                OptFocal.Value = snapped;   // triggers Refocus (rebuild decoder, re-decode, re-render)
+            // LOCAL search around the current plane (not the whole 200–3000 range) so a flat far-field depth-of-
+            // field can't yank the focus to an extreme; creeps toward an off-plane source over a few ticks.
+            double cur = OptFocal.Value;
+            double lo = Math.Max(OptFocal.Minimum, cur * 0.6);
+            double hi = Math.Min(OptFocal.Maximum, cur * 1.7);
+            double best = MixedFieldStudy.BestFocalMm(_floodAccum, _liveCfg, new DefaultSimulationFactory(), lo, hi, 12);
+            double snapped = Math.Clamp(Math.Round(best / 50.0) * 50.0, OptFocal.Minimum, OptFocal.Maximum);
+            if (Math.Abs(snapped - cur) >= 100.0)          // only a meaningful correction — no jitter on the plateau
+                OptFocal.Value = snapped;
         }
 
         RenderVisibleTab();

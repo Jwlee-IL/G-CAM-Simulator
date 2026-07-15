@@ -33,7 +33,8 @@ public sealed class SceneSource
     public double X { get; set; }                 // mm, lateral
     public double Y { get; set; }                 // mm, lateral
     public double DistanceMm { get; set; } = 1000; // z from the detector plane (~1 m — a realistic standoff)
-    public double ActivityUCi { get; set; } = 10.0;
+    public double ActivityUCi { get; set; } = 500.0;   // µCi — a ~1 m standoff source is dim (1/r²), so it
+                                                       // needs real strength to form an image in seconds
 
     public const double BqPerUCi = 3.7e4;         // 1 µCi = 37 kBq
 
