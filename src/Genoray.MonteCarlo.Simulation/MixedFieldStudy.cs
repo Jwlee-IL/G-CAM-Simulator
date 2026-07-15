@@ -170,6 +170,35 @@ public sealed class MixedFieldStudy
             .ToArray();
     }
 
+    /// <summary>The single focal plane that best focuses the STRONGEST source in a flood: decode across a
+    /// sweep and return the plane where the top peak's SNR is highest. Used for auto-focus — a source at an
+    /// unknown distance is brought into focus without the user knowing its depth.</summary>
+    public static double BestFocalMm(DetectorImage flood, SimulationConfig baseCfg, ISimulationFactory factory,
+                                     double zMin, double zMax, int steps, double minSeparationMm = 2.5)
+    {
+        double d = baseCfg.Geometry.MaskDetectorDistanceMm;
+        double bestFocal = zMin, bestSnr = double.NegativeInfinity;
+        for (int i = 0; i < steps; i++)
+        {
+            double z = steps > 1 ? zMin + (zMax - zMin) * i / (steps - 1) : zMin;
+            var cfg = baseCfg.Clone();
+            cfg.Geometry.SourceMaskDistanceMm = Math.Max(1.0, z - d);
+            double frac = d / Math.Max(d + 1.0, z);
+            cfg.Decoder.ReconHalfExtentMm = 0.95 * cfg.Mask.Rank * cfg.Mask.CellPitchMm / frac / 2.0;
+            cfg.Decoder.ReconStepMm = Math.Max(0.2, cfg.Mask.CellPitchMm / frac / 4.0);
+            var dec = factory.CreateDecoder(cfg)!.Decode(flood);
+            var recon = dec.Reconstruction;
+            double sum = 0, sum2 = 0;
+            int n = recon.Width * recon.Height;
+            foreach (var v in recon.Raw) { sum += v; sum2 += v * v; }
+            double mean = sum / n, std = Math.Sqrt(Math.Max(1e-9, sum2 / n - mean * mean));
+            var pk = TopPeaks(recon, dec.ReconOriginMm, dec.ReconStepMm, 1, minSeparationMm);
+            double snr = pk.Length > 0 ? (pk[0].Value - mean) / std : 0.0;
+            if (snr > bestSnr) { bestSnr = snr; bestFocal = z; }
+        }
+        return bestFocal;
+    }
+
     public static string ToCsv(MixedFieldResult r)
     {
         var sb = new System.Text.StringBuilder("kind,index,x_mm,y_mm,value\n");

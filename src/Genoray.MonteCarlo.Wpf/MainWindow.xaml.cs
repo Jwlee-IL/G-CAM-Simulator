@@ -691,6 +691,18 @@ public partial class MainWindow : Window
             for (int i = 0; i < _specCounts.Length; i++)
                 _specCounts[i] += Sampling.Poisson(rng, _specPdf[i] * dN);
 
+        // Auto-focus: every ~2 s, refocus the decoder to the plane that best focuses the strongest source, so
+        // a source at any distance is caught without knowing its depth (the fixed default plane misses far ones).
+        if (AutoFocus.IsChecked == true && _liveCfg != null && _floodAccum != null &&
+            _liveTotalCounts > 200 && _liveTickCount % 8 == 0)
+        {
+            double best = MixedFieldStudy.BestFocalMm(_floodAccum, _liveCfg, new DefaultSimulationFactory(),
+                OptFocal.Minimum, OptFocal.Maximum, 18);
+            double snapped = Math.Clamp(Math.Round(best / 10.0) * 10.0, OptFocal.Minimum, OptFocal.Maximum);
+            if (Math.Abs(snapped - OptFocal.Value) >= 10.0)
+                OptFocal.Value = snapped;   // triggers Refocus (rebuild decoder, re-decode, re-render)
+        }
+
         RenderVisibleTab();
 
         LiveStatus.Text = $"t = {_liveElapsedSec:F0} s   ·   {_liveTotalCounts:N0} counts   ·   {_liveRateCps:F0} cps detected";
