@@ -31,6 +31,19 @@ public partial class MainWindow : Window
     private WriteableBitmap? _reconBmp;
     private double _reconLeftMm, _reconRightMm, _reconBottomMm, _reconTopMm;
 
+    // Live (continuous) acquisition: one MC run fixes the shape, then a timer accumulates Poisson counts.
+    private System.Windows.Threading.DispatcherTimer? _liveTimer;
+    private bool _liveRunning;
+    private int _liveTab;                    // 1 = imaging, 2 = spectrum
+    private double _liveRateCps, _liveElapsedSec, _liveTotalCounts, _liveSpeed;
+    private IRandom? _liveRng;
+    private DetectorImage? _floodAccum;      // imaging: accumulated flood map
+    private double[]? _floodShape;           // imaging: per-pixel mean, Σ = 1
+    private IDecoder? _liveDecoder;
+    private IReadOnlyList<(double x, double y)>? _liveTruePos;
+    private double[]? _specPdf, _specCounts, _specCenters;   // spectrum accumulators
+    private double _specWindowLo, _specWindowHi;
+
     public MainWindow()
     {
         InitializeComponent();
@@ -43,6 +56,7 @@ public partial class MainWindow : Window
         SceneCanvas.SizeChanged += (_, _) => RedrawScene();
         SceneCanvas.MouseMove += SceneCanvas_MouseMove;
         SceneCanvas.MouseLeftButtonUp += SceneCanvas_MouseUp;
+        MainTabs.SelectionChanged += (_, e) => { if (e.Source is TabControl && _liveRunning) StopLive(); };
     }
 
     // ---- scene state / property panel --------------------------------------------------------------------
@@ -371,13 +385,148 @@ public partial class MainWindow : Window
 
     private async void Simulate_Click(object sender, RoutedEventArgs e)
     {
+        if (_liveRunning) { StopLive(); return; }            // a running acquisition: this click stops it
         if (_scene.Count == 0) { MessageBox.Show("Add at least one source to the scene."); return; }
-        switch (MainTabs.SelectedIndex)
+
+        int tab = MainTabs.SelectedIndex;
+        if (tab == 0) { await RunWaveform(); return; }       // waveform: a µs snapshot, one-shot
+        await StartLive(tab);                                // imaging / spectrum: continuous accumulation
+    }
+
+    // ---- live acquisition ----
+
+    private async Task StartLive(int tab)
+    {
+        _liveTab = tab;
+        _liveSpeed = Math.Max(0.1, ParseD(LiveSpeed.Text, 10));
+        long photons = tab == 1 ? (long)ParseD(ImgPhotons.Text, 500_000) : 400_000;
+        double bsr = tab == 1 ? ParseD(ImgBsr.Text, 0) : 0.0;
+        double windowFrac = ParseD(SpWindow.Text, 10) / 100.0;
+        var cfg = ConfigFromScene(photons, bsr);
+        double emissionRate = EmissionRatePerSec();
+        _liveTruePos = _scene.Select(s => (s.X, s.Y)).ToList();
+        double energyRef = Isotopes.Get(_scene[0].Isotope).Lines[0].EnergyKeV;
+        double maxE = _scene.SelectMany(s => Isotopes.Get(s.Isotope).Lines.Select(l => l.EnergyKeV))
+                            .DefaultIfEmpty(energyRef).Max() * 1.15;
+
+        SimulateButton.Content = "■  STOP";
+        LiveStatus.Text = "preparing…";
+        bool ok = await Task.Run(() => PrepareLive(tab, cfg, bsr, emissionRate, windowFrac, energyRef, maxE));
+        if (!ok)
         {
-            case 0: await RunWaveform(); break;
-            case 1: await RunImaging(); break;
-            case 2: await RunSpectrum(); break;
+            SimulateButton.Content = "▶  SIMULATE";
+            LiveStatus.Text = "no counts detected — check activity / distance / geometry";
+            return;
         }
+
+        _liveElapsedSec = 0;
+        _liveTotalCounts = 0;
+        _liveRng = new DefaultRandom(20260715);
+        _liveRunning = true;
+        _liveTimer = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromMilliseconds(250) };
+        _liveTimer.Tick += LiveTimer_Tick;
+        _liveTimer.Start();
+    }
+
+    // Off the UI thread: one MC run fixes the accumulation SHAPE (normalized) and the detected count rate.
+    private bool PrepareLive(int tab, SimulationConfig cfg, double bsr, double emissionRate,
+                             double windowFrac, double energyRef, double maxE)
+    {
+        var factory = new DefaultSimulationFactory();
+        var res = new SimulationRunner(factory).Run(cfg);
+        double eff = res.PhotonsEmitted > 0 ? res.DetectedWeight / res.PhotonsEmitted : 0.0;
+        _liveRateCps = emissionRate * eff;
+        if (!(_liveRateCps > 0.0)) return false;
+
+        if (tab == 1)
+        {
+            var mean = res.DetectorImage;
+            int w = mean.Width, h = mean.Height;
+            double ped = bsr > 0.0 ? SimBackground.PedestalPerPixel(bsr, SumImage(mean), w * h) : 0.0;
+            var shape = new double[w * h];
+            double sum = 0;
+            for (int y = 0; y < h; y++)
+                for (int x = 0; x < w; x++) { double v = mean[x, y] + ped; shape[y * w + x] = v; sum += v; }
+            if (!(sum > 0.0)) return false;
+            for (int i = 0; i < shape.Length; i++) shape[i] /= sum;
+            _floodShape = shape;
+            _floodAccum = new DetectorImage(w, h);
+            _liveDecoder = factory.CreateDecoder(cfg);
+            return _liveDecoder != null;
+        }
+
+        var pool = new EventStreamStudy().Generate(cfg, Math.Max(_liveRateCps, 1.0), AdcSampleRateHz, 20000)
+                       .Select(ev => ev.EnergyKeV).ToArray();
+        if (pool.Length == 0) return false;
+        const int bins = 128;
+        double bw = maxE / bins;
+        var pdf = new double[bins];
+        var ctr = new double[bins];
+        foreach (var d in pool) { int b = (int)(d / bw); if (b >= 0 && b < bins) pdf[b] += 1; }
+        for (int i = 0; i < bins; i++) { ctr[i] = (i + 0.5) * bw; pdf[i] /= pool.Length; }
+        _specPdf = pdf;
+        _specCounts = new double[bins];
+        _specCenters = ctr;
+        _specWindowLo = energyRef * (1.0 - windowFrac);
+        _specWindowHi = energyRef * (1.0 + windowFrac);
+        return true;
+    }
+
+    private void LiveTimer_Tick(object? sender, EventArgs e)
+    {
+        double dt = 0.25 * _liveSpeed;                 // simulated acquisition seconds this tick
+        _liveElapsedSec += dt;
+        double dN = _liveRateCps * dt;
+        var rng = _liveRng!;
+
+        if (_liveTab == 1 && _floodShape != null && _floodAccum != null && _liveDecoder != null)
+        {
+            int w = _floodAccum.Width, h = _floodAccum.Height;
+            for (int y = 0; y < h; y++)
+                for (int x = 0; x < w; x++)
+                {
+                    int add = Sampling.Poisson(rng, _floodShape[y * w + x] * dN);
+                    if (add != 0) { _floodAccum.Add(x, y, add); _liveTotalCounts += add; }
+                }
+
+            var dec = _liveDecoder.Decode(_floodAccum);
+            DrawHeatmap(ImgFloodPlot, ToGrid(_floodAccum), 0, w, 0, h,
+                "Detector flood map (counts)", "pixel x", "pixel y", null, null);
+            var recon = dec.Reconstruction;
+            double left = dec.ReconOriginMm, right = dec.ReconOriginMm + (recon.Width - 1) * dec.ReconStepMm;
+            double bottom = dec.ReconOriginMm, top = dec.ReconOriginMm + (recon.Height - 1) * dec.ReconStepMm;
+            DrawHeatmap(ImgReconPlot, ToGrid(recon), left, right, bottom, top,
+                "Decoded reconstruction (× sources, ○ estimate)", "x (mm)", "y (mm)",
+                _liveTruePos, (dec.Estimate.Position.X, dec.Estimate.Position.Y));
+            SetReconOverlay(recon, dec.ReconOriginMm, dec.ReconStepMm);
+            RedrawScene();
+            ImgStatus.Text = $"estimate ({dec.Estimate.Position.X:F2}, {dec.Estimate.Position.Y:F2}) mm — sharpens as counts build";
+        }
+        else if (_liveTab == 2 && _specPdf != null && _specCounts != null && _specCenters != null)
+        {
+            double win = 0;
+            for (int i = 0; i < _specCounts.Length; i++)
+            {
+                int add = Sampling.Poisson(rng, _specPdf[i] * dN);
+                if (add != 0) { _specCounts[i] += add; _liveTotalCounts += add; }
+                if (_specCenters[i] >= _specWindowLo && _specCenters[i] <= _specWindowHi) win += _specCounts[i];
+            }
+            DrawSpectrum(SpPlot, _specCenters, _specCounts, _specWindowLo, _specWindowHi,
+                "Deposited-energy spectrum (accumulating)", "deposited energy (keV)", "counts");
+            SpStatus.Text = _liveTotalCounts > 0
+                ? $"±window holds {win / _liveTotalCounts:P0} of {_liveTotalCounts:N0} counts"
+                : "";
+        }
+
+        LiveStatus.Text = $"t = {_liveElapsedSec:F0} s   ·   {_liveTotalCounts:N0} counts   ·   {_liveRateCps:F0} cps detected";
+    }
+
+    private void StopLive()
+    {
+        _liveTimer?.Stop();
+        _liveTimer = null;
+        _liveRunning = false;
+        SimulateButton.Content = "▶  SIMULATE";
     }
 
     private async Task RunWaveform()
@@ -413,105 +562,6 @@ public partial class MainWindow : Window
                             $"isotopes: {string.Join(", ", _scene.Select(s => s.Isotope).Distinct())}";
         }
         catch (Exception ex) { WfStatus.Text = "error: " + ex.Message; }
-    }
-
-    private async Task RunImaging()
-    {
-        long photons = (long)ParseD(ImgPhotons.Text, 500_000);
-        double bsr = ParseD(ImgBsr.Text, 0);
-        var cfg = ConfigFromScene(photons, bsr);
-        var truePos = _scene.Select(s => (s.X, s.Y)).ToList();
-
-        ImgStatus.Text = "running…";
-        try
-        {
-            var (flood, dec) = await Task.Run(() =>
-            {
-                var factory = new DefaultSimulationFactory();
-                var res = new SimulationRunner(factory).Run(cfg);
-                var fl = res.DetectorImage;
-                if (bsr > 0.0)
-                {
-                    double ped = SimBackground.PedestalPerPixel(bsr, SumImage(fl), fl.Width * fl.Height);
-                    SimBackground.AddUniform(fl, ped);
-                }
-                var d = factory.CreateDecoder(cfg)!.Decode(fl);
-                return (fl, d);
-            });
-
-            DrawHeatmap(ImgFloodPlot, ToGrid(flood), 0, flood.Width, 0, flood.Height,
-                "Detector flood map (counts)", "pixel x", "pixel y", null, null);
-
-            var recon = dec.Reconstruction;
-            double left = dec.ReconOriginMm, right = dec.ReconOriginMm + (recon.Width - 1) * dec.ReconStepMm;
-            double bottom = dec.ReconOriginMm, top = dec.ReconOriginMm + (recon.Height - 1) * dec.ReconStepMm;
-            DrawHeatmap(ImgReconPlot, ToGrid(recon), left, right, bottom, top,
-                "Decoded reconstruction (× sources, ○ estimate)", "x (mm)", "y (mm)",
-                truePos, (dec.Estimate.Position.X, dec.Estimate.Position.Y));
-
-            // Paint the same reconstruction onto the scene canvas, under the placed sources (truth vs decode).
-            SetReconOverlay(recon, dec.ReconOriginMm, dec.ReconStepMm);
-            RedrawScene();
-
-            ImgStatus.Text = $"peak estimate ({dec.Estimate.Position.X:F2}, {dec.Estimate.Position.Y:F2}) mm" +
-                             (_scene.Count > 1 ? $"  ·  {_scene.Count} sources" : "") +
-                             (bsr > 0 ? $"  ·  BSR {bsr:F1}" : "");
-        }
-        catch (Exception ex) { ImgStatus.Text = "error: " + ex.Message; }
-    }
-
-    private async Task RunSpectrum()
-    {
-        double time = ParseD(SpTime.Text, 60);
-        double windowFrac = ParseD(SpWindow.Text, 10) / 100.0;
-        double energyRef = _scene.Count > 0 ? Isotopes.Get(_scene[0].Isotope).Lines[0].EnergyKeV : 661.7;
-        double emissionRate = EmissionRatePerSec();
-        var cfg = ConfigFromScene(400_000);
-
-        SpStatus.Text = "running…";
-        try
-        {
-            var (centers, counts, rate, total) = await Task.Run(() =>
-            {
-                var factory = new DefaultSimulationFactory();
-                var res = new SimulationRunner(factory).Run(cfg);
-                double eff = res.PhotonsEmitted > 0 ? res.DetectedWeight / res.PhotonsEmitted : 0.0;
-                double detRate = emissionRate * eff;            // detected counts / sec
-                double n = detRate * time;                      // expected total detected counts
-
-                // deposit-spectrum SHAPE from a representative pool, then scale to n and Poisson-realize.
-                var pool = new EventStreamStudy()
-                    .Generate(cfg, Math.Max(detRate, 1.0), AdcSampleRateHz, 20000)
-                    .Select(ev => ev.EnergyKeV).ToArray();
-                double maxE = _scene
-                    .SelectMany(s => Isotopes.Get(s.Isotope).Lines.Select(l => l.EnergyKeV))
-                    .DefaultIfEmpty(energyRef).Max() * 1.15;
-
-                const int bins = 128;
-                double bw = maxE / bins;
-                var pdf = new double[bins];
-                foreach (var d in pool) { int b = (int)(d / bw); if (b >= 0 && b < bins) pdf[b] += 1; }
-                double poolN = Math.Max(pool.Length, 1);
-                var rng = new DefaultRandom(4242);
-                var cnt = new double[bins];
-                var ctr = new double[bins];
-                double tot = 0;
-                for (int i = 0; i < bins; i++)
-                {
-                    ctr[i] = (i + 0.5) * bw;
-                    cnt[i] = Sampling.Poisson(rng, pdf[i] / poolN * n);
-                    tot += cnt[i];
-                }
-                return (ctr, cnt, detRate, tot);
-            });
-
-            double lo = energyRef * (1.0 - windowFrac), hi = energyRef * (1.0 + windowFrac);
-            DrawSpectrum(SpPlot, centers, counts, lo, hi,
-                $"Deposited-energy spectrum · {time:F0}s acquisition", "deposited energy (keV)", "counts");
-            double uci = _scene.Sum(s => s.ActivityUCi);
-            SpStatus.Text = $"{uci:F0} µCi total  ·  {rate:F0} cps detected  ·  {total:F0} counts in {time:F0}s";
-        }
-        catch (Exception ex) { SpStatus.Text = "error: " + ex.Message; }
     }
 
     // ---- plotting helpers --------------------------------------------------------------------------------

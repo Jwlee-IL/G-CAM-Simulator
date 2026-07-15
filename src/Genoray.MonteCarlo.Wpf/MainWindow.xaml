@@ -79,8 +79,13 @@
                     </Grid>
 
                     <TextBlock x:Name="PropXY" Foreground="#666" Margin="2,6,0,0" />
-                    <Button Content="◀  SIMULATE  ▶" Click="Simulate_Click" FontWeight="Bold"
-                            Padding="14,6" Margin="0,10,0,0" HorizontalAlignment="Left" />
+                    <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                        <Button x:Name="SimulateButton" Content="▶  SIMULATE" Click="Simulate_Click"
+                                FontWeight="Bold" Padding="14,6" />
+                        <Label Content="Speed ×" />
+                        <TextBox x:Name="LiveSpeed" Text="10" Width="46" />
+                        <TextBlock x:Name="LiveStatus" VerticalAlignment="Center" Margin="10,0" Foreground="#444" />
+                    </StackPanel>
                 </StackPanel>
             </Grid>
         </Border>
@@ -137,10 +142,10 @@
             <TabItem Header="Spectrum">
                 <DockPanel>
                     <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="4,6">
-                        <Label Content="Acquisition time (s)" />
-                        <TextBox x:Name="SpTime" Text="60" />
                         <Label Content="Window ±%" />
                         <TextBox x:Name="SpWindow" Text="10" />
+                        <TextBlock Text="(press Simulate to accumulate; acquisition time runs live above)"
+                                   VerticalAlignment="Center" Margin="10,0" Foreground="#888" />
                         <TextBlock x:Name="SpStatus" VerticalAlignment="Center" Margin="12,0" Foreground="#555" />
                     </StackPanel>
                     <sp:WpfPlot x:Name="SpPlot" />
