@@ -77,8 +77,8 @@
 
                         <Label Grid.Row="2" Grid.Column="0" Content="Distance (mm)" />
                         <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal">
-                            <Slider x:Name="PropDistance" Minimum="50" Maximum="400" Width="180"
-                                    VerticalAlignment="Center" TickFrequency="10" IsSnapToTickEnabled="True"
+                            <Slider x:Name="PropDistance" Minimum="200" Maximum="3000" Width="180"
+                                    VerticalAlignment="Center" TickFrequency="50" IsSnapToTickEnabled="True"
                                     ValueChanged="PropDistance_Changed" />
                             <TextBlock x:Name="PropDistanceLabel" VerticalAlignment="Center" Margin="8,0" />
                         </StackPanel>
@@ -193,8 +193,8 @@
 
                     <StackPanel Orientation="Horizontal" Margin="0,2">
                         <Label Content="Focal distance (mm)" />
-                        <Slider x:Name="OptFocal" Minimum="50" Maximum="400" Value="160" Width="260"
-                                VerticalAlignment="Center" TickFrequency="10" IsSnapToTickEnabled="True"
+                        <Slider x:Name="OptFocal" Minimum="200" Maximum="3000" Value="1000" Width="260"
+                                VerticalAlignment="Center" TickFrequency="50" IsSnapToTickEnabled="True"
                                 ValueChanged="OptFocal_Changed" />
                         <TextBlock x:Name="OptFocalLabel" VerticalAlignment="Center" Margin="8,0" />
                         <TextBlock Text="  refocuses the live image — each source sharpens at its own distance"

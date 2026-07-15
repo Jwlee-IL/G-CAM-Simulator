@@ -32,7 +32,7 @@ public sealed class SceneSource
     public string Isotope { get; set; } = "Cs-137";
     public double X { get; set; }                 // mm, lateral
     public double Y { get; set; }                 // mm, lateral
-    public double DistanceMm { get; set; } = 160; // z from the detector plane (default = the focal plane)
+    public double DistanceMm { get; set; } = 1000; // z from the detector plane (~1 m — a realistic standoff)
     public double ActivityUCi { get; set; } = 10.0;
 
     public const double BqPerUCi = 3.7e4;         // 1 µCi = 37 kBq

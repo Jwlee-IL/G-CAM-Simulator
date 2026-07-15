@@ -20,7 +20,7 @@ namespace Genoray.MonteCarlo.Wpf;
 public partial class MainWindow : Window
 {
     private const double AdcSampleRateHz = 125e6;   // AD9648 125 MSPS
-    private const double MmSpan = 60.0;             // ±30 mm visible on the canvas
+    private const double MmSpan = 160.0;            // ±80 mm visible on the canvas (covers the FCFOV out to ~1.4 m)
 
     private readonly List<SceneSource> _scene = [];
     private SceneSource? _selected;
@@ -183,7 +183,7 @@ public partial class MainWindow : Window
     }
 
     private static double DotRadius(double distanceMm) =>
-        Math.Clamp(16.0 * (160.0 / Math.Max(distanceMm, 1.0)), 5.0, 22.0);   // nearer source = bigger dot
+        Math.Clamp(16.0 * (1000.0 / Math.Max(distanceMm, 1.0)), 5.0, 22.0);   // nearer source = bigger dot (~1 m ref)
 
     private static Brush IsotopeBrush(string isotope) => isotope switch
     {
@@ -539,10 +539,10 @@ public partial class MainWindow : Window
         var cfg = _liveCfg.Clone();
         int k = Math.Max(1, _scene.Count);
         double d = cfg.Geometry.MaskDetectorDistanceMm;
-        Log($"3D depth estimate — refocusing {k} source(s) across {d + 30:F0}–340 mm…");
+        Log($"3D depth estimate — refocusing {k} source(s) across {d + 30:F0}–3000 mm…");
 
         var found = await Task.Run(() => MixedFieldStudy.LocalizeDepths(
-            snap, cfg, new DefaultSimulationFactory(), k, zMin: d + 30, zMax: 340, steps: 25));
+            snap, cfg, new DefaultSimulationFactory(), k, zMin: d + 30, zMax: 3000, steps: 30));
 
         foreach (var p in found)
         {
