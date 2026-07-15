@@ -20,7 +20,9 @@ namespace Genoray.MonteCarlo.Wpf;
 public partial class MainWindow : Window
 {
     private const double AdcSampleRateHz = 125e6;   // AD9648 125 MSPS
-    private const double MmSpan = 160.0;            // ±80 mm visible on the canvas (covers the FCFOV out to ~1.4 m)
+    // Canvas span auto-fits the FCFOV, which grows with the rangefinder range — so sources stay in view at any
+    // range (a fixed span pushes them off-canvas when zoomed far out).
+    private double MmSpanMm() => Math.Max(120.0, 2.6 * FcfovHalfMm());
 
     private readonly List<SceneSource> _scene = [];
     private SceneSource? _selected;
@@ -167,7 +169,7 @@ public partial class MainWindow : Window
     {
         double cw = SceneCanvas.ActualWidth > 0 ? SceneCanvas.ActualWidth : SceneCanvas.Width;
         double ch = SceneCanvas.ActualHeight > 0 ? SceneCanvas.ActualHeight : SceneCanvas.Height;
-        return (Math.Min(cw, ch) / MmSpan, cw, ch);
+        return (Math.Min(cw, ch) / MmSpanMm(), cw, ch);
     }
 
     private Point MmToPx(double xmm, double ymm)
@@ -360,8 +362,9 @@ public partial class MainWindow : Window
     {
         if (_dragging == null || e.LeftButton != MouseButtonState.Pressed) return;
         var (x, y) = PxToMm(e.GetPosition(SceneCanvas));
-        _dragging.X = Math.Round(Math.Clamp(x, -MmSpan / 2, MmSpan / 2), 1);
-        _dragging.Y = Math.Round(Math.Clamp(y, -MmSpan / 2, MmSpan / 2), 1);
+        double half = MmSpanMm() / 2;
+        _dragging.X = Math.Round(Math.Clamp(x, -half, half), 1);
+        _dragging.Y = Math.Round(Math.Clamp(y, -half, half), 1);
         if (_dragging == _selected)
             PropXY.Text = $"x = {_dragging.X:F1} mm,  y = {_dragging.Y:F1} mm";
         RedrawScene();
