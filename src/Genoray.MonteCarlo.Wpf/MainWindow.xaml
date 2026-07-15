@@ -159,6 +159,44 @@
                     <sp:WpfPlot x:Name="SpPlot" />
                 </DockPanel>
             </TabItem>
+
+            <TabItem Header="Optics / Presets">
+                <StackPanel Margin="12">
+                    <StackPanel Orientation="Horizontal" Margin="0,4">
+                        <Label Content="Preset" />
+                        <ComboBox x:Name="OptPreset" Width="190" VerticalAlignment="Center"
+                                  SelectionChanged="OptPreset_Changed">
+                            <ComboBoxItem Content="Sharp (default)" />
+                            <ComboBoxItem Content="Baseline (coarse)" />
+                            <ComboBoxItem Content="Wide FOV" />
+                            <ComboBoxItem Content="High-res" />
+                        </ComboBox>
+                        <TextBlock Text="  fills the fields below · optics changes apply on the next Simulate"
+                                   VerticalAlignment="Center" Foreground="#888" />
+                    </StackPanel>
+
+                    <WrapPanel Margin="0,10">
+                        <Label Content="MURA rank (prime)" />
+                        <TextBox x:Name="OptRank" Text="13" />
+                        <Label Content="Cell pitch (mm)" />
+                        <TextBox x:Name="OptCell" Text="0.7" />
+                        <Label Content="Mask–detector D (mm)" />
+                        <TextBox x:Name="OptD" Text="80" />
+                        <Label Content="Detector N (per side)" />
+                        <TextBox x:Name="OptDetN" Text="20" />
+                        <Label Content="Pixel pitch (mm)" />
+                        <TextBox x:Name="OptDetPitch" Text="0.6" />
+                    </WrapPanel>
+
+                    <Border BorderBrush="#DDD" BorderThickness="1" Padding="10" Margin="0,6" Background="#F7F7F7">
+                        <TextBlock x:Name="OptReadout" FontFamily="Consolas" FontSize="12" />
+                    </Border>
+
+                    <TextBlock TextWrapping="Wrap" Foreground="#666" Margin="0,6" MaxWidth="640"
+                               HorizontalAlignment="Left"
+                               Text="Resolution element = cell pitch × (source distance) / D. Smaller cell or larger D sharpens it, but shrinks the FOV — raise the rank to widen the FOV back. The detector must sample the mask shadow at least twice per cell (Nyquist), so finer cells need a finer pixel pitch." />
+                </StackPanel>
+            </TabItem>
         </TabControl>
 
         <!-- ============================ LOG (bottom row) ============================ -->

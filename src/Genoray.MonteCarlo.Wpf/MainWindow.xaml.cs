@@ -61,6 +61,11 @@ public partial class MainWindow : Window
         SceneCanvas.MouseLeftButtonUp += SceneCanvas_MouseUp;
         // One acquisition drives every tab; switching tabs just re-renders the current state (no stop).
         MainTabs.SelectionChanged += (_, e) => { if (e.Source is TabControl && _liveRunning) RenderVisibleTab(); };
+
+        foreach (var box in new[] { OptRank, OptCell, OptD, OptDetN, OptDetPitch })
+            box.TextChanged += (_, _) => UpdateOpticsReadout();
+        UpdateOpticsReadout();
+
         Log("Ready. Place sources on the scene, then press Simulate.");
     }
 
@@ -260,14 +265,16 @@ public partial class MainWindow : Window
         SceneCanvas.Children.Add(t);
     }
 
-    /// <summary>Fully-coded FOV half-extent at the nominal source plane, from the same geometry the decoder
-    /// uses to size its reconstruction grid: period = rank·cellPitch / (maskZ/sourceZ), half = period/2.</summary>
-    private static double FcfovHalfMm()
+    /// <summary>Fully-coded FOV half-extent at the first source's plane, from the current optics (the same
+    /// geometry the decoder uses to size its reconstruction grid): period = rank·cellPitch·sourceZ/D.</summary>
+    private double FcfovHalfMm()
     {
-        var d = new SimulationConfig();   // scene runs use the default geometry/mask
-        double maskZ = d.Geometry.MaskDetectorDistanceMm;
-        double sourceZ = maskZ + d.Geometry.SourceMaskDistanceMm;
-        double period = d.Mask.Rank * d.Mask.CellPitchMm / (maskZ / sourceZ);
+        int rank = NearestPrime((int)ParseD(OptRank.Text, 13));
+        double cell = ParseD(OptCell.Text, 0.7);
+        double d = ParseD(OptD.Text, 80);
+        double sourceZ = _scene.Count > 0 ? _scene[0].DistanceMm : 160.0;
+        if (sourceZ <= d) sourceZ = d + 1.0;
+        double period = rank * cell / (d / sourceZ);
         return period / 2.0;
     }
 
@@ -379,9 +386,91 @@ public partial class MainWindow : Window
             Source = srcs.Length > 0 ? srcs[0] : new SourceConfig(),
             Sources = srcs.Length > 0 ? srcs : null,
         };
+
+        // Optics (from the Optics/Presets tab): mask rank/cell, mask–detector gap, detector array. The decoder
+        // focuses on the first source's plane, so its source–mask distance S = (source z) − D.
+        int rank = NearestPrime((int)ParseD(OptRank.Text, 13));
+        double cell = Math.Max(0.05, ParseD(OptCell.Text, 0.7));
+        double d = Math.Max(1.0, ParseD(OptD.Text, 80));
+        int detN = Math.Clamp((int)ParseD(OptDetN.Text, 20), 4, 64);
+        double pitch = Math.Max(0.05, ParseD(OptDetPitch.Text, 0.6));
+        double srcDist = srcs.Length > 0 ? srcs[0].Position[2] : 160.0;
+        cfg.Mask.Rank = rank;
+        cfg.Mask.CellPitchMm = cell;
+        cfg.Geometry.MaskDetectorDistanceMm = d;
+        cfg.Geometry.SourceMaskDistanceMm = Math.Max(1.0, srcDist - d);
+        cfg.Detector.PixelsX = cfg.Detector.PixelsY = detN;
+        cfg.Detector.PixelPitchMm = pitch;
+
         if (bsr > 0.0)
             cfg.Background = new BackgroundConfig { BackgroundToSignalRatio = bsr, EnergyKeV = 200.0 };
         return cfg;
+    }
+
+    // ---- optics / presets tab ----------------------------------------------------------------------------
+
+    private void OptPreset_Changed(object sender, SelectionChangedEventArgs e)
+    {
+        string name = (OptPreset.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? "";
+        (int rank, double cell, double d, int n, double pitch) p = name switch
+        {
+            "Baseline (coarse)" => (7, 1.0, 60, 12, 1.0),
+            "Wide FOV" => (17, 1.0, 50, 24, 0.8),
+            "High-res" => (17, 0.5, 100, 28, 0.4),
+            _ => (13, 0.7, 80, 20, 0.6),   // Sharp (default)
+        };
+        OptRank.Text = p.rank.ToString(CultureInfo.InvariantCulture);
+        OptCell.Text = p.cell.ToString(CultureInfo.InvariantCulture);
+        OptD.Text = p.d.ToString(CultureInfo.InvariantCulture);
+        OptDetN.Text = p.n.ToString(CultureInfo.InvariantCulture);
+        OptDetPitch.Text = p.pitch.ToString(CultureInfo.InvariantCulture);
+        UpdateOpticsReadout();
+        Log($"Optics preset: {name} — rank {p.rank}, cell {p.cell} mm, D {p.d} mm, det {p.n}×{p.n} @ {p.pitch} mm");
+    }
+
+    // Live derived numbers from the current optics fields (no MC — just the geometry formulas).
+    private void UpdateOpticsReadout()
+    {
+        if (OptReadout == null) return;
+        int rank = NearestPrime((int)ParseD(OptRank.Text, 13));
+        double cell = ParseD(OptCell.Text, 0.7);
+        double d = ParseD(OptD.Text, 80);
+        int n = (int)ParseD(OptDetN.Text, 20);
+        double pitch = ParseD(OptDetPitch.Text, 0.6);
+        double srcDist = _scene.Count > 0 ? _scene[0].DistanceMm : 160.0;
+        if (srcDist <= d) srcDist = d + 1.0;
+
+        double res = cell * srcDist / d;                       // resolution element at the source plane
+        double fcfovHalf = rank * res / 2.0;
+        double shadow = cell * srcDist / (srcDist - d);        // mask-cell shadow at the detector
+        double samples = shadow / pitch;
+        double detSize = n * pitch;
+
+        OptReadout.Text =
+            $"resolution element ≈ {res:F2} mm      FCFOV ± {fcfovHalf:F1} mm   (rank {rank})\n" +
+            $"detector {n}×{n} @ {pitch:F2} mm = {detSize:F1} mm across\n" +
+            $"Nyquist {samples:F1} samples/cell  {(samples >= 2.0 ? "✓" : "⚠ undersampled — finer pixel pitch")}\n" +
+            $"(focused on the first source at {srcDist:F0} mm)";
+        RedrawScene();   // keep the scene's FCFOV box in sync with the optics
+    }
+
+    private static int NearestPrime(int n)
+    {
+        if (n < 2) return 2;
+        for (int d = 0; d < n + 2; d++)
+        {
+            if (IsPrime(n - d) && n - d >= 2) return n - d;
+            if (IsPrime(n + d)) return n + d;
+        }
+        return 2;
+    }
+
+    private static bool IsPrime(int n)
+    {
+        if (n < 2) return false;
+        for (int i = 2; (long)i * i <= n; i++)
+            if (n % i == 0) return false;
+        return true;
     }
 
     private double EmissionRatePerSec() => _scene.Sum(s => s.EmissionRatePerSec());
