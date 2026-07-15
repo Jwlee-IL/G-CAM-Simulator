@@ -68,8 +68,8 @@ public sealed class MixedFieldStudy
     /// <summary>The K strongest reconstruction peaks, each ≥ minSeparation apart (greedy non-max
     /// suppression: take the global max, blank a disk around it, repeat). For a clean MURA decode each
     /// source is a sharp peak, so this recovers well-separated multiple sources.</summary>
-    private static FoundSource[] TopPeaks(DetectorImage recon, double origin, double step,
-                                          int k, double minSeparationMm)
+    public static FoundSource[] TopPeaks(DetectorImage recon, double origin, double step,
+                                         int k, double minSeparationMm)
     {
         int w = recon.Width, h = recon.Height;
         var work = new double[w, h];

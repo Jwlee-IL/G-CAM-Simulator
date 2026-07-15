@@ -183,7 +183,7 @@
                         <Label Content="Mask–detector D (mm)" />
                         <TextBox x:Name="OptD" Text="80" />
                         <Label Content="Detector N (per side)" />
-                        <TextBox x:Name="OptDetN" Text="20" />
+                        <TextBox x:Name="OptDetN" Text="30" />
                         <Label Content="Pixel pitch (mm)" />
                         <TextBox x:Name="OptDetPitch" Text="0.6" />
                     </WrapPanel>

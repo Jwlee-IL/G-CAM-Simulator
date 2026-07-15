@@ -402,6 +402,13 @@ public partial class MainWindow : Window
         cfg.Detector.PixelsX = cfg.Detector.PixelsY = detN;
         cfg.Detector.PixelPitchMm = pitch;
 
+        // Non-cyclic (finite-mask) decode + recon kept just inside the FCFOV — suppresses the off-axis ghosts
+        // that a cyclic decode aliases in, so MULTIPLE off-axis sources each resolve to their own peak.
+        double frac = d / Math.Max(d + 1.0, srcDist);
+        cfg.Decoder.Cyclic = false;
+        cfg.Decoder.ReconHalfExtentMm = 0.95 * rank * cell / frac / 2.0;
+        cfg.Decoder.ReconStepMm = Math.Max(0.2, cell / frac / 4.0);
+
         if (bsr > 0.0)
             cfg.Background = new BackgroundConfig { BackgroundToSignalRatio = bsr, EnergyKeV = 200.0 };
         return cfg;
@@ -412,12 +419,14 @@ public partial class MainWindow : Window
     private void OptPreset_Changed(object sender, SelectionChangedEventArgs e)
     {
         string name = (OptPreset.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? "";
+        // Each preset keeps the detector spanning ~one mask period (det ≈ rank·cell·srcDist/S); otherwise
+        // off-axis / multiple sources decode badly. Verified in the MC (mixedfield, 3 sources).
         (int rank, double cell, double d, int n, double pitch) p = name switch
         {
             "Baseline (coarse)" => (7, 1.0, 60, 12, 1.0),
-            "Wide FOV" => (17, 1.0, 50, 24, 0.8),
-            "High-res" => (17, 0.5, 100, 28, 0.4),
-            _ => (13, 0.7, 80, 20, 0.6),   // Sharp (default)
+            "Wide FOV" => (17, 1.0, 50, 34, 0.75),
+            "High-res" => (13, 0.5, 100, 44, 0.4),
+            _ => (13, 0.7, 80, 30, 0.6),   // Sharp (default)
         };
         OptRank.Text = p.rank.ToString(CultureInfo.InvariantCulture);
         OptCell.Text = p.cell.ToString(CultureInfo.InvariantCulture);
@@ -445,11 +454,15 @@ public partial class MainWindow : Window
         double shadow = cell * srcDist / (srcDist - d);        // mask-cell shadow at the detector
         double samples = shadow / pitch;
         double detSize = n * pitch;
+        double period = rank * shadow;                         // one mask period at the detector
+        double coverage = detSize / period;                    // detector must span ~1 period to decode well
 
         OptReadout.Text =
             $"resolution element ≈ {res:F2} mm      FCFOV ± {fcfovHalf:F1} mm   (rank {rank})\n" +
             $"detector {n}×{n} @ {pitch:F2} mm = {detSize:F1} mm across\n" +
             $"Nyquist {samples:F1} samples/cell  {(samples >= 2.0 ? "✓" : "⚠ undersampled — finer pixel pitch")}\n" +
+            $"detector spans {coverage:F2} mask periods  " +
+            $"{(coverage is >= 0.9 and <= 1.4 ? "✓" : "⚠ set N so detector ≈ 1 period, else off-axis sources decode badly")}\n" +
             $"(focused on the first source at {srcDist:F0} mm)";
         RedrawScene();   // keep the scene's FCFOV box in sync with the optics
     }
@@ -628,13 +641,24 @@ public partial class MainWindow : Window
         var recon = dec.Reconstruction;
         double left = dec.ReconOriginMm, right = dec.ReconOriginMm + (recon.Width - 1) * dec.ReconStepMm;
         double bottom = dec.ReconOriginMm, top = dec.ReconOriginMm + (recon.Height - 1) * dec.ReconStepMm;
+
+        // A coded aperture images every source at once — find the K strongest peaks (K = source count) so
+        // each source is marked, not just the single global maximum.
+        int k = Math.Max(1, _scene.Count);
+        var peaks = MixedFieldStudy.TopPeaks(recon, dec.ReconOriginMm, dec.ReconStepMm, k, minSeparationMm: 2.5);
+        var estList = peaks.Select(pk => (pk.Xmm, pk.Ymm)).ToList();
+
         DrawHeatmap(ImgReconPlot, ToGrid(recon), left, right, bottom, top,
-            "Decoded reconstruction (× sources, ○ estimate)", "x (mm)", "y (mm)",
-            _liveTruePos, (dec.Estimate.Position.X, dec.Estimate.Position.Y));
+            "Decoded reconstruction (× sources, ○ found)", "x (mm)", "y (mm)",
+            _liveTruePos, estList);
         SetReconOverlay(recon, dec.ReconOriginMm, dec.ReconStepMm);
         RedrawScene();
-        ImgStatus.Text = $"estimate ({dec.Estimate.Position.X:F2}, {dec.Estimate.Position.Y:F2}) mm — sharpens as counts build";
-        _liveDetail = $"est ({dec.Estimate.Position.X:F1}, {dec.Estimate.Position.Y:F1})mm";
+
+        var truth = _scene.Select(s => new[] { s.X, s.Y }).ToArray();
+        var matches = MixedFieldStudy.MatchOneToOne(truth, peaks);
+        double worst = matches.Length > 0 ? matches.Max(m => m.ErrorMm) : 0.0;
+        ImgStatus.Text = $"{peaks.Length} source(s) found · worst error {worst:F2} mm — sharpens as counts build";
+        _liveDetail = $"{peaks.Length} found, worst {worst:F1}mm";
     }
 
     private void RenderSpectrum()
@@ -764,7 +788,7 @@ public partial class MainWindow : Window
 
     private static void DrawHeatmap(ScottPlot.WPF.WpfPlot view, double[,] grid,
         double left, double right, double bottom, double top, string title, string xlabel, string ylabel,
-        IReadOnlyList<(double x, double y)>? truePositions, (double x, double y)? estPos)
+        IReadOnlyList<(double x, double y)>? truePositions, IReadOnlyList<(double x, double y)>? estPositions)
     {
         var p = view.Plot;
         p.Clear();
@@ -782,13 +806,14 @@ public partial class MainWindow : Window
                 m.Size = 16;
                 m.Shape = ScottPlot.MarkerShape.Cross;
             }
-        if (estPos is { } ep)
-        {
-            var m = p.Add.Marker(ep.x, ep.y);
-            m.Color = ScottPlot.Colors.Red;
-            m.Size = 18;
-            m.Shape = ScottPlot.MarkerShape.OpenCircle;
-        }
+        if (estPositions != null)
+            foreach (var ep in estPositions)
+            {
+                var m = p.Add.Marker(ep.x, ep.y);
+                m.Color = ScottPlot.Colors.Red;
+                m.Size = 18;
+                m.Shape = ScottPlot.MarkerShape.OpenCircle;
+            }
 
         p.Title(title);
         p.XLabel(xlabel);
