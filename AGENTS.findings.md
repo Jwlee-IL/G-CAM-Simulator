@@ -926,3 +926,37 @@ K = 1/τ_s in Q16, each stage feeding the next same sample) → a Gamma-shaped s
   ROM) and is rarely used in real FPGA DAQs — the recursive shapers (trapezoid, CR-RC) are the practical ones;
   theme 31 already establishes the cusp's near-optimal-ENC benchmark. So the RTL shaper family is
   trapezoid + pipelined-trapezoid + CR-RC (+ baseline restorer), with the cusp as the paper reference.
+
+## 34. WPF viewer app + native C# waveform + interactive source localization — `src/Genoray.MonteCarlo.Wpf`
+A ScottPlot WPF app (`Genoray.MonteCarlo.Wpf`, net9.0-windows) that RUNS the sim interactively — a scene
+editor over the tabs plus Waveform / Imaging / Spectrum / Optics tabs. The build arc surfaced real physics
+(several corrected my own mistakes — GUI can't be self-verified, so every claim was MC-checked):
+- **Native C# waveform** (`Detector/Waveform.cs`): bi-exp rasterizer + trapezoidal & CR-RC^4 shapers + BLR +
+  ADC presets, **bit-exact to the Python RTL reference** (signed `>>` = SV `>>>`), cross-checked against
+  Python golden values (`WaveformTests`, 8). Note: the CR-RC pole-zero constant is `round(e^-0.2·65536)=53656`,
+  not the `53667` in the cocotb params/comment (self-consistent there, but drifted from the math).
+- **One acquisition drives all tabs**: ΔN detected events/tick feed the flood map, energy histogram, and
+  scope from the SAME stream (not one sim per tab); only the visible tab renders. Live count accumulation
+  (Poisson on a normalized shape), realistic detector energy resolution on the spectrum (1/√E), a photopeak
+  window PER emission line.
+- **Per-source distance** (`DefaultSimulationFactory` honours `Position[2]>0`): real 1/r² efficiency + depth
+  defocus (`SourceDistanceTests`).
+- **Multi-source localization**: needs a NON-CYCLIC decode (cyclic aliases off-axis into ghosts) + the
+  detector must span ~ONE mask period (`det ≈ rank·cell·srcDist/S`) — my first "Sharp" preset undersized the
+  detector (12 mm vs 18 mm period) and wrecked off-axis decoding (3-source worst error 14 → 0.29 mm once
+  fixed). Optics tab exposes rank/cell/D/detector with a live readout (resolution, FCFOV, Nyquist, period
+  coverage) + presets. `MixedFieldStudy.TopPeaks` marks every source.
+- **Depth is weak by physics**: a coded aperture gives DIRECTION exactly; distance only comes from
+  depth-from-focus (`BestFocalMm`/`LocalizeDepths` — sharpest-plane = distance, metric = peak SNR, comparable
+  across planes; raw peak height is not). Depth FWHM grows ~z^1.5 and the ±10% 3D range is only ~0.15 m for
+  the 18 mm mask (`DepthDesignStudy` / `montecarlo depthdesign`): range extends with aperture only via MORE
+  CELLS (higher rank), not a coarser pitch (aperture gain cancels the lateral-resolution loss). So a handheld
+  3D-locates only near/weak sources; far needs a big mask.
+- **Realistic ~1 m default** (was ~16 cm): source distance 1 m, focal/distance sliders 200–3000 mm, canvas
+  auto-fits the FCFOV (grows ∝ distance), activity default 500 µCi (a 1 m source is ~40× dimmer, 1/r²). At
+  1 m the optics still localize laterally to ~1 mm (`RangeLocalizationTests`); depth stays coarse.
+- **Rangefinder + focus fusion** (matches the real instrument's laser module): the focal control IS the
+  external rangefinder range (aperture gives direction, this scales it to position); `MixedFieldStudy.CheckFocus`
+  cross-checks it against depth-from-focus — near it refines the range, far it only flags "target off the laser
+  surface" (their error modes are orthogonal: laser ranges the surface it HIT, focus measures the SOURCE).
+  `FocusFusionTests`.
