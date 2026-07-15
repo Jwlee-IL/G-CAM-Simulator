@@ -188,6 +188,16 @@
                         <TextBox x:Name="OptDetPitch" Text="0.6" />
                     </WrapPanel>
 
+                    <StackPanel Orientation="Horizontal" Margin="0,2">
+                        <Label Content="Focal distance (mm)" />
+                        <Slider x:Name="OptFocal" Minimum="50" Maximum="400" Value="160" Width="260"
+                                VerticalAlignment="Center" TickFrequency="10" IsSnapToTickEnabled="True"
+                                ValueChanged="OptFocal_Changed" />
+                        <TextBlock x:Name="OptFocalLabel" VerticalAlignment="Center" Margin="8,0" />
+                        <TextBlock Text="  refocuses the live image — each source sharpens at its own distance"
+                                   VerticalAlignment="Center" Foreground="#888" />
+                    </StackPanel>
+
                     <Border BorderBrush="#DDD" BorderThickness="1" Padding="10" Margin="0,6" Background="#F7F7F7">
                         <TextBlock x:Name="OptReadout" FontFamily="Consolas" FontSize="12" />
                     </Border>

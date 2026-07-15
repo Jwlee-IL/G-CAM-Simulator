@@ -39,6 +39,7 @@ public partial class MainWindow : Window
     private DetectorImage? _floodAccum;      // imaging: accumulated flood map
     private double[]? _floodShape;           // imaging: per-pixel mean, Σ = 1
     private IDecoder? _liveDecoder;
+    private SimulationConfig? _liveCfg;      // the config in flight, so refocusing can rebuild the decoder
     private IReadOnlyList<(double x, double y)>? _liveTruePos;
     private double[]? _specPdf, _specCounts, _specCenters;   // spectrum accumulators
     private List<(double lo, double hi, double energy)> _specWindows = [];   // one ROI per emission line
@@ -64,6 +65,7 @@ public partial class MainWindow : Window
 
         foreach (var box in new[] { OptRank, OptCell, OptD, OptDetN, OptDetPitch })
             box.TextChanged += (_, _) => UpdateOpticsReadout();
+        OptFocalLabel.Text = $"{OptFocal.Value:F0} mm";
         UpdateOpticsReadout();
 
         Log("Ready. Place sources on the scene, then press Simulate.");
@@ -272,9 +274,9 @@ public partial class MainWindow : Window
         int rank = NearestPrime((int)ParseD(OptRank.Text, 13));
         double cell = ParseD(OptCell.Text, 0.7);
         double d = ParseD(OptD.Text, 80);
-        double sourceZ = _scene.Count > 0 ? _scene[0].DistanceMm : 160.0;
-        if (sourceZ <= d) sourceZ = d + 1.0;
-        double period = rank * cell / (d / sourceZ);
+        double focalZ = OptFocal?.Value ?? 160.0;
+        if (focalZ <= d) focalZ = d + 1.0;
+        double period = rank * cell / (d / focalZ);
         return period / 2.0;
     }
 
@@ -394,20 +396,18 @@ public partial class MainWindow : Window
         double d = Math.Max(1.0, ParseD(OptD.Text, 80));
         int detN = Math.Clamp((int)ParseD(OptDetN.Text, 20), 4, 64);
         double pitch = Math.Max(0.05, ParseD(OptDetPitch.Text, 0.6));
-        double srcDist = srcs.Length > 0 ? srcs[0].Position[2] : 160.0;
+        double focalZ = OptFocal?.Value ?? 160.0;      // the plane the decoder focuses on (sources keep their z)
         cfg.Mask.Rank = rank;
         cfg.Mask.CellPitchMm = cell;
         cfg.Geometry.MaskDetectorDistanceMm = d;
-        cfg.Geometry.SourceMaskDistanceMm = Math.Max(1.0, srcDist - d);
+        cfg.Geometry.SourceMaskDistanceMm = Math.Max(1.0, focalZ - d);
         cfg.Detector.PixelsX = cfg.Detector.PixelsY = detN;
         cfg.Detector.PixelPitchMm = pitch;
 
         // Non-cyclic (finite-mask) decode + recon kept just inside the FCFOV — suppresses the off-axis ghosts
         // that a cyclic decode aliases in, so MULTIPLE off-axis sources each resolve to their own peak.
-        double frac = d / Math.Max(d + 1.0, srcDist);
         cfg.Decoder.Cyclic = false;
-        cfg.Decoder.ReconHalfExtentMm = 0.95 * rank * cell / frac / 2.0;
-        cfg.Decoder.ReconStepMm = Math.Max(0.2, cell / frac / 4.0);
+        SetReconExtent(cfg, focalZ);
 
         if (bsr > 0.0)
             cfg.Background = new BackgroundConfig { BackgroundToSignalRatio = bsr, EnergyKeV = 200.0 };
@@ -446,12 +446,12 @@ public partial class MainWindow : Window
         double d = ParseD(OptD.Text, 80);
         int n = (int)ParseD(OptDetN.Text, 20);
         double pitch = ParseD(OptDetPitch.Text, 0.6);
-        double srcDist = _scene.Count > 0 ? _scene[0].DistanceMm : 160.0;
-        if (srcDist <= d) srcDist = d + 1.0;
+        double focalZ = OptFocal?.Value ?? 160.0;
+        if (focalZ <= d) focalZ = d + 1.0;
 
-        double res = cell * srcDist / d;                       // resolution element at the source plane
+        double res = cell * focalZ / d;                        // resolution element at the focal plane
         double fcfovHalf = rank * res / 2.0;
-        double shadow = cell * srcDist / (srcDist - d);        // mask-cell shadow at the detector
+        double shadow = cell * focalZ / (focalZ - d);          // mask-cell shadow at the detector
         double samples = shadow / pitch;
         double detSize = n * pitch;
         double period = rank * shadow;                         // one mask period at the detector
@@ -463,7 +463,7 @@ public partial class MainWindow : Window
             $"Nyquist {samples:F1} samples/cell  {(samples >= 2.0 ? "✓" : "⚠ undersampled — finer pixel pitch")}\n" +
             $"detector spans {coverage:F2} mask periods  " +
             $"{(coverage is >= 0.9 and <= 1.4 ? "✓" : "⚠ set N so detector ≈ 1 period, else off-axis sources decode badly")}\n" +
-            $"(focused on the first source at {srcDist:F0} mm)";
+            $"(focal plane at {focalZ:F0} mm — sources at other distances defocus)";
         RedrawScene();   // keep the scene's FCFOV box in sync with the optics
     }
 
@@ -484,6 +484,37 @@ public partial class MainWindow : Window
         for (int i = 2; (long)i * i <= n; i++)
             if (n % i == 0) return false;
         return true;
+    }
+
+    private static void SetReconExtent(SimulationConfig cfg, double focalZ)
+    {
+        double d = cfg.Geometry.MaskDetectorDistanceMm;
+        double frac = d / Math.Max(d + 1.0, focalZ);
+        cfg.Decoder.ReconHalfExtentMm = 0.95 * cfg.Mask.Rank * cfg.Mask.CellPitchMm / frac / 2.0;
+        cfg.Decoder.ReconStepMm = Math.Max(0.2, cfg.Mask.CellPitchMm / frac / 4.0);
+    }
+
+    // Moving the focal slider only changes the DECODE (back-projection plane), not the flood map — so a live
+    // acquisition refocuses instantly (rebuild the decoder, re-decode the same accumulated counts). Sources at
+    // the chosen plane sharpen; sources at other distances defocus.
+    private void OptFocal_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (OptReadout == null) return;                 // still initializing
+        OptFocalLabel.Text = $"{OptFocal.Value:F0} mm";
+        UpdateOpticsReadout();
+        Refocus();
+    }
+
+    private void Refocus()
+    {
+        if (!_liveRunning || _liveCfg == null || _floodAccum == null) return;
+        double focalZ = OptFocal.Value;
+        var cfg = _liveCfg.Clone();
+        cfg.Geometry.SourceMaskDistanceMm = Math.Max(1.0, focalZ - cfg.Geometry.MaskDetectorDistanceMm);
+        SetReconExtent(cfg, focalZ);
+        _liveDecoder = new DefaultSimulationFactory().CreateDecoder(cfg);
+        _liveCfg = cfg;
+        if (MainTabs.SelectedIndex == 1) RenderImaging();   // re-decode the accumulated flood at the new plane
     }
 
     private double EmissionRatePerSec() => _scene.Sum(s => s.EmissionRatePerSec());
@@ -508,6 +539,7 @@ public partial class MainWindow : Window
         double windowFrac = ParseD(SpWindow.Text, 10) / 100.0;
         double resPct = ParseD(SpResolution.Text, 6);
         var cfg = ConfigFromScene(photons, bsr);
+        _liveCfg = cfg;                     // kept so the focal slider can rebuild the decoder without a new MC
         double emissionRate = EmissionRatePerSec();
         _liveTruePos = _scene.Select(s => (s.X, s.Y)).ToList();
         // Every distinct emission line across ALL sources gets its own photopeak window (ROI), so a mixed
