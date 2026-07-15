@@ -34,7 +34,6 @@ public partial class MainWindow : Window
     // Live (continuous) acquisition: one MC run fixes the shape, then a timer accumulates Poisson counts.
     private System.Windows.Threading.DispatcherTimer? _liveTimer;
     private bool _liveRunning;
-    private int _liveTab;                    // 1 = imaging, 2 = spectrum
     private double _liveRateCps, _liveElapsedSec, _liveTotalCounts, _liveSpeed;
     private IRandom? _liveRng;
     private DetectorImage? _floodAccum;      // imaging: accumulated flood map
@@ -43,6 +42,8 @@ public partial class MainWindow : Window
     private IReadOnlyList<(double x, double y)>? _liveTruePos;
     private double[]? _specPdf, _specCounts, _specCenters;   // spectrum accumulators
     private double _specWindowLo, _specWindowHi;
+    private double[]? _wfPool;               // waveform: this acquisition's deposit energies (scope source)
+    private IRandom? _wfRng;
     private int _liveTickCount;
     private string _liveDetail = "";
 
@@ -58,8 +59,8 @@ public partial class MainWindow : Window
         SceneCanvas.SizeChanged += (_, _) => RedrawScene();
         SceneCanvas.MouseMove += SceneCanvas_MouseMove;
         SceneCanvas.MouseLeftButtonUp += SceneCanvas_MouseUp;
-        // A live acquisition keeps running when you switch tabs (it accumulates for the tab it was started on);
-        // switch back to watch it, or press STOP to change what you acquire. No auto-stop on tab change.
+        // One acquisition drives every tab; switching tabs just re-renders the current state (no stop).
+        MainTabs.SelectionChanged += (_, e) => { if (e.Source is TabControl && _liveRunning) RenderVisibleTab(); };
         Log("Ready. Place sources on the scene, then press Simulate.");
     }
 
@@ -385,26 +386,23 @@ public partial class MainWindow : Window
 
     private double EmissionRatePerSec() => _scene.Sum(s => s.EmissionRatePerSec());
 
-    // ============================ SIMULATE dispatch ============================
+    // ============================ SIMULATE — one acquisition drives every tab ============================
 
     private async void Simulate_Click(object sender, RoutedEventArgs e)
     {
         if (_liveRunning) { StopLive(); return; }            // a running acquisition: this click stops it
         if (_scene.Count == 0) { MessageBox.Show("Add at least one source to the scene."); return; }
-
-        int tab = MainTabs.SelectedIndex;
-        if (tab == 0) { await RunWaveform(); return; }       // waveform: a µs snapshot, one-shot
-        await StartLive(tab);                                // imaging / spectrum: continuous accumulation
+        await StartLive();
     }
 
-    // ---- live acquisition ----
-
-    private async Task StartLive(int tab)
+    // One detector acquisition. Each tick, ΔN detected events feed the flood map (Imaging), the energy
+    // histogram (Spectrum) and the scope (Waveform) — the SAME event stream, three views. Only the visible
+    // tab is rendered each tick; switching tabs shows the current accumulated state immediately.
+    private async Task StartLive()
     {
-        _liveTab = tab;
         _liveSpeed = Math.Max(0.1, ParseD(LiveSpeed.Text, 10));
-        long photons = tab == 1 ? (long)ParseD(ImgPhotons.Text, 500_000) : 400_000;
-        double bsr = tab == 1 ? ParseD(ImgBsr.Text, 0) : 0.0;
+        long photons = (long)ParseD(ImgPhotons.Text, 500_000);
+        double bsr = ParseD(ImgBsr.Text, 0);
         double windowFrac = ParseD(SpWindow.Text, 10) / 100.0;
         double resPct = ParseD(SpResolution.Text, 6);
         var cfg = ConfigFromScene(photons, bsr);
@@ -416,8 +414,8 @@ public partial class MainWindow : Window
 
         SimulateButton.Content = "■  STOP";
         LiveStatus.Text = "preparing…";
-        Log($"▶ Start {(tab == 1 ? "Imaging" : "Spectrum")}  (speed ×{_liveSpeed:F0}) — {SceneSummary()}");
-        bool ok = await Task.Run(() => PrepareLive(tab, cfg, bsr, emissionRate, windowFrac, energyRef, maxE, resPct));
+        Log($"▶ Start acquisition  (speed ×{_liveSpeed:F0}) — {SceneSummary()}");
+        bool ok = await Task.Run(() => PrepareLive(cfg, bsr, emissionRate, windowFrac, energyRef, maxE, resPct));
         if (!ok)
         {
             SimulateButton.Content = "▶  SIMULATE";
@@ -431,14 +429,17 @@ public partial class MainWindow : Window
         _liveTotalCounts = 0;
         _liveTickCount = 0;
         _liveRng = new DefaultRandom(20260715);
+        _wfRng = new DefaultRandom(555);
         _liveRunning = true;
+        RenderVisibleTab();
         _liveTimer = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromMilliseconds(250) };
         _liveTimer.Tick += LiveTimer_Tick;
         _liveTimer.Start();
     }
 
-    // Off the UI thread: one MC run fixes the accumulation SHAPE (normalized) and the detected count rate.
-    private bool PrepareLive(int tab, SimulationConfig cfg, double bsr, double emissionRate,
+    // Off the UI thread: one MC run fixes the flood SHAPE + count rate and the deposit pool (spectrum PDF +
+    // scope energies) — everything every tab needs, from a single acquisition.
+    private bool PrepareLive(SimulationConfig cfg, double bsr, double emissionRate,
                              double windowFrac, double energyRef, double maxE, double resPct)
     {
         var factory = new DefaultSimulationFactory();
@@ -447,35 +448,35 @@ public partial class MainWindow : Window
         _liveRateCps = emissionRate * eff;
         if (!(_liveRateCps > 0.0)) return false;
 
-        if (tab == 1)
-        {
-            var mean = res.DetectorImage;
-            int w = mean.Width, h = mean.Height;
-            double ped = bsr > 0.0 ? SimBackground.PedestalPerPixel(bsr, SumImage(mean), w * h) : 0.0;
-            var shape = new double[w * h];
-            double sum = 0;
-            for (int y = 0; y < h; y++)
-                for (int x = 0; x < w; x++) { double v = mean[x, y] + ped; shape[y * w + x] = v; sum += v; }
-            if (!(sum > 0.0)) return false;
-            for (int i = 0; i < shape.Length; i++) shape[i] /= sum;
-            _floodShape = shape;
-            _floodAccum = new DetectorImage(w, h);
-            _liveDecoder = factory.CreateDecoder(cfg);
-            return _liveDecoder != null;
-        }
+        // Imaging: normalized flood shape + decoder.
+        var mean = res.DetectorImage;
+        int w = mean.Width, h = mean.Height;
+        double ped = bsr > 0.0 ? SimBackground.PedestalPerPixel(bsr, SumImage(mean), w * h) : 0.0;
+        var shape = new double[w * h];
+        double sum = 0;
+        for (int y = 0; y < h; y++)
+            for (int x = 0; x < w; x++) { double v = mean[x, y] + ped; shape[y * w + x] = v; sum += v; }
+        if (!(sum > 0.0)) return false;
+        for (int i = 0; i < shape.Length; i++) shape[i] /= sum;
+        _floodShape = shape;
+        _floodAccum = new DetectorImage(w, h);
+        _liveDecoder = factory.CreateDecoder(cfg);
+        if (_liveDecoder == null) return false;
 
+        // Deposit pool (shared): raw energies drive the Waveform scope; resolution-smeared energies build the
+        // Spectrum PDF — same detected events, two views.
         var rawPool = new EventStreamStudy().Generate(cfg, Math.Max(_liveRateCps, 1.0), AdcSampleRateHz, 20000)
                           .Select(ev => ev.EnergyKeV).ToArray();
         if (rawPool.Length == 0) return false;
-        // Detector energy resolution: smear each true deposit by the front-end's photostatistics (1/√E), so
-        // the spectrum shows realistic Gaussian-broadened photopeaks instead of artificially sharp lines.
-        var pool = ApplyResolution(rawPool, resPct, seed: 909);
+        _wfPool = rawPool;
+
+        var smeared = ApplyResolution(rawPool, resPct, seed: 909);
         const int bins = 128;
         double bw = maxE / bins;
         var pdf = new double[bins];
         var ctr = new double[bins];
-        foreach (var d in pool) { int b = (int)(d / bw); if (b >= 0 && b < bins) pdf[b] += 1; }
-        for (int i = 0; i < bins; i++) { ctr[i] = (i + 0.5) * bw; pdf[i] /= pool.Length; }
+        foreach (var d in smeared) { int b = (int)(d / bw); if (b >= 0 && b < bins) pdf[b] += 1; }
+        for (int i = 0; i < bins; i++) { ctr[i] = (i + 0.5) * bw; pdf[i] /= smeared.Length; }
         _specPdf = pdf;
         _specCounts = new double[bins];
         _specCenters = ctr;
@@ -491,7 +492,8 @@ public partial class MainWindow : Window
         double dN = _liveRateCps * dt;
         var rng = _liveRng!;
 
-        if (_liveTab == 1 && _floodShape != null && _floodAccum != null && _liveDecoder != null)
+        // Accumulate the SAME ΔN detected events into every view's store (cheap); render only the visible tab.
+        if (_floodShape != null && _floodAccum != null)
         {
             int w = _floodAccum.Width, h = _floodAccum.Height;
             for (int y = 0; y < h; y++)
@@ -500,42 +502,100 @@ public partial class MainWindow : Window
                     int add = Sampling.Poisson(rng, _floodShape[y * w + x] * dN);
                     if (add != 0) { _floodAccum.Add(x, y, add); _liveTotalCounts += add; }
                 }
-
-            var dec = _liveDecoder.Decode(_floodAccum);
-            DrawHeatmap(ImgFloodPlot, ToGrid(_floodAccum), 0, w, 0, h,
-                "Detector flood map (counts)", "pixel x", "pixel y", null, null);
-            var recon = dec.Reconstruction;
-            double left = dec.ReconOriginMm, right = dec.ReconOriginMm + (recon.Width - 1) * dec.ReconStepMm;
-            double bottom = dec.ReconOriginMm, top = dec.ReconOriginMm + (recon.Height - 1) * dec.ReconStepMm;
-            DrawHeatmap(ImgReconPlot, ToGrid(recon), left, right, bottom, top,
-                "Decoded reconstruction (× sources, ○ estimate)", "x (mm)", "y (mm)",
-                _liveTruePos, (dec.Estimate.Position.X, dec.Estimate.Position.Y));
-            SetReconOverlay(recon, dec.ReconOriginMm, dec.ReconStepMm);
-            RedrawScene();
-            ImgStatus.Text = $"estimate ({dec.Estimate.Position.X:F2}, {dec.Estimate.Position.Y:F2}) mm — sharpens as counts build";
-            _liveDetail = $"est ({dec.Estimate.Position.X:F1}, {dec.Estimate.Position.Y:F1})mm";
         }
-        else if (_liveTab == 2 && _specPdf != null && _specCounts != null && _specCenters != null)
-        {
-            double win = 0;
+        if (_specPdf != null && _specCounts != null)
             for (int i = 0; i < _specCounts.Length; i++)
-            {
-                int add = Sampling.Poisson(rng, _specPdf[i] * dN);
-                if (add != 0) { _specCounts[i] += add; _liveTotalCounts += add; }
-                if (_specCenters[i] >= _specWindowLo && _specCenters[i] <= _specWindowHi) win += _specCounts[i];
-            }
-            DrawSpectrum(SpPlot, _specCenters, _specCounts, _specWindowLo, _specWindowHi,
-                "Energy spectrum — detector resolution applied (accumulating)", "measured energy (keV)", "counts");
-            SpStatus.Text = _liveTotalCounts > 0
-                ? $"±window holds {win / _liveTotalCounts:P0} of {_liveTotalCounts:N0} counts"
-                : "";
-            _liveDetail = _liveTotalCounts > 0 ? $"{win / _liveTotalCounts:P0} in window" : "";
-        }
+                _specCounts[i] += Sampling.Poisson(rng, _specPdf[i] * dN);
 
-        LiveStatus.Text = $"[{(_liveTab == 1 ? "Imaging" : "Spectrum")}]  t = {_liveElapsedSec:F0} s   ·   " +
-                          $"{_liveTotalCounts:N0} counts   ·   {_liveRateCps:F0} cps detected";
+        RenderVisibleTab();
+
+        LiveStatus.Text = $"t = {_liveElapsedSec:F0} s   ·   {_liveTotalCounts:N0} counts   ·   {_liveRateCps:F0} cps detected";
         if (++_liveTickCount % 8 == 0)
             Log($"  t={_liveElapsedSec:F0}s   {_liveTotalCounts:N0} counts   {_liveDetail}");
+    }
+
+    // ---- per-tab rendering (all read the same live acquisition state) ----
+
+    private void RenderVisibleTab()
+    {
+        switch (MainTabs.SelectedIndex)
+        {
+            case 0: RenderWaveform(); break;
+            case 1: RenderImaging(); break;
+            case 2: RenderSpectrum(); break;
+        }
+    }
+
+    private void RenderImaging()
+    {
+        if (_floodAccum == null || _liveDecoder == null) return;
+        int w = _floodAccum.Width, h = _floodAccum.Height;
+        var dec = _liveDecoder.Decode(_floodAccum);
+        DrawHeatmap(ImgFloodPlot, ToGrid(_floodAccum), 0, w, 0, h,
+            "Detector flood map (counts)", "pixel x", "pixel y", null, null);
+        var recon = dec.Reconstruction;
+        double left = dec.ReconOriginMm, right = dec.ReconOriginMm + (recon.Width - 1) * dec.ReconStepMm;
+        double bottom = dec.ReconOriginMm, top = dec.ReconOriginMm + (recon.Height - 1) * dec.ReconStepMm;
+        DrawHeatmap(ImgReconPlot, ToGrid(recon), left, right, bottom, top,
+            "Decoded reconstruction (× sources, ○ estimate)", "x (mm)", "y (mm)",
+            _liveTruePos, (dec.Estimate.Position.X, dec.Estimate.Position.Y));
+        SetReconOverlay(recon, dec.ReconOriginMm, dec.ReconStepMm);
+        RedrawScene();
+        ImgStatus.Text = $"estimate ({dec.Estimate.Position.X:F2}, {dec.Estimate.Position.Y:F2}) mm — sharpens as counts build";
+        _liveDetail = $"est ({dec.Estimate.Position.X:F1}, {dec.Estimate.Position.Y:F1})mm";
+    }
+
+    private void RenderSpectrum()
+    {
+        if (_specCounts == null || _specCenters == null) return;
+        double win = 0, tot = 0;
+        for (int i = 0; i < _specCounts.Length; i++)
+        {
+            tot += _specCounts[i];
+            if (_specCenters[i] >= _specWindowLo && _specCenters[i] <= _specWindowHi) win += _specCounts[i];
+        }
+        DrawSpectrum(SpPlot, _specCenters, _specCounts, _specWindowLo, _specWindowHi,
+            "Energy spectrum — detector resolution applied (accumulating)", "measured energy (keV)", "counts");
+        SpStatus.Text = tot > 0 ? $"±window holds {win / tot:P0} of {tot:N0} counts" : "";
+        if (tot > 0) _liveDetail = $"{win / tot:P0} in window";
+    }
+
+    private void RenderWaveform()
+    {
+        if (_wfPool == null || _wfPool.Length == 0) return;
+        double scopeCps = Math.Max(1.0, ParseD(WfRate.Text, 50)) * 1000.0;   // scope time-zoom (see the label)
+        int nEvents = Math.Clamp(ParseI(WfEvents.Text, 40), 1, 4000);
+        bool realistic = WfRealistic.IsChecked == true;
+        bool crrc = WfShaper.SelectedIndex == 1;
+        var rng = _wfRng ??= new DefaultRandom(555);
+
+        // Sample nEvents from THIS acquisition's deposit pool, spaced by the scope rate (exponential arrivals).
+        double meanGap = AdcSampleRateHz / scopeCps;
+        var stream = new List<(long, double)>(nEvents);
+        long t = (long)(meanGap * 0.5);
+        for (int i = 0; i < nEvents; i++)
+        {
+            double energy = _wfPool[(int)(rng.NextDouble() * _wfPool.Length)];
+            stream.Add((t, energy));
+            double gap = -Math.Log(1.0 - rng.NextDouble()) * meanGap;
+            t += (long)Math.Max(1.0, gap);
+        }
+
+        var preset = Waveform.DefaultAdc;
+        int[] wave = realistic
+            ? Waveform.Rasterize(stream, preset)
+            : Waveform.Rasterize(stream, preset, tauRise: 0.0, noiseKev: 0.0, intrinsicFwhm: 0.0);
+        long[] sh = crrc ? Waveform.CrrcInt(wave) : Waveform.TrapShape(wave);
+
+        DrawSignal(WfAdcPlot, ToD(wave),
+            "ADC waveform — this acquisition's events (bi-exp pulses, pile-up, noise, clip)",
+            "sample  (8 ns @ 125 MSPS)", "ADC code");
+        DrawSignal(WfShapedPlot, ToD(sh),
+            (crrc ? "CR-RC^4" : "Trapezoidal") + " shaped  (flat top ∝ deposited energy)",
+            "sample", "shaper output");
+        WfStatus.Text = $"{nEvents} events @ scope rate {scopeCps / 1000:F0} kcps  ·  " +
+                        $"isotopes: {string.Join(", ", _scene.Select(s => s.Isotope).Distinct())}";
+        _liveDetail = $"waveform peak {ToD(sh).Max():F0}";
     }
 
     private void StopLive()
@@ -571,44 +631,6 @@ public partial class MainWindow : Window
             outp[i] = m < 0.0 ? 0.0 : m;
         }
         return outp;
-    }
-
-    private async Task RunWaveform()
-    {
-        double rateKcps = ParseD(WfRate.Text, 50);
-        int nEvents = Math.Clamp(ParseI(WfEvents.Text, 40), 1, 4000);
-        bool realistic = WfRealistic.IsChecked == true;
-        bool crrc = WfShaper.SelectedIndex == 1;
-        var cfg = ConfigFromScene(200_000);
-
-        WfStatus.Text = "running…";
-        Log($"▶ Waveform: {nEvents} events @ {rateKcps:F0} kcps, {(crrc ? "CR-RC^4" : "Trapezoidal")}" +
-            $"{(realistic ? ", realistic front-end" : ", ideal")} — {SceneSummary()}");
-        try
-        {
-            var (adc, shaped) = await Task.Run(() =>
-            {
-                var events = new EventStreamStudy().Generate(cfg, rateKcps * 1000.0, AdcSampleRateHz, nEvents);
-                var stream = events.Select(ev => (ev.ArrivalSample, ev.EnergyKeV)).ToList();
-                var preset = Waveform.DefaultAdc;
-                int[] wave = realistic
-                    ? Waveform.Rasterize(stream, preset)
-                    : Waveform.Rasterize(stream, preset, tauRise: 0.0, noiseKev: 0.0, intrinsicFwhm: 0.0);
-                long[] sh = crrc ? Waveform.CrrcInt(wave) : Waveform.TrapShape(wave);
-                return (wave, sh);
-            });
-
-            DrawSignal(WfAdcPlot, ToD(adc),
-                "ADC waveform — scene sources (bi-exp pulses, pile-up, noise, clip)",
-                "sample  (8 ns @ 125 MSPS)", "ADC code");
-            DrawSignal(WfShapedPlot, ToD(shaped),
-                (crrc ? "CR-RC^4" : "Trapezoidal") + " shaped  (flat top ∝ deposited energy)",
-                "sample", "shaper output");
-            WfStatus.Text = $"{nEvents} events @ {rateKcps:F0} kcps display rate  ·  " +
-                            $"isotopes: {string.Join(", ", _scene.Select(s => s.Isotope).Distinct())}";
-            Log($"  waveform done — peak ADC {ToD(adc).Max():F0}, shaped peak {ToD(shaped).Max():F0}");
-        }
-        catch (Exception ex) { WfStatus.Text = "error: " + ex.Message; Log("  ✗ waveform error: " + ex.Message); }
     }
 
     // ---- plotting helpers --------------------------------------------------------------------------------

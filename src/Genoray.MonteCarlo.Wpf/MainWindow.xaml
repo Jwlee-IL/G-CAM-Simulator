@@ -101,7 +101,7 @@
             <TabItem Header="Waveform">
                 <DockPanel>
                     <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="4,6">
-                        <Label Content="Display rate (kcps)" />
+                        <Label Content="Scope rate (kcps)" />
                         <TextBox x:Name="WfRate" Text="50" />
                         <Label Content="Events" />
                         <TextBox x:Name="WfEvents" Text="40" />
