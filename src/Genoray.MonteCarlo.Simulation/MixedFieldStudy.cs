@@ -100,6 +100,76 @@ public sealed class MixedFieldStudy
         return peaks.ToArray();
     }
 
+    /// <summary>One source localized in 3D: lateral (mm) + estimated distance from the detector (mm).</summary>
+    public sealed record DepthPeak(double Xmm, double Ymm, double Zmm, double Value);
+
+    /// <summary>Per-source DEPTH from a single flood map by refocusing: decode the SAME flood at a sweep of
+    /// focal planes, track each source's peak across planes (it drifts laterally with magnification), and take
+    /// the plane where its peak is SHARPEST (highest) as that source's distance — a source is in focus only at
+    /// its own depth. No new MC: only the decode changes per plane. Returns the K strongest 3D peaks.</summary>
+    public static DepthPeak[] LocalizeDepths(DetectorImage flood, SimulationConfig baseCfg,
+        ISimulationFactory factory, int k, double zMin, double zMax, int steps,
+        double gateMm = 4.0, double minSeparationMm = 2.5)
+    {
+        double d = baseCfg.Geometry.MaskDetectorDistanceMm;
+        double gate2 = gateMm * gateMm;
+
+        // Peaks at each focal plane. The metric is peak SNR = (peak − mean)/std of the reconstruction, which is
+        // comparable across planes (raw peak height is NOT — the recon grid and scale change with the plane).
+        // A source is a SHARP (high-SNR) peak only at its own depth; off-focus it smears to a low-SNR blob.
+        var perFocal = new List<(double z, List<DepthPeak> peaks)>(steps);
+        for (int s = 0; s < steps; s++)
+        {
+            double z = steps > 1 ? zMin + (zMax - zMin) * s / (steps - 1) : zMin;
+            var cfg = baseCfg.Clone();
+            cfg.Geometry.SourceMaskDistanceMm = Math.Max(1.0, z - d);
+            double frac = d / Math.Max(d + 1.0, z);
+            cfg.Decoder.ReconHalfExtentMm = 0.95 * cfg.Mask.Rank * cfg.Mask.CellPitchMm / frac / 2.0;
+            cfg.Decoder.ReconStepMm = Math.Max(0.2, cfg.Mask.CellPitchMm / frac / 4.0);
+            var dec = factory.CreateDecoder(cfg)!.Decode(flood);
+            var recon = dec.Reconstruction;
+
+            double sum = 0, sum2 = 0;
+            int n = recon.Width * recon.Height;
+            foreach (var v in recon.Raw) { sum += v; sum2 += v * v; }
+            double mean = sum / n;
+            double std = Math.Sqrt(Math.Max(1e-9, sum2 / n - mean * mean));
+
+            var dps = TopPeaks(recon, dec.ReconOriginMm, dec.ReconStepMm, k, minSeparationMm)
+                .Select(p => new DepthPeak(p.Xmm, p.Ymm, z, (p.Value - mean) / std))
+                .ToList();
+            perFocal.Add((z, dps));
+        }
+
+        // Greedy tracking: link each plane's peaks to the nearest open track head (sharpest peaks claim first).
+        var tracks = new List<List<DepthPeak>>();
+        foreach (var (z, peaks) in perFocal)
+        {
+            var used = new HashSet<List<DepthPeak>>();
+            foreach (var cand in peaks.OrderByDescending(q => q.Value))
+            {
+                List<DepthPeak>? best = null;
+                double bestD = gate2;
+                foreach (var t in tracks)
+                {
+                    if (used.Contains(t)) continue;
+                    var h = t[^1];
+                    double dd = (h.Xmm - cand.Xmm) * (h.Xmm - cand.Xmm) + (h.Ymm - cand.Ymm) * (h.Ymm - cand.Ymm);
+                    if (dd < bestD) { bestD = dd; best = t; }
+                }
+                if (best != null) { best.Add(cand); used.Add(best); }
+                else tracks.Add([cand]);
+            }
+        }
+
+        // Each track's sharpest plane is that source's depth; keep the K strongest tracks.
+        return tracks
+            .Select(t => t.Aggregate((a, b) => b.Value > a.Value ? b : a))
+            .OrderByDescending(p => p.Value)
+            .Take(k)
+            .ToArray();
+    }
+
     public static string ToCsv(MixedFieldResult r)
     {
         var sb = new System.Text.StringBuilder("kind,index,x_mm,y_mm,value\n");

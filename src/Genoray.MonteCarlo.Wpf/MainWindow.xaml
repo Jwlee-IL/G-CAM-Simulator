@@ -132,6 +132,7 @@
                         <TextBox x:Name="ImgPhotons" Text="500000" Width="90" />
                         <Label Content="Background BSR" />
                         <TextBox x:Name="ImgBsr" Text="0" />
+                        <Button Content="Estimate depth (3D)" Click="EstimateDepth_Click" Margin="10,2,4,2" />
                         <TextBlock x:Name="ImgStatus" VerticalAlignment="Center" Margin="12,0" Foreground="#555" />
                     </StackPanel>
                     <Grid>

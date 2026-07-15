@@ -517,6 +517,47 @@ public partial class MainWindow : Window
         if (MainTabs.SelectedIndex == 1) RenderImaging();   // re-decode the accumulated flood at the new plane
     }
 
+    // Automatic per-source DEPTH (#1): refocus the accumulated flood across a sweep of planes and take each
+    // source's sharpest plane as its distance — recovers (x, y, z) even for sources at different distances.
+    private async void EstimateDepth_Click(object sender, RoutedEventArgs e)
+    {
+        if (!_liveRunning || _floodAccum == null || _liveCfg == null)
+        {
+            Log("  depth: start an acquisition first"); return;
+        }
+        if (_liveTotalCounts < 300)
+        {
+            Log("  depth: let more counts build first"); return;
+        }
+        var snap = CopyImage(_floodAccum);              // snapshot — the timer keeps mutating _floodAccum
+        var cfg = _liveCfg.Clone();
+        int k = Math.Max(1, _scene.Count);
+        double d = cfg.Geometry.MaskDetectorDistanceMm;
+        Log($"3D depth estimate — refocusing {k} source(s) across {d + 30:F0}–340 mm…");
+
+        var found = await Task.Run(() => MixedFieldStudy.LocalizeDepths(
+            snap, cfg, new DefaultSimulationFactory(), k, zMin: d + 30, zMax: 340, steps: 25));
+
+        foreach (var p in found)
+        {
+            var near = _scene.Count > 0
+                ? _scene.OrderBy(s => (s.X - p.Xmm) * (s.X - p.Xmm) + (s.Y - p.Ymm) * (s.Y - p.Ymm)).First()
+                : null;
+            string tru = near != null ? $"  (placed {near.Isotope} @ {near.DistanceMm:F0} mm)" : "";
+            Log($"   ({p.Xmm:F1}, {p.Ymm:F1}) at {p.Zmm:F0} mm{tru}");
+        }
+        ImgStatus.Text = "3D: " + string.Join("  ·  ", found.Select(p => $"({p.Xmm:F0},{p.Ymm:F0}) @ {p.Zmm:F0}mm"));
+    }
+
+    private static DetectorImage CopyImage(DetectorImage src)
+    {
+        var dst = new DetectorImage(src.Width, src.Height);
+        for (int y = 0; y < src.Height; y++)
+            for (int x = 0; x < src.Width; x++)
+                dst[x, y] = src[x, y];
+        return dst;
+    }
+
     private double EmissionRatePerSec() => _scene.Sum(s => s.EmissionRatePerSec());
 
     // ============================ SIMULATE — one acquisition drives every tab ============================
