@@ -264,6 +264,12 @@ public sealed class DetectorConfig
     /// </summary>
     public double CrystalAttenuationPerMm { get; set; } = 0.0;
 
+    /// <summary>Effective stainless-steel-equivalent thickness (mm) of passive material in front of the crystal —
+    /// source encapsulation + detector entrance window/reflector/housing lumped together. Preferentially removes
+    /// low-energy photons (energy-dependent μ), so it tames soft X-ray lines the way a real encapsulated source
+    /// does. 0 = bare geometry (no attenuation), preserving legacy behaviour.</summary>
+    public double EntranceAbsorberMm { get; set; } = 0.0;
+
     /// <summary>Scintillation decay time in ns (used by the RTL pile-up study; informational here).</summary>
     public double DecayTimeNs { get; set; } = 0.0;
 }

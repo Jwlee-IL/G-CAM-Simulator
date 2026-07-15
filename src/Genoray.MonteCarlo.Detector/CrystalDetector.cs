@@ -15,11 +15,13 @@ public sealed class CrystalDetector : IDetector
     private readonly double[]? _sensitivity;   // per-pixel non-uniformity (null = uniform)
     private readonly double _crystalMuPerMm;   // stopping power (0 = ideal, detect all)
     private readonly double _crystalDepthMm;
+    private readonly EntranceAbsorber? _entrance;   // passive window/encapsulation in front (null = none)
 
     public double PlaneZ { get; }
 
     public CrystalDetector(int pixelsX, int pixelsY, double pixelPitchMm, double planeZ = 0.0,
-                           double[]? sensitivity = null, double crystalMuPerMm = 0.0, double crystalDepthMm = 10.0)
+                           double[]? sensitivity = null, double crystalMuPerMm = 0.0, double crystalDepthMm = 10.0,
+                           EntranceAbsorber? entranceAbsorber = null)
     {
         _image = new DetectorImage(pixelsX, pixelsY);
         _pixelPitchMm = pixelPitchMm;
@@ -29,6 +31,7 @@ public sealed class CrystalDetector : IDetector
         _sensitivity = sensitivity;
         _crystalMuPerMm = crystalMuPerMm;
         _crystalDepthMm = crystalDepthMm;
+        _entrance = entranceAbsorber;
     }
 
     public bool Score(Photon photon)
@@ -60,7 +63,8 @@ public sealed class CrystalDetector : IDetector
             absorb = 1.0 - Math.Exp(-_crystalMuPerMm * path);
         }
 
-        _image.Add(px, py, photon.Weight * s * absorb);
+        double trans = _entrance is null ? 1.0 : _entrance.Transmit(photon.EnergyKeV);
+        _image.Add(px, py, photon.Weight * s * absorb * trans);
         // Returns true for any geometric hit; absorption/sensitivity live in the scored
         // weight. So the runner's raw PhotonsDetected over-counts non-ideal crystals —
         // use DetectedWeight (sum of the image) for the physical detected count.

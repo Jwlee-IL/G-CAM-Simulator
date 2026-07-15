@@ -11,7 +11,12 @@ public static class Isotopes
     /// <summary>The common check-source isotopes. Line data are the principal gamma emissions.</summary>
     public static readonly IReadOnlyList<IsotopeInfo> All =
     [
-        new IsotopeInfo("Cs-137", 30.1,  [(661.7, 0.851)]),
+        // Cs-137 also emits Ba K X-rays: the 662 keV transition internally converts ~10% of the time, and the
+        // resulting Ba K-shell vacancy fluoresces. These are a real SOURCE emission (not environmental scatter),
+        // so they belong in the line list — they put a genuine low-energy peak in the spectrum. Kα1/Kα2 (32.19/
+        // 31.82) merge under the detector resolution, so they're lumped as one 32.1 keV line. Intensities are
+        // per-decay (Kα ~5.6%, Kβ ~1.4%). 661.7 stays FIRST so it remains the primary line / photopeak centre.
+        new IsotopeInfo("Cs-137", 30.1,  [(661.7, 0.851), (32.1, 0.056), (36.4, 0.014)]),
         new IsotopeInfo("Co-60",   5.27, [(1173.2, 0.999), (1332.5, 0.999)]),
         new IsotopeInfo("Co-57",   0.744,[(122.1, 0.856), (136.5, 0.107)]),
         new IsotopeInfo("Na-22",   2.60, [(511.0, 1.798), (1274.5, 0.999)]),   // 511 = β+ annihilation pair

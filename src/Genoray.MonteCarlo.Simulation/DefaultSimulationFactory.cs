@@ -79,8 +79,9 @@ public sealed class DefaultSimulationFactory : ISimulationFactory
         bool nonUniform = d.GainSigma != 0.0 || d.EnergyResolutionFwhmSigma != 0.0 || d.GainGradient != 0.0
                           || (d.EnergyWindowFraction > 0.0 && d.EnergyResolutionFwhm > 0.0);
         double[]? sensitivity = nonUniform ? new CrystalUniformity(d).Sensitivity : null;
+        var entrance = d.EntranceAbsorberMm > 0.0 ? new EntranceAbsorber(d.EntranceAbsorberMm) : null;
         return new CrystalDetector(d.PixelsX, d.PixelsY, d.PixelPitchMm, planeZ: 0.0, sensitivity,
-                                   d.CrystalAttenuationPerMm, d.CrystalThicknessMm);
+                                   d.CrystalAttenuationPerMm, d.CrystalThicknessMm, entrance);
     }
 
     public IDecoder? CreateDecoder(SimulationConfig config)

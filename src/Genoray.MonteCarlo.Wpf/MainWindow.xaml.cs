@@ -407,6 +407,11 @@ public partial class MainWindow : Window
         cfg.Detector.PixelsX = cfg.Detector.PixelsY = detN;
         cfg.Detector.PixelPitchMm = pitch;
 
+        // Passive entrance material (source encapsulation + detector window/housing), stainless-steel-equivalent.
+        // 0.15 mm leaves the Ba K X-ray (32 keV) as a modest ~8% bump instead of the blown-up peak a bare vacuum
+        // geometry produces — the energy-dependent μ barely touches 662 keV. (Sweep-picked; MC-verified.)
+        cfg.Detector.EntranceAbsorberMm = 0.15;
+
         // Non-cyclic (finite-mask) decode + recon kept just inside the FCFOV — suppresses the off-axis ghosts
         // that a cyclic decode aliases in, so MULTIPLE off-axis sources each resolve to their own peak.
         cfg.Decoder.Cyclic = false;
@@ -657,7 +662,7 @@ public partial class MainWindow : Window
         _wfPool = rawPool;
 
         var smeared = ApplyResolution(rawPool, resPct, seed: 909);
-        const int bins = 128;
+        const int bins = 256;             // ~1.5–3 keV/bin — fine enough to read as an MCA-style curve
         double bw = maxE / bins;
         var pdf = new double[bins];
         var ctr = new double[bins];
@@ -785,7 +790,8 @@ public partial class MainWindow : Window
                 if (c >= wnd.lo && c <= wnd.hi) { win += _specCounts[i]; break; }
         }
         DrawSpectrum(SpPlot, _specCenters, _specCounts, _specWindows,
-            "Energy spectrum — detector resolution applied (accumulating)", "measured energy (keV)", "counts");
+            "Energy spectrum — detector resolution applied (accumulating)", "measured energy (keV)", "counts",
+            logY: SpLogY.IsChecked == true);
         SpStatus.Text = tot > 0
             ? $"{_specWindows.Count} photopeak window(s) hold {win / tot:P0} of {tot:N0} counts"
             : "";
@@ -935,18 +941,26 @@ public partial class MainWindow : Window
     }
 
     private static void DrawSpectrum(ScottPlot.WPF.WpfPlot view, double[] centers, double[] counts,
-        IReadOnlyList<(double lo, double hi, double energy)> windows, string title, string xlabel, string ylabel)
+        IReadOnlyList<(double lo, double hi, double energy)> windows, string title, string xlabel, string ylabel,
+        bool logY)
     {
         var p = view.Plot;
         p.Clear();
 
+        // On a log axis, bars grow from a baseline of 0 in the TRANSFORMED coordinate = 10^0 = 1 count, so
+        // we plot log10(count) with an empty bin (count <= 1) collapsing to zero height. This is the standard
+        // spectroscopy view: it lifts the Compton continuum (bin ~10s of counts) out from under a photopeak
+        // that towers ~20x above it on a linear scale.
+        double Ty(double c) => logY ? Math.Log10(Math.Max(c, 1.0)) : c;
+
         double maxCount = 1.0;
         foreach (var c in counts) if (c > maxCount) maxCount = c;
+        double top = Ty(maxCount);
 
         // Photopeak ROI bands — one per emission line (translucent), with a labelled edge at each line.
         foreach (var wnd in windows)
         {
-            var band = p.Add.Rectangle(wnd.lo, wnd.hi, 0, maxCount);
+            var band = p.Add.Rectangle(wnd.lo, wnd.hi, 0, top);
             band.FillColor = ScottPlot.Colors.Red.WithAlpha(0.10);
             band.LineColor = ScottPlot.Colors.Transparent;
             var line = p.Add.VerticalLine(wnd.energy);
@@ -955,17 +969,44 @@ public partial class MainWindow : Window
             line.LabelText = $"{wnd.energy:F0}";
         }
 
-        double bw = centers.Length > 1 ? centers[1] - centers[0] : 1.0;
-        var bars = new List<ScottPlot.Bar>(centers.Length);
-        for (int i = 0; i < centers.Length; i++)
-            bars.Add(new ScottPlot.Bar { Position = centers[i], Value = counts[i], Size = bw });
-        p.Add.Bars(bars);
+        // Draw the spectrum as a filled outline (MCA-style curve) rather than fat bars — with fine bins it
+        // reads as a smooth trace. Fill to the baseline for a spectrum look.
+        var ys = new double[counts.Length];
+        for (int i = 0; i < counts.Length; i++) ys[i] = Ty(counts[i]);
+        var trace = p.Add.Scatter(centers, ys);
+        trace.MarkerSize = 0;
+        trace.LineWidth = 1.4f;
+        trace.LineColor = ScottPlot.Color.FromHex("#2a9d63");
+        trace.FillY = true;
+        trace.FillYColor = ScottPlot.Color.FromHex("#2a9d63").WithAlpha(0.22);
+        trace.FillYValue = 0;
+
+        if (logY)
+        {
+            // Label the log ticks back in real counts (10^tick) with decade minor ticks.
+            p.Axes.Left.TickGenerator = new ScottPlot.TickGenerators.NumericAutomatic
+            {
+                MinorTickGenerator = new ScottPlot.TickGenerators.LogMinorTickGenerator(),
+                IntegerTicksOnly = true,
+                LabelFormatter = y => $"{Math.Pow(10, y):N0}",
+            };
+        }
+        else
+        {
+            p.Axes.Left.TickGenerator = new ScottPlot.TickGenerators.NumericAutomatic();
+        }
 
         p.Title(title);
         p.XLabel(xlabel);
-        p.YLabel(ylabel);
+        p.YLabel(logY ? ylabel + " (log)" : ylabel);
         p.Axes.AutoScale();
         view.Refresh();
+    }
+
+    private void SpLogY_Changed(object sender, System.Windows.RoutedEventArgs e)
+    {
+        // Re-render immediately if the spectrum is the visible tab (works whether or not a run is live).
+        if (IsLoaded && MainTabs.SelectedIndex == 2) RenderSpectrum();
     }
 
     private static double ParseD(string s, double fallback) =>

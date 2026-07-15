@@ -38,6 +38,7 @@ public sealed class ComptonCrystalDetector : IDetector
     private readonly Action<double, double>? _eventSink;
     private readonly FrontEndModel? _frontEnd;
     private readonly IRandom? _frontEndRng;
+    private readonly EntranceAbsorber? _entrance;   // passive window/encapsulation in front (null = none)
 
     public double PlaneZ { get; }
 
@@ -45,7 +46,8 @@ public sealed class ComptonCrystalDetector : IDetector
         double windowCenterKeV, double windowFraction, ComptonStrategy strategy, IRandom rng,
         double muAt662PerMm = 0.09, double crystalDepthMm = 10.0, double planeZ = 0.0,
         double[]? sensitivity = null, Action<double, double>? eventSink = null,
-        FrontEndModel? frontEnd = null, IRandom? frontEndRng = null)
+        FrontEndModel? frontEnd = null, IRandom? frontEndRng = null,
+        EntranceAbsorber? entranceAbsorber = null)
     {
         _image = new DetectorImage(pixelsX, pixelsY);
         _pitch = pixelPitchMm;
@@ -61,6 +63,7 @@ public sealed class ComptonCrystalDetector : IDetector
         _eventSink = eventSink;
         _frontEnd = frontEnd;
         _frontEndRng = frontEndRng;
+        _entrance = entranceAbsorber;
         PlaneZ = planeZ;
     }
 
@@ -119,6 +122,11 @@ public sealed class ComptonCrystalDetector : IDetector
         }
         if (_sites.Count == 0) return false;
 
+        // Passive entrance window / source encapsulation: attenuates the INCOMING photon by its (pre-interaction)
+        // energy, applied as a survival weight so soft X-ray lines are suppressed the way an encapsulated source's
+        // are. Deposit energies are unchanged — only how often the event counts.
+        double weight = photon.Weight * (_entrance is null ? 1.0 : _entrance.Transmit(photon.EnergyKeV));
+
         // The analog scintillation pulse the SiPM/ADC would see is proportional to the TOTAL energy
         // deposited in the crystal (summed over the Compton cascade sites), BEFORE any energy window —
         // this is the physical pulse height the RTL shaper works on, so the event sink (used to build the
@@ -130,10 +138,10 @@ public sealed class ComptonCrystalDetector : IDetector
         {
             double total = 0.0;
             foreach (var (_, _, dep) in _sites) total += dep;
-            _eventSink(total, photon.Weight);
+            _eventSink(total, weight);
         }
 
-        Deposit(photon.Weight);
+        Deposit(weight);
         return true;
     }
 
