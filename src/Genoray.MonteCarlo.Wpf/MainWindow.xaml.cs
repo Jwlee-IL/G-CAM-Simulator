@@ -696,18 +696,32 @@ public partial class MainWindow : Window
 
         // Auto-focus: every ~2 s, refocus the decoder to the plane that best focuses the strongest source, so
         // a source at any distance is caught without knowing its depth (the fixed default plane misses far ones).
+        // Focus fusion: the rangefinder (OptFocal) is the absolute anchor; depth-from-focus cross-checks it.
+        // If the image is clearly sharper at a DIFFERENT plane, the source isn't on the laser-hit surface — near
+        // (narrow depth of field) the focus is trustworthy so we refine the range; far (wide DoF) we only flag it.
         if (AutoFocus.IsChecked == true && _liveCfg != null && _floodAccum != null &&
             _liveTotalCounts > 500 && _liveTickCount % 8 == 0)
         {
-            // LOCAL search around the current plane (not the whole 200–3000 range) so a flat far-field depth-of-
-            // field can't yank the focus to an extreme; creeps toward an off-plane source over a few ticks.
-            double cur = OptFocal.Value;
-            double lo = Math.Max(OptFocal.Minimum, cur * 0.6);
-            double hi = Math.Min(OptFocal.Maximum, cur * 1.7);
-            double best = MixedFieldStudy.BestFocalMm(_floodAccum, _liveCfg, new DefaultSimulationFactory(), lo, hi, 12);
-            double snapped = Math.Clamp(Math.Round(best / 50.0) * 50.0, OptFocal.Minimum, OptFocal.Maximum);
-            if (Math.Abs(snapped - cur) >= 100.0)          // only a meaningful correction — no jitter on the plateau
-                OptFocal.Value = snapped;
+            double laser = OptFocal.Value;
+            var chk = MixedFieldStudy.CheckFocus(_floodAccum, _liveCfg, new DefaultSimulationFactory(),
+                laser, Math.Max(OptFocal.Minimum, laser * 0.4), Math.Min(OptFocal.Maximum, laser * 2.5), 14);
+            double delta = chk.BestFocalMm - laser;
+            bool sharperElsewhere = chk.BestSnr > chk.LaserSnr * 1.2 && Math.Abs(delta) > 150.0;
+            if (sharperElsewhere && chk.FwhmMm < 250.0)         // near: trustworthy → refine the range
+            {
+                double snapped = Math.Clamp(Math.Round(chk.BestFocalMm / 50.0) * 50.0, OptFocal.Minimum, OptFocal.Maximum);
+                if (Math.Abs(snapped - laser) >= 50.0)
+                {
+                    OptFocal.Value = snapped;
+                    Log($"fusion: source ~{delta:+0} mm off the laser surface → range corrected to {snapped:F0} mm");
+                    ImgStatus.Text = $"fusion: laser {laser:F0}mm + focus Δ{delta:+0} → range {snapped:F0}mm";
+                }
+            }
+            else if (sharperElsewhere)                          // far: can't refine, flag the mismatch
+            {
+                Log($"⚠ fusion: laser {laser:F0} mm but image sharpest ~{chk.BestFocalMm:F0} mm — target may be off the laser surface (Δ{delta:+0}, coarse)");
+                ImgStatus.Text = $"⚠ laser {laser / 1000:F1}m vs image ~{chk.BestFocalMm / 1000:F1}m — target may be off the laser surface";
+            }
         }
 
         RenderVisibleTab();

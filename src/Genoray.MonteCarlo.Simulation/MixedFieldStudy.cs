@@ -199,6 +199,63 @@ public sealed class MixedFieldStudy
         return bestFocal;
     }
 
+    /// <summary>Result of comparing the external rangefinder range against depth-from-focus: the image-sharpest
+    /// plane, the peak SNR at the laser plane vs the sharpest plane, and the sharpness-curve FWHM (depth of
+    /// field = how trustworthy the focus estimate is — narrow near, huge far).</summary>
+    public sealed record FocusCheck(double LaserMm, double BestFocalMm, double LaserSnr, double BestSnr, double FwhmMm);
+
+    /// <summary>Cross-check the laser range with depth-from-focus. The laser gives an absolute range but to the
+    /// surface it HIT; the coded-aperture sharpness measures the SOURCE's own distance. If the image is clearly
+    /// sharper at a different plane, the source is not on the laser surface — near, the focus refines it; far,
+    /// the depth of field is too wide to refine (only flag it).</summary>
+    public static FocusCheck CheckFocus(DetectorImage flood, SimulationConfig baseCfg, ISimulationFactory factory,
+                                        double laserMm, double zMin, double zMax, int steps)
+    {
+        double d = baseCfg.Geometry.MaskDetectorDistanceMm;
+        var focal = new double[steps];
+        var snr = new double[steps];
+        for (int i = 0; i < steps; i++)
+        {
+            double z = steps > 1 ? zMin + (zMax - zMin) * i / (steps - 1) : zMin;
+            focal[i] = z;
+            var cfg = baseCfg.Clone();
+            cfg.Geometry.SourceMaskDistanceMm = Math.Max(1.0, z - d);
+            double frac = d / Math.Max(d + 1.0, z);
+            cfg.Decoder.ReconHalfExtentMm = 0.95 * cfg.Mask.Rank * cfg.Mask.CellPitchMm / frac / 2.0;
+            cfg.Decoder.ReconStepMm = Math.Max(0.2, cfg.Mask.CellPitchMm / frac / 4.0);
+            var dec = factory.CreateDecoder(cfg)!.Decode(flood);
+            var recon = dec.Reconstruction;
+            double sum = 0, s2 = 0;
+            int n = recon.Width * recon.Height;
+            foreach (var v in recon.Raw) { sum += v; s2 += v * v; }
+            double mean = sum / n, std = Math.Sqrt(Math.Max(1e-9, s2 / n - mean * mean));
+            var pk = TopPeaks(recon, dec.ReconOriginMm, dec.ReconStepMm, 1, 2.5);
+            snr[i] = pk.Length > 0 ? (pk[0].Value - mean) / std : 0.0;
+        }
+        int ib = 0;
+        for (int i = 1; i < steps; i++) if (snr[i] > snr[ib]) ib = i;
+        int il = 0;
+        double bd = double.MaxValue;
+        for (int i = 0; i < steps; i++) { double dd = Math.Abs(focal[i] - laserMm); if (dd < bd) { bd = dd; il = i; } }
+        return new FocusCheck(laserMm, focal[ib], snr[il], snr[ib], FwhmOf(focal, snr));
+    }
+
+    private static double FwhmOf(double[] x, double[] y)
+    {
+        int im = 0;
+        for (int i = 1; i < y.Length; i++) if (y[i] > y[im]) im = i;
+        double max = y[im], baseline = y.Min(), half = baseline + (max - baseline) / 2.0;
+        if (max <= baseline) return x[^1] - x[0];
+        double xl = x[0];
+        for (int i = im; i > 0; i--) if (y[i - 1] <= half) { xl = Lerp(y[i - 1], x[i - 1], y[i], x[i], half); break; }
+        double xr = x[^1];
+        for (int i = im; i < y.Length - 1; i++) if (y[i + 1] <= half) { xr = Lerp(y[i + 1], x[i + 1], y[i], x[i], half); break; }
+        return Math.Max(0.0, xr - xl);
+    }
+
+    private static double Lerp(double y0, double x0, double y1, double x1, double yt) =>
+        y1 == y0 ? x0 : x0 + (x1 - x0) * (yt - y0) / (y1 - y0);
+
     public static string ToCsv(MixedFieldResult r)
     {
         var sb = new System.Text.StringBuilder("kind,index,x_mm,y_mm,value\n");
