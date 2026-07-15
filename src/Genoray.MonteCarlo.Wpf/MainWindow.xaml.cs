@@ -50,10 +50,23 @@ public partial class MainWindow : Window
     private int _liveTickCount;
     private string _liveDetail = "";
 
+    // Selected detection chain (scintillator / photosensor / preamp) — the pulse shape and the energy resolution
+    // are DERIVED from the parts, not hand-set. Populated by UpdateFrontEnd().
+    private FrontEndConfig? _feConfig;
+    private double _pulseTauSamples = Waveform.TauSamples, _pulseRiseSamples = Waveform.TauRiseSamples;
+    private bool _feCrrc = true;
+    private double _feResPct662 = 6.0;
+
     public MainWindow()
     {
         InitializeComponent();
         foreach (var iso in Isotopes.All) PropIsotope.Items.Add(iso.Name);
+        foreach (var s in FrontEndParts.Scintillators) FeScint.Items.Add(s.Name);
+        foreach (var s in FrontEndParts.Sensors) FeSensor.Items.Add(s.Name);
+        foreach (var s in FrontEndParts.Preamps) FePreamp.Items.Add(s.Name);
+        FeScint.SelectedIndex = 0;    // GAGG(Ce)
+        FeSensor.SelectedIndex = 0;   // Hamamatsu MPPC S13360-3050
+        FePreamp.SelectedIndex = 1;   // CSP + CR-RC (your rig)
 
         _scene.Add(new SceneSource { Isotope = "Cs-137", X = 0, Y = 0, DistanceMm = 160, ActivityUCi = 10 });
         RefreshSourceList(select: 0);
@@ -409,8 +422,12 @@ public partial class MainWindow : Window
 
         // Passive entrance material (source encapsulation + detector window/housing), stainless-steel-equivalent.
         // 0.15 mm leaves the Ba K X-ray (32 keV) as a modest ~8% bump instead of the blown-up peak a bare vacuum
-        // geometry produces — the energy-dependent μ barely touches 662 keV. (Sweep-picked; MC-verified.)
+        // geometry produces; it also Compton-scatters, filling the photopeak's low-energy tail (the edge-to-peak
+        // valley). Sweep-picked; MC-verified.
         cfg.Detector.EntranceAbsorberMm = 0.15;
+        // Backing behind the crystal (SiPM + PCB + housing) — a through-going 662 keV photon back-scatters off it
+        // and re-enters as ~184 keV: the backscatter peak. Behind the crystal, so it doesn't attenuate the beam.
+        cfg.Detector.BackingScatterMm = 2.0;
 
         // Non-cyclic (finite-mask) decode + recon kept just inside the FCFOV — suppresses the off-axis ghosts
         // that a cyclic decode aliases in, so MULTIPLE off-axis sources each resolve to their own peak.
@@ -661,7 +678,18 @@ public partial class MainWindow : Window
         if (rawPool.Length == 0) return false;
         _wfPool = rawPool;
 
-        var smeared = ApplyResolution(rawPool, resPct, seed: 909);
+        // Energy resolution: when a detection chain is selected, smear each deposit by the DERIVED, energy-
+        // dependent FrontEndModel resolution (photostatistics from N_pe + non-proportionality + DCR) instead of
+        // the hand-set 1/√E fraction — so choosing a scintillator/sensor actually changes the photopeak width.
+        double[] smeared;
+        if (_feConfig != null)
+        {
+            var fem = new FrontEndModel(_feConfig);
+            var srng = new DefaultRandom(909);
+            smeared = new double[rawPool.Length];
+            for (int i = 0; i < rawPool.Length; i++) smeared[i] = fem.Measure(rawPool[i], srng);
+        }
+        else smeared = ApplyResolution(rawPool, resPct, seed: 909);
         const int bins = 256;             // ~1.5–3 keV/bin — fine enough to read as an MCA-style curve
         double bw = maxE / bins;
         var pdf = new double[bins];
@@ -804,7 +832,7 @@ public partial class MainWindow : Window
         double scopeCps = Math.Max(1.0, ParseD(WfRate.Text, 50)) * 1000.0;   // scope time-zoom (see the label)
         int nEvents = Math.Clamp(ParseI(WfEvents.Text, 40), 1, 4000);
         bool realistic = WfRealistic.IsChecked == true;
-        bool crrc = WfShaper.SelectedIndex == 1;
+        bool crrc = _feCrrc;
         var rng = _wfRng ??= new DefaultRandom(555);
 
         // Sample nEvents from THIS acquisition's deposit pool, spaced by the scope rate (exponential arrivals).
@@ -820,10 +848,24 @@ public partial class MainWindow : Window
         }
 
         var preset = Waveform.DefaultAdc;
+        double tau = _pulseTauSamples, tauRise = _pulseRiseSamples;   // derived from the selected chain
         int[] wave = realistic
-            ? Waveform.Rasterize(stream, preset)
-            : Waveform.Rasterize(stream, preset, tauRise: 0.0, noiseKev: 0.0, intrinsicFwhm: 0.0);
-        long[] sh = crrc ? Waveform.CrrcInt(wave) : Waveform.TrapShape(wave);
+            ? Waveform.Rasterize(stream, preset, tau: tau, tauRise: tauRise, intrinsicFwhm: _feResPct662 / 100.0)
+            : Waveform.Rasterize(stream, preset, tau: tau, tauRise: 0.0, noiseKev: 0.0, intrinsicFwhm: 0.0);
+
+        // Shaper pole-zero matched to THIS pulse tail tau (keeps the flat top / low-pass correct for the tail the
+        // preamp produces; the RTL golden constants are the tau=5 defaults and are untouched by this display path).
+        long[] sh;
+        if (crrc)
+        {
+            int aQ16 = (int)Math.Round(Math.Exp(-1.0 / tau) * 65536.0);
+            sh = Waveform.CrrcInt(wave, aQ16, Waveform.CrrcKQ16, Waveform.CrrcOrder);
+        }
+        else
+        {
+            int mQ8 = (int)Math.Round(256.0 / (Math.Exp(1.0 / tau) - 1.0));
+            sh = Waveform.TrapShape(wave, Waveform.Rise, Waveform.Flat, mQ8);
+        }
 
         DrawSignal(WfAdcPlot, ToD(wave),
             "ADC waveform — this acquisition's events (bi-exp pulses, pile-up, noise, clip)",
@@ -1007,6 +1049,46 @@ public partial class MainWindow : Window
     {
         // Re-render immediately if the spectrum is the visible tab (works whether or not a run is live).
         if (IsLoaded && MainTabs.SelectedIndex == 2) RenderSpectrum();
+    }
+
+    // ---- detection chain (scintillator / photosensor / preamp presets) -----------------------------------
+
+    private void FrontEnd_Changed(object sender, SelectionChangedEventArgs e) => UpdateFrontEnd();
+
+    /// <summary>Rebuild the front-end model from the three selected parts: N_pe = lightYield·collection·PDE·E
+    /// sets the resolution (FrontEndModel), the scintillator decay sets the pulse's leading edge, and the preamp
+    /// tail + shaper set the falling edge and the DAQ filter. The pulse re-renders live; the derived resolution
+    /// drives the Spectrum's photopeak width on the next acquisition.</summary>
+    private void UpdateFrontEnd()
+    {
+        if (FeScint == null || FeScint.SelectedIndex < 0 ||
+            FeSensor.SelectedIndex < 0 || FePreamp.SelectedIndex < 0) return;   // still populating
+
+        var sc = FrontEndParts.Scintillators[FeScint.SelectedIndex];
+        var se = FrontEndParts.Sensors[FeSensor.SelectedIndex];
+        var pa = FrontEndParts.Preamps[FePreamp.SelectedIndex];
+        _feConfig = FrontEndParts.BuildConfig(sc, se, pa);
+        _feCrrc = pa.Crrc;
+
+        // The charge-sensitive preamp output is the convolution of the scintillation decay with the preamp
+        // response — a bi-exponential of the two time constants, where the SLOWER one sets the tail and the
+        // faster the leading edge. So a fast scintillator (GAGG) + slow preamp gives a preamp-limited tail, while
+        // a slow scintillator (CsI) dominates its own tail regardless of the fast preamp. (Taking min/max also
+        // keeps tau_fall > tau_rise, so the bi-exp never inverts.)
+        double nsPerSample = 1e9 / AdcSampleRateHz;                 // 8 ns at 125 MSPS
+        double riseNs = Math.Min(sc.DecayNs, pa.PulseTailNs);
+        double fallNs = Math.Max(sc.DecayNs, pa.PulseTailNs);
+        _pulseRiseSamples = Math.Max(0.5, riseNs / nsPerSample);
+        _pulseTauSamples = Math.Max(_pulseRiseSamples + 0.5, fallNs / nsPerSample);
+
+        var model = new FrontEndModel(_feConfig);
+        _feResPct662 = model.FwhmFraction(662.0) * 100.0;
+        SpResolution.Text = _feResPct662.ToString("F1", CultureInfo.InvariantCulture);   // spectrum uses this on next Simulate
+
+        FeReadout.Text = $"→ N_pe(662) ≈ {model.Photoelectrons(662):N0},  R(662) ≈ {_feResPct662:F1}%,  " +
+                         $"pulse rise {sc.DecayNs:F0} ns / tail {pa.PulseTailNs:F0} ns,  {(pa.Crrc ? "CR-RC^4" : "trapezoid")}";
+
+        if (IsLoaded && _liveRunning && MainTabs.SelectedIndex == 0) RenderWaveform();
     }
 
     private static double ParseD(string s, double fallback) =>

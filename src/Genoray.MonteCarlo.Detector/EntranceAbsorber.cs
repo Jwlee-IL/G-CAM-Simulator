@@ -1,3 +1,5 @@
+using Genoray.MonteCarlo.Core;
+
 namespace Genoray.MonteCarlo.Detector;
 
 /// <summary>
@@ -29,6 +31,28 @@ public sealed class EntranceAbsorber
     /// <summary>Fraction of photons of energy <paramref name="energyKeV"/> that pass the absorber.</summary>
     public double Transmit(double energyKeV)
         => _muThickness662 <= 0.0 ? 1.0 : Math.Exp(-_muThickness662 * IronMuRel(energyKeV));
+
+    /// <summary>Transport a photon THROUGH the slab as real physics: it most likely passes unchanged, or it
+    /// interacts — photo-absorbed (removed) or Compton-scattered to a lower energy and new direction. A 662 keV
+    /// photon that interacts almost always Compton-scatters (iron is Compton-dominated there), so the FORWARD
+    /// small-angle scatters continue into the crystal and deposit just below full energy — the physical origin of
+    /// the photopeak's low-energy tail that fills the Compton-edge-to-photopeak valley. Soft X-rays that interact
+    /// are instead mostly photo-absorbed, which is why the slab still attenuates the 32 keV line. Uses the shared
+    /// <see cref="ComptonModel"/> (Klein-Nishina) — no hand-tuned tail.</summary>
+    public (bool absorbed, double energy, Vector3 dir) Interact(double energyKeV, Vector3 dir, IRandom rng)
+    {
+        if (_muThickness662 <= 0.0) return (false, energyKeV, dir);
+        double muT = _muThickness662 * IronMuRel(energyKeV);
+        if (rng.NextDouble() >= 1.0 - Math.Exp(-muT)) return (false, energyKeV, dir);   // passes through
+        if (rng.NextDouble() < IronPhotoFraction(energyKeV)) return (true, 0.0, dir);   // photo-absorbed
+        var (_, eNew, dirNew) = ComptonModel.Scatter(energyKeV, dir, rng);              // Compton-scattered
+        return (false, eNew, dirNew);
+    }
+
+    // Iron photoelectric FRACTION of interactions vs Compton: photoelectric dominates only at low energy (K-edge
+    // 7 keV) and is negligible above ~100 keV where Compton takes over. So a 32 keV X-ray that interacts is mostly
+    // absorbed, while a 662 keV photon that interacts almost always scatters. Rough parametrization (not tabulated).
+    private static double IronPhotoFraction(double eKeV) => 1.0 / (1.0 + Math.Pow(eKeV / 45.0, 2.6));
 
     // Iron (stainless-steel proxy) linear-attenuation ratio μ(E)/μ(662 keV) — NIST-XCOM total mass-attenuation
     // (with coherent) points, divided by the 662 keV value (0.0737 cm²/g), log–log interpolated and end-clamped.

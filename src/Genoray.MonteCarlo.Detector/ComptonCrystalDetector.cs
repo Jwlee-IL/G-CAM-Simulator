@@ -39,6 +39,7 @@ public sealed class ComptonCrystalDetector : IDetector
     private readonly FrontEndModel? _frontEnd;
     private readonly IRandom? _frontEndRng;
     private readonly EntranceAbsorber? _entrance;   // passive window/encapsulation in front (null = none)
+    private readonly EntranceAbsorber? _backing;    // scatterer behind the crystal (null = none) -> backscatter
 
     public double PlaneZ { get; }
 
@@ -47,7 +48,7 @@ public sealed class ComptonCrystalDetector : IDetector
         double muAt662PerMm = 0.09, double crystalDepthMm = 10.0, double planeZ = 0.0,
         double[]? sensitivity = null, Action<double, double>? eventSink = null,
         FrontEndModel? frontEnd = null, IRandom? frontEndRng = null,
-        EntranceAbsorber? entranceAbsorber = null)
+        EntranceAbsorber? entranceAbsorber = null, EntranceAbsorber? backingScatterer = null)
     {
         _image = new DetectorImage(pixelsX, pixelsY);
         _pitch = pixelPitchMm;
@@ -64,6 +65,7 @@ public sealed class ComptonCrystalDetector : IDetector
         _frontEnd = frontEnd;
         _frontEndRng = frontEndRng;
         _entrance = entranceAbsorber;
+        _backing = backingScatterer;
         PlaneZ = planeZ;
     }
 
@@ -95,20 +97,51 @@ public sealed class ComptonCrystalDetector : IDetector
         if (entry.X < -_halfWidth || entry.X >= _halfWidth ||
             entry.Y < -_halfHeight || entry.Y >= _halfHeight) return false;
 
+        // Entrance material (source encapsulation + front housing/window): the photon may pass through, be
+        // photo-absorbed (removed here), or Compton-scatter to a lower energy + new direction. Forward small-angle
+        // scatters continue into the crystal and deposit just BELOW full energy — the physical low-energy tail that
+        // fills the Compton-edge-to-photopeak valley. Back-scatters head away from the crystal and are lost.
+        double e = photon.EnergyKeV;
+        var dir = photon.Direction;
+        if (_entrance is not null)
+        {
+            var (absorbed, eScat, dirScat) = _entrance.Interact(e, dir, _rng);
+            if (absorbed) return false;
+            e = eScat; dir = dirScat;
+            if (dir.Z >= 0.0) return false;              // scattered back toward the source — misses the crystal
+        }
+
         // ---- transport the Compton cascade through the crystal slab z in [-depth, 0] ----
         _sites.Clear();
         var pos = new Vector3(entry.X, entry.Y, PlaneZ);
-        var dir = photon.Direction;
-        double e = photon.EnergyKeV;
         for (int step = 0; step < 32 && e > 1.0; step++)
         {
             double mu = _muAt662 * ComptonModel.MuRel(e);
             double s = -Math.Log(1.0 - _rng.NextDouble()) / mu;
             pos += dir * s;
-            if (pos.Z > PlaneZ || pos.Z < PlaneZ - _depth ||
+            if (pos.Z > PlaneZ ||
                 pos.X < -_halfWidth || pos.X >= _halfWidth ||
                 pos.Y < -_halfHeight || pos.Y >= _halfHeight)
-                break;                                        // escaped -> remaining energy lost
+                break;                                        // out the front / sides -> lost
+            if (pos.Z < PlaneZ - _depth)                      // exited the BACK face
+            {
+                // Backing (SiPM / PCB / housing): the through-going photon may Compton back-scatter off it and
+                // re-enter — a ~180° scatter of 662 keV returns ~184 keV that re-absorbs here (backscatter peak),
+                // and shallower back-scatters add to the sub-photopeak fill. Reuses Klein-Nishina; no hand tail.
+                if (_backing is not null && e > 1.0)
+                {
+                    var (absBack, eBack, dirBack) = _backing.Interact(e, dir, _rng);
+                    if (!absBack && dirBack.Z > 0.0 &&
+                        pos.X >= -_halfWidth && pos.X < _halfWidth &&
+                        pos.Y >= -_halfHeight && pos.Y < _halfHeight)
+                    {
+                        pos = new Vector3(pos.X, pos.Y, PlaneZ - _depth);   // re-enter at the back face, heading up
+                        dir = dirBack; e = eBack;
+                        continue;
+                    }
+                }
+                break;                                        // absorbed in / passed through the backing -> lost
+            }
 
             int px = PixelIndex(pos.X, _halfWidth);
             int py = PixelIndex(pos.Y, _halfHeight);
@@ -122,10 +155,9 @@ public sealed class ComptonCrystalDetector : IDetector
         }
         if (_sites.Count == 0) return false;
 
-        // Passive entrance window / source encapsulation: attenuates the INCOMING photon by its (pre-interaction)
-        // energy, applied as a survival weight so soft X-ray lines are suppressed the way an encapsulated source's
-        // are. Deposit energies are unchanged — only how often the event counts.
-        double weight = photon.Weight * (_entrance is null ? 1.0 : _entrance.Transmit(photon.EnergyKeV));
+        // Entrance attenuation is now handled physically above (pass / photo-absorb / scatter), so the surviving
+        // photon just carries its importance weight.
+        double weight = photon.Weight;
 
         // The analog scintillation pulse the SiPM/ADC would see is proportional to the TOTAL energy
         // deposited in the crystal (summed over the Compton cascade sites), BEFORE any energy window —

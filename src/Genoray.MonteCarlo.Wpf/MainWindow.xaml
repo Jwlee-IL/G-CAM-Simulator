@@ -100,19 +100,28 @@
         <TabControl x:Name="MainTabs" Grid.Row="1" Margin="6,3,6,6">
             <TabItem Header="Waveform">
                 <DockPanel>
-                    <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="4,6">
-                        <Label Content="Scope rate (kcps)" />
-                        <TextBox x:Name="WfRate" Text="50" />
-                        <Label Content="Events" />
-                        <TextBox x:Name="WfEvents" Text="40" />
-                        <Label Content="Shaper" />
-                        <ComboBox x:Name="WfShaper" Width="120" VerticalAlignment="Center" SelectedIndex="0">
-                            <ComboBoxItem Content="Trapezoidal" />
-                            <ComboBoxItem Content="CR-RC^4" />
-                        </ComboBox>
-                        <CheckBox x:Name="WfRealistic" Content="Realistic front-end" IsChecked="True"
-                                  VerticalAlignment="Center" Margin="10,0,0,0" />
-                        <TextBlock x:Name="WfStatus" VerticalAlignment="Center" Margin="12,0" Foreground="#555" />
+                    <StackPanel DockPanel.Dock="Top" Margin="4,6">
+                        <StackPanel Orientation="Horizontal">
+                            <Label Content="Scope rate (kcps)" />
+                            <TextBox x:Name="WfRate" Text="50" />
+                            <Label Content="Events" />
+                            <TextBox x:Name="WfEvents" Text="40" />
+                            <CheckBox x:Name="WfRealistic" Content="Realistic front-end" IsChecked="True"
+                                      VerticalAlignment="Center" Margin="10,0,0,0" />
+                            <TextBlock x:Name="WfStatus" VerticalAlignment="Center" Margin="12,0" Foreground="#555" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
+                            <Label Content="Scintillator" />
+                            <ComboBox x:Name="FeScint" Width="120" VerticalAlignment="Center"
+                                      SelectionChanged="FrontEnd_Changed" />
+                            <Label Content="Photosensor" Margin="8,0,0,0" />
+                            <ComboBox x:Name="FeSensor" Width="185" VerticalAlignment="Center"
+                                      SelectionChanged="FrontEnd_Changed" />
+                            <Label Content="Preamp" Margin="8,0,0,0" />
+                            <ComboBox x:Name="FePreamp" Width="185" VerticalAlignment="Center"
+                                      SelectionChanged="FrontEnd_Changed" />
+                            <TextBlock x:Name="FeReadout" VerticalAlignment="Center" Margin="12,0" Foreground="#286" />
+                        </StackPanel>
                     </StackPanel>
                     <Grid>
                         <Grid.RowDefinitions>

@@ -53,11 +53,12 @@ public sealed class EventStreamStudy
         var deposits = new List<double>(Math.Min(maxEvents, 4096));
         var weights = new List<double>(Math.Min(maxEvents, 4096));
         var entrance = d.EntranceAbsorberMm > 0.0 ? new EntranceAbsorber(d.EntranceAbsorberMm) : null;
+        var backing = d.BackingScatterMm > 0.0 ? new EntranceAbsorber(d.BackingScatterMm) : null;
         var detector = new ComptonCrystalDetector(d.PixelsX, d.PixelsY, d.PixelPitchMm,
             windowCenterKeV: 661.7, windowFraction: 1.0, ComptonStrategy.Argmax, cascadeRng,
             muAt662PerMm: 0.09, d.CrystalThicknessMm, planeZ: 0.0, sensitivity,
             eventSink: (dep, w) => { deposits.Add(dep); weights.Add(w); },
-            entranceAbsorber: entrance);
+            entranceAbsorber: entrance, backingScatterer: backing);
 
         foreach (var photon in source.Emit(rng, config.PhotonCount))
         {

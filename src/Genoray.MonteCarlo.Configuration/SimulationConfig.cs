@@ -267,8 +267,15 @@ public sealed class DetectorConfig
     /// <summary>Effective stainless-steel-equivalent thickness (mm) of passive material in front of the crystal —
     /// source encapsulation + detector entrance window/reflector/housing lumped together. Preferentially removes
     /// low-energy photons (energy-dependent μ), so it tames soft X-ray lines the way a real encapsulated source
-    /// does. 0 = bare geometry (no attenuation), preserving legacy behaviour.</summary>
+    /// does. In the crystal-Compton detector it also SCATTERS: forward small-angle Compton events fill the
+    /// photopeak's low-energy tail (the Compton-edge-to-photopeak valley). 0 = bare geometry, legacy behaviour.</summary>
     public double EntranceAbsorberMm { get; set; } = 0.0;
+
+    /// <summary>Effective stainless-steel-equivalent thickness (mm) of the material BEHIND the crystal (SiPM /
+    /// PCB / housing). A through-going photon can Compton back-scatter off it and re-enter the crystal — a ~180°
+    /// scatter of 662 keV returns ~184 keV, the backscatter peak. Behind the crystal, so it does not attenuate the
+    /// incoming beam. 0 = no backing (no backscatter).</summary>
+    public double BackingScatterMm { get; set; } = 0.0;
 
     /// <summary>Scintillation decay time in ns (used by the RTL pile-up study; informational here).</summary>
     public double DecayTimeNs { get; set; } = 0.0;
