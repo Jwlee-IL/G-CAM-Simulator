@@ -58,7 +58,8 @@ public partial class MainWindow : Window
         SceneCanvas.SizeChanged += (_, _) => RedrawScene();
         SceneCanvas.MouseMove += SceneCanvas_MouseMove;
         SceneCanvas.MouseLeftButtonUp += SceneCanvas_MouseUp;
-        MainTabs.SelectionChanged += (_, e) => { if (e.Source is TabControl && _liveRunning) StopLive(); };
+        // A live acquisition keeps running when you switch tabs (it accumulates for the tab it was started on);
+        // switch back to watch it, or press STOP to change what you acquire. No auto-stop on tab change.
         Log("Ready. Place sources on the scene, then press Simulate.");
     }
 
@@ -531,7 +532,8 @@ public partial class MainWindow : Window
             _liveDetail = _liveTotalCounts > 0 ? $"{win / _liveTotalCounts:P0} in window" : "";
         }
 
-        LiveStatus.Text = $"t = {_liveElapsedSec:F0} s   ·   {_liveTotalCounts:N0} counts   ·   {_liveRateCps:F0} cps detected";
+        LiveStatus.Text = $"[{(_liveTab == 1 ? "Imaging" : "Spectrum")}]  t = {_liveElapsedSec:F0} s   ·   " +
+                          $"{_liveTotalCounts:N0} counts   ·   {_liveRateCps:F0} cps detected";
         if (++_liveTickCount % 8 == 0)
             Log($"  t={_liveElapsedSec:F0}s   {_liveTotalCounts:N0} counts   {_liveDetail}");
     }

@@ -166,7 +166,9 @@
             <DockPanel>
                 <TextBlock DockPanel.Dock="Top" Text="Log" FontWeight="Bold" Foreground="#DDD"
                            Margin="6,3,0,0" />
-                <TextBox x:Name="LogBox" Height="96" Margin="6,2,6,6" IsReadOnly="True"
+                <!-- Width="Auto" overrides the implicit TextBox style's fixed 72px so the log fills the row. -->
+                <TextBox x:Name="LogBox" Height="96" Width="Auto" HorizontalAlignment="Stretch"
+                         Margin="6,2,6,6" IsReadOnly="True"
                          Background="#1E1E1E" Foreground="#CFCFCF" FontFamily="Consolas" FontSize="11"
                          BorderThickness="0" VerticalScrollBarVisibility="Auto"
                          HorizontalScrollBarVisibility="Auto" TextWrapping="NoWrap" />
