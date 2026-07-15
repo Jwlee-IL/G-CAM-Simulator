@@ -43,6 +43,8 @@ public partial class MainWindow : Window
     private IReadOnlyList<(double x, double y)>? _liveTruePos;
     private double[]? _specPdf, _specCounts, _specCenters;   // spectrum accumulators
     private double _specWindowLo, _specWindowHi;
+    private int _liveTickCount;
+    private string _liveDetail = "";
 
     public MainWindow()
     {
@@ -57,6 +59,7 @@ public partial class MainWindow : Window
         SceneCanvas.MouseMove += SceneCanvas_MouseMove;
         SceneCanvas.MouseLeftButtonUp += SceneCanvas_MouseUp;
         MainTabs.SelectionChanged += (_, e) => { if (e.Source is TabControl && _liveRunning) StopLive(); };
+        Log("Ready. Place sources on the scene, then press Simulate.");
     }
 
     // ---- scene state / property panel --------------------------------------------------------------------
@@ -412,16 +415,20 @@ public partial class MainWindow : Window
 
         SimulateButton.Content = "■  STOP";
         LiveStatus.Text = "preparing…";
+        Log($"▶ Start {(tab == 1 ? "Imaging" : "Spectrum")}  (speed ×{_liveSpeed:F0}) — {SceneSummary()}");
         bool ok = await Task.Run(() => PrepareLive(tab, cfg, bsr, emissionRate, windowFrac, energyRef, maxE, resPct));
         if (!ok)
         {
             SimulateButton.Content = "▶  SIMULATE";
             LiveStatus.Text = "no counts detected — check activity / distance / geometry";
+            Log("  ✗ no counts detected — check activity / distance / geometry");
             return;
         }
+        Log($"  detected rate = {_liveRateCps:F0} cps  (emission {emissionRate:F0}/s × geometric efficiency)");
 
         _liveElapsedSec = 0;
         _liveTotalCounts = 0;
+        _liveTickCount = 0;
         _liveRng = new DefaultRandom(20260715);
         _liveRunning = true;
         _liveTimer = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromMilliseconds(250) };
@@ -505,6 +512,7 @@ public partial class MainWindow : Window
             SetReconOverlay(recon, dec.ReconOriginMm, dec.ReconStepMm);
             RedrawScene();
             ImgStatus.Text = $"estimate ({dec.Estimate.Position.X:F2}, {dec.Estimate.Position.Y:F2}) mm — sharpens as counts build";
+            _liveDetail = $"est ({dec.Estimate.Position.X:F1}, {dec.Estimate.Position.Y:F1})mm";
         }
         else if (_liveTab == 2 && _specPdf != null && _specCounts != null && _specCenters != null)
         {
@@ -520,18 +528,28 @@ public partial class MainWindow : Window
             SpStatus.Text = _liveTotalCounts > 0
                 ? $"±window holds {win / _liveTotalCounts:P0} of {_liveTotalCounts:N0} counts"
                 : "";
+            _liveDetail = _liveTotalCounts > 0 ? $"{win / _liveTotalCounts:P0} in window" : "";
         }
 
         LiveStatus.Text = $"t = {_liveElapsedSec:F0} s   ·   {_liveTotalCounts:N0} counts   ·   {_liveRateCps:F0} cps detected";
+        if (++_liveTickCount % 8 == 0)
+            Log($"  t={_liveElapsedSec:F0}s   {_liveTotalCounts:N0} counts   {_liveDetail}");
     }
 
     private void StopLive()
     {
+        bool wasRunning = _liveRunning;
         _liveTimer?.Stop();
         _liveTimer = null;
         _liveRunning = false;
         SimulateButton.Content = "▶  SIMULATE";
+        if (wasRunning) Log($"■ Stopped — t = {_liveElapsedSec:F0}s, {_liveTotalCounts:N0} counts total");
     }
+
+    private string SceneSummary() =>
+        _scene.Count == 0 ? "no sources"
+            : string.Join(", ", _scene.Select(s =>
+                $"{s.Isotope} {s.ActivityUCi:F0}µCi @({s.X:F0},{s.Y:F0}) d{s.DistanceMm:F0}mm"));
 
     /// <summary>Smear each true deposit by the detector energy resolution — photostatistics give a Gaussian
     /// whose FWHM fraction scales as √(662/E) (broader, relatively, at low energy), the same 1/√E model the
@@ -562,6 +580,8 @@ public partial class MainWindow : Window
         var cfg = ConfigFromScene(200_000);
 
         WfStatus.Text = "running…";
+        Log($"▶ Waveform: {nEvents} events @ {rateKcps:F0} kcps, {(crrc ? "CR-RC^4" : "Trapezoidal")}" +
+            $"{(realistic ? ", realistic front-end" : ", ideal")} — {SceneSummary()}");
         try
         {
             var (adc, shaped) = await Task.Run(() =>
@@ -584,8 +604,9 @@ public partial class MainWindow : Window
                 "sample", "shaper output");
             WfStatus.Text = $"{nEvents} events @ {rateKcps:F0} kcps display rate  ·  " +
                             $"isotopes: {string.Join(", ", _scene.Select(s => s.Isotope).Distinct())}";
+            Log($"  waveform done — peak ADC {ToD(adc).Max():F0}, shaped peak {ToD(shaped).Max():F0}");
         }
-        catch (Exception ex) { WfStatus.Text = "error: " + ex.Message; }
+        catch (Exception ex) { WfStatus.Text = "error: " + ex.Message; Log("  ✗ waveform error: " + ex.Message); }
     }
 
     // ---- plotting helpers --------------------------------------------------------------------------------
@@ -630,7 +651,8 @@ public partial class MainWindow : Window
         var hm = p.Add.Heatmap(grid);
         hm.Extent = new ScottPlot.CoordinateRect(left, right, bottom, top);
         hm.Colormap = new ScottPlot.Colormaps.Viridis();
-        p.Add.ColorBar(hm);
+        // NOTE: no Add.ColorBar here — Plot.Clear() does not remove colorbars, so re-adding one every live
+        // tick stacks them across the right edge. Brightness is relative; the axes carry the scale.
 
         if (truePositions != null)
             foreach (var tp in truePositions)
@@ -684,4 +706,12 @@ public partial class MainWindow : Window
 
     private static int ParseI(string s, int fallback) =>
         int.TryParse(s, NumberStyles.Any, CultureInfo.InvariantCulture, out var v) ? v : fallback;
+
+    // ---- log console -------------------------------------------------------------------------------------
+
+    private void Log(string msg)
+    {
+        LogBox.AppendText($"[{DateTime.Now:HH:mm:ss}] {msg}{Environment.NewLine}");
+        LogBox.ScrollToEnd();
+    }
 }

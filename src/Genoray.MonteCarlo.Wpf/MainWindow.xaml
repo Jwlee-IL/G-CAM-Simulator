@@ -19,11 +19,17 @@
         </Style>
     </Window.Resources>
 
-    <DockPanel>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
         <!-- ============================ SCENE EDITOR (above the tabs) ============================ -->
-        <Border DockPanel.Dock="Top" BorderBrush="#BBB" BorderThickness="1" Margin="6,6,6,3" Padding="6"
+        <Border Grid.Row="0" BorderBrush="#BBB" BorderThickness="1" Margin="6,6,6,3" Padding="6"
                 Background="#FAFAFA">
-            <Grid Height="270">
+            <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
@@ -91,7 +97,7 @@
         </Border>
 
         <!-- ============================ ANALYSIS TABS ============================ -->
-        <TabControl x:Name="MainTabs" Margin="6,3,6,6">
+        <TabControl x:Name="MainTabs" Grid.Row="1" Margin="6,3,6,6">
             <TabItem Header="Waveform">
                 <DockPanel>
                     <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="4,6">
@@ -154,5 +160,17 @@
                 </DockPanel>
             </TabItem>
         </TabControl>
-    </DockPanel>
+
+        <!-- ============================ LOG (bottom row) ============================ -->
+        <Border Grid.Row="2" BorderBrush="#BBB" BorderThickness="1" Margin="6,0,6,6" Background="#1E1E1E">
+            <DockPanel>
+                <TextBlock DockPanel.Dock="Top" Text="Log" FontWeight="Bold" Foreground="#DDD"
+                           Margin="6,3,0,0" />
+                <TextBox x:Name="LogBox" Height="96" Margin="6,2,6,6" IsReadOnly="True"
+                         Background="#1E1E1E" Foreground="#CFCFCF" FontFamily="Consolas" FontSize="11"
+                         BorderThickness="0" VerticalScrollBarVisibility="Auto"
+                         HorizontalScrollBarVisibility="Auto" TextWrapping="NoWrap" />
+            </DockPanel>
+        </Border>
+    </Grid>
 </Window>
