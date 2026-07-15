@@ -469,7 +469,7 @@ public partial class MainWindow : Window
             $"detector spans {coverage:F2} mask periods  " +
             $"{(coverage is >= 0.9 and <= 1.4 ? "✓" : "⚠ set N so detector ≈ 1 period, else off-axis sources decode badly")}\n" +
             $"mask aperture {apertureMm:F0} mm → 3D depth reach ≈ {range10m:F2} m (±10%, rough — run depthdesign)\n" +
-            $"(focal plane at {focalZ:F0} mm — sources at other distances defocus)";
+            $"(range set to {focalZ:F0} mm — aperture gives direction, this input scales it to position)";
         RedrawScene();   // keep the scene's FCFOV box in sync with the optics
     }
 

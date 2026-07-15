@@ -132,8 +132,9 @@
                         <TextBox x:Name="ImgPhotons" Text="500000" Width="90" />
                         <Label Content="Background BSR" />
                         <TextBox x:Name="ImgBsr" Text="0" />
-                        <CheckBox x:Name="AutoFocus" Content="Auto-focus" IsChecked="True"
-                                  VerticalAlignment="Center" Margin="10,0,0,0" />
+                        <CheckBox x:Name="AutoFocus" Content="Auto-focus (depth-from-focus)" IsChecked="False"
+                                  VerticalAlignment="Center" Margin="10,0,0,0"
+                                  ToolTip="Estimate range from image sharpness. Unreliable at long range — prefer the rangefinder input." />
                         <Button Content="Estimate depth (3D)" Click="EstimateDepth_Click" Margin="10,2,4,2" />
                         <TextBlock x:Name="ImgStatus" VerticalAlignment="Center" Margin="12,0" Foreground="#555" />
                     </StackPanel>
@@ -192,12 +193,12 @@
                     </WrapPanel>
 
                     <StackPanel Orientation="Horizontal" Margin="0,2">
-                        <Label Content="Focal distance (mm)" />
+                        <Label Content="Rangefinder range (mm)" />
                         <Slider x:Name="OptFocal" Minimum="200" Maximum="3000" Value="1000" Width="260"
                                 VerticalAlignment="Center" TickFrequency="50" IsSnapToTickEnabled="True"
                                 ValueChanged="OptFocal_Changed" />
                         <TextBlock x:Name="OptFocalLabel" VerticalAlignment="Center" Margin="8,0" />
-                        <TextBlock Text="  refocuses the live image — each source sharpens at its own distance"
+                        <TextBlock Text="  external distance (laser). The aperture gives direction; this sets the range."
                                    VerticalAlignment="Center" Foreground="#888" />
                     </StackPanel>
 
