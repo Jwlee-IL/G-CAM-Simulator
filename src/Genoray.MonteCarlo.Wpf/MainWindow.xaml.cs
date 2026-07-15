@@ -457,12 +457,18 @@ public partial class MainWindow : Window
         double period = rank * shadow;                         // one mask period at the detector
         double coverage = detSize / period;                    // detector must span ~1 period to decode well
 
+        // Rough 3D depth reach: aperture A = rank·mosaic·cell; range ~ √(A·D) anchored to the MC (A=18mm,
+        // D=80mm → ±10% depth to ~0.15 m). Only a hint — run `montecarlo depthdesign` for the real curve.
+        double apertureMm = rank * 2 * cell;
+        double range10m = 0.15 * Math.Sqrt((apertureMm * d) / (18.2 * 80.0));
+
         OptReadout.Text =
             $"resolution element ≈ {res:F2} mm      FCFOV ± {fcfovHalf:F1} mm   (rank {rank})\n" +
             $"detector {n}×{n} @ {pitch:F2} mm = {detSize:F1} mm across\n" +
             $"Nyquist {samples:F1} samples/cell  {(samples >= 2.0 ? "✓" : "⚠ undersampled — finer pixel pitch")}\n" +
             $"detector spans {coverage:F2} mask periods  " +
             $"{(coverage is >= 0.9 and <= 1.4 ? "✓" : "⚠ set N so detector ≈ 1 period, else off-axis sources decode badly")}\n" +
+            $"mask aperture {apertureMm:F0} mm → 3D depth reach ≈ {range10m:F2} m (±10%, rough — run depthdesign)\n" +
             $"(focal plane at {focalZ:F0} mm — sources at other distances defocus)";
         RedrawScene();   // keep the scene's FCFOV box in sync with the optics
     }
