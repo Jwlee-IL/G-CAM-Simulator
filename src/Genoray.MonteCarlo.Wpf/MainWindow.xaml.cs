@@ -41,7 +41,7 @@ public partial class MainWindow : Window
     private IDecoder? _liveDecoder;
     private IReadOnlyList<(double x, double y)>? _liveTruePos;
     private double[]? _specPdf, _specCounts, _specCenters;   // spectrum accumulators
-    private double _specWindowLo, _specWindowHi;
+    private List<(double lo, double hi, double energy)> _specWindows = [];   // one ROI per emission line
     private double[]? _wfPool;               // waveform: this acquisition's deposit energies (scope source)
     private IRandom? _wfRng;
     private int _liveTickCount;
@@ -497,14 +497,16 @@ public partial class MainWindow : Window
         var cfg = ConfigFromScene(photons, bsr);
         double emissionRate = EmissionRatePerSec();
         _liveTruePos = _scene.Select(s => (s.X, s.Y)).ToList();
-        double energyRef = Isotopes.Get(_scene[0].Isotope).Lines[0].EnergyKeV;
-        double maxE = _scene.SelectMany(s => Isotopes.Get(s.Isotope).Lines.Select(l => l.EnergyKeV))
-                            .DefaultIfEmpty(energyRef).Max() * 1.15;
+        // Every distinct emission line across ALL sources gets its own photopeak window (ROI), so a mixed
+        // Cs/Co field marks 662, 1173 and 1332 — not just the first isotope.
+        double[] lineEnergies = _scene.SelectMany(s => Isotopes.Get(s.Isotope).Lines.Select(l => l.EnergyKeV))
+                                      .Distinct().OrderBy(x => x).ToArray();
+        double maxE = (lineEnergies.Length > 0 ? lineEnergies.Max() : 661.7) * 1.15;
 
         SimulateButton.Content = "■  STOP";
         LiveStatus.Text = "preparing…";
         Log($"▶ Start acquisition  (speed ×{_liveSpeed:F0}) — {SceneSummary()}");
-        bool ok = await Task.Run(() => PrepareLive(cfg, bsr, emissionRate, windowFrac, energyRef, maxE, resPct));
+        bool ok = await Task.Run(() => PrepareLive(cfg, bsr, emissionRate, windowFrac, lineEnergies, maxE, resPct));
         if (!ok)
         {
             SimulateButton.Content = "▶  SIMULATE";
@@ -529,7 +531,7 @@ public partial class MainWindow : Window
     // Off the UI thread: one MC run fixes the flood SHAPE + count rate and the deposit pool (spectrum PDF +
     // scope energies) — everything every tab needs, from a single acquisition.
     private bool PrepareLive(SimulationConfig cfg, double bsr, double emissionRate,
-                             double windowFrac, double energyRef, double maxE, double resPct)
+                             double windowFrac, double[] lineEnergies, double maxE, double resPct)
     {
         var factory = new DefaultSimulationFactory();
         var res = new SimulationRunner(factory).Run(cfg);
@@ -569,8 +571,9 @@ public partial class MainWindow : Window
         _specPdf = pdf;
         _specCounts = new double[bins];
         _specCenters = ctr;
-        _specWindowLo = energyRef * (1.0 - windowFrac);
-        _specWindowHi = energyRef * (1.0 + windowFrac);
+        _specWindows = lineEnergies
+            .Select(en => (en * (1.0 - windowFrac), en * (1.0 + windowFrac), en))
+            .ToList();
         return true;
     }
 
@@ -641,12 +644,16 @@ public partial class MainWindow : Window
         for (int i = 0; i < _specCounts.Length; i++)
         {
             tot += _specCounts[i];
-            if (_specCenters[i] >= _specWindowLo && _specCenters[i] <= _specWindowHi) win += _specCounts[i];
+            double c = _specCenters[i];
+            foreach (var wnd in _specWindows)
+                if (c >= wnd.lo && c <= wnd.hi) { win += _specCounts[i]; break; }
         }
-        DrawSpectrum(SpPlot, _specCenters, _specCounts, _specWindowLo, _specWindowHi,
+        DrawSpectrum(SpPlot, _specCenters, _specCounts, _specWindows,
             "Energy spectrum — detector resolution applied (accumulating)", "measured energy (keV)", "counts");
-        SpStatus.Text = tot > 0 ? $"±window holds {win / tot:P0} of {tot:N0} counts" : "";
-        if (tot > 0) _liveDetail = $"{win / tot:P0} in window";
+        SpStatus.Text = tot > 0
+            ? $"{_specWindows.Count} photopeak window(s) hold {win / tot:P0} of {tot:N0} counts"
+            : "";
+        if (tot > 0) _liveDetail = $"{win / tot:P0} in {_specWindows.Count} window(s)";
     }
 
     private void RenderWaveform()
@@ -791,21 +798,31 @@ public partial class MainWindow : Window
     }
 
     private static void DrawSpectrum(ScottPlot.WPF.WpfPlot view, double[] centers, double[] counts,
-        double windowLo, double windowHi, string title, string xlabel, string ylabel)
+        IReadOnlyList<(double lo, double hi, double energy)> windows, string title, string xlabel, string ylabel)
     {
         var p = view.Plot;
         p.Clear();
+
+        double maxCount = 1.0;
+        foreach (var c in counts) if (c > maxCount) maxCount = c;
+
+        // Photopeak ROI bands — one per emission line (translucent), with a labelled edge at each line.
+        foreach (var wnd in windows)
+        {
+            var band = p.Add.Rectangle(wnd.lo, wnd.hi, 0, maxCount);
+            band.FillColor = ScottPlot.Colors.Red.WithAlpha(0.10);
+            band.LineColor = ScottPlot.Colors.Transparent;
+            var line = p.Add.VerticalLine(wnd.energy);
+            line.Color = ScottPlot.Colors.Red.WithAlpha(0.55);
+            line.LineWidth = 1;
+            line.LabelText = $"{wnd.energy:F0}";
+        }
 
         double bw = centers.Length > 1 ? centers[1] - centers[0] : 1.0;
         var bars = new List<ScottPlot.Bar>(centers.Length);
         for (int i = 0; i < centers.Length; i++)
             bars.Add(new ScottPlot.Bar { Position = centers[i], Value = counts[i], Size = bw });
         p.Add.Bars(bars);
-
-        var vlo = p.Add.VerticalLine(windowLo);
-        vlo.Color = ScottPlot.Colors.Red; vlo.LineWidth = 2;
-        var vhi = p.Add.VerticalLine(windowHi);
-        vhi.Color = ScottPlot.Colors.Red; vhi.LineWidth = 2;
 
         p.Title(title);
         p.XLabel(xlabel);
