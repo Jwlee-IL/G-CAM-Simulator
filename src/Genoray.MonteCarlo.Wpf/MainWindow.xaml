@@ -141,6 +141,12 @@
                         <TextBox x:Name="ImgPhotons" Text="500000" Width="90" />
                         <Label Content="Background BSR" />
                         <TextBox x:Name="ImgBsr" Text="0" />
+                        <Label Content="Pixel gain σ%" Margin="8,0,0,0" />
+                        <TextBox x:Name="ImgGainSigma" Text="3"
+                                 ToolTip="Per-crystal gain spread (fixed pattern, seeded): each pixel's 662 keV lands slightly off, so an off-gain crystal loses part of the photopeak from its LLD/ULD window — the crystal-to-crystal non-uniformity a real rig calibrates out per crystal." />
+                        <Label Content="Seed" Margin="8,0,0,0" />
+                        <TextBox x:Name="ImgUnifSeed" Text="1" Width="48"
+                                 ToolTip="Seed for the per-pixel gain pattern — change it to draw a different detector." />
                         <CheckBox x:Name="AutoFocus" Content="Focus fusion (laser + image)" IsChecked="False"
                                   VerticalAlignment="Center" Margin="10,0,0,0"
                                   ToolTip="Cross-check the rangefinder against depth-from-focus: refine the range when the source is near, or flag when the laser hit a different surface than the source." />
@@ -160,17 +166,23 @@
 
             <TabItem Header="Spectrum">
                 <DockPanel>
-                    <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="4,6">
-                        <Label Content="Window ±%" />
-                        <TextBox x:Name="SpWindow" Text="10" />
-                        <Label Content="Resolution %@662" />
+                    <StackPanel DockPanel.Dock="Top" Margin="4,6">
+                      <StackPanel Orientation="Horizontal">
+                        <Label Content="Peak window ±×FWHM" />
+                        <TextBox x:Name="SpWindow" Text="1.5"
+                                 ToolTip="Per-pixel photopeak LLD/ULD: the imaging window is 662 ± (this × FWHM), so only photopeak events (per crystal, gain-corrected) form the coded image. Applies on the next Simulate." />
+                        <Label Content="Resolution %@662" Margin="8,0,0,0" />
                         <TextBox x:Name="SpResolution" Text="6" />
                         <CheckBox x:Name="SpLogY" Content="Log Y" IsChecked="False" VerticalAlignment="Center"
                                   Margin="8,0" Checked="SpLogY_Changed" Unchecked="SpLogY_Changed"
                                   ToolTip="Log counts axis — reveals the Compton continuum the photopeak dwarfs on a linear scale" />
-                        <TextBlock Text="(press Simulate to accumulate; time runs live above)"
+                        <Label Content="Noise floor (cps)" Margin="8,0,0,0" />
+                        <TextBox x:Name="SpNoiseCps" Text="0"
+                                 ToolTip="Device electronics/EMI noise trigger rate — a source-INDEPENDENT low-energy population (not derivable from the datasheet; set it to match your rig)." />
+                        <TextBlock Text="(press Simulate to accumulate)"
                                    VerticalAlignment="Center" Margin="10,0" Foreground="#888" />
                         <TextBlock x:Name="SpStatus" VerticalAlignment="Center" Margin="12,0" Foreground="#555" />
+                      </StackPanel>
                     </StackPanel>
                     <sp:WpfPlot x:Name="SpPlot" />
                 </DockPanel>

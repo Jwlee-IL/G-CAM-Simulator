@@ -44,6 +44,8 @@ public partial class MainWindow : Window
     private SimulationConfig? _liveCfg;      // the config in flight, so refocusing can rebuild the decoder
     private IReadOnlyList<(double x, double y)>? _liveTruePos;
     private double[]? _specPdf, _specCounts, _specCenters;   // spectrum accumulators
+    private double[]? _noisePdf;                             // source-independent low-energy noise-wall shape
+    private double _noiseCps;                                // device electronics/EMI noise trigger rate (cps)
     private List<(double lo, double hi, double energy)> _specWindows = [];   // one ROI per emission line
     private double[]? _wfPool;               // waveform: this acquisition's deposit energies (scope source)
     private IRandom? _wfRng;
@@ -429,6 +431,18 @@ public partial class MainWindow : Window
         // and re-enters as ~184 keV: the backscatter peak. Behind the crystal, so it doesn't attenuate the beam.
         cfg.Detector.BackingScatterMm = 2.0;
 
+        // The detection chain drives the per-pixel photopeak window's energy smear (the ComptonCrystalDetector
+        // measures each deposit through this before the LLD/ULD check), so a coarser detector's wider FWHM lets
+        // more scatter into the imaging window.
+        if (_feConfig != null) cfg.Detector.FrontEnd = _feConfig;
+
+        // Per-crystal gain spread (fixed pattern, seeded): each pixel's gain differs, so its 662 keV deposit lands
+        // slightly off-window and it loses part of the photopeak — the crystal-to-crystal non-uniformity the real
+        // rig calibrated out per crystal. EnergyWindowFraction stays 0 so the sensitivity is pure gain (the LLD/ULD
+        // itself lives in the ComptonCrystalDetector window).
+        cfg.Detector.GainSigma = Math.Max(0.0, ParseD(ImgGainSigma.Text, 3) / 100.0);
+        cfg.Detector.UniformitySeed = (int)ParseD(ImgUnifSeed.Text, 1);
+
         // Non-cyclic (finite-mask) decode + recon kept just inside the FCFOV — suppresses the off-axis ghosts
         // that a cyclic decode aliases in, so MULTIPLE off-axis sources each resolve to their own peak.
         cfg.Decoder.Cyclic = false;
@@ -608,8 +622,12 @@ public partial class MainWindow : Window
         _liveSpeed = Math.Max(0.1, ParseD(LiveSpeed.Text, 10));
         long photons = (long)ParseD(ImgPhotons.Text, 500_000);
         double bsr = ParseD(ImgBsr.Text, 0);
-        double windowFrac = ParseD(SpWindow.Text, 10) / 100.0;
+        // Per-pixel photopeak window: ±(N × FWHM) around the primary line. FWHM comes from the detection chain.
+        double peakWinFwhm = Math.Max(0.1, ParseD(SpWindow.Text, 1.5));
+        double windowFrac = Math.Max(0.005, peakWinFwhm * _feResPct662 / 100.0);
+        double primaryLine = _scene.Count > 0 ? Isotopes.Get(_scene[0].Isotope).Lines[0].EnergyKeV : 661.7;
         double resPct = ParseD(SpResolution.Text, 6);
+        double noiseCps = Math.Max(0.0, ParseD(SpNoiseCps.Text, 0));
         var cfg = ConfigFromScene(photons, bsr);
         _liveCfg = cfg;                     // kept so the focal slider can rebuild the decoder without a new MC
         double emissionRate = EmissionRatePerSec();
@@ -623,7 +641,7 @@ public partial class MainWindow : Window
         SimulateButton.Content = "■  STOP";
         LiveStatus.Text = "preparing…";
         Log($"▶ Start acquisition  (speed ×{_liveSpeed:F0}) — {SceneSummary()}");
-        bool ok = await Task.Run(() => PrepareLive(cfg, bsr, emissionRate, windowFrac, lineEnergies, maxE, resPct));
+        bool ok = await Task.Run(() => PrepareLive(cfg, bsr, emissionRate, windowFrac, lineEnergies, maxE, resPct, noiseCps, primaryLine));
         if (!ok)
         {
             SimulateButton.Content = "▶  SIMULATE";
@@ -648,9 +666,13 @@ public partial class MainWindow : Window
     // Off the UI thread: one MC run fixes the flood SHAPE + count rate and the deposit pool (spectrum PDF +
     // scope energies) — everything every tab needs, from a single acquisition.
     private bool PrepareLive(SimulationConfig cfg, double bsr, double emissionRate,
-                             double windowFrac, double[] lineEnergies, double maxE, double resPct)
+                             double windowFrac, double[] lineEnergies, double maxE, double resPct, double noiseCps,
+                             double primaryLine)
     {
-        var factory = new DefaultSimulationFactory();
+        // Imaging flood via the crystal-Compton detector with a PER-PIXEL photopeak window (LLD/ULD = primaryLine
+        // ± windowFrac, gain-corrected per crystal) — only photopeak events form the coded image, the way the real
+        // rig's per-crystal LLD/ULD worked. Compton/scatter/noise deposits fall outside the window and are rejected.
+        var factory = new ComptonFactory(ComptonStrategy.PerPixelWindow, primaryLine, windowFrac);
         var res = new SimulationRunner(factory).Run(cfg);
         double eff = res.PhotonsEmitted > 0 ? res.DetectedWeight / res.PhotonsEmitted : 0.0;
         _liveRateCps = emissionRate * eff;
@@ -702,6 +724,20 @@ public partial class MainWindow : Window
         _specWindows = lineEnergies
             .Select(en => (en * (1.0 - windowFrac), en * (1.0 + windowFrac), en))
             .ToList();
+
+        // Source-INDEPENDENT low-energy noise wall (device electronics / EMI): a falling exponential toward low
+        // energy, accumulated at a fixed rate regardless of activity — so at a weak source it dominates the low-E
+        // region (the "noise wall" real detectors show). The LLD (applied at render) cuts its bottom. The rate is
+        // a device knob, not derivable from the scintillator/sensor datasheet.
+        if (noiseCps > 0.0)
+        {
+            const double noiseScaleKev = 30.0;
+            var npdf = new double[bins]; double nsum = 0.0;
+            for (int i = 0; i < bins; i++) { npdf[i] = Math.Exp(-ctr[i] / noiseScaleKev); nsum += npdf[i]; }
+            if (nsum > 0.0) for (int i = 0; i < bins; i++) npdf[i] /= nsum;
+            _noisePdf = npdf; _noiseCps = noiseCps;
+        }
+        else { _noisePdf = null; _noiseCps = 0.0; }
         return true;
     }
 
@@ -726,6 +762,13 @@ public partial class MainWindow : Window
         if (_specPdf != null && _specCounts != null)
             for (int i = 0; i < _specCounts.Length; i++)
                 _specCounts[i] += Sampling.Poisson(rng, _specPdf[i] * dN);
+        // Noise wall accumulates at its own (source-independent) rate.
+        if (_noisePdf != null && _specCounts != null && _noiseCps > 0.0)
+        {
+            double noiseN = _noiseCps * dt;
+            for (int i = 0; i < _specCounts.Length; i++)
+                _specCounts[i] += Sampling.Poisson(rng, _noisePdf[i] * noiseN);
+        }
 
         // Auto-focus: every ~2 s, refocus the decoder to the plane that best focuses the strongest source, so
         // a source at any distance is caught without knowing its depth (the fixed default plane misses far ones).
@@ -809,6 +852,8 @@ public partial class MainWindow : Window
     private void RenderSpectrum()
     {
         if (_specCounts == null || _specCenters == null) return;
+        // The spectrum shows the FULL deposit spectrum; the red ROI band marks the per-pixel photopeak window
+        // that the imaging actually uses (the "% in window" is the photopeak-selected fraction).
         double win = 0, tot = 0;
         for (int i = 0; i < _specCounts.Length; i++)
         {
@@ -818,7 +863,7 @@ public partial class MainWindow : Window
                 if (c >= wnd.lo && c <= wnd.hi) { win += _specCounts[i]; break; }
         }
         DrawSpectrum(SpPlot, _specCenters, _specCounts, _specWindows,
-            "Energy spectrum — detector resolution applied (accumulating)", "measured energy (keV)", "counts",
+            "Energy spectrum — red band = per-pixel imaging photopeak window", "measured energy (keV)", "counts",
             logY: SpLogY.IsChecked == true);
         SpStatus.Text = tot > 0
             ? $"{_specWindows.Count} photopeak window(s) hold {win / tot:P0} of {tot:N0} counts"
