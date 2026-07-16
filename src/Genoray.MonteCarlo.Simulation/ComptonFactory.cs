@@ -45,6 +45,6 @@ public sealed class ComptonFactory : ISimulationFactory
         return new ComptonCrystalDetector(d.PixelsX, d.PixelsY, d.PixelPitchMm,
             _windowCenterKeV, _windowFraction, _strategy, cascadeRng,
             _muAt662, d.CrystalThicknessMm, planeZ: 0.0, sensitivity, eventSink: null, frontEnd, frontEndRng,
-            entrance, backing, d.ReflectorGapMm);
+            entrance, backing, d.ReflectorGapMm, d.OpticalCrosstalkFraction);
     }
 }

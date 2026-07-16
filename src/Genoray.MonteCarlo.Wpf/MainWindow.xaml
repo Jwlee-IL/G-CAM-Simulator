@@ -242,6 +242,9 @@
                         <Label Content="Reflector gap (µm)" />
                         <TextBox x:Name="DetGapUm" Text="100" TextChanged="DetField_Changed"
                                  ToolTip="Dead reflector / saw-kerf gap between crystals. A photon entering the gap is lost, so the fill factor is ((pitch−gap)/pitch)². 0 = ideal 100% fill." />
+                        <Label Content="Optical crosstalk %" Margin="8,0,0,0" />
+                        <TextBox x:Name="DetCrosstalk" Text="0"
+                                 ToolTip="Fraction of each crystal's scintillation LIGHT that an imperfect reflector leaks to its 4 neighbours. Reduces the per-crystal photopeak light (imaging efficiency loss); a wider reflector gap isolates better (less crosstalk) at the cost of dead area. Total light is conserved so the spectrum is unaffected. Applies on the next Simulate." />
                         <Button Content="Redraw" Click="DetRedraw_Click" Margin="10,2,4,2" />
                         <TextBlock x:Name="DetReadout" VerticalAlignment="Center" Margin="12,0" Foreground="#286" />
                     </StackPanel>

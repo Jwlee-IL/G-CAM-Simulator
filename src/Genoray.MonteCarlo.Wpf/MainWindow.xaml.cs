@@ -450,6 +450,8 @@ public partial class MainWindow : Window
         // Dead reflector / saw-kerf gap between crystals (µm → mm): a photon entering the gap is lost. Clamp below
         // the pitch (a gap ≥ pitch would kill the whole detector) — matches the Detector-tab preview's clamp.
         cfg.Detector.ReflectorGapMm = Math.Clamp(ParseD(DetGapUm.Text, 100) / 1000.0, 0.0, pitch * 0.9);
+        // Optical crosstalk: fraction of scintillation light an imperfect reflector leaks to neighbouring crystals.
+        cfg.Detector.OpticalCrosstalkFraction = Math.Clamp(ParseD(DetCrosstalk.Text, 0) / 100.0, 0.0, 0.9);
 
         // Non-cyclic (finite-mask) decode + recon kept just inside the FCFOV — suppresses the off-axis ghosts
         // that a cyclic decode aliases in, so MULTIPLE off-axis sources each resolve to their own peak.

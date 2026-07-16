@@ -58,7 +58,8 @@ public sealed class EventStreamStudy
             windowCenterKeV: 661.7, windowFraction: 1.0, ComptonStrategy.Argmax, cascadeRng,
             muAt662PerMm: 0.09, d.CrystalThicknessMm, planeZ: 0.0, sensitivity,
             eventSink: (dep, w) => { deposits.Add(dep); weights.Add(w); },
-            entranceAbsorber: entrance, backingScatterer: backing, reflectorGapMm: d.ReflectorGapMm);
+            entranceAbsorber: entrance, backingScatterer: backing, reflectorGapMm: d.ReflectorGapMm,
+            opticalCrosstalk: d.OpticalCrosstalkFraction);
 
         foreach (var photon in source.Emit(rng, config.PhotonCount))
         {

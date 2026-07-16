@@ -41,6 +41,7 @@ public sealed class ComptonCrystalDetector : IDetector
     private readonly EntranceAbsorber? _entrance;   // passive window/encapsulation in front (null = none)
     private readonly EntranceAbsorber? _backing;    // scatterer behind the crystal (null = none) -> backscatter
     private readonly double _reflectorGap;          // dead reflector/kerf gap between crystals (mm; 0 = 100% fill)
+    private readonly double _crosstalk;             // optical light-leak fraction to the 4 neighbours (0 = perfect isolation)
 
     public double PlaneZ { get; }
 
@@ -50,7 +51,7 @@ public sealed class ComptonCrystalDetector : IDetector
         double[]? sensitivity = null, Action<double, double>? eventSink = null,
         FrontEndModel? frontEnd = null, IRandom? frontEndRng = null,
         EntranceAbsorber? entranceAbsorber = null, EntranceAbsorber? backingScatterer = null,
-        double reflectorGapMm = 0.0)
+        double reflectorGapMm = 0.0, double opticalCrosstalk = 0.0)
     {
         _image = new DetectorImage(pixelsX, pixelsY);
         _pitch = pixelPitchMm;
@@ -69,6 +70,7 @@ public sealed class ComptonCrystalDetector : IDetector
         _entrance = entranceAbsorber;
         _backing = backingScatterer;
         _reflectorGap = reflectorGapMm;
+        _crosstalk = opticalCrosstalk;
         PlaneZ = planeZ;
     }
 
@@ -190,11 +192,38 @@ public sealed class ComptonCrystalDetector : IDetector
         {
             double total = 0.0;
             foreach (var (_, _, dep) in _sites) total += dep;
-            _eventSink(total, weight);
+            _eventSink(total, weight);   // TRUE total light (perfect collection) — crosstalk conserves it, so it goes here BEFORE the spread
         }
+
+        // Optical crosstalk: an imperfect reflector lets a fraction of each interaction's scintillation LIGHT leak
+        // to the 4 nearest crystals. The main channel keeps (1−leak); each neighbour gets leak/4 (light past the
+        // array edge is lost). A per-crystal windowed readout then sees reduced photopeak light in the main channel
+        // (events fall out of its LLD/ULD window → efficiency loss) plus low neighbour hits — which is exactly why
+        // the reflector isolation matters. The leak VARIES per event (edge interactions share more than centred
+        // ones), modelled as uniform [0, 2·fraction] so the photopeak efficiency rolls off gradually rather than
+        // cliff-dropping when the mean crosses the window. Total light is conserved → the total-energy sink is intact.
+        if (_crosstalk > 0.0) ApplyOpticalCrosstalk(Math.Min(0.95, 2.0 * _crosstalk * _rng.NextDouble()));
 
         Deposit(weight);
         return true;
+    }
+
+    private void ApplyOpticalCrosstalk(double c)
+    {
+        var orig = _sites.ToArray();
+        _sites.Clear();
+        foreach (var (px, py, e) in orig) AddSite(px, py, (1.0 - c) * e);
+        foreach (var (px, py, e) in orig)
+        {
+            double share = c * 0.25 * e;
+            Leak(px - 1, py, share); Leak(px + 1, py, share);
+            Leak(px, py - 1, share); Leak(px, py + 1, share);
+        }
+    }
+
+    private void Leak(int nx, int ny, double share)
+    {
+        if (nx >= 0 && nx < _image.Width && ny >= 0 && ny < _image.Height) AddSite(nx, ny, share);
     }
 
     private void AddSite(int px, int py, double dep)

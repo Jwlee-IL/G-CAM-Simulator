@@ -277,6 +277,12 @@ public sealed class DetectorConfig
     /// pattern on the flood. 0 = ideal 100% fill.</summary>
     public double ReflectorGapMm { get; set; } = 0.0;
 
+    /// <summary>Optical crosstalk fraction: the share of an interaction's scintillation light that an imperfect
+    /// reflector leaks to the 4 nearest crystals (each gets a quarter). The main channel keeps (1−fraction), so a
+    /// per-crystal windowed readout loses some photopeak light (efficiency drop) and neighbours see low hits.
+    /// Total light is conserved (the total-energy spectrum is unaffected). 0 = perfect optical isolation.</summary>
+    public double OpticalCrosstalkFraction { get; set; } = 0.0;
+
     /// <summary>Effective stainless-steel-equivalent thickness (mm) of the material BEHIND the crystal (SiPM /
     /// PCB / housing). A through-going photon can Compton back-scatter off it and re-enter the crystal — a ~180°
     /// scatter of 662 keV returns ~184 keV, the backscatter peak. Behind the crystal, so it does not attenuate the
