@@ -14,13 +14,25 @@ public sealed class CrystalUniformity
     public int Width { get; }
     public int Height { get; }
 
-    /// <summary>Per-pixel relative sensitivity (row-major), mean ≈ 1.</summary>
+    /// <summary>Per-pixel relative gain (row-major, mean ≈ 1). Light-yield / collection spread.</summary>
+    public double[] Gain { get; }
+
+    /// <summary>Per-pixel energy-resolution FWHM (fraction of the photopeak, row-major).</summary>
+    public double[] Fwhm { get; }
+
+    /// <summary>Per-pixel relative sensitivity (row-major), mean ≈ 1. Gain × photopeak-window acceptance
+    /// with the peak centred in the window (no thermal drift). This is the calibration-time map.</summary>
     public double[] Sensitivity { get; }
+
+    private readonly double _windowFraction;
 
     public CrystalUniformity(DetectorConfig cfg)
     {
         Width = cfg.PixelsX;
         Height = cfg.PixelsY;
+        _windowFraction = cfg.EnergyWindowFraction;
+        Gain = new double[Width * Height];
+        Fwhm = new double[Width * Height];
         Sensitivity = new double[Width * Height];
 
         var rng = new Random(cfg.UniformitySeed);
@@ -37,16 +49,34 @@ public sealed class CrystalUniformity
             double fwhm = cfg.EnergyResolutionFwhm * (1.0 + cfg.EnergyResolutionFwhmSigma * Gaussian(rng));
             if (fwhm < 0.0) fwhm = 0.0;
 
-            Sensitivity[i] = gain * WindowAcceptance(fwhm, cfg.EnergyWindowFraction);
+            Gain[i] = gain;
+            Fwhm[i] = fwhm;
+            Sensitivity[i] = gain * PhotopeakAcceptance(fwhm, _windowFraction, 0.0);
         }
     }
 
-    /// <summary>Fraction of a Gaussian photopeak (given FWHM) that falls inside ±window.</summary>
-    private static double WindowAcceptance(double fwhmFraction, double windowFraction)
+    /// <summary>Per-pixel sensitivity when the photopeak centroid has drifted by <paramref name="centroidShift"/>
+    /// (relative, e.g. +0.02 = peak 2% high). Row-major, same layout as <see cref="Sensitivity"/>. Used by the
+    /// thermal-drift study to build the acquisition-time flood the fixed calibration window actually sees.</summary>
+    public double[] SensitivityWithShift(double[] centroidShift)
     {
-        if (windowFraction <= 0.0 || fwhmFraction <= 0.0) return 1.0;
+        var s = new double[Sensitivity.Length];
+        for (int i = 0; i < s.Length; i++)
+            s[i] = Gain[i] * PhotopeakAcceptance(Fwhm[i], _windowFraction, centroidShift[i]);
+        return s;
+    }
+
+    /// <summary>Fraction of a Gaussian photopeak (given FWHM) that falls inside the fixed ±window when the peak
+    /// centroid is offset from the window centre by <paramref name="centroidShift"/> (relative to the line energy).
+    /// Shift 0 reduces to the symmetric erf(w/√2σ); a shift walks the peak out of the window asymmetrically.</summary>
+    public static double PhotopeakAcceptance(double fwhmFraction, double windowFraction, double centroidShift)
+    {
+        if (windowFraction <= 0.0 || fwhmFraction <= 0.0)
+            return Math.Abs(centroidShift) <= windowFraction || windowFraction <= 0.0 ? 1.0 : 0.0;
         double sigma = fwhmFraction / 2.355;
-        return Erf(windowFraction / (Math.Sqrt(2.0) * sigma));
+        double a = (windowFraction - centroidShift) / (Math.Sqrt(2.0) * sigma);
+        double b = (windowFraction + centroidShift) / (Math.Sqrt(2.0) * sigma);
+        return 0.5 * (Erf(a) + Erf(b));
     }
 
     private static double Gaussian(Random r)

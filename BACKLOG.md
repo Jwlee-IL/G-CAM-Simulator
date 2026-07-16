@@ -1,7 +1,7 @@
 # Backlog
 
 Deferred work, captured so we don't forget. Not in current scope. See
-`AGENTS.findings.md` (themes 1–35) for everything that IS done.
+`AGENTS.findings.md` (themes 1–36) for everything that IS done.
 
 **Genuinely open**: the **Physical realism gaps** list below (Codex gap-review after theme 35 — a whole queue of
 real-detector effects to model one-per-session, top picks ★thermal drift, ★flood-field correction, pile-up sum
@@ -105,19 +105,19 @@ model. Ranked by impact; **★ = user-flagged / connects to the real rig**. Tack
 - Room / object / operator scatter — MED. We have the entrance+backing scatterer; full environmental scatter is more.
 
 **Operational / calibration (★ real-rig pain points):**
-- **★ Thermal / gain drift DURING acquisition** — HIGH. The real rig's headache (SiPM thermal drift → the per-crystal
-  photopeak window walks → efficiency loss; "cooling was a headache"). We model only STATIC seeded gain; add a
-  time-varying drift and show the window-walk / count-imbalance it causes.
-- **★ Flood-field / uniformity correction** — MED. We now stamp the per-crystal gain non-uniformity but not the
-  flat-field CORRECTION a real system applies — the natural completing pair to the gain-spread + dead-region work.
+- ~~**★ Thermal / gain drift DURING acquisition**~~ + ~~**★ Flood-field / uniformity correction**~~ — **DONE, theme 36**
+  (`ThermalDrift` / `ThermalDriftStudy` / `montecarlo thermal`). Time-varying SiPM gain drift (ambient uniform +
+  self-heating gradient, −0.7 %/°C) walks the photopeak out of the fixed per-crystal window → −9.4 % efficiency +
+  6.7 % flood residual by end of acquisition; the calibration flood map cannot remove the time-varying part, only
+  bias-comp can (holds 99.9 %). Confirmed it is an ENERGY-window (efficiency) problem, not a localization one.
 - Dead time / count-rate saturation (paralyzable / non-paralyzable) + live-time vs real-time — MED. Only RTL pile-up
   exists; no per-channel dead-time / saturation in the acquisition.
 - Per-channel SiPM/preamp gain·PDE·threshold mismatch (beyond crystal gain), microcell saturation, afterpulsing — MED.
 - Non-proportionality as deposit-history-dependent (Compton-split vs photoelectric resolve differently) — MED.
 - Intrinsic activity (LYSO Lu-176, LaBr₃ La-138) — LOW for GAGG (none); matters only if those scintillators are picked.
 
-Recommended order next session: **thermal drift (★) + flood-field correction (★)** together (they close the
-detector-nonuniformity story), then **pile-up sum continuum**, then **mask fabrication tolerances (★)**, then mask
+Recommended order next session: ~~thermal drift + flood-field~~ (DONE, theme 36) → **pile-up sum continuum in the
+spectrum** (HIGH), then **mask fabrication tolerances (★)** (tungsten hard to machine — user flagged), then mask
 fluorescence/scatter. Reflector MATERIAL stays deliberately unmodelled (2nd-order, theme 35).
 
 ### Productization (theme 22 — design-only; user is NOT building this now)

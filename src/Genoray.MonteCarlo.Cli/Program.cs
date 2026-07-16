@@ -26,6 +26,9 @@ if (args[0].Equals("thickness", StringComparison.OrdinalIgnoreCase))
 if (args[0].Equals("uniformity", StringComparison.OrdinalIgnoreCase))
     return RunUniformity(args);
 
+if (args[0].Equals("thermal", StringComparison.OrdinalIgnoreCase))
+    return RunThermal(args);
+
 if (args[0].Equals("array", StringComparison.OrdinalIgnoreCase))
     return RunArray(args);
 
@@ -1152,6 +1155,68 @@ static int RunUniformity(string[] args)
 
     Console.WriteLine();
     Console.WriteLine($"CSV written: {csvPath}");
+    return 0;
+}
+
+static int RunThermal(string[] args)
+{
+    if (args.Length < 2)
+    {
+        Console.Error.WriteLine("Usage: montecarlo thermal <base.json> [out_prefix]");
+        Console.Error.WriteLine("  Models SiPM gain drift DURING an acquisition (ambient + self-heating) and");
+        Console.Error.WriteLine("  its effect on a per-crystal photopeak-window system, bias-comp OFF vs ON.");
+        return 1;
+    }
+
+    string prefix = args.Length >= 3 ? args[2] : "samples/thermal";
+    const double photonBudget = 800_000.0;
+    const int repeats = 60;
+    const double failThresholdMm = 3.0;
+
+    var baseConfig = ConfigLoader.Load(args[1]);
+    // Activate a per-crystal photopeak window + static non-uniformity so the drift has something to walk in.
+    if (baseConfig.Detector.EnergyResolutionFwhm <= 0.0) baseConfig.Detector.EnergyResolutionFwhm = 0.08;
+    if (baseConfig.Detector.EnergyWindowFraction <= 0.0) baseConfig.Detector.EnergyWindowFraction = 0.10;
+    if (baseConfig.Detector.EnergyResolutionFwhmSigma <= 0.0) baseConfig.Detector.EnergyResolutionFwhmSigma = 0.30;
+    if (baseConfig.Detector.GainSigma <= 0.0) baseConfig.Detector.GainSigma = 0.05;
+    if (baseConfig.Detector.GainGradient <= 0.0) baseConfig.Detector.GainGradient = 0.10;
+
+    int W = baseConfig.Detector.PixelsX, H = baseConfig.Detector.PixelsY;
+    int n = 13;
+    var times = new double[n];
+    for (int i = 0; i < n; i++) times[i] = (double)i / (n - 1);
+
+    // Physical drift: SiPM gain −0.7%/°C, ambient +3°C linear over the run, self-heating +8°C centre hotspot
+    // (τ 0.3, corner 40% of centre). Compare an uncompensated array with a 90%-effective bias-comp loop.
+    ThermalDrift Make(double comp) => new ThermalDrift(W, H,
+        alphaPerC: -0.007, biasCompFraction: comp,
+        ambientRatePerT: 3.0, ambientSwingC: 0.0, ambientPeriod: 0.0,
+        selfHeatC: 8.0, selfHeatTau: 0.3, edgeFactor: 0.4);
+
+    var study = new ThermalDriftStudy(new DefaultSimulationFactory());
+    var off = study.Run(baseConfig, Make(0.0), times, photonBudget, repeats, failThresholdMm);
+    var on = study.Run(baseConfig, Make(0.9), times, photonBudget, repeats, failThresholdMm);
+
+    File.WriteAllText(prefix + "_off.csv", ThermalDriftStudy.ToCsv(off));
+    File.WriteAllText(prefix + "_on.csv", ThermalDriftStudy.ToCsv(on));
+
+    Console.WriteLine("Thermal-drift study: SiPM gain -0.7%/C, ambient +3C linear + self-heating +8C hotspot (tau 0.3).");
+    Console.WriteLine("Per-crystal photopeak window; flood correction uses the t=0 calibration map.");
+    Console.WriteLine();
+    Console.WriteLine("                  bias-comp OFF                    bias-comp ON (90%)");
+    Console.WriteLine("  time  ctrDeg   eff    resid%   bias    |   eff    resid%   bias");
+    Console.WriteLine("  ----  ------   ----   ------   -----   |   ----   ------   -----");
+    for (int i = 0; i < n; i++)
+    {
+        var f = off[i]; var o = on[i];
+        Console.WriteLine($"  {f.Time,4:F2}  {f.CenterDeltaC,5:F1}   {f.Efficiency,5:P1} {f.ResidualCoV,7:P1} {f.RmsBiasMm,6:F2}mm  | " +
+                          $" {o.Efficiency,5:P1} {o.ResidualCoV,7:P1} {o.RmsBiasMm,6:F2}mm");
+    }
+    Console.WriteLine();
+    Console.WriteLine($"End of acquisition: OFF loses {1 - off[^1].Efficiency,4:P1} of photopeak counts, residual {off[^1].ResidualCoV,4:P1};");
+    Console.WriteLine($"                    ON  holds {on[^1].Efficiency,4:P1} efficiency, residual {on[^1].ResidualCoV,4:P1}.");
+    Console.WriteLine("Drift is an ENERGY-WINDOW (efficiency) problem, not a localization one: the bias tracks the decoder floor.");
+    Console.WriteLine($"CSV written: {prefix}_off.csv, {prefix}_on.csv");
     return 0;
 }
 

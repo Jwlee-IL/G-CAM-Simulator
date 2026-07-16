@@ -1033,3 +1033,33 @@ or the user (who built the real rig).
   3 mm MPPC over a big block — which is why the 0.6 mm-crystal / 3 mm-MPPC lump is only a datasheet convenience, not a
   buildable 1:1. (The blockify is the no-Anger worst case; Anger centroiding could recover some sub-SiPM position but
   needs a light-spread model — not done.) SiPM is otherwise 1:1 implicit, its light budget lumped in `FrontEndModel`.
+
+## 36. Thermal drift DURING an acquisition + flood-field correction — `ThermalDrift` / `ThermalDriftStudy` / `montecarlo thermal`
+First of the "physical realism gaps" queue (Codex gap-review). The real rig's headache: SiPM cooling. We modelled
+only STATIC per-crystal gain; this adds the TIME axis and asks what a per-crystal photopeak-window system loses as
+the array's temperature drifts mid-acquisition — and what flood correction can and cannot fix.
+- **The physics, no hand-tuning**: SiPM gain ∝ over-voltage = V_bias − V_breakdown(T); V_breakdown rises ≈ +21.5 mV/°C
+  (Hamamatsu), so at a few volts of over-voltage **dGain/dT ≈ −0.7 %/°C** (`ThermalDrift.AlphaPerC = −0.007`). A gain
+  change of `m(t)` walks the 662 photopeak centroid by `ε = m−1` relative to the FIXED calibration window, so the
+  acceptance falls asymmetrically: `½[erf((w−ε)/√2σ) + erf((w+ε)/√2σ)]` (`CrystalUniformity.PhotopeakAcceptance`,
+  a strict generalization — ε = 0 reduces to the old symmetric `erf(w/√2σ)`).
+- **Two physically distinct temperature drivers** (the user flagged that ambient was missing — the rig is 거치형):
+  **ambient** (room/HVAC) is spatially UNIFORM → walks every crystal together → a global efficiency droop, no flood
+  non-uniformity; **self-heating** has a spatial GRADIENT (centre hotspot) + exponential warm-up → the walk differs
+  across the face → a flood-correction RESIDUAL. `T_i(t) = T_amb(t) + ΔT_self·(1−e^{−t/τ})·shape(r_i)`.
+- **Flood correction cannot save it, only bias-comp can**: the calibration map `S_cal` is a t = 0 snapshot; the
+  acquisition-time sensitivity walks away from it, so dividing by the fixed `S_cal` leaves a residual that GROWS with
+  time. A bias-compensation (temperature-compensation) loop that nulls a fraction of α is the only fix. Reusing the
+  `UniformityStudy` "flood once, apply per-pixel" trick: the MC geometry flood is run ONCE, every time slice applies
+  the analytic `S_i(t) = gain_i · acceptance(fwhm_i, w, ε_i(t))`.
+- **Result** (`montecarlo thermal`, ambient +3 °C linear + self-heat +8 °C hotspot τ 0.3, over one acquisition):
+  bias-comp OFF droops photopeak counts **100 %→90.6 % (−9.4 %)** and grows the flood residual **0→6.7 % CoV**;
+  bias-comp ON (90 %) holds **99.9 %** efficiency, **0.1 %** residual. **Localization barely moves (~0.6 mm, the
+  decoder floor) in either case.**
+- **Independent confirmation of a prior claim**: the theme-22 note "SiPM thermal drift is an ENERGY-window not a
+  position issue" was asserted from design; this MC reproduces it from first principles — drift is an efficiency /
+  window-walk problem, and a smooth residual barely pulls the correlation peak. That is exactly why the real rig
+  fought it with cooling / bias-comp (an energy-stability problem), not with a position recalibration.
+- Flood-field correction (gap #2) was already latent in `UniformityStudy` (÷ calibrated sensitivity recovers static
+  non-uniformity perfectly); the honest new content is that it is powerless against the TIME-varying part. (Tests:
+  `ThermalDriftTests`, +6.)
