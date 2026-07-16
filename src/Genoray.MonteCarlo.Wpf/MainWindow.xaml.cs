@@ -604,6 +604,23 @@ public partial class MainWindow : Window
         ImgStatus.Text = "3D: " + string.Join("  ·  ", found.Select(p => $"({p.Xmm:F0},{p.Ymm:F0}) @ {p.Zmm:F0}mm"));
     }
 
+    // Average each SiPM block of crystals into a flat value — models a SiPM reading a block of crystals as one
+    // channel (light-sharing), so position is lost below the SiPM pitch.
+    private static void BlockifyFlood(DetectorImage img, int block)
+    {
+        int w = img.Width, h = img.Height;
+        for (int by = 0; by < h; by += block)
+            for (int bx = 0; bx < w; bx += block)
+            {
+                double sum = 0; int n = 0;
+                for (int y = by; y < Math.Min(by + block, h); y++)
+                    for (int x = bx; x < Math.Min(bx + block, w); x++) { sum += img[x, y]; n++; }
+                double avg = n > 0 ? sum / n : 0.0;
+                for (int y = by; y < Math.Min(by + block, h); y++)
+                    for (int x = bx; x < Math.Min(bx + block, w); x++) img[x, y] = avg;
+            }
+    }
+
     private static DetectorImage CopyImage(DetectorImage src)
     {
         var dst = new DetectorImage(src.Width, src.Height);
@@ -638,6 +655,7 @@ public partial class MainWindow : Window
         double primaryLine = _scene.Count > 0 ? Isotopes.Get(_scene[0].Isotope).Lines[0].EnergyKeV : 661.7;
         double resPct = ParseD(SpResolution.Text, 6);
         double noiseCps = Math.Max(0.0, ParseD(SpNoiseCps.Text, 0));
+        double sipmPitch = Math.Max(0.05, ParseD(DetSipmPitch.Text, 0.6));   // readout pitch (≥ crystal pitch → light-sharing)
         var cfg = ConfigFromScene(photons, bsr);
         _liveCfg = cfg;                     // kept so the focal slider can rebuild the decoder without a new MC
         double emissionRate = EmissionRatePerSec();
@@ -651,7 +669,7 @@ public partial class MainWindow : Window
         SimulateButton.Content = "■  STOP";
         LiveStatus.Text = "preparing…";
         Log($"▶ Start acquisition  (speed ×{_liveSpeed:F0}) — {SceneSummary()}");
-        bool ok = await Task.Run(() => PrepareLive(cfg, bsr, emissionRate, windowFrac, lineEnergies, maxE, resPct, noiseCps, primaryLine));
+        bool ok = await Task.Run(() => PrepareLive(cfg, bsr, emissionRate, windowFrac, lineEnergies, maxE, resPct, noiseCps, primaryLine, sipmPitch));
         if (!ok)
         {
             SimulateButton.Content = "▶  SIMULATE";
@@ -677,7 +695,7 @@ public partial class MainWindow : Window
     // scope energies) — everything every tab needs, from a single acquisition.
     private bool PrepareLive(SimulationConfig cfg, double bsr, double emissionRate,
                              double windowFrac, double[] lineEnergies, double maxE, double resPct, double noiseCps,
-                             double primaryLine)
+                             double primaryLine, double sipmPitch)
     {
         // Imaging flood via the crystal-Compton detector with a PER-PIXEL photopeak window (LLD/ULD = primaryLine
         // ± windowFrac, gain-corrected per crystal) — only photopeak events form the coded image, the way the real
@@ -690,6 +708,11 @@ public partial class MainWindow : Window
 
         // Imaging: normalized flood shape + decoder.
         var mean = res.DetectorImage;
+        // SiPM readout granularity: if the SiPM pitch is coarser than the crystal pitch, one SiPM reads a block of
+        // crystals (light-sharing) — the sub-block position is lost, so average each SiPM block. The flood is then
+        // read at the SiPM pitch and the coded decode can't resolve finer, even though the crystals are finer.
+        int sipmBlock = Math.Max(1, (int)Math.Round(sipmPitch / cfg.Detector.PixelPitchMm));
+        if (sipmBlock > 1) BlockifyFlood(mean, sipmBlock);
         int w = mean.Width, h = mean.Height;
         double ped = bsr > 0.0 ? SimBackground.PedestalPerPixel(bsr, SumImage(mean), w * h) : 0.0;
         var shape = new double[w * h];
@@ -875,13 +898,18 @@ public partial class MainWindow : Window
         double fill = Math.Pow((pitch - gapMm) / pitch, 2.0);
         double contactXtalk = Math.Clamp(ParseD(DetCrosstalk.Text, 0) / 100.0, 0.0, 0.9);
         double effXtalk = contactXtalk * Math.Exp(-gapMm / 0.04);   // coupled to the reflector thickness (λ=40µm)
-        DrawDetector(DetPlot, grid, n * pitch, "Detector face — per-crystal gain (colour), reflector gaps (dark)");
-        DetReadout.Text = $"fill factor {fill:P0}  ·  active {(pitch - gapMm) * 1000:F0} µm of {pitch * 1000:F0} µm pitch" +
-                          $"  ·  crosstalk {contactXtalk:P0}→{effXtalk:P1} eff (×exp(−gap/40µm))" +
+        double sipmPitch = Math.Max(pitch, ParseD(DetSipmPitch.Text, pitch));
+        int sipmBlock = Math.Max(1, (int)Math.Round(sipmPitch / pitch));
+        DrawDetector(DetPlot, grid, n * pitch, sipmBlock > 1 ? sipmBlock * pitch : 0.0,
+            "Detector face — per-crystal gain (colour), reflector gaps (dark), SiPM grid (white)");
+        DetReadout.Text = $"fill factor {fill:P0}  ·  active {(pitch - gapMm) * 1000:F0} µm / {pitch * 1000:F0} µm pitch" +
+                          $"  ·  crosstalk {contactXtalk:P0}→{effXtalk:P1} eff" +
+                          $"  ·  SiPM {(sipmBlock > 1 ? $"{sipmBlock}×{sipmBlock} crystals/SiPM ({sipmBlock * pitch:F1}mm)" : "1:1")}" +
                           $"  ·  gain σ {gainSigma:P0}, seed {seed}";
     }
 
-    private static void DrawDetector(ScottPlot.WPF.WpfPlot view, double[,] grid, double sizeMm, string title)
+    private static void DrawDetector(ScottPlot.WPF.WpfPlot view, double[,] grid, double sizeMm, double sipmPitchMm,
+        string title)
     {
         var p = view.Plot;
         p.Clear();
@@ -889,6 +917,15 @@ public partial class MainWindow : Window
         hm.Extent = new ScottPlot.CoordinateRect(0, sizeMm, 0, sizeMm);
         hm.Colormap = new ScottPlot.Colormaps.Viridis();
         p.DataBackground.Color = ScottPlot.Color.FromHex("#202020");   // NaN reflector gaps show as dark
+
+        // SiPM readout grid — one cell reads a block of crystals (light-sharing). White lines at the SiPM pitch.
+        if (sipmPitchMm > 0.0)
+            for (double c = sipmPitchMm; c < sizeMm - 1e-6; c += sipmPitchMm)
+            {
+                var vl = p.Add.VerticalLine(c); vl.Color = ScottPlot.Colors.White.WithAlpha(0.6); vl.LineWidth = 1;
+                var hl = p.Add.HorizontalLine(c); hl.Color = ScottPlot.Colors.White.WithAlpha(0.6); hl.LineWidth = 1;
+            }
+
         p.Title(title);
         p.XLabel("x (mm)");
         p.YLabel("y (mm)");

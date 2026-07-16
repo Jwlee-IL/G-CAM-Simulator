@@ -242,6 +242,9 @@
                         <Label Content="Reflector gap (µm)" />
                         <TextBox x:Name="DetGapUm" Text="100" TextChanged="DetField_Changed"
                                  ToolTip="Dead reflector / saw-kerf gap between crystals. A photon entering the gap is lost, so the fill factor is ((pitch−gap)/pitch)². 0 = ideal 100% fill." />
+                        <Label Content="SiPM pitch (mm)" Margin="8,0,0,0" />
+                        <TextBox x:Name="DetSipmPitch" Text="0.6" TextChanged="DetField_Changed"
+                                 ToolTip="Readout pixel pitch. =crystal pitch → 1:1 (each crystal its own channel). &gt; crystal pitch → light-sharing: one SiPM reads several crystals, so the flood is read at the SiPM granularity and position can't be resolved finer than the SiPM pitch (the coded decode degrades). Applies on the next Simulate." />
                         <Label Content="Contact crosstalk %" Margin="8,0,0,0" />
                         <TextBox x:Name="DetCrosstalk" Text="0" TextChanged="DetField_Changed"
                                  ToolTip="Optical light-leak to the 4 neighbours at ZERO reflector (bare touching crystals). The EFFECTIVE crosstalk is this × exp(−gap/40µm), so a wider reflector isolates better (less crosstalk) at the cost of dead area — the isolation vs fill-factor trade-off. Reduces the per-crystal photopeak light (imaging efficiency loss); total light is conserved so the spectrum is unaffected. Applies on the next Simulate." />
