@@ -32,6 +32,9 @@ if (args[0].Equals("thermal", StringComparison.OrdinalIgnoreCase))
 if (args[0].Equals("pileup", StringComparison.OrdinalIgnoreCase))
     return RunPileUp(args);
 
+if (args[0].Equals("maskfab", StringComparison.OrdinalIgnoreCase))
+    return RunMaskFab(args);
+
 if (args[0].Equals("array", StringComparison.OrdinalIgnoreCase))
     return RunArray(args);
 
@@ -1220,6 +1223,50 @@ static int RunThermal(string[] args)
     Console.WriteLine($"                    ON  holds {on[^1].Efficiency,4:P1} efficiency, residual {on[^1].ResidualCoV,4:P1}.");
     Console.WriteLine("Drift is an ENERGY-WINDOW (efficiency) problem, not a localization one: the bias tracks the decoder floor.");
     Console.WriteLine($"CSV written: {prefix}_off.csv, {prefix}_on.csv");
+    return 0;
+}
+
+static int RunMaskFab(string[] args)
+{
+    if (args.Length < 2)
+    {
+        Console.Error.WriteLine("Usage: montecarlo maskfab <base.json> [out.csv]");
+        Console.Error.WriteLine("  Sweeps tungsten mask fabrication tolerance (µm) vs an IDEAL decoder to find the");
+        Console.Error.WriteLine("  usability threshold: hole placement/size jitter, depth drill wander, blocked cells.");
+        return 1;
+    }
+
+    double[] sigmasUm = [0, 10, 20, 40, 80, 160];
+    const double photonBudget = 800_000.0;
+    const int repeats = 100;
+    string csvPath = args.Length >= 3 ? args[2] : "samples/maskfab.csv";
+
+    var baseConfig = ConfigLoader.Load(args[1]);
+    double pitchUm = baseConfig.Mask.CellPitchMm * 1000.0;
+
+    Console.WriteLine($"Mask fabrication tolerance study: a mis-machined tungsten mask vs the IDEAL MURA decoder.");
+    Console.WriteLine($"Cell pitch {pitchUm:F0} µm, {baseConfig.Mask.ThicknessMm:F0} mm thick " +
+                      $"(aspect ratio ≈ 1:{baseConfig.Mask.ThicknessMm / (0.71 * baseConfig.Mask.CellPitchMm):F0}); " +
+                      $"σ drives placement, size (0.7σ), depth wander (2.5σ), blocked cells.");
+    Console.WriteLine($"{repeats} Poisson reps/point, centered source; decoder assumes the perfect pattern.");
+    Console.WriteLine();
+
+    var rows = new MaskFabricationStudy(new DefaultSimulationFactory())
+        .Run(baseConfig, sigmasUm, photonBudget, repeats);
+    File.WriteAllText(csvPath, MaskFabricationStudy.ToCsv(rows));
+
+    Console.WriteLine("   σ(µm)   pos   wander   blocked   eff(rel)   RMS(mm)   PSR");
+    Console.WriteLine("   -----   ---   ------   -------   --------   -------   -----");
+    double psr0 = rows[0].Psr, rms0 = rows[0].RmsMm;
+    foreach (var r in rows)
+        Console.WriteLine($"   {r.SigmaUm,5:F0}   {r.PosJitterUm,3:F0}   {r.WanderUm,6:F0}   {r.BlockedPct,6:F1}%   " +
+                          $"{r.EfficiencyRel,8:P1}   {r.RmsMm,7:F2}   {r.Psr,5:F1}");
+
+    Console.WriteLine();
+    Console.WriteLine($"σ=0 baseline: RMS {rms0:F2} mm, PSR {psr0:F1}. As tolerance loosens the coded shadow blurs,");
+    Console.WriteLine("the decode PSR falls and localization scatters — the usability threshold is where RMS / PSR");
+    Console.WriteLine("leave the ideal-mask floor (the manufacturing requirement a real tungsten mask must hold).");
+    Console.WriteLine($"CSV written: {csvPath}");
     return 0;
 }
 

@@ -1085,3 +1085,25 @@ realize the pile-up in the energy domain by MERGING the timed MC event stream, n
 - **WPF**: a "Pile-up" checkbox on the Spectrum tab applies the merge to the spectrum path only (the Waveform scope
   keeps singles — it renders its own time-domain pulse overlap), and the energy axis auto-extends past the 2× sum
   peak so the continuum is visible. Ties the spectrum realism to the operating count rate. (Tests: `PileUpTests`, +6.)
+
+## 38. Mask fabrication tolerances — a mis-machined tungsten mask vs an ideal decoder — `MaskFabrication` / `MaskFabricationStudy` / `montecarlo maskfab`
+Third physical-realism gap, user-flagged (★): tungsten is hard to machine, so a real mask is not the ideal MURA the
+decoder assumes. The user's key steer: **model the CONSERVATIVE, usable tolerance, not the best-case a machine can
+momentarily hit** — "machinable" ≠ "deployable", especially for a thick brittle tungsten slab.
+- **`MaskFabrication`** (Masks project) stamps a fixed, seeded per-cell geometry error on the mask Transmit ONLY —
+  the decoder keeps decoding the ideal pattern, so it is a forward-model mismatch. Four errors from one tolerance
+  scale σ: **hole placement** jitter (σ), **hole size** jitter (0.7σ, its complement is the tungsten web width),
+  **blocked cells** (brittle tungsten fails to open, rate climbs with σ), and **depth drill WANDER** (2.5σ — the
+  high-aspect-ratio bore is not a clean straight channel through a thick slab; the hole centre drifts front→back, so
+  a straight ray is clipped where the bore has wandered away). Wander is injected at the existing slab ray-march
+  (`frac` depth), so it needs no new machinery — it is a per-depth hole-rectangle test. Requires a web (holeFraction
+  <1, set to 0.71 = ρ≈0.5) for placement/size to have room to move.
+- **Study framing = usability THRESHOLD**, averaged over several manufactured masks (fab seeds) so it is the typical
+  mask, not one lucky draw. Sweep σ, decode with the IDEAL decoder, measure localization RMS, efficiency, and the
+  reconstruction **PSR = (peak−mean)/std** (coded-shadow fidelity — more sensitive than peak/second-sidelobe).
+- **Result** (1 mm pitch, 10 mm thick W, aspect ≈ 1:14, centered Cs-137): RMS holds the ideal-mask floor (~0.95 mm)
+  to **σ ≈ 40 µm**, then degrades — 1.9 mm at 80 µm, 3.6 mm at 160 µm; efficiency 100 %→88.7 % (blocked cells 0→4 %
+  + shrunken/wandering holes); PSR 4.4→3.8. So the **manufacturing requirement is σ ≲ 40 µm** to stay within ~2× the
+  ideal floor — a conservative, actionable number, well below the ~1 mm pitch (a few-% of a cell).
+- Burrs / rounded corners fold into the hole-size error; slab WARPING (a global bow → position-dependent shift) is a
+  distinct structural defect, deliberately deferred. (Tests: `MaskFabricationTests`, +5.)

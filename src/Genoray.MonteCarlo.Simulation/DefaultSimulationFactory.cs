@@ -66,9 +66,18 @@ public sealed class DefaultSimulationFactory : ISimulationFactory
                     inv[x, y] = !pattern[x, y];
             pattern = inv;
         }
+        // Fabrication tolerances (a real tungsten mask ≠ the ideal MURA): stamp a fixed per-cell geometry
+        // error on the mask if any tolerance is set. The decoder is unaffected (it decodes the ideal pattern).
+        bool fabricated = m.HolePositionJitterMm > 0.0 || m.HoleSizeJitterMm > 0.0
+                          || m.BlockedCellProbability > 0.0 || m.HoleWanderMm > 0.0;
+        var fab = fabricated
+            ? new MaskFabrication(pattern.Width, pattern.Height, m.CellPitchMm, m.HoleFraction,
+                                  m.HolePositionJitterMm, m.HoleSizeJitterMm, m.BlockedCellProbability,
+                                  m.HoleWanderMm, m.FabricationSeed)
+            : null;
         return new CodedApertureMask(pattern, config.Geometry.MaskDetectorDistanceMm,
                                      m.CellPitchMm, m.ThicknessMm, m.LinearAttenuationPerMm,
-                                     m.FocalDistanceMm, m.HoleFraction, m.TaperAngleDeg);
+                                     m.FocalDistanceMm, m.HoleFraction, m.TaperAngleDeg, fab);
     }
 
     public IDetector CreateDetector(SimulationConfig config)

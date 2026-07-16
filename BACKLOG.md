@@ -1,7 +1,7 @@
 # Backlog
 
 Deferred work, captured so we don't forget. Not in current scope. See
-`AGENTS.findings.md` (themes 1–37) for everything that IS done.
+`AGENTS.findings.md` (themes 1–38) for everything that IS done.
 
 **Genuinely open**: the **Physical realism gaps** list below (Codex gap-review after theme 35 — a whole queue of
 real-detector effects to model one-per-session, top picks ★thermal drift, ★flood-field correction, pile-up sum
@@ -82,9 +82,10 @@ A completeness sweep (4 parallel Codex reviews + user) of what a REAL gamma came
 model. Ranked by impact; **★ = user-flagged / connects to the real rig**. Tackle one at a time.
 
 **Localization (coded-aperture accuracy):**
-- **★ Mask fabrication tolerances** — HIGH. Tungsten is hard to machine, so cell-pitch error, hole under/over-size,
-  web-thickness variation, burrs/rounded corners, blocked cells, warping are REAL. The decoder assumes an ideal MURA
-  → forward-model mismatch. Model per-cell geometry jitter + a decode that stays ideal, measure the localization hit.
+- ~~**★ Mask fabrication tolerances**~~ — **DONE, theme 38** (`MaskFabrication` / `MaskFabricationStudy` / `montecarlo
+  maskfab`). Seeded per-cell hole placement/size jitter + blocked cells + depth drill WANDER on the mask Transmit only
+  (decoder stays ideal → forward-model mismatch). Conservative one-σ model averaged over masks → usability threshold
+  σ ≲ 40 µm (RMS holds ~0.95 mm floor to 40 µm, 3.6 mm by 160 µm; efficiency 100→89 %). Warping (global bow) deferred.
 - **Mask–detector alignment / pose error** — HIGH. x/y/z offset, roll/pitch/yaw, thermal drift of the mask–detector
   spacing → systematic localization bias. Currently perfect alignment is assumed.
 - **Bad / dead / hot pixels** — MED-HIGH. Fixed spatial defects imprint mask-like structure on the flood and pull the
@@ -119,9 +120,10 @@ model. Ranked by impact; **★ = user-flagged / connects to the real rig**. Tack
 - Intrinsic activity (LYSO Lu-176, LaBr₃ La-138) — LOW for GAGG (none); matters only if those scintillators are picked.
 
 Recommended order next session: ~~thermal drift + flood-field~~ (theme 36) → ~~pile-up sum continuum~~ (theme 37) →
-**mask fabrication tolerances (★)** (tungsten hard to machine — user flagged), then mask fluorescence/scatter, then
-cascade summing (Co-60/Na-22 sum peaks — a natural follow-on to pile-up). Reflector MATERIAL stays deliberately
-unmodelled (2nd-order, theme 35).
+~~mask fabrication tolerances~~ (theme 38) → **mask tungsten fluorescence + Compton scatter** (the mask is still pure
+attenuation), or **cascade summing** (Co-60/Na-22 sum peaks — a natural follow-on to pile-up), or **mask–detector
+alignment / pose error** (HIGH — the other big localization gap). Reflector MATERIAL stays deliberately unmodelled
+(2nd-order, theme 35).
 
 ### Productization (theme 22 — design-only; user is NOT building this now)
 - Integrate the SiPM / thermal / gain-stabilization + shield models into the C# pipeline

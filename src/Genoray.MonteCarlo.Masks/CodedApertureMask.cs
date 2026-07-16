@@ -17,6 +17,7 @@ public sealed class CodedApertureMask : IMask
     private readonly double _focalMm;     // channels converge toward a source at this distance (0 = straight)
     private readonly double _holeFraction;// LINEAR open fraction of a cell (open AREA = _holeFraction²)
     private readonly double _tanTaper;    // bevel of the channel walls (0 = straight, collimating)
+    private readonly MaskFabrication? _fab;// per-cell fabrication error (null = ideal mask)
 
     public MaskPattern Pattern { get; }
     public double PlaneZ { get; }
@@ -24,8 +25,9 @@ public sealed class CodedApertureMask : IMask
     public CodedApertureMask(MaskPattern pattern, double planeZ, double cellPitchMm,
                              double thicknessMm, double muPerMm,
                              double focalDistanceMm = 0.0, double holeFraction = 1.0,
-                             double taperAngleDeg = 0.0)
+                             double taperAngleDeg = 0.0, MaskFabrication? fabrication = null)
     {
+        _fab = fabrication;
         Pattern = pattern;
         PlaneZ = planeZ;
         _cellPitchMm = cellPitchMm;
@@ -109,9 +111,20 @@ public sealed class CodedApertureMask : IMask
             int cy = (int)(vs / _cellPitchMm);
             if (cx >= Pattern.Width || cy >= Pattern.Height) { nTungsten++; continue; }
             if (!Pattern[cx, cy]) { nTungsten++; continue; }   // closed cell = tungsten
+            if (_fab != null)
+            {
+                // Fabricated hole: this cell may be blocked (never opened), and its hole is mis-placed /
+                // mis-sized and drifts with depth (drill wander). Compare the ray's in-cell position to the
+                // fabricated hole rectangle at THIS depth — a wandering channel clips a straight ray where the
+                // bore has drifted away, exactly as a crooked hole would.
+                if (_fab.Blocked(cx, cy)) { nTungsten++; continue; }
+                double fx = us / _cellPitchMm - cx, fy = vs / _cellPitchMm - cy;
+                var (hx, hy, hw) = _fab.Hole(cx, cy, frac);
+                if (Math.Abs(fx - hx) > hw || Math.Abs(fy - hy) > hw) nTungsten++;
+            }
             // Finite hole: only the central holeFraction of an open cell is drilled; the rest is
             // a tungsten border (sharpens the shadow at the cost of open area / sensitivity).
-            if (_holeFraction < 1.0)
+            else if (_holeFraction < 1.0)
             {
                 double fx = us / _cellPitchMm - cx, fy = vs / _cellPitchMm - cy;
                 double b = (1.0 - _holeFraction) / 2.0;

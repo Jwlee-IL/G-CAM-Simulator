@@ -180,6 +180,30 @@ public sealed class MaskConfig
     /// off-axis ray within the taper cone is not collimated away. 0 = straight (parallel) walls.
     /// Mutually exclusive with FocalDistanceMm (which is a narrow-FOV concentrator).</summary>
     public double TaperAngleDeg { get; set; } = 0.0;
+
+    // --- Fabrication tolerances (a REAL mask is not the ideal MURA; the decoder still assumes it is) ---
+    // Tungsten is hard, brittle, high-melting, so a deployed thick fine-pitch mask holds LOOSER tolerances
+    // than the best-case machining spec. These stamp a fixed, seeded per-cell geometry error on the mask
+    // Transmit ONLY; the decoder keeps decoding the ideal pattern → a forward-model mismatch. 0 = ideal.
+
+    /// <summary>Per-hole in-plane position error, σ in mm (drill placement scatter). 0 = perfectly placed.</summary>
+    public double HolePositionJitterMm { get; set; } = 0.0;
+
+    /// <summary>Per-hole size error, σ in mm on the hole half-width (over/under-drill; the tungsten web width
+    /// is its complement). 0 = every hole identical.</summary>
+    public double HoleSizeJitterMm { get; set; } = 0.0;
+
+    /// <summary>Probability that an OPEN cell fails to open (not drilled through / chipped shut / web breakout) —
+    /// tungsten brittleness. Such a cell stays opaque. 0 = every open cell drills cleanly.</summary>
+    public double BlockedCellProbability { get; set; } = 0.0;
+
+    /// <summary>Depth drill WANDER, σ in mm of the hole-centre drift from the front face to the back face of the
+    /// slab — the high-aspect-ratio channel is not a clean straight bore through thick tungsten, so it tilts/
+    /// tapers with depth. Only meaningful for a thick mask. 0 = perfectly straight channels.</summary>
+    public double HoleWanderMm { get; set; } = 0.0;
+
+    /// <summary>Seed for the (fixed) per-cell fabrication-error pattern — one specific manufactured mask.</summary>
+    public int FabricationSeed { get; set; } = 1;
 }
 
 /// <summary>
