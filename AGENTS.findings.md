@@ -1024,3 +1024,12 @@ or the user (who built the real rig).
   independent. **Reflector MATERIAL** (ceramic — the real rig — vs 3M ESR / PTFE / BaSO₄ / TiO₂, reflectance ~90–99%)
   is deliberately NOT modelled: it enters only as a second-order tuning of λ (reflectance) and of whether gap-entering
   gammas are fully lost vs partly transmitted/scattered (Z/density) — not a first-order factor for the localization.
+- **SiPM readout pitch / crystal↔SiPM matching** (Detector-tab "SiPM pitch"): = crystal pitch is 1:1; > crystal pitch
+  is light-sharing (one SiPM reads a block of crystals), modelled by AVERAGING each SiPM block of the flood before the
+  decoder — sub-block position is lost, so the flood is read at the SiPM granularity (Detector tab overlays the SiPM
+  grid). This makes the match a first-class constraint: the SiPM pitch must still Nyquist-sample the MASK SHADOW or the
+  coded decode fails — for a 0.6 mm crystal / 0.7 mm cell, localization holds at 0.6/1.2 mm SiPM then breaks to 11/15 mm
+  at 2.4/4.8 mm. So a fine coded aperture needs a fine READOUT (fine SiPM array / sub-pixel light-sharing), not a coarse
+  3 mm MPPC over a big block — which is why the 0.6 mm-crystal / 3 mm-MPPC lump is only a datasheet convenience, not a
+  buildable 1:1. (The blockify is the no-Anger worst case; Anger centroiding could recover some sub-SiPM position but
+  needs a light-spread model — not done.) SiPM is otherwise 1:1 implicit, its light budget lumped in `FrontEndModel`.
