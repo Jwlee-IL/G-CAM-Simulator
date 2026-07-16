@@ -29,6 +29,9 @@ if (args[0].Equals("uniformity", StringComparison.OrdinalIgnoreCase))
 if (args[0].Equals("thermal", StringComparison.OrdinalIgnoreCase))
     return RunThermal(args);
 
+if (args[0].Equals("pileup", StringComparison.OrdinalIgnoreCase))
+    return RunPileUp(args);
+
 if (args[0].Equals("array", StringComparison.OrdinalIgnoreCase))
     return RunArray(args);
 
@@ -1217,6 +1220,86 @@ static int RunThermal(string[] args)
     Console.WriteLine($"                    ON  holds {on[^1].Efficiency,4:P1} efficiency, residual {on[^1].ResidualCoV,4:P1}.");
     Console.WriteLine("Drift is an ENERGY-WINDOW (efficiency) problem, not a localization one: the bias tracks the decoder floor.");
     Console.WriteLine($"CSV written: {prefix}_off.csv, {prefix}_on.csv");
+    return 0;
+}
+
+static int RunPileUp(string[] args)
+{
+    if (args.Length < 2)
+    {
+        Console.Error.WriteLine("Usage: montecarlo pileup <base.json> [out.csv]");
+        Console.Error.WriteLine("  Random-coincidence pile-up: overlapping pulses SUM into one recorded event,");
+        Console.Error.WriteLine("  adding a self-convolution continuum above the photopeak + a throughput loss.");
+        return 1;
+    }
+
+    string csvPath = args.Length >= 3 ? args[2] : "samples/pileup.csv";
+    const double adcSampleRateHz = 125e6;               // AD9648 125 MSPS (matches the WPF chain)
+    const int maxEvents = 150_000;
+    double[] rates = [50e3, 200e3, 500e3, 1e6, 2e6];    // detected count rates (cps)
+
+    // Pulse-pair resolving time from the (default) shaper pulse: rise + 2·tail. Faster shaper → less pile-up.
+    double tauRes = EventStreamStudy.ResolvingSamples(Waveform.TauRiseSamples, Waveform.TauSamples);
+    double tauResNs = tauRes / adcSampleRateHz * 1e9;
+
+    var baseConfig = ConfigLoader.Load(args[1]);
+    double primary = baseConfig.Source.EnergyKeV > 0 ? baseConfig.Source.EnergyKeV : 661.7;
+    const double maxE = 1500.0;
+    const int bins = 750;                               // 2 keV/bin, spans up to the 2× sum region
+    double bw = maxE / bins;
+
+    static double[] Hist(IEnumerable<double> es, double bw, int bins)
+    {
+        var h = new double[bins];
+        foreach (double e in es) { int b = (int)(e / bw); if (b >= 0 && b < bins) h[b] += 1; }
+        return h;
+    }
+
+    var stream0 = new EventStreamStudy();
+    // Singles reference: rate is irrelevant to the singles ENERGY spectrum (only its time spacing), so build once.
+    var singlesStream = stream0.Generate(baseConfig, rates[0], adcSampleRateHz, maxEvents);
+    double[] singlesE = singlesStream.Select(e => e.EnergyKeV).ToArray();
+    double[] singlesHist = Hist(singlesE, bw, bins);
+    double photopeakLo = primary * 0.90, sumLo = primary * 1.30;   // photopeak window / above-line sum region
+    double SingPk = singlesE.Count(e => e >= photopeakLo && e <= primary * 1.10);
+
+    Console.WriteLine($"Pile-up study: peak pile-up on the MC event stream, resolving time {tauRes:F0} samples " +
+                      $"({tauResNs:F0} ns @ {adcSampleRateHz / 1e6:F0} MSPS, from shaper rise {Waveform.TauRiseSamples:F0}+2·tail {Waveform.TauSamples:F0}).");
+    Console.WriteLine($"Primary line {primary:F0} keV; {singlesE.Length} detected events per rate.");
+    Console.WriteLine();
+    Console.WriteLine("   rate(cps)   R·τ     throughput   photopeak_kept   above-line(sum)%");
+    Console.WriteLine("   ---------   -----   ----------   --------------   ----------------");
+
+    double[]? piledShowcaseHist = null;
+    double showcaseRate = rates[^2];   // 1 Mcps: clear continuum but not absurd
+    foreach (double rate in rates)
+    {
+        var stream = stream0.Generate(baseConfig, rate, adcSampleRateHz, maxEvents);
+        var piled = EventStreamStudy.ApplyPileUp(stream, tauRes);
+        double[] piledE = piled.Select(e => e.EnergyKeV).ToArray();
+
+        double throughput = (double)piled.Count / stream.Count;
+        double pk = piledE.Count(e => e >= photopeakLo && e <= primary * 1.10);
+        double aboveLine = piledE.Count(e => e > sumLo);
+        double rtau = rate * tauRes / adcSampleRateHz;
+
+        Console.WriteLine($"   {rate,9:N0}   {rtau,5:F3}   {throughput,10:P1}   {pk / SingPk,14:P1}   {aboveLine / piledE.Length,16:P2}");
+
+        if (rate == showcaseRate) piledShowcaseHist = Hist(piledE, bw, bins);
+    }
+
+    // CSV: singles vs the showcase-rate piled spectrum (per 2-keV bin) for plotting / autoconvolution cross-check.
+    var sb = new StringBuilder();
+    sb.AppendLine($"# pileup spectrum  primary={primary:F1}keV  resolving_samples={tauRes:F1}  showcase_rate_cps={showcaseRate:G3}");
+    sb.AppendLine("energy_keV,singles,piled");
+    for (int i = 0; i < bins; i++)
+        sb.AppendLine($"{(i + 0.5) * bw:F1},{singlesHist[i]:F0},{(piledShowcaseHist?[i] ?? 0):F0}");
+    File.WriteAllText(csvPath, sb.ToString());
+
+    Console.WriteLine();
+    Console.WriteLine($"Above the {primary:F0} keV line, pile-up builds a self-convolution continuum up to the " +
+                      $"{2 * primary:F0} keV sum peak; higher rate migrates more counts out of the photopeak.");
+    Console.WriteLine($"CSV written: {csvPath} (singles vs {showcaseRate / 1e6:F1} Mcps piled, 2 keV bins).");
     return 0;
 }
 

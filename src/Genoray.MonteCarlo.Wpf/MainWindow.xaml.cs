@@ -664,12 +664,15 @@ public partial class MainWindow : Window
         // Cs/Co field marks 662, 1173 and 1332 — not just the first isotope.
         double[] lineEnergies = _scene.SelectMany(s => Isotopes.Get(s.Isotope).Lines.Select(l => l.EnergyKeV))
                                       .Distinct().OrderBy(x => x).ToArray();
-        double maxE = (lineEnergies.Length > 0 ? lineEnergies.Max() : 661.7) * 1.15;
+        double topLine = lineEnergies.Length > 0 ? lineEnergies.Max() : 661.7;
+        // With pile-up on, extend the axis past the 2× sum peak so the self-convolution continuum is visible.
+        bool pileUp = SpPileUp.IsChecked == true;
+        double maxE = topLine * (pileUp ? 2.15 : 1.15);
 
         SimulateButton.Content = "■  STOP";
         LiveStatus.Text = "preparing…";
         Log($"▶ Start acquisition  (speed ×{_liveSpeed:F0}) — {SceneSummary()}");
-        bool ok = await Task.Run(() => PrepareLive(cfg, bsr, emissionRate, windowFrac, lineEnergies, maxE, resPct, noiseCps, primaryLine, sipmPitch));
+        bool ok = await Task.Run(() => PrepareLive(cfg, bsr, emissionRate, windowFrac, lineEnergies, maxE, resPct, noiseCps, primaryLine, sipmPitch, pileUp));
         if (!ok)
         {
             SimulateButton.Content = "▶  SIMULATE";
@@ -695,7 +698,7 @@ public partial class MainWindow : Window
     // scope energies) — everything every tab needs, from a single acquisition.
     private bool PrepareLive(SimulationConfig cfg, double bsr, double emissionRate,
                              double windowFrac, double[] lineEnergies, double maxE, double resPct, double noiseCps,
-                             double primaryLine, double sipmPitch)
+                             double primaryLine, double sipmPitch, bool pileUp)
     {
         // Imaging flood via the crystal-Compton detector with a PER-PIXEL photopeak window (LLD/ULD = primaryLine
         // ± windowFrac, gain-corrected per crystal) — only photopeak events form the coded image, the way the real
@@ -728,10 +731,21 @@ public partial class MainWindow : Window
 
         // Deposit pool (shared): raw energies drive the Waveform scope; resolution-smeared energies build the
         // Spectrum PDF — same detected events, two views.
-        var rawPool = new EventStreamStudy().Generate(cfg, Math.Max(_liveRateCps, 1.0), AdcSampleRateHz, 20000)
-                          .Select(ev => ev.EnergyKeV).ToArray();
+        var stream = new EventStreamStudy().Generate(cfg, Math.Max(_liveRateCps, 1.0), AdcSampleRateHz, 20000);
+        var rawPool = stream.Select(ev => ev.EnergyKeV).ToArray();
         if (rawPool.Length == 0) return false;
-        _wfPool = rawPool;
+        _wfPool = rawPool;   // the scope keeps SINGLES — the waveform renders its own time-domain pulse overlap
+
+        // Spectrum energies: with pile-up on, events within the shaper's resolving time SUM into one recorded
+        // event (peak pile-up) at the DETECTED rate — a self-convolution continuum above the line + throughput
+        // loss. The resolving time is DERIVED from the selected chain's pulse (rise + 2·tail), not a free knob.
+        double[] specPool = rawPool;
+        if (pileUp)
+        {
+            double tauRes = EventStreamStudy.ResolvingSamples(_pulseRiseSamples, _pulseTauSamples);
+            specPool = EventStreamStudy.ApplyPileUp(stream, tauRes).Select(ev => ev.EnergyKeV).ToArray();
+            if (specPool.Length == 0) specPool = rawPool;
+        }
 
         // Energy resolution: when a detection chain is selected, smear each deposit by the DERIVED, energy-
         // dependent FrontEndModel resolution (photostatistics from N_pe + non-proportionality + DCR) instead of
@@ -741,10 +755,10 @@ public partial class MainWindow : Window
         {
             var fem = new FrontEndModel(_feConfig);
             var srng = new DefaultRandom(909);
-            smeared = new double[rawPool.Length];
-            for (int i = 0; i < rawPool.Length; i++) smeared[i] = fem.Measure(rawPool[i], srng);
+            smeared = new double[specPool.Length];
+            for (int i = 0; i < specPool.Length; i++) smeared[i] = fem.Measure(specPool[i], srng);
         }
-        else smeared = ApplyResolution(rawPool, resPct, seed: 909);
+        else smeared = ApplyResolution(specPool, resPct, seed: 909);
         const int bins = 256;             // ~1.5–3 keV/bin — fine enough to read as an MCA-style curve
         double bw = maxE / bins;
         var pdf = new double[bins];

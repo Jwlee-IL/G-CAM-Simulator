@@ -119,6 +119,44 @@ public sealed class EventStreamStudy
         return events;
     }
 
+    /// <summary>Pulse-pair resolving time (in ADC samples) for a bi-exponential pulse with the given rise and
+    /// tail time constants: the interval within which two events' pulses overlap into a single recorded peak.
+    /// Taken as the pulse's significant duration ≈ rise + 2·tail (peak, then ~2 fall time-constants back toward
+    /// baseline) — so a faster shaper (shorter tail) resolves pile-up better, exactly as in hardware. This is
+    /// the physical coupling: the resolving time is DERIVED from the selected shaper, not a free knob.</summary>
+    public static double ResolvingSamples(double pulseRiseSamples, double pulseTailSamples)
+        => Math.Max(1.0, pulseRiseSamples) + 2.0 * Math.Max(1.0, pulseTailSamples);
+
+    /// <summary>Apply PEAK PILE-UP to a timed event stream: any events whose arrivals fall within the shaper's
+    /// <paramref name="resolvingSamples"/> of the running pulse are recorded as ONE event with SUMMED energy
+    /// (extending / paralyzable — each absorbed event re-extends the window, so a burst piles to 3-fold and up).
+    /// This is the pulse-height spectrum a real single-channel counting chain measures at rate: a self-convolution
+    /// SUM CONTINUUM above the photopeak (662+662 → a 1324 keV sum peak, 662+Compton filling 662→1324, Compton+
+    /// Compton lower) plus a count-rate-dependent THROUGHPUT loss as singles migrate up out of their peaks. The
+    /// energies are the real MC spectrum; only their time coincidence is added. Input need not be pre-sorted.</summary>
+    public static IReadOnlyList<StreamEvent> ApplyPileUp(IReadOnlyList<StreamEvent> events, double resolvingSamples)
+    {
+        if (events.Count == 0 || !(resolvingSamples > 0.0)) return events;
+        var sorted = events.OrderBy(e => e.ArrivalSample).ToArray();
+        var outp = new List<StreamEvent>(sorted.Length);
+        int n = sorted.Length, i = 0;
+        while (i < n)
+        {
+            long start = sorted[i].ArrivalSample, last = start;
+            double sumE = sorted[i].EnergyKeV;
+            int j = i + 1;
+            while (j < n && sorted[j].ArrivalSample - last < resolvingSamples)
+            {
+                sumE += sorted[j].EnergyKeV;
+                last = sorted[j].ArrivalSample;   // extending window (paralyzable pile-up)
+                j++;
+            }
+            outp.Add(new StreamEvent(start, sumE));
+            i = j;
+        }
+        return outp;
+    }
+
     // A dark-count nuisance pulse in keV-equivalent: a few photoelectrons, far below any photopeak window.
     // Kept a few keV (not literally sub-keV) so it clears the rasterizer's integer-ADC rounding floor and
     // actually appears as a low-amplitude pulse; its only effect on the shaper is occasional small pile-up.

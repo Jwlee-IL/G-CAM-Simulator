@@ -176,6 +176,9 @@
                         <CheckBox x:Name="SpLogY" Content="Log Y" IsChecked="False" VerticalAlignment="Center"
                                   Margin="8,0" Checked="SpLogY_Changed" Unchecked="SpLogY_Changed"
                                   ToolTip="Log counts axis — reveals the Compton continuum the photopeak dwarfs on a linear scale" />
+                        <CheckBox x:Name="SpPileUp" Content="Pile-up" IsChecked="False" VerticalAlignment="Center"
+                                  Margin="8,0"
+                                  ToolTip="Random-coincidence pile-up: at the detected count rate, pulses closer than the shaper's resolving time SUM into one recorded event — a self-convolution continuum above the photopeak (662+662 sum peak) and a throughput loss. Applies on the next Simulate." />
                         <Label Content="Noise floor (cps)" Margin="8,0,0,0" />
                         <TextBox x:Name="SpNoiseCps" Text="0"
                                  ToolTip="Device electronics/EMI noise trigger rate — a source-INDEPENDENT low-energy population (not derivable from the datasheet; set it to match your rig)." />

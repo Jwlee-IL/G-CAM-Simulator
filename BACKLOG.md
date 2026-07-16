@@ -1,7 +1,7 @@
 # Backlog
 
 Deferred work, captured so we don't forget. Not in current scope. See
-`AGENTS.findings.md` (themes 1–36) for everything that IS done.
+`AGENTS.findings.md` (themes 1–37) for everything that IS done.
 
 **Genuinely open**: the **Physical realism gaps** list below (Codex gap-review after theme 35 — a whole queue of
 real-detector effects to model one-per-session, top picks ★thermal drift, ★flood-field correction, pile-up sum
@@ -95,8 +95,10 @@ model. Ranked by impact; **★ = user-flagged / connects to the real rig**. Tack
   interacts at depth), so off-axis resolution already degrades with crystal thickness. It's uncorrected, not unmodelled.
 
 **Spectrum realism:**
-- **Random-coincidence pile-up SUM continuum in the spectrum** — HIGH. Pile-up lives only in the RTL waveform; the
-  per-event energy spectrum has no two-events-summing continuum. The big remaining spectrum-realism piece at rate.
+- ~~**Random-coincidence pile-up SUM continuum in the spectrum**~~ — **DONE, theme 37** (`EventStreamStudy.ApplyPileUp`
+  / `montecarlo pileup` / WPF Spectrum "Pile-up"). Merges the timed MC event stream within the shaper-derived resolving
+  time (rise+2·tail) → a 662+662 sum peak + self-convolution continuum + rate-dependent throughput loss (99.6 %→84.7 %
+  over 50 k→2 M cps); cross-checked vs the analytic `singles⊛singles` autoconvolution.
 - **Coincidence / cascade summing** — MED. Co-60 (1173+1332 → 2505 sum peak), Na-22 (511+511, +1275) emit correlated
   gammas that sum in one event; our independent-line model misses the sum peaks.
 - **Mask tungsten fluorescence + Compton scatter** — MED. The mask is pure attenuation; real W K X-rays (~59–67 keV)
@@ -116,9 +118,10 @@ model. Ranked by impact; **★ = user-flagged / connects to the real rig**. Tack
 - Non-proportionality as deposit-history-dependent (Compton-split vs photoelectric resolve differently) — MED.
 - Intrinsic activity (LYSO Lu-176, LaBr₃ La-138) — LOW for GAGG (none); matters only if those scintillators are picked.
 
-Recommended order next session: ~~thermal drift + flood-field~~ (DONE, theme 36) → **pile-up sum continuum in the
-spectrum** (HIGH), then **mask fabrication tolerances (★)** (tungsten hard to machine — user flagged), then mask
-fluorescence/scatter. Reflector MATERIAL stays deliberately unmodelled (2nd-order, theme 35).
+Recommended order next session: ~~thermal drift + flood-field~~ (theme 36) → ~~pile-up sum continuum~~ (theme 37) →
+**mask fabrication tolerances (★)** (tungsten hard to machine — user flagged), then mask fluorescence/scatter, then
+cascade summing (Co-60/Na-22 sum peaks — a natural follow-on to pile-up). Reflector MATERIAL stays deliberately
+unmodelled (2nd-order, theme 35).
 
 ### Productization (theme 22 — design-only; user is NOT building this now)
 - Integrate the SiPM / thermal / gain-stabilization + shield models into the C# pipeline
