@@ -1,11 +1,12 @@
 # Backlog
 
 Deferred work, captured so we don't forget. Not in current scope. See
-`AGENTS.findings.md` (themes 1–33) for everything that IS done.
+`AGENTS.findings.md` (themes 1–35) for everything that IS done.
 
-**Genuinely open** (most "Open" items below are now marked DONE inline): exact Artix-7 Fmax in Vivado
-(deferred — install friction; `vivado_trap.tcl` ready); structured/directional background (minor — ≈ another
-mixed-field source); integrate the theme-22 SiPM/thermal/shield productization models into the C# pipeline
+**Genuinely open**: the **Physical realism gaps** list below (Codex gap-review after theme 35 — a whole queue of
+real-detector effects to model one-per-session, top picks ★thermal drift, ★flood-field correction, pile-up sum
+continuum, ★mask fabrication tolerances); exact Artix-7 Fmax in Vivado (deferred — install friction;
+`vivado_trap.tcl` ready); integrate the theme-22 SiPM/thermal/shield productization models into the C# pipeline
 (design-only, user isn't building it).
 
 ## Open
@@ -75,6 +76,49 @@ mixed-field source); integrate the theme-22 SiPM/thermal/shield productization m
     estimate systematically toward its strong side (BSR 4: flat 1.1 mm → graded 9.2 mm) where a flat pedestal
     only fails randomly. The remaining structured case — a *directional discrete* background — is not new
     work: it is just another off-axis source in the mixed field (theme 26).
+
+### Physical realism gaps (Codex gap-review after theme 35 — do one-per-session)
+A completeness sweep (4 parallel Codex reviews + user) of what a REAL gamma camera has that GCAM does not yet
+model. Ranked by impact; **★ = user-flagged / connects to the real rig**. Tackle one at a time.
+
+**Localization (coded-aperture accuracy):**
+- **★ Mask fabrication tolerances** — HIGH. Tungsten is hard to machine, so cell-pitch error, hole under/over-size,
+  web-thickness variation, burrs/rounded corners, blocked cells, warping are REAL. The decoder assumes an ideal MURA
+  → forward-model mismatch. Model per-cell geometry jitter + a decode that stays ideal, measure the localization hit.
+- **Mask–detector alignment / pose error** — HIGH. x/y/z offset, roll/pitch/yaw, thermal drift of the mask–detector
+  spacing → systematic localization bias. Currently perfect alignment is assumed.
+- **Bad / dead / hot pixels** — MED-HIGH. Fixed spatial defects imprint mask-like structure on the flood and pull the
+  correlation peak. We model gain non-uniformity but not dead/hot channels (or a masked/system-matrix decode).
+- Sub-cell peak interpolation — MED. Grid argmax leaves a decoder-resolution floor; real localization interpolates or
+  fits a continuous likelihood. (Cheap, improves the reported precision.)
+- NOTE — DOI/parallax is NOT missing: the flood already carries the depth-of-interaction lateral shift (the cascade
+  interacts at depth), so off-axis resolution already degrades with crystal thickness. It's uncorrected, not unmodelled.
+
+**Spectrum realism:**
+- **Random-coincidence pile-up SUM continuum in the spectrum** — HIGH. Pile-up lives only in the RTL waveform; the
+  per-event energy spectrum has no two-events-summing continuum. The big remaining spectrum-realism piece at rate.
+- **Coincidence / cascade summing** — MED. Co-60 (1173+1332 → 2505 sum peak), Na-22 (511+511, +1275) emit correlated
+  gammas that sum in one event; our independent-line model misses the sum peaks.
+- **Mask tungsten fluorescence + Compton scatter** — MED. The mask is pure attenuation; real W K X-rays (~59–67 keV)
+  and mask Compton scatter add a low-energy background + semi-coded counts.
+- Scintillator K X-ray escape peak (GAGG Gd ~43 keV below the photopeak) — LOW-MED. A real satellite peak.
+- Room / object / operator scatter — MED. We have the entrance+backing scatterer; full environmental scatter is more.
+
+**Operational / calibration (★ real-rig pain points):**
+- **★ Thermal / gain drift DURING acquisition** — HIGH. The real rig's headache (SiPM thermal drift → the per-crystal
+  photopeak window walks → efficiency loss; "cooling was a headache"). We model only STATIC seeded gain; add a
+  time-varying drift and show the window-walk / count-imbalance it causes.
+- **★ Flood-field / uniformity correction** — MED. We now stamp the per-crystal gain non-uniformity but not the
+  flat-field CORRECTION a real system applies — the natural completing pair to the gain-spread + dead-region work.
+- Dead time / count-rate saturation (paralyzable / non-paralyzable) + live-time vs real-time — MED. Only RTL pile-up
+  exists; no per-channel dead-time / saturation in the acquisition.
+- Per-channel SiPM/preamp gain·PDE·threshold mismatch (beyond crystal gain), microcell saturation, afterpulsing — MED.
+- Non-proportionality as deposit-history-dependent (Compton-split vs photoelectric resolve differently) — MED.
+- Intrinsic activity (LYSO Lu-176, LaBr₃ La-138) — LOW for GAGG (none); matters only if those scintillators are picked.
+
+Recommended order next session: **thermal drift (★) + flood-field correction (★)** together (they close the
+detector-nonuniformity story), then **pile-up sum continuum**, then **mask fabrication tolerances (★)**, then mask
+fluorescence/scatter. Reflector MATERIAL stays deliberately unmodelled (2nd-order, theme 35).
 
 ### Productization (theme 22 — design-only; user is NOT building this now)
 - Integrate the SiPM / thermal / gain-stabilization + shield models into the C# pipeline
