@@ -1131,3 +1131,21 @@ shadow → a SYSTEMATIC localization bias, not just scatter. The other big local
   the mask centre to a fraction of the wanted localization accuracy (≈0.4 mm offset for a ~1 mm bias budget here);
   spacing and roll are far more forgiving at practical off-axis distances. Pitch/yaw TILT (a tilted-slab geometry)
   is deliberately deferred, like warping. (Tests: `AlignmentTests`, +4.)
+
+## 40. Bad (dead / hot) detector pixels + bad-pixel-map repair — `DetectorDefects` / `DetectorDefectStudy` / `montecarlo defects`
+Fifth physical-realism gap (MED-HIGH). We modelled per-crystal gain non-uniformity (theme 36) but not the discrete
+channel defects a real SiPM array carries. **Dead** pixels (disconnected/failed channel) punch holes in the flood;
+**hot** pixels (dark-count / breakdown runaway) add source-INDEPENDENT spikes — both imprint fixed structure that is
+NOT part of the mask code, so the ideal decoder's correlation is pulled off the true peak.
+- **`DetectorDefects`** (seeded dead + hot maps; a pixel is at most one kind). Applied post-hoc on the geometry
+  flood — the "flood once, apply per-pixel" trick (same as `UniformityStudy`), so no MC re-run per level. Dead →
+  count set to 0; hot → +HotFactor×(mean live-pixel counts). The decoder stays IDEAL.
+- **Repair = the discrete analogue of flood-field correction**: given the KNOWN bad-pixel map, replace every flagged
+  pixel with the mean of its non-defective 4-neighbours (interpolate over the defects). Real systems keep exactly
+  such a map from calibration.
+- **Result** (12×12 array, hot = 5× mean, averaged over defect maps): the repaired decode holds the ~0.60 mm floor
+  flat (0.60→0.68 mm) across 0→8 % bad pixels, while the RAW decode degrades and scatters (up to ~1.2–1.8 mm at 8 %;
+  the intermediate points are noisy because a 12×12 = 144-pixel array has only ~1 pixel per %). So bad pixels DO pull
+  the localization, and a known bad-pixel map recovers it — the same lesson as flood-field, for discrete defects.
+- The 144-pixel grid makes single-% defect counts small and the raw curve seed-noisy; the robust, monotone result is
+  the repair holding the floor. (Tests: `DetectorDefectTests`, +4.)

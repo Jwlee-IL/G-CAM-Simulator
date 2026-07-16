@@ -1,7 +1,7 @@
 # Backlog
 
 Deferred work, captured so we don't forget. Not in current scope. See
-`AGENTS.findings.md` (themes 1–39) for everything that IS done.
+`AGENTS.findings.md` (themes 1–40) for everything that IS done.
 
 **Genuinely open**: the **Physical realism gaps** list below (Codex gap-review after theme 35 — a whole queue of
 real-detector effects to model one-per-session, top picks ★thermal drift, ★flood-field correction, pile-up sum
@@ -90,8 +90,10 @@ model. Ranked by impact; **★ = user-flagged / connects to the real rig**. Tack
   `montecarlo align`). Rigid-body mask offset (x/y/z) + roll on the Transmit only, decoder stays ideal → systematic
   bias: in-plane offset amplified by (D+S)/D (~2.5 mm bias per 1 mm shift), radial spacing bias, tangential roll bias.
   In-plane registration is the driving tolerance. Pitch/yaw TILT (tilted-slab geometry) deferred.
-- **Bad / dead / hot pixels** — MED-HIGH. Fixed spatial defects imprint mask-like structure on the flood and pull the
-  correlation peak. We model gain non-uniformity but not dead/hot channels (or a masked/system-matrix decode).
+- ~~**Bad / dead / hot pixels**~~ — **DONE, theme 40** (`DetectorDefects` / `DetectorDefectStudy` / `montecarlo
+  defects`). Seeded dead (holes) + hot (spikes) maps applied to the flood, ideal decoder → localization pulled off;
+  a known bad-pixel map repairs it by neighbour interpolation (discrete flood-field), holding the ~0.6 mm floor to 8 %
+  bad pixels while raw degrades to ~1.2–1.8 mm.
 - Sub-cell peak interpolation — MED. Grid argmax leaves a decoder-resolution floor; real localization interpolates or
   fits a continuous likelihood. (Cheap, improves the reported precision.)
 - NOTE — DOI/parallax is NOT missing: the flood already carries the depth-of-interaction lateral shift (the cascade
@@ -122,9 +124,10 @@ model. Ranked by impact; **★ = user-flagged / connects to the real rig**. Tack
 - Intrinsic activity (LYSO Lu-176, LaBr₃ La-138) — LOW for GAGG (none); matters only if those scintillators are picked.
 
 Recommended order next session: ~~thermal drift + flood-field~~ (36) → ~~pile-up sum continuum~~ (37) → ~~mask
-fabrication tolerances~~ (38) → ~~mask–detector alignment/pose~~ (39) → **mask tungsten fluorescence + Compton scatter**
-(the mask is still pure attenuation), or **cascade summing** (Co-60/Na-22 sum peaks — a follow-on to pile-up), or
-**bad/dead/hot pixels** (MED-HIGH localization). Reflector MATERIAL + mask TILT/WARPING stay deliberately deferred.
+fabrication tolerances~~ (38) → ~~mask–detector alignment/pose~~ (39) → ~~bad/dead/hot pixels~~ (40) → **mask tungsten
+fluorescence + Compton scatter** (the mask is still pure attenuation), or **cascade summing** (Co-60/Na-22 sum peaks —
+a follow-on to pile-up; ∝ε² so small for a coded aperture), or **dead time / count-rate saturation**, or **sub-cell
+peak interpolation** (cheap precision). Reflector MATERIAL + mask TILT/WARPING stay deliberately deferred.
 
 ### Productization (theme 22 — design-only; user is NOT building this now)
 - Integrate the SiPM / thermal / gain-stabilization + shield models into the C# pipeline

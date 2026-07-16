@@ -38,6 +38,9 @@ if (args[0].Equals("maskfab", StringComparison.OrdinalIgnoreCase))
 if (args[0].Equals("align", StringComparison.OrdinalIgnoreCase))
     return RunAlign(args);
 
+if (args[0].Equals("defects", StringComparison.OrdinalIgnoreCase))
+    return RunDefects(args);
+
 if (args[0].Equals("array", StringComparison.OrdinalIgnoreCase))
     return RunArray(args);
 
@@ -1225,6 +1228,46 @@ static int RunThermal(string[] args)
     Console.WriteLine($"                    ON  holds {on[^1].Efficiency,4:P1} efficiency, residual {on[^1].ResidualCoV,4:P1}.");
     Console.WriteLine("Drift is an ENERGY-WINDOW (efficiency) problem, not a localization one: the bias tracks the decoder floor.");
     Console.WriteLine($"CSV written: {prefix}_off.csv, {prefix}_on.csv");
+    return 0;
+}
+
+static int RunDefects(string[] args)
+{
+    if (args.Length < 2)
+    {
+        Console.Error.WriteLine("Usage: montecarlo defects <base.json> [out.csv]");
+        Console.Error.WriteLine("  Sweeps bad (dead/hot) pixel fraction vs an IDEAL decoder: raw flood vs a known");
+        Console.Error.WriteLine("  bad-pixel-map repair (interpolate the flagged pixels).");
+        return 1;
+    }
+
+    string csvPath = args.Length >= 3 ? args[2] : "samples/defects.csv";
+    const double photonBudget = 800_000.0;
+    const int repeats = 60;
+    const double deadShare = 0.6;    // dead pixels are more common than hot
+    const double hotFactor = 5.0;    // a hot pixel adds 5× the mean live-pixel counts
+    double[] badPct = [0.0, 1.0, 2.0, 4.0, 8.0];
+
+    var baseConfig = ConfigLoader.Load(args[1]);
+
+    Console.WriteLine("Detector bad-pixel study: dead (holes) + hot (spikes) pixels vs the IDEAL decoder.");
+    Console.WriteLine($"dead share {deadShare:P0}, hot pixel = {hotFactor:F0}× mean level; {repeats} Poisson reps, " +
+                      $"averaged over defect maps. Repair = interpolate the known bad-pixel map.");
+    Console.WriteLine();
+
+    var rows = new DetectorDefectStudy(new DefaultSimulationFactory())
+        .Run(baseConfig, badPct, deadShare, hotFactor, photonBudget, repeats, seeds: 8);
+    File.WriteAllText(csvPath, DetectorDefectStudy.ToCsv(rows));
+
+    Console.WriteLine("   bad%   dead%   hot%   RMS raw    RMS repaired");
+    Console.WriteLine("   ----   -----   ----   --------   ------------");
+    foreach (var r in rows)
+        Console.WriteLine($"   {r.BadPixelPct,4:F1}   {r.DeadPct,5:F2}   {r.HotPct,4:F2}   {r.RmsRawMm,7:F2}mm   {r.RmsCorrMm,9:F2}mm");
+
+    Console.WriteLine();
+    Console.WriteLine("Bad pixels imprint fixed non-coded structure that pulls the correlation peak; a known bad-pixel");
+    Console.WriteLine("map repairs most of it by interpolation (the discrete analogue of flood-field correction).");
+    Console.WriteLine($"CSV written: {csvPath}");
     return 0;
 }
 
