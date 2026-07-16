@@ -1111,3 +1111,23 @@ momentarily hit** — "machinable" ≠ "deployable", especially for a thick brit
   ideal floor — a conservative, actionable number, well below the ~1 mm pitch (a few-% of a cell).
 - Burrs / rounded corners fold into the hole-size error; slab WARPING (a global bow → position-dependent shift) is a
   distinct structural defect, deliberately deferred. (Tests: `MaskFabricationTests`, +5.)
+
+## 39. Mask–detector alignment / pose error — `CodedApertureMask` pose + `AlignmentStudy` / `montecarlo align`
+Fourth physical-realism gap (HIGH). The decoder back-projects the IDEAL geometry (mask centred at its nominal
+plane, unrotated); a rigid-body mis-registration of the real mask casts a systematically shifted/rotated coded
+shadow → a SYSTEMATIC localization bias, not just scatter. The other big localization gap after fabrication.
+- **Implementation is a single ray transform**: at the top of `Transmit`, express the incoming ray in the mask's
+  OWN (nominal) frame — `p_nom = Rz(−roll)·(p − offset)` — so the entire existing slab march (which assumes an ideal
+  centred mask at PlaneZ) runs unchanged and composes automatically with focal/taper/fabrication. The decoder,
+  still built from the nominal geometry, is unaware of the pose → the mismatch IS the bias. `MaskOffsetX/Y/Z`,
+  `MaskRollDeg` on the config; the equivalence (offset mask at p ≡ ideal mask at p−offset; rolled ≡ Rz(−roll)·p) is
+  unit-tested directly.
+- **Three DOF, three distinct signatures** (swept independently, off-axis source near the FCFOV edge so the leverage
+  shows): **in-plane offset** → a parallel bias AMPLIFIED by the magnification (D+S)/D (a 1 mm mask shift → ~2.5 mm
+  source bias at D=60/S=100, ref 2.67×) — the dominant, most dangerous error; **spacing (z) error** → a radial
+  magnification bias that grows off-axis (~0.4 mm at 2 mm dz); **roll** → a tangential bias that grows off-axis
+  (~0.1 mm at 2°, zero on-axis). The aligned baseline sits at the ~sub-mm decoder floor.
+- **Tolerance takeaway**: in-plane registration is the driver — the (D+S)/D amplification means the mount must hold
+  the mask centre to a fraction of the wanted localization accuracy (≈0.4 mm offset for a ~1 mm bias budget here);
+  spacing and roll are far more forgiving at practical off-axis distances. Pitch/yaw TILT (a tilted-slab geometry)
+  is deliberately deferred, like warping. (Tests: `AlignmentTests`, +4.)

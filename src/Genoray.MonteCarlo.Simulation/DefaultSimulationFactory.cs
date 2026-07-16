@@ -77,7 +77,8 @@ public sealed class DefaultSimulationFactory : ISimulationFactory
             : null;
         return new CodedApertureMask(pattern, config.Geometry.MaskDetectorDistanceMm,
                                      m.CellPitchMm, m.ThicknessMm, m.LinearAttenuationPerMm,
-                                     m.FocalDistanceMm, m.HoleFraction, m.TaperAngleDeg, fab);
+                                     m.FocalDistanceMm, m.HoleFraction, m.TaperAngleDeg, fab,
+                                     m.MaskOffsetXMm, m.MaskOffsetYMm, m.MaskOffsetZMm, m.MaskRollDeg);
     }
 
     public IDetector CreateDetector(SimulationConfig config)

@@ -35,6 +35,9 @@ if (args[0].Equals("pileup", StringComparison.OrdinalIgnoreCase))
 if (args[0].Equals("maskfab", StringComparison.OrdinalIgnoreCase))
     return RunMaskFab(args);
 
+if (args[0].Equals("align", StringComparison.OrdinalIgnoreCase))
+    return RunAlign(args);
+
 if (args[0].Equals("array", StringComparison.OrdinalIgnoreCase))
     return RunArray(args);
 
@@ -1222,6 +1225,62 @@ static int RunThermal(string[] args)
     Console.WriteLine($"                    ON  holds {on[^1].Efficiency,4:P1} efficiency, residual {on[^1].ResidualCoV,4:P1}.");
     Console.WriteLine("Drift is an ENERGY-WINDOW (efficiency) problem, not a localization one: the bias tracks the decoder floor.");
     Console.WriteLine($"CSV written: {prefix}_off.csv, {prefix}_on.csv");
+    return 0;
+}
+
+static int RunAlign(string[] args)
+{
+    if (args.Length < 2)
+    {
+        Console.Error.WriteLine("Usage: montecarlo align <base.json> [out.csv]");
+        Console.Error.WriteLine("  Sweeps mask-detector misalignment (in-plane offset, spacing, roll) vs an IDEAL");
+        Console.Error.WriteLine("  decoder and reports the systematic localization bias — the alignment tolerance.");
+        return 1;
+    }
+
+    string csvPath = args.Length >= 3 ? args[2] : "samples/align.csv";
+    const double photonBudget = 800_000.0;
+    const int repeats = 120;
+    double[] offsets = [0.0, 0.1, 0.2, 0.5, 1.0];    // in-plane mask offset (mm)
+    double[] zOffsets = [0.0, 0.25, 0.5, 1.0, 2.0];  // spacing error (mm)
+    double[] rolls = [0.0, 0.25, 0.5, 1.0, 2.0];     // roll about the optical axis (deg)
+
+    var baseConfig = ConfigLoader.Load(args[1]);
+    // Near the FCFOV edge so the roll / spacing leverage (which grows with off-axis radius) shows clearly.
+    double fcfovHalf = baseConfig.Mask.Rank * baseConfig.Mask.CellPitchMm
+        * (baseConfig.Geometry.MaskDetectorDistanceMm + baseConfig.Geometry.SourceMaskDistanceMm)
+        / baseConfig.Geometry.MaskDetectorDistanceMm / 2.0;
+    double srcX = 0.85 * fcfovHalf;
+    var src = (srcX, 0.0, 0.0);
+
+    Console.WriteLine("Mask-detector alignment study: a mis-registered mask vs the IDEAL-geometry decoder.");
+    Console.WriteLine($"Off-axis source at x={srcX:F0} mm, D={baseConfig.Geometry.MaskDetectorDistanceMm:F0} / " +
+                      $"S={baseConfig.Geometry.SourceMaskDistanceMm:F0} mm, {repeats} Poisson reps/point.");
+    Console.WriteLine("Bias = systematic (decoded − true); RMS includes scatter. Decoder assumes perfect alignment.");
+    Console.WriteLine();
+
+    var rows = new AlignmentStudy(new DefaultSimulationFactory())
+        .Run(baseConfig, src, offsets, zOffsets, rolls, photonBudget, repeats);
+    File.WriteAllText(csvPath, AlignmentStudy.ToCsv(rows));
+
+    string lastDof = "";
+    foreach (var r in rows)
+    {
+        if (r.Dof != lastDof)
+        {
+            lastDof = r.Dof;
+            string unit = r.Dof == "roll_deg" ? "deg" : "mm";
+            Console.WriteLine();
+            Console.WriteLine($"  {r.Dof} ({unit})   biasX    biasY     bias     RMS");
+            Console.WriteLine("  ---------------   ------   ------   ------   ------");
+        }
+        Console.WriteLine($"  {r.Magnitude,13:F2}   {r.BiasXMm,6:F2}   {r.BiasYMm,6:F2}   {r.BiasMm,6:F2}   {r.RmsMm,6:F2}");
+    }
+
+    Console.WriteLine();
+    Console.WriteLine("In-plane offset biases the position almost 1:1; spacing (magnification) and roll bias grow");
+    Console.WriteLine("with off-axis distance. The tolerance is where the bias leaves the decoder floor (~sub-mm).");
+    Console.WriteLine($"CSV written: {csvPath}");
     return 0;
 }
 

@@ -204,6 +204,24 @@ public sealed class MaskConfig
 
     /// <summary>Seed for the (fixed) per-cell fabrication-error pattern — one specific manufactured mask.</summary>
     public int FabricationSeed { get; set; } = 1;
+
+    // --- Alignment / pose error (the mask is not perfectly registered to the detector; the decoder assumes it is) ---
+    // A rigid-body misregistration of the mask relative to the ideal pose the decoder back-projects with → a
+    // SYSTEMATIC localization bias (not just scatter). Applied to the mask Transmit only. 0 = perfect alignment.
+
+    /// <summary>In-plane mask offset along x (mm): the coded shadow shifts, biasing the decoded position.</summary>
+    public double MaskOffsetXMm { get; set; } = 0.0;
+
+    /// <summary>In-plane mask offset along y (mm).</summary>
+    public double MaskOffsetYMm { get; set; } = 0.0;
+
+    /// <summary>Mask–detector spacing error (mm) along z: the decoder's assumed magnification M=(D+S)/S is wrong,
+    /// giving a radial scale / range bias that grows off-axis.</summary>
+    public double MaskOffsetZMm { get; set; } = 0.0;
+
+    /// <summary>Mask roll (deg) about the optical (z) axis: the coded shadow is rotated relative to the decoder's
+    /// assumed orientation, a bias that grows with off-axis distance (zero for a centred source).</summary>
+    public double MaskRollDeg { get; set; } = 0.0;
 }
 
 /// <summary>

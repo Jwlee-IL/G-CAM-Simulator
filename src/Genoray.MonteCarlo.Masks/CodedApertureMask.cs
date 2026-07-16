@@ -18,6 +18,8 @@ public sealed class CodedApertureMask : IMask
     private readonly double _holeFraction;// LINEAR open fraction of a cell (open AREA = _holeFraction²)
     private readonly double _tanTaper;    // bevel of the channel walls (0 = straight, collimating)
     private readonly MaskFabrication? _fab;// per-cell fabrication error (null = ideal mask)
+    private readonly bool _misaligned;    // rigid-body pose error relative to the decoder's assumed pose
+    private readonly double _offX, _offY, _offZ, _cosRoll, _sinRoll;
 
     public MaskPattern Pattern { get; }
     public double PlaneZ { get; }
@@ -25,9 +27,18 @@ public sealed class CodedApertureMask : IMask
     public CodedApertureMask(MaskPattern pattern, double planeZ, double cellPitchMm,
                              double thicknessMm, double muPerMm,
                              double focalDistanceMm = 0.0, double holeFraction = 1.0,
-                             double taperAngleDeg = 0.0, MaskFabrication? fabrication = null)
+                             double taperAngleDeg = 0.0, MaskFabrication? fabrication = null,
+                             double offsetXMm = 0.0, double offsetYMm = 0.0, double offsetZMm = 0.0,
+                             double rollDeg = 0.0)
     {
         _fab = fabrication;
+        _offX = offsetXMm;
+        _offY = offsetYMm;
+        _offZ = offsetZMm;
+        double roll = rollDeg * Math.PI / 180.0;
+        _cosRoll = Math.Cos(roll);
+        _sinRoll = Math.Sin(roll);
+        _misaligned = offsetXMm != 0.0 || offsetYMm != 0.0 || offsetZMm != 0.0 || rollDeg != 0.0;
         Pattern = pattern;
         PlaneZ = planeZ;
         _cellPitchMm = cellPitchMm;
@@ -52,6 +63,20 @@ public sealed class CodedApertureMask : IMask
 
     public bool Transmit(Ray ray, double energyKeV, IRandom rng)
     {
+        // Alignment / pose error: the physical mask is displaced by (offX,offY,offZ) and rolled about z from the
+        // ideal pose the decoder assumes. Express the ray in the mask's OWN (nominal) frame — p_nom = Rz(-roll)·
+        // (p − offset) — so the rest of the slab march (which assumes an ideal centred mask at PlaneZ) is unchanged
+        // and the decoder, still back-projecting the ideal geometry, sees a systematically shifted/rotated shadow.
+        if (_misaligned)
+        {
+            double ox = ray.Origin.X - _offX, oy = ray.Origin.Y - _offY, oz = ray.Origin.Z - _offZ;
+            double nox = _cosRoll * ox + _sinRoll * oy;
+            double noy = -_sinRoll * ox + _cosRoll * oy;
+            double ndx = _cosRoll * ray.Direction.X + _sinRoll * ray.Direction.Y;
+            double ndy = -_sinRoll * ray.Direction.X + _cosRoll * ray.Direction.Y;
+            ray = new Ray(new Vector3(nox, noy, oz), new Vector3(ndx, ndy, ray.Direction.Z));
+        }
+
         // The mask is a slab of thickness t centered on z = PlaneZ. March the ray
         // from the front face (z = PlaneZ + t/2) to the back face (z = PlaneZ - t/2),
         // counting how many sub-steps fall in tungsten (closed cells, mask edges, or
