@@ -873,9 +873,12 @@ public partial class MainWindow : Window
             }
 
         double fill = Math.Pow((pitch - gapMm) / pitch, 2.0);
+        double contactXtalk = Math.Clamp(ParseD(DetCrosstalk.Text, 0) / 100.0, 0.0, 0.9);
+        double effXtalk = contactXtalk * Math.Exp(-gapMm / 0.04);   // coupled to the reflector thickness (λ=40µm)
         DrawDetector(DetPlot, grid, n * pitch, "Detector face — per-crystal gain (colour), reflector gaps (dark)");
         DetReadout.Text = $"fill factor {fill:P0}  ·  active {(pitch - gapMm) * 1000:F0} µm of {pitch * 1000:F0} µm pitch" +
-                          $"  ·  {n}×{n} crystals  ·  gain σ {gainSigma:P0}, seed {seed}";
+                          $"  ·  crosstalk {contactXtalk:P0}→{effXtalk:P1} eff (×exp(−gap/40µm))" +
+                          $"  ·  gain σ {gainSigma:P0}, seed {seed}";
     }
 
     private static void DrawDetector(ScottPlot.WPF.WpfPlot view, double[,] grid, double sizeMm, string title)

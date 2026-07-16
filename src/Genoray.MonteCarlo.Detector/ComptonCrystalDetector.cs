@@ -41,7 +41,8 @@ public sealed class ComptonCrystalDetector : IDetector
     private readonly EntranceAbsorber? _entrance;   // passive window/encapsulation in front (null = none)
     private readonly EntranceAbsorber? _backing;    // scatterer behind the crystal (null = none) -> backscatter
     private readonly double _reflectorGap;          // dead reflector/kerf gap between crystals (mm; 0 = 100% fill)
-    private readonly double _crosstalk;             // optical light-leak fraction to the 4 neighbours (0 = perfect isolation)
+    private readonly double _crosstalk;             // EFFECTIVE optical light-leak fraction (contact coupling × reflector transmission)
+    private const double CrosstalkLambdaMm = 0.04;  // reflector optical attenuation length — crosstalk ~ exp(-gap/λ)
 
     public double PlaneZ { get; }
 
@@ -70,7 +71,11 @@ public sealed class ComptonCrystalDetector : IDetector
         _entrance = entranceAbsorber;
         _backing = backingScatterer;
         _reflectorGap = reflectorGapMm;
-        _crosstalk = opticalCrosstalk;
+        // Optical crosstalk is COUPLED to the reflector thickness: light leaking to a neighbour must penetrate the
+        // reflector, whose transmission falls ~exp(-gap/λ). So opticalCrosstalk is the contact coupling (bare
+        // crystals, gap 0) and the EFFECTIVE crosstalk drops as the reflector widens — the isolation vs dead-area
+        // trade-off in a single reflector parameter. λ ≈ 40 µm (a decent diffuse/ESR reflector).
+        _crosstalk = opticalCrosstalk * Math.Exp(-reflectorGapMm / CrosstalkLambdaMm);
         PlaneZ = planeZ;
     }
 
