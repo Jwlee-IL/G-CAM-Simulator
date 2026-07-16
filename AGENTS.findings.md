@@ -1011,3 +1011,16 @@ or the user (who built the real rig).
 - **Codex parallel cross-verification** (4 topics, `33b79c7..`): core physics all confirmed; fixed backing back-scatter
   re-entry (actual back-face crossing, not the overshoot; respect the reflector gap; require the scattered photon to
   survive escaping the backing) and a couple of display/clamp nits.
+- **Optical inter-crystal crosstalk, COUPLED to the reflector** (`Detector.OpticalCrosstalkFraction`): an imperfect
+  reflector leaks scintillation LIGHT to the 4 neighbours (main keeps 1−leak, leak/4 each; edge light lost; per-event
+  leak uniform [0, 2·contact] so efficiency rolls off gradually, not a cliff). This is what the reflector prevents
+  (vs the dead-region geometry). With a per-crystal LLD/ULD readout that does NOT sum clusters, leaked light drops the
+  main channel below its window → crosstalk costs photopeak COUNTS while leaving position UNBIASED (why isolation
+  matters; tighter windows are more crosstalk-sensitive). Total light conserved → the total-energy spectrum is
+  unaffected; it bites imaging. **Crucially, crosstalk is coupled to reflector THICKNESS**: effective = contact ×
+  exp(−gap/λ), λ≈40 µm — so ONE reflector parameter drives both the dead region (fill) and the isolation (crosstalk),
+  and an OPTIMUM gap emerges (at 40% contact, windowed efficiency 9/13/20/69/45% at 0/20/40/100/200 µm — thin lets
+  crosstalk dominate, thick lets dead area dominate, best ~100 µm). Reviewer (user) caught that they were wrongly
+  independent. **Reflector MATERIAL** (ceramic — the real rig — vs 3M ESR / PTFE / BaSO₄ / TiO₂, reflectance ~90–99%)
+  is deliberately NOT modelled: it enters only as a second-order tuning of λ (reflectance) and of whether gap-entering
+  gammas are fully lost vs partly transmitted/scattered (Z/density) — not a first-order factor for the localization.
