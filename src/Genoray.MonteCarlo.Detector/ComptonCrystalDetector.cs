@@ -40,6 +40,7 @@ public sealed class ComptonCrystalDetector : IDetector
     private readonly IRandom? _frontEndRng;
     private readonly EntranceAbsorber? _entrance;   // passive window/encapsulation in front (null = none)
     private readonly EntranceAbsorber? _backing;    // scatterer behind the crystal (null = none) -> backscatter
+    private readonly double _reflectorGap;          // dead reflector/kerf gap between crystals (mm; 0 = 100% fill)
 
     public double PlaneZ { get; }
 
@@ -48,7 +49,8 @@ public sealed class ComptonCrystalDetector : IDetector
         double muAt662PerMm = 0.09, double crystalDepthMm = 10.0, double planeZ = 0.0,
         double[]? sensitivity = null, Action<double, double>? eventSink = null,
         FrontEndModel? frontEnd = null, IRandom? frontEndRng = null,
-        EntranceAbsorber? entranceAbsorber = null, EntranceAbsorber? backingScatterer = null)
+        EntranceAbsorber? entranceAbsorber = null, EntranceAbsorber? backingScatterer = null,
+        double reflectorGapMm = 0.0)
     {
         _image = new DetectorImage(pixelsX, pixelsY);
         _pitch = pixelPitchMm;
@@ -66,6 +68,7 @@ public sealed class ComptonCrystalDetector : IDetector
         _frontEndRng = frontEndRng;
         _entrance = entranceAbsorber;
         _backing = backingScatterer;
+        _reflectorGap = reflectorGapMm;
         PlaneZ = planeZ;
     }
 
@@ -80,6 +83,16 @@ public sealed class ComptonCrystalDetector : IDetector
     // (not the cascade _rng) so enabling the front-end doesn't perturb the Compton cascade stream — the
     // strategy comparison (ComptonStudy) still replays identical cascades across strategies.
     private double Measured(double e) => _frontEnd is null ? e : _frontEnd.Measure(e, _frontEndRng ?? _rng);
+
+    // True if (x,y) on the detector face lands in the reflector / saw-kerf gap between crystals (the dead region).
+    // Active crystal footprint is (pitch − gap), centred in each pitch cell, so the outer gap/2 border is dead.
+    private bool InReflectorGap(double x, double y)
+    {
+        double half = _reflectorGap * 0.5;
+        double lx = (x + _halfWidth) % _pitch;
+        double ly = (y + _halfHeight) % _pitch;
+        return lx < half || lx > _pitch - half || ly < half || ly > _pitch - half;
+    }
 
     private int PixelIndex(double coord, double half) => (int)((coord + half) / _pitch);
     private double PixelCenter(int i, double half) => (i + 0.5) * _pitch - half;
@@ -96,6 +109,7 @@ public sealed class ComptonCrystalDetector : IDetector
         var entry = photon.Ray.At(t0);
         if (entry.X < -_halfWidth || entry.X >= _halfWidth ||
             entry.Y < -_halfHeight || entry.Y >= _halfHeight) return false;
+        if (_reflectorGap > 0.0 && InReflectorGap(entry.X, entry.Y)) return false;   // hit the dead reflector gap
 
         // Entrance material (source encapsulation + front housing/window): the photon may pass through, be
         // photo-absorbed (removed here), or Compton-scatter to a lower energy + new direction. Forward small-angle
@@ -118,6 +132,7 @@ public sealed class ComptonCrystalDetector : IDetector
         {
             double mu = _muAt662 * ComptonModel.MuRel(e);
             double s = -Math.Log(1.0 - _rng.NextDouble()) / mu;
+            var prev = pos;
             pos += dir * s;
             if (pos.Z > PlaneZ ||
                 pos.X < -_halfWidth || pos.X >= _halfWidth ||
@@ -130,12 +145,17 @@ public sealed class ComptonCrystalDetector : IDetector
                 // and shallower back-scatters add to the sub-photopeak fill. Reuses Klein-Nishina; no hand tail.
                 if (_backing is not null && e > 1.0)
                 {
+                    // Re-enter at the ACTUAL back-face crossing (not the overshot free-flight endpoint).
+                    double backZ = PlaneZ - _depth;
+                    double tb = (backZ - prev.Z) / dir.Z;
+                    double cx = prev.X + dir.X * tb, cy = prev.Y + dir.Y * tb;
                     var (absBack, eBack, dirBack) = _backing.Interact(e, dir, _rng);
                     if (!absBack && dirBack.Z > 0.0 &&
-                        pos.X >= -_halfWidth && pos.X < _halfWidth &&
-                        pos.Y >= -_halfHeight && pos.Y < _halfHeight)
+                        cx >= -_halfWidth && cx < _halfWidth && cy >= -_halfHeight && cy < _halfHeight &&
+                        !(_reflectorGap > 0.0 && InReflectorGap(cx, cy)) &&        // re-enter a live crystal, not a gap
+                        _rng.NextDouble() < _backing.Transmit(eBack))             // scattered photon must escape the backing
                     {
-                        pos = new Vector3(pos.X, pos.Y, PlaneZ - _depth);   // re-enter at the back face, heading up
+                        pos = new Vector3(cx, cy, backZ);                          // re-enter at the crossing, heading up
                         dir = dirBack; e = eBack;
                         continue;
                     }

@@ -78,7 +78,12 @@ public partial class MainWindow : Window
         SceneCanvas.MouseMove += SceneCanvas_MouseMove;
         SceneCanvas.MouseLeftButtonUp += SceneCanvas_MouseUp;
         // One acquisition drives every tab; switching tabs just re-renders the current state (no stop).
-        MainTabs.SelectionChanged += (_, e) => { if (e.Source is TabControl && _liveRunning) RenderVisibleTab(); };
+        MainTabs.SelectionChanged += (_, e) =>
+        {
+            if (e.Source is not TabControl) return;
+            if (_liveRunning) RenderVisibleTab();
+            else if (MainTabs.SelectedIndex == 4) RenderDetector();   // static detector view works with no run
+        };
 
         foreach (var box in new[] { OptRank, OptCell, OptD, OptDetN, OptDetPitch })
             box.TextChanged += (_, _) => UpdateOpticsReadout();
@@ -442,6 +447,9 @@ public partial class MainWindow : Window
         // itself lives in the ComptonCrystalDetector window).
         cfg.Detector.GainSigma = Math.Max(0.0, ParseD(ImgGainSigma.Text, 3) / 100.0);
         cfg.Detector.UniformitySeed = (int)ParseD(ImgUnifSeed.Text, 1);
+        // Dead reflector / saw-kerf gap between crystals (µm → mm): a photon entering the gap is lost. Clamp below
+        // the pitch (a gap ≥ pitch would kill the whole detector) — matches the Detector-tab preview's clamp.
+        cfg.Detector.ReflectorGapMm = Math.Clamp(ParseD(DetGapUm.Text, 100) / 1000.0, 0.0, pitch * 0.9);
 
         // Non-cyclic (finite-mask) decode + recon kept just inside the FCFOV — suppresses the off-axis ghosts
         // that a cyclic decode aliases in, so MULTIPLE off-axis sources each resolve to their own peak.
@@ -816,7 +824,71 @@ public partial class MainWindow : Window
             case 0: RenderWaveform(); break;
             case 1: RenderImaging(); break;
             case 2: RenderSpectrum(); break;
+            case 4: RenderDetector(); break;   // Detector face — static, no acquisition needed
         }
+    }
+
+    // ---- Detector face: per-crystal gain × fill factor (reflector gaps) ----------------------------------
+
+    private void DetField_Changed(object sender, System.Windows.Controls.TextChangedEventArgs e)
+    {
+        if (IsLoaded && MainTabs.SelectedIndex == 4) RenderDetector();
+    }
+
+    private void DetRedraw_Click(object sender, RoutedEventArgs e) => RenderDetector();
+
+    /// <summary>Render the detector face at sub-pixel resolution: each crystal is coloured by its seeded gain, and
+    /// the reflector / saw-kerf gap between crystals (the dead region) is drawn as NaN over a dark background — so
+    /// the fixed-pattern non-uniformity (gain spread) and the fill factor are both visible.</summary>
+    private void RenderDetector()
+    {
+        if (DetPlot == null) return;
+        int n = Math.Clamp((int)ParseD(OptDetN.Text, 30), 4, 64);
+        double pitch = Math.Max(0.05, ParseD(OptDetPitch.Text, 0.6));
+        double gapMm = Math.Max(0.0, ParseD(DetGapUm.Text, 100) / 1000.0);
+        gapMm = Math.Min(gapMm, pitch * 0.9);
+        double gainSigma = Math.Max(0.0, ParseD(ImgGainSigma.Text, 3) / 100.0);
+        int seed = (int)ParseD(ImgUnifSeed.Text, 1);
+
+        var dcfg = new DetectorConfig { PixelsX = n, PixelsY = n, PixelPitchMm = pitch, GainSigma = gainSigma, UniformitySeed = seed };
+        var sens = new CrystalUniformity(dcfg).Sensitivity;   // per-pixel gain (row-major, mean ≈ 1)
+
+        const int SUB = 12;                                   // sub-pixel cells per crystal to resolve the gap
+        int g = n * SUB;
+        var grid = new double[g, g];
+        double half = gapMm * 0.5;
+        for (int py = 0; py < n; py++)
+            for (int px = 0; px < n; px++)
+            {
+                double gain = sens[py * n + px];
+                for (int sy = 0; sy < SUB; sy++)
+                    for (int sx = 0; sx < SUB; sx++)
+                    {
+                        double lx = (sx + 0.5) / SUB * pitch, ly = (sy + 0.5) / SUB * pitch;
+                        bool gap = lx < half || lx > pitch - half || ly < half || ly > pitch - half;
+                        grid[py * SUB + sy, px * SUB + sx] = gap ? double.NaN : gain;
+                    }
+            }
+
+        double fill = Math.Pow((pitch - gapMm) / pitch, 2.0);
+        DrawDetector(DetPlot, grid, n * pitch, "Detector face — per-crystal gain (colour), reflector gaps (dark)");
+        DetReadout.Text = $"fill factor {fill:P0}  ·  active {(pitch - gapMm) * 1000:F0} µm of {pitch * 1000:F0} µm pitch" +
+                          $"  ·  {n}×{n} crystals  ·  gain σ {gainSigma:P0}, seed {seed}";
+    }
+
+    private static void DrawDetector(ScottPlot.WPF.WpfPlot view, double[,] grid, double sizeMm, string title)
+    {
+        var p = view.Plot;
+        p.Clear();
+        var hm = p.Add.Heatmap(grid);
+        hm.Extent = new ScottPlot.CoordinateRect(0, sizeMm, 0, sizeMm);
+        hm.Colormap = new ScottPlot.Colormaps.Viridis();
+        p.DataBackground.Color = ScottPlot.Color.FromHex("#202020");   // NaN reflector gaps show as dark
+        p.Title(title);
+        p.XLabel("x (mm)");
+        p.YLabel("y (mm)");
+        p.Axes.AutoScale();
+        view.Refresh();
     }
 
     private void RenderImaging()
@@ -1131,7 +1203,7 @@ public partial class MainWindow : Window
         SpResolution.Text = _feResPct662.ToString("F1", CultureInfo.InvariantCulture);   // spectrum uses this on next Simulate
 
         FeReadout.Text = $"→ N_pe(662) ≈ {model.Photoelectrons(662):N0},  R(662) ≈ {_feResPct662:F1}%,  " +
-                         $"pulse rise {sc.DecayNs:F0} ns / tail {pa.PulseTailNs:F0} ns,  {(pa.Crrc ? "CR-RC^4" : "trapezoid")}";
+                         $"pulse rise {riseNs:F0} ns / tail {fallNs:F0} ns,  {(pa.Crrc ? "CR-RC^4" : "trapezoid")}";
 
         if (IsLoaded && _liveRunning && MainTabs.SelectedIndex == 0) RenderWaveform();
     }

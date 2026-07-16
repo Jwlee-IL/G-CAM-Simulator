@@ -40,8 +40,11 @@ public sealed class ComptonFactory : ISimulationFactory
         // Separate RNG for the front-end energy smear so it never perturbs the cascade stream (keeps the
         // strategy comparison's identical-cascade replay). Same seed across strategies -> same smear inputs.
         var frontEndRng = frontEnd is null ? null : new DefaultRandom(config.Seed + 888);
+        var entrance = d.EntranceAbsorberMm > 0.0 ? new EntranceAbsorber(d.EntranceAbsorberMm) : null;
+        var backing = d.BackingScatterMm > 0.0 ? new EntranceAbsorber(d.BackingScatterMm) : null;
         return new ComptonCrystalDetector(d.PixelsX, d.PixelsY, d.PixelPitchMm,
             _windowCenterKeV, _windowFraction, _strategy, cascadeRng,
-            _muAt662, d.CrystalThicknessMm, planeZ: 0.0, sensitivity, eventSink: null, frontEnd, frontEndRng);
+            _muAt662, d.CrystalThicknessMm, planeZ: 0.0, sensitivity, eventSink: null, frontEnd, frontEndRng,
+            entrance, backing, d.ReflectorGapMm);
     }
 }

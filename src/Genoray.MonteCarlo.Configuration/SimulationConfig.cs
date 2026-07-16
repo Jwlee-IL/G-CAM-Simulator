@@ -271,6 +271,12 @@ public sealed class DetectorConfig
     /// photopeak's low-energy tail (the Compton-edge-to-photopeak valley). 0 = bare geometry, legacy behaviour.</summary>
     public double EntranceAbsorberMm { get; set; } = 0.0;
 
+    /// <summary>Reflector / saw-kerf gap (mm) between adjacent crystals in the pixelated array — the DEAD REGION.
+    /// The active crystal footprint is (pitch − gap); a photon whose entry point lands in the gap deposits in the
+    /// reflector and is lost. Reduces the fill factor to ((pitch−gap)/pitch)² and stamps a periodic sensitivity
+    /// pattern on the flood. 0 = ideal 100% fill.</summary>
+    public double ReflectorGapMm { get; set; } = 0.0;
+
     /// <summary>Effective stainless-steel-equivalent thickness (mm) of the material BEHIND the crystal (SiPM /
     /// PCB / housing). A through-going photon can Compton back-scatter off it and re-enter the crystal — a ~180°
     /// scatter of 662 keV returns ~184 keV, the backscatter peak. Behind the crystal, so it does not attenuate the
