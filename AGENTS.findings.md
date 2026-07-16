@@ -1002,3 +1002,12 @@ or the user (who built the real rig).
   a "Noise floor (cps)" knob (a device value, honestly NOT datasheet-derived) for a falling low-E wall. Also resolved
   the DCR puzzle: SiPM dark pulses are ~0.1 keV (1 PE) — invisible in the WAVEFORM at gamma scale (so the clean
   baseline is right), but they show up in the SPECTRUM as the low-E wall.
+- **Dead region (`Detector.ReflectorGapMm`)**: the reflector / saw-kerf gap between crystals — a photon entering the
+  gap is lost, cutting counts by the fill factor ((pitch−gap)/pitch)² (verified 69.4% theory → 69.8% detected) and
+  stamping a periodic pattern on the flood. New **Detector tab** renders the detector face at sub-pixel resolution:
+  per-crystal gain (colour) + reflector gaps (dark). SiPM↔crystal is modelled 1:1 (each crystal = a readout channel;
+  the SiPM's light budget is lumped into `FrontEndModel`, not a separate spatial matrix) — the right choice for a
+  pixelated coded-aperture camera with per-crystal LLD/ULD (light-sharing/Anger would fight that windowing).
+- **Codex parallel cross-verification** (4 topics, `33b79c7..`): core physics all confirmed; fixed backing back-scatter
+  re-entry (actual back-face crossing, not the overshoot; respect the reflector gap; require the scattered photon to
+  survive escaping the backing) and a couple of display/clamp nits.
