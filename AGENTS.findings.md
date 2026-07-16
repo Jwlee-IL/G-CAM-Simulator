@@ -960,3 +960,45 @@ editor over the tabs plus Waveform / Imaging / Spectrum / Optics tabs. The build
   cross-checks it against depth-from-focus — near it refines the range, far it only flags "target off the laser
   surface" (their error modes are orthogonal: laser ranges the surface it HIT, focus measures the SOURCE).
   `FocusFusionTests`.
+
+## 35. Spectrum & detector realism — make the WPF Cs-137 look like a real measurement, all from physics
+An iterative arc driven by "this looks too ideal", each step MC-verified; the recurring principle: **fill features
+from real physics, never hand-add a tail/grass**. Several of my proposals were wrong and got corrected by the data
+or the user (who built the real rig).
+- **Cs-137 Ba K X-rays** (`Scene.cs` isotope lines): 32.1 keV (Kα, 5.6%) + 36.4 keV (Kβ, 1.4%) are a real SOURCE
+  emission (internal conversion of the 662 transition), not environmental — belongs in the line list. 661.7 stays
+  `Lines[0]`. Gives a genuine low-E peak.
+- **The spectrum was never wrong, the DISPLAY was**: the raw MC deposit spectrum already had ~29% Compton continuum
+  with the 477 keV edge and the empty edge→peak gap. It looked "artificially clean" only because a LINEAR y-axis
+  buries a continuum ~20× under the photopeak. Added a log/linear toggle (default linear — log felt like a trick to
+  the user) + 256-bin MCA-style filled-line render (was 128 fat bars).
+- **`EntranceAbsorber`** (`Detector/`, opt-in `Detector.EntranceAbsorberMm`, NIST iron μ(E) table): source
+  encapsulation + detector window as a stainless-steel slab. Two roles: (1) energy-dependent attenuation tames the
+  32 keV X-ray from ~17%→~8% peak area while barely touching 662 (0.15 mm default, sweep-picked); (2) `Interact()`
+  is a real Klein-Nishina SCATTERER — forward small-angle scatters fill the photopeak's low-E tail (the edge→peak
+  valley, 1.1%→~4%), soft X-rays that interact are mostly photo-absorbed. A **backing scatterer** behind the crystal
+  (`Detector.BackingScatterMm`, ~180° backscatter of through-going photons) makes the ~184 keV backscatter peak.
+  Valley/backscatter magnitudes scale with the surrounding material. (`EntranceAbsorberTests`, `ScattererTests`.)
+- **Detection-chain component presets** (WPF Waveform tab, `FrontEnd.cs` — same datasheet-derived idea as the ADC
+  preset): pick a **scintillator** (GAGG/NaI/LYSO/CsI/BGO) + **photosensor** (Hamamatsu MPPC S13360-3050/-6050, PMT)
+  + **preamp**. The energy resolution is DERIVED via the existing `FrontEndModel` (`N_pe = lightYield·collection·PDE·E`
+  → 1/√E statistics; the scintillator's NON-PROPORTIONALITY floor is the intrinsic term, NOT the total resolution,
+  so a good crystal + poor sensor still resolves badly — GAGG+MPPC 4.6% vs NaI 6.4% vs BGO 8.8% @662). Scintillator
+  decay sets the pulse rise, preamp tail the fall (min/max of the two constants so the bi-exp never inverts); shaper
+  pole-zero matched to the tail (RTL golden τ=5 untouched — it's the default). Selecting parts changes waveform AND
+  photopeak width together. On the default GAGG the visible change is small; the payoff is swapping detectors.
+- **Per-crystal LLD/ULD is a PHOTOPEAK WINDOW, not a global low-E cut** (I first built the latter — wrong; user
+  corrected). WPF imaging now builds the flood via `ComptonFactory(PerPixelWindow, primaryLine, windowFrac)`: only
+  photopeak events (per pixel, gain-corrected) form the coded image (~22% of interactions kept; localization still
+  0.09 mm). Window half-width is **FWHM-based**: `windowFrac = (Peak window ±×FWHM, default 1.5) × derived FWHM`, so
+  a coarser detector lets more scatter into the window. The full spectrum is still shown; the red ROI band marks the
+  imaging window.
+- **Seeded per-crystal gain spread** (Imaging tab `GainSigma` + `UniformitySeed`, via existing `CrystalUniformity`):
+  each pixel's 662 lands slightly off-window so off-gain crystals lose part of the photopeak — the crystal-to-crystal
+  non-uniformity a real rig flood-corrects. Seed → reproducible pattern; different seed → different detector.
+- **The low-E "noise wall" was the user's real-rig noise, not gamma physics**: our stark photopeak-to-low-E contrast
+  is CORRECT for a near-ideal detector (we count only real deposits). A real (SiPM) rig fills the low-E from
+  electronic/EMI noise + dark counts crossing the trigger, source-INDEPENDENT so it dominates at low activity. Added
+  a "Noise floor (cps)" knob (a device value, honestly NOT datasheet-derived) for a falling low-E wall. Also resolved
+  the DCR puzzle: SiPM dark pulses are ~0.1 keV (1 PE) — invisible in the WAVEFORM at gamma scale (so the clean
+  baseline is right), but they show up in the SPECTRUM as the low-E wall.
