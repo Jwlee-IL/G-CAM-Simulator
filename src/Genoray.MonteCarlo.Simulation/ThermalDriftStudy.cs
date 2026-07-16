@@ -35,8 +35,13 @@ public sealed class ThermalDriftStudy
     }
 
     public ThermalDriftRow[] Run(SimulationConfig baseConfig, ThermalDrift drift, double[] times,
-                                 double photonBudget, int repeats, double failThresholdMm)
+                                 double photonBudget, int repeats)
     {
+        if (drift.Width != baseConfig.Detector.PixelsX || drift.Height != baseConfig.Detector.PixelsY)
+            throw new ArgumentException(
+                $"ThermalDrift is {drift.Width}×{drift.Height} but the detector is " +
+                $"{baseConfig.Detector.PixelsX}×{baseConfig.Detector.PixelsY}.", nameof(drift));
+
         // Per-crystal static non-uniformity (gain_i, fwhm_i) and the calibration map S_cal.
         var uni = new CrystalUniformity(baseConfig.Detector);
         double[] sCal = uni.Sensitivity;
@@ -98,7 +103,10 @@ public sealed class ThermalDriftStudy
             double residualCoV = wmean != 0 ? Math.Sqrt(wvar) / Math.Abs(wmean) : 0.0;
 
             // Localization after flood correction: acquisition flood F_i = G_i · S_i(t), corrected by ÷ S_cal_i.
-            double rms = Localize(baseConfig, img, g, sNow, sCal, nDet, detW, repeats, failThresholdMm);
+            // Counts are scaled by ref0 (the t=0 photopeak total), NOT the current total, so as the peak walks out
+            // of the window the acquisition keeps FEWER counts (efficiency droop) → more Poisson noise. The RMS
+            // therefore compounds both channels: the spatial flood residual AND the count loss.
+            double rms = Localize(baseConfig, img, g, sNow, sCal, nDet, ref0, detW, repeats);
 
             rows.Add(new ThermalDriftRow(t, drift.AmbientDelta(t), drift.DeltaT((int)(w / 2), (int)(h / 2), t),
                                          efficiency, residualCoV, rms));
@@ -107,15 +115,13 @@ public sealed class ThermalDriftStudy
     }
 
     private double Localize(SimulationConfig cfg, DetectorImage geo, double[] g, double[] sNow, double[] sCal,
-                            double nDet, double detW, int repeats, double failThr)
+                            double nDet, double ref0, double detW, int repeats)
     {
-        if (detW <= 0) return double.NaN;
+        if (detW <= 0 || ref0 <= 0) return double.NaN;
         int w = geo.Width, h = geo.Height;
-        // Acquisition flood normalised to nDet detected counts (before Poisson).
-        double acqSum = 0.0;
-        for (int i = 0; i < g.Length; i++) acqSum += g[i] * sNow[i];
-        if (acqSum <= 0) return double.NaN;
-        double scale = nDet / acqSum;
+        // Fix the counts scale from the t=0 photopeak total (ref0), so a drooped-efficiency slice keeps
+        // proportionally FEWER counts (Σ g·sNow·scale = nDet·efficiency(t)) → higher Poisson noise.
+        double scale = nDet / ref0;
 
         var decoder = _factory.CreateDecoder(cfg)!;
         var rng = _factory.CreateRandom(cfg);

@@ -1072,16 +1072,20 @@ realize the pile-up in the energy domain by MERGING the timed MC event stream, n
   MC deposit list (it drives the cocotb shaper). `ApplyPileUp` walks that timed stream and records any events whose
   arrivals fall within the shaper's resolving time as ONE event with SUMMED energy (extending / paralyzable — a burst
   piles to 3-fold+). The energies are the real MC spectrum; only their time coincidence is added.
-- **Resolving time is DERIVED from the shaper, not a knob** (same discipline as theme 36's α): `ResolvingSamples =
-  rise + 2·tail` — the bi-exponential pulse's significant duration (peak + ~2 fall constants). Default 1 + 2·5 = 11
-  samples = 88 ns @ 125 MSPS; a faster shaper (shorter tail) resolves pile-up better, exactly as in hardware. The
-  RATE is the operating point (detected cps = emission × efficiency, already the WPF `_liveRateCps`).
+- **Resolving time is an EFFECTIVE value derived from the shaper**, not a free knob (same discipline as theme 36's α):
+  `ResolvingSamples = rise + 2·tail` — the bi-exponential pulse's significant duration (peak + ~2 fall constants).
+  Default 1 + 2·5 = 11 samples = 88 ns @ 125 MSPS; a faster shaper (shorter tail) resolves pile-up better, as in
+  hardware. It is a shaper-coupled model value (the true pulse-pair resolution also depends on the peak picker,
+  threshold and tolerated distortion). The RATE is the operating point (detected cps = emission × efficiency, the
+  WPF `_liveRateCps`); throughput ≈ exp(−R·τ) is exact for this fixed-dead-time extending Poisson cluster model.
 - **Result** (`montecarlo pileup`, Cs-137): throughput 99.6 %→84.7 % and photopeak-kept 99.3 %→73.4 % as the rate
   climbs 50 k→2 M cps (R·τ 0.004→0.176); the counts migrate UP into a **self-convolution continuum** — a 662+662 →
   1323 keV SUM peak, a 662→1324 plateau (662 + Compton edge), and Compton+Compton lower. Throughput tracks exp(−R·τ).
 - **Cross-checked against the analytic pile-up math**: the piled excess above the line matches the AUTOCONVOLUTION of
-  the singles energy spectrum (`singles ⊛ singles`) in shape — the time-domain merge reproduces the known random-
-  coincidence self-convolution. Energy is conserved (merging sums, never invents, counts).
+  the singles energy spectrum (`singles ⊛ singles`) in shape — the leading (2-fold) random-coincidence term, which
+  dominates the excess at these rates (R·τ ≲ 0.18, so 3-fold ~ (R·τ)² is sub-%). It is a shape cross-check, not an
+  identity: the full recorded spectrum is a 1/2/3-fold cluster mixture. Energy is conserved (merging sums, never
+  invents, counts).
 - **WPF**: a "Pile-up" checkbox on the Spectrum tab applies the merge to the spectrum path only (the Waveform scope
   keeps singles — it renders its own time-domain pulse overlap), and the energy axis auto-extends past the 2× sum
   peak so the continuum is visible. Ties the spectrum realism to the operating count rate. (Tests: `PileUpTests`, +6.)

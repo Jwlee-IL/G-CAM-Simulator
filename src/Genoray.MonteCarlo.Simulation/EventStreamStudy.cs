@@ -122,8 +122,9 @@ public sealed class EventStreamStudy
     /// <summary>Pulse-pair resolving time (in ADC samples) for a bi-exponential pulse with the given rise and
     /// tail time constants: the interval within which two events' pulses overlap into a single recorded peak.
     /// Taken as the pulse's significant duration ≈ rise + 2·tail (peak, then ~2 fall time-constants back toward
-    /// baseline) — so a faster shaper (shorter tail) resolves pile-up better, exactly as in hardware. This is
-    /// the physical coupling: the resolving time is DERIVED from the selected shaper, not a free knob.</summary>
+    /// baseline) — so a faster shaper (shorter tail) resolves pile-up better, as in hardware. It is an EFFECTIVE,
+    /// shaper-coupled model value (the true pulse-pair resolution also depends on the peak picker, trigger threshold
+    /// and tolerated distortion), derived from the selected shaper rather than being a free knob.</summary>
     public static double ResolvingSamples(double pulseRiseSamples, double pulseTailSamples)
         => Math.Max(1.0, pulseRiseSamples) + 2.0 * Math.Max(1.0, pulseTailSamples);
 

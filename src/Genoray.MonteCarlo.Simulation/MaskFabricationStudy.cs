@@ -54,7 +54,9 @@ public sealed class MaskFabricationStudy
                 sumRms += rms; sumPsr += psr; sumEff += eff;
             }
             double meanEff = sumEff / nSeeds;
-            if (double.IsNaN(eff0)) eff0 = meanEff;
+            // Baseline for the relative efficiency is the IDEAL (σ=0) mask specifically, not merely the first row —
+            // guard against a caller passing an unsorted sweep or omitting σ=0.
+            if (sigmaUm <= 0.0 || double.IsNaN(eff0)) eff0 = meanEff;
             rows.Add(new MaskFabRow(sigmaUm, sigmaUm, 2.5 * sigmaUm, BlockedProb(sigmaUm) * 100.0,
                                     eff0 > 0 ? meanEff / eff0 : 0.0, sumRms / nSeeds, sumPsr / nSeeds));
         }

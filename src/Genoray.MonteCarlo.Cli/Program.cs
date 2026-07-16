@@ -1177,7 +1177,6 @@ static int RunThermal(string[] args)
     string prefix = args.Length >= 3 ? args[2] : "samples/thermal";
     const double photonBudget = 800_000.0;
     const int repeats = 60;
-    const double failThresholdMm = 3.0;
 
     var baseConfig = ConfigLoader.Load(args[1]);
     // Activate a per-crystal photopeak window + static non-uniformity so the drift has something to walk in.
@@ -1200,8 +1199,8 @@ static int RunThermal(string[] args)
         selfHeatC: 8.0, selfHeatTau: 0.3, edgeFactor: 0.4);
 
     var study = new ThermalDriftStudy(new DefaultSimulationFactory());
-    var off = study.Run(baseConfig, Make(0.0), times, photonBudget, repeats, failThresholdMm);
-    var on = study.Run(baseConfig, Make(0.9), times, photonBudget, repeats, failThresholdMm);
+    var off = study.Run(baseConfig, Make(0.0), times, photonBudget, repeats);
+    var on = study.Run(baseConfig, Make(0.9), times, photonBudget, repeats);
 
     File.WriteAllText(prefix + "_off.csv", ThermalDriftStudy.ToCsv(off));
     File.WriteAllText(prefix + "_on.csv", ThermalDriftStudy.ToCsv(on));

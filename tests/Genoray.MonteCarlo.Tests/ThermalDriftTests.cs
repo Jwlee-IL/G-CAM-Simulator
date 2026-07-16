@@ -84,8 +84,8 @@ public class ThermalDriftTests
         var cfg = DriftConfig();
         double[] times = [0.0, 0.5, 1.0];
         var study = new ThermalDriftStudy(new DefaultSimulationFactory());
-        var off = study.Run(cfg, Drift(0.0), times, 400_000.0, 12, 3.0);
-        var on  = study.Run(cfg, Drift(0.9), times, 400_000.0, 12, 3.0);
+        var off = study.Run(cfg, Drift(0.0), times, 400_000.0, 12);
+        var on  = study.Run(cfg, Drift(0.9), times, 400_000.0, 12);
 
         // Calibration point: no drift.
         Assert.Equal(1.0, off[0].Efficiency, 3);
@@ -100,7 +100,10 @@ public class ThermalDriftTests
         Assert.True(on[^1].Efficiency > 0.99, $"comp should hold efficiency, got {on[^1].Efficiency}");
         Assert.True(on[^1].ResidualCoV < off[^1].ResidualCoV * 0.2, "comp should shrink the residual");
 
-        // Drift is an energy-window problem, not a localization one: the bias stays near the decoder floor.
-        Assert.True(off[^1].RmsBiasMm < 1.5, $"localization stays bounded, got {off[^1].RmsBiasMm}");
+        // Drift is an energy-window problem, not a localization one: localization stays BOUNDED near the decoder
+        // floor (no positional blow-up, which would push RMS to many mm as in the ghost cases). The counts now
+        // also droop with efficiency, so at these low reps (12) Poisson noise dominates the last-slice RMS — the
+        // flat trend proper is the CLI/plot's job; here we only guard against a blow-up.
+        Assert.True(off[^1].RmsBiasMm < 2.5, $"localization stays bounded, got {off[^1].RmsBiasMm}");
     }
 }
