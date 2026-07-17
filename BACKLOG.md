@@ -1,7 +1,7 @@
 # Backlog
 
 Deferred work, captured so we don't forget. Not in current scope. See
-`AGENTS.findings.md` (themes 1–40) for everything that IS done.
+`AGENTS.findings.md` (themes 1–41) for everything that IS done.
 
 **Genuinely open**: the **Physical realism gaps** list below (Codex gap-review after theme 35 — a whole queue of
 real-detector effects to model one-per-session, top picks ★thermal drift, ★flood-field correction, pile-up sum
@@ -106,8 +106,10 @@ model. Ranked by impact; **★ = user-flagged / connects to the real rig**. Tack
   over 50 k→2 M cps); cross-checked vs the analytic `singles⊛singles` autoconvolution.
 - **Coincidence / cascade summing** — MED. Co-60 (1173+1332 → 2505 sum peak), Na-22 (511+511, +1275) emit correlated
   gammas that sum in one event; our independent-line model misses the sum peaks.
-- **Mask tungsten fluorescence + Compton scatter** — MED. The mask is pure attenuation; real W K X-rays (~59–67 keV)
-  and mask Compton scatter add a low-energy background + semi-coded counts.
+- ~~**Mask tungsten fluorescence + Compton scatter**~~ — **DONE, theme 41** (`MaskSecondary` / `MaskSecondaryStudy` /
+  `montecarlo masksec`). Closed-cell interactions emit secondaries: forward Compton scatter ≈9 % of the coded primary
+  (its in-window tail is NOT window-rejected → imaging background), while W K X-rays (59/67 keV) are self-absorbed
+  away (<0.2 % reach the detector). Focused slab MC, doesn't touch the coded Transmit.
 - Scintillator K X-ray escape peak (GAGG Gd ~43 keV below the photopeak) — LOW-MED. A real satellite peak.
 - Room / object / operator scatter — MED. We have the entrance+backing scatterer; full environmental scatter is more.
 
@@ -123,11 +125,10 @@ model. Ranked by impact; **★ = user-flagged / connects to the real rig**. Tack
 - Non-proportionality as deposit-history-dependent (Compton-split vs photoelectric resolve differently) — MED.
 - Intrinsic activity (LYSO Lu-176, LaBr₃ La-138) — LOW for GAGG (none); matters only if those scintillators are picked.
 
-Recommended order next session: ~~thermal drift + flood-field~~ (36) → ~~pile-up sum continuum~~ (37) → ~~mask
-fabrication tolerances~~ (38) → ~~mask–detector alignment/pose~~ (39) → ~~bad/dead/hot pixels~~ (40) → **mask tungsten
-fluorescence + Compton scatter** (the mask is still pure attenuation), or **cascade summing** (Co-60/Na-22 sum peaks —
-a follow-on to pile-up; ∝ε² so small for a coded aperture), or **dead time / count-rate saturation**, or **sub-cell
-peak interpolation** (cheap precision). Reflector MATERIAL + mask TILT/WARPING stay deliberately deferred.
+Recommended order next session: 36 thermal drift → 37 pile-up → 38 mask fabrication → 39 alignment/pose → 40 bad
+pixels → 41 mask fluorescence/scatter — ALL DONE. Remaining: **cascade summing** (Co-60/Na-22 sum peaks — a follow-on
+to pile-up; ∝ε² so small for a coded aperture), **dead time / count-rate saturation**, **sub-cell peak interpolation**
+(cheap precision), per-channel SiPM mismatch, intrinsic activity. Reflector MATERIAL + mask TILT/WARPING stay deferred.
 
 ### Productization (theme 22 — design-only; user is NOT building this now)
 - Integrate the SiPM / thermal / gain-stabilization + shield models into the C# pipeline

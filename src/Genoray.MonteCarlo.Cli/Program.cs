@@ -41,6 +41,9 @@ if (args[0].Equals("align", StringComparison.OrdinalIgnoreCase))
 if (args[0].Equals("defects", StringComparison.OrdinalIgnoreCase))
     return RunDefects(args);
 
+if (args[0].Equals("masksec", StringComparison.OrdinalIgnoreCase))
+    return RunMaskSecondary(args);
+
 if (args[0].Equals("array", StringComparison.OrdinalIgnoreCase))
     return RunArray(args);
 
@@ -1228,6 +1231,50 @@ static int RunThermal(string[] args)
     Console.WriteLine($"                    ON  holds {on[^1].Efficiency,4:P1} efficiency, residual {on[^1].ResidualCoV,4:P1}.");
     Console.WriteLine("Drift is an ENERGY-WINDOW (efficiency) problem, not a localization one: the bias tracks the decoder floor.");
     Console.WriteLine($"CSV written: {prefix}_off.csv, {prefix}_on.csv");
+    return 0;
+}
+
+static int RunMaskSecondary(string[] args)
+{
+    if (args.Length < 2)
+    {
+        Console.Error.WriteLine("Usage: montecarlo masksec <base.json> [out.csv]");
+        Console.Error.WriteLine("  Mask tungsten SECONDARIES a pure-attenuation mask omits: Compton scatter +");
+        Console.Error.WriteLine("  W K-fluorescence (59/67 keV), transported out of the slab to the detector.");
+        return 1;
+    }
+
+    string csvPath = args.Length >= 3 ? args[2] : "samples/masksec.csv";
+    const int samples = 4_000_000;
+    const int bins = 350;
+    const double maxE = 700.0;
+
+    var baseConfig = ConfigLoader.Load(args[1]);
+    double primary = baseConfig.Source.EnergyKeV > 0 ? baseConfig.Source.EnergyKeV : 661.7;
+
+    var result = new MaskSecondaryStudy().Run(baseConfig, primary, samples, bins, maxE);
+    File.WriteAllText(csvPath, MaskSecondaryStudy.ToCsv(result));
+
+    // A Compton scatter reaching the detector must head DOWN (forward), so its arriving photon energy runs from a
+    // 90° scatter (minimum forward-detectable) up to ~the primary (small-angle forward scatter).
+    double alpha = primary / 510.999;
+    double e90 = primary / (1.0 + alpha);   // scattered-photon energy at 90°
+
+    Console.WriteLine($"Mask tungsten secondary study: {primary:F0} keV primary on a {baseConfig.Mask.ThicknessMm:F0} mm " +
+                      $"W mask (open fraction {result.OpenFraction:P0}), {samples:N0} samples.");
+    Console.WriteLine($"W photoelectric fraction @{primary:F0} = {MaskSecondary.PhotoFraction(primary):P1} " +
+                      $"(rest Compton); K-edge {MaskSecondary.KEdgeKeV:F1}, Kα {MaskSecondary.KaKeV:F0}/Kβ {MaskSecondary.KbKeV:F0} keV.");
+    Console.WriteLine();
+    Console.WriteLine($"  Escaped secondaries reaching the detector: {result.SecondaryPerPrimaryPct:F2}% of the " +
+                      $"open-cell (coded) primary flux.");
+    Console.WriteLine($"  Of those, {result.FluorPct:F1}% are K-fluorescence X-rays (heavily self-absorbed, front-weighted");
+    Console.WriteLine($"  → almost none reach the detector), the rest FORWARD Compton scatter.");
+    Console.WriteLine($"  Arriving scatter energy ≈ {e90:F0}–{primary:F0} keV (backscatter heads away): the small-angle");
+    Console.WriteLine($"  forward tail near {primary:F0} keV sits INSIDE the photopeak window, so the energy window can NOT");
+    Console.WriteLine($"  reject it — a mildly mis-positioned imaging background; the lower-energy scatter IS rejected.");
+    Console.WriteLine();
+    Console.WriteLine("A pure-attenuation mask misses this entirely.");
+    Console.WriteLine($"CSV written: {csvPath}");
     return 0;
 }
 

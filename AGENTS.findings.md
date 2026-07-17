@@ -1149,3 +1149,24 @@ NOT part of the mask code, so the ideal decoder's correlation is pulled off the 
   the localization, and a known bad-pixel map recovers it — the same lesson as flood-field, for discrete defects.
 - The 144-pixel grid makes single-% defect counts small and the raw curve seed-noisy; the robust, monotone result is
   the repair holding the floor. (Tests: `DetectorDefectTests`, +4.)
+
+## 41. Mask tungsten fluorescence + Compton scatter — `MaskSecondary` / `MaskSecondaryStudy` / `montecarlo masksec`
+Sixth physical-realism gap. The mask was PURE ATTENUATION — a photon hitting a closed cell either leaked through or
+vanished. A real tungsten mask emits SECONDARIES: a photon that interacts in the tungsten Compton-scatters or (via
+photoelectric absorption above the K-edge) fluoresces a W K X-ray, and some head to the detector.
+- **`MaskSecondary`** decides the secondary at an interaction: sample W photoelectric-vs-Compton (log-log table, PE
+  9.5 % @662), then either Klein-Nishina scatter (reusing `ComptonModel.Scatter`) or, above the 69.5 keV K-edge, a W
+  Kα 59.3 / Kβ 67.2 keV X-ray (yield ω_K 0.958 × K-shell 0.88), isotropic. The X-ray energies are the real W
+  characteristic lines — no hand-added line. W μ(E) is extended below 122 keV so the fluorescence self-absorption is
+  right (μ(59 keV) ≈ 47× μ(662)).
+- **`MaskSecondaryStudy`** is a focused slab MC (it does NOT touch the coded pipeline's Transmit): sample an
+  interaction depth in the slab, decide the secondary, require it to head to the detector (exit the back face) and
+  survive the escape self-absorption. Output = the arriving-energy spectrum, normalized to the open-cell primary flux.
+- **Result** (662 keV on 10 mm W, ~49 % open): escaping secondaries ≈ **9 % of the coded primary flux**, and they are
+  almost entirely **forward Compton scatter** (backscatter heads away from the detector). The arriving scatter runs
+  ~290→662 keV and PEAKS near the primary — so its high-energy tail sits INSIDE the photopeak window and the energy
+  window canNOT reject it (a mildly mis-positioned imaging background); only the lower-energy scatter is rejected.
+- **W K-fluorescence is negligible at the detector** (< 0.2 % of the secondaries): a 59 keV X-ray in tungsten has a
+  ~0.1 mm mean free path, and interactions are front-weighted, so almost none escape the 10 mm slab toward the
+  detector. Honest result — the W X-ray lines exist but are self-absorbed away; the real mask effect is the forward
+  scatter. (Tests: `MaskSecondaryTests`, +5.)
