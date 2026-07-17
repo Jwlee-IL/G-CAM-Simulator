@@ -1172,3 +1172,18 @@ photoelectric absorption above the K-edge) fluoresces a W K X-ray, and some head
   ~0.1 mm mean free path, and interactions are front-weighted, so almost none escape the 10 mm slab toward the
   detector. Honest result — the W X-ray lines exist but are self-absorbed away; the real mask effect is the forward
   scatter. (Tests: `MaskSecondaryTests`, +5.)
+
+## 42. Counting-system dead time / count-rate saturation — `DeadTime` / `DeadTimeStudy` / `montecarlo deadtime`
+Seventh physical-realism gap, the count-rate companion to pile-up (theme 37): pile-up SUMS overlapping pulses in the
+spectrum; dead time is the counting THROUGHPUT loss while the DAQ processes each pulse. Reuses the same timed MC event
+stream (`EventStreamStudy`), so the loss comes from the real Poisson arrival statistics.
+- **`DeadTime`** applies the two classic models to the stream: **non-paralyzable** (dead for τ only after a RECORDED
+  event → m = R/(1+Rτ), saturates at 1/τ) and **paralyzable** (EVERY arrival restarts the dead period → m =
+  R·exp(−Rτ), peaks at R=1/τ then collapses — the system paralyses at high rate).
+- **`DeadTimeStudy` / `montecarlo deadtime`** sweeps the true rate, applies both filters to the stream, and reports
+  the recorded rate + **live fraction (= recorded/true = the live-time-vs-real-time correction)**, cross-checked
+  against the analytic formulas.
+- **Result** (τ = 1 µs, 1/τ = 1 Mcps): the MC recorded rate sits exactly on the analytic curves. Non-paralyzable
+  saturates toward 1 Mcps (912 kcps at 10 Mcps true); paralyzable peaks at 1 Mcps (366 kcps ≈ R/e) then COLLAPSES
+  (32 kcps at 5 Mcps, 550 cps at 10 Mcps). Live fraction falls 99 %→9 % (non-para) / 99 %→0 % (para) across R·τ
+  0.01→10. The classic dead-time curves, reproduced from the event stream. (Tests: `DeadTimeTests`, +5.)

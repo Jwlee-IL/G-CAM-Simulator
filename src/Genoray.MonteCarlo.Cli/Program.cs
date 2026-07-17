@@ -44,6 +44,9 @@ if (args[0].Equals("defects", StringComparison.OrdinalIgnoreCase))
 if (args[0].Equals("masksec", StringComparison.OrdinalIgnoreCase))
     return RunMaskSecondary(args);
 
+if (args[0].Equals("deadtime", StringComparison.OrdinalIgnoreCase))
+    return RunDeadTime(args);
+
 if (args[0].Equals("array", StringComparison.OrdinalIgnoreCase))
     return RunArray(args);
 
@@ -1231,6 +1234,42 @@ static int RunThermal(string[] args)
     Console.WriteLine($"                    ON  holds {on[^1].Efficiency,4:P1} efficiency, residual {on[^1].ResidualCoV,4:P1}.");
     Console.WriteLine("Drift is an ENERGY-WINDOW (efficiency) problem, not a localization one: the bias tracks the decoder floor.");
     Console.WriteLine($"CSV written: {prefix}_off.csv, {prefix}_on.csv");
+    return 0;
+}
+
+static int RunDeadTime(string[] args)
+{
+    if (args.Length < 2)
+    {
+        Console.Error.WriteLine("Usage: montecarlo deadtime <base.json> [out.csv]");
+        Console.Error.WriteLine("  Sweeps the true count rate vs the recorded rate under non-paralyzable and");
+        Console.Error.WriteLine("  paralyzable dead time (MC event stream vs analytic), plus the live fraction.");
+        return 1;
+    }
+
+    string csvPath = args.Length >= 3 ? args[2] : "samples/deadtime.csv";
+    const double adcSampleRateHz = 125e6;
+    const int maxEvents = 200_000;
+    const double deadTimeUs = 1.0;                    // DAQ per-pulse processing dead time
+    double[] rates = [1e4, 5e4, 1e5, 3e5, 6e5, 1e6, 2e6, 5e6, 1e7];
+
+    var baseConfig = ConfigLoader.Load(args[1]);
+    var rows = new DeadTimeStudy().Run(baseConfig, rates, deadTimeUs, adcSampleRateHz, maxEvents);
+    File.WriteAllText(csvPath, DeadTimeStudy.ToCsv(rows));
+
+    Console.WriteLine($"Dead-time study: τ = {deadTimeUs:F1} µs (1/τ = {1e6 / deadTimeUs:N0} cps), {maxEvents:N0} events/rate.");
+    Console.WriteLine("Recorded rate under non-paralyzable m=R/(1+Rτ) and paralyzable m=R·exp(−Rτ); MC vs analytic.");
+    Console.WriteLine();
+    Console.WriteLine("   true(cps)   R·τ    non-para(MC/an)      para(MC/an)        live np/p");
+    Console.WriteLine("   ---------   ----   ----------------     ----------------   ---------");
+    foreach (var r in rows)
+        Console.WriteLine($"   {r.TrueRateCps,9:N0}   {r.Rtau,4:F2}   {r.RecordedNonParaCps,7:N0}/{r.AnalyticNonParaCps,-7:N0}  " +
+                          $"{r.RecordedParaCps,7:N0}/{r.AnalyticParaCps,-7:N0}  {r.LiveNonPara,4:P0}/{r.LivePara,-4:P0}");
+
+    Console.WriteLine();
+    Console.WriteLine("Non-paralyzable saturates toward 1/τ; paralyzable PEAKS at R=1/τ then collapses (paralysis).");
+    Console.WriteLine("Live fraction = recorded/true = the live-time vs real-time correction a real acquisition applies.");
+    Console.WriteLine($"CSV written: {csvPath}");
     return 0;
 }
 

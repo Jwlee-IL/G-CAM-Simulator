@@ -1,7 +1,7 @@
 # Backlog
 
 Deferred work, captured so we don't forget. Not in current scope. See
-`AGENTS.findings.md` (themes 1–41) for everything that IS done.
+`AGENTS.findings.md` (themes 1–42) for everything that IS done.
 
 **Genuinely open**: the **Physical realism gaps** list below (Codex gap-review after theme 35 — a whole queue of
 real-detector effects to model one-per-session, top picks ★thermal drift, ★flood-field correction, pile-up sum
@@ -119,16 +119,17 @@ model. Ranked by impact; **★ = user-flagged / connects to the real rig**. Tack
   self-heating gradient, −0.7 %/°C) walks the photopeak out of the fixed per-crystal window → −9.4 % efficiency +
   6.7 % flood residual by end of acquisition; the calibration flood map cannot remove the time-varying part, only
   bias-comp can (holds 99.9 %). Confirmed it is an ENERGY-window (efficiency) problem, not a localization one.
-- Dead time / count-rate saturation (paralyzable / non-paralyzable) + live-time vs real-time — MED. Only RTL pile-up
-  exists; no per-channel dead-time / saturation in the acquisition.
+- ~~Dead time / count-rate saturation (paralyzable / non-paralyzable) + live-time vs real-time~~ — **DONE, theme 42**
+  (`DeadTime` / `DeadTimeStudy` / `montecarlo deadtime`). Both models on the timed MC stream: non-para saturates at
+  1/τ, para peaks at R=1/τ then collapses; live fraction = recorded/true; MC matches the analytic m=R/(1+Rτ), R·exp(−Rτ).
 - Per-channel SiPM/preamp gain·PDE·threshold mismatch (beyond crystal gain), microcell saturation, afterpulsing — MED.
 - Non-proportionality as deposit-history-dependent (Compton-split vs photoelectric resolve differently) — MED.
 - Intrinsic activity (LYSO Lu-176, LaBr₃ La-138) — LOW for GAGG (none); matters only if those scintillators are picked.
 
 Recommended order next session: 36 thermal drift → 37 pile-up → 38 mask fabrication → 39 alignment/pose → 40 bad
 pixels → 41 mask fluorescence/scatter — ALL DONE. Remaining: **cascade summing** (Co-60/Na-22 sum peaks — a follow-on
-to pile-up; ∝ε² so small for a coded aperture), **dead time / count-rate saturation**, **sub-cell peak interpolation**
-(cheap precision), per-channel SiPM mismatch, intrinsic activity. Reflector MATERIAL + mask TILT/WARPING stay deferred.
+to pile-up; ∝ε² so small for a coded aperture), **sub-cell peak interpolation** (cheap precision), per-channel SiPM
+mismatch, intrinsic activity. Reflector MATERIAL + mask TILT/WARPING stay deferred. (Dead time DONE, theme 42.)
 
 ### Productization (theme 22 — design-only; user is NOT building this now)
 - Integrate the SiPM / thermal / gain-stabilization + shield models into the C# pipeline
