@@ -1194,3 +1194,31 @@ stream (`EventStreamStudy`), so the loss comes from the real Poisson arrival sta
   `EventStreamStudy` merges extra arrivals the DAQ actually sees — so the study now derives the **effective** arrival
   rate from the generated stream (nTrue over its span) for R·τ, recorded, and analytic. Source-only (the normal case)
   is unchanged to within 1/nTrue; background-on is now correct too.
+
+## 43. Sub-cell peak interpolation — `PeakInterpolation` / `SubCellStudy` / `montecarlo subcell`
+A precision WIN (not a physics gap): the decoder samples the source plane on a grid of step `ReconStepMm` and
+`FindPeak` reported the **integer argmax cell**, so the estimate was quantized to one cell — a deterministic sawtooth
+of amplitude ±step/2, **RMS = step/√12, independent of counts**. No amount of statistics beats it; only a finer (more
+expensive, O(n²)×pixels) grid did. Interpolating the correlation-peak SHAPE around the argmax recovers a fractional
+offset instead.
+- **`PeakInterpolation`** (Decoding): separable 3-point estimators returning δ∈[−0.5,0.5] per axis — `Tent` (matched
+  to the MURA autocorrelation core, **exact** for an ideal tent: δ=(f₊−f₋)/(2(f₀−f₋))), `Parabolic` (vertex of a
+  quadratic; biased toward the cell for a tent — returns ≈u/(2(1−u))), `Gaussian` (log-parabola; needs positive
+  samples, falls back to parabolic near the ±1 array's negative sidelobes), `None`. All use DIFFERENCES so they
+  tolerate the signed sidelobes (unlike a centroid). Wired opt-in on `CrossCorrelationDecoder` + `DecoderConfig`
+  (`SubCellInterpolation`, default **Tent**); the decoder default stays `None` so direct-construction tests are
+  unchanged; the factory reads the config.
+- **`SubCellStudy` / `montecarlo subcell`**: sweeps a point source across the grid in sub-cell steps (Y on-axis) and,
+  from ONE noise-free mean image per position, decodes with each estimator — isolating the quantization sawtooth from
+  Poisson noise — over a range of recon steps.
+- **Method choice was decided by the DATA, not a prior** (Codex design consult first flagged tent over Gaussian; the
+  MC confirmed and refined it). RMS(mm) vs step, default geometry: interpolation beats the argmax at **every** step,
+  and the gain GROWS as the grid coarsens (where the floor is largest) — step 1.8 mm: none 0.52 → tent **0.13 (4×)**;
+  step 2.4: 0.66 → 0.19. **Tent is the most robust** (best/tied at 0.6/0.9/1.8/2.4 mm); parabolic edges it only at an
+  intermediate 1.2 mm (rounded apex favours the quadratic) and degrades at coarse steps (2.4: parab 0.26 vs tent 0.19);
+  Gaussian tracks tent but also degrades coarse. The honest headline: sub-cell interpolation lets you run a COARSE
+  (cheap) recon grid and still localize ~3–4× better than the argmax floor. **Gaussian (what the real hardware used) =
+  parabolic in log-space**; both are matched only to a bump-shaped peak, which this signed-correlation tent is not.
+- Regression: defaulting the pipeline to Tent shifted one pinned bias value in `BackgroundTests` by ~0.0005 mm — the
+  gradient's low-frequency residual, which the integer argmax hid, is now resolved sub-cell (loosened bit-identical →
+  <0.01 mm). (Tests: `SubCellTests`, +9 — estimator math exact-cases + MC floor-beating.)

@@ -122,6 +122,7 @@ public sealed class DefaultSimulationFactory : ISimulationFactory
             ReconHalfExtentMm: half,
             ReconStepMm: step,
             Cyclic: config.Decoder.Cyclic);
-        return new CrossCorrelationDecoder(MuraGenerator.DecodingArray(m.Rank), geo);
+        return new CrossCorrelationDecoder(MuraGenerator.DecodingArray(m.Rank), geo,
+                                           config.Decoder.SubCellInterpolation);
     }
 }

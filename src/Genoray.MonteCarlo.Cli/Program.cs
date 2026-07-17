@@ -47,6 +47,9 @@ if (args[0].Equals("masksec", StringComparison.OrdinalIgnoreCase))
 if (args[0].Equals("deadtime", StringComparison.OrdinalIgnoreCase))
     return RunDeadTime(args);
 
+if (args[0].Equals("subcell", StringComparison.OrdinalIgnoreCase))
+    return RunSubCell(args);
+
 if (args[0].Equals("array", StringComparison.OrdinalIgnoreCase))
     return RunArray(args);
 
@@ -1270,6 +1273,64 @@ static int RunDeadTime(string[] args)
     Console.WriteLine("Non-paralyzable saturates toward 1/τ; paralyzable PEAKS at R=1/τ then collapses (paralysis).");
     Console.WriteLine("Live fraction = recorded/true = the live-time vs real-time correction a real acquisition applies.");
     Console.WriteLine($"CSV written: {csvPath}");
+    return 0;
+}
+
+static int RunSubCell(string[] args)
+{
+    if (args.Length < 2)
+    {
+        Console.Error.WriteLine("Usage: montecarlo subcell <base.json> [out.csv]");
+        Console.Error.WriteLine("  Sweeps a point source across the recon grid in sub-cell steps and compares the");
+        Console.Error.WriteLine("  localization error with NO interpolation (argmax) vs parabolic / tent / Gaussian");
+        Console.Error.WriteLine("  peak interpolation, across a range of recon-grid steps.");
+        return 1;
+    }
+
+    string csvPath = args.Length >= 3 ? args[2] : "samples/subcell.csv";
+    double[] steps = [0.6, 0.9, 1.2, 1.8, 2.4];
+    const int samples = 41;
+    const int photons = 800_000;
+
+    var baseConfig = ConfigLoader.Load(args[1]);
+    var study = new SubCellStudy(new DefaultSimulationFactory());
+
+    var sb = new System.Text.StringBuilder();
+    sb.AppendLine("step_mm,floor_mm,rms_none,rms_parab,rms_tent,rms_gauss,bias_none,bias_parab,bias_tent,bias_gauss");
+    var summaries = new List<SubCellSummary>();
+    SubCellRow[]? detailRows = null;
+    foreach (double step in steps)
+    {
+        var (rows, s) = study.Run(baseConfig, step, sweepHalfWidthMm: 1.25 * step, samples: samples,
+                                  sourceYMm: 0.0, photonCount: photons);
+        summaries.Add(s);
+        if (Math.Abs(step - 1.2) < 1e-9) detailRows = rows;   // keep one full sawtooth trace for plotting
+        sb.AppendLine($"{step:F2},{s.QuantFloorMm:F4},{s.RmsNoneMm:F4},{s.RmsParabolicMm:F4},{s.RmsTentMm:F4}," +
+                      $"{s.RmsGaussianMm:F4},{s.BiasNoneMm:F4},{s.BiasParabolicMm:F4},{s.BiasTentMm:F4},{s.BiasGaussianMm:F4}");
+    }
+    File.WriteAllText(csvPath, sb.ToString());
+    if (detailRows is not null)
+        File.WriteAllText(csvPath.Replace(".csv", "_trace.csv"), SubCellStudy.ToCsv(detailRows));
+
+    Console.WriteLine("Sub-cell peak interpolation: localization RMS vs recon-grid step.");
+    Console.WriteLine("The bare argmax quantizes the estimate to the step (RMS ≈ step/√12); interpolating the");
+    Console.WriteLine("correlation-peak shape recovers a fractional offset and beats that floor.");
+    Console.WriteLine();
+    Console.WriteLine("   step   floor    none   parab    tent   gauss   (RMS mm; best in **)");
+    Console.WriteLine("   ----   -----   -----   -----   -----   -----");
+    foreach (var s in summaries)
+    {
+        double best = Math.Min(Math.Min(s.RmsParabolicMm, s.RmsTentMm), s.RmsGaussianMm);
+        string Mark(double v) => Math.Abs(v - best) < 1e-9 ? $"*{v:F3}*" : $" {v:F3} ";
+        Console.WriteLine($"   {s.ReconStepMm,4:F1}   {s.QuantFloorMm,5:F3}   {s.RmsNoneMm,5:F3}   " +
+                          $"{Mark(s.RmsParabolicMm)}  {Mark(s.RmsTentMm)}  {Mark(s.RmsGaussianMm)}");
+    }
+    Console.WriteLine();
+    Console.WriteLine("Interpolation beats the argmax at every step; the gain grows as the grid coarsens (where the");
+    Console.WriteLine("quantization floor is largest). Tent is the matched model for the MURA autocorrelation core and");
+    Console.WriteLine("the most robust across step sizes; parabolic can edge it at intermediate steps but degrades when");
+    Console.WriteLine("the grid nears the projected cell size. Default: tent.");
+    Console.WriteLine($"CSV written: {csvPath} (+ _trace.csv: the per-position sawtooth at step 1.2 mm)");
     return 0;
 }
 

@@ -1,13 +1,13 @@
 # Backlog
 
 Deferred work, captured so we don't forget. Not in current scope. See
-`AGENTS.findings.md` (themes 1–42) for everything that IS done.
+`AGENTS.findings.md` (themes 1–43) for everything that IS done.
 
 **Genuinely open**: the **Physical realism gaps** list below (Codex gap-review after theme 35) is now mostly DONE —
-themes 36–42 cleared thermal drift + flood-field, pile-up sum continuum, mask fabrication tolerances, alignment/pose,
-bad/dead/hot pixels, mask fluorescence/scatter, and dead time. Still open in that queue: **cascade summing** (Co-60/
-Na-22 sum peaks; ∝ε² so small for a coded aperture), **sub-cell peak interpolation** (cheap precision WIN), per-channel
-SiPM mismatch, intrinsic activity. Also open: exact Artix-7 Fmax in Vivado (deferred — install friction; `vivado_trap.tcl`
+themes 36–43 cleared thermal drift + flood-field, pile-up sum continuum, mask fabrication tolerances, alignment/pose,
+bad/dead/hot pixels, mask fluorescence/scatter, dead time, and sub-cell peak interpolation. Still open in that queue:
+**cascade summing** (Co-60/Na-22 sum peaks; ∝ε² so small for a coded aperture), per-channel SiPM mismatch, intrinsic
+activity. Also open: exact Artix-7 Fmax in Vivado (deferred — install friction; `vivado_trap.tcl`
 ready); integrate the theme-22 SiPM/thermal/shield productization models into the C# pipeline (design-only, user isn't
 building it). Deferred by choice: mask TILT (pitch/yaw), mask WARPING, reflector MATERIAL (all 2nd-order).
 
@@ -96,8 +96,8 @@ model. Ranked by impact; **★ = user-flagged / connects to the real rig**. Tack
   defects`). Seeded dead (holes) + hot (spikes) maps applied to the flood, ideal decoder → localization pulled off;
   a known bad-pixel map repairs it by neighbour interpolation (discrete flood-field), holding the ~0.6 mm floor to 8 %
   bad pixels while raw degrades to ~1.2–1.8 mm.
-- Sub-cell peak interpolation — MED. Grid argmax leaves a decoder-resolution floor; real localization interpolates or
-  fits a continuous likelihood. (Cheap, improves the reported precision.)
+- Sub-cell peak interpolation — DONE (theme 43). `PeakInterpolation` (tent/parabolic/Gaussian), default tent; beats the
+  argmax step/√12 floor ~3–4× at coarse recon steps. Method picked by MC data (tent most robust across steps).
 - NOTE — DOI/parallax is NOT missing: the flood already carries the depth-of-interaction lateral shift (the cascade
   interacts at depth), so off-axis resolution already degrades with crystal thickness. It's uncorrected, not unmodelled.
 
@@ -130,8 +130,8 @@ model. Ranked by impact; **★ = user-flagged / connects to the real rig**. Tack
 
 Recommended order next session: 36 thermal drift → 37 pile-up → 38 mask fabrication → 39 alignment/pose → 40 bad
 pixels → 41 mask fluorescence/scatter — ALL DONE. Remaining: **cascade summing** (Co-60/Na-22 sum peaks — a follow-on
-to pile-up; ∝ε² so small for a coded aperture), **sub-cell peak interpolation** (cheap precision), per-channel SiPM
-mismatch, intrinsic activity. Reflector MATERIAL + mask TILT/WARPING stay deferred. (Dead time DONE, theme 42.)
+to pile-up; ∝ε² so small for a coded aperture), per-channel SiPM mismatch, intrinsic activity. Reflector MATERIAL +
+mask TILT/WARPING stay deferred. (Dead time DONE theme 42; sub-cell peak interpolation DONE theme 43.)
 
 ### Productization (theme 22 — design-only; user is NOT building this now)
 - Integrate the SiPM / thermal / gain-stabilization + shield models into the C# pipeline

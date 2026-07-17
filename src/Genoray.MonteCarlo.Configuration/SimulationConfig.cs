@@ -1,3 +1,5 @@
+using Genoray.MonteCarlo.Core;
+
 namespace Genoray.MonteCarlo.Configuration;
 
 /// <summary>
@@ -62,6 +64,14 @@ public sealed class DecoderConfig
 
     /// <summary>Reconstruction grid step in mm (null = auto).</summary>
     public double? ReconStepMm { get; set; }
+
+    /// <summary>
+    /// Sub-cell peak refinement of the localization. The bare argmax quantizes the estimate to
+    /// <see cref="ReconStepMm"/> (≈ step/√12 floor, independent of counts); interpolating the correlation-peak
+    /// shape beats it. Default <see cref="SubCellMethod.Tent"/> — the matched model for the MURA autocorrelation
+    /// core. <see cref="SubCellMethod.None"/> restores the raw argmax.
+    /// </summary>
+    public SubCellMethod SubCellInterpolation { get; set; } = SubCellMethod.Tent;
 }
 
 /// <summary>The radioactive source.</summary>

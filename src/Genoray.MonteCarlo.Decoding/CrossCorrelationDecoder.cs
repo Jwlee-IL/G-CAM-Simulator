@@ -34,11 +34,14 @@ public sealed class CrossCorrelationDecoder : IDecoder
 {
     private readonly int[,] _g;               // p×p signed decoding array (+1/-1)
     private readonly CodedApertureGeometry _geo;
+    private readonly SubCellMethod _subCell;   // sub-grid peak refinement (None = raw argmax)
 
-    public CrossCorrelationDecoder(int[,] decodingArray, CodedApertureGeometry geometry)
+    public CrossCorrelationDecoder(int[,] decodingArray, CodedApertureGeometry geometry,
+                                   SubCellMethod subCell = SubCellMethod.None)
     {
         _g = decodingArray;
         _geo = geometry;
+        _subCell = subCell;
     }
 
     public DecodeResult Decode(DetectorImage image)
@@ -70,8 +73,11 @@ public sealed class CrossCorrelationDecoder : IDecoder
         }
 
         var (peakX, peakY, peakVal, secondVal) = FindPeak(recon);
-        double estX = origin + peakX * _geo.ReconStepMm;
-        double estY = origin + peakY * _geo.ReconStepMm;
+        // Refine the peak below one recon cell: the argmax quantizes the estimate to ReconStepMm regardless of
+        // counts; fitting the correlation-peak shape recovers a fractional offset (see PeakInterpolation).
+        var (dx, dy) = PeakInterpolation.Estimate(recon, peakX, peakY, _subCell);
+        double estX = origin + (peakX + dx) * _geo.ReconStepMm;
+        double estY = origin + (peakY + dy) * _geo.ReconStepMm;
         double confidence = peakVal / Math.Max(secondVal, 1e-9); // primary/secondary ratio
 
         var estimate = new SourceEstimate(new Vector3(estX, estY, sz), confidence);

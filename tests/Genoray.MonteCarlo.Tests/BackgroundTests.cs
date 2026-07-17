@@ -114,8 +114,11 @@ public class BackgroundTests
         var grad = new BackgroundStudy().RunSweep(Base(), bsr, detectedBudget: 400.0, repeats: 30, failThrMm: 3.0,
                                                   gradientContrast: 0.6, gradientAngleDeg: 0.0);
 
-        // While the source wins (BSR 1), the gradient adds NO bias over flat.
-        Assert.Equal(flat[0].BiasMm, grad[0].BiasMm, 3);
+        // While the source wins (BSR 1), the gradient adds no MEANINGFUL bias over flat. (With the integer argmax
+        // both snapped to the same recon cell → bit-identical; sub-cell interpolation now resolves the gradient's
+        // ~0.001 mm perturbation of the peak neighbours, so they are near-identical rather than exactly equal.)
+        Assert.True(System.Math.Abs(flat[0].BiasMm - grad[0].BiasMm) < 0.01,
+            $"gradient should not bias while the source wins: flat {flat[0].BiasMm:F4} vs grad {grad[0].BiasMm:F4} mm");
 
         // At the knee (BSR 4) the gradient biases far more than the flat pedestal.
         Assert.True(grad[1].BiasMm > flat[1].BiasMm + 2.0,
