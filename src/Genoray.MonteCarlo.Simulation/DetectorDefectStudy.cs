@@ -60,12 +60,16 @@ public sealed class DetectorDefectStudy
         {
             double deadFrac = pct / 100.0 * deadShare;
             double hotFrac = pct / 100.0 * (1.0 - deadShare);
+            // DetectorDefects draws hot only for not-dead pixels (dead precedence), so the realized hot rate is
+            // (1−deadFrac)×(passed hot fraction). Pre-divide so the realized UNCONDITIONAL hot fraction matches the
+            // target split (keeps the total bad-pixel count on target).
+            double hotFracPassed = deadFrac < 1.0 ? hotFrac / (1.0 - deadFrac) : 0.0;
             int nSeeds = pct <= 0.0 ? 1 : seeds;
             double sumRaw = 0.0, sumCorr = 0.0;
             double gotDead = 0, gotHot = 0;
             for (int s = 0; s < nSeeds; s++)
             {
-                var defects = new DetectorDefects(w, h, deadFrac, hotFrac, hotFactor, seed: 200 + s);
+                var defects = new DetectorDefects(w, h, deadFrac, hotFracPassed, hotFactor, seed: 200 + s);
                 gotDead += defects.DeadCount; gotHot += defects.HotCount;
                 var (raw, corr) = Evaluate(baseConfig, baseCounts, meanLevel, defects, repeats);
                 sumRaw += raw; sumCorr += corr;

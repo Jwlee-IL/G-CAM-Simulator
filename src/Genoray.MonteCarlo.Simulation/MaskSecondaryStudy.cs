@@ -21,7 +21,8 @@ public sealed record MaskSecondaryResult(
 /// the main coded pipeline's Transmit): sample an interaction depth in the slab, decide the secondary, then require
 /// it to head to the detector and survive the escape self-absorption. The output is the arriving-energy spectrum of
 /// the mask secondaries, normalized to the open-cell primary flux — a low-energy scatter background plus a
-/// (heavily self-absorbed, hence small) W X-ray line pair.
+/// (heavily self-absorbed, hence small) W X-ray line pair. "Heads to the detector" is a back-face HEMISPHERE tally
+/// (dir.Z &lt; 0), not a finite-detector solid-angle cut, so the reported fraction is an upper bound.
 /// </summary>
 public sealed class MaskSecondaryStudy
 {

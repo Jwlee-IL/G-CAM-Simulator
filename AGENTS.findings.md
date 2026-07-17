@@ -1166,6 +1166,8 @@ photoelectric absorption above the K-edge) fluoresces a W K X-ray, and some head
   almost entirely **forward Compton scatter** (backscatter heads away from the detector). The arriving scatter runs
   ~290→662 keV and PEAKS near the primary — so its high-energy tail sits INSIDE the photopeak window and the energy
   window canNOT reject it (a mildly mis-positioned imaging background); only the lower-energy scatter is rejected.
+  (The ~9 % is a back-face hemisphere tally — "exits toward the detector side" — so it is an UPPER bound; a finite
+  detector solid angle would collect somewhat less.)
 - **W K-fluorescence is negligible at the detector** (< 0.2 % of the secondaries): a 59 keV X-ray in tungsten has a
   ~0.1 mm mean free path, and interactions are front-weighted, so almost none escape the 10 mm slab toward the
   detector. Honest result — the W X-ray lines exist but are self-absorbed away; the real mask effect is the forward
