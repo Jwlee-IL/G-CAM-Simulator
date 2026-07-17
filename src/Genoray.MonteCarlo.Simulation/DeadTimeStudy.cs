@@ -4,8 +4,8 @@ namespace Genoray.MonteCarlo.Simulation;
 
 /// <summary>One true count rate: the recorded rate and live fraction under both dead-time models, MC vs analytic.</summary>
 public sealed record DeadTimeRow(
-    double TrueRateCps,
-    double Rtau,                 // R·τ, the dead-time load
+    double TrueRateCps,          // nominal source rate dialed in (x-axis); with background off, ≈ the effective rate
+    double Rtau,                 // R·τ, the dead-time load — R is the EFFECTIVE arrival rate (source + any background)
     double RecordedNonParaCps,   // MC recorded rate, non-paralyzable
     double RecordedParaCps,      // MC recorded rate, paralyzable
     double LiveNonPara,          // live fraction = recorded / true
@@ -41,15 +41,23 @@ public sealed class DeadTimeStudy
             int nTrue = events.Count;
             if (nTrue == 0) continue;
 
+            // The dead-time filters see EVERY arrival — including any ambient background / dark-count pulses
+            // EventStreamStudy merges into the train. Derive the effective true arrival rate from the generated
+            // stream itself (nTrue over its time span), not the nominal source rate r, so m = R/(1+Rτ) and
+            // R·exp(−Rτ) are compared against the rate the DAQ actually experiences. For a clean source-only
+            // stream this equals r to within 1/nTrue; with background on it correctly counts the extra arrivals.
+            double spanSec = events[^1].ArrivalSample / adcSampleRateHz;
+            double rEff = spanSec > 0.0 ? nTrue / spanSec : r;
+
             double liveNon = (double)DeadTime.NonParalyzable(events, tauSamples) / nTrue;
             double livePara = (double)DeadTime.Paralyzable(events, tauSamples) / nTrue;
-            double rtau = r * tauSec;
+            double rtau = rEff * tauSec;
 
             rows.Add(new DeadTimeRow(
                 r, rtau,
-                r * liveNon, r * livePara,
+                rEff * liveNon, rEff * livePara,
                 liveNon, livePara,
-                r / (1.0 + rtau), r * Math.Exp(-rtau)));
+                rEff / (1.0 + rtau), rEff * Math.Exp(-rtau)));
         }
         return rows.ToArray();
     }

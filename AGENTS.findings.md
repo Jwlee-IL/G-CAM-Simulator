@@ -1187,3 +1187,10 @@ stream (`EventStreamStudy`), so the loss comes from the real Poisson arrival sta
   saturates toward 1 Mcps (912 kcps at 10 Mcps true); paralyzable peaks at 1 Mcps (366 kcps ≈ R/e) then COLLAPSES
   (32 kcps at 5 Mcps, 550 cps at 10 Mcps). Live fraction falls 99 %→9 % (non-para) / 99 %→0 % (para) across R·τ
   0.01→10. The classic dead-time curves, reproduced from the event stream. (Tests: `DeadTimeTests`, +5.)
+- **Codex cross-verification** (gpt-5.5, read-only): both filters CORRECT — non-paralyzable `deadUntil` semantics
+  and `>=` boundary (live at exactly t+τ), paralyzable `prev`-update-every-arrival and `>τ` boundary, unit chain
+  (µs→s→ADC samples), and the τ=0 / empty-stream / extreme-Rτ edge cases all sound. One latent limitation found and
+  FIXED: the analytic comparison used the nominal source rate `r`, but if `config.Background` (BSR/DCR) is on,
+  `EventStreamStudy` merges extra arrivals the DAQ actually sees — so the study now derives the **effective** arrival
+  rate from the generated stream (nTrue over its span) for R·τ, recorded, and analytic. Source-only (the normal case)
+  is unchanged to within 1/nTrue; background-on is now correct too.
