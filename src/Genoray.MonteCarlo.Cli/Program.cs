@@ -1296,7 +1296,7 @@ static int RunSubCell(string[] args)
     var study = new SubCellStudy(new DefaultSimulationFactory());
 
     var sb = new System.Text.StringBuilder();
-    sb.AppendLine("step_mm,floor_mm,rms_none,rms_parab,rms_tent,rms_gauss,bias_none,bias_parab,bias_tent,bias_gauss");
+    sb.AppendLine("step_mm,floor_mm,rms_none,rms_parab,rms_tent,rms_gauss,mae_none,mae_parab,mae_tent,mae_gauss");
     var summaries = new List<SubCellSummary>();
     SubCellRow[]? detailRows = null;
     foreach (double step in steps)
@@ -1306,7 +1306,7 @@ static int RunSubCell(string[] args)
         summaries.Add(s);
         if (Math.Abs(step - 1.2) < 1e-9) detailRows = rows;   // keep one full sawtooth trace for plotting
         sb.AppendLine($"{step:F2},{s.QuantFloorMm:F4},{s.RmsNoneMm:F4},{s.RmsParabolicMm:F4},{s.RmsTentMm:F4}," +
-                      $"{s.RmsGaussianMm:F4},{s.BiasNoneMm:F4},{s.BiasParabolicMm:F4},{s.BiasTentMm:F4},{s.BiasGaussianMm:F4}");
+                      $"{s.RmsGaussianMm:F4},{s.MaeNoneMm:F4},{s.MaeParabolicMm:F4},{s.MaeTentMm:F4},{s.MaeGaussianMm:F4}");
     }
     File.WriteAllText(csvPath, sb.ToString());
     if (detailRows is not null)

@@ -11,12 +11,12 @@ public sealed record SubCellRow(
     double ErrTentMm,
     double ErrGaussianMm);
 
-/// <summary>Per-estimator summary over the whole sweep: RMS and mean-|bias| of the X localization error.</summary>
+/// <summary>Per-estimator summary over the whole sweep: RMS and mean-absolute X localization error.</summary>
 public sealed record SubCellSummary(
     double ReconStepMm,
     double QuantFloorMm,    // step/√12 — the RMS a uniform sub-cell offset gives with NO interpolation
     double RmsNoneMm, double RmsParabolicMm, double RmsTentMm, double RmsGaussianMm,
-    double BiasNoneMm, double BiasParabolicMm, double BiasTentMm, double BiasGaussianMm);
+    double MaeNoneMm, double MaeParabolicMm, double MaeTentMm, double MaeGaussianMm);  // mean |error|
 
 /// <summary>
 /// Studies SUB-CELL peak interpolation: how far below the recon-grid step the source can be localized. The decoder
@@ -25,11 +25,13 @@ public sealed record SubCellSummary(
 /// error of amplitude ±step/2, RMS = step/√12, that no amount of counts removes. Interpolating the correlation-peak
 /// SHAPE around the argmax recovers a fractional offset and beats that floor.
 ///
-/// The study sweeps a point source across the grid in fine sub-cell steps (Y fixed on-axis) and, from ONE noise-free
-/// mean detector image per position, decodes with each estimator (<see cref="SubCellMethod"/>) so the quantization
-/// sawtooth (None) and its collapse (interpolated) are isolated from Poisson noise. It runs at a deliberately COARSE
-/// recon step — the regime where the grid is kept coarse for speed and interpolation actually earns its keep — and
-/// reports RMS/bias per method so the DATA, not a prior, picks the best estimator.
+/// The study sweeps a SINGLE point source across the grid in fine sub-cell steps (Y fixed on-axis) and, from ONE
+/// high-count (low-noise, not zero-noise) mean detector image per position, decodes with each estimator
+/// (<see cref="SubCellMethod"/>) so the quantization sawtooth (None) and its collapse (interpolated) stand out above
+/// the residual Poisson noise. It runs at a deliberately COARSE recon step — the regime where the grid is kept coarse
+/// for speed and interpolation actually earns its keep — and reports RMS + mean-|error| per method so the DATA, not a
+/// prior, picks the best estimator. (Single-source, nominal source depth: the sim emits and the decoder back-projects
+/// the same plane. It is not meant for multi-source fields or off-nominal depth.)
 /// </summary>
 public sealed class SubCellStudy
 {
@@ -57,8 +59,9 @@ public sealed class SubCellStudy
             decoders[m] = _factory.CreateDecoder(cfgM)!;
         }
 
-        double sourceZ = baseConfig.Source.Position is { Length: >= 3 } p ? p[2]
-            : baseConfig.Geometry.MaskDetectorDistanceMm + baseConfig.Geometry.SourceMaskDistanceMm;
+        // Emit from the NOMINAL source plane the decoder back-projects (maskZ + source-mask distance), so the sim and
+        // the decode geometry always agree — this study measures sub-cell localization, not depth defocus.
+        double sourceZ = baseConfig.Geometry.MaskDetectorDistanceMm + baseConfig.Geometry.SourceMaskDistanceMm;
 
         var rows = new List<SubCellRow>(samples);
         var sumSq = new double[methods.Length];
@@ -87,11 +90,11 @@ public sealed class SubCellStudy
         }
 
         double Rms(int m) => Math.Sqrt(sumSq[m] / samples);
-        double Bias(int m) => sumAbs[m] / samples;
+        double Mae(int m) => sumAbs[m] / samples;
         var summary = new SubCellSummary(
             reconStepMm, reconStepMm / Math.Sqrt(12.0),
             Rms(0), Rms(1), Rms(2), Rms(3),
-            Bias(0), Bias(1), Bias(2), Bias(3));
+            Mae(0), Mae(1), Mae(2), Mae(3));
         return (rows.ToArray(), summary);
     }
 

@@ -11,7 +11,7 @@ public enum SubCellMethod
     None,
 
     /// <summary>3-point separable parabola through the peak and its two neighbours. Slightly biased toward the
-    /// integer cell for a triangular peak (returns ≈ u/(2(1−u)) for a tent of true offset u).</summary>
+    /// integer cell for a triangular peak (returns u/(2(1−|u|)) for a tent of true offset u).</summary>
     Parabolic,
 
     /// <summary>3-point separable TENT (triangle) estimator — the matched model for a MURA autocorrelation core,

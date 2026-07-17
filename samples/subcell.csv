@@ -1,4 +1,4 @@
-step_mm,floor_mm,rms_none,rms_parab,rms_tent,rms_gauss,bias_none,bias_parab,bias_tent,bias_gauss
+step_mm,floor_mm,rms_none,rms_parab,rms_tent,rms_gauss,mae_none,mae_parab,mae_tent,mae_gauss
 0.60,0.1732,0.3505,0.2123,0.1968,0.2044,0.3096,0.1869,0.1727,0.1786
 0.90,0.2598,0.2902,0.1114,0.0952,0.1029,0.2513,0.0915,0.0809,0.0852
 1.20,0.3464,0.3610,0.1822,0.2034,0.1958,0.3053,0.1591,0.1854,0.1782

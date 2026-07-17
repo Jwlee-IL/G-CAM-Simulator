@@ -1203,14 +1203,14 @@ expensive, O(n²)×pixels) grid did. Interpolating the correlation-peak SHAPE ar
 offset instead.
 - **`PeakInterpolation`** (Decoding): separable 3-point estimators returning δ∈[−0.5,0.5] per axis — `Tent` (matched
   to the MURA autocorrelation core, **exact** for an ideal tent: δ=(f₊−f₋)/(2(f₀−f₋))), `Parabolic` (vertex of a
-  quadratic; biased toward the cell for a tent — returns ≈u/(2(1−u))), `Gaussian` (log-parabola; needs positive
+  quadratic; biased toward the cell for a tent — returns u/(2(1−|u|))), `Gaussian` (log-parabola; needs positive
   samples, falls back to parabolic near the ±1 array's negative sidelobes), `None`. All use DIFFERENCES so they
   tolerate the signed sidelobes (unlike a centroid). Wired opt-in on `CrossCorrelationDecoder` + `DecoderConfig`
   (`SubCellInterpolation`, default **Tent**); the decoder default stays `None` so direct-construction tests are
   unchanged; the factory reads the config.
 - **`SubCellStudy` / `montecarlo subcell`**: sweeps a point source across the grid in sub-cell steps (Y on-axis) and,
-  from ONE noise-free mean image per position, decodes with each estimator — isolating the quantization sawtooth from
-  Poisson noise — over a range of recon steps.
+  from ONE high-count (low-noise) mean image per position, decodes with each estimator — lifting the quantization
+  sawtooth above the residual Poisson noise — over a range of recon steps.
 - **Method choice was decided by the DATA, not a prior** (Codex design consult first flagged tent over Gaussian; the
   MC confirmed and refined it). RMS(mm) vs step, default geometry: interpolation beats the argmax at **every** step,
   and the gain GROWS as the grid coarsens (where the floor is largest) — step 1.8 mm: none 0.52 → tent **0.13 (4×)**;
@@ -1222,3 +1222,11 @@ offset instead.
 - Regression: defaulting the pipeline to Tent shifted one pinned bias value in `BackgroundTests` by ~0.0005 mm — the
   gradient's low-frequency residual, which the integer argmax hid, is now resolved sub-cell (loosened bit-identical →
   <0.01 mm). (Tests: `SubCellTests`, +9 — estimator math exact-cases + MC floor-beating.)
+- **Codex cross-verification** (gpt-5.5, read-only): estimator MATH and decoder WIRING CORRECT — tent derived exact
+  for an ideal tent (both u≥0 and u<0 branches), parabolic sign/guard right, Gaussian = log-parabola exact for a
+  Gaussian and scale- (not pedestal-) invariant, argmax→estimate axis mapping consistent, no sign/off-by-one. Minor
+  fixes applied from its notes: parabolic tent-bias generalized to u/(2(1−|u|)) (was written for u≥0 only; +a negative-u
+  test); `Bias*` renamed `Mae*` (it is mean-|error|, not signed bias); "noise-free" softened to "high-count low-noise";
+  `SubCellStudy` source depth pinned to the nominal decode plane (was reading `Position[2]`, which could desync the sim
+  and decode planes). The "tent most robust" claim is backed by the 5-step MC sweep, not asserted in the unit test
+  (which proves only that interpolation beats the argmax and tent beats the floor).

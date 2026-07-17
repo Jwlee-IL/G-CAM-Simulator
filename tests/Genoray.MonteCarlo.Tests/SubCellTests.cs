@@ -43,14 +43,16 @@ public class SubCellTests
         Assert.Equal(0.0, dy, 6);
     }
 
-    [Fact]
-    public void Parabolic_IsBiasedTowardTheCellForATent()
+    [Theory]
+    [InlineData(0.3)]
+    [InlineData(-0.35)]
+    public void Parabolic_IsBiasedTowardTheCellForATent(double u)
     {
-        // For a tent of offset u the parabola returns ≈ u/(2(1−u)) < u — it under-shoots toward the integer cell.
-        const double u = 0.3;
+        // For a tent of offset u the parabola returns u/(2(1−|u|)) — same sign as u but smaller magnitude, so it
+        // under-shoots toward the integer cell.
         double dx = PeakInterpolation.Estimate(TentImage(u), 1, 1, SubCellMethod.Parabolic).dx;
-        Assert.True(dx < u, $"parabola should under-shoot the tent apex: {dx:F4} vs u={u}");
-        Assert.Equal(u / (2.0 * (1.0 - u)), dx, 4);
+        Assert.True(Math.Abs(dx) < Math.Abs(u), $"parabola should under-shoot the tent apex: {dx:F4} vs u={u}");
+        Assert.Equal(u / (2.0 * (1.0 - Math.Abs(u))), dx, 4);
     }
 
     [Fact]
