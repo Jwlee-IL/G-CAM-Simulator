@@ -3,11 +3,13 @@
 Deferred work, captured so we don't forget. Not in current scope. See
 `AGENTS.findings.md` (themes 1–42) for everything that IS done.
 
-**Genuinely open**: the **Physical realism gaps** list below (Codex gap-review after theme 35 — a whole queue of
-real-detector effects to model one-per-session, top picks ★thermal drift, ★flood-field correction, pile-up sum
-continuum, ★mask fabrication tolerances); exact Artix-7 Fmax in Vivado (deferred — install friction;
-`vivado_trap.tcl` ready); integrate the theme-22 SiPM/thermal/shield productization models into the C# pipeline
-(design-only, user isn't building it).
+**Genuinely open**: the **Physical realism gaps** list below (Codex gap-review after theme 35) is now mostly DONE —
+themes 36–42 cleared thermal drift + flood-field, pile-up sum continuum, mask fabrication tolerances, alignment/pose,
+bad/dead/hot pixels, mask fluorescence/scatter, and dead time. Still open in that queue: **cascade summing** (Co-60/
+Na-22 sum peaks; ∝ε² so small for a coded aperture), **sub-cell peak interpolation** (cheap precision WIN), per-channel
+SiPM mismatch, intrinsic activity. Also open: exact Artix-7 Fmax in Vivado (deferred — install friction; `vivado_trap.tcl`
+ready); integrate the theme-22 SiPM/thermal/shield productization models into the C# pipeline (design-only, user isn't
+building it). Deferred by choice: mask TILT (pitch/yaw), mask WARPING, reflector MATERIAL (all 2nd-order).
 
 ## Open
 

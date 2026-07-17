@@ -105,6 +105,22 @@ dotnet run --project src/Genoray.MonteCarlo.Cli -c Release -- samples/materials/
 
 # single-mask vs mask/antimask vs additive background → antimask.csv
 dotnet run --project src/Genoray.MonteCarlo.Cli -c Release -- antimask samples/scenario.json samples/antimask.csv
+
+# --- physical-realism gap studies (themes 36–42; see AGENTS.findings.md) ---
+# thermal drift during acquisition (ambient + self-heating) → window walk / flood residual → thermal_{off,on}.csv
+dotnet run --project src/Genoray.MonteCarlo.Cli -c Release -- thermal  samples/scenario.json samples/thermal
+# random-coincidence pile-up SUM continuum in the spectrum → pileup.csv
+dotnet run --project src/Genoray.MonteCarlo.Cli -c Release -- pileup   samples/scenario.json samples/pileup.csv
+# mask fabrication tolerances vs an ideal decoder (usability threshold) → maskfab.csv
+dotnet run --project src/Genoray.MonteCarlo.Cli -c Release -- maskfab  samples/scenario.json samples/maskfab.csv
+# mask–detector alignment / pose error (systematic bias) → align.csv
+dotnet run --project src/Genoray.MonteCarlo.Cli -c Release -- align    samples/scenario.json samples/align.csv
+# bad (dead/hot) detector pixels + bad-pixel-map repair → defects.csv
+dotnet run --project src/Genoray.MonteCarlo.Cli -c Release -- defects  samples/scenario.json samples/defects.csv
+# mask tungsten secondaries (Compton scatter + W K-fluorescence) → masksec.csv
+dotnet run --project src/Genoray.MonteCarlo.Cli -c Release -- masksec  samples/scenario.json samples/masksec.csv
+# counting-system dead time (non-paralyzable / paralyzable) + live fraction → deadtime.csv
+dotnet run --project src/Genoray.MonteCarlo.Cli -c Release -- deadtime samples/scenario.json samples/deadtime.csv
 ```
 
 Sample scenarios in `samples/`: `scenario.json` (centered), `scenario_offaxis.json`
