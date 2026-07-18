@@ -1275,16 +1275,27 @@ hemisphere upper bound); this study folds it into the actual FLOOD by real photo
 impact + energy-window mitigation.
 - **`MaskScatterStudy` / `montecarlo maskscatter`**: biased point source → mask cell → primary OR a transported
   mask-scatter photon (Compton via the shared `MaskSecondary`/`ComptonModel`, self-absorption escape, landing on the
-  detector). Decodes THREE variants — primary, primary+scatter, primary+scatter after a ±10% photopeak window — over
-  a sweep of the mask–detector gap. Self-contained (does not touch the main `Transmit`).
+  detector). Decodes THREE variants — primary, primary+scatter, primary+scatter after a ~±10% arriving-energy window
+  (a proxy for the detector photopeak window) — over a sweep of the mask–detector gap. Self-contained (does not touch
+  the main `Transmit`); the mask is a SIMPLIFIED ideal slab (mid-plane cell lookup, no hole-fraction/taper/fab), and
+  deposits go straight into the flood (no crystal stopping-power/resolution). The source proposal covers the whole-mask
+  back-projection so the scatter contamination is unbiased.
 - **Honest result: mask forward-scatter is a MINOR, doubly-suppressed contaminant.** (1) GEOMETRY: over the mask→
-  detector gap a wide-angle scatter drifts laterally off the small detector, so contamination falls from **3.4 % at a
-  12 mm gap to 0.24 % at 65 mm** — the nominal geometry's finite-detector value is ~30× BELOW theme 41's ~9 % hemisphere
+  detector gap a wide-angle scatter drifts laterally off the small detector, so contamination falls from **2.8 % at a
+  12 mm gap to 0.21 % at 65 mm** — the nominal geometry's finite-detector value is ~30× BELOW theme 41's ~9 % hemisphere
   upper bound. (2) DECODER: the balanced MURA ±1 array correlates the smooth scatter pedestal to ≈0, so the coded-image
   contrast (peak/secondary) barely moves even with a few-% pedestal.
 - **The surviving scatter is the hardest to reject**: what reaches the detector is small-angle forward Compton (mean
-  ~612 keV, **~74 % INSIDE a ±10 % photopeak window**), because large-angle scatter both down-shifts MORE and drifts
-  off the detector. So the energy window removes only the down-shifted ~25–35 % (largest at close gaps); the in-window
-  forward tail is irreducible — exactly theme 41's point, now quantified as an imaging contamination. (Tests:
-  `MaskScatterTests`, +3 — contamination vs gap, window removes the down-shifted part, balanced-decoder pedestal
-  rejection + valid localization.)
+  ~613 keV, **~75 % INSIDE a ±10 % window**), because large-angle scatter both down-shifts MORE and drifts off the
+  detector. So the window removes only the down-shifted part — **~39 % at a 12 mm gap, falling to ≈0 at wide gaps**
+  (where only near-forward in-window scatter survives the drift); the in-window forward tail is irreducible — exactly
+  theme 41's point, now quantified as an imaging contamination. (Tests: `MaskScatterTests`, +3 — contamination vs gap,
+  window removes the down-shifted part, balanced-decoder pedestal rejection + valid localization.)
+- **Codex cross-verification** (gpt-5.5, read-only): geometry/sign conventions CORRECT — mid-plane crossing, front-face
+  hit, truncated-exponential interaction depth, back-face escape path, detector landing, KN reuse all sound. One real
+  METHODOLOGY bias fixed: the biased proposal originally aimed only at the detector, so mask-scatter from primaries
+  whose STRAIGHT path would miss the detector was outside the support (contamination biased). Now the proposal covers
+  the whole-mask back-projection → unbiased (contamination refined 3.4→2.8 % at 12 mm). Framing corrected per its
+  notes: simplified ideal-slab mask scope, arriving-energy (not measured-detector-energy) window, confidence is an
+  internal contrast proxy (not a full SNR), and window-removal is gap-dependent (~39 % close → ≈0 wide), not a flat
+  "~25–35 %".

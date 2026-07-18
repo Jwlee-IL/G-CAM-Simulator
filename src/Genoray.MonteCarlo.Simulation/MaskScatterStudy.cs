@@ -21,9 +21,16 @@ public sealed record MaskScatterRow(
 ///
 /// The study builds the flood by real photon transport (biased point source → mask cell → primary OR a transported
 /// mask-scatter photon via <see cref="MaskSecondary"/>), then decodes THREE variants — primary only, primary+scatter,
-/// and primary+scatter after a PHOTOPEAK ENERGY WINDOW — so it shows both the degradation and how much the window
-/// (which rejects the down-shifted scatter) recovers. The residual in-window, small-angle forward scatter is the
-/// irreducible part (theme 41's honest point). Self-contained: it does not change the main pipeline's mask Transmit.
+/// and primary+scatter after an ARRIVING-ENERGY window (a proxy for the detector photopeak window) — so it shows both
+/// the degradation and how much the window (which rejects the down-shifted scatter) recovers. The residual in-window,
+/// small-angle forward scatter is the irreducible part (theme 41's honest point).
+///
+/// Scope: self-contained (it does NOT change the main pipeline's mask <see cref="CodedApertureMask"/> Transmit). The
+/// mask is a SIMPLIFIED ideal slab — a single mid-plane cell lookup (no hole-fraction / taper / focus / fabrication /
+/// alignment / oblique channel clipping) — valid for the default straight full-cell mask. Deposits go straight into
+/// the flood (no crystal stopping-power / resolution), and the window is a cut on the ARRIVING photon energy, not a
+/// measured detector-energy window. The source proposal covers the whole-mask back-projection so the mask-scatter
+/// contamination is unbiased (not just primaries whose straight path lands on the detector).
 /// </summary>
 public sealed class MaskScatterStudy
 {
@@ -56,7 +63,15 @@ public sealed class MaskScatterStudy
         var src = new Vector3(sourceXMm, sourceYMm, sourceZ);
         var sec = new MaskSecondary();
         var rng = new DefaultRandom(seed ?? config.Seed ?? 0);
-        double norm = (2.0 * detHalfW) * (2.0 * detHalfH) / (4.0 * Math.PI);
+
+        // Source-support fix (Codex theme-45 review): the biased proposal must cover EVERY closed-cell interaction
+        // that can scatter onto the detector — including primaries whose straight path would MISS the detector but
+        // that hit a closed cell and scatter in. Aim over the detector-plane region that back-projects across the
+        // WHOLE mask (aim = maskHalf × sourceZ/sourceMaskDist), so the mask-scatter numerator is unbiased, not just
+        // the primaries whose straight path lands on the detector. Off-mask rays are the surrounding shield (skipped).
+        double aimScale = sourceZ / config.Geometry.SourceMaskDistanceMm;
+        double aimHalfW = maskHalfW * aimScale, aimHalfH = maskHalfH * aimScale;
+        double norm = (2.0 * aimHalfW) * (2.0 * aimHalfH) / (4.0 * Math.PI);
 
         var fPrimary = new DetectorImage(W, H);
         var fScatterAll = new DetectorImage(W, H);
@@ -67,9 +82,9 @@ public sealed class MaskScatterStudy
 
         for (long n = 0; n < photonCount; n++)
         {
-            // Detector-area biased emission (unbiased flood estimate): aim at a uniform detector point.
-            double tx = (rng.NextDouble() * 2.0 - 1.0) * detHalfW;
-            double ty = (rng.NextDouble() * 2.0 - 1.0) * detHalfH;
+            // Biased emission over the whole-mask back-projection (see source-support fix above).
+            double tx = (rng.NextDouble() * 2.0 - 1.0) * aimHalfW;
+            double ty = (rng.NextDouble() * 2.0 - 1.0) * aimHalfH;
             var aim = new Vector3(tx, ty, 0.0);
             var delta = aim - src;
             double r = delta.Length;
