@@ -1265,3 +1265,26 @@ the camera. (Activates the `EmissionLine.CascadeCoincident` flag that was reserv
   process reproduces this" overclaim in docs/CLI/tests). (ii) `CrystalDeposit` enters at NORMAL incidence only, so
   absolute yields are approximate (scaling/peak position unaffected) — now documented. (iii) Co-60 W(θ) is A₂≈0.10
   (~10% close-geometry correction), not "few %"; noted as an ignored approximation.
+
+## 45. Mask forward-scatter folded into the coded image — `MaskScatterStudy` / `montecarlo maskscatter`
+First target from the physics-realism audit's mask subsystem (audit item B): the mask `Transmit` is binary — a primary
+either passes (open cell / straight leakage, full energy) or is absorbed. But a primary hitting a CLOSED tungsten cell
+can Compton-scatter FORWARD (lower energy, small angle) and reach the detector as a blurred pedestal/halo AROUND the
+true shadow, which the decoder's forward model doesn't expect. Theme 41 tallied that scatter as an escape SPECTRUM (a
+hemisphere upper bound); this study folds it into the actual FLOOD by real photon transport and measures the IMAGING
+impact + energy-window mitigation.
+- **`MaskScatterStudy` / `montecarlo maskscatter`**: biased point source → mask cell → primary OR a transported
+  mask-scatter photon (Compton via the shared `MaskSecondary`/`ComptonModel`, self-absorption escape, landing on the
+  detector). Decodes THREE variants — primary, primary+scatter, primary+scatter after a ±10% photopeak window — over
+  a sweep of the mask–detector gap. Self-contained (does not touch the main `Transmit`).
+- **Honest result: mask forward-scatter is a MINOR, doubly-suppressed contaminant.** (1) GEOMETRY: over the mask→
+  detector gap a wide-angle scatter drifts laterally off the small detector, so contamination falls from **3.4 % at a
+  12 mm gap to 0.24 % at 65 mm** — the nominal geometry's finite-detector value is ~30× BELOW theme 41's ~9 % hemisphere
+  upper bound. (2) DECODER: the balanced MURA ±1 array correlates the smooth scatter pedestal to ≈0, so the coded-image
+  contrast (peak/secondary) barely moves even with a few-% pedestal.
+- **The surviving scatter is the hardest to reject**: what reaches the detector is small-angle forward Compton (mean
+  ~612 keV, **~74 % INSIDE a ±10 % photopeak window**), because large-angle scatter both down-shifts MORE and drifts
+  off the detector. So the energy window removes only the down-shifted ~25–35 % (largest at close gaps); the in-window
+  forward tail is irreducible — exactly theme 41's point, now quantified as an imaging contamination. (Tests:
+  `MaskScatterTests`, +3 — contamination vs gap, window removes the down-shifted part, balanced-decoder pedestal
+  rejection + valid localization.)

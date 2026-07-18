@@ -53,6 +53,9 @@ if (args[0].Equals("subcell", StringComparison.OrdinalIgnoreCase))
 if (args[0].Equals("cascade", StringComparison.OrdinalIgnoreCase))
     return RunCascade(args);
 
+if (args[0].Equals("maskscatter", StringComparison.OrdinalIgnoreCase))
+    return RunMaskScatter(args);
+
 if (args[0].Equals("array", StringComparison.OrdinalIgnoreCase))
     return RunArray(args);
 
@@ -1276,6 +1279,65 @@ static int RunDeadTime(string[] args)
     Console.WriteLine("Non-paralyzable saturates toward 1/τ; paralyzable PEAKS at R=1/τ then collapses (paralysis).");
     Console.WriteLine("Live fraction = recorded/true = the live-time vs real-time correction a real acquisition applies.");
     Console.WriteLine($"CSV written: {csvPath}");
+    return 0;
+}
+
+static int RunMaskScatter(string[] args)
+{
+    if (args.Length < 2)
+    {
+        Console.Error.WriteLine("Usage: montecarlo maskscatter <base.json> [out.csv]");
+        Console.Error.WriteLine("  Folds mask forward-scatter into the coded image and measures the imaging impact vs");
+        Console.Error.WriteLine("  the mask-detector gap: contamination %, decoder contrast, and photopeak-window recovery.");
+        return 1;
+    }
+
+    string csvPath = args.Length >= 3 ? args[2] : "samples/maskscatter.csv";
+    var baseCfg = ConfigLoader.Load(args[1]);
+    double primaryE = baseCfg.Source.EnergyKeV > 0 ? baseCfg.Source.EnergyKeV : 661.7;
+    double winLo = primaryE * 0.89, winHi = primaryE * 1.10;   // ~±10% photopeak window
+    double[] gaps = [12, 18, 25, 35, 48, 65];
+    const long photons = 4_000_000;
+    var study = new MaskScatterStudy();
+
+    var sb = new System.Text.StringBuilder();
+    sb.AppendLine("gap_mm,contam_all_pct,contam_window_pct,conf_primary,conf_scatter,conf_window,bias_primary_mm,bias_scatter_mm");
+    double[]? spec = null; double specBin = 0, specMax = 0;
+    var summary = new List<(double gap, MaskScatterRow[] rows)>();
+    foreach (double gap in gaps)
+    {
+        var cfg = baseCfg.Clone();
+        cfg.Geometry.MaskDetectorDistanceMm = gap;
+        // Fixed modest off-axis source (mm) — inside the FCFOV at every gap so the decode stays valid.
+        var (rows, sp, bin, max) = study.Run(cfg, 5.0, 0.0, photons, winLo, winHi, cfg.Seed);
+        summary.Add((gap, rows));
+        if (Math.Abs(gap - 18) < 1e-9) { spec = sp; specBin = bin; specMax = max; }
+        sb.AppendLine($"{gap:F0},{rows[1].ContaminationPct:F3},{rows[2].ContaminationPct:F3}," +
+                      $"{rows[0].Confidence:F4},{rows[1].Confidence:F4},{rows[2].Confidence:F4}," +
+                      $"{rows[0].LocalizationBiasMm:F3},{rows[1].LocalizationBiasMm:F3}");
+    }
+    File.WriteAllText(csvPath, sb.ToString());
+    if (spec != null)
+    {
+        var ss = new System.Text.StringBuilder();
+        ss.AppendLine("e_keV,scatter_weight");
+        for (int i = 0; i < spec.Length; i++) ss.AppendLine($"{(i + 0.5) * specBin:F1},{spec[i]:F2}");
+        File.WriteAllText(csvPath.Replace(".csv", "_spectrum.csv"), ss.ToString());
+    }
+
+    Console.WriteLine($"Mask forward-scatter study: {primaryE:F0} keV primary, {photons:N0} photons/gap, window {winLo:F0}-{winHi:F0} keV.");
+    Console.WriteLine("A primary hitting a CLOSED cell can Compton-scatter forward to the detector — a coded-image pedestal.");
+    Console.WriteLine();
+    Console.WriteLine("   gap   contam   +window   conf(prim→scat)   (scatter as % of coded primary)");
+    Console.WriteLine("   ---   ------   -------   ---------------");
+    foreach (var (gap, rows) in summary)
+        Console.WriteLine($"   {gap,3:F0}   {rows[1].ContaminationPct,5:F2}%   {rows[2].ContaminationPct,5:F2}%   " +
+                          $"{rows[0].Confidence,6:F3}→{rows[1].Confidence,-6:F3}");
+    Console.WriteLine();
+    Console.WriteLine("Contamination rises as the gap SHRINKS (a wide mask-detector gap drifts wide-angle scatter off the");
+    Console.WriteLine("small detector). It stays small and the balanced MURA decoder rejects the smooth pedestal (contrast");
+    Console.WriteLine("barely moves); the photopeak window removes the down-shifted part, leaving the small-angle forward tail.");
+    Console.WriteLine($"CSV written: {csvPath} (+ _spectrum.csv: the arriving-scatter energy spectrum at 18 mm)");
     return 0;
 }
 
