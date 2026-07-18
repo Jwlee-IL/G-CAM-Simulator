@@ -1,13 +1,15 @@
 # Backlog
 
 Deferred work, captured so we don't forget. Not in current scope. See
-`AGENTS.findings.md` (themes 1–43) for everything that IS done.
+`AGENTS.findings.md` (themes 1–44) for everything that IS done.
 
 **Genuinely open**: the **Physical realism gaps** list below (Codex gap-review after theme 35) is now mostly DONE —
-themes 36–43 cleared thermal drift + flood-field, pile-up sum continuum, mask fabrication tolerances, alignment/pose,
-bad/dead/hot pixels, mask fluorescence/scatter, dead time, and sub-cell peak interpolation. Still open in that queue:
-**cascade summing** (Co-60/Na-22 sum peaks; ∝ε² so small for a coded aperture), per-channel SiPM mismatch, intrinsic
-activity. Also open: exact Artix-7 Fmax in Vivado (deferred — install friction; `vivado_trap.tcl`
+themes 36–44 cleared thermal drift + flood-field, pile-up sum continuum, mask fabrication tolerances, alignment/pose,
+bad/dead/hot pixels, mask fluorescence/scatter, dead time, sub-cell peak interpolation, and cascade summing. A
+5-subsystem Codex **physics-realism audit** (2026-07-18) surfaced the next tier: full mask forward-transport (fold the
+theme-41 secondaries into the beam), MLEM/likelihood reconstruction (vs cross-correlation peak-picking → depth &
+multi-source), non-proportional light yield, finite source size / capsule self-attenuation. Still small/open:
+per-channel SiPM mismatch, intrinsic activity. Also open: exact Artix-7 Fmax in Vivado (deferred — install friction; `vivado_trap.tcl`
 ready); integrate the theme-22 SiPM/thermal/shield productization models into the C# pipeline (design-only, user isn't
 building it). Deferred by choice: mask TILT (pitch/yaw), mask WARPING, reflector MATERIAL (all 2nd-order).
 
@@ -106,8 +108,9 @@ model. Ranked by impact; **★ = user-flagged / connects to the real rig**. Tack
   / `montecarlo pileup` / WPF Spectrum "Pile-up"). Merges the timed MC event stream within the shaper-derived resolving
   time (rise+2·tail) → a 662+662 sum peak + self-convolution continuum + rate-dependent throughput loss (99.6 %→84.7 %
   over 50 k→2 M cps); cross-checked vs the analytic `singles⊛singles` autoconvolution.
-- **Coincidence / cascade summing** — MED. Co-60 (1173+1332 → 2505 sum peak), Na-22 (511+511, +1275) emit correlated
-  gammas that sum in one event; our independent-line model misses the sum peaks.
+- ~~**Coincidence / cascade summing**~~ — **DONE, theme 44** (`DecayScheme` / `CascadeSummingStudy` / `montecarlo
+  cascade`). Correlated per-decay gammas (Co-60 1173+1332, Na-22 back-to-back 511s) sum in the crystal → 2505 sum peak,
+  rate-independent, log-log slope 2.04 = ∝ε²; Cs-137 null; Na-22 511+511 suppressed by back-to-back on a 1-sided detector.
 - ~~**Mask tungsten fluorescence + Compton scatter**~~ — **DONE, theme 41** (`MaskSecondary` / `MaskSecondaryStudy` /
   `montecarlo masksec`). Closed-cell interactions emit secondaries: forward Compton scatter ≈9 % of the coded primary
   (its in-window tail is NOT window-rejected → imaging background), while W K X-rays (59/67 keV) are self-absorbed
@@ -129,8 +132,9 @@ model. Ranked by impact; **★ = user-flagged / connects to the real rig**. Tack
 - Intrinsic activity (LYSO Lu-176, LaBr₃ La-138) — LOW for GAGG (none); matters only if those scintillators are picked.
 
 Recommended order next session: 36 thermal drift → 37 pile-up → 38 mask fabrication → 39 alignment/pose → 40 bad
-pixels → 41 mask fluorescence/scatter — ALL DONE. Remaining: **cascade summing** (Co-60/Na-22 sum peaks — a follow-on
-to pile-up; ∝ε² so small for a coded aperture), per-channel SiPM mismatch, intrinsic activity. Reflector MATERIAL +
+pixels → 41 mask fluorescence/scatter — ALL DONE (through theme 44). Remaining small: per-channel SiPM mismatch,
+intrinsic activity. Bigger next-tier (from the 2026-07-18 physics-realism audit): mask forward-transport, MLEM
+reconstruction, non-proportional light yield, finite source size. Reflector MATERIAL +
 mask TILT/WARPING stay deferred. (Dead time DONE theme 42; sub-cell peak interpolation DONE theme 43.)
 
 ### Productization (theme 22 — design-only; user is NOT building this now)

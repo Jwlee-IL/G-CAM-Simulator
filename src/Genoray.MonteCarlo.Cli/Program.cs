@@ -50,6 +50,9 @@ if (args[0].Equals("deadtime", StringComparison.OrdinalIgnoreCase))
 if (args[0].Equals("subcell", StringComparison.OrdinalIgnoreCase))
     return RunSubCell(args);
 
+if (args[0].Equals("cascade", StringComparison.OrdinalIgnoreCase))
+    return RunCascade(args);
+
 if (args[0].Equals("array", StringComparison.OrdinalIgnoreCase))
     return RunArray(args);
 
@@ -1273,6 +1276,63 @@ static int RunDeadTime(string[] args)
     Console.WriteLine("Non-paralyzable saturates toward 1/τ; paralyzable PEAKS at R=1/τ then collapses (paralysis).");
     Console.WriteLine("Live fraction = recorded/true = the live-time vs real-time correction a real acquisition applies.");
     Console.WriteLine($"CSV written: {csvPath}");
+    return 0;
+}
+
+static int RunCascade(string[] args)
+{
+    if (args.Length < 2)
+    {
+        Console.Error.WriteLine("Usage: montecarlo cascade <base.json> [out.csv]");
+        Console.Error.WriteLine("  True (cascade) coincidence summing: two gammas from ONE decay both deposit in the");
+        Console.Error.WriteLine("  crystal and SUM (Co-60 1173+1332→2505). Rate-independent, ∝ε². Isotope from the");
+        Console.Error.WriteLine("  config Source.Isotope (Cs-137 / Co-60 / Na-22).");
+        return 1;
+    }
+
+    string csvPath = args.Length >= 3 ? args[2] : "samples/cascade.csv";
+    var cfg = ConfigLoader.Load(args[1]);
+    var scheme = DecayScheme.From(cfg.Source.Isotope);
+
+    // Detector footprint = the crystal array; MURA open fraction ≈ 0.5. Sweep source distance to vary ε.
+    double detHalf = 0.5 * cfg.Detector.PixelPitchMm * cfg.Mask.Rank * Math.Max(cfg.Mask.MosaicX, cfg.Mask.MosaicY);
+    double[] dists = [18, 24, 32, 43, 57, 76, 100];
+    const long decays = 8_000_000;
+    double specDist = dists[0];
+
+    var study = new CascadeSummingStudy(detHalf, detHalf, maskOpenFraction: 0.5);
+    var (rows, spec, specBin, specMax) = study.Run(scheme, dists, decays, cfg.Seed, specDist);
+
+    File.WriteAllText(csvPath, CascadeSummingStudy.ToCsv(rows));
+    var sb = new System.Text.StringBuilder();
+    sb.AppendLine("e_keV,counts");
+    for (int i = 0; i < spec.Length; i++) sb.AppendLine($"{(i + 0.5) * specBin:F1},{spec[i]:F0}");
+    File.WriteAllText(csvPath.Replace(".csv", "_spectrum.csv"), sb.ToString());
+
+    Console.WriteLine($"Cascade coincidence summing: {scheme.Isotope}, {decays:N0} decays/distance, detector ±{detHalf:F0} mm.");
+    Console.WriteLine("Two coincident gammas both depositing → one SUMMED event. Rate-independent, ∝ε².");
+    Console.WriteLine();
+    if (scheme.SumPeaks.Length == 0)
+        Console.WriteLine("  (Single-line isotope — no cascade partner, so no coincidence summing. Expect sum ≈ 0.)");
+    else
+        Console.WriteLine($"  Sum peaks: {string.Join(", ", scheme.SumPeaks.Select(s => $"{s.label}={s.energyKeV:F0}keV"))}");
+    Console.WriteLine();
+    Console.WriteLine("   dist   single/decay   sum/decay    sum/single");
+    Console.WriteLine("   ----   ------------   ---------    ----------");
+    foreach (var r in rows)
+        Console.WriteLine($"   {r.SourceDistanceMm,4:F0}   {r.SinglePhotopeakPerDecay,12:E3}   {r.SumPeakPerDecay,9:E3}    {r.SumToSingleRatio,10:E3}");
+
+    var pts = rows.Where(r => r.SumPeakPerDecay > 0 && r.SinglePhotopeakPerDecay > 0).ToArray();
+    if (pts.Length >= 2)
+    {
+        double[] lx = pts.Select(p => Math.Log(p.SinglePhotopeakPerDecay)).ToArray();
+        double[] ly = pts.Select(p => Math.Log(p.SumPeakPerDecay)).ToArray();
+        double mx = lx.Average(), my = ly.Average(), sxy = 0, sxx = 0;
+        for (int i = 0; i < lx.Length; i++) { sxy += (lx[i] - mx) * (ly[i] - my); sxx += (lx[i] - mx) * (lx[i] - mx); }
+        Console.WriteLine();
+        Console.WriteLine($"  log-log slope (sum vs single) = {sxy / sxx:F2}  →  sum ∝ single^2 = ∝ε²  (a true cascade, not pile-up).");
+    }
+    Console.WriteLine($"CSV written: {csvPath} (+ _spectrum.csv: the summed spectrum at {specDist:F0} mm)");
     return 0;
 }
 

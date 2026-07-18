@@ -1230,3 +1230,29 @@ offset instead.
   `SubCellStudy` source depth pinned to the nominal decode plane (was reading `Position[2]`, which could desync the sim
   and decode planes). The "tent most robust" claim is backed by the 5-step MC sweep, not asserted in the unit test
   (which proves only that interpolation beats the argmax and tent beats the floor).
+
+## 44. True (cascade) coincidence summing — `DecayScheme` / `CascadeSummingStudy` / `montecarlo cascade`
+First target from the **physics-realism audit** (5 Codex subsystem audits over themes 1–43; this was the source-audit's
+top structural gap): the sim emitted ONE photon per history, so two gammas from the SAME decay were never correlated.
+Real cascade isotopes emit coincident gammas that, if BOTH deposit in the crystal, SUM into one recorded event — a sum
+peak plus a loss of single-photopeak counts (summing-out). This is the opposite of random pile-up (theme 37, DIFFERENT
+decays, ∝ rate): cascade summing is **rate-INDEPENDENT and ∝ ε²** — a geometric effect that grows as the source nears
+the camera. (Activates the `EmissionLine.CascadeCoincident` flag that was reserved-but-informational.)
+- **`DecayScheme`** models one decay's correlated gammas WITH angular correlation: Cs-137 (single 662, no partner),
+  Co-60 (1173+1332 cascade, weak W(θ) → independent isotropic), Na-22 (1275 + a β⁺ annihilation pair of 511s emitted
+  **back-to-back**). Each gamma is transported through the crystal with the SAME physics the main detector uses
+  (`ComptonModel`: μ(E), photoelectric-vs-Compton, Klein-Nishina), so the sum peak and its continuum are REAL energy
+  deposition, not a hand-added line.
+- **`CascadeSummingStudy` / `montecarlo cascade`** sweeps source distance (varying ε) and reports single-photopeak vs
+  sum-peak yield per decay. **The verification signature: the sum yield scales as the SQUARE of the single yield** —
+  log-log slope **2.04** (Co-60), which no random-coincidence process reproduces.
+- **Results** (default geometry, ±7 mm detector): Co-60 shows a clean **2505 keV sum peak** sitting ABOVE both Compton
+  edges; slope 2.04 = ∝ε². Cs-137 → **exactly 0 summing** (single line — the honest null that confirms the backlog's
+  "∝ε² so small" note). Na-22 → the back-to-back 511s can't both reach a one-sided detector, so the **511+511 (1022)
+  sum is suppressed** and 511+1275 (1786) dominates; and 1022 sits on the 1275 Compton edge, so it is single-photon
+  contaminated anyway. **Honest metric correction found during MC**: a sum window only proves ∝ε² coincidence if it lies
+  ABOVE the highest single line (else a single photon's Compton continuum leaks in as a ∝ε event) — the study restricts
+  the coincidence metric to sums above max(single line), which turned Na-22's slope from a spurious 1.1 into a true 2.1.
+- Magnitude is genuinely small (sum/decay ~1e-5 even at 18 mm), confirming cascade summing is a minor effect for a
+  coded-aperture camera's small solid angle — real, ∝ε², but second-order. (Tests: `CascadeSummingTests`, +5 — decay
+  scheme correlation incl. back-to-back 511s + MC ∝ε² slope + Cs-137 null.)

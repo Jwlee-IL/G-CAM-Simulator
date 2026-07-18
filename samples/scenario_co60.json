@@ -1,0 +1,33 @@
+{
+  "name": "co60-cascade-summing",
+  "photonCount": 1000000,
+  "seed": 12345,
+  "source": {
+    "isotope": "Co-60",
+    "energyKeV": 1252.0,
+    "position": [0.0, 0.0, 0.0],
+    "lines": [
+      { "energyKeV": 1173.2, "intensity": 0.999, "cascadeCoincident": true },
+      { "energyKeV": 1332.5, "intensity": 0.999, "cascadeCoincident": true }
+    ]
+  },
+  "mask": {
+    "type": "MURA",
+    "rank": 7,
+    "mosaicX": 2,
+    "mosaicY": 2,
+    "thicknessMm": 10.0,
+    "material": "Tungsten",
+    "cellPitchMm": 1.0
+  },
+  "detector": {
+    "pixelsX": 12,
+    "pixelsY": 12,
+    "pixelPitchMm": 1.0,
+    "energyResolutionFwhm": 0.0
+  },
+  "geometry": {
+    "maskDetectorDistanceMm": 60.0,
+    "sourceMaskDistanceMm": 100.0
+  }
+}
