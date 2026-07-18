@@ -85,7 +85,9 @@ public class CascadeSummingTests
         Assert.True(rows[0].SumPeakPerDecay > 1e-5, $"expected a measurable sum peak near the camera, got {rows[0].SumPeakPerDecay:E2}");
         Assert.True(rows[^1].SumPeakPerDecay < rows[0].SumPeakPerDecay, "summing should fall with distance");
 
-        // The defining signature: the SUM yield scales as the SQUARE of the single-line yield (slope ≈ 2 on log-log).
+        // The ∝ε² geometric signature: the SUM yield scales as the SQUARE of the single-line yield (slope ≈ 2 on
+        // log-log). (This confirms the geometry scaling; it does not by itself separate cascade from random
+        // coincidence — rate-independence does. Here the pair is same-decay by construction.)
         var pts = rows.Where(r => r.SumPeakPerDecay > 0 && r.SinglePhotopeakPerDecay > 0).ToArray();
         double slope = LogLogSlope(pts.Select(p => p.SinglePhotopeakPerDecay).ToArray(),
                                    pts.Select(p => p.SumPeakPerDecay).ToArray());

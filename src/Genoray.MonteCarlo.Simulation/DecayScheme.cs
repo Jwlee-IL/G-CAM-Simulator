@@ -13,8 +13,9 @@ public enum Isotope { Cs137, Co60, Na22 }
 /// is rate-INDEPENDENT and ∝ ε².)
 /// <list type="bullet">
 /// <item><b>Cs-137</b> — a single 662 keV line (per-decay 0.851); no significant coincident partner, so summing ≈ 0.</item>
-/// <item><b>Co-60</b> — the 1173 + 1332 keV CASCADE, both ~1.0/decay. Their angular correlation W(θ) is weak (few %),
-///   so the two directions are taken independent-isotropic.</item>
+/// <item><b>Co-60</b> — the 1173 + 1332 keV CASCADE, both ~1.0/decay. Their angular correlation W(θ) (A₂≈0.10,
+///   A₄≈0.01) is taken as independent-isotropic here; that omits a ~10% correction to absolute close-geometry
+///   summing, but not the ∝ε² trend.</item>
 /// <item><b>Na-22</b> — a 1275 keV gamma plus (β⁺ branch) a positron whose annihilation gives two 511 keV photons
 ///   emitted BACK-TO-BACK (180°). On a one-sided detector the back-to-back pair can almost never both be caught, so
 ///   511+511 summing is strongly suppressed and 511+1275 dominates — a correlation the model must capture.</item>
@@ -59,7 +60,7 @@ public sealed class DecayScheme
         switch (Isotope)
         {
             case Isotope.Co60:
-                // Cascade: 1173 then 1332, both ~1.0/decay, weak W(θ) → independent isotropic directions.
+                // Cascade: 1173 then 1332, both ~1.0/decay; W(θ) (A₂≈0.10) approximated as independent isotropic.
                 if (rng.NextDouble() < 0.999) outPhotons.Add((1173.2, rng.NextOnUnitSphere()));
                 if (rng.NextDouble() < 0.999) outPhotons.Add((1332.5, rng.NextOnUnitSphere()));
                 break;

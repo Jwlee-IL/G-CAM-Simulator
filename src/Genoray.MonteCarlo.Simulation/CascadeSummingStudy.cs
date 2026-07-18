@@ -9,7 +9,7 @@ public sealed record CascadeRow(
     double SourceDistanceMm,
     double SinglePhotopeakPerDecay,  // decays landing in a single-line photopeak window (∝ ε)
     double SumPeakPerDecay,          // decays landing in a coincidence-SUM window (∝ ε² for a true cascade)
-    double SumToSingleRatio);        // SUM/single ∝ ε — the rate-independent cascade signature
+    double SumToSingleRatio);        // SUM/single ∝ ε (geometric)
 
 /// <summary>
 /// Studies TRUE (cascade) COINCIDENCE SUMMING: two gammas from ONE decay both depositing in the crystal, so their
@@ -21,10 +21,13 @@ public sealed record CascadeRow(
 /// detector uses (<see cref="ComptonModel"/>: μ(E), photoelectric-vs-Compton, Klein-Nishina), so the sum peak and
 /// its continuum come from real energy deposition, not a hand-added line.
 ///
-/// Sweeping the source distance changes ε; the defining check is that the SUM-peak yield scales as the SQUARE of the
-/// single-photopeak yield (slope 2 on log-log), which no random-coincidence process reproduces. Cs-137 (single line)
-/// gives ≈ 0 summing; Na-22's back-to-back 511s can't both reach a one-sided detector, so its 511+511 sum is
-/// suppressed and 511+1275 dominates.
+/// Sweeping the source distance changes ε; the SUM-peak yield scales as the SQUARE of the single-photopeak yield
+/// (slope 2 on log-log), confirming the ∝ ε² GEOMETRIC scaling. (Note: a distance sweep alone does NOT separate
+/// cascade from random coincidence — random pile-up also scales ∝ ε² in geometry; the true discriminator is that
+/// cascade summing is rate/activity-INDEPENDENT per decay while random coincidence grows with rate. Here the two
+/// gammas are same-decay by construction, so this IS cascade summing.) Cs-137 (single line) gives ≈ 0 summing;
+/// Na-22's back-to-back 511s can't both reach a one-sided detector, so its 511+511 sum is suppressed and 511+1275
+/// dominates.
 /// </summary>
 public sealed class CascadeSummingStudy
 {
@@ -97,9 +100,11 @@ public sealed class CascadeSummingStudy
         return (rows.ToArray(), spectrum, specBinKeV, specMaxKeV);
     }
 
-    /// <summary>Total energy one gamma deposits in the crystal slab (front face z=0, back z=−depth), entering
-    /// normally. Mirrors the main detector's cascade: sample a path, photoelectric → full absorb, else Compton
-    /// scatter and continue; 0 if it escapes a face without fully absorbing. Uses the shared <see cref="ComptonModel"/>.</summary>
+    /// <summary>Total energy one gamma deposits in the crystal slab (front face z=0, back z=−depth). Mirrors the main
+    /// detector's cascade physics (sample a path, photoelectric → full absorb, else Compton scatter and continue;
+    /// 0 if it escapes a face) using the shared <see cref="ComptonModel"/>, but always enters at NORMAL incidence from
+    /// the slab centre — so absolute efficiency is approximate (real incident angle, lateral entry point, side escape,
+    /// backing and parallax are omitted). The sum-peak POSITION and the ∝ ε² scaling do not depend on that.</summary>
     private double CrystalDeposit(double eKeV, IRandom rng)
     {
         double deposited = 0.0, energy = eKeV;

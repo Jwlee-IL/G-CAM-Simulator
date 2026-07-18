@@ -1330,7 +1330,9 @@ static int RunCascade(string[] args)
         double mx = lx.Average(), my = ly.Average(), sxy = 0, sxx = 0;
         for (int i = 0; i < lx.Length; i++) { sxy += (lx[i] - mx) * (ly[i] - my); sxx += (lx[i] - mx) * (lx[i] - mx); }
         Console.WriteLine();
-        Console.WriteLine($"  log-log slope (sum vs single) = {sxy / sxx:F2}  →  sum ∝ single^2 = ∝ε²  (a true cascade, not pile-up).");
+        Console.WriteLine($"  log-log slope (sum vs single) = {sxy / sxx:F2}  →  sum ∝ single^2 = ∝ε² geometric scaling.");
+        Console.WriteLine("  (Cascade summing is distinguished from random pile-up by being RATE-independent per decay —");
+        Console.WriteLine("   not by this slope: pile-up also scales ∝ε² in a distance sweep. Here the pair is same-decay.)");
     }
     Console.WriteLine($"CSV written: {csvPath} (+ _spectrum.csv: the summed spectrum at {specDist:F0} mm)");
     return 0;

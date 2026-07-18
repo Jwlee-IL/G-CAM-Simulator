@@ -1244,8 +1244,10 @@ the camera. (Activates the `EmissionLine.CascadeCoincident` flag that was reserv
   (`ComptonModel`: μ(E), photoelectric-vs-Compton, Klein-Nishina), so the sum peak and its continuum are REAL energy
   deposition, not a hand-added line.
 - **`CascadeSummingStudy` / `montecarlo cascade`** sweeps source distance (varying ε) and reports single-photopeak vs
-  sum-peak yield per decay. **The verification signature: the sum yield scales as the SQUARE of the single yield** —
-  log-log slope **2.04** (Co-60), which no random-coincidence process reproduces.
+  sum-peak yield per decay. **The sum yield scales as the SQUARE of the single yield** — log-log slope **2.04** (Co-60),
+  confirming the ∝ε² GEOMETRIC scaling. (A distance sweep alone does NOT separate cascade from random pile-up, which
+  also scales ∝ε² in geometry; the true discriminator is that cascade summing is rate/activity-INDEPENDENT per decay.
+  Here the pair is same-decay by construction, so this is cascade summing.)
 - **Results** (default geometry, ±7 mm detector): Co-60 shows a clean **2505 keV sum peak** sitting ABOVE both Compton
   edges; slope 2.04 = ∝ε². Cs-137 → **exactly 0 summing** (single line — the honest null that confirms the backlog's
   "∝ε² so small" note). Na-22 → the back-to-back 511s can't both reach a one-sided detector, so the **511+511 (1022)
@@ -1256,3 +1258,10 @@ the camera. (Activates the `EmissionLine.CascadeCoincident` flag that was reserv
 - Magnitude is genuinely small (sum/decay ~1e-5 even at 18 mm), confirming cascade summing is a minor effect for a
   coded-aperture camera's small solid angle — real, ∝ε², but second-order. (Tests: `CascadeSummingTests`, +5 — decay
   scheme correlation incl. back-to-back 511s + MC ∝ε² slope + Cs-137 null.)
+- **Codex cross-verification** (gpt-5.5, read-only): physics broadly CORRECT — no sign error, no back-to-back mistake,
+  no double-counting; decay schemes/branches, the `t=dist/(−dir.Z)` acceptance geometry, and the clean-sum metric all
+  sound. Framing corrections applied: (i) **slope-2 does NOT by itself distinguish cascade from random pile-up** —
+  pile-up also scales ∝ε² in a distance sweep; the real discriminator is rate-independence (fixed the "no random
+  process reproduces this" overclaim in docs/CLI/tests). (ii) `CrystalDeposit` enters at NORMAL incidence only, so
+  absolute yields are approximate (scaling/peak position unaffected) — now documented. (iii) Co-60 W(θ) is A₂≈0.10
+  (~10% close-geometry correction), not "few %"; noted as an ignored approximation.
