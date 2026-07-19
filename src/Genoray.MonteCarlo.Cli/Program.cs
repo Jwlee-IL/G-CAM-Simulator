@@ -59,6 +59,9 @@ if (args[0].Equals("maskscatter", StringComparison.OrdinalIgnoreCase))
 if (args[0].Equals("nonprop", StringComparison.OrdinalIgnoreCase))
     return RunNonProp(args);
 
+if (args[0].Equals("finitesrc", StringComparison.OrdinalIgnoreCase))
+    return RunFiniteSource(args);
+
 if (args[0].Equals("array", StringComparison.OrdinalIgnoreCase))
     return RunArray(args);
 
@@ -1282,6 +1285,52 @@ static int RunDeadTime(string[] args)
     Console.WriteLine("Non-paralyzable saturates toward 1/τ; paralyzable PEAKS at R=1/τ then collapses (paralysis).");
     Console.WriteLine("Live fraction = recorded/true = the live-time vs real-time correction a real acquisition applies.");
     Console.WriteLine($"CSV written: {csvPath}");
+    return 0;
+}
+
+static int RunFiniteSource(string[] args)
+{
+    if (args.Length < 2)
+    {
+        Console.Error.WriteLine("Usage: montecarlo finitesrc <base.json> [out.csv]");
+        Console.Error.WriteLine("  Finite (extended) source: reconstruction blur / washout vs source diameter, plus");
+        Console.Error.WriteLine("  capsule self-attenuation (662 keV vs a low-energy line) vs wall thickness.");
+        return 1;
+    }
+
+    string csvPath = args.Length >= 3 ? args[2] : "samples/finitesrc.csv";
+    var cfg = ConfigLoader.Load(args[1]);
+    var study = new FiniteSourceStudy();
+
+    double[] dias = [0, 1, 2, 3, 4, 5, 6, 8, 11, 16];
+    var (rows, _, _, _) = study.Run(cfg, dias, 0.0, 0.0, photonCount: 3_000_000, cfg.Seed);
+    File.WriteAllText(csvPath, FiniteSourceStudy.ToCsv(rows));
+
+    // Sealed-source capsule (steel-equivalent walls; a small ceramic/salt pellet). μ (per mm): 662 keV vs a 32 keV
+    // Ba K X-ray — representative, since the sim has no material database.
+    double[] tc = [0, 0.25, 0.5, 1, 2, 4];
+    var caps = study.CapsuleSweep(tc, pelletDiameterMm: 3.0,
+        muPelletPrimary: 0.030, muCapsulePrimary: 0.057, muPelletLowE: 0.5, muCapsuleLowE: 0.94, samples: 1_000_000);
+    File.WriteAllText(csvPath.Replace(".csv", "_capsule.csv"), FiniteSourceStudy.CapsuleCsv(caps));
+
+    Console.WriteLine($"Finite-source study: {dias.Length} diameters, {rows[0].ReconPeakFwhmMm:F2} mm point-source resolution.");
+    Console.WriteLine("A finite source blurs the coded reconstruction and, once its size ~ the coded resolution, washes");
+    Console.WriteLine("the shadow out (contrast peak/secondary → 1, localization lost).");
+    Console.WriteLine();
+    Console.WriteLine("   diameter   reconFWHM   contrast   bias(mm)   note");
+    Console.WriteLine("   --------   ---------   --------   --------   ----");
+    foreach (var r in rows)
+    {
+        string note = r.ReconConfidence < 1.05 ? "WASHED OUT" : (r.DiameterMm == 0 ? "point" : "");
+        Console.WriteLine($"   {r.DiameterMm,6:F1}      {r.ReconPeakFwhmMm,7:F2}    {r.ReconConfidence,7:F3}    {r.LocalizationBiasMm,6:F2}    {note}");
+    }
+    Console.WriteLine();
+    Console.WriteLine("Capsule self-attenuation (steel-equiv. wall; 3 mm pellet) — the low-energy line is killed far more:");
+    Console.WriteLine("   wall(mm)   T(662keV)   T(32keV)");
+    Console.WriteLine("   --------   ---------   --------");
+    foreach (var c in caps)
+        Console.WriteLine($"   {c.ThicknessMm,6:F2}      {c.TransmissionPrimary,7:F3}    {c.TransmissionLowE,7:F3}");
+    Console.WriteLine($"CSV written: {csvPath} (+ _capsule.csv)");
     return 0;
 }
 

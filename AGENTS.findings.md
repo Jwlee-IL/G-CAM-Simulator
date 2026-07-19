@@ -1331,3 +1331,20 @@ intrinsic resolution, with zero photon-counting noise.
   is the full pulse-height spectrum (photopeak + continuum). One documented SIMPLIFICATION: photoelectric absorption
   deposits the whole remaining energy as one electron (no shell-binding + Auger/X-ray sub-cascade), so the
   photoabsorption-event spread is a slight UNDER-estimate — the derived component is a lower bound.
+
+## 47. Finite source size + capsule self-attenuation — `FiniteSourceStudy` / `montecarlo finitesrc`
+Physics-realism-audit item (source subsystem, item E): the source was an ideal mathematical POINT. Real sources are a
+finite active pellet in a sealed capsule. Two effects:
+- **Source SIZE → reconstruction blur, then washout.** `FiniteSourceStudy.Run` builds the coded flood by transporting
+  photons from emission points sampled inside a sphere (diameter swept) and decodes it. The reconstruction peak is the
+  point response CONVOLVED with the source's projected profile, so the source blur adds in QUADRATURE: negligible while
+  the source is below the point resolution (≈2.5 mm here), then growing — **FWHM 2.50 mm (point) → 2.75 mm at 4 mm dia**.
+  The dramatic effect is on CONTRAST (peak/secondary): it falls monotonically (1.18 → 1.09 at 4 mm → ~1.03 at 5–6 mm),
+  and once the source approaches the coded resolution the shadow **WASHES OUT** — contrast → 1 (no peak above the
+  sidelobes) and localization is lost (bias jumps to several mm). A hard source-size limit, not just a blur.
+- **CAPSULE self-attenuation** (`CapsuleSweep`): gammas escaping the pellet + capsule attenuate ∝ exp(−μ·path) with an
+  energy-dependent μ. The 662 keV primary mostly survives a few mm of steel (T 0.97 → 0.77 at 4 mm), but a **32 keV Ba
+  K X-ray is killed far more** (T 0.61 → 0.014) — so a capsule strips the soft lines from a Cs-137 source's spectrum.
+- Self-contained (does not change the main source/pipeline). The contrast (peak/secondary) is the clean washout tracker
+  — the FWHM metric itself becomes meaningless once the peak dies. (Tests: `FiniteSourceTests`, +2 — blur→washout via
+  contrast, capsule low-E suppression.)
