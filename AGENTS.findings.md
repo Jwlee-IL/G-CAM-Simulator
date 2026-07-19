@@ -1371,10 +1371,21 @@ aperture as the forward model).
   cross-correlation decoder uses, and iterates MLEM. Opt-in — the pipeline still defaults to cross-correlation.
 - **`MlemStudy` / `montecarlo mlem`** decodes the SAME coded floods both ways and compares. Headline TWO-SOURCE
   SEPARATION: MLEM deconvolves a close pair into two non-negative peaks where cross-correlation shows one merged blob.
-  **Minimum resolvable separation: MLEM 1.5 mm vs cross-correlation 3.5 mm** (~2.3×), on the default geometry (point
-  resolution ≈2.5 mm). At 3 mm the MLEM valley depth is 0.82 (two clear peaks) vs cross-correlation's 0.17 (merged).
+  **MLEM cleanly splits 2–3 mm pairs cross-correlation merges** (min resolvable ~2 mm vs ~3.5 mm), on the default
+  geometry (point resolution ≈2.5 mm). At 3 mm the MLEM valley depth is 0.82 (two clear peaks) vs cross-correlation's
+  0.17 (merged). (The metric is truth-centred, so its deepest-separation ~1.5 mm number is optimistic; the robust,
+  test-backed claim is the 2–3 mm split.)
 - **Single-source**: MLEM is **NON-NEGATIVE** (min recon 0.00) while cross-correlation dips to −103 (negative
   sidelobes), and MLEM deconvolves to a **sharper peak** (FWHM 1.76 mm vs 2.50 mm) at comparable localization bias
   (0.87 vs 0.55 mm). The cost is iteration and the usual MLEM resolution/noise trade-off with iteration count.
 - Self-contained (builds both decoders + floods from the config geometry; the main pipeline is untouched). (Tests:
   `MlemTests`, +2 — non-negativity & sharpness vs sidelobes, resolves closer pairs than cross-correlation.)
+- **Codex cross-verification** (gpt-5.5, read-only): the MLEM CORE is CORRECT — standard zero-background ML-EM update
+  (forward-project, ratio, back-project, ÷ sensitivity, multiplicative), `A[j·nDet+i]` indexing consistent, flat λ=1
+  start fine, and the system-matrix ray geometry MATCHES the flood generator (no sign/transpose/mirror/index bug).
+  Framing tightened per its notes (no code change): `A_ij` is a binary pixel-CENTRE sample (no pixel-area / cos·r²
+  integration) — a good approximation, not an exact forward model; the ghost-suppression benefit needs the FINITE
+  forward model (`Cyclic = false`) and is a capability, not what the default cyclic demo exercises; the ~1.5 mm number
+  is optimistic (truth-centred metric windows overlap below ~2 mm) so the robust claim is the 2–3 mm split; and the
+  sharper-peak / closer-resolving results are iteration- and count-dependent (an ideal high-count study, not a general
+  camera resolution limit).

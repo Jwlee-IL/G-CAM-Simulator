@@ -1333,6 +1333,8 @@ static int RunMlem(string[] args)
     Console.WriteLine($"Minimum resolvable separation:  cross-correlation {CrossRes(),0:F1} mm  vs  MLEM {MlemRes(),0:F1} mm.");
     Console.WriteLine("MLEM deconvolves the physical forward model to a non-negative distribution, so it separates pairs");
     Console.WriteLine("cross-correlation merges (and has no negative sidelobes). Cost: iteration + a resolution/noise trade-off.");
+    Console.WriteLine("(Ideal high-count binary-aperture demo; the valley metric is truth-centred so ~1.5 mm is optimistic —");
+    Console.WriteLine(" the robust split is 2-3 mm. The ghost-suppression benefit needs the finite forward model, Cyclic=false.)");
     Console.WriteLine($"CSV written: {csvPath} (+ _profile.csv: the 3 mm-separation reconstruction profiles)");
     return 0;
 }

@@ -12,11 +12,14 @@ namespace Genoray.MonteCarlo.Decoding;
 /// <code>
 ///   λ_j ← (λ_j / s_j) · Σ_i A_ij · y_i / (Σ_j' A_ij' λ_j' + b_i),   s_j = Σ_i A_ij
 /// </code>
-/// where the system matrix <c>A_ij</c> is the probability a photon from source cell j reaches detector pixel i — for a
-/// coded aperture, 1 when the ray j→i crosses an OPEN mask cell, else 0. Using the true (finite) aperture as the
-/// forward model, MLEM is non-negative, has no decoding sidelobes, suppresses the partially-coded-FOV ghost, and
-/// DECONVOLVES nearby sources that cross-correlation cannot separate. The cost is iteration (and the usual MLEM
-/// resolution/noise trade-off with iteration count). Opt-in: the pipeline still defaults to cross-correlation.
+/// where the system matrix <c>A_ij</c> approximates the probability a photon from source cell j reaches detector
+/// pixel i — for a coded aperture, 1 when the ray j→i (pixel CENTRE) crosses an OPEN mask cell, else 0. (It is a
+/// binary pixel-centre sample: it does not integrate over pixel area or the cos/r² emission weighting, a good
+/// approximation for the compact default geometry.) MLEM is non-negative, has no decoding sidelobes, and DECONVOLVES
+/// nearby sources that cross-correlation cannot separate. With the FINITE aperture (<c>Cyclic = false</c>) it also
+/// suppresses the partially-coded-FOV ghost that cyclic decoding aliases; it honours the geometry's Cyclic flag. The
+/// cost is iteration and the usual MLEM resolution/noise trade-off with iteration count. Opt-in: the pipeline still
+/// defaults to cross-correlation.
 /// </summary>
 public sealed class MlemDecoder : IDecoder
 {

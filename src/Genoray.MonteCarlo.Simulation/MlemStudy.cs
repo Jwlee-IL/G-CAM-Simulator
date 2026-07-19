@@ -26,6 +26,14 @@ public sealed record MlemSingle(
 /// argmath picks a single peak, while MLEM deconvolves the physical forward model into two non-negative peaks, so it
 /// resolves pairs at a smaller separation. Also reports the single-source non-negativity (MLEM ≥ 0, cross-corr dips
 /// negative) and peak sharpness. Self-contained: builds the floods and both decoders from the config geometry.
+///
+/// Caveats (this is an IDEAL high-count binary-aperture demonstration, not a general resolution limit): the floods
+/// use the same binary pixel-centre forward model MLEM inverts, so there is no model mismatch; both decoders run in
+/// the config's mode (default <c>Cyclic = true</c>), so the ghost-suppression benefit of the finite forward model is
+/// a capability, not what this demo exercises. MLEM's sharper peak and closer resolving are iteration- and
+/// count-dependent (early/late stopping trades resolution for noise). The <see cref="ValleyDepth"/> metric is
+/// truth-centred, so the deepest-separation numbers (≈1.5 mm) are optimistic; the robust, test-backed claim is that
+/// MLEM splits 2–3 mm pairs cross-correlation merges.
 /// </summary>
 public sealed class MlemStudy
 {
@@ -119,7 +127,9 @@ public sealed class MlemStudy
         return flood;
     }
 
-    // Depth of the valley between the two source peaks along the central recon row: 1 − dip/mean(peaks).
+    // Depth of the valley between the two source peaks along the central recon row: 1 − dip/mean(peaks). The peak
+    // windows are TRUTH-centred (±2 cells), so below ~2 mm separation they can overlap and the metric is optimistic —
+    // it is a comparative indicator, not a blind resolution measurement.
     private static double ValleyDepth(DecodeResult res, double sepMm)
     {
         var recon = res.Reconstruction;
