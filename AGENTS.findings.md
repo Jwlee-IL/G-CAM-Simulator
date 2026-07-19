@@ -1299,3 +1299,27 @@ impact + energy-window mitigation.
   notes: simplified ideal-slab mask scope, arriving-energy (not measured-detector-energy) window, confidence is an
   internal contrast proxy (not a full SNR), and window-removal is gap-dependent (~39 % close → ≈0 wide), not a flat
   "~25–35 %".
+
+## 46. Scintillator non-proportionality — intrinsic resolution from first principles — `NonProportionality` / `NonProportionalityStudy` / `montecarlo nonprop`
+Next physics-realism-audit item (crystal subsystem, item D): the front-end sets the crystal's intrinsic resolution as
+a hand-tuned CONSTANT (`FrontEndConfig.IntrinsicResolutionFwhm`, "GAGG ~0.05"). Its real origin is NON-PROPORTIONALITY:
+the light yield per keV, nP(E), varies with the depositing ELECTRON's energy. A full-energy gamma deposits through a
+Compton CASCADE of electrons whose composition varies event-to-event (a single photoelectron vs a recoil + a
+photoelectron + …), so the total light Σ Eᵢ·nP(Eᵢ) fluctuates even though Σ Eᵢ is fixed at the photopeak — THAT is the
+intrinsic resolution, with zero photon-counting noise.
+- **`NonProportionality`** carries representative literature electron-response curves normalized to 1.0 at 662 keV:
+  `NaI` (strong low-energy light deficit), `CsI` (intermediate-energy excess), `Gagg` (comparatively proportional,
+  a few %), and `Proportional` (nP≡1). Not spectroscopic-grade — the shapes drive the mechanism.
+- **`NonProportionalityStudy` / `montecarlo nonprop`** transports the cascade (the SAME `ComptonModel` the detector
+  uses), applies every crystal's nP to the SAME cascade, and reports the intrinsic photopeak FWHM = FWHM(Σ Eᵢ·nP(Eᵢ))
+  over full-energy events, per energy. Self-contained (does not change the detector).
+- **Results**: the intrinsic resolution EMERGES from the physics and is **exactly 0 for a proportional crystal** (the
+  mechanism check — the whole effect is non-proportionality, nothing else) and is **ENERGY-DEPENDENT**, which a constant
+  floor cannot be: NaI **2.5 % @122 keV → 0.6 % @1332** (its low-energy deficit shrinks as high-energy electrons
+  dominate), GAGG ~0.7–1.5 %, CsI ~2–2.9 %. There is also a non-proportional PEAK SHIFT / energy non-linearity (lines
+  land off their true keV because nP is normed to 662; CsI +5 % @122 keV).
+- **Honest decomposition**: GAGG's derived electron-non-proportionality is only **~1.5 % at 662** — well BELOW the
+  config's hand-set ~3–5 % intrinsic floor. So most of that floor is OTHER (light-collection non-uniformity, Ce
+  concentration, SiPM), not electron non-proportionality — the study separates the two. GAGG being comparatively
+  proportional is exactly why this camera's crystal is a good choice. (Tests: `NonProportionalityTests`, +4 — response
+  curves, proportional→0, energy dependence, GAGG < CsI.)

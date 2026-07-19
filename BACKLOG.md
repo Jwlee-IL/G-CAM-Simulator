@@ -1,15 +1,16 @@
 # Backlog
 
 Deferred work, captured so we don't forget. Not in current scope. See
-`AGENTS.findings.md` (themes 1–45) for everything that IS done.
+`AGENTS.findings.md` (themes 1–46) for everything that IS done.
 
 **Genuinely open**: the **Physical realism gaps** list below (Codex gap-review after theme 35) is now mostly DONE —
-themes 36–45 cleared thermal drift + flood-field, pile-up sum continuum, mask fabrication tolerances, alignment/pose,
-bad/dead/hot pixels, mask fluorescence/scatter, dead time, sub-cell peak interpolation, cascade summing, and mask
-forward-scatter imaging impact. A 5-subsystem Codex **physics-realism audit** (2026-07-18) surfaced the next tier —
-✓ mask forward-scatter (theme 45); still open: **MLEM/likelihood reconstruction** (vs cross-correlation peak-picking →
-depth & multi-source), **non-proportional light yield**, **finite source size / capsule self-attenuation**, decoder
-pixel-area/DOI PSF, thermal-drift DCR/PDE extension. Still small/open: per-channel SiPM mismatch, intrinsic activity. Also open: exact Artix-7 Fmax in Vivado (deferred — install friction; `vivado_trap.tcl`
+themes 36–46 cleared thermal drift + flood-field, pile-up sum continuum, mask fabrication tolerances, alignment/pose,
+bad/dead/hot pixels, mask fluorescence/scatter, dead time, sub-cell peak interpolation, cascade summing, mask
+forward-scatter imaging impact, and non-proportional intrinsic resolution. A 5-subsystem Codex **physics-realism audit**
+(2026-07-18) surfaced the next tier — ✓ mask forward-scatter (45), ✓ non-proportionality (46); still open:
+**MLEM/likelihood reconstruction** (vs cross-correlation peak-picking → depth & multi-source), **finite source size /
+capsule self-attenuation**, decoder pixel-area/DOI PSF, thermal-drift DCR/PDE extension. Still small/open: per-channel
+SiPM mismatch, intrinsic activity. Also open: exact Artix-7 Fmax in Vivado (deferred — install friction; `vivado_trap.tcl`
 ready); integrate the theme-22 SiPM/thermal/shield productization models into the C# pipeline (design-only, user isn't
 building it). Deferred by choice: mask TILT (pitch/yaw), mask WARPING, reflector MATERIAL (all 2nd-order).
 

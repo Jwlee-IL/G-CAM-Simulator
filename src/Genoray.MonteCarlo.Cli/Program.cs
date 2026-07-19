@@ -56,6 +56,9 @@ if (args[0].Equals("cascade", StringComparison.OrdinalIgnoreCase))
 if (args[0].Equals("maskscatter", StringComparison.OrdinalIgnoreCase))
     return RunMaskScatter(args);
 
+if (args[0].Equals("nonprop", StringComparison.OrdinalIgnoreCase))
+    return RunNonProp(args);
+
 if (args[0].Equals("array", StringComparison.OrdinalIgnoreCase))
     return RunArray(args);
 
@@ -1279,6 +1282,56 @@ static int RunDeadTime(string[] args)
     Console.WriteLine("Non-paralyzable saturates toward 1/τ; paralyzable PEAKS at R=1/τ then collapses (paralysis).");
     Console.WriteLine("Live fraction = recorded/true = the live-time vs real-time correction a real acquisition applies.");
     Console.WriteLine($"CSV written: {csvPath}");
+    return 0;
+}
+
+static int RunNonProp(string[] args)
+{
+    if (args.Length < 2)
+    {
+        Console.Error.WriteLine("Usage: montecarlo nonprop <base.json> [out.csv]");
+        Console.Error.WriteLine("  Derives the crystal's INTRINSIC (non-proportional) resolution from the Compton cascade");
+        Console.Error.WriteLine("  + a scintillator light-yield curve nP(E), instead of the hand-set constant floor.");
+        return 1;
+    }
+
+    string csvPath = args.Length >= 3 ? args[2] : "samples/nonprop.csv";
+    var cfg = ConfigLoader.Load(args[1]);
+    double mu662 = cfg.Detector.CrystalAttenuationPerMm > 0 ? cfg.Detector.CrystalAttenuationPerMm : 0.09;
+    double depth = cfg.Detector.CrystalThicknessMm > 0 ? cfg.Detector.CrystalThicknessMm : 10.0;
+    double[] energies = [122, 356, 511, 662, 1000, 1332];
+    var crystals = new[] { NonProportionality.Proportional, NonProportionality.Gagg, NonProportionality.NaI, NonProportionality.CsI };
+    const long samples = 1_000_000;
+
+    var (pts, spectra, bin, max) = new NonProportionalityStudy(mu662, depth)
+        .Run(energies, crystals, samples, cfg.Seed, spectrumEnergyKeV: 662.0);
+    File.WriteAllText(csvPath, NonProportionalityStudy.ToCsv(pts));
+    var ss = new System.Text.StringBuilder();
+    ss.AppendLine("e_keV," + string.Join(",", crystals.Select(c => c.Name)));
+    for (int i = 0; i < spectra[0].Length; i++)
+        ss.AppendLine($"{(i + 0.5) * bin:F1}," + string.Join(",", spectra.Select(s => s[i].ToString("F0"))));
+    File.WriteAllText(csvPath.Replace(".csv", "_spectrum662.csv"), ss.ToString());
+
+    Console.WriteLine($"Non-proportionality study: intrinsic resolution from the cascade + nP(E), {samples:N0} events/energy.");
+    Console.WriteLine("The light per keV varies with electron energy, so a full-energy cascade's total light fluctuates");
+    Console.WriteLine("even at fixed deposited energy — the intrinsic floor, with NO photon-counting noise.");
+    Console.WriteLine();
+    Console.Write("   energy ");
+    foreach (var c in crystals) Console.Write($"{c.Name,10}");
+    Console.WriteLine("   (intrinsic FWHM %)");
+    Console.WriteLine("   ------ " + string.Concat(crystals.Select(_ => "  --------")));
+    foreach (double e in energies)
+    {
+        Console.Write($"   {e,5:F0}  ");
+        foreach (var c in crystals)
+            Console.Write($"{pts.Single(p => p.Crystal == c.Name && p.EnergyKeV == e).IntrinsicFwhmPct,10:F2}");
+        Console.WriteLine();
+    }
+    Console.WriteLine();
+    Console.WriteLine("Exactly 0 for a proportional crystal (the whole effect IS non-proportionality); ENERGY-DEPENDENT, so");
+    Console.WriteLine("the hand-set constant floor is a simplification. GAGG is comparatively proportional (~1-1.5% at 662,");
+    Console.WriteLine("below the total intrinsic floor — the rest is light-collection / Ce non-uniformity, not electron nP).");
+    Console.WriteLine($"CSV written: {csvPath} (+ _spectrum662.csv: the 662 keV photopeak, no counting noise)");
     return 0;
 }
 
