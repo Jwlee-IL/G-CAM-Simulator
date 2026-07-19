@@ -30,6 +30,13 @@ public sealed record CapsuleRow(double ThicknessMm, double TransmissionPrimary, 
 /// The size-blur study builds the flood by real transport from emission points sampled in a sphere and decodes it;
 /// the capsule study is an attenuation MC over emission point + direction. Self-contained (it does not change the main
 /// source/pipeline).
+///
+/// Scope: the flood uses an IDEAL binary zero-thickness MURA lookup at the mask mid-plane (no tungsten leakage /
+/// hole-fraction / taper / fabrication / alignment / detector attenuation) — the ideal coded primary shadow, not the
+/// full tungsten-slab response. The quadrature blur is a small-blur heuristic (the projected sphere is non-Gaussian
+/// with some z-defocus). "Washout" means THIS point-source argmax decoder no longer has a unique peak, not that an
+/// extended source carries no information. The capsule sweep uses the pellet exit path plus a steel-EQUIVALENT normal
+/// wall thickness (not exact spherical-shell transport).
 /// </summary>
 public sealed class FiniteSourceStudy
 {
@@ -126,7 +133,7 @@ public sealed class FiniteSourceStudy
                 var p = radius > 0 ? RandomInSphere(rng, radius) : new Vector3(0, 0, 0);
                 var dir = rng.NextOnUnitSphere();
                 double pelletPath = RayExitDistanceFromSphere(p, dir, radius);   // path through remaining pellet
-                double capsulePath = tc;                                          // ≈ shell thickness along exit
+                double capsulePath = tc;   // steel-EQUIVALENT normal wall thickness (not exact spherical-shell path)
                 sumP += Math.Exp(-muPelletPrimary * pelletPath - muCapsulePrimary * capsulePath);
                 sumL += Math.Exp(-muPelletLowE * pelletPath - muCapsuleLowE * capsulePath);
             }
@@ -151,15 +158,16 @@ public sealed class FiniteSourceStudy
         double baseline = sorted[sorted.Count / 2];                     // median of the peak row ≈ sidelobe floor
         double half = baseline + 0.5 * (peak - baseline);
 
-        // Interpolated half-max crossings either side of the peak column.
-        double left = bx, right = bx;
+        // Interpolated half-max crossings either side of the peak column. If a crossing is missing (a broad,
+        // edge-clipped, or washed-out peak) the FWHM is meaningless — return NaN rather than a truncated width.
+        double left = double.NaN, right = double.NaN;
         for (int x = bx; x > 0; x--)
             if (peakRow[x] >= half && peakRow[x - 1] < half)
             { left = x - 1 + (half - peakRow[x - 1]) / (peakRow[x] - peakRow[x - 1]); break; }
         for (int x = bx; x < recon.Width - 1; x++)
             if (peakRow[x] >= half && peakRow[x + 1] < half)
             { right = x + (peakRow[x] - half) / (peakRow[x] - peakRow[x + 1]); break; }
-        return (right - left) * res.ReconStepMm;
+        return (right - left) * res.ReconStepMm;   // NaN if either crossing was not found
     }
 
     private static Vector3 RandomInSphere(IRandom rng, double radius)

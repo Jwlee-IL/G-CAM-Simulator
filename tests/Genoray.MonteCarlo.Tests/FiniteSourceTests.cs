@@ -30,7 +30,8 @@ public class FiniteSourceTests
         Assert.True(small.ReconPeakFwhmMm > point.ReconPeakFwhmMm, "a finite source should widen the reconstruction peak");
         Assert.True(small.ReconConfidence < point.ReconConfidence, "a finite source should lower the reconstruction contrast");
 
-        // A source as large as the coded FOV washes the shadow out — contrast → 1 (no peak), localization lost.
+        // A source large relative to the coded RESOLUTION (14 mm vs a ~2.5 mm point response) washes the shadow out
+        // — contrast → 1 (no peak above the sidelobes), localization lost.
         Assert.True(huge.ReconConfidence < 1.05, $"a huge source should wash the shadow out, contrast {huge.ReconConfidence:F2}");
         Assert.True(huge.LocalizationBiasMm > small.LocalizationBiasMm, "washout should destroy localization");
     }

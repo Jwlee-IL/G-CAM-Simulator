@@ -1337,8 +1337,9 @@ Physics-realism-audit item (source subsystem, item E): the source was an ideal m
 finite active pellet in a sealed capsule. Two effects:
 - **Source SIZE → reconstruction blur, then washout.** `FiniteSourceStudy.Run` builds the coded flood by transporting
   photons from emission points sampled inside a sphere (diameter swept) and decodes it. The reconstruction peak is the
-  point response CONVOLVED with the source's projected profile, so the source blur adds in QUADRATURE: negligible while
-  the source is below the point resolution (≈2.5 mm here), then growing — **FWHM 2.50 mm (point) → 2.75 mm at 4 mm dia**.
+  point response CONVOLVED with the source's projected profile, so the source blur adds roughly in QUADRATURE (a
+  small-blur heuristic): negligible while the source is below the point resolution (≈2.5 mm here), then growing —
+  **FWHM 2.50 mm (point) → 2.75 mm at 4 mm dia**.
   The dramatic effect is on CONTRAST (peak/secondary): it falls monotonically (1.18 → 1.09 at 4 mm → ~1.03 at 5–6 mm),
   and once the source approaches the coded resolution the shadow **WASHES OUT** — contrast → 1 (no peak above the
   sidelobes) and localization is lost (bias jumps to several mm). A hard source-size limit, not just a blur.
@@ -1346,5 +1347,14 @@ finite active pellet in a sealed capsule. Two effects:
   energy-dependent μ. The 662 keV primary mostly survives a few mm of steel (T 0.97 → 0.77 at 4 mm), but a **32 keV Ba
   K X-ray is killed far more** (T 0.61 → 0.014) — so a capsule strips the soft lines from a Cs-137 source's spectrum.
 - Self-contained (does not change the main source/pipeline). The contrast (peak/secondary) is the clean washout tracker
-  — the FWHM metric itself becomes meaningless once the peak dies. (Tests: `FiniteSourceTests`, +2 — blur→washout via
-  contrast, capsule low-E suppression.)
+  — the FWHM metric itself becomes meaningless once the peak dies (returns NaN on a missing half-max crossing). (Tests:
+  `FiniteSourceTests`, +2 — blur→washout via contrast, capsule low-E suppression.)
+- **Codex cross-verification** (gpt-5.5, read-only): geometry/transport CORRECT — `RandomInSphere` is volume-uniform
+  (dir·radius·∛u), depositing at the detector landing `aim` is right (the source offset blurs the shadow through the
+  mask-plane crossing, so no extra shift is needed), the `A·|cos|/(4πr²)` weight is correct, and there is NO
+  source-support bias here (direct primaries land at `aim`); `RayExitDistanceFromSphere` and the mean exp(−μ·path) are
+  correct. Framing tightened per its notes: the flood is the IDEAL binary zero-thickness coded shadow (not the full
+  tungsten-slab response); "quadrature" is a small-blur heuristic (non-Gaussian projected sphere + z-defocus);
+  "washout" is THIS argmax decoder's limit, not a fundamental information loss; the capsule sweep is a steel-EQUIVALENT
+  normal thickness, not exact spherical-shell transport; and `PeakFwhmMm` now returns NaN (not a truncated width) when
+  a half-max crossing is missing.
