@@ -1,16 +1,16 @@
 # Backlog
 
 Deferred work, captured so we don't forget. Not in current scope. See
-`AGENTS.findings.md` (themes 1–47) for everything that IS done.
+`AGENTS.findings.md` (themes 1–48) for everything that IS done.
 
 **Genuinely open**: the **Physical realism gaps** list below (Codex gap-review after theme 35) is now mostly DONE —
-themes 36–47 cleared thermal drift + flood-field, pile-up sum continuum, mask fabrication tolerances, alignment/pose,
+themes 36–48 cleared thermal drift + flood-field, pile-up sum continuum, mask fabrication tolerances, alignment/pose,
 bad/dead/hot pixels, mask fluorescence/scatter, dead time, sub-cell peak interpolation, cascade summing, mask
-forward-scatter imaging impact, non-proportional intrinsic resolution, and finite-source blur / capsule self-attenuation.
-A 5-subsystem Codex **physics-realism audit** (2026-07-18) surfaced the next tier — ✓ mask forward-scatter (45),
-✓ non-proportionality (46), ✓ finite source (47); still open: **MLEM/likelihood reconstruction** (vs cross-correlation
-peak-picking → depth & multi-source), decoder pixel-area/DOI PSF, thermal-drift DCR/PDE extension. Still small/open:
-per-channel SiPM mismatch, intrinsic activity. Also open: exact Artix-7 Fmax in Vivado (deferred — install friction; `vivado_trap.tcl`
+forward-scatter, non-proportional intrinsic resolution, finite-source blur / capsule self-attenuation, and MLEM
+reconstruction. The 5-subsystem Codex **physics-realism audit** (2026-07-18) next tier is now: ✓ mask forward-scatter
+(45), ✓ non-proportionality (46), ✓ finite source (47), ✓ MLEM (48); still open (smaller): decoder pixel-area/DOI PSF,
+thermal-drift DCR/PDE extension, per-channel SiPM mismatch, intrinsic activity. MLEM opens follow-ons: a likelihood
+DEPTH estimate and iteration/noise regularization. Also open: exact Artix-7 Fmax in Vivado (deferred — install friction; `vivado_trap.tcl`
 ready); integrate the theme-22 SiPM/thermal/shield productization models into the C# pipeline (design-only, user isn't
 building it). Deferred by choice: mask TILT (pitch/yaw), mask WARPING, reflector MATERIAL (all 2nd-order).
 

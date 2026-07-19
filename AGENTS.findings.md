@@ -1358,3 +1358,23 @@ finite active pellet in a sealed capsule. Two effects:
   "washout" is THIS argmax decoder's limit, not a fundamental information loss; the capsule sweep is a steel-EQUIVALENT
   normal thickness, not exact spherical-shell transport; and `PeakFwhmMm` now returns NaN (not a truncated width) when
   a half-max crossing is missing.
+
+## 48. MLEM (Poisson-likelihood) reconstruction — `MlemDecoder` / `MlemStudy` / `montecarlo mlem`
+The biggest physics-realism-audit item (reconstruction subsystem, item C): the only decoder was cross-correlation — a
+single linear back-projection with the ±1 decoding array. It is fast but leaves NEGATIVE sidelobes, aliases off-axis
+sources into a ghost, and MERGES nearby sources into one blurred peak that its argmax then picks. `MlemDecoder` adds
+the statistical alternative: iterate the physical FORWARD model to the source distribution λ ≥ 0 that maximizes the
+Poisson likelihood of the detector counts, `λ_j ← (λ_j/s_j)·Σ_i A_ij·y_i/(Σ_j' A_ij' λ_j'+b_i)`, where the system
+matrix `A_ij` is 1 when the ray from source cell j to detector pixel i crosses an OPEN mask cell (the true finite
+aperture as the forward model).
+- **`MlemDecoder` (Decoding)** implements `IDecoder`, builds/caches the system matrix from the same geometry the
+  cross-correlation decoder uses, and iterates MLEM. Opt-in — the pipeline still defaults to cross-correlation.
+- **`MlemStudy` / `montecarlo mlem`** decodes the SAME coded floods both ways and compares. Headline TWO-SOURCE
+  SEPARATION: MLEM deconvolves a close pair into two non-negative peaks where cross-correlation shows one merged blob.
+  **Minimum resolvable separation: MLEM 1.5 mm vs cross-correlation 3.5 mm** (~2.3×), on the default geometry (point
+  resolution ≈2.5 mm). At 3 mm the MLEM valley depth is 0.82 (two clear peaks) vs cross-correlation's 0.17 (merged).
+- **Single-source**: MLEM is **NON-NEGATIVE** (min recon 0.00) while cross-correlation dips to −103 (negative
+  sidelobes), and MLEM deconvolves to a **sharper peak** (FWHM 1.76 mm vs 2.50 mm) at comparable localization bias
+  (0.87 vs 0.55 mm). The cost is iteration and the usual MLEM resolution/noise trade-off with iteration count.
+- Self-contained (builds both decoders + floods from the config geometry; the main pipeline is untouched). (Tests:
+  `MlemTests`, +2 — non-negativity & sharpness vs sidelobes, resolves closer pairs than cross-correlation.)

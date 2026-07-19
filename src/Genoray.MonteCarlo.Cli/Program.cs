@@ -62,6 +62,9 @@ if (args[0].Equals("nonprop", StringComparison.OrdinalIgnoreCase))
 if (args[0].Equals("finitesrc", StringComparison.OrdinalIgnoreCase))
     return RunFiniteSource(args);
 
+if (args[0].Equals("mlem", StringComparison.OrdinalIgnoreCase))
+    return RunMlem(args);
+
 if (args[0].Equals("array", StringComparison.OrdinalIgnoreCase))
     return RunArray(args);
 
@@ -1285,6 +1288,52 @@ static int RunDeadTime(string[] args)
     Console.WriteLine("Non-paralyzable saturates toward 1/τ; paralyzable PEAKS at R=1/τ then collapses (paralysis).");
     Console.WriteLine("Live fraction = recorded/true = the live-time vs real-time correction a real acquisition applies.");
     Console.WriteLine($"CSV written: {csvPath}");
+    return 0;
+}
+
+static int RunMlem(string[] args)
+{
+    if (args.Length < 2)
+    {
+        Console.Error.WriteLine("Usage: montecarlo mlem <base.json> [out.csv]");
+        Console.Error.WriteLine("  MLEM (Poisson-likelihood) reconstruction vs cross-correlation: two-source resolving");
+        Console.Error.WriteLine("  power, non-negativity, and peak sharpness on the same coded floods.");
+        return 1;
+    }
+
+    string csvPath = args.Length >= 3 ? args[2] : "samples/mlem.csv";
+    var cfg = ConfigLoader.Load(args[1]);
+    double[] seps = [1, 1.5, 2, 2.5, 3, 3.5, 4, 5, 6];
+    const int iters = 80;
+
+    var (rows, single, cp, mp, pstep, porigin) = new MlemStudy().Run(cfg, seps, photonCount: 1_500_000,
+        mlemIterations: iters, seed: cfg.Seed, profileSeparationMm: 3.0);
+    File.WriteAllText(csvPath, MlemStudy.ToCsv(rows));
+    var sb = new System.Text.StringBuilder();
+    sb.AppendLine("x_mm,cross,mlem");
+    for (int i = 0; i < cp.Length; i++)
+        sb.AppendLine($"{porigin + i * pstep:F2},{cp[i]:F5},{(i < mp.Length ? mp[i] : 0):F5}");
+    File.WriteAllText(csvPath.Replace(".csv", "_profile.csv"), sb.ToString());
+
+    double? CrossRes() => rows.Where(r => r.CrossResolved).Select(r => (double?)r.SeparationMm).FirstOrDefault();
+    double? MlemRes() => rows.Where(r => r.MlemResolved).Select(r => (double?)r.SeparationMm).FirstOrDefault();
+
+    Console.WriteLine($"MLEM vs cross-correlation ({iters} iterations, 1.5M photons).");
+    Console.WriteLine();
+    Console.WriteLine($"  Single source: bias  cross {single.CrossBiasMm:F2} / MLEM {single.MlemBiasMm:F2} mm;  " +
+                      $"min value  cross {single.CrossMinValue:F1} (negative sidelobes) / MLEM {single.MlemMinValue:F2} (≥0);  " +
+                      $"peak FWHM  cross {single.CrossPeakFwhmMm:F2} / MLEM {single.MlemPeakFwhmMm:F2} mm.");
+    Console.WriteLine();
+    Console.WriteLine("   separation   cross valley   MLEM valley   (resolved if > 0.25)");
+    Console.WriteLine("   ----------   ------------   -----------");
+    foreach (var r in rows)
+        Console.WriteLine($"   {r.SeparationMm,7:F1}      {r.CrossValleyDepth,8:F3}{(r.CrossResolved ? " Y" : "  ")}    " +
+                          $"{r.MlemValleyDepth,8:F3}{(r.MlemResolved ? " Y" : "  ")}");
+    Console.WriteLine();
+    Console.WriteLine($"Minimum resolvable separation:  cross-correlation {CrossRes(),0:F1} mm  vs  MLEM {MlemRes(),0:F1} mm.");
+    Console.WriteLine("MLEM deconvolves the physical forward model to a non-negative distribution, so it separates pairs");
+    Console.WriteLine("cross-correlation merges (and has no negative sidelobes). Cost: iteration + a resolution/noise trade-off.");
+    Console.WriteLine($"CSV written: {csvPath} (+ _profile.csv: the 3 mm-separation reconstruction profiles)");
     return 0;
 }
 
