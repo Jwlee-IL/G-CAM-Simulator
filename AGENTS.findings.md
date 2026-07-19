@@ -1300,7 +1300,7 @@ impact + energy-window mitigation.
   internal contrast proxy (not a full SNR), and window-removal is gap-dependent (~39 % close → ≈0 wide), not a flat
   "~25–35 %".
 
-## 46. Scintillator non-proportionality — intrinsic resolution from first principles — `NonProportionality` / `NonProportionalityStudy` / `montecarlo nonprop`
+## 46. Scintillator non-proportionality — the intrinsic-resolution COMPONENT from first principles — `NonProportionality` / `NonProportionalityStudy` / `montecarlo nonprop`
 Next physics-realism-audit item (crystal subsystem, item D): the front-end sets the crystal's intrinsic resolution as
 a hand-tuned CONSTANT (`FrontEndConfig.IntrinsicResolutionFwhm`, "GAGG ~0.05"). Its real origin is NON-PROPORTIONALITY:
 the light yield per keV, nP(E), varies with the depositing ELECTRON's energy. A full-energy gamma deposits through a
@@ -1323,3 +1323,11 @@ intrinsic resolution, with zero photon-counting noise.
   concentration, SiPM), not electron non-proportionality — the study separates the two. GAGG being comparatively
   proportional is exactly why this camera's crystal is a good choice. (Tests: `NonProportionalityTests`, +4 — response
   curves, proportional→0, energy dependence, GAGG < CsI.)
+- **Codex cross-verification** (gpt-5.5, read-only): physics CORRECT — Welford variance, FWHM = 2.355·σ/mean, the
+  ÷mean normalization, full-energy identification, and the shared-cascade variance reduction all sound; nP tables sane
+  and 662-normalized; proportional→0 by construction. Framing tightened per its notes: the reported FWHM is the
+  non-proportionality COMPONENT, not the whole intrinsic floor (already the finding's point, now labelled so in
+  study/CLI/records); `PeakShift` is a RAW pre-calibration offset (a real Cs-137 calibration zeroes 662); the 662 CSV
+  is the full pulse-height spectrum (photopeak + continuum). One documented SIMPLIFICATION: photoelectric absorption
+  deposits the whole remaining energy as one electron (no shell-binding + Auger/X-ray sub-cascade), so the
+  photoabsorption-event spread is a slight UNDER-estimate — the derived component is a lower bound.

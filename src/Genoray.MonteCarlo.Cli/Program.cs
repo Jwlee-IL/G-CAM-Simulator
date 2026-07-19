@@ -1312,13 +1312,13 @@ static int RunNonProp(string[] args)
         ss.AppendLine($"{(i + 0.5) * bin:F1}," + string.Join(",", spectra.Select(s => s[i].ToString("F0"))));
     File.WriteAllText(csvPath.Replace(".csv", "_spectrum662.csv"), ss.ToString());
 
-    Console.WriteLine($"Non-proportionality study: intrinsic resolution from the cascade + nP(E), {samples:N0} events/energy.");
+    Console.WriteLine($"Non-proportionality study: the nP COMPONENT of intrinsic resolution from the cascade + nP(E), {samples:N0} events/energy.");
     Console.WriteLine("The light per keV varies with electron energy, so a full-energy cascade's total light fluctuates");
-    Console.WriteLine("even at fixed deposited energy — the intrinsic floor, with NO photon-counting noise.");
+    Console.WriteLine("even at fixed deposited energy — the non-proportionality resolution, with NO photon-counting noise.");
     Console.WriteLine();
     Console.Write("   energy ");
     foreach (var c in crystals) Console.Write($"{c.Name,10}");
-    Console.WriteLine("   (intrinsic FWHM %)");
+    Console.WriteLine("   (non-proportionality FWHM component, %)");
     Console.WriteLine("   ------ " + string.Concat(crystals.Select(_ => "  --------")));
     foreach (double e in energies)
     {
@@ -1328,10 +1328,11 @@ static int RunNonProp(string[] args)
         Console.WriteLine();
     }
     Console.WriteLine();
-    Console.WriteLine("Exactly 0 for a proportional crystal (the whole effect IS non-proportionality); ENERGY-DEPENDENT, so");
-    Console.WriteLine("the hand-set constant floor is a simplification. GAGG is comparatively proportional (~1-1.5% at 662,");
-    Console.WriteLine("below the total intrinsic floor — the rest is light-collection / Ce non-uniformity, not electron nP).");
-    Console.WriteLine($"CSV written: {csvPath} (+ _spectrum662.csv: the 662 keV photopeak, no counting noise)");
+    Console.WriteLine("Exactly 0 for a proportional crystal (this component IS non-proportionality); ENERGY-DEPENDENT, so a");
+    Console.WriteLine("constant floor can't capture it. GAGG is comparatively proportional (~1-1.5% at 662, BELOW the total");
+    Console.WriteLine("intrinsic floor — the rest is light-collection / Ce non-uniformity / SiPM, not electron nP). Photo-");
+    Console.WriteLine("absorption is modelled as one full-energy electron (no binding/Auger), so this slightly under-counts.");
+    Console.WriteLine($"CSV written: {csvPath} (+ _spectrum662.csv: the 662 keV pulse-height spectrum, photopeak + continuum, no counting noise)");
     return 0;
 }
 

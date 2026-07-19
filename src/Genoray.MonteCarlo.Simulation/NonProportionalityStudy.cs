@@ -3,24 +3,29 @@ using Genoray.MonteCarlo.Detector;
 
 namespace Genoray.MonteCarlo.Simulation;
 
-/// <summary>One energy × crystal: the INTRINSIC (non-proportional) photopeak resolution that emerges from the cascade.</summary>
+/// <summary>One energy × crystal: the non-proportionality COMPONENT of the photopeak resolution, from the cascade.</summary>
 public sealed record NonPropPoint(
     double EnergyKeV,
     string Crystal,
-    double IntrinsicFwhmPct,   // FWHM of the non-proportional light over full-energy events, ÷ its mean
-    double PeakShiftPct,       // non-proportional photopeak centroid vs the true energy (calibration bias)
+    double IntrinsicFwhmPct,   // FWHM of the non-proportional light over full-energy events ÷ its mean (the nP COMPONENT)
+    double PeakShiftPct,       // RAW non-proportional centroid vs true energy (pre-calibration; a Cs-137 cal zeroes 662)
     double FullEnergyFrac);    // fraction of events that fully absorbed (the photopeak efficiency here)
 
 /// <summary>
-/// Derives the crystal's INTRINSIC (non-proportional) energy resolution from FIRST PRINCIPLES instead of the hand-set
-/// constant floor (<c>FrontEndConfig.IntrinsicResolutionFwhm</c>). A full-energy gamma deposits its energy through a
-/// Compton CASCADE of electrons; each electron's light is Eᵢ·nP(Eᵢ) with the scintillator's non-proportional response
-/// (<see cref="NonProportionality"/>). Because the cascade composition varies event-to-event, the total light
-/// Σ Eᵢ·nP(Eᵢ) fluctuates even though Σ Eᵢ is fixed at the photopeak — that fluctuation IS the intrinsic resolution,
-/// with ZERO photon-counting noise added. The study transports the cascade (the same <see cref="ComptonModel"/>
-/// physics the main detector uses), applies every candidate crystal's nP to the SAME cascade, and reports the
-/// resulting intrinsic FWHM per energy — showing it is ENERGY-DEPENDENT (a constant floor cannot be), and exactly 0
-/// for a perfectly proportional crystal (the mechanism check). Self-contained: it does not change the detector.
+/// Derives the NON-PROPORTIONALITY COMPONENT of the crystal's intrinsic resolution from FIRST PRINCIPLES — the part
+/// the front-end otherwise buries in one hand-set constant (<c>FrontEndConfig.IntrinsicResolutionFwhm</c>). A
+/// full-energy gamma deposits through a Compton CASCADE of electrons; each electron's light is Eᵢ·nP(Eᵢ) with the
+/// scintillator's non-proportional response (<see cref="NonProportionality"/>). Because the cascade composition varies
+/// event-to-event, the total light Σ Eᵢ·nP(Eᵢ) fluctuates even though Σ Eᵢ is fixed at the photopeak — that fluctuation
+/// is the non-proportional resolution, with ZERO photon-counting noise. The study transports the cascade (the same
+/// <see cref="ComptonModel"/> physics the main detector uses), applies every candidate crystal's nP to the SAME
+/// cascade, and reports the resulting FWHM per energy — showing it is ENERGY-DEPENDENT (a constant floor cannot be),
+/// and exactly 0 for a perfectly proportional crystal (the mechanism check). It is only the nP COMPONENT: the full
+/// intrinsic floor also has light-collection / Ce-uniformity / SiPM terms this does not model.
+///
+/// Simplification: photoelectric absorption deposits the WHOLE remaining photon energy as one electron — it omits the
+/// shell binding + Auger/X-ray sub-cascade, which would put a little more energy through low-nP-energy electrons, so
+/// the photoabsorption-event spread here is a slight UNDER-estimate. Self-contained: it does not change the detector.
 /// </summary>
 public sealed class NonProportionalityStudy
 {
