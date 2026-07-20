@@ -14,6 +14,22 @@ MLEM opens follow-ons: a likelihood DEPTH estimate and iteration/noise regulariz
 ready); integrate the theme-22 SiPM/thermal/shield productization models into the C# pipeline (design-only, user isn't
 building it). Deferred by choice: mask TILT (pitch/yaw), mask WARPING, reflector MATERIAL (all 2nd-order).
 
+**✓ DONE (2026-07-20) — loose-end cleanup:** (a) **CR-RC⁴ constant** — the RTL default + cocotb param carried the
+wrong `A_Q16=53667`; realigned `crrc_shaper.sv`/`run_cocotb.py`/`trap_ref.py` to the correct `53656` (= round(e⁻⁰·²·
+65536)), so C#↔RTL CR-RC is now genuinely bit-exact (7 cocotb re-run green). (b) **WPF Compton stripping** — per-pixel
+`max(0, low − Σ R·high)` behind a "Compton strip" toggle, R calibrated per isotope-pair in PrepareLive, so a lower
+isotope CO-LOCATED with a higher one separates in the image (test `ComptonStripping_RecoversCoLocatedCsCount`).
+
+**★ Optional polish — take-it-or-leave-it (repo is complete without these; none is blocking):**
+- **Vivado exact Artix-7 Fmax** — `vivado_trap.tcl` ready; ECP5/nextpnr already gives an Fmax proxy, so this only
+  swaps "proxy → measured". Install-friction gated. Low value.
+- **Mask K-edge proper NIST split** — `CodedApertureMask` μ(E) below 122 keV is a documented approximation (69.4 keV
+  = below-edge; the 70–122 keV above-edge region is under-attenuated). No isotope line sits there and a 10 mm mask is
+  opaque regardless, so nil practical effect — only worth it for curve fidelity, needs verified NIST-XCOM values.
+- **per-channel SiPM/preamp gain·PDE·threshold mismatch**, **intrinsic activity** (LYSO Lu-176 / LaBr₃ La-138 — nil for GAGG).
+- **MLEM follow-ons**: likelihood DEPTH estimate, iteration/noise regularization, finite-mask (Cyclic=false) ghost demo.
+- Deferred by choice (2nd-order): mask TILT (pitch/yaw), mask WARPING, reflector MATERIAL.
+
 **✓ DONE (2026-07-20) — docs modernization pass** (extended after an adversarial Codex + Claude re-review caught a
 half-done first attempt): (1) **`AGENTS.md`** *Solution layout* table refreshed — every `…Core/…Configuration/…Detector/
 …Simulation/…Decoding/…Cli` row now names the new subsystems (MLEM, non-proportionality, cascade, finite-source, DOI,
