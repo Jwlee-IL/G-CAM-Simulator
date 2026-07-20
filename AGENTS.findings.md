@@ -927,8 +927,8 @@ K = 1/τ_s in Q16, each stage feeding the next same sample) → a Gamma-shaped s
   theme 31 already establishes the cusp's near-optimal-ENC benchmark. So the RTL shaper family is
   trapezoid + pipelined-trapezoid + CR-RC (+ baseline restorer), with the cusp as the paper reference.
 
-## 34. WPF viewer app + native C# waveform + interactive source localization — `src/Genoray.MonteCarlo.Wpf`
-A ScottPlot WPF app (`Genoray.MonteCarlo.Wpf`, net9.0-windows) that RUNS the sim interactively — a scene
+## 34. WPF viewer app + native C# waveform + interactive source localization — `src/Gcam.Wpf`
+A ScottPlot WPF app (`Gcam.Wpf`, net9.0-windows) that RUNS the sim interactively — a scene
 editor over the tabs plus Waveform / Imaging / Spectrum / Optics tabs. The build arc surfaced real physics
 (several corrected my own mistakes — GUI can't be self-verified, so every claim was MC-checked):
 - **Native C# waveform** (`Detector/Waveform.cs`): bi-exp rasterizer + trapezoidal & CR-RC^4 shapers + BLR +

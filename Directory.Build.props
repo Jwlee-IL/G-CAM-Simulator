@@ -3,7 +3,6 @@
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <Company>Genoray</Company>
-    <Product>Genoray.MonteCarlo</Product>
+    <Product>Gcam</Product>
   </PropertyGroup>
 </Project>

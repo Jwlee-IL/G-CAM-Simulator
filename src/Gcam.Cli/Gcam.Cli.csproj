@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\Gcam.Core\Gcam.Core.csproj" />
+    <ProjectReference Include="..\Gcam.Configuration\Gcam.Configuration.csproj" />
+    <ProjectReference Include="..\Gcam.Masks\Gcam.Masks.csproj" />
+    <ProjectReference Include="..\Gcam.Simulation\Gcam.Simulation.csproj" />
+    <ProjectReference Include="..\Gcam.Detector\Gcam.Detector.csproj" />
+    <ProjectReference Include="..\Gcam.Decoding\Gcam.Decoding.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+</Project>

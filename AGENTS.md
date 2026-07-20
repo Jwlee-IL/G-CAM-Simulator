@@ -1,4 +1,4 @@
-# AGENTS.md — Genoray.MonteCarlo (GCAM)
+# AGENTS.md — Gcam (GCAM)
 
 Guidance for AI agents and contributors working on this repository.
 
@@ -23,7 +23,7 @@ modelling pass (thermal, pile-up, fabrication/alignment tolerances, non-proporti
 
 ## Solution layout
 
-`Genoray.MonteCarlo.sln`, all projects target **net9.0** (C#). Shared build settings
+`Gcam.sln`, all projects target **net9.0** (C#). Shared build settings
 in `Directory.Build.props` (nullable + implicit usings enabled).
 
 | Project | Role |
@@ -34,7 +34,7 @@ in `Directory.Build.props` (nullable + implicit usings enabled).
 | `src/…Detector` | `CrystalDetector` / `ComptonCrystalDetector` (`IDetector` — ray→pixel scoring, Compton transport), `ComptonModel` (Klein-Nishina), `CrystalUniformity` (per-pixel gain/resolution + photopeak window), `FrontEndModel` (photoelectron-budget resolution + DCR), `Waveform` (native C# shaper, bit-exact to RTL), `ThermalDrift` (gain/DCR/PDE vs T), `NonProportionality` (electron-response curves), `DetectorDefects` (dead/hot maps + repair), `MaskSecondary` (W fluorescence/scatter), `EntranceAbsorber` (source capsule/window) |
 | `src/…Decoding` | `CrossCorrelationDecoder` (`IDecoder`, ±1 back-projection + optional sub-cell interp), `MlemDecoder` (`IDecoder`, Poisson-likelihood ML-EM), `PeakInterpolation` (tent/parabolic/gaussian), `CodedApertureGeometry` |
 | `src/…Simulation` | `SimulationRunner`, `ISimulationFactory`/`DefaultSimulationFactory` (+ `ComptonFactory`), sources (`IsotropicSource`, `DetectorBiasedSource`, `MixedFieldSource`), `DecayScheme` (per-decay correlated gammas), `EventStreamStudy` (timed MC stream → pile-up), and one study class per theme (`SourceSweep`, `ParameterScan`, `NoiseStudy`, `ThicknessStudy`, `UniformityStudy`, `ArrayStudy`, `ComptonStudy`, `DepthStudy`/`DepthDesignStudy`, `MaskGeometryStudy`, `BackgroundStudy`, `ShieldStudy`, `MixedFieldStudy`, `MaskAntimaskStudy`, plus the realism-gap studies: `ThermalDriftStudy`/`ThermalReadoutStudy`, `MaskFabricationStudy`, `AlignmentStudy`, `DetectorDefectStudy`, `MaskSecondaryStudy`/`MaskScatterStudy`, `DeadTime`/`DeadTimeStudy`, `SubCellStudy`, `CascadeSummingStudy`, `NonProportionalityStudy`, `FiniteSourceStudy`, `MlemStudy`, `DoiParallaxStudy`) |
-| `src/…Wpf` | `Genoray.MonteCarlo.Wpf` (net9.0-windows, ScottPlot 5): interactive scene editor + Waveform/Imaging/Spectrum/Optics/Detector tabs; one acquisition drives all tabs. Can't be headless-tested — verify it *compiles* (theme 34–35) |
+| `src/…Wpf` | `Gcam.Wpf` (net9.0-windows, ScottPlot 5): interactive scene editor + Waveform/Imaging/Spectrum/Optics/Detector tabs; one acquisition drives all tabs. Can't be headless-tested — verify it *compiles* (theme 34–35) |
 | `src/…Cli` | Console entrypoint `montecarlo`: single run + **~39** study sub-commands (`sweep`, `scan`, `noise`, the Compton/depth/mask-geometry/mixed-field/front-end set, and the realism-gap set `thermal`…`doi` — see Build/run for the full list) |
 | `tests/…Tests` | xUnit harness — ~34 test files / **145 test cases** (+ 7 cocotb in `rtl/`): MURA properties (`MuraGeneratorTests`) + end-to-end physics invariants (`PipelineTests`) + per-theme physics classes (localization, ghost, biasing-unbiased, stopping power, dead time, sub-cell, cascade, non-proportionality, MLEM, DOI, …) |
 
@@ -79,94 +79,94 @@ Coordinate frame (optical axis = z):
 ## Build / run
 
 ```bash
-dotnet build Genoray.MonteCarlo.sln -c Release
-dotnet test  Genoray.MonteCarlo.sln   # 145 cases across ~34 files: MURA properties + pipeline
+dotnet build Gcam.sln -c Release
+dotnet test  Gcam.sln   # 145 cases across ~34 files: MURA properties + pipeline
                                        # physics invariants + one class per theme (dead time,
                                        # sub-cell, cascade, non-prop, MLEM, DOI, …). 7 cocotb tests in rtl/.
 
 # single scenario → prints flood map + reconstruction + estimate
-dotnet run --project src/Genoray.MonteCarlo.Cli -c Release -- samples/scenario.json
+dotnet run --project src/Gcam.Cli -c Release -- samples/scenario.json
 
 # source-position sweep → FCFOV map, cyclic vs non-cyclic, writes sweep_*.csv
-dotnet run --project src/Genoray.MonteCarlo.Cli -c Release -- sweep samples/scenario.json
+dotnet run --project src/Gcam.Cli -c Release -- sweep samples/scenario.json
 
 # configuration scan (rank × cell pitch × mask-detector distance) → scan.csv
-dotnet run --project src/Genoray.MonteCarlo.Cli -c Release -- scan samples/scenario.json samples/scan.csv
+dotnet run --project src/Gcam.Cli -c Release -- scan samples/scenario.json samples/scan.csv
 
 # noise study: localization accuracy vs detected counts (Poisson) → noise.csv
-dotnet run --project src/Genoray.MonteCarlo.Cli -c Release -- noise samples/scenario.json samples/noise.csv
+dotnet run --project src/Gcam.Cli -c Release -- noise samples/scenario.json samples/noise.csv
 
 # tungsten thickness optimization (use a wide-FOV config to see collimation) → thickness.csv
-dotnet run --project src/Genoray.MonteCarlo.Cli -c Release -- thickness samples/scenario.json samples/thickness.csv
+dotnet run --project src/Gcam.Cli -c Release -- thickness samples/scenario.json samples/thickness.csv
 
 # crystal non-uniformity + flood correction → uniformity.csv
-dotnet run --project src/Genoray.MonteCarlo.Cli -c Release -- uniformity samples/scenario.json samples/uniformity.csv
+dotnet run --project src/Gcam.Cli -c Release -- uniformity samples/scenario.json samples/uniformity.csv
 
 # detector array (pixel pitch/count) sampling sweep → array.csv
-dotnet run --project src/Genoray.MonteCarlo.Cli -c Release -- array samples/scenario.json samples/array.csv
+dotnet run --project src/Gcam.Cli -c Release -- array samples/scenario.json samples/array.csv
 
 # crystal material presets (GAGG, CeBr3, LaBr3, LYSO, BGO, NaI, GAGG:Mg) in samples/materials/
-dotnet run --project src/Genoray.MonteCarlo.Cli -c Release -- samples/materials/CeBr3.json
+dotnet run --project src/Gcam.Cli -c Release -- samples/materials/CeBr3.json
 
 # single-mask vs mask/antimask vs additive background → antimask.csv
-dotnet run --project src/Genoray.MonteCarlo.Cli -c Release -- antimask samples/scenario.json samples/antimask.csv
+dotnet run --project src/Gcam.Cli -c Release -- antimask samples/scenario.json samples/antimask.csv
 
 # --- physical-realism gap studies (themes 36–50; see AGENTS.findings.md) ---
 # thermal drift during acquisition (ambient + self-heating) → window walk / flood residual → thermal_{off,on}.csv
-dotnet run --project src/Genoray.MonteCarlo.Cli -c Release -- thermal  samples/scenario.json samples/thermal
+dotnet run --project src/Gcam.Cli -c Release -- thermal  samples/scenario.json samples/thermal
 # random-coincidence pile-up SUM continuum in the spectrum → pileup.csv
-dotnet run --project src/Genoray.MonteCarlo.Cli -c Release -- pileup   samples/scenario.json samples/pileup.csv
+dotnet run --project src/Gcam.Cli -c Release -- pileup   samples/scenario.json samples/pileup.csv
 # mask fabrication tolerances vs an ideal decoder (usability threshold) → maskfab.csv
-dotnet run --project src/Genoray.MonteCarlo.Cli -c Release -- maskfab  samples/scenario.json samples/maskfab.csv
+dotnet run --project src/Gcam.Cli -c Release -- maskfab  samples/scenario.json samples/maskfab.csv
 # mask–detector alignment / pose error (systematic bias) → align.csv
-dotnet run --project src/Genoray.MonteCarlo.Cli -c Release -- align    samples/scenario.json samples/align.csv
+dotnet run --project src/Gcam.Cli -c Release -- align    samples/scenario.json samples/align.csv
 # bad (dead/hot) detector pixels + bad-pixel-map repair → defects.csv
-dotnet run --project src/Genoray.MonteCarlo.Cli -c Release -- defects  samples/scenario.json samples/defects.csv
+dotnet run --project src/Gcam.Cli -c Release -- defects  samples/scenario.json samples/defects.csv
 # mask tungsten secondaries (Compton scatter + W K-fluorescence) → masksec.csv
-dotnet run --project src/Genoray.MonteCarlo.Cli -c Release -- masksec  samples/scenario.json samples/masksec.csv
+dotnet run --project src/Gcam.Cli -c Release -- masksec  samples/scenario.json samples/masksec.csv
 # counting-system dead time (non-paralyzable / paralyzable) + live fraction → deadtime.csv
-dotnet run --project src/Genoray.MonteCarlo.Cli -c Release -- deadtime samples/scenario.json samples/deadtime.csv
+dotnet run --project src/Gcam.Cli -c Release -- deadtime samples/scenario.json samples/deadtime.csv
 # sub-cell peak interpolation (tent/parabolic/gaussian vs argmax floor) vs recon step → subcell.csv (+_trace.csv)
-dotnet run --project src/Genoray.MonteCarlo.Cli -c Release -- subcell  samples/scenario.json samples/subcell.csv
+dotnet run --project src/Gcam.Cli -c Release -- subcell  samples/scenario.json samples/subcell.csv
 # true (cascade) coincidence summing (Co-60 1173+1332→2505, ∝ε²); isotope from config → cascade.csv (+_spectrum.csv)
-dotnet run --project src/Genoray.MonteCarlo.Cli -c Release -- cascade  samples/scenario_co60.json samples/cascade.csv
+dotnet run --project src/Gcam.Cli -c Release -- cascade  samples/scenario_co60.json samples/cascade.csv
 # mask forward-scatter folded into the coded image (contamination vs gap, window recovery) → maskscatter.csv (+_spectrum.csv)
-dotnet run --project src/Genoray.MonteCarlo.Cli -c Release -- maskscatter samples/scenario.json samples/maskscatter.csv
+dotnet run --project src/Gcam.Cli -c Release -- maskscatter samples/scenario.json samples/maskscatter.csv
 # scintillator non-proportionality → intrinsic resolution from the cascade + nP(E) → nonprop.csv (+_spectrum662.csv)
-dotnet run --project src/Genoray.MonteCarlo.Cli -c Release -- nonprop  samples/scenario.json samples/nonprop.csv
+dotnet run --project src/Gcam.Cli -c Release -- nonprop  samples/scenario.json samples/nonprop.csv
 # finite source size (recon blur/washout) + capsule self-attenuation (662 vs low-E) → finitesrc.csv (+_capsule.csv)
-dotnet run --project src/Genoray.MonteCarlo.Cli -c Release -- finitesrc samples/scenario.json samples/finitesrc.csv
+dotnet run --project src/Gcam.Cli -c Release -- finitesrc samples/scenario.json samples/finitesrc.csv
 # MLEM (Poisson-likelihood) vs cross-correlation: two-source resolving power, non-negativity → mlem.csv (+_profile.csv)
-dotnet run --project src/Genoray.MonteCarlo.Cli -c Release -- mlem     samples/scenario.json samples/mlem.csv
+dotnet run --project src/Gcam.Cli -c Release -- mlem     samples/scenario.json samples/mlem.csv
 # thermal DCR/PDE readout effects (dark rate, low-E vs photopeak resolution) vs temperature → thermalro.csv
-dotnet run --project src/Genoray.MonteCarlo.Cli -c Release -- thermalro samples/scenario.json samples/thermalro.csv
+dotnet run --project src/Gcam.Cli -c Release -- thermalro samples/scenario.json samples/thermalro.csv
 # depth-of-interaction (DOI) parallax: off-axis localization shift vs thickness -> doi.csv
-dotnet run --project src/Genoray.MonteCarlo.Cli -c Release -- doi      samples/scenario.json samples/doi.csv
+dotnet run --project src/Gcam.Cli -c Release -- doi      samples/scenario.json samples/doi.csv
 
 # --- multi-isotope / Compton / depth / mask-geometry / front-end studies (themes 15–34) ---
 # crystal-Compton multi-isotope separation (spatial + spectral energy-window) — theme 15–17
-dotnet run --project src/Genoray.MonteCarlo.Cli -c Release -- compton       samples/scenario.json
-dotnet run --project src/Genoray.MonteCarlo.Cli -c Release -- compton-strip samples/scenario.json
+dotnet run --project src/Gcam.Cli -c Release -- compton       samples/scenario.json
+dotnet run --project src/Gcam.Cli -c Release -- compton-strip samples/scenario.json
 # mixed multi-isotope field: image + localize all sources, energy-window/stripping separation — theme 26
-dotnet run --project src/Genoray.MonteCarlo.Cli -c Release -- mixedfield    samples/scenario.json
-dotnet run --project src/Genoray.MonteCarlo.Cli -c Release -- mixediso      samples/scenario.json
-dotnet run --project src/Genoray.MonteCarlo.Cli -c Release -- mixedstrip    samples/scenario.json
+dotnet run --project src/Gcam.Cli -c Release -- mixedfield    samples/scenario.json
+dotnet run --project src/Gcam.Cli -c Release -- mixediso      samples/scenario.json
+dotnet run --project src/Gcam.Cli -c Release -- mixedstrip    samples/scenario.json
 # depth (z) estimation: refocusing, joint x/y/z, 3D, and the depth-from-focus design study — themes 18–24, 34
-dotnet run --project src/Genoray.MonteCarlo.Cli -c Release -- depth         samples/scenario.json
-dotnet run --project src/Genoray.MonteCarlo.Cli -c Release -- depth-joint   samples/scenario.json
-dotnet run --project src/Genoray.MonteCarlo.Cli -c Release -- depth3d       samples/scenario.json
-dotnet run --project src/Genoray.MonteCarlo.Cli -c Release -- depthdesign   samples/scenario.json
+dotnet run --project src/Gcam.Cli -c Release -- depth         samples/scenario.json
+dotnet run --project src/Gcam.Cli -c Release -- depth-joint   samples/scenario.json
+dotnet run --project src/Gcam.Cli -c Release -- depth3d       samples/scenario.json
+dotnet run --project src/Gcam.Cli -c Release -- depthdesign   samples/scenario.json
 # mask channel geometry / optimal size / tapered channels — themes 20–23
-dotnet run --project src/Genoray.MonteCarlo.Cli -c Release -- maskgeo       samples/scenario.json
-dotnet run --project src/Genoray.MonteCarlo.Cli -c Release -- masksize      samples/scenario.json
-dotnet run --project src/Genoray.MonteCarlo.Cli -c Release -- masktaper     samples/scenario.json
+dotnet run --project src/Gcam.Cli -c Release -- maskgeo       samples/scenario.json
+dotnet run --project src/Gcam.Cli -c Release -- masksize      samples/scenario.json
+dotnet run --project src/Gcam.Cli -c Release -- masktaper     samples/scenario.json
 # ambient background + directional shield leak — theme 28; antimask over a full scene
-dotnet run --project src/Genoray.MonteCarlo.Cli -c Release -- background     samples/scenario.json
-dotnet run --project src/Genoray.MonteCarlo.Cli -c Release -- shield         samples/scenario.json
-dotnet run --project src/Genoray.MonteCarlo.Cli -c Release -- antimask-scene samples/scenario.json
+dotnet run --project src/Gcam.Cli -c Release -- background     samples/scenario.json
+dotnet run --project src/Gcam.Cli -c Release -- shield         samples/scenario.json
+dotnet run --project src/Gcam.Cli -c Release -- antimask-scene samples/scenario.json
 # timed MC → RTL event stream (drives the cocotb shaper) — theme 27; physical front-end folded into C# — theme 32
-dotnet run --project src/Genoray.MonteCarlo.Cli -c Release -- eventstream   samples/scenario.json
-dotnet run --project src/Genoray.MonteCarlo.Cli -c Release -- frontend      samples/scenario.json
+dotnet run --project src/Gcam.Cli -c Release -- eventstream   samples/scenario.json
+dotnet run --project src/Gcam.Cli -c Release -- frontend      samples/scenario.json
 ```
 
 Sample scenarios in `samples/`: `scenario.json` (centered), `scenario_offaxis.json`
