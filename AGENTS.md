@@ -15,8 +15,11 @@ decoding of that image localizes the source. Historically the source position wa
 found by physically moving the isotope around; this project replaces that with
 simulation so the geometry, decoder, and mask design can be swept programmatically.
 
-Started 2026-07-08. It began as a hobby rebuild and grew into an experiment platform
-(FCFOV mapping, ghost-artifact study, configuration optimization).
+Started 2026-07-08. It began as a hobby rebuild and grew into a 50-theme experiment
+platform: FCFOV/ghost mapping and configuration optimization, then crystal-Compton
+multi-isotope separation, depth estimation, MLEM reconstruction, a full detector/front-end
+chain (with a SystemVerilog + cocotb RTL path and a WPF viewer app), and a physical-realism
+modelling pass (thermal, pile-up, fabrication/alignment tolerances, non-proportionality, DOI).
 
 ## Solution layout
 
@@ -26,14 +29,14 @@ in `Directory.Build.props` (nullable + implicit usings enabled).
 | Project | Role |
 |---|---|
 | `src/…Core` | Domain primitives: `Vector3`, `Ray`, `Photon`, `IRandom`+`DefaultRandom`, `DetectorImage`, `Sampling`, `SubCellMethod`, result records, and the pipeline interfaces (`ISource`, `IMask`, `IDetector`, `IDecoder`) |
-| `src/…Configuration` | `SimulationConfig` (+ `Source`/`Mask`/`Detector`/`Geometry`/`Decoder`/`FrontEnd` sections) and `ConfigLoader` (System.Text.Json) |
+| `src/…Configuration` | `SimulationConfig` (+ `Source`/`Mask`/`Detector`/`Geometry`/`Decoder`/`FrontEnd`/`Background` sections; multi-source `Sources[]` + `SourceConfig.Lines[]`/`EmissionLine` for mixed fields) and `ConfigLoader` (System.Text.Json) |
 | `src/…Masks` | `MaskPattern`, `MuraGenerator` (rank-p MURA, mosaic, decoding array), `CodedApertureMask` (`IMask`; focal/taper/pose/fabrication-error transforms), `MaskFabrication` (per-cell machining error) |
 | `src/…Detector` | `CrystalDetector` / `ComptonCrystalDetector` (`IDetector` — ray→pixel scoring, Compton transport), `ComptonModel` (Klein-Nishina), `CrystalUniformity` (per-pixel gain/resolution + photopeak window), `FrontEndModel` (photoelectron-budget resolution + DCR), `Waveform` (native C# shaper, bit-exact to RTL), `ThermalDrift` (gain/DCR/PDE vs T), `NonProportionality` (electron-response curves), `DetectorDefects` (dead/hot maps + repair), `MaskSecondary` (W fluorescence/scatter), `EntranceAbsorber` (source capsule/window) |
 | `src/…Decoding` | `CrossCorrelationDecoder` (`IDecoder`, ±1 back-projection + optional sub-cell interp), `MlemDecoder` (`IDecoder`, Poisson-likelihood ML-EM), `PeakInterpolation` (tent/parabolic/gaussian), `CodedApertureGeometry` |
 | `src/…Simulation` | `SimulationRunner`, `ISimulationFactory`/`DefaultSimulationFactory` (+ `ComptonFactory`), sources (`IsotropicSource`, `DetectorBiasedSource`, `MixedFieldSource`), `DecayScheme` (per-decay correlated gammas), `EventStreamStudy` (timed MC stream → pile-up), and one study class per theme (`SourceSweep`, `ParameterScan`, `NoiseStudy`, `ThicknessStudy`, `UniformityStudy`, `ArrayStudy`, `ComptonStudy`, `DepthStudy`/`DepthDesignStudy`, `MaskGeometryStudy`, `BackgroundStudy`, `ShieldStudy`, `MixedFieldStudy`, `MaskAntimaskStudy`, plus the realism-gap studies: `ThermalDriftStudy`/`ThermalReadoutStudy`, `MaskFabricationStudy`, `AlignmentStudy`, `DetectorDefectStudy`, `MaskSecondaryStudy`/`MaskScatterStudy`, `DeadTime`/`DeadTimeStudy`, `SubCellStudy`, `CascadeSummingStudy`, `NonProportionalityStudy`, `FiniteSourceStudy`, `MlemStudy`, `DoiParallaxStudy`) |
 | `src/…Wpf` | `Genoray.MonteCarlo.Wpf` (net9.0-windows, ScottPlot 5): interactive scene editor + Waveform/Imaging/Spectrum/Optics/Detector tabs; one acquisition drives all tabs. Can't be headless-tested — verify it *compiles* (theme 34–35) |
-| `src/…Cli` | Console entrypoint `montecarlo`: single run + ~23 study sub-commands (`sweep`, `scan`, `noise`, … through the realism-gap set `thermal`…`doi` — see Build/run) |
-| `tests/…Tests` | xUnit harness — MURA properties (`MuraGeneratorTests`) + end-to-end physics invariants (`PipelineTests`) + one test class per theme (localization, ghost, biasing-unbiased, stopping power, dead time, sub-cell, cascade, non-proportionality, MLEM, DOI, …) |
+| `src/…Cli` | Console entrypoint `montecarlo`: single run + **~39** study sub-commands (`sweep`, `scan`, `noise`, the Compton/depth/mask-geometry/mixed-field/front-end set, and the realism-gap set `thermal`…`doi` — see Build/run for the full list) |
+| `tests/…Tests` | xUnit harness — ~34 test files / **145 test cases** (+ 7 cocotb in `rtl/`): MURA properties (`MuraGeneratorTests`) + end-to-end physics invariants (`PipelineTests`) + per-theme physics classes (localization, ghost, biasing-unbiased, stopping power, dead time, sub-cell, cascade, non-proportionality, MLEM, DOI, …) |
 
 ### Design principle
 Everything is **data-driven**: one `SimulationConfig` (JSON) fully describes a
@@ -77,8 +80,9 @@ Coordinate frame (optical axis = z):
 
 ```bash
 dotnet build Genoray.MonteCarlo.sln -c Release
-dotnet test  Genoray.MonteCarlo.sln   # harness: MURA properties + pipeline physics invariants
-                                       # (localization, ghost, biasing-unbiased, stopping power, ghost suppression)
+dotnet test  Genoray.MonteCarlo.sln   # 145 cases across ~34 files: MURA properties + pipeline
+                                       # physics invariants + one class per theme (dead time,
+                                       # sub-cell, cascade, non-prop, MLEM, DOI, …). 7 cocotb tests in rtl/.
 
 # single scenario → prints flood map + reconstruction + estimate
 dotnet run --project src/Genoray.MonteCarlo.Cli -c Release -- samples/scenario.json
@@ -138,6 +142,31 @@ dotnet run --project src/Genoray.MonteCarlo.Cli -c Release -- mlem     samples/s
 dotnet run --project src/Genoray.MonteCarlo.Cli -c Release -- thermalro samples/scenario.json samples/thermalro.csv
 # depth-of-interaction (DOI) parallax: off-axis localization shift vs thickness -> doi.csv
 dotnet run --project src/Genoray.MonteCarlo.Cli -c Release -- doi      samples/scenario.json samples/doi.csv
+
+# --- multi-isotope / Compton / depth / mask-geometry / front-end studies (themes 15–34) ---
+# crystal-Compton multi-isotope separation (spatial + spectral energy-window) — theme 15–17
+dotnet run --project src/Genoray.MonteCarlo.Cli -c Release -- compton       samples/scenario.json
+dotnet run --project src/Genoray.MonteCarlo.Cli -c Release -- compton-strip samples/scenario.json
+# mixed multi-isotope field: image + localize all sources, energy-window/stripping separation — theme 26
+dotnet run --project src/Genoray.MonteCarlo.Cli -c Release -- mixedfield    samples/scenario.json
+dotnet run --project src/Genoray.MonteCarlo.Cli -c Release -- mixediso      samples/scenario.json
+dotnet run --project src/Genoray.MonteCarlo.Cli -c Release -- mixedstrip    samples/scenario.json
+# depth (z) estimation: refocusing, joint x/y/z, 3D, and the depth-from-focus design study — themes 18–24, 34
+dotnet run --project src/Genoray.MonteCarlo.Cli -c Release -- depth         samples/scenario.json
+dotnet run --project src/Genoray.MonteCarlo.Cli -c Release -- depth-joint   samples/scenario.json
+dotnet run --project src/Genoray.MonteCarlo.Cli -c Release -- depth3d       samples/scenario.json
+dotnet run --project src/Genoray.MonteCarlo.Cli -c Release -- depthdesign   samples/scenario.json
+# mask channel geometry / optimal size / tapered channels — themes 20–23
+dotnet run --project src/Genoray.MonteCarlo.Cli -c Release -- maskgeo       samples/scenario.json
+dotnet run --project src/Genoray.MonteCarlo.Cli -c Release -- masksize      samples/scenario.json
+dotnet run --project src/Genoray.MonteCarlo.Cli -c Release -- masktaper     samples/scenario.json
+# ambient background + directional shield leak — theme 28; antimask over a full scene
+dotnet run --project src/Genoray.MonteCarlo.Cli -c Release -- background     samples/scenario.json
+dotnet run --project src/Genoray.MonteCarlo.Cli -c Release -- shield         samples/scenario.json
+dotnet run --project src/Genoray.MonteCarlo.Cli -c Release -- antimask-scene samples/scenario.json
+# timed MC → RTL event stream (drives the cocotb shaper) — theme 27; physical front-end folded into C# — theme 32
+dotnet run --project src/Genoray.MonteCarlo.Cli -c Release -- eventstream   samples/scenario.json
+dotnet run --project src/Genoray.MonteCarlo.Cli -c Release -- frontend      samples/scenario.json
 ```
 
 Sample scenarios in `samples/`: `scenario.json` (centered), `scenario_offaxis.json`
@@ -159,8 +188,22 @@ The full, theme-organized results log with reproduce commands and artifacts is i
 - **Crystal**: efficiency ∝ density (GAGG is dense; its weakness is resolution + afterglow →
   prefer GAGG:Ce,Mg or CeBr3). Position is uniformity-robust; **energy needs per-channel
   calibration**. GAGG's afterglow collapses rate capability at ~1 Mcps (RTL).
-- **Mask/antimask**: redundant with no background, essential once background is significant.
+- **Mask/antimask**: redundant with no background; helps against **diffuse/common-mode**
+  background — but a calibrated background subtraction matches it (physical mask rotation is
+  then unnecessary), and it does **not** remove a directional coded interferer (themes 28, and
+  the mask/antimask trade note).
 - **Count threshold** ~25–50 detected counts; biasing gives ~100× fewer photons, unbiased.
+- **Compton multi-isotope separation (15–17, 26)**: crystal-Compton spatial + spectral
+  energy-window levers strip a high-energy isotope's downscatter out of a lower line's window —
+  the real rig's long-unsolved Co-60-reads-as-Cs problem, cracked in sim.
+- **Depth (18–24, 34)**: z is recoverable via near-field magnification + depth-from-focus, but
+  weak far (∝z²); 3D range extends by rank, not cell pitch. WPF fuses it with a rangefinder input.
+- **MLEM (48)**: Poisson-likelihood reconstruction is non-negative and resolves 2–3 mm source
+  pairs that cross-correlation's ±1 sidelobes merge — the main reconstruction upgrade over peak-pick.
+- **Physical-realism gaps (36–50)**: thermal drift is an energy-window (not position) issue;
+  pile-up + cascade summing add spectral continua/sum-peaks; mask fabrication needs σ≲40 µm;
+  alignment/pose is the dominant systematic tolerance; sub-cell interpolation beats the argmax
+  floor. Most effects are honestly **small for this camera** — see findings.md for magnitudes.
 
 ## RTL front-end (`rtl/`)
 
@@ -176,8 +219,15 @@ while GAGG:Ce,Mg recovers — the rate-domain confirmation of the material recom
 `pixel_uniformity_study.py` runs the RTL per crystal (each with its own gain + decay):
 per-crystal gain scatter smears the aggregate photopeak (7.4%→18% at 15% gain σ) and
 per-channel gain calibration restores it — so **energy needs calibration even though
-position is uniformity-robust** (finding 8). See `rtl/README.md`. Not yet wired to the
-C# MC event stream or cocotb/ModelSim.
+position is uniformity-robust** (finding 8). See `rtl/README.md`.
+
+**Now wired to the C# MC and cocotb** (themes 27, 31, 33): `EventStreamStudy` (`montecarlo
+eventstream`) exports a Poisson-timed MC arrival stream that drives the RTL shaper, and the
+`crrc_shaper.sv` (CR-RC⁴ pole-zero + 4 RC low-passes) and trapezoidal front-ends are
+verified **bit-exact against the native C# `Waveform`** by a **cocotb** harness (7 tests
+across `rtl/test_*.py`, python.org 3.13 + Icarus). The cusp shaper stays a Python benchmark
+by choice (a digital cusp is a rare ~19-tap FIR). ModelSim/Vivado not used (Icarus + nextpnr
+ECP5 as the Fmax proxy; `rtl/vivado_trap.tcl` ready for exact Artix-7 whenever installed).
 
 ## Notes & gotchas
 

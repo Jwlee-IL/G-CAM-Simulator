@@ -14,12 +14,17 @@ MLEM opens follow-ons: a likelihood DEPTH estimate and iteration/noise regulariz
 ready); integrate the theme-22 SiPM/thermal/shield productization models into the C# pipeline (design-only, user isn't
 building it). Deferred by choice: mask TILT (pitch/yaw), mask WARPING, reflector MATERIAL (all 2nd-order).
 
-**✓ DONE (2026-07-20) — docs modernization pass:** (1) **`AGENTS.md`** *Solution layout* table refreshed — every
-`…Core/…Detector/…Simulation/…Decoding/…Cli` row now names the new subsystems (MLEM, non-proportionality, cascade,
-finite-source, DOI, thermal, mask-scatter, defects, fabrication, front-end, waveform) and a `…Wpf` row was added; the
-CLI list already covered all 23 commands through `doi`. (2) memory `gcam-project.md` compressed — verbose themes 34–35
-collapsed to terse pointers ("detail → findings.md #N"); themes 1–33 were already a terse index. (3) commit/HEAD/test
-line synced to **109 commits, HEAD `5d48991`, 145 C# + 7 cocotb green** (the 110-vs-108 drift is resolved).
+**✓ DONE (2026-07-20) — docs modernization pass** (extended after an adversarial Codex + Claude re-review caught a
+half-done first attempt): (1) **`AGENTS.md`** *Solution layout* table refreshed — every `…Core/…Configuration/…Detector/
+…Simulation/…Decoding/…Cli` row now names the new subsystems (MLEM, non-proportionality, cascade, finite-source, DOI,
+thermal, mask-scatter, defects, fabrication, front-end, waveform, multi-source/background config) and a `…Wpf` row added.
+(2) **CLI list completed** — the first attempt wrongly assumed it was done at `doi`; `Program.cs` actually dispatches **39**
+sub-commands, so the 17 older ones (Compton/depth/mask-geometry/mixed-field/shield/background/eventstream/frontend) were
+added to Build/run. (3) **RTL paragraph un-staled** — it wrongly said "not yet wired to cocotb"; themes 27/31/33 wired
+`EventStreamStudy` + bit-exact cocotb (7 tests). (4) **"Findings so far" headlines** extended past theme 11 (Compton
+separation, depth, MLEM, realism gaps). (5) memory `gcam-project.md`: themes 34–35 collapsed to pointers, 36–50 kept
+detailed with the intro claim corrected to match (not a blanket "terse index"). (6) commit/HEAD/test synced to
+**HEAD `baf0ff3`+, 145 C# + 7 cocotb green**.
 
 ## Open
 
@@ -139,11 +144,10 @@ model. Ranked by impact; **★ = user-flagged / connects to the real rig**. Tack
 - Non-proportionality as deposit-history-dependent (Compton-split vs photoelectric resolve differently) — MED.
 - Intrinsic activity (LYSO Lu-176, LaBr₃ La-138) — LOW for GAGG (none); matters only if those scintillators are picked.
 
-Recommended order next session: 36 thermal drift → 37 pile-up → 38 mask fabrication → 39 alignment/pose → 40 bad
-pixels → 41 mask fluorescence/scatter — ALL DONE (through theme 44). Remaining small: per-channel SiPM mismatch,
-intrinsic activity. Bigger next-tier (from the 2026-07-18 physics-realism audit): mask forward-transport, MLEM
-reconstruction, non-proportional light yield, finite source size. Reflector MATERIAL +
-mask TILT/WARPING stay deferred. (Dead time DONE theme 42; sub-cell peak interpolation DONE theme 43.)
+**Status:** the whole physical-realism-gaps queue (themes 36–50) and the 2026-07-18 audit next-tier (A–G) are DONE.
+Still genuinely open (small): per-channel SiPM/preamp mismatch, intrinsic activity, and the MLEM follow-ons (likelihood
+DEPTH estimate, iteration/noise regularization, finite-mask ghost demo). Deferred by choice: reflector MATERIAL, mask
+TILT (pitch/yaw), mask WARPING.
 
 ### Productization (theme 22 — design-only; user is NOT building this now)
 - Integrate the SiPM / thermal / gain-stabilization + shield models into the C# pipeline
