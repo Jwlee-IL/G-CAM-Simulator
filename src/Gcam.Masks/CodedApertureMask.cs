@@ -177,6 +177,11 @@ public sealed class CodedApertureMask : IMask
     // match the Codex-verified table in MaskSecondary (theme 41). Below 50 keV it clamps (soft X-rays are already
     // fully blocked by any real mask). NOTE: for a normal ~10 mm mask closed cells are opaque at ≤122 keV either
     // way, so this mainly corrects the μ curve for THIN masks / oblique edge-clipping / fabrication partial paths.
+    // APPROXIMATION (Codex-flagged, negligible in practice): 69.4 keV is the BELOW-edge value, so the 69.5–122 keV
+    // ABOVE-edge region (where μ actually spikes at the K-edge) is under-attenuated by the log-log interpolation,
+    // and energies below 50 keV clamp. No standard isotope line sits in 70–121 keV and a thick mask is opaque there
+    // regardless, so this is a curve-fidelity caveat, not a functional error. A proper fix would split the table at
+    // the 69.525 keV edge (below-edge point + a separate above-edge point) with NIST-XCOM values.
     private static readonly double[] _muE = { 50.0, 60.0, 69.4, 122.0, 250.0, 400.0, 662.0, 1000.0, 1332.0 };
     private static readonly double[] _muR = { 57.0, 47.0, 40.0, 28.6, 5.0, 1.95, 1.00, 0.67, 0.55 };
 
