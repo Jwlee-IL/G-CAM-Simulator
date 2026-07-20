@@ -1054,7 +1054,7 @@ public partial class MainWindow : Window
         // Imaging-tab recon heatmap = per-pixel MAX over each channel's NORMALIZED recon (so every nuclide's
         // source shows at comparable strength regardless of its count level), plus per-nuclide peak marks.
         var comp = new DetectorImage(rw, rh);
-        var estList = new List<(double, double)>();
+        var estList = new List<(double x, double y, string label)>();       // each found peak tagged with its nuclide
         foreach (var (ch, rec, mx) in recons)
         {
             if (mx > 0)
@@ -1066,11 +1066,13 @@ public partial class MainWindow : Window
                     }
             int kIso = Math.Max(1, _scene.Count(s => s.Isotope == ch.Isotope));
             foreach (var pk in MixedFieldStudy.TopPeaks(rec, originMm, stepMm, kIso, minSeparationMm: 2.5))
-                estList.Add((pk.Xmm, pk.Ymm));
+                estList.Add((pk.Xmm, pk.Ymm, ch.Isotope));
         }
         double left = originMm, right = originMm + (rw - 1) * stepMm;
         double bottom = originMm, top = originMm + (rh - 1) * stepMm;
-        DrawHeatmap(ImgReconPlot, ToGrid(comp), left, right, bottom, top,
+        // flipY: the heatmap draws grid row 0 at the TOP, so flip rows to put +y up — matching the scene canvas
+        // overlay (which flips the same way) and the data-space markers, so image and markers line up.
+        DrawHeatmap(ImgReconPlot, ToGrid(comp, flipY: true), left, right, bottom, top,
             "Decoded reconstruction — per-nuclide (× sources, ○ found)", "x (mm)", "y (mm)",
             _liveTruePos, estList);
 
@@ -1079,7 +1081,7 @@ public partial class MainWindow : Window
         RedrawScene();
 
         var truth = _scene.Select(s => new[] { s.X, s.Y }).ToArray();
-        var matches = MixedFieldStudy.MatchOneToOne(truth, estList.Select(e => new FoundSource(e.Item1, e.Item2, 1.0)).ToArray());
+        var matches = MixedFieldStudy.MatchOneToOne(truth, estList.Select(e => new FoundSource(e.x, e.y, 1.0)).ToArray());
         double worst = matches.Length > 0 ? matches.Max(m => m.ErrorMm) : 0.0;
         ImgStatus.Text = $"{_channels.Count} nuclide(s) · {estList.Count} source(s) found · worst {worst:F2} mm — sharpens as counts build";
         _liveDetail = $"{_channels.Count} nuclide, {estList.Count} found, worst {worst:F1}mm";
@@ -1206,12 +1208,12 @@ public partial class MainWindow : Window
         return s;
     }
 
-    private static double[,] ToGrid(DetectorImage img)
+    private static double[,] ToGrid(DetectorImage img, bool flipY = false)
     {
         var g = new double[img.Height, img.Width];
         for (int y = 0; y < img.Height; y++)
             for (int x = 0; x < img.Width; x++)
-                g[y, x] = img[x, y];
+                g[y, x] = flipY ? img[x, img.Height - 1 - y] : img[x, y];   // flipY: row 0 = max-y so +y points up
         return g;
     }
 
@@ -1229,7 +1231,8 @@ public partial class MainWindow : Window
 
     private static void DrawHeatmap(ScottPlot.WPF.WpfPlot view, double[,] grid,
         double left, double right, double bottom, double top, string title, string xlabel, string ylabel,
-        IReadOnlyList<(double x, double y)>? truePositions, IReadOnlyList<(double x, double y)>? estPositions)
+        IReadOnlyList<(double x, double y)>? truePositions,
+        IReadOnlyList<(double x, double y, string label)>? estPositions)
     {
         var p = view.Plot;
         p.Clear();
@@ -1254,6 +1257,15 @@ public partial class MainWindow : Window
                 m.Color = ScottPlot.Colors.Red;
                 m.Size = 18;
                 m.Shape = ScottPlot.MarkerShape.OpenCircle;
+                if (!string.IsNullOrEmpty(ep.label))     // tag the found peak with its nuclide
+                {
+                    var txt = p.Add.Text(ep.label, ep.x, ep.y);
+                    txt.LabelFontColor = ScottPlot.Colors.Red;
+                    txt.LabelFontSize = 12;
+                    txt.LabelBold = true;
+                    txt.OffsetX = 8;                     // nudge clear of the circle (screen px)
+                    txt.OffsetY = -8;
+                }
             }
 
         p.Title(title);
