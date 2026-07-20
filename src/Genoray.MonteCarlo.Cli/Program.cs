@@ -68,6 +68,9 @@ if (args[0].Equals("mlem", StringComparison.OrdinalIgnoreCase))
 if (args[0].Equals("thermalro", StringComparison.OrdinalIgnoreCase))
     return RunThermalReadout(args);
 
+if (args[0].Equals("doi", StringComparison.OrdinalIgnoreCase))
+    return RunDoi(args);
+
 if (args[0].Equals("array", StringComparison.OrdinalIgnoreCase))
     return RunArray(args);
 
@@ -1290,6 +1293,44 @@ static int RunDeadTime(string[] args)
     Console.WriteLine();
     Console.WriteLine("Non-paralyzable saturates toward 1/τ; paralyzable PEAKS at R=1/τ then collapses (paralysis).");
     Console.WriteLine("Live fraction = recorded/true = the live-time vs real-time correction a real acquisition applies.");
+    Console.WriteLine($"CSV written: {csvPath}");
+    return 0;
+}
+
+static int RunDoi(string[] args)
+{
+    if (args.Length < 2)
+    {
+        Console.Error.WriteLine("Usage: montecarlo doi <base.json> [out.csv]");
+        Console.Error.WriteLine("  Depth-of-interaction (DOI) parallax: the off-axis localization shift the interaction");
+        Console.Error.WriteLine("  depth adds (vs the decoder's front-face back-projection) vs off-axis position & thickness.");
+        return 1;
+    }
+
+    string csvPath = args.Length >= 3 ? args[2] : "samples/doi.csv";
+    var cfg = ConfigLoader.Load(args[1]);
+    double[] xs = [0, 3, 6, 9];
+    double[] th = [5, 10, 20, 30];
+    var rows = new DoiParallaxStudy().Run(cfg, xs, th, photonCount: 2_500_000, cfg.Seed);
+    File.WriteAllText(csvPath, DoiParallaxStudy.ToCsv(rows));
+
+    Console.WriteLine("Depth-of-interaction parallax: systematic localization shift (mm) the decoder cannot correct.");
+    Console.WriteLine("(The decoder back-projects the front-face crossing; the real scintillation centroid is deeper.)");
+    Console.WriteLine();
+    Console.Write("   thick\\x ");
+    foreach (double x in xs) Console.Write($"{x,8:F0}mm");
+    Console.WriteLine();
+    foreach (double t in th)
+    {
+        Console.Write($"   {t,5:F0}mm ");
+        foreach (double x in xs)
+            Console.Write($"{rows.Single(r => r.SourceXMm == x && r.CrystalThicknessMm == t).DoiShiftMm,8:F3} ");
+        Console.WriteLine();
+    }
+    Console.WriteLine();
+    Console.WriteLine("Zero on-axis (normal incidence); off-axis it grows with crystal thickness (deeper interactions →");
+    Console.WriteLine("bigger parallax). Sub-mm here (far source → small obliquity), but a real floor under the sub-cell");
+    Console.WriteLine("interpolation (theme 43) at the FOV edge, uncorrected by the centre-back-projecting decoder.");
     Console.WriteLine($"CSV written: {csvPath}");
     return 0;
 }

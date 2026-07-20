@@ -1406,3 +1406,18 @@ generation, so **DCR keeps climbing with temperature even under a comp loop**.
   and the 662 photopeak (this camera's line) is nearly immune, so the gain-centroid drift of theme 36 stays the main
   thermal concern for Cs-137 imaging.** (Tests: `ThermalReadoutTests`, +2 — DCR doubling & comp-immunity, 1/E low-E
   degradation + PDE droop.)
+
+## 50. Depth-of-interaction (DOI) parallax in reconstruction — `DoiParallaxStudy` / `montecarlo doi`
+Physics-realism-audit item F (decoder vs detector response): the decoder back-projects the pixel-CENTRE front-face
+crossing, but a gamma interacts at a random DEPTH in the crystal. For an OBLIQUE (off-axis) ray the scintillation
+centroid the detector reads is displaced from the front face by depth·tan(incidence) — a parallax the centre-back-
+projecting decoder cannot correct. `DoiParallaxStudy` isolates it by building the SAME rays' flood twice — deposit at
+the front-face crossing (no DOI) vs at the DOI-displaced interaction point — and comparing the decoded position.
+- **Result**: the DOI localization shift is **0 on-axis** (normal incidence) and grows off-axis WITH crystal thickness
+  (deeper interactions → bigger parallax): at 9 mm off-axis it is 0.10 mm for a 5 mm crystal → **0.30 mm for a 30 mm
+  crystal**. Sub-mm here because the far source (160 mm) gives a small (~2–4°) obliquity, but it is a real, systematic
+  floor — comparable to the recon grid step (0.39 mm) and thus a genuine limit UNDER the sub-cell interpolation
+  (theme 43) at the FOV edge with a thick crystal, uncorrected by the decoder.
+- Because the shift is often sub-grid-step, the raw argmax quantizes it to 0 until it crosses a cell (one 0.88 mm
+  argmax jump in the sweep) — which is exactly why it matters only against the SUB-CELL precision, not the coarse grid.
+  Self-contained. (Tests: `DoiParallaxTests`, +1 — zero on-axis, grows with thickness off-axis, sub-mm.)

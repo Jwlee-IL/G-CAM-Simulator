@@ -1,16 +1,16 @@
 # Backlog
 
 Deferred work, captured so we don't forget. Not in current scope. See
-`AGENTS.findings.md` (themes 1–49) for everything that IS done.
+`AGENTS.findings.md` (themes 1–50) for everything that IS done.
 
 **Genuinely open**: the **Physical realism gaps** list below (Codex gap-review after theme 35) is now mostly DONE —
-themes 36–49 cleared thermal drift + flood-field, pile-up sum continuum, mask fabrication tolerances, alignment/pose,
+themes 36–50 cleared thermal drift + flood-field, pile-up sum continuum, mask fabrication tolerances, alignment/pose,
 bad/dead/hot pixels, mask fluorescence/scatter, dead time, sub-cell peak interpolation, cascade summing, mask
 forward-scatter, non-proportional intrinsic resolution, finite-source blur / capsule self-attenuation, and MLEM
 reconstruction. The 5-subsystem Codex **physics-realism audit** (2026-07-18) next tier is now: ✓ mask forward-scatter
-(45), ✓ non-proportionality (46), ✓ finite source (47), ✓ MLEM (48), ✓ thermal DCR/PDE (49); still open (smaller):
-decoder pixel-area/DOI PSF, per-channel SiPM mismatch, intrinsic activity. MLEM opens follow-ons: a likelihood
-DEPTH estimate and iteration/noise regularization. Also open: exact Artix-7 Fmax in Vivado (deferred — install friction; `vivado_trap.tcl`
+(45), ✓ non-proportionality (46), ✓ finite source (47), ✓ MLEM (48), ✓ thermal DCR/PDE (49), ✓ DOI parallax (50).
+The whole audit next-tier (A–G) is now cleared; still open (smaller): per-channel SiPM mismatch, intrinsic activity.
+MLEM opens follow-ons: a likelihood DEPTH estimate and iteration/noise regularization. Also open: exact Artix-7 Fmax in Vivado (deferred — install friction; `vivado_trap.tcl`
 ready); integrate the theme-22 SiPM/thermal/shield productization models into the C# pipeline (design-only, user isn't
 building it). Deferred by choice: mask TILT (pitch/yaw), mask WARPING, reflector MATERIAL (all 2nd-order).
 
