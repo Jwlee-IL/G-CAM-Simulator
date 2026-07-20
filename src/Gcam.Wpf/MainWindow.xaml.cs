@@ -38,9 +38,9 @@ public partial class MainWindow : Window
     private bool _liveRunning;
     private double _liveRateCps, _liveElapsedSec, _liveTotalCounts, _liveSpeed;
     private IRandom? _liveRng;
-    private DetectorImage? _floodAccum;      // imaging: accumulated flood map (primary channel — depth/autofocus read this)
-    private double[]? _floodShape;           // imaging: per-pixel mean, Σ = 1 (primary channel)
+    private DetectorImage? _floodAccum;      // imaging: COMBINED flood (all nuclide channels summed) — depth/autofocus decode this so they see EVERY source
     private IDecoder? _liveDecoder;          // geometry-only decoder, SHARED across nuclide channels (energy-independent)
+    private bool _preparing;                 // a background acquisition-prepare is in flight — guards against a double-click launching a second run
 
     // One imaging channel per DISTINCT isotope in the scene. Each isolates its nuclide with that nuclide's
     // photopeak energy window, so decoding its own flood reconstructs (mostly) only that nuclide's sources. The
@@ -696,6 +696,7 @@ public partial class MainWindow : Window
     private async void Simulate_Click(object sender, RoutedEventArgs e)
     {
         if (_liveRunning) { StopLive(); return; }            // a running acquisition: this click stops it
+        if (_preparing) return;                              // a prepare is already in flight — ignore the double-click
         if (_scene.Count == 0) { MessageBox.Show("Add at least one source to the scene."); return; }
         await StartLive();
     }
@@ -732,7 +733,9 @@ public partial class MainWindow : Window
         SimulateButton.Content = "■  STOP";
         LiveStatus.Text = "preparing…";
         Log($"▶ Start acquisition  (speed ×{_liveSpeed:F0}) — {SceneSummary()}");
+        _preparing = true;
         bool ok = await Task.Run(() => PrepareLive(cfg, bsr, emissionRate, windowFrac, sceneIsotopes, lineEnergies, maxE, resPct, noiseCps, sipmPitch, pileUp));
+        _preparing = false;
         if (!ok)
         {
             SimulateButton.Content = "▶  SIMULATE";
@@ -799,8 +802,9 @@ public partial class MainWindow : Window
         if (_channels.Count == 0 || decoder == null) return false;
         _liveDecoder = decoder;
         _liveRateCps = totalRate;
-        _floodShape = _channels[0].FloodShape;    // primary channel drives depth / autofocus / focus-fusion
-        _floodAccum = _channels[0].FloodAccum;
+        // COMBINED flood (every channel summed) — depth / autofocus / focus-fusion decode this so a multi-isotope
+        // scene's ALL sources are present (not just the first nuclide's). Per-nuclide floods live on the channels.
+        _floodAccum = new DetectorImage(_channels[0].FloodAccum.Width, _channels[0].FloodAccum.Height);
 
         // Deposit pool (shared): raw energies drive the Waveform scope; resolution-smeared energies build the
         // Spectrum PDF — same detected events, two views.
@@ -879,7 +883,7 @@ public partial class MainWindow : Window
                 for (int x = 0; x < w; x++)
                 {
                     int add = Sampling.Poisson(rng, ch.FloodShape[y * w + x] * dNc);
-                    if (add != 0) { ch.FloodAccum.Add(x, y, add); _liveTotalCounts += add; }
+                    if (add != 0) { ch.FloodAccum.Add(x, y, add); _floodAccum?.Add(x, y, add); _liveTotalCounts += add; }
                 }
         }
         if (_specPdf != null && _specCounts != null)

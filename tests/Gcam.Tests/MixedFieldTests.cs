@@ -122,9 +122,9 @@ public class MixedFieldTests
             cfg.Decoder.ReconStepMm = 0.4;
             cfg.Sources =
             [
-                new SourceConfig { Position = [5, 0, 0.0], ActivityBq = 1.0,
+                new SourceConfig { Isotope = "Cs-137", Position = [5, 0, 0.0], ActivityBq = 1.0,
                     Lines = [new EmissionLine { EnergyKeV = 661.7, Intensity = 0.851 }] },
-                new SourceConfig { Position = [-4, 4, 0.0], ActivityBq = 1.0,
+                new SourceConfig { Isotope = "Na-22", Position = [-4, 4, 0.0], ActivityBq = 1.0,
                     Lines = [new EmissionLine { EnergyKeV = 511.0, Intensity = 1.798 },
                              new EmissionLine { EnergyKeV = 1274.5, Intensity = 0.999 }] },
             ];
@@ -133,14 +133,20 @@ public class MixedFieldTests
         double[] cs = [5, 0], na = [-4, 4];
         double Dist(FoundSource p, double[] q) => System.Math.Sqrt((p.Xmm - q[0]) * (p.Xmm - q[0]) + (p.Ymm - q[1]) * (p.Ymm - q[1]));
 
-        // 662 window -> the top peak is the Cs source, not the Na source.
-        var csWin = new MixedFieldStudy(new ComptonFactory(ComptonStrategy.PerPixelWindow, 661.7, 0.10))
-            .LocalizeMultiple(Scene(), k: 1, minSeparationMm: 3.0).Found[0];
-        Assert.True(Dist(csWin, cs) < 2.5, $"662 window should localize Cs @(5,0); got ({csWin.Xmm:F1},{csWin.Ymm:F1})");
-        Assert.True(Dist(csWin, na) > 4.0, $"662 window peak should NOT sit on Na; got ({csWin.Xmm:F1},{csWin.Ymm:F1})");
+        // Each nuclide's window is its PRIMARY line (Lines[0]) — the same rule the WPF channel builder uses
+        // (Isotopes.Get(iso).Lines[0]). Derive the centers from the scene so the test tracks that rule.
+        var scene0 = Scene();
+        double csCenter = scene0.Sources[0].Lines![0].EnergyKeV;   // 661.7 (Cs primary)
+        double naCenter = scene0.Sources[1].Lines![0].EnergyKeV;   // 511.0 (Na primary)
 
-        // 511 window -> the top peak is the Na source, not the Cs source. Switching the window switches the nuclide.
-        var naWin = new MixedFieldStudy(new ComptonFactory(ComptonStrategy.PerPixelWindow, 511.0, 0.10))
+        // Cs window -> the top peak is the Cs source, not the Na source.
+        var csWin = new MixedFieldStudy(new ComptonFactory(ComptonStrategy.PerPixelWindow, csCenter, 0.10))
+            .LocalizeMultiple(Scene(), k: 1, minSeparationMm: 3.0).Found[0];
+        Assert.True(Dist(csWin, cs) < 2.5, $"Cs window should localize Cs @(5,0); got ({csWin.Xmm:F1},{csWin.Ymm:F1})");
+        Assert.True(Dist(csWin, na) > 4.0, $"Cs window peak should NOT sit on Na; got ({csWin.Xmm:F1},{csWin.Ymm:F1})");
+
+        // Na window -> the top peak is the Na source, not the Cs source. Switching the window switches the nuclide.
+        var naWin = new MixedFieldStudy(new ComptonFactory(ComptonStrategy.PerPixelWindow, naCenter, 0.10))
             .LocalizeMultiple(Scene(), k: 1, minSeparationMm: 3.0).Found[0];
         Assert.True(Dist(naWin, na) < 2.5, $"511 window should localize Na @(-4,4); got ({naWin.Xmm:F1},{naWin.Ymm:F1})");
         Assert.True(Dist(naWin, cs) > 4.0, $"511 window peak should NOT sit on Cs; got ({naWin.Xmm:F1},{naWin.Ymm:F1})");
