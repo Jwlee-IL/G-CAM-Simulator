@@ -104,6 +104,49 @@ public class MixedFieldTests
     }
 
     [Fact]
+    public void PerNuclideWindow_SeparatesCsFromNa_InTheImage()
+    {
+        // The image-domain nuclide separation the WPF viewer uses: a Cs-137 source and a Na-22 source are
+        // co-measured, then the SAME scene is imaged twice, each through a DIFFERENT nuclide's photopeak window.
+        // The 662 keV window's reconstruction is dominated by the Cs source (Cs emits 662 directly; Na reaches
+        // 662 only via weak downscatter), and the 511 keV window's by the Na source — so which nuclide appears is
+        // selected by the window. That is what makes co-measured isotopes separate in the reconstructed image.
+        SimulationConfig Scene()
+        {
+            var cfg = Base();
+            cfg.PhotonCount = 4_000_000;
+            cfg.Decoder.Cyclic = false;
+            double frac = cfg.Geometry.MaskDetectorDistanceMm /
+                          (cfg.Geometry.MaskDetectorDistanceMm + cfg.Geometry.SourceMaskDistanceMm);
+            cfg.Decoder.ReconHalfExtentMm = 0.95 * cfg.Mask.Rank * cfg.Mask.CellPitchMm / frac / 2.0;
+            cfg.Decoder.ReconStepMm = 0.4;
+            cfg.Sources =
+            [
+                new SourceConfig { Position = [5, 0, 0.0], ActivityBq = 1.0,
+                    Lines = [new EmissionLine { EnergyKeV = 661.7, Intensity = 0.851 }] },
+                new SourceConfig { Position = [-4, 4, 0.0], ActivityBq = 1.0,
+                    Lines = [new EmissionLine { EnergyKeV = 511.0, Intensity = 1.798 },
+                             new EmissionLine { EnergyKeV = 1274.5, Intensity = 0.999 }] },
+            ];
+            return cfg;
+        }
+        double[] cs = [5, 0], na = [-4, 4];
+        double Dist(FoundSource p, double[] q) => System.Math.Sqrt((p.Xmm - q[0]) * (p.Xmm - q[0]) + (p.Ymm - q[1]) * (p.Ymm - q[1]));
+
+        // 662 window -> the top peak is the Cs source, not the Na source.
+        var csWin = new MixedFieldStudy(new ComptonFactory(ComptonStrategy.PerPixelWindow, 661.7, 0.10))
+            .LocalizeMultiple(Scene(), k: 1, minSeparationMm: 3.0).Found[0];
+        Assert.True(Dist(csWin, cs) < 2.5, $"662 window should localize Cs @(5,0); got ({csWin.Xmm:F1},{csWin.Ymm:F1})");
+        Assert.True(Dist(csWin, na) > 4.0, $"662 window peak should NOT sit on Na; got ({csWin.Xmm:F1},{csWin.Ymm:F1})");
+
+        // 511 window -> the top peak is the Na source, not the Cs source. Switching the window switches the nuclide.
+        var naWin = new MixedFieldStudy(new ComptonFactory(ComptonStrategy.PerPixelWindow, 511.0, 0.10))
+            .LocalizeMultiple(Scene(), k: 1, minSeparationMm: 3.0).Found[0];
+        Assert.True(Dist(naWin, na) < 2.5, $"511 window should localize Na @(-4,4); got ({naWin.Xmm:F1},{naWin.Ymm:F1})");
+        Assert.True(Dist(naWin, cs) > 4.0, $"511 window peak should NOT sit on Cs; got ({naWin.Xmm:F1},{naWin.Ymm:F1})");
+    }
+
+    [Fact]
     public void MultiLine_SplitsByIntensity()
     {
         // A single source emitting two equal-intensity lines at the SAME energy splits its photons

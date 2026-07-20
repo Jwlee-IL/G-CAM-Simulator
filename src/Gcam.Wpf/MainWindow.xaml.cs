@@ -38,9 +38,25 @@ public partial class MainWindow : Window
     private bool _liveRunning;
     private double _liveRateCps, _liveElapsedSec, _liveTotalCounts, _liveSpeed;
     private IRandom? _liveRng;
-    private DetectorImage? _floodAccum;      // imaging: accumulated flood map
-    private double[]? _floodShape;           // imaging: per-pixel mean, Σ = 1
-    private IDecoder? _liveDecoder;
+    private DetectorImage? _floodAccum;      // imaging: accumulated flood map (primary channel — depth/autofocus read this)
+    private double[]? _floodShape;           // imaging: per-pixel mean, Σ = 1 (primary channel)
+    private IDecoder? _liveDecoder;          // geometry-only decoder, SHARED across nuclide channels (energy-independent)
+
+    // One imaging channel per DISTINCT isotope in the scene. Each isolates its nuclide with that nuclide's
+    // photopeak energy window, so decoding its own flood reconstructs (mostly) only that nuclide's sources. The
+    // per-nuclide recons are normalized and composited (isotope-coloured) so co-measured isotopes separate in the
+    // reconstructed image the way they already separate in the spectrum. (A single isotope → one channel.)
+    private readonly List<NuclideChannel> _channels = [];
+
+    private sealed class NuclideChannel
+    {
+        public string Isotope = "";
+        public double WindowCenterKeV;
+        public (byte r, byte g, byte b) Color;
+        public double[] FloodShape = [];        // per-pixel mean, Σ = 1
+        public DetectorImage FloodAccum = null!;
+        public double RateCps;                  // detected counts/s landing in THIS nuclide's window
+    }
     private SimulationConfig? _liveCfg;      // the config in flight, so refocusing can rebuild the decoder
     private IReadOnlyList<(double x, double y)>? _liveTruePos;
     private double[]? _specPdf, _specCounts, _specCenters;   // spectrum accumulators
@@ -217,6 +233,14 @@ public partial class MainWindow : Window
         _ => Brushes.Gray,
     };
 
+    /// <summary>The isotope's marker colour as raw RGB — used to tint its channel in the per-nuclide
+    /// reconstruction composite (so each nuclide reads as its own colour on the scene overlay).</summary>
+    private static (byte r, byte g, byte b) IsotopeRgb(string isotope)
+    {
+        var c = ((SolidColorBrush)IsotopeBrush(isotope)).Color;
+        return (c.R, c.G, c.B);
+    }
+
     private void RedrawScene()
     {
         var (_, cw, ch) = CanvasMetrics();
@@ -323,6 +347,41 @@ public partial class MainWindow : Window
             }
         bmp.WritePixels(new Int32Rect(0, 0, w, h), px, w * 4, 0);
 
+        _reconBmp = bmp;
+        _reconLeftMm = originMm;
+        _reconBottomMm = originMm;
+        _reconRightMm = originMm + (w - 1) * stepMm;
+        _reconTopMm = originMm + (h - 1) * stepMm;
+    }
+
+    /// <summary>Per-nuclide reconstruction composite for the scene overlay: each channel's recon is normalized to
+    /// its own peak and tinted its isotope colour, then the tinted layers are added. Co-measured nuclides read as
+    /// their own colours at their own positions — the image-domain nuclide separation the single-window decode
+    /// couldn't do. (One channel → a single-colour heatmap of that nuclide.)</summary>
+    private void SetReconOverlayComposite(
+        List<(NuclideChannel ch, DetectorImage recon, double max)> recons, double originMm, double stepMm)
+    {
+        if (recons.Count == 0) { _reconBmp = null; return; }
+        int w = recons[0].recon.Width, h = recons[0].recon.Height;
+        var bmp = new WriteableBitmap(w, h, 96, 96, PixelFormats.Bgra32, null);
+        var px = new byte[w * h * 4];
+        for (int r = 0; r < h; r++)
+            for (int x = 0; x < w; x++)
+            {
+                double accR = 0, accG = 0, accB = 0;
+                foreach (var (ch, rec, mx) in recons)
+                {
+                    if (mx <= 0) continue;
+                    double t = Math.Clamp(rec[x, h - 1 - r] / mx, 0.0, 1.0);   // flip: screen-top = max y
+                    accR += t * ch.Color.r; accG += t * ch.Color.g; accB += t * ch.Color.b;
+                }
+                int i = (r * w + x) * 4;
+                px[i + 0] = (byte)Math.Min(255.0, accB);
+                px[i + 1] = (byte)Math.Min(255.0, accG);
+                px[i + 2] = (byte)Math.Min(255.0, accR);
+                px[i + 3] = 215;
+            }
+        bmp.WritePixels(new Int32Rect(0, 0, w, h), px, w * 4, 0);
         _reconBmp = bmp;
         _reconLeftMm = originMm;
         _reconBottomMm = originMm;
@@ -652,7 +711,8 @@ public partial class MainWindow : Window
         // Per-pixel photopeak window: ±(N × FWHM) around the primary line. FWHM comes from the detection chain.
         double peakWinFwhm = Math.Max(0.1, ParseD(SpWindow.Text, 1.5));
         double windowFrac = Math.Max(0.005, peakWinFwhm * _feResPct662 / 100.0);
-        double primaryLine = _scene.Count > 0 ? Isotopes.Get(_scene[0].Isotope).Lines[0].EnergyKeV : 661.7;
+        // One imaging channel per DISTINCT isotope in the scene (each imaged through its own photopeak window).
+        string[] sceneIsotopes = _scene.Select(s => s.Isotope).Distinct().ToArray();
         double resPct = ParseD(SpResolution.Text, 6);
         double noiseCps = Math.Max(0.0, ParseD(SpNoiseCps.Text, 0));
         double sipmPitch = Math.Max(0.05, ParseD(DetSipmPitch.Text, 0.6));   // readout pitch (≥ crystal pitch → light-sharing)
@@ -672,7 +732,7 @@ public partial class MainWindow : Window
         SimulateButton.Content = "■  STOP";
         LiveStatus.Text = "preparing…";
         Log($"▶ Start acquisition  (speed ×{_liveSpeed:F0}) — {SceneSummary()}");
-        bool ok = await Task.Run(() => PrepareLive(cfg, bsr, emissionRate, windowFrac, lineEnergies, maxE, resPct, noiseCps, primaryLine, sipmPitch, pileUp));
+        bool ok = await Task.Run(() => PrepareLive(cfg, bsr, emissionRate, windowFrac, sceneIsotopes, lineEnergies, maxE, resPct, noiseCps, sipmPitch, pileUp));
         if (!ok)
         {
             SimulateButton.Content = "▶  SIMULATE";
@@ -697,37 +757,50 @@ public partial class MainWindow : Window
     // Off the UI thread: one MC run fixes the flood SHAPE + count rate and the deposit pool (spectrum PDF +
     // scope energies) — everything every tab needs, from a single acquisition.
     private bool PrepareLive(SimulationConfig cfg, double bsr, double emissionRate,
-                             double windowFrac, double[] lineEnergies, double maxE, double resPct, double noiseCps,
-                             double primaryLine, double sipmPitch, bool pileUp)
+                             double windowFrac, string[] isotopes, double[] lineEnergies, double maxE, double resPct,
+                             double noiseCps, double sipmPitch, bool pileUp)
     {
-        // Imaging flood via the crystal-Compton detector with a PER-PIXEL photopeak window (LLD/ULD = primaryLine
-        // ± windowFrac, gain-corrected per crystal) — only photopeak events form the coded image, the way the real
-        // rig's per-crystal LLD/ULD worked. Compton/scatter/noise deposits fall outside the window and are rejected.
-        var factory = new ComptonFactory(ComptonStrategy.PerPixelWindow, primaryLine, windowFrac);
-        var res = new SimulationRunner(factory).Run(cfg);
-        double eff = res.PhotonsEmitted > 0 ? res.DetectedWeight / res.PhotonsEmitted : 0.0;
-        _liveRateCps = emissionRate * eff;
-        if (!(_liveRateCps > 0.0)) return false;
-
-        // Imaging: normalized flood shape + decoder.
-        var mean = res.DetectorImage;
-        // SiPM readout granularity: if the SiPM pitch is coarser than the crystal pitch, one SiPM reads a block of
-        // crystals (light-sharing) — the sub-block position is lost, so average each SiPM block. The flood is then
-        // read at the SiPM pitch and the coded decode can't resolve finer, even though the crystals are finer.
+        // ONE imaging channel per distinct isotope: each is imaged through ITS OWN per-pixel photopeak window
+        // (LLD/ULD = the isotope's primary line ± windowFrac, gain-corrected per crystal), so its coded flood —
+        // and thus its reconstruction — contains essentially only that nuclide's sources. Co-measured isotopes then
+        // separate in the IMAGE, not just the spectrum. Out-of-window Compton/scatter/other-line events are rejected.
+        // SiPM readout granularity: a coarser SiPM pitch reads a block of crystals (light-sharing) → the sub-block
+        // position is lost, so each block is averaged before the coded decode.
         int sipmBlock = Math.Max(1, (int)Math.Round(sipmPitch / cfg.Detector.PixelPitchMm));
-        if (sipmBlock > 1) BlockifyFlood(mean, sipmBlock);
-        int w = mean.Width, h = mean.Height;
-        double ped = bsr > 0.0 ? SimBackground.PedestalPerPixel(bsr, SumImage(mean), w * h) : 0.0;
-        var shape = new double[w * h];
-        double sum = 0;
-        for (int y = 0; y < h; y++)
-            for (int x = 0; x < w; x++) { double v = mean[x, y] + ped; shape[y * w + x] = v; sum += v; }
-        if (!(sum > 0.0)) return false;
-        for (int i = 0; i < shape.Length; i++) shape[i] /= sum;
-        _floodShape = shape;
-        _floodAccum = new DetectorImage(w, h);
-        _liveDecoder = factory.CreateDecoder(cfg);
-        if (_liveDecoder == null) return false;
+        IDecoder? decoder = null;                 // geometry-only (rank/pitch/distance) → SHARED across channels
+        _channels.Clear();
+        double totalRate = 0.0;
+        foreach (var iso in isotopes)
+        {
+            double center = Isotopes.Get(iso).Lines[0].EnergyKeV;
+            var factory = new ComptonFactory(ComptonStrategy.PerPixelWindow, center, windowFrac);
+            var res = new SimulationRunner(factory).Run(cfg);
+            double eff = res.PhotonsEmitted > 0 ? res.DetectedWeight / res.PhotonsEmitted : 0.0;
+            double rate = emissionRate * eff;
+            if (!(rate > 0.0)) continue;          // nothing lands in this nuclide's window (e.g. Am-241 vs a Cs scene)
+            var mean = res.DetectorImage;
+            if (sipmBlock > 1) BlockifyFlood(mean, sipmBlock);
+            int w = mean.Width, h = mean.Height;
+            double ped = bsr > 0.0 ? SimBackground.PedestalPerPixel(bsr, SumImage(mean), w * h) : 0.0;
+            var shape = new double[w * h];
+            double sum = 0;
+            for (int y = 0; y < h; y++)
+                for (int x = 0; x < w; x++) { double v = mean[x, y] + ped; shape[y * w + x] = v; sum += v; }
+            if (!(sum > 0.0)) continue;
+            for (int i = 0; i < shape.Length; i++) shape[i] /= sum;
+            decoder ??= factory.CreateDecoder(cfg);
+            _channels.Add(new NuclideChannel
+            {
+                Isotope = iso, WindowCenterKeV = center, Color = IsotopeRgb(iso),
+                FloodShape = shape, FloodAccum = new DetectorImage(w, h), RateCps = rate,
+            });
+            totalRate += rate;
+        }
+        if (_channels.Count == 0 || decoder == null) return false;
+        _liveDecoder = decoder;
+        _liveRateCps = totalRate;
+        _floodShape = _channels[0].FloodShape;    // primary channel drives depth / autofocus / focus-fusion
+        _floodAccum = _channels[0].FloodAccum;
 
         // Deposit pool (shared): raw energies drive the Waveform scope; resolution-smeared energies build the
         // Spectrum PDF — same detected events, two views.
@@ -795,15 +868,18 @@ public partial class MainWindow : Window
         double dN = _liveRateCps * dt;
         var rng = _liveRng!;
 
-        // Accumulate the SAME ΔN detected events into every view's store (cheap); render only the visible tab.
-        if (_floodShape != null && _floodAccum != null)
+        // Accumulate each nuclide channel into its OWN flood at ITS OWN detected rate (channels differ by energy
+        // and efficiency), so the per-nuclide floods — and the composited reconstruction — build up correctly for a
+        // mixed field. The spectrum/scope stores below use the combined rate (dN). Render only the visible tab.
+        foreach (var ch in _channels)
         {
-            int w = _floodAccum.Width, h = _floodAccum.Height;
+            int w = ch.FloodAccum.Width, h = ch.FloodAccum.Height;
+            double dNc = ch.RateCps * dt;
             for (int y = 0; y < h; y++)
                 for (int x = 0; x < w; x++)
                 {
-                    int add = Sampling.Poisson(rng, _floodShape[y * w + x] * dN);
-                    if (add != 0) { _floodAccum.Add(x, y, add); _liveTotalCounts += add; }
+                    int add = Sampling.Poisson(rng, ch.FloodShape[y * w + x] * dNc);
+                    if (add != 0) { ch.FloodAccum.Add(x, y, add); _liveTotalCounts += add; }
                 }
         }
         if (_specPdf != null && _specCounts != null)
@@ -949,32 +1025,60 @@ public partial class MainWindow : Window
 
     private void RenderImaging()
     {
-        if (_floodAccum == null || _liveDecoder == null) return;
+        if (_channels.Count == 0 || _liveDecoder == null || _floodAccum == null) return;
         int w = _floodAccum.Width, h = _floodAccum.Height;
-        var dec = _liveDecoder.Decode(_floodAccum);
-        DrawHeatmap(ImgFloodPlot, ToGrid(_floodAccum), 0, w, 0, h,
-            "Detector flood map (counts)", "pixel x", "pixel y", null, null);
-        var recon = dec.Reconstruction;
-        double left = dec.ReconOriginMm, right = dec.ReconOriginMm + (recon.Width - 1) * dec.ReconStepMm;
-        double bottom = dec.ReconOriginMm, top = dec.ReconOriginMm + (recon.Height - 1) * dec.ReconStepMm;
 
-        // A coded aperture images every source at once — find the K strongest peaks (K = source count) so
-        // each source is marked, not just the single global maximum.
-        int k = Math.Max(1, _scene.Count);
-        var peaks = MixedFieldStudy.TopPeaks(recon, dec.ReconOriginMm, dec.ReconStepMm, k, minSeparationMm: 2.5);
-        var estList = peaks.Select(pk => (pk.Xmm, pk.Ymm)).ToList();
+        // Decode EACH nuclide channel's own flood → a reconstruction with (mostly) only that nuclide's sources.
+        // Normalize each and composite them, isotope-coloured, so co-measured nuclides separate in the image.
+        var recons = new List<(NuclideChannel ch, DetectorImage recon, double max)>();
+        double originMm = 0, stepMm = 1; int rw = 0, rh = 0;
+        var floodSum = new DetectorImage(w, h);
+        foreach (var ch in _channels)
+        {
+            var dr = _liveDecoder.Decode(ch.FloodAccum);
+            var rec = dr.Reconstruction;
+            double mx = 0; foreach (var v in rec.Raw) if (v > mx) mx = v;
+            recons.Add((ch, rec, mx));
+            originMm = dr.ReconOriginMm; stepMm = dr.ReconStepMm; rw = rec.Width; rh = rec.Height;
+            for (int y = 0; y < h; y++) for (int x = 0; x < w; x++) floodSum.Add(x, y, ch.FloodAccum[x, y]);
+        }
+        if (rw == 0) return;
 
-        DrawHeatmap(ImgReconPlot, ToGrid(recon), left, right, bottom, top,
-            "Decoded reconstruction (× sources, ○ found)", "x (mm)", "y (mm)",
+        DrawHeatmap(ImgFloodPlot, ToGrid(floodSum), 0, w, 0, h,
+            "Detector flood map (all windows, counts)", "pixel x", "pixel y", null, null);
+
+        // Imaging-tab recon heatmap = per-pixel MAX over each channel's NORMALIZED recon (so every nuclide's
+        // source shows at comparable strength regardless of its count level), plus per-nuclide peak marks.
+        var comp = new DetectorImage(rw, rh);
+        var estList = new List<(double, double)>();
+        foreach (var (ch, rec, mx) in recons)
+        {
+            if (mx > 0)
+                for (int y = 0; y < rh; y++)
+                    for (int x = 0; x < rw; x++)
+                    {
+                        double t = rec[x, y] / mx;
+                        if (t > comp[x, y]) comp[x, y] = t;
+                    }
+            int kIso = Math.Max(1, _scene.Count(s => s.Isotope == ch.Isotope));
+            foreach (var pk in MixedFieldStudy.TopPeaks(rec, originMm, stepMm, kIso, minSeparationMm: 2.5))
+                estList.Add((pk.Xmm, pk.Ymm));
+        }
+        double left = originMm, right = originMm + (rw - 1) * stepMm;
+        double bottom = originMm, top = originMm + (rh - 1) * stepMm;
+        DrawHeatmap(ImgReconPlot, ToGrid(comp), left, right, bottom, top,
+            "Decoded reconstruction — per-nuclide (× sources, ○ found)", "x (mm)", "y (mm)",
             _liveTruePos, estList);
-        SetReconOverlay(recon, dec.ReconOriginMm, dec.ReconStepMm);
+
+        // Scene-canvas overlay: colour composite (each nuclide tinted its isotope colour, normalized).
+        SetReconOverlayComposite(recons, originMm, stepMm);
         RedrawScene();
 
         var truth = _scene.Select(s => new[] { s.X, s.Y }).ToArray();
-        var matches = MixedFieldStudy.MatchOneToOne(truth, peaks);
+        var matches = MixedFieldStudy.MatchOneToOne(truth, estList.Select(e => new FoundSource(e.Item1, e.Item2, 1.0)).ToArray());
         double worst = matches.Length > 0 ? matches.Max(m => m.ErrorMm) : 0.0;
-        ImgStatus.Text = $"{peaks.Length} source(s) found · worst error {worst:F2} mm — sharpens as counts build";
-        _liveDetail = $"{peaks.Length} found, worst {worst:F1}mm";
+        ImgStatus.Text = $"{_channels.Count} nuclide(s) · {estList.Count} source(s) found · worst {worst:F2} mm — sharpens as counts build";
+        _liveDetail = $"{_channels.Count} nuclide, {estList.Count} found, worst {worst:F1}mm";
     }
 
     private void RenderSpectrum()
