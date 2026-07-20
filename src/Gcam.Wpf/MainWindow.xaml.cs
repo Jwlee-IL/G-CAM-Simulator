@@ -56,6 +56,9 @@ public partial class MainWindow : Window
         public double[] FloodShape = [];        // per-pixel mean, Σ = 1
         public DetectorImage FloodAccum = null!;
         public double RateCps;                  // detected counts/s landing in THIS nuclide's window
+        // Compton stripping: (index of a HIGHER-energy channel, calibrated downscatter ratio R). Subtracting
+        // R·(that channel's flood) per pixel removes its downscatter leaking into THIS window.
+        public readonly List<(int hiIdx, double r)> Strip = new();
     }
     private SimulationConfig? _liveCfg;      // the config in flight, so refocusing can rebuild the decoder
     private IReadOnlyList<(double x, double y)>? _liveTruePos;
@@ -806,6 +809,30 @@ public partial class MainWindow : Window
         // scene's ALL sources are present (not just the first nuclide's). Per-nuclide floods live on the channels.
         _floodAccum = new DetectorImage(_channels[0].FloodAccum.Width, _channels[0].FloodAccum.Height);
 
+        // Compton-stripping calibration: for each channel, against every HIGHER-energy channel H, the ratio
+        // R = (H-only counts landing in THIS window) / (H-only counts in H's own window) — a spectral/geometry
+        // property calibrated from an H-only run of the scene. Per pixel, subtracting R·H.flood then removes H's
+        // downscatter leaking into this window, recovering a co-located lower isotope (themes 16-17).
+        for (int i = 0; i < _channels.Count; i++)
+        {
+            var lo = _channels[i];
+            for (int j = 0; j < _channels.Count; j++)
+            {
+                var hi = _channels[j];
+                if (hi.WindowCenterKeV <= lo.WindowCenterKeV) continue;      // downscatter only high -> low
+                var hCfg = cfg.Clone();
+                hCfg.Sources = (cfg.Sources ?? []).Where(s => s.Isotope == hi.Isotope).ToArray();
+                if (hCfg.Sources.Length == 0) continue;
+                double hiSum = SumImage(new SimulationRunner(new ComptonFactory(
+                    ComptonStrategy.PerPixelWindow, hi.WindowCenterKeV, windowFrac)).Run(hCfg).DetectorImage);
+                if (!(hiSum > 0)) continue;
+                double loSum = SumImage(new SimulationRunner(new ComptonFactory(
+                    ComptonStrategy.PerPixelWindow, lo.WindowCenterKeV, windowFrac)).Run(hCfg).DetectorImage);
+                double r = loSum / hiSum;
+                if (r > 0) lo.Strip.Add((j, r));
+            }
+        }
+
         // Deposit pool (shared): raw energies drive the Waveform scope; resolution-smeared energies build the
         // Spectrum PDF — same detected events, two views.
         var stream = new EventStreamStudy().Generate(cfg, Math.Max(_liveRateCps, 1.0), AdcSampleRateHz, 20000);
@@ -1027,6 +1054,12 @@ public partial class MainWindow : Window
         view.Refresh();
     }
 
+    // Compton-strip toggle: re-decode the accumulated floods with/without stripping (no new MC needed).
+    private void ImgStrip_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_liveRunning && MainTabs.SelectedIndex == 1) RenderImaging();
+    }
+
     private void RenderImaging()
     {
         if (_channels.Count == 0 || _liveDecoder == null || _floodAccum == null) return;
@@ -1034,12 +1067,27 @@ public partial class MainWindow : Window
 
         // Decode EACH nuclide channel's own flood → a reconstruction with (mostly) only that nuclide's sources.
         // Normalize each and composite them, isotope-coloured, so co-measured nuclides separate in the image.
+        // With Compton strip on, first subtract each higher-energy channel's calibrated downscatter per pixel —
+        // so a lower isotope CO-LOCATED with a higher one (which the spatial decode alone can't split) is recovered.
+        bool strip = ImgStrip?.IsChecked == true;
         var recons = new List<(NuclideChannel ch, DetectorImage recon, double max)>();
         double originMm = 0, stepMm = 1; int rw = 0, rh = 0;
         var floodSum = new DetectorImage(w, h);
         foreach (var ch in _channels)
         {
-            var dr = _liveDecoder.Decode(ch.FloodAccum);
+            var flood = ch.FloodAccum;
+            if (strip && ch.Strip.Count > 0)
+            {
+                flood = new DetectorImage(w, h);
+                for (int y = 0; y < h; y++)
+                    for (int x = 0; x < w; x++)
+                    {
+                        double v = ch.FloodAccum[x, y];
+                        foreach (var (hiIdx, r) in ch.Strip) v -= r * _channels[hiIdx].FloodAccum[x, y];
+                        flood[x, y] = Math.Max(0.0, v);
+                    }
+            }
+            var dr = _liveDecoder.Decode(flood);
             var rec = dr.Reconstruction;
             double mx = 0; foreach (var v in rec.Raw) if (v > mx) mx = v;
             recons.Add((ch, rec, mx));
@@ -1083,8 +1131,9 @@ public partial class MainWindow : Window
         var truth = _scene.Select(s => new[] { s.X, s.Y }).ToArray();
         var matches = MixedFieldStudy.MatchOneToOne(truth, estList.Select(e => new FoundSource(e.x, e.y, 1.0)).ToArray());
         double worst = matches.Length > 0 ? matches.Max(m => m.ErrorMm) : 0.0;
-        ImgStatus.Text = $"{_channels.Count} nuclide(s) · {estList.Count} source(s) found · worst {worst:F2} mm — sharpens as counts build";
-        _liveDetail = $"{_channels.Count} nuclide, {estList.Count} found, worst {worst:F1}mm";
+        string stripNote = strip && _channels.Any(c => c.Strip.Count > 0) ? " · Compton-stripped" : "";
+        ImgStatus.Text = $"{_channels.Count} nuclide(s) · {estList.Count} source(s) found · worst {worst:F2} mm{stripNote} — sharpens as counts build";
+        _liveDetail = $"{_channels.Count} nuclide, {estList.Count} found, worst {worst:F1}mm{stripNote}";
     }
 
     private void RenderSpectrum()

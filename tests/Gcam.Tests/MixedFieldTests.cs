@@ -1,4 +1,5 @@
 using Gcam.Configuration;
+using Gcam.Core;
 using Gcam.Detector;
 using Gcam.Simulation;
 using Xunit;
@@ -150,6 +151,49 @@ public class MixedFieldTests
             .LocalizeMultiple(Scene(), k: 1, minSeparationMm: 3.0).Found[0];
         Assert.True(Dist(naWin, na) < 2.5, $"511 window should localize Na @(-4,4); got ({naWin.Xmm:F1},{naWin.Ymm:F1})");
         Assert.True(Dist(naWin, cs) > 4.0, $"511 window peak should NOT sit on Cs; got ({naWin.Xmm:F1},{naWin.Ymm:F1})");
+    }
+
+    [Fact]
+    public void ComptonStripping_RecoversCoLocatedCsCount()
+    {
+        // Cs-137 and a strong Co-60 CO-LOCATED at the origin. The 662 keV window flood OVER-counts Cs because
+        // Co-60 downscatters into 662 at the SAME position — the spatial decode cannot split them. Per-pixel
+        // Compton stripping (subtract R × the Co 1332 window, with R = Co-only downscatter-into-662 / Co
+        // photopeak) removes the contamination and recovers the Cs count. This is the mechanism the WPF
+        // Compton-strip toggle and the CLI `mixedstrip` use (themes 16-17).
+        const double wf = 0.10, csLine = 661.7, coCenter = 1332.5;
+        const long budget = 4_000_000;
+        SourceConfig Cs() => new() { Isotope = "Cs-137", Position = [0, 0, 0.0], ActivityBq = 1.0,
+            Lines = [new EmissionLine { EnergyKeV = csLine, Intensity = 0.851 }] };
+        SourceConfig Co() => new() { Isotope = "Co-60", Position = [0, 0, 0.0], ActivityBq = 8.0,
+            Lines = [new EmissionLine { EnergyKeV = 1173.2, Intensity = 0.999 }, new EmissionLine { EnergyKeV = 1332.5, Intensity = 0.999 }] };
+        static double Sum(DetectorImage m) { double s = 0; foreach (var v in m.Raw) s += v; return s; }
+        DetectorImage Flood(SourceConfig[] s, double center, long photons)
+        {
+            var c = Base(); c.Sources = s; c.PhotonCount = photons;
+            return new SimulationRunner(new ComptonFactory(ComptonStrategy.PerPixelWindow, center, wf)).Run(c).DetectorImage;
+        }
+
+        // "true Cs" reference: Cs at its share of the mixed photon budget (weak source is diluted in a mixed field).
+        double wCsE = 1.0 * 0.851, wCoE = 8.0 * (0.999 + 0.999);
+        long csPhotons = (long)(budget * (wCsE / (wCsE + wCoE)));
+        var trueCs = Flood([Cs()], csLine, csPhotons);
+        var raw662 = Flood([Cs(), Co()], csLine, budget);
+        var coWin = Flood([Cs(), Co()], coCenter, budget);
+
+        // R calibrated from a Co-ONLY run: downscatter-into-662 per Co photopeak (budget-independent ratio).
+        double R = Sum(Flood([Co()], coCenter, budget)) is var hi && hi > 0
+            ? Sum(Flood([Co()], csLine, budget)) / hi : 0.0;
+
+        var stripped = new DetectorImage(raw662.Width, raw662.Height);
+        for (int y = 0; y < raw662.Height; y++)
+            for (int x = 0; x < raw662.Width; x++)
+                stripped[x, y] = System.Math.Max(0.0, raw662[x, y] - R * coWin[x, y]);
+
+        double t = Sum(trueCs), rawErr = System.Math.Abs(Sum(raw662) - t), stripErr = System.Math.Abs(Sum(stripped) - t);
+        Assert.True(R > 0, $"R should be positive: {R:F3}");
+        Assert.True(Sum(raw662) > t * 1.2, $"raw 662 should OVER-count Cs (Co contamination): raw {Sum(raw662):F0} vs true {t:F0}");
+        Assert.True(stripErr < rawErr, $"stripping should recover the Cs count: raw err {rawErr:F0} vs stripped err {stripErr:F0}");
     }
 
     [Fact]
