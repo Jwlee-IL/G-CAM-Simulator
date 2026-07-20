@@ -25,14 +25,15 @@ in `Directory.Build.props` (nullable + implicit usings enabled).
 
 | Project | Role |
 |---|---|
-| `src/…Core` | Domain primitives: `Vector3`, `Ray`, `Photon`, `IRandom`+`DefaultRandom`, `DetectorImage`, result records, and the pipeline interfaces (`ISource`, `IMask`, `IDetector`, `IDecoder`) |
-| `src/…Configuration` | `SimulationConfig` (+ `Source`/`Mask`/`Detector`/`Geometry`/`Decoder` sections) and `ConfigLoader` (System.Text.Json) |
-| `src/…Masks` | `MaskPattern`, `MuraGenerator` (rank-p MURA, mosaic, decoding array), `CodedApertureMask` (`IMask`) |
-| `src/…Detector` | `CrystalDetector` (`IDetector`) — ray→pixel scoring; `CrystalUniformity` (per-pixel gain/resolution sensitivity map) |
-| `src/…Decoding` | `CrossCorrelationDecoder` (`IDecoder`) + `CodedApertureGeometry` |
-| `src/…Simulation` | `SimulationRunner`, `ISimulationFactory`/`DefaultSimulationFactory`, `IsotropicSource`, `DetectorBiasedSource`, `SourceSweep`, `ParameterScan`, `NoiseStudy`, `ThicknessStudy`, `UniformityStudy`, `ArrayStudy` |
-| `src/…Cli` | Console entrypoint: single run, `sweep`, `scan`, `noise`, `thickness`, `uniformity`, `array` |
-| `tests/…Tests` | xUnit harness — MURA properties (`MuraGeneratorTests`) + end-to-end physics invariants (`PipelineTests`: localization, ghost, biasing-unbiased, stopping power, ghost suppression) |
+| `src/…Core` | Domain primitives: `Vector3`, `Ray`, `Photon`, `IRandom`+`DefaultRandom`, `DetectorImage`, `Sampling`, `SubCellMethod`, result records, and the pipeline interfaces (`ISource`, `IMask`, `IDetector`, `IDecoder`) |
+| `src/…Configuration` | `SimulationConfig` (+ `Source`/`Mask`/`Detector`/`Geometry`/`Decoder`/`FrontEnd` sections) and `ConfigLoader` (System.Text.Json) |
+| `src/…Masks` | `MaskPattern`, `MuraGenerator` (rank-p MURA, mosaic, decoding array), `CodedApertureMask` (`IMask`; focal/taper/pose/fabrication-error transforms), `MaskFabrication` (per-cell machining error) |
+| `src/…Detector` | `CrystalDetector` / `ComptonCrystalDetector` (`IDetector` — ray→pixel scoring, Compton transport), `ComptonModel` (Klein-Nishina), `CrystalUniformity` (per-pixel gain/resolution + photopeak window), `FrontEndModel` (photoelectron-budget resolution + DCR), `Waveform` (native C# shaper, bit-exact to RTL), `ThermalDrift` (gain/DCR/PDE vs T), `NonProportionality` (electron-response curves), `DetectorDefects` (dead/hot maps + repair), `MaskSecondary` (W fluorescence/scatter), `EntranceAbsorber` (source capsule/window) |
+| `src/…Decoding` | `CrossCorrelationDecoder` (`IDecoder`, ±1 back-projection + optional sub-cell interp), `MlemDecoder` (`IDecoder`, Poisson-likelihood ML-EM), `PeakInterpolation` (tent/parabolic/gaussian), `CodedApertureGeometry` |
+| `src/…Simulation` | `SimulationRunner`, `ISimulationFactory`/`DefaultSimulationFactory` (+ `ComptonFactory`), sources (`IsotropicSource`, `DetectorBiasedSource`, `MixedFieldSource`), `DecayScheme` (per-decay correlated gammas), `EventStreamStudy` (timed MC stream → pile-up), and one study class per theme (`SourceSweep`, `ParameterScan`, `NoiseStudy`, `ThicknessStudy`, `UniformityStudy`, `ArrayStudy`, `ComptonStudy`, `DepthStudy`/`DepthDesignStudy`, `MaskGeometryStudy`, `BackgroundStudy`, `ShieldStudy`, `MixedFieldStudy`, `MaskAntimaskStudy`, plus the realism-gap studies: `ThermalDriftStudy`/`ThermalReadoutStudy`, `MaskFabricationStudy`, `AlignmentStudy`, `DetectorDefectStudy`, `MaskSecondaryStudy`/`MaskScatterStudy`, `DeadTime`/`DeadTimeStudy`, `SubCellStudy`, `CascadeSummingStudy`, `NonProportionalityStudy`, `FiniteSourceStudy`, `MlemStudy`, `DoiParallaxStudy`) |
+| `src/…Wpf` | `Genoray.MonteCarlo.Wpf` (net9.0-windows, ScottPlot 5): interactive scene editor + Waveform/Imaging/Spectrum/Optics/Detector tabs; one acquisition drives all tabs. Can't be headless-tested — verify it *compiles* (theme 34–35) |
+| `src/…Cli` | Console entrypoint `montecarlo`: single run + ~23 study sub-commands (`sweep`, `scan`, `noise`, … through the realism-gap set `thermal`…`doi` — see Build/run) |
+| `tests/…Tests` | xUnit harness — MURA properties (`MuraGeneratorTests`) + end-to-end physics invariants (`PipelineTests`) + one test class per theme (localization, ghost, biasing-unbiased, stopping power, dead time, sub-cell, cascade, non-proportionality, MLEM, DOI, …) |
 
 ### Design principle
 Everything is **data-driven**: one `SimulationConfig` (JSON) fully describes a

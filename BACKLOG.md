@@ -14,14 +14,12 @@ MLEM opens follow-ons: a likelihood DEPTH estimate and iteration/noise regulariz
 ready); integrate the theme-22 SiPM/thermal/shield productization models into the C# pipeline (design-only, user isn't
 building it). Deferred by choice: mask TILT (pitch/yaw), mask WARPING, reflector MATERIAL (all 2nd-order).
 
-**★ NEXT SESSION — docs modernization pass** (do this before more feature work): the code has grown to 50 themes but
-some top-level docs lag. (1) **`AGENTS.md`** — the *Solution layout* table (per-project one-liners) and the intro still
-describe the early state; refresh the `…Detector` / `…Simulation` / `…Decoding` / `…Cli` rows to name the many new
-studies/decoders (MLEM, non-proportionality, cascade, finite-source, DOI, thermal, mask-scatter, etc.) and confirm the
-CLI-command list is complete. (2) **memory `gcam-project.md`** is ~280 lines (themes 42–50 detail accreted); compress
-the older themes (≈1–35) into a terse index and keep only pointers, so the per-session load stays cheap — the full
-detail already lives in `AGENTS.findings.md`. (3) sanity-check the commit-count / HEAD / test-count line stays in sync
-(it drifted to 110 vs actual 108 this session).
+**✓ DONE (2026-07-20) — docs modernization pass:** (1) **`AGENTS.md`** *Solution layout* table refreshed — every
+`…Core/…Detector/…Simulation/…Decoding/…Cli` row now names the new subsystems (MLEM, non-proportionality, cascade,
+finite-source, DOI, thermal, mask-scatter, defects, fabrication, front-end, waveform) and a `…Wpf` row was added; the
+CLI list already covered all 23 commands through `doi`. (2) memory `gcam-project.md` compressed — verbose themes 34–35
+collapsed to terse pointers ("detail → findings.md #N"); themes 1–33 were already a terse index. (3) commit/HEAD/test
+line synced to **109 commits, HEAD `5d48991`, 145 C# + 7 cocotb green** (the 110-vs-108 drift is resolved).
 
 ## Open
 
