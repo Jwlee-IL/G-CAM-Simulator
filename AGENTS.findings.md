@@ -1389,3 +1389,20 @@ aperture as the forward model).
   is optimistic (truth-centred metric windows overlap below ~2 mm) so the robust claim is the 2–3 mm split; and the
   sharper-peak / closer-resolving results are iteration- and count-dependent (an ideal high-count study, not a general
   camera resolution limit).
+
+## 49. Thermal DCR / PDE readout effects — `ThermalDrift` (extended) / `ThermalReadoutStudy` / `montecarlo thermalro`
+Physics-realism-audit item G (readout): the thermal model (theme 36) mapped temperature only to the SiPM gain
+(photopeak-centroid drift). It missed the DARK-COUNT and PDE consequences. `ThermalDrift` gains `DcrFactor(ΔT) =
+2^(ΔT/doubling)` (silicon dark generation ≈ doubles every 8–10 °C) and `PdeFactor(ΔT)` (PDE follows the over-voltage,
+≈ −0.2 %/°C). Key physical point: bias compensation nulls the GAIN drift but does NOT null the thermal dark
+generation, so **DCR keeps climbing with temperature even under a comp loop**.
+- **`ThermalReadoutStudy` / `montecarlo thermalro`** sweeps ΔT and, via `FrontEndModel`, reports DCR, the low-line vs
+  photopeak resolution, and the PDE factor.
+- **Result**: DCR rises **×13 over 30 °C** (2× / 8 °C). Its parallel-noise term is ∝1/E, so it degrades the **low line
+  (60 keV) ~2× more (relatively) than the 662 keV photopeak** — but only **modestly in absolute terms** (60 keV
+  10.1 %→10.4 %, 662 keV 4.30 %→4.36 %) because for this high-light-yield crystal the resolution is
+  STATISTICS-dominated, not DCR-dominated. PDE droops −6 % over 30 °C. **Honest headline: the dominant thermal-readout
+  effect is the raw DCR growth itself (a dark trigger / pile-up load, cf. dead time theme 42), not a resolution hit —
+  and the 662 photopeak (this camera's line) is nearly immune, so the gain-centroid drift of theme 36 stays the main
+  thermal concern for Cs-137 imaging.** (Tests: `ThermalReadoutTests`, +2 — DCR doubling & comp-immunity, 1/E low-E
+  degradation + PDE droop.)

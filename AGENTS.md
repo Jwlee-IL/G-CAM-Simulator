@@ -106,7 +106,7 @@ dotnet run --project src/Genoray.MonteCarlo.Cli -c Release -- samples/materials/
 # single-mask vs mask/antimask vs additive background → antimask.csv
 dotnet run --project src/Genoray.MonteCarlo.Cli -c Release -- antimask samples/scenario.json samples/antimask.csv
 
-# --- physical-realism gap studies (themes 36–48; see AGENTS.findings.md) ---
+# --- physical-realism gap studies (themes 36–49; see AGENTS.findings.md) ---
 # thermal drift during acquisition (ambient + self-heating) → window walk / flood residual → thermal_{off,on}.csv
 dotnet run --project src/Genoray.MonteCarlo.Cli -c Release -- thermal  samples/scenario.json samples/thermal
 # random-coincidence pile-up SUM continuum in the spectrum → pileup.csv
@@ -133,6 +133,8 @@ dotnet run --project src/Genoray.MonteCarlo.Cli -c Release -- nonprop  samples/s
 dotnet run --project src/Genoray.MonteCarlo.Cli -c Release -- finitesrc samples/scenario.json samples/finitesrc.csv
 # MLEM (Poisson-likelihood) vs cross-correlation: two-source resolving power, non-negativity → mlem.csv (+_profile.csv)
 dotnet run --project src/Genoray.MonteCarlo.Cli -c Release -- mlem     samples/scenario.json samples/mlem.csv
+# thermal DCR/PDE readout effects (dark rate, low-E vs photopeak resolution) vs temperature → thermalro.csv
+dotnet run --project src/Genoray.MonteCarlo.Cli -c Release -- thermalro samples/scenario.json samples/thermalro.csv
 ```
 
 Sample scenarios in `samples/`: `scenario.json` (centered), `scenario_offaxis.json`

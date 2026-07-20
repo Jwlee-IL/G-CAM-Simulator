@@ -45,13 +45,24 @@ public sealed class ThermalDrift
     /// <summary>Self-heating shape at the array corner relative to the centre (0..1; 1 = flat, no gradient).</summary>
     public double EdgeFactor { get; }
 
+    /// <summary>Temperature rise (°C) over which the SiPM dark-count rate DOUBLES (thermal generation ≈ doubles every
+    /// 8–10 °C for a silicon SiPM). Drives <see cref="DcrFactor"/>.</summary>
+    public double DcrDoublingC { get; }
+
+    /// <summary>SiPM photon-detection-efficiency temperature coefficient (relative PDE change per °C). PDE tracks the
+    /// over-voltage like the gain, so an uncompensated cool-down/​warm-up shifts it too; physically small (≈ −0.2 %/°C).</summary>
+    public double PdePerC { get; }
+
     private readonly double _cx, _cy, _rMax;
 
     public ThermalDrift(int width, int height,
                         double alphaPerC = -0.007, double biasCompFraction = 0.0,
                         double ambientRatePerT = 0.0, double ambientSwingC = 0.0, double ambientPeriod = 0.0,
-                        double selfHeatC = 0.0, double selfHeatTau = 1.0, double edgeFactor = 1.0)
+                        double selfHeatC = 0.0, double selfHeatTau = 1.0, double edgeFactor = 1.0,
+                        double dcrDoublingC = 8.0, double pdePerC = -0.002)
     {
+        DcrDoublingC = dcrDoublingC <= 0.0 ? 8.0 : dcrDoublingC;
+        PdePerC = pdePerC;
         Width = width;
         Height = height;
         AlphaPerC = alphaPerC;
@@ -96,6 +107,15 @@ public sealed class ThermalDrift
     /// <summary>Photopeak centroid shift (relative to the line energy) at pixel (x,y), time t, after bias compensation.</summary>
     public double CentroidShift(int x, int y, double t)
         => AlphaPerC * (1.0 - BiasCompFraction) * DeltaT(x, y, t);
+
+    /// <summary>Dark-count-rate multiplier vs the calibration point for a temperature deviation <paramref name="deltaT"/>
+    /// (°C): DCR ≈ DCR₀·2^(ΔT/doubling). Bias compensation nulls the GAIN drift but NOT the thermal dark generation,
+    /// so DCR keeps rising with temperature even under a comp loop.</summary>
+    public double DcrFactor(double deltaT) => Math.Pow(2.0, deltaT / DcrDoublingC);
+
+    /// <summary>PDE multiplier vs calibration for a temperature deviation (°C). Like the gain, PDE follows the
+    /// over-voltage, so a comp loop that holds over-voltage also holds PDE — reduced by <see cref="BiasCompFraction"/>.</summary>
+    public double PdeFactor(double deltaT) => 1.0 + PdePerC * (1.0 - BiasCompFraction) * deltaT;
 
     /// <summary>Row-major centroid-shift map at time <paramref name="t"/> for the whole array.</summary>
     public double[] CentroidShiftMap(double t)

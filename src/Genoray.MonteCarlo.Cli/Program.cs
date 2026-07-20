@@ -65,6 +65,9 @@ if (args[0].Equals("finitesrc", StringComparison.OrdinalIgnoreCase))
 if (args[0].Equals("mlem", StringComparison.OrdinalIgnoreCase))
     return RunMlem(args);
 
+if (args[0].Equals("thermalro", StringComparison.OrdinalIgnoreCase))
+    return RunThermalReadout(args);
+
 if (args[0].Equals("array", StringComparison.OrdinalIgnoreCase))
     return RunArray(args);
 
@@ -1287,6 +1290,46 @@ static int RunDeadTime(string[] args)
     Console.WriteLine();
     Console.WriteLine("Non-paralyzable saturates toward 1/τ; paralyzable PEAKS at R=1/τ then collapses (paralysis).");
     Console.WriteLine("Live fraction = recorded/true = the live-time vs real-time correction a real acquisition applies.");
+    Console.WriteLine($"CSV written: {csvPath}");
+    return 0;
+}
+
+static int RunThermalReadout(string[] args)
+{
+    if (args.Length < 2)
+    {
+        Console.Error.WriteLine("Usage: montecarlo thermalro <base.json> [out.csv]");
+        Console.Error.WriteLine("  Thermal DCR/PDE readout effects (beyond the gain-centroid drift): dark-count rate,");
+        Console.Error.WriteLine("  low-energy vs photopeak resolution, and PDE droop vs temperature deviation.");
+        return 1;
+    }
+
+    string csvPath = args.Length >= 3 ? args[2] : "samples/thermalro.csv";
+    var cfg = ConfigLoader.Load(args[1]);
+    var fe = cfg.Detector.FrontEnd ?? new FrontEndConfig();
+    if (!(fe.DarkCountRateHz > 0)) fe = new FrontEndConfig
+    {
+        LightYieldPhPerKeV = fe.LightYieldPhPerKeV, CollectionEfficiency = fe.CollectionEfficiency,
+        SipmPde = fe.SipmPde, ExcessNoiseFactor = fe.ExcessNoiseFactor,
+        IntrinsicResolutionFwhm = fe.IntrinsicResolutionFwhm, DarkCountRateHz = 1.0e6, IntegrationTimeNs = 300,
+    };
+    var thermal = new ThermalDrift(cfg.Detector.PixelsX, cfg.Detector.PixelsY);
+    double[] dts = [0, 4, 8, 12, 16, 20, 24, 30];
+    var rows = new ThermalReadoutStudy().Run(fe, thermal, dts, lowLineKeV: 60.0, photopeakKeV: 661.7);
+    File.WriteAllText(csvPath, ThermalReadoutStudy.ToCsv(rows));
+
+    Console.WriteLine($"Thermal readout study: DCR₀ = {fe.DarkCountRateHz / 1e6:F1} Mcps, doubling every {thermal.DcrDoublingC:F0} °C.");
+    Console.WriteLine("Bias compensation nulls the GAIN drift (theme 36) but NOT the thermal dark generation.");
+    Console.WriteLine();
+    Console.WriteLine("   ΔT(°C)   DCR(Mcps)   res@60keV   res@662keV   PDE");
+    Console.WriteLine("   ------   ---------   ---------   ----------   ----");
+    foreach (var r in rows)
+        Console.WriteLine($"   {r.DeltaTC,5:F0}    {r.DcrHz / 1e6,8:F2}    {r.ResLowEPct,7:F2}%    {r.ResPhotopeakPct,7:F2}%   {r.PdeFactor:F3}");
+    var c = rows[0]; var h = rows[^1];
+    Console.WriteLine();
+    Console.WriteLine($"Over {h.DeltaTC:F0} °C: DCR ×{h.DcrHz / c.DcrHz:F0}, PDE {(h.PdeFactor - 1) * 100:F0}%. The DCR term is ∝1/E, so the");
+    Console.WriteLine($"low line degrades ~2× more (relatively) than the photopeak — but modestly for this high-light-yield");
+    Console.WriteLine("crystal (statistics-dominated). The dominant effect is the raw DCR growth = a dark trigger / pile-up load.");
     Console.WriteLine($"CSV written: {csvPath}");
     return 0;
 }
