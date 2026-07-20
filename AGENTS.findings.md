@@ -1401,11 +1401,17 @@ generation, so **DCR keeps climbing with temperature even under a comp loop**.
 - **Result**: DCR rises **×13 over 30 °C** (2× / 8 °C). Its parallel-noise term is ∝1/E, so it degrades the **low line
   (60 keV) ~2× more (relatively) than the 662 keV photopeak** — but only **modestly in absolute terms** (60 keV
   10.1 %→10.4 %, 662 keV 4.30 %→4.36 %) because for this high-light-yield crystal the resolution is
-  STATISTICS-dominated, not DCR-dominated. PDE droops −6 % over 30 °C. **Honest headline: the dominant thermal-readout
-  effect is the raw DCR growth itself (a dark trigger / pile-up load, cf. dead time theme 42), not a resolution hit —
-  and the 662 photopeak (this camera's line) is nearly immune, so the gain-centroid drift of theme 36 stays the main
-  thermal concern for Cs-137 imaging.** (Tests: `ThermalReadoutTests`, +2 — DCR doubling & comp-immunity, 1/E low-E
-  degradation + PDE droop.)
+  STATISTICS-dominated, not DCR-dominated. (The ∝1/E is the DCR TERM; the total FWHM is its quadrature sum with the
+  statistics and intrinsic floor, so the total is not itself 1/E.) PDE droops −6 % over 30 °C. **Honest headline: the
+  dominant thermal-readout effect is the raw DCR growth itself (a dark avalanche / pile-up load, cf. dead time theme
+  42), not a resolution hit — and the 662 photopeak (this camera's line) is nearly immune, so the gain-centroid drift
+  of theme 36 stays the main thermal concern for Cs-137 imaging.** (Tests: `ThermalReadoutTests`, +2 — DCR doubling &
+  comp-immunity, 1/E low-E degradation + PDE droop.)
+- **Codex cross-verification** (gpt-5.5, read-only): no implementation bug — `DcrFactor = 2^(ΔT/8)` and the −0.2 %/°C
+  PDE droop are physically reasonable, bias compensation correctly affects gain/PDE but NOT the thermal DCR term, and
+  `R_dcr = 2.355·√(ENF·DCR·τ)/npe` with npe∝E gives the ∝1/E term consistently. Clarified per its notes: the ∝1/E is
+  the DCR TERM (not the total FWHM), and `dark_trigger_kcps = DCR/1000` is the raw dark avalanche-load proxy, not a
+  modelled discriminator false-trigger rate.
 
 ## 50. Depth-of-interaction (DOI) parallax in reconstruction — `DoiParallaxStudy` / `montecarlo doi`
 Physics-realism-audit item F (decoder vs detector response): the decoder back-projects the pixel-CENTRE front-face
@@ -1413,11 +1419,18 @@ crossing, but a gamma interacts at a random DEPTH in the crystal. For an OBLIQUE
 centroid the detector reads is displaced from the front face by depth·tan(incidence) — a parallax the centre-back-
 projecting decoder cannot correct. `DoiParallaxStudy` isolates it by building the SAME rays' flood twice — deposit at
 the front-face crossing (no DOI) vs at the DOI-displaced interaction point — and comparing the decoded position.
-- **Result**: the DOI localization shift is **0 on-axis** (normal incidence) and grows off-axis WITH crystal thickness
-  (deeper interactions → bigger parallax): at 9 mm off-axis it is 0.10 mm for a 5 mm crystal → **0.30 mm for a 30 mm
-  crystal**. Sub-mm here because the far source (160 mm) gives a small (~2–4°) obliquity, but it is a real, systematic
-  floor — comparable to the recon grid step (0.39 mm) and thus a genuine limit UNDER the sub-cell interpolation
-  (theme 43) at the FOV edge with a thick crystal, uncorrected by the decoder.
+- **Result**: the DOI localization SHIFT is **0 on-axis** (by symmetry the displacement averages out — individual rays
+  still have DOI blur; it is the signed shift that vanishes) and grows off-axis WITH crystal thickness (deeper
+  interactions → bigger parallax): at 9 mm off-axis it is 0.10 mm for a 5 mm crystal → **0.30 mm for a 30 mm crystal**.
+  Sub-mm here because the far source (160 mm) gives a small (~2–4°) obliquity, but it is a real, systematic floor —
+  comparable to the recon grid step (0.39 mm) and thus a genuine limit UNDER the sub-cell interpolation (theme 43) at
+  the FOV edge with a thick crystal, uncorrected by the decoder.
 - Because the shift is often sub-grid-step, the raw argmax quantizes it to 0 until it crosses a cell (one 0.88 mm
-  argmax jump in the sweep) — which is exactly why it matters only against the SUB-CELL precision, not the coarse grid.
-  Self-contained. (Tests: `DoiParallaxTests`, +1 — zero on-axis, grows with thickness off-axis, sub-mm.)
+  argmax jump in the sweep is quantization behaviour, not smooth DOI scaling) — which is exactly why it matters only
+  against the SUB-CELL precision, not the coarse grid. Self-contained. (Tests: `DoiParallaxTests`, +1 — zero on-axis,
+  grows with thickness off-axis, sub-mm.)
+- **Codex cross-verification** (gpt-5.5, read-only): geometry CORRECT — the lateral displacement `d_xy/|d_z|·depthZ`
+  reduces to `d_xy·pathIn` (correct along-ray displacement), and the paired-flood (same rays, DOI on vs off) is a valid
+  isolation. Framing tightened per its notes: "zero on-axis" is the SIGNED shift by symmetry (not zero per-ray DOI
+  blur); the FWHM columns are a fragile reference (the metric NaNs off-axis, so only the SHIFT is asserted); the 0.88 mm
+  row is argmax/quantization behaviour, not physical DOI scaling.
