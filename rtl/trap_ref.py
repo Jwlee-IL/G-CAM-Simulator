@@ -60,7 +60,7 @@ def blr(xs, gate=4096, frac=12):
 # CR-RC^n shaper fixed-point constants (Q16). A = exp(-1/tau) deconvolves the exp tail (pole-zero);
 # K = 1/tau_s is the single-pole RC low-pass gain. Defaults: tau=5 (matches the trapezoid), tau_s=2.5, order 4.
 CRRC_ORDER = 4
-CRRC_A_Q16 = round(math.exp(-1.0 / TAU_SAMPLES) * 65536)   # 53667
+CRRC_A_Q16 = round(math.exp(-1.0 / TAU_SAMPLES) * 65536)   # 53656
 CRRC_K_Q16 = round((1.0 / 2.5) * 65536)                     # 26214
 
 

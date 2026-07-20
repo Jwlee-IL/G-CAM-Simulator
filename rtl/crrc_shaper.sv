@@ -11,7 +11,7 @@
 module crrc_shaper #(
     parameter WIN    = 16,      // signed input sample width
     parameter ORDER  = 4,       // number of RC low-pass stages
-    parameter A_Q16  = 53667,   // exp(-1/tau) in Q16 (tau=5) — pole-zero deconvolution
+    parameter A_Q16  = 53656,   // round(exp(-1/tau)*65536), tau=5 — pole-zero deconvolution (matches C#/Python)
     parameter K_Q16  = 26214,   // 1/tau_s in Q16 (tau_s=2.5) — RC low-pass gain
     parameter Q      = 16,
     parameter WACC   = 40       // accumulator width

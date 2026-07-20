@@ -48,7 +48,7 @@ crrc.build(
     sources=[os.path.join(here, "crrc_shaper.sv")],
     hdl_toplevel="crrc_shaper",
     build_args=["-g2012"],
-    parameters={"ORDER": 4, "A_Q16": 53667, "K_Q16": 26214},
+    parameters={"ORDER": 4, "A_Q16": 53656, "K_Q16": 26214},
     always=True,
 )
 print(f"results xml: {crrc.test(hdl_toplevel='crrc_shaper', test_module='test_crrc', test_dir=here)}")

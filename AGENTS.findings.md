@@ -933,8 +933,10 @@ editor over the tabs plus Waveform / Imaging / Spectrum / Optics tabs. The build
 (several corrected my own mistakes — GUI can't be self-verified, so every claim was MC-checked):
 - **Native C# waveform** (`Detector/Waveform.cs`): bi-exp rasterizer + trapezoidal & CR-RC^4 shapers + BLR +
   ADC presets, **bit-exact to the Python RTL reference** (signed `>>` = SV `>>>`), cross-checked against
-  Python golden values (`WaveformTests`, 8). Note: the CR-RC pole-zero constant is `round(e^-0.2·65536)=53656`,
-  not the `53667` in the cocotb params/comment (self-consistent there, but drifted from the math).
+  Python golden values (`WaveformTests`, 8). CR-RC pole-zero constant `round(e^-0.2·65536)=53656`. **FIXED
+  (Codex-flagged): the RTL default + cocotb param carried the wrong `53667`** (a stale value ≈ tau 5.005; the
+  cocotb test read A from the DUT so it was self-consistent but masked the drift) — realigned `crrc_shaper.sv`,
+  `run_cocotb.py`, `trap_ref.py` to `53656` so **C# ↔ RTL CR-RC is now truly bit-exact** (7 cocotb tests re-run green).
 - **One acquisition drives all tabs**: ΔN detected events/tick feed the flood map, energy histogram, and
   scope from the SAME stream (not one sim per tab); only the visible tab renders. Live count accumulation
   (Poisson on a normalized shape), realistic detector energy resolution on the spectrum (1/√E), a photopeak
