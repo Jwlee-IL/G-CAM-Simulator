@@ -136,8 +136,8 @@ public class MixedFieldTests
         // Each nuclide's window is its PRIMARY line (Lines[0]) — the same rule the WPF channel builder uses
         // (Isotopes.Get(iso).Lines[0]). Derive the centers from the scene so the test tracks that rule.
         var scene0 = Scene();
-        double csCenter = scene0.Sources[0].Lines![0].EnergyKeV;   // 661.7 (Cs primary)
-        double naCenter = scene0.Sources[1].Lines![0].EnergyKeV;   // 511.0 (Na primary)
+        double csCenter = scene0.Sources![0].Lines![0].EnergyKeV;   // 661.7 (Cs primary)
+        double naCenter = scene0.Sources![1].Lines![0].EnergyKeV;   // 511.0 (Na primary)
 
         // Cs window -> the top peak is the Cs source, not the Na source.
         var csWin = new MixedFieldStudy(new ComptonFactory(ComptonStrategy.PerPixelWindow, csCenter, 0.10))

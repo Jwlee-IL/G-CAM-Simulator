@@ -78,7 +78,6 @@ public class MaskSecondaryTests
         Assert.True(r.FluorPct < 5.0, $"K X-rays are self-absorbed → a tiny share, got {r.FluorPct}%");
 
         // Arriving scatter is forward (backscatter heads away): counts live above ~250 keV, essentially none at 150.
-        double bw = 700.0 / 350;
         double lowBand = 0.0, highBand = 0.0;
         for (int i = 0; i < r.SecondaryHist.Length; i++)
         {

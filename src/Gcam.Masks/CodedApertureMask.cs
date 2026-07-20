@@ -172,11 +172,17 @@ public sealed class CodedApertureMask : IMask
     // Tungsten linear-attenuation ratio μ(E)/μ(662 keV), from NIST-XCOM total-with-coherent points
     // (photoelectric-steep below ~200 keV, Compton-flat above), log–log interpolated and end-clamped.
     // Anchored at 662 keV = 1.0 so the config's LinearAttenuationPerMm keeps its meaning.
-    // Relative-to-662 tungsten total-attenuation ratios (NIST-XCOM, corrected per Codex round 6).
-    private static readonly double[] _muE = { 122.0, 250.0, 400.0, 662.0, 1000.0, 1332.0 };
-    private static readonly double[] _muR = { 28.6, 5.0, 1.95, 1.00, 0.67, 0.55 };
+    // Extended below 122 keV (K-edge 69.5 keV; the 69.4 point is the below-edge value) so soft lines — Am-241
+    // 59.5, the Cs-137 Ba X-rays — see the correct, MORE opaque mask instead of the old 122 keV clamp. Values
+    // match the Codex-verified table in MaskSecondary (theme 41). Below 50 keV it clamps (soft X-rays are already
+    // fully blocked by any real mask). NOTE: for a normal ~10 mm mask closed cells are opaque at ≤122 keV either
+    // way, so this mainly corrects the μ curve for THIN masks / oblique edge-clipping / fabrication partial paths.
+    private static readonly double[] _muE = { 50.0, 60.0, 69.4, 122.0, 250.0, 400.0, 662.0, 1000.0, 1332.0 };
+    private static readonly double[] _muR = { 57.0, 47.0, 40.0, 28.6, 5.0, 1.95, 1.00, 0.67, 0.55 };
 
-    private static double TungstenMuRel(double energyKeV)
+    /// <summary>Tungsten total linear attenuation relative to 662 keV (μ(E)/μ(662)); the config's
+    /// LinearAttenuationPerMm is the 662 keV anchor. Public so the energy dependence is directly testable.</summary>
+    public static double TungstenMuRel(double energyKeV)
     {
         if (energyKeV <= _muE[0]) return _muR[0];
         if (energyKeV >= _muE[^1]) return _muR[^1];
