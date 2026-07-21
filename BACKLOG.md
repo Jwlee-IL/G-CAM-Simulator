@@ -28,6 +28,9 @@ isotope CO-LOCATED with a higher one separates in the image (test `ComptonStripp
   opaque regardless, so nil practical effect — only worth it for curve fidelity, needs verified NIST-XCOM values.
 - **per-channel SiPM/preamp gain·PDE·threshold mismatch**, **intrinsic activity** (LYSO Lu-176 / LaBr₃ La-138 — nil for GAGG).
 - **MLEM follow-ons**: likelihood DEPTH estimate, iteration/noise regularization, finite-mask (Cyclic=false) ghost demo.
+- **Compton-stripping response matrix** — the current WPF/CLI stripping is a one-pass scalar model (subtracts the raw
+  high-window flood), exact for a clean 2-isotope pair but approximate for 3+ overlapping contaminants; a per-pixel
+  isotope×window response-matrix solve (high→low, purified) would be exact. Nil for the common 1–2 isotope case.
 - Deferred by choice (2nd-order): mask TILT (pitch/yaw), mask WARPING, reflector MATERIAL.
 
 **✓ DONE (2026-07-20) — docs modernization pass** (extended after an adversarial Codex + Claude re-review caught a
