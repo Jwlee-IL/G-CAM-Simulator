@@ -56,8 +56,9 @@ public partial class MainWindow : Window
         public double[] FloodShape = [];        // per-pixel mean, Σ = 1
         public DetectorImage FloodAccum = null!;
         public double RateCps;                  // detected counts/s landing in THIS nuclide's window
-        // Compton stripping: (index of a HIGHER-energy channel, calibrated downscatter ratio R). Subtracting
-        // R·(that channel's flood) per pixel removes its downscatter leaking into THIS window.
+        // Compton stripping: (index of a CONTAMINATING channel — one with an emission line above this window,
+        // calibrated downscatter ratio R). Subtracting R·(that channel's flood) per pixel removes its downscatter
+        // leaking into THIS window.
         public readonly List<(int hiIdx, double r)> Strip = new();
     }
     private SimulationConfig? _liveCfg;      // the config in flight, so refocusing can rebuild the decoder
@@ -809,17 +810,24 @@ public partial class MainWindow : Window
         // scene's ALL sources are present (not just the first nuclide's). Per-nuclide floods live on the channels.
         _floodAccum = new DetectorImage(_channels[0].FloodAccum.Width, _channels[0].FloodAccum.Height);
 
-        // Compton-stripping calibration: for each channel, against every HIGHER-energy channel H, the ratio
+        // Compton-stripping calibration: for each channel, against every contaminating channel H, the ratio
         // R = (H-only counts landing in THIS window) / (H-only counts in H's own window) — a spectral/geometry
         // property calibrated from an H-only run of the scene. Per pixel, subtracting R·H.flood then removes H's
         // downscatter leaking into this window, recovering a co-located lower isotope (themes 16-17).
+        // NOTE: this is the CLI's one-pass SCALAR model — exact for a clean pair; with 3+ overlapping contaminants
+        // it approximates (subtracts the RAW high-window flood, not a purified one). A full fix is a per-pixel
+        // isotope×window response-matrix solve, high→low.
         for (int i = 0; i < _channels.Count; i++)
         {
             var lo = _channels[i];
             for (int j = 0; j < _channels.Count; j++)
             {
+                if (j == i) continue;
                 var hi = _channels[j];
-                if (hi.WindowCenterKeV <= lo.WindowCenterKeV) continue;      // downscatter only high -> low
+                // H contaminates lo's window only if H has an emission LINE above lo's window centre. H's channel
+                // CENTRE (its primary line) may be lower yet a higher secondary line still leaks in — e.g. Na-22's
+                // 511 channel contaminates a 662 window via its 1275 line. So gate on H's MAX line, not its centre.
+                if (Isotopes.Get(hi.Isotope).Lines.Max(l => l.EnergyKeV) <= lo.WindowCenterKeV) continue;
                 var hCfg = cfg.Clone();
                 hCfg.Sources = (cfg.Sources ?? []).Where(s => s.Isotope == hi.Isotope).ToArray();
                 if (hCfg.Sources.Length == 0) continue;

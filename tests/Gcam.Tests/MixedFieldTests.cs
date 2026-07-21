@@ -161,7 +161,8 @@ public class MixedFieldTests
         // Compton stripping (subtract R × the Co 1332 window, with R = Co-only downscatter-into-662 / Co
         // photopeak) removes the contamination and recovers the Cs count. This is the mechanism the WPF
         // Compton-strip toggle and the CLI `mixedstrip` use (themes 16-17).
-        const double wf = 0.10, csLine = 661.7, coCenter = 1332.5;
+        // coCenter = Co-60's PRIMARY line (Lines[0]), matching the WPF channel centre — not 1332.5.
+        const double wf = 0.10, csLine = 661.7, coCenter = 1173.2;
         const long budget = 4_000_000;
         SourceConfig Cs() => new() { Isotope = "Cs-137", Position = [0, 0, 0.0], ActivityBq = 1.0,
             Lines = [new EmissionLine { EnergyKeV = csLine, Intensity = 0.851 }] };
@@ -193,7 +194,9 @@ public class MixedFieldTests
         double t = Sum(trueCs), rawErr = System.Math.Abs(Sum(raw662) - t), stripErr = System.Math.Abs(Sum(stripped) - t);
         Assert.True(R > 0, $"R should be positive: {R:F3}");
         Assert.True(Sum(raw662) > t * 1.2, $"raw 662 should OVER-count Cs (Co contamination): raw {Sum(raw662):F0} vs true {t:F0}");
-        Assert.True(stripErr < rawErr, $"stripping should recover the Cs count: raw err {rawErr:F0} vs stripped err {stripErr:F0}");
+        // Stripping should remove MOST of the contamination (at least half the raw error) and land near the true Cs.
+        Assert.True(stripErr < 0.5 * rawErr, $"stripping should remove >=half the Cs count error: raw err {rawErr:F0} vs stripped err {stripErr:F0}");
+        Assert.InRange(Sum(stripped), 0.5 * t, 1.5 * t);
     }
 
     [Fact]
