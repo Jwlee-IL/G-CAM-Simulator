@@ -36,7 +36,7 @@ in `Directory.Build.props` (nullable + implicit usings enabled).
 | `src/…Simulation` | `SimulationRunner`, `ISimulationFactory`/`DefaultSimulationFactory` (+ `ComptonFactory`), sources (`IsotropicSource`, `DetectorBiasedSource`, `MixedFieldSource`), `DecayScheme` (per-decay correlated gammas), `EventStreamStudy` (timed MC stream → pile-up), and one study class per theme (`SourceSweep`, `ParameterScan`, `NoiseStudy`, `ThicknessStudy`, `UniformityStudy`, `ArrayStudy`, `ComptonStudy`, `DepthStudy`/`DepthDesignStudy`, `MaskGeometryStudy`, `BackgroundStudy`, `ShieldStudy`, `MixedFieldStudy`, `MaskAntimaskStudy`, plus the realism-gap studies: `ThermalDriftStudy`/`ThermalReadoutStudy`, `MaskFabricationStudy`, `AlignmentStudy`, `DetectorDefectStudy`, `MaskSecondaryStudy`/`MaskScatterStudy`, `DeadTime`/`DeadTimeStudy`, `SubCellStudy`, `CascadeSummingStudy`, `NonProportionalityStudy`, `FiniteSourceStudy`, `MlemStudy`, `DoiParallaxStudy`) |
 | `src/…Wpf` | `Gcam.Wpf` (net9.0-windows, ScottPlot 5): interactive scene editor + Waveform/Imaging/Spectrum/Optics/Detector tabs; one acquisition drives all tabs. Can't be headless-tested — verify it *compiles* (theme 34–35) |
 | `src/…Cli` | Console entrypoint `montecarlo`: single run + **~39** study sub-commands (`sweep`, `scan`, `noise`, the Compton/depth/mask-geometry/mixed-field/front-end set, and the realism-gap set `thermal`…`doi` — see Build/run for the full list) |
-| `tests/…Tests` | xUnit harness — ~34 test files / **145 test cases** (+ 7 cocotb in `rtl/`): MURA properties (`MuraGeneratorTests`) + end-to-end physics invariants (`PipelineTests`) + per-theme physics classes (localization, ghost, biasing-unbiased, stopping power, dead time, sub-cell, cascade, non-proportionality, MLEM, DOI, …) |
+| `tests/…Tests` | xUnit harness — ~35 test files / **149 test cases** (+ 7 cocotb in `rtl/`): MURA properties (`MuraGeneratorTests`) + end-to-end physics invariants (`PipelineTests`) + per-theme physics classes (localization, ghost, biasing-unbiased, stopping power, dead time, sub-cell, cascade, non-proportionality, MLEM, DOI, nuclide separation, Compton stripping, …) |
 
 ### Design principle
 Everything is **data-driven**: one `SimulationConfig` (JSON) fully describes a
@@ -80,7 +80,7 @@ Coordinate frame (optical axis = z):
 
 ```bash
 dotnet build Gcam.sln -c Release
-dotnet test  Gcam.sln   # 145 cases across ~34 files: MURA properties + pipeline
+dotnet test  Gcam.sln   # 149 cases across ~35 files: MURA properties + pipeline
                                        # physics invariants + one class per theme (dead time,
                                        # sub-cell, cascade, non-prop, MLEM, DOI, …). 7 cocotb tests in rtl/.
 

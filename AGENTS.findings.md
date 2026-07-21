@@ -1436,3 +1436,34 @@ the front-face crossing (no DOI) vs at the DOI-displaced interaction point — a
   isolation. Framing tightened per its notes: "zero on-axis" is the SIGNED shift by symmetry (not zero per-ray DOI
   blur); the FWHM columns are a fragile reference (the metric NaNs off-axis, so only the SHIFT is asserted); the 0.88 mm
   row is argmax/quantization behaviour, not physical DOI scaling.
+
+---
+
+## Post-theme-50 follow-ons (2026-07-20/21) — WPF nuclide separation, Compton strip, CR-RC fix
+
+Enhancements on top of the 50-theme base (WPF = theme 34–35, stripping = theme 16–17, CR-RC = theme 33), each
+Codex-cross-verified and headless-tested (the WPF GUI can't be tested here, so the underlying physics is proven in
+the `Gcam.Simulation`/`Gcam.Detector` layer and the app is verified to compile).
+
+- **Nuclide separation IN THE RECONSTRUCTED IMAGE** (`Gcam.Wpf/{Scene.cs, MainWindow.xaml.cs}`): the imaging tab
+  decoded ONE flood through a single window locked to `scene[0].Lines[0]`, so co-measured isotopes separated in the
+  SPECTRUM but not the IMAGE. Now **one imaging channel per distinct isotope**, each windowed on its own primary line,
+  decoded with the shared geometry-only decoder; per-nuclide recon **normalized + isotope-coloured composite** on the
+  scene overlay; per-channel accumulation at each channel's own detected rate; `_floodAccum` is the COMBINED flood so
+  depth/autofocus see all sources. Recon heatmap **flipped +y-up** (ScottPlot draws grid row 0 at top) to match the
+  canvas + markers; **found peaks labelled by nuclide**. Test `PerNuclideWindow_SeparatesCsFromNa_InTheImage`
+  (662 window → Cs, 511 window → Na). Co-60 stays physics-limited (1+ MeV punches through).
+- **Compton stripping toggle** (co-located isotopes): per-pixel `max(0, low − Σ R·high)`, `R` calibrated per
+  isotope-pair in `PrepareLive` from an isotope-only run (pair gated on the contaminant's MAX emission line, not its
+  channel centre — so Na-22's 511 channel strips a Cs 662 window via its 1275 line). One-pass scalar model (matches
+  the CLI `mixedstrip`): exact for a clean pair, approximate for 3+ overlap (a per-pixel response-matrix solve is the
+  optional-polish full fix). Test `ComptonStripping_RecoversCoLocatedCsCount`.
+- **CR-RC⁴ constant fix**: the RTL default + cocotb param carried the wrong `A_Q16 = 53667`; the correct value is
+  `round(e^-0.2·65536) = 53656` (the C#/Python formulas). Realigned `crrc_shaper.sv` / `run_cocotb.py` /
+  `trap_ref.py` — **C# ↔ RTL CR-RC is now genuinely bit-exact** (7 cocotb re-run green). The cocotb test read A from
+  the DUT, so it was self-consistent and had masked the drift.
+- **Mask μ(E) extended < 122 keV** for soft lines (Am-241 59.5 → ~47×); documented approximation (K-edge above-edge
+  region + < 50 keV clamp — no isotope line there, thick mask opaque regardless). Test `MaskAttenuationTests`.
+- Docs: `docs/paper_ko.md` (+ rendered artifact) — a two-tier (expert/plain) physics & sweet-spot note covering
+  §1–9 incl. in-crystal Compton transport, dead region, crosstalk, hardware realization (RTL/cocotb/FPGA), and
+  productization; Codex physics-verified (6 wording/number fixes applied).
