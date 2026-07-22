@@ -4,129 +4,66 @@ using Gcam.Core;
 using Gcam.Detector;
 using Gcam.Simulation;
 
-if (args.Length < 1)
+var commands = new Dictionary<string, Func<string[], int>>(StringComparer.OrdinalIgnoreCase)
 {
-    Console.Error.WriteLine("Usage: montecarlo <scenario.json>");
-    Console.Error.WriteLine("       montecarlo sweep <base.json> [out.csv]");
-    return 1;
+    ["sweep"]          = RunSweep,
+    ["scan"]           = RunScan,
+    ["noise"]          = RunNoise,
+    ["thickness"]      = RunThickness,
+    ["uniformity"]     = RunUniformity,
+    ["array"]          = RunArray,
+    ["maskgeo"]        = RunMaskGeo,
+    ["masksize"]       = RunMaskSize,
+    ["masktaper"]      = RunMaskTaper,
+    ["maskfab"]        = RunMaskFab,
+    ["masksec"]        = RunMaskSecondary,
+    ["maskscatter"]    = RunMaskScatter,
+    ["align"]          = RunAlign,
+    ["mlem"]           = RunMlem,
+    ["subcell"]        = RunSubCell,
+    ["antimask"]       = RunAntimask,
+    ["antimask-scene"] = RunAntimaskScene,
+    ["compton"]        = RunCompton,
+    ["compton-strip"]  = RunComptonStrip,
+    ["mixedfield"]     = RunMixedField,
+    ["mixediso"]       = RunMixedIso,
+    ["mixedstrip"]     = RunMixedStrip,
+    ["cascade"]        = RunCascade,
+    ["nonprop"]        = RunNonProp,
+    ["depth"]          = RunDepth,
+    ["depth-joint"]    = RunDepthJoint,
+    ["depth3d"]        = RunDepth3D,
+    ["depthdesign"]    = RunDepthDesign,
+    ["doi"]            = RunDoi,
+    ["background"]     = RunBackground,
+    ["shield"]         = RunShield,
+    ["finitesrc"]      = RunFiniteSource,
+    ["frontend"]       = RunFrontend,
+    ["eventstream"]    = RunEventStream,
+    ["thermal"]        = RunThermal,
+    ["thermalro"]      = RunThermalReadout,
+    ["pileup"]         = RunPileUp,
+    ["deadtime"]       = RunDeadTime,
+    ["defects"]        = RunDefects,
+};
+
+if (args.Length < 1 || args[0] is "help" or "--help" or "-h" or "/?")
+{
+    PrintUsage(commands);
+    return args.Length < 1 ? 1 : 0;
 }
 
-if (args[0].Equals("sweep", StringComparison.OrdinalIgnoreCase))
-    return RunSweep(args);
+if (commands.TryGetValue(args[0], out var handler))
+    return handler(args);
 
-if (args[0].Equals("scan", StringComparison.OrdinalIgnoreCase))
-    return RunScan(args);
-
-if (args[0].Equals("noise", StringComparison.OrdinalIgnoreCase))
-    return RunNoise(args);
-
-if (args[0].Equals("thickness", StringComparison.OrdinalIgnoreCase))
-    return RunThickness(args);
-
-if (args[0].Equals("uniformity", StringComparison.OrdinalIgnoreCase))
-    return RunUniformity(args);
-
-if (args[0].Equals("thermal", StringComparison.OrdinalIgnoreCase))
-    return RunThermal(args);
-
-if (args[0].Equals("pileup", StringComparison.OrdinalIgnoreCase))
-    return RunPileUp(args);
-
-if (args[0].Equals("maskfab", StringComparison.OrdinalIgnoreCase))
-    return RunMaskFab(args);
-
-if (args[0].Equals("align", StringComparison.OrdinalIgnoreCase))
-    return RunAlign(args);
-
-if (args[0].Equals("defects", StringComparison.OrdinalIgnoreCase))
-    return RunDefects(args);
-
-if (args[0].Equals("masksec", StringComparison.OrdinalIgnoreCase))
-    return RunMaskSecondary(args);
-
-if (args[0].Equals("deadtime", StringComparison.OrdinalIgnoreCase))
-    return RunDeadTime(args);
-
-if (args[0].Equals("subcell", StringComparison.OrdinalIgnoreCase))
-    return RunSubCell(args);
-
-if (args[0].Equals("cascade", StringComparison.OrdinalIgnoreCase))
-    return RunCascade(args);
-
-if (args[0].Equals("maskscatter", StringComparison.OrdinalIgnoreCase))
-    return RunMaskScatter(args);
-
-if (args[0].Equals("nonprop", StringComparison.OrdinalIgnoreCase))
-    return RunNonProp(args);
-
-if (args[0].Equals("finitesrc", StringComparison.OrdinalIgnoreCase))
-    return RunFiniteSource(args);
-
-if (args[0].Equals("mlem", StringComparison.OrdinalIgnoreCase))
-    return RunMlem(args);
-
-if (args[0].Equals("thermalro", StringComparison.OrdinalIgnoreCase))
-    return RunThermalReadout(args);
-
-if (args[0].Equals("doi", StringComparison.OrdinalIgnoreCase))
-    return RunDoi(args);
-
-if (args[0].Equals("array", StringComparison.OrdinalIgnoreCase))
-    return RunArray(args);
-
-if (args[0].Equals("antimask", StringComparison.OrdinalIgnoreCase))
-    return RunAntimask(args);
-
-if (args[0].Equals("antimask-scene", StringComparison.OrdinalIgnoreCase))
-    return RunAntimaskScene(args);
-
-if (args[0].Equals("compton", StringComparison.OrdinalIgnoreCase))
-    return RunCompton(args);
-
-if (args[0].Equals("compton-strip", StringComparison.OrdinalIgnoreCase))
-    return RunComptonStrip(args);
-
-if (args[0].Equals("depth", StringComparison.OrdinalIgnoreCase))
-    return RunDepth(args);
-
-if (args[0].Equals("depth-joint", StringComparison.OrdinalIgnoreCase))
-    return RunDepthJoint(args);
-
-if (args[0].Equals("depth3d", StringComparison.OrdinalIgnoreCase))
-    return RunDepth3D(args);
-
-if (args[0].Equals("maskgeo", StringComparison.OrdinalIgnoreCase))
-    return RunMaskGeo(args);
-
-if (args[0].Equals("masksize", StringComparison.OrdinalIgnoreCase))
-    return RunMaskSize(args);
-
-if (args[0].Equals("shield", StringComparison.OrdinalIgnoreCase))
-    return RunShield(args);
-
-if (args[0].Equals("masktaper", StringComparison.OrdinalIgnoreCase))
-    return RunMaskTaper(args);
-
-if (args[0].Equals("mixedfield", StringComparison.OrdinalIgnoreCase))
-    return RunMixedField(args);
-
-if (args[0].Equals("mixediso", StringComparison.OrdinalIgnoreCase))
-    return RunMixedIso(args);
-
-if (args[0].Equals("mixedstrip", StringComparison.OrdinalIgnoreCase))
-    return RunMixedStrip(args);
-
-if (args[0].Equals("eventstream", StringComparison.OrdinalIgnoreCase))
-    return RunEventStream(args);
-
-if (args[0].Equals("background", StringComparison.OrdinalIgnoreCase))
-    return RunBackground(args);
-
-if (args[0].Equals("frontend", StringComparison.OrdinalIgnoreCase))
-    return RunFrontend(args);
-
-if (args[0].Equals("depthdesign", StringComparison.OrdinalIgnoreCase))
-    return RunDepthDesign(args);
+// Not a known command — the only remaining valid form is a scenario file path.
+// Guard against a mistyped sub-command falling through to a cryptic file-load error.
+if (!File.Exists(args[0]))
+{
+    Console.Error.WriteLine($"Unknown command or scenario file: '{args[0]}'");
+    Console.Error.WriteLine("Run 'montecarlo help' to list available commands.");
+    return 1;
+}
 
 var config = ConfigLoader.Load(args[0]);
 Console.WriteLine($"Scenario : {config.Name}");
@@ -163,6 +100,27 @@ if (result.Estimate is { } est && result.Reconstruction is { } recon)
     RenderReconstruction(recon, result.ReconOriginMm, result.ReconStepMm, trueX, trueY, est.Position.X, est.Position.Y);
 }
 return 0;
+
+static void PrintUsage(Dictionary<string, Func<string[], int>> commands)
+{
+    Console.WriteLine("montecarlo - coded-aperture gamma-source localization Monte Carlo");
+    Console.WriteLine();
+    Console.WriteLine("Usage:");
+    Console.WriteLine("  montecarlo <scenario.json>            run a single scenario (flood map + recon + estimate)");
+    Console.WriteLine("  montecarlo <command> <base.json> ...  run a study (writes CSV/PNG outputs)");
+    Console.WriteLine("  montecarlo help                       show this list");
+    Console.WriteLine();
+    Console.WriteLine("Commands (see AGENTS.md for details on each):");
+    Console.WriteLine("  core / config   sweep  scan  noise  thickness  uniformity  array");
+    Console.WriteLine("  mask            maskgeo  masksize  masktaper  maskfab  masksec  maskscatter  align");
+    Console.WriteLine("  decoding        mlem  subcell  antimask  antimask-scene");
+    Console.WriteLine("  compton / iso   compton  compton-strip  mixedfield  mixediso  mixedstrip  cascade  nonprop");
+    Console.WriteLine("  depth           depth  depth-joint  depth3d  depthdesign  doi");
+    Console.WriteLine("  scene / bg      background  shield  finitesrc");
+    Console.WriteLine("  front-end/RTL   frontend  eventstream  thermal  thermalro  pileup  deadtime  defects");
+    Console.WriteLine();
+    Console.WriteLine($"  ({commands.Count} study commands total.)");
+}
 
 static int RunSweep(string[] args)
 {
@@ -1050,7 +1008,7 @@ static int RunAntimaskScene(string[] args)
     var sB = Mean(primary, true);
     var bA = Mean(bgSource, false);
     var bB = Mean(bgSource, true);
-    var decoder = factory.CreateDecoder(baseConfig.Clone());
+    var decoder = factory.CreateDecoder(baseConfig.Clone())!;
 
     // Diffuse background cancels in the difference -> antimask of source alone: one peak.
     var diffuse = Combine(sA, sB, -1.0);

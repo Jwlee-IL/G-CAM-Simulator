@@ -1,0 +1,25 @@
+# Normalize line endings. This repo is LF-based and moves between machines
+# (see CLAUDE.md), so force LF in the working tree everywhere to avoid
+# cross-machine diff churn regardless of each checkout's core.autocrlf.
+* text=auto eol=lf
+
+# Explicit text types (belt-and-suspenders over the wildcard above)
+*.cs      text eol=lf
+*.csproj  text eol=lf
+*.sln     text eol=lf
+*.props   text eol=lf
+*.json    text eol=lf
+*.md      text eol=lf
+*.py      text eol=lf
+*.sh      text eol=lf
+*.sv      text eol=lf
+*.v       text eol=lf
+*.tcl     text eol=lf
+*.txt     text eol=lf
+
+# Binary — never normalize or diff as text
+*.png     binary
+*.dat     binary
+*.zip     binary
+*.vcd     binary
+*.fst     binary
