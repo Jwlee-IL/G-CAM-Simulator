@@ -10,6 +10,10 @@ namespace Gcam.Simulation;
 /// </summary>
 public sealed class SimulationRunner : ISimulation
 {
+    // Photons between progress reports / cancellation checks: frequent enough for a responsive UI,
+    // rare enough that the check costs nothing next to the transport.
+    private const int CheckInterval = 4096;
+
     private readonly ISimulationFactory _factory;
 
     public SimulationRunner(ISimulationFactory factory)
@@ -17,8 +21,16 @@ public sealed class SimulationRunner : ISimulation
         _factory = factory;
     }
 
-    public SimulationResult Run(SimulationConfig config)
+    public SimulationResult Run(SimulationConfig config) => Run(config, progress: null, CancellationToken.None);
+
+    /// <summary>
+    /// Same as <see cref="Run(SimulationConfig)"/>, but reports the emitted fraction (0..1) and stops with
+    /// <see cref="OperationCanceledException"/> when <paramref name="cancellationToken"/> is cancelled.
+    /// </summary>
+    public SimulationResult Run(SimulationConfig config, IProgress<double>? progress, CancellationToken cancellationToken)
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
         var rng = _factory.CreateRandom(config);
         var source = _factory.CreateSource(config);
         var mask = _factory.CreateMask(config);
@@ -26,9 +38,16 @@ public sealed class SimulationRunner : ISimulation
         var decoder = _factory.CreateDecoder(config);
 
         long emitted = 0, detected = 0;
+        double budget = Math.Max(1, config.PhotonCount);
         foreach (var photon in source.Emit(rng, config.PhotonCount))
         {
             emitted++;
+            if (emitted % CheckInterval == 0)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                progress?.Report(Math.Min(1.0, emitted / budget));
+            }
+
             if (!mask.Transmit(photon.Ray, photon.EnergyKeV, rng))
                 continue;
 
@@ -36,8 +55,10 @@ public sealed class SimulationRunner : ISimulation
                 detected++;
         }
 
+        cancellationToken.ThrowIfCancellationRequested();
         var image = detector.Readout();
         var decode = decoder?.Decode(image);
+        progress?.Report(1.0);
 
         double detectedWeight = 0.0;
         foreach (var v in image.Raw) detectedWeight += v;

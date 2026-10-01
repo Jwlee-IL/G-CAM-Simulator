@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Presentation layer: models, service contracts and ViewModels. Deliberately net9.0 (no WPF),
+       so a ViewModel that reaches for a UI type fails to compile and the tests run without a UI stack. -->
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <RootNamespace>Gcam.Studio.Core</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Gcam.Core\Gcam.Core.csproj" />
+    <ProjectReference Include="..\Gcam.Configuration\Gcam.Configuration.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Gcam.Studio.Tests" />
+  </ItemGroup>
+
+</Project>

@@ -22,6 +22,9 @@ dotnet test  Gcam.sln            # unit + physics-invariant tests
 # single scenario -> flood map + reconstruction + source estimate
 dotnet run --project src/Gcam.Cli -c Release -- samples/scenario.json
 
+# MVVM viewer (imaging workflow)
+dotnet run --project src/Gcam.Studio -c Release
+
 # list all study sub-commands
 dotnet run --project src/Gcam.Cli -c Release -- help
 ```
@@ -34,8 +37,8 @@ physical-realism set). Run `montecarlo help` for the grouped list.
 
 | Path | What |
 |---|---|
-| `src/` | Core domain, masks, detector/Compton transport, decoders, simulation studies, CLI, WPF viewer |
-| `tests/` | xUnit harness — MURA properties + end-to-end physics invariants |
+| `src/` | Core domain, masks, detector/Compton transport, decoders, simulation studies, CLI, WPF viewer (`Gcam.Wpf`) and its MVVM rewrite (`Gcam.Studio`) |
+| `tests/` | xUnit harness — MURA properties + end-to-end physics invariants; `Gcam.Studio.Tests` for the viewer's ViewModels |
 | `rtl/` | SystemVerilog ADC front-end (Icarus + cocotb), verified bit-exact against the C# shaper |
 | `samples/` | Example scenarios (JSON) and result CSVs / figures |
 | **`AGENTS.md`** | Architecture, pipeline, coordinate frame, full command reference |

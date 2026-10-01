@@ -1,6 +1,6 @@
-using Gcam.Configuration;
 
-namespace Gcam.Wpf;
+
+namespace Gcam.Configuration;
 
 /// <summary>A gamma-emitting isotope: its decay half-life (info) and emission lines (energy keV, intensity
 /// = photons per decay). Intensity is the emission weight the mixed-field source allocates photons by.</summary>
