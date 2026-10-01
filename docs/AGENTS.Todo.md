@@ -9,7 +9,7 @@ done list (and Findings, if it produced a result) in the same commit; its plan s
 |---|---|---|---|---|
 | TODO-06 | Studio workspace shell and a first-party `PlotView` — [PLAN.Studio.Shell](PLAN.Studio.Shell.md) | author decision 2026-10-01 (one viewer for the portfolio) | Studio session | committed `bb3f00e`; desktop regression + polish survey wait for a free desktop |
 | TODO-07 | Spectrum workspace — [PLAN.Studio.Spectrum](PLAN.Studio.Spectrum.md) | `Gcam.Wpf` Spectrum tab | Studio session | implemented (S-1…S-5), headless tests pass; real-window check waits for a free desktop |
-| TODO-08 | Imaging options: Compton strip, background BSR, pixel gain σ | `Gcam.Wpf` Imaging tab | Studio session | open (after 07) |
+| TODO-08 | Detector realism, gain σ, cascades, background; per-nuclide imaging and Compton strip — [PLAN.Studio.ImagingOptions](PLAN.Studio.ImagingOptions.md) | `Gcam.Wpf` Imaging tab; R-2 / R-5 | Studio session | phase A with Codex; phase B after review |
 | TODO-09 | Editable optics + presets (lifts the "optics read-only" exclusion in VV.Studio.SRS §7) | `Gcam.Wpf` Optics / Presets tab | Studio session | open |
 | TODO-10 | Waveform workspace: front-end chain presets, ADC + shaped traces | `Gcam.Wpf` Waveform tab | Studio session | open (needs `PlotView` decimation) |
 | TODO-11 | Detector workspace (reflector gap, SiPM pitch, crosstalk) and depth (3D) / rangefinder in Imaging | `Gcam.Wpf` Detector tab, Imaging depth | Studio session | open |
