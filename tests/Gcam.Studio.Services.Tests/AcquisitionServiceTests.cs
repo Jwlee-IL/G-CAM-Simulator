@@ -33,6 +33,30 @@ public sealed class AcquisitionServiceTests(ITestOutputHelper output)
     }
 
     [Fact]
+    public async Task FloodAxis_MatchesTheDecodersPixelCentres()
+    {
+        var scene = new[] { new SceneSource { ActivityUCi = 500 } };
+        var optics = new OpticsSettings();
+        var clock = new ManualTimeProvider();
+        await using var session = new SimulationService(clock).Start(scene, optics, 0.25, 1);
+        await using var reader = session.ReadSnapshotsAsync().GetAsyncEnumerator();
+        Assert.True(await reader.MoveNextAsync());
+        await clock.WaitForTimerAsync();
+        clock.Advance(TimeSpan.FromMilliseconds(250));
+        Assert.True(await reader.MoveNextAsync());
+        Assert.True(reader.Current.IsCompleted);
+        Assert.Equal(0.25, reader.Current.LiveTimeS);
+        var imaging = reader.Current.Imaging;
+        int n = imaging.Flood.Width;
+        double pitch = SceneConfigBuilder.Build(scene, optics, 1).Detector.PixelPitchMm;
+
+        Assert.Equal(pitch, imaging.FloodStepMm);
+        for (int i = 0; i < n; i++) // CrossCorrelationDecoder: pixel i centre at (i + 0.5)·pitch − N·pitch/2.
+            Assert.Equal((i + 0.5) * pitch - n * pitch / 2.0, imaging.FloodOriginMm + i * imaging.FloodStepMm, 9);
+        Assert.False(await reader.MoveNextAsync());
+    }
+
+    [Fact]
     public async Task Stop_KeepsConsumedPrefix_AtExtremeMcLimitedSpeed()
     {
         var clock = new ManualTimeProvider();

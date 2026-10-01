@@ -28,7 +28,7 @@ flowchart TB
     end
     subgraph CORE["Gcam.Studio.Core (net9.0, no WPF)"]
         VM["ViewModels<br/>MainViewModel, SourceItemViewModel,<br/>MeasurementsViewModel, MeasurementViewModel"]
-        Contracts["Service contracts<br/>ISimulationService, IThemeService"]
+        Contracts["Service contracts<br/>IAcquisitionService, IThemeService"]
         Geo["Imaging<br/>HeatmapViewport, MeasurementMath, IPlaneMarker"]
     end
     subgraph ENGINE["Engine"]
@@ -64,11 +64,11 @@ in a ViewModel is a build error, and the ViewModel tests run on any machine with
 
 | You are writing… | Put it in | Example |
 |---|---|---|
-| State and commands a screen binds to | `Core/ViewModels` | `MainViewModel.RunCommand` |
+| State and commands a screen binds to | `Core/ViewModels` | `MainViewModel.StartCommand` |
 | A data shape returned by a service | `Core/Services` (next to the contract) | `ImagingResult` |
 | Maths a control needs but that has no UI types | `Core/Imaging` (or a new `Core/<Area>`) | `HeatmapViewport` (fit, zoom about a point, screen ↔ mm), `MeasurementMath` (distance, angle, ROI stats) |
 | A contract a control needs from a ViewModel without knowing its type | `Core/Imaging` interface | `IPlaneMarker` — the overlay drags anything with `X`, `Y`, `MarkerLabel`; `SourceItemViewModel` implements it |
-| Something that talks to the engine, files, network | a contract in `Core/Services` + implementation in `Gcam.Studio.Services` | `ISimulationService` / `SimulationService` |
+| Something that talks to the engine, files, network | a contract in `Core/Services` + implementation in `Gcam.Studio.Services` | `IAcquisitionService` / `SimulationService` |
 | Something that needs WPF to do its job | a contract in `Core/Services` + implementation in `Gcam.Studio/Services` | `IThemeService` / `ThemeService` |
 | A reusable visual element with its own rendering or input | `Gcam.Studio/Controls` | `HeatmapView`, `ColorBar` |
 | A value → presentation mapping | `Gcam.Studio/Converters` | `NullToCollapsedConverter` |
@@ -80,7 +80,7 @@ in a ViewModel is a build error, and the ViewModel tests run on any machine with
 `App.xaml.cs` is the only place that knows concrete types:
 
 ```csharp
-.AddSingleton<ISimulationService, SimulationService>()
+.AddSingleton<IAcquisitionService, SimulationService>()
 .AddSingleton<ThemeService>()
 .AddSingleton<IThemeService>(sp => sp.GetRequiredService<ThemeService>())
 .AddSingleton<MainViewModel>()
@@ -88,7 +88,7 @@ in a ViewModel is a build error, and the ViewModel tests run on any machine with
 ```
 
 ViewModels receive contracts through their constructor, which is what lets the tests pass fakes
-(`FakeSimulation`, `FakeTheme` in `MainViewModelTests`).
+(`FakeAcquisition`, `FakeTheme` in `MainViewModelTests`).
 
 ## A live acquisition, end to end
 
@@ -121,9 +121,6 @@ sequenceDiagram
 - **Time**: an injected `TimeProvider` controls the 4 Hz scheduler. Transport has a 200 ms work budget per
   refresh; a look-ahead event proves empty live intervals. When compute cannot reach the target, live time
   stops at the consumed event prefix and the status reports achieved speed. Reconstruction is decoded off-thread.
-- **Compatibility**: `ISimulationService` inherits `IAcquisitionService`. Its old `RunAsync`, `RunCommand`,
-  `RunCancelCommand`, `Photons` and batch enum values remain callable for existing tests/clients; the view uses
-  Start / Stop exclusively. Batch-only service fakes inherit a default unsupported acquisition implementation.
 
 ## Workspaces and plotting
 
@@ -135,18 +132,18 @@ the workspace or measurement session. Only Imaging is registered; no empty tabs 
 
 Core `Plotting/` contains series / bands / markers, `PlotViewport`, `NiceTicks` and `MinMaxPyramid`, with no WPF
 types. The WPF `PlotView` caches preparation on data changes and renders exact column extrema during input or
-resize. The engine remains behind `ISimulationService`; no spectrum / waveform calculation has moved in this
+resize. The engine remains behind `IAcquisitionService`; no spectrum / waveform calculation has moved in this
 shell step. Tests for maths run without WPF; the plot gate hosts the production control in a visible STA window.
 
 ## Testing strategy
 
 | What | Where | How |
 |---|---|---|
-| ViewModel behaviour (commands, can-execute, state, cancel, failure, theme toggle) | `tests/Gcam.Studio.Tests/MainViewModelTests.cs` | fakes for the service contracts |
+| ViewModel behaviour (commands, can-execute, acquisition state, Stop, failure, theme toggle) | `tests/Gcam.Studio.Tests/MainViewModelTests.cs`, `AcquisitionViewModelTests.cs` | fakes for the service contracts |
 | View geometry (fit, snapping, zoom anchor, pan limits, screen ↔ image ↔ mm) | `tests/Gcam.Studio.Tests/HeatmapViewportTests.cs` | pure maths, no UI |
 | Measurement maths (distance, angle, ROI by pixel centre, clipping) | `tests/Gcam.Studio.Tests/MeasurementMathTests.cs` | pure maths, no UI |
-| Measurement session (numbering, selection, delete / clear, ROI refresh on a new result), stale-result flag | `MeasurementsViewModelTests.cs`, `MainViewModelTests.cs` | ViewModels with fakes |
+| Measurement session (numbering, selection, delete / clear, ROI refresh on a new result), stale-result flag | `MeasurementsViewModelTests.cs`, `MainViewModelTests.cs`, `AcquisitionViewModelTests.cs` | ViewModels with fakes |
 | Scene → config, runner progress / cancellation | `tests/Gcam.Tests/SceneConfigBuilderTests.cs` | engine-level |
-| The service layer (same run as the engine, flood axis on the decoder's pixel centres, argument errors before scheduling, progress, cancellation) | `tests/Gcam.Studio.Services.Tests/SimulationServiceTests.cs` | the real engine, no fakes |
+| The acquisition service (localization, immutable snapshots, count conservation, input checks, live-time pacing and Stop) | `tests/Gcam.Studio.Services.Tests/AcquisitionServiceTests.cs` | the real engine, no fakes |
 | Oracles of the UI tests (where the image sits on screen, mm per pixel, row parsing) | `tests/Gcam.Studio.UiTests/FloodOracleTests.cs` | pure maths, runs everywhere |
 | The running app | `tests/Gcam.Studio.UiTests/PilotTests.cs`, `ScenarioTests.cs` — opt-in (`GCAM_UI_TESTS=1`), real window, real pointer, a fresh app per scenario | AutomationIds, run state in `ItemStatus`; sandboxed and owned process ([AGENTS.UiAutomation](AGENTS.UiAutomation.md)) |

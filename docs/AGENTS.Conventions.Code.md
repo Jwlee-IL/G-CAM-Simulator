@@ -38,7 +38,7 @@ Resource key kinds: `Color`, `Brush`, `Space`, `Pad` (padding), `Gap` (margin), 
   dependents, `partial void On<Name>Changed` for clamping.
 - Commands that can be cancelled use `[RelayCommand(IncludeCancelCommand = true)]` and take a
   `CancellationToken`.
-- ViewModels depend on **contracts** (`ISimulationService`, `IThemeService`) injected through the constructor;
+- ViewModels depend on **contracts** (`IAcquisitionService`, `IThemeService`) injected through the constructor;
   no `new` of services, no static singletons.
 - Nothing in `Gcam.Studio.Core` may reference WPF (enforced: it targets plain `net9.0`).
 

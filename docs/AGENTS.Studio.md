@@ -43,7 +43,7 @@ dotnet test tests/Gcam.Studio.Services.Tests   # SimulationService against the r
    `AutomationProperties.Name` only for glyph buttons and custom surfaces) and, if a test drives it, an
    `AutomationId`; custom controls have an automation peer. Never put a fixed `Name` on a text element — it hides
    the text.
-5. The engine is reached only through `ISimulationService`.
+5. The engine is reached only through `IAcquisitionService`.
 6. Docs that describe a change are updated in the same commit.
 
 ## Verifying a UI change

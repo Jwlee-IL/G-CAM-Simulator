@@ -33,7 +33,7 @@ Plot: <code>samples/plot_sweep.py</code>.</sub>
 | **Physics engine** | Photon transport with directional biasing (unbiased vs. 4π, ~100× fewer photons), Klein–Nishina Compton in the crystal, tabulated tungsten / scintillator cross sections, cross-correlation and **MLEM** decoders. One JSON config describes a scenario; ~40 CLI studies sweep it. |
 | **Tests that check physics, not snapshots** | 300+ .NET tests. Each transport stage is held to a closed form — biased-source weight = the detector's solid angle, crystal stopping 1 − exp(−μt/cosθ), mask transmission = open fraction + tungsten leak, Compton energy conservation, decoder peak on an analytic shadow — with k·σ tolerances that follow the sample size; study-level tests assert physics (MLEM is non-negative and out-resolves cross-correlation, ghosts appear outside the fully-coded field) rather than pinning output numbers. A mutation check (Poisson off-by-one, half-pixel flood origin, slant path ignored) fails each one. |
 | **Hardware path** | CR-RC⁴ / trapezoidal shapers and a baseline restorer in SystemVerilog. The RTL (cocotb + Icarus) and the native C# `Waveform` model (xUnit golden values) are each held **bit-exact** to one shared integer reference, both in CI. Pipelining raised Fmax from 59 to 119 MHz (ECP5, nextpnr timing). |
-| **Viewer** | GCAM Studio: WPF + CommunityToolkit.Mvvm, split into `Studio.Core` (no WPF) → `Studio.Services` (only layer touching the engine) → `Studio` (views), so the boundaries are compiler-enforced; ViewModel tests plus a UI-automation harness with independent oracles. |
+| **Viewer** | GCAM Studio: live list-mode acquisition (Start / Stop over live time) — every count is one independent Compton-transported event, so in-crystal scatter mispositioning is part of the image. WPF + CommunityToolkit.Mvvm, split into `Studio.Core` (no WPF) → `Studio.Services` (only layer touching the engine) → `Studio` (views), so the boundaries are compiler-enforced; ViewModel tests plus a UI-automation harness with independent oracles. |
 | **Self-correction on record** | When the crystal model moved to physical cross sections, earlier multi-isotope results got weaker; they were re-run and revised in place ([theme 52](docs/AGENTS.Findings.md#52-crystal-attenuation-from-tabulated-cross-sections--crystalmaterial-2026-10-01)), not left standing. |
 
 ## Headline results
@@ -78,7 +78,7 @@ IEC 62304, no compliance claimed), and they are self-contained:
 
 ```bash
 dotnet build Gcam.sln -c Release
-dotnet test  Gcam.sln -c Release          # engine physics + Studio ViewModels + service layer + UI oracles
+dotnet test  Gcam.sln -c Release          # 254 engine + 69 Studio Core + 8 service + 10 UI oracles; 9 desktop cases skipped
 
 # single scenario -> flood map + reconstruction + source estimate (ASCII)
 dotnet run --project src/Gcam.Cli -c Release -- samples/scenario.json

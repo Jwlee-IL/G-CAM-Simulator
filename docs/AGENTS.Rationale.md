@@ -31,7 +31,7 @@ Enforcement: **C** compiler / build · **T** automated test · **R** review agai
 | Rule | Why | Stated in | Enforced |
 |---|---|---|---|
 | `Gcam.Studio.Core` references no WPF type. | ViewModels and view geometry must be testable without a UI stack; "by discipline" erodes, a target framework doesn't. | `DESIGN.Architecture`, `AGENTS.Studio` | **C** (plain `net9.0`) |
-| Only `Gcam.Studio.Services` references the simulation engine; the UI reaches it through `ISimulationService`. | Views must not be able to call the engine; tests swap the service for a fake. | `DESIGN.Architecture`, `AGENTS.Studio` | C for Core; **R only** for the shell (project references are transitive) |
+| Only `Gcam.Studio.Services` references the simulation engine; the UI reaches it through `IAcquisitionService`. | Views must not be able to call the engine; tests swap the service for a fake. | `DESIGN.Architecture`, `AGENTS.Studio` | C for Core; **R only** for the shell (project references are transitive) |
 | `App.xaml.cs` is the only place that knows concrete types (DI root). | ViewModels get contracts, so tests pass fakes. | `DESIGN.Architecture` | R |
 | CPU-bound work runs via `Task.Run` in a **service**, never in a ViewModel. | The UI never blocks, and ViewModels stay synchronous-testable. | `AGENTS.Conventions.Code` | R |
 | Build the engine config on the caller's thread, run the transport on the pool. | Bad input fails immediately instead of inside a background task. | `SimulationService` | R |

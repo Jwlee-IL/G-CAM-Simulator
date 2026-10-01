@@ -5,7 +5,7 @@ references `Gcam.Simulation`.
 
 | Type | Does |
 |---|---|
-| `SimulationService` | builds scene configs and starts list-mode acquisition; retains `RunAsync` for batch compatibility |
+| `SimulationService` | builds scene configs and starts list-mode acquisition |
 | `AcquisitionSession` | transports fresh MC histories off-thread, paces live time with an injectable clock, publishes immutable cumulative images / events at 4 Hz, and supports Stop / preset completion |
 
 WPF-bound services (e.g. `ThemeService`) live in `Gcam.Studio/Services` instead, because they need WPF.

@@ -16,7 +16,7 @@ public partial class App : Application
         base.OnStartup(e);
 
         _services = new ServiceCollection()
-            .AddSingleton<ISimulationService, SimulationService>()
+            .AddSingleton<IAcquisitionService, SimulationService>()
             .AddSingleton<ThemeService>()
             .AddSingleton<IThemeService>(sp => sp.GetRequiredService<ThemeService>())
             .AddSingleton<MainViewModel>()

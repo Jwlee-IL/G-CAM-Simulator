@@ -5,11 +5,11 @@ processing is future work; no desktop acquisition validation was run in this cha
 
 **At a glance**
 - Fresh histories, importance-weight rejection and independent Poisson timing feed one cumulative event list.
-- Eight added engine cases, five Core cases (four acquisition + one batch regression) and seven service cases pass.
-- Release solution verification: 254 engine, 76 Core, 14 service and 10 UI-oracle passes; nine desktop cases skipped.
-- All original 246 engine assertions remain unchanged. Legacy batch API and commands still compile.
+- Eight added engine cases, four acquisition Core cases and eight service cases pass.
+- Release solution verification: 254 engine, 69 Core, 8 service and 10 UI-oracle passes; nine desktop cases skipped.
+- All original 246 engine assertions remain unchanged. The unused batch API, commands and batch-only tests have been removed.
 - Active acquisition requirements are SR-RUN-09 … SR-RUN-19; the affected batch rows are withdrawn.
-- Desktop migration and the retained compatibility paths are listed below.
+- Desktop migration and the remaining scope are listed below.
 
 ## Physics verification
 
@@ -63,7 +63,7 @@ dotnet test tests/Gcam.Studio.Services.Tests -c Release --filter FullyQualifiedN
 ```
 
 Leave `GCAM_UI_TESTS` unset. Build has zero errors; NU1900 reports unreachable NuGet vulnerability metadata.
-Core's 76 cases include concurrent additions to the existing plot tests; this change adds five Core cases.
+Core's 69 cases include concurrent additions to the existing plot tests and four acquisition cases.
 
 ## Requirement and design trace
 
@@ -76,14 +76,12 @@ and seven withdrawn rows. The matrix is in [VV.Studio](VV.Studio.md); SU-19 is a
 
 Virtual-clock tests verify snapshots grow, preset completion, Stop retention, stale edits, measurement geometry
 and input locking. Service tests verify real transport/localization, detached immutable snapshots, count/flood
-conservation, look-ahead boundaries, input rejection and an extreme MC-limited Stop on an injected clock.
+conservation, flood pixel centres matching the decoder to nine decimal places, look-ahead boundaries, input rejection and an extreme MC-limited Stop on an injected clock.
 Read-only cross-review identified and rechecked fixes for Stop's live horizon and true deposits before optical
 light spread. No desktop session was started.
 
-During full verification, an existing batch progress race reproduced once: a late callback overwrote terminal
-progress 1 with 0.5. The retained batch path now serializes callback guard/write with terminal progress, closes
-each run's callback acceptance and rejects obsolete reports during a later run. A queued synchronization-context
-regression forces that late delivery without sleeps. Existing tests and assertions were not changed.
+The batch progress implementation and its late-callback regression test have been removed with the unused
+batch path. Acquisition progress comes from sequential snapshots.
 
 ## Required UI-test migration (not applied)
 
@@ -106,11 +104,15 @@ these updates once the author frees that project and desktop:
 5. Preserve the plotting gate/oracles; the polish survey's acquisition helper needs updated controls only.
    Runtime UI evidence remains pending; compilation does not establish desktop behavior.
 
-## Compatibility and scope
+## Scope
 
-`RunAsync`, `RunCommand`, `RunCancelCommand`, `Photons` and old batch enum values remain available to keep
-existing callers and tests compiling; the view uses Start / Stop exclusively. This is the deliberate deviation
-from deleting the old API. The new producer explicitly rejects nonzero ambient/background configurations;
+Studio uses Start / Stop exclusively. The batch members, ISimulationService and batch enum values have been
+removed; SimulationService remains as the acquisition adapter and ImagingResult remains the snapshot image record.
+Before list-mode acquisition the flood used geometric CrystalDetector scoring through DefaultSimulationFactory.
+It now adds one count per ComptonCrystalDetector event at its Argmax pixel, so in-crystal Compton scatter
+mispositioning is included in the image. No quantitative size of this change is asserted.
+
+The new producer explicitly rejects nonzero ambient/background configurations;
 Studio currently exposes none, and background requires a separately transported process rather than a reused
 shape. List-mode deposits are unsmeared and unwindowed, located by Argmax; front-end resolution, energy windows,
 pile-up, spectrum and waveform work remain outside this change.

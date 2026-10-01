@@ -8,13 +8,10 @@ using Gcam.Studio.Core.Services;
 
 namespace Gcam.Studio.Core.ViewModels;
 
-/// <summary>Where the last run ended up — drives the status-bar indicator.</summary>
+/// <summary>Where the acquisition ended up — drives the status-bar indicator.</summary>
 public enum RunState
 {
     Idle,
-    Running,
-    Succeeded,
-    Cancelled,
     Failed,
     Acquiring,
     Stopped,
@@ -23,13 +20,13 @@ public enum RunState
 
 public sealed partial class MainViewModel : ObservableObject
 {
-    private readonly ISimulationService _simulation;
+    private readonly IAcquisitionService _acquisition;
     private readonly IThemeService _theme;
     private IAcquisitionSession? _session;
 
-    public MainViewModel(ISimulationService simulation, IThemeService theme)
+    public MainViewModel(IAcquisitionService acquisition, IThemeService theme)
     {
-        _simulation = simulation;
+        _acquisition = acquisition;
         _theme = theme;
         Imaging = new ImagingWorkspaceViewModel(this);
         Workspaces = new ReadOnlyObservableCollection<WorkspaceViewModel>(new ObservableCollection<WorkspaceViewModel> { Imaging });
@@ -75,8 +72,6 @@ public sealed partial class MainViewModel : ObservableObject
     /// <summary>Half-width of the fully-coded field of view at the focal plane (mm).</summary>
     public double FcfovHalfMm => SceneConfigBuilder.FcfovHalfMm(Optics);
     partial void OnOpticsChanged(OpticsSettings value) => MarkStale();
-    [ObservableProperty] private long _photons = 500_000;
-    // Photons / RunCommand remain a batch compatibility path for existing callers, absent from the view.
     [ObservableProperty] private double _liveTimeS = 60;
     [ObservableProperty] private double _speed = 10;
     [ObservableProperty] private AcquisitionSnapshot? _snapshot;
@@ -123,12 +118,6 @@ public sealed partial class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(ThemeToggleLabel));
     }
 
-    partial void OnPhotonsChanged(long value)
-    {
-        if (value < 1_000) Photons = 1_000;
-        MarkStale();
-    }
-
     [RelayCommand(CanExecute = nameof(IsIdle))]
     private void AddSource()
     {
@@ -150,8 +139,6 @@ public sealed partial class MainViewModel : ObservableObject
         SelectedSource = Sources.Count == 0 ? null : Sources[Math.Min(index, Sources.Count - 1)];
     }
 
-    private bool CanRun() => Sources.Count > 0;
-
     private bool CanStart() => IsIdle && Sources.Count > 0;
 
     [RelayCommand(CanExecute = nameof(IsRunning))]
@@ -170,7 +157,7 @@ public sealed partial class MainViewModel : ObservableObject
         double preset = LiveTimeS;
         try
         {
-            await using var session = _simulation.Start(Sources.Select(s => s.ToModel()).ToArray(), Optics, preset, Speed);
+            await using var session = _acquisition.Start(Sources.Select(s => s.ToModel()).ToArray(), Optics, preset, Speed);
             _session = session;
             await foreach (var snapshot in session.ReadSnapshotsAsync())
             {
@@ -195,60 +182,10 @@ public sealed partial class MainViewModel : ObservableObject
         }
     }
 
-    [RelayCommand(CanExecute = nameof(CanRun), IncludeCancelCommand = true)]
-    private async Task RunAsync(CancellationToken cancellationToken)
-    {
-        IsRunning = true;
-        State = RunState.Running;
-        Progress = 0;
-        Status = $"Simulating {Photons:N0} photons…";
-        var progressGate = new object();
-        bool acceptProgress = true;
-        try
-        {
-            var scene = Sources.Select(s => s.ToModel()).ToArray();
-            // Progress<T> posts reports asynchronously, so a late report can land after completion:
-            // accept them only while running, and never let the bar move backwards.
-            var progress = new Progress<double>(p =>
-            {
-                // Batch-only callers may have no synchronization context: make the guard + write atomic
-                // with completion, so a callback cannot lower progress after the terminal value is set.
-                lock (progressGate)
-                    if (acceptProgress && IsRunning && p > Progress) Progress = p;
-            });
-            var result = await _simulation.RunAsync(scene, Optics, Photons, progress, cancellationToken);
-            Result = result;
-            IsResultStale = false;
-            lock (progressGate)
-            {
-                acceptProgress = false;
-                Progress = 1;
-            }
-            Status = Describe(result);
-            State = RunState.Succeeded;
-        }
-        catch (OperationCanceledException)
-        {
-            Status = "Cancelled — previous result kept";
-            State = RunState.Cancelled;
-        }
-        catch (Exception ex)
-        {
-            Status = $"Failed: {ex.Message}";
-            State = RunState.Failed;
-        }
-        finally
-        {
-            lock (progressGate) acceptProgress = false;
-            IsRunning = false;
-        }
-    }
-
     private void OnSourcesChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
         foreach (SourceItemViewModel s in e.OldItems ?? Array.Empty<SourceItemViewModel>()) s.PropertyChanged -= OnSourceEdited;
         foreach (SourceItemViewModel s in e.NewItems ?? Array.Empty<SourceItemViewModel>()) s.PropertyChanged += OnSourceEdited;
-        RunCommand.NotifyCanExecuteChanged();
         StartCommand.NotifyCanExecuteChanged();
         MarkStale();
     }
@@ -263,11 +200,4 @@ public sealed partial class MainViewModel : ObservableObject
         if (Result is not null) IsResultStale = true;
     }
 
-    private static string Describe(ImagingResult r)
-    {
-        string where = r.Estimate is { } e
-            ? $"peak at ({e.Position.X:F1}, {e.Position.Y:F1}) mm, ghost margin {e.Confidence:F2}"
-            : "no decode";
-        return $"{r.EffectiveCounts:N1} effective counts in {r.Elapsed.TotalSeconds:F1} s · {where}";
-    }
 }

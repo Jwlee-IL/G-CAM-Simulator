@@ -24,7 +24,7 @@ Structured after IEC 62304 §5.2 (software requirements analysis). As in [VV.Stu
 | Inputs | A scene of point sources (isotope, lateral X / Y, distance, activity), preset live time and acquisition speed. Optics are fixed defaults (`OpticsSettings`), shown read-only. |
 | Outputs | Two images (flood map, reconstruction) with colour bars, the decoded peak in mm, a status line, and user measurements (distance, angle, ROI statistics). Nothing is written to disk. |
 | Upward trace | Studio is subsystem SS-4 of the product concept: it implements [PR-SW-02](VV.Gcam.PRS.md#software-and-engineering-use-pr-sw) and serves user need UN-09 (engineering inspection; [VV.Gcam.URS](VV.Gcam.URS.md)). |
-| Neighbouring systems | The Gcam engine, reached only through `ISimulationService` ([VV.Studio.SDS §3](VV.Studio.SDS.md#3-interfaces-between-items-532-543)); Windows (WPF, DWM title bar, UI Automation). |
+| Neighbouring systems | The Gcam engine, reached only through `IAcquisitionService` ([VV.Studio.SDS §3](VV.Studio.SDS.md#3-interfaces-between-items-532-543)); Windows (WPF, DWM title bar, UI Automation). |
 
 ## 2. Conventions
 
@@ -68,14 +68,14 @@ Structured after IEC 62304 §5.2 (software requirements analysis). As in [VV.Stu
 | SR-RUN-06 | *Withdrawn* — batch command availability; replaced by SR-RUN-13. |
 | SR-RUN-07 | *Withdrawn* — batch result staleness; replaced by SR-RUN-14. |
 | SR-RUN-08 | *Withdrawn* — photon-budget config; replaced by SR-RUN-15. |
-| SR-RUN-09 | Start executes fresh list-mode MC transport and decoding off the UI thread through `ISimulationService`'s acquisition contract; the state is Acquiring until Stopped, Completed or Failed. |
+| SR-RUN-09 | Start executes fresh list-mode MC transport and decoding off the UI thread through `IAcquisitionService`; the state is Acquiring until Stopped, Completed or Failed. |
 | SR-RUN-10 | Stop cooperatively ends acquisition, retains all acquired data and measurements, sets Stopped, and re-enables editing. |
 | SR-RUN-11 | Progress equals acquired live time / preset live time, never decreases within a session, and reaches 1 at Completed. |
 | SR-RUN-12 | While Acquiring, source fields, add / remove, source dragging, live-time and speed controls are disabled. |
 | SR-RUN-13 | Start is enabled only while idle and with at least one source. |
 | SR-RUN-14 | A scene or run-input edit after acquisition marks its images outdated; Start clears the old data and stale flag. Before any acquisition nothing is stale. |
 | SR-RUN-15 | The scene config uses nearest-prime rank, non-cyclic decoding and a reconstruction grid inside the FCFOV; non-finite or non-positive preset live time and speed are rejected by the service. |
-| SR-RUN-16 | Immutable cumulative snapshots carry live time, integer counts, flood, reconstruction, estimate and the same fresh event list (pixel, true deposit in keV, Poisson arrival time in s); each event is used once. |
+| SR-RUN-16 | Immutable cumulative snapshots carry live time, integer counts, flood, reconstruction, estimate and the same fresh event list (pixel, true deposit in keV, Poisson arrival time in s); each event is used once. The flood adds one count at each ComptonCrystalDetector event’s Argmax pixel, so in-crystal Compton scatter mispositioning is part of the image. |
 | SR-RUN-17 | At 4 Hz the accumulated flood is re-decoded on its fixed grid and imaging measurements refresh without replacing their geometry. A slow consumer receives the latest cumulative snapshot. |
 | SR-RUN-18 | If MC cannot supply rate × speed, live time advances only through the acquired prefix and the status appends "MC-limited ×k" with achieved live seconds per wall second. |
 | SR-RUN-19 | Preset live time defaults to 60 s and speed to ×10; Start clears and begins a new session, and reaching the preset automatically sets Completed. |
@@ -152,7 +152,7 @@ point). They are kept as requirements so that a change breaking them fails verif
 | ID | Requirement |
 |---|---|
 | SR-ARCH-01 | `Gcam.Studio.Core` references no WPF type. |
-| SR-ARCH-02 | Only `Gcam.Studio.Services` references the simulation engine (`Gcam.Simulation`); the UI reaches it only through `ISimulationService`. |
+| SR-ARCH-02 | Only `Gcam.Studio.Services` references the simulation engine (`Gcam.Simulation`); the UI reaches it only through `IAcquisitionService`. |
 | SR-ARCH-03 | View code-behind is `InitializeComponent()` only; views use theme keys, not literal colours or sizes. |
 | SR-ARCH-04 | Studio tests reference `Gcam.Studio.Core` only (no WPF in tests). |
 

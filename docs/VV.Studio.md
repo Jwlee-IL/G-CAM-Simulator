@@ -41,7 +41,7 @@ viewer does not control anything, so the worst plausible outcome is a wrong read
 non-serious injury at most, hence B rather than C. As actually used (a demo on simulated data) it would be Class A.
 
 **Engine boundary.** Physics, decoding and the scene → config builder belong to the engine. Studio relies on them
-through `ISimulationService` and does not re-verify them; the engine suite (246 cases, all passing on 2026-10-01)
+through `IAcquisitionService` and does not re-verify them; the engine suite (246 cases, all passing on 2026-10-01)
 is the evidence. The four `SceneConfigBuilderTests` cases that pin the Studio-facing contract are cited below.
 
 ## 2. Software items
@@ -53,7 +53,7 @@ How each item is verified:
 |---|---|---|
 | SI-1 Presentation logic | `Gcam.Studio.Core` (net9.0, no WPF) | unit tests with fakes |
 | SI-2 View geometry and measurement maths | `Gcam.Studio.Core/Imaging` | unit tests, pure maths |
-| SI-3 Simulation adapter | `Gcam.Studio.Services` | integration tests against the real engine (`SimulationServiceTests`) + engine-level tests |
+| SI-3 Simulation adapter | `Gcam.Studio.Services` | integration tests against the real engine (`AcquisitionServiceTests`) + engine-level tests |
 | SI-4 WPF shell | `Gcam.Studio` (net9.0-windows) | inspection + manual UI Automation |
 | SOUP ([VV.Studio.SDS §4](VV.Studio.SDS.md#4-soup-and-required-platform-533-534)) | NuGet | used as published; not separately verified |
 
@@ -77,14 +77,14 @@ Automation. Status: **pass** (evidence on 2026-10-01), **partial**, **open** (no
 
 | Req | Level | Method | Evidence | Status |
 |---|---|---|---|---|
-| SR-RUN-01 | historical batch | T | unchanged batch tests remain for compatibility | withdrawn → SR-RUN-09, -19 |
-| SR-RUN-02 | historical batch | T | unchanged batch cancellation tests remain for compatibility | withdrawn → SR-RUN-10 |
-| SR-RUN-03 | unit | T | `MainViewModelTests.Failure_IsReportedNotThrown`, `MainViewModelTests.RunState_TracksOutcome_PeakTextFollowsResult` | pass |
-| SR-RUN-04 | historical batch | T, I | batch progress guard remains; AN-04 is scoped to that path | withdrawn → SR-RUN-11 |
-| SR-RUN-05 | historical batch | T, I | batch locking evidence retained in historical validation below | withdrawn → SR-RUN-12 |
-| SR-RUN-06 | historical batch | T | batch command tests remain | withdrawn → SR-RUN-13 |
-| SR-RUN-07 | historical batch | T | batch stale tests remain | withdrawn → SR-RUN-14 |
-| SR-RUN-08 | historical batch | T | unchanged `SceneConfigBuilderTests` retain builder verification | withdrawn → SR-RUN-15 |
+| SR-RUN-01 | historical batch | — | batch implementation and batch-only tests removed; historical desktop evidence below | withdrawn → SR-RUN-09, -19 |
+| SR-RUN-02 | historical batch | — | batch implementation and batch-only tests removed; historical desktop evidence below | withdrawn → SR-RUN-10 |
+| SR-RUN-03 | unit | T | `AcquisitionViewModelTests.Failure_ReportsMessage_KeepsAcquiredData` | pass |
+| SR-RUN-04 | historical batch | — | batch implementation and batch-only tests removed; historical desktop evidence below | withdrawn → SR-RUN-11 |
+| SR-RUN-05 | historical batch | — | batch implementation and batch-only tests removed; historical desktop evidence below | withdrawn → SR-RUN-12 |
+| SR-RUN-06 | historical batch | — | batch implementation and batch-only tests removed; historical desktop evidence below | withdrawn → SR-RUN-13 |
+| SR-RUN-07 | historical batch | — | batch implementation and batch-only tests removed; historical desktop evidence below | withdrawn → SR-RUN-14 |
+| SR-RUN-08 | historical batch | — | batch implementation and batch-only tests removed; historical desktop evidence below | withdrawn → SR-RUN-15 |
 | SR-RUN-09 | unit + integration | T, I | `AcquisitionViewModelTests.Preset_Completes_NewStartClears_ResultAndEvents`; `AcquisitionServiceTests.ShortAcquisition_LocalizesAfterCountThreshold_SnapshotsAreImmutable`; worker inspected | pass (headless); desktop pending |
 | SR-RUN-10 | unit + integration | T | `AcquisitionViewModelTests.Start_SnapshotsGrow_StopKeepsData_UnlocksAndEditMarksStale`; `AcquisitionServiceTests.Stop_KeepsConsumedPrefix_AtExtremeMcLimitedSpeed` | pass (headless); desktop pending |
 | SR-RUN-11 | unit + integration | T | `AcquisitionViewModelTests.Preset_Completes_NewStartClears_ResultAndEvents`; `AcquisitionServiceTests.InjectedClock_AdvancesLiveTimeAndPresetWithoutWallDelay` | pass |
@@ -102,10 +102,10 @@ Automation. Status: **pass** (evidence on 2026-10-01), **partial**, **open** (no
 | SR-VIEW-02 | unit | T, I | `HeatmapViewportTests.Snapping_FitsWholeDevicePixelsPerCell` (100 %, 125 %, sub-pixel); `HeatmapView` passes `PixelsPerDip` and `snapToWholePixels: true` (I) | pass |
 | SR-VIEW-03 | unit | T | `HeatmapViewportTests.ZoomAt_KeepsAnchorPointFixed`, `HeatmapViewportTests.ZoomAt_IsClamped_FullZoomOutRefits` | pass |
 | SR-VIEW-04 | unit | T | `HeatmapViewportTests.PanBy_CannotDragImageOutOfView` | pass |
-| SR-VIEW-05 | unit | T, I | `HeatmapViewportTests.ScreenImage_RoundTripWithYUp`, `HeatmapViewportTests.PixelAt_RespectsBoundsAndOrientation`, `HeatmapViewportTests.MmMapping_PutsPixelCentresOnGrid`; flood origin `-(N−1)/2·pitch` in `SimulationService`, pinned by `SimulationServiceTests.FloodAxis_MatchesTheDecodersPixelCentres` | pass |
+| SR-VIEW-05 | unit + integration | T, I | `HeatmapViewportTests.ScreenImage_RoundTripWithYUp`, `HeatmapViewportTests.PixelAt_RespectsBoundsAndOrientation`, `HeatmapViewportTests.MmMapping_PutsPixelCentresOnGrid`; flood origin `-(N−1)/2·pitch` in `AcquisitionSession` (I), pinned by `AcquisitionServiceTests.FloodAxis_MatchesTheDecodersPixelCentres` | pass |
 | SR-VIEW-06 | unit | T | `HeatmapViewportTests.Configure_ResizeKeepsZoom_NewImageSizeRefits` | pass |
 | SR-VIEW-07 | system | I, M | readout format and key handling in `HeatmapView` (I); readout exposed via `ItemStatus`; UI scenario `ScenarioTests.Readout_AndOneCellRoi_MatchAbsolutePositionAndValue` (§5) | partial — readout automated; the refit keys (double-click, `0`, Home) by inspection only |
-| SR-VIEW-08 | unit | T | `MainViewModelTests.RunState_TracksOutcome_PeakTextFollowsResult` | pass |
+| SR-VIEW-08 | unit | T | `MainViewModelTests.Workspace_SharedResultAndSelectionSurviveSnapshot_ViewSettingsDoNotMarkStale` | pass |
 | SR-MEAS-01 | unit + integration | T, M | `MeasurementMathTests.Distance_IsEuclidean`, `MeasurementsViewModelTests.Add_NumbersSequentially_AndSelectsTheNewOne`; VAL-03 (12.3 mm) | pass |
 | SR-MEAS-02 | unit | T, M | `MeasurementMathTests.AngleDeg_MeasuresAtTheVertex`, `MeasurementMathTests.AngleDeg_DegenerateArm_IsZero`; VAL-03 (67.0°) | pass |
 | SR-MEAS-03 | unit | T, M | `MeasurementMathTests.Roi_CountsPixelsByCentre_CornersInAnyOrder`, `MeasurementMathTests.Roi_ClipsToTheImage_AndIsEmptyBetweenCentres`; VAL-03 (ROI on flood) | pass |
@@ -113,7 +113,7 @@ Automation. Status: **pass** (evidence on 2026-10-01), **partial**, **open** (no
 | SR-MEAS-05 | unit | T | `MeasurementsViewModelTests.Add_NumbersSequentially_AndSelectsTheNewOne`, `MeasurementsViewModelTests.Delete_SelectsTheNeighbour_ClearRestartsNumbering`, `MeasurementsViewModelTests.Add_WrongNumberOfPoints_Throws` | pass |
 | SR-MEAS-06 | unit | T | `MeasurementsViewModelTests.ToolHint_FollowsTheActiveTool` | pass |
 | SR-MEAS-07 | system | I, M | `MeasurementAdorner` (`MinDragPx = 4`, Esc / right-click / Delete handlers, `Clamp`); VAL-03 (Delete, Esc) | partial — 4 px threshold, right-click and clamping by I only |
-| SR-MEAS-08 | system + unit | I, M, T | `MeasurementAdorner` (`MarkerSnapDigits = 1`, `Clamp`, `HitTestCore` honours `CanMoveMarkers`); VAL-04 drag to (18.9, 16.1) mm; stale part by `MainViewModelTests.EditingTheSceneAfterARun_MarksTheResultStale_UntilTheNextRun` | pass |
+| SR-MEAS-08 | system + unit | I, M, T | `MeasurementAdorner` (`MarkerSnapDigits = 1`, `Clamp`, `HitTestCore` honours `CanMoveMarkers`); VAL-04 drag to (18.9, 16.1) mm; stale part by `AcquisitionViewModelTests.Start_SnapshotsGrow_StopKeepsData_UnlocksAndEditMarksStale` | pass |
 | SR-THEME-01 | unit | T | `MainViewModelTests.ThemeToggle_FlipsThemeAndRelabels` (with `FakeTheme`) | pass |
 | SR-THEME-02 | system | I, M | `ThemeService.Apply` replaces in place (I); both-theme visual check | partial — no dated manual record |
 | SR-ENV-01 | build | C, I | `Gcam.Studio.csproj` targets `net9.0-windows`, the other two `net9.0` (C); DWM return values ignored in `ThemeService.ApplyTitleBar` (I) | pass — run on Windows 11 only |
@@ -127,9 +127,9 @@ Automation. Status: **pass** (evidence on 2026-10-01), **partial**, **open** (no
 | SR-ARCH-02 | build | C, I | Core has no reference to `Gcam.Simulation` (C); the shell could reach it transitively through Services, so for the shell it is I only | pass — see AN-08 |
 | SR-ARCH-03 | inspection | I | `MainWindow.xaml.cs` is `InitializeComponent()` only; literal sizes found — AN-05 | partial |
 | SR-ARCH-04 | build | C, I | `Gcam.Studio.Tests.csproj` references only `Gcam.Studio.Core` and targets `net9.0` | pass |
-| SR-NAV-01 | unit + I | T, I | `MainViewModelTests.Workspace_SharedResultAndSelectionSurviveRun_ViewSettingsDoNotMarkStale`; workspace-type centre / panel templates | pass |
+| SR-NAV-01 | unit + I | T, I | `MainViewModelTests.Workspace_SharedResultAndSelectionSurviveSnapshot_ViewSettingsDoNotMarkStale`; workspace-type centre / panel templates | pass |
 | SR-NAV-02 | unit + system | T, I | same workspace test: registered identity, unavailable index, retained selection; segmented switch / Ctrl+1…4 inspected | partial — only Imaging registered; desktop survey blocked |
-| SR-NAV-03 | unit | T | `MainViewModelTests.RunInputs_MarkSharedResultStale_WhileWorkspaceSelectionDoesNot`, `Workspace_SharedResultAndSelectionSurviveRun_ViewSettingsDoNotMarkStale` | pass |
+| SR-NAV-03 | unit | T | `AcquisitionViewModelTests.LiveTimeAndSpeed_MarkStale_WorkspaceAndMeasurementsDoNot`, `Workspace_SharedResultAndSelectionSurviveSnapshot_ViewSettingsDoNotMarkStale` | pass |
 | SR-PLOT-01 | unit + I | T, I | `PlotSeriesTests.LowerBound_HandlesUniformAndIrregularX_AndEnds`; validation / cap / band / marker properties inspected | pass |
 | SR-PLOT-02 | unit | T | `PlotViewportTests.Mapping_RoundTrips_AndClampsLogFloor`, `NiceTicksTests.Linear_Uses125Steps_EngineeringLabels_NoNegativeZero`, `Logarithmic_LabelsDecades_WithEightMinorTicks` | pass |
 | SR-PLOT-03 | unit | T | `MinMaxPyramidTests.Query_EqualsBruteForce_IncludingBothEnds` (5 cases), `Range_ClipsOutsideData_RejectsNonFiniteSamples` | pass |
@@ -155,23 +155,22 @@ the prior batch desktop passes must not be treated as acquisition validation.
 | partial | 9 — NAV-02, PLOT-04, RUN-04, VIEW-07, MEAS-07, THEME-02, ENV-02, A11Y-03, ARCH-03 |
 | open | 0 requirements; system-level scenarios are open in §5 |
 
-### Test inventory (run 2026-10-01, `dotnet test Gcam.sln` (Debug), .NET SDK 9.0.311)
+### Test inventory (run 2026-10-01, `dotnet test Gcam.sln -c Release`, .NET SDK 9.0.311)
 
 | Class | Level | Cases | Result |
 |---|---|---|---|
 | `HeatmapViewportTests` | unit | 11 (9 methods, one theory × 3) | 11 / 11 pass |
 | `MeasurementMathTests` | unit | 5 | 5 / 5 pass |
 | `MeasurementsViewModelTests` | unit / integration | 7 | 7 / 7 pass |
-| `MainViewModelTests` | unit / integration (with workspace and measurements) | 14 | 14 / 14 pass |
-| `AcquisitionViewModelTests` | unit / integration with virtual acquisition clock + batch callback regression | 5 | 5 / 5 pass |
+| `MainViewModelTests` | unit / integration (with workspace and measurements) | 8 | 8 / 8 pass |
+| `AcquisitionViewModelTests` | unit / integration with virtual acquisition clock | 4 | 4 / 4 pass |
 | `TickFormatterTests` | unit | 9 | 9 / 9 pass — no requirement yet (AN-10) |
 | `MinMaxPyramidTests` | unit | 19 | 19 / 19 pass (includes concurrent plot edge / storage cases) |
 | `PlotViewportTests` | unit | 3 | 3 / 3 pass |
 | `NiceTicksTests` | unit | 2 | 2 / 2 pass |
 | `PlotSeriesTests` | unit | 1 | 1 / 1 pass |
-| **Gcam.Studio.Tests** | | **76** | **76 / 76 pass** |
-| `SimulationServiceTests` (in Gcam.Studio.Services.Tests) | integration (the service against the real engine) | 7 | 7 / 7 pass |
-| `AcquisitionServiceTests` (same project) | integration, real engine + virtual scheduler | 7 | 7 / 7 pass |
+| **Gcam.Studio.Tests** | | **69** | **69 / 69 pass** |
+| `AcquisitionServiceTests` (in Gcam.Studio.Services.Tests) | integration, real engine + virtual scheduler | 8 | 8 / 8 pass |
 | `FloodOracleTests` (in Gcam.Studio.UiTests) | the UI scenarios' oracle, tested on its own | 10 | 10 / 10 pass |
 | `PilotTests`, `ScenarioTests` (in Gcam.Studio.UiTests) | system, desktop (opt-in) | 7 | skipped normally; latest opt-in run: 7 fail at desktop input / focus (§5) |
 | `PlotViewTests` | system, desktop (opt-in) | 1 | CPU redraw gate pass; skipped normally |
@@ -180,12 +179,11 @@ the prior batch desktop passes must not be treated as acquisition validation.
 | `ListModeSourceTests` (engine) | physics / compatibility / throughput / decode measurements | 8 | 8 / 8 pass |
 | **Gcam.Tests** (engine, out of scope) | | **254** | **254 / 254 pass; original 246 unchanged** |
 
-The solution, including the WPF shell, built in Release without errors. Restore emitted NU1900 because NuGet
-vulnerability metadata was unreachable. Builds used one MSBuild node and disabled node reuse after the default
-restore failed without diagnostics. The final ordinary run passed 321 cases and skipped 9 desktop tests.
-This table is the dated record; `dotnet test` prints the current totals.
+The solution, including the WPF shell and unchanged UI-test project, built in Release without errors. Restore
+emitted NU1900 because NuGet vulnerability metadata was unreachable. The default build failed without diagnostics;
+verification used one MSBuild node and disabled node reuse. `dotnet test` prints the current totals.
 
-Live-acquisition Release verification on 2026-10-01 passed 354 cases (254 engine + 76 Core + 14 service +
+Live-acquisition Release verification on 2026-10-01 passed 341 cases (254 engine + 69 Core + 8 service +
 10 UI oracles), skipped all nine desktop cases and launched no Studio window. Zero build errors; NU1900
 remains a restore warning. Measurements and pending desktop migration are in
 [VV.Studio.Acquisition](VV.Studio.Acquisition.md).
@@ -267,7 +265,7 @@ so the verdicts can fail. No app process or sandbox folder was left behind.
 | AN-01 | Measurements can only be **created** with the pointer (documented in [DESIGN.Controls](DESIGN.Controls.md#measurementadorner-via-measurementoverlay)) | keyboard users can review, select and delete, not create | keyboard crosshair |
 | AN-02 | UI automation is desktop-only and opt-in | the seven scenarios of §5 are not part of CI; zoom and pan, the refit keys, drag-snapping limits and the visual theme swap are still checked by inspection or by hand | heatmap navigation scenarios next |
 | AN-03 | No high-contrast mode | Windows high-contrast themes are not honoured | planned with the keyboard crosshair |
-| AN-04 | Resolved: a legacy batch progress callback could race completion or arrive in a later session | callback guard/write and terminal progress now share a per-run lock and closed flag; live acquisition uses sequential snapshots | `AcquisitionViewModelTests.LegacyBatch_LateReportCannotOverwriteANewSessionProgress` forces an obsolete report into a new active run; original progress assertion unchanged |
+| AN-04 | Closed: legacy batch progress race | unused batch progress implementation removed; acquisition uses sequential snapshots | batch regression removed with the code it guarded; acquisition progress verified by `AcquisitionViewModelTests.Preset_Completes_NewStartClears_ResultAndEvents` |
 | AN-05 | Literal sizes in `MainWindow.xaml` (photon box `Width="120"`, readout `Height="18"`, `Margin="0,4,0,0"`, colour-bar `Margin="0,8,0,0"`) despite the no-literals rule | cosmetic; spacing doesn't follow `Metrics.xaml` | move to named keys |
 | AN-06 | The "outdated" chip is visual only (tooltip, not a live region) | a screen reader is not told that the images no longer match the scene | announce via the status line or a live region |
 | AN-07 | WPF items (`HeatmapView` rendering, `ColorBar` ticks, `ThemeService`) have no unit tests, by design | defects show only when the app runs | covered by AN-02 plan |

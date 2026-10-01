@@ -15,56 +15,6 @@ public sealed class AcquisitionViewModelTests
         public void Apply(AppTheme theme) => Current = theme;
     }
 
-    private sealed class QueuedContext : SynchronizationContext
-    {
-        private readonly Queue<(SendOrPostCallback Callback, object? State)> _callbacks = [];
-        public override void Post(SendOrPostCallback callback, object? state) => _callbacks.Enqueue((callback, state));
-        public void Drain()
-        {
-            while (_callbacks.TryDequeue(out var item)) item.Callback(item.State);
-        }
-    }
-
-    private sealed class BatchService : ISimulationService
-    {
-        private int _runs;
-        public static ImagingResult Image => new(new DetectorImage(4, 4), -1.5, 1, null, 0, 0, null, 0, TimeSpan.Zero);
-        public TaskCompletionSource<ImagingResult> NextResult { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
-        public Task<ImagingResult> RunAsync(IReadOnlyList<SceneSource> scene, OpticsSettings optics, long photons,
-            IProgress<double>? progress, CancellationToken cancellationToken)
-        {
-            if (_runs++ != 0) return NextResult.Task;
-            progress?.Report(0.5);
-            return Task.FromResult(Image);
-        }
-    }
-
-    [Fact]
-    public async Task LegacyBatch_LateReportCannotOverwriteANewSessionProgress()
-    {
-        var service = new BatchService();
-        var vm = new MainViewModel(service, new Theme());
-        var queue = new QueuedContext();
-        var original = SynchronizationContext.Current;
-        Task first;
-        try
-        {
-            SynchronizationContext.SetSynchronizationContext(queue);
-            first = vm.RunCommand.ExecuteAsync(null);
-        }
-        finally { SynchronizationContext.SetSynchronizationContext(original); }
-        await first;
-        Assert.Equal(1, vm.Progress);
-        var second = vm.RunCommand.ExecuteAsync(null);
-        Assert.True(vm.IsRunning);
-        Assert.Equal(0, vm.Progress);
-        queue.Drain(); // Deliver the previous run's report while the next run is active.
-        Assert.Equal(0, vm.Progress);
-        service.NextResult.SetResult(BatchService.Image);
-        await second;
-        Assert.Equal(1, vm.Progress);
-    }
-
     // A virtual acquisition clock: advancing wall time publishes physical data at the requested speed.
     private sealed class VirtualSession(double preset, double speed) : IAcquisitionSession
     {
@@ -94,13 +44,11 @@ public sealed class AcquisitionViewModelTests
         public void Fail(Exception error) => _channel.Writer.TryComplete(error);
     }
 
-    private sealed class Service : ISimulationService, IAcquisitionService
+    private sealed class Service : IAcquisitionService
     {
         public VirtualSession Session { get; private set; } = null!;
         public IAcquisitionSession Start(IReadOnlyList<SceneSource> scene, OpticsSettings optics, double liveTimeS, double speed)
             => Session = new VirtualSession(liveTimeS, speed);
-        public Task<ImagingResult> RunAsync(IReadOnlyList<SceneSource> scene, OpticsSettings optics, long photons,
-            IProgress<double>? progress, CancellationToken cancellationToken) => throw new NotSupportedException();
     }
 
     private static async Task WaitForSnapshot(MainViewModel vm, double live)

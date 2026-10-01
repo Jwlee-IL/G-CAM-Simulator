@@ -8,55 +8,32 @@ namespace Gcam.Studio.Tests;
 public class MainViewModelTests
 {
     [Fact]
-    public async Task RunInputs_MarkSharedResultStale_WhileWorkspaceSelectionDoesNot()
+    public void Workspace_SharedResultAndSelectionSurviveSnapshot_ViewSettingsDoNotMarkStale()
     {
-        var vm = new MainViewModel(new FakeSimulation(), new FakeTheme());
-        await vm.RunCommand.ExecuteAsync(null);
-        vm.Photons += 1000;
-        Assert.True(vm.IsResultStale);
-        await vm.RunCommand.ExecuteAsync(null);
-        vm.SelectWorkspaceCommand.Execute("0");
-        Assert.False(vm.IsResultStale);
-        vm.Optics = vm.Optics with { FocalDistanceMm = vm.Optics.FocalDistanceMm + 100 };
-        Assert.True(vm.IsResultStale);
-    }
-    [Fact]
-    public async Task Workspace_SharedResultAndSelectionSurviveRun_ViewSettingsDoNotMarkStale()
-    {
-        var vm = new MainViewModel(new FakeSimulation(), new FakeTheme());
+        var vm = new MainViewModel(new FakeAcquisition(), new FakeTheme());
         Assert.Same(vm.Imaging, Assert.Single(vm.Workspaces));
         Assert.Same(vm.Imaging, vm.SelectedWorkspace);
         Assert.Equal("Workspace.Imaging", vm.Imaging.AutomationId);
         Assert.False(vm.HasWorkspaceSwitch);
-        await vm.RunCommand.ExecuteAsync(null);
+        vm.Result = Image;
         Assert.Same(vm.Imaging, vm.SelectedWorkspace);
         Assert.Same(vm.Result, vm.Imaging.Shared.Result);
+        Assert.Equal("peak (1.0, 2.0) mm", vm.Imaging.PeakText);
         vm.Imaging.Measurements.ActiveTool = MeasureTool.Distance;
         Assert.False(vm.IsResultStale);
         vm.SelectWorkspaceCommand.Execute("3");
         Assert.Same(vm.Imaging, vm.SelectedWorkspace);
         Assert.True(vm.Imaging.IsActive);
     }
-    /// <summary>Fake simulation: reports progress, then either returns a canned result or waits for cancellation.</summary>
-    private sealed class FakeSimulation : ISimulationService
-    {
-        public bool BlockUntilCancelled { get; init; }
-        public Exception? Throw { get; init; }
-        public IReadOnlyList<SceneSource>? LastScene { get; private set; }
-        public readonly TaskCompletionSource Started = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
-        public async Task<ImagingResult> RunAsync(IReadOnlyList<SceneSource> scene, OpticsSettings optics, long photons,
-            IProgress<double>? progress, CancellationToken cancellationToken)
-        {
-            LastScene = scene;
-            Started.TrySetResult();
-            progress?.Report(0.5);
-            if (Throw is not null) throw Throw;
-            if (BlockUntilCancelled) await Task.Delay(Timeout.Infinite, cancellationToken);
-            return new ImagingResult(new DetectorImage(4, 4), -0.9, 0.6, null, 0, 0,
-                new SourceEstimate(new Vector3(1, 2, 0), 2.5), 1234, TimeSpan.FromSeconds(1));
-        }
+    private sealed class FakeAcquisition : IAcquisitionService
+    {
+        public IAcquisitionSession Start(IReadOnlyList<SceneSource> scene, OpticsSettings optics,
+            double liveTimeS, double speed) => throw new NotSupportedException();
     }
+
+    private static ImagingResult Image => new(new DetectorImage(4, 4), -0.9, 0.6, null, 0, 0,
+        new SourceEstimate(new Vector3(1, 2, 0), 2.5), 1234, TimeSpan.FromSeconds(1));
 
     private sealed class FakeTheme : IThemeService
     {
@@ -68,7 +45,7 @@ public class MainViewModelTests
     public void ThemeToggle_FlipsThemeAndRelabels()
     {
         var theme = new FakeTheme();
-        var vm = new MainViewModel(new FakeSimulation(), theme);
+        var vm = new MainViewModel(new FakeAcquisition(), theme);
         Assert.Equal("Light theme", vm.ThemeToggleLabel);
         vm.ToggleThemeCommand.Execute(null);
         Assert.Equal(AppTheme.Light, theme.Current);
@@ -76,33 +53,18 @@ public class MainViewModelTests
     }
 
     [Fact]
-    public async Task RunState_TracksOutcome_PeakTextFollowsResult()
-    {
-        var vm = new MainViewModel(new FakeSimulation(), new FakeTheme());
-        Assert.Equal(RunState.Idle, vm.State);
-        Assert.Null(vm.Imaging.PeakText);
-        await vm.RunCommand.ExecuteAsync(null);
-        Assert.Equal(RunState.Succeeded, vm.State);
-        Assert.Equal("peak (1.0, 2.0) mm", vm.Imaging.PeakText);
-
-        var failing = new MainViewModel(new FakeSimulation { Throw = new InvalidOperationException("x") }, new FakeTheme());
-        await failing.RunCommand.ExecuteAsync(null);
-        Assert.Equal(RunState.Failed, failing.State);
-    }
-
-    [Fact]
     public void Startup_HasOneSelectedSource()
     {
-        var vm = new MainViewModel(new FakeSimulation(), new FakeTheme());
+        var vm = new MainViewModel(new FakeAcquisition(), new FakeTheme());
         Assert.Single(vm.Sources);
         Assert.Same(vm.Sources[0], vm.SelectedSource);
-        Assert.True(vm.RunCommand.CanExecute(null));
+        Assert.True(vm.StartCommand.CanExecute(null));
     }
 
     [Fact]
     public void AddRemove_SelectsNewSourceThenNeighbour()
     {
-        var vm = new MainViewModel(new FakeSimulation(), new FakeTheme());
+        var vm = new MainViewModel(new FakeAcquisition(), new FakeTheme());
         vm.AddSourceCommand.Execute(null);
         vm.AddSourceCommand.Execute(null);
         Assert.Equal(3, vm.Sources.Count);
@@ -116,62 +78,14 @@ public class MainViewModelTests
     }
 
     [Fact]
-    public void RemoveAll_DisablesRemoveAndRun()
+    public void RemoveAll_DisablesRemoveAndStart()
     {
-        var vm = new MainViewModel(new FakeSimulation(), new FakeTheme());
+        var vm = new MainViewModel(new FakeAcquisition(), new FakeTheme());
         vm.RemoveSourceCommand.Execute(null);
         Assert.Empty(vm.Sources);
         Assert.Null(vm.SelectedSource);
         Assert.False(vm.RemoveSourceCommand.CanExecute(null));
-        Assert.False(vm.RunCommand.CanExecute(null));
-    }
-
-    [Fact]
-    public async Task Run_PassesSceneAndPublishesResult()
-    {
-        var sim = new FakeSimulation();
-        var vm = new MainViewModel(sim, new FakeTheme());
-        vm.SelectedSource!.X = 12;
-
-        await vm.RunCommand.ExecuteAsync(null);
-
-        Assert.NotNull(vm.Result);
-        Assert.False(vm.IsRunning);
-        Assert.Equal(1.0, vm.Progress);
-        Assert.Contains("1,234.0 effective counts", vm.Status);
-        Assert.Equal(12, Assert.Single(sim.LastScene!).X);
-    }
-
-    [Fact]
-    public async Task Cancel_KeepsPreviousResult_ReenablesEditing()
-    {
-        var vm = new MainViewModel(new FakeSimulation(), new FakeTheme());
-        await vm.RunCommand.ExecuteAsync(null);
-        var first = vm.Result;
-
-        var blocking = new FakeSimulation { BlockUntilCancelled = true };
-        var vm2 = new MainViewModel(blocking, new FakeTheme()) { Result = first };
-        var run = vm2.RunCommand.ExecuteAsync(null);
-        await blocking.Started.Task;
-        Assert.True(vm2.IsRunning);
-        Assert.False(vm2.AddSourceCommand.CanExecute(null));   // scene is locked while running
-
-        vm2.RunCancelCommand.Execute(null);
-        await run;
-
-        Assert.False(vm2.IsRunning);
-        Assert.Same(first, vm2.Result);
-        Assert.StartsWith("Cancelled", vm2.Status);
-        Assert.True(vm2.AddSourceCommand.CanExecute(null));
-    }
-
-    [Fact]
-    public async Task Failure_IsReportedNotThrown()
-    {
-        var vm = new MainViewModel(new FakeSimulation { Throw = new InvalidOperationException("boom") }, new FakeTheme());
-        await vm.RunCommand.ExecuteAsync(null);
-        Assert.False(vm.IsRunning);
-        Assert.Equal("Failed: boom", vm.Status);
+        Assert.False(vm.StartCommand.CanExecute(null));
     }
 
     [Fact]
@@ -192,34 +106,14 @@ public class MainViewModelTests
     }
 
     [Fact]
-    public async Task EditingTheSceneAfterARun_MarksTheResultStale_UntilTheNextRun()
+    public void NewResult_RefreshesMeasurements()
     {
-        var vm = new MainViewModel(new FakeSimulation(), new FakeTheme());
-        vm.Sources[0].X = 5;
-        Assert.False(vm.IsResultStale);   // nothing simulated yet, nothing to be stale
-
-        await vm.RunCommand.ExecuteAsync(null);
-        Assert.False(vm.IsResultStale);
-
-        vm.Sources[0].Y = -3;             // e.g. dragged on the reconstruction
-        Assert.True(vm.IsResultStale);
-
-        await vm.RunCommand.ExecuteAsync(null);
-        Assert.False(vm.IsResultStale);
-
-        vm.AddSourceCommand.Execute(null);
-        Assert.True(vm.IsResultStale);
-    }
-
-    [Fact]
-    public async Task NewResult_RefreshesMeasurements()
-    {
-        var vm = new MainViewModel(new FakeSimulation(), new FakeTheme());
+        var vm = new MainViewModel(new FakeAcquisition(), new FakeTheme());
         vm.Imaging.Measurements.AddCommand.Execute(new MeasurementDraft(ImagePane.Flood, MeasurementKind.Roi,
             [new Gcam.Studio.Core.Imaging.Vec2(-5, -5), new Gcam.Studio.Core.Imaging.Vec2(5, 5)]));
         Assert.Equal("—", vm.Imaging.Measurements.Items[0].Value);
 
-        await vm.RunCommand.ExecuteAsync(null);
+        vm.Result = Image;
         Assert.Equal("Σ 0", vm.Imaging.Measurements.Items[0].Value);   // the fake's flood is all zeros
     }
 
