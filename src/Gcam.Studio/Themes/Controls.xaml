@@ -454,6 +454,7 @@
         <Setter Property="FocusBrush" Value="{DynamicResource Brush.Focus}" />
         <Setter Property="GridBrush" Value="{DynamicResource Brush.Plot.Grid}" />
         <Setter Property="BandBrush" Value="{DynamicResource Brush.Plot.Band}" />
+        <Setter Property="BandEdgeBrush" Value="{DynamicResource Brush.Plot.BandEdge}" />
         <Setter Property="Series1Brush" Value="{DynamicResource Brush.Plot.Series1}" />
         <Setter Property="Series2Brush" Value="{DynamicResource Brush.Plot.Series2}" />
         <Setter Property="Series3Brush" Value="{DynamicResource Brush.Plot.Series3}" />
@@ -469,8 +470,8 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="CheckBox">
-                    <StackPanel Orientation="Horizontal">
-                        <Border x:Name="Box" Width="{StaticResource Size.Logo}" Height="{StaticResource Size.Logo}"
+                    <DockPanel>
+                        <Border x:Name="Box" DockPanel.Dock="Left" VerticalAlignment="Center" Width="{StaticResource Size.Logo}" Height="{StaticResource Size.Logo}"
                                 BorderBrush="{DynamicResource Brush.Line.Control}" BorderThickness="{StaticResource Border.Hairline}"
                                 Background="{DynamicResource Brush.Bg.Raised}" CornerRadius="{StaticResource Radius.Control}"
                                 Margin="{StaticResource Gap.Inline}">
@@ -478,7 +479,7 @@
                                        Foreground="{DynamicResource Brush.Text.OnAccent}" />
                         </Border>
                         <ContentPresenter VerticalAlignment="Center" RecognizesAccessKey="True" />
-                    </StackPanel>
+                    </DockPanel>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsChecked" Value="True">
                             <Setter TargetName="Tick" Property="Visibility" Value="Visible" />

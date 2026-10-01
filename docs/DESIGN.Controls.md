@@ -18,7 +18,7 @@ is therefore re-templated against the tokens in [DESIGN.Color](DESIGN.Color.md).
 | Primary button | `Button.Primary` | accent fill, `OnAccent` text — **one per screen** (Simulate) |
 | Ghost button | `Button.Ghost` | borderless, for bars and panel headers |
 | TextBox | implicit | mono text; unit suffix via `Tag` (`Tag="mm"`); accent 2 px border on focus; error border + tooltip when `Validation.HasError`; themed caret and selection |
-| CheckBox | implicit | themed box and visible check mark, focus ring, hover border and disabled state; used for Spectrum log Y / pile-up |
+| CheckBox | implicit | themed box and visible check mark, focus ring, hover border and disabled state; used for Spectrum log Y / pile-up; DockPanel constrains wrapping content to the available width |
 | ComboBox / ComboBoxItem | implicit | full template including popup, arrow and item highlight |
 | ListBox / ListBoxItem | implicit | selection = subtle fill **+ 2 px accent bar** (not colour alone), stays visible when unfocused, inset focus ring |
 | Segmented picker | `Segment.Track` (Border) + `RadioButton.Segment` | one radio button per option in a `UniformGrid`; checked = subtle fill + accent text + semibold (not colour alone); access keys (`_Distance` → Alt+D). Bind with `EnumMatchConverter` (tool picker) |
@@ -56,9 +56,9 @@ and keyboard gestures. Each control follows the same five rules:
 | Rendering | bitmap rebuilt only when `Image` changes (viridis LUT, min–max normalised); zoom / pan only move the destination rect in `OnRender`; nearest-neighbour scaling; 1 px `FrameBrush` outline so dark colormap ends don't melt into a dark panel |
 | Pixel accuracy | at fit, a whole number of **device** pixels per cell (`PixelsPerDip`), so cells stay equal width at 125 / 150 % scaling |
 | Input | wheel: zoom about the cursor · drag: pan · double-click: fit · `+` / `−`: zoom · arrows: pan · `0` / Home: fit |
-| Bindable output | `Readout` ("x, y mm · value" of the hovered pixel), `DataMin` / `DataMax`, `Zoom` |
+| Bindable output | `Readout` ("x, y mm · value unit" of the hovered pixel), `DataMin` / `DataMax`, `Zoom` |
 | Overlay API | `ViewChanged` (data, resize, DPI, zoom, pan), `ScreenToMm` / `MmToScreen`, `ExtentMm`, `HasImage` — what an adorner needs to draw in mm |
-| Options | `ShowReadoutOverlay` (draw the readout on the image, or let the host show `Readout`), `EmptyText`, `Foreground`, `FrameBrush`, `FocusBrush` |
+| Options | `ValueUnit` ("counts" for flood, "(decoded)" for reconstruction), `ShowReadoutOverlay` (draw the readout on the image, or let the host show `Readout`), `EmptyText`, `Foreground`, `FrameBrush`, `FocusBrush` |
 | Accessibility | `HeatmapViewAutomationPeer`: control type Image, class `HeatmapView`, keyboard-focusable; `ItemStatus` = zoom + readout |
 | Geometry | `HeatmapViewport` (Core): fit, snapping, zoom about an anchor, pan limits, screen ↔ image ↔ mm — 11 tests |
 
@@ -98,8 +98,11 @@ unaligned head / tail fragments within 64-sample blocks. Axis margins use measur
 labels are centred by their measured width.
 One frozen `StreamGeometry` per series preserves column extrema (about two points per device column), with a
 translucent baseline fill for Area. Log Y clamps counts at 1, matching the legacy spectrum; linear ticks use
-1–2–5 steps, log ticks have decades and 2…9 minor ticks, and labels use `TickFormatter` engineering notation.
-Bands and labelled X markers support future spectrum windows. Brushes come from the implicit theme style.
+1–2–5 steps with `TickFormatter` engineering labels. Log ticks have decades and 2…9 minor ticks;
+decades through 10⁵ use grouped numbers ("10,000"), higher decades use superscript powers ("10⁶").
+The Y title occupies its own measured text row plus a 4-DIP gap above the top tick label.
+Bands use neutral `BandBrush` tint and `BandEdgeBrush` boundaries drawn above the series fill, so windows
+remain distinct from data in both themes. Brushes come from the implicit theme style.
 
 Wheel / + / − zoom X; drag / arrows pan; double-click / 0 / Home reset. Resizing retains the X viewport;
 capture loss ends dragging. A focus ring and `PlotViewAutomationPeer` expose keyboard focus, zoom and readout.
@@ -121,13 +124,15 @@ Core `PlotBandLayout` centres labels on bands, clamps them to the plot and moves
 text wider than the plot is ellipsized. Labels draw over the fill.
 
 Spectrum table selection requests the window plus one window width on each side. Snapshot row replacement
-retains selection without re-requesting zoom. Offscreen evidence uses `Gcam.Studio.RenderTests`, opt-in with
+retains selection without re-requesting zoom. Whole-window content and plot offscreen evidence uses `Gcam.Studio.RenderTests`, opt-in with
 `GCAM_RENDER_SNAPSHOTS=1`, and creates no window or desktop input.
 
 ### ColorBar
 
-`FrameworkElement` drawing the colormap gradient with `TickCount` numeric labels between `Minimum` and
-`Maximum`, in `Font.Mono`; strip height `BarHeight` (set from `Size.ColorBar`). Bind it to a heatmap:
+`FrameworkElement` drawing the colormap gradient with a target `TickCount` of numeric labels between `Minimum` and
+`Maximum`. `NiceTicks.Linear` chooses 1–2–5 steps inside the actual range, with tick marks placed by their values;
+labels centre on each mark and clamp to the strip edges. A constant image has one labelled value.
+Text uses `Font.Mono`; strip height `BarHeight` is set from `Size.ColorBar`. Bind it to a heatmap:
 `Minimum="{Binding DataMin, ElementName=Flood}"`. Labels come from `TickFormatter` (Core, tested): one shared power
 of ten when values are very small or large (`1.6 … 16.1 ×10⁻³` instead of `0.00157 … 0.0161`), the same number
 of decimals on every tick, never `-0`.

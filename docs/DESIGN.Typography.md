@@ -48,6 +48,10 @@ Text drawn by controls (heatmap labels, overlay chips, colour-bar ticks) uses th
 `TextElement.FontFamily`, which the view sets to `Font.Mono` on the heatmaps — no control hard-codes a typeface,
 and every number on screen is in the same mono face.
 
+Plot Y titles reserve a measured text-height row and a 4-DIP gap above the plot; the top tick
+label keeps its own half-height margin. Log decades use grouped integer labels through 100,000,
+then superscript powers, avoiding a second shared multiplier on an individual log tick.
+
 ## Adding a role
 
 Derive from the nearest existing role (`BasedOn`), change one or two properties, name it `Text.<Purpose>`, and

@@ -12,8 +12,11 @@
                 <TextBox Text="{Binding WindowFwhm}" Tag="× FWHM" Margin="{StaticResource Gap.Section}"
                          AutomationProperties.AutomationId="Spectrum.Window" AutomationProperties.Name="Window N times FWHM" />
                 <DockPanel Style="{StaticResource PanelHeader}"><TextBlock Text="Pile-up" Style="{StaticResource Text.PanelTitle}" /></DockPanel>
-                <CheckBox Content="Pile-up" IsChecked="{Binding PileUp}" Margin="{StaticResource Gap.Field}"
-                          AutomationProperties.AutomationId="Spectrum.PileUp" />
+                <CheckBox
+                    IsChecked="{Binding PileUp}" Margin="{StaticResource Gap.Field}"
+                    AutomationProperties.AutomationId="Spectrum.PileUp">
+                    <TextBlock Text="Merge pulses within the resolving time" TextWrapping="Wrap" Style="{StaticResource Text.Body}" />
+                </CheckBox>
                 <TextBlock Text="{Binding ResolvingTime}" Style="{StaticResource Text.Mono}" Margin="{StaticResource Gap.Section}" />
                 <DockPanel Style="{StaticResource PanelHeader}"><TextBlock Text="Resolution" Style="{StaticResource Text.PanelTitle}" /></DockPanel>
                 <TextBlock Text="{Binding Resolution}" Style="{StaticResource Text.Mono}" Margin="{StaticResource Gap.Field}" />

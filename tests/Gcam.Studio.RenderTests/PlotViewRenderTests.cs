@@ -12,7 +12,7 @@ using Xunit.Abstractions;
 
 namespace Gcam.Studio.RenderTests;
 
-public sealed class PlotViewRenderTests(ITestOutputHelper output)
+public sealed partial class PlotViewRenderTests(ITestOutputHelper output)
 {
     [RenderSnapshotFact]
     public void Spectrum_BothThemesFullAndZoom_RenderWithoutWindow()
@@ -20,11 +20,17 @@ public sealed class PlotViewRenderTests(ITestOutputHelper output)
         Exception? failure = null;
         var thread = new Thread(() =>
         {
+            System.Globalization.CultureInfo.CurrentCulture = System.Globalization.CultureInfo.GetCultureInfo("en-US");
+            System.Globalization.CultureInfo.CurrentUICulture = System.Globalization.CultureInfo.GetCultureInfo("en-US");
             // Base WPF resource infrastructure only: no Studio App, Run(), window or startup handler.
             var application = new Application { ShutdownMode = ShutdownMode.OnExplicitShutdown };
             try
             {
-                foreach (string theme in new[] { "Dark", "Light" }) Render(theme);
+                foreach (string theme in new[] { "Dark", "Light" })
+                {
+                    Render(theme);
+                    RenderWindows(theme);
+                }
             }
             catch (Exception ex) { failure = ex; }
             finally { application.Shutdown(); Dispatcher.CurrentDispatcher.InvokeShutdown(); }
@@ -61,7 +67,7 @@ public sealed class PlotViewRenderTests(ITestOutputHelper output)
             Series = [series], LogY = true, XUnit = "keV", YUnit = "counts",
             XLabel = "measured energy (keV)", YLabel = "counts",
             Foreground = Brush("Brush.Text.Primary"), GridBrush = Brush("Brush.Plot.Grid"),
-            BandBrush = Brush("Brush.Plot.Band"), FocusBrush = Brush("Brush.Focus"),
+            BandBrush = Brush("Brush.Plot.Band"), BandEdgeBrush = Brush("Brush.Plot.BandEdge"), FocusBrush = Brush("Brush.Focus"),
             Series1Brush = Brush("Brush.Plot.Series1"),
             Bands = [new(18, 50, "32.1 + 36.4 keV"), new(615, 708, "661.7 keV"),
                 new(1110, 1236, "1173.2 keV"), new(1265, 1400, "1332.5 keV")]

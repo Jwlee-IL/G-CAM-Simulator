@@ -51,8 +51,10 @@
     <SolidColorBrush x:Key="Brush.Plot.Series2" Color="{StaticResource Color.Plot.Series2}" />
     <Color x:Key="Color.Plot.Series3">#6742A6</Color>
     <SolidColorBrush x:Key="Brush.Plot.Series3" Color="{StaticResource Color.Plot.Series3}" />
-    <Color x:Key="Color.Plot.Band">#2617693C</Color>
+    <Color x:Key="Color.Plot.Band">#26808080</Color>
     <SolidColorBrush x:Key="Brush.Plot.Band" Color="{StaticResource Color.Plot.Band}" />
+    <Color x:Key="Color.Plot.BandEdge">#505050</Color>
+    <SolidColorBrush x:Key="Brush.Plot.BandEdge" Color="{StaticResource Color.Plot.BandEdge}" />
     <Color x:Key="Color.Plot.Grid">#CCD4DC</Color>
     <SolidColorBrush x:Key="Brush.Plot.Grid" Color="{StaticResource Color.Plot.Grid}" />
 </ResourceDictionary>

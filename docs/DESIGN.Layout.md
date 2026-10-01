@@ -23,7 +23,8 @@ combine a container's padding with a child's margin for the same edge.
 | `Size.Bar` / `Size.StatusBar` | 48 / 28 | top bar / status bar height (`GridLength`, used directly as row heights) |
 | `Size.SidePanel` | 300 | scene and measurement panel width (`GridLength`) |
 | `Size.SourceList` / `Size.ResultsList` | 168 / 280 | **max** heights: lists grow with their rows, then scroll — no reserved empty space |
-| `Size.NumberInput` · `Size.Progress` | 120 · 160 | live-time / speed boxes · progress bar |
+| `Size.NumberInput` · `Size.Progress` | 120 · 160 | general numeric input width · progress bar |
+| `Size.NumberInput.Short` | 80 | short live-time / speed values with s / × suffixes; preserves top-bar space |
 | `Size.ColorBar` · `Size.ReadoutLine` | 8 · 16 | colour-bar strip · the reserved readout line under an image |
 | `Size.Logo` · `Size.Icon` · `Size.StatusDot` | 16 · 12 · 8 | top-bar mark · button icon · run-state dot |
 | `Size.Column.Id` / `Size.Column.Short` | 36 / 60 | fixed columns of the results table (header and rows share them; the value column takes the rest) |
@@ -49,6 +50,10 @@ Row 1  Content (a Border with Pad.Window)
                 Spectrum: Display (log Y) · Window (N × FWHM) · Pile-up (resolving time) · Resolution (read-only chain)
 Row 2  Status bar (Size.StatusBar) state dot · live time / counts / cps / MC-limited (live region) · live-time progress
 ```
+
+Top-bar live-time and speed inputs are vertically centred at `Size.Control` (28 DIP), with
+`Size.NumberInput.Short` width (80 DIP). Labels are "Live time" / "Speed"; `Tag` supplies "s" / "×"
+inside the inputs, matching the scene fields.
 
 The primary action sits at the same place on every screen (top right); the status of the last run is always
 visible at the bottom, full width, regardless of which panel has focus.

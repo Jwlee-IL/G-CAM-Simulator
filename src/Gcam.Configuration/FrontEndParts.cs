@@ -44,7 +44,7 @@ public static class FrontEndParts
     public static readonly IReadOnlyList<PreampPreset> Preamps =
     [
         new("Fast CSP + CR-RC^4",        100.0, 150.0, true),
-        new("CSP + CR-RC (your rig)",    200.0, 320.0, true),
+        new("CSP + CR-RC (original rig)",    200.0, 320.0, true),
         new("Slow shaping (high pileup)", 500.0, 800.0, true),
         new("Trapezoid DAQ",             200.0, 320.0, false),
     ];

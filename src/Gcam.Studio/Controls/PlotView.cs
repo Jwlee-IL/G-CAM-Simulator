@@ -50,7 +50,8 @@ public sealed class PlotView : FrameworkElement
             xHalfWidth = Math.Max(xHalfWidth, text.Width / 2);
         }
         double left = OuterPadding + Math.Max(yWidth + LabelGap, xHalfWidth);
-        double top = OuterPadding + Math.Max(Text(YLabel).Height + LabelGap, yHeight / 2);
+        double titleRow = string.IsNullOrEmpty(YLabel) ? 0 : Text(YLabel).Height + LabelGap;
+        double top = OuterPadding + titleRow + yHeight / 2;
         double right = OuterPadding + xHalfWidth;
         double bottom = OuterPadding + xHeight + LabelGap + Text(XLabel).Height + LabelGap;
         return new(left, top, Math.Max(1, ActualWidth - left - right), Math.Max(1, ActualHeight - top - bottom));
@@ -99,6 +100,8 @@ public sealed class PlotView : FrameworkElement
     public Brush? GridBrush { get => (Brush?)GetValue(GridBrushProperty); set => SetValue(GridBrushProperty, value); }
     public static readonly DependencyProperty BandBrushProperty = Register<Brush?>(nameof(BandBrush), null);
     public Brush? BandBrush { get => (Brush?)GetValue(BandBrushProperty); set => SetValue(BandBrushProperty, value); }
+    public static readonly DependencyProperty BandEdgeBrushProperty = Register<Brush?>(nameof(BandEdgeBrush), null);
+    public Brush? BandEdgeBrush { get => (Brush?)GetValue(BandEdgeBrushProperty); set => SetValue(BandEdgeBrushProperty, value); }
     public static readonly DependencyProperty FocusBrushProperty = Register<Brush?>(nameof(FocusBrush), null);
     public Brush? FocusBrush { get => (Brush?)GetValue(FocusBrushProperty); set => SetValue(FocusBrushProperty, value); }
     public static readonly DependencyProperty Series1BrushProperty = Register<Brush?>(nameof(Series1Brush), null);
@@ -227,6 +230,12 @@ public sealed class PlotView : FrameworkElement
                 dc.DrawRectangle(BandBrush, null, new Rect(Math.Min(a, b), r.Top, Math.Abs(b - a), r.Height));
             }
             foreach (var (series, pyramid) in _prepared) DrawSeries(dc, r, series, pyramid);
+            // Edges stay visible even where a filled series covers the window tint.
+            foreach (var band in visibleBands)
+            {
+                foreach (double x in new[] { ScreenX(band.Lo), ScreenX(band.Hi) })
+                    dc.DrawLine(Pen(BandEdgeBrush), new Point(x, r.Top), new Point(x, r.Bottom));
+            }
             if (_hover is { } hover)
             {
                 double a = ScreenX(hover.Series.EdgeAt(hover.Bin)), b = ScreenX(hover.Series.EdgeAt(hover.Bin + 1));

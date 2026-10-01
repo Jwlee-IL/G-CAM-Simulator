@@ -28,4 +28,22 @@ public sealed class NiceTicksTests
         Assert.All(ticks.Where(t => !t.IsMajor), t => Assert.Empty(t.Label));
         Assert.Empty(NiceTicks.Linear(0, 0));
     }
+
+    [Fact]
+    public void Logarithmic_UsesGroupedNumbersThenSuperscriptPowers()
+    {
+        var major = NiceTicks.Logarithmic(1, 10_000_000).Where(t => t.IsMajor).ToArray();
+        Assert.Equal(new[] { "1", "10", "100", "1,000", "10,000", "100,000", "10⁶", "10⁷" },
+            major.Select(t => t.Label));
+    }
+
+    [Fact]
+    public void Linear_ColourScaleTicksStayInsideDataRange()
+    {
+        Assert.Equal(new[] { 0.0, 10, 20 }, NiceTicks.Linear(0, 25, 5).Select(t => t.Value));
+        var decoded = NiceTicks.Linear(-1027, 3077, 5);
+        Assert.Equal(new[] { 0.0, 2000 }, decoded.Select(t => t.Value));
+        Assert.All(decoded, t => Assert.InRange(t.Value, -1027, 3077));
+        Assert.Equal("0", decoded[0].Label);
+    }
 }

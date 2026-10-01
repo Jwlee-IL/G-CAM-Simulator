@@ -1,8 +1,9 @@
+using System.Globalization;
 using Gcam.Studio.Core.Imaging;
 
 namespace Gcam.Studio.Core.Plotting;
 
-/// <summary>1–2–5 linear steps and log decades, using the colour scale's engineering labels.</summary>
+/// <summary>1–2–5 linear steps with engineering labels; log decades with grouped numbers or superscript powers.</summary>
 public static class NiceTicks
 {
     public static IReadOnlyList<PlotTick> Linear(double min, double max, int count = 6)
@@ -30,7 +31,9 @@ public static class NiceTicks
             {
                 double v = basis * m;
                 if (v < min || v > max) continue;
-                ticks.Add(new(v, m == 1 ? TickFormatter.Labels(v, v, 2)[1] : "", m == 1));
+                string label = decade <= 5 ? v.ToString("N0", CultureInfo.InvariantCulture)
+                    : "10" + TickFormatter.Superscript(decade);
+                ticks.Add(new(v, m == 1 ? label : "", m == 1));
             }
         }
         return ticks;

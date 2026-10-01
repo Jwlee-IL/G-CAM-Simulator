@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using Gcam.Studio.Core.Imaging;
+using Gcam.Studio.Core.Plotting;
 using Gcam.Studio.Rendering;
 
 namespace Gcam.Studio.Controls;
@@ -65,15 +66,18 @@ public sealed class ColorBar : FrameworkElement
         if (w <= 0) return;
         dc.DrawImage(Gradient, new Rect(0, 0, w, BarHeight));
 
-        var labels = TickFormatter.Labels(Minimum, Maximum, TickCount);
+        var ticks = NiceTicks.Linear(Minimum, Maximum, TickCount);
+        // A constant image still needs its one value displayed; it has no tick interval.
+        if (Maximum == Minimum && double.IsFinite(Minimum))
+            ticks = [new PlotTick(Minimum, TickFormatter.Labels(Minimum, Maximum, 2)[1])];
         double ppd = VisualTreeHelper.GetDpi(this).PixelsPerDip;
         var typeface = new Typeface(FontFamily, FontStyles.Normal, FontWeights.Normal, FontStretches.Normal);
-        for (int i = 0; i < labels.Count; i++)
+        foreach (var tick in ticks)
         {
-            double t = i / (double)(labels.Count - 1);
-            var text = new FormattedText(labels[i], CultureInfo.InvariantCulture, FlowDirection.LeftToRight, typeface, LabelSize, Foreground, ppd);
-            // First label left-aligned, last right-aligned, the rest centred on their tick.
-            double x = i == 0 ? 0 : i == labels.Count - 1 ? w - text.Width : t * w - text.Width / 2;
+            double t = Maximum > Minimum ? (tick.Value - Minimum) / (Maximum - Minimum) : 0;
+            var text = new FormattedText(tick.Label, CultureInfo.InvariantCulture, FlowDirection.LeftToRight, typeface, LabelSize, Foreground, ppd);
+            double x = Math.Clamp(t * w - text.Width / 2, 0, Math.Max(0, w - text.Width));
+            dc.DrawLine(new Pen(Foreground, 1), new Point(t * w, BarHeight), new Point(t * w, BarHeight + LabelGap));
             dc.DrawText(text, new Point(x, BarHeight + LabelGap));
         }
     }

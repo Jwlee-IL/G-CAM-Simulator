@@ -60,6 +60,14 @@ public sealed class HeatmapView : FrameworkElement
     /// <summary>Pixel spacing in mm.</summary>
     public double StepMm { get => (double)GetValue(StepMmProperty); set => SetValue(StepMmProperty, value); }
 
+    public static readonly DependencyProperty ValueUnitProperty = DependencyProperty.Register(
+        nameof(ValueUnit), typeof(string), typeof(HeatmapView),
+        new FrameworkPropertyMetadata(string.Empty, FrameworkPropertyMetadataOptions.AffectsRender,
+            (d, _) => ((HeatmapView)d).RefreshReadout()));
+
+    /// <summary>Value suffix for the hovered pixel, such as counts or (decoded).</summary>
+    public string ValueUnit { get => (string)GetValue(ValueUnitProperty); set => SetValue(ValueUnitProperty, value); }
+
     public static readonly DependencyProperty EmptyTextProperty = DependencyProperty.Register(
         nameof(EmptyText), typeof(string), typeof(HeatmapView), new FrameworkPropertyMetadata("No data", FrameworkPropertyMetadataOptions.AffectsRender));
 
@@ -401,15 +409,22 @@ public sealed class HeatmapView : FrameworkElement
     {
         var img = Image;
         _hover = img is null ? null : _viewport.PixelAt(new Vec2(p.X, p.Y));
+        RefreshReadout();
+        Cursor = _viewport.Zoom > HeatmapViewport.MinZoom ? (IsMouseCaptured ? Cursors.SizeAll : Cursors.Hand) : null;
+        InvalidateVisual();
+    }
+
+    private void RefreshReadout()
+    {
+        var img = Image;
         string readout = string.Empty;
         if (_hover is { } h && img is not null)
         {
             var mm = HeatmapViewport.ImageToMm(new Vec2(h.X + 0.5, h.Y + 0.5), OriginMm, StepMm);
-            readout = string.Format(CultureInfo.InvariantCulture, "x {0:F1} mm, y {1:F1} mm · {2:G4}", mm.X, mm.Y, img[h.X, h.Y])
+            readout = string.Format(CultureInfo.InvariantCulture, "x {0:F1} mm, y {1:F1} mm · {2:#,0.####}", mm.X, mm.Y, img[h.X, h.Y])
                 .Replace("-0.0 mm", "0.0 mm");   // a tiny negative coordinate shouldn't read as "-0.0"
+            if (!string.IsNullOrWhiteSpace(ValueUnit)) readout += " " + ValueUnit;
         }
         SetValue(ReadoutPropertyKey, readout);
-        Cursor = _viewport.Zoom > HeatmapViewport.MinZoom ? (IsMouseCaptured ? Cursors.SizeAll : Cursors.Hand) : null;
-        InvalidateVisual();
     }
 }

@@ -20,3 +20,6 @@ Remove-Item Env:GCAM_RENDER_SNAPSHOTS
 The test also verifies zoom and grow-only Y retention on data replacement and full-axis reset.
 It initializes base WPF resource infrastructure, without constructing the Studio App or calling Run.
 Normal solution tests skip it. Desktop tests remain a separate final verification step.
+
+Batch 1 regenerates these plots with grouped log decades, a separate Y-title row, and neutral bands
+with edge lines. The same render case also captures [whole-window content](../studio-render/README.md).

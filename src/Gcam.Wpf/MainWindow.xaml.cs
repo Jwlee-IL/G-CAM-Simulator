@@ -88,7 +88,7 @@ public partial class MainWindow : Window
         foreach (var s in FrontEndParts.Preamps) FePreamp.Items.Add(s.Name);
         FeScint.SelectedIndex = 0;    // GAGG(Ce)
         FeSensor.SelectedIndex = 0;   // Hamamatsu MPPC S13360-3050
-        FePreamp.SelectedIndex = 1;   // CSP + CR-RC (your rig)
+        FePreamp.SelectedIndex = 1;   // CSP + CR-RC (original rig)
 
         _scene.Add(new SceneSource { Isotope = "Cs-137", X = 0, Y = 0, DistanceMm = 160, ActivityUCi = 10 });
         RefreshSourceList(select: 0);

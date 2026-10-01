@@ -185,10 +185,10 @@ the prior batch desktop passes must not be treated as acquisition validation.
 | `TickFormatterTests` | unit | 9 | 9 / 9 pass — no requirement yet (AN-10) |
 | `MinMaxPyramidTests` | unit | 19 | 19 / 19 pass (includes concurrent plot edge / storage cases) |
 | `PlotViewportTests` | unit | 3 | 3 / 3 pass |
-| `NiceTicksTests` | unit | 2 | 2 / 2 pass |
+| `NiceTicksTests` | unit | 4 | 4 / 4 pass — colour-scale range and grouped log decades included |
 | `PlotSeriesTests` | unit | 1 | 1 / 1 pass |
 | `HistogramPlotTests` | unit / headless geometry timing | 9 | 9 / 9 pass |
-| **Gcam.Studio.Tests** | | **82** | **82 / 82 pass** |
+| **Gcam.Studio.Tests** | | **84** | **84 / 84 pass** |
 | `AcquisitionServiceTests` (in Gcam.Studio.Services.Tests) | integration, real engine + virtual scheduler | 8 | 8 / 8 pass |
 | `SpectrumServiceTests` (in Gcam.Studio.Services.Tests) | physics / deterministic processing / timing and band grouping | 9 | 9 / 9 pass |
 | `DetectorRealismTests` (in Gcam.Studio.Services.Tests) | physics / defaults / measurement replay / throughput | 6 | 6 / 6 pass; service project total 23 |
@@ -213,6 +213,19 @@ the render opt-in passes independently. The prior 365 count is the pre-change in
 execution. Full solution Release build uses cached packages and one MSBuild node because network restore of the
 legacy WPF project's floating ScottPlot version is unavailable. No desktop test was enabled and Studio was not
 launched. Snapshot evidence: [studio-plot](assets/studio-plot/README.md).
+
+UI polish batch 1 Release verification adds two `NiceTicksTests` cases: measured baseline 374 -> 376
+passing headless cases (259 engine, 84 Core, 23 services, 10 UI oracles). Nine desktop cases and the
+one render case skip in the normal solution run; the render opt-in passes separately. Release build
+has zero warnings and errors. Cached packages, `--no-restore`, `--disable-build-servers` and one
+MSBuild node are used; the legacy floating ScottPlot restore is unavailable on the restricted network.
+The existing render case now creates eight [whole-window content snapshots](assets/studio-render/README.md)
+at 1280 × 800 / 1440 × 900 in both themes, plus the four plot snapshots. It uses a fake acquisition
+service and schematic analytic drawing data, never shows a window or sends desktop input.
+The captures verify counts / decoded readout units, value-positioned colour ticks, centred short acquisition
+inputs, the descriptive pile-up label, original-rig preset name, grouped log decades, Y-title separation
+and neutral window bands with contrasted edges. They are visual review evidence, not desktop validation
+or detector physics evidence. AutomationIds are unchanged; no desktop test was enabled or edited.
 
 Core timing (Release, 1200 device columns, 100 warmed iterations): 10 M line geometry plus visible-range query
 median 0.490 ms / p95 0.575 ms; zoomed 0.426 / 0.509 ms. Pyramid construction 28.335 ms. A 256-bin stepped

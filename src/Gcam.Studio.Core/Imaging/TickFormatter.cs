@@ -38,7 +38,7 @@ public static class TickFormatter
         return k is >= -1 and <= 3 ? 0 : 3 * (int)Math.Floor(k / 3.0);
     }
 
-    private static string Superscript(int n) => string.Concat(n.ToString(CultureInfo.InvariantCulture).Select(c => c switch
+    public static string Superscript(int n) => string.Concat(n.ToString(CultureInfo.InvariantCulture).Select(c => c switch
     {
         '-' => '⁻', '0' => '⁰', '1' => '¹', '2' => '²', '3' => '³', '4' => '⁴',
         '5' => '⁵', '6' => '⁶', '7' => '⁷', '8' => '⁸', _ => '⁹',

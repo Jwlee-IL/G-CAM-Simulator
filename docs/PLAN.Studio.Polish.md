@@ -5,7 +5,7 @@ Scope: the polish work the author made the focus on 2026-10-01 — what each bat
 (`docs/assets/studio-polish-survey/README.md`, P-xx) and the plot snapshots (`docs/assets/studio-plot/`). Order and
 the testing rule: [PLAN.Studio.Migration](PLAN.Studio.Migration.md).
 
-Status: batch 1 handed to Codex 2026-10-01.
+Status: batch 1 done 2026-10-01 (renders in `docs/assets/studio-render/`); batch 2 candidates listed below.
 
 ## Batch 1 — design-system level (new workspaces inherit these)
 
@@ -30,6 +30,14 @@ Extend `tests/Gcam.Studio.RenderTests` (opt-in `GCAM_RENDER_SNAPSHOTS=1`, no win
 workspaces, from a deterministic acquisition snapshot supplied by a fake acquisition service (no MC in the test).
 Output: `docs/assets/studio-render/{imaging,spectrum}-{dark,light}-{1280x800,1440x900}.png`, plus the existing plot
 snapshots re-rendered. Before / after for this batch = the survey captures vs these renders.
+
+## Seen in the batch-1 renders (batch 2 candidates)
+
+| # | Issue | Cause (checked) |
+|---|---|---|
+| B2-1 | "Background B…" label truncated; the editable Gain σ / Gain seed / Background fields sit under the "Geometry — read-only" header | phase A added inputs to the read-only geometry block; `Size.FieldLabel` (84) is too narrow for "Background BSR" |
+| B2-2 | A narrow band's label ("32.1 + 36.4 keV") is crossed by the band's own edge lines | edges are drawn over the label row; the label is wider than the band |
+| B2-3 | FCFOV value blank in the renders (fine in the app) | `MainWindow.xaml` binds through `RelativeSource AncestorType=Window`, which the offscreen render (content detached from the window) cannot resolve — such bindings also tie views to the window type |
 
 ## Later batches (after the workspaces exist)
 

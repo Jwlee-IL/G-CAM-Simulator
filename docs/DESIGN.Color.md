@@ -35,7 +35,8 @@ Every colour exists as a `Color.*` and a matching `Brush.*`; views use the brush
 | `Brush.Plot.Series1` | `#6ACD91` | `#17693C` | first trace |
 | `Brush.Plot.Series2` | `#F2C66D` | `#855500` | second trace |
 | `Brush.Plot.Series3` | `#B5A1F2` | `#6742A6` | third trace |
-| `Brush.Plot.Band` | `#266ACD91` | `#2617693C` | translucent X interval |
+| `Brush.Plot.Band` | `#26999999` | `#26808080` | neutral translucent X interval, separate from series hues |
+| `Brush.Plot.BandEdge` | `#B8B8B8` | `#505050` | one-DIP interval boundaries, drawn above the series fill |
 | `Brush.Plot.Grid` | `#394650` | `#CCD4DC` | axis grid |
 
 ## Contrast (WCAG 2.1)
@@ -45,6 +46,23 @@ Focus 10.6:1 · Success 8.0 · Warning 8.5 · Error 6.0 — all **AA**. `Line.Co
 non-text minimum for control boundaries. `OnAccent` on `Accent` 9.6:1. Light: `Accent` on white 6.5:1,
 `Line.Control` 3.4:1 on white and 3.1:1 on `Bg.Canvas` (it was `#8A97A2`, 2.99:1 — just under the minimum).
 `Text.Disabled` is for disabled controls only (3.7:1 dark, 2.5:1 light): informational text uses `Text.Secondary`.
+
+Band tint is decorative; its edge conveys the interval boundary (3:1 non-text minimum).
+Measured with sRGB alpha compositing (band alpha 38/255, series fill opacity 0.22):
+
+| Contrast | Dark | Light |
+|---|---|---|
+| Band tint / surface | 1.27:1 | 1.18:1 |
+| Band edge / surface | 8.38:1 | 8.06:1 |
+| Band edge / band tint | 6.60:1 | 6.83:1 |
+| Band edge / Series1, Series2, Series3 fill over band | 4.19, 3.93, 4.35:1 | 4.96, 5.02, 4.92:1 |
+| Series1, Series2, Series3 trace / band tint | 6.71, 8.15, 5.83:1 | 5.70, 5.40, 6.12:1 |
+| Text.Primary / band tint | 11.11:1 | 13.31:1 |
+| Text.Secondary (plot labels) / band tint | 6.00:1 | 5.22:1 |
+
+Band tint / series fill ratios are 1.58, 1.68, 1.52:1 dark and 1.38, 1.36, 1.39:1 light;
+these soft fills are not the boundary signal. All edges and traces exceed 3:1, and labels exceed 4.5:1.
+Neutral grey prevents windows from looking like another green data trace; the edge stays visible over data.
 
 ## Data colours vs UI colours
 
