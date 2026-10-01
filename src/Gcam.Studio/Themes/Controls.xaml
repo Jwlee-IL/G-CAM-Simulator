@@ -40,6 +40,14 @@
         <Setter Property="Margin" Value="0,4,0,12" />
     </Style>
 
+    <!-- Header row of a panel or section: title left, actions / chips right. Owns the gap below and a fixed
+         row height, so titles with and without buttons line up. -->
+    <Style x:Key="PanelHeader" TargetType="DockPanel">
+        <Setter Property="LastChildFill" Value="False" />
+        <Setter Property="MinHeight" Value="{StaticResource Size.Control}" />
+        <Setter Property="Margin" Value="{StaticResource Gap.Title}" />
+    </Style>
+
     <!-- Small rounded label, e.g. units or the decoded peak -->
     <Style x:Key="Chip" TargetType="Border">
         <Setter Property="BorderBrush" Value="{DynamicResource Brush.Line.Control}" />
@@ -48,6 +56,14 @@
         <Setter Property="Padding" Value="8,1" />
         <Setter Property="VerticalAlignment" Value="Center" />
     </Style>
+
+    <!-- Status variant: the result is out of date -->
+    <Style x:Key="Chip.Warning" TargetType="Border" BasedOn="{StaticResource Chip}">
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.Status.Warning}" />
+    </Style>
+
+    <!-- Play triangle for the primary action, drawn in the button's foreground -->
+    <Geometry x:Key="Icon.Play">M0,0 L10,6 L0,12 Z</Geometry>
 
     <!-- ===== Buttons ===== -->
     <Style TargetType="Button">
@@ -124,7 +140,7 @@
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="BorderBrush" Value="Transparent" />
         <Setter Property="Foreground" Value="{DynamicResource Brush.Text.Secondary}" />
-        <Setter Property="Padding" Value="8,0" />
+        <Setter Property="Padding" Value="{StaticResource Pad.Control}" />
         <Setter Property="MinWidth" Value="{StaticResource Size.Control}" />
     </Style>
 

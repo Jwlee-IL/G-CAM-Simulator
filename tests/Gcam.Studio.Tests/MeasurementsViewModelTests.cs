@@ -66,6 +66,17 @@ public class MeasurementsViewModelTests
     }
 
     [Fact]
+    public void Roi_WithNoPixelCentreInside_HasNoValue()
+    {
+        var vm = new MeasurementsViewModel();
+        vm.Refresh(ResultWithFlood(2));
+        // Entirely outside the 4×4 image (centres at -1.5 … 1.5 mm)
+        vm.AddCommand.Execute(new MeasurementDraft(ImagePane.Flood, MeasurementKind.Roi, [new Vec2(10, 10), new Vec2(12, 12)]));
+        Assert.Equal("—", vm.Items[0].Value);
+        Assert.Contains("no pixel centres inside", vm.Items[0].Detail);
+    }
+
+    [Fact]
     public void Delete_SelectsTheNeighbour_ClearRestartsNumbering()
     {
         var vm = new MeasurementsViewModel();

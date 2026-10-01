@@ -33,6 +33,13 @@ public sealed record FloodOracle(Rect ViewBounds, int Cells, double PitchMm)
         return new Point(Math.Round(r.X + fx * r.Width), Math.Round(r.Y + fy * r.Height));
     }
 
+    /// <summary>Centre of cell (<paramref name="col"/>, <paramref name="rowFromTop"/>) in mm — what the readout reports.</summary>
+    public (double X, double Y) CellCentreMm(int col, int rowFromTop) =>
+        (-Cells * PitchMm / 2 + (col + 0.5) * PitchMm, Cells * PitchMm / 2 - (rowFromTop + 0.5) * PitchMm);
+
+    /// <summary>The screen point in the middle of a cell, for hovering.</summary>
+    public Point CellCentre(int col, int rowFromTop) => ScreenAt((col + 0.5) / Cells, (rowFromTop + 0.5) / Cells);
+
     public (double X, double Y) ScreenToMm(Point p)
     {
         var r = ImageBounds;
@@ -128,6 +135,25 @@ public static class Verdict
         if (!m.Success) throw new FormatException($"unexpected peak text '{text}'");
         return (double.Parse(m.Groups["x"].Value, NumberStyles.Float, CultureInfo.CurrentCulture),
                 double.Parse(m.Groups["y"].Value, NumberStyles.Float, CultureInfo.CurrentCulture));
+    }
+
+    private static readonly Regex Readout = new(@"^x (?<x>-?[\d.]+) mm, y (?<y>-?[\d.]+) mm · (?<v>\S+)$");
+
+    /// <summary>The heatmap readout "x -6.3 mm, y 5.1 mm · 0.01067" (invariant culture) → (x, y, value).</summary>
+    public static (double X, double Y, double Value) ParseReadout(string text)
+    {
+        var m = Readout.Match(text);
+        if (!m.Success) throw new FormatException($"unexpected readout '{text}'");
+        return (double.Parse(m.Groups["x"].Value, CultureInfo.InvariantCulture),
+                double.Parse(m.Groups["y"].Value, CultureInfo.InvariantCulture),
+                double.Parse(m.Groups["v"].Value, NumberStyles.Float, CultureInfo.InvariantCulture));
+    }
+
+    /// <summary>"Σ 0.0107" (the app's culture) → 0.0107.</summary>
+    public static double ParseSum(string value)
+    {
+        if (!value.StartsWith("Σ ", StringComparison.Ordinal)) throw new FormatException($"not a sum: '{value}'");
+        return double.Parse(value[2..], NumberStyles.Float, CultureInfo.CurrentCulture);
     }
 
     private static readonly Regex RoiDetail = new(@"^(?<w>[\d.,]+) × (?<h>[\d.,]+) mm · (?<n>\d+) px · ");

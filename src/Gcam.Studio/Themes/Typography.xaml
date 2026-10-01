@@ -20,15 +20,28 @@
         <Setter Property="FontWeight" Value="SemiBold" />
     </Style>
 
-    <!-- Panel / section headings -->
+    <!--
+        Headings carry no margin: they sit in a PanelHeader row (Controls.xaml), which owns the gap below and the
+        row height, so a title lines up with the buttons next to it.
+    -->
+    <!-- Panel title: the top of a panel ("Sources", "Detector flood map") -->
     <Style x:Key="Text.PanelTitle" TargetType="TextBlock" BasedOn="{StaticResource Text.Base}">
+        <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+
+    <!-- Section title: a group inside a panel ("Selected source", "Measurements") -->
+    <Style x:Key="Text.SectionTitle" TargetType="TextBlock" BasedOn="{StaticResource Text.Base}">
         <Setter Property="FontSize" Value="{StaticResource FontSize.Label}" />
         <Setter Property="FontWeight" Value="SemiBold" />
         <Setter Property="Foreground" Value="{DynamicResource Brush.Text.Secondary}" />
-        <Setter Property="Margin" Value="{StaticResource Gap.Title}" />
     </Style>
 
     <Style x:Key="Text.Body" TargetType="TextBlock" BasedOn="{StaticResource Text.Base}" />
+
+    <!-- Emphasised body text, e.g. the isotope in a source row -->
+    <Style x:Key="Text.Strong" TargetType="TextBlock" BasedOn="{StaticResource Text.Base}">
+        <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
 
     <!-- Field labels and secondary text -->
     <Style x:Key="Text.Label" TargetType="TextBlock" BasedOn="{StaticResource Text.Base}">
@@ -41,6 +54,16 @@
         <Setter Property="Foreground" Value="{DynamicResource Brush.Text.Secondary}" />
     </Style>
 
+    <!-- Caption in the warning colour, for a status chip ("outdated") -->
+    <Style x:Key="Text.CaptionWarning" TargetType="TextBlock" BasedOn="{StaticResource Text.Caption}">
+        <Setter Property="Foreground" Value="{DynamicResource Brush.Status.Warning}" />
+    </Style>
+
+    <!-- Table column headers -->
+    <Style x:Key="Text.ColumnHeader" TargetType="TextBlock" BasedOn="{StaticResource Text.Caption}">
+        <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+
     <!-- Numbers, coordinates, units: monospaced so columns of values line up -->
     <Style x:Key="Text.Mono" TargetType="TextBlock" BasedOn="{StaticResource Text.Base}">
         <Setter Property="FontFamily" Value="{StaticResource Font.Mono}" />
@@ -50,5 +73,10 @@
     <Style x:Key="Text.MonoCaption" TargetType="TextBlock" BasedOn="{StaticResource Text.Mono}">
         <Setter Property="FontSize" Value="{StaticResource FontSize.Caption}" />
         <Setter Property="Foreground" Value="{DynamicResource Brush.Text.Secondary}" />
+    </Style>
+
+    <!-- Hovered-pixel readout under an image: one reserved line, so the layout doesn't jump when it empties -->
+    <Style x:Key="Text.Readout" TargetType="TextBlock" BasedOn="{StaticResource Text.MonoCaption}">
+        <Setter Property="Height" Value="{StaticResource Size.ReadoutLine}" />
     </Style>
 </ResourceDictionary>

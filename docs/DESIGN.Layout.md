@@ -6,9 +6,9 @@ Scope: GCAM Studio layout metrics (`src/Gcam.Studio/Themes/Metrics.xaml`) and ho
 
 | Kind | Keys (value) |
 |---|---|
-| Scale | `Space.1` 4 · `Space.2` 8 · `Space.3` 12 · `Space.4` 16 · `Space.5` 24 · `Space.6` 32 |
+| Scale | 4 · 8 · 12 · 16 · 24 · 32 — expressed as the `Pad.*` / `Gap.*` Thickness keys below (XAML can't build a `Thickness` from `Double` keys, so there are no separate `Space.*` keys) |
 | Padding (`Pad.*`, inside a container) | `Pad.Window` 12 · `Pad.Panel` 12 · `Pad.Bar` 16,0 · `Pad.Control` 8,0 · `Pad.Button` 12,0 · `Pad.ListItem` 8,0 |
-| Margin (`Gap.*`, after an element) | `Gap.Field` 0,0,0,8 · `Gap.Section` 0,0,0,16 · `Gap.Title` 0,0,0,8 · `Gap.Inline` 0,0,8,0 · `Gap.InlineWide` 0,0,16,0 |
+| Margin (`Gap.*`, after an element) | `Gap.Tight` 0,0,0,4 · `Gap.Field` 0,0,0,8 · `Gap.Section` 0,0,0,16 · `Gap.Title` 0,0,0,8 · `Gap.Inline` 0,0,8,0 · `Gap.InlineWide` 0,0,16,0 |
 | Grid gutter | `Gutter` 12 (a `GridLength` for gutter columns) |
 
 **Padding vs margin rule.** A container owns its inner space (`Pad.*`). Space *between siblings* is the
@@ -20,8 +20,12 @@ combine a container's padding with a child's margin for the same edge.
 | Key | Value | Used for |
 |---|---|---|
 | `Size.Control` | 28 | min height of buttons, inputs, list rows |
-| `Size.Bar` / `Size.StatusBar` | 48 / 28 | top bar / status bar height |
-| `Size.SidePanel` | 300 | scene and measurement panel width |
+| `Size.Bar` / `Size.StatusBar` | 48 / 28 | top bar / status bar height (`GridLength`, used directly as row heights) |
+| `Size.SidePanel` | 300 | scene and measurement panel width (`GridLength`) |
+| `Size.SourceList` / `Size.ResultsList` | 168 / 280 | **max** heights: lists grow with their rows, then scroll — no reserved empty space |
+| `Size.NumberInput` · `Size.Progress` | 120 · 160 | photon-budget box · progress bar |
+| `Size.ColorBar` · `Size.ReadoutLine` | 8 · 16 | colour-bar strip · the reserved readout line under an image |
+| `Size.Logo` · `Size.Icon` · `Size.StatusDot` | 16 · 12 · 8 | top-bar mark · button icon · run-state dot |
 | `Size.Column.Id` / `Size.Column.Short` | 36 / 60 | fixed columns of the results table (header and rows share them; the value column takes the rest) |
 | `Size.FieldLabel` | 84 | label column in forms |
 | `Radius.Control` / `Radius.Panel` / `Radius.Chip` | 3 / 6 / 10 | corners |
@@ -31,14 +35,15 @@ combine a container's padding with a child's margin for the same edge.
 
 ```
 Row 0  Top bar (Size.Bar)          identity · theme toggle · photon budget · Cancel · ▶ Simulate (primary, rightmost)
-Row 1  Content (Pad.Window)
+Row 1  Content (a Border with Pad.Window)
          Col 0  Scene panel (Size.SidePanel)   sources · selected source · geometry (read-only)
          Col 1  Gutter
          Col 2  Images: [flood map] Gutter [reconstruction]
-                each = header (title + chips) · HeatmapView (+ measurement adorner) · ColorBar · readout line
+                each = PanelHeader (title + chips) · ImageStackPanel: square HeatmapView (+ adorner), ColorBar and
+                readout directly beneath, at the image's width; spare height collects below
          Col 3  Gutter
          Col 4  Measurement panel (Size.SidePanel)   tool picker · hint · results table · detail of the selected row
-Row 2  Status bar (Size.StatusBar) state dot · status sentence (live region) · progress + %
+Row 2  Status bar (Size.StatusBar) state dot · status sentence (live region) · progress + % (only while running)
 ```
 
 The primary action sits at the same place on every screen (top right); the status of the last run is always
@@ -53,6 +58,10 @@ visible at the bottom, full width, regardless of which panel has focus.
 - If the work area is smaller than the default, the window starts maximised (`App.xaml.cs`).
 - `UseLayoutRounding` and `SnapsToDevicePixels` are on; heatmap cells additionally snap to whole device pixels
   ([DESIGN.Controls](DESIGN.Controls.md#heatmapview)).
+
+**Headers.** Every panel and section heading sits in a `PanelHeader` row (min height `Size.Control`, `Gap.Title`
+below). Headings carry no margin of their own, so a title lines up with the buttons beside it and all headers have
+the same rhythm whether or not they have actions.
 
 ## Adding layout values
 

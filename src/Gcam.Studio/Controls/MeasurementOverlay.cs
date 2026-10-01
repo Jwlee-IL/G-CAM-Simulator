@@ -84,7 +84,7 @@ public static class MeasurementOverlay
         if (view.GetValue(AdornerProperty) is not null) return;
         var layer = AdornerLayer.GetAdornerLayer(view);
         if (layer is null) return;   // no AdornerDecorator above (not inside a Window yet)
-        var adorner = new MeasurementAdorner(view);
+        var adorner = new MeasurementAdorner(view) { Layer = layer };   // kept: on Unloaded the element may be detached already
         layer.Add(adorner);
         view.SetValue(AdornerProperty, adorner);
         adorner.Rebind();
@@ -94,7 +94,7 @@ public static class MeasurementOverlay
     {
         if (view.GetValue(AdornerProperty) is not MeasurementAdorner adorner) return;
         adorner.Unbind();
-        AdornerLayer.GetAdornerLayer(view)?.Remove(adorner);
+        adorner.Layer?.Remove(adorner);
         view.ClearValue(AdornerProperty);
     }
 }

@@ -68,7 +68,8 @@ public sealed partial class MeasurementViewModel : ObservableObject
                     break;
                 }
                 var s = MeasurementMath.Roi(image, p[0], p[1], originMm, stepMm);
-                Value = $"Σ {Amount(s.Sum)}";
+                // No pixel centre inside (e.g. a new result moved the grid away): no value, not a plausible "Σ 0".
+                Value = s.Pixels == 0 ? "—" : $"Σ {Amount(s.Sum)}";
                 Detail = s.Pixels == 0
                     ? $"{size} · no pixel centres inside"
                     : $"{size} · {s.Pixels} px · mean {Amount(s.Mean)} · max {Amount(s.Max)}";

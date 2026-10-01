@@ -49,9 +49,11 @@ public sealed class StudioProcess : IDisposable
     public static StudioProcess Start(string runId)
     {
         var running = Process.GetProcessesByName(ProcessName);
+        string pids = string.Join(", ", running.Select(p => p.Id));
+        foreach (var p in running) p.Dispose();
         if (running.Length > 0)
             throw new InvalidOperationException(
-                $"{ProcessName} is already running (PID {string.Join(", ", running.Select(p => p.Id))}) and was not started by " +
+                $"{ProcessName} is already running (PID {pids}) and was not started by " +
                 "this run. Close it yourself; the harness never attaches to or kills a process it does not own.");
 
         string exe = RepoPaths.StudioExe();

@@ -24,7 +24,9 @@ is therefore re-templated against the tokens in [DESIGN.Color](DESIGN.Color.md).
 | ScrollBar | implicit | 8 px, no arrow buttons |
 | ProgressBar | implicit | flat 4 px, no Aero glow animation |
 | ToolTip | implicit | raised surface |
-| Panel / Divider / Chip | `Panel.Surface` / `Divider` / `Chip` | `Border` styles for layout blocks |
+| Panel / Divider / Chip | `Panel.Surface` / `Divider` / `Chip`, `Chip.Warning` | `Border` styles for layout blocks; the warning chip pairs with `Text.CaptionWarning` |
+| Header row | `PanelHeader` (DockPanel) | title left, actions / chips right; min height `Size.Control`, `Gap.Title` below |
+| Icon | `Icon.Play` (Geometry) | drawn with a `Path` in the button's foreground — no glyph characters as icons |
 
 Add a shared style only when two or more views need it; otherwise keep it in the view's `Resources`, still
 built from tokens.
@@ -69,9 +71,10 @@ a pure data viewer; everything about measuring lives in the adorner.
 | Attaching | attached properties on the heatmap, so the view stays XAML-only: `MeasurementOverlay.Session` (the `MeasurementsViewModel`), `Pane` (`Flood` / `Reconstruction`), `Markers` (any `IPlaneMarker` items — the scene's sources), `SelectedMarker` (two-way), `CanMoveMarkers` (bound to `IsIdle`). The adorner is added on `Loaded` and removed on `Unloaded`, so it never outlives the element or holds the ViewModels |
 | State | none on screen: measurements and markers are mm values in the ViewModels, mapped through `HeatmapView.MmToScreen` on every render, so they follow zoom and pan. Only the gesture in progress (draft points, the marker being dragged) lives in the adorner |
 | Input ownership | **Pan** tool: `HitTestCore` returns nothing except over a marker, so drags and the wheel fall through to the heatmap. **Measuring** tools: the adorner takes the pointer and forwards the wheel (`HeatmapView.ZoomStep`) and the hover readout (`HoverAt`) |
+| Capture loss | Alt+Tab, the Windows key or a modal can take the mouse mid-gesture: `OnLostMouseCapture` ends a marker drag and abandons a press-drag draft, and a marker moves only while the adorner holds the capture |
 | Gestures | distance and ROI: press–drag–release (shorter than 4 px is ignored) · angle: three clicks, vertex second · Esc or right-click: abandon the draft · Delete (heatmap focused): remove the selected measurement · drag a marker (Pan tool, idle only): move the source, snapped to 0.1 mm. Points are clamped to the image |
 | Result | a finished gesture becomes a `MeasurementDraft` sent through `MeasurementsViewModel.AddCommand` — the control never constructs a measurement itself |
-| Drawing | white 1.5 px lines on a 4 px black halo, labels as white-on-black chips (as `HeatmapView`'s own). **Selected** = 2.5 px line + inverted chip, not a colour: the accent would collide with viridis' teal ([DESIGN.Color](DESIGN.Color.md#data-colours-vs-ui-colours)). Drafts are dashed with a live value |
+| Drawing | white 1.5 px lines on a 4 px black halo, labels as white-on-black chips (as `HeatmapView`'s own) in the inherited mono font. A source marker is highlighted only while dragged or when there are several sources (with one, "selected" says nothing and would compete with the selected measurement). **Selected** = 2.5 px line + inverted chip, not a colour: the accent would collide with viridis' teal ([DESIGN.Color](DESIGN.Color.md#data-colours-vs-ui-colours)). Drafts are dashed with a live value |
 | Accessibility | the adorner itself is not in the automation tree; every measurement is a row in the results table, named by `MeasurementViewModel.Description` ("M2 ROI on Flood: Σ 1,234"). Sources can be moved from the keyboard with the X / Y fields |
 | Maths | `MeasurementMath` (Core): distance, angle at a vertex, ROI sum / mean / max by pixel centre — 5 tests |
 
@@ -81,8 +84,16 @@ them; a keyboard crosshair for creating them is planned with step 4.
 ### ColorBar
 
 `FrameworkElement` drawing the colormap gradient with `TickCount` numeric labels between `Minimum` and
-`Maximum`, in `Font.Mono`. Bind it to a heatmap: `Minimum="{Binding DataMin, ElementName=Flood}"`. Tick labels
-pick their format from the range and never show `-0`.
+`Maximum`, in `Font.Mono`; strip height `BarHeight` (set from `Size.ColorBar`). Bind it to a heatmap:
+`Minimum="{Binding DataMin, ElementName=Flood}"`. Labels come from `TickFormatter` (Core, tested): one shared power
+of ten when values are very small or large (`1.6 … 16.1 ×10⁻³` instead of `0.00157 … 0.0161`), the same number
+of decimals on every tick, never `-0`.
+
+### ImageStackPanel
+
+Lays out an image with its legend: the first child stays **square** and as large as fits; the colour bar and the
+readout stack directly beneath it at the image's width; spare height collects below. The images are square grids —
+letting the heatmap fill a tall panel centred the image in empty space with the legend ~175 px away from it.
 
 ## Known dark-theme pitfalls (handled)
 

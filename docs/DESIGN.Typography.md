@@ -28,15 +28,25 @@ Views pick a role; they never set `FontSize`, `FontWeight` or `Foreground` on a 
 | Role | Size · weight · colour | Use |
 |---|---|---|
 | `Text.AppTitle` | Title · SemiBold · Primary | app name in the top bar |
-| `Text.PanelTitle` | Label · SemiBold · Secondary, bottom `Gap.Title` | panel and section headings |
+| `Text.PanelTitle` | Body · SemiBold · Primary | top of a panel ("Sources", "Detector flood map") |
+| `Text.SectionTitle` | Label · SemiBold · Secondary | a group inside a panel ("Selected source", "Measurements") |
+| `Text.Strong` | Body · SemiBold · Primary | emphasised body text (the isotope in a source row) |
 | `Text.Body` | Body · Regular · Primary | default text |
 | `Text.Label` | Label · Regular · Secondary | field labels, secondary text, status sentence |
 | `Text.Caption` | Caption · Regular · Secondary | chips, small notes |
+| `Text.CaptionWarning` | Caption · Regular · Status.Warning | a status chip ("outdated") |
+| `Text.ColumnHeader` | Caption · SemiBold · Secondary | table column headers |
 | `Text.Mono` | Label · Mono · Primary | coordinates, values with units |
-| `Text.MonoCaption` | Caption · Mono · Secondary | readouts, unit suffixes, ticks |
+| `Text.MonoCaption` | Caption · Mono · Secondary | unit suffixes, the peak chip, measurement detail |
+| `Text.Readout` | MonoCaption, height `Size.ReadoutLine` | the hovered-pixel line under an image (reserved, so the layout doesn't jump) |
 
 All roles derive from `Text.Base` (UI font, Body size, Primary colour, vertical centre, ellipsis trimming).
-Colours inside roles are `DynamicResource`, so text follows the theme.
+Colours inside roles are `DynamicResource`, so text follows the theme. Headings carry no margin — the
+`PanelHeader` row owns the gap ([DESIGN.Layout](DESIGN.Layout.md#screen-grid-mainwindow)).
+
+Text drawn by controls (heatmap labels, overlay chips, colour-bar ticks) uses the inherited
+`TextElement.FontFamily`, which the view sets to `Font.Mono` on the heatmaps — no control hard-codes a typeface,
+and every number on screen is in the same mono face.
 
 ## Adding a role
 

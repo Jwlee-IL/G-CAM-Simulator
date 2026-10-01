@@ -12,6 +12,7 @@ MVVM rewrite of the WPF viewer; `src/Gcam.Wpf` is the original code-behind app a
 | [DESIGN.Controls](DESIGN.Controls.md) | use or write a control (shared styles, `HeatmapView`, `ColorBar`) |
 | [DESIGN.Color](DESIGN.Color.md) · [DESIGN.Layout](DESIGN.Layout.md) · [DESIGN.Typography](DESIGN.Typography.md) | use colours, spacing and text roles; switch themes |
 | [AGENTS.Conventions.Code](AGENTS.Conventions.Code.md) · [AGENTS.Conventions.Docs](AGENTS.Conventions.Docs.md) | naming, C# / XAML / test / commit style, how docs are named and kept in sync |
+| [AGENTS.Rationale](AGENTS.Rationale.md) | know why a rule exists before changing or bending it |
 | [AGENTS.UiAutomation](AGENTS.UiAutomation.md) | run or extend the UI automation of the real window (safety, selectors, pilot, evidence) |
 
 ## At a glance
@@ -36,8 +37,10 @@ dotnet test tests/Gcam.Studio.Tests        # ViewModels + view geometry, no WPF 
 1. Nothing in `Gcam.Studio.Core` references WPF — it targets plain `net9.0`, so it won't compile anyway.
 2. View code-behind is `InitializeComponent()` only.
 3. No literal colours, sizes or gaps in views; colours are `DynamicResource Brush.*`.
-4. Every interactive element has `AutomationProperties.Name` and, if a test drives it, an `AutomationId`; custom
-   controls have an automation peer. Never put a fixed `Name` on a text element — it hides the text.
+4. Every interactive element has an accessible name containing its visible label (an explicit
+   `AutomationProperties.Name` only for glyph buttons and custom surfaces) and, if a test drives it, an
+   `AutomationId`; custom controls have an automation peer. Never put a fixed `Name` on a text element — it hides
+   the text.
 5. The engine is reached only through `ISimulationService`.
 6. Docs that describe a change are updated in the same commit.
 

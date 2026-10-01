@@ -9,7 +9,7 @@
     <Color x:Key="Color.Bg.Raised">#F0F3F5</Color>
     <Color x:Key="Color.Bg.Hover">#E6EBEF</Color>
     <Color x:Key="Color.Line">#DDE3E8</Color>
-    <Color x:Key="Color.Line.Control">#8A97A2</Color>
+    <Color x:Key="Color.Line.Control">#7F8D99</Color>
     <Color x:Key="Color.Text.Primary">#1B242D</Color>
     <Color x:Key="Color.Text.Secondary">#56636F</Color>
     <Color x:Key="Color.Text.Disabled">#9AA5AE</Color>

@@ -81,6 +81,48 @@ public sealed class ScenarioTests(ITestOutputHelper output)
             Assert.True(Verdict.Within(h, Math.Abs(by - ay), oracle.ToleranceMm), $"height {h}");
         });
 
+    /// <summary>
+    /// SR-VIEW-05, SR-VIEW-07, SR-MEAS-03. Closes a blind spot of the other scenarios: lengths, angles and ROI counts
+    /// are translation- and flip-invariant, so an origin off by a pixel or a mirrored y axis would pass them. Here the
+    /// readout must report each hovered cell's absolute position (both signs), and a one-cell ROI must sum to exactly
+    /// the value the readout shows for that cell.
+    /// </summary>
+    [DesktopFact]
+    public void Readout_AndOneCellRoi_MatchAbsolutePositionAndValue() =>
+        Scenario.Run(nameof(Readout_AndOneCellRoi_MatchAbsolutePositionAndValue), output, (ui, record) =>
+        {
+            Assert.Equal("Succeeded", ui.Simulate(RunTimeout));
+            var optics = new OpticsSettings();
+            var oracle = new FloodOracle(ui.Bounds("FloodView"), optics.DetectorPixels, optics.PixelPitchMm);
+
+            // Upper-left and lower-right quadrants: x and y of both signs.
+            var cells = new[] { (Col: 4, Row: 6), (Col: 25, Row: 22) };
+            double cellValue = 0;
+            foreach (var (col, row) in cells)
+            {
+                Pointer.MoveTo(oracle.CellCentre(col, row));
+                StudioWindow.WaitUntil(() => ui.Text("FloodReadout").Length > 0, TimeSpan.FromSeconds(2), "readout shown");
+                var (x, y, v) = Verdict.ParseReadout(ui.Text("FloodReadout"));
+                var (ex, ey) = oracle.CellCentreMm(col, row);
+                if (Broken) ex += optics.PixelPitchMm;
+                record.Step($"cell ({col},{row}): readout ({x}, {y}) value {v}; expected ({ex:F2}, {ey:F2})");
+                Assert.True(Verdict.Within(x, ex, 0.051) && Verdict.Within(y, ey, 0.051),
+                    $"cell ({col},{row}) read ({x}, {y}) mm, expected ({ex:F2}, {ey:F2}) mm");
+                cellValue = v;   // keeps the last cell's value for the ROI check
+            }
+
+            var (lastCol, lastRow) = cells[^1];
+            ui.Select("ToolRoi");
+            Pointer.Drag(oracle.CellCorner(lastCol, lastRow), oracle.CellCorner(lastCol + 1, lastRow + 1));
+            StudioWindow.WaitUntil(() => ui.Rows("MeasurementList").Count == 1, TimeSpan.FromSeconds(3), "one ROI row");
+            var row1 = MeasurementRow.Parse(ui.Rows("MeasurementList")[0].Current.Name);
+            Assert.Equal(1, Verdict.ParseRoiDetail(ui.Text("MeasurementDetail")).Pixels);
+            double sum = Verdict.ParseSum(row1.Value);
+            record.Set("actual", new { cellValue, roi = row1.Value, detail = ui.Text("MeasurementDetail") });
+            // The readout shows 4 significant digits, the table 3: agree to the coarser one.
+            Assert.True(Math.Abs(sum - cellValue) <= Math.Abs(cellValue) * 0.006 + 1e-12, $"one-cell ROI Σ {sum} vs readout {cellValue}");
+        });
+
     /// <summary>VAL-03 (angle, Esc, Delete) · SR-MEAS-02, SR-MEAS-07.</summary>
     [DesktopFact]
     public void Angle_EscAbandonsDraft_DeleteRemovesSelected() =>

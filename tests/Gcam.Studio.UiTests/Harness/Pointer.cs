@@ -14,6 +14,8 @@ public static class Pointer
 
     static Pointer()
     {
+        // The INPUT layout below (union at offset 8) is the x64 one; an x86 test host would send garbage.
+        if (!Environment.Is64BitProcess) throw new PlatformNotSupportedException("Pointer requires a 64-bit test host");
         // Per-monitor v2: without it, UIA rectangles and SetCursorPos disagree at 125 / 150 % scaling.
         SetProcessDpiAwarenessContext(new IntPtr(-4));
     }

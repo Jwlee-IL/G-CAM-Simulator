@@ -295,9 +295,10 @@ public sealed class HeatmapView : FrameworkElement
         dc.DrawText(text, at);
     }
 
+    // Font from the inherited TextElement.FontFamily (the view sets Font.Mono), not a hard-coded face.
     private FormattedText Text(string s, double size) => new(
-        s, CultureInfo.CurrentUICulture, FlowDirection.LeftToRight, new Typeface("Segoe UI"), size, Foreground,
-        VisualTreeHelper.GetDpi(this).PixelsPerDip);
+        s, CultureInfo.CurrentUICulture, FlowDirection.LeftToRight, new Typeface(System.Windows.Documents.TextElement.GetFontFamily(this),
+            FontStyles.Normal, FontWeights.Normal, FontStretches.Normal), size, Foreground, VisualTreeHelper.GetDpi(this).PixelsPerDip);
 
     // ---- accessibility -----------------------------------------------------------------------------
 

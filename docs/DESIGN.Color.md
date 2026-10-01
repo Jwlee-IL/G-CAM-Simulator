@@ -21,7 +21,7 @@ Every colour exists as a `Color.*` and a matching `Brush.*`; views use the brush
 | `Brush.Bg.Raised` | `#222A32` | `#F0F3F5` | buttons, popups, progress track |
 | `Brush.Bg.Hover` | `#2A343D` | `#E6EBEF` | hover |
 | `Brush.Line` | `#2B353E` | `#DDE3E8` | panel borders, dividers (decorative) |
-| `Brush.Line.Control` | `#5E6E7A` | `#8A97A2` | input / button borders |
+| `Brush.Line.Control` | `#5E6E7A` | `#7F8D99` | input / button borders |
 | `Brush.Text.Primary` | `#E8EDF1` | `#1B242D` | main text |
 | `Brush.Text.Secondary` | `#A6B1BB` | `#56636F` | labels, secondary text |
 | `Brush.Text.Disabled` | `#6B7883` | `#9AA5AE` | disabled text |
@@ -37,7 +37,9 @@ Every colour exists as a `Color.*` and a matching `Brush.*`; views use the brush
 
 Dark, against `Bg.Surface`: Text.Primary 14.1:1 · Text.Secondary 7.6:1 · Accent (as text) 8.5:1 ·
 Focus 10.6:1 · Success 8.0 · Warning 8.5 · Error 6.0 — all **AA**. `Line.Control` 3.15:1 meets the 3:1
-non-text minimum for control boundaries. `OnAccent` on `Accent` 9.6:1. Light: `Accent` on white 6.4:1.
+non-text minimum for control boundaries. `OnAccent` on `Accent` 9.6:1. Light: `Accent` on white 6.5:1,
+`Line.Control` 3.4:1 on white and 3.1:1 on `Bg.Canvas` (it was `#8A97A2`, 2.99:1 — just under the minimum).
+`Text.Disabled` is for disabled controls only (3.7:1 dark, 2.5:1 light): informational text uses `Text.Secondary`.
 
 ## Data colours vs UI colours
 
@@ -47,6 +49,8 @@ non-text minimum for control boundaries. `OnAccent` on `Accent` 9.6:1. Light: `A
   black chip, which stays legible on any colormap. A *selected* overlay (measurement, source marker) is shown by a
   thicker line and an inverted chip (black on white), so selection needs no colour either and looks the same in
   both themes.
+- **No cyan at rest.** The progress bar is shown only while running, and the decoded-peak chip is a neutral
+  reading (mono text, control border) — a reading is neither an action nor a selection.
 - Status colours are never the only signal: the status dot sits next to a sentence, a selected row also gets
   an accent bar.
 

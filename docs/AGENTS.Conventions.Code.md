@@ -49,7 +49,9 @@ Resource key kinds: `Color`, `Brush`, `Space`, `Pad` (padding), `Gap` (margin), 
   else via `StaticResource` keys from `Themes/`.
 - Text through a role style (`Style="{StaticResource Text.Label}"`).
 - `x:Name` only when something references the element (`ElementName` bindings, code).
-- Every interactive element gets `AutomationProperties.Name`; custom surfaces also get `HelpText`.
+- Every interactive element has an accessible name that **contains its visible label** (WCAG 2.5.3). Set
+  `AutomationProperties.Name` only where the content can't serve — icon glyphs ("+", "−") and custom surfaces;
+  custom surfaces also get `HelpText`. Reasons for this and every other rule: [AGENTS.Rationale](AGENTS.Rationale.md).
 - Anything a UI test drives or reads gets `AutomationProperties.AutomationId` — PascalCase, by meaning
   (`RunSimulation`, `ToolDistance`, `FloodView`), unique in the window. Tests select by ID, never by name.
 - Don't set `AutomationProperties.Name` on a text element (`TextBlock`): its text *is* its name, and a fixed name

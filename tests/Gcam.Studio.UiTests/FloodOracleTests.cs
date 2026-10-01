@@ -71,6 +71,24 @@ public class FloodOracleTests
     }
 
     [Fact]
+    public void CellCentreMm_IsAbsolute_WithYUp()
+    {
+        Assert.Equal((-8.7, 8.7), Round(Oracle.CellCentreMm(0, 0)));      // top-left cell
+        Assert.Equal((8.7, -8.7), Round(Oracle.CellCentreMm(29, 29)));    // bottom-right cell
+        Assert.Equal((-6.3, 5.1), Round(Oracle.CellCentreMm(4, 6)));
+        static (double, double) Round((double X, double Y) p) => (Math.Round(p.X, 6), Math.Round(p.Y, 6));
+    }
+
+    [Fact]
+    public void ReadoutAndSumParsers_ReadTheAppsFormats()
+    {
+        Assert.Equal((-6.3, 5.1, 0.01067), Verdict.ParseReadout("x -6.3 mm, y 5.1 mm · 0.01067"));
+        Assert.Equal(0.0107, Verdict.ParseSum($"Σ {0.0107:G3}"), 9);
+        Assert.Throws<FormatException>(() => Verdict.ParseReadout(""));
+        Assert.Throws<FormatException>(() => Verdict.ParseSum("—"));
+    }
+
+    [Fact]
     public void MeasurementRow_ParsesTheAutomationName()
     {
         var row = MeasurementRow.Parse($"M1 Distance on Flood: {12.3:F1} mm");

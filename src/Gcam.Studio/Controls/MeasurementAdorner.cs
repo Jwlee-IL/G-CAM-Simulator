@@ -52,6 +52,9 @@ public sealed class MeasurementAdorner : Adorner
         _view.PreviewKeyDown += OnViewKeyDown;
     }
 
+    /// <summary>The layer this adorner was added to (removal must not depend on the element still being in the tree).</summary>
+    internal AdornerLayer? Layer { get; init; }
+
     private ImagePane Pane => MeasurementOverlay.GetPane(_view);
     private MeasureTool Tool => _session?.ActiveTool ?? MeasureTool.Pan;
 
@@ -147,9 +150,12 @@ public sealed class MeasurementAdorner : Adorner
                 DrawMeasurement(dc, m, ReferenceEquals(m, s.Selected));
         DrawDraft(dc);
 
+        // With one source "selected" carries no information and would compete with the selected measurement, so a
+        // marker is highlighted only while dragged, or when there are several to tell apart.
+        var markers = Markers().ToArray();
         var selectedMarker = MeasurementOverlay.GetSelectedMarker(_view);
-        foreach (var marker in Markers())
-            DrawMarker(dc, marker, ReferenceEquals(marker, selectedMarker));
+        foreach (var marker in markers)
+            DrawMarker(dc, marker, ReferenceEquals(marker, _dragMarker) || (markers.Length > 1 && ReferenceEquals(marker, selectedMarker)));
     }
 
     private void DrawMeasurement(DrawingContext dc, MeasurementViewModel m, bool selected)
@@ -259,7 +265,8 @@ public sealed class MeasurementAdorner : Adorner
     // with viridis' teal band (DESIGN.Color, "Data colours vs UI colours").
     private void Chip(DrawingContext dc, string text, Point at, bool selected)
     {
-        var ft = new FormattedText(text, CultureInfo.CurrentUICulture, FlowDirection.LeftToRight, new Typeface("Segoe UI"),
+        var typeface = new Typeface(TextElement.GetFontFamily(_view), FontStyles.Normal, FontWeights.Normal, FontStretches.Normal);
+        var ft = new FormattedText(text, CultureInfo.CurrentUICulture, FlowDirection.LeftToRight, typeface,
             11, selected ? Brushes.Black : Brushes.White, VisualTreeHelper.GetDpi(this).PixelsPerDip);
         var box = new Rect(at.X - 5, at.Y - 2, ft.Width + 10, ft.Height + 4);
         dc.DrawRoundedRectangle(selected ? SelectedChipBrush : ChipBrush, selected ? HaloPen : null, box, 3, 3);
@@ -345,7 +352,7 @@ public sealed class MeasurementAdorner : Adorner
         _view.HoverAt(p);
         var mm = Clamp(_view.ScreenToMm(p));
 
-        if (_dragMarker is { } marker)
+        if (_dragMarker is { } marker && IsMouseCaptured)
         {
             marker.X = Math.Round(mm.X, MarkerSnapDigits);
             marker.Y = Math.Round(mm.Y, MarkerSnapDigits);
@@ -376,6 +383,20 @@ public sealed class MeasurementAdorner : Adorner
         var end = Clamp(_view.ScreenToMm(e.GetPosition(this)));
         if ((_view.MmToScreen(end) - _view.MmToScreen(d[0])).Length < MinDragPx) { CancelDraft(); return; }
         Commit(Tool == MeasureTool.Distance ? MeasurementKind.Distance : MeasurementKind.Roi, [d[0], end]);
+    }
+
+    // Alt+Tab, the Windows key or a modal can take the capture mid-gesture. Without this the marker kept following a
+    // released mouse, and the next click committed a measurement from a stale start point.
+    protected override void OnLostMouseCapture(MouseEventArgs e)
+    {
+        base.OnLostMouseCapture(e);
+        if (_dragMarker is not null)
+        {
+            _dragMarker = null;
+            Cursor = null;
+            InvalidateVisual();
+        }
+        if (_draft is not null && Tool != MeasureTool.Angle) CancelDraft();   // angle drafts are click-by-click, no capture
     }
 
     protected override void OnMouseRightButtonDown(MouseButtonEventArgs e)

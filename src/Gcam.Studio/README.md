@@ -7,7 +7,7 @@ No business logic: views bind to ViewModels in `Gcam.Studio.Core`, and code-behi
 | Folder | Contents | Docs |
 |---|---|---|
 | `Views/` | `MainWindow` — fixed grid, flexible centre | [DESIGN.ViewLayer](../../docs/DESIGN.ViewLayer.md), [DESIGN.Layout](../../docs/DESIGN.Layout.md) |
-| `Controls/` | `HeatmapView` (zoom / pan / mm readout, automation peer), `ColorBar`, `MeasurementAdorner` + `MeasurementOverlay` (measurements and source markers over a heatmap) | [DESIGN.Controls](../../docs/DESIGN.Controls.md#custom-controls) |
+| `Controls/` | `HeatmapView` (zoom / pan / mm readout, automation peer), `ColorBar`, `ImageStackPanel` (square image + legend), `MeasurementAdorner` + `MeasurementOverlay` (measurements and source markers over a heatmap) | [DESIGN.Controls](../../docs/DESIGN.Controls.md#custom-controls) |
 | `Converters/` | `NullToCollapsedConverter`, `InverseBoolToVisibilityConverter`, `EnumMatchConverter` | [DESIGN.ViewLayer](../../docs/DESIGN.ViewLayer.md#how-a-view-gets-its-data-and-services) |
 | `Rendering/` | colormap lookup tables | |
 | `Services/` | `ThemeService` (token swap + DWM title bar) | [DESIGN.Color](../../docs/DESIGN.Color.md#theme-switching) |

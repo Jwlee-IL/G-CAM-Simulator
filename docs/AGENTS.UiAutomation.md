@@ -40,10 +40,16 @@ for file, directory, registry, environment, process, network, clipboard and mute
 
 | Surface | Declared | Resolved in a run | State |
 |---|---|---|---|
-| User / app data, settings, logs, caches | none in code | `APPDATA`, `LOCALAPPDATA`, `TEMP`, `TMP` redirected into an owned sandbox folder; **0 files written** in every run so far | confirmed absent, isolated anyway |
+| User / app data, settings, logs, caches | none in code | `TEMP` / `TMP` (and env-var readers of `APPDATA` / `LOCALAPPDATA`) redirected into an owned sandbox folder; **0 files written** in every run so far | confirmed absent; the redirect is a partial boundary — see below |
 | Network | none in code | no TCP connections observed from the app's PID during an audit run | confirmed absent |
 | Child processes | none in code | none observed | confirmed absent |
 | Shared resources | the interactive desktop and the mouse | one run at a time (`DisableTestParallelization`), opt-in | blocked by policy |
+
+**What the redirect does not cover.** `Environment.GetFolderPath(ApplicationData)`, isolated storage and other
+known-folder lookups resolve through the shell's known-folder registry, not the process environment, so they would
+still reach the real profile. The boundary for those is the source survey (no such call is reachable) plus the
+audit — not the redirect. If Studio ever gains settings or a cache, isolate them through an explicit path the
+harness can set, and re-run this stage.
 
 **Audit run.** Before any automation: the app started (sandboxed) and closed with no UI interaction while
 child processes, TCP connections and the sandbox were watched. Nothing was written, started or connected. A global
@@ -130,7 +136,13 @@ from the app's own code.
 | `Roi_OnFloodMap_CountsWholePixelsByCentre` | VAL-03 · SR-MEAS-03 | pixel count by centre, with corners on cell **boundaries** so one pixel of error can't change it | 42 px, 3.6 × 4.2 mm |
 | `Angle_EscAbandonsDraft_DeleteRemovesSelected` | VAL-03 · SR-MEAS-02, SR-MEAS-07 | angle from the three screen points (scale- and flip-invariant); Esc is proven by the value — an un-abandoned first click would have produced a different angle | 69.8° vs 70.02 ± 2.29; Delete removed it |
 | `SourceDrag_MarksOutdated_RerunPutsPeakOnTheSource` | VAL-04, VAL-05 · SR-MEAS-08, SR-RUN-07, SR-VIEW-08 | physics: after a re-run the decoded peak must sit on the moved source (≤ 1.5 mm; localisation inside the FCFOV is sub-mm) | source (18.3, 13.6) → peak (18.7, 12.9); chip shown, then cleared |
+| `Readout_AndOneCellRoi_MatchAbsolutePositionAndValue` | SR-VIEW-05, SR-VIEW-07, SR-MEAS-03 | absolute mm of two cells (both signs) from the oracle; a one-cell ROI must sum to the readout's value — closes the blind spot below | (-6.3, 5.1) and (6.3, -4.5) mm exact; Σ = cell value |
 | `ThemeToggle_RelabelsAndSwitchesBack` | SR-THEME-01 | the label names the other theme; the app still simulates after two swaps | pass (the visual swap stays manual) |
+
+**Blind spot found by review, then closed.** Length, angle and ROI-count verdicts are translation- and
+flip-invariant: an origin off by a whole pixel or a mirrored y axis would have passed all of them. The readout
+scenario pins absolute positions. Re-run after the audit fixes: 3 × 17/17 (10 oracle + 7 desktop); broken run
+fails all 7 desktop scenarios at their corrupted assertions.
 
 **Verdict checks.** `GCAM_UI_BREAK_VERDICT=1` corrupts every scenario's own expectation (+1 mm, +1 pixel, +5°,
 source + 3 mm, wrong label, wrong peak text). Record, 2026-10-01: normal runs 3 × 14/14 pass → broken run: **all 6

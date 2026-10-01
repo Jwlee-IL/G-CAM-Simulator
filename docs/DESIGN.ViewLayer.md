@@ -9,7 +9,7 @@ XAML style rules: [AGENTS.Conventions.Code](AGENTS.Conventions.Code.md#xaml).
 Gcam.Studio/
   App.xaml / App.xaml.cs   merged theme dictionaries · DI composition root · startup window placement
   Views/                   screens: XAML layout + code-behind that only calls InitializeComponent()
-  Controls/                elements with their own rendering / input (HeatmapView, ColorBar),
+  Controls/                elements with their own rendering / input / layout (HeatmapView, ColorBar, ImageStackPanel),
                            and adorners attached to them (MeasurementAdorner via MeasurementOverlay)
   Converters/              IValueConverter implementations (NullToCollapsed, InverseBoolToVisibility, EnumMatch)
   Rendering/               pixel-level helpers shared by controls (colormap lookup tables)
@@ -74,7 +74,8 @@ The grid, panel widths and window sizing policy are in [DESIGN.Layout](DESIGN.La
 - [ ] State and commands in a ViewModel, with a test.
 - [ ] XAML uses only theme keys — no literal colours, sizes or gaps.
 - [ ] Code-behind still only `InitializeComponent()`.
-- [ ] `AutomationProperties.Name` on every interactive element (not on text); an `AutomationId` if a test uses it;
+- [ ] An accessible name containing the visible label (explicit `Name` only for glyphs / custom surfaces, never on
+      text); an `AutomationId` if a test uses it;
       a keyboard path exists.
 - [ ] Checked in both themes (top-bar toggle).
 - [ ] The relevant `DESIGN.*` page updated in the same commit.
