@@ -31,8 +31,9 @@ public sealed class MaskSecondary
 
     // W total attenuation μ(E)/μ(662), extended below 122 keV so fluorescence escape is attenuated correctly.
     // Kα/Kβ (59/67 keV) sit just BELOW the 69.5 keV K-edge, so they use the (lower) below-edge μ.
-    private static readonly double[] _muE = { 50, 60, 69.4, 122, 250, 400, 662, 1000, 1332 };
-    private static readonly double[] _muR = { 57.0, 47.0, 40.0, 28.6, 5.0, 1.95, 1.0, 0.67, 0.55 };
+    // Same tungsten μ(E)/μ(662) table as CodedApertureMask.TungstenMuRel (200–600 keV points from NIST, 2026-10-01).
+    private static readonly double[] _muE = { 50, 60, 69.4, 122, 200, 300, 400, 500, 600, 662, 1000, 1332 };
+    private static readonly double[] _muR = { 57.0, 47.0, 40.0, 28.6, 7.962, 3.287, 1.954, 1.399, 1.109, 1.0, 0.67, 0.55 };
 
     /// <summary>W photoelectric fraction of the total attenuation at <paramref name="eKeV"/>.</summary>
     public static double PhotoFraction(double eKeV) => LogLog(eKeV, _peE, _peF);

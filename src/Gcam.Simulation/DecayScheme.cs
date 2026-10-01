@@ -49,6 +49,10 @@ public sealed class DecayScheme
     {
         "CO-60" or "CO60" => For(Isotope.Co60),
         "NA-22" or "NA22" => For(Isotope.Na22),
+        // Ir-192 has real cascades (e.g. 468 → 316 keV) but its correlated per-decay emission is not modelled.
+        // Failing loudly beats the fallback below, which would quietly run a Cs-137 cascade study instead.
+        "IR-192" or "IR192" => throw new NotSupportedException(
+            "Ir-192 cascade (true-coincidence) summing is not modelled; use Cs-137, Co-60 or Na-22."),
         _ => For(Isotope.Cs137),
     };
 

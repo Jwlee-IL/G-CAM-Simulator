@@ -17,7 +17,8 @@ crystal flood map → ADC peak detection → cross-correlation decode. 50 themes
 cocotb RTL front-end path.
 
 ## Key decisions / context (not derivable from the code or git history)
-- **Isotope scope:** core Cs-137 / Co-60 / Co-57 (122→1332 keV, cascade sum, low line under
+- **Isotope scope:** core Cs-137 / Co-60 / Co-57, plus Ir-192 as the industrial reference source (theme 51; no
+  cascade model) (122→1332 keV, cascade sum, low line under
   high-E Compton).
 - **The real rig's long-unsolved problem** was 662-keV window contamination — Co-60 downscatter
   reading as Cs. Gcam's crystal-Compton **spatial + spectral** separation levers (themes 15–17,

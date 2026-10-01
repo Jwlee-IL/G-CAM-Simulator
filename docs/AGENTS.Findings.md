@@ -1467,3 +1467,34 @@ the `Gcam.Simulation`/`Gcam.Detector` layer and the app is verified to compile).
 - Docs: `docs/PAPER.ko.md` (+ rendered artifact) — a two-tier (expert/plain) physics & sweet-spot note covering
   §1–9 incl. in-crystal Compton transport, dead region, crosstalk, hardware realization (RTL/cocotb/FPGA), and
   productization; Codex physics-verified (6 wording/number fixes applied).
+
+## 51. Ir-192 (industrial radiography) + tungsten μ(E) between 200 and 600 keV — `Isotopes` / `samples/isotopes/ir192.json` (2026-10-01)
+
+Ir-192 is reference source RS-1 of the locator concept (3.7 TBq radiography source) and the only reference source
+the engine could not run. Added from ENSDF (C. M. Baglin, Nucl. Data Sheets 113, 1871 (2012)) via IAEA LiveChart and
+NNDC NuDat — the same evaluation, checked line by line — and cross-checked by a Codex read-only review against an
+independent decay-data table: the nine gammas ≥ 1 % per decay (316.5 / 468.1 / 308.5 / 296.0 / 604.4 / 612.5 / 588.6
+keV β⁻, 205.8 / 484.6 keV EC), **2.137 γ/decay**, T½ 73.829 d. Pt / Os K X-rays (61–78 keV) are left out.
+
+- **Tungsten μ(E) table was 2–7 % too opaque at the Ir-192 lines** (+4.5 % at 316 keV, +7.3 % at 206 keV): it
+  jumped 250 → 400 → 662 keV and log-log interpolation overshoots the curved photoelectric fall-off. Added NIST
+  (Hubbell & Seltzer) points at 200, 300, 400, 500, 600 keV (ratios to μ(662) = 0.09852 cm²/g); now within 0.5 %
+  over 200–662 keV. Both copies (mask transmission, mask secondaries) updated. Effect on earlier themes: none
+  measurable — no earlier line sits in 250–600 keV except Na-22's 511 (−3.6 % μ), and all 156 earlier tests pass
+  unchanged. The iron entrance-window table was already within 0.3 % of NIST and is unchanged.
+- **Cascade summing is not modelled for Ir-192** (real cascades exist, e.g. 468 → 316 keV). The preset says
+  `cascadeCoincident: false` — the RTL study's notion of a cascade is "every line in one decay", which would invent
+  coincidences between alternative branches — and `DecayScheme.From("Ir-192")` now throws instead of silently
+  running the Cs-137 cascade it used to fall back to.
+- **Imaging works** (`samples/scenario_ir192.json`, `montecarlo`): on-axis estimate (0.3, −0.2) mm, 0.3 mm error,
+  efficiency 1.96 × 10⁻⁴, ghost margin 1.15 — the same scenario with Cs-137 gives 0.4 mm, 2.49 × 10⁻⁴ and 1.16, so
+  imaging quality matches; the efficiency gap is not interpreted here because the crystal stopping model is wrong at
+  these energies (last bullet). `montecarlo compton` with the 316.5 keV line: 69 % in-window,
+  0.32 mm RMS. In the Studio scene (1 m standoff, ~3 mm recon grid) Ir-192 localises inside one grid cell, no worse
+  than Cs-137 at the same position, with and without a ±10 % window on 316.5 keV (`Ir192Tests`).
+- **Open — crystal attenuation is not right at Ir-192 energies.** (a) The default `CrystalDetector` uses ONE μ (the
+  662 keV value) for every energy: for 15 mm GAGG it stops 55 % at any energy, where NIST gives ~81 % at 316 keV, so
+  Ir-192 count rates come out ~1.5× low. (b) `ComptonModel.MuRel` = (661.7/E)^1.56 for every material deviates from
+  NIST GAGG by +54 % at 316 keV, +30 % at 468 keV and −48 % at 1332 keV. The RS-1 count-rate comparison (TODO-01
+  step 8) waits for that fix; it is tracked as TODO-02.
+

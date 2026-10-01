@@ -1,0 +1,71 @@
+{
+  "name": "Ir-192 (industrial radiography, URS RS-1) on axis",
+  "photonCount": 1000000,
+  "seed": 12345,
+  "source": {
+    "isotope": "Ir-192",
+    "energyKeV": 316.5,
+    "position": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "lines": [
+      {
+        "energyKeV": 316.5,
+        "intensity": 0.8286
+      },
+      {
+        "energyKeV": 468.1,
+        "intensity": 0.4784
+      },
+      {
+        "energyKeV": 308.5,
+        "intensity": 0.297
+      },
+      {
+        "energyKeV": 296.0,
+        "intensity": 0.2871
+      },
+      {
+        "energyKeV": 604.4,
+        "intensity": 0.08216
+      },
+      {
+        "energyKeV": 612.5,
+        "intensity": 0.0534
+      },
+      {
+        "energyKeV": 588.6,
+        "intensity": 0.04522
+      },
+      {
+        "energyKeV": 205.8,
+        "intensity": 0.0331
+      },
+      {
+        "energyKeV": 484.6,
+        "intensity": 0.0319
+      }
+    ]
+  },
+  "mask": {
+    "type": "MURA",
+    "rank": 7,
+    "mosaicX": 2,
+    "mosaicY": 2,
+    "thicknessMm": 10.0,
+    "material": "Tungsten",
+    "cellPitchMm": 1.0
+  },
+  "detector": {
+    "pixelsX": 12,
+    "pixelsY": 12,
+    "pixelPitchMm": 1.0,
+    "energyResolutionFwhm": 0.0
+  },
+  "geometry": {
+    "maskDetectorDistanceMm": 60.0,
+    "sourceMaskDistanceMm": 100.0
+  }
+}

@@ -21,6 +21,13 @@ public static class Isotopes
         new IsotopeInfo("Co-57",   0.744,[(122.1, 0.856), (136.5, 0.107)]),
         new IsotopeInfo("Na-22",   2.60, [(511.0, 1.798), (1274.5, 0.999)]),   // 511 = β+ annihilation pair
         new IsotopeInfo("Am-241", 432.0, [(59.5, 0.359)]),
+        // Ir-192 (industrial radiography, URS reference source RS-1). ENSDF, C. M. Baglin, Nucl. Data Sheets 113, 1871
+        // (2012), via IAEA LiveChart and NNDC NuDat (same evaluation; values checked line by line on 2026-10-01):
+        // ground state, T½ 73.829 d, β⁻ 95.24 % / EC 4.76 %. The nine gammas ≥ 1 % per decay (2.14 γ/decay); the
+        // Pt / Os K X-rays (61–78 keV, ~0.19 /decay together) are left out — add them only for a low-energy study.
+        // 316.5 stays FIRST: Lines[0] is the primary line / photopeak centre.
+        new IsotopeInfo("Ir-192", 73.829 / 365.25, [(316.5, 0.8286), (468.1, 0.4784), (308.5, 0.2970), (296.0, 0.2871),
+            (604.4, 0.08216), (612.5, 0.0534), (588.6, 0.04522), (205.8, 0.0331), (484.6, 0.0319)]),
     ];
 
     public static IsotopeInfo Get(string name)

@@ -1,0 +1,17 @@
+{
+  "name": "Ir-192",
+  "halfLifeDays": 73.829,
+  "cascadeCoincident": false,
+  "lines": [
+    { "keV": 316.506, "branching": 0.8286 },
+    { "keV": 468.069, "branching": 0.4784 },
+    { "keV": 308.455, "branching": 0.2970 },
+    { "keV": 295.957, "branching": 0.2871 },
+    { "keV": 604.411, "branching": 0.08216 },
+    { "keV": 612.462, "branching": 0.0534 },
+    { "keV": 588.581, "branching": 0.04522 },
+    { "keV": 205.794, "branching": 0.0331 },
+    { "keV": 484.575, "branching": 0.0319 }
+  ],
+  "notes": "Industrial gamma radiography source (URS RS-1). ENSDF (Baglin, NDS 113, 1871, 2012) via IAEA LiveChart / NNDC NuDat: beta- 95.24 % to Pt-192, EC 4.76 % to Os-192 (205.8, 484.6 keV). Nine lines >= 1 %, 2.14 gamma/decay; Pt/Os K X-rays (61-78 keV) omitted. Real cascades exist (e.g. 468 -> 316 keV) but cascadeCoincident is FALSE: in this study a cascade means every line in one decay, which is wrong for Ir-192, and its correlated emission is not modelled - no invented correlation."
+}

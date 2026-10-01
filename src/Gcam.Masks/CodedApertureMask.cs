@@ -182,8 +182,11 @@ public sealed class CodedApertureMask : IMask
     // and energies below 50 keV clamp. No standard isotope line sits in 70–121 keV and a thick mask is opaque there
     // regardless, so this is a curve-fidelity caveat, not a functional error. A proper fix would split the table at
     // the 69.525 keV edge (below-edge point + a separate above-edge point) with NIST-XCOM values.
-    private static readonly double[] _muE = { 50.0, 60.0, 69.4, 122.0, 250.0, 400.0, 662.0, 1000.0, 1332.0 };
-    private static readonly double[] _muR = { 57.0, 47.0, 40.0, 28.6, 5.0, 1.95, 1.00, 0.67, 0.55 };
+    // 200–600 keV: NIST (Hubbell & Seltzer) W μ/ρ at 200, 300, 400, 500, 600 keV ÷ μ/ρ(662) = 0.09852 cm²/g (log-log
+    // between 600 and 800). Before 2026-10-01 the table jumped 250 → 400 → 662 and over-attenuated the Ir-192 lines
+    // by 2–7 % (+4.5 % at 316 keV); the extra points bring it within 0.5 % of NIST over 200–662 keV.
+    private static readonly double[] _muE = { 50.0, 60.0, 69.4, 122.0, 200.0, 300.0, 400.0, 500.0, 600.0, 662.0, 1000.0, 1332.0 };
+    private static readonly double[] _muR = { 57.0, 47.0, 40.0, 28.6, 7.962, 3.287, 1.954, 1.399, 1.109, 1.00, 0.67, 0.55 };
 
     /// <summary>Tungsten total linear attenuation relative to 662 keV (μ(E)/μ(662)); the config's
     /// LinearAttenuationPerMm is the 662 keV anchor. Public so the energy dependence is directly testable.</summary>

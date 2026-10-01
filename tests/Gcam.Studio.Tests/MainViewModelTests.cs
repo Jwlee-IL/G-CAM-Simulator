@@ -192,4 +192,15 @@ public class MainViewModelTests
         await vm.RunCommand.ExecuteAsync(null);
         Assert.Equal("Σ 0", vm.Measurements.Items[0].Value);   // the fake's flood is all zeros
     }
+
+    [Fact]
+    public void IsotopePicker_OffersIr192_AndKeepsCs137AsTheDefault()
+    {
+        Assert.Contains("Ir-192", SourceItemViewModel.IsotopeNames);
+        Assert.Equal("Cs-137", SourceItemViewModel.IsotopeNames[0]);
+        var source = new SourceItemViewModel { Isotope = "Ir-192" };
+        Assert.Equal("Ir-192", source.ToModel().Isotope);
+        source.Isotope = "no such isotope";
+        Assert.Equal("Cs-137", source.Isotope);   // unknown → first entry
+    }
 }
