@@ -231,9 +231,6 @@ ECP5 as the Fmax proxy; `rtl/vivado_trap.tcl` ready for exact Artix-7 whenever i
 
 ## Notes & gotchas
 
-- `Mask.dat` (repo root) is **base64-wrapped, encrypted/high-entropy** — NOT a
-  readable 0/1 pattern. Don't try to parse it; regenerate the mask via
-  `MuraGenerator` instead (rank 7 → identical pattern, deterministically).
 - Emission uses **directional biasing** by default (`Source.DirectionalBiasing`):
   `DetectorBiasedSource` aims photons at the detector rectangle and weights them by
   `A·cosθ/(4π r²)`, giving an **unbiased** estimate of the 4π result with ~100× fewer

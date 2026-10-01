@@ -43,8 +43,7 @@ pass once trusted a summary's "CLI complete" and was wrong — 39 commands, not 
 ## ⚠ Machine-specific — re-establish per computer, do NOT trust these paths verbatim on a new machine
 The physics/code above is portable; the toolchain paths below are for the **original machine only**.
 On a new computer, find the local equivalents (and update this section, or keep them in local memory):
-- **cocotb / matplotlib:** python.org **Python 3.13** (was `C:\Users\leonh\AppData\Local\Programs\
-  Python\Python313\python.exe`, cocotb 2.0.1). Windows-Store Python's `python311.dll` is VPI-denied.
+- **cocotb / matplotlib:** python.org **Python 3.13** (cocotb 2.0.1). Windows-Store Python's `python311.dll` is VPI-denied.
 - **RTL:** Icarus (iverilog/vvp) + **OSS CAD Suite** (yosys + nextpnr-ecp5) via scoop — needs BOTH
   `bin` AND `lib` on PATH. nextpnr is Lattice-only (ECP5 as an Fmax proxy). Vivado not installed
   (`rtl/vivado_trap.tcl` ready for exact Artix-7 Fmax whenever available).

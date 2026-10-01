@@ -100,7 +100,7 @@ which uses the bit-exact integer reference `trap_ref.py`).
 Run (⚠ needs a **non-Store Python**; the Windows-Store Python's `python311.dll` is access-denied
 to Icarus's VPI loader — use the python.org 3.13 install):
 ```bash
-/c/Users/leonh/AppData/Local/Programs/Python/Python313/python.exe run_cocotb.py   # TESTS=2 PASS=2
+<python.org 3.13 python> run_cocotb.py   # TESTS=2 PASS=2
 python trap_shaper_study.py                                                        # -> trap_shaper.png
 ```
 
