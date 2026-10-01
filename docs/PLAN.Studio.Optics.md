@@ -54,8 +54,8 @@ judged at the focal plane it will be used at.
 | R-7 | **Validation as Studio policy**, not engine physics: finite numbers only; rank from the tested set {5, 7, 11, 13, 17, 19, 23}; N integer 4–64; D ≥ 1 mm; pitches ≥ 0.05 mm; pixel pitch > reflector gap (cross-field error, never silently changed); every scene source in front of the mask; decoder focus > the acquired D; a bounded decode-grid allocation. | review O-7; rank set = presets + the configuration-scan ranks (planner) |
 
 **Separate finding, not part of TODO-09:** the review could not reproduce Findings theme 3 / EV-03's rank-23
-"usable ±64 mm (96 %)" (measured 0.149 usable under the stated conditions). It is tracked as TODO-18; the optics
-UI must not cite that headline until it is resolved.
+"usable ±64 mm (96 %)" (measured 0.149 usable under the stated conditions). It was resolved as TODO-18 (2026-10-02): the headline
+predated the slab mask; the corrected scan is in Findings theme 3 / EV-03.
 
 ## Steps (after the review)
 

@@ -123,12 +123,19 @@ Geometries used below:
 
 ### EV-03 — Field of view ÷ resolution = rank
 
-- **Shows.** Widening the field with a coarser cell or a shorter D coarsens the resolution by the same factor; only
-  a higher rank buys field for free. With 12 × 12 × 1 mm pixels and S = 100 mm, rank 23 / 1 mm cells / D = 20 mm
-  gives a usable ±64 mm (96 %), ~7× the original ±9.3 mm. Decoding **collapses** when the detector cannot hold about
-  one period of the shadow (2 mm cells at rank ≥ 17, D = 20: 22–44 % usable).
-- **Reproduce.** `montecarlo scan samples/scenario.json samples/scan.csv` → `samples/scan_pareto.png`,
-  `samples/scan_collapse.png`.
+- **Shows.** Nominally, field ÷ resolution = rank: a coarser cell or a shorter D widens the field and coarsens the
+  resolution by the same factor, and a higher rank widens the nominal field at the same resolution. The **usable**
+  field is limited by the 10 mm tungsten slab: at short D its 1 mm channels collimate oblique sources away. With
+  12 × 12 × 1 mm pixels and S = 100 mm, the widest field with ≥ 90 % of the swept points localised within one
+  resolution element is **rank 11 / 1 mm cells / D = 30 mm: ±21.5 mm**, ~2.5× the original rank-7 / D-60 field
+  (±8.6 mm, 93 %). Rank 23 / 1 mm / D = 20 mm is 0.149 usable (median error 65 mm); with the slab thinned to
+  0.5 mm at the same μ·t it is 0.752. Decoding also **collapses** when the detector cannot hold about one period
+  of the shadow (2 mm cells: every rank ≥ 13 below 40 % usable).
+- **Limits.** One source plane (S = 100 mm), one detector (12 × 12 × 1 mm), one mask thickness; "usable" is a coarse
+  gate (error < one resolution element), not a precision. The thinner-slab numbers trade leakage geometry for
+  acceptance and were not optimised.
+- **Reproduce.** `montecarlo scan samples/scenario.json samples/scan.csv`, then `python samples/plot_scan.py` →
+  `samples/scan_collapse.png`, `samples/scan_pareto.png`.
 - **Tests.** none specific (a sweep of the pipeline that `PipelineTests` covers).
 
 ### EV-04 — Mask thickness: leak against collimation
@@ -465,6 +472,7 @@ Numbers above are from the current engine. Changes that moved earlier results:
 
 | Date | Change | Effect on the evidence |
 |---|---|---|
+| 2026-10-02 | Configuration scan re-run with the engine in git (10 mm ray-marched tungsten slab); the earlier figures predated the slab model | EV-03: the max-FOV pick changes from rank 23 / 1 mm / D 20 ("±64 mm, 96 %", not reproducible: 0.149) to rank 11 / 1 mm / D 30 (±21.5 mm, 90 %); "~7×" becomes ~2.5×; high ranks collapse at short D by collimation. |
 | 2026-10-01 | Crystal attenuation and photoelectric share taken from tabulated cross sections per material, replacing one 662 keV μ and one power law for every crystal (which absorbed too much, too photoelectrically) | EV-14: per-pixel window 24 → 6 % of ideal counts; EV-15: Co-60 share of the 662 keV window 22 → 55 %, Cs-137 lost from Co × 4 (was shown at × 8); EV-09: hand-held efficiency 2.65 → 2.48 × 10⁻⁴; EV-19: same ranking, lower values. All PRS numbers were re-measured on the new model. |
 | 2026-10-01 | Ir-192 added; tungsten μ(E) points at 200–600 keV | EV-20; earlier lines unchanged |
 | 2026-10-01 | Field-distance FOV study and dose model added | EV-02, EV-23 replace the estimates the PRS carried before (usable field ±5°, dose "not modelled") |

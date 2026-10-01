@@ -46,15 +46,26 @@ theme below changes, update its EV entries in the same commit (`AGENTS.Conventio
   `sweep_cyclic.csv`, `sweep_noncyclic.csv` (fixed output names — the committed ones are the hand-held run).
 
 ## 3. Configuration optimization (maximise FOV)
-- **Fundamental law: FOV ÷ resolution = rank.** Widening FOV via cell pitch or D coarsens
-  resolution by the same factor; only a **larger rank** buys FOV for free.
-- **Max-FOV optimum** (12×12/1 mm fixed, S = 100 mm): large rank, small D, pitch ≤ 1.5.
-  Robust pick **rank 23 / pitch 1.0 / D 20 mm → usable ±64 mm (96%)**, ~7× the original
-  rank-7/D-60 (±9.3 mm).
-- **Collapse cliff**: decoding fails when the detector can't hold ~one basic period of the
-  shadow — `pitch 2.0` collapses at rank ≥ 17 / D 20 (usable 22–44%).
-- Reproduce: `montecarlo scan samples/scenario.json` → `samples/scan_pareto.png`,
-  `scan_collapse.png`, `scan.csv` / `scan_extended.csv`.
+- **Geometric identity: nominal FOV ÷ resolution = rank.** Widening the field via cell pitch or D
+  coarsens resolution by the same factor. A larger rank widens the *nominal* field at the same
+  resolution — but whether that field is *usable* depends on the mask slab (below).
+- **Corrected 2026-10-02 (TODO-18).** The earlier headline — "robust pick rank 23 / pitch 1.0 /
+  D 20 mm → usable ±64 mm (96 %), ~7× the original" — does not reproduce with the engine in git
+  (initial commit 863f249 included): that configuration gives **0.149 usable** (median error 65 mm).
+  Cause: the mask is a **10 mm ray-marched tungsten slab**; at D = 20 mm a 1 mm channel accepts only
+  ~±6°, while sources across the nominal field arrive at up to ~33°, so the channels collimate the
+  off-axis field away. Keeping μ·t fixed and thinning the slab restores it (rank 23 / D 20:
+  0.149 → 0.248 → 0.645 → 0.752 at 10 / 5 / 2 / 0.5 mm). The 0.959 in the old `scan_extended.csv`
+  predates the slab model (not in git history).
+- **Max-FOV result with the current engine** (12 × 12 × 1 mm detector, S = 100 mm, 10 mm W, 11 × 11
+  sweep, 200 000 photons/point): widest field with ≥ 90 % usable is **rank 11 / 1.0 mm / D 30 mm →
+  ±21.5 mm**, ~2.5× the original rank-7 / D-60 configuration (±8.6 mm, 93 % usable); the widest at
+  any reliability is rank 13 / 1.5 mm / D 20 mm → ±44.3 mm at 64 % usable (median error 6.3 mm).
+  Ranks 17–23 collapse at short D (usable 0.05–0.62 at pitch 1 mm).
+- **Collapse cliff** (unchanged in kind): decoding fails when the detector can't hold ~one basic
+  period of the shadow — at pitch 2.0 mm every rank ≥ 13 is below 40 % usable.
+- Reproduce: `montecarlo scan samples/scenario.json samples/scan.csv`, then
+  `python samples/plot_scan.py` → `samples/scan_collapse.png`, `samples/scan_pareto.png`.
 
 ## 4. Mask design — tungsten thickness
 - Mask is a **ray-marched 3-D slab** (collimation modelled). **Optimum ≈ 8–10 mm.**

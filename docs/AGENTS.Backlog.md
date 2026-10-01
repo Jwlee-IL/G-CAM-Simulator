@@ -175,6 +175,9 @@ TILT (pitch/yaw), mask WARPING.
 
 ## Done (summary — details in AGENTS.Findings by theme)
 
+- **TODO-18 configuration-scan headline** (2026-10-02): the rank-23 "±64 mm, 96 %, ~7×" result predated the 10 mm
+  slab mask and does not reproduce (0.149; collimation at D = 20). Re-scanned: widest ≥ 90 %-usable field is rank 11 /
+  1 mm / D 30 → ±21.5 mm (~2.5×). Findings theme 3, EV-03 (and its model-history row), new `samples/plot_scan.py`.
 - **TODO-17 Co-60 localisation bias** (2026-10-02): not energy — undersampling of the mask shadow by the default
   optics at 1 m (1.27 samples per cell; RMS 0.95 → 0.24 mm from 0.6 to 0.2 mm pixels). Findings theme 55; feeds TODO-09.
 - **TODO-08 detector realism, background, per-nuclide imaging, Compton strip** (2026-10-02): Gcam.Wpf's detector
