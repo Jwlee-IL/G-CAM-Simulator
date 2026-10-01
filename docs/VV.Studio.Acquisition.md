@@ -1,7 +1,8 @@
 # VV.Studio.Acquisition — live list-mode verification and measurements
 
-Scope: engine list-mode events and the Studio acquisition contract, state and imaging snapshots. Spectrum
-processing is future work; no desktop acquisition validation was run in this change.
+Scope: engine list-mode events and the Studio acquisition contract, state and imaging snapshots. This is the
+acquisition-only verification baseline; Spectrum evidence and current test totals are in
+[VV.Studio](VV.Studio.md#spectrum-physics-and-processing-evidence). No desktop acquisition validation was run here.
 
 **At a glance**
 - Fresh histories, importance-weight rejection and independent Poisson timing feed one cumulative event list.

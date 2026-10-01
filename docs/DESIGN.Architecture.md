@@ -28,7 +28,7 @@ flowchart TB
     end
     subgraph CORE["Gcam.Studio.Core (net9.0, no WPF)"]
         VM["ViewModels<br/>MainViewModel, SourceItemViewModel,<br/>MeasurementsViewModel, MeasurementViewModel"]
-        Contracts["Service contracts<br/>IAcquisitionService, IThemeService"]
+        Contracts["Service contracts<br/>IAcquisitionService, ISpectrumService, IThemeService"]
         Geo["Imaging<br/>HeatmapViewport, MeasurementMath, IPlaneMarker"]
     end
     subgraph ENGINE["Engine"]
@@ -81,6 +81,7 @@ in a ViewModel is a build error, and the ViewModel tests run on any machine with
 
 ```csharp
 .AddSingleton<IAcquisitionService, SimulationService>()
+.AddSingleton<ISpectrumService, SpectrumService>()
 .AddSingleton<ThemeService>()
 .AddSingleton<IThemeService>(sp => sp.GetRequiredService<ThemeService>())
 .AddSingleton<MainViewModel>()
@@ -128,12 +129,20 @@ sequenceDiagram
 `SelectedWorkspace` select the centre and right panel through type-based DataTemplates. `WorkspaceViewModel`
 supplies title, AutomationId and active state; `ImagingWorkspaceViewModel` owns `Measurements` and `PeakText`,
 and reads the shared result through `Shared`. Publishing a result refreshes imaging readings without replacing
-the workspace or measurement session. Only Imaging is registered; no empty tabs are shown.
+the workspace or measurement session. Imaging and Spectrum are registered; no empty tabs are shown.
 
 Core `Plotting/` contains series / bands / markers, `PlotViewport`, `NiceTicks` and `MinMaxPyramid`, with no WPF
 types. The WPF `PlotView` caches preparation on data changes and renders exact column extrema during input or
-resize. The engine remains behind `IAcquisitionService`; no spectrum / waveform calculation has moved in this
-shell step. Tests for maths run without WPF; the plot gate hosts the production control in a visible STA window.
+resize. Transport stays behind `IAcquisitionService`; spectrum processing stays behind `ISpectrumService`.
+Tests for maths run without WPF; the plot gate hosts the production control in a visible STA window.
+
+`SpectrumWorkspaceViewModel` follows cumulative snapshots and exposes Area series, bands and table rows.
+`SpectrumService` serializes requests with a semaphore and performs smearing, binning and window counting in
+`Task.Run`. New events extend the histogram; an open paralyzable pile-up group survives snapshot boundaries.
+Changing acquisition, seed, pile-up or axis range resets the cache. Index-seeded pulse smearing makes replay
+independent of snapshot partitioning. Log Y changes the plot only; N changes windows and union share.
+Resolution and pulse samples derive from the shared Configuration presets and `FrontEndModel`; no noise floor
+is manufactured. Each line uses its own FWHM; unresolved neighbours merge, overlapping resolved windows do not.
 
 ## Testing strategy
 

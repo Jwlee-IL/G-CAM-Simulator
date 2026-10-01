@@ -11,7 +11,7 @@ Structured after IEC 62304 §5.3 (architectural design) and §5.4 (detailed desi
 **At a glance**
 - Four software items in three projects — presentation logic and view maths (`Gcam.Studio.Core`, no WPF), the
   simulation adapter (`Gcam.Studio.Services`, the only layer that reaches the engine) and the WPF shell — split into
-  19 units (§2); the compiler enforces the layering.
+  22 units (§2); the compiler enforces the layering.
 - Interfaces between items (§3), SOUP with what Studio relies on (§4), the run state machine and the measurement
   gesture (§5), and the detailed design of each unit (§6).
 - Every SRS requirement is allocated to the unit that meets it (§7).
@@ -40,7 +40,7 @@ Key decisions and why:
 | Decision | Reason | Requirements it serves |
 |---|---|---|
 | All logic in `net9.0` projects without WPF | testable without a UI stack; a ViewModel cannot touch a UI type | SR-ARCH-01, SR-ARCH-04 |
-| One engine entry point, `IAcquisitionService` | the UI can be tested with a fake; the engine can change behind the contract | SR-ARCH-02, SR-RUN-09 |
+| Engine operations behind `IAcquisitionService` and `ISpectrumService` | the UI can be tested with fakes; the engine can change behind the contracts | SR-ARCH-02, SR-RUN-09, SR-SPEC-01 … -07 |
 | Monte Carlo and decode on the thread pool, snapshots marshalled back by an async stream | the UI never blocks | SR-RUN-09, SR-RUN-17 |
 | All screen ↔ mm maths in one UI-free class (`HeatmapViewport`) | one mapping, unit-tested; overlays and readout cannot disagree | SR-VIEW-01…06, SR-VIEW-05 (RC) |
 | Measurements stored in mm, per pane, mapped to the screen on every render | overlays follow zoom / pan without screen state; ROI always reads the right image | SR-MEAS-04, SR-MEAS-07 |
@@ -72,6 +72,9 @@ one class, or a small group of types that only make sense together. Unit IDs are
 | SU-17 | SI-2 | `PlotSeries`, `PlotBand`, `PlotMarker`, `PlotViewport`, `NiceTicks`, `MinMaxPyramid` | `Core/Plotting/*.cs` | finite / increasing inputs, sample limit, linear / log mapping, X navigation, ticks, exact range extrema |
 | SU-18 | SI-4 | `PlotView` (+ automation peer) | `Studio/Controls/PlotView.cs` | cached preparation, frozen geometry, themed axes / series / bands / markers, readout, pointer / key input, measured CPU redraw |
 | SU-19 | SI-3 | `AcquisitionSession` | `Services/AcquisitionSession.cs` | fresh MC histories, consumed event prefix, live-time pacing, immutable cumulative snapshots, Stop and automatic completion |
+| SU-20 | SI-3 | `SpectrumService` | `Services/SpectrumService.cs` | worker smearing / binning, incremental pile-up, resolvable-line grouping and union share |
+| SU-21 | SI-1 | `SpectrumWorkspaceViewModel`, `ISpectrumService`, spectrum records | `Core/ViewModels/SpectrumWorkspaceViewModel.cs`, `Core/Services/Spectrum*.cs`, `Core/Services/ISpectrumService.cs` | view settings, snapshot refresh, Area series / bands / table, rejection of late responses |
+| SU-22 | SI-4 | `SpectrumView`, `SpectrumPanel` | `Studio/Views/Spectrum*.xaml(.cs)` | plot, readout, table and read-only chain / view-settings panel |
 
 Paths are relative to `src/Gcam.Studio.Core`, `src/Gcam.Studio.Services` and `src/Gcam.Studio` respectively.
 
@@ -98,6 +101,16 @@ then publishes the terminal snapshot. A look-ahead event beyond the target prove
 
 `SceneConfigBuilderTests` verifies scene-to-config mapping in the engine suite. `AcquisitionServiceTests`
 verifies transport/localization, immutable snapshots, count conservation, input checks, pacing and Stop.
+
+### SI-1 ↔ SI-3: `ISpectrumService`
+
+`ProcessAsync(acquisitionId, events, lines, settings, seed, cancellationToken)` returns `SpectrumView`:
+256 centres and acquired counts, grouped bands and their counts / shares, total measured pulses, overflow,
+union share, resolution at 662 keV, resolving time, chain name and worker processing elapsed time.
+`SpectrumSettings` contains a positive finite N and pile-up; log Y is a plot property.
+Requests are serialized and CPU work runs in `Task.Run`. The ViewModel resumes on its calling context;
+cancellation and a revision check prevent an old request from overwriting a newer view. Failure is shown as
+`Spectrum failed: …` without discarding the acquisition. Published plot arrays are never subsequently mutated.
 
 ### SI-1 ↔ SI-4: `IThemeService`
 
@@ -252,6 +265,25 @@ theme style. The control exposes a read-only readout for a host TextBlock (no se
 input parity and an Image automation peer. Axis margins and centred X ticks use measured text dimensions. CPU `OnRender`
 timing includes axes, query and geometry; the desktop test separately records event-to-render delay.
 
+### SU-20 … SU-22 Spectrum
+
+The default chain comes from Configuration `FrontEndParts.Default`: GAGG(Ce), Hamamatsu MPPC S13360-3050,
+CSP + CR-RC. `FrontEndModel` derives resolution from the photoelectron budget, intrinsic floor and DCR.
+The shared pulse helper gives 11.25 / 40 ADC samples at 125 MSPS; `ResolvingSamples` gives 730 ns.
+Each retained MC deposit is smeared once, using a seed addressed by its event index. Singles extend the
+histogram; pile-up sums deposits while each arrival gap is below 730 ns, re-extending the interval as the
+engine's `ApplyPileUp` does. The final open group is measured on a copied histogram for publication and
+stays open in the cache. A pile-up toggle resets and replays; snapshot boundaries do not change counts.
+Axis range is 1.15 × highest emission energy (2.15 × with pile-up); pulses above it are counted as overflow.
+
+Sorted adjacent emissions merge when their separation is less than FWHM at their mean energy. Band limits
+are the union span of E ± N·FWHM(E); labels retain every energy and isotope. Counts use bin centres, and
+the overall share uses the union of bands, so overlapping resolved windows count a bin only once.
+Spectrum follows the acquisition scene captured at Start, retains stale status after edits, and reprocesses
+view settings without acquisition. Log Y only redraws `PlotView`. No independent pool or noise wall is added.
+The list-mode acquisition's per-pixel gain and correlated nuclear cascades remain unavailable; this processing
+does not add either. Measurements and real-engine checks are recorded in [VV.Studio](VV.Studio.md).
+
 ### SU-02 `SourceItemViewModel`
 
 Distance clamped to 200–3000 mm; activity `≤ 0 → 1 µCi`; isotope not in `Isotopes.All` → first entry (Cs-137).
@@ -325,6 +357,10 @@ Every SRS requirement maps to at least one unit; every unit carries at least one
 | SR-NAV-01 … SR-NAV-03 | SU-01, SU-16, SU-14 (type-based centre / panel templates) |
 | SR-PLOT-01 … SR-PLOT-03 | SU-17, SU-18 |
 | SR-PLOT-04, SR-PLOT-05 | SU-18, SU-17, SU-14 (theme styles) |
+| SR-SPEC-01 … SR-SPEC-05 | SU-20, SU-21, SU-22, SU-18; engine Configuration presets and `FrontEndModel` |
+| SR-SPEC-06 | SU-01, SU-21, SU-22 |
+| SR-SPEC-07 | SU-20, SU-21 |
+| SR-SPEC-08 | SU-22, SU-18, SU-14 |
 | SR-MEAS-01, SR-MEAS-02 | SU-04, SU-06 |
 | SR-MEAS-03 | SU-06 |
 | SR-MEAS-04 | SU-01, SU-16, SU-03, SU-04 |

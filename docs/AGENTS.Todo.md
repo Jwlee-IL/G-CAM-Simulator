@@ -8,7 +8,7 @@ done list (and Findings, if it produced a result) in the same commit; its plan s
 | ID | Task | Origin | Owner | State |
 |---|---|---|---|---|
 | TODO-06 | Studio workspace shell and a first-party `PlotView` — [PLAN.Studio.Shell](PLAN.Studio.Shell.md) | author decision 2026-10-01 (one viewer for the portfolio) | Studio session | committed `bb3f00e`; desktop regression + polish survey wait for a free desktop |
-| TODO-07 | Spectrum workspace — [PLAN.Studio.Spectrum](PLAN.Studio.Spectrum.md) | `Gcam.Wpf` Spectrum tab | Studio session | planned, decisions S-1…S-4 recorded — after TODO-13 |
+| TODO-07 | Spectrum workspace — [PLAN.Studio.Spectrum](PLAN.Studio.Spectrum.md) | `Gcam.Wpf` Spectrum tab | Studio session | implemented (S-1…S-5), headless tests pass; real-window check waits for a free desktop |
 | TODO-08 | Imaging options: Compton strip, background BSR, pixel gain σ | `Gcam.Wpf` Imaging tab | Studio session | open (after 07) |
 | TODO-09 | Editable optics + presets (lifts the "optics read-only" exclusion in VV.Studio.SRS §7) | `Gcam.Wpf` Optics / Presets tab | Studio session | open |
 | TODO-10 | Waveform workspace: front-end chain presets, ADC + shaped traces | `Gcam.Wpf` Waveform tab | Studio session | open (needs `PlotView` decimation) |

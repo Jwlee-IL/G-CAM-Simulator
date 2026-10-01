@@ -1,22 +1,4 @@
-using Gcam.Configuration;
-
-namespace Gcam.Wpf;
-
-/// <summary>A scintillator, by the datasheet numbers that drive the model: light yield (→ photoelectron budget →
-/// resolution), decay time (→ the pulse's leading edge), density (informational / efficiency), and the
-/// NON-PROPORTIONALITY resolution floor (the part of the intrinsic resolution that is NOT photon-counting
-/// statistics — the FrontEndModel adds the 1/√N_pe statistical term on top, so a good crystal with a poor
-/// sensor still resolves badly).</summary>
-public sealed record ScintPreset(string Name, double LightYieldPhPerKeV, double DecayNs, double Density,
-    double NonPropFwhm);
-
-/// <summary>A photosensor, by datasheet: photon-detection efficiency (→ N_pe), excess-noise factor, and dark
-/// count rate (→ low-energy resolution and a dark-count background).</summary>
-public sealed record SensorPreset(string Name, double Pde, double Enf, double DcrHz);
-
-/// <summary>A preamp + shaper: the effective integration time (noise window; also sets DCR-collected variance)
-/// and the pulse decay tail the charge-sensitive preamp produces, plus which digital shaper the DAQ runs.</summary>
-public sealed record PreampPreset(string Name, double IntegrationNs, double PulseTailNs, bool Crrc);
+namespace Gcam.Configuration;
 
 /// <summary>The detection chain as selectable REAL parts (same idea as the ADC preset): pick a scintillator, a
 /// photosensor and a preamp/shaper, and the pulse shape AND the energy resolution are DERIVED from their specs
@@ -24,6 +6,22 @@ public sealed record PreampPreset(string Name, double IntegrationNs, double Puls
 /// pulse/shaper. Numbers are representative datasheet values; adjust to a specific part as needed.</summary>
 public static class FrontEndParts
 {
+    public const double AdcSampleRateHz = 125e6;
+
+    /// <summary>The chain selected at startup by the original viewer.</summary>
+    public static FrontEndChain Default => new(Scintillators[0], Sensors[0], Preamps[1]);
+
+    /// <summary>Bi-exponential scintillation / CSP convolution, with the legacy half-sample guards.</summary>
+    public static (double RiseSamples, double TailSamples) PulseSamples(ScintPreset scintillator,
+        PreampPreset preamp, double sampleRateHz = AdcSampleRateHz)
+    {
+        if (!(sampleRateHz > 0) || !double.IsFinite(sampleRateHz))
+            throw new ArgumentOutOfRangeException(nameof(sampleRateHz));
+        double nsPerSample = 1e9 / sampleRateHz;
+        double rise = Math.Max(0.5, Math.Min(scintillator.DecayNs, preamp.PulseTailNs) / nsPerSample);
+        return (rise, Math.Max(rise + 0.5, Math.Max(scintillator.DecayNs, preamp.PulseTailNs) / nsPerSample));
+    }
+
     // Light collection efficiency of the crystal→sensor coupling (shared; folded into N_pe with PDE).
     public const double Collection = 0.50;
 

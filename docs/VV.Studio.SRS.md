@@ -8,7 +8,7 @@ Structured after IEC 62304 §5.2 (software requirements analysis). As in [VV.Stu
 **GCAM Studio is not a medical device and no compliance is claimed**; the structure is borrowed for its discipline.
 
 **At a glance**
-- **51 active requirements** (plus seven withdrawn rows) in eleven groups: navigation, plotting, acquisition, scene, image view, measurement, theme (functional, §3) and environment,
+- **59 active requirements** (plus seven withdrawn rows) in twelve groups: navigation, plotting, spectrum, acquisition, scene, image view, measurement, theme (functional, §3) and environment,
   accessibility, security, architecture (§4). Each is one testable present-tense statement.
 - Inputs, outputs and every status message are listed with their valid ranges (§5); risk control
   (the illustrative safety class B) maps six hazardous situations to the requirements that control them (§6);
@@ -24,7 +24,7 @@ Structured after IEC 62304 §5.2 (software requirements analysis). As in [VV.Stu
 | Inputs | A scene of point sources (isotope, lateral X / Y, distance, activity), preset live time and acquisition speed. Optics are fixed defaults (`OpticsSettings`), shown read-only. |
 | Outputs | Two images (flood map, reconstruction) with colour bars, the decoded peak in mm, a status line, and user measurements (distance, angle, ROI statistics). Nothing is written to disk. |
 | Upward trace | Studio is subsystem SS-4 of the product concept: it implements [PR-SW-02](VV.Gcam.PRS.md#software-and-engineering-use-pr-sw) and serves user need UN-09 (engineering inspection; [VV.Gcam.URS](VV.Gcam.URS.md)). |
-| Neighbouring systems | The Gcam engine, reached only through `IAcquisitionService` ([VV.Studio.SDS §3](VV.Studio.SDS.md#3-interfaces-between-items-532-543)); Windows (WPF, DWM title bar, UI Automation). |
+| Neighbouring systems | The Gcam engine, reached only through `IAcquisitionService` and `ISpectrumService` ([VV.Studio.SDS §3](VV.Studio.SDS.md#3-interfaces-between-items-532-543)); Windows (WPF, DWM title bar, UI Automation). |
 
 ## 2. Conventions
 
@@ -55,6 +55,19 @@ Structured after IEC 62304 §5.2 (software requirements analysis). As in [VV.Stu
 | SR-PLOT-03 | A pyramid built once per published dataset preserves exact per-column extrema, including short series, singleton data and boundary ranges; navigation does not rescan the whole trace. |
 | SR-PLOT-04 | Plot X zoom / pan / reset have pointer and keyboard paths; read-only pointer readout, a focus ring, theme brushes and an automation peer are exposed. Resize retains X navigation. |
 | SR-PLOT-05 | In a visible WPF window a 10-million-sample trace has CPU redraw ≤16 ms after a zoom and after a resize, including axes, query, geometry and drawing commands. Dispatcher / composition latency is recorded separately. |
+
+### Spectrum (`SR-SPEC`)
+
+| ID | Requirement |
+|---|---|
+| SR-SPEC-01 | Spectrum displays a live 256-bin Area histogram of the shared acquisition's measured event deposits, with measured energy in keV and acquired counts; it adds no synthetic noise floor or independent event pool. |
+| SR-SPEC-02 | Energy smearing and the read-only resolution at 662 keV derive from the default GAGG(Ce), S13360-3050 and CSP + CR-RC chain through `FrontEndModel`; the chain is shown without a resolution override. |
+| SR-SPEC-03 | Optional pile-up sums deposits whose actual arrival gaps are below the chain-derived resolving time, extending the interval after each pulse; toggling it reprocesses retained events. |
+| SR-SPEC-04 | Each emission window spans E ± N·FWHM(E); adjacent lines separated by less than FWHM at their mean merge into one labelled band spanning their windows. Resolved lines keep separate bands even if their windows overlap. |
+| SR-SPEC-05 | The emission table gives isotope, every grouped line energy, window limits, counts and share selected by bin centre; the total in-window share counts each bin once across all bands. |
+| SR-SPEC-06 | Log Y, positive finite window multiplier (default 1.5) and pile-up are view settings: they reuse acquired events without starting acquisition or marking results stale. Spectrum shares Imaging's outdated state. |
+| SR-SPEC-07 | Same events, settings and seed produce identical histogram counts regardless of snapshot partition or pile-up toggle replay; new events are processed incrementally and CPU processing runs in a service worker. |
+| SR-SPEC-08 | Spectrum exposes the plot and readout, table and right-panel controls with accessible names and AutomationIds `Spectrum.Plot`, `Spectrum.Lines`, `Spectrum.LogY`, `Spectrum.Window` and `Spectrum.PileUp`. |
 
 ### Acquisition (`SR-RUN`)
 
@@ -152,11 +165,11 @@ point). They are kept as requirements so that a change breaking them fails verif
 | ID | Requirement |
 |---|---|
 | SR-ARCH-01 | `Gcam.Studio.Core` references no WPF type. |
-| SR-ARCH-02 | Only `Gcam.Studio.Services` references the simulation engine (`Gcam.Simulation`); the UI reaches it only through `IAcquisitionService`. |
+| SR-ARCH-02 | Only `Gcam.Studio.Services` references the simulation engine (`Gcam.Simulation`); the UI reaches transport and spectrum processing only through `IAcquisitionService` and `ISpectrumService`. |
 | SR-ARCH-03 | View code-behind is `InitializeComponent()` only; views use theme keys, not literal colours or sizes. |
 | SR-ARCH-04 | Studio tests reference `Gcam.Studio.Core` only (no WPF in tests). |
 
-**51 active requirements**, seven withdrawn rows retained with stable IDs.
+**59 active requirements**, seven withdrawn rows retained with stable IDs.
 
 ## 5. Inputs, outputs, messages (§5.2.2 b–d)
 
@@ -171,6 +184,8 @@ point). They are kept as requirements so that a change breaking them fails verif
 | Preset live time | s | finite > 0; default 60; invalid UI input → 60, invalid service input rejected | SR-RUN-15, SR-RUN-19 |
 | Speed | live s / wall s | finite > 0; default 10; invalid UI input → 10, invalid service input rejected | SR-RUN-15, SR-RUN-19 |
 | Optics | mm / rank | read-only defaults in this version | — |
+| Spectrum window N | × FWHM(E) | positive finite; default 1.5; invalid numeric value → 1.5 | SR-SPEC-04, -06 |
+| Spectrum log Y / pile-up | boolean | defaults true / false; view settings | SR-SPEC-03, -06 |
 | Measurement points | mm | clamped to the image extent; 2 points (distance, ROI) or 3 (angle) | SR-MEAS-05, SR-MEAS-07 |
 
 ### Outputs
@@ -180,6 +195,8 @@ point). They are kept as requirements so that a change breaking them fails verif
 | Flood map, reconstruction | heatmap (viridis, linear min–max) + colour bar; row 0 at the bottom | SR-VIEW-01…06 |
 | Hovered pixel | "x 1.2 mm, y −3.4 mm · 56.7" | SR-VIEW-07 |
 | Decoded peak | "peak (x, y) mm", 0.1 mm | SR-VIEW-08 |
+| Spectrum | 256-bin Area plot, measured energy (keV) / acquired counts; line bands and emission-window table | SR-SPEC-01, -04, -05 |
+| Front-end chain | read-only chain name, resolution FWHM % at 662 keV and resolving time in ns | SR-SPEC-02, -03 |
 | Distance / angle / ROI | "12.3 mm" · "67.0°" · "Σ 1,234" with px count, mean, max | SR-MEAS-01…04 |
 
 ### Status messages and warnings
@@ -191,6 +208,7 @@ point). They are kept as requirements so that a change breaking them fails verif
 | Completed | "Completed · t = 60.0 s of 60 s · <counts> counts · <rate> cps" | SR-RUN-19 |
 | Stopped | "Stopped · t = <t> s of 60 s · <counts> counts · <rate> cps"; acquired data retained | SR-RUN-10 |
 | Failed | "Failed: <message>" | SR-RUN-03 |
+| Spectrum processing failure | "Spectrum failed: <message>"; acquired data retained | SR-SPEC-01, -07 |
 | Images no longer match the scene | "outdated" chip on the images | SR-RUN-14 |
 | ROI before any run / outside the pixels | "—" · "no image yet" / "no pixel centres inside" | SR-MEAS-04 |
 
@@ -218,6 +236,7 @@ Stated so that their absence is not read as a gap in verification:
 - Saving or loading scenes, exporting images or measurements (SR-SEC-01 forbids file I/O today).
 - Creating measurements from the keyboard — known gap AN-01, planned.
 - High-contrast mode — known gap AN-03, planned.
+- Front-end chain selection, per-pixel gain and correlated nuclear cascades in list-mode events, windowed imaging and Compton stripping are outside this Spectrum workspace.
 - Any physics accuracy claim — the engine's own suite covers it ([VV.Studio §1](VV.Studio.md#1-scope-and-intended-use)).
 
 ## 8. Re-evaluation (§5.2.5–5.2.6)

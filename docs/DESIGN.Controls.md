@@ -18,6 +18,7 @@ is therefore re-templated against the tokens in [DESIGN.Color](DESIGN.Color.md).
 | Primary button | `Button.Primary` | accent fill, `OnAccent` text — **one per screen** (Simulate) |
 | Ghost button | `Button.Ghost` | borderless, for bars and panel headers |
 | TextBox | implicit | mono text; unit suffix via `Tag` (`Tag="mm"`); accent 2 px border on focus; error border + tooltip when `Validation.HasError`; themed caret and selection |
+| CheckBox | implicit | themed box and visible check mark, focus ring, hover border and disabled state; used for Spectrum log Y / pile-up |
 | ComboBox / ComboBoxItem | implicit | full template including popup, arrow and item highlight |
 | ListBox / ListBoxItem | implicit | selection = subtle fill **+ 2 px accent bar** (not colour alone), stays visible when unfocused, inset focus ring |
 | Segmented picker | `Segment.Track` (Border) + `RadioButton.Segment` | one radio button per option in a `UniformGrid`; checked = subtle fill + accent text + semibold (not colour alone); access keys (`_Distance` → Alt+D). Bind with `EnumMatchConverter` (tool picker) |
@@ -123,5 +124,5 @@ letting the heatmap fill a tall panel centred the image in empty space with the 
 
 ComboBox popup and highlight · button hover background · TextBox caret / selection · black dotted focus ·
 ListBox inactive-selection grey · Aero progress glow · light title bar (DWM) · `-0` labels from rounding.
-Not styled yet because unused: CheckBox, Slider, ContextMenu, DataGrid — style them when they are introduced
+Not styled yet because unused: Slider, ContextMenu, DataGrid — style them when they are introduced
 (the results table is a `ListBox` with a column template, so it reuses the list style instead of a `DataGrid`).

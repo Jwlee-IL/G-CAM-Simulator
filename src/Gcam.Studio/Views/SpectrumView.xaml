@@ -1,0 +1,58 @@
+<UserControl x:Class="Gcam.Studio.Views.SpectrumView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:c="clr-namespace:Gcam.Studio.Controls">
+    <UserControl.Resources><BooleanToVisibilityConverter x:Key="BoolToVis" /></UserControl.Resources>
+    <Border Style="{StaticResource Panel.Surface}">
+        <DockPanel>
+            <DockPanel DockPanel.Dock="Top" Style="{StaticResource PanelHeader}">
+                <TextBlock Text="Spectrum" Style="{StaticResource Text.PanelTitle}" />
+                <Border Style="{StaticResource Chip.Warning}" Visibility="{Binding Shared.IsResultStale, Converter={StaticResource BoolToVis}}">
+                    <TextBlock Text="Outdated" Style="{StaticResource Text.CaptionWarning}" />
+                </Border>
+            </DockPanel>
+            <StackPanel DockPanel.Dock="Bottom">
+                <TextBlock Text="{Binding Readout, ElementName=SpectrumPlot}" Style="{StaticResource Text.Mono}"
+                           Height="{StaticResource Size.ReadoutLine}" Margin="{StaticResource Gap.Field}" />
+                <TextBlock Text="{Binding Summary}" Style="{StaticResource Text.Caption}" Margin="{StaticResource Gap.Field}" />
+                <TextBlock Text="{Binding Error}" Style="{StaticResource Text.CaptionWarning}" />
+                <DockPanel Style="{StaticResource PanelHeader}">
+                    <TextBlock Text="Emission windows" Style="{StaticResource Text.PanelTitle}" />
+                </DockPanel>
+                <Grid Margin="{StaticResource Gap.Tight}">
+                    <Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition /><ColumnDefinition /><ColumnDefinition /><ColumnDefinition /></Grid.ColumnDefinitions>
+                    <TextBlock Text="Isotope" Style="{StaticResource Text.Label}" />
+                    <TextBlock Grid.Column="1" Text="Line (keV)" Style="{StaticResource Text.Label}" />
+                    <TextBlock Grid.Column="2" Text="Window (keV)" Style="{StaticResource Text.Label}" />
+                    <TextBlock Grid.Column="3" Text="Counts" Style="{StaticResource Text.Label}" />
+                    <TextBlock Grid.Column="4" Text="Share" Style="{StaticResource Text.Label}" />
+                </Grid>
+                <ListBox ItemsSource="{Binding Lines}" MaxHeight="{StaticResource Size.ResultsList}"
+                         AutomationProperties.AutomationId="Spectrum.Lines" AutomationProperties.Name="Spectrum emission windows">
+                    <ListBox.ItemContainerStyle>
+                        <Style TargetType="ListBoxItem" BasedOn="{StaticResource {x:Type ListBoxItem}}">
+                            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                            <Setter Property="AutomationProperties.Name" Value="{Binding Description}" />
+                        </Style>
+                    </ListBox.ItemContainerStyle>
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <Grid>
+                                <Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition /><ColumnDefinition /><ColumnDefinition /><ColumnDefinition /></Grid.ColumnDefinitions>
+                                <TextBlock Text="{Binding Isotope}" Style="{StaticResource Text.Mono}" />
+                                <TextBlock Grid.Column="1" Text="{Binding Energies}" Style="{StaticResource Text.Mono}" />
+                                <TextBlock Grid.Column="2" Text="{Binding Window}" Style="{StaticResource Text.Mono}" />
+                                <TextBlock Grid.Column="3" Text="{Binding Counts, StringFormat=N0}" Style="{StaticResource Text.Mono}" />
+                                <TextBlock Grid.Column="4" Text="{Binding Share, StringFormat=P1}" Style="{StaticResource Text.Mono}" />
+                            </Grid>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </StackPanel>
+            <c:PlotView x:Name="SpectrumPlot" Series="{Binding Series}" Bands="{Binding Bands}" LogY="{Binding LogY}"
+                        XLabel="measured energy (keV)" YLabel="counts" EmptyText="Start acquisition to build the spectrum"
+                        AutomationProperties.AutomationId="Spectrum.Plot" AutomationProperties.Name="Spectrum measured energy counts"
+                        AutomationProperties.HelpText="Wheel or plus and minus to zoom; arrows to pan; Home to reset." />
+        </DockPanel>
+    </Border>
+</UserControl>

@@ -1,0 +1,24 @@
+<UserControl x:Class="Gcam.Studio.Views.SpectrumPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Border Style="{StaticResource Panel.Surface}">
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+                <DockPanel Style="{StaticResource PanelHeader}"><TextBlock Text="Display" Style="{StaticResource Text.PanelTitle}" /></DockPanel>
+                <CheckBox Content="Log Y" IsChecked="{Binding LogY}" Margin="{StaticResource Gap.Section}"
+                          AutomationProperties.AutomationId="Spectrum.LogY" />
+                <DockPanel Style="{StaticResource PanelHeader}"><TextBlock Text="Window" Style="{StaticResource Text.PanelTitle}" /></DockPanel>
+                <TextBlock Text="N × FWHM at each line" Style="{StaticResource Text.Label}" Margin="{StaticResource Gap.Tight}" />
+                <TextBox Text="{Binding WindowFwhm}" Tag="× FWHM" Margin="{StaticResource Gap.Section}"
+                         AutomationProperties.AutomationId="Spectrum.Window" AutomationProperties.Name="Window N times FWHM" />
+                <DockPanel Style="{StaticResource PanelHeader}"><TextBlock Text="Pile-up" Style="{StaticResource Text.PanelTitle}" /></DockPanel>
+                <CheckBox Content="Pile-up" IsChecked="{Binding PileUp}" Margin="{StaticResource Gap.Field}"
+                          AutomationProperties.AutomationId="Spectrum.PileUp" />
+                <TextBlock Text="{Binding ResolvingTime}" Style="{StaticResource Text.Mono}" Margin="{StaticResource Gap.Section}" />
+                <DockPanel Style="{StaticResource PanelHeader}"><TextBlock Text="Resolution" Style="{StaticResource Text.PanelTitle}" /></DockPanel>
+                <TextBlock Text="{Binding Resolution}" Style="{StaticResource Text.Mono}" Margin="{StaticResource Gap.Field}" />
+                <TextBlock Text="{Binding Chain}" TextWrapping="Wrap" Style="{StaticResource Text.Caption}" />
+            </StackPanel>
+        </ScrollViewer>
+    </Border>
+</UserControl>

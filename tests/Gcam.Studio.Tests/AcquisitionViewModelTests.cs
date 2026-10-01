@@ -46,9 +46,13 @@ public sealed class AcquisitionViewModelTests
 
     private sealed class Service : IAcquisitionService
     {
+        public int Starts { get; private set; }
         public VirtualSession Session { get; private set; } = null!;
         public IAcquisitionSession Start(IReadOnlyList<SceneSource> scene, OpticsSettings optics, double liveTimeS, double speed)
-            => Session = new VirtualSession(liveTimeS, speed);
+        {
+            Starts++;
+            return Session = new VirtualSession(liveTimeS, speed);
+        }
     }
 
     private static async Task WaitForSnapshot(MainViewModel vm, double live)
@@ -61,7 +65,7 @@ public sealed class AcquisitionViewModelTests
     public async Task Start_SnapshotsGrow_StopKeepsData_UnlocksAndEditMarksStale()
     {
         var service = new Service();
-        var vm = new MainViewModel(service, new Theme());
+        var vm = new MainViewModel(service, new Theme(), new FakeSpectrumService());
         vm.Imaging.Measurements.AddCommand.Execute(new MeasurementDraft(ImagePane.Flood, MeasurementKind.Roi,
             [new Vec2(-2, -2), new Vec2(2, 2)]));
         var run = vm.StartCommand.ExecuteAsync(null);
@@ -98,7 +102,7 @@ public sealed class AcquisitionViewModelTests
     public async Task Preset_Completes_NewStartClears_ResultAndEvents()
     {
         var service = new Service();
-        var vm = new MainViewModel(service, new Theme()) { LiveTimeS = 5, Speed = 10 };
+        var vm = new MainViewModel(service, new Theme(), new FakeSpectrumService()) { LiveTimeS = 5, Speed = 10 };
         var run = vm.StartCommand.ExecuteAsync(null);
         service.Session.AdvanceWallTime(0.5);
         await run;
@@ -119,7 +123,7 @@ public sealed class AcquisitionViewModelTests
     public async Task Failure_ReportsMessage_KeepsAcquiredData()
     {
         var service = new Service();
-        var vm = new MainViewModel(service, new Theme());
+        var vm = new MainViewModel(service, new Theme(), new FakeSpectrumService());
         var run = vm.StartCommand.ExecuteAsync(null);
         service.Session.AdvanceWallTime(0.25);
         await WaitForSnapshot(vm, 2.5);
@@ -133,10 +137,44 @@ public sealed class AcquisitionViewModelTests
     }
 
     [Fact]
+    public async Task Spectrum_SnapshotsGrow_ViewSettingsReuseAcquisition_SelectionSurvives()
+    {
+        var acquisition = new Service();
+        var spectrum = new FakeSpectrumService();
+        var vm = new MainViewModel(acquisition, new Theme(), spectrum) { LiveTimeS = 5 };
+        vm.SelectWorkspaceCommand.Execute("1");
+        var run = vm.StartCommand.ExecuteAsync(null);
+        acquisition.Session.AdvanceWallTime(0.25);
+        await WaitForSnapshot(vm, 2.5);
+        await vm.Spectrum.WhenUpdated;
+        Assert.Equal(25, vm.Spectrum.View!.TotalCounts);
+        acquisition.Session.AdvanceWallTime(0.25);
+        await run;
+        Assert.Equal(50, vm.Spectrum.View!.TotalCounts);
+        Assert.Same(vm.Spectrum, vm.SelectedWorkspace);
+        Assert.Equal("Workspace.Spectrum", vm.Spectrum.AutomationId);
+        var snapshot = vm.Snapshot;
+        int calls = spectrum.Calls;
+        vm.Spectrum.WindowFwhm = 2;
+        await vm.Spectrum.WhenUpdated;
+        vm.Spectrum.PileUp = true;
+        await vm.Spectrum.WhenUpdated;
+        vm.Spectrum.LogY = false;
+        Assert.Equal(calls + 2, spectrum.Calls);
+        Assert.Equal(new SpectrumSettings(2, true), spectrum.Settings[^1]);
+        Assert.Equal(1, acquisition.Starts);
+        Assert.Same(snapshot, vm.Snapshot);
+        Assert.False(vm.IsResultStale);
+        Assert.Equal(50, vm.Spectrum.View.TotalCounts);
+        Assert.Equal(Gcam.Studio.Core.Plotting.PlotKind.Area, Assert.Single(vm.Spectrum.Series).Kind);
+        Assert.NotEmpty(vm.Spectrum.Bands);
+    }
+
+    [Fact]
     public async Task LiveTimeAndSpeed_MarkStale_WorkspaceAndMeasurementsDoNot()
     {
         var service = new Service();
-        var vm = new MainViewModel(service, new Theme()) { LiveTimeS = 5 };
+        var vm = new MainViewModel(service, new Theme(), new FakeSpectrumService()) { LiveTimeS = 5 };
         var run = vm.StartCommand.ExecuteAsync(null);
         service.Session.AdvanceWallTime(0.5);
         await run;

@@ -42,16 +42,18 @@ Row 1  Content (a Border with Pad.Window)
                 Imaging: [flood map] Gutter [reconstruction]
                 each = PanelHeader (title + chips) · ImageStackPanel: square HeatmapView (+ adorner), ColorBar and
                 readout directly beneath, at the image's width; spare height collects below
+                Spectrum: Area PlotView with line bands · readout · acquired-pulse summary · emission-window table
          Col 3  Gutter
          Col 4  Selected workspace panel (DataTemplate by workspace type, Size.SidePanel)
                 Imaging: tool picker · hint · results table · selected row detail
+                Spectrum: Display (log Y) · Window (N × FWHM) · Pile-up (resolving time) · Resolution (read-only chain)
 Row 2  Status bar (Size.StatusBar) state dot · live time / counts / cps / MC-limited (live region) · live-time progress
 ```
 
 The primary action sits at the same place on every screen (top right); the status of the last run is always
 visible at the bottom, full width, regardless of which panel has focus.
 
-Only Imaging is registered today: there are no placeholder workspaces. The switch uses `Segment.Track` /
+Imaging and Spectrum are registered: there are no placeholder workspaces. The switch uses `Segment.Track` /
 `RadioButton.Segment`, workspace titles and `Workspace.*` AutomationIds. Ctrl+1…4 selects a registered workspace;
 an unavailable index leaves selection unchanged. Acquisition preserves selection. Shared scene / optics / live-time / speed inputs
 mark an existing result outdated; workspace view settings re-render without invalidating that result.

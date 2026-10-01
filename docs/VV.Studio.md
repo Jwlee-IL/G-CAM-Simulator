@@ -15,7 +15,7 @@ one of a set:
 The working design guides are [DESIGN.Architecture](DESIGN.Architecture.md) and the other `DESIGN.*` pages.
 
 **At a glance**
-- 51 active software requirements plus seven withdrawn batch rows (§4). Live acquisition verification and
+- 59 active software requirements plus seven withdrawn batch rows (§4). Live acquisition verification and
   measurements are recorded in [VV.Studio.Acquisition](VV.Studio.Acquisition.md); desktop acquisition
   validation is pending while the desktop and UI-test project are occupied.
 - Seven regression scenarios, a plot gate and a diagnostic survey are opt-in desktop tests. The latest regression / survey attempt was blocked by desktop input; the plot CPU gate passed (§5). Historical scenarios judge the running app against
@@ -41,12 +41,12 @@ viewer does not control anything, so the worst plausible outcome is a wrong read
 non-serious injury at most, hence B rather than C. As actually used (a demo on simulated data) it would be Class A.
 
 **Engine boundary.** Physics, decoding and the scene → config builder belong to the engine. Studio relies on them
-through `IAcquisitionService` and does not re-verify them; the engine suite (246 cases, all passing on 2026-10-01)
-is the evidence. The four `SceneConfigBuilderTests` cases that pin the Studio-facing contract are cited below.
+through `IAcquisitionService` and `ISpectrumService`. The engine inventory is recorded below;
+`SpectrumServiceTests` additionally verifies the measured spectrum against real-engine deposits.
 
 ## 2. Software items
 
-Items SI-1 … SI-4 and their units SU-01 … SU-15 are defined in [VV.Studio.SDS §2](VV.Studio.SDS.md#2-software-items-and-units-531-541).
+Items SI-1 … SI-4 and their units SU-01 … SU-22 are defined in [VV.Studio.SDS §2](VV.Studio.SDS.md#2-software-items-and-units-531-541).
 How each item is verified:
 
 | Item | Project | Verified by |
@@ -62,7 +62,7 @@ stack. SI-3 is tested through the real engine.
 
 ## 3. Software requirements
 
-The requirements are specified in [VV.Studio.SRS](VV.Studio.SRS.md) — **51 active** in eleven groups, including
+The requirements are specified in [VV.Studio.SRS](VV.Studio.SRS.md) — **59 active** in twelve groups, including
 navigation, plotting and acquisition. Seven withdrawn batch rows retain their IDs. The matrix cites IDs only;
 the SRS is the single source of their wording.
 
@@ -128,18 +128,26 @@ Automation. Status: **pass** (evidence on 2026-10-01), **partial**, **open** (no
 | SR-ARCH-03 | inspection | I | `MainWindow.xaml.cs` is `InitializeComponent()` only; literal sizes found — AN-05 | partial |
 | SR-ARCH-04 | build | C, I | `Gcam.Studio.Tests.csproj` references only `Gcam.Studio.Core` and targets `net9.0` | pass |
 | SR-NAV-01 | unit + I | T, I | `MainViewModelTests.Workspace_SharedResultAndSelectionSurviveSnapshot_ViewSettingsDoNotMarkStale`; workspace-type centre / panel templates | pass |
-| SR-NAV-02 | unit + system | T, I | same workspace test: registered identity, unavailable index, retained selection; segmented switch / Ctrl+1…4 inspected | partial — only Imaging registered; desktop survey blocked |
+| SR-NAV-02 | unit + system | T, I | workspace test plus `Spectrum_SnapshotsGrow_ViewSettingsReuseAcquisition_SelectionSurvives`: Imaging / Spectrum identities, unavailable index and retained selection; segmented switch / Ctrl+1…4 inspected | partial — desktop workspace switching pending |
 | SR-NAV-03 | unit | T | `AcquisitionViewModelTests.LiveTimeAndSpeed_MarkStale_WorkspaceAndMeasurementsDoNot`, `Workspace_SharedResultAndSelectionSurviveSnapshot_ViewSettingsDoNotMarkStale` | pass |
 | SR-PLOT-01 | unit + I | T, I | `PlotSeriesTests.LowerBound_HandlesUniformAndIrregularX_AndEnds`; validation / cap / band / marker properties inspected | pass |
 | SR-PLOT-02 | unit | T | `PlotViewportTests.Mapping_RoundTrips_AndClampsLogFloor`, `NiceTicksTests.Linear_Uses125Steps_EngineeringLabels_NoNegativeZero`, `Logarithmic_LabelsDecades_WithEightMinorTicks` | pass |
 | SR-PLOT-03 | unit | T | `MinMaxPyramidTests.Query_EqualsBruteForce_IncludingBothEnds` (5 cases), `Range_ClipsOutsideData_RejectsNonFiniteSamples` | pass |
 | SR-PLOT-04 | unit + system | T, I | `PlotViewportTests.ZoomPanReset_PreservesAnchor_AndBounds`; `PlotViewTests.TenMillionSamples_ZoomAndResizeRedraw_Within16Milliseconds` checks production peer, + key and reset; pointer / other keys / readout by inspection | partial — full input walkthrough pending |
 | SR-PLOT-05 | system | T | `PlotViewTests.TenMillionSamples_ZoomAndResizeRedraw_Within16Milliseconds`; measured record in §5 | pass (CPU redraw only) |
+| SR-SPEC-01 | integration + I | T, I | `SpectrumServiceTests.CsAcquisition_PhotopeakBinAndFwhmMatchChain`; Area binding, axis labels and no synthetic noise inspected | pass headless; live desktop appearance pending |
+| SR-SPEC-02 | integration | T | `CsAcquisition_PhotopeakBinAndFwhmMatchChain`; engine `FrontEndPartsTests` verifies legacy chain and pulse compatibility | pass |
+| SR-SPEC-03 | integration | T | `HighRate_PileUpLosesPulsesAndMovesCountsAbovePhotopeak`; exact pulse-count agreement with engine `ApplyPileUp` | pass |
+| SR-SPEC-04 | integration + unit | T | `MixedCsCo_HasFourBandsAndUnionCountsEachBinOnce`, `Merge_UsesResolutionRatherThanWindowOverlap` (2 cases), `Merge_SingleLineGivesOneBand` | pass |
+| SR-SPEC-05 | integration + I | T, I | `MixedCsCo_HasFourBandsAndUnionCountsEachBinOnce`; table columns and bin-centre selection inspected | pass headless; desktop table pending |
+| SR-SPEC-06 | unit + I | T, I | `AcquisitionViewModelTests.Spectrum_SnapshotsGrow_ViewSettingsReuseAcquisition_SelectionSurvives`; shared stale binding inspected | pass headless; desktop controls pending |
+| SR-SPEC-07 | integration + I | T, I | `SeedAndSnapshotPartition_AreDeterministic_ToggleReplaysExactly` (2 cases), `Processing_MeasuresFullAndIncrementalWorkAt100000Events`; service `Task.Run` inspected | pass |
+| SR-SPEC-08 | inspection + system | I | `SpectrumView.xaml`, `SpectrumPanel.xaml`, inherited `PlotView` peer | partial — desktop accessibility and themes pending |
 
 ### Coverage summary
 
 The tables below preserve the pre-acquisition baseline (47 rows); withdrawn RUN rows are historical evidence.
-The current eleven acquisition rows are verified above by tests / inspection. Their desktop paths are pending;
+The current eleven acquisition rows and eight spectrum rows are verified above by tests / inspection. Their desktop paths are pending;
 the prior batch desktop passes must not be treated as acquisition validation.
 
 | Primary method | Requirements |
@@ -163,30 +171,66 @@ the prior batch desktop passes must not be treated as acquisition validation.
 | `MeasurementMathTests` | unit | 5 | 5 / 5 pass |
 | `MeasurementsViewModelTests` | unit / integration | 7 | 7 / 7 pass |
 | `MainViewModelTests` | unit / integration (with workspace and measurements) | 8 | 8 / 8 pass |
-| `AcquisitionViewModelTests` | unit / integration with virtual acquisition clock | 4 | 4 / 4 pass |
+| `AcquisitionViewModelTests` | unit / integration with virtual acquisition clock | 5 | 5 / 5 pass |
 | `TickFormatterTests` | unit | 9 | 9 / 9 pass — no requirement yet (AN-10) |
 | `MinMaxPyramidTests` | unit | 19 | 19 / 19 pass (includes concurrent plot edge / storage cases) |
 | `PlotViewportTests` | unit | 3 | 3 / 3 pass |
 | `NiceTicksTests` | unit | 2 | 2 / 2 pass |
 | `PlotSeriesTests` | unit | 1 | 1 / 1 pass |
-| **Gcam.Studio.Tests** | | **69** | **69 / 69 pass** |
+| **Gcam.Studio.Tests** | | **70** | **70 / 70 pass** |
 | `AcquisitionServiceTests` (in Gcam.Studio.Services.Tests) | integration, real engine + virtual scheduler | 8 | 8 / 8 pass |
+| `SpectrumServiceTests` (in Gcam.Studio.Services.Tests) | physics / deterministic processing / timing and band grouping | 9 | 9 / 9 pass; service project total 17 |
 | `FloodOracleTests` (in Gcam.Studio.UiTests) | the UI scenarios' oracle, tested on its own | 10 | 10 / 10 pass |
 | `PilotTests`, `ScenarioTests` (in Gcam.Studio.UiTests) | system, desktop (opt-in) | 7 | skipped normally; latest opt-in run: 7 fail at desktop input / focus (§5) |
 | `PlotViewTests` | system, desktop (opt-in) | 1 | CPU redraw gate pass; skipped normally |
 | `PolishSurveyTests` | diagnostic, desktop (opt-in) | 1 | blocked at UIA focus; skipped normally |
 | `SceneConfigBuilderTests` (in Gcam.Tests) | integration (engine) | 7 (one theory × 4) | pass |
 | `ListModeSourceTests` (engine) | physics / compatibility / throughput / decode measurements | 8 | 8 / 8 pass |
-| **Gcam.Tests** (engine, out of scope) | | **254** | **254 / 254 pass; original 246 unchanged** |
+| `FrontEndPartsTests` (engine Configuration compatibility) | unit | 2 | 2 / 2 pass |
+| **Gcam.Tests** | | **256** | **256 / 256 pass; pre-Spectrum 254 assertions unchanged** |
 
-The solution, including the WPF shell and unchanged UI-test project, built in Release without errors. Restore
-emitted NU1900 because NuGet vulnerability metadata was unreachable. The default build failed without diagnostics;
-verification used one MSBuild node and disabled node reuse. `dotnet test` prints the current totals.
+The solution, including the WPF shell and unchanged UI-test project, built in Release without errors.
+NU1900 reports unreachable NuGet vulnerability metadata; verification used existing restore assets, one
+MSBuild node and disabled node reuse. `dotnet test` prints the current totals.
 
 Live-acquisition Release verification on 2026-10-01 passed 341 cases (254 engine + 69 Core + 8 service +
 10 UI oracles), skipped all nine desktop cases and launched no Studio window. Zero build errors; NU1900
 remains a restore warning. Measurements and pending desktop migration are in
 [VV.Studio.Acquisition](VV.Studio.Acquisition.md).
+
+Spectrum Release verification on 2026-10-01 passed 353 cases (256 engine + 70 Core + 17 service +
+10 UI oracles), with all nine desktop cases skipped. Build included the unchanged UI-test project and had
+zero errors and one NU1900 warning. Existing restore assets were used (`--no-restore`), one MSBuild node,
+node reuse disabled; test runtime had `DOTNET_PROCESSOR_COUNT=4`. No Studio window was launched.
+
+### Spectrum physics and processing evidence
+
+`SpectrumServiceTests` acquires fresh real-engine events with transport seed 12345 and processing seed 909.
+The default chain is GAGG(Ce) / Hamamatsu MPPC S13360-3050 / CSP + CR-RC, with 4.5692% FWHM at 662 keV.
+
+| Check | Measurement | Acceptance / tolerance |
+|---|---|---|
+| Cs-137 photopeak, 100,000 events (31,053 full-energy deposits) | regional maximum bin 222, containing 661.7 keV; bin width 2.9725 keV | exact bin match, maximum above 478 keV through axis end |
+| Physical Ba K peak | global maximum bin 10, centre 31.2110 keV, inside grouped band 25.4589–43.5022 keV | global maximum lies inside Ba K band and is taller than the photopeak; no low-energy counts hidden |
+| Cs photopeak FWHM | histogram 30.3436 keV vs `FrontEndModel` 30.2373 keV; error 0.1063 keV | ≤6.5516 keV = two bins + 5·FWHM/√(2(N−1)), N = full-energy deposits |
+| High-rate Cs pile-up (activity 10⁶ µCi, 100,000 events) | 100,000 → 85,108 pulses; above 794.04 keV: 0 → 4,735; overflow 456; resolving time 730 ns | strictly fewer pulses and more counts above 1.2×661.7; pulse count exactly matches `ApplyPileUp` at 1 ps time rounding |
+| Cs + Co, 20,000 events | four bands: 32.1 + 36.4, 661.7, 1173.2, 1332.5 keV; union share 37.1900% | exact labels / band count and union share; default Co windows need not overlap |
+| Merge unit fixtures | Ba K merged; single line retained; injected constant 10% FWHM keeps 1173.2 / 1332.5 separate despite overlapping N=1.5 windows | exact band counts; separation 159.3 keV > FWHM(mean) 125.285 keV; fixture is not a physical-chain claim |
+| Determinism, 10,000 events | batch, prefix 503 + remainder, and toggle replay agree with / without pile-up | exact histogram and overflow equality |
+
+Worker elapsed time measured by `Stopwatch` inside `Task.Run` (five warmed Release runs; excludes queue / gate
+waiting, includes worker preemption). No hard timing tolerance is imposed on this measurement.
+
+| Work | Five measurements (ms) |
+|---|---|
+| Smear + bin full 100,000-event snapshot | 102.166, 176.062, 101.702, 116.910, 101.117 |
+| Increment 1,000 events over cached 99,000 | 1.267, 1.054, 1.034, 1.323, 1.065 |
+| Pile-up toggle, replay 100,000 events | 135.560, 102.186, 102.762, 112.295, 101.615 |
+
+Full processing exceeds a few ms, so it stays on the service worker. This is processing evidence, not a
+desktop responsiveness measurement. Once the desktop and UI-test project are free, add live-count growth /
+Stop retention, Cs photopeak / Ba K and mixed four-band display, setting reuse without stale, workspace switching
+and selection retention, plot keyboard / readout / focus, accessible control and table names, and both-theme checks.
 
 ## 5. Validation
 

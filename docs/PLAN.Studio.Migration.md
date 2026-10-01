@@ -11,7 +11,7 @@ Status: in progress (2026-10-01).
 |---|---|---|---|
 | 1 | TODO-06 workspace shell, `PlotView` | [PLAN.Studio.Shell](PLAN.Studio.Shell.md) | committed `bb3f00e`; desktop regression + polish survey pending |
 | 2 | TODO-13 live list-mode acquisition | [PLAN.Studio.LiveAcquisition](PLAN.Studio.LiveAcquisition.md) | committed `0ed17e0`; desktop test migration pending |
-| 3 | TODO-07 Spectrum workspace | [PLAN.Studio.Spectrum](PLAN.Studio.Spectrum.md) | planned |
+| 3 | TODO-07 Spectrum workspace | [PLAN.Studio.Spectrum](PLAN.Studio.Spectrum.md) | implemented; desktop check pending |
 | 4 | TODO-08 imaging options (Compton strip, BSR, gain σ) | — (written when it starts) | open |
 | 5 | TODO-09 editable optics + presets | — | open |
 | 6 | TODO-10 Waveform workspace, front-end chain selection | — | open |

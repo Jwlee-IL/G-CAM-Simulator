@@ -1,0 +1,95 @@
+using CommunityToolkit.Mvvm.ComponentModel;
+using Gcam.Configuration;
+using Gcam.Studio.Core.Plotting;
+using Gcam.Studio.Core.Services;
+
+namespace Gcam.Studio.Core.ViewModels;
+
+/// <summary>View-only settings over the shared acquisition; late responses cannot overwrite newer data.</summary>
+public sealed partial class SpectrumWorkspaceViewModel : WorkspaceViewModel
+{
+    private readonly ISpectrumService _service;
+    private Guid _acquisitionId;
+    private IReadOnlyList<SpectrumLine> _lines = [];
+    private CancellationTokenSource? _refresh;
+    private int _revision;
+
+    public SpectrumWorkspaceViewModel(MainViewModel shared, ISpectrumService service)
+        : base("Spectrum", "Workspace.Spectrum")
+    { Shared = shared; _service = service; }
+
+    public MainViewModel Shared { get; }
+    public Task WhenUpdated { get; private set; } = Task.CompletedTask;
+    [ObservableProperty] private bool _logY = true;
+    [ObservableProperty] private double _windowFwhm = 1.5;
+    [ObservableProperty] private bool _pileUp;
+    [ObservableProperty] private SpectrumView? _view;
+    [ObservableProperty] private string? _error;
+    [ObservableProperty] private IReadOnlyList<PlotSeries> _series = [];
+    [ObservableProperty] private IReadOnlyList<PlotBand> _bands = [];
+    public IReadOnlyList<SpectrumBand> Lines => View?.Bands ?? [];
+    public string Summary => View is { } v
+        ? $"{v.TotalCounts:N0} measured pulses · {v.InWindowShare:P1} in windows · {v.OverflowCounts:N0} above plot range" : "No acquired counts";
+    public string Chain => FrontEndParts.Default.ToString();
+    public string Resolution => $"{_service.Resolution662:P2} FWHM at 662 keV";
+    public string ResolvingTime => $"Resolving time {_service.ResolvingTimeS * 1e9:F0} ns";
+
+    partial void OnWindowFwhmChanged(double value)
+    {
+        if (!double.IsFinite(value) || value <= 0) { WindowFwhm = 1.5; return; }
+        Refresh();
+    }
+    partial void OnPileUpChanged(bool value) => Refresh();
+
+    internal void Begin(IReadOnlyList<SceneSource> scene)
+    {
+        _refresh?.Cancel();
+        _revision++;
+        _acquisitionId = Guid.NewGuid();
+        _lines = scene.SelectMany(s => Isotopes.Get(s.Isotope).Lines.Select(l => new SpectrumLine(s.Isotope, l.EnergyKeV)))
+            .Distinct().ToArray();
+        View = null;
+        Series = [];
+        Bands = [];
+        Error = null;
+        NotifyReadings();
+    }
+
+    internal void Refresh()
+    {
+        _refresh?.Cancel();
+        _refresh?.Dispose();
+        _refresh = new CancellationTokenSource();
+        int revision = ++_revision;
+        WhenUpdated = UpdateAsync(revision, _refresh.Token);
+    }
+
+    private async Task UpdateAsync(int revision, CancellationToken token)
+    {
+        if (Shared.Snapshot is not { } snapshot || _lines.Count == 0) return;
+        try
+        {
+            var view = await _service.ProcessAsync(_acquisitionId, snapshot.Events, _lines,
+                new SpectrumSettings(WindowFwhm, PileUp), cancellationToken: token);
+            if (revision != _revision || token.IsCancellationRequested) return;
+            View = view;
+            Series = [new PlotSeries("Acquired counts", view.Counts, view.CentresKeV, Kind: PlotKind.Area)];
+            Bands = view.Bands.Select(b => new PlotBand(b.LoKeV, b.HiKeV, b.Label)).ToArray();
+            Error = null;
+            NotifyReadings();
+        }
+        catch (OperationCanceledException) when (token.IsCancellationRequested) { }
+        catch (Exception ex)
+        {
+            if (revision == _revision) Error = $"Spectrum failed: {ex.Message}";
+        }
+    }
+
+    private void NotifyReadings()
+    {
+        OnPropertyChanged(nameof(Lines));
+        OnPropertyChanged(nameof(Summary));
+        OnPropertyChanged(nameof(Resolution));
+        OnPropertyChanged(nameof(ResolvingTime));
+    }
+}

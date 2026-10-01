@@ -460,4 +460,35 @@
         <Setter Property="TextElement.FontFamily" Value="{StaticResource Font.Mono}" />
         <Setter Property="TextElement.FontSize" Value="{StaticResource FontSize.Caption}" />
     </Style>
+    <Style TargetType="CheckBox">
+        <Setter Property="Foreground" Value="{DynamicResource Brush.Text.Primary}" />
+        <Setter Property="FontFamily" Value="{StaticResource Font.UI}" />
+        <Setter Property="FontSize" Value="{StaticResource FontSize.Label}" />
+        <Setter Property="FocusVisualStyle" Value="{StaticResource FocusVisual}" />
+        <Setter Property="MinHeight" Value="{StaticResource Size.Control}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="CheckBox">
+                    <StackPanel Orientation="Horizontal">
+                        <Border x:Name="Box" Width="{StaticResource Size.Logo}" Height="{StaticResource Size.Logo}"
+                                BorderBrush="{DynamicResource Brush.Line.Control}" BorderThickness="{StaticResource Border.Hairline}"
+                                Background="{DynamicResource Brush.Bg.Raised}" CornerRadius="{StaticResource Radius.Control}"
+                                Margin="{StaticResource Gap.Inline}">
+                            <TextBlock x:Name="Tick" Text="✓" Visibility="Hidden" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                       Foreground="{DynamicResource Brush.Text.OnAccent}" />
+                        </Border>
+                        <ContentPresenter VerticalAlignment="Center" RecognizesAccessKey="True" />
+                    </StackPanel>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="Tick" Property="Visibility" Value="Visible" />
+                            <Setter TargetName="Box" Property="Background" Value="{DynamicResource Brush.Accent}" />
+                        </Trigger>
+                        <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Box" Property="BorderBrush" Value="{DynamicResource Brush.Accent.Hover}" /></Trigger>
+                        <Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.5" /></Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
 </ResourceDictionary>

@@ -10,11 +10,13 @@ public class MainViewModelTests
     [Fact]
     public void Workspace_SharedResultAndSelectionSurviveSnapshot_ViewSettingsDoNotMarkStale()
     {
-        var vm = new MainViewModel(new FakeAcquisition(), new FakeTheme());
-        Assert.Same(vm.Imaging, Assert.Single(vm.Workspaces));
+        var vm = new MainViewModel(new FakeAcquisition(), new FakeTheme(), new FakeSpectrumService());
+        Assert.Equal(2, vm.Workspaces.Count);
+        Assert.Same(vm.Imaging, vm.Workspaces[0]);
+        Assert.Same(vm.Spectrum, vm.Workspaces[1]);
         Assert.Same(vm.Imaging, vm.SelectedWorkspace);
         Assert.Equal("Workspace.Imaging", vm.Imaging.AutomationId);
-        Assert.False(vm.HasWorkspaceSwitch);
+        Assert.True(vm.HasWorkspaceSwitch);
         vm.Result = Image;
         Assert.Same(vm.Imaging, vm.SelectedWorkspace);
         Assert.Same(vm.Result, vm.Imaging.Shared.Result);
@@ -45,7 +47,7 @@ public class MainViewModelTests
     public void ThemeToggle_FlipsThemeAndRelabels()
     {
         var theme = new FakeTheme();
-        var vm = new MainViewModel(new FakeAcquisition(), theme);
+        var vm = new MainViewModel(new FakeAcquisition(), theme, new FakeSpectrumService());
         Assert.Equal("Light theme", vm.ThemeToggleLabel);
         vm.ToggleThemeCommand.Execute(null);
         Assert.Equal(AppTheme.Light, theme.Current);
@@ -55,7 +57,7 @@ public class MainViewModelTests
     [Fact]
     public void Startup_HasOneSelectedSource()
     {
-        var vm = new MainViewModel(new FakeAcquisition(), new FakeTheme());
+        var vm = new MainViewModel(new FakeAcquisition(), new FakeTheme(), new FakeSpectrumService());
         Assert.Single(vm.Sources);
         Assert.Same(vm.Sources[0], vm.SelectedSource);
         Assert.True(vm.StartCommand.CanExecute(null));
@@ -64,7 +66,7 @@ public class MainViewModelTests
     [Fact]
     public void AddRemove_SelectsNewSourceThenNeighbour()
     {
-        var vm = new MainViewModel(new FakeAcquisition(), new FakeTheme());
+        var vm = new MainViewModel(new FakeAcquisition(), new FakeTheme(), new FakeSpectrumService());
         vm.AddSourceCommand.Execute(null);
         vm.AddSourceCommand.Execute(null);
         Assert.Equal(3, vm.Sources.Count);
@@ -80,7 +82,7 @@ public class MainViewModelTests
     [Fact]
     public void RemoveAll_DisablesRemoveAndStart()
     {
-        var vm = new MainViewModel(new FakeAcquisition(), new FakeTheme());
+        var vm = new MainViewModel(new FakeAcquisition(), new FakeTheme(), new FakeSpectrumService());
         vm.RemoveSourceCommand.Execute(null);
         Assert.Empty(vm.Sources);
         Assert.Null(vm.SelectedSource);
@@ -108,7 +110,7 @@ public class MainViewModelTests
     [Fact]
     public void NewResult_RefreshesMeasurements()
     {
-        var vm = new MainViewModel(new FakeAcquisition(), new FakeTheme());
+        var vm = new MainViewModel(new FakeAcquisition(), new FakeTheme(), new FakeSpectrumService());
         vm.Imaging.Measurements.AddCommand.Execute(new MeasurementDraft(ImagePane.Flood, MeasurementKind.Roi,
             [new Gcam.Studio.Core.Imaging.Vec2(-5, -5), new Gcam.Studio.Core.Imaging.Vec2(5, 5)]));
         Assert.Equal("—", vm.Imaging.Measurements.Items[0].Value);

@@ -43,7 +43,7 @@ dotnet test tests/Gcam.Studio.Services.Tests   # SimulationService against the r
    `AutomationProperties.Name` only for glyph buttons and custom surfaces) and, if a test drives it, an
    `AutomationId`; custom controls have an automation peer. Never put a fixed `Name` on a text element — it hides
    the text.
-5. The engine is reached only through `IAcquisitionService`.
+5. Transport and spectrum processing reach the engine only through `IAcquisitionService` and `ISpectrumService`.
 6. Docs that describe a change are updated in the same commit.
 
 ## Verifying a UI change
@@ -70,3 +70,4 @@ name a helper `Select` (the `Select-Object` alias wins).
 | 4 | UI automation (6 scenarios traced to V&V; heatmap navigation next), keyboard crosshair for measuring, high-contrast mode, colormap choice | in progress |
 | Migration | One shared run, workspace templates and first-party `PlotView` (TODO-06); feature workspaces follow in TODO-07 … TODO-12 | implemented; plot CPU gate passed; existing desktop regression and polish survey blocked by desktop input / capture errors |
 | Live acquisition | Fresh list-mode MC, weight rejection, shared immutable 4 Hz snapshots, Start / Stop with preset live time and speed (TODO-13) | implemented; physics / headless validation in VV.Studio; desktop validation deferred while the desktop and UI-test project are occupied |
+| Spectrum | Shared live counts, physical default chain, per-energy windows with unresolved-line grouping, optional arrival-time pile-up (TODO-07) | implemented; headless evidence in VV.Studio; desktop validation deferred while the desktop and UI-test project are occupied |

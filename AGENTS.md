@@ -53,7 +53,7 @@ in `Directory.Build.props` (nullable + implicit usings enabled).
 | `src/…Wpf` | `Gcam.Wpf` (net9.0-windows, ScottPlot 5): interactive scene editor + Waveform/Imaging/Spectrum/Optics/Detector tabs; one acquisition drives all tabs. Can't be headless-tested — verify it *compiles* (theme 34–35) |
 | `src/…Studio*` | MVVM rewrite of the viewer (imaging workflow first), layered so the boundaries are enforced by the compiler: **`Gcam.Studio.Core`** (net9.0, no WPF — models, `IAcquisitionService`, ViewModels on CommunityToolkit.Mvvm) → **`Gcam.Studio.Services`** (net9.0 — `SimulationService`, the only Studio layer that touches the engine; publishes immutable list-mode acquisition snapshots at 4 Hz with Start / Stop) → **`Gcam.Studio`** (net9.0-windows — views, converters, DI composition root). Scene → config via `Configuration.SceneConfigBuilder`. `tests/Gcam.Studio.Tests` (net9.0) covers the ViewModels without a UI stack |
 | `src/…Cli` | Console entrypoint `montecarlo` (`Program.cs` = dispatch + single run; one static class per study group in `Commands/`): single run + **~41** study sub-commands (`sweep`, `fov`, `dose`, `scan`, `noise`, the Compton/depth/mask-geometry/mixed-field/front-end set, and the realism-gap set `thermal`…`doi` — see Build/run for the full list) |
-| `tests/…Tests` | xUnit harness — **254 engine cases** (original 246 + 8 list-mode; + 7 cocotb in `rtl/`); Studio has 69 Core cases, 8 service cases, 10 UI-oracle cases and 9 opt-in desktop cases. Current inventory and acquisition evidence: [VV.Studio](docs/VV.Studio.md), [VV.Studio.Acquisition](docs/VV.Studio.Acquisition.md). Physics tests cover MURA, pipeline / transport invariants, per-theme studies and list-mode histogram / timing laws. |
+| `tests/…Tests` | xUnit harness — **256 engine cases** (original 246 + 8 list-mode + 2 front-end preset compatibility; + 7 cocotb in `rtl/`); Studio has 70 Core cases, 17 service cases, 10 UI-oracle cases and 9 opt-in desktop cases. Current inventory and acquisition / spectrum evidence: [VV.Studio](docs/VV.Studio.md), [VV.Studio.Acquisition](docs/VV.Studio.Acquisition.md). Physics tests cover MURA, pipeline / transport invariants, per-theme studies and list-mode histogram / timing laws. |
 
 ### Design principle
 Everything is **data-driven**: one `SimulationConfig` (JSON) fully describes a
@@ -97,7 +97,7 @@ Coordinate frame (optical axis = z):
 
 ```bash
 dotnet build Gcam.sln -c Release
-dotnet test  Gcam.sln   # 254 engine + 69 Studio + 8 service + 10 UI-oracle cases (+9 desktop tests, skipped unless GCAM_UI_TESTS=1): MURA properties + pipeline
+dotnet test  Gcam.sln   # 256 engine + 70 Studio + 17 service + 10 UI-oracle cases (+9 desktop tests, skipped unless GCAM_UI_TESTS=1): MURA properties + pipeline
                                        # physics invariants + one class per theme (dead time,
                                        # sub-cell, cascade, non-prop, MLEM, DOI, …). 7 cocotb tests in rtl/.
 
