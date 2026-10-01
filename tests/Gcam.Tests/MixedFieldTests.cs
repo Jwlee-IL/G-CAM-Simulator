@@ -82,9 +82,12 @@ public class MixedFieldTests
     [Fact]
     public void MixedField_ThroughEnergyWindow_SeparatesIsotopesSpatially()
     {
-        // Cs-137 (662) + a strong Co-60 (1173+1332) imaged in ONE run through a 662 keV window +
+        // Cs-137 (662) + a stronger Co-60 (1173+1332) imaged in ONE run through a 662 keV window +
         // crystal Compton. The window admits both (Cs photopeak AND Co downscatter), but the coded
         // decode puts them at different positions -> both localize near their true sources.
+        // Limit (theme 52, physical GAGG cross sections): this holds up to Co:Cs = 2:1 activity at 3 M photons;
+        // from 4:1 the Co downscatter (55 % of the 662 window) buries the Cs peak. It held at 8:1 only with the
+        // old over-absorbing crystal model.
         var cfg = Base();
         cfg.PhotonCount = 3_000_000;
         cfg.Decoder.Cyclic = false;
@@ -95,7 +98,7 @@ public class MixedFieldTests
         cfg.Sources =
         [
             new SourceConfig { Position = [4, 0, 0.0], ActivityBq = 1.0, Lines = [new EmissionLine { EnergyKeV = 661.7, Intensity = 0.851 }] },
-            new SourceConfig { Position = [-5, 3, 0.0], ActivityBq = 8.0, Lines = [new EmissionLine { EnergyKeV = 1173.2, Intensity = 0.999 }, new EmissionLine { EnergyKeV = 1332.5, Intensity = 0.999 }] },
+            new SourceConfig { Position = [-5, 3, 0.0], ActivityBq = 2.0, Lines = [new EmissionLine { EnergyKeV = 1173.2, Intensity = 0.999 }, new EmissionLine { EnergyKeV = 1332.5, Intensity = 0.999 }] },
         ];
         var factory = new ComptonFactory(ComptonStrategy.PerPixelWindow, 661.7, 0.10);
         var r = new MixedFieldStudy(factory).LocalizeMultiple(cfg, k: 2, minSeparationMm: 3.0);
@@ -229,5 +232,21 @@ public class MixedFieldTests
             ActivityBq = 1.0, Lines = [new EmissionLine { EnergyKeV = e, Intensity = 1.0 }] }]; return c; }
         double wLow = Weight(One(122.1)), wHigh = Weight(One(1332.5));
         Assert.True(wHigh > wLow, $"1332 keV weight {wHigh:F1} should exceed 122 keV {wLow:F1} (more leak)");
+    }
+
+    [Fact]
+    public void SingleSourceWithLines_EmitsAllItsLines()
+    {
+        // A "source" with its own Lines used to run as its EnergyKeV only (theme 52): the Lines were ignored unless
+        // the source sat in Sources[]. Both spellings must now build the same multi-line emitter.
+        var lines = new[] { new EmissionLine { EnergyKeV = 1173.2, Intensity = 0.999 }, new EmissionLine { EnergyKeV = 1332.5, Intensity = 0.999 } };
+        var single = Base();
+        single.Source.EnergyKeV = 1252.0;
+        single.Source.Lines = lines;
+        var asList = Base();
+        asList.Sources = [new SourceConfig { Position = [0, 0, 0.0], ActivityBq = 1.0, Lines = lines }];
+
+        Assert.IsType<MixedFieldSource>(new DefaultSimulationFactory().CreateSource(single));
+        Assert.Equal(Weight(asList), Weight(single), 6);
     }
 }

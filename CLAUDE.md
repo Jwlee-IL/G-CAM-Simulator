@@ -21,8 +21,9 @@ cocotb RTL front-end path.
   cascade model) (122→1332 keV, cascade sum, low line under
   high-E Compton).
 - **The real rig's long-unsolved problem** was 662-keV window contamination — Co-60 downscatter
-  reading as Cs. Gcam's crystal-Compton **spatial + spectral** separation levers (themes 15–17,
-  26) are what crack it.
+  reading as Cs. Gcam's crystal-Compton **spectral** lever (per-pixel stripping, themes 16–17, 26) recovers
+  the Cs count; the **spatial** lever holds only up to Co:Cs ≈ 2:1 once the crystal uses physical GAGG cross
+  sections (theme 52 — the earlier, stronger result rested on an over-absorbing crystal model).
 - **Productization** (theme 22, design-only — not being built): GAGG:Ce,Mg, 16×16 @1 mm, D=55,
   15 mm crystal, rank-7, non-cyclic; weight is the SHIELD not the crystal; SiPM thermal drift is
   an **energy-window** issue, not a position issue.

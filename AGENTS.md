@@ -43,13 +43,13 @@ in `Directory.Build.props` (nullable + implicit usings enabled).
 | `src/…Core` | Domain primitives: `Vector3`, `Ray`, `Photon`, `IRandom`+`DefaultRandom`, `DetectorImage`, `Sampling`, `SubCellMethod`, result records, and the pipeline interfaces (`ISource`, `IMask`, `IDetector`, `IDecoder`) |
 | `src/…Configuration` | `SimulationConfig` (+ `Source`/`Mask`/`Detector`/`Geometry`/`Decoder`/`FrontEnd`/`Background` sections; multi-source `Sources[]` + `SourceConfig.Lines[]`/`EmissionLine` for mixed fields) and `ConfigLoader` (System.Text.Json) |
 | `src/…Masks` | `MaskPattern`, `MuraGenerator` (rank-p MURA, mosaic, decoding array), `CodedApertureMask` (`IMask`; focal/taper/pose/fabrication-error transforms), `MaskFabrication` (per-cell machining error) |
-| `src/…Detector` | `CrystalDetector` / `ComptonCrystalDetector` (`IDetector` — ray→pixel scoring, Compton transport), `ComptonModel` (Klein-Nishina), `CrystalUniformity` (per-pixel gain/resolution + photopeak window), `FrontEndModel` (photoelectron-budget resolution + DCR), `Waveform` (native C# shaper, bit-exact to RTL), `ThermalDrift` (gain/DCR/PDE vs T), `NonProportionality` (electron-response curves), `DetectorDefects` (dead/hot maps + repair), `MaskSecondary` (W fluorescence/scatter), `EntranceAbsorber` (source capsule/window) |
+| `src/…Detector` | `CrystalDetector` / `ComptonCrystalDetector` (`IDetector` — ray→pixel scoring, Compton transport), `ComptonModel` (Klein-Nishina), `CrystalMaterial` (μ(E) + photoelectric share per scintillator, from xraylib/NIST — theme 52), `CrystalUniformity` (per-pixel gain/resolution + photopeak window), `FrontEndModel` (photoelectron-budget resolution + DCR), `Waveform` (native C# shaper, bit-exact to RTL), `ThermalDrift` (gain/DCR/PDE vs T), `NonProportionality` (electron-response curves), `DetectorDefects` (dead/hot maps + repair), `MaskSecondary` (W fluorescence/scatter), `EntranceAbsorber` (source capsule/window) |
 | `src/…Decoding` | `CrossCorrelationDecoder` (`IDecoder`, ±1 back-projection + optional sub-cell interp), `MlemDecoder` (`IDecoder`, Poisson-likelihood ML-EM), `PeakInterpolation` (tent/parabolic/gaussian), `CodedApertureGeometry` |
 | `src/…Simulation` | `SimulationRunner`, `ISimulationFactory`/`DefaultSimulationFactory` (+ `ComptonFactory`), sources (`IsotropicSource`, `DetectorBiasedSource`, `MixedFieldSource`), `DecayScheme` (per-decay correlated gammas), `EventStreamStudy` (timed MC stream → pile-up), and one study class per theme (`SourceSweep`, `ParameterScan`, `NoiseStudy`, `ThicknessStudy`, `UniformityStudy`, `ArrayStudy`, `ComptonStudy`, `DepthStudy`/`DepthDesignStudy`, `MaskGeometryStudy`, `BackgroundStudy`, `ShieldStudy`, `MixedFieldStudy`, `MaskAntimaskStudy`, plus the realism-gap studies: `ThermalDriftStudy`/`ThermalReadoutStudy`, `MaskFabricationStudy`, `AlignmentStudy`, `DetectorDefectStudy`, `MaskSecondaryStudy`/`MaskScatterStudy`, `DeadTime`/`DeadTimeStudy`, `SubCellStudy`, `CascadeSummingStudy`, `NonProportionalityStudy`, `FiniteSourceStudy`, `MlemStudy`, `DoiParallaxStudy`) |
 | `src/…Wpf` | `Gcam.Wpf` (net9.0-windows, ScottPlot 5): interactive scene editor + Waveform/Imaging/Spectrum/Optics/Detector tabs; one acquisition drives all tabs. Can't be headless-tested — verify it *compiles* (theme 34–35) |
 | `src/…Studio*` | MVVM rewrite of the viewer (imaging workflow first), layered so the boundaries are enforced by the compiler: **`Gcam.Studio.Core`** (net9.0, no WPF — models, `ISimulationService`, ViewModels on CommunityToolkit.Mvvm) → **`Gcam.Studio.Services`** (net9.0 — `SimulationService`, the only Studio layer that touches the engine; runs the MC off the UI thread via `SimulationRunner.Run(config, progress, ct)`) → **`Gcam.Studio`** (net9.0-windows — views, converters, DI composition root). Scene → config via `Configuration.SceneConfigBuilder`. `tests/Gcam.Studio.Tests` (net9.0) covers the ViewModels without a UI stack |
 | `src/…Cli` | Console entrypoint `montecarlo`: single run + **~39** study sub-commands (`sweep`, `scan`, `noise`, the Compton/depth/mask-geometry/mixed-field/front-end set, and the realism-gap set `thermal`…`doi` — see Build/run for the full list) |
-| `tests/…Tests` | xUnit harness — **168 test cases** (+ 7 cocotb in `rtl/`; Studio has its own 44 in `tests/Gcam.Studio.Tests`, plus `tests/Gcam.Studio.UiTests`: 10 oracle cases and 7 opt-in desktop scenarios): MURA properties (`MuraGeneratorTests`) + end-to-end physics invariants (`PipelineTests`) + per-theme physics classes (localization, ghost, biasing-unbiased, stopping power, dead time, sub-cell, cascade, non-proportionality, MLEM, DOI, nuclide separation, Compton stripping, …) |
+| `tests/…Tests` | xUnit harness — **177 test cases** (+ 7 cocotb in `rtl/`; Studio has its own 44 in `tests/Gcam.Studio.Tests`, plus `tests/Gcam.Studio.UiTests`: 10 oracle cases and 7 opt-in desktop scenarios): MURA properties (`MuraGeneratorTests`) + end-to-end physics invariants (`PipelineTests`) + per-theme physics classes (localization, ghost, biasing-unbiased, stopping power, dead time, sub-cell, cascade, non-proportionality, MLEM, DOI, nuclide separation, Compton stripping, …) |
 
 ### Design principle
 Everything is **data-driven**: one `SimulationConfig` (JSON) fully describes a
@@ -93,7 +93,7 @@ Coordinate frame (optical axis = z):
 
 ```bash
 dotnet build Gcam.sln -c Release
-dotnet test  Gcam.sln   # 168 engine + 44 Studio + 10 UI-oracle cases (+7 desktop tests, skipped unless GCAM_UI_TESTS=1): MURA properties + pipeline
+dotnet test  Gcam.sln   # 177 engine + 44 Studio + 10 UI-oracle cases (+7 desktop tests, skipped unless GCAM_UI_TESTS=1): MURA properties + pipeline
                                        # physics invariants + one class per theme (dead time,
                                        # sub-cell, cascade, non-prop, MLEM, DOI, …). 7 cocotb tests in rtl/.
 
@@ -206,9 +206,9 @@ The full, theme-organized results log with reproduce commands and artifacts is i
   then unnecessary), and it does **not** remove a directional coded interferer (themes 28, and
   the mask/antimask trade note).
 - **Count threshold** ~25–50 detected counts; biasing gives ~100× fewer photons, unbiased.
-- **Compton multi-isotope separation (15–17, 26)**: crystal-Compton spatial + spectral
-  energy-window levers strip a high-energy isotope's downscatter out of a lower line's window —
-  the real rig's long-unsolved Co-60-reads-as-Cs problem, cracked in sim.
+- **Compton multi-isotope separation (15–17, 26)**: per-pixel spectral stripping removes a high-energy
+  isotope's downscatter from a lower line's window and recovers the Cs count (the real rig's Co-60-reads-as-Cs
+  problem); spatial separation alone holds only up to Co:Cs ≈ 2:1 with physical GAGG cross sections (theme 52).
 - **Depth (18–24, 34)**: z is recoverable via near-field magnification + depth-from-focus, but
   weak far (∝z²); 3D range extends by rank, not cell pitch. WPF fuses it with a rangefinder input.
 - **MLEM (48)**: Poisson-likelihood reconstruction is non-negative and resolves 2–3 mm source

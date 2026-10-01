@@ -5,24 +5,13 @@ namespace Gcam.Detector;
 /// <summary>
 /// Photon interaction physics inside the scintillator: the photoelectric-vs-Compton branch,
 /// the energy-dependent attenuation, and Klein-Nishina scattering (Kahn's exact rejection
-/// sampler). Approximations (parametrized, not tabulated cross-sections) tuned to a mid-Z
-/// scintillator (~GAGG) at gamma-camera energies; the point is the multi-pixel spreading of a
-/// Compton event, not spectroscopic-grade cross-sections.
+/// sampler). How often a photon interacts, and whether photoelectrically, is material data and lives in
+/// <see cref="CrystalMaterial"/> (it replaced the fitted power laws that used to be here: they were one curve
+/// for every crystal and off by up to ~50 % for GAGG — Findings theme 52).
 /// </summary>
 public static class ComptonModel
 {
     public const double MeC2 = 510.999;   // electron rest energy (keV)
-
-    /// <summary>Probability an interaction is photoelectric (full absorption) vs Compton, at
-    /// energy <paramref name="eKeV"/>. Tuned to ~0.9 @122, ~0.35 @662, ~0.15 @1332 keV.</summary>
-    public static double PhotoFraction(double eKeV)
-        => 1.0 / (1.0 + Math.Pow(eKeV / 460.0, 1.66));
-
-    /// <summary>Total linear attenuation at <paramref name="eKeV"/> relative to its value at
-    /// 662 keV (rises steeply at low energy as photoelectric takes over → short mean free path,
-    /// so a downscattered photon reabsorbs nearby).</summary>
-    public static double MuRel(double eKeV)
-        => Math.Pow(661.7 / Math.Max(eKeV, 1.0), 1.56);
 
     /// <summary>
     /// Klein-Nishina Compton scatter via Kahn's rejection method (exact, allocation-free).

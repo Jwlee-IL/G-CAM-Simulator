@@ -1,5 +1,5 @@
 {
-  "name": "Ir-192 (industrial radiography, URS RS-1) on axis, all nine lines",
+  "name": "Ir-192 (RS-1, all nine lines) in the theme-22 handheld head",
   "photonCount": 1000000,
   "seed": 12345,
   "source": {
@@ -9,7 +9,10 @@
       0.0,
       0.0,
       0.0
-    ]
+    ],
+    "activityBq": 1000000.0,
+    "acquisitionTimeSeconds": 1.0,
+    "branchingRatio": 0.851
   },
   "mask": {
     "type": "MURA",
@@ -18,16 +21,21 @@
     "mosaicY": 2,
     "thicknessMm": 10.0,
     "material": "Tungsten",
+    "linearAttenuationPerMm": 0.178,
     "cellPitchMm": 1.0
   },
   "detector": {
-    "pixelsX": 12,
-    "pixelsY": 12,
+    "pixelsX": 16,
+    "pixelsY": 16,
     "pixelPitchMm": 1.0,
-    "energyResolutionFwhm": 0.0
+    "material": "GAGG_Mg",
+    "crystalThicknessMm": 15.0,
+    "crystalAttenuationPerMm": 0.0513,
+    "energyResolutionFwhm": 0.07,
+    "decayTimeNs": 55.0
   },
   "geometry": {
-    "maskDetectorDistanceMm": 60.0,
+    "maskDetectorDistanceMm": 55.0,
     "sourceMaskDistanceMm": 100.0
   },
   "sources": [
@@ -38,7 +46,7 @@
         0.0,
         0.0
       ],
-      "activityBq": 1.0,
+      "activityBq": 1000000.0,
       "lines": [
         {
           "energyKeV": 316.5,

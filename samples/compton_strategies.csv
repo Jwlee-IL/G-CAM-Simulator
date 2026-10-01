@@ -1,6 +1,6 @@
 strategy,efficiency_rel,bias_mm,rms_mm,fail_rate
-Ideal (no Compton),1.000,0.550,0.560,0.000
-PerPixelWindow,0.243,0.550,0.783,0.000
-AntiCoincidence,0.238,0.550,0.983,0.005
-Argmax,0.376,0.550,0.742,0.000
-Centroid,0.376,0.550,1.040,0.010
+Ideal (no Compton),1.000,0.354,0.374,0.000
+PerPixelWindow,0.061,0.353,5.647,0.455
+AntiCoincidence,0.060,0.352,5.107,0.370
+Argmax,0.123,0.376,3.513,0.160
+Centroid,0.123,0.410,4.114,0.240

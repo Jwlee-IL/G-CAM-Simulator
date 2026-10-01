@@ -31,6 +31,7 @@ public sealed class ComptonCrystalDetector : IDetector
 {
     private readonly DetectorImage _image;
     private readonly double _pitch, _halfWidth, _halfHeight, _depth, _muAt662;
+    private readonly CrystalMaterial _material;
     private readonly double _windowCenterKeV, _windowFraction;
     private readonly ComptonStrategy _strategy;
     private readonly IRandom _rng;
@@ -48,18 +49,20 @@ public sealed class ComptonCrystalDetector : IDetector
 
     public ComptonCrystalDetector(int pixelsX, int pixelsY, double pixelPitchMm,
         double windowCenterKeV, double windowFraction, ComptonStrategy strategy, IRandom rng,
-        double muAt662PerMm = 0.09, double crystalDepthMm = 10.0, double planeZ = 0.0,
+        double? muAt662PerMm = null, double crystalDepthMm = 10.0, double planeZ = 0.0,
         double[]? sensitivity = null, Action<double, double>? eventSink = null,
         FrontEndModel? frontEnd = null, IRandom? frontEndRng = null,
         EntranceAbsorber? entranceAbsorber = null, EntranceAbsorber? backingScatterer = null,
-        double reflectorGapMm = 0.0, double opticalCrosstalk = 0.0)
+        double reflectorGapMm = 0.0, double opticalCrosstalk = 0.0, CrystalMaterial? material = null)
     {
         _image = new DetectorImage(pixelsX, pixelsY);
         _pitch = pixelPitchMm;
         _halfWidth = pixelsX * pixelPitchMm / 2.0;
         _halfHeight = pixelsY * pixelPitchMm / 2.0;
         _depth = crystalDepthMm;
-        _muAt662 = muAt662PerMm;
+        // The material's own μ(662) unless the config pins one (presets / older configs anchor it explicitly).
+        _material = material ?? CrystalMaterial.Gagg;
+        _muAt662 = muAt662PerMm ?? _material.MuPerMm(CrystalMaterial.ReferenceKeV);
         _windowCenterKeV = windowCenterKeV;
         _windowFraction = windowFraction;
         _strategy = strategy;
@@ -137,7 +140,7 @@ public sealed class ComptonCrystalDetector : IDetector
         var pos = new Vector3(entry.X, entry.Y, PlaneZ);
         for (int step = 0; step < 32 && e > 1.0; step++)
         {
-            double mu = _muAt662 * ComptonModel.MuRel(e);
+            double mu = _muAt662 * _material.MuRel(e);
             double s = -Math.Log(1.0 - _rng.NextDouble()) / mu;
             var prev = pos;
             pos += dir * s;
@@ -172,7 +175,7 @@ public sealed class ComptonCrystalDetector : IDetector
 
             int px = PixelIndex(pos.X, _halfWidth);
             int py = PixelIndex(pos.Y, _halfHeight);
-            if (_rng.NextDouble() < ComptonModel.PhotoFraction(e))
+            if (_rng.NextDouble() < _material.PhotoFraction(e))
             {
                 AddSite(px, py, e); e = 0.0; break;           // photoelectric: full absorption
             }

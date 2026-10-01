@@ -35,8 +35,8 @@ public class ComptonTests
     [Fact]
     public void PhotoFraction_DecreasesWithEnergy()
     {
-        Assert.True(ComptonModel.PhotoFraction(122) > ComptonModel.PhotoFraction(662));
-        Assert.True(ComptonModel.PhotoFraction(662) > ComptonModel.PhotoFraction(1332));
+        Assert.True(CrystalMaterial.Gagg.PhotoFraction(122) > CrystalMaterial.Gagg.PhotoFraction(662));
+        Assert.True(CrystalMaterial.Gagg.PhotoFraction(662) > CrystalMaterial.Gagg.PhotoFraction(1332));
     }
 
     [Fact]

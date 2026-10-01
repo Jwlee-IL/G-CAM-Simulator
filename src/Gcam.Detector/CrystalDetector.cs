@@ -16,12 +16,13 @@ public sealed class CrystalDetector : IDetector
     private readonly double _crystalMuPerMm;   // stopping power (0 = ideal, detect all)
     private readonly double _crystalDepthMm;
     private readonly EntranceAbsorber? _entrance;   // passive window/encapsulation in front (null = none)
+    private readonly CrystalMaterial _material;     // scales the 662 keV stopping to each photon's energy
 
     public double PlaneZ { get; }
 
     public CrystalDetector(int pixelsX, int pixelsY, double pixelPitchMm, double planeZ = 0.0,
                            double[]? sensitivity = null, double crystalMuPerMm = 0.0, double crystalDepthMm = 10.0,
-                           EntranceAbsorber? entranceAbsorber = null)
+                           EntranceAbsorber? entranceAbsorber = null, CrystalMaterial? material = null)
     {
         _image = new DetectorImage(pixelsX, pixelsY);
         _pixelPitchMm = pixelPitchMm;
@@ -32,6 +33,7 @@ public sealed class CrystalDetector : IDetector
         _crystalMuPerMm = crystalMuPerMm;
         _crystalDepthMm = crystalDepthMm;
         _entrance = entranceAbsorber;
+        _material = material ?? CrystalMaterial.Gagg;
     }
 
     public bool Score(Photon photon)
@@ -54,13 +56,15 @@ public sealed class CrystalDetector : IDetector
         double s = _sensitivity is null ? 1.0 : _sensitivity[py * _image.Width + px];
 
         // Stopping power: probability the photon interacts within the crystal depth
-        // (slant path = depth / |cos θ|). 0 mu = ideal (detect all).
+        // (slant path = depth / |cos θ|). 0 mu = ideal (detect all). The configured μ is the 662 keV value; the
+        // material's μ(E)/μ(662) scales it to this photon's energy (until 2026-10-01 every energy used the 662 keV
+        // stopping, which under-counted a 316 keV line in 15 mm GAGG by ~1.5×).
         double absorb = 1.0;
         if (_crystalMuPerMm > 0.0)
         {
             double absDz = Math.Abs(photon.Direction.Z);
             double path = absDz > 0.0 ? _crystalDepthMm / absDz : _crystalDepthMm;
-            absorb = 1.0 - Math.Exp(-_crystalMuPerMm * path);
+            absorb = 1.0 - Math.Exp(-_crystalMuPerMm * _material.MuRel(photon.EnergyKeV) * path);
         }
 
         double trans = _entrance is null ? 1.0 : _entrance.Transmit(photon.EnergyKeV);

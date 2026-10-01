@@ -32,14 +32,17 @@ public sealed record CascadeRow(
 public sealed class CascadeSummingStudy
 {
     private readonly double _detHalfW, _detHalfH, _openFraction, _muAt662, _depthMm, _fwhmAt662;
+    private readonly CrystalMaterial _material;
 
     public CascadeSummingStudy(double detHalfWidthMm, double detHalfHeightMm, double maskOpenFraction,
-                               double muAt662PerMm = 0.09, double crystalDepthMm = 10.0, double fwhmAt662 = 0.06)
+                               double? muAt662PerMm = null, double crystalDepthMm = 10.0, double fwhmAt662 = 0.06,
+                               CrystalMaterial? material = null)
     {
         _detHalfW = detHalfWidthMm;
         _detHalfH = detHalfHeightMm;
         _openFraction = maskOpenFraction;
-        _muAt662 = muAt662PerMm;
+        _material = material ?? CrystalMaterial.Gagg;
+        _muAt662 = muAt662PerMm ?? _material.MuPerMm(CrystalMaterial.ReferenceKeV);
         _depthMm = crystalDepthMm;
         _fwhmAt662 = fwhmAt662;
     }
@@ -112,11 +115,11 @@ public sealed class CascadeSummingStudy
         var dir = new Vector3(0.0, 0.0, -1.0);
         for (int bounce = 0; bounce < 24; bounce++)
         {
-            double mu = _muAt662 * ComptonModel.MuRel(energy);
+            double mu = _muAt662 * _material.MuRel(energy);
             double s = -Math.Log(1.0 - rng.NextDouble()) / mu;
             pos += dir * s;
             if (pos.Z > 0.0 || pos.Z < -_depthMm) return deposited;       // left the slab (front or back face)
-            if (rng.NextDouble() < ComptonModel.PhotoFraction(energy))
+            if (rng.NextDouble() < _material.PhotoFraction(energy))
             {
                 deposited += energy;                                       // photoelectric: full remaining energy
                 return deposited;

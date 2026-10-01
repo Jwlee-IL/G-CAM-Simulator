@@ -304,15 +304,17 @@ public sealed class DetectorConfig
 
     // --- Crystal material (stopping power / detection efficiency) ---
 
-    /// <summary>Scintillator material name (informational).</summary>
+    /// <summary>Scintillator material: a <c>CrystalMaterial</c> key (GAGG, GAGG_Mg, CeBr3, LaBr3, LYSO, BGO, NaI) whose
+    /// tabulated μ(E) and photoelectric share drive the crystal transport. "ideal" or an unknown name uses GAGG.</summary>
     public string Material { get; set; } = "ideal";
 
     /// <summary>Crystal depth in mm (stopping-power path). Used with the attenuation below.</summary>
     public double CrystalThicknessMm { get; set; } = 10.0;
 
     /// <summary>
-    /// Crystal linear attenuation (per mm) at the source energy. Detection efficiency =
-    /// 1 - exp(-mu * depth). 0 = ideal (every incident photon detected).
+    /// Crystal linear attenuation (per mm) at 661.7 keV — the anchor that <see cref="Material"/>'s μ(E)/μ(662)
+    /// scales to each photon's energy, so stopping = 1 - exp(-mu * MuRel(E) * path). 0 = ideal (every incident photon
+    /// detected) in the default detector; the Compton paths then use the material's own μ(662).
     /// </summary>
     public double CrystalAttenuationPerMm { get; set; } = 0.0;
 

@@ -25,7 +25,11 @@ public sealed class DefaultSimulationFactory : ISimulationFactory
         double SourceZOf(double[] pos) => pos.Length > 2 && pos[2] > 0.0 ? pos[2] : sourceZ;
 
         // Mixed-isotope field: build one emitter per (source, line), weighted by activity × intensity.
-        if (config.Sources is { Length: > 0 } scene)
+        // A single Source with its own Lines takes the same path: before 2026-10-01 it silently emitted only
+        // EnergyKeV, so a multi-line source written as "source": { "lines": [...] } ran as one line (theme 52).
+        var scene = config.Sources is { Length: > 0 } list ? list
+                  : config.Source.Lines is { Length: > 0 } ? new[] { config.Source } : null;
+        if (scene is not null)
         {
             var emitters = new List<(Vector3, double, double)>();
             foreach (var s in scene)
@@ -91,7 +95,8 @@ public sealed class DefaultSimulationFactory : ISimulationFactory
         double[]? sensitivity = nonUniform ? new CrystalUniformity(d).Sensitivity : null;
         var entrance = d.EntranceAbsorberMm > 0.0 ? new EntranceAbsorber(d.EntranceAbsorberMm) : null;
         return new CrystalDetector(d.PixelsX, d.PixelsY, d.PixelPitchMm, planeZ: 0.0, sensitivity,
-                                   d.CrystalAttenuationPerMm, d.CrystalThicknessMm, entrance);
+                                   d.CrystalAttenuationPerMm, d.CrystalThicknessMm, entrance,
+                                   CrystalMaterial.ForConfig(d.Material));
     }
 
     public IDecoder? CreateDecoder(SimulationConfig config)

@@ -75,6 +75,8 @@ Baseline scenario unless noted: Cs-137, rank-7 MURA (2×2 mosaic), 10 mm tungste
   `samples/antimask_scene.png`.
 
 ## 6. Crystal material
+
+> **Revised 2026-10-01 — [theme 52](#52-crystal-attenuation-from-tabulated-cross-sections--crystalmaterial-2026-10-01).** Efficiencies re-run with energy- and material-dependent stopping and physical μ(662) anchors: NaI 0.59e-4 < LaBr3 0.76e-4 ≈ CeBr3 0.77e-4 < GAGG 1.00e-4 < LYSO 1.13e-4 < BGO 1.23e-4 — same ranking.
 - **Detection efficiency tracks density** (1−exp(−μ·depth), 10 mm): NaI 0.67e-4 < CeBr3/LaBr3
   0.87e-4 < GAGG 1.08e-4 < LYSO 1.15e-4 < BGO 1.17e-4.
 - **GAGG's weakness is not efficiency** (dense) but poor resolution + high afterglow. Upgrades:
@@ -222,6 +224,8 @@ presets in `samples/isotopes/*.json`: multi-line + `cascadeCoincident` flag), ea
   imaging).
 
 ## 15. Crystal Compton scattering — positioning strategy + multi-isotope spatial separation — `ComptonModel`/`ComptonCrystalDetector`
+
+> **Revised 2026-10-01 — [theme 52](#52-crystal-attenuation-from-tabulated-cross-sections--crystalmaterial-2026-10-01).** With physical GAGG cross sections the single-pixel 662 keV window keeps 6 % (was 24 %), Co-60 downscatter is 55 % of that window (was 22 %), and spatial separation of Cs from Co holds only up to Co:Cs ≈ 2:1 activity (was shown at 8:1).
 Crystal-internal Compton is now modelled in the C# coded-aperture pipeline: `ComptonModel` (Kahn
 exact Klein-Nishina sampler, energy-dependent photoelectric fraction and attenuation) +
 `ComptonCrystalDetector` (tracks the multi-pixel cascade, then applies a positioning strategy).
@@ -271,6 +275,8 @@ it from all lower channels.
 - Reproduce: `python rtl/compton_stripping_study.py` → `rtl/compton_stripping.png`.
 
 ## 17. Combined lever — per-pixel Compton stripping inside the coded pipeline — `ComptonStudy.RunStripping`
+
+> **Revised 2026-10-01 — [theme 52](#52-crystal-attenuation-from-tabulated-cross-sections--crystalmaterial-2026-10-01).** Stripping still recovers the Cs count (stripped error 0–4 %), but the true in-window Cs count falls 93 → 30 and R rises 0.15 → 0.47.
 Themes 15 (spatial) and 16 (spectral) joined: strip the Co-60 downscatter out of the Cs-137 662 keV
 window **per pixel** (subtract `R × the pixel's Co-60-photopeak count`, R = the aggregate
 downscatter-into-662 / Co-photopeak ratio ≈ 0.15), **then decode**. Because the Co downscatter is coded
@@ -615,6 +621,8 @@ project's first cocotb co-simulation — it drives the DUT directly, replacing t
 ---
 
 ## 26. Mixed-isotope field imaged in one run — `MixedFieldSource` / `MixedFieldStudy`
+
+> **Revised 2026-10-01 — [theme 52](#52-crystal-attenuation-from-tabulated-cross-sections--crystalmaterial-2026-10-01).** `mixediso` at Co ×8: Cs NOT localised (8.75 mm); holds at Co ×2. `mixedstrip`: stripping still recovers Cs (≤ 11 %) but from 3 true counts (was 12).
 The core-capability gap closed: a REAL mixed field (several sources, each multi-line) imaged through the
 coded aperture in ONE Monte-Carlo run, instead of summing per-line runs. Config: `SimulationConfig.Sources[]`
 (scene) + `SourceConfig.Lines[]` (multi-line) + `EmissionLine{EnergyKeV, Intensity, CascadeCoincident}` — all
@@ -709,6 +717,8 @@ Poisson pile-up. End-to-end loop: MC physics → event stream → ADC waveform �
   and `python event_stream_study.py`.
 
 ## 28. Ambient background — a controllable, opt-in noise field — `BackgroundConfig` / `BackgroundStudy`
+
+> **Revised 2026-10-01 — [theme 52](#52-crystal-attenuation-from-tabulated-cross-sections--crystalmaterial-2026-10-01).** The isotropic-vs-normal photopeak difference is not significant with physical cross sections (71.0 % vs 71.2 % at 300 keV, 40 000 events); the 90.9 / 92.0 % figures below came from the over-absorbing model.
 The simulation had **no ambient/environmental background** (only source counting-noise + mask leakage +
 cross-isotope contamination); a real detector sees a diffuse field that raises the noise floor. Added it as a
 **controllable, opt-in** model, NOT a global always-on noise (which would silently move every prior baseline
@@ -1067,6 +1077,8 @@ the array's temperature drifts mid-acquisition — and what flood correction can
   `ThermalDriftTests`, +6.)
 
 ## 37. Random-coincidence pile-up SUM continuum in the spectrum — `EventStreamStudy.ApplyPileUp` / `montecarlo pileup`
+
+> **Revised 2026-10-01 — [theme 52](#52-crystal-attenuation-from-tabulated-cross-sections--crystalmaterial-2026-10-01).** Pile-up fractions roughly halve (e.g. 1 Mcps: 5.56 % → 3.26 %) — less of each event's energy is fully absorbed.
 Second physical-realism gap. Pile-up already lived in the RTL waveform (the shaper sees overlapping pulses) but NOT
 in the per-event ENERGY spectrum — the WPF Cs-137 spectrum had no two-events-summing continuum. The honest fix:
 realize the pile-up in the energy domain by MERGING the timed MC event stream, never by hand-adding a tail.
@@ -1234,6 +1246,8 @@ offset instead.
   (which proves only that interpolation beats the argmax and tent beats the floor).
 
 ## 44. True (cascade) coincidence summing — `DecayScheme` / `CascadeSummingStudy` / `montecarlo cascade`
+
+> **Revised 2026-10-01 — [theme 52](#52-crystal-attenuation-from-tabulated-cross-sections--crystalmaterial-2026-10-01).** Sum/single values fall (18 mm: sum/decay 1.15e-5 → 3.6e-6); the ∝ε² scaling stands (slope 2.04 → 2.16, noisier).
 First target from the **physics-realism audit** (5 Codex subsystem audits over themes 1–43; this was the source-audit's
 top structural gap): the sim emitted ONE photon per history, so two gammas from the SAME decay were never correlated.
 Real cascade isotopes emit coincident gammas that, if BOTH deposit in the crystal, SUM into one recorded event — a sum
@@ -1303,6 +1317,8 @@ impact + energy-window mitigation.
   "~25–35 %".
 
 ## 46. Scintillator non-proportionality — the intrinsic-resolution COMPONENT from first principles — `NonProportionality` / `NonProportionalityStudy` / `montecarlo nonprop`
+
+> **Revised 2026-10-01 — [theme 52](#52-crystal-attenuation-from-tabulated-cross-sections--crystalmaterial-2026-10-01).** Resolution components shift by 10–30 % (re-run CSV in `samples/`); the qualitative conclusions stand.
 Next physics-realism-audit item (crystal subsystem, item D): the front-end sets the crystal's intrinsic resolution as
 a hand-tuned CONSTANT (`FrontEndConfig.IntrinsicResolutionFwhm`, "GAGG ~0.05"). Its real origin is NON-PROPORTIONALITY:
 the light yield per keV, nP(E), varies with the depositing ELECTRON's energy. A full-energy gamma deposits through a
@@ -1470,6 +1486,8 @@ the `Gcam.Simulation`/`Gcam.Detector` layer and the app is verified to compile).
 
 ## 51. Ir-192 (industrial radiography) + tungsten μ(E) between 200 and 600 keV — `Isotopes` / `samples/isotopes/ir192.json` (2026-10-01)
 
+> **Revised 2026-10-01 — [theme 52](#52-crystal-attenuation-from-tabulated-cross-sections--crystalmaterial-2026-10-01).** The efficiencies quoted below were from a run that used only the 316.5 keV line (a single `source` ignored its `lines` — fixed in theme 52); with all nine lines and the corrected crystal: on-axis 2.05e-4, error 0.3 mm, ghost margin 1.15. The open crystal item is closed by theme 52.
+
 Ir-192 is reference source RS-1 of the locator concept (3.7 TBq radiography source) and the only reference source
 the engine could not run. Added from ENSDF (C. M. Baglin, Nucl. Data Sheets 113, 1871 (2012)) via IAEA LiveChart and
 NNDC NuDat — the same evaluation, checked line by line — and cross-checked by a Codex read-only review against an
@@ -1497,4 +1515,55 @@ keV β⁻, 205.8 / 484.6 keV EC), **2.137 γ/decay**, T½ 73.829 d. Pt / Os K X-
   Ir-192 count rates come out ~1.5× low. (b) `ComptonModel.MuRel` = (661.7/E)^1.56 for every material deviates from
   NIST GAGG by +54 % at 316 keV, +30 % at 468 keV and −48 % at 1332 keV. The RS-1 count-rate comparison (TODO-01
   step 8) waits for that fix; it is tracked as TODO-02.
+
+## 52. Crystal attenuation from tabulated cross sections — `CrystalMaterial` (2026-10-01)
+
+Found while adding Ir-192 (theme 51): the crystal physics was not material data. `CrystalDetector` stopped every
+energy with the 662 keV μ; `ComptonModel` used one power law for μ(E) and one curve for the photoelectric share, for
+every crystal; and the Compton paths defaulted to μ(662) = 0.09 /mm, which matches no preset (GAGG is 0.051).
+Against NIST/xraylib for GAGG the old curves were off by +54 % (μ, 316 keV) and the photoelectric share by 2.7×
+(0.35 vs 0.13 at 662 keV) — the modelled crystal was far more absorbing than real GAGG.
+
+**Fix.** `CrystalMaterial`: μ/ρ(E) (photo + Compton) and the photoelectric fraction per preset (GAGG, GAGG:Ce,Mg,
+CeBr3, LaBr3, LYSO, BGO, NaI), 20–3000 keV with points straddling every K edge, from xraylib 4.3.0 to 800 keV and
+Klein–Nishina above (`samples/materials/gen_crystal_tables.py`). Coherent scattering is left out on purpose (no
+energy deposit); pair production is negligible below 1.5 MeV. Both detectors and the cascade / non-proportionality
+studies use it; the configured μ(662) stays the anchor where a config sets one, otherwise the material's own value.
+Preset anchors were set to the physical values (they were 7–17 % off). Unknown or "ideal" materials use GAGG.
+
+**What changed (same commands, same seeds; before = the old model on the same code):**
+
+| Study | Before | After |
+|---|---|---|
+| `compton`: PerPixelWindow efficiency / RMS / fail | 24 % / 0.83 mm / 1 % | 6 % / 5.65 mm / 46 % |
+| `compton`: Co-60 share of the 662 window | 22 % | **55 %** |
+| `compton-strip`: R; true Cs; stripped error | 0.150; 93; 0 % | 0.469; 30; 0–4 % |
+| `mixediso` (Co ×8): Cs error | 0.47 mm | **8.75 mm (lost)** — holds at Co ×2, fails from ×4 |
+| `mixedstrip`: R; true Cs; stripped error | 1.16; 12; 0–1 % | 3.97; 3; 0–11 % |
+| `cascade` (18 mm): sum / decay; ε² slope | 1.15e-5; 2.04 | 3.6e-6; 2.16 |
+| `pileup` at 1 Mcps: pile-up fraction | 5.56 % | 3.26 % |
+| `eventstream`, `deadtime`, `frontend` | — | unchanged |
+| Material presets (efficiency, 10 mm) | NaI 0.67 … BGO 1.17e-4 | NaI 0.59 … BGO 1.23e-4, same ranking |
+| Handheld head, Cs-137 (MC vs URS analytic 2.44e-4) | 2.65e-4 (+8 %) | 2.48e-4 (+2 %) |
+
+**What it means.** The spectral lever survives: per-pixel stripping still recovers a co-located Cs count. The
+spatial lever is weaker than reported: through a 662 keV window in 1 mm GAGG pixels, Co-60 downscatter is the
+majority of the window, and the Cs peak is lost once Co-60 is ~4× stronger. Fewer full-energy single-pixel events
+also mean far fewer counts per photon, so localisation at a fixed photon budget degrades (the RMS / fail rates
+above). The earlier, better numbers rested on a crystal that absorbed too much and too photoelectrically.
+
+**Ir-192 count rate (TODO-01 step 8).** Per emitted photon in the theme-22 head: Ir-192 (all nine lines)
+2.62e-4 vs Cs-137 2.48e-4; the URS's analytic estimate (662 keV stopping for every line) is 2.44e-4, so it
+under-states Ir-192 by ~7 %: RS-1 ≈ 1.07 Mcps at 10 mSv/h and ≈ 1.07 kcps at 10 µSv/h (was 1.0 / 1.0).
+
+**Also fixed.** A single `source` with `lines` silently emitted only its `energyKeV` (multi-line emission worked only
+in `sources[]`) — it affected `scenario_co60.json` (used only for its isotope name by `cascade`) and the first
+Ir-192 scenario (theme 51 numbers corrected above). Test `SingleSourceWithLines_EmitsAllItsLines`.
+
+**Note on sample CSVs.** Before this change, re-running `compton` / `mixediso` / `mixedstrip` / `compton-strip` on the
+unmodified code already produced different CSVs from the committed ones (e.g. bias 0.354 vs 0.550 mm): those
+committed outputs were from an older code state. They are regenerated here.
+
+Tests: `CrystalMaterialTests` (NIST mixture, K-edge step, photoelectric ordering by Z), two tests re-stated to the
+measured physics (theme 28 angular result; mixed-field separation at Co ×2), `SingleSourceWithLines_EmitsAllItsLines`.
 

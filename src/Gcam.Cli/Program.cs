@@ -291,8 +291,8 @@ static int RunMixedIso(string[] args)
 
     Console.WriteLine("Mixed field through the 662 keV window (crystal-Compton), ONE run:");
     Console.WriteLine($"  Cs-137 @ ({csPos[0]},{csPos[1]}) + Co-60 @ ({coPos[0]},{coPos[1]}) (Co ACTIVITY ×8)");
-    Console.WriteLine("  The 662 window can't reject Co downscatter (energy alone fails), but the coded");
-    Console.WriteLine("  decode images Cs at its position and the Co contamination at Co's — SPATIAL separation.");
+    Console.WriteLine("  The 662 window can't reject Co downscatter (energy alone fails); the question is whether");
+    Console.WriteLine("  the coded decode still images Cs at its position and the contamination at Co's.");
     Console.WriteLine();
     Console.WriteLine("  true (x,y)      matched peak (x,y)      error");
     Console.WriteLine("  -------------   -------------------    -------");
@@ -306,10 +306,16 @@ static int RunMixedIso(string[] args)
     File.WriteAllText("samples/mixediso_recon.csv", sb.ToString());
     File.WriteAllText("samples/mixediso.csv", MixedFieldStudy.ToCsv(r));
     Console.WriteLine();
-    Console.WriteLine("Cs and the Co-downscatter contamination land at DIFFERENT positions in the 662-window");
-    Console.WriteLine("image — the coded decode separates the two components by POSITION (theme 15, now from a");
-    Console.WriteLine("TRUE mixed field). Isotope ID of CO-LOCATED sources still needs the spectral lever");
-    Console.WriteLine("(per-pixel stripping, theme 16-17). CSV: samples/mixediso{,_recon}.csv");
+    // The conclusion follows the result: with the physical GAGG cross sections (theme 52) the Co downscatter fills
+    // ~55 % of the 662 window, and at Co ×8 the Cs peak is lost; separation holds up to ~Co ×2.
+    bool allFound = MixedFieldStudy.MatchOneToOne(r.TruthXY, r.Found).All(m => m.ErrorMm < 2.5);
+    Console.WriteLine(allFound
+        ? "Both land at their own positions in the 662-window image: the coded decode separates the Cs photopeak\n" +
+          "from the Co downscatter by POSITION."
+        : "NOT separated: the Co downscatter in the 662 window buries the Cs peak at this activity ratio (with\n" +
+          "physical GAGG cross sections spatial separation holds up to about Co ×2 — Findings theme 52).");
+    Console.WriteLine("Isotope ID of CO-LOCATED sources needs the spectral lever (per-pixel stripping, theme 16-17).");
+    Console.WriteLine("CSV: samples/mixediso{,_recon}.csv");
     return 0;
 }
 
@@ -1439,13 +1445,15 @@ static int RunNonProp(string[] args)
 
     string csvPath = args.Length >= 3 ? args[2] : "samples/nonprop.csv";
     var cfg = ConfigLoader.Load(args[1]);
-    double mu662 = cfg.Detector.CrystalAttenuationPerMm > 0 ? cfg.Detector.CrystalAttenuationPerMm : 0.09;
+    var crystalMaterial = CrystalMaterial.ForConfig(cfg.Detector.Material);
+    double mu662 = cfg.Detector.CrystalAttenuationPerMm > 0 ? cfg.Detector.CrystalAttenuationPerMm
+                                                            : crystalMaterial.MuPerMm(CrystalMaterial.ReferenceKeV);
     double depth = cfg.Detector.CrystalThicknessMm > 0 ? cfg.Detector.CrystalThicknessMm : 10.0;
     double[] energies = [122, 356, 511, 662, 1000, 1332];
     var crystals = new[] { NonProportionality.Proportional, NonProportionality.Gagg, NonProportionality.NaI, NonProportionality.CsI };
     const long samples = 1_000_000;
 
-    var (pts, spectra, bin, max) = new NonProportionalityStudy(mu662, depth)
+    var (pts, spectra, bin, max) = new NonProportionalityStudy(mu662, depth, crystalMaterial)
         .Run(energies, crystals, samples, cfg.Seed, spectrumEnergyKeV: 662.0);
     File.WriteAllText(csvPath, NonProportionalityStudy.ToCsv(pts));
     var ss = new System.Text.StringBuilder();
@@ -1558,7 +1566,10 @@ static int RunCascade(string[] args)
     const long decays = 8_000_000;
     double specDist = dists[0];
 
-    var study = new CascadeSummingStudy(detHalf, detHalf, maskOpenFraction: 0.5);
+    var d = cfg.Detector;
+    var study = new CascadeSummingStudy(detHalf, detHalf, maskOpenFraction: 0.5,
+        muAt662PerMm: d.CrystalAttenuationPerMm > 0 ? d.CrystalAttenuationPerMm : null,
+        crystalDepthMm: d.CrystalThicknessMm, material: CrystalMaterial.ForConfig(d.Material));
     var (rows, spec, specBin, specMax) = study.Run(scheme, dists, decays, cfg.Seed, specDist);
 
     File.WriteAllText(csvPath, CascadeSummingStudy.ToCsv(rows));

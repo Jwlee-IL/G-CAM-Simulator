@@ -30,10 +30,12 @@ public sealed record NonPropPoint(
 public sealed class NonProportionalityStudy
 {
     private readonly double _muAt662, _depthMm;
+    private readonly CrystalMaterial _material;
 
-    public NonProportionalityStudy(double muAt662PerMm = 0.09, double crystalDepthMm = 10.0)
+    public NonProportionalityStudy(double? muAt662PerMm = null, double crystalDepthMm = 10.0, CrystalMaterial? material = null)
     {
-        _muAt662 = muAt662PerMm;
+        _material = material ?? CrystalMaterial.Gagg;
+        _muAt662 = muAt662PerMm ?? _material.MuPerMm(CrystalMaterial.ReferenceKeV);
         _depthMm = crystalDepthMm;
     }
 
@@ -102,11 +104,11 @@ public sealed class NonProportionalityStudy
         var dir = new Vector3(0.0, 0.0, -1.0);
         for (int step = 0; step < 32 && e > 1.0; step++)
         {
-            double mu = _muAt662 * ComptonModel.MuRel(e);
+            double mu = _muAt662 * _material.MuRel(e);
             double s = -Math.Log(1.0 - rng.NextDouble()) / mu;
             pos += dir * s;
             if (pos.Z > 0.0 || pos.Z < -_depthMm) return false;   // escaped the slab → not full-energy
-            if (rng.NextDouble() < ComptonModel.PhotoFraction(e))
+            if (rng.NextDouble() < _material.PhotoFraction(e))
             {
                 sites.Add(e);                                     // photoelectric: the remaining energy → one electron
                 return true;

@@ -14,10 +14,11 @@ public sealed class ComptonFactory : ISimulationFactory
 {
     private readonly DefaultSimulationFactory _base = new();
     private readonly ComptonStrategy _strategy;
-    private readonly double _windowCenterKeV, _windowFraction, _muAt662;
+    private readonly double _windowCenterKeV, _windowFraction;
+    private readonly double? _muAt662;
 
     public ComptonFactory(ComptonStrategy strategy, double windowCenterKeV, double windowFraction,
-                          double muAt662PerMm = 0.09)
+                          double? muAt662PerMm = null)
     {
         _strategy = strategy;
         _windowCenterKeV = windowCenterKeV;
@@ -42,9 +43,11 @@ public sealed class ComptonFactory : ISimulationFactory
         var frontEndRng = frontEnd is null ? null : new DefaultRandom(config.Seed + 888);
         var entrance = d.EntranceAbsorberMm > 0.0 ? new EntranceAbsorber(d.EntranceAbsorberMm) : null;
         var backing = d.BackingScatterMm > 0.0 ? new EntranceAbsorber(d.BackingScatterMm) : null;
+        // μ(662): explicit factory argument, else the config's anchor, else the material's own value.
+        double? mu662 = _muAt662 ?? (d.CrystalAttenuationPerMm > 0.0 ? d.CrystalAttenuationPerMm : null);
         return new ComptonCrystalDetector(d.PixelsX, d.PixelsY, d.PixelPitchMm,
             _windowCenterKeV, _windowFraction, _strategy, cascadeRng,
-            _muAt662, d.CrystalThicknessMm, planeZ: 0.0, sensitivity, eventSink: null, frontEnd, frontEndRng,
-            entrance, backing, d.ReflectorGapMm, d.OpticalCrosstalkFraction);
+            mu662, d.CrystalThicknessMm, planeZ: 0.0, sensitivity, eventSink: null, frontEnd, frontEndRng,
+            entrance, backing, d.ReflectorGapMm, d.OpticalCrosstalkFraction, CrystalMaterial.ForConfig(d.Material));
     }
 }

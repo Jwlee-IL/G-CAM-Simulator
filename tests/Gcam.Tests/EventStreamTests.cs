@@ -76,14 +76,18 @@ public class EventStreamTests
     }
 
     [Fact]
-    public void IsotropicBackground_DepositsDifferFromNormalIncidence()
+    public void IsotropicBackground_PhotopeakFraction_MatchesNormalIncidence_InThisSmallCrystal()
     {
-        // Isotropic (cosine-hemisphere) background rays hit the crystal at a spread of angles, so their
-        // path lengths differ from straight-down photons — the deposit spectrum's photopeak fraction shifts.
+        // Oblique (cosine-hemisphere) rays travel further in depth but escape more through the sides of a 12×12×10 mm
+        // crystal. With the physical GAGG cross sections (theme 52) the two cancel: 71.0 % vs 71.2 % at 40 000 events.
+        // (With the old over-absorbing model the shift was > 1 % — a test of that would now be testing the bug.)
         var cfg = Base();
         double e = 300.0;
-        double[] iso = EventStreamStudy.BackgroundDepositSpectrum(cfg, e, 4000, isotropic: true);
-        double[] norm = EventStreamStudy.BackgroundDepositSpectrum(cfg, e, 4000, isotropic: false);
+        const int n = 20_000;
+        double[] iso = EventStreamStudy.BackgroundDepositSpectrum(cfg, e, n, isotropic: true);
+        double[] norm = EventStreamStudy.BackgroundDepositSpectrum(cfg, e, n, isotropic: false);
+        Assert.Equal(n, iso.Length);
+        Assert.Equal(n, norm.Length);
 
         double PhotopeakFrac(double[] a)
         {
@@ -91,8 +95,9 @@ public class EventStreamTests
             return (double)pp / a.Length;
         }
         double fi = PhotopeakFrac(iso), fn = PhotopeakFrac(norm);
-        Assert.True(System.Math.Abs(fi - fn) > 0.01,
-            $"angular model should shift the photopeak fraction: iso {fi:P1} vs normal {fn:P1}");
+        double sigma = System.Math.Sqrt(fi * (1 - fi) / n + fn * (1 - fn) / n);
+        Assert.True(System.Math.Abs(fi - fn) < 3 * sigma,
+            $"iso {fi:P2} vs normal {fn:P2} differ by more than 3σ ({3 * sigma:P2})");
     }
 
     [Fact]

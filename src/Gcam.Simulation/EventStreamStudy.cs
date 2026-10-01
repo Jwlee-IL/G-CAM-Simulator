@@ -56,10 +56,11 @@ public sealed class EventStreamStudy
         var backing = d.BackingScatterMm > 0.0 ? new EntranceAbsorber(d.BackingScatterMm) : null;
         var detector = new ComptonCrystalDetector(d.PixelsX, d.PixelsY, d.PixelPitchMm,
             windowCenterKeV: 661.7, windowFraction: 1.0, ComptonStrategy.Argmax, cascadeRng,
-            muAt662PerMm: 0.09, d.CrystalThicknessMm, planeZ: 0.0, sensitivity,
+            muAt662PerMm: d.CrystalAttenuationPerMm > 0.0 ? d.CrystalAttenuationPerMm : null, d.CrystalThicknessMm,
+            planeZ: 0.0, sensitivity,
             eventSink: (dep, w) => { deposits.Add(dep); weights.Add(w); },
             entranceAbsorber: entrance, backingScatterer: backing, reflectorGapMm: d.ReflectorGapMm,
-            opticalCrosstalk: d.OpticalCrosstalkFraction);
+            opticalCrosstalk: d.OpticalCrosstalkFraction, material: CrystalMaterial.ForConfig(d.Material));
 
         foreach (var photon in source.Emit(rng, config.PhotonCount))
         {
@@ -203,8 +204,9 @@ public sealed class EventStreamStudy
         var deposits = new List<double>(count);
         var det = new ComptonCrystalDetector(d.PixelsX, d.PixelsY, d.PixelPitchMm,
             windowCenterKeV: 661.7, windowFraction: 1.0, ComptonStrategy.Argmax, cascadeRng,
-            muAt662PerMm: 0.09, d.CrystalThicknessMm, planeZ: 0.0, sensitivity: null,
-            eventSink: (dep, _) => deposits.Add(dep));
+            muAt662PerMm: d.CrystalAttenuationPerMm > 0.0 ? d.CrystalAttenuationPerMm : null, d.CrystalThicknessMm,
+            planeZ: 0.0, sensitivity: null,
+            eventSink: (dep, _) => deposits.Add(dep), material: CrystalMaterial.ForConfig(d.Material));
 
         double halfW = d.PixelsX * d.PixelPitchMm / 2.0, halfH = d.PixelsY * d.PixelPitchMm / 2.0;
         var entryRng = new DefaultRandom((config.Seed ?? 0) + 556);

@@ -191,3 +191,8 @@ TILT (pitch/yaw), mask WARPING.
   iteration's near-field coupling trap (lateral RMS 3.6→0.37 mm); far field stays physics-limited.
 - **25**: trapezoidal shaper (Jordanov-Knoll) in RTL + first cocotb co-sim (bit-exact vs reference,
   TESTS=2 PASS=2); flat-top energy, pole-zero baseline restoration, pile-up separation.
+- **51** (2026-10-01): Ir-192 reference source (RS-1) — ENSDF lines, NIST tungsten points 200–600 keV, cascade
+  explicitly not modelled; RS-1 per-photon efficiency vs the URS estimate in theme 52.
+- **52** (2026-10-01): crystal attenuation from tabulated cross sections (`CrystalMaterial`, 7 scintillators) —
+  replaced fitted curves that made the crystal over-absorbing; themes 6, 15, 17, 26, 28, 37, 44, 46 re-run
+  (spatial Cs/Co separation now holds only to Co:Cs ≈ 2:1); single `source` with `lines` now emits all lines.
