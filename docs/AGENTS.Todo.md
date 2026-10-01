@@ -8,7 +8,7 @@ done list (and Findings, if it produced a result) in the same commit; its plan s
 | ID | Task | Origin | Owner | State |
 |---|---|---|---|---|
 | TODO-07 | Spectrum workspace — [PLAN.Studio.Spectrum](PLAN.Studio.Spectrum.md) | `Gcam.Wpf` Spectrum tab | Studio session | committed `45eece8`; checked on the desktop (survey) |
-| TODO-09 | Editable optics, presets, focal-plane refocus, derived geometry readout — [PLAN.Studio.Optics](PLAN.Studio.Optics.md) | `Gcam.Wpf` Optics / Presets tab | Studio session | reference plan; Codex reviews first, then implements |
+| TODO-09 | Editable optics, presets, focal-plane refocus, derived geometry readout — [PLAN.Studio.Optics](PLAN.Studio.Optics.md) | `Gcam.Wpf` Optics / Presets tab | Studio session | reviewed by Codex, plan revised; implementing |
 | TODO-10 | Waveform workspace: front-end chain presets, ADC + shaped traces | `Gcam.Wpf` Waveform tab | Studio session | open (needs `PlotView` decimation) |
 | TODO-11 | Detector workspace (reflector gap, SiPM pitch, crosstalk) and depth (3D) / rangefinder in Imaging | `Gcam.Wpf` Detector tab, Imaging depth | Studio session | open |
 | TODO-12 | Delete `src/Gcam.Wpf`; update `Gcam.sln`, CI, AGENTS / README / VV.Studio; README screenshot of Studio | end of the migration | Studio session | open (last) |
@@ -16,6 +16,7 @@ done list (and Findings, if it produced a result) in the same commit; its plan s
 | TODO-14 | Per-decay list-mode emission: correlated cascade gammas (Co-60 1173 + 1332) with one arrival time, so true coincidence summing comes out of the pile-up stage | found in TODO-08 phase A (wrong premise in R-2) | — | open — needs an engine design (biasing vs angular correlation) |
 | TODO-15 | Spectrum graph: histogram steps, view kept during live acquisition, Y auto-scale to the visible range, bin readout with units, laid-out band labels, zoom-to-window — [PLAN.Studio.SpectrumPlot](PLAN.Studio.SpectrumPlot.md) | author 2026-10-01 (focus on the spectrum graph) | Studio session | implemented; offscreen snapshots in `docs/assets/studio-plot` — polish follow-ups listed in the plan |
 | TODO-16 | UI polish in batches — batch 1: design-system level (units, round ticks, input sizing, labels, plot axis and band colours) with whole-window render snapshots — [PLAN.Studio.Polish](PLAN.Studio.Polish.md) | author 2026-10-01 (polish is the focus) | Studio session | batches 1–2 done; layout batch after the workspaces exist |
+| TODO-18 | Re-measure the configuration-scan headline (Findings theme 3 / VV.Gcam.Evidence EV-03: rank 23 "usable ±64 mm, 96 %", the README's max-FOV pick). Codex's TODO-09 review measured 0.149 usable for rank 23 (0.975 for rank 7) under the stated conditions (ParameterScan, S = 100, 12×12 @ 1 mm, cell 1 mm, D 20 mm, 11×11 sweep, 200 000 photons/point). Find which is right and why; correct Findings / EV-03 / README if needed | PLAN.Studio.Optics.Review, 2026-10-02 | — | open — high priority (portfolio headline) |
 
-Next free ID: TODO-18. TODO-06 … TODO-13 are the `Gcam.Wpf` → Studio migration; order and shared decisions:
+Next free ID: TODO-19. TODO-06 … TODO-13 are the `Gcam.Wpf` → Studio migration; order and shared decisions:
 [PLAN.Studio.Migration](PLAN.Studio.Migration.md) (06 → 13 → 07 → 08 …).
