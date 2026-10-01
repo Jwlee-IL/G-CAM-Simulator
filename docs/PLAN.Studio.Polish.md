@@ -5,7 +5,7 @@ Scope: the polish work the author made the focus on 2026-10-01 — what each bat
 (`docs/assets/studio-polish-survey/README.md`, P-xx) and the plot snapshots (`docs/assets/studio-plot/`). Order and
 the testing rule: [PLAN.Studio.Migration](PLAN.Studio.Migration.md).
 
-Status: batch 1 done 2026-10-01 (renders in `docs/assets/studio-render/`); batch 2 candidates listed below.
+Status: batch 1 done 2026-10-01 (renders in `docs/assets/studio-render/`); batch 2 handed to Codex the same day.
 
 ## Batch 1 — design-system level (new workspaces inherit these)
 
@@ -31,13 +31,25 @@ workspaces, from a deterministic acquisition snapshot supplied by a fake acquisi
 Output: `docs/assets/studio-render/{imaging,spectrum}-{dark,light}-{1280x800,1440x900}.png`, plus the existing plot
 snapshots re-rendered. Before / after for this batch = the survey captures vs these renders.
 
-## Seen in the batch-1 renders (batch 2 candidates)
+## Batch 2 — seen in the batch-1 renders
 
 | # | Issue | Cause (checked) |
 |---|---|---|
 | B2-1 | "Background B…" label truncated; the editable Gain σ / Gain seed / Background fields sit under the "Geometry — read-only" header | phase A added inputs to the read-only geometry block; `Size.FieldLabel` (84) is too narrow for "Background BSR" |
 | B2-2 | A narrow band's label ("32.1 + 36.4 keV") is crossed by the band's own edge lines | edges are drawn over the label row; the label is wider than the band |
 | B2-3 | FCFOV value blank in the renders (fine in the app) | `MainWindow.xaml` binds through `RelativeSource AncestorType=Window`, which the offscreen render (content detached from the window) cannot resolve — such bindings also tie views to the window type |
+
+Fixes:
+- **B2-1** Split the left panel's lower part into **Geometry** (read-only facts: mask, pitch, distances, detector,
+  focal plane, FCFOV) and **Detector** (read-only facts: entrance, backing, reflector gap; editable run inputs:
+  gain σ with a "%" suffix, gain seed, background with a "× signal" (BSR) suffix). Labels short enough for
+  `Size.FieldLabel`; the "read-only" caption only on the section that is. AutomationIds of the fields unchanged.
+- **B2-2** Band labels are drawn after the band edges on a plate of the plot background colour (padding from the
+  metrics), so no edge or grid line crosses the text; a label wider than its band stays centred and clamped as now.
+- **B2-3** No `RelativeSource AncestorType=Window` bindings in views (three today: the workspace command, the
+  selected-source `IsEnabled`, FCFOV). Bind to the view model through the data context that is already there (an
+  element name on the root content, or the workspace / panel's own context), so a view works the same inside the
+  window and in the offscreen render; the FCFOV value then shows in the renders.
 
 ## Later batches (after the workspaces exist)
 
