@@ -17,7 +17,7 @@ Scope: the three Studio projects and their tests. The simulation engine's own ar
 flowchart TB
     subgraph WPF["Gcam.Studio (net9.0-windows)"]
         Views["Views<br/>XAML + minimal code-behind"]
-        Controls["Controls<br/>HeatmapView, ColorBar"]
+        Controls["Controls<br/>HeatmapView, ColorBar, MeasurementAdorner"]
         Conv["Converters"]
         Themes["Themes<br/>tokens · metrics · typography · control styles"]
         WpfSvc["Services (WPF)<br/>ThemeService"]
@@ -27,9 +27,9 @@ flowchart TB
         SimSvc["SimulationService"]
     end
     subgraph CORE["Gcam.Studio.Core (net9.0, no WPF)"]
-        VM["ViewModels<br/>MainViewModel, SourceItemViewModel"]
+        VM["ViewModels<br/>MainViewModel, SourceItemViewModel,<br/>MeasurementsViewModel, MeasurementViewModel"]
         Contracts["Service contracts<br/>ISimulationService, IThemeService"]
-        Geo["Imaging<br/>HeatmapViewport"]
+        Geo["Imaging<br/>HeatmapViewport, MeasurementMath, IPlaneMarker"]
     end
     subgraph ENGINE["Engine"]
         Sim["Gcam.Simulation"]
@@ -51,7 +51,7 @@ flowchart TB
 
 | Project | Target | Contains | May reference | Must not contain |
 |---|---|---|---|---|
-| `Gcam.Studio.Core` | net9.0 | ViewModels, models (`ImagingResult`, `RunState`), service contracts, UI-free view geometry (`HeatmapViewport`) | `Gcam.Core`, `Gcam.Configuration`, CommunityToolkit.Mvvm | any `System.Windows.*` type (it would not compile), I/O, the simulation engine |
+| `Gcam.Studio.Core` | net9.0 | ViewModels, models (`ImagingResult`, `RunState`, `MeasurementDraft`), service contracts, UI-free view geometry and measurement maths (`HeatmapViewport`, `MeasurementMath`) | `Gcam.Core`, `Gcam.Configuration`, CommunityToolkit.Mvvm | any `System.Windows.*` type (it would not compile), I/O, the simulation engine |
 | `Gcam.Studio.Services` | net9.0 | implementations of contracts that need the engine or the outside world (`SimulationService`) | `Gcam.Studio.Core`, `Gcam.Simulation` | UI types, ViewModel logic |
 | `Gcam.Studio` | net9.0-windows | XAML views, custom controls, converters, theme dictionaries, WPF-bound services (`ThemeService`), the DI root | `Gcam.Studio.Core`, `Gcam.Studio.Services` | business rules, direct engine calls |
 | `tests/Gcam.Studio.Tests` | net9.0 | ViewModel and geometry tests with fakes | `Gcam.Studio.Core` only | WPF |
@@ -65,7 +65,8 @@ in a ViewModel is a build error, and the ViewModel tests run on any machine with
 |---|---|---|
 | State and commands a screen binds to | `Core/ViewModels` | `MainViewModel.RunCommand` |
 | A data shape returned by a service | `Core/Services` (next to the contract) | `ImagingResult` |
-| Maths a control needs but that has no UI types | `Core/Imaging` (or a new `Core/<Area>`) | `HeatmapViewport` (fit, zoom about a point, screen ↔ mm) |
+| Maths a control needs but that has no UI types | `Core/Imaging` (or a new `Core/<Area>`) | `HeatmapViewport` (fit, zoom about a point, screen ↔ mm), `MeasurementMath` (distance, angle, ROI stats) |
+| A contract a control needs from a ViewModel without knowing its type | `Core/Imaging` interface | `IPlaneMarker` — the overlay drags anything with `X`, `Y`, `MarkerLabel`; `SourceItemViewModel` implements it |
 | Something that talks to the engine, files, network | a contract in `Core/Services` + implementation in `Gcam.Studio.Services` | `ISimulationService` / `SimulationService` |
 | Something that needs WPF to do its job | a contract in `Core/Services` + implementation in `Gcam.Studio/Services` | `IThemeService` / `ThemeService` |
 | A reusable visual element with its own rendering or input | `Gcam.Studio/Controls` | `HeatmapView`, `ColorBar` |
@@ -126,5 +127,7 @@ sequenceDiagram
 |---|---|---|
 | ViewModel behaviour (commands, can-execute, state, cancel, failure, theme toggle) | `tests/Gcam.Studio.Tests/MainViewModelTests.cs` | fakes for the service contracts |
 | View geometry (fit, snapping, zoom anchor, pan limits, screen ↔ image ↔ mm) | `tests/Gcam.Studio.Tests/HeatmapViewportTests.cs` | pure maths, no UI |
+| Measurement maths (distance, angle, ROI by pixel centre, clipping) | `tests/Gcam.Studio.Tests/MeasurementMathTests.cs` | pure maths, no UI |
+| Measurement session (numbering, selection, delete / clear, ROI refresh on a new result), stale-result flag | `MeasurementsViewModelTests.cs`, `MainViewModelTests.cs` | ViewModels with fakes |
 | Scene → config, runner progress / cancellation | `tests/Gcam.Tests/SceneConfigBuilderTests.cs` | engine-level |
-| The running app | manual / UI Automation (step 4) | controls expose `AutomationProperties.Name`; `HeatmapView` has an automation peer |
+| The running app | UI Automation script driving real pointer input (manual for now; automated in step 4) | controls expose `AutomationProperties.Name`; `HeatmapView` has an automation peer |

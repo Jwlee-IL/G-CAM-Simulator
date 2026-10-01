@@ -6,8 +6,8 @@ Targets plain `net9.0` on purpose: a ViewModel that reaches for a WPF type does 
 
 | Folder | Contents |
 |---|---|
-| `ViewModels/` | `MainViewModel` (scene, run / cancel, state, theme toggle), `SourceItemViewModel` (one source, clamped input) |
+| `ViewModels/` | `MainViewModel` (scene, run / cancel, state, stale result, theme toggle), `SourceItemViewModel` (one source, clamped input), `MeasurementsViewModel` / `MeasurementViewModel` (tool, measurements, selection, ROI refresh) |
 | `Services/` | contracts the UI depends on: `ISimulationService` + `ImagingResult`, `IThemeService` |
-| `Imaging/` | `HeatmapViewport` — fit, whole-pixel snapping, zoom about a point, pan limits, screen ↔ image ↔ mm |
+| `Imaging/` | `HeatmapViewport` — fit, whole-pixel snapping, zoom about a point, pan limits, screen ↔ image ↔ mm; `MeasurementMath` — distance, angle, ROI stats; `IPlaneMarker` — what an overlay can drag |
 
 See [DESIGN.Architecture](../../docs/DESIGN.Architecture.md).

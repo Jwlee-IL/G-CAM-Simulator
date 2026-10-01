@@ -21,7 +21,8 @@ combine a container's padding with a child's margin for the same edge.
 |---|---|---|
 | `Size.Control` | 28 | min height of buttons, inputs, list rows |
 | `Size.Bar` / `Size.StatusBar` | 48 / 28 | top bar / status bar height |
-| `Size.SidePanel` | 300 | scene panel width |
+| `Size.SidePanel` | 300 | scene and measurement panel width |
+| `Size.Column.Id` / `Size.Column.Short` | 36 / 60 | fixed columns of the results table (header and rows share them; the value column takes the rest) |
 | `Size.FieldLabel` | 84 | label column in forms |
 | `Radius.Control` / `Radius.Panel` / `Radius.Chip` | 3 / 6 / 10 | corners |
 | `Border.Hairline` | 1 | all borders |
@@ -34,7 +35,9 @@ Row 1  Content (Pad.Window)
          Col 0  Scene panel (Size.SidePanel)   sources · selected source · geometry (read-only)
          Col 1  Gutter
          Col 2  Images: [flood map] Gutter [reconstruction]
-                each = header (title + chip) · HeatmapView · ColorBar · readout line
+                each = header (title + chips) · HeatmapView (+ measurement adorner) · ColorBar · readout line
+         Col 3  Gutter
+         Col 4  Measurement panel (Size.SidePanel)   tool picker · hint · results table · detail of the selected row
 Row 2  Status bar (Size.StatusBar) state dot · status sentence (live region) · progress + %
 ```
 
@@ -43,7 +46,8 @@ visible at the bottom, full width, regardless of which panel has focus.
 
 ## Window sizing: fixed grid, flexible centre
 
-- Side panels are a **fixed** width; the image area takes the rest (`*`).
+- Side panels (scene left, measurements right) are a **fixed** width; the image area takes the rest (`*`). At the
+  1280 px minimum each image still gets about 300 px.
 - The window has a **minimum** size (1280×800) and a default of 1440×900 instead of a fixed size. A fixed
   window breaks on 1366×768 laptops and overflows the screen at 125 / 150 % scaling.
 - If the work area is smaller than the default, the window starts maximised (`App.xaml.cs`).

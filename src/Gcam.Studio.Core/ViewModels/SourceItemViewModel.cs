@@ -1,10 +1,11 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using Gcam.Configuration;
+using Gcam.Studio.Core.Imaging;
 
 namespace Gcam.Studio.Core.ViewModels;
 
 /// <summary>Editable view of one <see cref="SceneSource"/>. Values are clamped to physically sensible ranges.</summary>
-public sealed partial class SourceItemViewModel : ObservableObject
+public sealed partial class SourceItemViewModel : ObservableObject, IPlaneMarker
 {
     public static IReadOnlyList<string> IsotopeNames { get; } = Isotopes.All.Select(i => i.Name).ToArray();
 
@@ -34,8 +35,12 @@ public sealed partial class SourceItemViewModel : ObservableObject
     protected override void OnPropertyChanged(System.ComponentModel.PropertyChangedEventArgs e)
     {
         base.OnPropertyChanged(e);
-        if (e.PropertyName != nameof(Label)) OnPropertyChanged(nameof(Label));
+        if (e.PropertyName == nameof(Isotope)) OnPropertyChanged(nameof(MarkerLabel));
+        if (e.PropertyName is not (nameof(Label) or nameof(MarkerLabel))) OnPropertyChanged(nameof(Label));
     }
+
+    /// <summary>Text next to the source's marker on the reconstruction.</summary>
+    public string MarkerLabel => Isotope;
 
     public string Label => $"{Isotope}  ({X:F0}, {Y:F0}) mm  ·  {DistanceMm:F0} mm  ·  {ActivityUCi:F0} µCi";
 

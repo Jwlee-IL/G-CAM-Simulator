@@ -37,6 +37,9 @@
     <sys:Double x:Key="Size.SidePanel">300</sys:Double>
     <sys:Double x:Key="Size.FieldLabel">84</sys:Double>
     <sys:Double x:Key="Size.ColorBar">8</sys:Double>
+    <!-- Results-table columns (the last column takes the rest) -->
+    <GridLength x:Key="Size.Column.Id">36</GridLength>
+    <GridLength x:Key="Size.Column.Short">60</GridLength>
 
     <!-- Shape -->
     <CornerRadius x:Key="Radius.Control">3</CornerRadius>

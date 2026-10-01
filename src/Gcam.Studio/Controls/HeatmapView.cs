@@ -117,6 +117,61 @@ public sealed class HeatmapView : FrameworkElement
     /// <summary>Current zoom relative to fit (1 = whole image).</summary>
     public double Zoom => _viewport.Zoom;
 
+    // ---- view mapping (for overlays such as MeasurementAdorner) -----------------------------------
+
+    /// <summary>Raised after anything that moves the image on screen: new data, resize, DPI, zoom or pan.</summary>
+    public event EventHandler? ViewChanged;
+
+    /// <summary>True once there is an image to map coordinates onto.</summary>
+    public bool HasImage => _bitmap is not null && Image is not null;
+
+    /// <summary>Screen point (element coordinates) → mm in the image's frame.</summary>
+    public Vec2 ScreenToMm(Point screen) =>
+        HeatmapViewport.ImageToMm(_viewport.ScreenToImage(new Vec2(screen.X, screen.Y)), OriginMm, StepMm);
+
+    /// <summary>mm in the image's frame → screen point (element coordinates).</summary>
+    public Point MmToScreen(Vec2 mm)
+    {
+        var p = _viewport.ImageToScreen(HeatmapViewport.MmToImage(mm, OriginMm, StepMm));
+        return new Point(p.X, p.Y);
+    }
+
+    /// <summary>mm extent of the image's outer edges (not pixel centres): (min corner, max corner).</summary>
+    public (Vec2 Min, Vec2 Max) ExtentMm
+    {
+        get
+        {
+            var img = Image;
+            if (img is null) return default;
+            return (HeatmapViewport.ImageToMm(new Vec2(0, 0), OriginMm, StepMm),
+                    HeatmapViewport.ImageToMm(new Vec2(img.Width, img.Height), OriginMm, StepMm));
+        }
+    }
+
+    /// <summary>One wheel notch of zoom about <paramref name="anchor"/> — lets an overlay forward the wheel.</summary>
+    internal void ZoomStep(Point anchor, bool zoomIn)
+    {
+        if (Image is null) return;
+        _viewport.ZoomAt(new Vec2(anchor.X, anchor.Y), zoomIn ? WheelStep : 1 / WheelStep);
+        UpdateHover(anchor);
+        OnViewChanged();
+    }
+
+    /// <summary>Show the readout for <paramref name="screen"/> (null clears it) while an overlay owns the mouse.</summary>
+    internal void HoverAt(Point? screen)
+    {
+        if (screen is { } p) { UpdateHover(p); return; }
+        _hover = null;
+        SetValue(ReadoutPropertyKey, string.Empty);
+        InvalidateVisual();
+    }
+
+    private void OnViewChanged()
+    {
+        InvalidateVisual();
+        ViewChanged?.Invoke(this, EventArgs.Empty);
+    }
+
     // ---- data --------------------------------------------------------------------------------------
 
     private void OnImageChanged()
@@ -124,7 +179,7 @@ public sealed class HeatmapView : FrameworkElement
         _hover = null;
         SetValue(ReadoutPropertyKey, string.Empty);
         var img = Image;
-        if (img is null) { _bitmap = null; return; }
+        if (img is null) { _bitmap = null; OnViewChanged(); return; }
 
         _min = double.MaxValue; _max = double.MinValue;
         foreach (var v in img.Raw) { if (v < _min) _min = v; if (v > _max) _max = v; }
@@ -160,13 +215,13 @@ public sealed class HeatmapView : FrameworkElement
     {
         if (Image is { } img)
             _viewport.Configure(img.Width, img.Height, ActualWidth, ActualHeight, VisualTreeHelper.GetDpi(this).PixelsPerDip, snapToWholePixels: true);
+        OnViewChanged();
     }
 
     protected override void OnDpiChanged(DpiScale oldDpi, DpiScale newDpi)
     {
         base.OnDpiChanged(oldDpi, newDpi);
         ConfigureViewport();
-        InvalidateVisual();
     }
 
     protected override void OnIsKeyboardFocusedChanged(DependencyPropertyChangedEventArgs e)
@@ -271,9 +326,7 @@ public sealed class HeatmapView : FrameworkElement
     {
         base.OnMouseWheel(e);
         if (Image is null) return;
-        var p = e.GetPosition(this);
-        _viewport.ZoomAt(new Vec2(p.X, p.Y), e.Delta > 0 ? WheelStep : 1 / WheelStep);
-        UpdateHover(p);
+        ZoomStep(e.GetPosition(this), e.Delta > 0);
         e.Handled = true;
     }
 
@@ -296,6 +349,7 @@ public sealed class HeatmapView : FrameworkElement
         {
             _viewport.PanBy(new Vec2(p.X - from.X, p.Y - from.Y));
             _dragFrom = p;
+            OnViewChanged();
         }
         UpdateHover(p);
     }
@@ -332,14 +386,14 @@ public sealed class HeatmapView : FrameworkElement
             default: return;
         }
         e.Handled = true;
-        InvalidateVisual();
+        OnViewChanged();
     }
 
     /// <summary>Back to fit-to-view.</summary>
     public void ResetView()
     {
         _viewport.Reset();
-        InvalidateVisual();
+        OnViewChanged();
     }
 
     private void UpdateHover(Point p)

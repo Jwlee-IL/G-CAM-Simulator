@@ -44,7 +44,9 @@ non-text minimum for control boundaries. `OnAccent` on `Accent` 9.6:1. Light: `A
 - Heatmaps use **viridis** (perceptually uniform, colour-blind safe), always with a colour bar and numeric ticks
   ([DESIGN.Controls](DESIGN.Controls.md#colorbar)).
 - **Image overlays never use the accent** — cyan would collide with viridis' teal band. Overlays are white on a
-  black chip, which stays legible on any colormap.
+  black chip, which stays legible on any colormap. A *selected* overlay (measurement, source marker) is shown by a
+  thicker line and an inverted chip (black on white), so selection needs no colour either and looks the same in
+  both themes.
 - Status colours are never the only signal: the status dot sits next to a sentence, a selected row also gets
   an accent bar.
 

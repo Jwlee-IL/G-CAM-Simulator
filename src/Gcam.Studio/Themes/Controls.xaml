@@ -128,6 +128,52 @@
         <Setter Property="MinWidth" Value="{StaticResource Size.Control}" />
     </Style>
 
+    <!-- ===== Segmented picker: RadioButtons in a Segment.Track, one per option (tool picker) ===== -->
+    <Style x:Key="Segment.Track" TargetType="Border">
+        <Setter Property="Background" Value="{DynamicResource Brush.Bg.Canvas}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.Line}" />
+        <Setter Property="BorderThickness" Value="{StaticResource Border.Hairline}" />
+        <Setter Property="CornerRadius" Value="{StaticResource Radius.Control}" />
+        <Setter Property="Padding" Value="2" />
+        <Setter Property="SnapsToDevicePixels" Value="True" />
+    </Style>
+
+    <Style x:Key="RadioButton.Segment" TargetType="RadioButton">
+        <Setter Property="FocusVisualStyle" Value="{StaticResource FocusVisual}" />
+        <Setter Property="FontFamily" Value="{StaticResource Font.UI}" />
+        <Setter Property="FontSize" Value="{StaticResource FontSize.Label}" />
+        <Setter Property="Foreground" Value="{DynamicResource Brush.Text.Secondary}" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Padding" Value="{StaticResource Pad.Control}" />
+        <Setter Property="MinHeight" Value="24" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="RadioButton">
+                    <Border x:Name="Chrome" Background="{TemplateBinding Background}" CornerRadius="2"
+                            Padding="{TemplateBinding Padding}" SnapsToDevicePixels="True">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" RecognizesAccessKey="True" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Chrome" Property="Background" Value="{DynamicResource Brush.Bg.Hover}" />
+                        </Trigger>
+                        <!-- Selected = filled segment + accent text + weight, not colour alone -->
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="Chrome" Property="Background" Value="{DynamicResource Brush.Accent.Subtle}" />
+                            <Setter Property="Foreground" Value="{DynamicResource Brush.Accent}" />
+                            <Setter Property="FontWeight" Value="SemiBold" />
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Foreground" Value="{DynamicResource Brush.Text.Disabled}" />
+                            <Setter Property="Cursor" Value="Arrow" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <!-- ===== Text input ===== -->
     <Style TargetType="TextBox">
         <Setter Property="FocusVisualStyle" Value="{x:Null}" />

@@ -160,4 +160,36 @@ public class MainViewModelTests
         Assert.Equal("Cs-137", s.Isotope);
         Assert.Contains(nameof(SourceItemViewModel.Label), changed);
     }
+
+    [Fact]
+    public async Task EditingTheSceneAfterARun_MarksTheResultStale_UntilTheNextRun()
+    {
+        var vm = new MainViewModel(new FakeSimulation(), new FakeTheme());
+        vm.Sources[0].X = 5;
+        Assert.False(vm.IsResultStale);   // nothing simulated yet, nothing to be stale
+
+        await vm.RunCommand.ExecuteAsync(null);
+        Assert.False(vm.IsResultStale);
+
+        vm.Sources[0].Y = -3;             // e.g. dragged on the reconstruction
+        Assert.True(vm.IsResultStale);
+
+        await vm.RunCommand.ExecuteAsync(null);
+        Assert.False(vm.IsResultStale);
+
+        vm.AddSourceCommand.Execute(null);
+        Assert.True(vm.IsResultStale);
+    }
+
+    [Fact]
+    public async Task NewResult_RefreshesMeasurements()
+    {
+        var vm = new MainViewModel(new FakeSimulation(), new FakeTheme());
+        vm.Measurements.AddCommand.Execute(new MeasurementDraft(ImagePane.Flood, MeasurementKind.Roi,
+            [new Gcam.Studio.Core.Imaging.Vec2(-5, -5), new Gcam.Studio.Core.Imaging.Vec2(5, 5)]));
+        Assert.Equal("—", vm.Measurements.Items[0].Value);
+
+        await vm.RunCommand.ExecuteAsync(null);
+        Assert.Equal("Σ 0", vm.Measurements.Items[0].Value);   // the fake's flood is all zeros
+    }
 }

@@ -9,8 +9,9 @@ XAML style rules: [AGENTS.Conventions.Code](AGENTS.Conventions.Code.md#xaml).
 Gcam.Studio/
   App.xaml / App.xaml.cs   merged theme dictionaries · DI composition root · startup window placement
   Views/                   screens: XAML layout + code-behind that only calls InitializeComponent()
-  Controls/                elements with their own rendering / input (HeatmapView, ColorBar)
-  Converters/              IValueConverter implementations (NullToCollapsedConverter)
+  Controls/                elements with their own rendering / input (HeatmapView, ColorBar),
+                           and adorners attached to them (MeasurementAdorner via MeasurementOverlay)
+  Converters/              IValueConverter implementations (NullToCollapsed, InverseBoolToVisibility, EnumMatch)
   Rendering/               pixel-level helpers shared by controls (colormap lookup tables)
   Services/                WPF-bound implementations of Core contracts (ThemeService)
   Themes/                  Tokens.Dark / Tokens.Light, Metrics, Typography, Controls
@@ -48,6 +49,11 @@ loaded); it must carry a comment saying why it can't live elsewhere.
   `…CancelCommand` (`RunCancelCommand`).
 - Controls expose results as read-only dependency properties, and sibling elements bind to them by
   `ElementName` (`ColorBar.Minimum` ← `HeatmapView.DataMin`), so no code connects them.
+- Behaviour added to an existing control from a view uses **attached properties**, not code-behind:
+  `c:MeasurementOverlay.Session="{Binding Measurements}"` puts the measurement adorner on a heatmap. The
+  adorner sends finished gestures back through a command (`AddCommand`), like any other view element.
+- A radio-button group bound to one enum uses `EnumMatchConverter` with the value as `ConverterParameter`
+  (the tool picker → `MeasurementsViewModel.ActiveTool`).
 - `d:DataContext="{d:DesignInstance Type=vm:MainViewModel}"` keeps binding IntelliSense working across the
   assembly boundary (`xmlns:vm="clr-namespace:…;assembly=Gcam.Studio.Core"`).
 

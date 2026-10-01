@@ -1,4 +1,6 @@
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
+using System.ComponentModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Gcam.Configuration;
@@ -25,9 +27,12 @@ public sealed partial class MainViewModel : ObservableObject
     {
         _simulation = simulation;
         _theme = theme;
-        Sources.CollectionChanged += (_, _) => RunCommand.NotifyCanExecuteChanged();
+        Sources.CollectionChanged += OnSourcesChanged;
         AddSource();
     }
+
+    /// <summary>Measurement tools, overlays and the results table.</summary>
+    public MeasurementsViewModel Measurements { get; } = new();
 
     public ObservableCollection<SourceItemViewModel> Sources { get; } = [];
 
@@ -57,6 +62,11 @@ public sealed partial class MainViewModel : ObservableObject
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(PeakText))]
     private ImagingResult? _result;
+
+    /// <summary>The scene was edited after the shown result was simulated — the images no longer match it.</summary>
+    [ObservableProperty] private bool _isResultStale;
+
+    partial void OnResultChanged(ImagingResult? value) => Measurements.Refresh(value);
 
     /// <summary>Decoded peak position for the reconstruction header, or null before the first run.</summary>
     public string? PeakText => Result?.Estimate is { } e ? $"peak ({e.Position.X:F1}, {e.Position.Y:F1}) mm" : null;
@@ -117,6 +127,7 @@ public sealed partial class MainViewModel : ObservableObject
             });
             var result = await _simulation.RunAsync(scene, Optics, Photons, progress, cancellationToken);
             Result = result;
+            IsResultStale = false;
             Progress = 1;
             Status = Describe(result);
             State = RunState.Succeeded;
@@ -135,6 +146,24 @@ public sealed partial class MainViewModel : ObservableObject
         {
             IsRunning = false;
         }
+    }
+
+    private void OnSourcesChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        foreach (SourceItemViewModel s in e.OldItems ?? Array.Empty<SourceItemViewModel>()) s.PropertyChanged -= OnSourceEdited;
+        foreach (SourceItemViewModel s in e.NewItems ?? Array.Empty<SourceItemViewModel>()) s.PropertyChanged += OnSourceEdited;
+        RunCommand.NotifyCanExecuteChanged();
+        MarkStale();
+    }
+
+    private void OnSourceEdited(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName is not (nameof(SourceItemViewModel.Label) or nameof(SourceItemViewModel.MarkerLabel))) MarkStale();
+    }
+
+    private void MarkStale()
+    {
+        if (Result is not null) IsResultStale = true;
     }
 
     private static string Describe(ImagingResult r)

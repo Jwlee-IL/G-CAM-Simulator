@@ -43,7 +43,13 @@ dotnet test tests/Gcam.Studio.Tests        # ViewModels + view geometry, no WPF 
 
 Build and test, then run the app and check the change **in both themes** (top-bar toggle) and with the
 keyboard only. UI Automation can drive it: controls are found by `AutomationProperties.Name`
-(e.g. "Run simulation", "Reconstruction image"), and `HeatmapView` reports zoom and readout in `ItemStatus`.
+(e.g. "Run simulation", "Distance tool", "Measurement results"), and `HeatmapView` reports zoom and readout in
+`ItemStatus`. For the measuring tools, send real pointer input (`SetCursorPos` + `mouse_event`) to the heatmap's
+screen rectangle and read the rows of "Measurement results".
+
+Pitfalls met so far: a panel title has the same automation name as its heatmap ("Detector flood map"), so find a
+heatmap by name **and** class `HeatmapView`; in PowerShell, don't name a helper `Select` (the `Select-Object` alias
+wins); wait for the window before capturing the screen.
 
 ## Roadmap
 
@@ -52,5 +58,5 @@ keyboard only. UI Automation can drive it: controls are found by `AutomationProp
 | 1 | Layered MVVM shell, async run with progress / cancel | done |
 | 2 | `HeatmapView`: zoom, pan, mm readout, automation peer | done |
 | 2.5 | Theme tokens (dark / light), metrics, typography, shared control styles; fixed-grid layout; colour bars | done |
-| 3 | Measurement tools (distance, angle, ROI) as adorners, source drag, measurement panel, results table | next |
-| 4 | UI automation smoke tests, high-contrast mode, colormap choice | planned |
+| 3 | Measurement tools (distance, angle, ROI) as an adorner, source drag on the reconstruction, measurement panel, results table, stale-result chip | done |
+| 4 | UI automation smoke tests, keyboard crosshair for measuring, high-contrast mode, colormap choice | next |
