@@ -5,7 +5,8 @@ cascades, ambient background, per-nuclide energy-window imaging and Compton stri
 phases. Builds on [PLAN.Studio.LiveAcquisition](PLAN.Studio.LiveAcquisition.md) (closes its review points R-2, R-5)
 and [PLAN.Studio.Spectrum](PLAN.Studio.Spectrum.md).
 
-Status: phase A handed to Codex 2026-10-01; phase B planned (starts after phase A is reviewed).
+Status: phase A corrected after the implementer stopped on two wrong premises (2026-10-01, see "Corrections")
+and handed back; phase B planned (starts after phase A is reviewed).
 
 ## What `Gcam.Wpf` does that Studio does not
 
@@ -17,7 +18,7 @@ Status: phase A handed to Codex 2026-10-01; phase B planned (starts after phase 
 | **Backing 2 mm** behind the crystal (SiPM, PCB, housing) → the ~184 keV backscatter peak | absent |
 | **Pixel gain σ** (default 3 %, seeded fixed pattern) | absent (R-2) |
 | **Reflector gap 100 µm** between crystals | absent (editing it is TODO-11; the default belongs here) |
-| Decay-scheme cascades (Co-60 1173 + 1332 sum) via the detector's cascade RNG / `DecayScheme` | list-mode emits singles only (R-2) |
+| No cascades: `Gcam.Wpf` and `EventStreamStudy` also emit singles; true coincidence summing exists only in `CascadeSummingStudy` (`DecayScheme`) | list-mode emits singles — same as `Gcam.Wpf` |
 | **Background** at a background-to-signal ratio (uncoded pedestal + crystal response at the background energy) | rejected with `NotSupportedException` (R-5) |
 | **One imaging channel per isotope**: events inside that isotope's primary-line window, decoded separately, composited; found peaks labelled by isotope | one flood of all events |
 | **Compton strip**: per pixel, subtract R·(higher channel) from a lower channel; R calibrated from an H-only run of the scene | absent |
@@ -26,6 +27,17 @@ Status: phase A handed to Codex 2026-10-01; phase B planned (starts after phase 
 expected physics. That holds only for the bare geometry Studio uses today; with the entrance absorber `Gcam.Wpf`
 always had, the Ba K X-rays are attenuated (steel at 32 keV, μ ≈ 65 cm⁻¹, gives ~38 % transmission through
 0.15 mm by the narrow-beam estimate — the MC is the judge). Phase A replaces that assertion with a physics check.
+
+## Corrections (2026-10-01, after the implementer stopped)
+
+- **Cascades were a wrong premise.** R-2 said `EventStreamStudy` adds decay cascades; its `cascadeRng` is the
+  in-crystal Compton RNG, and `MixedFieldSource` picks each line independently. Coincidence summing needs a
+  per-decay emission path (correlated gammas, same arrival time, biasing that keeps the angular correlation) —
+  new engine design, moved to **TODO-14**. With it, summing would come out of the existing pile-up stage (zero time
+  separation), not a separate model.
+- **Gain cannot be "passed through".** The detector's event sink reports the deposit before the per-pixel
+  sensitivity, so gain belongs in the measurement stage (I-2) using the `CrystalUniformity` pattern for the
+  configured σ and seed — not a `ListModeSource` parameter.
 
 ## Decisions (planner, 2026-10-01; the author may override)
 
@@ -43,9 +55,11 @@ always had, the Ba K X-rays are attenuated (steel at 32 keV, μ ≈ 65 cm⁻¹, 
 1. **`DetectorSettings`** in Studio (entrance, backing, gain σ, gain seed, reflector gap) with the I-1 defaults,
    applied by the service when building the acquisition config (clone + mutate, never a hand-written config).
    Shown read-only in the left panel's geometry section except gain σ / seed, which are editable run inputs.
-2. **`ListModeSource`**: pass the per-pixel sensitivity (gain pattern) and the decay-scheme cascade exactly as
-   `EventStreamStudy` does; emit background events per I-3. Additive; existing engine results unchanged.
-3. **Measurement stage** per I-2, used by `SpectrumService` (replace its own smear) and ready for phase B's windows.
+2. **`ListModeSource`**: emit background events per I-3 (and carry the realism defaults through the config).
+   Additive; existing engine results unchanged. No cascade (TODO-14), no gain here (I-2).
+3. **Measurement stage** per I-2: measured energy = gain[pixel] × deposit (gain pattern from `CrystalUniformity`
+   for σ and seed), then the chain's `FrontEndModel` smear; used by `SpectrumService` (replace its own smear) and
+   ready for phase B's windows.
 4. **Tests (k·σ, real engine):**
    - Ba K band counts with the 0.15 mm absorber vs without: ratio consistent with the MC transmission of that
      absorber at 32–36 keV (state the expectation from an independent narrow-beam calculation and the tolerance);
@@ -53,11 +67,12 @@ always had, the Ba K X-rays are attenuated (steel at 32 keV, μ ≈ 65 cm⁻¹, 
    - Backscatter: a peak region near 184 keV appears with the backing and not without.
    - Gain σ = 3 %: the 662 keV in-window fraction drops vs σ = 0, and the measured photopeak FWHM widens
      consistently with σ added in quadrature (within tolerance).
-   - Co-60 cascade: a sum peak at 2505 keV whose rate scales ∝ ε² when the source distance changes (as theme 41 /
-     `CascadeSummingStudy`), absent for Cs-137.
    - Background: at BSR = 1 the event rate doubles within k·σ and the extra events follow the engine's spatial
      profile and energy response; at BSR = 0 the stream is unchanged bit-for-bit for the same seed.
-5. **Docs:** VV.Studio.SRS / SDS / matrix / VV.Studio.Acquisition (present behaviour; history only in the SDS and
+5. **Workspace switch defect (VV.Studio AN-10, found on the desktop):** selecting a workspace button through UI
+   Automation (`SelectionItemPattern.Select`, used by screen readers) checks it without changing the workspace.
+   Make activation ViewModel-side (setting a workspace active selects it in the shell) with a ViewModel test.
+6. **Docs:** VV.Studio.SRS / SDS / matrix / VV.Studio.Acquisition (present behaviour; history only in the SDS and
    evidence notes), DESIGN.Layout (left-panel detector rows), the Spectrum plan's Ba K note.
 
 ## Phase B — per-nuclide imaging and Compton strip (after phase A review)

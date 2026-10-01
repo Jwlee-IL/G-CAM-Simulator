@@ -2,8 +2,9 @@
 
 Scope: the steps of TODO-06. Decisions shared by every migration step: [PLAN.Studio.Migration](PLAN.Studio.Migration.md).
 
-Status: implemented and committed (`bb3f00e`, 2026-10-01); open until the desktop regression scenarios and the polish
-survey run (they need a free desktop).
+Status: **done** (`bb3f00e`, 2026-10-01). Desktop regression and polish survey ran the same day on list-mode
+acquisition: 19 / 19 UI tests pass, broken verdicts fail all 7 scenarios; survey issues P-01 … P-11 are in
+`docs/assets/studio-polish-survey/README.md` for the author to choose from.
 
 ## Steps
 

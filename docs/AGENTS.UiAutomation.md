@@ -131,11 +131,11 @@ from the app's own code.
 
 | Scenario | Traces to | Oracle (independent of the app) | Recovery-run result |
 |---|---|---|---|
-| `Pilot_SimulateThenMeasureDistance_AddsRowWithExpectedLength` | VAL-01, VAL-03 · SR-RUN-01, SR-MEAS-01 | length from screen points through the documented fit rule | 13.4 mm vs 13.400 ± 0.204 |
-| `Cancel_KeepsPreviousResult_LocksThenUnlocksScene` | VAL-02 · SR-RUN-02, SR-RUN-05 | state machine: Running → Cancelled; the peak text before the cancelled run | locked while running; Cancelled; peak unchanged; editable again |
+| `Pilot_SimulateThenMeasureDistance_AddsRowWithExpectedLength` | VAL-01, VAL-03 · SR-RUN-09, SR-MEAS-01 | length from screen points through the documented fit rule | 13.4 mm vs 13.400 ± 0.204 |
+| `Stop_KeepsAcquiredData_LocksThenUnlocksScene` | VAL-02 · SR-RUN-10, SR-RUN-12, SR-RUN-14, SR-RUN-19 | state machine Acquiring → Stopped; counts frozen after Stop (two refresh periods); Start clears | Start replaced by Stop, scene / live time / speed locked; 35 counts kept and unchanged; editable again; restart began at 0 |
 | `Roi_OnFloodMap_CountsWholePixelsByCentre` | VAL-03 · SR-MEAS-03 | pixel count by centre, with corners on cell **boundaries** so one pixel of error can't change it | 42 px, 3.6 × 4.2 mm |
 | `Angle_EscAbandonsDraft_DeleteRemovesSelected` | VAL-03 · SR-MEAS-02, SR-MEAS-07 | angle from the three screen points (scale- and flip-invariant); Esc is proven by the value — an un-abandoned first click would have produced a different angle | 69.8° vs 70.02 ± 2.29; Delete removed it |
-| `SourceDrag_MarksOutdated_RerunPutsPeakOnTheSource` | VAL-04, VAL-05 · SR-MEAS-08, SR-RUN-07, SR-VIEW-08 | physics: after a re-run the decoded peak must sit on the moved source (≤ 1.5 mm; localisation inside the FCFOV is sub-mm) | source (18.3, 13.6) → peak (18.7, 12.9); chip shown, then cleared |
+| `SourceDrag_MarksOutdated_RerunPutsPeakOnTheSource` | VAL-04, VAL-05 · SR-MEAS-08, SR-RUN-14, SR-VIEW-08 | physics: after a re-run the decoded peak must sit on the moved source (≤ 1.5 mm) | list-mode, 60 s: source (21.4, 16.0) → peak (21.7, 17.4), 1.43 mm — inside but near the tolerance; chip shown, then cleared |
 | `Readout_AndOneCellRoi_MatchAbsolutePositionAndValue` | SR-VIEW-05, SR-VIEW-07, SR-MEAS-03 | absolute mm of two cells (both signs) from the oracle; a one-cell ROI must sum to the readout's value — closes the blind spot below | (-6.3, 5.1) and (6.3, -4.5) mm exact; Σ = cell value |
 | `ThemeToggle_RelabelsAndSwitchesBack` | SR-THEME-01 | the label names the other theme; the app still simulates after two swaps | pass (the visual swap stays manual) |
 
@@ -196,3 +196,12 @@ image was deleted and the capture fixed. Open a failure bundle's image before sh
 - Promote from exploratory to regression use (profile P2) once the suite has a run policy owner and history.
 
 Keep screenshots diagnostic-only; judge on product state.
+
+**Re-run on list-mode acquisition (2026-10-01).** The scenarios moved from Simulate / Cancel / photon budget to
+Start / Stop / live time (`StudioWindow.Acquire`, status counts parsed from the status line); the cancel scenario
+became `Stop_KeepsAcquiredData_LocksThenUnlocksScene`. Normal run: 19 / 19 (10 oracle, 7 desktop scenarios, the
+plot gate, the polish survey). Broken run (`GCAM_UI_BREAK_VERDICT=1`): all 7 desktop scenarios fail at their
+corrupted assertions. Two findings: the source-drag localisation passed at 1.43 mm against a 1.5 mm tolerance
+(in-crystal Compton scatter is now in the image and the peak is the grid argmax — a thin margin, not a pass to rely
+on), and **UIA Select on the workspace switch checks the button without changing the workspace** (only a click or
+`Ctrl+1…4` runs the command) — an accessibility defect; the survey switches with `Ctrl+2` until it is fixed.

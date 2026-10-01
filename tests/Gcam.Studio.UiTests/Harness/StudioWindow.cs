@@ -64,16 +64,29 @@ public sealed class StudioWindow(AutomationElement window)
         Thread.Sleep(150);
     }
 
-    /// <summary>Invokes Run and waits for a terminal state; progress end and result presence are checked separately by callers.</summary>
-    public string Simulate(TimeSpan timeout)
+    /// <summary>Starts an acquisition and waits for a terminal state (Completed / Stopped / Failed).</summary>
+    public string Acquire(TimeSpan timeout)
     {
-        Invoke("RunSimulation");
-        WaitUntil(() => RunState is "Succeeded" or "Failed" or "Cancelled", timeout, "run finished");
+        Invoke("StartAcquisition");
+        WaitUntil(() => RunState == "Acquiring" || IsTerminal(RunState), TimeSpan.FromSeconds(5), "acquisition started");
+        WaitUntil(() => IsTerminal(RunState), timeout, "acquisition finished");
         return RunState;
     }
 
-    /// <summary>Run state published by the status line (Idle / Running / Succeeded / Cancelled / Failed).</summary>
+    private static bool IsTerminal(string state) => state is "Completed" or "Stopped" or "Failed";
+
+    /// <summary>Acquisition state published by the status line (Idle / Acquiring / Stopped / Completed / Failed).</summary>
     public string RunState => ById("StatusText").Current.ItemStatus;
+
+    /// <summary>Counts in the status sentence ("t = 1.2 s of 60 s · 1,834 counts · 153 cps").</summary>
+    public long Counts
+    {
+        get
+        {
+            var m = System.Text.RegularExpressions.Regex.Match(Text("StatusText"), @"([\d,]+) counts");
+            return m.Success ? long.Parse(m.Groups[1].Value.Replace(",", ""), System.Globalization.CultureInfo.InvariantCulture) : -1;
+        }
+    }
 
     public string Text(string id) => ById(id).Current.Name;
 

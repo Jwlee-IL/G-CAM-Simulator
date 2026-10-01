@@ -288,17 +288,18 @@ they are skipped and reported as skipped, not passed. Each scenario starts its o
 
 | Scenario | Traces to | Oracle (independent of the app) | Result 2026-10-01 |
 |---|---|---|---|
-| `PilotTests.Pilot_SimulateThenMeasureDistance_AddsRowWithExpectedLength` | VAL-01, VAL-03 · SR-RUN-01, SR-MEAS-01 | length from screen points through the documented fit rule | 13.4 mm vs 13.400 ± 0.204 |
-| `ScenarioTests.Cancel_KeepsPreviousResult_LocksThenUnlocksScene` | VAL-02 · SR-RUN-02, SR-RUN-05 | state machine Running → Cancelled; the peak text before the cancelled run | locked while running; Cancelled; peak unchanged; editable again |
+| `PilotTests.Pilot_SimulateThenMeasureDistance_AddsRowWithExpectedLength` | VAL-01, VAL-03 · SR-RUN-09, SR-MEAS-01 | length from screen points through the documented fit rule | 13.4 mm vs 13.400 ± 0.204 |
+| `ScenarioTests.Stop_KeepsAcquiredData_LocksThenUnlocksScene` | VAL-02 · SR-RUN-10, SR-RUN-12, SR-RUN-14, SR-RUN-19 | state machine Acquiring → Stopped; counts frozen after Stop; Start clears | inputs locked; 35 counts kept and unchanged; editable again; restart began at 0 |
 | `ScenarioTests.Roi_OnFloodMap_CountsWholePixelsByCentre` | VAL-03 · SR-MEAS-03 | pixel count by centre, corners on cell boundaries so one pixel of error cannot change it | 42 px, 3.6 × 4.2 mm |
 | `ScenarioTests.Angle_EscAbandonsDraft_DeleteRemovesSelected` | VAL-03 · SR-MEAS-02, SR-MEAS-07 | angle from the three screen points; Esc is proven by the value | 69.8° vs 70.02 ± 2.29; Delete removed it |
-| `ScenarioTests.SourceDrag_MarksOutdated_RerunPutsPeakOnTheSource` | VAL-04, VAL-05 · SR-MEAS-08, SR-RUN-07, SR-VIEW-08 | physics: after the re-run the decoded peak must sit on the moved source (≤ 1.5 mm) | source (18.3, 13.6) → peak (18.7, 12.9); chip shown, then cleared |
+| `ScenarioTests.SourceDrag_MarksOutdated_RerunPutsPeakOnTheSource` | VAL-04, VAL-05 · SR-MEAS-08, SR-RUN-14, SR-VIEW-08 | physics: after the re-run the decoded peak must sit on the moved source (≤ 1.5 mm) | 60 s list-mode: 1.43 mm (source (21.4, 16.0), peak (21.7, 17.4)) — near the tolerance; chip shown, then cleared |
 | `ScenarioTests.Readout_AndOneCellRoi_MatchAbsolutePositionAndValue` | SR-VIEW-05, SR-VIEW-07, SR-MEAS-03 | absolute mm of two cells (both signs); a one-cell ROI must sum to the readout's value | (−6.3, 5.1) and (6.3, −4.5) mm exact; sum = cell value |
 | `ScenarioTests.ThemeToggle_RelabelsAndSwitchesBack` | SR-THEME-01 | the label names the other theme; the app still simulates after two swaps | pass (the visual swap stays manual) |
 
-Record: three normal runs of all 17 UI tests (10 oracle + 7 desktop) passed; a run with every scenario's expectation
-deliberately corrupted (`GCAM_UI_BREAK_VERDICT=1`) failed all 7 desktop scenarios, each at its corrupted assertion,
-so the verdicts can fail. No app process or sandbox folder was left behind.
+Record (list-mode acquisition, 2026-10-01): all 19 UI tests passed (10 oracle, 7 desktop scenarios, the plot gate,
+the polish survey); with every scenario's expectation deliberately corrupted (`GCAM_UI_BREAK_VERDICT=1`) all 7
+desktop scenarios failed, each at its corrupted assertion, so the verdicts can fail. No app process or sandbox
+folder was left behind. UIA Select on the workspace switch does not change the workspace (see anomalies).
 
 ## 6. Known anomalies, gaps and risks
 
@@ -314,7 +315,9 @@ so the verdicts can fail. No app process or sandbox folder was left behind.
 | AN-06 | The "outdated" chip is visual only (tooltip, not a live region) | a screen reader is not told that the images no longer match the scene | announce via the status line or a live region |
 | AN-07 | WPF items (`HeatmapView` rendering, `ColorBar` ticks, `ThemeService`) have no unit tests, by design | defects show only when the app runs | covered by AN-02 plan |
 | AN-08 | SDK-style project references are transitive, so the shell *could* call the engine directly | layering rule for the shell is inspection-only | optional: `PrivateAssets` on the Services → engine reference |
-| AN-09 | Photon budget clamp (≥ 1,000) is untested | low | add a test |
+| AN-09 | *Closed* — the photon budget no longer exists (list-mode acquisition) | — | — |
+| AN-10 | UIA Select (SelectionItemPattern) on a workspace switch button checks it but does not change the workspace; only a click or `Ctrl+1…4` runs the command | a screen-reader or voice-control user cannot switch workspaces | make selecting a workspace button activate it (ViewModel-side), then switch by Select in the survey test |
+| AN-11 | The source-drag scenario localised at 1.43 mm against its 1.5 mm tolerance after list-mode acquisition (Compton mispositioning in the image, argmax peak on the grid) | the scenario may fail by chance | measure the localisation spread over repeated seeds; use sub-cell peak interpolation or a longer live time — do not widen the tolerance blindly |
 | AN-11 | Latest desktop input and screen capture unavailable | regression scenarios and four-view polish survey remain unverified in this working tree | re-run on an accessible interactive desktop; preserve verdicts |
 | AN-12 | CPU plot redraw meets the gate, but resize event-to-render delay is 280–316 ms | CPU evidence does not establish end-to-end responsiveness | distinguish timings; investigate dispatcher / desktop latency before making a presentation-latency claim |
 | AN-10 | `TickFormatterTests` (colour-bar tick labels: one shared multiplier, one decimal count, no negative zero) test behaviour that no SRS row states | the behaviour is verified but not required, so a change to it would not be traced | add an `SR-VIEW` row for colour-bar labels |

@@ -1,4 +1,3 @@
-using System.Text.RegularExpressions;
 using System.Windows;
 using Gcam.Configuration;
 using Gcam.Studio.UiTests.Harness;
@@ -17,36 +16,47 @@ public sealed class ScenarioTests(ITestOutputHelper output)
     /// <summary>With GCAM_UI_BREAK_VERDICT=1 every scenario corrupts its own expectation and must then fail.</summary>
     private static bool Broken => Environment.GetEnvironmentVariable(PilotTests.BreakVerdictVariable) == "1";
 
-    /// <summary>VAL-02 · SR-RUN-02, SR-RUN-05.</summary>
+    /// <summary>VAL-02 · SR-RUN-10, SR-RUN-12, SR-RUN-14, SR-RUN-19.</summary>
     [DesktopFact]
-    public void Cancel_KeepsPreviousResult_LocksThenUnlocksScene() =>
-        Scenario.Run(nameof(Cancel_KeepsPreviousResult_LocksThenUnlocksScene), output, (ui, record) =>
+    public void Stop_KeepsAcquiredData_LocksThenUnlocksScene() =>
+        Scenario.Run(nameof(Stop_KeepsAcquiredData_LocksThenUnlocksScene), output, (ui, record) =>
         {
-            Assert.Equal("Succeeded", ui.Simulate(RunTimeout));
-            string peakBefore = ui.Text("PeakText");
+            // A preset long enough to still be acquiring when we stop: 600 s at x1 is 10 wall minutes.
+            ui.SetText("AcquisitionLiveTime", "600", commitBy: "SourceY");
+            ui.SetText("AcquisitionSpeed", "1", commitBy: "SourceY");
+            Assert.Equal("600", ui.Value("AcquisitionLiveTime"));
 
-            // A budget large enough to still be running when we cancel (measured: ~2 % done after 0.3 s at 20 M photons)
-            ui.SetText("PhotonBudget", "20000000", commitBy: "SourceY");
-            Assert.Equal("20000000", Regex.Replace(ui.Value("PhotonBudget"), @"\D", ""));
+            ui.Invoke("StartAcquisition");
+            StudioWindow.WaitUntil(() => ui.RunState == "Acquiring", TimeSpan.FromSeconds(5), "acquisition started");
+            StudioWindow.WaitUntil(() => ui.Counts > 0, TimeSpan.FromSeconds(20), "first counts");
+            Assert.False(ui.Exists("StartAcquisition"), "Start is replaced by Stop while acquiring");
+            Assert.False(ui.IsEnabled("AddSource"));                 // scene locked
+            Assert.False(ui.IsEnabled("AcquisitionLiveTime"));
+            Assert.False(ui.IsEnabled("AcquisitionSpeed"));
+            Assert.True(ui.IsEnabled("StopAcquisition"), "Stop is offered while acquiring");
+            record.Step($"acquiring, scene locked, {ui.Counts} counts");
 
-            ui.Invoke("RunSimulation");
-            StudioWindow.WaitUntil(() => ui.RunState == "Running", TimeSpan.FromSeconds(5), "run started");
-            Assert.True(ui.Exists("CancelRun"), "Cancel is offered while running");
-            Assert.False(ui.IsEnabled("RunSimulation"));
-            Assert.False(ui.IsEnabled("AddSource"));      // scene locked
-            Assert.False(ui.IsEnabled("PhotonBudget"));
-            record.Step("running, scene locked");
-
-            ui.Invoke("CancelRun");
-            StudioWindow.WaitUntil(() => ui.RunState != "Running", TimeSpan.FromSeconds(5), "run stopped");
-            Assert.Equal("Cancelled", ui.RunState);
-            Assert.Equal("Cancelled — previous result kept", ui.Text("StatusText"));
-            Assert.Equal(Broken ? peakBefore + " (broken)" : peakBefore, ui.Text("PeakText"));
+            ui.Invoke("StopAcquisition");
+            StudioWindow.WaitUntil(() => ui.RunState != "Acquiring", TimeSpan.FromSeconds(5), "acquisition stopped");
+            Assert.Equal("Stopped", ui.RunState);
+            long kept = ui.Counts;
+            Assert.True(kept > 0, $"counts kept after Stop: {ui.Text("StatusText")}");
+            Assert.StartsWith("Stopped", ui.Text("StatusText"));
             Assert.StartsWith("zoom", ui.ById("FloodView").Current.ItemStatus);   // image still there
-            Assert.False(ui.Exists("CancelRun"));
-            Assert.True(ui.IsEnabled("AddSource"));       // scene editable again
-            Assert.True(ui.IsEnabled("RunSimulation"));
-            record.Set("actual", new { peakBefore, peakAfter = ui.Text("PeakText"), status = ui.Text("StatusText") });
+            Thread.Sleep(600);                                       // two refresh periods: nothing more arrives
+            Assert.Equal(Broken ? kept + 1 : kept, ui.Counts);
+            Assert.True(ui.IsEnabled("AddSource"));                  // scene editable again
+            Assert.True(ui.IsEnabled("StartAcquisition"));
+            Assert.False(ui.Exists("StopAcquisition"));
+
+            // Start clears: the new session begins from zero, below what the stopped one had kept.
+            ui.Invoke("StartAcquisition");
+            StudioWindow.WaitUntil(() => ui.RunState == "Acquiring", TimeSpan.FromSeconds(5), "second acquisition started");
+            long restarted = ui.Counts;
+            ui.Invoke("StopAcquisition");
+            StudioWindow.WaitUntil(() => ui.RunState == "Stopped", TimeSpan.FromSeconds(5), "second acquisition stopped");
+            record.Set("actual", new { kept, restarted, status = ui.Text("StatusText") });
+            Assert.True(restarted < kept, $"Start cleared the previous data: {restarted} vs {kept}");
         });
 
     /// <summary>VAL-03 (ROI part) · SR-MEAS-03.</summary>
@@ -54,7 +64,7 @@ public sealed class ScenarioTests(ITestOutputHelper output)
     public void Roi_OnFloodMap_CountsWholePixelsByCentre() =>
         Scenario.Run(nameof(Roi_OnFloodMap_CountsWholePixelsByCentre), output, (ui, record) =>
         {
-            Assert.Equal("Succeeded", ui.Simulate(RunTimeout));
+            Assert.Equal("Completed", ui.Acquire(RunTimeout));
             ui.Select("ToolRoi");
 
             var optics = new OpticsSettings();
@@ -91,7 +101,7 @@ public sealed class ScenarioTests(ITestOutputHelper output)
     public void Readout_AndOneCellRoi_MatchAbsolutePositionAndValue() =>
         Scenario.Run(nameof(Readout_AndOneCellRoi_MatchAbsolutePositionAndValue), output, (ui, record) =>
         {
-            Assert.Equal("Succeeded", ui.Simulate(RunTimeout));
+            Assert.Equal("Completed", ui.Acquire(RunTimeout));
             var optics = new OpticsSettings();
             var oracle = new FloodOracle(ui.Bounds("FloodView"), optics.DetectorPixels, optics.PixelPitchMm);
 
@@ -128,7 +138,7 @@ public sealed class ScenarioTests(ITestOutputHelper output)
     public void Angle_EscAbandonsDraft_DeleteRemovesSelected() =>
         Scenario.Run(nameof(Angle_EscAbandonsDraft_DeleteRemovesSelected), output, (ui, record) =>
         {
-            Assert.Equal("Succeeded", ui.Simulate(RunTimeout));
+            Assert.Equal("Completed", ui.Acquire(RunTimeout));
             ui.Select("ToolAngle");
 
             var view = ui.Bounds("ReconView");
@@ -165,7 +175,7 @@ public sealed class ScenarioTests(ITestOutputHelper output)
     public void SourceDrag_MarksOutdated_RerunPutsPeakOnTheSource() =>
         Scenario.Run(nameof(SourceDrag_MarksOutdated_RerunPutsPeakOnTheSource), output, (ui, record) =>
         {
-            Assert.Equal("Succeeded", ui.Simulate(RunTimeout));
+            Assert.Equal("Completed", ui.Acquire(RunTimeout));
             Assert.False(ui.Exists("ResultStale"));
             Assert.Equal(("0", "0"), (ui.Value("SourceX"), ui.Value("SourceY")));
             Assert.True(StudioWindow.Pattern<System.Windows.Automation.SelectionItemPattern>(
@@ -185,7 +195,7 @@ public sealed class ScenarioTests(ITestOutputHelper output)
             Assert.Equal(y, Math.Round(y, 1));
             Assert.True(ui.Exists("ResultStale"), "outdated chip after moving the source");
 
-            Assert.Equal("Succeeded", ui.Simulate(RunTimeout));
+            Assert.Equal("Completed", ui.Acquire(RunTimeout));
             Assert.False(ui.Exists("ResultStale"));
             var (px, py) = Verdict.ParsePeak(ui.Text("PeakText"));
             // Localisation inside the fully-coded field is sub-mm for this camera (AGENTS.md findings); 1.5 mm
@@ -208,6 +218,6 @@ public sealed class ScenarioTests(ITestOutputHelper output)
             StudioWindow.WaitUntil(() => ui.Text("ThemeToggle") == "Dark theme", TimeSpan.FromSeconds(2), "label names the other theme");
             ui.Invoke("ThemeToggle");
             StudioWindow.WaitUntil(() => ui.Text("ThemeToggle") == "Light theme", TimeSpan.FromSeconds(2), "and back");
-            Assert.Equal("Succeeded", ui.Simulate(RunTimeout));   // still fully working after two swaps
+            Assert.Equal("Completed", ui.Acquire(RunTimeout));   // still fully working after two swaps
         });
 }

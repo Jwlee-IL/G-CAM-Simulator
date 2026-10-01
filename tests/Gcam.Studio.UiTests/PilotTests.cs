@@ -23,7 +23,7 @@ public sealed class PilotTests(ITestOutputHelper output)
             Assert.Empty(ui.Rows("MeasurementList"));
 
             // Progress end and result presence are separate conditions
-            Assert.Equal("Succeeded", ui.Simulate(RunTimeout));
+            Assert.Equal("Completed", ui.Acquire(RunTimeout));
             StudioWindow.WaitUntil(() => ui.ById("FloodView").Current.ItemStatus.StartsWith("zoom", StringComparison.Ordinal),
                 TimeSpan.FromSeconds(5), "flood map has an image");
             record.Step($"simulated: {ui.Text("StatusText")}");

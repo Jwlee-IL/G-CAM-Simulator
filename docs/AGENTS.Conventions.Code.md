@@ -64,7 +64,7 @@ Resource key kinds: `Color`, `Brush`, `Space`, `Pad` (padding), `Gap` (margin), 
 
 | Topic | Convention |
 |---|---|
-| Method name | `Subject_ExpectedBehaviour[_Condition]` in PascalCase segments: `ZoomAt_KeepsAnchorPointFixed`, `Cancel_KeepsPreviousResult_ReenablesEditing` |
+| Method name | `Subject_ExpectedBehaviour[_Condition]` in PascalCase segments: `ZoomAt_KeepsAnchorPointFixed`, `Stop_KeepsAcquiredData_ReenablesEditing` |
 | Class | `<TypeUnderTest>Tests`, one file per class under test |
 | Doubles | hand-written fakes for contracts (`FakeSimulation`, `FakeTheme`), no mocking library |
 | Physics tests | assert invariants with tolerances that are justified in a comment, and seed every RNG; statistical tolerances use the k·σ helpers in `tests/Gcam.Tests/Harness/Stat.cs` so they follow the sample size, and shared geometries come from `Harness/Rigs.cs` (loaded from `samples/`) |

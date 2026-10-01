@@ -174,6 +174,10 @@ TILT (pitch/yaw), mask WARPING.
   (Codex cross-verification of all theme-22 pieces is now DONE — round 6, no bugs.)
 
 ## Done (summary — details in AGENTS.Findings by theme)
+
+- **TODO-06 Studio workspace shell + `PlotView`** (2026-10-01, `bb3f00e`; desktop-verified the same day): workspaces,
+  first-party plot (10 M samples, CPU redraw ≤ 12 ms), polish survey with issues P-01 … P-11 for the author —
+  [PLAN.Studio.Shell](PLAN.Studio.Shell.md), `docs/assets/studio-polish-survey/README.md`.
 - **1–11**: geometry & localization, FOV÷resolution=rank, cyclic-ghost, directional biasing, noise
   threshold, tungsten leakage, optimal thickness, crystal uniformity, detector array (Nyquist),
   crystal materials, RTL peak-detector, SiPM+ADC front-end.

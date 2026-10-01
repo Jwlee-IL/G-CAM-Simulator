@@ -3,8 +3,8 @@
 Scope: why the batch run is replaced, the author's decisions A-1 … A-3, the steps and the effect on
 [PLAN.Studio.Spectrum](PLAN.Studio.Spectrum.md).
 
-Status: implemented (`0ed17e0`), headless tests pass, reviewed 2026-10-01; R-1 and R-3 done, R-2 / R-4 / R-5 go
-with TODO-08, R-6 waits for a free desktop.
+Status: implemented (`0ed17e0`), headless tests pass, reviewed 2026-10-01; R-1, R-3, R-6 done; R-2 / R-4 / R-5 go
+with TODO-08.
 
 Implementation checkpoint (2026-10-01): fresh event producer, rejection, 4 Hz immutable snapshots, Start / Stop,
 preset completion and headless physics / service / virtual-clock ViewModel tests implemented. Desktop validation
@@ -87,8 +87,8 @@ Open points, to settle before or in the next steps:
 | # | Point | Proposal |
 |---|---|---|
 | R-1 | The batch path (`Photons`, `RunCommand`, `ISimulationService.RunAsync`) is kept "for compatibility" but no view uses it, while its SR-RUN rows are withdrawn. | **Done** (2026-10-01): batch members, `ISimulationService` and the batch-only tests removed; the flood-axis convention test that guarded mm measurements was re-added on the acquisition path. |
-| R-2 | `ListModeSource` does not pass the per-pixel sensitivity (gain σ, non-uniformity) or the decay-scheme cascades that `EventStreamStudy` uses. | Add both in TODO-08, before the gain-σ input appears. |
+| R-2 | `ListModeSource` has no per-pixel gain non-uniformity. (The original note also claimed `EventStreamStudy` adds decay cascades — wrong: it emits singles too; see PLAN.Studio.ImagingOptions "Corrections".) | Gain in TODO-08's measurement stage; cascades in TODO-14. |
 | R-3 | The imaging model changed: Studio scored floods with the geometric `CrystalDetector`; events now come from `ComptonCrystalDetector` (Argmax), so in-crystal Compton mispositioning is in the image. More physical, but a behaviour change. | **Done** (2026-10-01): stated in VV.Studio.SRS (SR-RUN-16, present behaviour only), SDS SU-19 (with the history), VV.Studio.Acquisition and README. The size of the effect is not measured yet. |
 | R-4 | Arrival gaps use the running efficiency ΣW / N, which is noisy for the first few hundred histories. | Negligible at this throughput; if wanted, a short pilot run fixes the rate before the first event. |
 | R-5 | A non-zero background is rejected (`NotSupportedException`). | TODO-08 adds a transported background producer with the BSR input. |
-| R-6 | The desktop UI tests still press `RunSimulation` / read `PhotonBudget`. | Migrate them (list in VV.Studio.Acquisition) once the author says that project and the desktop are free. |
+| R-6 | The desktop UI tests still press `RunSimulation` / read `PhotonBudget`. | **Done** (2026-10-01): migrated in a separate worktree and run on the desktop — 19 / 19 pass; broken verdicts fail all 7 scenarios. New anomalies: AN-10 (workspace switch ignores UIA Select), AN-11 (source-drag localisation 1.43 mm vs 1.5 mm tolerance). |

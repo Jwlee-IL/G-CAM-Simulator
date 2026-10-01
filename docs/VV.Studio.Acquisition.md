@@ -84,26 +84,14 @@ light spread. No desktop session was started.
 The batch progress implementation and its late-callback regression test have been removed with the unused
 batch path. Acquisition progress comes from sequential snapshots.
 
-## Required UI-test migration (not applied)
+## UI-test migration (applied 2026-10-01)
 
-The existing UI-test project compiles unchanged. Its desktop scenarios are historical batch tests and need
-these updates once the author frees that project and desktop:
-
-1. `Harness/StudioWindow.cs`: invoke `StartAcquisition`; terminal states are Completed / Stopped / Failed and
-   active state Acquiring. Replace photon-budget setup with `AcquisitionLiveTime` and `AcquisitionSpeed`.
-2. `PilotTests.cs`, `ScenarioTests.cs`, `PolishSurveyTests.cs`: all callers of Simulate/Succeeded use acquisition
-   controls and Completed; wait for sufficient counts / acquisition completion before numerical readings.
-   Keep geometry oracles and their existing tolerances.
-3. The cancel scenario becomes Stop retention: assert Start clears prior data; use a sufficiently long preset,
-   wait for a snapshot, capture its counts / image, invoke `StopAcquisition`, verify Stopped and acquired data
-   retained, then editing restored. Retaining the previous run's peak is no longer the required behavior.
-   Verify both live-time and speed fields lock, plus source fields / add / remove / marker dragging.
-4. Status assertions parse live time, counts and cps with the optional MC-limited suffix. Re-run localization,
-   stale-chip, ROI/readout, measurement, keyboard/default-action and theme scenarios against a frozen terminal
-   snapshot; live ROI values may change between refreshes. Add preset auto-completion, restart-clears-data,
-   count monotonicity and MC-limited presentation scenarios. Trace them to SR-RUN-09 … -19.
-5. Preserve the plotting gate/oracles; the polish survey's acquisition helper needs updated controls only.
-   Runtime UI evidence remains pending; compilation does not establish desktop behavior.
+The desktop scenarios now drive Start / Stop / live time: `StudioWindow.Acquire` waits for Completed / Stopped /
+Failed and the status-line counts are parsed; the cancel scenario became
+`Stop_KeepsAcquiredData_LocksThenUnlocksScene` (inputs locked while acquiring, counts frozen after Stop, Start
+clears). On the desktop all 19 UI tests passed and, with corrupted verdicts, all 7 desktop scenarios failed at their
+corrupted assertions. Not yet automated: preset auto-completion timing, count monotonicity during acquisition and the
+MC-limited presentation.
 
 ## Scope
 
