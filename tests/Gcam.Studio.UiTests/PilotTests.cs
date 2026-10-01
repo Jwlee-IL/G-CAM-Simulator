@@ -1,4 +1,3 @@
-using System.Windows.Automation;
 using Gcam.Configuration;
 using Gcam.Studio.UiTests.Harness;
 using Xunit.Abstractions;
@@ -6,43 +5,25 @@ using Xunit.Abstractions;
 namespace Gcam.Studio.UiTests;
 
 /// <summary>
-/// G3 pilot: one complete user flow — start (sandboxed, owned) → simulate → pick the distance tool → drag on the
-/// flood map → judge the product's result → clean up. Judged on what only the product's handlers can produce
-/// (run state, a results-table row and its value), never on "the click didn't throw".
+/// The pilot flow: simulate → pick the distance tool → drag on the flood map → judge the product's result. Judged
+/// on what only the product's handlers produce (run state, a results-table row and its value), never on "the click
+/// didn't throw".
 /// </summary>
 public sealed class PilotTests(ITestOutputHelper output)
 {
     /// <summary>Set to 1 to shift the expected length by 1 mm: the run must then FAIL (verdict regression check).</summary>
     public const string BreakVerdictVariable = "GCAM_UI_BREAK_VERDICT";
 
-    private static readonly TimeSpan RunTimeout = TimeSpan.FromSeconds(60);
+    internal static readonly TimeSpan RunTimeout = TimeSpan.FromSeconds(60);
 
     [DesktopFact]
-    public void Pilot_SimulateThenMeasureDistance_AddsRowWithExpectedLength()
-    {
-        var record = new RunRecord(nameof(Pilot_SimulateThenMeasureDistance_AddsRowWithExpectedLength));
-        StudioProcess? app = null;
-        AutomationElement? windowElement = null;
-        string result = "failed";
-        try
+    public void Pilot_SimulateThenMeasureDistance_AddsRowWithExpectedLength() =>
+        Scenario.Run(nameof(Pilot_SimulateThenMeasureDistance_AddsRowWithExpectedLength), output, (ui, record) =>
         {
-            app = StudioProcess.Start(record.RunId);
-            record.Set("build", new { exe = app.ExePath, productVersion = app.ProductVersion, exeWritten = File.GetLastWriteTime(app.ExePath) });
-            record.Set("process", new { pid = app.Process.Id, started = app.StartedAt, sandbox = app.Sandbox });
-            windowElement = app.MainWindow(TimeSpan.FromSeconds(15));
-            var ui = new StudioWindow(windowElement);
-            ui.Normalise(1440, 900);
-            record.Set("window", windowElement.Current.BoundingRectangle.ToString());
-            record.Step("window ready");
-
-            // Start state
-            Assert.Equal("Idle", ui.RunState);
             Assert.Empty(ui.Rows("MeasurementList"));
 
-            // Simulate: progress end and result presence are separate conditions
-            ui.Invoke("RunSimulation");
-            StudioWindow.WaitUntil(() => ui.RunState is "Succeeded" or "Failed" or "Cancelled", RunTimeout, "run finished");
-            Assert.Equal("Succeeded", ui.RunState);
+            // Progress end and result presence are separate conditions
+            Assert.Equal("Succeeded", ui.Simulate(RunTimeout));
             StudioWindow.WaitUntil(() => ui.ById("FloodView").Current.ItemStatus.StartsWith("zoom", StringComparison.Ordinal),
                 TimeSpan.FromSeconds(5), "flood map has an image");
             record.Step($"simulated: {ui.Text("StatusText")}");
@@ -52,7 +33,6 @@ public sealed class PilotTests(ITestOutputHelper output)
             ui.Select("ToolDistance");
             StudioWindow.WaitUntil(() => ui.Text("ToolHint") != hintBefore, TimeSpan.FromSeconds(2), "tool hint follows the tool");
 
-            // Drag across the flood map at fixed fractions of the image
             var optics = new OpticsSettings();
             var oracle = new FloodOracle(ui.Bounds("FloodView"), optics.DetectorPixels, optics.PixelPitchMm);
             var from = oracle.ScreenAt(0.2, 0.8);
@@ -63,9 +43,8 @@ public sealed class PilotTests(ITestOutputHelper output)
             record.Set("oracle", new { view = oracle.ViewBounds.ToString(), image = oracle.ImageBounds.ToString(), oracle.CellPx, from = from.ToString(), to = to.ToString(), expected, tolerance = oracle.ToleranceMm, verdictBroken = broken });
             Pointer.Drag(from, to);
             Assert.Equal(to, Pointer.Position());   // the input landed where the oracle assumed
-            record.Step($"dragged {from} -> {to}");
 
-            // Verdict: exactly one new row, of the right kind, on the right image, with the expected length
+            // Exactly one new row, of the right kind, on the right image, with the expected length
             StudioWindow.WaitUntil(() => ui.Rows("MeasurementList").Count == 1, TimeSpan.FromSeconds(3), "one measurement row");
             var rowElement = ui.Rows("MeasurementList")[0];
             var row = MeasurementRow.Parse(rowElement.Current.Name);
@@ -75,24 +54,5 @@ public sealed class PilotTests(ITestOutputHelper output)
             output.WriteLine($"expected {expected:F3} mm ± {oracle.ToleranceMm:F3}, actual {actual:F1} mm");
             Assert.True(Verdict.Within(actual, expected, oracle.ToleranceMm),
                 $"length {actual} mm is not within {oracle.ToleranceMm:F3} mm of the expected {expected:F3} mm");
-            result = "passed";
-        }
-        catch (Exception e)
-        {
-            record.CaptureFailure(e, windowElement);
-            throw;
-        }
-        finally
-        {
-            app?.Dispose();
-            if (app is not null)
-            {
-                record.Set("sandboxWrites", app.SandboxWrites);
-                record.Set("ownedProcessEnding", app.Ending);
-            }
-            output.WriteLine($"manifest: {record.Save(result)}");
-        }
-        Assert.Equal("exit 0", app!.Ending);
-        Assert.Empty(app.SandboxWrites);
-    }
+        });
 }

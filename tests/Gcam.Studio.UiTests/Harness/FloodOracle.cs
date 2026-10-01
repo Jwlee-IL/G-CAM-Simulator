@@ -48,6 +48,24 @@ public sealed record FloodOracle(Rect ViewBounds, int Cells, double PitchMm)
     }
 
     /// <summary>
+    /// The screen point on the boundary before cell (<paramref name="col"/>, <paramref name="rowFromTop"/>). ROI corners go
+    /// here, half a cell from every pixel centre, so a pixel of pointer or layout error can't change which centres
+    /// are inside (a corner on a centre would flip with half a pixel).
+    /// </summary>
+    public Point CellCorner(int col, int rowFromTop) => ScreenAt((double)col / Cells, (double)rowFromTop / Cells);
+
+    /// <summary>Pixels whose centres lie in the rectangle spanned by two screen points (the ROI rule, re-derived).</summary>
+    public int PixelsInside(Point a, Point b)
+    {
+        var (ax, ay) = ScreenToMm(a);
+        var (bx, by) = ScreenToMm(b);
+        double half = Cells * PitchMm / 2;
+        int Count(double lo, double hi) =>
+            Enumerable.Range(0, Cells).Count(i => -half + (i + 0.5) * PitchMm is var c && c >= lo && c <= hi);
+        return Count(Math.Min(ax, bx), Math.Max(ax, bx)) * Count(Math.Min(ay, by), Math.Max(ay, by));
+    }
+
+    /// <summary>
     /// Allowed error: each endpoint may land one device pixel off (layout rounding of the view's position), so
     /// 2·√2 pixels of length, plus 0.05 mm for the one-decimal display.
     /// </summary>
@@ -72,9 +90,55 @@ public sealed record MeasurementRow(string Name, string Kind, string Pane, strin
         if (!Value.EndsWith(" mm", StringComparison.Ordinal)) throw new FormatException($"not a length: '{Value}'");
         return double.Parse(Value[..^3], NumberStyles.Float, CultureInfo.CurrentCulture);
     }
+
+    /// <summary>The number in "67.0°".</summary>
+    public double AngleDeg()
+    {
+        if (!Value.EndsWith('°')) throw new FormatException($"not an angle: '{Value}'");
+        return double.Parse(Value[..^1], NumberStyles.Float, CultureInfo.CurrentCulture);
+    }
 }
 
 public static class Verdict
 {
     public static bool Within(double actual, double expected, double tolerance) => Math.Abs(actual - expected) <= tolerance;
+
+    /// <summary>Angle at <paramref name="vertex"/> in degrees, from screen points. A uniform scale and a y-flip (screen →
+    /// mm) don't change it, so it needs no knowledge of the image's mm frame.</summary>
+    public static double AngleDeg(Point a, Point vertex, Point b)
+    {
+        Vector u = a - vertex, v = b - vertex;
+        return Math.Abs(Vector.AngleBetween(u, v));
+    }
+
+    /// <summary>Worst-case angle error if each of the three clicks lands one pixel (diagonal) off.</summary>
+    public static double AngleToleranceDeg(Point a, Point vertex, Point b)
+    {
+        double arm1 = (a - vertex).Length, arm2 = (b - vertex).Length;
+        double rad = 2 * Math.Atan(Math.Sqrt(2) / arm1) + 2 * Math.Atan(Math.Sqrt(2) / arm2);
+        return rad * 180 / Math.PI + 0.05;
+    }
+
+    private static readonly Regex Peak = new(@"^peak \((?<x>[^,]+), (?<y>[^)]+)\) mm$");
+
+    /// <summary>"peak (10.0, 0.2) mm" → (10.0, 0.2).</summary>
+    public static (double X, double Y) ParsePeak(string text)
+    {
+        var m = Peak.Match(text);
+        if (!m.Success) throw new FormatException($"unexpected peak text '{text}'");
+        return (double.Parse(m.Groups["x"].Value, NumberStyles.Float, CultureInfo.CurrentCulture),
+                double.Parse(m.Groups["y"].Value, NumberStyles.Float, CultureInfo.CurrentCulture));
+    }
+
+    private static readonly Regex RoiDetail = new(@"^(?<w>[\d.,]+) × (?<h>[\d.,]+) mm · (?<n>\d+) px · ");
+
+    /// <summary>ROI detail "1.8 × 1.8 mm · 9 px · mean … · max …" → (w, h, pixels).</summary>
+    public static (double W, double H, int Pixels) ParseRoiDetail(string text)
+    {
+        var m = RoiDetail.Match(text);
+        if (!m.Success) throw new FormatException($"unexpected ROI detail '{text}'");
+        return (double.Parse(m.Groups["w"].Value, NumberStyles.Float, CultureInfo.CurrentCulture),
+                double.Parse(m.Groups["h"].Value, NumberStyles.Float, CultureInfo.CurrentCulture),
+                int.Parse(m.Groups["n"].Value, CultureInfo.InvariantCulture));
+    }
 }

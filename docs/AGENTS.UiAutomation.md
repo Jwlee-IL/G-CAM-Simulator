@@ -13,7 +13,7 @@ condition and a record below.
 | 1 Safety | what can a run write, start, or reach | every write surface confirmed absent, isolated or blocked; process ownership rules in code | **done** |
 | 2 Measurement | how is each kind of control found, driven and judged | every interaction contract measured on the running app | **done** for the contracts the pilot uses + run / cancel |
 | 3 Pilot | does one complete flow work end to end | start → act → judge → clean up; 2 passes in a row; a deliberately broken verdict fails; a recovery run passes | **done** |
-| 4 Scale-out | scenarios traced to requirements and risks | each target requirement automated, manual, or excluded with a reason | next |
+| 4 Scale-out | scenarios traced to requirements and risks | each target requirement automated, manual, or excluded with a reason | **done** for the measuring and run flows; coverage gaps listed |
 | 5 Evidence | are results tied to build, script, input, environment | manifest per run; artefacts opened and checked | manifest + failure bundle exist; exploratory only |
 | 6 Operation | who runs it, when, how flakiness and baselines are handled | written run policy | rules below; no CI runner (needs a desktop) |
 
@@ -117,6 +117,44 @@ No `Gcam.Studio` process or sandbox folder was left after the four runs.
 **Harness defects found along the way:** the configuration folder was derived from a path with a trailing separator
 (the run failed cleanly with a manifest); the process exit was read after disposal. Both fixed.
 
+## 4. Scale-out
+
+`ScenarioTests` adds five scenarios to the pilot. Each starts a fresh, sandboxed app (`Harness/Scenario.cs`), so no
+tool, selection, zoom or result leaks between them (~2–3 s each; the suite takes ~20 s). Expected values never come
+from the app's own code.
+
+| Scenario | Traces to | Oracle (independent of the app) | Recovery-run result |
+|---|---|---|---|
+| `Pilot_SimulateThenMeasureDistance_AddsRowWithExpectedLength` | VAL-01, VAL-03 · SR-RUN-01, SR-MEAS-01 | length from screen points through the documented fit rule | 13.4 mm vs 13.400 ± 0.204 |
+| `Cancel_KeepsPreviousResult_LocksThenUnlocksScene` | VAL-02 · SR-RUN-02, SR-RUN-05 | state machine: Running → Cancelled; the peak text before the cancelled run | locked while running; Cancelled; peak unchanged; editable again |
+| `Roi_OnFloodMap_CountsWholePixelsByCentre` | VAL-03 · SR-MEAS-03 | pixel count by centre, with corners on cell **boundaries** so one pixel of error can't change it | 42 px, 3.6 × 4.2 mm |
+| `Angle_EscAbandonsDraft_DeleteRemovesSelected` | VAL-03 · SR-MEAS-02, SR-MEAS-07 | angle from the three screen points (scale- and flip-invariant); Esc is proven by the value — an un-abandoned first click would have produced a different angle | 69.8° vs 70.02 ± 2.29; Delete removed it |
+| `SourceDrag_MarksOutdated_RerunPutsPeakOnTheSource` | VAL-04, VAL-05 · SR-MEAS-08, SR-RUN-07, SR-VIEW-08 | physics: after a re-run the decoded peak must sit on the moved source (≤ 1.5 mm; localisation inside the FCFOV is sub-mm) | source (18.3, 13.6) → peak (18.7, 12.9); chip shown, then cleared |
+| `ThemeToggle_RelabelsAndSwitchesBack` | SR-THEME-01 | the label names the other theme; the app still simulates after two swaps | pass (the visual swap stays manual) |
+
+**Verdict checks.** `GCAM_UI_BREAK_VERDICT=1` corrupts every scenario's own expectation (+1 mm, +1 pixel, +5°,
+source + 3 mm, wrong label, wrong peak text). Record, 2026-10-01: normal runs 3 × 14/14 pass → broken run: **all 6
+desktop scenarios fail, each at its corrupted assertion** (checked in the manifests), the 8 oracle tests pass →
+recovery run 14/14. No process or sandbox left behind.
+
+**Oracle defects found by its own tests.** ROI corners were first placed on cell centres — exactly where the
+"by centre" rule flips — so half a pixel decided the count. Moved to cell boundaries; a test now proves a pixel of
+error changes nothing.
+
+**Product defect found.** The theme button's accessible name was a fixed "Switch theme" while it shows "Light theme"
+/ "Dark theme" — the spoken name didn't contain the visible label (WCAG 2.5.3). The fixed name was removed.
+
+### Coverage
+
+| Axis | Covered | Not covered, and why |
+|---|---|---|
+| Requirements (system level) | SR-RUN-01/02/05/07, SR-VIEW-08, SR-MEAS-01/02/03/07/08, SR-THEME-01, SR-A11Y-05 (all selectors are AutomationIds) | SR-VIEW-01…07 zoom / pan / readout — unit-tested in Core, keyboard zoom measured once (stage 2); next candidates. SR-THEME-02 visual swap — would need a pixel verdict, excluded by charter. SR-A11Y-03 keyboard walkthrough, VAL-07 — manual. VAL-08 display scaling — needs a second machine setting, manual |
+| Screen | the one window, idle / running / succeeded / cancelled; both images with and without data | light theme beyond the label (charter) |
+| Controls operated | Run, Cancel, photon budget, tool picker (Pan, Distance, Angle, ROI), both heatmaps (pointer, Esc, Delete), source marker drag, theme toggle | operated only in stage 2 measurement: Add source, X / Y fields, isotope combo. Never operated: Remove source, Distance / Activity fields, Clear and − (delete) buttons, source list selection |
+| Judged results | every scenario judges product state (run state, rows, values, fields, chips); none judges pixels | — |
+| Environment | Windows 11, ko-KR, 100 % scaling, 1440×900 window, Release build | other scaling, other cultures |
+| Manual only | gesture thresholds (4 px drag, right-click abandon) — inspection; screen-reader session — not done | |
+
 ## 5. Evidence
 
 Each run writes `ui-runs/<runId>/manifest.json` under the test output folder (ignored by git): profile, purpose,
@@ -131,14 +169,18 @@ image was deleted and the capture fixed. Open a failure bundle's image before sh
 ## 6. Operation
 
 - `GCAM_UI_TESTS=1 dotnet test tests/Gcam.Studio.UiTests -c Release` — only when the desktop is free.
-  Without the variable the desktop test is **skipped** and reported as skipped, never as passed.
+  Without the variable the desktop tests are **skipped** and reported as skipped, never as passed.
 - Runs are serial. A run that fails is not retried automatically; read its manifest first.
 - CI (when added) can run the oracle tests but not the desktop tests — it has no interactive session. Say so in its
   summary rather than reporting the UI suite green.
 - Re-measure (stage 2) and re-pilot (stage 3) after changing AutomationIds, the window layout, the adorner's input
   handling, or the test machine's display scaling.
 
-## Next (stage 4)
+## Next
 
-Scenarios to automate, traced to `VV.Studio`: VAL-02 cancel, VAL-03 ROI and angle, VAL-04 source drag →
-"outdated" → re-run, Esc / Delete. Keep screenshots diagnostic-only; judge on product state.
+- Heatmap zoom / pan / readout scenarios (SR-VIEW-03, -04, -07) through keys and `ItemStatus`.
+- The never-operated controls above (Remove source, Clear, Delete button, source list selection).
+- A keyboard crosshair for creating measurements (AN-01), then a keyboard-only scenario.
+- Promote from exploratory to regression use (profile P2) once the suite has a run policy owner and history.
+
+Keep screenshots diagnostic-only; judge on product state.

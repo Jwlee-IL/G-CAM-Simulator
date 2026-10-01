@@ -62,4 +62,4 @@ name a helper `Select` (the `Select-Object` alias wins).
 | 2 | `HeatmapView`: zoom, pan, mm readout, automation peer | done |
 | 2.5 | Theme tokens (dark / light), metrics, typography, shared control styles; fixed-grid layout; colour bars | done |
 | 3 | Measurement tools (distance, angle, ROI) as an adorner, source drag on the reconstruction, measurement panel, results table, stale-result chip | done |
-| 4 | UI automation (charter, safety, measurement and pilot done; scale-out next), keyboard crosshair for measuring, high-contrast mode, colormap choice | in progress |
+| 4 | UI automation (6 scenarios traced to V&V; heatmap navigation next), keyboard crosshair for measuring, high-contrast mode, colormap choice | in progress |

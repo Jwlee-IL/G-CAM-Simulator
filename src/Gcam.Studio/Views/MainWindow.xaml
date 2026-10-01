@@ -71,7 +71,7 @@
                 <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
                     <Button Content="{Binding ThemeToggleLabel}" Command="{Binding ToggleThemeCommand}"
                             Style="{StaticResource Button.Ghost}" Margin="{StaticResource Gap.InlineWide}"
-                            AutomationProperties.AutomationId="ThemeToggle" AutomationProperties.Name="Switch theme" />
+                            AutomationProperties.AutomationId="ThemeToggle" />
                     <TextBlock Text="Photons" Style="{StaticResource Text.Label}" Margin="{StaticResource Gap.Inline}" />
                     <TextBox Width="120" Text="{Binding Photons, UpdateSourceTrigger=LostFocus, StringFormat=N0}"
                              IsEnabled="{Binding IsIdle}" Margin="{StaticResource Gap.InlineWide}"

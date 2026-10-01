@@ -38,6 +38,40 @@ public sealed class StudioWindow(AutomationElement window)
         WaitUntil(() => item.Current.IsSelected, TimeSpan.FromSeconds(2), $"{id} selected");
     }
 
+    /// <summary>
+    /// Types into a text field and commits it. Fields bind on LostFocus, so focus is moved to
+    /// <paramref name="commitBy"/> afterwards; the value is read back before returning.
+    /// </summary>
+    public void SetText(string id, string text, string commitBy)
+    {
+        var value = Pattern<ValuePattern>(ById(id), ValuePattern.Pattern);
+        value.SetValue(text);
+        ById(id).SetFocus();
+        ById(commitBy).SetFocus();
+        Thread.Sleep(150);
+    }
+
+    public string Value(string id) => Pattern<ValuePattern>(ById(id), ValuePattern.Pattern).Current.Value;
+
+    public bool IsEnabled(string id) => ById(id).Current.IsEnabled;
+
+    /// <summary>Keys to the element (focused first), as <c>SendKeys</c> syntax: "{ESC}", "{DELETE}".</summary>
+    public void Keys(string id, string keys)
+    {
+        ById(id).SetFocus();
+        Thread.Sleep(100);
+        System.Windows.Forms.SendKeys.SendWait(keys);
+        Thread.Sleep(150);
+    }
+
+    /// <summary>Invokes Run and waits for a terminal state; progress end and result presence are checked separately by callers.</summary>
+    public string Simulate(TimeSpan timeout)
+    {
+        Invoke("RunSimulation");
+        WaitUntil(() => RunState is "Succeeded" or "Failed" or "Cancelled", timeout, "run finished");
+        return RunState;
+    }
+
     /// <summary>Run state published by the status line (Idle / Running / Succeeded / Cancelled / Failed).</summary>
     public string RunState => ById("StatusText").Current.ItemStatus;
 

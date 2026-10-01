@@ -42,6 +42,35 @@ public class FloodOracleTests
     }
 
     [Fact]
+    public void PixelsInside_CountsCentres_RobustToAPixelAtTheCorners()
+    {
+        Assert.Equal(1, Oracle.PixelsInside(Oracle.CellCorner(3, 3), Oracle.CellCorner(4, 4)));
+        Assert.Equal(6 * 7, Oracle.PixelsInside(Oracle.CellCorner(8, 10), Oracle.CellCorner(14, 17)));
+        Assert.Equal(6 * 7, Oracle.PixelsInside(Oracle.CellCorner(14, 17), Oracle.CellCorner(8, 10)));   // any order
+        // One pixel of error at either corner changes nothing
+        Assert.Equal(6 * 7, Oracle.PixelsInside(Oracle.CellCorner(8, 10) + new Vector(1, -1), Oracle.CellCorner(14, 17) + new Vector(-1, 1)));
+    }
+
+    [Fact]
+    public void AngleDeg_IsTheVertexAngle_ToleranceShrinksWithLongerArms()
+    {
+        Assert.Equal(90, Verdict.AngleDeg(new Point(10, 0), new Point(0, 0), new Point(0, 10)), 9);
+        Assert.Equal(45, Verdict.AngleDeg(new Point(10, 0), new Point(0, 0), new Point(10, -10)), 9);
+        double shortArms = Verdict.AngleToleranceDeg(new Point(20, 0), new Point(0, 0), new Point(0, 20));
+        double longArms = Verdict.AngleToleranceDeg(new Point(200, 0), new Point(0, 0), new Point(0, 200));
+        Assert.True(longArms < shortArms / 5);   // ~1.6° at 200 px arms vs ~16° at 20 px
+    }
+
+    [Fact]
+    public void Parsers_ReadPeakAndRoiDetail_RejectOtherText()
+    {
+        Assert.Equal((10.0, -0.2), Verdict.ParsePeak($"peak ({10.0:F1}, {-0.2:F1}) mm"));
+        Assert.Equal((1.8, 2.4, 12), Verdict.ParseRoiDetail($"{1.8:F1} × {2.4:F1} mm · 12 px · mean 0.01 · max 0.02"));
+        Assert.Throws<FormatException>(() => Verdict.ParsePeak("Cancelled — previous result kept"));
+        Assert.Throws<FormatException>(() => Verdict.ParseRoiDetail($"{1.8:F1} × {2.4:F1} mm · no image yet"));
+    }
+
+    [Fact]
     public void MeasurementRow_ParsesTheAutomationName()
     {
         var row = MeasurementRow.Parse($"M1 Distance on Flood: {12.3:F1} mm");
