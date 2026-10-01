@@ -6,8 +6,8 @@ acquisition-only verification baseline; Spectrum evidence and current test total
 
 **At a glance**
 - Fresh histories, importance-weight rejection and independent Poisson timing feed one cumulative event list.
-- Eight added engine cases, four acquisition Core cases and eight service cases pass.
-- Release solution verification: 254 engine, 69 Core, 8 service and 10 UI-oracle passes; nine desktop cases skipped.
+- Current realism and background evidence is below; original list-mode measurements remain the baseline.
+- Release inventory: 259 engine, 73 Core, 23 service and 10 UI-oracle cases; nine desktop cases skipped.
 - All original 246 engine assertions remain unchanged. The unused batch API, commands and batch-only tests have been removed.
 - Active acquisition requirements are SR-RUN-09 … SR-RUN-19; the affected batch rows are withdrawn.
 - Desktop migration and the remaining scope are listed below.
@@ -101,7 +101,68 @@ Before list-mode acquisition the flood used geometric CrystalDetector scoring th
 It now adds one count per ComptonCrystalDetector event at its Argmax pixel, so in-crystal Compton scatter
 mispositioning is included in the image. No quantitative size of this change is asserted.
 
-The new producer explicitly rejects nonzero ambient/background configurations;
-Studio currently exposes none, and background requires a separately transported process rather than a reused
-shape. List-mode deposits are unsmeared and unwindowed, located by Argmax; front-end resolution, energy windows,
-pile-up, spectrum and waveform work remain outside this change.
+Studio supplies detector settings explicitly after cloning the scene config; existing builder callers keep
+the bare geometry. List-mode deposits remain unsmeared and unwindowed, located by Argmax. Measurement applies
+the seeded CrystalUniformity gain pattern before one chain smear. Snapshots retain their acquisition inputs,
+so later gain edits mark results outdated without changing recorded response. Spectrum windows and optional
+pile-up reuse these events. Per-nuclide imaging, stripping and nuclear decay cascades are outside this scope.
+
+## Detector realism and background
+
+Measured 2026-10-01, Release. Source tests use default Studio optics (30×30 pixels, 0.6 mm pitch, Cs-137 at
+1 m), transport seed 12345, measurement seed 909, gain σ 3% and gain seed 1. Entrance is 0.15 mm steel-equivalent,
+backing 2 mm and reflector gap 0.1 mm. Each absorber/backing comparison transports 2,000,000 proposals per
+configuration; variations use Clone + mutate. Counts are per proposal budget, not normalized to a fixed accepted
+event count, so attenuation remains visible. The Cs spectrum has 256 bins of width 2.9725 keV.
+
+| Test / check | Measurement | Expectation and tolerance |
+|---|---|---|
+| `BaKAbsorber_UncollidedBandMatchesIndependentNarrowBeam_ReportsMeasuredSpectrum`, unchanged Ba line energies | 50,400 → 24,198; ratio 0.480119 | Beer-Lambert prediction 0.474422 ± 0.014926 (4σ), weighted by the bare 32.1 / 36.4 keV line counts; independent log-log interpolation of iron μ anchors at 30 / 40 keV gives transmission 0.450696 / 0.571939; Poisson reference and transmitted-count uncertainty included |
+| Same test, measured grouped Ba band | 58,031 → 36,338; ratio 0.626183 | independent weighted transport + measurement MC, seed 987 / 444, predicts 0.623270 ± 0.028881 (4σ); weighted-reference variance bounded by w² ≤ w_max·w |
+| Same test, Ba K / 662 peak-bin ratio | 3.977877 without absorber, 2.324194 with absorber | descriptive, not a global-peak requirement; Ba K remains the global maximum at 31.2110 keV in both configurations |
+| Same test, 480–620 keV valley (P-11) | 11,367 → 11,515 counts | descriptive; increase 148 counts is only 0.98σ under an independent Poisson comparison; no claim of a large absorber tail |
+| `Backing_AddsBackscatterRegion_FromTransport` | 170–210 keV counts 15,239 without backing → 17,674 with backing; excess 2,435 | excess exceeds 4σ = 725.6776 counts; Compton's 180° return energy E/(1+2E/m_ec²) = 184.3263 keV; finite-angle return broadens toward higher energies; the bare crystal already has continuum in this region |
+| `Gain_WidensPhotopeakInQuadrature_AndReducesTightWindowAcceptance`, 53,119 MC full-energy events | measured variance 558.8994 vs expected 558.9961 keV²; equivalent FWHM 55.6700 vs 55.6748 keV; sampled pattern σ 2.9997% | pixel-amplitude variance + mean FrontEndModel noise variance; 4σ variance tolerance 13.7193 keV² from the mixture's fourth central moment |
+| Same test, histogram FWHM | 55.8680 vs 55.6748 keV | quadrature prediction, tolerance 6.7990 keV = two bins + 5·FWHM/√(2(N−1)) |
+| Same test, ±0.5 chain-FWHM window | fraction 0.760914 at zero gain spread → 0.476082 at 3%; decline 0.284832 | decline exceeds 4σ = 0.011399, conservative independent-binomial bound for paired samples |
+| `BsrOne_DoublesRate_PreservesEverySourceEvent_AndMatchesBackgroundModel` | 80,029 source + 80,235 background events in 1000 s; mature total/source ratio 2.003018 | BSR=1 predicts 2; 4σ tolerance 0.021112, excluding first 100 s of running-rate startup |
+| Same test, spatial / energy distributions | uniform-profile max abs z 3.0688 over 144 pixels; energy max abs z 1.1164 over eight bins | 5σ per pixel vs Background.SideLeakProfile(sideFraction=0); 4σ per energy bin vs 100,000 fresh cosine-flux deposits from BackgroundDepositSpectrum at 200 keV with independent seed 987 |
+| `ZeroBsr_PreservesSourceStreamBitForBit`, `Background_SeedAndCancellationAreDeterministic` | source-only and explicit zero-BSR records, histories and weights agree; enabled streams replay; cancellation throws promptly | exact seeded equality, no extra RNG draws on the disabled path |
+| `Measurement_UsesFrozenInputs_AndReplaysAcrossSnapshotsAndPileUp` | batch, incremental and toggle replay agree; shared MeasurementStage reproduces every histogram bin | exact; 8,427 fresh events; gain precedes smearing and is not applied twice |
+
+Narrow-beam transmission describes uncollided photons, not the full measured Ba band: entrance Compton
+scattering can leave a photon inside that broad band. Both checks are therefore reported separately. The
+absorber suppresses Ba counts, but in this geometry does not make the Ba peak smaller than the 662 keV peak.
+No tail, line or noise floor is added by hand. The valley increase is small and statistically unresolved here.
+
+The ambient energy response matches the existing unmasked cosine-flux crystal model; pixel placement matches
+the uniform detected pedestal. BSR is defined after detection, so this is not a prediction of incident flux,
+entrance loss or shield leakage. Each background deposit is freshly transported and used once; no event pool
+is repeated. Source records remain exactly intact when background is merged. Source and background arrival
+streams use separate RNGs and the running source-rate estimator. Spatial structure beyond the uniform pedestal
+is outside this implementation.
+
+The first background test used a reference-only variance estimate, then incorrectly treated an empty finite
+reference bin as zero probability. The two-sample estimate now pools both counts under the equal-distribution
+null; bins with no variance in either sample require exact agreement. The 4σ energy criterion is unchanged.
+
+### Throughput with realism defaults
+
+`Throughput_RecordsBareAndRealisticAcquisition` warms each producer for 2,000 accepted events and times
+100,000 further events, four runs per configuration. Bare Studio scene-builder geometry gives 536,360,
+525,671, 538,449 and 538,924 accepted events/s (mean 534,851). Realism defaults give 285,234, 299,889,
+291,842 and 284,532 events/s (mean 290,375): about 45.7% lower accepted throughput. This comparison includes
+transport and rejection, excludes measurement / decode / UI, and changes physical geometry as well as its
+compute cost; it is a local measurement, not a performance requirement.
+
+### Traceability and pending desktop checks
+
+SR-RUN-20 … -22 cover explicit defaults, frozen measurement inputs and background. SR-NAV-01 / -02,
+SR-SPEC-02 / -03 and SR-RUN-12 state the shared inputs, checked-state workspace activation, gained amplitudes
+and input locking. Headless workspace activation fixes AN-10; SelectionItemPattern.Select still needs a real
+desktop regression. No Studio window was launched and the UI-test project was not edited.
+
+Needed UI additions: select both workspaces through SelectionItemPattern and assert the displayed content;
+verify detector defaults, field reachability in both themes at minimum size, gain / seed / BSR locking during
+acquisition, stale state after edits, preserved spectrum response after a later window change, and live BSR
+count/rate presentation. Existing desktop tolerances remain unchanged.

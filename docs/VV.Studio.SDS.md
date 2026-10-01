@@ -72,7 +72,7 @@ one class, or a small group of types that only make sense together. Unit IDs are
 | SU-17 | SI-2 | `PlotSeries`, `PlotBand`, `PlotMarker`, `PlotViewport`, `NiceTicks`, `MinMaxPyramid` | `Core/Plotting/*.cs` | finite / increasing inputs, sample limit, linear / log mapping, X navigation, ticks, exact range extrema |
 | SU-18 | SI-4 | `PlotView` (+ automation peer) | `Studio/Controls/PlotView.cs` | cached preparation, frozen geometry, themed axes / series / bands / markers, readout, pointer / key input, measured CPU redraw |
 | SU-19 | SI-3 | `AcquisitionSession` | `Services/AcquisitionSession.cs` | fresh MC histories, consumed event prefix, live-time pacing, immutable cumulative snapshots, Stop and automatic completion |
-| SU-20 | SI-3 | `SpectrumService` | `Services/SpectrumService.cs` | worker smearing / binning, incremental pile-up, resolvable-line grouping and union share |
+| SU-20 | SI-3 | `SpectrumService`, `MeasurementStage` | `Services/SpectrumService.cs`, `Services/MeasurementStage.cs` | shared gain / chain response, worker binning, incremental pile-up, resolvable-line grouping and union share |
 | SU-21 | SI-1 | `SpectrumWorkspaceViewModel`, `ISpectrumService`, spectrum records | `Core/ViewModels/SpectrumWorkspaceViewModel.cs`, `Core/Services/Spectrum*.cs`, `Core/Services/ISpectrumService.cs` | view settings, snapshot refresh, Area series / bands / table, rejection of late responses |
 | SU-22 | SI-4 | `SpectrumView`, `SpectrumPanel` | `Studio/Views/Spectrum*.xaml(.cs)` | plot, readout, table and read-only chain / view-settings panel |
 
@@ -82,10 +82,10 @@ Paths are relative to `src/Gcam.Studio.Core`, `src/Gcam.Studio.Services` and `sr
 
 ### SI-1 ↔ SI-3: `IAcquisitionService`
 
-`IAcquisitionService`: `Start(scene, optics, liveTimeS, speed)` returns an
+`IAcquisitionService`: `Start(scene, optics, liveTimeS, speed, detector, backgroundToSignalRatio)` returns an
 `IAcquisitionSession`. It publishes `IAsyncEnumerable<AcquisitionSnapshot>`, exposes `Stop()` and supports
 asynchronous disposal. Snapshots contain live time, integer counts, running rate, achieved speed, MC-limited
-flag, imaging, unsmeared events, decode time and completion. Images are detached read-only copies; the event
+flag, imaging, unsmeared events, frozen detector inputs, decode time and completion. Images are detached read-only copies; the event
 array is detached and wrapped read-only. A bounded channel keeps at most two cumulative snapshots and drops
 old snapshots for a slow reader; it never drops acquired events. The ViewModel awaits on its UI context.
 `TimeProvider` is injected into the service for virtual-clock verification. Stop cancels transport and waiting,
@@ -107,7 +107,9 @@ verifies transport/localization, immutable snapshots, count conservation, input 
 `ProcessAsync(acquisitionId, events, lines, settings, seed, cancellationToken)` returns `SpectrumView`:
 256 centres and acquired counts, grouped bands and their counts / shares, total measured pulses, overflow,
 union share, resolution at 662 keV, resolving time, chain name and worker processing elapsed time.
-`SpectrumSettings` contains a positive finite N and pile-up; log Y is a plot property.
+`SpectrumSettings` contains a positive finite N and pile-up, plus the snapshot's frozen DetectorSettings and
+pixel dimensions; log Y is a plot property. Gain σ and seed belong to acquisition inputs, not to the editable
+view; the response therefore survives later input edits.
 Requests are serialized and CPU work runs in `Task.Run`. The ViewModel resumes on its calling context;
 cancellation and a revision check prevent an old request from overwriting a newer view. Failure is shown as
 `Spectrum failed: …` without discarding the acquisition. Published plot arrays are never subsequently mutated.
@@ -227,7 +229,7 @@ Only the rules a reviewer needs to check a requirement; the rest is in the code 
 | Rule | Definition |
 |---|---|
 | Progress | acquisition live time / preset, from sequential cumulative snapshots. |
-| Stale flag | set when `Result ≠ null` and scene, live time / speed / optics change; cleared at Start. |
+| Stale flag | set when `Result ≠ null` and scene, live time / speed / optics / gain / background change; cleared at Start. |
 | Inputs | default 60 s and ×10; invalid non-positive / non-finite UI values return to defaults; service rejects them. |
 | Add source | new source at `X = 15 mm · count`, `Y = 0`, selected. |
 | Remove source | select the item now at the removed index, or the new last item; `null` when empty. |
@@ -243,8 +245,12 @@ Each 250 ms refresh spends at most 200 ms transporting fresh histories, then dec
 off-thread. Physical rate is total emission × sum of detected importance weights / emitted histories.
 Rejection uses A/(4πz_min²), a proven detector-area weight bound; analog emission uses bound 1. Timing and
 rejection have independent seeded RNG streams. The MC-limited horizon is the consumed prefix, not an unconsumed
-accepted event. Events past the preset are look-ahead only. Ambient acquisition is explicitly unsupported
-rather than silently manufacturing a background shape.
+accepted event. Events past the preset are look-ahead only. Background uses a separately timed process at
+BSR × source rate, whose fresh deposits use the existing cosine-flux unmasked crystal response. A uniform
+pixel assignment follows the engine's detected-pedestal model, not a transported shield profile. BSR is a
+detected-count ratio, not an incident-flux prediction; entrance, backing and reflector effects apply to source
+transport, while the ambient response matches `BackgroundDepositSpectrum`. Disabled background consumes no
+additional source RNG draws. Nuclear emissions remain independent singles.
 
 ### SU-16 workspaces / SU-17 plotting / SU-18 `PlotView`
 
@@ -252,6 +258,8 @@ The shell registers Imaging once and retains its identity on completion, Stop an
 is the acquisition source of truth; publishing it refreshes the imaging measurement session and notifies `PeakText`.
 The two `ContentControl`s use workspace-type DataTemplates for centre and panel. Only registered indices are
 selected by Ctrl+1…4; switch visibility requires at least two workspaces.
+Setting a registered workspace's `IsActive` true selects it in the shell and clears the other active state.
+This handles SelectionItem activation without relying on a button command (AN-10).
 
 Plot data arrays are immutable after publication. A series validates finite values, a strictly increasing X axis
 or positive sample step, and a 10M input cap. The pyramid stores extrema for complete dyadic blocks starting at 64 samples
@@ -270,8 +278,10 @@ timing includes axes, query and geometry; the desktop test separately records ev
 The default chain comes from Configuration `FrontEndParts.Default`: GAGG(Ce), Hamamatsu MPPC S13360-3050,
 CSP + CR-RC. `FrontEndModel` derives resolution from the photoelectron budget, intrinsic floor and DCR.
 The shared pulse helper gives 11.25 / 40 ADC samples at 125 MSPS; `ResolvingSamples` gives 730 ns.
-Each retained MC deposit is smeared once, using a seed addressed by its event index. Singles extend the
-histogram; pile-up sums deposits while each arrival gap is below 730 ns, re-extending the interval as the
+Each retained MC deposit is multiplied by its fixed pixel gain and smeared once, using a seed addressed by its
+event index. `MeasurementStage` obtains the `CrystalUniformity.Gain` pattern from the acquisition settings;
+it supplies the same deterministic response to spectrum and future energy-window images. Singles extend the
+histogram; pile-up sums gained amplitudes while each arrival gap is below 730 ns, re-extending the interval as the
 engine's `ApplyPileUp` does. The final open group is measured on a copied histogram for publication and
 stays open in the cache. A pile-up toggle resets and replays; snapshot boundaries do not change counts.
 Axis range is 1.15 × highest emission energy (2.15 × with pile-up); pulses above it are counted as overflow.
@@ -281,8 +291,9 @@ are the union span of E ± N·FWHM(E); labels retain every energy and isotope. C
 the overall share uses the union of bands, so overlapping resolved windows count a bin only once.
 Spectrum follows the acquisition scene captured at Start, retains stale status after edits, and reprocesses
 view settings without acquisition. Log Y only redraws `PlotView`. No independent pool or noise wall is added.
-The list-mode acquisition's per-pixel gain and correlated nuclear cascades remain unavailable; this processing
-does not add either. Measurements and real-engine checks are recorded in [VV.Studio](VV.Studio.md).
+Acquisition snapshots retain their detector settings; gain edits never resmear recorded events with a new pattern.
+The chain-only resolution readout excludes pixel gain spread. Correlated nuclear cascades remain unavailable.
+Measurements and real-engine checks are recorded in [VV.Studio](VV.Studio.md).
 
 ### SU-02 `SourceItemViewModel`
 
@@ -301,7 +312,8 @@ Any property change raises `Label`; an isotope change also raises `MarkerLabel`.
 ### SU-08 `SimulationService`
 
 `Start` validates live time, speed and the nonempty scene, builds the config on the caller's thread with
-`SceneConfigBuilder.Build(scene, optics, 1)`, and returns SU-19 with the injected `TimeProvider`. The placeholder
+`SceneConfigBuilder.Build(scene, optics, 1)`, clones it, applies explicit `DetectorSettings` and BSR, and returns
+SU-19 with frozen settings and the injected `TimeProvider`. The placeholder
 photon budget is required by the config builder; acquisition ends by live time or Stop. Decoder settings come
 from the builder: non-cyclic, recon half-extent `0.95 · rank · pitch / (D/F) / 2`, step
 `max(0.2, pitch / (D/F) / 4)` mm, rank snapped to the nearest prime.
@@ -349,6 +361,7 @@ Every SRS requirement maps to at least one unit; every unit carries at least one
 | SR-RUN-03, SR-RUN-09 … SR-RUN-14, SR-RUN-19 | SU-01, SU-07, SU-08, SU-19 |
 | SR-RUN-15 | SU-08 (argument checks and engine `SceneConfigBuilder`) |
 | SR-RUN-16 … SR-RUN-18 | SU-19, SU-07, SU-01, SU-16 |
+| SR-RUN-20 … SR-RUN-22 | SU-08, SU-19, SU-20 (`MeasurementStage`), SU-01, engine list-mode background producer |
 | SR-SCENE-01 | SU-01 (live time / speed), SU-02 |
 | SR-SCENE-02 | SU-01 |
 | SR-VIEW-01 … SR-VIEW-06 | SU-05, SU-09 |

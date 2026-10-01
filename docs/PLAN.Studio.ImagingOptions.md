@@ -5,8 +5,9 @@ cascades, ambient background, per-nuclide energy-window imaging and Compton stri
 phases. Builds on [PLAN.Studio.LiveAcquisition](PLAN.Studio.LiveAcquisition.md) (closes its review points R-2, R-5)
 and [PLAN.Studio.Spectrum](PLAN.Studio.Spectrum.md).
 
-Status: phase A corrected after the implementer stopped on two wrong premises (2026-10-01, see "Corrections")
-and handed back; phase B planned (starts after phase A is reviewed).
+Status: phase A done (2026-10-01; corrected after the implementer stopped on two wrong premises, see
+"Corrections"); phase B planned. Open from phase A: the 480–620 keV valley did not fill with the absorber and
+backing (11 367 → 11 515 counts, ~1σ) — survey P-11 is not a styling issue and not explained yet.
 
 ## What `Gcam.Wpf` does that Studio does not
 
@@ -23,10 +24,12 @@ and handed back; phase B planned (starts after phase A is reviewed).
 | **One imaging channel per isotope**: events inside that isotope's primary-line window, decoded separately, composited; found peaks labelled by isotope | one flood of all events |
 | **Compton strip**: per pixel, subtract R·(higher channel) from a lower channel; R calibrated from an H-only run of the scene | absent |
 
-**Correction to TODO-07.** The Spectrum commit and its test describe the Ba K peak being the global maximum as
-expected physics. That holds only for the bare geometry Studio uses today; with the entrance absorber `Gcam.Wpf`
-always had, the Ba K X-rays are attenuated (steel at 32 keV, μ ≈ 65 cm⁻¹, gives ~38 % transmission through
-0.15 mm by the narrow-beam estimate — the MC is the judge). Phase A replaces that assertion with a physics check.
+**Correction to TODO-07 — and to this correction (measured in phase A).** This plan first said the Ba K peak
+being the spectrum's tallest bin holds only for the bare geometry. Measured with the realism defaults it still is:
+the Ba K / 662 keV peak-bin ratio falls from 3.98 (bare) to 2.32 (0.15 mm steel, unscattered transmission 0.48 vs
+0.474 from Beer–Lambert). The original reading was right: the low-energy peak is far narrower (~7 keV FWHM vs
+~56 keV for the photopeak once the 3 % pixel gain spread is included), so its bin is taller although it holds
+fewer counts. `Gcam.Wpf`'s "~8 % bump" comment does not describe peak height.
 
 ## Corrections (2026-10-01, after the implementer stopped)
 

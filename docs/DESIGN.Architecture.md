@@ -125,7 +125,8 @@ sequenceDiagram
 
 ## Workspaces and plotting
 
-`MainViewModel` owns scene, optics, live time, speed, acquisition state, snapshot and the shared `ImagingResult`. `Workspaces` and
+`MainViewModel` owns scene, optics, detector inputs, background ratio, live time, speed, acquisition state,
+snapshot and the shared `ImagingResult`. `Workspaces` and
 `SelectedWorkspace` select the centre and right panel through type-based DataTemplates. `WorkspaceViewModel`
 supplies title, AutomationId and active state; `ImagingWorkspaceViewModel` owns `Measurements` and `PeakText`,
 and reads the shared result through `Shared`. Publishing a result refreshes imaging readings without replacing
@@ -143,6 +144,13 @@ Changing acquisition, seed, pile-up or axis range resets the cache. Index-seeded
 independent of snapshot partitioning. Log Y changes the plot only; N changes windows and union share.
 Resolution and pulse samples derive from the shared Configuration presets and `FrontEndModel`; no noise floor
 is manufactured. Each line uses its own FWHM; unresolved neighbours merge, overlapping resolved windows do not.
+
+Studio applies `DetectorSettings` to a clone of the scene config in `SimulationService`; the scene builder's
+existing defaults are unchanged. Snapshots retain the detector inputs used at Start. `MeasurementStage` uses
+`CrystalUniformity.Gain`, then the chain smear, with event-index randomness. Spectrum and future imaging
+windows use that same response; raw event deposits are retained. Pile-up sums gained amplitudes before one
+chain smear. A background acquisition merges a second Poisson process with fresh diffuse crystal deposits;
+its uniform pixel placement follows the engine's detected-pedestal model. No nuclear cascades are emitted.
 
 ## Testing strategy
 

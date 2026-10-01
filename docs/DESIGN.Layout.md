@@ -36,7 +36,7 @@ combine a container's padding with a child's margin for the same edge.
 ```
 Row 0  Top bar (Size.Bar)          identity · workspace switch (when ≥2) · theme · live time (s) · speed × · ▶ Start / Stop
 Row 1  Content (a Border with Pad.Window)
-         Col 0  Scene panel (Size.SidePanel)   sources · selected source · geometry (read-only)
+         Col 0  Scene panel (Size.SidePanel, scrollable)   sources · selected source · geometry · detector · background
          Col 1  Gutter
          Col 2  Selected workspace centre (DataTemplate by workspace type)
                 Imaging: [flood map] Gutter [reconstruction]
@@ -57,6 +57,13 @@ Imaging and Spectrum are registered: there are no placeholder workspaces. The sw
 `RadioButton.Segment`, workspace titles and `Workspace.*` AutomationIds. Ctrl+1…4 selects a registered workspace;
 an unavailable index leaves selection unchanged. Acquisition preserves selection. Shared scene / optics / live-time / speed inputs
 mark an existing result outdated; workspace view settings re-render without invalidating that result.
+
+The geometry section shows the detector entrance (0.15 mm steel-equivalent), backing (2 mm) and reflector
+gap (0.1 mm) read-only. Gain σ (%) and gain seed are editable acquisition inputs (defaults 3 and 1), followed
+by Background BSR (default 0, detected background/source ratio at 200 keV). These inputs are disabled during
+acquisition and mark retained results outdated after an edit. The left panel scrolls when needed so all fields
+remain reachable at the minimum window height. Workspace activation follows `IsActive` as well as commands,
+so a UI Automation SelectionItem selection changes the centre and right panel.
 
 ## Window sizing: fixed grid, flexible centre
 

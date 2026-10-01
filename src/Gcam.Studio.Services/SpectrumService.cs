@@ -20,6 +20,8 @@ public sealed class SpectrumService : ISpectrumService
     private double _lastArrival, _groupEnergy, _maxEnergy;
     private long _total, _overflow;
     private double[] _counts = new double[BinCount];
+    private SpectrumSettings? _measurementSettings;
+    private MeasurementStage _measurement = new(null, 0, 0);
     public double Resolution662 => _model.FwhmFraction(662);
     public double ResolvingTimeS => _resolvingTimeS;
 
@@ -56,8 +58,12 @@ public sealed class SpectrumService : ISpectrumService
         var watch = Stopwatch.StartNew();
         double maxEnergy = lines.Max(l => l.EnergyKeV) * (settings.PileUp ? 2.15 : 1.15);
         if (id != _acquisitionId || settings.PileUp != _pileUp || seed != _seed ||
-            events.Count < _consumed || maxEnergy != _maxEnergy)
+            events.Count < _consumed || maxEnergy != _maxEnergy ||
+            settings.Detector != _measurementSettings?.Detector ||
+            settings.PixelsX != _measurementSettings?.PixelsX || settings.PixelsY != _measurementSettings?.PixelsY)
         {
+            _measurementSettings = settings;
+            _measurement = new MeasurementStage(settings.Detector, settings.PixelsX, settings.PixelsY, seed);
             _acquisitionId = id;
             _pileUp = settings.PileUp;
             _seed = seed;
@@ -78,7 +84,8 @@ public sealed class SpectrumService : ISpectrumService
                     !double.IsFinite(ev.ArrivalTimeS) || ev.ArrivalTimeS < 0 ||
                     (_consumed > 0 && ev.ArrivalTimeS < events[_consumed - 1].ArrivalTimeS))
                     throw new ArgumentException("Events must have ordered finite arrival times and nonnegative deposits.", nameof(events));
-                if (!_pileUp) AddMeasured(_counts, ev.DepositKeV, _consumed, ref _total, ref _overflow);
+                double amplitude = _measurement.Amplitude(ev);
+                if (!_pileUp) AddMeasured(_counts, amplitude, _consumed, ref _total, ref _overflow);
                 else
                 {
                     // Each absorbed pulse re-extends the resolving interval, exactly as ApplyPileUp.
@@ -88,7 +95,7 @@ public sealed class SpectrumService : ISpectrumService
                         _groupEnergy = 0;
                     }
                     if (_groupEnergy == 0) _groupStart = _consumed;
-                    _groupEnergy += ev.DepositKeV;
+                    _groupEnergy += amplitude;
                     _lastArrival = ev.ArrivalTimeS;
                 }
             }
@@ -115,8 +122,7 @@ public sealed class SpectrumService : ISpectrumService
     {
         // Index-addressed randomness keeps a pulse stable when an open pile-up group is redrawn,
         // regardless of snapshot partitioning, window changes or a later full reprocess.
-        var rng = new DefaultRandom(unchecked(_seed + index * 104729));
-        double measured = _model.Measure(energy, rng);
+        double measured = _measurement.MeasureAmplitude(energy, index);
         int bin = (int)(measured / _maxEnergy * BinCount);
         total++;
         if (bin >= 0 && bin < BinCount) counts[bin]++;

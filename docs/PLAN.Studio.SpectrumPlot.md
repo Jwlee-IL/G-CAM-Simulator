@@ -5,7 +5,7 @@ acquisition, scales Y, reports the hovered bin and places band labels — plus h
 be polished without desktop UI tests. The spectrum's physics (smearing, bands, pile-up) is
 [PLAN.Studio.Spectrum](PLAN.Studio.Spectrum.md); the order of work is [PLAN.Studio.Migration](PLAN.Studio.Migration.md).
 
-Status: planned 2026-10-01; starts after TODO-08 phase A (both touch the Spectrum workspace).
+Status: handed to Codex 2026-10-01 (after TODO-08 phase A).
 
 ## What the graph does today (checked in the code, 2026-10-01)
 

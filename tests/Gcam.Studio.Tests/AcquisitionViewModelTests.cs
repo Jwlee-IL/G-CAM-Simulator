@@ -48,11 +48,43 @@ public sealed class AcquisitionViewModelTests
     {
         public int Starts { get; private set; }
         public VirtualSession Session { get; private set; } = null!;
-        public IAcquisitionSession Start(IReadOnlyList<SceneSource> scene, OpticsSettings optics, double liveTimeS, double speed)
+        public DetectorSettings? Detector { get; private set; }
+        public double BackgroundToSignalRatio { get; private set; }
+        public IAcquisitionSession Start(IReadOnlyList<SceneSource> scene, OpticsSettings optics, double liveTimeS, double speed,
+            DetectorSettings? detector = null, double backgroundToSignalRatio = 0)
         {
+            Detector = detector;
+            BackgroundToSignalRatio = backgroundToSignalRatio;
             Starts++;
             return Session = new VirtualSession(liveTimeS, speed);
         }
+    }
+
+    [Fact]
+    public async Task Start_CapturesDetectorInputs_AndEditingMarksOnlyTheResultStale()
+    {
+        var acquisition = new Service();
+        var spectrum = new FakeSpectrumService();
+        var vm = new MainViewModel(acquisition, new Theme(), spectrum)
+            { LiveTimeS = 5, GainSigmaPercent = 4, GainSeed = 7, BackgroundToSignalRatio = 1 };
+        var run = vm.StartCommand.ExecuteAsync(null);
+        Assert.Equal(0.04, acquisition.Detector!.GainSigma);
+        Assert.Equal(7, acquisition.Detector.GainSeed);
+        Assert.Equal(1, acquisition.BackgroundToSignalRatio);
+        acquisition.Session.AdvanceWallTime(0.5);
+        await run;
+        vm.Snapshot = vm.Snapshot! with { Detector = acquisition.Detector };
+        await vm.Spectrum.WhenUpdated;
+        int calls = spectrum.Calls;
+        vm.GainSeed = 9;
+        Assert.True(vm.IsResultStale);
+        Assert.Equal(7, acquisition.Detector.GainSeed);
+        Assert.Equal(calls, spectrum.Calls);
+        Assert.Equal(1, acquisition.Starts);
+        vm.Spectrum.WindowFwhm = 2;
+        await vm.Spectrum.WhenUpdated;
+        Assert.Equal(7, spectrum.Settings[^1].Detector!.GainSeed);
+        Assert.Equal(0.04, spectrum.Settings[^1].Detector!.GainSigma);
     }
 
     private static async Task WaitForSnapshot(MainViewModel vm, double live)

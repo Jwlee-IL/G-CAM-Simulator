@@ -13,6 +13,11 @@ public sealed class ListModeSource : IDisposable
     private readonly IRandom _transport, _rejection, _time;
     private readonly ComptonCrystalDetector _detector;
     private readonly double _emissionRateCps;
+    private readonly double _bsr, _darkRate;
+    private readonly ListModeBackground? _background;
+    private readonly IRandom? _backgroundTime, _darkTime;
+    private DetectedEvent? _pendingSignal;
+    private double _signalTime, _nextBackgroundTime = double.NaN, _nextDarkTime = double.NaN;
     private (int X, int Y, double Deposit, double Weight)? _scored;
     public long HistoriesEmitted { get; private set; }
     public long HistoriesDetected { get; private set; }
@@ -20,16 +25,25 @@ public sealed class ListModeSource : IDisposable
     public double DetectedWeight { get; private set; }
     public double ArrivalTimeS { get; private set; }
     public double WeightBound { get; }
-    public double RateCps => HistoriesEmitted == 0 ? 0 : _emissionRateCps * DetectedWeight / HistoriesEmitted;
+    public double SourceRateCps => HistoriesEmitted == 0 ? 0 : _emissionRateCps * DetectedWeight / HistoriesEmitted;
+    public double RateCps => SourceRateCps * (1 + _bsr) + _darkRate;
     public double Acceptance => HistoriesDetected == 0 ? 0 : (double)EventsAccepted / HistoriesDetected;
 
     public ListModeSource(SimulationConfig configuration)
     {
         ArgumentNullException.ThrowIfNull(configuration);
         var config = configuration.Clone();
-        // Ambient events need their own transported process; never silently fabricate or ignore them.
-        if (config.Background is { BackgroundToSignalRatio: > 0 } or { DarkCountRateKcps: > 0 })
-            throw new NotSupportedException("List-mode ambient acquisition is not implemented.");
+        _bsr = config.Background?.BackgroundToSignalRatio ?? 0;
+        _darkRate = (config.Background?.DarkCountRateKcps ?? 0) * 1000;
+        if (!double.IsFinite(_bsr) || _bsr < 0 || !double.IsFinite(_darkRate) || _darkRate < 0 ||
+            _bsr > 0 && (!(config.Background!.EnergyKeV > 0) || !double.IsFinite(config.Background.EnergyKeV)))
+            throw new ArgumentOutOfRangeException(nameof(configuration));
+        if (_bsr > 0 || _darkRate > 0)
+        {
+            _background = new ListModeBackground(config);
+            _backgroundTime = new DefaultRandom((config.Seed ?? 0) + 909);
+            _darkTime = new DefaultRandom((config.Seed ?? 0) + 1717);
+        }
         var sources = config.Sources is { Length: > 0 } scene ? scene : [config.Source];
         double area = config.Detector.PixelsX * config.Detector.PixelsY * Math.Pow(config.Detector.PixelPitchMm, 2);
         double bound = 0, rate = 0;
@@ -68,6 +82,48 @@ public sealed class ListModeSource : IDisposable
     public DetectedEvent? Advance(CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
+        // The disabled path consumes precisely the legacy RNG draws and preserves every source record.
+        if (_background is null)
+        {
+            var signal = AdvanceSignal();
+            if (signal is { } e) ArrivalTimeS = e.ArrivalTimeS;
+            return signal;
+        }
+        if (_pendingSignal is null)
+        {
+            _pendingSignal = AdvanceSignal();
+            if (_pendingSignal is null) return null;
+        }
+        if (double.IsNaN(_nextBackgroundTime))
+            _nextBackgroundTime = _bsr > 0 ? Gap(_backgroundTime!, _bsr * SourceRateCps) : double.PositiveInfinity;
+        if (double.IsNaN(_nextDarkTime))
+            _nextDarkTime = _darkRate > 0 ? Gap(_darkTime!, _darkRate) : double.PositiveInfinity;
+        if (_nextBackgroundTime < _pendingSignal.Value.ArrivalTimeS && _nextBackgroundTime <= _nextDarkTime)
+        {
+            var background = _background.Advance(_nextBackgroundTime);
+            if (background is null) return null;
+            ArrivalTimeS = _nextBackgroundTime;
+            _nextBackgroundTime += Gap(_backgroundTime!, _bsr * SourceRateCps);
+            return background;
+        }
+        if (_nextDarkTime < _pendingSignal.Value.ArrivalTimeS)
+        {
+            // Existing event-stream nuisance model: 3 keV-equivalent single-p.e. pulse.
+            var dark = _background.Place(3, _nextDarkTime);
+            ArrivalTimeS = _nextDarkTime;
+            _nextDarkTime += Gap(_darkTime!, _darkRate);
+            return dark;
+        }
+        var next = _pendingSignal;
+        _pendingSignal = null;
+        ArrivalTimeS = next.Value.ArrivalTimeS;
+        return next;
+    }
+
+    private static double Gap(IRandom rng, double rate) => -Math.Log(1 - rng.NextDouble()) / rate;
+
+    private DetectedEvent? AdvanceSignal()
+    {
         _photons.MoveNext();
         HistoriesEmitted++;
         var photon = _photons.Current;
@@ -79,8 +135,8 @@ public sealed class ListModeSource : IDisposable
         if (hit.Weight > WeightBound * (1 + 1e-12)) throw new InvalidOperationException("Importance weight exceeds proven bound.");
         if (_rejection.NextDouble() >= hit.Weight / WeightBound) return null;
         EventsAccepted++;
-        ArrivalTimeS += -Math.Log(1 - _time.NextDouble()) / RateCps;
-        return new DetectedEvent(hit.X, hit.Y, hit.Deposit, ArrivalTimeS);
+        _signalTime += -Math.Log(1 - _time.NextDouble()) / SourceRateCps;
+        return new DetectedEvent(hit.X, hit.Y, hit.Deposit, _signalTime);
     }
 
     public void Dispose() => _photons.Dispose();

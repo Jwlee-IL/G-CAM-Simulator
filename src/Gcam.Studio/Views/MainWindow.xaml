@@ -135,6 +135,7 @@
 
                 <!-- Scene -->
                 <Border Grid.Column="0" Style="{StaticResource Panel.Surface}">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                     <StackPanel>
                         <DockPanel Style="{StaticResource PanelHeader}">
                             <TextBlock DockPanel.Dock="Left" Text="Sources" Style="{StaticResource Text.PanelTitle}" />
@@ -237,7 +238,39 @@
                                            Style="{StaticResource FactValue}" />
                             </DockPanel>
                         </StackPanel>
+                        <StackPanel DataContext="{Binding Detector}">
+                            <DockPanel Style="{StaticResource FactRow}">
+                                <TextBlock Text="Entrance" Style="{StaticResource Text.Label}" />
+                                <TextBlock Text="{Binding EntranceAbsorberMm, StringFormat={}{0:0.##} mm steel}" Style="{StaticResource FactValue}" />
+                            </DockPanel>
+                            <DockPanel Style="{StaticResource FactRow}">
+                                <TextBlock Text="Backing" Style="{StaticResource Text.Label}" />
+                                <TextBlock Text="{Binding BackingScatterMm, StringFormat={}{0:0.##} mm steel}" Style="{StaticResource FactValue}" />
+                            </DockPanel>
+                            <DockPanel Style="{StaticResource FactRow}">
+                                <TextBlock Text="Reflector gap" Style="{StaticResource Text.Label}" />
+                                <TextBlock Text="{Binding ReflectorGapMm, StringFormat={}{0:0.##} mm}" Style="{StaticResource FactValue}" />
+                            </DockPanel>
+                        </StackPanel>
+                        <StackPanel IsEnabled="{Binding IsIdle}">
+                            <DockPanel Style="{StaticResource FieldRow}">
+                                <TextBlock Text="Gain σ (%)" Style="{StaticResource FieldLabel}" />
+                                <TextBox Text="{Binding GainSigmaPercent}" AutomationProperties.AutomationId="Detector.GainSigma"
+                                         AutomationProperties.Name="Gain σ (%)" />
+                            </DockPanel>
+                            <DockPanel Style="{StaticResource FieldRow}">
+                                <TextBlock Text="Gain seed" Style="{StaticResource FieldLabel}" />
+                                <TextBox Text="{Binding GainSeed}" AutomationProperties.AutomationId="Detector.GainSeed"
+                                         AutomationProperties.Name="Gain seed" />
+                            </DockPanel>
+                            <DockPanel Style="{StaticResource FieldRow}">
+                                <TextBlock Text="Background BSR" Style="{StaticResource FieldLabel}" />
+                                <TextBox Text="{Binding BackgroundToSignalRatio}" AutomationProperties.AutomationId="Acquisition.Background"
+                                         AutomationProperties.Name="Background BSR (detected background to signal ratio)" />
+                            </DockPanel>
+                        </StackPanel>
                     </StackPanel>
+                    </ScrollViewer>
                 </Border>
 
                 <ContentControl Grid.Column="2" Content="{Binding SelectedWorkspace}" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">

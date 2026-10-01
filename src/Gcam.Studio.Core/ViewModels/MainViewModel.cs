@@ -31,6 +31,7 @@ public sealed partial class MainViewModel : ObservableObject
         Imaging = new ImagingWorkspaceViewModel(this);
         Spectrum = new SpectrumWorkspaceViewModel(this, spectrum);
         Workspaces = new ReadOnlyObservableCollection<WorkspaceViewModel>(new ObservableCollection<WorkspaceViewModel> { Imaging, Spectrum });
+        foreach (var workspace in Workspaces) workspace.PropertyChanged += OnWorkspaceChanged;
         _selectedWorkspace = Imaging;
         Imaging.IsActive = true;
         Sources.CollectionChanged += OnSourcesChanged;
@@ -41,6 +42,12 @@ public sealed partial class MainViewModel : ObservableObject
     public SpectrumWorkspaceViewModel Spectrum { get; }
     public ReadOnlyObservableCollection<WorkspaceViewModel> Workspaces { get; }
     public bool HasWorkspaceSwitch => Workspaces.Count >= 2;
+    private void OnWorkspaceChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        // UIA SelectionItem.Select sets IsChecked without invoking the button's command.
+        if (e.PropertyName == nameof(WorkspaceViewModel.IsActive) && sender is WorkspaceViewModel { IsActive: true } workspace)
+            SelectedWorkspace = workspace;
+    }
     [ObservableProperty] private WorkspaceViewModel _selectedWorkspace;
 
     partial void OnSelectedWorkspaceChanged(WorkspaceViewModel value)
@@ -74,6 +81,22 @@ public sealed partial class MainViewModel : ObservableObject
     /// <summary>Half-width of the fully-coded field of view at the focal plane (mm).</summary>
     public double FcfovHalfMm => SceneConfigBuilder.FcfovHalfMm(Optics);
     partial void OnOpticsChanged(OpticsSettings value) => MarkStale();
+    public DetectorSettings Detector => new() { GainSigma = GainSigmaPercent / 100, GainSeed = GainSeed };
+    [ObservableProperty] private double _gainSigmaPercent = 3;
+    [ObservableProperty] private int _gainSeed = 1;
+    [ObservableProperty] private double _backgroundToSignalRatio;
+    partial void OnGainSigmaPercentChanged(double value)
+    {
+        if (!double.IsFinite(value) || value < 0) { GainSigmaPercent = 3; return; }
+        OnPropertyChanged(nameof(Detector));
+        MarkStale();
+    }
+    partial void OnGainSeedChanged(int value) { OnPropertyChanged(nameof(Detector)); MarkStale(); }
+    partial void OnBackgroundToSignalRatioChanged(double value)
+    {
+        if (!double.IsFinite(value) || value < 0) { BackgroundToSignalRatio = 0; return; }
+        MarkStale();
+    }
     [ObservableProperty] private double _liveTimeS = 60;
     [ObservableProperty] private double _speed = 10;
     [ObservableProperty] private AcquisitionSnapshot? _snapshot;
@@ -162,7 +185,7 @@ public sealed partial class MainViewModel : ObservableObject
         Spectrum.Begin(scene);
         try
         {
-            await using var session = _acquisition.Start(scene, Optics, preset, Speed);
+            await using var session = _acquisition.Start(scene, Optics, preset, Speed, Detector, BackgroundToSignalRatio);
             _session = session;
             await foreach (var snapshot in session.ReadSnapshotsAsync())
             {

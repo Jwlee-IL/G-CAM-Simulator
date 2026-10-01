@@ -70,7 +70,12 @@ public sealed partial class SpectrumWorkspaceViewModel : WorkspaceViewModel
         try
         {
             var view = await _service.ProcessAsync(_acquisitionId, snapshot.Events, _lines,
-                new SpectrumSettings(WindowFwhm, PileUp), cancellationToken: token);
+                new SpectrumSettings(WindowFwhm, PileUp)
+                {
+                    Detector = snapshot.Detector,
+                    PixelsX = snapshot.Detector is null ? 0 : snapshot.Imaging.Flood.Width,
+                    PixelsY = snapshot.Detector is null ? 0 : snapshot.Imaging.Flood.Height
+                }, cancellationToken: token);
             if (revision != _revision || token.IsCancellationRequested) return;
             View = view;
             Series = [new PlotSeries("Acquired counts", view.Counts, view.CentresKeV, Kind: PlotKind.Area)];

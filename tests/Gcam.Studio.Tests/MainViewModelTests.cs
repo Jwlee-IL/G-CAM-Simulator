@@ -8,6 +8,43 @@ namespace Gcam.Studio.Tests;
 public class MainViewModelTests
 {
     [Fact]
+    public void WorkspaceActivation_SelectsShell_WhenActiveIsSetWithoutCommand()
+    {
+        var vm = new MainViewModel(new FakeAcquisition(), new FakeTheme(), new FakeSpectrumService());
+        vm.Spectrum.IsActive = true;
+        Assert.Same(vm.Spectrum, vm.SelectedWorkspace);
+        Assert.False(vm.Imaging.IsActive);
+        vm.Imaging.IsActive = true;
+        Assert.Same(vm.Imaging, vm.SelectedWorkspace);
+        Assert.False(vm.Spectrum.IsActive);
+        vm.SelectedWorkspace = vm.Spectrum;
+        Assert.True(vm.Spectrum.IsActive);
+        Assert.False(vm.Imaging.IsActive);
+        Assert.False(vm.IsResultStale);
+    }
+
+    [Fact]
+    public void DetectorInputs_DefaultsAndStaleStateFollowEdits()
+    {
+        var vm = new MainViewModel(new FakeAcquisition(), new FakeTheme(), new FakeSpectrumService());
+        Assert.Equal(new DetectorSettings(), vm.Detector);
+        vm.GainSigmaPercent = 4;
+        Assert.False(vm.IsResultStale);
+        vm.Result = Image;
+        vm.GainSeed = 5;
+        Assert.True(vm.IsResultStale);
+        vm.IsResultStale = false;
+        vm.GainSigmaPercent = 3;
+        Assert.True(vm.IsResultStale);
+        vm.IsResultStale = false;
+        vm.BackgroundToSignalRatio = 1;
+        Assert.True(vm.IsResultStale);
+        vm.GainSigmaPercent = double.NaN;
+        vm.BackgroundToSignalRatio = -1;
+        Assert.Equal(3, vm.GainSigmaPercent);
+        Assert.Equal(0, vm.BackgroundToSignalRatio);
+    }
+    [Fact]
     public void Workspace_SharedResultAndSelectionSurviveSnapshot_ViewSettingsDoNotMarkStale()
     {
         var vm = new MainViewModel(new FakeAcquisition(), new FakeTheme(), new FakeSpectrumService());
@@ -31,7 +68,8 @@ public class MainViewModelTests
     private sealed class FakeAcquisition : IAcquisitionService
     {
         public IAcquisitionSession Start(IReadOnlyList<SceneSource> scene, OpticsSettings optics,
-            double liveTimeS, double speed) => throw new NotSupportedException();
+            double liveTimeS, double speed, DetectorSettings? detector = null, double backgroundToSignalRatio = 0)
+            => throw new NotSupportedException();
     }
 
     private static ImagingResult Image => new(new DetectorImage(4, 4), -0.9, 0.6, null, 0, 0,

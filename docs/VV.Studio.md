@@ -15,7 +15,7 @@ one of a set:
 The working design guides are [DESIGN.Architecture](DESIGN.Architecture.md) and the other `DESIGN.*` pages.
 
 **At a glance**
-- 59 active software requirements plus seven withdrawn batch rows (§4). Live acquisition verification and
+- 62 active software requirements plus seven withdrawn batch rows (§4). Live acquisition verification and
   measurements are recorded in [VV.Studio.Acquisition](VV.Studio.Acquisition.md); desktop acquisition
   validation is pending while the desktop and UI-test project are occupied.
 - Seven regression scenarios, a plot gate and a diagnostic survey are opt-in desktop tests. The latest regression / survey attempt was blocked by desktop input; the plot CPU gate passed (§5). Historical scenarios judge the running app against
@@ -62,7 +62,7 @@ stack. SI-3 is tested through the real engine.
 
 ## 3. Software requirements
 
-The requirements are specified in [VV.Studio.SRS](VV.Studio.SRS.md) — **59 active** in twelve groups, including
+The requirements are specified in [VV.Studio.SRS](VV.Studio.SRS.md) — **62 active** in twelve groups, including
 navigation, plotting and acquisition. Seven withdrawn batch rows retain their IDs. The matrix cites IDs only;
 the SRS is the single source of their wording.
 
@@ -96,6 +96,9 @@ Automation. Status: **pass** (evidence on 2026-10-01), **partial**, **open** (no
 | SR-RUN-17 | integration + inspection | T, I | injected-clock test (250 ms); acquisition ViewModel test (ROI grows, old snapshot unchanged); fixed grid and decode per tick inspected; timings in acquisition record | pass (T/I); desktop pending |
 | SR-RUN-18 | integration + unit | T | extreme MC-limited service test; virtual ViewModel test verifies note and retained prefix | pass |
 | SR-RUN-19 | unit + integration | T | preset / restart ViewModel test; service preset completion test; defaults inspected | pass |
+| SR-RUN-20 | integration + unit + inspection | T, I | `DetectorRealismTests.StudioDefaults_AreExplicit_AndSceneBuilderRemainsBare`; `MainViewModelTests.DetectorInputs_DefaultsAndStaleStateFollowEdits`; geometry fields and IsIdle binding inspected | pass headless; desktop fields pending |
+| SR-RUN-21 | integration + unit | T | `DetectorRealismTests.Gain_WidensPhotopeakInQuadrature_AndReducesTightWindowAcceptance`, `Measurement_UsesFrozenInputs_AndReplaysAcrossSnapshotsAndPileUp`; `AcquisitionViewModelTests.Start_CapturesDetectorInputs_AndEditingMarksOnlyTheResultStale` | pass |
+| SR-RUN-22 | engine + inspection | T, I | `ListModeBackgroundTests` verifies rate, spatial profile, energy response, exact disabled stream, seed and cancellation; BSR field and worker inspected | pass headless; desktop BSR input pending |
 | SR-SCENE-01 | unit | T | `MainViewModelTests.SourceItem_ClampsValues_LabelFollowsEdits`, `MainViewModelTests.IsotopePicker_OffersIr192_AndKeepsCs137AsTheDefault` | pass |
 | SR-SCENE-02 | unit | T | `MainViewModelTests.Startup_HasOneSelectedSource`, `MainViewModelTests.AddRemove_SelectsNewSourceThenNeighbour` | pass |
 | SR-VIEW-01 | unit | T | `HeatmapViewportTests.Fit_PreservesAspectAndCentres` | pass |
@@ -128,7 +131,7 @@ Automation. Status: **pass** (evidence on 2026-10-01), **partial**, **open** (no
 | SR-ARCH-03 | inspection | I | `MainWindow.xaml.cs` is `InitializeComponent()` only; literal sizes found — AN-05 | partial |
 | SR-ARCH-04 | build | C, I | `Gcam.Studio.Tests.csproj` references only `Gcam.Studio.Core` and targets `net9.0` | pass |
 | SR-NAV-01 | unit + I | T, I | `MainViewModelTests.Workspace_SharedResultAndSelectionSurviveSnapshot_ViewSettingsDoNotMarkStale`; workspace-type centre / panel templates | pass |
-| SR-NAV-02 | unit + system | T, I | workspace test plus `Spectrum_SnapshotsGrow_ViewSettingsReuseAcquisition_SelectionSurvives`: Imaging / Spectrum identities, unavailable index and retained selection; segmented switch / Ctrl+1…4 inspected | partial — desktop workspace switching pending |
+| SR-NAV-02 | unit + system | T, I | workspace tests, `WorkspaceActivation_SelectsShell_WhenActiveIsSetWithoutCommand` and `Spectrum_SnapshotsGrow_ViewSettingsReuseAcquisition_SelectionSurvives`: checked-state activation, identities, unavailable index and retained selection; segmented switch / Ctrl+1…4 inspected | partial — desktop SelectionItem switching pending |
 | SR-NAV-03 | unit | T | `AcquisitionViewModelTests.LiveTimeAndSpeed_MarkStale_WorkspaceAndMeasurementsDoNot`, `Workspace_SharedResultAndSelectionSurviveSnapshot_ViewSettingsDoNotMarkStale` | pass |
 | SR-PLOT-01 | unit + I | T, I | `PlotSeriesTests.LowerBound_HandlesUniformAndIrregularX_AndEnds`; validation / cap / band / marker properties inspected | pass |
 | SR-PLOT-02 | unit | T | `PlotViewportTests.Mapping_RoundTrips_AndClampsLogFloor`, `NiceTicksTests.Linear_Uses125Steps_EngineeringLabels_NoNegativeZero`, `Logarithmic_LabelsDecades_WithEightMinorTicks` | pass |
@@ -147,7 +150,7 @@ Automation. Status: **pass** (evidence on 2026-10-01), **partial**, **open** (no
 ### Coverage summary
 
 The tables below preserve the pre-acquisition baseline (47 rows); withdrawn RUN rows are historical evidence.
-The current eleven acquisition rows and eight spectrum rows are verified above by tests / inspection. Their desktop paths are pending;
+The current fourteen acquisition rows and eight spectrum rows are verified above by tests / inspection. Their desktop paths are pending;
 the prior batch desktop passes must not be treated as acquisition validation.
 
 | Primary method | Requirements |
@@ -170,24 +173,26 @@ the prior batch desktop passes must not be treated as acquisition validation.
 | `HeatmapViewportTests` | unit | 11 (9 methods, one theory × 3) | 11 / 11 pass |
 | `MeasurementMathTests` | unit | 5 | 5 / 5 pass |
 | `MeasurementsViewModelTests` | unit / integration | 7 | 7 / 7 pass |
-| `MainViewModelTests` | unit / integration (with workspace and measurements) | 8 | 8 / 8 pass |
-| `AcquisitionViewModelTests` | unit / integration with virtual acquisition clock | 5 | 5 / 5 pass |
+| `MainViewModelTests` | unit / integration (with workspace and measurements) | 10 | 10 / 10 pass |
+| `AcquisitionViewModelTests` | unit / integration with virtual acquisition clock | 6 | 6 / 6 pass |
 | `TickFormatterTests` | unit | 9 | 9 / 9 pass — no requirement yet (AN-10) |
 | `MinMaxPyramidTests` | unit | 19 | 19 / 19 pass (includes concurrent plot edge / storage cases) |
 | `PlotViewportTests` | unit | 3 | 3 / 3 pass |
 | `NiceTicksTests` | unit | 2 | 2 / 2 pass |
 | `PlotSeriesTests` | unit | 1 | 1 / 1 pass |
-| **Gcam.Studio.Tests** | | **70** | **70 / 70 pass** |
+| **Gcam.Studio.Tests** | | **73** | **73 / 73 pass** |
 | `AcquisitionServiceTests` (in Gcam.Studio.Services.Tests) | integration, real engine + virtual scheduler | 8 | 8 / 8 pass |
-| `SpectrumServiceTests` (in Gcam.Studio.Services.Tests) | physics / deterministic processing / timing and band grouping | 9 | 9 / 9 pass; service project total 17 |
+| `SpectrumServiceTests` (in Gcam.Studio.Services.Tests) | physics / deterministic processing / timing and band grouping | 9 | 9 / 9 pass |
+| `DetectorRealismTests` (in Gcam.Studio.Services.Tests) | physics / defaults / measurement replay / throughput | 6 | 6 / 6 pass; service project total 23 |
 | `FloodOracleTests` (in Gcam.Studio.UiTests) | the UI scenarios' oracle, tested on its own | 10 | 10 / 10 pass |
 | `PilotTests`, `ScenarioTests` (in Gcam.Studio.UiTests) | system, desktop (opt-in) | 7 | skipped normally; latest opt-in run: 7 fail at desktop input / focus (§5) |
 | `PlotViewTests` | system, desktop (opt-in) | 1 | CPU redraw gate pass; skipped normally |
 | `PolishSurveyTests` | diagnostic, desktop (opt-in) | 1 | blocked at UIA focus; skipped normally |
 | `SceneConfigBuilderTests` (in Gcam.Tests) | integration (engine) | 7 (one theory × 4) | pass |
 | `ListModeSourceTests` (engine) | physics / compatibility / throughput / decode measurements | 8 | 8 / 8 pass |
+| `ListModeBackgroundTests` (engine) | physics / deterministic disabled and enabled background | 3 | 3 / 3 pass |
 | `FrontEndPartsTests` (engine Configuration compatibility) | unit | 2 | 2 / 2 pass |
-| **Gcam.Tests** | | **256** | **256 / 256 pass; pre-Spectrum 254 assertions unchanged** |
+| **Gcam.Tests** | | **259** | **259 / 259 pass; previous 256 assertions unchanged** |
 
 The solution, including the WPF shell and unchanged UI-test project, built in Release without errors.
 NU1900 reports unreachable NuGet vulnerability metadata; verification used existing restore assets, one
@@ -203,6 +208,12 @@ Spectrum Release verification on 2026-10-01 passed 353 cases (256 engine + 70 Co
 zero errors and one NU1900 warning. Existing restore assets were used (`--no-restore`), one MSBuild node,
 node reuse disabled; test runtime had `DOTNET_PROCESSOR_COUNT=4`. No Studio window was launched.
 
+Detector-realism and background Release verification passed 365 cases (259 engine + 73 Core + 23 service +
+10 UI oracles), with nine desktop cases skipped. Existing engine assertions are unchanged. The solution,
+including the unchanged UI-test project, builds with zero errors and one NU1900 warning. Detector physics,
+source/background preservation, fixed gain measurement, throughput and pending UI checks are in
+[VV.Studio.Acquisition](VV.Studio.Acquisition.md#detector-realism-and-background).
+
 ### Spectrum physics and processing evidence
 
 `SpectrumServiceTests` acquires fresh real-engine events with transport seed 12345 and processing seed 909.
@@ -211,7 +222,7 @@ The default chain is GAGG(Ce) / Hamamatsu MPPC S13360-3050 / CSP + CR-RC, with 4
 | Check | Measurement | Acceptance / tolerance |
 |---|---|---|
 | Cs-137 photopeak, 100,000 events (31,053 full-energy deposits) | regional maximum bin 222, containing 661.7 keV; bin width 2.9725 keV | exact bin match, maximum above 478 keV through axis end |
-| Physical Ba K peak | global maximum bin 10, centre 31.2110 keV, inside grouped band 25.4589–43.5022 keV | global maximum lies inside Ba K band and is taller than the photopeak; no low-energy counts hidden |
+| Ba K absorber response | uncollided ratio 0.480119 vs narrow-beam 0.474422; measured-band ratio 0.626183 vs independent weighted MC 0.623270 | 4σ tolerances 0.014926 and 0.028881; global peak ordering is reported rather than asserted; detailed conditions in [acquisition evidence](VV.Studio.Acquisition.md#detector-realism-and-background) |
 | Cs photopeak FWHM | histogram 30.3436 keV vs `FrontEndModel` 30.2373 keV; error 0.1063 keV | ≤6.5516 keV = two bins + 5·FWHM/√(2(N−1)), N = full-energy deposits |
 | High-rate Cs pile-up (activity 10⁶ µCi, 100,000 events) | 100,000 → 85,108 pulses; above 794.04 keV: 0 → 4,735; overflow 456; resolving time 730 ns | strictly fewer pulses and more counts above 1.2×661.7; pulse count exactly matches `ApplyPileUp` at 1 ps time rounding |
 | Cs + Co, 20,000 events | four bands: 32.1 + 36.4, 661.7, 1173.2, 1332.5 keV; union share 37.1900% | exact labels / band count and union share; default Co windows need not overlap |
@@ -316,7 +327,7 @@ folder was left behind. UIA Select on the workspace switch does not change the w
 | AN-07 | WPF items (`HeatmapView` rendering, `ColorBar` ticks, `ThemeService`) have no unit tests, by design | defects show only when the app runs | covered by AN-02 plan |
 | AN-08 | SDK-style project references are transitive, so the shell *could* call the engine directly | layering rule for the shell is inspection-only | optional: `PrivateAssets` on the Services → engine reference |
 | AN-09 | *Closed* — the photon budget no longer exists (list-mode acquisition) | — | — |
-| AN-10 | UIA Select (SelectionItemPattern) on a workspace switch button checks it but does not change the workspace; only a click or `Ctrl+1…4` runs the command | a screen-reader or voice-control user cannot switch workspaces | make selecting a workspace button activate it (ViewModel-side), then switch by Select in the survey test |
+| AN-10 | Workspace checked-state activation now selects the shell workspace; `WorkspaceActivation_SelectsShell_WhenActiveIsSetWithoutCommand` passes | screen-reader SelectionItem switching still needs desktop verification | ViewModel fix implemented; add a desktop Select regression and verify the displayed workspace, without relying on the checked state alone |
 | AN-11 | The source-drag scenario localised at 1.43 mm against its 1.5 mm tolerance after list-mode acquisition (Compton mispositioning in the image, argmax peak on the grid) | the scenario may fail by chance | measure the localisation spread over repeated seeds; use sub-cell peak interpolation or a longer live time — do not widen the tolerance blindly |
 | AN-11 | Latest desktop input and screen capture unavailable | regression scenarios and four-view polish survey remain unverified in this working tree | re-run on an accessible interactive desktop; preserve verdicts |
 | AN-12 | CPU plot redraw meets the gate, but resize event-to-render delay is 280–316 ms | CPU evidence does not establish end-to-end responsiveness | distinguish timings; investigate dispatcher / desktop latency before making a presentation-latency claim |

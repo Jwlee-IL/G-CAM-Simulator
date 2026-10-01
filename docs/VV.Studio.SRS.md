@@ -8,7 +8,7 @@ Structured after IEC 62304 §5.2 (software requirements analysis). As in [VV.Stu
 **GCAM Studio is not a medical device and no compliance is claimed**; the structure is borrowed for its discipline.
 
 **At a glance**
-- **59 active requirements** (plus seven withdrawn rows) in twelve groups: navigation, plotting, spectrum, acquisition, scene, image view, measurement, theme (functional, §3) and environment,
+- **62 active requirements** (plus seven withdrawn rows) in twelve groups: navigation, plotting, spectrum, acquisition, scene, image view, measurement, theme (functional, §3) and environment,
   accessibility, security, architecture (§4). Each is one testable present-tense statement.
 - Inputs, outputs and every status message are listed with their valid ranges (§5); risk control
   (the illustrative safety class B) maps six hazardous situations to the requirements that control them (§6);
@@ -42,8 +42,8 @@ Structured after IEC 62304 §5.2 (software requirements analysis). As in [VV.Stu
 
 | ID | Requirement |
 |---|---|
-| SR-NAV-01 | One shared scene, optics, live time, speed, acquisition state and cumulative snapshot feed all registered workspaces; imaging owns its measurements and peak reading. |
-| SR-NAV-02 | With at least two registered workspaces, a segmented switch exposes their titles and unique `Workspace.*` AutomationIds; Ctrl+1…4 selects available workspaces, unavailable indices do nothing, and a run retains selection. A single workspace has no switch. |
+| SR-NAV-01 | One shared scene, optics, detector inputs, background ratio, live time, speed, acquisition state and cumulative snapshot feed all registered workspaces; imaging owns its measurements and peak reading. |
+| SR-NAV-02 | With at least two registered workspaces, a segmented switch exposes their titles and unique `Workspace.*` AutomationIds; activating a workspace through its checked state, click or Ctrl+1…4 changes the selected workspace. Unavailable indices do nothing, and a run retains selection. A single workspace has no switch. |
 | SR-NAV-03 | Run-input edits mark an existing result outdated; workspace view settings and selection do not. |
 
 ### Plot surface (`SR-PLOT`)
@@ -61,8 +61,8 @@ Structured after IEC 62304 §5.2 (software requirements analysis). As in [VV.Stu
 | ID | Requirement |
 |---|---|
 | SR-SPEC-01 | Spectrum displays a live 256-bin Area histogram of the shared acquisition's measured event deposits, with measured energy in keV and acquired counts; it adds no synthetic noise floor or independent event pool. |
-| SR-SPEC-02 | Energy smearing and the read-only resolution at 662 keV derive from the default GAGG(Ce), S13360-3050 and CSP + CR-RC chain through `FrontEndModel`; the chain is shown without a resolution override. |
-| SR-SPEC-03 | Optional pile-up sums deposits whose actual arrival gaps are below the chain-derived resolving time, extending the interval after each pulse; toggling it reprocesses retained events. |
+| SR-SPEC-02 | Measured energy applies the acquisition's fixed pixel gain to its true deposit, then smears once through the default GAGG(Ce), S13360-3050 and CSP + CR-RC chain's `FrontEndModel`. The read-only chain resolution at 662 keV excludes pixel gain spread; no resolution override is offered. |
+| SR-SPEC-03 | Optional pile-up sums gained amplitudes whose actual arrival gaps are below the chain-derived resolving time, extending the interval after each pulse, then smears the summed pulse once; toggling it reprocesses retained events. |
 | SR-SPEC-04 | Each emission window spans E ± N·FWHM(E); adjacent lines separated by less than FWHM at their mean merge into one labelled band spanning their windows. Resolved lines keep separate bands even if their windows overlap. |
 | SR-SPEC-05 | The emission table gives isotope, every grouped line energy, window limits, counts and share selected by bin centre; the total in-window share counts each bin once across all bands. |
 | SR-SPEC-06 | Log Y, positive finite window multiplier (default 1.5) and pile-up are view settings: they reuse acquired events without starting acquisition or marking results stale. Spectrum shares Imaging's outdated state. |
@@ -84,7 +84,7 @@ Structured after IEC 62304 §5.2 (software requirements analysis). As in [VV.Stu
 | SR-RUN-09 | Start executes fresh list-mode MC transport and decoding off the UI thread through `IAcquisitionService`; the state is Acquiring until Stopped, Completed or Failed. |
 | SR-RUN-10 | Stop cooperatively ends acquisition, retains all acquired data and measurements, sets Stopped, and re-enables editing. |
 | SR-RUN-11 | Progress equals acquired live time / preset live time, never decreases within a session, and reaches 1 at Completed. |
-| SR-RUN-12 | While Acquiring, source fields, add / remove, source dragging, live-time and speed controls are disabled. |
+| SR-RUN-12 | While Acquiring, source fields, add / remove, source dragging, detector gain / seed, background ratio, live-time and speed controls are disabled. |
 | SR-RUN-13 | Start is enabled only while idle and with at least one source. |
 | SR-RUN-14 | A scene or run-input edit after acquisition marks its images outdated; Start clears the old data and stale flag. Before any acquisition nothing is stale. |
 | SR-RUN-15 | The scene config uses nearest-prime rank, non-cyclic decoding and a reconstruction grid inside the FCFOV; non-finite or non-positive preset live time and speed are rejected by the service. |
@@ -92,6 +92,9 @@ Structured after IEC 62304 §5.2 (software requirements analysis). As in [VV.Stu
 | SR-RUN-17 | At 4 Hz the accumulated flood is re-decoded on its fixed grid and imaging measurements refresh without replacing their geometry. A slow consumer receives the latest cumulative snapshot. |
 | SR-RUN-18 | If MC cannot supply rate × speed, live time advances only through the acquired prefix and the status appends "MC-limited ×k" with achieved live seconds per wall second. |
 | SR-RUN-19 | Preset live time defaults to 60 s and speed to ×10; Start clears and begins a new session, and reaching the preset automatically sets Completed. |
+| SR-RUN-20 | Studio explicitly supplies entrance 0.15 mm steel-equivalent, backing 2 mm, reflector gap 0.1 mm, gain σ 3% and gain seed 1. Entrance, backing and gap are read-only; gain σ and seed are editable run inputs. Existing engine scene-builder defaults are unchanged. |
+| SR-RUN-21 | Snapshots retain their acquisition detector inputs. True deposits are preserved; one shared deterministic measurement response applies the CrystalUniformity gain pattern before chain smearing. Editing gain marks results outdated and cannot change the recorded detector response. |
+| SR-RUN-22 | A finite nonnegative detected background/source ratio (default 0) adds an independent Poisson process at BSR × source rate. Each fresh background deposit comes from the existing unmasked cosine-flux crystal response at 200 keV and is placed according to the uniform detected pedestal. At zero BSR the seeded source stream is unchanged. |
 
 ### Scene (`SR-SCENE`)
 
@@ -169,7 +172,7 @@ point). They are kept as requirements so that a change breaking them fails verif
 | SR-ARCH-03 | View code-behind is `InitializeComponent()` only; views use theme keys, not literal colours or sizes. |
 | SR-ARCH-04 | Studio tests reference `Gcam.Studio.Core` only (no WPF in tests). |
 
-**59 active requirements**, seven withdrawn rows retained with stable IDs.
+**62 active requirements**, seven withdrawn rows retained with stable IDs.
 
 ## 5. Inputs, outputs, messages (§5.2.2 b–d)
 
@@ -183,6 +186,8 @@ point). They are kept as requirements so that a change breaking them fails verif
 | Activity | µCi | > 0 (≤ 0 → 1) | SR-SCENE-01 |
 | Preset live time | s | finite > 0; default 60; invalid UI input → 60, invalid service input rejected | SR-RUN-15, SR-RUN-19 |
 | Speed | live s / wall s | finite > 0; default 10; invalid UI input → 10, invalid service input rejected | SR-RUN-15, SR-RUN-19 |
+| Gain σ / seed | % / integer | σ finite ≥ 0, default 3%; invalid UI σ → 3%; seed default 1 | SR-RUN-20, -21 |
+| Background BSR | detected background / source | finite ≥ 0, default 0; invalid UI input → 0; invalid service input rejected | SR-RUN-22 |
 | Optics | mm / rank | read-only defaults in this version | — |
 | Spectrum window N | × FWHM(E) | positive finite; default 1.5; invalid numeric value → 1.5 | SR-SPEC-04, -06 |
 | Spectrum log Y / pile-up | boolean | defaults true / false; view settings | SR-SPEC-03, -06 |

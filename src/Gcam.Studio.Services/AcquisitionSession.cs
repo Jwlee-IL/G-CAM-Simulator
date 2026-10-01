@@ -18,8 +18,8 @@ internal sealed class AcquisitionSession : IAcquisitionSession
         new BoundedChannelOptions(2) { SingleReader = true, SingleWriter = true, FullMode = BoundedChannelFullMode.DropOldest });
     private readonly Task _worker;
 
-    public AcquisitionSession(SimulationConfig config, double preset, double speed, TimeProvider clock)
-        => _worker = Task.Run(() => ProduceAsync(config, preset, speed, clock));
+    public AcquisitionSession(SimulationConfig config, DetectorSettings detector, double preset, double speed, TimeProvider clock)
+        => _worker = Task.Run(() => ProduceAsync(config, detector, preset, speed, clock));
 
     public void Stop() => _stop.Cancel();
 
@@ -31,7 +31,7 @@ internal sealed class AcquisitionSession : IAcquisitionSession
         await foreach (var snapshot in _snapshots.Reader.ReadAllAsync()) yield return snapshot;
     }
 
-    private async Task ProduceAsync(SimulationConfig config, double preset, double speed, TimeProvider clock)
+    private async Task ProduceAsync(SimulationConfig config, DetectorSettings detector, double preset, double speed, TimeProvider clock)
     {
         try
         {
@@ -85,7 +85,8 @@ internal sealed class AcquisitionSession : IAcquisitionSession
                 double reportInterval = clock.GetElapsedTime(previousPublished).TotalSeconds;
                 double actual = reportInterval > 0 ? (live - previousLive) / reportInterval : 0;
                 await _snapshots.Writer.WriteAsync(new AcquisitionSnapshot(live, events.Count, source.RateCps,
-                    actual, limited, imaging, Array.AsReadOnly(events.ToArray()), decodeWatch.Elapsed, completed));
+                    actual, limited, imaging, Array.AsReadOnly(events.ToArray()), decodeWatch.Elapsed, completed)
+                    { Detector = detector });
                 if (completed || _stop.IsCancellationRequested) break;
                 previous = tickStart;
                 previousPublished = clock.GetTimestamp();

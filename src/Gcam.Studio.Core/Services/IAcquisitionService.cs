@@ -6,5 +6,5 @@ namespace Gcam.Studio.Core.Services;
 public interface IAcquisitionService
 {
     IAcquisitionSession Start(IReadOnlyList<SceneSource> scene, OpticsSettings optics,
-        double liveTimeS, double speed);
+        double liveTimeS, double speed, DetectorSettings? detector = null, double backgroundToSignalRatio = 0);
 }
