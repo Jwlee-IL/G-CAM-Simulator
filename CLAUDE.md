@@ -6,7 +6,7 @@ This file carries the **cross-session context that isn't otherwise in the repo**
 survives moving to another computer. It is git-tracked and **auto-loaded by Claude Code on
 any clone** (the machine-local auto-memory under `~/.claude/…/memory/` does NOT travel).
 Architecture + build/run is in `@AGENTS.md` above; per-theme quantitative results are in
-`AGENTS.findings.md` (themes 1–50). Keep answers to the author in **Korean**.
+`docs/AGENTS.Findings.md` (themes 1–50). Keep answers to the author in **Korean**.
 
 ## What this is
 **Gcam** — a personal C#/.NET 9 Monte Carlo simulator for **coded-aperture gamma-source
@@ -50,3 +50,5 @@ On a new computer, find the local equivalents (and update this section, or keep 
 - **codex exec:** run FOREGROUND with `< /dev/null`, read-only (`-s read-only --skip-git-repo-check`),
   ONE topic per call.
 - **WPF** can't be GUI-tested headless — verify it *compiles* (build `src/Gcam.Wpf`).
+  GCAM Studio (`src/Gcam.Studio`) is driven through UI Automation instead — see
+  `docs/AGENTS.Studio.md` ("Verifying a UI change").

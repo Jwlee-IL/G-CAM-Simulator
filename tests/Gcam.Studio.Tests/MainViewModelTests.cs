@@ -35,7 +35,7 @@ public class MainViewModelTests
     }
 
     [Fact]
-    public void Theme_toggle_flips_and_relabels()
+    public void ThemeToggle_FlipsThemeAndRelabels()
     {
         var theme = new FakeTheme();
         var vm = new MainViewModel(new FakeSimulation(), theme);
@@ -46,7 +46,7 @@ public class MainViewModelTests
     }
 
     [Fact]
-    public async Task Run_state_tracks_outcome_and_peak_text_follows_result()
+    public async Task RunState_TracksOutcome_PeakTextFollowsResult()
     {
         var vm = new MainViewModel(new FakeSimulation(), new FakeTheme());
         Assert.Equal(RunState.Idle, vm.State);
@@ -61,7 +61,7 @@ public class MainViewModelTests
     }
 
     [Fact]
-    public void Starts_with_one_selected_source()
+    public void Startup_HasOneSelectedSource()
     {
         var vm = new MainViewModel(new FakeSimulation(), new FakeTheme());
         Assert.Single(vm.Sources);
@@ -70,7 +70,7 @@ public class MainViewModelTests
     }
 
     [Fact]
-    public void Add_selects_new_source_and_remove_selects_neighbour()
+    public void AddRemove_SelectsNewSourceThenNeighbour()
     {
         var vm = new MainViewModel(new FakeSimulation(), new FakeTheme());
         vm.AddSourceCommand.Execute(null);
@@ -86,7 +86,7 @@ public class MainViewModelTests
     }
 
     [Fact]
-    public void Removing_every_source_disables_remove_and_run()
+    public void RemoveAll_DisablesRemoveAndRun()
     {
         var vm = new MainViewModel(new FakeSimulation(), new FakeTheme());
         vm.RemoveSourceCommand.Execute(null);
@@ -97,7 +97,7 @@ public class MainViewModelTests
     }
 
     [Fact]
-    public async Task Run_passes_scene_and_publishes_result()
+    public async Task Run_PassesSceneAndPublishesResult()
     {
         var sim = new FakeSimulation();
         var vm = new MainViewModel(sim, new FakeTheme());
@@ -113,7 +113,7 @@ public class MainViewModelTests
     }
 
     [Fact]
-    public async Task Cancel_keeps_previous_result_and_reenables_editing()
+    public async Task Cancel_KeepsPreviousResult_ReenablesEditing()
     {
         var vm = new MainViewModel(new FakeSimulation(), new FakeTheme());
         await vm.RunCommand.ExecuteAsync(null);
@@ -136,7 +136,7 @@ public class MainViewModelTests
     }
 
     [Fact]
-    public async Task Failure_is_reported_not_thrown()
+    public async Task Failure_IsReportedNotThrown()
     {
         var vm = new MainViewModel(new FakeSimulation { Throw = new InvalidOperationException("boom") }, new FakeTheme());
         await vm.RunCommand.ExecuteAsync(null);
@@ -145,7 +145,7 @@ public class MainViewModelTests
     }
 
     [Fact]
-    public void Source_values_are_clamped_and_label_follows_edits()
+    public void SourceItem_ClampsValues_LabelFollowsEdits()
     {
         var s = new SourceItemViewModel();
         var changed = new List<string?>();

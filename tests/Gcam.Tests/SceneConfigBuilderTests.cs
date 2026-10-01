@@ -10,11 +10,11 @@ public class SceneConfigBuilderTests
     [InlineData(12, 11)]   // ties resolve downward
     [InlineData(1, 2)]
     [InlineData(20, 19)]
-    public void Rank_snaps_to_nearest_prime(int requested, int expected) =>
+    public void NearestPrime_SnapsRankToNearestPrime(int requested, int expected) =>
         Assert.Equal(expected, SceneConfigBuilder.NearestPrime(requested));
 
     [Fact]
-    public void Builds_multi_source_finite_mask_config()
+    public void Build_MultiSourceFiniteMaskConfig()
     {
         var scene = new[]
         {
@@ -36,12 +36,12 @@ public class SceneConfigBuilderTests
     }
 
     [Fact]
-    public void Rejects_non_positive_photon_budget() =>
+    public void Build_RejectsNonPositivePhotonBudget() =>
         Assert.Throws<ArgumentOutOfRangeException>(() =>
             SceneConfigBuilder.Build([new SceneSource()], new OpticsSettings(), photons: 0));
 
     [Fact]
-    public void Runner_reports_progress_and_honours_cancellation()
+    public void Runner_ReportsProgress_HonoursCancellation()
     {
         var cfg = SceneConfigBuilder.Build([new SceneSource()], new OpticsSettings(), photons: 50_000);
         var runner = new SimulationRunner(new DefaultSimulationFactory());

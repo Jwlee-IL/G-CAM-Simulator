@@ -2,8 +2,18 @@
 
 Guidance for AI agents and contributors working on this repository.
 
-**Companion docs:** `AGENTS.findings.md` (theme-organized results log — put new results
-there), `BACKLOG.md` (done + deferred work), `rtl/README.md` (SystemVerilog front-end).
+**Companion docs** (all in `docs/`, named `KEYWORD.Section.md` — see `AGENTS.Conventions.Docs`):
+
+| Document | Covers |
+|---|---|
+| `AGENTS.Findings.md` | theme-organized results log — put new results there |
+| `AGENTS.Backlog.md` | done + deferred work |
+| `AGENTS.Conventions.Code.md` / `AGENTS.Conventions.Docs.md` | C# / XAML / test / commit style; doc naming, placement and sync rules |
+| `AGENTS.Studio.md` | entry point for GCAM Studio (the MVVM viewer) — read before touching `src/Gcam.Studio*` |
+| `DESIGN.Architecture.md`, `DESIGN.ViewLayer.md`, `DESIGN.Controls.md`, `DESIGN.Color.md`, `DESIGN.Layout.md`, `DESIGN.Typography.md` | GCAM Studio design |
+| `PAPER.ko.md` | two-tier (expert / plain) physics write-up, Korean |
+
+Folder maps: `rtl/README.md` (SystemVerilog front-end), `src/Gcam.Studio*/README.md`.
 
 ## What this is
 
@@ -37,7 +47,7 @@ in `Directory.Build.props` (nullable + implicit usings enabled).
 | `src/…Wpf` | `Gcam.Wpf` (net9.0-windows, ScottPlot 5): interactive scene editor + Waveform/Imaging/Spectrum/Optics/Detector tabs; one acquisition drives all tabs. Can't be headless-tested — verify it *compiles* (theme 34–35) |
 | `src/…Studio*` | MVVM rewrite of the viewer (imaging workflow first), layered so the boundaries are enforced by the compiler: **`Gcam.Studio.Core`** (net9.0, no WPF — models, `ISimulationService`, ViewModels on CommunityToolkit.Mvvm) → **`Gcam.Studio.Services`** (net9.0 — `SimulationService`, the only Studio layer that touches the engine; runs the MC off the UI thread via `SimulationRunner.Run(config, progress, ct)`) → **`Gcam.Studio`** (net9.0-windows — views, converters, DI composition root). Scene → config via `Configuration.SceneConfigBuilder`. `tests/Gcam.Studio.Tests` (net9.0) covers the ViewModels without a UI stack |
 | `src/…Cli` | Console entrypoint `montecarlo`: single run + **~39** study sub-commands (`sweep`, `scan`, `noise`, the Compton/depth/mask-geometry/mixed-field/front-end set, and the realism-gap set `thermal`…`doi` — see Build/run for the full list) |
-| `tests/…Tests` | xUnit harness — ~35 test files / **149 test cases** (+ 7 cocotb in `rtl/`): MURA properties (`MuraGeneratorTests`) + end-to-end physics invariants (`PipelineTests`) + per-theme physics classes (localization, ghost, biasing-unbiased, stopping power, dead time, sub-cell, cascade, non-proportionality, MLEM, DOI, nuclide separation, Compton stripping, …) |
+| `tests/…Tests` | xUnit harness — **156 test cases** (+ 7 cocotb in `rtl/`; Studio has its own 20 in `tests/Gcam.Studio.Tests`): MURA properties (`MuraGeneratorTests`) + end-to-end physics invariants (`PipelineTests`) + per-theme physics classes (localization, ghost, biasing-unbiased, stopping power, dead time, sub-cell, cascade, non-proportionality, MLEM, DOI, nuclide separation, Compton stripping, …) |
 
 ### Design principle
 Everything is **data-driven**: one `SimulationConfig` (JSON) fully describes a
@@ -81,7 +91,7 @@ Coordinate frame (optical axis = z):
 
 ```bash
 dotnet build Gcam.sln -c Release
-dotnet test  Gcam.sln   # 149 cases across ~35 files: MURA properties + pipeline
+dotnet test  Gcam.sln   # 156 engine + 20 Studio cases: MURA properties + pipeline
                                        # physics invariants + one class per theme (dead time,
                                        # sub-cell, cascade, non-prop, MLEM, DOI, …). 7 cocotb tests in rtl/.
 
@@ -112,7 +122,7 @@ dotnet run --project src/Gcam.Cli -c Release -- samples/materials/CeBr3.json
 # single-mask vs mask/antimask vs additive background → antimask.csv
 dotnet run --project src/Gcam.Cli -c Release -- antimask samples/scenario.json samples/antimask.csv
 
-# --- physical-realism gap studies (themes 36–50; see AGENTS.findings.md) ---
+# --- physical-realism gap studies (themes 36–50; see docs/AGENTS.Findings.md) ---
 # thermal drift during acquisition (ambient + self-heating) → window walk / flood residual → thermal_{off,on}.csv
 dotnet run --project src/Gcam.Cli -c Release -- thermal  samples/scenario.json samples/thermal
 # random-coincidence pile-up SUM continuum in the spectrum → pileup.csv
@@ -178,7 +188,7 @@ land in `samples/`. Plots are generated with a standalone Python+matplotlib scri
 ## Findings so far
 
 The full, theme-organized results log with reproduce commands and artifacts is in
-**`AGENTS.findings.md`** — keep new results there, not in this file. Headlines:
+**`docs/AGENTS.Findings.md`** — keep new results there, not in this file. Headlines:
 
 - **Localization + ghost**: sub-mm inside the FCFOV; off-axis beyond it aliases to an
   opposite-side ghost. Non-cyclic decoding ≈ doubles the usable area.
@@ -204,7 +214,7 @@ The full, theme-organized results log with reproduce commands and artifacts is i
 - **Physical-realism gaps (36–50)**: thermal drift is an energy-window (not position) issue;
   pile-up + cascade summing add spectral continua/sum-peaks; mask fabrication needs σ≲40 µm;
   alignment/pose is the dominant systematic tolerance; sub-cell interpolation beats the argmax
-  floor. Most effects are honestly **small for this camera** — see findings.md for magnitudes.
+  floor. Most effects are honestly **small for this camera** — see `docs/AGENTS.Findings.md` for magnitudes.
 
 ## RTL front-end (`rtl/`)
 

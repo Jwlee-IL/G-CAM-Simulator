@@ -12,7 +12,7 @@ public class HeatmapViewportTests
     }
 
     [Fact]
-    public void Fit_preserves_aspect_and_centres()
+    public void Fit_PreservesAspectAndCentres()
     {
         var v = Fit30In300x200();
         Assert.Equal(200.0 / 30, v.Scale, 9);          // limited by height
@@ -21,7 +21,7 @@ public class HeatmapViewportTests
     }
 
     [Fact]
-    public void Screen_and_image_round_trip_with_y_up()
+    public void ScreenImage_RoundTripWithYUp()
     {
         var v = Fit30In300x200();
         // Top-left screen corner of the image is image (0, H) because row 0 is at the bottom.
@@ -36,7 +36,7 @@ public class HeatmapViewportTests
     }
 
     [Fact]
-    public void Pixel_lookup_respects_bounds_and_orientation()
+    public void PixelAt_RespectsBoundsAndOrientation()
     {
         var v = Fit30In300x200();
         Assert.Equal((0, 29), v.PixelAt(new Vec2(51, 1)));     // top-left screen = top row = y 29
@@ -45,7 +45,7 @@ public class HeatmapViewportTests
     }
 
     [Fact]
-    public void Zoom_keeps_the_anchor_point_fixed()
+    public void ZoomAt_KeepsAnchorPointFixed()
     {
         var v = Fit30In300x200();
         var anchor = new Vec2(180, 60);
@@ -60,7 +60,7 @@ public class HeatmapViewportTests
     }
 
     [Fact]
-    public void Zoom_is_clamped_and_zooming_out_fully_refits()
+    public void ZoomAt_IsClamped_FullZoomOutRefits()
     {
         var v = Fit30In300x200();
         v.ZoomAt(new Vec2(150, 100), 1000);
@@ -72,7 +72,7 @@ public class HeatmapViewportTests
     }
 
     [Fact]
-    public void Pan_cannot_drag_the_image_out_of_view()
+    public void PanBy_CannotDragImageOutOfView()
     {
         var v = Fit30In300x200();
         v.PanBy(new Vec2(500, 500));           // at fit, the image stays centred
@@ -88,7 +88,7 @@ public class HeatmapViewportTests
     }
 
     [Fact]
-    public void Mm_mapping_puts_pixel_centres_on_the_grid()
+    public void MmMapping_PutsPixelCentresOnGrid()
     {
         // Pixel i centred at origin + i·step, so the centre of pixel 0 (image 0.5) is the origin.
         var mm = HeatmapViewport.ImageToMm(new Vec2(0.5, 0.5), originMm: -8.7, stepMm: 0.6);
@@ -104,7 +104,7 @@ public class HeatmapViewportTests
     [InlineData(366, 1.0, 12.0)]      // 366/30 = 12.2 → 12 px per cell
     [InlineData(366, 1.25, 12.0)]     // 15.25 device px → 15 → 12 dip
     [InlineData(20, 1.0, 20.0 / 30)]  // smaller than one px per cell: no snapping
-    public void Snapping_fits_a_whole_number_of_device_pixels_per_cell(double view, double ppd, double expectedScale)
+    public void Snapping_FitsWholeDevicePixelsPerCell(double view, double ppd, double expectedScale)
     {
         var v = new HeatmapViewport();
         v.Configure(30, 30, view, view, ppd, snapToWholePixels: true);
@@ -113,7 +113,7 @@ public class HeatmapViewportTests
     }
 
     [Fact]
-    public void Resizing_the_view_keeps_zoom_but_new_image_size_refits()
+    public void Configure_ResizeKeepsZoom_NewImageSizeRefits()
     {
         var v = Fit30In300x200();
         v.ZoomAt(new Vec2(150, 100), 2);

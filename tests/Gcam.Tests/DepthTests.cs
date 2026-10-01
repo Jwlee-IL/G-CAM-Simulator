@@ -63,7 +63,7 @@ public class DepthTests
         // The alternating iteration with a FIXED nominal seed (100) stalls on near-field off-axis
         // coupling (true S=60, so the seed is far off). The seed-free 3D search removes that trap.
         // NOTE (Codex round 5): a well-SEEDED alternating iteration converges too — the trap was the
-        // seed, not the alternation; the 3D search's value is being seed-free. See AGENTS.findings 24.
+        // seed, not the alternation; the 3D search's value is being seed-free. See docs/AGENTS.Findings.md, theme 24.
         var study = new DepthStudy(new DefaultSimulationFactory());
         var alt = study.RunNoisyJoint(Baseline(), "near", sx: 5.0, sy: 0.0, trueSmm: 60.0,
                                       Assumed(), nominalSmm: 100.0, counts: 1000, repeats: 40);

@@ -1,8 +1,8 @@
-# AGENTS.findings.md — Simulation results, by theme
+# AGENTS.Findings — simulation results, by theme
 
 The quantitative results GCAM has produced, grouped by theme. Each item lists the
 finding, how to reproduce it (CLI command / script), and the artifact it wrote to
-`samples/` (or `rtl/`). See `AGENTS.md` for architecture and conventions.
+`samples/` (or `rtl/`). See [AGENTS.md](../AGENTS.md) for architecture and conventions.
 
 Baseline scenario unless noted: Cs-137, rank-7 MURA (2×2 mosaic), 10 mm tungsten,
 12×12 / 1 mm detector, D = 60 mm (mask–detector), S = 100 mm (source–mask).
@@ -1464,6 +1464,6 @@ the `Gcam.Simulation`/`Gcam.Detector` layer and the app is verified to compile).
   the DUT, so it was self-consistent and had masked the drift.
 - **Mask μ(E) extended < 122 keV** for soft lines (Am-241 59.5 → ~47×); documented approximation (K-edge above-edge
   region + < 50 keV clamp — no isotope line there, thick mask opaque regardless). Test `MaskAttenuationTests`.
-- Docs: `docs/paper_ko.md` (+ rendered artifact) — a two-tier (expert/plain) physics & sweet-spot note covering
+- Docs: `docs/PAPER.ko.md` (+ rendered artifact) — a two-tier (expert/plain) physics & sweet-spot note covering
   §1–9 incl. in-crystal Compton transport, dead region, crosstalk, hardware realization (RTL/cocotb/FPGA), and
   productization; Codex physics-verified (6 wording/number fixes applied).

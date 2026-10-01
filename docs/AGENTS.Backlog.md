@@ -1,7 +1,7 @@
-# Backlog
+# AGENTS.Backlog — deferred and done work
 
 Deferred work, captured so we don't forget. Not in current scope. See
-`AGENTS.findings.md` (themes 1–50) for everything that IS done.
+[AGENTS.Findings](AGENTS.Findings.md) (themes 1–50) for everything that IS done.
 
 **Genuinely open**: the **Physical realism gaps** list below (Codex gap-review after theme 35) is now mostly DONE —
 themes 36–50 cleared thermal drift + flood-field, pile-up sum continuum, mask fabrication tolerances, alignment/pose,
@@ -173,7 +173,7 @@ TILT (pitch/yaw), mask WARPING.
   (currently Python design layers on top of the validated MC).
   (Codex cross-verification of all theme-22 pieces is now DONE — round 6, no bugs.)
 
-## Done (summary — details in AGENTS.findings by theme)
+## Done (summary — details in AGENTS.Findings by theme)
 - **1–11**: geometry & localization, FOV÷resolution=rank, cyclic-ghost, directional biasing, noise
   threshold, tungsten leakage, optimal thickness, crystal uniformity, detector array (Nyquist),
   crystal materials, RTL peak-detector, SiPM+ADC front-end.

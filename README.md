@@ -22,7 +22,7 @@ dotnet test  Gcam.sln            # unit + physics-invariant tests
 # single scenario -> flood map + reconstruction + source estimate
 dotnet run --project src/Gcam.Cli -c Release -- samples/scenario.json
 
-# MVVM viewer (imaging workflow)
+# MVVM viewer (imaging workflow) — start with docs/AGENTS.Studio.md
 dotnet run --project src/Gcam.Studio -c Release
 
 # list all study sub-commands
@@ -42,7 +42,7 @@ physical-realism set). Run `montecarlo help` for the grouped list.
 | `rtl/` | SystemVerilog ADC front-end (Icarus + cocotb), verified bit-exact against the C# shaper |
 | `samples/` | Example scenarios (JSON) and result CSVs / figures |
 | **`AGENTS.md`** | Architecture, pipeline, coordinate frame, full command reference |
-| **`AGENTS.findings.md`** | Theme-organized results log (with reproduce commands) |
+| **`docs/`** | `AGENTS.*` (findings log, backlog, conventions, Studio guide), `DESIGN.*` (Studio design), `PAPER.ko.md` — naming in `docs/AGENTS.Conventions.Docs.md` |
 
 For anything beyond this quickstart, start with **`AGENTS.md`**.
 
