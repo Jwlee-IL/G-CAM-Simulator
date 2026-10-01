@@ -175,6 +175,8 @@ TILT (pitch/yaw), mask WARPING.
 
 ## Done (summary — details in AGENTS.Findings by theme)
 
+- **TODO-17 Co-60 localisation bias** (2026-10-02): not energy — undersampling of the mask shadow by the default
+  optics at 1 m (1.27 samples per cell; RMS 0.95 → 0.24 mm from 0.6 to 0.2 mm pixels). Findings theme 55; feeds TODO-09.
 - **TODO-08 detector realism, background, per-nuclide imaging, Compton strip** (2026-10-02): Gcam.Wpf's detector
   defaults restored, gain in one measurement stage, BSR background events, channels per isotope through the shared
   window N, a selector with truth / found markers, Compton strip with an H-only calibration (co-located Cs + Co ×2,

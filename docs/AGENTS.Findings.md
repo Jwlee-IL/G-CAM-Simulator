@@ -1723,3 +1723,23 @@ Reproduce: `montecarlo dose samples/scenario_handheld.json` (≈ 10 s) → `samp
 `python samples/plot_dose.py` → `samples/dose.png`. Tests: `DoseTests` (ICRP points, interpolation and range, held-out
 662 keV within ±25 % and collimated oblique field, paralyzable over-range and the live-time limit).
 
+## 55. Localisation bias from undersampling the mask shadow — Studio optics at 1 m (2026-10-02)
+
+Found while measuring Studio's per-nuclide precision (TODO-08 B): a Co-60 source at (−15, −8) mm, 1 m, localised
+with a steady −1.4 mm y bias over 20 seeds, also without the Cs-137 source. Isolated with single-source weighted
+runs (3 × 10⁶ biased photons, default `OpticsSettings`: rank 13, cell 0.7 mm, D 80 mm, 30 × 0.6 mm, focal 1000 mm):
+
+- **Not energy, not Compton:** the same bias with the ideal geometric `CrystalDetector` and with Compton Argmax,
+  for Cs-137 (−1.26 mm) as for Co-60 (−1.40 mm) at (−15, −8).
+- **Position-dependent:** y = −8 gives −1.3 … −1.4 mm at any x; y = +8 gives −0.3 mm; y = 0 gives +0.15 mm.
+- **Not interpolation:** a 0.25 mm reconstruction grid leaves it (errors up to 1.66 mm).
+- **Sampling:** at constant detector size, pixel pitch 0.6 / 0.3 / 0.2 mm (1.27 / 2.54 / 3.80 samples per 0.761 mm
+  shadow cell) gives RMS 0.95 / 0.51 / 0.24 mm and max 1.91 / 0.91 / 0.41 mm over y = −10 … 10 mm; the error
+  repeats with the source position (period ≈ 3.4 mm at 0.6 mm pitch).
+
+So the default optics (the `Gcam.Wpf` "Sharp" preset) sample the shadow at ≥ 2 pixels per cell only near a 160 mm
+focal plane; at Studio's 1 m default they alias. This is theme 9's Nyquist rule (≳ 2 pixels per shadow cell) showing
+up as a position-dependent bias, and it explains Studio anomaly AN-11. Consequence: TODO-09's presets must be
+judged at the working focal plane. Reproduce: a throwaway program on `SceneConfigBuilder` + `SimulationRunner`
+(sweep in `VV.Studio.Imaging`, "Localisation bias"); a regression test is to come with TODO-09.
+

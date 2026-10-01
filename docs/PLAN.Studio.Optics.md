@@ -24,6 +24,11 @@ coverage = 18 mm / (13 · 0.761 mm) = **1.82** periods — outside `Gcam.Wpf`'s 
 same preset gives 0.99. Either the presets were tuned for a near focal plane, or the ✓ band is not the right rule
 for non-cyclic decoding. This must be settled by measurement, not by choosing one.
 
+**Measured since (planner, 2026-10-02, Findings theme 55).** The default optics at 1 m sample the 0.761 mm mask
+shadow at 1.27 pixels per cell; this produces a position-dependent localisation error (RMS 0.95 mm, max 1.91 mm;
+0.24 / 0.41 mm at 3.8 samples per cell). The Nyquist row of O-4 therefore has evidence, and every preset must be
+judged at the focal plane it will be used at.
+
 ## Proposed design (reference — the implementer may improve any of it)
 
 | # | Proposal | Status |

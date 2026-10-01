@@ -6,8 +6,8 @@ verification from measured localization precision; it makes no new precision cla
 **At a glance**
 - Requirements SR-IMG-01 … SR-IMG-06 are in [VV.Studio.SRS](VV.Studio.SRS.md).
 - Headless requirements passed; Release measurements below were supplied by the reviewer on 2026-10-02.
-- Co-60 has a measured systematic y bias near −1.4 mm in these scenes, including the Co-only control;
-  finding TODO-17 remains open with no established cause.
+- The Co-60 y bias near −1.4 mm is not an energy effect: it is a position-dependent localisation error from
+  undersampling the mask-cell shadow with the default optics at a 1 m focal plane (see "Localisation bias").
 - Offscreen mixed-scene renders pass in both themes and sizes; desktop validation remains unperformed.
 - No desktop UI test or Studio launch is part of this verification.
 
@@ -43,9 +43,28 @@ were accepted; worker costs were channels 216.2 ms, calibration 696.8 ms and dec
 The engine EV-15 scalar subtraction model motivates this method, but does not substitute for these Studio
 measurements. Finding TODO-17: at Co-60 (−15,−8) mm, 1000 µCi, with the defaults above, N = 1.5,
 stripping enabled, 600 s and 20 seeds, the refined mean y error is −1.378 mm in the mixed scene and
-−1.367 mm in the Co-only control. This records a systematic bias under these conditions; the cause is open.
+−1.367 mm in the Co-only control. This records a systematic bias under these conditions; its cause is given under "Localisation bias" below.
 The Cs refined mean error is (−0.093, −0.084) mm in this mixed-scene sample. These numbers do not establish
 precision at other positions, geometries, activities or live times.
+
+## Localisation bias: detector sampling, not energy (2026-10-02)
+
+Single-source, weighted engine runs (3 × 10⁶ biased photons, noise negligible; default optics, focal 1000 mm):
+the same bias appears with the ideal geometric detector and with Compton Argmax events, for Cs-137 as for Co-60
+(at (−15, −8): Cs −1.26 mm, Co −1.40 mm in y), and it depends on the source position (y = −8: −1.3 … −1.4 mm at
+any x; y = +8: −0.3 mm; y = 0: +0.15 mm). A 0.25 mm reconstruction grid does not remove it, so it is not the
+sub-cell interpolation. Varying the detector pixel pitch at constant detector size (Cs-137, x = 0,
+y = −10 … 10 mm in 1 mm steps, 0.25 mm grid):
+
+| Pixel pitch | Samples per mask-cell shadow (0.761 mm) | RMS error | Max error |
+|---|---|---|---|
+| 0.6 mm (default) | 1.27 | 0.95 mm | 1.91 mm |
+| 0.3 mm | 2.54 | 0.51 mm | 0.91 mm |
+| 0.2 mm | 3.80 | 0.24 mm | 0.41 mm |
+
+The error repeats with the source position (period ≈ 3.4 mm at 0.6 mm pitch): the shadow's phase on the pixel grid
+decides where the decoded peak lands. The default optics reach ≥ 2 samples per cell only near a 160 mm focal plane
+(shadow 1.4 mm), not at 1 m.
 
 ## Reproduction and renders
 
