@@ -45,15 +45,15 @@ public sealed class DecayScheme
         _ => new(Isotope.Cs137, [661.7], []),
     };
 
+    /// <summary>The scheme for an isotope name. Only Cs-137, Co-60 and Na-22 have a modelled cascade; any other name
+    /// (Ir-192, Co-57, Am-241, a typo, blank) throws — a fallback would quietly run another isotope's study.</summary>
     public static DecayScheme From(string? name) => name?.Trim().ToUpperInvariant() switch
     {
+        "CS-137" or "CS137" => For(Isotope.Cs137),
         "CO-60" or "CO60" => For(Isotope.Co60),
         "NA-22" or "NA22" => For(Isotope.Na22),
-        // Ir-192 has real cascades (e.g. 468 → 316 keV) but its correlated per-decay emission is not modelled.
-        // Failing loudly beats the fallback below, which would quietly run a Cs-137 cascade study instead.
-        "IR-192" or "IR192" => throw new NotSupportedException(
-            "Ir-192 cascade (true-coincidence) summing is not modelled; use Cs-137, Co-60 or Na-22."),
-        _ => For(Isotope.Cs137),
+        _ => throw new NotSupportedException(
+            $"Cascade (true-coincidence) summing is not modelled for '{name}'; use Cs-137, Co-60 or Na-22."),
     };
 
     /// <summary>Sample ONE decay's emitted gammas (energy + direction) into <paramref name="outPhotons"/>, applying

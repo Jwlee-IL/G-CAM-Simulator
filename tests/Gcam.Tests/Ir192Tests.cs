@@ -55,8 +55,23 @@ public class Ir192Tests
     {
         var e = Assert.Throws<NotSupportedException>(() => DecayScheme.From("Ir-192"));
         Assert.Contains("not modelled", e.Message);
-        Assert.Equal(Isotope.Cs137, DecayScheme.From("unknown").Isotope);   // existing fallback unchanged
     }
+
+    [Theory]
+    [InlineData("Co-57")]
+    [InlineData("Am-241")]
+    [InlineData("Cs-173")]
+    [InlineData("")]
+    [InlineData(null)]
+    public void CascadeStudy_RefusesEveryUnmodelledName(string? name)
+        => Assert.Throws<NotSupportedException>(() => DecayScheme.From(name));
+
+    [Theory]
+    [InlineData("Cs-137", Isotope.Cs137)]
+    [InlineData(" co60 ", Isotope.Co60)]
+    [InlineData("NA-22", Isotope.Na22)]
+    public void CascadeStudy_AcceptsTheModelledNames(string name, Isotope expected)
+        => Assert.Equal(expected, DecayScheme.From(name).Isotope);
 
     private static SimulationConfig SingleScene(string isotope, double x, double y)
     {

@@ -1506,6 +1506,8 @@ keV β⁻, 205.8 / 484.6 keV EC), **2.137 γ/decay**, T½ 73.829 d. Pt / Os K X-
   `cascadeCoincident: false` — the RTL study's notion of a cascade is "every line in one decay", which would invent
   coincidences between alternative branches — and `DecayScheme.From("Ir-192")` now throws instead of silently
   running the Cs-137 cascade it used to fall back to.
+  Since 2026-10-01 (later the same day) every name without a modelled cascade throws — Co-57, Am-241, a typo or a
+  blank name used to fall back to Cs-137 the same way (found by a rule review of `AGENTS.Rationale`).
 - **Imaging works** (`samples/scenario_ir192.json`, `montecarlo`): on-axis estimate (0.3, −0.2) mm, 0.3 mm error,
   efficiency 1.96 × 10⁻⁴, ghost margin 1.15 — the same scenario with Cs-137 gives 0.4 mm, 2.49 × 10⁻⁴ and 1.16, so
   imaging quality matches; the efficiency gap is not interpreted here because the crystal stopping model is wrong at
