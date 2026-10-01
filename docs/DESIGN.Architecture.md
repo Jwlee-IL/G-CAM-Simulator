@@ -122,6 +122,19 @@ sequenceDiagram
 - **Progress race**: `Progress<T>` posts reports asynchronously, so a late report can arrive after completion.
   The ViewModel accepts reports only while running and never lets the bar move backwards (a test pins this).
 
+## Workspaces and plotting
+
+`MainViewModel` owns scene, optics, run state and the shared `ImagingResult`. `Workspaces` and
+`SelectedWorkspace` select the centre and right panel through type-based DataTemplates. `WorkspaceViewModel`
+supplies title, AutomationId and active state; `ImagingWorkspaceViewModel` owns `Measurements` and `PeakText`,
+and reads the shared result through `Shared`. Publishing a result refreshes imaging readings without replacing
+the workspace or measurement session. Only Imaging is registered; no empty tabs are shown.
+
+Core `Plotting/` contains series / bands / markers, `PlotViewport`, `NiceTicks` and `MinMaxPyramid`, with no WPF
+types. The WPF `PlotView` caches preparation on data changes and renders exact column extrema during input or
+resize. The engine remains behind `ISimulationService`; no spectrum / waveform calculation has moved in this
+shell step. Tests for maths run without WPF; the plot gate hosts the production control in a visible STA window.
+
 ## Testing strategy
 
 | What | Where | How |

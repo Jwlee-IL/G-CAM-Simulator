@@ -7,6 +7,36 @@ namespace Gcam.Studio.Tests;
 
 public class MainViewModelTests
 {
+    [Fact]
+    public async Task RunInputs_MarkSharedResultStale_WhileWorkspaceSelectionDoesNot()
+    {
+        var vm = new MainViewModel(new FakeSimulation(), new FakeTheme());
+        await vm.RunCommand.ExecuteAsync(null);
+        vm.Photons += 1000;
+        Assert.True(vm.IsResultStale);
+        await vm.RunCommand.ExecuteAsync(null);
+        vm.SelectWorkspaceCommand.Execute("0");
+        Assert.False(vm.IsResultStale);
+        vm.Optics = vm.Optics with { FocalDistanceMm = vm.Optics.FocalDistanceMm + 100 };
+        Assert.True(vm.IsResultStale);
+    }
+    [Fact]
+    public async Task Workspace_SharedResultAndSelectionSurviveRun_ViewSettingsDoNotMarkStale()
+    {
+        var vm = new MainViewModel(new FakeSimulation(), new FakeTheme());
+        Assert.Same(vm.Imaging, Assert.Single(vm.Workspaces));
+        Assert.Same(vm.Imaging, vm.SelectedWorkspace);
+        Assert.Equal("Workspace.Imaging", vm.Imaging.AutomationId);
+        Assert.False(vm.HasWorkspaceSwitch);
+        await vm.RunCommand.ExecuteAsync(null);
+        Assert.Same(vm.Imaging, vm.SelectedWorkspace);
+        Assert.Same(vm.Result, vm.Imaging.Shared.Result);
+        vm.Imaging.Measurements.ActiveTool = MeasureTool.Distance;
+        Assert.False(vm.IsResultStale);
+        vm.SelectWorkspaceCommand.Execute("3");
+        Assert.Same(vm.Imaging, vm.SelectedWorkspace);
+        Assert.True(vm.Imaging.IsActive);
+    }
     /// <summary>Fake simulation: reports progress, then either returns a canned result or waits for cancellation.</summary>
     private sealed class FakeSimulation : ISimulationService
     {
@@ -50,10 +80,10 @@ public class MainViewModelTests
     {
         var vm = new MainViewModel(new FakeSimulation(), new FakeTheme());
         Assert.Equal(RunState.Idle, vm.State);
-        Assert.Null(vm.PeakText);
+        Assert.Null(vm.Imaging.PeakText);
         await vm.RunCommand.ExecuteAsync(null);
         Assert.Equal(RunState.Succeeded, vm.State);
-        Assert.Equal("peak (1.0, 2.0) mm", vm.PeakText);
+        Assert.Equal("peak (1.0, 2.0) mm", vm.Imaging.PeakText);
 
         var failing = new MainViewModel(new FakeSimulation { Throw = new InvalidOperationException("x") }, new FakeTheme());
         await failing.RunCommand.ExecuteAsync(null);
@@ -185,12 +215,12 @@ public class MainViewModelTests
     public async Task NewResult_RefreshesMeasurements()
     {
         var vm = new MainViewModel(new FakeSimulation(), new FakeTheme());
-        vm.Measurements.AddCommand.Execute(new MeasurementDraft(ImagePane.Flood, MeasurementKind.Roi,
+        vm.Imaging.Measurements.AddCommand.Execute(new MeasurementDraft(ImagePane.Flood, MeasurementKind.Roi,
             [new Gcam.Studio.Core.Imaging.Vec2(-5, -5), new Gcam.Studio.Core.Imaging.Vec2(5, 5)]));
-        Assert.Equal("—", vm.Measurements.Items[0].Value);
+        Assert.Equal("—", vm.Imaging.Measurements.Items[0].Value);
 
         await vm.RunCommand.ExecuteAsync(null);
-        Assert.Equal("Σ 0", vm.Measurements.Items[0].Value);   // the fake's flood is all zeros
+        Assert.Equal("Σ 0", vm.Imaging.Measurements.Items[0].Value);   // the fake's flood is all zeros
     }
 
     [Fact]

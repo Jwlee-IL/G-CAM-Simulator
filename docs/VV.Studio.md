@@ -15,13 +15,13 @@ one of a set:
 The working design guides are [DESIGN.Architecture](DESIGN.Architecture.md) and the other `DESIGN.*` pages.
 
 **At a glance**
-- 39 software requirements; **32 pass, 7 partial**, none without evidence (§4). 44 unit and integration tests in
+- 47 software requirements; **38 pass, 9 partial** (§4). 58 unit and integration tests in
   `Gcam.Studio.Tests` and 7 service tests against the real engine in `Gcam.Studio.Services.Tests`, all passing on
   2026-10-01.
-- Seven desktop scenarios drive the running app through UI Automation with real pointer input and judge it against
+- Seven regression scenarios, a plot gate and a diagnostic survey are opt-in desktop tests. The latest regression / survey attempt was blocked by desktop input; the plot CPU gate passed (§5). Historical scenarios judge the running app against
   independently computed values (§5): VAL-01 … VAL-04 performed, VAL-05 partial, VAL-06 … VAL-08 open.
 - The layering that keeps the logic testable is compiler-enforced (SR-ARCH-01, -04).
-- Open problems are in §6 (AN-01 … AN-10); no screen-reader session has been run.
+- Open problems are in §6 (AN-01 … AN-12); no screen-reader session has been run.
 
 ## 1. Scope and intended use
 
@@ -116,40 +116,56 @@ Automation. Status: **pass** (evidence on 2026-10-01), **partial**, **open** (no
 | SR-ARCH-02 | build | C, I | Core has no reference to `Gcam.Simulation` (C); the shell could reach it transitively through Services, so for the shell it is I only | pass — see AN-08 |
 | SR-ARCH-03 | inspection | I | `MainWindow.xaml.cs` is `InitializeComponent()` only; literal sizes found — AN-05 | partial |
 | SR-ARCH-04 | build | C, I | `Gcam.Studio.Tests.csproj` references only `Gcam.Studio.Core` and targets `net9.0` | pass |
+| SR-NAV-01 | unit + I | T, I | `MainViewModelTests.Workspace_SharedResultAndSelectionSurviveRun_ViewSettingsDoNotMarkStale`; workspace-type centre / panel templates | pass |
+| SR-NAV-02 | unit + system | T, I | same workspace test: registered identity, unavailable index, retained selection; segmented switch / Ctrl+1…4 inspected | partial — only Imaging registered; desktop survey blocked |
+| SR-NAV-03 | unit | T | `MainViewModelTests.RunInputs_MarkSharedResultStale_WhileWorkspaceSelectionDoesNot`, `Workspace_SharedResultAndSelectionSurviveRun_ViewSettingsDoNotMarkStale` | pass |
+| SR-PLOT-01 | unit + I | T, I | `PlotSeriesTests.LowerBound_HandlesUniformAndIrregularX_AndEnds`; validation / cap / band / marker properties inspected | pass |
+| SR-PLOT-02 | unit | T | `PlotViewportTests.Mapping_RoundTrips_AndClampsLogFloor`, `NiceTicksTests.Linear_Uses125Steps_EngineeringLabels_NoNegativeZero`, `Logarithmic_LabelsDecades_WithEightMinorTicks` | pass |
+| SR-PLOT-03 | unit | T | `MinMaxPyramidTests.Query_EqualsBruteForce_IncludingBothEnds` (5 cases), `Range_ClipsOutsideData_RejectsNonFiniteSamples` | pass |
+| SR-PLOT-04 | unit + system | T, I | `PlotViewportTests.ZoomPanReset_PreservesAnchor_AndBounds`; `PlotViewTests.TenMillionSamples_ZoomAndResizeRedraw_Within16Milliseconds` checks production peer, + key and reset; pointer / other keys / readout by inspection | partial — full input walkthrough pending |
+| SR-PLOT-05 | system | T | `PlotViewTests.TenMillionSamples_ZoomAndResizeRedraw_Within16Milliseconds`; measured record in §5 | pass (CPU redraw only) |
 
 ### Coverage summary
 
 | Primary method | Requirements |
 |---|---|
-| Automated test (alone or with I / M) | 25 — RUN 01–08, SCENE 01–02, VIEW 01–06 + 08, MEAS 01–06 + 08, THEME-01 |
+| Automated test (alone or with I / M) | 33 — NAV 01–03, PLOT 01–05, RUN 01–08, SCENE 01–02, VIEW 01–06 + 08, MEAS 01–06 + 08, THEME-01 |
 | Manual UI Automation + inspection | 7 — VIEW-07, MEAS-07, THEME-02, ENV-02, A11Y-01, A11Y-02, A11Y-03 |
 | Inspection only | 3 — A11Y-04, SEC-01, ARCH-03 |
 | Compiler-enforced (+ inspection) | 4 — ENV-01, ARCH-01, ARCH-02, ARCH-04 |
 
 | Status | Count |
 |---|---|
-| pass | 32 |
-| partial | 7 — RUN-04, VIEW-07, MEAS-07, THEME-02, ENV-02, A11Y-03, ARCH-03 |
+| pass | 38 |
+| partial | 9 — NAV-02, PLOT-04, RUN-04, VIEW-07, MEAS-07, THEME-02, ENV-02, A11Y-03, ARCH-03 |
 | open | 0 requirements; system-level scenarios are open in §5 |
 
-### Test inventory (run 2026-10-01, `dotnet test Gcam.sln -c Release`, .NET SDK 9.0.311)
+### Test inventory (run 2026-10-01, `dotnet test Gcam.sln` (Debug), .NET SDK 9.0.311)
 
 | Class | Level | Cases | Result |
 |---|---|---|---|
 | `HeatmapViewportTests` | unit | 11 (9 methods, one theory × 3) | 11 / 11 pass |
 | `MeasurementMathTests` | unit | 5 | 5 / 5 pass |
 | `MeasurementsViewModelTests` | unit / integration | 7 | 7 / 7 pass |
-| `MainViewModelTests` | unit / integration (with `MeasurementsViewModel`) | 12 | 12 / 12 pass |
+| `MainViewModelTests` | unit / integration (with workspace and measurements) | 14 | 14 / 14 pass |
 | `TickFormatterTests` | unit | 9 | 9 / 9 pass — no requirement yet (AN-10) |
-| **Gcam.Studio.Tests** | | **44** | **44 / 44 pass** |
+| `MinMaxPyramidTests` | unit | 6 | 6 / 6 pass |
+| `PlotViewportTests` | unit | 3 | 3 / 3 pass |
+| `NiceTicksTests` | unit | 2 | 2 / 2 pass |
+| `PlotSeriesTests` | unit | 1 | 1 / 1 pass |
+| **Gcam.Studio.Tests** | | **58** | **58 / 58 pass** |
 | `SimulationServiceTests` (in Gcam.Studio.Services.Tests) | integration (the service against the real engine) | 7 | 7 / 7 pass |
 | `FloodOracleTests` (in Gcam.Studio.UiTests) | the UI scenarios' oracle, tested on its own | 10 | 10 / 10 pass |
-| `PilotTests`, `ScenarioTests` (in Gcam.Studio.UiTests) | system, desktop (opt-in) | 7 | skipped in the ordinary run; dated desktop record in §5 |
+| `PilotTests`, `ScenarioTests` (in Gcam.Studio.UiTests) | system, desktop (opt-in) | 7 | skipped normally; latest opt-in run: 7 fail at desktop input / focus (§5) |
+| `PlotViewTests` | system, desktop (opt-in) | 1 | CPU redraw gate pass; skipped normally |
+| `PolishSurveyTests` | diagnostic, desktop (opt-in) | 1 | blocked at UIA focus; skipped normally |
 | `SceneConfigBuilderTests` (in Gcam.Tests) | integration (engine) | 7 (one theory × 4) | pass |
 | **Gcam.Tests** (engine, out of scope) | | **246** | **246 / 246 pass** |
 
-The solution, including the WPF shell, built in Release without errors or warnings in the same run. This table is
-the dated record; `dotnet test` prints the current totals.
+The solution, including the WPF shell, built in Release without errors. Restore emitted NU1900 because NuGet
+vulnerability metadata was unreachable. Builds used one MSBuild node and disabled node reuse after the default
+restore failed without diagnostics. The final ordinary run passed 321 cases and skipped 9 desktop tests.
+This table is the dated record; `dotnet test` prints the current totals.
 
 ## 5. Validation
 
@@ -168,6 +184,37 @@ app's code (an oracle that re-derives the image layout and the screen → mm map
 | VAL-06 | Use both themes | all text, focus rings, chips and overlays legible in dark and light; title bar follows | open |
 | VAL-07 | Keyboard only | every function reachable without a pointer except creating measurements (AN-01) | open |
 | VAL-08 | Small screen and display scaling | at 1366×768 the window starts maximised; at 125 % / 150 % heatmap cells stay equal width | open |
+
+### Plot performance gate
+
+2026-10-01, DESKTOP-4D9CRJT, Windows 11 build 26200, .NET SDK 9.0.311 / runtime 9.0.13, Release,
+100% DPI, 10,000,000 samples, visible 1280×800 host resized to 1440 width. The tool shell reports 24 processors;
+`DOTNET_PROCESSOR_COUNT=4` constrained build / test runtime concurrency. Three warm-up zoom redraws preceded
+five measured zoom / resize pairs. Data preparation is outside the interactive redraw measurement.
+
+| CPU redraw | Five measurements (ms) | Maximum | Gate |
+|---|---|---|---|
+| Zoom | 2.0368, 12.1177, 3.2046, 1.0483, 1.3064 | 12.118 ms | ≤16 ms: pass |
+| Resize | 2.6021, 2.6420, 0.7743, 0.7808, 0.6819 | 2.642 ms | ≤16 ms: pass |
+
+CPU `OnRender` includes axes / ticks, exact extrema query, frozen geometry and WPF drawing commands.
+It excludes dispatcher scheduling and compositor presentation. Event-to-render resize latency was
+280.517…315.842 ms; this is **not** evidence of a ≤16 ms end-to-end resize. Full record:
+[performance.json](assets/studio-polish-survey/performance.json). No data were removed or extrema dropped.
+The host test also checks the production automation peer and keyboard + / reset.
+
+### Latest desktop regression and polish survey attempt
+
+The opt-in Release run on 2026-10-01 returned **11 pass / 8 fail / 0 skipped**: 10 oracle cases and the plot gate
+passed; all seven existing scenarios and the survey failed. The pilot reached Succeeded and found the flood map,
+then `SetCursorPos` failed. The remaining scenarios failed at UIA `SetFocus` while normalising the owned window.
+Screen-copy diagnostics also failed (invalid handle). Existing assertions were not weakened. All owned app
+processes exited with 0 and their sandbox-write lists were empty. This does not establish regression success.
+
+Failure manifests / tree dumps are under the ignored test output `ui-runs/20261001-154607-7bf65f/` through
+`ui-runs/20261001-154654-dfd8b1/`. The dated earlier scenario results below are historical evidence.
+The four requested Imaging captures and observed polish issue list are **pending**, as is a keyboard walkthrough;
+[survey record and intended paths](assets/studio-polish-survey/README.md). No screenshot or issue is invented.
 
 ### Automated scenarios (`tests/Gcam.Studio.UiTests`, opt-in with `GCAM_UI_TESTS=1`)
 
@@ -203,6 +250,8 @@ so the verdicts can fail. No app process or sandbox folder was left behind.
 | AN-07 | WPF items (`HeatmapView` rendering, `ColorBar` ticks, `ThemeService`) have no unit tests, by design | defects show only when the app runs | covered by AN-02 plan |
 | AN-08 | SDK-style project references are transitive, so the shell *could* call the engine directly | layering rule for the shell is inspection-only | optional: `PrivateAssets` on the Services → engine reference |
 | AN-09 | Photon budget clamp (≥ 1,000) is untested | low | add a test |
+| AN-11 | Latest desktop input and screen capture unavailable | regression scenarios and four-view polish survey remain unverified in this working tree | re-run on an accessible interactive desktop; preserve verdicts |
+| AN-12 | CPU plot redraw meets the gate, but resize event-to-render delay is 280–316 ms | CPU evidence does not establish end-to-end responsiveness | distinguish timings; investigate dispatcher / desktop latency before making a presentation-latency claim |
 | AN-10 | `TickFormatterTests` (colour-bar tick labels: one shared multiplier, one decimal count, no negative zero) test behaviour that no SRS row states | the behaviour is verified but not required, so a change to it would not be traced | add an `SR-VIEW` row for colour-bar labels |
 
 No screen-reader (Narrator / NVDA) session has been run. Not verified.

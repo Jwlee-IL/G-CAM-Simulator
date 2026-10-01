@@ -40,6 +40,16 @@ public sealed class RunRecord
 
     public void Step(string text) => _steps.Add($"{DateTime.Now:HH:mm:ss.fff} {text}");
 
+    /// <summary>Diagnostic-only capture of the owned window's visible frame.</summary>
+    public static void CaptureWindow(AutomationElement window, string path)
+    {
+        var r = VisibleFrame(new IntPtr(window.Current.NativeWindowHandle));
+        using var bmp = new System.Drawing.Bitmap(r.Width, r.Height);
+        using (var g = System.Drawing.Graphics.FromImage(bmp))
+            g.CopyFromScreen(r.Left, r.Top, 0, 0, bmp.Size);
+        bmp.Save(path);
+    }
+
     /// <summary>Tree dump + window capture + last steps, for a run that failed.</summary>
     public void CaptureFailure(Exception error, AutomationElement? window)
     {

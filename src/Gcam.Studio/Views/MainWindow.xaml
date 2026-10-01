@@ -54,6 +54,12 @@
         </Style>
     </Window.Resources>
 
+    <Window.InputBindings>
+        <KeyBinding Modifiers="Control" Key="D1" Command="{Binding SelectWorkspaceCommand}" CommandParameter="0" />
+        <KeyBinding Modifiers="Control" Key="D2" Command="{Binding SelectWorkspaceCommand}" CommandParameter="1" />
+        <KeyBinding Modifiers="Control" Key="D3" Command="{Binding SelectWorkspaceCommand}" CommandParameter="2" />
+        <KeyBinding Modifiers="Control" Key="D4" Command="{Binding SelectWorkspaceCommand}" CommandParameter="3" />
+    </Window.InputBindings>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="{StaticResource Size.Bar}" />
@@ -69,7 +75,22 @@
                     <Border Width="{StaticResource Size.Logo}" Height="{StaticResource Size.Logo}" CornerRadius="{StaticResource Radius.Control}"
                             Background="{DynamicResource Brush.Accent}" Margin="{StaticResource Gap.Inline}" />
                     <TextBlock Text="GCAM Studio" Style="{StaticResource Text.AppTitle}" Margin="{StaticResource Gap.Inline}" />
-                    <TextBlock Text="coded-aperture imaging" Style="{StaticResource Text.Label}" />
+                    <Border Style="{StaticResource Segment.Track}"
+                            Visibility="{Binding HasWorkspaceSwitch, Converter={StaticResource BoolToVis}}">
+                        <ItemsControl ItemsSource="{Binding Workspaces}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate><UniformGrid Rows="1" /></ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <RadioButton Content="{Binding Title}" GroupName="Workspace" Style="{StaticResource RadioButton.Segment}"
+                                                 IsChecked="{Binding IsActive}"
+                                                 Command="{Binding DataContext.ActivateWorkspaceCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                 CommandParameter="{Binding}" AutomationProperties.AutomationId="{Binding AutomationId}" />
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </Border>
                 </StackPanel>
 
                 <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
@@ -213,137 +234,118 @@
                     </StackPanel>
                 </Border>
 
-                <!-- Images: square heatmap with its colour bar and readout directly beneath (ImageStackPanel) -->
-                <Grid Grid.Column="2">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="{StaticResource Gutter}" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
-
-                    <Border Grid.Column="0" Style="{StaticResource Panel.Surface}">
-                        <DockPanel>
-                            <DockPanel DockPanel.Dock="Top" Style="{StaticResource PanelHeader}">
-                                <TextBlock DockPanel.Dock="Left" Text="Detector flood map" Style="{StaticResource Text.PanelTitle}" />
-                                <Border DockPanel.Dock="Right" Style="{StaticResource Chip}"
-                                        ToolTip="Each crystal's detected photon weight (directional biasing makes counts fractional)">
-                                    <TextBlock Text="weighted counts" Style="{StaticResource Text.Caption}" />
-                                </Border>
-                            </DockPanel>
-                            <c:ImageStackPanel>
-                                <c:HeatmapView x:Name="Flood" Style="{StaticResource ImageHeatmap}" Image="{Binding Result.Flood}"
-                                               OriginMm="{Binding Result.FloodOriginMm}" StepMm="{Binding Result.FloodStepMm}"
-                                               EmptyText="Run a simulation to see the flood map"
-                                               c:MeasurementOverlay.Session="{Binding Measurements}" c:MeasurementOverlay.Pane="Flood"
-                                               AutomationProperties.AutomationId="FloodView" AutomationProperties.Name="Detector flood map"
-                                               AutomationProperties.HelpText="Mouse wheel or plus and minus to zoom, drag or arrow keys to pan, double-click or 0 to reset. With a measuring tool, draw on the image; Escape cancels, Delete removes the selected measurement." />
-                                <c:ColorBar Style="{StaticResource ImageColorBar}" Minimum="{Binding DataMin, ElementName=Flood}" Maximum="{Binding DataMax, ElementName=Flood}"
-                                            AutomationProperties.AutomationId="FloodColorBar" AutomationProperties.Name="Flood map colour scale" />
-                                <TextBlock Text="{Binding Readout, ElementName=Flood}" Style="{StaticResource Text.Readout}"
-                                           AutomationProperties.AutomationId="FloodReadout" />
-                            </c:ImageStackPanel>
-                        </DockPanel>
-                    </Border>
-
-                    <Border Grid.Column="2" Style="{StaticResource Panel.Surface}">
-                        <DockPanel>
-                            <DockPanel DockPanel.Dock="Top" Style="{StaticResource PanelHeader}">
-                                <TextBlock DockPanel.Dock="Left" Text="Reconstruction" Style="{StaticResource Text.PanelTitle}" />
-                                <!-- The decoded peak is a reading, not an action or selection: neutral chip, mono numbers -->
-                                <Border DockPanel.Dock="Right" Style="{StaticResource Chip}"
-                                        Visibility="{Binding PeakText, Converter={x:Static conv:NullToCollapsedConverter.Instance}}">
-                                    <TextBlock Text="{Binding PeakText}" Style="{StaticResource Text.MonoCaption}" AutomationProperties.AutomationId="PeakText" />
-                                </Border>
-                                <!-- The images no longer match the scene (a source was moved or edited) -->
-                                <Border DockPanel.Dock="Right" Style="{StaticResource Chip.Warning}" Margin="{StaticResource Gap.Inline}"
-                                        Visibility="{Binding IsResultStale, Converter={StaticResource BoolToVis}}"
-                                        ToolTip="The scene changed after this run. Simulate again to update the images.">
-                                    <TextBlock Text="outdated" Style="{StaticResource Text.CaptionWarning}" AutomationProperties.AutomationId="ResultStale" />
-                                </Border>
-                            </DockPanel>
-                            <c:ImageStackPanel>
-                                <c:HeatmapView x:Name="Recon" Style="{StaticResource ImageHeatmap}" Image="{Binding Result.Reconstruction}"
-                                               OriginMm="{Binding Result.ReconOriginMm}" StepMm="{Binding Result.ReconStepMm}"
-                                               EmptyText="Run a simulation to see the reconstruction"
-                                               c:MeasurementOverlay.Session="{Binding Measurements}" c:MeasurementOverlay.Pane="Reconstruction"
-                                               c:MeasurementOverlay.Markers="{Binding Sources}" c:MeasurementOverlay.SelectedMarker="{Binding SelectedSource}"
-                                               c:MeasurementOverlay.CanMoveMarkers="{Binding IsIdle}"
-                                               AutomationProperties.AutomationId="ReconView" AutomationProperties.Name="Reconstruction image"
-                                               AutomationProperties.HelpText="Mouse wheel or plus and minus to zoom, drag or arrow keys to pan, double-click or 0 to reset. Drag a source marker to move the source. With a measuring tool, draw on the image; Escape cancels, Delete removes the selected measurement." />
-                                <c:ColorBar Style="{StaticResource ImageColorBar}" Minimum="{Binding DataMin, ElementName=Recon}" Maximum="{Binding DataMax, ElementName=Recon}"
-                                            AutomationProperties.AutomationId="ReconColorBar" AutomationProperties.Name="Reconstruction colour scale" />
-                                <TextBlock Text="{Binding Readout, ElementName=Recon}" Style="{StaticResource Text.Readout}"
-                                           AutomationProperties.AutomationId="ReconReadout" />
-                            </c:ImageStackPanel>
-                        </DockPanel>
-                    </Border>
-                </Grid>
-
-                <!-- Measurements: tool picker · results table · detail of the selected row, top-aligned -->
-                <Border Grid.Column="4" Style="{StaticResource Panel.Surface}">
-                    <StackPanel DataContext="{Binding Measurements}">
-                        <DockPanel Style="{StaticResource PanelHeader}">
-                            <TextBlock Text="Tools" Style="{StaticResource Text.PanelTitle}" />
-                        </DockPanel>
-                        <Border Style="{StaticResource Segment.Track}" Margin="{StaticResource Gap.Field}">
-                            <UniformGrid Rows="1" AutomationProperties.Name="Pointer tool">
-                                <RadioButton Content="_Pan" GroupName="Tool" Style="{StaticResource RadioButton.Segment}"
-                                             IsChecked="{Binding ActiveTool, Converter={x:Static conv:EnumMatchConverter.Instance}, ConverterParameter=Pan}"
-                                             AutomationProperties.AutomationId="ToolPan" AutomationProperties.Name="Pan tool" />
-                                <RadioButton Content="_Distance" GroupName="Tool" Style="{StaticResource RadioButton.Segment}"
-                                             IsChecked="{Binding ActiveTool, Converter={x:Static conv:EnumMatchConverter.Instance}, ConverterParameter=Distance}"
-                                             AutomationProperties.AutomationId="ToolDistance" AutomationProperties.Name="Distance tool" />
-                                <RadioButton Content="_Angle" GroupName="Tool" Style="{StaticResource RadioButton.Segment}"
-                                             IsChecked="{Binding ActiveTool, Converter={x:Static conv:EnumMatchConverter.Instance}, ConverterParameter=Angle}"
-                                             AutomationProperties.AutomationId="ToolAngle" AutomationProperties.Name="Angle tool" />
-                                <RadioButton Content="_ROI" GroupName="Tool" Style="{StaticResource RadioButton.Segment}"
-                                             IsChecked="{Binding ActiveTool, Converter={x:Static conv:EnumMatchConverter.Instance}, ConverterParameter=Roi}"
-                                             AutomationProperties.AutomationId="ToolRoi" AutomationProperties.Name="ROI tool (region of interest)" />
-                            </UniformGrid>
-                        </Border>
-                        <TextBlock Text="{Binding ToolHint}" Style="{StaticResource Text.Caption}" TextWrapping="Wrap"
-                                   Margin="{StaticResource Gap.Section}" AutomationProperties.AutomationId="ToolHint" />
-
-                        <DockPanel Style="{StaticResource PanelHeader}">
-                            <TextBlock DockPanel.Dock="Left" Text="Measurements" Style="{StaticResource Text.SectionTitle}" />
-                            <Button DockPanel.Dock="Right" Content="Clear" Command="{Binding ClearCommand}"
-                                    Style="{StaticResource Button.Ghost}" ToolTip="Remove all measurements"
-                                    AutomationProperties.AutomationId="ClearMeasurements" AutomationProperties.Name="Clear all measurements" />
-                            <Button DockPanel.Dock="Right" Content="−" Command="{Binding DeleteCommand}"
-                                    Style="{StaticResource Button.Ghost}" ToolTip="Delete selected measurement (Delete)"
-                                    AutomationProperties.AutomationId="DeleteMeasurement" AutomationProperties.Name="Delete selected measurement" />
-                        </DockPanel>
-
-                        <!-- Column header: same Size.Column.* keys and the same inner padding as the rows -->
-                        <Border Padding="{StaticResource Pad.ListItem}">
+                <ContentControl Grid.Column="2" Content="{Binding SelectedWorkspace}" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
+                    <ContentControl.Resources>
+                        <DataTemplate DataType="{x:Type vm:ImagingWorkspaceViewModel}">
+                            <!-- Images: square heatmap with its colour bar and readout directly beneath (ImageStackPanel) -->
                             <Grid>
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="{StaticResource Size.Column.Id}" />
-                                    <ColumnDefinition Width="{StaticResource Size.Column.Short}" />
-                                    <ColumnDefinition Width="{StaticResource Size.Column.Short}" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="{StaticResource Gutter}" />
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" Text="#" Style="{StaticResource Text.ColumnHeader}" />
-                                <TextBlock Grid.Column="1" Text="Image" Style="{StaticResource Text.ColumnHeader}" />
-                                <TextBlock Grid.Column="2" Text="Kind" Style="{StaticResource Text.ColumnHeader}" />
-                                <TextBlock Grid.Column="3" Text="Value" Style="{StaticResource Text.ColumnHeader}" HorizontalAlignment="Right" />
-                            </Grid>
-                        </Border>
 
-                        <Grid Margin="{StaticResource Gap.Field}">
-                            <ListBox MaxHeight="{StaticResource Size.ResultsList}" ItemsSource="{Binding Items}" SelectedItem="{Binding Selected}"
-                                     AutomationProperties.AutomationId="MeasurementList" AutomationProperties.Name="Measurement results">
-                                <ListBox.InputBindings>
-                                    <KeyBinding Key="Delete" Command="{Binding DeleteCommand}" />
-                                </ListBox.InputBindings>
-                                <ListBox.ItemContainerStyle>
-                                    <Style TargetType="ListBoxItem" BasedOn="{StaticResource {x:Type ListBoxItem}}">
-                                        <Setter Property="AutomationProperties.Name" Value="{Binding Description}" />
-                                        <Setter Property="AutomationProperties.AutomationId" Value="{Binding Name}" />
-                                    </Style>
-                                </ListBox.ItemContainerStyle>
-                                <ListBox.ItemTemplate>
-                                    <DataTemplate DataType="{x:Type vm:MeasurementViewModel}">
+                                <Border Grid.Column="0" Style="{StaticResource Panel.Surface}">
+                                    <DockPanel>
+                                        <DockPanel DockPanel.Dock="Top" Style="{StaticResource PanelHeader}">
+                                            <TextBlock DockPanel.Dock="Left" Text="Detector flood map" Style="{StaticResource Text.PanelTitle}" />
+                                            <Border DockPanel.Dock="Right" Style="{StaticResource Chip}"
+                                                    ToolTip="Each crystal's detected photon weight (directional biasing makes counts fractional)">
+                                                <TextBlock Text="weighted counts" Style="{StaticResource Text.Caption}" />
+                                            </Border>
+                                        </DockPanel>
+                                        <c:ImageStackPanel>
+                                            <c:HeatmapView x:Name="Flood" Style="{StaticResource ImageHeatmap}" Image="{Binding Shared.Result.Flood}"
+                                                           OriginMm="{Binding Shared.Result.FloodOriginMm}" StepMm="{Binding Shared.Result.FloodStepMm}"
+                                                           EmptyText="Run a simulation to see the flood map"
+                                                           c:MeasurementOverlay.Session="{Binding Measurements}" c:MeasurementOverlay.Pane="Flood"
+                                                           AutomationProperties.AutomationId="FloodView" AutomationProperties.Name="Detector flood map"
+                                                           AutomationProperties.HelpText="Mouse wheel or plus and minus to zoom, drag or arrow keys to pan, double-click or 0 to reset. With a measuring tool, draw on the image; Escape cancels, Delete removes the selected measurement." />
+                                            <c:ColorBar Style="{StaticResource ImageColorBar}" Minimum="{Binding DataMin, ElementName=Flood}" Maximum="{Binding DataMax, ElementName=Flood}"
+                                                        AutomationProperties.AutomationId="FloodColorBar" AutomationProperties.Name="Flood map colour scale" />
+                                            <TextBlock Text="{Binding Readout, ElementName=Flood}" Style="{StaticResource Text.Readout}"
+                                                       AutomationProperties.AutomationId="FloodReadout" />
+                                        </c:ImageStackPanel>
+                                    </DockPanel>
+                                </Border>
+
+                                <Border Grid.Column="2" Style="{StaticResource Panel.Surface}">
+                                    <DockPanel>
+                                        <DockPanel DockPanel.Dock="Top" Style="{StaticResource PanelHeader}">
+                                            <TextBlock DockPanel.Dock="Left" Text="Reconstruction" Style="{StaticResource Text.PanelTitle}" />
+                                            <!-- The decoded peak is a reading, not an action or selection: neutral chip, mono numbers -->
+                                            <Border DockPanel.Dock="Right" Style="{StaticResource Chip}"
+                                                    Visibility="{Binding PeakText, Converter={x:Static conv:NullToCollapsedConverter.Instance}}">
+                                                <TextBlock Text="{Binding PeakText}" Style="{StaticResource Text.MonoCaption}" AutomationProperties.AutomationId="PeakText" />
+                                            </Border>
+                                            <!-- The images no longer match the scene (a source was moved or edited) -->
+                                            <Border DockPanel.Dock="Right" Style="{StaticResource Chip.Warning}" Margin="{StaticResource Gap.Inline}"
+                                                    Visibility="{Binding Shared.IsResultStale, Converter={StaticResource BoolToVis}}"
+                                                    ToolTip="The scene changed after this run. Simulate again to update the images.">
+                                                <TextBlock Text="outdated" Style="{StaticResource Text.CaptionWarning}" AutomationProperties.AutomationId="ResultStale" />
+                                            </Border>
+                                        </DockPanel>
+                                        <c:ImageStackPanel>
+                                            <c:HeatmapView x:Name="Recon" Style="{StaticResource ImageHeatmap}" Image="{Binding Shared.Result.Reconstruction}"
+                                                           OriginMm="{Binding Shared.Result.ReconOriginMm}" StepMm="{Binding Shared.Result.ReconStepMm}"
+                                                           EmptyText="Run a simulation to see the reconstruction"
+                                                           c:MeasurementOverlay.Session="{Binding Measurements}" c:MeasurementOverlay.Pane="Reconstruction"
+                                                           c:MeasurementOverlay.Markers="{Binding Shared.Sources}" c:MeasurementOverlay.SelectedMarker="{Binding Shared.SelectedSource}"
+                                                           c:MeasurementOverlay.CanMoveMarkers="{Binding Shared.IsIdle}"
+                                                           AutomationProperties.AutomationId="ReconView" AutomationProperties.Name="Reconstruction image"
+                                                           AutomationProperties.HelpText="Mouse wheel or plus and minus to zoom, drag or arrow keys to pan, double-click or 0 to reset. Drag a source marker to move the source. With a measuring tool, draw on the image; Escape cancels, Delete removes the selected measurement." />
+                                            <c:ColorBar Style="{StaticResource ImageColorBar}" Minimum="{Binding DataMin, ElementName=Recon}" Maximum="{Binding DataMax, ElementName=Recon}"
+                                                        AutomationProperties.AutomationId="ReconColorBar" AutomationProperties.Name="Reconstruction colour scale" />
+                                            <TextBlock Text="{Binding Readout, ElementName=Recon}" Style="{StaticResource Text.Readout}"
+                                                       AutomationProperties.AutomationId="ReconReadout" />
+                                        </c:ImageStackPanel>
+                                    </DockPanel>
+                                </Border>
+                            </Grid>
+
+                        </DataTemplate>
+                    </ContentControl.Resources>
+                </ContentControl>
+                <ContentControl Grid.Column="4" Content="{Binding SelectedWorkspace}" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
+                    <ContentControl.Resources>
+                        <DataTemplate DataType="{x:Type vm:ImagingWorkspaceViewModel}">
+                            <!-- Measurements: tool picker · results table · detail of the selected row, top-aligned -->
+                            <Border Style="{StaticResource Panel.Surface}">
+                                <StackPanel DataContext="{Binding Measurements}">
+                                    <DockPanel Style="{StaticResource PanelHeader}">
+                                        <TextBlock Text="Tools" Style="{StaticResource Text.PanelTitle}" />
+                                    </DockPanel>
+                                    <Border Style="{StaticResource Segment.Track}" Margin="{StaticResource Gap.Field}">
+                                        <UniformGrid Rows="1" AutomationProperties.Name="Pointer tool">
+                                            <RadioButton Content="_Pan" GroupName="Tool" Style="{StaticResource RadioButton.Segment}"
+                                                         IsChecked="{Binding ActiveTool, Converter={x:Static conv:EnumMatchConverter.Instance}, ConverterParameter=Pan}"
+                                                         AutomationProperties.AutomationId="ToolPan" AutomationProperties.Name="Pan tool" />
+                                            <RadioButton Content="_Distance" GroupName="Tool" Style="{StaticResource RadioButton.Segment}"
+                                                         IsChecked="{Binding ActiveTool, Converter={x:Static conv:EnumMatchConverter.Instance}, ConverterParameter=Distance}"
+                                                         AutomationProperties.AutomationId="ToolDistance" AutomationProperties.Name="Distance tool" />
+                                            <RadioButton Content="_Angle" GroupName="Tool" Style="{StaticResource RadioButton.Segment}"
+                                                         IsChecked="{Binding ActiveTool, Converter={x:Static conv:EnumMatchConverter.Instance}, ConverterParameter=Angle}"
+                                                         AutomationProperties.AutomationId="ToolAngle" AutomationProperties.Name="Angle tool" />
+                                            <RadioButton Content="_ROI" GroupName="Tool" Style="{StaticResource RadioButton.Segment}"
+                                                         IsChecked="{Binding ActiveTool, Converter={x:Static conv:EnumMatchConverter.Instance}, ConverterParameter=Roi}"
+                                                         AutomationProperties.AutomationId="ToolRoi" AutomationProperties.Name="ROI tool (region of interest)" />
+                                        </UniformGrid>
+                                    </Border>
+                                    <TextBlock Text="{Binding ToolHint}" Style="{StaticResource Text.Caption}" TextWrapping="Wrap"
+                                               Margin="{StaticResource Gap.Section}" AutomationProperties.AutomationId="ToolHint" />
+
+                                    <DockPanel Style="{StaticResource PanelHeader}">
+                                        <TextBlock DockPanel.Dock="Left" Text="Measurements" Style="{StaticResource Text.SectionTitle}" />
+                                        <Button DockPanel.Dock="Right" Content="Clear" Command="{Binding ClearCommand}"
+                                                Style="{StaticResource Button.Ghost}" ToolTip="Remove all measurements"
+                                                AutomationProperties.AutomationId="ClearMeasurements" AutomationProperties.Name="Clear all measurements" />
+                                        <Button DockPanel.Dock="Right" Content="−" Command="{Binding DeleteCommand}"
+                                                Style="{StaticResource Button.Ghost}" ToolTip="Delete selected measurement (Delete)"
+                                                AutomationProperties.AutomationId="DeleteMeasurement" AutomationProperties.Name="Delete selected measurement" />
+                                    </DockPanel>
+
+                                    <!-- Column header: same Size.Column.* keys and the same inner padding as the rows -->
+                                    <Border Padding="{StaticResource Pad.ListItem}">
                                         <Grid>
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="{StaticResource Size.Column.Id}" />
@@ -351,26 +353,57 @@
                                                 <ColumnDefinition Width="{StaticResource Size.Column.Short}" />
                                                 <ColumnDefinition Width="*" />
                                             </Grid.ColumnDefinitions>
-                                            <TextBlock Grid.Column="0" Text="{Binding Name}" Style="{StaticResource Text.Mono}" />
-                                            <TextBlock Grid.Column="1" Text="{Binding PaneLabel}" Style="{StaticResource Text.Label}" />
-                                            <TextBlock Grid.Column="2" Text="{Binding KindLabel}" Style="{StaticResource Text.Label}" />
-                                            <TextBlock Grid.Column="3" Text="{Binding Value}" Style="{StaticResource Text.Mono}" HorizontalAlignment="Right" />
+                                            <TextBlock Grid.Column="0" Text="#" Style="{StaticResource Text.ColumnHeader}" />
+                                            <TextBlock Grid.Column="1" Text="Image" Style="{StaticResource Text.ColumnHeader}" />
+                                            <TextBlock Grid.Column="2" Text="Kind" Style="{StaticResource Text.ColumnHeader}" />
+                                            <TextBlock Grid.Column="3" Text="Value" Style="{StaticResource Text.ColumnHeader}" HorizontalAlignment="Right" />
                                         </Grid>
-                                    </DataTemplate>
-                                </ListBox.ItemTemplate>
-                            </ListBox>
-                            <Border Padding="{StaticResource Pad.Panel}" VerticalAlignment="Top"
-                                    Visibility="{Binding HasItems, Converter={x:Static conv:InverseBoolToVisibilityConverter.Instance}}">
-                                <TextBlock Text="No measurements yet. Pick a tool and draw on an image." Style="{StaticResource Text.Caption}"
-                                           TextWrapping="Wrap" TextAlignment="Center" />
-                            </Border>
-                        </Grid>
+                                    </Border>
 
-                        <!-- Selected measurement: coordinates, size, pixel statistics — right under the table -->
-                        <TextBlock Text="{Binding Selected.Detail}" Style="{StaticResource Text.MonoCaption}"
-                                   TextWrapping="Wrap" TextTrimming="None" AutomationProperties.AutomationId="MeasurementDetail" />
-                    </StackPanel>
-                </Border>
+                                    <Grid Margin="{StaticResource Gap.Field}">
+                                        <ListBox MaxHeight="{StaticResource Size.ResultsList}" ItemsSource="{Binding Items}" SelectedItem="{Binding Selected}"
+                                                 AutomationProperties.AutomationId="MeasurementList" AutomationProperties.Name="Measurement results">
+                                            <ListBox.InputBindings>
+                                                <KeyBinding Key="Delete" Command="{Binding DeleteCommand}" />
+                                            </ListBox.InputBindings>
+                                            <ListBox.ItemContainerStyle>
+                                                <Style TargetType="ListBoxItem" BasedOn="{StaticResource {x:Type ListBoxItem}}">
+                                                    <Setter Property="AutomationProperties.Name" Value="{Binding Description}" />
+                                                    <Setter Property="AutomationProperties.AutomationId" Value="{Binding Name}" />
+                                                </Style>
+                                            </ListBox.ItemContainerStyle>
+                                            <ListBox.ItemTemplate>
+                                                <DataTemplate DataType="{x:Type vm:MeasurementViewModel}">
+                                                    <Grid>
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="{StaticResource Size.Column.Id}" />
+                                                            <ColumnDefinition Width="{StaticResource Size.Column.Short}" />
+                                                            <ColumnDefinition Width="{StaticResource Size.Column.Short}" />
+                                                            <ColumnDefinition Width="*" />
+                                                        </Grid.ColumnDefinitions>
+                                                        <TextBlock Grid.Column="0" Text="{Binding Name}" Style="{StaticResource Text.Mono}" />
+                                                        <TextBlock Grid.Column="1" Text="{Binding PaneLabel}" Style="{StaticResource Text.Label}" />
+                                                        <TextBlock Grid.Column="2" Text="{Binding KindLabel}" Style="{StaticResource Text.Label}" />
+                                                        <TextBlock Grid.Column="3" Text="{Binding Value}" Style="{StaticResource Text.Mono}" HorizontalAlignment="Right" />
+                                                    </Grid>
+                                                </DataTemplate>
+                                            </ListBox.ItemTemplate>
+                                        </ListBox>
+                                        <Border Padding="{StaticResource Pad.Panel}" VerticalAlignment="Top"
+                                                Visibility="{Binding HasItems, Converter={x:Static conv:InverseBoolToVisibilityConverter.Instance}}">
+                                            <TextBlock Text="No measurements yet. Pick a tool and draw on an image." Style="{StaticResource Text.Caption}"
+                                                       TextWrapping="Wrap" TextAlignment="Center" />
+                                        </Border>
+                                    </Grid>
+
+                                    <!-- Selected measurement: coordinates, size, pixel statistics — right under the table -->
+                                    <TextBlock Text="{Binding Selected.Detail}" Style="{StaticResource Text.MonoCaption}"
+                                               TextWrapping="Wrap" TextTrimming="None" AutomationProperties.AutomationId="MeasurementDetail" />
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ContentControl.Resources>
+                </ContentControl>
             </Grid>
         </Border>
 

@@ -112,7 +112,7 @@ reviewer agent cross-check the important claims — several fixes in the history
 
 | Path | What |
 |---|---|
-| `src/` | Core domain, masks, detector / Compton transport, decoders, simulation studies, CLI (`Gcam.Cli`, one class per study group under `Commands/`), WPF viewer (`Gcam.Wpf`) and its MVVM rewrite (`Gcam.Studio*`) |
+| `src/` | Core domain, masks, detector / Compton transport, decoders, simulation studies, CLI (`Gcam.Cli`, one class per study group under `Commands/`), GCAM Studio (`Gcam.Studio*`); `Gcam.Wpf` is the legacy viewer being folded into Studio (TODO-06 … TODO-12) |
 | `tests/` | xUnit — engine physics and closed-form invariants (shared rigs and k·σ assertions in `Gcam.Tests/Harness`), Studio ViewModels, the service layer against the real engine, UI-automation oracles and opt-in desktop scenarios |
 | `rtl/` | SystemVerilog front-end, Icarus + cocotb benches ([`rtl/README.md`](rtl/README.md)) |
 | `samples/` | Scenario JSON plus the result CSVs / figures each finding cites |

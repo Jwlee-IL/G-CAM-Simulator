@@ -32,6 +32,11 @@ Every colour exists as a `Color.*` and a matching `Brush.*`; views use the brush
 | `Brush.Focus` | `#7FDCF0` | `#0D6583` | keyboard focus ring |
 | `Brush.Status.Success` / `.Warning` / `.Error` | `#58C98B` / `#E3B342` / `#F2766F` | `#1E7F4F` / `#9A6A00` / `#C2362E` | run state, validation |
 | `Brush.Selection` | accent @ 35 % | accent @ 30 % | text selection |
+| `Brush.Plot.Series1` | `#6ACD91` | `#17693C` | first trace |
+| `Brush.Plot.Series2` | `#F2C66D` | `#855500` | second trace |
+| `Brush.Plot.Series3` | `#B5A1F2` | `#6742A6` | third trace |
+| `Brush.Plot.Band` | `#266ACD91` | `#2617693C` | translucent X interval |
+| `Brush.Plot.Grid` | `#394650` | `#CCD4DC` | axis grid |
 
 ## Contrast (WCAG 2.1)
 

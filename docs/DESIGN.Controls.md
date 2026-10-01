@@ -81,6 +81,30 @@ a pure data viewer; everything about measuring lives in the adorner.
 **Known gap (rule 4):** measurements are created with the pointer only. Keyboard users can review, select and delete
 them; a keyboard crosshair for creating them is planned with step 4.
 
+### PlotView
+
+`FrameworkElement` with `OnRender`, first-party and independent of ScottPlot. Axis / viewport / tick maths and
+the exact min/max pyramid live in Core `Plotting/`. Host properties: `Series`, `Bands`, `Markers`, `LogY`,
+`XLabel`, `YLabel`, `EmptyText`; `Readout` is read-only (pointer x / y in data units), shown by a host TextBlock
+like HeatmapView with its overlay disabled; pointer readout updates do not redraw the series. `PlotSeries` arrays are
+immutable after publication, with increasing explicit X or origin + positive step, Line / Area, and a colour role.
+Each series is capped at 10 million finite samples; a new `Series` value prepares the pyramid once. Stored
+extrema start at complete 64-sample blocks, then double in size, using at most N/16 extra doubles.
+
+Rendering uses the coarsest aligned blocks wholly inside a pixel column, scanning raw samples only for
+unaligned head / tail fragments within 64-sample blocks. Axis margins use measured tick / label text; X tick
+labels are centred by their measured width.
+One frozen `StreamGeometry` per series preserves column extrema (about two points per device column), with a
+translucent baseline fill for Area. Log Y clamps counts at 1, matching the legacy spectrum; linear ticks use
+1–2–5 steps, log ticks have decades and 2…9 minor ticks, and labels use `TickFormatter` engineering notation.
+Bands and labelled X markers support future spectrum windows. Brushes come from the implicit theme style.
+
+Wheel / + / − zoom X; drag / arrows pan; double-click / 0 / Home reset. Resizing retains the X viewport;
+capture loss ends dragging. A focus ring and `PlotViewAutomationPeer` expose keyboard focus, zoom and readout.
+The opt-in 10M desktop gate measures CPU `OnRender` after zoom and resize, including ticks, query, geometry and
+drawing commands; dispatcher / compositor delay is recorded separately. Results and limitations are in
+[VV.Studio](VV.Studio.md#plot-performance-gate).
+
 ### ColorBar
 
 `FrameworkElement` drawing the colormap gradient with `TickCount` numeric labels between `Minimum` and

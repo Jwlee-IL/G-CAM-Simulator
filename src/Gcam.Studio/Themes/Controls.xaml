@@ -4,7 +4,8 @@
     re-templated against the colour tokens. Implicit styles = the default look; keyed styles = variants.
 -->
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:c="clr-namespace:Gcam.Studio.Controls">
     <!-- StaticResource can't see sibling dictionaries at load time, so pull in what this one needs. -->
     <ResourceDictionary.MergedDictionaries>
         <ResourceDictionary Source="Metrics.xaml" />
@@ -446,5 +447,17 @@
         <Setter Property="FontFamily" Value="{StaticResource Font.UI}" />
         <Setter Property="FontSize" Value="{StaticResource FontSize.Label}" />
         <Setter Property="Padding" Value="8,4" />
+    </Style>
+
+    <Style TargetType="c:PlotView">
+        <Setter Property="Foreground" Value="{DynamicResource Brush.Text.Secondary}" />
+        <Setter Property="FocusBrush" Value="{DynamicResource Brush.Focus}" />
+        <Setter Property="GridBrush" Value="{DynamicResource Brush.Plot.Grid}" />
+        <Setter Property="BandBrush" Value="{DynamicResource Brush.Plot.Band}" />
+        <Setter Property="Series1Brush" Value="{DynamicResource Brush.Plot.Series1}" />
+        <Setter Property="Series2Brush" Value="{DynamicResource Brush.Plot.Series2}" />
+        <Setter Property="Series3Brush" Value="{DynamicResource Brush.Plot.Series3}" />
+        <Setter Property="TextElement.FontFamily" Value="{StaticResource Font.Mono}" />
+        <Setter Property="TextElement.FontSize" Value="{StaticResource FontSize.Caption}" />
     </Style>
 </ResourceDictionary>

@@ -27,12 +27,36 @@ public sealed partial class MainViewModel : ObservableObject
     {
         _simulation = simulation;
         _theme = theme;
+        Imaging = new ImagingWorkspaceViewModel(this);
+        Workspaces = new ReadOnlyObservableCollection<WorkspaceViewModel>(new ObservableCollection<WorkspaceViewModel> { Imaging });
+        _selectedWorkspace = Imaging;
+        Imaging.IsActive = true;
         Sources.CollectionChanged += OnSourcesChanged;
         AddSource();
     }
 
-    /// <summary>Measurement tools, overlays and the results table.</summary>
-    public MeasurementsViewModel Measurements { get; } = new();
+    public ImagingWorkspaceViewModel Imaging { get; }
+    public ReadOnlyObservableCollection<WorkspaceViewModel> Workspaces { get; }
+    public bool HasWorkspaceSwitch => Workspaces.Count >= 2;
+    [ObservableProperty] private WorkspaceViewModel _selectedWorkspace;
+
+    partial void OnSelectedWorkspaceChanged(WorkspaceViewModel value)
+    {
+        foreach (var workspace in Workspaces) workspace.IsActive = ReferenceEquals(workspace, value);
+    }
+
+    [RelayCommand]
+    private void ActivateWorkspace(WorkspaceViewModel workspace)
+    {
+        if (Workspaces.Contains(workspace)) SelectedWorkspace = workspace;
+    }
+
+    [RelayCommand]
+    private void SelectWorkspace(string index)
+    {
+        if (int.TryParse(index, out int i) && i >= 0 && i < Workspaces.Count)
+            SelectedWorkspace = Workspaces[i];
+    }
 
     public ObservableCollection<SourceItemViewModel> Sources { get; } = [];
 
@@ -46,6 +70,7 @@ public sealed partial class MainViewModel : ObservableObject
 
     /// <summary>Half-width of the fully-coded field of view at the focal plane (mm).</summary>
     public double FcfovHalfMm => SceneConfigBuilder.FcfovHalfMm(Optics);
+    partial void OnOpticsChanged(OpticsSettings value) => MarkStale();
     [ObservableProperty] private long _photons = 500_000;
 
     [ObservableProperty]
@@ -60,16 +85,12 @@ public sealed partial class MainViewModel : ObservableObject
     [ObservableProperty] private RunState _state = RunState.Idle;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(PeakText))]
     private ImagingResult? _result;
 
     /// <summary>The scene was edited after the shown result was simulated — the images no longer match it.</summary>
     [ObservableProperty] private bool _isResultStale;
 
-    partial void OnResultChanged(ImagingResult? value) => Measurements.Refresh(value);
-
-    /// <summary>Decoded peak position for the reconstruction header, or null before the first run.</summary>
-    public string? PeakText => Result?.Estimate is { } e ? $"peak ({e.Position.X:F1}, {e.Position.Y:F1}) mm" : null;
+    partial void OnResultChanged(ImagingResult? value) => Imaging.Refresh(value);
 
     /// <summary>Label for the theme toggle: the theme you would switch TO.</summary>
     public string ThemeToggleLabel => _theme.Current == AppTheme.Dark ? "Light theme" : "Dark theme";
@@ -84,6 +105,7 @@ public sealed partial class MainViewModel : ObservableObject
     partial void OnPhotonsChanged(long value)
     {
         if (value < 1_000) Photons = 1_000;
+        MarkStale();
     }
 
     [RelayCommand(CanExecute = nameof(IsIdle))]

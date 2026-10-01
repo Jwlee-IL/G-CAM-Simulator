@@ -8,7 +8,7 @@ Structured after IEC 62304 §5.2 (software requirements analysis). As in [VV.Stu
 **GCAM Studio is not a medical device and no compliance is claimed**; the structure is borrowed for its discipline.
 
 **At a glance**
-- **39 requirements** in nine groups: run, scene, image view, measurement, theme (functional, §3) and environment,
+- **47 requirements** in eleven groups: navigation, plotting, run, scene, image view, measurement, theme (functional, §3) and environment,
   accessibility, security, architecture (§4). Each is one testable present-tense statement.
 - Inputs, outputs and every status message are listed with their valid ranges (§5); risk control
   (the illustrative safety class B) maps six hazardous situations to the requirements that control them (§6);
@@ -37,6 +37,24 @@ Structured after IEC 62304 §5.2 (software requirements analysis). As in [VV.Stu
   [VV.Studio.SDS §7](VV.Studio.SDS.md#7-requirement-allocation).
 
 ## 3. Functional and capability requirements (§5.2.2 a)
+
+### Workspaces (`SR-NAV`)
+
+| ID | Requirement |
+|---|---|
+| SR-NAV-01 | One shared scene, optics, photon budget, run state and run result feed all registered workspaces; imaging owns its measurements and peak reading. |
+| SR-NAV-02 | With at least two registered workspaces, a segmented switch exposes their titles and unique `Workspace.*` AutomationIds; Ctrl+1…4 selects available workspaces, unavailable indices do nothing, and a run retains selection. A single workspace has no switch. |
+| SR-NAV-03 | Run-input edits mark an existing result outdated; workspace view settings and selection do not. |
+
+### Plot surface (`SR-PLOT`)
+
+| ID | Requirement |
+|---|---|
+| SR-PLOT-01 | A series supplies finite Y with increasing X or origin + positive step, name, Line / Area kind and colour role; bands and labelled X markers are available. Input is capped at 10 million samples per series. |
+| SR-PLOT-02 | Linear and log10 Y map between pixels and data; log counts ≤1 clamp to 1. Linear ticks use 1–2–5 steps, log decades have 2…9 minor ticks, and labels follow the engineering notation of the image colour scales. |
+| SR-PLOT-03 | A pyramid built once per published dataset preserves exact per-column extrema, including short series, singleton data and boundary ranges; navigation does not rescan the whole trace. |
+| SR-PLOT-04 | Plot X zoom / pan / reset have pointer and keyboard paths; read-only pointer readout, a focus ring, theme brushes and an automation peer are exposed. Resize retains X navigation. |
+| SR-PLOT-05 | In a visible WPF window a 10-million-sample trace has CPU redraw ≤16 ms after a zoom and after a resize, including axes, query, geometry and drawing commands. Dispatcher / composition latency is recorded separately. |
 
 ### Run (`SR-RUN`)
 

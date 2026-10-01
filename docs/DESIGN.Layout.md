@@ -34,20 +34,27 @@ combine a container's padding with a child's margin for the same edge.
 ## Screen grid (`MainWindow`)
 
 ```
-Row 0  Top bar (Size.Bar)          identity · theme toggle · photon budget · Cancel · ▶ Simulate (primary, rightmost)
+Row 0  Top bar (Size.Bar)          identity · workspace switch (when ≥2) · theme · photons · Cancel · ▶ Simulate
 Row 1  Content (a Border with Pad.Window)
          Col 0  Scene panel (Size.SidePanel)   sources · selected source · geometry (read-only)
          Col 1  Gutter
-         Col 2  Images: [flood map] Gutter [reconstruction]
+         Col 2  Selected workspace centre (DataTemplate by workspace type)
+                Imaging: [flood map] Gutter [reconstruction]
                 each = PanelHeader (title + chips) · ImageStackPanel: square HeatmapView (+ adorner), ColorBar and
                 readout directly beneath, at the image's width; spare height collects below
          Col 3  Gutter
-         Col 4  Measurement panel (Size.SidePanel)   tool picker · hint · results table · detail of the selected row
+         Col 4  Selected workspace panel (DataTemplate by workspace type, Size.SidePanel)
+                Imaging: tool picker · hint · results table · selected row detail
 Row 2  Status bar (Size.StatusBar) state dot · status sentence (live region) · progress + % (only while running)
 ```
 
 The primary action sits at the same place on every screen (top right); the status of the last run is always
 visible at the bottom, full width, regardless of which panel has focus.
+
+Only Imaging is registered today: there are no placeholder workspaces. The switch uses `Segment.Track` /
+`RadioButton.Segment`, workspace titles and `Workspace.*` AutomationIds. Ctrl+1…4 selects a registered workspace;
+an unavailable index leaves selection unchanged. A run preserves selection. Shared scene / optics / photon inputs
+mark an existing result outdated; workspace view settings re-render without invalidating that result.
 
 ## Window sizing: fixed grid, flexible centre
 

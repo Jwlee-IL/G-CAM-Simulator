@@ -11,7 +11,7 @@ Structured after IEC 62304 §5.3 (architectural design) and §5.4 (detailed desi
 **At a glance**
 - Four software items in three projects — presentation logic and view maths (`Gcam.Studio.Core`, no WPF), the
   simulation adapter (`Gcam.Studio.Services`, the only layer that reaches the engine) and the WPF shell — split into
-  15 units (§2); the compiler enforces the layering.
+  18 units (§2); the compiler enforces the layering.
 - Interfaces between items (§3), SOUP with what Studio relies on (§4), the run state machine and the measurement
   gesture (§5), and the detailed design of each unit (§6).
 - Every SRS requirement is allocated to the unit that meets it (§7).
@@ -53,7 +53,7 @@ one class, or a small group of types that only make sense together. Unit IDs are
 
 | Unit | Item | Type(s) | File(s) | Responsibility |
 |---|---|---|---|---|
-| SU-01 | SI-1 | `MainViewModel`, `RunState` | `Core/ViewModels/MainViewModel.cs` | scene list and selection, photon budget, run / cancel / failure state machine, progress guard, stale flag, peak text, theme toggle |
+| SU-01 | SI-1 | `MainViewModel`, `RunState` | `Core/ViewModels/MainViewModel.cs` | scene list and selection, photon budget, shared run result, workspace selection, run / cancel / failure state machine, progress guard, stale flag, theme toggle |
 | SU-02 | SI-1 | `SourceItemViewModel` | `Core/ViewModels/SourceItemViewModel.cs` | one editable source; input clamping; list and marker labels; `IPlaneMarker`; → `SceneSource` |
 | SU-03 | SI-1 | `MeasurementsViewModel`, `MeasureTool` | `Core/ViewModels/MeasurementsViewModel.cs`, `MeasureTool.cs` | measurement session: active tool and hint, numbering, add / delete / clear, selection, refresh on a new result |
 | SU-04 | SI-1 | `MeasurementViewModel`, `MeasurementKind`, `ImagePane`, `MeasurementDraft` | `Core/ViewModels/Measurement*.cs`, `ImagePane.cs` | one measurement: point-count check, value and detail text, description for screen readers |
@@ -68,6 +68,9 @@ one class, or a small group of types that only make sense together. Unit IDs are
 | SU-13 | SI-4 | `NullToCollapsedConverter`, `InverseBoolToVisibilityConverter`, `EnumMatchConverter` | `Studio/Converters/*.cs` | value → visibility / radio-button mapping |
 | SU-14 | SI-4 | `MainWindow`, theme dictionaries | `Studio/Views/MainWindow.xaml(.cs)`, `Studio/Themes/*.xaml` | screen layout and bindings; tokens, metrics, typography, control styles ([DESIGN.Layout](DESIGN.Layout.md), [DESIGN.Color](DESIGN.Color.md), [DESIGN.Typography](DESIGN.Typography.md), [DESIGN.Controls](DESIGN.Controls.md)) |
 | SU-15 | SI-4 | `App` | `Studio/App.xaml(.cs)` | DI composition root, startup window placement, title-bar hook |
+| SU-16 | SI-1 | `WorkspaceViewModel`, `ImagingWorkspaceViewModel` | `Core/ViewModels/*WorkspaceViewModel.cs` | title, automation key, active state; imaging measurements and peak over the shared result |
+| SU-17 | SI-2 | `PlotSeries`, `PlotBand`, `PlotMarker`, `PlotViewport`, `NiceTicks`, `MinMaxPyramid` | `Core/Plotting/*.cs` | finite / increasing inputs, sample limit, linear / log mapping, X navigation, ticks, exact range extrema |
+| SU-18 | SI-4 | `PlotView` (+ automation peer) | `Studio/Controls/PlotView.cs` | cached preparation, frozen geometry, themed axes / series / bands / markers, readout, pointer / key input, measured CPU redraw |
 
 Paths are relative to `src/Gcam.Studio.Core`, `src/Gcam.Studio.Services` and `src/Gcam.Studio` respectively.
 
@@ -207,11 +210,30 @@ Only the rules a reviewer needs to check a requirement; the rest is in the code 
 | Rule | Definition |
 |---|---|
 | Progress guard | accept a report only if `IsRunning` and `p > Progress`. |
-| Stale flag | set when `Result ≠ null` and the source collection changes or any source property except `Label` / `MarkerLabel` changes; cleared only on success. |
+| Stale flag | set when `Result ≠ null` and the source collection changes, any source property except `Label` / `MarkerLabel` changes, or photons / optics change; cleared only on success. |
 | Photon clamp | `Photons < 1,000 → 1,000` in the property-changed hook. |
 | Add source | new source at `X = 15 mm · count`, `Y = 0`, selected. |
 | Remove source | select the item now at the removed index, or the new last item; `null` when empty. |
 | Status text on success | `"{counts:N1} effective counts in {s:F1} s · peak at ({x:F1}, {y:F1}) mm, ghost margin {c:F2}"`, or `"… · no decode"`. |
+
+### SU-16 workspaces / SU-17 plotting / SU-18 `PlotView`
+
+The shell registers Imaging once and retains its identity on success, cancellation and failure. `Shared.Result`
+is the acquisition source of truth; publishing it refreshes the imaging measurement session and notifies `PeakText`.
+The two `ContentControl`s use workspace-type DataTemplates for centre and panel. Only registered indices are
+selected by Ctrl+1…4; switch visibility requires at least two workspaces.
+
+Plot data arrays are immutable after publication. A series validates finite values, a strictly increasing X axis
+or positive sample step, and a 10M input cap. The pyramid stores extrema for complete dyadic blocks starting at 64 samples
+(at most N/16 extra doubles); range queries use the largest aligned block wholly within the requested half-open
+interval and scan raw samples only for head / tail block fragments, so edge extrema are exact. Empty columns
+carry no fabricated data. Linear / log viewport transformations and tick labels remain UI-free.
+
+`PlotView` prepares data on `Series` replacement. Resizing / navigation reuse preparation and issue one frozen
+geometry per series (column extrema); Area fills to zero, or one count on log Y. Dynamic brushes are set by the
+theme style. The control exposes a read-only readout for a host TextBlock (no series redraw on pointer readout updates),
+input parity and an Image automation peer. Axis margins and centred X ticks use measured text dimensions. CPU `OnRender`
+timing includes axes, query and geometry; the desktop test separately records event-to-render delay.
 
 ### SU-02 `SourceItemViewModel`
 
@@ -283,10 +305,13 @@ Every SRS requirement maps to at least one unit; every unit carries at least one
 | SR-SCENE-02 | SU-01 |
 | SR-VIEW-01 … SR-VIEW-06 | SU-05, SU-09 |
 | SR-VIEW-07 | SU-09 |
-| SR-VIEW-08 | SU-01, SU-14 |
+| SR-VIEW-08 | SU-16, SU-14 |
+| SR-NAV-01 … SR-NAV-03 | SU-01, SU-16, SU-14 (type-based centre / panel templates) |
+| SR-PLOT-01 … SR-PLOT-03 | SU-17, SU-18 |
+| SR-PLOT-04, SR-PLOT-05 | SU-18, SU-17, SU-14 (theme styles) |
 | SR-MEAS-01, SR-MEAS-02 | SU-04, SU-06 |
 | SR-MEAS-03 | SU-06 |
-| SR-MEAS-04 | SU-01, SU-03, SU-04 |
+| SR-MEAS-04 | SU-01, SU-16, SU-03, SU-04 |
 | SR-MEAS-05, SR-MEAS-06 | SU-03, SU-04 |
 | SR-MEAS-07 | SU-10 |
 | SR-MEAS-08 | SU-02 (`IPlaneMarker`), SU-10, SU-01 (stale) |

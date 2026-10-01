@@ -27,8 +27,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- Build order only: the app is launched from its own output folder, never loaded into the test process. -->
-    <ProjectReference Include="..\..\src\Gcam.Studio\Gcam.Studio.csproj" ReferenceOutputAssembly="false" />
+    <!-- Scenarios launch the app from its output folder; the plot gate hosts the production control on an STA. -->
+    <ProjectReference Include="..\..\src\Gcam.Studio\Gcam.Studio.csproj" />
+    <ProjectReference Include="..\..\src\Gcam.Studio.Core\Gcam.Studio.Core.csproj" />
     <!-- Default optics (detector pixels, pitch) are the oracle's inputs; the oracle's maths is independent. -->
     <ProjectReference Include="..\..\src\Gcam.Configuration\Gcam.Configuration.csproj" />
   </ItemGroup>

@@ -45,4 +45,16 @@
     <SolidColorBrush x:Key="Brush.Status.Warning" Color="{StaticResource Color.Status.Warning}" />
     <SolidColorBrush x:Key="Brush.Status.Error" Color="{StaticResource Color.Status.Error}" />
     <SolidColorBrush x:Key="Brush.Selection" Color="{StaticResource Color.Selection}" />
+
+    <!-- Plot data colours are separate from UI action / selection colours. -->
+    <Color x:Key="Color.Plot.Series1">#6ACD91</Color>
+    <SolidColorBrush x:Key="Brush.Plot.Series1" Color="{StaticResource Color.Plot.Series1}" />
+    <Color x:Key="Color.Plot.Series2">#F2C66D</Color>
+    <SolidColorBrush x:Key="Brush.Plot.Series2" Color="{StaticResource Color.Plot.Series2}" />
+    <Color x:Key="Color.Plot.Series3">#B5A1F2</Color>
+    <SolidColorBrush x:Key="Brush.Plot.Series3" Color="{StaticResource Color.Plot.Series3}" />
+    <Color x:Key="Color.Plot.Band">#266ACD91</Color>
+    <SolidColorBrush x:Key="Brush.Plot.Band" Color="{StaticResource Color.Plot.Band}" />
+    <Color x:Key="Color.Plot.Grid">#394650</Color>
+    <SolidColorBrush x:Key="Brush.Plot.Grid" Color="{StaticResource Color.Plot.Grid}" />
 </ResourceDictionary>

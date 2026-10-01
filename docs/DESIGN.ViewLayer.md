@@ -9,7 +9,7 @@ XAML style rules: [AGENTS.Conventions.Code](AGENTS.Conventions.Code.md#xaml).
 Gcam.Studio/
   App.xaml / App.xaml.cs   merged theme dictionaries · DI composition root · startup window placement
   Views/                   screens: XAML layout + code-behind that only calls InitializeComponent()
-  Controls/                elements with their own rendering / input / layout (HeatmapView, ColorBar, ImageStackPanel),
+  Controls/                elements with their own rendering / input / layout (HeatmapView, PlotView, ColorBar, ImageStackPanel),
                            and adorners attached to them (MeasurementAdorner via MeasurementOverlay)
   Converters/              IValueConverter implementations (NullToCollapsed, InverseBoolToVisibility, EnumMatch)
   Rendering/               pixel-level helpers shared by controls (colormap lookup tables)
@@ -49,6 +49,9 @@ loaded); it must carry a comment saying why it can't live elsewhere.
   `…CancelCommand` (`RunCancelCommand`).
 - Controls expose results as read-only dependency properties, and sibling elements bind to them by
   `ElementName` (`ColorBar.Minimum` ← `HeatmapView.DataMin`), so no code connects them.
+- The shared shell binds centre and panel `ContentControl`s to `SelectedWorkspace`; each uses a DataTemplate
+  for the workspace type. Imaging bindings use `Shared` for the scene / run result and workspace properties
+  for measurements / peak text. The left panel and run controls remain bound to the shell.
 - Behaviour added to an existing control from a view uses **attached properties**, not code-behind:
   `c:MeasurementOverlay.Session="{Binding Measurements}"` puts the measurement adorner on a heatmap. The
   adorner sends finished gestures back through a command (`AddCommand`), like any other view element.

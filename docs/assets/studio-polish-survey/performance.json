@@ -1,0 +1,35 @@
+{
+  "machine": "DESKTOP-4D9CRJT",
+  "os": "Microsoft Windows NT 10.0.26200.0",
+  "processors": 4,
+  "date": "2026-10-01T15:47:02.2800282+09:00",
+  "samples": 10000000,
+  "dpi": 1,
+  "zoomRedrawMs": [
+    2.0368,
+    12.1177,
+    3.2046,
+    1.0483,
+    1.3064
+  ],
+  "resizeRedrawMs": [
+    2.6021,
+    2.642,
+    0.7743,
+    0.7808,
+    0.6819
+  ],
+  "eventToRenderMs": [
+    2.1175,
+    280.517,
+    13.3489,
+    315.6137,
+    3.4786,
+    308.8271,
+    1.1664,
+    315.8416,
+    2.9948,
+    294.257
+  ],
+  "metric": "CPU OnRender: axes, query, frozen geometry and drawing commands; excludes compositor / refresh wait"
+}
