@@ -200,3 +200,6 @@ TILT (pitch/yaw), mask WARPING.
 - **53** (2026-10-01): field of view at field distance (`montecarlo fov`, TODO-04) — non-cyclic usable field ≈ ±7° along
   x (±4–6.5° with background), wrong in-field answers past ~7.5° caught by the flood-centroid "outside" flag, side cue
   1–14.5°, no direction information past ~14°.
+- **54** (2026-10-01): dose rate from the detector spectrum (`montecarlo dose`, TODO-05) — ICRP 74 truth, fitted G(E)
+  within ±13 % frontally (all reference sources), but the collimating mask reads 0.1–0.7 of the dose 10° off axis;
+  paralyzable over-range with live-time correction to ~150 mSv/h and the live fraction as the over-range signature.

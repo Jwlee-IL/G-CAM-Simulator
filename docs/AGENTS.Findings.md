@@ -1644,3 +1644,59 @@ Reproduce: `montecarlo fov samples/scenario_handheld.json` (≈ 3 min) → `samp
 → `samples/fov.png`. Tests: `FieldOfViewTests` (square field, non-cyclic beyond the coded field, centroid side and
 flag at 10°, no cue at 18°, reproducibility, argument guard).
 
+## 54. Dose rate from the detector spectrum — `DoseStudy` / `montecarlo dose` (2026-10-01)
+
+TODO-05 / PR-SAFE-01 / PR-SENS-05 / D-21: the dose-rate function is required (up to 10 mSv/h within ±50 % over
+60 keV – 1.33 MeV, NSS-1) but the engine had no dose model. A scintillator meter weights its pulse-height spectrum
+with a function G(E) so that Σ G(Eᵢ)·Nᵢ / t tracks H*(10); the simulator knows the truth, so it can say how well that
+works for this head.
+
+**Model.**
+- **Truth:** the unscattered fluence at the detector position × ICRP 74 Table A.21 H*(10)/Φ (log–log; checked against
+  the table as cited by SC&A/CDC 2019 and by Codex). H*(10) is defined in the field without the instrument, so the
+  truth is free-in-air.
+- **Response:** biased MC of a point source 1 m away through the mask and the Compton crystal. Every scored event's
+  total deposit (the whole array, as a dose channel would sum it) is smeared by the energy resolution (7 % at
+  662 keV, 1/√E), cut at a 30 keV LLD and histogrammed (5 keV bins) per unit fluence.
+- **G(E):** Σₖ aₖ·(ln(E/662))ᵏ, k ≤ 4, least squares on the relative error over 14 frontal energies (50–1500 keV).
+  It is then checked, without refitting, on other energies, the reference sources' line mixtures, oblique incidence
+  and a paralyzable front end (τ = 1 µs, theme 42).
+
+**Results** (`samples/dose_{ratio,g,overrange}.csv`, `samples/dose.png`):
+
+| | Estimate / truth |
+|---|---|
+| Frontal, fit set 50–1500 keV | 0.91–1.09 |
+| Frontal, held-out 70 / 122 / 250 / 662 / 1173 / 1332 keV | 1.05 / 0.90 / 1.13 / 0.91 / 1.04 / 1.07 |
+| Reference sources, frontal: Am-241 / Co-57 / Ir-192 / Cs-137 / Co-60 | 1.06 / 0.91 / 1.00 / 0.90 / 1.05 |
+| 662 keV at 0 / 2.5 / 5 / 10 / 20 / 45° | 0.91 / 0.82 / 0.66 / 0.40 / 0.22 / 0.08 |
+| 60 keV at 0 / 2.5 / 5 / 10 / 20° | 1.07 / 0.79 / 0.44 / 0.11 / 0.00 |
+| Cs-137 at 1 mSv/h / 10 mSv/h / 100 mSv/h, raw | 0.86 / 0.53 / 0.004 |
+| same, live-time corrected | 0.90 / 0.90 / 0.90; fails past ~150 mSv/h (live fraction < 10⁻³) |
+
+- **Frontal dose works.** One G(E) keeps every energy and every reference source within ±13 % — well inside ±50 %.
+  Counts per µSv (frontal): Am-241 2.0 M, Co-57 1.38 M, Ir-192 343 k, Cs-137 193 k, Co-60 104 k.
+- **Off axis it does not, and that is the head's design.** The 10 mm mask with 1 mm cells is a collimator
+  (acceptance ~atan(1/10) ≈ 6°): 10° off axis the head reads 0.11 (60 keV) to 0.66 (1250 keV) of the dose, and beyond
+  20° low-energy fields read ~0. A user standing in a field from the side gets a reading far below the dose where
+  they stand. NSS-1 tests frontal incidence only, so a frontal type test would pass while the field reading fails —
+  the imaging channel cannot be the dose-rate channel. The obvious fix (an unshielded small dose sensor, or a
+  side-looking crystal) is a design decision for the VV owner, not taken here.
+- **Over-range.** A paralyzable front end under-reads from ~1 mSv/h (−5 %) and reads 0.53 of the dose at 10 mSv/h —
+  inside ±50 % only because the fit error happens to be small. Live-time correction (recorded / live fraction)
+  restores the reading up to ~150 mSv/h; past that the live fraction falls below what a live-time clock can resolve
+  and the reading collapses to zero. The live fraction itself keeps falling monotonically, so it is the over-range
+  signature: show "over range" when it drops below ~10⁻³ instead of a number. With that, PR-SENS-05's "no
+  under-reading from 10 mSv/h to 1 Sv/h" is met by the indication, not by the reading.
+
+Caveats: the head is modelled with the front plate only (no side or rear walls), so oblique readings are an upper
+bound — real walls cut them further; no scatter in the room or the body; one distance (1 m — the ratios do not depend
+on it beyond the collimation geometry); the dead time is the analytic paralyzable model (verified against the event
+stream in theme 42), not a full pulse-train simulation with pile-up; the 30 keV LLD drops the Cs-137 Ba X-rays.
+Codex review (read-only): ICRP values, the fluence normalisation (the biased source already carries the projected-area
+cosine), the fit and the dead-time model check out; fixed: detector options (entrance, backing, reflector, front-end
+model) now pass through, the over-range ratios include the frontal calibration error, fractional angles in the CSV.
+
+Reproduce: `montecarlo dose samples/scenario_handheld.json` (≈ 10 s) → `samples/dose_*.csv`;
+`python samples/plot_dose.py` → `samples/dose.png`. Tests: `DoseTests` (ICRP points, interpolation and range, held-out
+662 keV within ±25 % and collimated oblique field, paralyzable over-range and the live-time limit).
