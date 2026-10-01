@@ -210,8 +210,9 @@ The full, theme-organized results log with reproduce commands and artifacts is i
 - **Localization + ghost**: sub-mm inside the FCFOV; off-axis beyond it aliases to an
   opposite-side ghost. Non-cyclic decoding ≈ doubles the usable area; at field
   distance it localizes to ±7° (fully coded ±3.6°) and a flood-centroid cue flags sources out to ~14° (theme 53).
-- **FOV ÷ resolution = rank** — the config-optimization law. Max-FOV pick rank 23 / pitch 1 /
-  D 20 mm (~7× the original FOV); collapses when the detector can't hold one shadow period.
+- **FOV ÷ resolution = rank** — nominally; the usable field is limited by the 10 mm W slab's collimation at
+  short D. Widest ≥ 90 %-usable pick: rank 11 / pitch 1 / D 30 mm → ±21.5 mm (~2.5× the original); high ranks
+  collapse at short D (corrected 2026-10-02 — the old rank-23 "~7×" predated the slab model).
 - **Tungsten ~8–10 mm** optimum (thin leaks, thick collimates). **Array**: ≳1 detector pixel
   per mask-cell shadow (Nyquist); ~2 is the sweet spot.
 - **Crystal**: efficiency ∝ density (GAGG is dense; its weakness is resolution + afterglow →

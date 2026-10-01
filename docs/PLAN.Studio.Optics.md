@@ -4,9 +4,7 @@ Scope: making the optics (mask rank, cell pitch, mask–detector distance, detec
 GCAM Studio, with presets and derived geometry numbers, and lifting the "optics read-only" exclusion in
 VV.Studio.SRS §7. Order of work: [PLAN.Studio.Migration](PLAN.Studio.Migration.md).
 
-Status: revised after the implementer's measured review ([PLAN.Studio.Optics.Review](PLAN.Studio.Optics.Review.md),
-2026-10-02); the review's corrections are adopted below. The reference proposals O-1 … O-7 are kept for the
-record; **"Decisions after review" is the specification.**
+Status: **done** 2026-10-02 (implementation committed after the review; decisions R-1 … R-7 below).
 
 ## What exists (checked in the code, 2026-10-02)
 

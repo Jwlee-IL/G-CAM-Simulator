@@ -175,6 +175,8 @@ TILT (pitch/yaw), mask WARPING.
 
 ## Done (summary — details in AGENTS.Findings by theme)
 
+- **TODO-09 editable optics, presets, decoder-focus refocus** (2026-10-02): reference plan → Codex's measured review
+  (coverage rule false, All not refocused) → revised plan → implementation — [PLAN.Studio.Optics](PLAN.Studio.Optics.md).
 - **TODO-18 configuration-scan headline** (2026-10-02): the rank-23 "±64 mm, 96 %, ~7×" result predated the 10 mm
   slab mask and does not reproduce (0.149; collimation at D = 20). Re-scanned: widest ≥ 90 %-usable field is rank 11 /
   1 mm / D 30 → ±21.5 mm (~2.5×). Findings theme 3, EV-03 (and its model-history row), new `samples/plot_scan.py`.
