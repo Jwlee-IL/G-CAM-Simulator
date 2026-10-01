@@ -13,10 +13,18 @@ Status: in progress (2026-10-01).
 | 2 | TODO-13 live list-mode acquisition | [PLAN.Studio.LiveAcquisition](PLAN.Studio.LiveAcquisition.md) | committed `0ed17e0`; desktop-verified |
 | 3 | TODO-07 Spectrum workspace | [PLAN.Studio.Spectrum](PLAN.Studio.Spectrum.md) | committed `45eece8`; desktop-verified (survey) |
 | 4 | TODO-08 detector realism, background, per-nuclide imaging, Compton strip | [PLAN.Studio.ImagingOptions](PLAN.Studio.ImagingOptions.md) | phase A with Codex |
+| 4a | TODO-15 spectrum graph (histogram steps, live zoom, Y auto-scale, bin readout, band labels) | [PLAN.Studio.SpectrumPlot](PLAN.Studio.SpectrumPlot.md) | planned — next after phase A |
 | 5 | TODO-09 editable optics + presets | — | open |
 | 6 | TODO-10 Waveform workspace, front-end chain selection | — | open |
 | 7 | TODO-11 Detector workspace, depth (3D) / rangefinder | — | open |
 | 8 | TODO-12 delete `Gcam.Wpf`, README screenshot | — | open (last) |
+
+**Order of polish and testing (author, 2026-10-01).** UI polish is the focus; **desktop UI tests run last**, once
+the workspaces are complete and polished — running them (and the polish survey) per step only re-collects the same
+remarks on screens that are still changing. Per step: headless tests plus headless render snapshots for review.
+Design-system-level polish (units in readouts, round ticks, input sizing, labels — survey P-01, P-02, P-03, P-05,
+P-08, P-09) goes early because new workspaces inherit it; workspace layout polish (P-04, P-10) comes once the
+workspaces exist; then one desktop run, the survey and the README screenshot, then TODO-12.
 
 **Why.** Two WPF viewers confuse a reviewer of the portfolio. `src/Gcam.Wpf` (code-behind, ScottPlot) still has the
 Spectrum, Waveform, Optics and Detector tabs and the Compton-strip / depth controls; GCAM Studio has only the imaging
