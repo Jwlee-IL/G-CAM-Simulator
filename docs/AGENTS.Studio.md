@@ -11,6 +11,7 @@ MVVM rewrite of the WPF viewer; `src/Gcam.Wpf` is the original code-behind app a
 | [DESIGN.ViewLayer](DESIGN.ViewLayer.md) | add UI: XAML vs code-behind vs control vs converter vs WPF service |
 | [DESIGN.Controls](DESIGN.Controls.md) | use or write a control (shared styles, `HeatmapView`, `ColorBar`) |
 | [DESIGN.Color](DESIGN.Color.md) · [DESIGN.Layout](DESIGN.Layout.md) · [DESIGN.Typography](DESIGN.Typography.md) | use colours, spacing and text roles; switch themes |
+| [VV.Studio.SRS](VV.Studio.SRS.md) · [VV.Studio.SDS](VV.Studio.SDS.md) · [VV.Studio](VV.Studio.md) | add or change behaviour: its requirement (SRS), the unit that meets it (SDS), its test and matrix row (VV) |
 | [AGENTS.Conventions.Code](AGENTS.Conventions.Code.md) · [AGENTS.Conventions.Docs](AGENTS.Conventions.Docs.md) | naming, C# / XAML / test / commit style, how docs are named and kept in sync |
 | [AGENTS.Rationale](AGENTS.Rationale.md) | know why a rule exists before changing or bending it |
 | [AGENTS.UiAutomation](AGENTS.UiAutomation.md) | run or extend the UI automation of the real window (safety, selectors, pilot, evidence) |

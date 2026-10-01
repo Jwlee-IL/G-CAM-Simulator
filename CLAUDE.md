@@ -27,6 +27,20 @@ cocotb RTL front-end path.
 - **Productization** (theme 22, design-only — not being built): GAGG:Ce,Mg, 16×16 @1 mm, D=55,
   15 mm crystal, rank-7, non-cyclic; weight is the SHIELD not the crystal; SiPM thermal drift is
   an **energy-window** issue, not a position issue.
+- **Requirement set (2026-10-01, design-only)** — `docs/VV.Gcam.{URS,PRS,Limitations,Decisions}.md`
+  (+ `VV.Studio.{SRS,SDS}` for the viewer). Author decisions with reasons are logged in
+  `VV.Gcam.Decisions.md` (D-01…D-33); headlines:
+  - The product is a **scintillator coded-aperture camera**: compare only with same-class imagers (iPIX),
+    never with Compton / HPGe cameras (Polaris-H, GeGI). Use conditions **relaxed to iPIX level**
+    (−10…+45 °C, 93 % RH, IP65, 60 cm drop, ≤ 2.5 kg).
+  - **No built-in radioactive source** (cost, handling, and it would be a 방사선기기 under 원자력안전법 §60);
+    gain held by compensated bias + LED + **peak tracking + window widening**.
+  - **Dose-rate function required** (NSS-1 range, over-range indication) + calibration obligation; no
+    imaging requirement in high fields (the user's alarming dosimeter acts first).
+  - **Ghosts: non-cyclic decoding**, no mask-rotation hardware. **Narrow FOV** (±3.6° fully coded):
+    software path — non-cyclic usable field ~±5°, out-of-field cue, IMU/VIO hand sweep.
+  - Users: radiation-safety technician + non-specialists. Dockable **Windows tablet** UI; own record
+    format; plain category "industrial"; no fixed false-positive target; **Korean law only**.
 - **Realistic front-end defaults** (themes 30–32): AD9648 14-bit/125 MSPS, `tau_rise=1` sample
   (set by Nyquist), intrinsic ~6 % @662, ~3 keV electronic noise; cusp = best ENC, trapezoid's
   flat-top pays ballistic-deficit; cusp stays a Python benchmark by choice.

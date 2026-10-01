@@ -8,11 +8,14 @@ Guidance for AI agents and contributors working on this repository.
 |---|---|
 | `AGENTS.Findings.md` | theme-organized results log — put new results there |
 | `AGENTS.Backlog.md` | done + deferred work |
+| `AGENTS.Todo.md` | concrete tasks handed between sessions (ready to pick up) |
 | `AGENTS.Conventions.Code.md` / `AGENTS.Conventions.Docs.md` | C# / XAML / test / commit style; doc naming, placement and sync rules |
 | `AGENTS.Studio.md` | entry point for GCAM Studio (the MVVM viewer) — read before touching `src/Gcam.Studio*` |
 | `AGENTS.Rationale.md` | every normative rule in the docs and code, with its reason, source and enforcement |
 | `AGENTS.UiAutomation.md` | UI automation of the running Studio window: safety, selectors, pilot, evidence |
 | `DESIGN.Architecture.md`, `DESIGN.ViewLayer.md`, `DESIGN.Controls.md`, `DESIGN.Color.md`, `DESIGN.Layout.md`, `DESIGN.Typography.md` | GCAM Studio design |
+| `VV.Gcam.URS.md`, `VV.Gcam.PRS.md`, `VV.Gcam.Limitations.md`, `VV.Gcam.Decisions.md` | user needs, product requirements, known limitations (with fixes and their costs) and the author's decision log with reasons, for the hand-held locator concept (theme 22) — design-only |
+| `VV.Studio.md`, `VV.Studio.SRS.md`, `VV.Studio.SDS.md` | GCAM Studio verification & validation (traceability, validation, anomalies), requirements (SRS) and design record (SDS), IEC 62304-style |
 | `PAPER.ko.md` | two-tier (expert / plain) physics write-up, Korean |
 
 Folder maps: `rtl/README.md` (SystemVerilog front-end), `src/Gcam.Studio*/README.md`.

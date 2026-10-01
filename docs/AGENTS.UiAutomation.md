@@ -2,7 +2,7 @@
 
 Scope: automated UI runs against the real GCAM Studio window (`tests/Gcam.Studio.UiTests`). Unit tests of the
 ViewModels and geometry are not covered here (see [DESIGN.Architecture](DESIGN.Architecture.md#testing-strategy));
-what the UI runs verify is traced in `VV.Studio`.
+what the UI runs verify is traced in [VV.Studio](VV.Studio.md).
 
 The work goes through stages, and a stage is not skipped because a later one looks easy. Each stage has an exit
 condition and a record below.
@@ -22,7 +22,7 @@ condition and a record below.
 | Item | Decision |
 |---|---|
 | Purpose | Regression checks of Studio's user flows that unit tests cannot reach: the adorner's pointer gestures, hit-testing, the async run as seen from the window, and the automation surface itself |
-| Result use | **Exploratory (profile P1)** until stage 4: results guide development and are not evidence for `VV.Studio` beyond "performed" |
+| Result use | **Exploratory (profile P1)** until stage 4: results guide development and are not evidence for [VV.Studio](VV.Studio.md) beyond "performed" |
 | Readers | the author and reviewers of this repository |
 | In scope | `Gcam.Studio.exe` built from this working tree; main window; dark theme; default optics |
 | Out of scope (for now) | light theme, display scaling other than the test machine's, keyboard-only flows, screenshots as pass/fail criteria |

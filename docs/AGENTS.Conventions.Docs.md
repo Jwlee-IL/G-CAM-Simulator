@@ -9,8 +9,9 @@ A document's name says **what kind of document it is** (the upper-case keyword) 
 
 | Keyword | Kind | Audience | Examples |
 |---|---|---|---|
-| `AGENTS` | how to work here: rules, conventions, logs, backlog | contributors and coding agents | `AGENTS.md`, `AGENTS.Studio.md`, `AGENTS.Conventions.Code.md`, `AGENTS.Findings.md` |
+| `AGENTS` | how to work here: rules, conventions, logs, backlog | contributors and coding agents | `AGENTS.md`, `AGENTS.Studio.md`, `AGENTS.Conventions.Code.md`, `AGENTS.Findings.md`, `AGENTS.Todo.md` |
 | `DESIGN` | how GCAM Studio is designed: architecture, UI system, components | anyone changing Studio | `DESIGN.Architecture.md`, `DESIGN.Typography.md`, `DESIGN.Controls.md` |
+| `VV` | verification and validation: user / product / software requirements, design record, traceability to tests, validation scenarios, known anomalies | reviewers, anyone changing behaviour | `VV.Gcam.URS.md`, `VV.Gcam.PRS.md`, `VV.Gcam.Limitations.md`, `VV.Gcam.Decisions.md`, `VV.Studio.SRS.md`, `VV.Studio.SDS.md`, `VV.Studio.md` |
 | `PAPER` | write-ups of the physics / results for readers | readers | `PAPER.ko.md` |
 
 Rules:
@@ -51,7 +52,7 @@ Rules:
 ## Keeping docs in sync
 
 - A change that alters behaviour, structure or a name **updates the affected doc in the same commit**.
-- Results go to `AGENTS.Findings.md` (by theme), deferred work to `AGENTS.Backlog.md`.
+- Results go to `AGENTS.Findings.md` (by theme), deferred work to `AGENTS.Backlog.md`, ready-to-start handover tasks to `AGENTS.Todo.md`.
 - Counts that drift (test totals, command counts) are stated in one place and linked from elsewhere, or
   updated everywhere in the same commit.
 - Renaming a document: `git mv` it, then search the repository for the old name and fix every reference.
