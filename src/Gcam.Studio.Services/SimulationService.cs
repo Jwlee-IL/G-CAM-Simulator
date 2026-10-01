@@ -21,8 +21,13 @@ public sealed class SimulationService : ISimulationService
         {
             var watch = Stopwatch.StartNew();
             var result = new SimulationRunner(new DefaultSimulationFactory()).Run(config, progress, cancellationToken);
+            // Detector pixels are centred on the optical axis: pixel i at (i - (N-1)/2)·pitch.
+            double pitch = config.Detector.PixelPitchMm;
+            double floodOrigin = -(result.DetectorImage.Width - 1) / 2.0 * pitch;
             return new ImagingResult(
                 result.DetectorImage,
+                floodOrigin,
+                pitch,
                 result.Reconstruction,
                 result.ReconOriginMm,
                 result.ReconStepMm,

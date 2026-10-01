@@ -23,7 +23,7 @@ public class MainViewModelTests
             progress?.Report(0.5);
             if (Throw is not null) throw Throw;
             if (BlockUntilCancelled) await Task.Delay(Timeout.Infinite, cancellationToken);
-            return new ImagingResult(new DetectorImage(4, 4), null, 0, 0,
+            return new ImagingResult(new DetectorImage(4, 4), -0.9, 0.6, null, 0, 0,
                 new SourceEstimate(new Vector3(1, 2, 0), 2.5), 1234, TimeSpan.FromSeconds(1));
         }
     }

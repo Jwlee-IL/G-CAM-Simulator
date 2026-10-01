@@ -4,13 +4,12 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:vm="clr-namespace:Gcam.Studio.Core.ViewModels;assembly=Gcam.Studio.Core"
-        xmlns:r="clr-namespace:Gcam.Studio.Rendering"
+        xmlns:c="clr-namespace:Gcam.Studio.Controls"
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance Type=vm:MainViewModel}"
         Title="GCAM Studio — coded-aperture imaging" Height="760" Width="1200"
         Background="{StaticResource Canvas}" UseLayoutRounding="True">
     <Window.Resources>
-        <r:DetectorImageToBitmapConverter x:Key="ToBitmap" />
         <BooleanToVisibilityConverter x:Key="BoolToVis" />
     </Window.Resources>
 
@@ -107,9 +106,11 @@
                     BorderThickness="1" CornerRadius="4" Padding="14">
                 <DockPanel>
                     <TextBlock DockPanel.Dock="Top" Text="Detector flood map" Style="{StaticResource SectionTitle}" />
-                    <Image Source="{Binding Result.Flood, Converter={StaticResource ToBitmap}}"
-                           RenderOptions.BitmapScalingMode="NearestNeighbor" Stretch="Uniform"
-                           AutomationProperties.Name="Detector flood map" />
+                    <c:HeatmapView Image="{Binding Result.Flood}" OriginMm="{Binding Result.FloodOriginMm}"
+                                   StepMm="{Binding Result.FloodStepMm}" EmptyText="Run a simulation to see the flood map"
+                                   Foreground="{StaticResource Muted}"
+                                   AutomationProperties.Name="Detector flood map"
+                                   AutomationProperties.HelpText="Mouse wheel or plus and minus to zoom, drag or arrow keys to pan, double-click or 0 to reset" />
                 </DockPanel>
             </Border>
 
@@ -117,9 +118,11 @@
                     BorderThickness="1" CornerRadius="4" Padding="14">
                 <DockPanel>
                     <TextBlock DockPanel.Dock="Top" Text="Reconstruction (source plane)" Style="{StaticResource SectionTitle}" />
-                    <Image Source="{Binding Result.Reconstruction, Converter={StaticResource ToBitmap}}"
-                           RenderOptions.BitmapScalingMode="NearestNeighbor" Stretch="Uniform"
-                           AutomationProperties.Name="Reconstruction image" />
+                    <c:HeatmapView Image="{Binding Result.Reconstruction}" OriginMm="{Binding Result.ReconOriginMm}"
+                                   StepMm="{Binding Result.ReconStepMm}" EmptyText="Run a simulation to see the reconstruction"
+                                   Foreground="{StaticResource Muted}"
+                                   AutomationProperties.Name="Reconstruction image"
+                                   AutomationProperties.HelpText="Mouse wheel or plus and minus to zoom, drag or arrow keys to pan, double-click or 0 to reset" />
                 </DockPanel>
             </Border>
         </Grid>
