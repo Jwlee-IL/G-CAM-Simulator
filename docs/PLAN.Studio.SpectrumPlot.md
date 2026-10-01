@@ -5,7 +5,9 @@ acquisition, scales Y, reports the hovered bin and places band labels — plus h
 be polished without desktop UI tests. The spectrum's physics (smearing, bands, pile-up) is
 [PLAN.Studio.Spectrum](PLAN.Studio.Spectrum.md); the order of work is [PLAN.Studio.Migration](PLAN.Studio.Migration.md).
 
-Status: handed to Codex 2026-10-01 (after TODO-08 phase A).
+Status: implemented 2026-10-01 (F-1 … F-5 fixed, offscreen snapshots in `docs/assets/studio-plot/`). Follow-ups seen in
+the snapshots: log-axis top label renders "10 ×10³" and crowds the "counts" title; window bands use nearly the
+series' own green, so band and data blend (light theme especially).
 
 ## What the graph does today (checked in the code, 2026-10-01)
 

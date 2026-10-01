@@ -69,11 +69,11 @@ one class, or a small group of types that only make sense together. Unit IDs are
 | SU-14 | SI-4 | `MainWindow`, theme dictionaries | `Studio/Views/MainWindow.xaml(.cs)`, `Studio/Themes/*.xaml` | screen layout and bindings; tokens, metrics, typography, control styles ([DESIGN.Layout](DESIGN.Layout.md), [DESIGN.Color](DESIGN.Color.md), [DESIGN.Typography](DESIGN.Typography.md), [DESIGN.Controls](DESIGN.Controls.md)) |
 | SU-15 | SI-4 | `App` | `Studio/App.xaml(.cs)` | DI composition root, startup window placement, title-bar hook |
 | SU-16 | SI-1 | `WorkspaceViewModel`, `ImagingWorkspaceViewModel` | `Core/ViewModels/*WorkspaceViewModel.cs` | title, automation key, active state; imaging measurements and peak over the shared result |
-| SU-17 | SI-2 | `PlotSeries`, `PlotBand`, `PlotMarker`, `PlotViewport`, `NiceTicks`, `MinMaxPyramid` | `Core/Plotting/*.cs` | finite / increasing inputs, sample limit, linear / log mapping, X navigation, ticks, exact range extrema |
+| SU-17 | SI-2 | `PlotSeries`, `PlotBand`, `PlotMarker`, `PlotViewport`, `NiceTicks`, `MinMaxPyramid`, `PlotGeometry`, `PlotAutoScale`, `PlotBinReadout`, `PlotBandLayout`, `PlotViewRange` | `Core/Plotting/*.cs` | finite / increasing inputs, sample limit, linear / log mapping, X navigation, ticks, exact range extrema |
 | SU-18 | SI-4 | `PlotView` (+ automation peer) | `Studio/Controls/PlotView.cs` | cached preparation, frozen geometry, themed axes / series / bands / markers, readout, pointer / key input, measured CPU redraw |
 | SU-19 | SI-3 | `AcquisitionSession` | `Services/AcquisitionSession.cs` | fresh MC histories, consumed event prefix, live-time pacing, immutable cumulative snapshots, Stop and automatic completion |
 | SU-20 | SI-3 | `SpectrumService`, `MeasurementStage` | `Services/SpectrumService.cs`, `Services/MeasurementStage.cs` | shared gain / chain response, worker binning, incremental pile-up, resolvable-line grouping and union share |
-| SU-21 | SI-1 | `SpectrumWorkspaceViewModel`, `ISpectrumService`, spectrum records | `Core/ViewModels/SpectrumWorkspaceViewModel.cs`, `Core/Services/Spectrum*.cs`, `Core/Services/ISpectrumService.cs` | view settings, snapshot refresh, Area series / bands / table, rejection of late responses |
+| SU-21 | SI-1 | `SpectrumWorkspaceViewModel`, `ISpectrumService`, spectrum records | `Core/ViewModels/SpectrumWorkspaceViewModel.cs`, `Core/Services/Spectrum*.cs`, `Core/Services/ISpectrumService.cs` | view settings, snapshot refresh, Histogram series / bands / table, selected window range, rejection of late responses |
 | SU-22 | SI-4 | `SpectrumView`, `SpectrumPanel` | `Studio/Views/Spectrum*.xaml(.cs)` | plot, readout, table and read-only chain / view-settings panel |
 
 Paths are relative to `src/Gcam.Studio.Core`, `src/Gcam.Studio.Services` and `src/Gcam.Studio` respectively.
@@ -105,7 +105,7 @@ verifies transport/localization, immutable snapshots, count conservation, input 
 ### SI-1 ↔ SI-3: `ISpectrumService`
 
 `ProcessAsync(acquisitionId, events, lines, settings, seed, cancellationToken)` returns `SpectrumView`:
-256 centres and acquired counts, grouped bands and their counts / shares, total measured pulses, overflow,
+257 explicit bin edges, 256 centres and acquired counts, grouped bands and their counts / shares, total measured pulses, overflow,
 union share, resolution at 662 keV, resolving time, chain name and worker processing elapsed time.
 `SpectrumSettings` contains a positive finite N and pile-up, plus the snapshot's frozen DetectorSettings and
 pixel dimensions; log Y is a plot property. Gain σ and seed belong to acquisition inputs, not to the editable
@@ -269,9 +269,18 @@ carry no fabricated data. Linear / log viewport transformations and tick labels 
 
 `PlotView` prepares data on `Series` replacement. Resizing / navigation reuse preparation and issue one frozen
 geometry per series (column extrema); Area fills to zero, or one count on log Y. Dynamic brushes are set by the
-theme style. The control exposes a read-only readout for a host TextBlock (no series redraw on pointer readout updates),
+theme style. The control exposes a read-only readout for a host TextBlock (line readout does not redraw; histogram bin changes redraw the cursor),
 input parity and an Image automation peer. Axis margins and centred X ticks use measured text dimensions. CPU `OnRender`
 timing includes axes, query and geometry; the desktop test separately records event-to-render delay.
+
+`PlotGeometry` emits two points per visible histogram bin (clipped to X) at widths of at least two device
+pixels; otherwise it queries bins intersecting each device column through the pyramid. The existing line
+column query stays bounded by resolution. `PlotViewport.Configure` resets only on full-range change.
+`PlotAutoScale` applies visible extrema and headroom; `PlotView` retains the previous top for same-range data
+updates, recomputing on navigation / log change. `PlotBinReadout` reports real half-open bin bounds.
+`PlotBandLayout` takes measured widths and returns clamped positions and collision rows; WPF ellipsizes text
+wider than the plot. A one-way `ViewRange` requests X navigation. Offscreen verification uses a separate
+opt-in STA test project, with base WPF resource infrastructure but no Studio App startup or desktop input.
 
 ### SU-20 … SU-22 Spectrum
 
@@ -294,6 +303,10 @@ view settings without acquisition. Log Y only redraws `PlotView`. No independent
 Acquisition snapshots retain their detector settings; gain edits never resmear recorded events with a new pattern.
 The chain-only resolution readout excludes pixel gain spread. Correlated nuclear cascades remain unavailable.
 Measurements and real-engine checks are recorded in [VV.Studio](VV.Studio.md).
+
+Spectrum publishes explicit edges from the count-binning width; centres remain for window statistics.
+Table selection requests [lo - width, hi + width]. Snapshot publication matches selection by emission lines,
+suppressing a second range request so live navigation survives.
 
 ### SU-02 `SourceItemViewModel`
 
@@ -370,10 +383,13 @@ Every SRS requirement maps to at least one unit; every unit carries at least one
 | SR-NAV-01 … SR-NAV-03 | SU-01, SU-16, SU-14 (type-based centre / panel templates) |
 | SR-PLOT-01 … SR-PLOT-03 | SU-17, SU-18 |
 | SR-PLOT-04, SR-PLOT-05 | SU-18, SU-17, SU-14 (theme styles) |
+| SR-PLOT-06 ... SR-PLOT-10 | SU-17, SU-18 |
+| SR-PLOT-11 | SU-18, SU-14; separate Gcam.Studio.RenderTests verification project |
 | SR-SPEC-01 … SR-SPEC-05 | SU-20, SU-21, SU-22, SU-18; engine Configuration presets and `FrontEndModel` |
 | SR-SPEC-06 | SU-01, SU-21, SU-22 |
 | SR-SPEC-07 | SU-20, SU-21 |
 | SR-SPEC-08 | SU-22, SU-18, SU-14 |
+| SR-SPEC-09 | SU-20, SU-21, SU-22, SU-17, SU-18 |
 | SR-MEAS-01, SR-MEAS-02 | SU-04, SU-06 |
 | SR-MEAS-03 | SU-06 |
 | SR-MEAS-04 | SU-01, SU-16, SU-03, SU-04 |

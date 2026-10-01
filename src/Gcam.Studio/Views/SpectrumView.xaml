@@ -27,7 +27,7 @@
                     <TextBlock Grid.Column="3" Text="Counts" Style="{StaticResource Text.Label}" />
                     <TextBlock Grid.Column="4" Text="Share" Style="{StaticResource Text.Label}" />
                 </Grid>
-                <ListBox ItemsSource="{Binding Lines}" MaxHeight="{StaticResource Size.ResultsList}"
+                <ListBox ItemsSource="{Binding Lines}" SelectedItem="{Binding SelectedLine, Mode=TwoWay}" MaxHeight="{StaticResource Size.ResultsList}"
                          AutomationProperties.AutomationId="Spectrum.Lines" AutomationProperties.Name="Spectrum emission windows">
                     <ListBox.ItemContainerStyle>
                         <Style TargetType="ListBoxItem" BasedOn="{StaticResource {x:Type ListBoxItem}}">
@@ -50,6 +50,7 @@
                 </ListBox>
             </StackPanel>
             <c:PlotView x:Name="SpectrumPlot" Series="{Binding Series}" Bands="{Binding Bands}" LogY="{Binding LogY}"
+                        ViewRange="{Binding ViewRange, Mode=OneWay}" XUnit="keV" YUnit="counts"
                         XLabel="measured energy (keV)" YLabel="counts" EmptyText="Start acquisition to build the spectrum"
                         AutomationProperties.AutomationId="Spectrum.Plot" AutomationProperties.Name="Spectrum measured energy counts"
                         AutomationProperties.HelpText="Wheel or plus and minus to zoom; arrows to pan; Home to reset." />

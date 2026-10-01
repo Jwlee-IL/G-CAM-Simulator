@@ -16,11 +16,24 @@ public sealed class PlotViewport
     {
         if (!double.IsFinite(xMin) || !double.IsFinite(xMax) || !double.IsFinite(yMin) || !double.IsFinite(yMax))
             throw new ArgumentException("Bounds must be finite.");
-        _fullMin = xMin; _fullMax = xMax > xMin ? xMax : xMin + 1;
+        double fullMax = xMax > xMin ? xMax : xMin + 1;
+        bool changed = _fullMin != xMin || _fullMax != fullMax;
+        _fullMin = xMin; _fullMax = fullMax;
         LogY = logY;
         YMin = logY ? Math.Max(LogFloor, yMin) : yMin;
         YMax = yMax > YMin ? yMax : (logY ? YMin * 10 : YMin + 1);
-        Reset();
+        if (changed) Reset();
+    }
+
+    public void SetY(double min, double max) { YMin = min; YMax = max; }
+
+    public void SetRange(PlotViewRange range)
+    {
+        if (!double.IsFinite(range.Lo) || !double.IsFinite(range.Hi) || range.Hi <= range.Lo)
+            throw new ArgumentException("View range must increase and be finite.");
+        double span = Math.Clamp(range.Hi - range.Lo, (_fullMax - _fullMin) / 1_000_000, _fullMax - _fullMin);
+        XMin = Math.Clamp(range.Lo, _fullMin, _fullMax - span);
+        XMax = XMin + span;
     }
 
     public double XToPixel(double x, double width) => (x - XMin) / (XMax - XMin) * width;

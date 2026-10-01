@@ -13,6 +13,7 @@ public sealed partial class SpectrumWorkspaceViewModel : WorkspaceViewModel
     private IReadOnlyList<SpectrumLine> _lines = [];
     private CancellationTokenSource? _refresh;
     private int _revision;
+    private bool _updatingSelection;
 
     public SpectrumWorkspaceViewModel(MainViewModel shared, ISpectrumService service)
         : base("Spectrum", "Workspace.Spectrum")
@@ -27,6 +28,15 @@ public sealed partial class SpectrumWorkspaceViewModel : WorkspaceViewModel
     [ObservableProperty] private string? _error;
     [ObservableProperty] private IReadOnlyList<PlotSeries> _series = [];
     [ObservableProperty] private IReadOnlyList<PlotBand> _bands = [];
+    [ObservableProperty] private SpectrumBand? _selectedLine;
+    [ObservableProperty] private PlotViewRange? _viewRange;
+
+    partial void OnSelectedLineChanged(SpectrumBand? value)
+    {
+        if (value is null || _updatingSelection) return;
+        double width = value.HiKeV - value.LoKeV;
+        ViewRange = new(value.LoKeV - width, value.HiKeV + width);
+    }
     public IReadOnlyList<SpectrumBand> Lines => View?.Bands ?? [];
     public string Summary => View is { } v
         ? $"{v.TotalCounts:N0} measured pulses · {v.InWindowShare:P1} in windows · {v.OverflowCounts:N0} above plot range" : "No acquired counts";
@@ -51,6 +61,8 @@ public sealed partial class SpectrumWorkspaceViewModel : WorkspaceViewModel
         View = null;
         Series = [];
         Bands = [];
+        SelectedLine = null;
+        ViewRange = null;
         Error = null;
         NotifyReadings();
     }
@@ -77,11 +89,17 @@ public sealed partial class SpectrumWorkspaceViewModel : WorkspaceViewModel
                     PixelsY = snapshot.Detector is null ? 0 : snapshot.Imaging.Flood.Height
                 }, cancellationToken: token);
             if (revision != _revision || token.IsCancellationRequested) return;
+            var selected = SelectedLine;
             View = view;
-            Series = [new PlotSeries("Acquired counts", view.Counts, view.CentresKeV, Kind: PlotKind.Area)];
+            // Replace ItemsSource before assigning a row from the new list; otherwise WPF rejects it.
+            NotifyReadings();
+            // Snapshot rows are immutable replacements; rebinding selection must not re-zoom a live view.
+            _updatingSelection = true;
+            SelectedLine = selected is null ? null : view.Bands.FirstOrDefault(b => b.Lines.SequenceEqual(selected.Lines));
+            _updatingSelection = false;
+            Series = [new PlotSeries("Acquired counts", view.Counts, Kind: PlotKind.Histogram, BinEdges: view.BinEdgesKeV)];
             Bands = view.Bands.Select(b => new PlotBand(b.LoKeV, b.HiKeV, b.Label)).ToArray();
             Error = null;
-            NotifyReadings();
         }
         catch (OperationCanceledException) when (token.IsCancellationRequested) { }
         catch (Exception ex)

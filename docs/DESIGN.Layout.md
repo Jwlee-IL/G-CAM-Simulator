@@ -42,7 +42,7 @@ Row 1  Content (a Border with Pad.Window)
                 Imaging: [flood map] Gutter [reconstruction]
                 each = PanelHeader (title + chips) · ImageStackPanel: square HeatmapView (+ adorner), ColorBar and
                 readout directly beneath, at the image's width; spare height collects below
-                Spectrum: Area PlotView with line bands · readout · acquired-pulse summary · emission-window table
+                Spectrum: stepped histogram PlotView with line bands · readout · acquired-pulse summary · emission-window table (select a row to zoom to its window)
          Col 3  Gutter
          Col 4  Selected workspace panel (DataTemplate by workspace type, Size.SidePanel)
                 Imaging: tool picker · hint · results table · selected row detail

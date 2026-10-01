@@ -138,7 +138,13 @@ Automation. Status: **pass** (evidence on 2026-10-01), **partial**, **open** (no
 | SR-PLOT-03 | unit | T | `MinMaxPyramidTests.Query_EqualsBruteForce_IncludingBothEnds` (5 cases), `Range_ClipsOutsideData_RejectsNonFiniteSamples` | pass |
 | SR-PLOT-04 | unit + system | T, I | `PlotViewportTests.ZoomPanReset_PreservesAnchor_AndBounds`; `PlotViewTests.TenMillionSamples_ZoomAndResizeRedraw_Within16Milliseconds` checks production peer, + key and reset; pointer / other keys / readout by inspection | partial — full input walkthrough pending |
 | SR-PLOT-05 | system | T | `PlotViewTests.TenMillionSamples_ZoomAndResizeRedraw_Within16Milliseconds`; measured record in §5 | pass (CPU redraw only) |
-| SR-SPEC-01 | integration + I | T, I | `SpectrumServiceTests.CsAcquisition_PhotopeakBinAndFwhmMatchChain`; Area binding, axis labels and no synthetic noise inspected | pass headless; live desktop appearance pending |
+| SR-PLOT-06 | unit + offscreen render | T | `HistogramPlotTests.Steps_IncludePartialBins_AndEmptyBinHasFullWidth`, `Envelope_RetainsExtremaOfBinsCrossingColumns`, histogram validation; `PlotViewRenderTests` PNGs | pass headless |
+| SR-PLOT-07 | unit + offscreen render | T | `Configure_PreservesZoomAndPanUntilRangeChanges_AndResetStillFits`; acquisition snapshot VM test; render test replaces counts under zoom | pass headless |
+| SR-PLOT-08 | unit + offscreen render | T | `VisibleExtent_ExcludesDistantPeak_IncludesIntersectingBins`; render test checks live top retention | pass headless |
+| SR-PLOT-09 | unit + inspection | T, I | `BinLookup_UsesHalfOpenEdges_AndReadoutUsesCountsAndUnits`; `PlotView.UpdateHover` and drawing inspected | pass headless; desktop pointer walkthrough deferred |
+| SR-PLOT-10 | unit + offscreen render | T | `Labels_ClampBothEdges_AndUseAdditionalRowsWithoutCollisions`; dark / light full PNGs show complete Ba K label | pass headless |
+| SR-PLOT-11 | offscreen render | T | `PlotViewRenderTests.Spectrum_BothThemesFullAndZoom_RenderWithoutWindow`, independent opt-in, four PNGs | pass |
+| SR-SPEC-01 | integration + I | T, I | `SpectrumServiceTests.CsAcquisition_PhotopeakBinAndFwhmMatchChain`; Histogram binding / explicit edges, axis labels and no synthetic noise inspected | pass headless; live desktop appearance pending |
 | SR-SPEC-02 | integration | T | `CsAcquisition_PhotopeakBinAndFwhmMatchChain`; engine `FrontEndPartsTests` verifies legacy chain and pulse compatibility | pass |
 | SR-SPEC-03 | integration | T | `HighRate_PileUpLosesPulsesAndMovesCountsAbovePhotopeak`; exact pulse-count agreement with engine `ApplyPileUp` | pass |
 | SR-SPEC-04 | integration + unit | T | `MixedCsCo_HasFourBandsAndUnionCountsEachBinOnce`, `Merge_UsesResolutionRatherThanWindowOverlap` (2 cases), `Merge_SingleLineGivesOneBand` | pass |
@@ -146,11 +152,12 @@ Automation. Status: **pass** (evidence on 2026-10-01), **partial**, **open** (no
 | SR-SPEC-06 | unit + I | T, I | `AcquisitionViewModelTests.Spectrum_SnapshotsGrow_ViewSettingsReuseAcquisition_SelectionSurvives`; shared stale binding inspected | pass headless; desktop controls pending |
 | SR-SPEC-07 | integration + I | T, I | `SeedAndSnapshotPartition_AreDeterministic_ToggleReplaysExactly` (2 cases), `Processing_MeasuresFullAndIncrementalWorkAt100000Events`; service `Task.Run` inspected | pass |
 | SR-SPEC-08 | inspection + system | I | `SpectrumView.xaml`, `SpectrumPanel.xaml`, inherited `PlotView` peer | partial — desktop accessibility and themes pending |
+| SR-SPEC-09 | unit + integration + inspection | T, I | acquisition VM test checks range request / selection persistence; spectrum service verifies every bin edge / centre; XAML one-way range / units inspected | pass headless; desktop selection walkthrough deferred |
 
 ### Coverage summary
 
 The tables below preserve the pre-acquisition baseline (47 rows); withdrawn RUN rows are historical evidence.
-The current fourteen acquisition rows and eight spectrum rows are verified above by tests / inspection. Their desktop paths are pending;
+The current fourteen acquisition rows, nine spectrum rows and six additional plot rows (PLOT-06 … -11) are verified above by tests / inspection and offscreen rendering. Their desktop paths are pending;
 the prior batch desktop passes must not be treated as acquisition validation.
 
 | Primary method | Requirements |
@@ -180,7 +187,8 @@ the prior batch desktop passes must not be treated as acquisition validation.
 | `PlotViewportTests` | unit | 3 | 3 / 3 pass |
 | `NiceTicksTests` | unit | 2 | 2 / 2 pass |
 | `PlotSeriesTests` | unit | 1 | 1 / 1 pass |
-| **Gcam.Studio.Tests** | | **73** | **73 / 73 pass** |
+| `HistogramPlotTests` | unit / headless geometry timing | 9 | 9 / 9 pass |
+| **Gcam.Studio.Tests** | | **82** | **82 / 82 pass** |
 | `AcquisitionServiceTests` (in Gcam.Studio.Services.Tests) | integration, real engine + virtual scheduler | 8 | 8 / 8 pass |
 | `SpectrumServiceTests` (in Gcam.Studio.Services.Tests) | physics / deterministic processing / timing and band grouping | 9 | 9 / 9 pass |
 | `DetectorRealismTests` (in Gcam.Studio.Services.Tests) | physics / defaults / measurement replay / throughput | 6 | 6 / 6 pass; service project total 23 |
@@ -188,6 +196,7 @@ the prior batch desktop passes must not be treated as acquisition validation.
 | `PilotTests`, `ScenarioTests` (in Gcam.Studio.UiTests) | system, desktop (opt-in) | 7 | skipped normally; latest opt-in run: 7 fail at desktop input / focus (§5) |
 | `PlotViewTests` | system, desktop (opt-in) | 1 | CPU redraw gate pass; skipped normally |
 | `PolishSurveyTests` | diagnostic, desktop (opt-in) | 1 | blocked at UIA focus; skipped normally |
+| `PlotViewRenderTests` (Gcam.Studio.RenderTests) | offscreen STA, independent opt-in | 1 | skipped normally; opt-in pass, four PNGs |
 | `SceneConfigBuilderTests` (in Gcam.Tests) | integration (engine) | 7 (one theory × 4) | pass |
 | `ListModeSourceTests` (engine) | physics / compatibility / throughput / decode measurements | 8 | 8 / 8 pass |
 | `ListModeBackgroundTests` (engine) | physics / deterministic disabled and enabled background | 3 | 3 / 3 pass |
@@ -197,6 +206,20 @@ the prior batch desktop passes must not be treated as acquisition validation.
 The solution, including the WPF shell and unchanged UI-test project, built in Release without errors.
 NU1900 reports unreachable NuGet vulnerability metadata; verification used existing restore assets, one
 MSBuild node and disabled node reuse. `dotnet test` prints the current totals.
+
+Spectrum-plot verification on 2026-10-01 adds nine Core cases: inventory 365 -> 374 passing headless cases
+(259 engine, 82 Core, 23 services, 10 UI oracles). Nine desktop cases and the separate render case skip normally;
+the render opt-in passes independently. The prior 365 count is the pre-change inventory, not a fresh baseline
+execution. Full solution Release build uses cached packages and one MSBuild node because network restore of the
+legacy WPF project's floating ScottPlot version is unavailable. No desktop test was enabled and Studio was not
+launched. Snapshot evidence: [studio-plot](assets/studio-plot/README.md).
+
+Core timing (Release, 1200 device columns, 100 warmed iterations): 10 M line geometry plus visible-range query
+median 0.490 ms / p95 0.575 ms; zoomed 0.426 / 0.509 ms. Pyramid construction 28.335 ms. A 256-bin stepped
+histogram takes 0.010 / 0.011 ms; a 10 M histogram envelope 0.513 / 0.567 ms. These measure Core query / point
+construction, excluding WPF text, drawing commands and composition; the changed control's real-window 16 ms
+gate is deferred to the author. `LineGeometry_PreservesSingletonsAndRightEndpoint` protects the existing line
+geometry at sparse sample columns and the final endpoint.
 
 Live-acquisition Release verification on 2026-10-01 passed 341 cases (254 engine + 69 Core + 8 service +
 10 UI oracles), skipped all nine desktop cases and launched no Studio window. Zero build errors; NU1900

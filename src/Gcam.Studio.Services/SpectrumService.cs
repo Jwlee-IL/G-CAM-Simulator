@@ -115,7 +115,8 @@ public sealed class SpectrumService : ISpectrumService
         double union = counts.Where((_, i) => rows.Any(b => centres[i] >= b.LoKeV && centres[i] <= b.HiKeV)).Sum();
         watch.Stop();
         return new(centres, counts, Array.AsReadOnly(rows), total, overflow, total > 0 ? union / total : 0,
-            _model.FwhmFraction(662), _resolvingTimeS, FrontEndParts.Default.ToString(), watch.Elapsed);
+            _model.FwhmFraction(662), _resolvingTimeS, FrontEndParts.Default.ToString(), watch.Elapsed)
+        { BinEdgesKeV = Enumerable.Range(0, BinCount + 1).Select(i => i * width).ToArray() };
     }
 
     private void AddMeasured(double[] counts, double energy, int index, ref long total, ref long overflow)

@@ -25,6 +25,9 @@ public sealed class PlotView : FrameworkElement
     private Point? _drag;
     private double _xMin, _xMax = 1, _yMin, _yMax = 1;
     private Rect _plotRect;
+    private (PlotSeries Series, int Bin)? _hover;
+    private double? _hoverX;
+    private bool _pendingViewRange;
     private Rect PlotRect => _plotRect;
 
     private IReadOnlyList<PlotTick> YTicks() => LogY
@@ -70,12 +73,23 @@ public sealed class PlotView : FrameworkElement
     public IReadOnlyList<PlotBand>? Bands { get => (IReadOnlyList<PlotBand>?)GetValue(BandsProperty); set => SetValue(BandsProperty, value); }
     public static readonly DependencyProperty MarkersProperty = Register<IReadOnlyList<PlotMarker>?>(nameof(Markers), null);
     public IReadOnlyList<PlotMarker>? Markers { get => (IReadOnlyList<PlotMarker>?)GetValue(MarkersProperty); set => SetValue(MarkersProperty, value); }
-    public static readonly DependencyProperty LogYProperty = Register(nameof(LogY), false, (d, _) => ((PlotView)d).Configure());
+    public static readonly DependencyProperty LogYProperty = Register(nameof(LogY), false, (d, _) => ((PlotView)d).Configure(false));
     public bool LogY { get => (bool)GetValue(LogYProperty); set => SetValue(LogYProperty, value); }
     public static readonly DependencyProperty XLabelProperty = Register(nameof(XLabel), "");
     public string XLabel { get => (string)GetValue(XLabelProperty); set => SetValue(XLabelProperty, value); }
     public static readonly DependencyProperty YLabelProperty = Register(nameof(YLabel), "");
     public string YLabel { get => (string)GetValue(YLabelProperty); set => SetValue(YLabelProperty, value); }
+    public static readonly DependencyProperty ViewRangeProperty = Register<PlotViewRange?>(nameof(ViewRange), null,
+        (d, _) => ((PlotView)d).ApplyViewRange());
+    public PlotViewRange? ViewRange { get => (PlotViewRange?)GetValue(ViewRangeProperty); set => SetValue(ViewRangeProperty, value); }
+    public static readonly DependencyProperty XUnitProperty = Register(nameof(XUnit), "");
+    public string XUnit { get => (string)GetValue(XUnitProperty); set => SetValue(XUnitProperty, value); }
+    public static readonly DependencyProperty YUnitProperty = Register(nameof(YUnit), "");
+    public string YUnit { get => (string)GetValue(YUnitProperty); set => SetValue(YUnitProperty, value); }
+    public static readonly DependencyProperty XFormatProperty = Register<string?>(nameof(XFormat), null);
+    public string? XFormat { get => (string?)GetValue(XFormatProperty); set => SetValue(XFormatProperty, value); }
+    public static readonly DependencyProperty YFormatProperty = Register(nameof(YFormat), "N0");
+    public string YFormat { get => (string)GetValue(YFormatProperty); set => SetValue(YFormatProperty, value); }
     public static readonly DependencyProperty EmptyTextProperty = Register(nameof(EmptyText), "No data");
     public string EmptyText { get => (string)GetValue(EmptyTextProperty); set => SetValue(EmptyTextProperty, value); }
 
@@ -96,9 +110,11 @@ public sealed class PlotView : FrameworkElement
 
     private static readonly DependencyPropertyKey ReadoutPropertyKey = DependencyProperty.RegisterReadOnly(nameof(Readout), typeof(string), typeof(PlotView), new FrameworkPropertyMetadata(""));
     public static readonly DependencyProperty ReadoutProperty = ReadoutPropertyKey.DependencyProperty;
-    /// <summary>Pointer coordinates for a host TextBlock; updating this output does not redraw the trace.</summary>
+    /// <summary>Line pointer coordinates or histogram bin counts / bounds for a host TextBlock.</summary>
     public string Readout => (string)GetValue(ReadoutProperty);
     public double Zoom => _viewport.Zoom;
+    public PlotViewRange CurrentViewRange => new(_viewport.XMin, _viewport.XMax);
+    public double CurrentYMax => _viewport.YMax;
 
     /// <summary>CPU redraw duration, including ticks, query, geometry and drawing commands; excludes composition.</summary>
     public double LastRedrawMilliseconds { get; private set; }
@@ -117,18 +133,62 @@ public sealed class PlotView : FrameworkElement
             var pyramid = new MinMaxPyramid(series.Y);
             var range = pyramid.Range(0, series.Y.Length);
             _prepared.Add((series, pyramid));
-            _xMin = Math.Min(_xMin, series.XAt(0));
-            _xMax = Math.Max(_xMax, series.XAt(series.Y.Length - 1));
-            _yMin = Math.Min(_yMin, series.Kind == PlotKind.Area ? Math.Min(0, range.Min) : range.Min);
+            _xMin = Math.Min(_xMin, series.Kind == PlotKind.Histogram ? series.EdgeAt(0) : series.XAt(0));
+            _xMax = Math.Max(_xMax, series.Kind == PlotKind.Histogram ? series.EdgeAt(series.Y.Length) : series.XAt(series.Y.Length - 1));
+            _yMin = Math.Min(_yMin, series.Kind != PlotKind.Line ? Math.Min(0, range.Min) : range.Min);
             _yMax = Math.Max(_yMax, range.Max);
         }
-        SetValue(ReadoutPropertyKey, "");
-        Configure();
+        Configure(true);
+        if (_pendingViewRange && _prepared.Count > 0) ApplyViewRange();
+        UpdateHover(_hoverX);
     }
 
-    private void Configure()
+    private void Configure(bool dataUpdate)
     {
-        if (_prepared.Count > 0) _viewport.Configure(_xMin, _xMax, _yMin, _yMax, LogY);
+        if (_prepared.Count == 0)
+        {
+            _viewport.Configure(0, 1, 0, 1, LogY);
+            _viewport.Reset();
+            _hover = null;
+            _hoverX = null;
+        }
+        else
+        {
+            double oldMin = _viewport.XMin, oldMax = _viewport.XMax, oldTop = _viewport.YMax;
+            bool sameRange = _xMin == _fullXMin && _xMax == _fullXMax;
+            _viewport.Configure(_xMin, _xMax, _yMin, _yMax, LogY);
+            AutoScale(dataUpdate && sameRange && oldMin == _viewport.XMin && oldMax == _viewport.XMax ? oldTop : null);
+        }
+        _fullXMin = _xMin; _fullXMax = _xMax;
+        InvalidateVisual();
+    }
+
+    private double _fullXMin = double.NaN, _fullXMax = double.NaN;
+    private void AutoScale(double? previousTop = null)
+    {
+        double min = double.PositiveInfinity, max = double.NegativeInfinity;
+        foreach (var (series, pyramid) in _prepared)
+        {
+            var range = PlotGeometry.VisibleRange(series, pyramid, _viewport.XMin, _viewport.XMax);
+            if (range.IsEmpty) continue;
+            min = Math.Min(min, range.Min); max = Math.Max(max, range.Max);
+        }
+        if (!double.IsFinite(min)) { min = 0; max = 0; }
+        var bounds = PlotAutoScale.Calculate(min, max, _prepared.Any(p => p.Series.Kind != PlotKind.Line), LogY, previousTop);
+        _viewport.SetY(bounds.Min, bounds.Max);
+    }
+
+    private void ApplyViewRange()
+    {
+        _pendingViewRange = ViewRange is not null && _prepared.Count == 0;
+        if (ViewRange is { } range && _prepared.Count > 0) _viewport.SetRange(range);
+        NavigationChanged();
+    }
+
+    private void NavigationChanged()
+    {
+        AutoScale();
+        UpdateHover(null);
         InvalidateVisual();
     }
 
@@ -160,13 +220,31 @@ public sealed class PlotView : FrameworkElement
         {
             DrawAxes(dc, r);
             dc.PushClip(new RectangleGeometry(r));
-            foreach (var band in Bands ?? [])
+            var visibleBands = (Bands ?? []).Where(b => b.Hi >= _viewport.XMin && b.Lo <= _viewport.XMax).ToArray();
+            foreach (var band in visibleBands)
             {
                 double a = ScreenX(band.Lo), b = ScreenX(band.Hi);
                 dc.DrawRectangle(BandBrush, null, new Rect(Math.Min(a, b), r.Top, Math.Abs(b - a), r.Height));
-                DrawText(dc, band.Label, new Point(Math.Min(a, b) + LabelGap, r.Top + LabelGap));
             }
             foreach (var (series, pyramid) in _prepared) DrawSeries(dc, r, series, pyramid);
+            if (_hover is { } hover)
+            {
+                double a = ScreenX(hover.Series.EdgeAt(hover.Bin)), b = ScreenX(hover.Series.EdgeAt(hover.Bin + 1));
+                dc.DrawRectangle(BandBrush, Pen(Foreground), new Rect(a, r.Top, b - a, r.Height));
+                double centre = (a + b) / 2;
+                dc.DrawLine(Pen(Foreground), new Point(centre, r.Top), new Point(centre, r.Bottom));
+            }
+            var labels = visibleBands.Select(b => Text(b.Label)).ToArray();
+            var layout = PlotBandLayout.Arrange(visibleBands.Select((b, i) =>
+                (ScreenX((b.Lo + b.Hi) / 2) - r.Left, labels[i].Width)).ToArray(), r.Width, LabelGap);
+            double rowHeight = labels.Length == 0 ? 0 : labels.Max(t => t.Height) + LabelGap;
+            foreach (var label in layout)
+            {
+                var text = labels[label.Index];
+                text.MaxTextWidth = Math.Max(1, label.Width);
+                text.Trimming = TextTrimming.CharacterEllipsis;
+                dc.DrawText(text, new Point(r.Left + label.Left, r.Top + LabelGap + label.Row * rowHeight));
+            }
             foreach (var marker in Markers ?? [])
             {
                 double x = ScreenX(marker.X);
@@ -191,39 +269,20 @@ public sealed class PlotView : FrameworkElement
         var geometry = new StreamGeometry();
         using (var g = geometry.Open())
         {
-            bool started = false;
-            double lastX = r.Left;
-            for (int c = 0; c < columns; c++)
+            var points = PlotGeometry.Build(series, pyramid, _viewport.XMin, _viewport.XMax, columns);
+            if (points.Count > 0)
             {
-                double x0 = _viewport.PixelToX(r.Width * c / columns, r.Width);
-                double x1 = _viewport.PixelToX(r.Width * (c + 1) / columns, r.Width);
-                int begin = series.LowerBound(x0), end = series.LowerBound(x1);
-                // Include the final endpoint once, and never lose an impulse at the right edge.
-                if (c == columns - 1 && end < series.Y.Length && series.XAt(end) <= x1) end++;
-                var range = pyramid.Range(begin, end);
-                if (range.IsEmpty) continue;
-                double x = range.End - range.Start == 1 ? ScreenX(series.XAt(begin)) : r.Left + r.Width * (c + 0.5) / columns;
-                var low = new Point(x, ScreenY(range.Min));
-                var high = new Point(x, ScreenY(range.Max));
-                if (!started)
-                {
-                    if (series.Kind == PlotKind.Area)
-                    {
-                        g.BeginFigure(new Point(x, ScreenY(LogY ? PlotViewport.LogFloor : 0)), true, true);
-                        g.LineTo(low, true, false);
-                    }
-                    else g.BeginFigure(low, false, false);
-                    started = true;
-                }
-                else g.LineTo(low, true, false);
-                g.LineTo(high, true, false);
-                lastX = x;
+                bool filled = series.Kind != PlotKind.Line;
+                double floor = ScreenY(LogY ? PlotViewport.LogFloor : 0);
+                var first = points[0];
+                g.BeginFigure(new Point(ScreenX(first.X), filled ? floor : ScreenY(first.Y)), filled, filled);
+                foreach (var point in points) g.LineTo(new Point(ScreenX(point.X), ScreenY(point.Y)), true, false);
+                if (filled) g.LineTo(new Point(ScreenX(points[^1].X), floor), true, false);
             }
-            if (started && series.Kind == PlotKind.Area) g.LineTo(new Point(lastX, ScreenY(LogY ? PlotViewport.LogFloor : 0)), true, false);
         }
         geometry.Freeze();
         Brush? brush = series.ColourRole switch { PlotColourRole.Series2 => Series2Brush, PlotColourRole.Series3 => Series3Brush, _ => Series1Brush };
-        if (series.Kind == PlotKind.Area)
+        if (series.Kind != PlotKind.Line)
         {
             dc.PushOpacity(AreaOpacity);
             dc.DrawGeometry(brush, null, geometry);
@@ -281,9 +340,9 @@ public sealed class PlotView : FrameworkElement
     public void ZoomAt(double fraction, bool zoomIn)
     {
         _viewport.ZoomAt(_viewport.PixelToX(Math.Clamp(fraction, 0, 1), 1), zoomIn ? ZoomStep : 1 / ZoomStep);
-        InvalidateVisual();
+        NavigationChanged();
     }
-    public void ResetView() { _viewport.Reset(); InvalidateVisual(); }
+    public void ResetView() { _viewport.Reset(); NavigationChanged(); }
     protected override void OnMouseWheel(MouseWheelEventArgs e)
     {
         base.OnMouseWheel(e);
@@ -307,11 +366,30 @@ public sealed class PlotView : FrameworkElement
             double previousMin = _viewport.XMin, previousMax = _viewport.XMax;
             _viewport.Pan((from.X - point.X) / PlotRect.Width * (_viewport.XMax - _viewport.XMin));
             _drag = point;
-            if (_viewport.XMin != previousMin || _viewport.XMax != previousMax) InvalidateVisual();
+            if (_viewport.XMin != previousMin || _viewport.XMax != previousMax) NavigationChanged();
         }
-        SetValue(ReadoutPropertyKey, PlotRect.Contains(point) && _prepared.Count > 0
-            ? string.Format(CultureInfo.InvariantCulture, "x {0:G5}, y {1:G5}", _viewport.PixelToX(point.X - PlotRect.Left, PlotRect.Width),
-                _viewport.PixelToY(point.Y - PlotRect.Top, PlotRect.Height)) : "");
+        if (PlotRect.Contains(point) && _prepared.Any(p => p.Series.Kind == PlotKind.Histogram))
+            UpdateHover(_viewport.PixelToX(point.X - PlotRect.Left, PlotRect.Width));
+        else
+        {
+            UpdateHover(null);
+            SetValue(ReadoutPropertyKey, PlotRect.Contains(point) && _prepared.Count > 0
+                ? string.Format(CultureInfo.InvariantCulture, "x {0:G5}, y {1:G5}", _viewport.PixelToX(point.X - PlotRect.Left, PlotRect.Width),
+                    _viewport.PixelToY(point.Y - PlotRect.Top, PlotRect.Height)) : "");
+        }
+    }
+
+    private void UpdateHover(double? x)
+    {
+        var previous = _hover;
+        _hoverX = x;
+        _hover = null;
+        if (x is { } value)
+            foreach (var (series, _) in _prepared)
+                if (series.Kind == PlotKind.Histogram && series.BinAt(value) is var bin && bin >= 0)
+                { _hover = (series, bin); break; }
+        SetValue(ReadoutPropertyKey, _hover is { } h ? PlotBinReadout.Format(h.Series, h.Bin, XUnit, YUnit, XFormat, YFormat) : "");
+        if (previous != _hover) InvalidateVisual();
     }
     protected override void OnMouseLeftButtonUp(MouseButtonEventArgs e)
     {
@@ -320,7 +398,7 @@ public sealed class PlotView : FrameworkElement
     protected override void OnLostMouseCapture(MouseEventArgs e) { base.OnLostMouseCapture(e); _drag = null; }
     protected override void OnMouseLeave(MouseEventArgs e)
     {
-        base.OnMouseLeave(e); SetValue(ReadoutPropertyKey, "");
+        base.OnMouseLeave(e); UpdateHover(null);
     }
     protected override void OnKeyDown(KeyEventArgs e)
     {
@@ -334,7 +412,7 @@ public sealed class PlotView : FrameworkElement
             case Key.D0 or Key.NumPad0 or Key.Home: ResetView(); break;
             default: return;
         }
-        e.Handled = true; InvalidateVisual();
+        e.Handled = true; NavigationChanged();
     }
 
     protected override AutomationPeer OnCreateAutomationPeer() => new PlotViewAutomationPeer(this);

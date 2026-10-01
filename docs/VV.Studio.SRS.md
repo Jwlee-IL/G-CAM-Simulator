@@ -50,17 +50,23 @@ Structured after IEC 62304 §5.2 (software requirements analysis). As in [VV.Stu
 
 | ID | Requirement |
 |---|---|
-| SR-PLOT-01 | A series supplies finite Y with increasing X or origin + positive step, name, Line / Area kind and colour role; bands and labelled X markers are available. Input is capped at 10 million samples per series. |
+| SR-PLOT-01 | A series supplies finite Y with increasing X or origin + positive step, name, Line / Area / Histogram kind and colour role; bands and labelled X markers are available. Input is capped at 10 million samples per series. |
 | SR-PLOT-02 | Linear and log10 Y map between pixels and data; log counts ≤1 clamp to 1. Linear ticks use 1–2–5 steps, log decades have 2…9 minor ticks, and labels follow the engineering notation of the image colour scales. |
 | SR-PLOT-03 | A pyramid built once per published dataset preserves exact per-column extrema, including short series, singleton data and boundary ranges; navigation does not rescan the whole trace. |
 | SR-PLOT-04 | Plot X zoom / pan / reset have pointer and keyboard paths; read-only pointer readout, a focus ring, theme brushes and an automation peer are exposed. Resize retains X navigation. |
 | SR-PLOT-05 | In a visible WPF window a 10-million-sample trace has CPU redraw ≤16 ms after a zoom and after a resize, including axes, query, geometry and drawing commands. Dispatcher / composition latency is recorded separately. |
+| SR-PLOT-06 | Histogram data has N+1 finite increasing edges (or origin + positive width) and nonnegative counts. Bins at least two device pixels wide draw filled steps; narrower bins use exact column extrema. Zero bins occupy their full width at the floor. |
+| SR-PLOT-07 | Same-full-range data updates preserve X zoom / pan. Changed ranges, cleared acquisitions and double-click / 0 / Home resets fit X. Log Y and resize preserve X. |
+| SR-PLOT-08 | Y follows visible X with 8 percent linear headroom or the next half decade in log mode. Data updates only grow the top; navigation and log changes recompute it. |
+| SR-PLOT-09 | Histogram hover highlights a half-open bin and draws its centre cursor; readout gives centre, bounds and counts with host units / formats. Default precision follows bin width. Line hover retains continuous coordinates. |
+| SR-PLOT-10 | Band labels centre on bands, clamp inside the plot and occupy additional collision rows. Labels wider than the plot use ellipsis. |
+| SR-PLOT-11 | A separate offscreen STA test, opt-in with GCAM_RENDER_SNAPSHOTS=1, renders fixed-spectrum dark / light, full / 662-keV zoom PNGs without windows, focus or mouse input. |
 
 ### Spectrum (`SR-SPEC`)
 
 | ID | Requirement |
 |---|---|
-| SR-SPEC-01 | Spectrum displays a live 256-bin Area histogram of the shared acquisition's measured event deposits, with measured energy in keV and acquired counts; it adds no synthetic noise floor or independent event pool. |
+| SR-SPEC-01 | Spectrum displays a live 256-bin stepped, filled histogram of the shared acquisition's measured event deposits, with measured energy in keV and acquired counts; it adds no synthetic noise floor or independent event pool. |
 | SR-SPEC-02 | Measured energy applies the acquisition's fixed pixel gain to its true deposit, then smears once through the default GAGG(Ce), S13360-3050 and CSP + CR-RC chain's `FrontEndModel`. The read-only chain resolution at 662 keV excludes pixel gain spread; no resolution override is offered. |
 | SR-SPEC-03 | Optional pile-up sums gained amplitudes whose actual arrival gaps are below the chain-derived resolving time, extending the interval after each pulse, then smears the summed pulse once; toggling it reprocesses retained events. |
 | SR-SPEC-04 | Each emission window spans E ± N·FWHM(E); adjacent lines separated by less than FWHM at their mean merge into one labelled band spanning their windows. Resolved lines keep separate bands even if their windows overlap. |
@@ -68,6 +74,7 @@ Structured after IEC 62304 §5.2 (software requirements analysis). As in [VV.Stu
 | SR-SPEC-06 | Log Y, positive finite window multiplier (default 1.5) and pile-up are view settings: they reuse acquired events without starting acquisition or marking results stale. Spectrum shares Imaging's outdated state. |
 | SR-SPEC-07 | Same events, settings and seed produce identical histogram counts regardless of snapshot partition or pile-up toggle replay; new events are processed incrementally and CPU processing runs in a service worker. |
 | SR-SPEC-08 | Spectrum exposes the plot and readout, table and right-panel controls with accessible names and AutomationIds `Spectrum.Plot`, `Spectrum.Lines`, `Spectrum.LogY`, `Spectrum.Window` and `Spectrum.PileUp`. |
+| SR-SPEC-09 | Counts carry explicit bin edges; the graph uses keV and counts. Selecting an emission-window row requests its range plus one window width on each side, clamped to the axis. Snapshot replacement retains selection without another zoom request. |
 
 ### Acquisition (`SR-RUN`)
 
@@ -200,7 +207,7 @@ point). They are kept as requirements so that a change breaking them fails verif
 | Flood map, reconstruction | heatmap (viridis, linear min–max) + colour bar; row 0 at the bottom | SR-VIEW-01…06 |
 | Hovered pixel | "x 1.2 mm, y −3.4 mm · 56.7" | SR-VIEW-07 |
 | Decoded peak | "peak (x, y) mm", 0.1 mm | SR-VIEW-08 |
-| Spectrum | 256-bin Area plot, measured energy (keV) / acquired counts; line bands and emission-window table | SR-SPEC-01, -04, -05 |
+| Spectrum | 256-bin stepped histogram, measured energy (keV) / acquired counts; line bands and emission-window table | SR-SPEC-01, -04, -05 |
 | Front-end chain | read-only chain name, resolution FWHM % at 662 keV and resolving time in ns | SR-SPEC-02, -03 |
 | Distance / angle / ROI | "12.3 mm" · "67.0°" · "Σ 1,234" with px count, mean, max | SR-MEAS-01…04 |
 

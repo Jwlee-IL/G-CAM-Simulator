@@ -86,9 +86,10 @@ them; a keyboard crosshair for creating them is planned with step 4.
 
 `FrameworkElement` with `OnRender`, first-party and independent of ScottPlot. Axis / viewport / tick maths and
 the exact min/max pyramid live in Core `Plotting/`. Host properties: `Series`, `Bands`, `Markers`, `LogY`,
-`XLabel`, `YLabel`, `EmptyText`; `Readout` is read-only (pointer x / y in data units), shown by a host TextBlock
-like HeatmapView with its overlay disabled; pointer readout updates do not redraw the series. `PlotSeries` arrays are
-immutable after publication, with increasing explicit X or origin + positive step, Line / Area, and a colour role.
+`XLabel`, `YLabel`, `XUnit`, `YUnit`, `XFormat`, `YFormat`, `ViewRange`, `EmptyText`; `Readout` is read-only (line pointer coordinates or histogram bin counts / bounds), shown by a host TextBlock
+like HeatmapView with its overlay disabled; line pointer readout updates do not redraw the series. `PlotSeries` arrays are
+immutable after publication, with increasing explicit X or origin + positive step, Line / Area / Histogram, and a colour role.
+Histograms use N+1 explicit edges or edge origin + positive width; negative counts are rejected.
 Each series is capped at 10 million finite samples; a new `Series` value prepares the pyramid once. Stored
 extrema start at complete 64-sample blocks, then double in size, using at most N/16 extra doubles.
 
@@ -105,6 +106,23 @@ capture loss ends dragging. A focus ring and `PlotViewAutomationPeer` expose key
 The opt-in 10M desktop gate measures CPU `OnRender` after zoom and resize, including ticks, query, geometry and
 drawing commands; dispatcher / compositor delay is recorded separately. Results and limitations are in
 [VV.Studio](VV.Studio.md#plot-performance-gate).
+
+Histogram bins at least two device pixels wide draw steps filled to zero (one on log Y); narrower bins use
+exact min/max columns, including bins intersecting each column. Empty bins occupy their full width at the floor.
+`PlotGeometry` supplies both paths in Core. Data replacement preserves X zoom / pan for an unchanged full X
+range; clearing data, changing the full range or explicit reset fits X. Log switching and resize preserve X.
+A one-way `ViewRange` requests a clamped X interval.
+
+Y follows visible bins / crossing trace segments: 8 percent linear headroom, or the next half decade on log Y.
+Data updates only grow the top; navigation and log changes recompute it. Histogram hover highlights a bin and
+draws a thin centre cursor with a readout such as `662.4 keV (660.9 – 663.9) · 1,234 counts`; default precision
+follows bin width, with optional X / Y formats. Line readout retains continuous coordinates without redrawing.
+Core `PlotBandLayout` centres labels on bands, clamps them to the plot and moves collisions to additional rows;
+text wider than the plot is ellipsized. Labels draw over the fill.
+
+Spectrum table selection requests the window plus one window width on each side. Snapshot row replacement
+retains selection without re-requesting zoom. Offscreen evidence uses `Gcam.Studio.RenderTests`, opt-in with
+`GCAM_RENDER_SNAPSHOTS=1`, and creates no window or desktop input.
 
 ### ColorBar
 

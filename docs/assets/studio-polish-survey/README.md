@@ -16,8 +16,8 @@ measurement and a Tab focus step: `imaging-{dark,light}-{1280x800,1440x900}.png`
 | P-03 | Imaging, colour bars | Ticks are evenly divided, not round (0.0 / 6.2 / 12.5 / 18.8 / 25.0; −1027 / −1 / 1025 …); "−1" reads as a value, not a tick. `NiceTicks` exists for the plot. | imaging-* |
 | P-04 | Imaging, layout | At 1440 × 900 the image panels leave about 40 % empty height below the colour bars. | imaging-*-1440x900 |
 | P-05 | Top bar | Live time / Speed boxes are much taller and wider than the label line and the switch; units sit in the labels ("Live time (s)", "Speed ×") while the left panel puts units inside the field. | all |
-| P-06 | Spectrum, bands | The merged Ba K band label is clipped at the plot's left edge ("2.1 + 36.4 keV"). | spectrum-* |
-| P-07 | Spectrum, readout | "x 251.29, y 141.06" — no units, more digits than the data carry (keV, counts). | spectrum-* |
+| P-06 | Spectrum, bands | Addressed: centred / clamped labels with collision rows. Offscreen dark / light evidence in [studio-plot](../studio-plot/README.md); desktop re-survey deferred. | spectrum-* |
+| P-07 | Spectrum, readout | Addressed: bin centre, bounds and counts with units and bin-width precision. Core readout test passes; desktop hover walkthrough deferred. | spectrum-* |
 | P-08 | Spectrum, panel | Section title "Pile-up" above a checkbox labelled "Pile-up" — the label repeats. | spectrum-* |
 | P-09 | Spectrum, chain text | The default chain is named "… CSP + CR-RC (your rig)" — a leftover first-person label from `Gcam.Wpf`; say "original rig". | spectrum-* |
 | P-10 | Spectrum, table | "Emission windows" columns do not line up with their headers (Counts, Share), and the Ba K row is labelled only "Cs-137". | spectrum-* |

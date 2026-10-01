@@ -27,7 +27,12 @@ public sealed class SpectrumServiceTests(ITestOutputHelper output)
     {
         var events = Acquire(100_000, new SceneSource());
         var view = await new SpectrumService().ProcessAsync(Guid.NewGuid(), events, CsLines, new());
+        Assert.Equal(view.Counts.Length + 1, view.BinEdgesKeV.Length);
+        Assert.Equal(0, view.BinEdgesKeV[0]);
         double width = view.CentresKeV[1] - view.CentresKeV[0];
+        Assert.Equal(CsLines.Max(l => l.EnergyKeV) * 1.15, view.BinEdgesKeV[^1], 8);
+        for (int i = 0; i < view.Counts.Length; i++)
+            Assert.Equal(view.CentresKeV[i], (view.BinEdgesKeV[i] + view.BinEdgesKeV[i + 1]) / 2, 8);
         int peak = Enumerable.Range(0, view.Counts.Length)
             .Where(i => view.CentresKeV[i] > 478)
             .MaxBy(i => view.Counts[i]);

@@ -15,7 +15,7 @@ done list (and Findings, if it produced a result) in the same commit; its plan s
 | TODO-12 | Delete `src/Gcam.Wpf`; update `Gcam.sln`, CI, AGENTS / README / VV.Studio; README screenshot of Studio | end of the migration | Studio session | open (last) |
 | TODO-13 | Live list-mode acquisition feeding every workspace — [PLAN.Studio.LiveAcquisition](PLAN.Studio.LiveAcquisition.md) | author decision 2026-10-01 (S-1 / S-4) | Studio session | committed `0ed17e0`; desktop tests migrated and passing (R-6) — open: AN-10, AN-11 |
 | TODO-14 | Per-decay list-mode emission: correlated cascade gammas (Co-60 1173 + 1332) with one arrival time, so true coincidence summing comes out of the pile-up stage | found in TODO-08 phase A (wrong premise in R-2) | — | open — needs an engine design (biasing vs angular correlation) |
-| TODO-15 | Spectrum graph: histogram steps, view kept during live acquisition, Y auto-scale to the visible range, bin readout with units, laid-out band labels, zoom-to-window — [PLAN.Studio.SpectrumPlot](PLAN.Studio.SpectrumPlot.md) | author 2026-10-01 (focus on the spectrum graph) | Studio session | handed to Codex 2026-10-01 |
+| TODO-15 | Spectrum graph: histogram steps, view kept during live acquisition, Y auto-scale to the visible range, bin readout with units, laid-out band labels, zoom-to-window — [PLAN.Studio.SpectrumPlot](PLAN.Studio.SpectrumPlot.md) | author 2026-10-01 (focus on the spectrum graph) | Studio session | implemented; offscreen snapshots in `docs/assets/studio-plot` — polish follow-ups listed in the plan |
 
 Next free ID: TODO-16. TODO-06 … TODO-13 are the `Gcam.Wpf` → Studio migration; order and shared decisions:
 [PLAN.Studio.Migration](PLAN.Studio.Migration.md) (06 → 13 → 07 → 08 …).

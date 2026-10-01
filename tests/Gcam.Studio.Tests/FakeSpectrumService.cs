@@ -19,6 +19,6 @@ internal sealed class FakeSpectrumService : ISpectrumService
         LineRequests.Add(lines);
         return Task.FromResult(new SpectrumView([661.7], [(double)events.Count],
             [new SpectrumBand(lines, 600, 720, events.Count, 1)], events.Count, 0, 1,
-            0.06, 730e-9, "test chain", TimeSpan.Zero));
+            0.06, 730e-9, "test chain", TimeSpan.Zero) { BinEdgesKeV = [650, 675] });
     }
 }

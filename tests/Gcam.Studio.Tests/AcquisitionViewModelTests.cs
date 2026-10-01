@@ -180,9 +180,23 @@ public sealed class AcquisitionViewModelTests
         await WaitForSnapshot(vm, 2.5);
         await vm.Spectrum.WhenUpdated;
         Assert.Equal(25, vm.Spectrum.View!.TotalCounts);
+        vm.Spectrum.SelectedLine = vm.Spectrum.Lines[0];
+        var requested = vm.Spectrum.ViewRange;
+        Assert.Equal(new Gcam.Studio.Core.Plotting.PlotViewRange(480, 840), requested);
+        var series = Assert.Single(vm.Spectrum.Series);
+        Assert.Equal(new double[] { 650, 675 }, series.BinEdges);
+        var viewport = new Gcam.Studio.Core.Plotting.PlotViewport();
+        viewport.Configure(series.EdgeAt(0), series.EdgeAt(series.Y.Length), 0, 25, false);
+        viewport.ZoomAt(662, 2);
+        var min = viewport.XMin;
         acquisition.Session.AdvanceWallTime(0.25);
         await run;
         Assert.Equal(50, vm.Spectrum.View!.TotalCounts);
+        var updated = Assert.Single(vm.Spectrum.Series);
+        viewport.Configure(updated.EdgeAt(0), updated.EdgeAt(updated.Y.Length), 0, 50, false);
+        Assert.Equal(min, viewport.XMin);
+        Assert.Same(requested, vm.Spectrum.ViewRange);
+        Assert.Same(vm.Spectrum.Lines[0], vm.Spectrum.SelectedLine);
         Assert.Same(vm.Spectrum, vm.SelectedWorkspace);
         Assert.Equal("Workspace.Spectrum", vm.Spectrum.AutomationId);
         var snapshot = vm.Snapshot;
@@ -198,7 +212,7 @@ public sealed class AcquisitionViewModelTests
         Assert.Same(snapshot, vm.Snapshot);
         Assert.False(vm.IsResultStale);
         Assert.Equal(50, vm.Spectrum.View.TotalCounts);
-        Assert.Equal(Gcam.Studio.Core.Plotting.PlotKind.Area, Assert.Single(vm.Spectrum.Series).Kind);
+        Assert.Equal(Gcam.Studio.Core.Plotting.PlotKind.Histogram, Assert.Single(vm.Spectrum.Series).Kind);
         Assert.NotEmpty(vm.Spectrum.Bands);
     }
 
