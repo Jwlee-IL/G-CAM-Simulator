@@ -5,126 +5,271 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:vm="clr-namespace:Gcam.Studio.Core.ViewModels;assembly=Gcam.Studio.Core"
         xmlns:c="clr-namespace:Gcam.Studio.Controls"
+        xmlns:conv="clr-namespace:Gcam.Studio.Converters"
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance Type=vm:MainViewModel}"
-        Title="GCAM Studio — coded-aperture imaging" Height="760" Width="1200"
-        Background="{StaticResource Canvas}" UseLayoutRounding="True">
+        Title="GCAM Studio" Width="1440" Height="900" MinWidth="1280" MinHeight="800"
+        WindowStartupLocation="CenterScreen"
+        Background="{DynamicResource Brush.Bg.Canvas}" FontFamily="{StaticResource Font.UI}"
+        UseLayoutRounding="True" SnapsToDevicePixels="True" TextOptions.TextFormattingMode="Display">
+    <!--
+        Fixed grid, flexible centre: side panels are a fixed width, the image area takes the rest, and the
+        window has a minimum size (1280×800) instead of a fixed one, so it still works at 125/150 % scaling.
+        Every size, gap and colour below comes from Themes/*.xaml.
+    -->
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis" />
+
+        <!-- Field row: fixed-width label + control -->
+        <Style x:Key="FieldLabel" TargetType="TextBlock" BasedOn="{StaticResource Text.Label}">
+            <Setter Property="Width" Value="{StaticResource Size.FieldLabel}" />
+        </Style>
+        <Style x:Key="FieldRow" TargetType="DockPanel">
+            <Setter Property="Margin" Value="{StaticResource Gap.Field}" />
+        </Style>
+
+        <!-- Read-only key/value line (geometry) -->
+        <Style x:Key="FactRow" TargetType="DockPanel">
+            <Setter Property="Margin" Value="0,0,0,4" />
+        </Style>
+        <Style x:Key="FactValue" TargetType="TextBlock" BasedOn="{StaticResource Text.Mono}">
+            <Setter Property="HorizontalAlignment" Value="Right" />
+        </Style>
+
+        <Style x:Key="ImageHeader" TargetType="DockPanel">
+            <Setter Property="Margin" Value="{StaticResource Gap.Title}" />
+            <Setter Property="LastChildFill" Value="False" />
+        </Style>
+        <Style x:Key="ImageTitle" TargetType="TextBlock" BasedOn="{StaticResource Text.Body}">
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
     </Window.Resources>
 
-    <Grid Margin="16">
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="340" />
-            <ColumnDefinition Width="16" />
-            <ColumnDefinition Width="*" />
-        </Grid.ColumnDefinitions>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="{Binding Source={StaticResource Size.Bar}}" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="{Binding Source={StaticResource Size.StatusBar}}" />
+        </Grid.RowDefinitions>
 
-        <!-- ============ Scene editor ============ -->
-        <Border Grid.Column="0" Background="{StaticResource Surface}" BorderBrush="{StaticResource Line}"
-                BorderThickness="1" CornerRadius="4" Padding="14">
-            <DockPanel LastChildFill="True">
-                <TextBlock DockPanel.Dock="Top" Text="Sources" Style="{StaticResource SectionTitle}" />
-
-                <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,8">
-                    <Button Content="Add" Command="{Binding AddSourceCommand}"
-                            AutomationProperties.Name="Add source" />
-                    <Button Content="Remove" Command="{Binding RemoveSourceCommand}"
-                            AutomationProperties.Name="Remove selected source" />
+        <!-- ================= Top bar: identity · global settings · primary action ================= -->
+        <Border Grid.Row="0" Background="{DynamicResource Brush.Bg.Surface}" BorderBrush="{DynamicResource Brush.Line}"
+                BorderThickness="0,0,0,1" Padding="{StaticResource Pad.Bar}">
+            <DockPanel LastChildFill="False">
+                <StackPanel DockPanel.Dock="Left" Orientation="Horizontal">
+                    <Border Width="16" Height="16" CornerRadius="3" Background="{DynamicResource Brush.Accent}"
+                            Margin="{StaticResource Gap.Inline}" />
+                    <TextBlock Text="GCAM Studio" Style="{StaticResource Text.AppTitle}" Margin="{StaticResource Gap.Inline}" />
+                    <TextBlock Text="coded-aperture imaging" Style="{StaticResource Text.Label}" />
                 </StackPanel>
 
-                <!-- Run controls pinned to the bottom -->
-                <StackPanel DockPanel.Dock="Bottom" Margin="0,12,0,0">
-                    <DockPanel Margin="0,0,0,8">
-                        <TextBlock Text="Photons" Style="{StaticResource FieldLabel}" />
-                        <TextBox Text="{Binding Photons, UpdateSourceTrigger=LostFocus}"
-                                 IsEnabled="{Binding IsIdle}" AutomationProperties.Name="Photon budget" />
-                    </DockPanel>
-                    <StackPanel Orientation="Horizontal">
-                        <Button Content="Simulate" Command="{Binding RunCommand}" FontWeight="SemiBold"
-                                AutomationProperties.Name="Run simulation" />
-                        <Button Content="Cancel" Command="{Binding RunCancelCommand}"
-                                Visibility="{Binding IsRunning, Converter={StaticResource BoolToVis}}"
-                                AutomationProperties.Name="Cancel simulation" />
-                    </StackPanel>
-                    <ProgressBar Height="4" Margin="0,10,0,6" Maximum="1" Value="{Binding Progress}"
-                                 Foreground="{StaticResource Accent}" BorderThickness="0"
-                                 AutomationProperties.Name="Simulation progress" />
-                    <TextBlock Text="{Binding Status}" Foreground="{StaticResource Muted}" TextWrapping="Wrap"
-                               AutomationProperties.Name="Status" AutomationProperties.LiveSetting="Polite" />
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                    <Button Content="{Binding ThemeToggleLabel}" Command="{Binding ToggleThemeCommand}"
+                            Style="{StaticResource Button.Ghost}" Margin="{StaticResource Gap.InlineWide}"
+                            AutomationProperties.Name="Switch theme" />
+                    <TextBlock Text="Photons" Style="{StaticResource Text.Label}" Margin="{StaticResource Gap.Inline}" />
+                    <TextBox Width="120" Text="{Binding Photons, UpdateSourceTrigger=LostFocus, StringFormat=N0}"
+                             IsEnabled="{Binding IsIdle}" Margin="{StaticResource Gap.InlineWide}"
+                             AutomationProperties.Name="Photon budget" />
+                    <Button Content="Cancel" Command="{Binding RunCancelCommand}" Style="{StaticResource Button.Ghost}"
+                            Visibility="{Binding IsRunning, Converter={StaticResource BoolToVis}}"
+                            Margin="{StaticResource Gap.Inline}" AutomationProperties.Name="Cancel simulation" />
+                    <Button Content="▶  Simulate" Command="{Binding RunCommand}" Style="{StaticResource Button.Primary}"
+                            IsDefault="True" AutomationProperties.Name="Run simulation" />
                 </StackPanel>
-
-                <!-- Selected source properties -->
-                <Grid DockPanel.Dock="Bottom" DataContext="{Binding SelectedSource}" Margin="0,12,0,0"
-                      IsEnabled="{Binding DataContext.IsIdle, RelativeSource={RelativeSource AncestorType=Window}}">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                    </Grid.RowDefinitions>
-                    <Grid.Resources>
-                        <Style TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
-                            <Setter Property="Margin" Value="0,3" />
-                        </Style>
-                    </Grid.Resources>
-
-                    <TextBlock Grid.Row="0" Text="Isotope" Style="{StaticResource FieldLabel}" />
-                    <ComboBox Grid.Row="0" Grid.Column="1" Margin="0,3"
-                              ItemsSource="{x:Static vm:SourceItemViewModel.IsotopeNames}"
-                              SelectedItem="{Binding Isotope}" AutomationProperties.Name="Isotope" />
-                    <TextBlock Grid.Row="1" Text="X (mm)" Style="{StaticResource FieldLabel}" />
-                    <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding X}" AutomationProperties.Name="Source X in millimetres" />
-                    <TextBlock Grid.Row="2" Text="Y (mm)" Style="{StaticResource FieldLabel}" />
-                    <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding Y}" AutomationProperties.Name="Source Y in millimetres" />
-                    <TextBlock Grid.Row="3" Text="Distance (mm)" Style="{StaticResource FieldLabel}" />
-                    <TextBox Grid.Row="3" Grid.Column="1" Text="{Binding DistanceMm}" AutomationProperties.Name="Source distance in millimetres" />
-                    <TextBlock Grid.Row="4" Text="Activity (µCi)" Style="{StaticResource FieldLabel}" />
-                    <TextBox Grid.Row="4" Grid.Column="1" Text="{Binding ActivityUCi}" AutomationProperties.Name="Source activity in microcuries" />
-                </Grid>
-
-                <ListBox ItemsSource="{Binding Sources}" SelectedItem="{Binding SelectedSource}"
-                         DisplayMemberPath="Label" BorderBrush="{StaticResource Line}"
-                         AutomationProperties.Name="Source list" />
             </DockPanel>
         </Border>
 
-        <!-- ============ Images ============ -->
-        <Grid Grid.Column="2">
+        <!-- ================= Content ================= -->
+        <Grid Grid.Row="1" Margin="{StaticResource Pad.Window}">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="16" />
+                <ColumnDefinition Width="{Binding Source={StaticResource Size.SidePanel}}" />
+                <ColumnDefinition Width="{StaticResource Gutter}" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
 
-            <Border Grid.Column="0" Background="{StaticResource Surface}" BorderBrush="{StaticResource Line}"
-                    BorderThickness="1" CornerRadius="4" Padding="14">
-                <DockPanel>
-                    <TextBlock DockPanel.Dock="Top" Text="Detector flood map" Style="{StaticResource SectionTitle}" />
-                    <c:HeatmapView Image="{Binding Result.Flood}" OriginMm="{Binding Result.FloodOriginMm}"
-                                   StepMm="{Binding Result.FloodStepMm}" EmptyText="Run a simulation to see the flood map"
-                                   Foreground="{StaticResource Muted}"
-                                   AutomationProperties.Name="Detector flood map"
-                                   AutomationProperties.HelpText="Mouse wheel or plus and minus to zoom, drag or arrow keys to pan, double-click or 0 to reset" />
-                </DockPanel>
+            <!-- Scene -->
+            <Border Grid.Column="0" Style="{StaticResource Panel.Surface}">
+                <StackPanel>
+                    <DockPanel LastChildFill="False">
+                        <TextBlock DockPanel.Dock="Left" Text="Sources" Style="{StaticResource Text.PanelTitle}" />
+                        <Button DockPanel.Dock="Right" Content="−" Command="{Binding RemoveSourceCommand}"
+                                Style="{StaticResource Button.Ghost}" ToolTip="Remove selected source"
+                                AutomationProperties.Name="Remove selected source" />
+                        <Button DockPanel.Dock="Right" Content="+" Command="{Binding AddSourceCommand}"
+                                Style="{StaticResource Button.Ghost}" ToolTip="Add source"
+                                AutomationProperties.Name="Add source" />
+                    </DockPanel>
+
+                    <ListBox Height="168" ItemsSource="{Binding Sources}" SelectedItem="{Binding SelectedSource}"
+                             Margin="{StaticResource Gap.Section}" AutomationProperties.Name="Source list">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <DockPanel AutomationProperties.Name="{Binding Label}">
+                                    <TextBlock DockPanel.Dock="Left" Text="{Binding Isotope}" Style="{StaticResource Text.Body}"
+                                               Width="64" FontWeight="SemiBold" />
+                                    <TextBlock DockPanel.Dock="Right" Style="{StaticResource Text.MonoCaption}">
+                                        <Run Text="{Binding ActivityUCi, Mode=OneWay, StringFormat={}{0:N0}}" /><Run Text=" µCi" />
+                                    </TextBlock>
+                                    <TextBlock Style="{StaticResource Text.Mono}">
+                                        <Run Text="(" /><Run Text="{Binding X, Mode=OneWay, StringFormat={}{0:F0}}" /><Run Text=", " /><Run Text="{Binding Y, Mode=OneWay, StringFormat={}{0:F0}}" /><Run Text=") mm" />
+                                    </TextBlock>
+                                </DockPanel>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+
+                    <!-- Selected source -->
+                    <StackPanel DataContext="{Binding SelectedSource}"
+                                IsEnabled="{Binding DataContext.IsIdle, RelativeSource={RelativeSource AncestorType=Window}}">
+                        <TextBlock Text="Selected source" Style="{StaticResource Text.PanelTitle}" />
+                        <DockPanel Style="{StaticResource FieldRow}">
+                            <TextBlock Text="Isotope" Style="{StaticResource FieldLabel}" />
+                            <ComboBox ItemsSource="{x:Static vm:SourceItemViewModel.IsotopeNames}" SelectedItem="{Binding Isotope}"
+                                      AutomationProperties.Name="Isotope" />
+                        </DockPanel>
+                        <DockPanel Style="{StaticResource FieldRow}">
+                            <TextBlock Text="X" Style="{StaticResource FieldLabel}" />
+                            <TextBox Text="{Binding X}" Tag="mm" AutomationProperties.Name="Source X in millimetres" />
+                        </DockPanel>
+                        <DockPanel Style="{StaticResource FieldRow}">
+                            <TextBlock Text="Y" Style="{StaticResource FieldLabel}" />
+                            <TextBox Text="{Binding Y}" Tag="mm" AutomationProperties.Name="Source Y in millimetres" />
+                        </DockPanel>
+                        <DockPanel Style="{StaticResource FieldRow}">
+                            <TextBlock Text="Distance" Style="{StaticResource FieldLabel}" />
+                            <TextBox Text="{Binding DistanceMm}" Tag="mm" AutomationProperties.Name="Source distance in millimetres" />
+                        </DockPanel>
+                        <DockPanel Style="{StaticResource FieldRow}">
+                            <TextBlock Text="Activity" Style="{StaticResource FieldLabel}" />
+                            <TextBox Text="{Binding ActivityUCi}" Tag="µCi" AutomationProperties.Name="Source activity in microcuries" />
+                        </DockPanel>
+                    </StackPanel>
+
+                    <Border Style="{StaticResource Divider}" />
+
+                    <!-- Geometry (read-only for now) -->
+                    <StackPanel DataContext="{Binding Optics}">
+                        <TextBlock Style="{StaticResource Text.PanelTitle}">
+                            <Run Text="Geometry" /><Run Text="  read-only" Foreground="{DynamicResource Brush.Text.Disabled}" FontWeight="Normal" />
+                        </TextBlock>
+                        <DockPanel Style="{StaticResource FactRow}">
+                            <TextBlock Text="Mask" Style="{StaticResource Text.Label}" />
+                            <TextBlock Style="{StaticResource FactValue}"><Run Text="MURA rank " /><Run Text="{Binding MuraRank, Mode=OneWay}" /></TextBlock>
+                        </DockPanel>
+                        <DockPanel Style="{StaticResource FactRow}">
+                            <TextBlock Text="Cell pitch" Style="{StaticResource Text.Label}" />
+                            <TextBlock Text="{Binding CellPitchMm, StringFormat={}{0:0.##} mm}" Style="{StaticResource FactValue}" />
+                        </DockPanel>
+                        <DockPanel Style="{StaticResource FactRow}">
+                            <TextBlock Text="Mask–detector" Style="{StaticResource Text.Label}" />
+                            <TextBlock Text="{Binding MaskDetectorDistanceMm, StringFormat={}{0:0.#} mm}" Style="{StaticResource FactValue}" />
+                        </DockPanel>
+                        <DockPanel Style="{StaticResource FactRow}">
+                            <TextBlock Text="Detector" Style="{StaticResource Text.Label}" />
+                            <TextBlock Style="{StaticResource FactValue}"><Run Text="{Binding DetectorPixels, Mode=OneWay}" /><Run Text=" × " /><Run Text="{Binding PixelPitchMm, Mode=OneWay, StringFormat={}{0:0.##}}" /><Run Text=" mm" /></TextBlock>
+                        </DockPanel>
+                        <DockPanel Style="{StaticResource FactRow}">
+                            <TextBlock Text="Focal plane" Style="{StaticResource Text.Label}" />
+                            <TextBlock Text="{Binding FocalDistanceMm, StringFormat={}{0:N0} mm}" Style="{StaticResource FactValue}" />
+                        </DockPanel>
+                        <DockPanel Style="{StaticResource FactRow}">
+                            <TextBlock Text="FCFOV" Style="{StaticResource Text.Label}" />
+                            <TextBlock Text="{Binding DataContext.FcfovHalfMm, RelativeSource={RelativeSource AncestorType=Window}, StringFormat={}± {0:0.#} mm}"
+                                       Style="{StaticResource FactValue}" />
+                        </DockPanel>
+                    </StackPanel>
+                </StackPanel>
             </Border>
 
-            <Border Grid.Column="2" Background="{StaticResource Surface}" BorderBrush="{StaticResource Line}"
-                    BorderThickness="1" CornerRadius="4" Padding="14">
-                <DockPanel>
-                    <TextBlock DockPanel.Dock="Top" Text="Reconstruction (source plane)" Style="{StaticResource SectionTitle}" />
-                    <c:HeatmapView Image="{Binding Result.Reconstruction}" OriginMm="{Binding Result.ReconOriginMm}"
-                                   StepMm="{Binding Result.ReconStepMm}" EmptyText="Run a simulation to see the reconstruction"
-                                   Foreground="{StaticResource Muted}"
-                                   AutomationProperties.Name="Reconstruction image"
-                                   AutomationProperties.HelpText="Mouse wheel or plus and minus to zoom, drag or arrow keys to pan, double-click or 0 to reset" />
-                </DockPanel>
-            </Border>
+            <!-- Images -->
+            <Grid Grid.Column="2">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="{StaticResource Gutter}" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <Border Grid.Column="0" Style="{StaticResource Panel.Surface}">
+                    <DockPanel>
+                        <DockPanel DockPanel.Dock="Top" Style="{StaticResource ImageHeader}">
+                            <TextBlock DockPanel.Dock="Left" Text="Detector flood map" Style="{StaticResource ImageTitle}" />
+                            <Border DockPanel.Dock="Right" Style="{StaticResource Chip}">
+                                <TextBlock Text="counts" Style="{StaticResource Text.Caption}" />
+                            </Border>
+                        </DockPanel>
+                        <TextBlock DockPanel.Dock="Bottom" Text="{Binding Readout, ElementName=Flood}" Style="{StaticResource Text.MonoCaption}"
+                                   Height="18" Margin="0,4,0,0" />
+                        <c:ColorBar DockPanel.Dock="Bottom" Margin="0,8,0,0" Minimum="{Binding DataMin, ElementName=Flood}"
+                                    Maximum="{Binding DataMax, ElementName=Flood}" Foreground="{DynamicResource Brush.Text.Secondary}"
+                                    FontFamily="{StaticResource Font.Mono}" AutomationProperties.Name="Flood map colour scale" />
+                        <c:HeatmapView x:Name="Flood" Image="{Binding Result.Flood}" OriginMm="{Binding Result.FloodOriginMm}"
+                                       StepMm="{Binding Result.FloodStepMm}" EmptyText="Run a simulation to see the flood map"
+                                       ShowReadoutOverlay="False" Foreground="{DynamicResource Brush.Text.Secondary}"
+                                       FrameBrush="{DynamicResource Brush.Line.Control}" FocusBrush="{DynamicResource Brush.Focus}"
+                                       AutomationProperties.Name="Detector flood map"
+                                       AutomationProperties.HelpText="Mouse wheel or plus and minus to zoom, drag or arrow keys to pan, double-click or 0 to reset" />
+                    </DockPanel>
+                </Border>
+
+                <Border Grid.Column="2" Style="{StaticResource Panel.Surface}">
+                    <DockPanel>
+                        <DockPanel DockPanel.Dock="Top" Style="{StaticResource ImageHeader}">
+                            <TextBlock DockPanel.Dock="Left" Text="Reconstruction (source plane)" Style="{StaticResource ImageTitle}" />
+                            <Border DockPanel.Dock="Right" Style="{StaticResource Chip}" BorderBrush="{DynamicResource Brush.Accent}"
+                                    Visibility="{Binding PeakText, Converter={x:Static conv:NullToCollapsedConverter.Instance}}">
+                                <TextBlock Text="{Binding PeakText}" Style="{StaticResource Text.Caption}" Foreground="{DynamicResource Brush.Accent}" />
+                            </Border>
+                        </DockPanel>
+                        <TextBlock DockPanel.Dock="Bottom" Text="{Binding Readout, ElementName=Recon}" Style="{StaticResource Text.MonoCaption}"
+                                   Height="18" Margin="0,4,0,0" />
+                        <c:ColorBar DockPanel.Dock="Bottom" Margin="0,8,0,0" Minimum="{Binding DataMin, ElementName=Recon}"
+                                    Maximum="{Binding DataMax, ElementName=Recon}" Foreground="{DynamicResource Brush.Text.Secondary}"
+                                    FontFamily="{StaticResource Font.Mono}" AutomationProperties.Name="Reconstruction colour scale" />
+                        <c:HeatmapView x:Name="Recon" Image="{Binding Result.Reconstruction}" OriginMm="{Binding Result.ReconOriginMm}"
+                                       StepMm="{Binding Result.ReconStepMm}" EmptyText="Run a simulation to see the reconstruction"
+                                       ShowReadoutOverlay="False" Foreground="{DynamicResource Brush.Text.Secondary}"
+                                       FrameBrush="{DynamicResource Brush.Line.Control}" FocusBrush="{DynamicResource Brush.Focus}"
+                                       AutomationProperties.Name="Reconstruction image"
+                                       AutomationProperties.HelpText="Mouse wheel or plus and minus to zoom, drag or arrow keys to pan, double-click or 0 to reset" />
+                    </DockPanel>
+                </Border>
+            </Grid>
         </Grid>
+
+        <!-- ================= Status bar ================= -->
+        <Border Grid.Row="2" Background="{DynamicResource Brush.Bg.Surface}" BorderBrush="{DynamicResource Brush.Line}"
+                BorderThickness="0,1,0,0" Padding="{StaticResource Pad.Bar}">
+            <DockPanel>
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                    <ProgressBar Width="160" Maximum="1" Value="{Binding Progress, Mode=OneWay}" VerticalAlignment="Center"
+                                 Margin="{StaticResource Gap.Inline}" AutomationProperties.Name="Simulation progress" />
+                    <TextBlock Text="{Binding Progress, StringFormat={}{0:P0}}" Style="{StaticResource Text.MonoCaption}" Width="36" />
+                </StackPanel>
+                <Ellipse Width="8" Height="8" Margin="{StaticResource Gap.Inline}" VerticalAlignment="Center">
+                    <Ellipse.Style>
+                        <Style TargetType="Ellipse">
+                            <Setter Property="Fill" Value="{DynamicResource Brush.Text.Disabled}" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding State}" Value="Running">
+                                    <Setter Property="Fill" Value="{DynamicResource Brush.Accent}" />
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding State}" Value="Succeeded">
+                                    <Setter Property="Fill" Value="{DynamicResource Brush.Status.Success}" />
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding State}" Value="Cancelled">
+                                    <Setter Property="Fill" Value="{DynamicResource Brush.Status.Warning}" />
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding State}" Value="Failed">
+                                    <Setter Property="Fill" Value="{DynamicResource Brush.Status.Error}" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Ellipse.Style>
+                </Ellipse>
+                <TextBlock Text="{Binding Status}" Style="{StaticResource Text.Label}"
+                           AutomationProperties.Name="Status" AutomationProperties.LiveSetting="Polite" />
+            </DockPanel>
+        </Border>
     </Grid>
 </Window>

@@ -35,11 +35,28 @@ public sealed class HeatmapViewport
     /// <summary>Screen pixels per image pixel.</summary>
     public double Scale => FitScale * Zoom;
 
-    private double FitScale => Math.Min(ViewWidth / ImageWidth, ViewHeight / ImageHeight);
+    /// <summary>Device pixels per layout unit (1 at 100 % scaling, 1.25 at 125 %, …).</summary>
+    public double PixelsPerDip { get; private set; } = 1;
+
+    /// <summary>When set, fit uses a whole number of device pixels per cell so nearest-neighbour cells stay even.</summary>
+    public bool SnapToWholePixels { get; private set; }
+
+    private double FitScale
+    {
+        get
+        {
+            double raw = Math.Min(ViewWidth / ImageWidth, ViewHeight / ImageHeight);
+            double device = raw * PixelsPerDip;
+            return SnapToWholePixels && device >= 1 ? Math.Floor(device) / PixelsPerDip : raw;
+        }
+    }
 
     /// <summary>Resize the image and/or viewport. Resets to fit when the image size changes.</summary>
-    public void Configure(int imageWidth, int imageHeight, double viewWidth, double viewHeight)
+    public void Configure(int imageWidth, int imageHeight, double viewWidth, double viewHeight,
+        double pixelsPerDip = 1, bool snapToWholePixels = false)
     {
+        PixelsPerDip = pixelsPerDip > 0 ? pixelsPerDip : 1;
+        SnapToWholePixels = snapToWholePixels;
         bool imageChanged = imageWidth != ImageWidth || imageHeight != ImageHeight;
         ImageWidth = Math.Max(1, imageWidth);
         ImageHeight = Math.Max(1, imageHeight);

@@ -1,0 +1,48 @@
+<!--
+    Colour tokens — DARK ("dark instrument"). Swapped at runtime by ThemeService; styles reference these
+    keys with DynamicResource only. Contrast vs Bg.Surface: Text.Primary 14.1:1, Text.Secondary 7.6:1,
+    Accent 8.5:1, Line.Control 3.15:1 (non-text 3:1) — all WCAG AA.
+    Cyan is reserved for meaning (primary action, selection, focus, progress); image overlays use white + black halo.
+-->
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Color x:Key="Color.Bg.Canvas">#121619</Color>
+    <Color x:Key="Color.Bg.Surface">#191F25</Color>
+    <Color x:Key="Color.Bg.Raised">#222A32</Color>
+    <Color x:Key="Color.Bg.Hover">#2A343D</Color>
+    <Color x:Key="Color.Line">#2B353E</Color>
+    <Color x:Key="Color.Line.Control">#5E6E7A</Color>
+    <Color x:Key="Color.Text.Primary">#E8EDF1</Color>
+    <Color x:Key="Color.Text.Secondary">#A6B1BB</Color>
+    <Color x:Key="Color.Text.Disabled">#6B7883</Color>
+    <Color x:Key="Color.Accent">#4FC8E3</Color>
+    <Color x:Key="Color.Accent.Hover">#6FD4EA</Color>
+    <Color x:Key="Color.Accent.Pressed">#38AFCA</Color>
+    <Color x:Key="Color.Accent.Subtle">#244FC8E3</Color>
+    <Color x:Key="Color.OnAccent">#0B1215</Color>
+    <Color x:Key="Color.Focus">#7FDCF0</Color>
+    <Color x:Key="Color.Status.Success">#58C98B</Color>
+    <Color x:Key="Color.Status.Warning">#E3B342</Color>
+    <Color x:Key="Color.Status.Error">#F2766F</Color>
+    <Color x:Key="Color.Selection">#594FC8E3</Color>
+
+    <SolidColorBrush x:Key="Brush.Bg.Canvas" Color="{StaticResource Color.Bg.Canvas}" />
+    <SolidColorBrush x:Key="Brush.Bg.Surface" Color="{StaticResource Color.Bg.Surface}" />
+    <SolidColorBrush x:Key="Brush.Bg.Raised" Color="{StaticResource Color.Bg.Raised}" />
+    <SolidColorBrush x:Key="Brush.Bg.Hover" Color="{StaticResource Color.Bg.Hover}" />
+    <SolidColorBrush x:Key="Brush.Line" Color="{StaticResource Color.Line}" />
+    <SolidColorBrush x:Key="Brush.Line.Control" Color="{StaticResource Color.Line.Control}" />
+    <SolidColorBrush x:Key="Brush.Text.Primary" Color="{StaticResource Color.Text.Primary}" />
+    <SolidColorBrush x:Key="Brush.Text.Secondary" Color="{StaticResource Color.Text.Secondary}" />
+    <SolidColorBrush x:Key="Brush.Text.Disabled" Color="{StaticResource Color.Text.Disabled}" />
+    <SolidColorBrush x:Key="Brush.Accent" Color="{StaticResource Color.Accent}" />
+    <SolidColorBrush x:Key="Brush.Accent.Hover" Color="{StaticResource Color.Accent.Hover}" />
+    <SolidColorBrush x:Key="Brush.Accent.Pressed" Color="{StaticResource Color.Accent.Pressed}" />
+    <SolidColorBrush x:Key="Brush.Accent.Subtle" Color="{StaticResource Color.Accent.Subtle}" />
+    <SolidColorBrush x:Key="Brush.OnAccent" Color="{StaticResource Color.OnAccent}" />
+    <SolidColorBrush x:Key="Brush.Focus" Color="{StaticResource Color.Focus}" />
+    <SolidColorBrush x:Key="Brush.Status.Success" Color="{StaticResource Color.Status.Success}" />
+    <SolidColorBrush x:Key="Brush.Status.Warning" Color="{StaticResource Color.Status.Warning}" />
+    <SolidColorBrush x:Key="Brush.Status.Error" Color="{StaticResource Color.Status.Error}" />
+    <SolidColorBrush x:Key="Brush.Selection" Color="{StaticResource Color.Selection}" />
+</ResourceDictionary>

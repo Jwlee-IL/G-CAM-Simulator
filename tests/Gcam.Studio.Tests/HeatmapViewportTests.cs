@@ -100,6 +100,18 @@ public class HeatmapViewportTests
         Assert.Equal(0.5, back.X, 9);
     }
 
+    [Theory]
+    [InlineData(366, 1.0, 12.0)]      // 366/30 = 12.2 → 12 px per cell
+    [InlineData(366, 1.25, 12.0)]     // 15.25 device px → 15 → 12 dip
+    [InlineData(20, 1.0, 20.0 / 30)]  // smaller than one px per cell: no snapping
+    public void Snapping_fits_a_whole_number_of_device_pixels_per_cell(double view, double ppd, double expectedScale)
+    {
+        var v = new HeatmapViewport();
+        v.Configure(30, 30, view, view, ppd, snapToWholePixels: true);
+        Assert.Equal(expectedScale, v.Scale, 9);
+        Assert.Equal((view - 30 * v.Scale) / 2, v.Offset.X, 9);   // still centred
+    }
+
     [Fact]
     public void Resizing_the_view_keeps_zoom_but_new_image_size_refits()
     {

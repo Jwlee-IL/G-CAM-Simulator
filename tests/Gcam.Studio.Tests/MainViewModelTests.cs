@@ -28,10 +28,42 @@ public class MainViewModelTests
         }
     }
 
+    private sealed class FakeTheme : IThemeService
+    {
+        public AppTheme Current { get; private set; } = AppTheme.Dark;
+        public void Apply(AppTheme theme) => Current = theme;
+    }
+
+    [Fact]
+    public void Theme_toggle_flips_and_relabels()
+    {
+        var theme = new FakeTheme();
+        var vm = new MainViewModel(new FakeSimulation(), theme);
+        Assert.Equal("Light theme", vm.ThemeToggleLabel);
+        vm.ToggleThemeCommand.Execute(null);
+        Assert.Equal(AppTheme.Light, theme.Current);
+        Assert.Equal("Dark theme", vm.ThemeToggleLabel);
+    }
+
+    [Fact]
+    public async Task Run_state_tracks_outcome_and_peak_text_follows_result()
+    {
+        var vm = new MainViewModel(new FakeSimulation(), new FakeTheme());
+        Assert.Equal(RunState.Idle, vm.State);
+        Assert.Null(vm.PeakText);
+        await vm.RunCommand.ExecuteAsync(null);
+        Assert.Equal(RunState.Succeeded, vm.State);
+        Assert.Equal("peak (1.0, 2.0) mm", vm.PeakText);
+
+        var failing = new MainViewModel(new FakeSimulation { Throw = new InvalidOperationException("x") }, new FakeTheme());
+        await failing.RunCommand.ExecuteAsync(null);
+        Assert.Equal(RunState.Failed, failing.State);
+    }
+
     [Fact]
     public void Starts_with_one_selected_source()
     {
-        var vm = new MainViewModel(new FakeSimulation());
+        var vm = new MainViewModel(new FakeSimulation(), new FakeTheme());
         Assert.Single(vm.Sources);
         Assert.Same(vm.Sources[0], vm.SelectedSource);
         Assert.True(vm.RunCommand.CanExecute(null));
@@ -40,7 +72,7 @@ public class MainViewModelTests
     [Fact]
     public void Add_selects_new_source_and_remove_selects_neighbour()
     {
-        var vm = new MainViewModel(new FakeSimulation());
+        var vm = new MainViewModel(new FakeSimulation(), new FakeTheme());
         vm.AddSourceCommand.Execute(null);
         vm.AddSourceCommand.Execute(null);
         Assert.Equal(3, vm.Sources.Count);
@@ -56,7 +88,7 @@ public class MainViewModelTests
     [Fact]
     public void Removing_every_source_disables_remove_and_run()
     {
-        var vm = new MainViewModel(new FakeSimulation());
+        var vm = new MainViewModel(new FakeSimulation(), new FakeTheme());
         vm.RemoveSourceCommand.Execute(null);
         Assert.Empty(vm.Sources);
         Assert.Null(vm.SelectedSource);
@@ -68,7 +100,7 @@ public class MainViewModelTests
     public async Task Run_passes_scene_and_publishes_result()
     {
         var sim = new FakeSimulation();
-        var vm = new MainViewModel(sim);
+        var vm = new MainViewModel(sim, new FakeTheme());
         vm.SelectedSource!.X = 12;
 
         await vm.RunCommand.ExecuteAsync(null);
@@ -83,12 +115,12 @@ public class MainViewModelTests
     [Fact]
     public async Task Cancel_keeps_previous_result_and_reenables_editing()
     {
-        var vm = new MainViewModel(new FakeSimulation());
+        var vm = new MainViewModel(new FakeSimulation(), new FakeTheme());
         await vm.RunCommand.ExecuteAsync(null);
         var first = vm.Result;
 
         var blocking = new FakeSimulation { BlockUntilCancelled = true };
-        var vm2 = new MainViewModel(blocking) { Result = first };
+        var vm2 = new MainViewModel(blocking, new FakeTheme()) { Result = first };
         var run = vm2.RunCommand.ExecuteAsync(null);
         await blocking.Started.Task;
         Assert.True(vm2.IsRunning);
@@ -106,7 +138,7 @@ public class MainViewModelTests
     [Fact]
     public async Task Failure_is_reported_not_thrown()
     {
-        var vm = new MainViewModel(new FakeSimulation { Throw = new InvalidOperationException("boom") });
+        var vm = new MainViewModel(new FakeSimulation { Throw = new InvalidOperationException("boom") }, new FakeTheme());
         await vm.RunCommand.ExecuteAsync(null);
         Assert.False(vm.IsRunning);
         Assert.Equal("Failed: boom", vm.Status);

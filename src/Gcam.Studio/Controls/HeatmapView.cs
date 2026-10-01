@@ -30,6 +30,7 @@ public sealed class HeatmapView : FrameworkElement
     static HeatmapView()
     {
         FocusableProperty.OverrideMetadata(typeof(HeatmapView), new FrameworkPropertyMetadata(true));
+        FocusVisualStyleProperty.OverrideMetadata(typeof(HeatmapView), new FrameworkPropertyMetadata(null));
         ClipToBoundsProperty.OverrideMetadata(typeof(HeatmapView), new FrameworkPropertyMetadata(true));
     }
 
@@ -71,6 +72,40 @@ public sealed class HeatmapView : FrameworkElement
     /// <summary>Colour of the overlay text (readout, zoom, empty state).</summary>
     public Brush Foreground { get => (Brush)GetValue(ForegroundProperty); set => SetValue(ForegroundProperty, value); }
 
+    public static readonly DependencyProperty ShowReadoutOverlayProperty = DependencyProperty.Register(
+        nameof(ShowReadoutOverlay), typeof(bool), typeof(HeatmapView), new FrameworkPropertyMetadata(true, FrameworkPropertyMetadataOptions.AffectsRender));
+
+    /// <summary>Draw the hovered-pixel readout inside the image (turn off when the host shows <see cref="Readout"/> itself).</summary>
+    public bool ShowReadoutOverlay { get => (bool)GetValue(ShowReadoutOverlayProperty); set => SetValue(ShowReadoutOverlayProperty, value); }
+
+    public static readonly DependencyProperty FrameBrushProperty = DependencyProperty.Register(
+        nameof(FrameBrush), typeof(Brush), typeof(HeatmapView), new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.AffectsRender));
+
+    /// <summary>1 px outline around the image, so dark colormap ends don't melt into a dark background.</summary>
+    public Brush? FrameBrush { get => (Brush?)GetValue(FrameBrushProperty); set => SetValue(FrameBrushProperty, value); }
+
+    public static readonly DependencyProperty FocusBrushProperty = DependencyProperty.Register(
+        nameof(FocusBrush), typeof(Brush), typeof(HeatmapView), new FrameworkPropertyMetadata(Brushes.DodgerBlue, FrameworkPropertyMetadataOptions.AffectsRender));
+
+    /// <summary>Keyboard focus ring colour.</summary>
+    public Brush FocusBrush { get => (Brush)GetValue(FocusBrushProperty); set => SetValue(FocusBrushProperty, value); }
+
+    private static readonly DependencyPropertyKey DataMinPropertyKey = DependencyProperty.RegisterReadOnly(
+        nameof(DataMin), typeof(double), typeof(HeatmapView), new FrameworkPropertyMetadata(0.0));
+
+    public static readonly DependencyProperty DataMinProperty = DataMinPropertyKey.DependencyProperty;
+
+    /// <summary>Value mapped to the bottom of the colormap (bind a <see cref="ColorBar"/> to it).</summary>
+    public double DataMin => (double)GetValue(DataMinProperty);
+
+    private static readonly DependencyPropertyKey DataMaxPropertyKey = DependencyProperty.RegisterReadOnly(
+        nameof(DataMax), typeof(double), typeof(HeatmapView), new FrameworkPropertyMetadata(1.0));
+
+    public static readonly DependencyProperty DataMaxProperty = DataMaxPropertyKey.DependencyProperty;
+
+    /// <summary>Value mapped to the top of the colormap.</summary>
+    public double DataMax => (double)GetValue(DataMaxProperty);
+
     private static readonly DependencyPropertyKey ReadoutPropertyKey = DependencyProperty.RegisterReadOnly(
         nameof(Readout), typeof(string), typeof(HeatmapView), new FrameworkPropertyMetadata(string.Empty));
 
@@ -94,6 +129,8 @@ public sealed class HeatmapView : FrameworkElement
         _min = double.MaxValue; _max = double.MinValue;
         foreach (var v in img.Raw) { if (v < _min) _min = v; if (v > _max) _max = v; }
         double span = _max > _min ? _max - _min : 1;
+        SetValue(DataMinPropertyKey, _min);
+        SetValue(DataMaxPropertyKey, _max);
 
         if (_bitmap is null || _bitmap.PixelWidth != img.Width || _bitmap.PixelHeight != img.Height)
             _bitmap = new WriteableBitmap(img.Width, img.Height, 96, 96, PixelFormats.Bgra32, null);
@@ -107,7 +144,7 @@ public sealed class HeatmapView : FrameworkElement
                 pixels[row + x] = lut[(int)Math.Round((img[x, y] - _min) / span * 255)];
         }
         _bitmap.WritePixels(new Int32Rect(0, 0, img.Width, img.Height), pixels, img.Width * 4, 0);
-        _viewport.Configure(img.Width, img.Height, ActualWidth, ActualHeight);
+        ConfigureViewport();
     }
 
     // ---- rendering ---------------------------------------------------------------------------------
@@ -115,7 +152,27 @@ public sealed class HeatmapView : FrameworkElement
     protected override void OnRenderSizeChanged(SizeChangedInfo sizeInfo)
     {
         base.OnRenderSizeChanged(sizeInfo);
-        if (Image is { } img) _viewport.Configure(img.Width, img.Height, ActualWidth, ActualHeight);
+        ConfigureViewport();
+    }
+
+    // Whole device pixels per cell at fit, so nearest-neighbour cells stay equal width at any DPI.
+    private void ConfigureViewport()
+    {
+        if (Image is { } img)
+            _viewport.Configure(img.Width, img.Height, ActualWidth, ActualHeight, VisualTreeHelper.GetDpi(this).PixelsPerDip, snapToWholePixels: true);
+    }
+
+    protected override void OnDpiChanged(DpiScale oldDpi, DpiScale newDpi)
+    {
+        base.OnDpiChanged(oldDpi, newDpi);
+        ConfigureViewport();
+        InvalidateVisual();
+    }
+
+    protected override void OnIsKeyboardFocusedChanged(DependencyPropertyChangedEventArgs e)
+    {
+        base.OnIsKeyboardFocusedChanged(e);
+        InvalidateVisual();
     }
 
     protected override void OnRender(DrawingContext dc)
@@ -127,12 +184,21 @@ public sealed class HeatmapView : FrameworkElement
         {
             var empty = Text(EmptyText, 13);
             dc.DrawText(empty, new Point((ActualWidth - empty.Width) / 2, (ActualHeight - empty.Height) / 2));
+            DrawFocusRing(dc);
             return;
         }
 
         double s = _viewport.Scale;
         var origin = new Point(_viewport.Offset.X, _viewport.Offset.Y);
-        dc.DrawImage(_bitmap, new Rect(origin, new Size(_bitmap.PixelWidth * s, _bitmap.PixelHeight * s)));
+        var imageRect = new Rect(origin, new Size(_bitmap.PixelWidth * s, _bitmap.PixelHeight * s));
+        dc.DrawImage(_bitmap, imageRect);
+        if (FrameBrush is { } frame)
+        {
+            var framePen = new Pen(frame, 1);
+            framePen.Freeze();
+            imageRect.Intersect(new Rect(RenderSize));
+            if (!imageRect.IsEmpty) dc.DrawRectangle(null, framePen, Inset(imageRect, 0.5));
+        }
 
         if (_hover is { } h)
         {
@@ -147,11 +213,22 @@ public sealed class HeatmapView : FrameworkElement
             var z = Text($"×{_viewport.Zoom:0.#}", 11);
             DrawLabel(dc, z, new Point(ActualWidth - z.Width - 12, 8));
         }
-        if (Readout.Length > 0)
+        if (ShowReadoutOverlay && Readout.Length > 0)
         {
             var r = Text(Readout, 11);
             DrawLabel(dc, r, new Point(8, ActualHeight - r.Height - 10));
         }
+        DrawFocusRing(dc);
+    }
+
+    private static Rect Inset(Rect r, double d) => new(r.X + d, r.Y + d, Math.Max(0, r.Width - 2 * d), Math.Max(0, r.Height - 2 * d));
+
+    private void DrawFocusRing(DrawingContext dc)
+    {
+        if (!IsKeyboardFocused) return;
+        var pen = new Pen(FocusBrush, 2);
+        pen.Freeze();
+        dc.DrawRectangle(null, pen, Inset(new Rect(RenderSize), 1));
     }
 
     private void DrawLabel(DrawingContext dc, FormattedText text, Point at)
@@ -273,7 +350,8 @@ public sealed class HeatmapView : FrameworkElement
         if (_hover is { } h && img is not null)
         {
             var mm = HeatmapViewport.ImageToMm(new Vec2(h.X + 0.5, h.Y + 0.5), OriginMm, StepMm);
-            readout = string.Format(CultureInfo.InvariantCulture, "x {0:F1} mm, y {1:F1} mm · {2:G4}", mm.X, mm.Y, img[h.X, h.Y]);
+            readout = string.Format(CultureInfo.InvariantCulture, "x {0:F1} mm, y {1:F1} mm · {2:G4}", mm.X, mm.Y, img[h.X, h.Y])
+                .Replace("-0.0 mm", "0.0 mm");   // a tiny negative coordinate shouldn't read as "-0.0"
         }
         SetValue(ReadoutPropertyKey, readout);
         Cursor = _viewport.Zoom > HeatmapViewport.MinZoom ? (IsMouseCaptured ? Cursors.SizeAll : Cursors.Hand) : null;
