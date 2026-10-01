@@ -7,6 +7,7 @@ using Gcam.Simulation;
 var commands = new Dictionary<string, Func<string[], int>>(StringComparer.OrdinalIgnoreCase)
 {
     ["sweep"]          = RunSweep,
+    ["fov"]            = RunFieldOfView,
     ["scan"]           = RunScan,
     ["noise"]          = RunNoise,
     ["thickness"]      = RunThickness,
@@ -111,7 +112,7 @@ static void PrintUsage(Dictionary<string, Func<string[], int>> commands)
     Console.WriteLine("  montecarlo help                       show this list");
     Console.WriteLine();
     Console.WriteLine("Commands (see AGENTS.md for details on each):");
-    Console.WriteLine("  core / config   sweep  scan  noise  thickness  uniformity  array");
+    Console.WriteLine("  core / config   sweep  fov  scan  noise  thickness  uniformity  array");
     Console.WriteLine("  mask            maskgeo  masksize  masktaper  maskfab  masksec  maskscatter  align");
     Console.WriteLine("  decoding        mlem  subcell  antimask  antimask-scene");
     Console.WriteLine("  compton / iso   compton  compton-strip  mixedfield  mixediso  mixedstrip  cascade  nonprop");
@@ -120,6 +121,54 @@ static void PrintUsage(Dictionary<string, Func<string[], int>> commands)
     Console.WriteLine("  front-end/RTL   frontend  eventstream  thermal  thermalro  pileup  deadtime  defects");
     Console.WriteLine();
     Console.WriteLine($"  ({commands.Count} study commands total.)");
+}
+
+static int RunFieldOfView(string[] args)
+{
+    if (args.Length < 2) { Console.Error.WriteLine("Usage: montecarlo fov <base.json> [out.csv]"); return 1; }
+    var baseConfig = ConfigLoader.Load(args[1]);
+    string csvPath = args.Length >= 3 ? args[2] : "samples/fov.csv";
+    baseConfig.PhotonCount = 1_000_000;
+
+    double[] distances = [1000.0, 5000.0];
+    double[] directions = [0.0, 45.0];
+    double[] onAxis = [500.0, 5000.0];
+    double[] bsrs = [0.0, 1.0];
+    double[] angles = Enumerable.Range(0, 41).Select(i => i * 0.5).ToArray();   // 0 … 20°
+    const int repeats = 100;
+    double fcHalf = FieldOfViewStudy.FullyCodedHalfAngleDeg(baseConfig);
+    double resDeg = Math.Atan(baseConfig.Mask.CellPitchMm / baseConfig.Geometry.MaskDetectorDistanceMm) * 180.0 / Math.PI;
+
+    Console.WriteLine("Field of view at field distance: usable field of non-cyclic decoding + out-of-field cue");
+    Console.WriteLine($"Fully coded half-angle {fcHalf:F2}° along x, {FieldOfViewStudy.FullyCodedHalfAngleDeg(baseConfig, 45.0):F2}° along the diagonal; resolution element {resDeg:F2}° (success = error within it)");
+    Console.WriteLine($"Angles 0–20°, {repeats} Poisson realizations each; N0 = counts the source gives on axis; BSR = uniform pedestal / N0");
+    Console.WriteLine();
+
+    var all = new List<FovRow>();
+    var study = new FieldOfViewStudy();
+    foreach (double s in distances)
+        foreach (double dir in directions)
+            all.AddRange(study.Run(baseConfig, s, dir, angles, onAxis, bsrs, repeats));
+    File.WriteAllText(csvPath, FieldOfViewStudy.ToCsv(all));
+
+    Console.WriteLine("  S(m)  dir   N0     BSR  usable ± (>=90 % localized)  side cue >=95 %          outside flag >=90 %   worst false in-field");
+    Console.WriteLine("                          non-cyclic  cyclic         centroid    peak         centroid              spot   unflagged");
+    foreach (var g in all.GroupBy(r => (r.DistanceMm, r.DirectionDeg, r.OnAxisCounts, r.Bsr)))
+    {
+        var rows = g.OrderBy(r => r.AngleDeg).ToArray();
+        double nc = FieldOfViewStudy.UsableHalfAngleDeg(rows, r => r.LocalizedNonCyclic, 0.9);
+        double cy = FieldOfViewStudy.UsableHalfAngleDeg(rows, r => r.LocalizedCyclic, 0.9);
+        double fcDir = FieldOfViewStudy.FullyCodedHalfAngleDeg(baseConfig, g.Key.DirectionDeg);
+        static string Range((double From, double To)? r) => r is { } v ? $"{v.From,4:F1}-{v.To,4:F1}" : "   never ";
+        var sideC = FieldOfViewStudy.PassingRange(rows.Where(r => r.AngleDeg > 0), r => r.SideByCentroid, 0.95);
+        var sideP = FieldOfViewStudy.PassingRange(rows.Where(r => r.AngleDeg > 0), r => r.SideByPeak, 0.95);
+        var outC = FieldOfViewStudy.PassingRange(rows.Where(r => r.AngleDeg > fcDir), r => r.OutsideByCentroid, 0.9);
+        double fi = rows.Max(r => r.FalseInField), fu = rows.Max(r => r.FalseInFieldUnflagged);
+        Console.WriteLine($"  {g.Key.DistanceMm / 1000,4:F0}  {g.Key.DirectionDeg,3:F0}  {g.Key.OnAxisCounts,5:F0}  {g.Key.Bsr,4:F1}    {nc,5:F1}       {cy,5:F1}        {Range(sideC)}  {Range(sideP)}    {Range(outC)}             {fi,5:P0}  {fu,5:P0}");
+    }
+    Console.WriteLine();
+    Console.WriteLine($"CSV written: {csvPath}");
+    return 0;
 }
 
 static int RunSweep(string[] args)

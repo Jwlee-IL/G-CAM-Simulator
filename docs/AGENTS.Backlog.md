@@ -197,3 +197,6 @@ TILT (pitch/yaw), mask WARPING.
   replaced fitted curves that made the crystal over-absorbing; themes 6, 15, 17, 26, 28, 37, 44, 46 re-run
   (spatial Cs/Co separation now holds only to Co:Cs ≈ 2:1); single `source` with `lines` now emits all lines.
   TODO-03 addendum: the PRS † rows re-measured (handheld floor 0.24 mm, mixed field unchanged, Argmax 2.0× per-pixel).
+- **53** (2026-10-01): field of view at field distance (`montecarlo fov`, TODO-04) — non-cyclic usable field ≈ ±7° along
+  x (±4–6.5° with background), wrong in-field answers past ~7.5° caught by the flood-centroid "outside" flag, side cue
+  1–14.5°, no direction information past ~14°.

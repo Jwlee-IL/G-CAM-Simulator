@@ -1587,3 +1587,60 @@ Same commands on the current code:
   the Compton-split ones doubles the counts (was 1.6×). At a 400-photon budget only ~50 / ~25 counts remain, which is why
   neither strategy reaches sub-mm here — the comparison, not the absolute RMS, is the result.
 - Regenerated: `noise_handheld.csv`, `noise_orig_gagg.csv`, `sweep_{cyclic,noncyclic}.csv` (handheld), `mixedfield*.csv`.
+
+## 53. Field of view at field distance + out-of-field cue — `FieldOfViewStudy` / `montecarlo fov` (2026-10-01)
+
+TODO-04 / LIM-01 / D-16: the adopted narrow-FOV path relies on (1) the usable field of non-cyclic decoding, estimated at
+±5° from the lab-geometry area ratio, and (2) an out-of-field cue. Neither had been simulated at field distance.
+
+**Set-up.** Theme-22 head (`scenario_handheld.json`, theme-52 crystal), Cs-137, source at S = 1 m and 5 m, moved
+0–20° off axis along x and along the diagonal. Fully coded field ±3.64° along x (square: ±5.14° on the diagonal),
+resolution element 1.04° (= success threshold). Per angle: biased MC mean flood, then 100 Poisson realizations of a
+source of FIXED strength — N0 = 500 or 5000 counts if it were on axis, N0·ε(θ)/ε(0) here — with no background or a
+uniform ambient pedestal equal to N0 (BSR 1). Each realization is decoded non-cyclically over ±20° and cyclically
+over its one period; the left/right cue is read from the decoded peak and from the flood centroid; the "outside"
+flag from the centroid uses the 95th percentile of the in-field centroid offsets of the same series as threshold.
+
+**Results** (`samples/fov.{csv,png}`; panel numbers refer to the plot, S = 1 m along x unless stated):
+
+| | N0 5000 | N0 500 | N0 500 + BSR 1 |
+|---|---|---|---|
+| usable half-field, non-cyclic (≥ 90 % within 1.04°), x · 1 m / 5 m | **7.0° / 7.5°** | 6.0° / 7.0° | 4.0° / 6.5° |
+| same, cyclic | 3.0° / 3.5° | 3.0° / 3.0° | 3.0° / 3.0° |
+| same, non-cyclic, diagonal · 1 m / 5 m | 9.0° / 4.5° | 4.5° / 3.0° | 0.5° / 0.5° |
+| side by centroid ≥ 95 % | 1.0–14.5° | 1.5–14.0° | 1.5–13.0° |
+| "outside" flag by centroid ≥ 90 % | 4.0–12.5° | 6.0–11.5° | never (peaks 68 % at 9.5°) |
+
+- **Usable field ≈ ±7° along x** — wider than the ±5° estimate, and the same at 1 m and 5 m (the field is set by angle,
+  not distance). With background it shrinks to ±4–6.5°. On the DIAGONAL at low counts the wide non-cyclic search is
+  *less* reliable than the cyclic one even inside the field (N0 500 + BSR 1: 0.5° vs 2.0°): searching ±20° gives the
+  noise far more places to win. A usable-field claim therefore needs a count level and a direction.
+- **Beyond ~7.5° the non-cyclic decode answers with a wrong spot inside the field** (50–90 % of acquisitions at
+  7.5–11°, median error ~7°) — the partially coded source is not suppressed, it lands elsewhere. Non-cyclic decoding
+  moves the ghost boundary from 3.6° to ~7°; it does not remove it (LIM-07).
+- **The flood centroid catches those answers.** The aperture's shadow moves away from the source and the 10 mm front
+  plate only leaks ~17 %, so the lit side of the array is opposite the source: the centroid gives the correct side
+  from ~1° to ~14.5° and, at N0 ≥ 500 without background, flags "outside" in 95–100 % of the 7.5–12° acquisitions —
+  the wrong in-field answers it misses stay ≤ 3 % there (panel 4). With background equal to N0 the flag weakens
+  (≤ 68 %) and 10–45 % of the 5–12° wrong answers go unflagged.
+- **Past ~14°, nothing tells the direction.** The aperture's shadow leaves the array at atan((7 + 8)/55) ≈ 15°; what
+  reaches the detector is the plate leak (relative efficiency flattens at ~0.27), the side cue falls to chance, and
+  the argmax still returns an in-field spot in ~60 % of acquisitions. That is the "is there a source at all" decision
+  (PR-IMG-07), which this study does not implement — the decoder always reports its highest peak.
+- **What it means for the adopted path.** (1) Quote the usable field as ±7° along the axes at ≥ 500 on-axis counts
+  without background, ±4–6.5° with background equal to the signal. (2) The out-of-field cue works from the flood
+  alone between ~4° and ~12–14° and is what makes non-cyclic answers past 7° safe to reject; it needs a background
+  estimate to keep working in a real ambient field. (3) Beyond ~14° the device is blind to direction: the hand sweep
+  (IMU / VIO) has to bring the source within ~14° before any cue exists, i.e. pointings ≲ 28° apart.
+
+Caveats: one isotope (662 keV); the front plate is modelled as an infinite 10 mm W slab around the mask (no side
+walls, so sources past ~20° are outside the model); the background is a flat pedestal; the centroid threshold is
+calibrated on the same series (in-field false alarms ≈ 5 % over the pooled in-field samples by construction).
+Codex review (read-only) found and we fixed: process-randomized RNG seeding (`HashCode.Combine`), an approximate
+angular metric, the square field treated as a circle on the diagonal, and missing guards (negative angles, empty
+calibration, zero efficiency).
+
+Reproduce: `montecarlo fov samples/scenario_handheld.json` (≈ 3 min) → `samples/fov.csv`; `python samples/plot_fov.py`
+→ `samples/fov.png`. Tests: `FieldOfViewTests` (square field, non-cyclic beyond the coded field, centroid side and
+flag at 10°, no cue at 18°, reproducibility, argument guard).
+
