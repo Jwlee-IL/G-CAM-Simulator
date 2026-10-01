@@ -5,7 +5,8 @@ Scope: the polish work the author made the focus on 2026-10-01 — what each bat
 (`docs/assets/studio-polish-survey/README.md`, P-xx) and the plot snapshots (`docs/assets/studio-plot/`). Order and
 the testing rule: [PLAN.Studio.Migration](PLAN.Studio.Migration.md).
 
-Status: batch 1 done 2026-10-01 (renders in `docs/assets/studio-render/`); batch 2 handed to Codex the same day.
+Status: batch 1 done 2026-10-01 (renders in `docs/assets/studio-render/`); batch 2 done the same day (detector section, label plates, no
+Window-ancestor bindings; FCFOV now in the renders).
 
 ## Batch 1 — design-system level (new workspaces inherit these)
 
@@ -53,6 +54,7 @@ Fixes:
 
 ## Later batches (after the workspaces exist)
 
-- Workspace layout: empty height under the images (P-04), emission-window table alignment and a Ba K row label
+- Workspace layout: the left panel scrolls at 1280 × 800 since the Detector section was added (compact or
+  collapsible sections), empty height under the images (P-04), emission-window table alignment and a Ba K row label
   (P-10), and the layouts of the Waveform / Detector workspaces when they land.
 - Then the desktop UI tests, the desktop survey and the README screenshot (last).

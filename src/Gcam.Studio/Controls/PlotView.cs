@@ -102,6 +102,10 @@ public sealed class PlotView : FrameworkElement
     public Brush? BandBrush { get => (Brush?)GetValue(BandBrushProperty); set => SetValue(BandBrushProperty, value); }
     public static readonly DependencyProperty BandEdgeBrushProperty = Register<Brush?>(nameof(BandEdgeBrush), null);
     public Brush? BandEdgeBrush { get => (Brush?)GetValue(BandEdgeBrushProperty); set => SetValue(BandEdgeBrushProperty, value); }
+    public static readonly DependencyProperty BandLabelBrushProperty = Register<Brush?>(nameof(BandLabelBrush), null);
+    public Brush? BandLabelBrush { get => (Brush?)GetValue(BandLabelBrushProperty); set => SetValue(BandLabelBrushProperty, value); }
+    public static readonly DependencyProperty BandLabelPaddingProperty = Register(nameof(BandLabelPadding), new Thickness(4)); // Four-DIP fallback matches Pad.Plot.BandLabel.
+    public Thickness BandLabelPadding { get => (Thickness)GetValue(BandLabelPaddingProperty); set => SetValue(BandLabelPaddingProperty, value); }
     public static readonly DependencyProperty FocusBrushProperty = Register<Brush?>(nameof(FocusBrush), null);
     public Brush? FocusBrush { get => (Brush?)GetValue(FocusBrushProperty); set => SetValue(FocusBrushProperty, value); }
     public static readonly DependencyProperty Series1BrushProperty = Register<Brush?>(nameof(Series1Brush), null);
@@ -243,22 +247,28 @@ public sealed class PlotView : FrameworkElement
                 double centre = (a + b) / 2;
                 dc.DrawLine(Pen(Foreground), new Point(centre, r.Top), new Point(centre, r.Bottom));
             }
-            var labels = visibleBands.Select(b => Text(b.Label)).ToArray();
-            var layout = PlotBandLayout.Arrange(visibleBands.Select((b, i) =>
-                (ScreenX((b.Lo + b.Hi) / 2) - r.Left, labels[i].Width)).ToArray(), r.Width, LabelGap);
-            double rowHeight = labels.Length == 0 ? 0 : labels.Max(t => t.Height) + LabelGap;
-            foreach (var label in layout)
-            {
-                var text = labels[label.Index];
-                text.MaxTextWidth = Math.Max(1, label.Width);
-                text.Trimming = TextTrimming.CharacterEllipsis;
-                dc.DrawText(text, new Point(r.Left + label.Left, r.Top + LabelGap + label.Row * rowHeight));
-            }
             foreach (var marker in Markers ?? [])
             {
                 double x = ScreenX(marker.X);
                 dc.DrawLine(Pen(Foreground), new Point(x, r.Top), new Point(x, r.Bottom));
                 DrawText(dc, marker.Label, new Point(x + LabelGap, r.Top + Text(marker.Label).Height + LabelGap));
+            }
+            // Opaque plates draw last so edges, grid lines and traces cannot cross band text.
+            var padding = BandLabelPadding;
+            double horizontalPadding = padding.Left + padding.Right;
+            var labels = visibleBands.Select(b => Text(b.Label)).ToArray();
+            var layout = PlotBandLayout.Arrange(visibleBands.Select((b, i) =>
+                (ScreenX((b.Lo + b.Hi) / 2) - r.Left, labels[i].Width + horizontalPadding)).ToArray(), r.Width, LabelGap);
+            double rowHeight = labels.Length == 0 ? 0 : labels.Max(t => t.Height) + padding.Top + padding.Bottom + LabelGap;
+            foreach (var label in layout)
+            {
+                var text = labels[label.Index];
+                text.MaxTextWidth = Math.Max(1, label.Width - horizontalPadding);
+                text.Trimming = TextTrimming.CharacterEllipsis;
+                var plate = new Rect(r.Left + label.Left, r.Top + LabelGap + label.Row * rowHeight,
+                    label.Width, text.Height + padding.Top + padding.Bottom);
+                dc.DrawRectangle(BandLabelBrush, null, plate);
+                dc.DrawText(text, new Point(plate.Left + padding.Left, plate.Top + padding.Top));
             }
             dc.Pop();
         }

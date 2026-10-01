@@ -455,6 +455,8 @@
         <Setter Property="GridBrush" Value="{DynamicResource Brush.Plot.Grid}" />
         <Setter Property="BandBrush" Value="{DynamicResource Brush.Plot.Band}" />
         <Setter Property="BandEdgeBrush" Value="{DynamicResource Brush.Plot.BandEdge}" />
+        <Setter Property="BandLabelBrush" Value="{DynamicResource Brush.Bg.Surface}" />
+        <Setter Property="BandLabelPadding" Value="{StaticResource Pad.Plot.BandLabel}" />
         <Setter Property="Series1Brush" Value="{DynamicResource Brush.Plot.Series1}" />
         <Setter Property="Series2Brush" Value="{DynamicResource Brush.Plot.Series2}" />
         <Setter Property="Series3Brush" Value="{DynamicResource Brush.Plot.Series3}" />

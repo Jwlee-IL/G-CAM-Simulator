@@ -8,6 +8,7 @@ Scope: GCAM Studio layout metrics (`src/Gcam.Studio/Themes/Metrics.xaml`) and ho
 |---|---|
 | Scale | 4 · 8 · 12 · 16 · 24 · 32 — expressed as the `Pad.*` / `Gap.*` Thickness keys below (XAML can't build a `Thickness` from `Double` keys, so there are no separate `Space.*` keys) |
 | Padding (`Pad.*`, inside a container) | `Pad.Window` 12 · `Pad.Panel` 12 · `Pad.Bar` 16,0 · `Pad.Control` 8,0 · `Pad.Button` 12,0 · `Pad.ListItem` 8,0 |
+| Plot label plate | `Pad.Plot.BandLabel` 4 on every side — prevents edges, grid and traces from touching band text; padded widths also determine collision rows |
 | Margin (`Gap.*`, after an element) | `Gap.Tight` 0,0,0,4 · `Gap.Field` 0,0,0,8 · `Gap.Section` 0,0,0,16 · `Gap.Title` 0,0,0,8 · `Gap.Inline` 0,0,8,0 · `Gap.InlineWide` 0,0,16,0 |
 | Grid gutter | `Gutter` 12 (a `GridLength` for gutter columns) |
 
@@ -37,7 +38,7 @@ combine a container's padding with a child's margin for the same edge.
 ```
 Row 0  Top bar (Size.Bar)          identity · workspace switch (when ≥2) · theme · live time (s) · speed × · ▶ Start / Stop
 Row 1  Content (a Border with Pad.Window)
-         Col 0  Scene panel (Size.SidePanel, scrollable)   sources · selected source · geometry · detector · background
+         Col 0  Scene panel (Size.SidePanel, scrollable)   sources · selected source · geometry · detector
          Col 1  Gutter
          Col 2  Selected workspace centre (DataTemplate by workspace type)
                 Imaging: [flood map] Gutter [reconstruction]
@@ -63,9 +64,12 @@ Imaging and Spectrum are registered: there are no placeholder workspaces. The sw
 an unavailable index leaves selection unchanged. Acquisition preserves selection. Shared scene / optics / live-time / speed inputs
 mark an existing result outdated; workspace view settings re-render without invalidating that result.
 
-The geometry section shows the detector entrance (0.15 mm steel-equivalent), backing (2 mm) and reflector
-gap (0.1 mm) read-only. Gain σ (%) and gain seed are editable acquisition inputs (defaults 3 and 1), followed
-by Background BSR (default 0, detected background/source ratio at 200 keV). These inputs are disabled during
+Geometry contains only read-only mask, cell pitch, mask–detector distance, detector grid, focal plane and
+FCFOV facts, and carries the read-only caption. A separate Detector section contains entrance
+(0.15 mm steel-equivalent), backing (2 mm) and reflector gap (0.1 mm) facts, then editable Gain σ
+(default 3, `%` suffix), Gain seed (default 1) and Background (default 0, `× signal` BSR suffix;
+detected background/source ratio at 200 keV). Short labels fit the existing 84-DIP field column.
+These inputs are disabled during
 acquisition and mark retained results outdated after an edit. The left panel scrolls when needed so all fields
 remain reachable at the minimum window height. Workspace activation follows `IsActive` as well as commands,
 so a UI Automation SelectionItem selection changes the centre and right panel.

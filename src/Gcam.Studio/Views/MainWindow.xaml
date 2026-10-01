@@ -86,7 +86,7 @@
                                 <DataTemplate>
                                     <RadioButton Content="{Binding Title}" GroupName="Workspace" Style="{StaticResource RadioButton.Segment}"
                                                  IsChecked="{Binding IsActive}"
-                                                 Command="{Binding DataContext.ActivateWorkspaceCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                 Command="{Binding DataContext.ActivateWorkspaceCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                                                  CommandParameter="{Binding}" AutomationProperties.AutomationId="{Binding AutomationId}" />
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
@@ -177,7 +177,7 @@
 
                         <!-- Selected source -->
                         <StackPanel DataContext="{Binding SelectedSource}"
-                                    IsEnabled="{Binding DataContext.IsIdle, RelativeSource={RelativeSource AncestorType=Window}}">
+                                    IsEnabled="{Binding DataContext.IsIdle, RelativeSource={RelativeSource AncestorType=ScrollViewer}}">
                             <DockPanel Style="{StaticResource PanelHeader}">
                                 <TextBlock Text="Selected source" Style="{StaticResource Text.SectionTitle}" />
                             </DockPanel>
@@ -234,10 +234,14 @@
                             </DockPanel>
                             <DockPanel Style="{StaticResource FactRow}">
                                 <TextBlock Text="FCFOV" Style="{StaticResource Text.Label}" />
-                                <TextBlock Text="{Binding DataContext.FcfovHalfMm, RelativeSource={RelativeSource AncestorType=Window}, StringFormat={}± {0:0.#} mm}"
+                                <TextBlock Text="{Binding DataContext.FcfovHalfMm, RelativeSource={RelativeSource AncestorType=ScrollViewer}, StringFormat={}± {0:0.#} mm}"
                                            Style="{StaticResource FactValue}" />
                             </DockPanel>
                         </StackPanel>
+                        <Border Style="{StaticResource Divider}" />
+                        <DockPanel Style="{StaticResource PanelHeader}">
+                            <TextBlock Text="Detector" Style="{StaticResource Text.SectionTitle}" />
+                        </DockPanel>
                         <StackPanel DataContext="{Binding Detector}">
                             <DockPanel Style="{StaticResource FactRow}">
                                 <TextBlock Text="Entrance" Style="{StaticResource Text.Label}" />
@@ -254,8 +258,8 @@
                         </StackPanel>
                         <StackPanel IsEnabled="{Binding IsIdle}">
                             <DockPanel Style="{StaticResource FieldRow}">
-                                <TextBlock Text="Gain σ (%)" Style="{StaticResource FieldLabel}" />
-                                <TextBox Text="{Binding GainSigmaPercent}" AutomationProperties.AutomationId="Detector.GainSigma"
+                                <TextBlock Text="Gain σ" Style="{StaticResource FieldLabel}" />
+                                <TextBox Text="{Binding GainSigmaPercent}" Tag="%" AutomationProperties.AutomationId="Detector.GainSigma"
                                          AutomationProperties.Name="Gain σ (%)" />
                             </DockPanel>
                             <DockPanel Style="{StaticResource FieldRow}">
@@ -264,8 +268,8 @@
                                          AutomationProperties.Name="Gain seed" />
                             </DockPanel>
                             <DockPanel Style="{StaticResource FieldRow}">
-                                <TextBlock Text="Background BSR" Style="{StaticResource FieldLabel}" />
-                                <TextBox Text="{Binding BackgroundToSignalRatio}" AutomationProperties.AutomationId="Acquisition.Background"
+                                <TextBlock Text="Background" Style="{StaticResource FieldLabel}" />
+                                <TextBox Text="{Binding BackgroundToSignalRatio}" Tag="× signal" AutomationProperties.AutomationId="Acquisition.Background"
                                          AutomationProperties.Name="Background BSR (detected background to signal ratio)" />
                             </DockPanel>
                         </StackPanel>

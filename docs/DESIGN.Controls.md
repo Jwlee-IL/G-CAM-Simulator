@@ -121,7 +121,9 @@ Data updates only grow the top; navigation and log changes recompute it. Histogr
 draws a thin centre cursor with a readout such as `662.4 keV (660.9 – 663.9) · 1,234 counts`; default precision
 follows bin width, with optional X / Y formats. Line readout retains continuous coordinates without redrawing.
 Core `PlotBandLayout` centres labels on bands, clamps them to the plot and moves collisions to additional rows;
-text wider than the plot is ellipsized. Labels draw over the fill.
+text wider than the plot is ellipsized. Layout includes `BandLabelPadding` from `Pad.Plot.BandLabel`
+(4 DIP on every side). Labels draw last on opaque `BandLabelBrush` plates using `Brush.Bg.Surface`,
+so band edges, grid lines and data cannot cross the text, even when the label is wider than its band.
 
 Spectrum table selection requests the window plus one window width on each side. Snapshot row replacement
 retains selection without re-requesting zoom. Whole-window content and plot offscreen evidence uses `Gcam.Studio.RenderTests`, opt-in with

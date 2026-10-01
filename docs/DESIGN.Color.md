@@ -64,6 +64,12 @@ Band tint / series fill ratios are 1.58, 1.68, 1.52:1 dark and 1.38, 1.36, 1.39:
 these soft fills are not the boundary signal. All edges and traces exceed 3:1, and labels exceed 4.5:1.
 Neutral grey prevents windows from looking like another green data trace; the edge stays visible over data.
 
+Band-label plates reuse opaque `Brush.Bg.Surface` (#191F25 dark, #FFFFFF light), with no new colour token.
+The shipped plot-label `Text.Secondary` (#A6B1BB / #56636F) has measured sRGB luminance contrast
+7.62:1 dark and 6.16:1 light on the plate (AA ≥ 4.5:1). Standalone plot snapshots use `Text.Primary`,
+which measures 14.09:1 dark and 15.71:1 light. The plate is a text backing, not an interval boundary;
+it deliberately matches the plot background while the existing band edges convey the interval below it.
+
 ## Data colours vs UI colours
 
 - Heatmaps use **viridis** (perceptually uniform, colour-blind safe), always with a colour bar and numeric ticks

@@ -13,6 +13,8 @@
     <Thickness x:Key="Pad.Control">8,0</Thickness>
     <Thickness x:Key="Pad.Button">12,0</Thickness>
     <Thickness x:Key="Pad.ListItem">8,0</Thickness>
+    <!-- Clear plot lines beneath band labels, including labels wider than their interval. -->
+    <Thickness x:Key="Pad.Plot.BandLabel">4</Thickness>
 
     <!-- Margins (Gap = space after an element) -->
     <Thickness x:Key="Gap.Tight">0,0,0,4</Thickness>

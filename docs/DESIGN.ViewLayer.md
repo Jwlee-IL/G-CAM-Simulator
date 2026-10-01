@@ -47,6 +47,9 @@ loaded); it must carry a comment saying why it can't live elsewhere.
 - `App.xaml.cs` resolves `MainWindow` and sets `DataContext` to `MainViewModel` from the DI container.
 - Views bind to ViewModel properties and commands only. Acquisition uses `StartCommand` / `StopCommand`;
   its live time, speed, shared snapshots and state live in the shell ViewModel.
+- Shell bindings across item / section contexts use the context already on the containing `ItemsControl`
+  (workspace activation) or scene `ScrollViewer` (selected-source enablement and FCFOV), rather than a
+  Window ancestor. They also resolve when the content is rendered offscreen without a window parent.
 - Controls expose results as read-only dependency properties, and sibling elements bind to them by
   `ElementName` (`ColorBar.Minimum` ← `HeatmapView.DataMin`), so no code connects them.
 - The shared shell binds centre and panel `ContentControl`s to `SelectedWorkspace`; each uses a DataTemplate

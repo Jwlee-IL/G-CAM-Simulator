@@ -68,6 +68,7 @@ public sealed partial class PlotViewRenderTests(ITestOutputHelper output)
             XLabel = "measured energy (keV)", YLabel = "counts",
             Foreground = Brush("Brush.Text.Primary"), GridBrush = Brush("Brush.Plot.Grid"),
             BandBrush = Brush("Brush.Plot.Band"), BandEdgeBrush = Brush("Brush.Plot.BandEdge"), FocusBrush = Brush("Brush.Focus"),
+            BandLabelBrush = Brush("Brush.Bg.Surface"), BandLabelPadding = (Thickness)resources["Pad.Plot.BandLabel"],
             Series1Brush = Brush("Brush.Plot.Series1"),
             Bands = [new(18, 50, "32.1 + 36.4 keV"), new(615, 708, "661.7 keV"),
                 new(1110, 1236, "1173.2 keV"), new(1265, 1400, "1332.5 keV")]

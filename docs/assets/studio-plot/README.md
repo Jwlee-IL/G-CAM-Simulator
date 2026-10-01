@@ -1,7 +1,7 @@
 # Spectrum plot offscreen evidence
 
 Fixed analytic Cs-137 + Co-60 drawing fixture, 256 bins of 6 keV; these images verify rendering,
-not detector physics. Produced on 2026-10-01 by `PlotViewRenderTests` through `RenderTargetBitmap`
+not detector physics. Regenerated on 2026-10-02 by `PlotViewRenderTests` through `RenderTargetBitmap`
 at 1000 × 600, 96 DPI, using the shipped theme tokens and mono font. No window, focus or mouse input.
 
 | Theme | Full axis | 580–740 keV zoom |
@@ -21,5 +21,7 @@ The test also verifies zoom and grow-only Y retention on data replacement and fu
 It initializes base WPF resource infrastructure, without constructing the Studio App or calling Run.
 Normal solution tests skip it. Desktop tests remain a separate final verification step.
 
-Batch 1 regenerates these plots with grouped log decades, a separate Y-title row, and neutral bands
-with edge lines. The same render case also captures [whole-window content](../studio-render/README.md).
+Batches 1–2 show grouped log decades, a separate Y-title row, neutral bands with edge lines and
+opaque, 4-DIP-padded band-label plates. In both full-axis images the narrow 32.1 + 36.4 keV label
+stays clear of the band's own edges; the zoom images show the label plate on the wider 661.7 keV band.
+The same render case also captures [whole-window content](../studio-render/README.md).

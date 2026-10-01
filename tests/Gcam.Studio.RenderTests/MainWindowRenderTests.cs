@@ -5,6 +5,7 @@ using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Controls;
 using System.Windows.Documents;
+using System.Windows.Data;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
@@ -62,6 +63,20 @@ public sealed partial class PlotViewRenderTests
             // Flush binding work only; no input is queued or synthesized.
             Dispatcher.CurrentDispatcher.Invoke(() => { }, DispatcherPriority.ContextIdle);
             root.UpdateLayout();
+
+            var fcfov = Assert.Single(Descendants(root).OfType<TextBlock>(),
+                t => BindingOperations.GetBinding(t, TextBlock.TextProperty)?.Path.Path == "DataContext.FcfovHalfMm");
+            Assert.Equal($"± {model.FcfovHalfMm:0.#} mm", fcfov.Text);
+            var pickers = Descendants(root).OfType<RadioButton>().Where(
+                b => AutomationProperties.GetAutomationId(b).StartsWith("Workspace.", StringComparison.Ordinal)).ToArray();
+            Assert.Equal(model.Workspaces.Count, pickers.Length);
+            foreach (var picker in pickers)
+                Assert.Same(model.ActivateWorkspaceCommand, picker.Command);
+            var sourceEditor = Assert.Single(Descendants(root).OfType<StackPanel>(),
+                p => ReferenceEquals(p.DataContext, model.SelectedSource));
+            Assert.Equal(model.IsIdle, sourceEditor.IsEnabled);
+            Assert.Equal(BindingStatus.Active,
+                BindingOperations.GetBindingExpression(sourceEditor, UIElement.IsEnabledProperty)!.Status);
 
             foreach (var heatmap in Descendants(root).OfType<HeatmapView>())
             {
