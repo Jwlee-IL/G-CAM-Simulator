@@ -1,6 +1,6 @@
 using Gcam.Configuration;
 using Gcam.Simulation;
-using Xunit;
+using Gcam.Tests.Harness;
 
 namespace Gcam.Tests;
 
@@ -8,15 +8,7 @@ namespace Gcam.Tests;
 /// frontal responses, the collimating mask's angular response, and paralyzable over-range.</summary>
 public class DoseTests
 {
-    private static SimulationConfig Head() => new()
-    {
-        Seed = 12345,
-        Source = new SourceConfig { DirectionalBiasing = true },
-        Mask = new MaskConfig { Rank = 7, MosaicX = 2, MosaicY = 2, ThicknessMm = 10.0, LinearAttenuationPerMm = 0.178, CellPitchMm = 1.0 },
-        Detector = new DetectorConfig { PixelsX = 16, PixelsY = 16, PixelPitchMm = 1.0, Material = "GAGG_Mg",
-                                        CrystalThicknessMm = 15.0, CrystalAttenuationPerMm = 0.0513, EnergyResolutionFwhm = 0.07 },
-        Geometry = new GeometryConfig { MaskDetectorDistanceMm = 55.0, SourceMaskDistanceMm = 100.0 },
-    };
+    private static SimulationConfig Head() => Rigs.Handheld();
 
     private static DoseResponse At(double keV, double angleDeg = 0.0)
         => new DoseStudy().Response(Head(), keV, angleDeg, distanceMm: 1000.0, photons: 100_000, seed: 7 + (int)keV);

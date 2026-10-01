@@ -1,6 +1,6 @@
 using Gcam.Configuration;
 using Gcam.Simulation;
-using Xunit;
+using Gcam.Tests.Harness;
 
 namespace Gcam.Tests;
 
@@ -9,17 +9,7 @@ namespace Gcam.Tests;
 /// (~15° here), and beyond that only the front plate's leak reaches the detector.</summary>
 public class FieldOfViewTests
 {
-    // The theme-22 hand-held head: rank-7 2×2 mosaic, 1 mm cells, 10 mm W, D = 55 mm, 16×16 @ 1 mm, 15 mm GAGG:Ce,Mg.
-    private static SimulationConfig Head() => new()
-    {
-        PhotonCount = 300_000,
-        Seed = 12345,
-        Source = new SourceConfig { EnergyKeV = 661.7, DirectionalBiasing = true },
-        Mask = new MaskConfig { Rank = 7, MosaicX = 2, MosaicY = 2, ThicknessMm = 10.0, LinearAttenuationPerMm = 0.178, CellPitchMm = 1.0 },
-        Detector = new DetectorConfig { PixelsX = 16, PixelsY = 16, PixelPitchMm = 1.0, Material = "GAGG_Mg",
-                                        CrystalThicknessMm = 15.0, CrystalAttenuationPerMm = 0.0513 },
-        Geometry = new GeometryConfig { MaskDetectorDistanceMm = 55.0, SourceMaskDistanceMm = 100.0 },
-    };
+    private static SimulationConfig Head() => Rigs.Handheld();
 
     private static FovRow[] Sweep(double[] angles) =>
         new FieldOfViewStudy().Run(Head(), distanceMm: 1000.0, directionDeg: 0.0, angles,

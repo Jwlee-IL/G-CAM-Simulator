@@ -203,3 +203,9 @@ TILT (pitch/yaw), mask WARPING.
 - **54** (2026-10-01): dose rate from the detector spectrum (`montecarlo dose`, TODO-05) — ICRP 74 truth, fitted G(E)
   within ±13 % frontally (all reference sources), but the collimating mask reads 0.1–0.7 of the dose 10° off axis;
   paralyzable over-range with live-time correction to ~150 mSv/h and the live fraction as the over-range signature.
+- **Test harness** (2026-10-01): closed-form invariants for every transport stage (sampler moments, config
+  round-trip and every shipped scenario, decoder vs an analytic shadow, biased-source solid angle, crystal slant
+  stopping, mask open fraction + leak, Compton energy conservation, determinism / progress / cancellation), k·σ
+  statistical assertions, shared rigs from `samples/`, and `tests/Gcam.Studio.Services.Tests` for the service layer
+  against the real engine. A mutation check (Poisson off-by-one, half-pixel flood origin, crystal slant path ignored)
+  fails each — the last one was not caught by the earlier suite.

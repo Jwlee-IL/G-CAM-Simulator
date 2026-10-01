@@ -52,7 +52,7 @@ in `Directory.Build.props` (nullable + implicit usings enabled).
 | `src/…Wpf` | `Gcam.Wpf` (net9.0-windows, ScottPlot 5): interactive scene editor + Waveform/Imaging/Spectrum/Optics/Detector tabs; one acquisition drives all tabs. Can't be headless-tested — verify it *compiles* (theme 34–35) |
 | `src/…Studio*` | MVVM rewrite of the viewer (imaging workflow first), layered so the boundaries are enforced by the compiler: **`Gcam.Studio.Core`** (net9.0, no WPF — models, `ISimulationService`, ViewModels on CommunityToolkit.Mvvm) → **`Gcam.Studio.Services`** (net9.0 — `SimulationService`, the only Studio layer that touches the engine; runs the MC off the UI thread via `SimulationRunner.Run(config, progress, ct)`) → **`Gcam.Studio`** (net9.0-windows — views, converters, DI composition root). Scene → config via `Configuration.SceneConfigBuilder`. `tests/Gcam.Studio.Tests` (net9.0) covers the ViewModels without a UI stack |
 | `src/…Cli` | Console entrypoint `montecarlo`: single run + **~41** study sub-commands (`sweep`, `fov`, `dose`, `scan`, `noise`, the Compton/depth/mask-geometry/mixed-field/front-end set, and the realism-gap set `thermal`…`doi` — see Build/run for the full list) |
-| `tests/…Tests` | xUnit harness — **195 test cases** (+ 7 cocotb in `rtl/`; Studio has its own 44 in `tests/Gcam.Studio.Tests`, plus `tests/Gcam.Studio.UiTests`: 10 oracle cases and 7 opt-in desktop scenarios): MURA properties (`MuraGeneratorTests`) + end-to-end physics invariants (`PipelineTests`) + per-theme physics classes (localization, ghost, biasing-unbiased, stopping power, dead time, sub-cell, cascade, non-proportionality, MLEM, DOI, nuclide separation, Compton stripping, …) |
+| `tests/…Tests` | xUnit harness — **245 test cases** (+ 7 cocotb in `rtl/`; Studio has its own 44 in `tests/Gcam.Studio.Tests`, 7 service tests against the real engine in `tests/Gcam.Studio.Services.Tests`, plus `tests/Gcam.Studio.UiTests`: 10 oracle cases and 7 opt-in desktop scenarios): MURA properties (`MuraGeneratorTests`) + end-to-end physics invariants (`PipelineTests`) + closed-form invariants per stage (`SamplingTests`, `ConfigLoaderTests`, `DecoderInvariantTests`, `TransportInvariantTests`; shared rigs and k·σ assertions in `Harness/`) + per-theme physics classes (localization, ghost, biasing-unbiased, stopping power, dead time, sub-cell, cascade, non-proportionality, MLEM, DOI, nuclide separation, Compton stripping, …) |
 
 ### Design principle
 Everything is **data-driven**: one `SimulationConfig` (JSON) fully describes a
@@ -96,7 +96,7 @@ Coordinate frame (optical axis = z):
 
 ```bash
 dotnet build Gcam.sln -c Release
-dotnet test  Gcam.sln   # 195 engine + 44 Studio + 10 UI-oracle cases (+7 desktop tests, skipped unless GCAM_UI_TESTS=1): MURA properties + pipeline
+dotnet test  Gcam.sln   # 245 engine + 44 Studio + 7 service + 10 UI-oracle cases (+7 desktop tests, skipped unless GCAM_UI_TESTS=1): MURA properties + pipeline
                                        # physics invariants + one class per theme (dead time,
                                        # sub-cell, cascade, non-prop, MLEM, DOI, …). 7 cocotb tests in rtl/.
 
