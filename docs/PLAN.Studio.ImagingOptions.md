@@ -6,7 +6,7 @@ phases. Builds on [PLAN.Studio.LiveAcquisition](PLAN.Studio.LiveAcquisition.md) 
 and [PLAN.Studio.Spectrum](PLAN.Studio.Spectrum.md).
 
 Status: phase A done (2026-10-01; corrected after the implementer stopped on two wrong premises, see
-"Corrections"); phase B planned. Open from phase A: the 480–620 keV valley did not fill with the absorber and
+"Corrections"); phase B planned in detail (premises checked) and handed to Codex 2026-10-02. Open from phase A: the 480–620 keV valley did not fill with the absorber and
 backing (11 367 → 11 515 counts, ~1σ) — survey P-11 is not a styling issue and not explained yet.
 
 ## What `Gcam.Wpf` does that Studio does not
@@ -78,18 +78,33 @@ fewer counts. `Gcam.Wpf`'s "~8 % bump" comment does not describe peak height.
 6. **Docs:** VV.Studio.SRS / SDS / matrix / VV.Studio.Acquisition (present behaviour; history only in the SDS and
    evidence notes), DESIGN.Layout (left-panel detector rows), the Spectrum plan's Ba K note.
 
-## Phase B — per-nuclide imaging and Compton strip (after phase A review)
+## Phase B — per-nuclide imaging and Compton strip
 
-1. Shared window N (I-4) moves from the Spectrum panel to the shell; both panels bind it.
-2. Imaging channels: per isotope in the scene, the events whose measured energy (phase A stage) is inside that
-   isotope's primary-line window; decode each; the selector (I-5) picks All (all events, as today) or one isotope;
-   found peaks per isotope via `MixedFieldStudy.TopPeaks`, labelled.
-3. Compton strip toggle (view setting): calibration per I-6 at acquisition start; per pixel
-   `max(0, low − Σ R·high)` before decode; status says when stripping is applied and its scalar-model limit.
-4. Tests: a co-located Cs-137 + Co-60 scene recovers the Cs count in the 662 keV window with strip on, consistent
-   with the engine's own stripping result for the same geometry (the CLI `compton-strip` / evidence for isotope
-   separation), and an off-axis pair separates per channel; window N changes re-filter without a new acquisition.
-5. Docs as in phase A, plus SR rows for channels, selector and strip.
+Checked in the code before writing (2026-10-01): `MixedFieldStudy.TopPeaks` / `MatchOneToOne` exist; the engine's
+stripping model and its evidence (EV-15: R calibrated from a Co-only run, Cs count error 0–11 %; tests
+`ComptonTests.Stripping_RecoversCsCount_EvenCoLocated`, `MixedFieldTests.ComptonStripping_RecoversCoLocatedCsCount`);
+`MeasurementStage.Amplitude` gives each event's measured energy; `SpectrumSettings.WindowFwhm` is the window N today.
+
+1. **Shared window N (I-4).** Move N from `SpectrumSettings` to the shell (one value; both the Spectrum and the
+   Imaging panels show it). Imaging windows use the same S-5 windows (E ± N·FWHM(E) of each isotope's primary line).
+2. **Channels.** Per isotope in the scene: the events whose measured energy (`MeasurementStage`) falls in that
+   isotope's primary-line window → a flood → decode. "All" = every event (today's image). Built on the worker with
+   each snapshot, incrementally where cheap. Re-filtering after an N change needs no new acquisition (view setting).
+3. **Selector (I-5).** An Imaging-panel selector All / each isotope; the reconstruction, its colour bar and readout
+   show the selected channel. Found peaks: `MixedFieldStudy.TopPeaks` per channel (k = sources of that isotope),
+   drawn as a distinct marker shape labelled with the isotope; the true-source markers stay as they are.
+4. **Compton strip (I-6).** A view-setting toggle. At acquisition start (and when N changes) the worker runs an
+   H-only list-mode calibration per contaminating isotope H (an isotope with a line above the lower channel's
+   window): R = H events in the low window ÷ H events in H's own window, with ≥ 20 000 H events. Per pixel
+   `max(0, low − Σ R·high)` before decoding. The status / panel shows each R and says it is the one-pass scalar
+   model (exact for a pair; approximate for 3+ overlapping contaminants).
+5. **Tests (real engine, k·σ).** Co-located Cs-137 + Co-60 (Co ×2 activity): with strip on, the Cs channel's
+   in-window count matches a Cs-only acquisition of the same live time within the stated k·σ (EV-15's 0–11 % is the
+   reference scale, not the tolerance — derive the tolerance from the counts); with strip off it is biased high by
+   the Co downscatter. Off-axis Cs + Co: each channel's top peak lands on its own source (≤ the source-drag
+   scenario's 1.5 mm at a stated live time). N change re-filters without a new acquisition; R is recomputed.
+6. **Docs:** SR rows for channels, selector, found-peak markers and strip; SDS units; DESIGN.Layout (Imaging panel);
+   VV matrix.
 
 **Not here:** editable optics (TODO-09), chain selection (TODO-10), editing reflector gap / SiPM / crosstalk and
 depth (TODO-11).
