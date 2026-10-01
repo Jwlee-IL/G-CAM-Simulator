@@ -56,6 +56,9 @@ cocotb RTL front-end path.
 Design-first discussion before coding; give options with a recommendation, then build one clean
 pass and **show a visual** (ASCII map or a matplotlib PNG). Honest self-correction from the data.
 Use Codex + an adversarial Claude reviewer for "did I really finish / is this right?" moments.
+**Delegation (since 2026-10-01):** Claude plans and verifies, Codex (`gpt-6.1-sol`) implements — reference plan →
+Codex's measured review → "Decisions after review" → implementation in the same Codex conversation (`resume`);
+desktop UI tests last. Procedure, call rules and cautions: `docs/AGENTS.Planning.md`.
 **Verify inherited "it's done" claims against the actual code before propagating them** (a docs
 pass once trusted a summary's "CLI complete" and was wrong — 39 commands, not 23).
 

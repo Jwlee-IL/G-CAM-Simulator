@@ -57,7 +57,9 @@ Rules:
 - **`AGENTS.Todo.md` stays a short list; a task's plan lives in a `PLAN.*` document** (one per task or task group)
   that the task's row links. A plan opens with a `Status:` line below its scope line; when the task is done the plan
   stays as the design record (status set to *done*, with the commit), and the Backlog's done entry links it.
-  Plans may link `AGENTS.*`; `VV.*` documents do not link plans (they are self-contained).
+  Plans may link `AGENTS.*`; `VV.*` documents do not link plans (they are self-contained). The implementer's review of a
+  plan is `PLAN.<Area>.<Name>.Review.md`; the procedure (reference plan → measured review → decisions → implementation)
+  is [AGENTS.Planning](AGENTS.Planning.md).
 - Counts that drift (test totals, command counts) are stated in one place and linked from elsewhere, or
   updated everywhere in the same commit.
 - Renaming a document: `git mv` it, then search the repository for the old name and fix every reference.
