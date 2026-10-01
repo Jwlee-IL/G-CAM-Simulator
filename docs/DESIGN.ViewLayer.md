@@ -45,8 +45,8 @@ loaded); it must carry a comment saying why it can't live elsewhere.
 ## How a view gets its data and services
 
 - `App.xaml.cs` resolves `MainWindow` and sets `DataContext` to `MainViewModel` from the DI container.
-- Views bind to ViewModel properties and commands only. Commands that are cancellable expose a generated
-  `…CancelCommand` (`RunCancelCommand`).
+- Views bind to ViewModel properties and commands only. Acquisition uses `StartCommand` / `StopCommand`;
+  its live time, speed, shared snapshots and state live in the shell ViewModel.
 - Controls expose results as read-only dependency properties, and sibling elements bind to them by
   `ElementName` (`ColorBar.Minimum` ← `HeatmapView.DataMin`), so no code connects them.
 - The shared shell binds centre and panel `ContentControl`s to `SelectedWorkspace`; each uses a DataTemplate

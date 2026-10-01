@@ -23,7 +23,7 @@ combine a container's padding with a child's margin for the same edge.
 | `Size.Bar` / `Size.StatusBar` | 48 / 28 | top bar / status bar height (`GridLength`, used directly as row heights) |
 | `Size.SidePanel` | 300 | scene and measurement panel width (`GridLength`) |
 | `Size.SourceList` / `Size.ResultsList` | 168 / 280 | **max** heights: lists grow with their rows, then scroll — no reserved empty space |
-| `Size.NumberInput` · `Size.Progress` | 120 · 160 | photon-budget box · progress bar |
+| `Size.NumberInput` · `Size.Progress` | 120 · 160 | live-time / speed boxes · progress bar |
 | `Size.ColorBar` · `Size.ReadoutLine` | 8 · 16 | colour-bar strip · the reserved readout line under an image |
 | `Size.Logo` · `Size.Icon` · `Size.StatusDot` | 16 · 12 · 8 | top-bar mark · button icon · run-state dot |
 | `Size.Column.Id` / `Size.Column.Short` | 36 / 60 | fixed columns of the results table (header and rows share them; the value column takes the rest) |
@@ -34,7 +34,7 @@ combine a container's padding with a child's margin for the same edge.
 ## Screen grid (`MainWindow`)
 
 ```
-Row 0  Top bar (Size.Bar)          identity · workspace switch (when ≥2) · theme · photons · Cancel · ▶ Simulate
+Row 0  Top bar (Size.Bar)          identity · workspace switch (when ≥2) · theme · live time (s) · speed × · ▶ Start / Stop
 Row 1  Content (a Border with Pad.Window)
          Col 0  Scene panel (Size.SidePanel)   sources · selected source · geometry (read-only)
          Col 1  Gutter
@@ -45,7 +45,7 @@ Row 1  Content (a Border with Pad.Window)
          Col 3  Gutter
          Col 4  Selected workspace panel (DataTemplate by workspace type, Size.SidePanel)
                 Imaging: tool picker · hint · results table · selected row detail
-Row 2  Status bar (Size.StatusBar) state dot · status sentence (live region) · progress + % (only while running)
+Row 2  Status bar (Size.StatusBar) state dot · live time / counts / cps / MC-limited (live region) · live-time progress
 ```
 
 The primary action sits at the same place on every screen (top right); the status of the last run is always
@@ -53,7 +53,7 @@ visible at the bottom, full width, regardless of which panel has focus.
 
 Only Imaging is registered today: there are no placeholder workspaces. The switch uses `Segment.Track` /
 `RadioButton.Segment`, workspace titles and `Workspace.*` AutomationIds. Ctrl+1…4 selects a registered workspace;
-an unavailable index leaves selection unchanged. A run preserves selection. Shared scene / optics / photon inputs
+an unavailable index leaves selection unchanged. Acquisition preserves selection. Shared scene / optics / live-time / speed inputs
 mark an existing result outdated; workspace view settings re-render without invalidating that result.
 
 ## Window sizing: fixed grid, flexible centre

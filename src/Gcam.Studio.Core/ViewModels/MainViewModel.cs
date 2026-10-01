@@ -16,12 +16,16 @@ public enum RunState
     Succeeded,
     Cancelled,
     Failed,
+    Acquiring,
+    Stopped,
+    Completed,
 }
 
 public sealed partial class MainViewModel : ObservableObject
 {
     private readonly ISimulationService _simulation;
     private readonly IThemeService _theme;
+    private IAcquisitionSession? _session;
 
     public MainViewModel(ISimulationService simulation, IThemeService theme)
     {
@@ -72,10 +76,27 @@ public sealed partial class MainViewModel : ObservableObject
     public double FcfovHalfMm => SceneConfigBuilder.FcfovHalfMm(Optics);
     partial void OnOpticsChanged(OpticsSettings value) => MarkStale();
     [ObservableProperty] private long _photons = 500_000;
+    // Photons / RunCommand remain a batch compatibility path for existing callers, absent from the view.
+    [ObservableProperty] private double _liveTimeS = 60;
+    [ObservableProperty] private double _speed = 10;
+    [ObservableProperty] private AcquisitionSnapshot? _snapshot;
+
+    partial void OnLiveTimeSChanged(double value)
+    {
+        if (!(value > 0) || !double.IsFinite(value)) LiveTimeS = 60;
+        MarkStale();
+    }
+
+    partial void OnSpeedChanged(double value)
+    {
+        if (!(value > 0) || !double.IsFinite(value)) Speed = 10;
+        MarkStale();
+    }
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsIdle))]
     [NotifyCanExecuteChangedFor(nameof(AddSourceCommand), nameof(RemoveSourceCommand))]
+    [NotifyCanExecuteChangedFor(nameof(StartCommand), nameof(StopCommand))]
     private bool _isRunning;
 
     public bool IsIdle => !IsRunning;
@@ -131,6 +152,49 @@ public sealed partial class MainViewModel : ObservableObject
 
     private bool CanRun() => Sources.Count > 0;
 
+    private bool CanStart() => IsIdle && Sources.Count > 0;
+
+    [RelayCommand(CanExecute = nameof(IsRunning))]
+    private void Stop() => _session?.Stop();
+
+    [RelayCommand(CanExecute = nameof(CanStart))]
+    private async Task StartAsync()
+    {
+        IsRunning = true;
+        State = RunState.Acquiring;
+        Result = null;
+        Snapshot = null;
+        IsResultStale = false;
+        Progress = 0;
+        Status = $"t = 0 s of {LiveTimeS:G} s · 0 counts · 0 cps";
+        double preset = LiveTimeS;
+        try
+        {
+            await using var session = _simulation.Start(Sources.Select(s => s.ToModel()).ToArray(), Optics, preset, Speed);
+            _session = session;
+            await foreach (var snapshot in session.ReadSnapshotsAsync())
+            {
+                Result = snapshot.Imaging;
+                Progress = snapshot.LiveTimeS / preset;
+                string limited = snapshot.IsMcLimited ? $" · MC-limited ×{snapshot.ActualSpeed:F2}" : "";
+                Status = $"t = {snapshot.LiveTimeS:F1} s of {preset:G} s · {snapshot.Counts:N0} counts · {snapshot.RateCps:F0} cps{limited}";
+                Snapshot = snapshot;
+            }
+            State = Snapshot?.IsCompleted == true ? RunState.Completed : RunState.Stopped;
+            Status = $"{State} · {Status}";
+        }
+        catch (Exception ex)
+        {
+            State = RunState.Failed;
+            Status = $"Failed: {ex.Message}";
+        }
+        finally
+        {
+            _session = null;
+            IsRunning = false;
+        }
+    }
+
     [RelayCommand(CanExecute = nameof(CanRun), IncludeCancelCommand = true)]
     private async Task RunAsync(CancellationToken cancellationToken)
     {
@@ -138,6 +202,8 @@ public sealed partial class MainViewModel : ObservableObject
         State = RunState.Running;
         Progress = 0;
         Status = $"Simulating {Photons:N0} photons…";
+        var progressGate = new object();
+        bool acceptProgress = true;
         try
         {
             var scene = Sources.Select(s => s.ToModel()).ToArray();
@@ -145,12 +211,19 @@ public sealed partial class MainViewModel : ObservableObject
             // accept them only while running, and never let the bar move backwards.
             var progress = new Progress<double>(p =>
             {
-                if (IsRunning && p > Progress) Progress = p;
+                // Batch-only callers may have no synchronization context: make the guard + write atomic
+                // with completion, so a callback cannot lower progress after the terminal value is set.
+                lock (progressGate)
+                    if (acceptProgress && IsRunning && p > Progress) Progress = p;
             });
             var result = await _simulation.RunAsync(scene, Optics, Photons, progress, cancellationToken);
             Result = result;
             IsResultStale = false;
-            Progress = 1;
+            lock (progressGate)
+            {
+                acceptProgress = false;
+                Progress = 1;
+            }
             Status = Describe(result);
             State = RunState.Succeeded;
         }
@@ -166,6 +239,7 @@ public sealed partial class MainViewModel : ObservableObject
         }
         finally
         {
+            lock (progressGate) acceptProgress = false;
             IsRunning = false;
         }
     }
@@ -175,6 +249,7 @@ public sealed partial class MainViewModel : ObservableObject
         foreach (SourceItemViewModel s in e.OldItems ?? Array.Empty<SourceItemViewModel>()) s.PropertyChanged -= OnSourceEdited;
         foreach (SourceItemViewModel s in e.NewItems ?? Array.Empty<SourceItemViewModel>()) s.PropertyChanged += OnSourceEdited;
         RunCommand.NotifyCanExecuteChanged();
+        StartCommand.NotifyCanExecuteChanged();
         MarkStale();
     }
 

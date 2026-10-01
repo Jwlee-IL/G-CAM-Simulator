@@ -17,8 +17,12 @@ public sealed record ImagingResult(
     TimeSpan Elapsed);
 
 /// <summary>Runs the Monte Carlo imaging pipeline off the UI thread.</summary>
-public interface ISimulationService
+public interface ISimulationService : IAcquisitionService
 {
+    // Existing batch clients/fakes keep compiling. Production SimulationService supplies live acquisition.
+    IAcquisitionSession IAcquisitionService.Start(IReadOnlyList<SceneSource> scene, OpticsSettings optics,
+        double liveTimeS, double speed) => throw new NotSupportedException("This service supports batch simulation only.");
+
     Task<ImagingResult> RunAsync(
         IReadOnlyList<SceneSource> scene,
         OpticsSettings optics,

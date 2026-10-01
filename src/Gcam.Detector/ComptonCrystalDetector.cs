@@ -37,6 +37,7 @@ public sealed class ComptonCrystalDetector : IDetector
     private readonly IRandom _rng;
     private readonly double[]? _sensitivity;
     private readonly Action<double, double>? _eventSink;
+    private readonly Action<int, int, double, double>? _pixelEventSink;
     private readonly FrontEndModel? _frontEnd;
     private readonly IRandom? _frontEndRng;
     private readonly EntranceAbsorber? _entrance;   // passive window/encapsulation in front (null = none)
@@ -53,7 +54,8 @@ public sealed class ComptonCrystalDetector : IDetector
         double[]? sensitivity = null, Action<double, double>? eventSink = null,
         FrontEndModel? frontEnd = null, IRandom? frontEndRng = null,
         EntranceAbsorber? entranceAbsorber = null, EntranceAbsorber? backingScatterer = null,
-        double reflectorGapMm = 0.0, double opticalCrosstalk = 0.0, CrystalMaterial? material = null)
+        double reflectorGapMm = 0.0, double opticalCrosstalk = 0.0, CrystalMaterial? material = null,
+        Action<int, int, double, double>? pixelEventSink = null)
     {
         _image = new DetectorImage(pixelsX, pixelsY);
         _pitch = pixelPitchMm;
@@ -69,6 +71,7 @@ public sealed class ComptonCrystalDetector : IDetector
         _rng = rng;
         _sensitivity = sensitivity;
         _eventSink = eventSink;
+        _pixelEventSink = pixelEventSink;
         _frontEnd = frontEnd;
         _frontEndRng = frontEndRng;
         _entrance = entranceAbsorber;
@@ -196,11 +199,11 @@ public sealed class ComptonCrystalDetector : IDetector
         // The photon's importance-sampling weight goes with it, so a directional-biased run can be
         // resampled back to the physical detected-event spectrum (unweighted would over-represent the
         // biased proposal at positions/angles where deposit/escape probability differs).
-        if (_eventSink is not null)
+        double pulseDeposit = 0.0;
+        if (_eventSink is not null || _pixelEventSink is not null)
         {
-            double total = 0.0;
-            foreach (var (_, _, dep) in _sites) total += dep;
-            _eventSink(total, weight);   // TRUE total light (perfect collection) — crosstalk conserves it, so it goes here BEFORE the spread
+            foreach (var (_, _, dep) in _sites) pulseDeposit += dep;
+            _eventSink?.Invoke(pulseDeposit, weight);   // TRUE total light before the spread
         }
 
         // Optical crosstalk: an imperfect reflector lets a fraction of each interaction's scintillation LIGHT leak
@@ -212,6 +215,18 @@ public sealed class ComptonCrystalDetector : IDetector
         // cliff-dropping when the mean crosses the window. Total light is conserved → the total-energy sink is intact.
         if (_crosstalk > 0.0) ApplyOpticalCrosstalk(Math.Min(0.95, 2.0 * _crosstalk * _rng.NextDouble()));
 
+        // One list-mode pulse per history, located by largest collected deposit (Argmax).
+        // The old energy-only sink and all transport RNG calls remain unchanged.
+        if (_pixelEventSink is not null)
+        {
+            double best = -1.0;
+            int bx = 0, by = 0;
+            foreach (var (px, py, dep) in _sites)
+            {
+                if (dep > best) { best = dep; bx = px; by = py; }
+            }
+            _pixelEventSink(bx, by, pulseDeposit, weight);
+        }
         Deposit(weight);
         return true;
     }

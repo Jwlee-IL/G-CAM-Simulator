@@ -11,7 +11,7 @@ Structured after IEC 62304 §5.3 (architectural design) and §5.4 (detailed desi
 **At a glance**
 - Four software items in three projects — presentation logic and view maths (`Gcam.Studio.Core`, no WPF), the
   simulation adapter (`Gcam.Studio.Services`, the only layer that reaches the engine) and the WPF shell — split into
-  18 units (§2); the compiler enforces the layering.
+  19 units (§2); the compiler enforces the layering.
 - Interfaces between items (§3), SOUP with what Studio relies on (§4), the run state machine and the measurement
   gesture (§5), and the detailed design of each unit (§6).
 - Every SRS requirement is allocated to the unit that meets it (§7).
@@ -40,8 +40,8 @@ Key decisions and why:
 | Decision | Reason | Requirements it serves |
 |---|---|---|
 | All logic in `net9.0` projects without WPF | testable without a UI stack; a ViewModel cannot touch a UI type | SR-ARCH-01, SR-ARCH-04 |
-| One engine entry point, `ISimulationService` | the UI can be tested with a fake; the engine can change behind the contract | SR-ARCH-02, SR-RUN-01 |
-| Monte Carlo on the thread pool, results marshalled back by `async` / `Progress<T>` | the UI never blocks | SR-RUN-01, SR-RUN-04 |
+| One engine entry point, `ISimulationService` with inherited acquisition contract | the UI can be tested with a fake; the engine can change behind the contract | SR-ARCH-02, SR-RUN-09 |
+| Monte Carlo and decode on the thread pool, snapshots marshalled back by an async stream | the UI never blocks | SR-RUN-09, SR-RUN-17 |
 | All screen ↔ mm maths in one UI-free class (`HeatmapViewport`) | one mapping, unit-tested; overlays and readout cannot disagree | SR-VIEW-01…06, SR-VIEW-05 (RC) |
 | Measurements stored in mm, per pane, mapped to the screen on every render | overlays follow zoom / pan without screen state; ROI always reads the right image | SR-MEAS-04, SR-MEAS-07 |
 | Colours only through `DynamicResource` tokens | runtime theme switch without restarting | SR-THEME-02, SR-ARCH-03 |
@@ -53,13 +53,13 @@ one class, or a small group of types that only make sense together. Unit IDs are
 
 | Unit | Item | Type(s) | File(s) | Responsibility |
 |---|---|---|---|---|
-| SU-01 | SI-1 | `MainViewModel`, `RunState` | `Core/ViewModels/MainViewModel.cs` | scene list and selection, photon budget, shared run result, workspace selection, run / cancel / failure state machine, progress guard, stale flag, theme toggle |
+| SU-01 | SI-1 | `MainViewModel`, `RunState` | `Core/ViewModels/MainViewModel.cs` | scene list and selection, live time / speed, snapshots, workspace selection, Start / Stop / failure state machine, progress, stale flag, theme toggle; batch compatibility |
 | SU-02 | SI-1 | `SourceItemViewModel` | `Core/ViewModels/SourceItemViewModel.cs` | one editable source; input clamping; list and marker labels; `IPlaneMarker`; → `SceneSource` |
 | SU-03 | SI-1 | `MeasurementsViewModel`, `MeasureTool` | `Core/ViewModels/MeasurementsViewModel.cs`, `MeasureTool.cs` | measurement session: active tool and hint, numbering, add / delete / clear, selection, refresh on a new result |
 | SU-04 | SI-1 | `MeasurementViewModel`, `MeasurementKind`, `ImagePane`, `MeasurementDraft` | `Core/ViewModels/Measurement*.cs`, `ImagePane.cs` | one measurement: point-count check, value and detail text, description for screen readers |
 | SU-05 | SI-2 | `HeatmapViewport`, `Vec2` | `Core/Imaging/HeatmapViewport.cs` | fit, device-pixel snapping, zoom about a point, pan clamping, screen ↔ image ↔ mm |
 | SU-06 | SI-2 | `MeasurementMath`, `RoiStats` | `Core/Imaging/MeasurementMath.cs` | distance, angle, ROI statistics by pixel centre |
-| SU-07 | SI-1 | `ISimulationService`, `ImagingResult`, `IThemeService`, `AppTheme`, `IPlaneMarker` | `Core/Services/*.cs`, `Core/Imaging/IPlaneMarker.cs` | contracts between items (§3) |
+| SU-07 | SI-1 | `ISimulationService`, `IAcquisitionService`, `IAcquisitionSession`, `AcquisitionSnapshot`, `ImagingResult`, `IThemeService`, `AppTheme`, `IPlaneMarker` | `Core/Services/*.cs`, `Core/Imaging/IPlaneMarker.cs` | contracts between items (§3) |
 | SU-08 | SI-3 | `SimulationService` | `Services/SimulationService.cs` | build the engine config, run it off the UI thread, return both grids with their mm mapping |
 | SU-09 | SI-4 | `HeatmapView` (+ `HeatmapViewAutomationPeer`) | `Studio/Controls/HeatmapView.cs` | draw a grid with the colormap, zoom / pan input, hover readout, automation peer, exposes data range and mm mapping |
 | SU-10 | SI-4 | `MeasurementAdorner`, `MeasurementOverlay` | `Studio/Controls/Measurement*.cs` | draw measurements and source markers over a heatmap; turn gestures into `MeasurementDraft`s; marker drag |
@@ -71,12 +71,25 @@ one class, or a small group of types that only make sense together. Unit IDs are
 | SU-16 | SI-1 | `WorkspaceViewModel`, `ImagingWorkspaceViewModel` | `Core/ViewModels/*WorkspaceViewModel.cs` | title, automation key, active state; imaging measurements and peak over the shared result |
 | SU-17 | SI-2 | `PlotSeries`, `PlotBand`, `PlotMarker`, `PlotViewport`, `NiceTicks`, `MinMaxPyramid` | `Core/Plotting/*.cs` | finite / increasing inputs, sample limit, linear / log mapping, X navigation, ticks, exact range extrema |
 | SU-18 | SI-4 | `PlotView` (+ automation peer) | `Studio/Controls/PlotView.cs` | cached preparation, frozen geometry, themed axes / series / bands / markers, readout, pointer / key input, measured CPU redraw |
+| SU-19 | SI-3 | `AcquisitionSession` | `Services/AcquisitionSession.cs` | fresh MC histories, consumed event prefix, live-time pacing, immutable cumulative snapshots, Stop and automatic completion |
 
 Paths are relative to `src/Gcam.Studio.Core`, `src/Gcam.Studio.Services` and `src/Gcam.Studio` respectively.
 
 ## 3. Interfaces between items (§5.3.2, §5.4.3)
 
 ### SI-1 ↔ SI-3: `ISimulationService`
+
+`ISimulationService` inherits `IAcquisitionService`: `Start(scene, optics, liveTimeS, speed)` returns an
+`IAcquisitionSession`. It publishes `IAsyncEnumerable<AcquisitionSnapshot>`, exposes `Stop()` and supports
+asynchronous disposal. Snapshots contain live time, integer counts, running rate, achieved speed, MC-limited
+flag, imaging, unsmeared events, decode time and completion. Images are detached read-only copies; the event
+array is detached and wrapped read-only. A bounded channel keeps at most two cumulative snapshots and drops
+old snapshots for a slow reader; it never drops acquired events. The ViewModel awaits on its UI context.
+`TimeProvider` is injected into the service for virtual-clock verification. Stop cancels transport and waiting,
+then publishes the terminal snapshot. A look-ahead event beyond the target proves the preceding empty interval.
+
+The old batch method below is retained for source compatibility. Batch-only fakes inherit an unsupported
+default Start. The production view uses acquisition controls exclusively.
 
 ```csharp
 Task<ImagingResult> RunAsync(IReadOnlyList<SceneSource> scene, OpticsSettings optics, long photons,
@@ -106,8 +119,8 @@ not a user-reachable state).
 
 | Direction | Mechanism | Payload |
 |---|---|---|
-| View → ViewModel | commands | `RunCommand` / `RunCancelCommand`, `AddSourceCommand`, `RemoveSourceCommand`, `ToggleThemeCommand`; `Measurements.AddCommand(MeasurementDraft)`, `DeleteCommand`, `ClearCommand` |
-| View ↔ ViewModel | two-way bindings | source fields, photon budget, selected source, selected measurement, `ActiveTool` (radio group through `EnumMatchConverter`) |
+| View → ViewModel | commands | `StartCommand` / `StopCommand`, `AddSourceCommand`, `RemoveSourceCommand`, `ToggleThemeCommand`; `Measurements.AddCommand(MeasurementDraft)`, `DeleteCommand`, `ClearCommand` |
+| View ↔ ViewModel | two-way bindings | source fields, live time, speed, selected source, selected measurement, `ActiveTool` (radio group through `EnumMatchConverter`) |
 | ViewModel → View | one-way bindings | `Result` (images and mm mapping), `Progress`, `Status`, `State`, `IsIdle`, `IsResultStale`, `PeakText`, `ThemeToggleLabel`, `ToolHint`, `Items` |
 | Overlay → ViewModel | attached properties on `HeatmapView` (`MeasurementOverlay.Session`, `Pane`, `Markers`, `SelectedMarker`, `CanMoveMarkers`) | the adorner reads the session's tool and items, sends `MeasurementDraft(Pane, Kind, PointsMm)` through `AddCommand`, and writes `X` / `Y` of an `IPlaneMarker` while dragging |
 | Control → sibling | read-only dependency properties bound by `ElementName` | `HeatmapView.DataMin` / `DataMax` → `ColorBar`; `HeatmapView.Readout` |
@@ -142,7 +155,7 @@ and are verified by their own suite.
 
 - **Compile-time segregation**: target frameworks and project references (§1). The shell could still reach the
   engine transitively through SI-3 — tracked as AN-08 in [VV.Studio §6](VV.Studio.md#anomalies-and-gaps).
-- **Thread segregation**: only SU-08's `Task.Run` body runs off the UI thread, and it touches no ViewModel. Every
+- **Thread segregation**: SU-08 / SU-19's worker runs off the UI thread, and it touches no ViewModel. Every
   ViewModel member is read and written on the UI thread.
 - No safety-related segregation is needed: no unit controls anything outside the process.
 
@@ -151,18 +164,19 @@ and are verified by their own suite.
 ```mermaid
 stateDiagram-v2
     [*] --> Idle
-    Idle --> Running: Run (≥ 1 source)
-    Succeeded --> Running: Run
-    Cancelled --> Running: Run
-    Failed --> Running: Run
-    Running --> Succeeded: result
-    Running --> Cancelled: OperationCanceledException
-    Running --> Failed: any other exception
+    Idle --> Acquiring: Start (≥ 1 source)
+    Completed --> Acquiring: Start
+    Stopped --> Acquiring: Start
+    Failed --> Acquiring: Start
+    Acquiring --> Completed: preset reached
+    Acquiring --> Stopped: Stop
+    Acquiring --> Failed: exception
 ```
 
-While `Running`: `IsRunning = true`, `IsIdle = false` → add / remove source, photon box and marker drag disabled
-(SR-RUN-05). On `Succeeded` only: `Result` replaced, `IsResultStale = false`, `Progress = 1`. On `Cancelled` /
-`Failed`, `Result` is untouched. `IsRunning` is reset in `finally`.
+While `Acquiring`: `IsRunning = true`, `IsIdle = false` → source fields, add / remove, live time / speed and
+marker drag disabled (SR-RUN-12). Start clears old data; every snapshot refreshes images and ROI values without
+replacing measurement geometry. Completed has progress 1; Stop / Failed retain acquired data. `IsRunning` resets
+in `finally`. Batch enum values remain available for compatibility callers.
 
 ### Measurement gesture (SU-10 → SU-03)
 
@@ -209,12 +223,21 @@ Only the rules a reviewer needs to check a requirement; the rest is in the code 
 
 | Rule | Definition |
 |---|---|
-| Progress guard | accept a report only if `IsRunning` and `p > Progress`. |
-| Stale flag | set when `Result ≠ null` and the source collection changes, any source property except `Label` / `MarkerLabel` changes, or photons / optics change; cleared only on success. |
-| Photon clamp | `Photons < 1,000 → 1,000` in the property-changed hook. |
+| Progress | acquisition live time / preset, from sequential cumulative snapshots. |
+| Stale flag | set when `Result ≠ null` and scene, live time / speed / optics change; cleared at Start. |
+| Inputs | default 60 s and ×10; invalid non-positive / non-finite UI values return to defaults; service rejects them. |
 | Add source | new source at `X = 15 mm · count`, `Y = 0`, selected. |
 | Remove source | select the item now at the removed index, or the new last item; `null` when empty. |
-| Status text on success | `"{counts:N1} effective counts in {s:F1} s · peak at ({x:F1}, {y:F1}) mm, ghost margin {c:F2}"`, or `"… · no decode"`. |
+| Status text | `"t = {live:F1} s of {preset:G} s · {counts:N0} counts · {rate:F0} cps"`; MC-limited appends achieved speed; terminal text prefixes Stopped / Completed. |
+
+### SU-19 `AcquisitionSession`
+
+Each 250 ms refresh spends at most 200 ms transporting fresh histories, then decodes the accumulated flood
+off-thread. Physical rate is total emission × sum of detected importance weights / emitted histories.
+Rejection uses A/(4πz_min²), a proven detector-area weight bound; analog emission uses bound 1. Timing and
+rejection have independent seeded RNG streams. The MC-limited horizon is the consumed prefix, not an unconsumed
+accepted event. Events past the preset are look-ahead only. Ambient acquisition is explicitly unsupported
+rather than silently manufacturing a background shape. Batch behavior is unchanged.
 
 ### SU-16 workspaces / SU-17 plotting / SU-18 `PlotView`
 
@@ -295,12 +318,10 @@ Every SRS requirement maps to at least one unit; every unit carries at least one
 
 | Requirement | Units |
 |---|---|
-| SR-RUN-01 | SU-01, SU-07, SU-08 |
-| SR-RUN-02, SR-RUN-03 | SU-01 |
-| SR-RUN-04 | SU-01, SU-08 (engine progress) |
-| SR-RUN-05 | SU-01, SU-10, SU-14 |
-| SR-RUN-06, SR-RUN-07 | SU-01, SU-14 (chip) |
-| SR-RUN-08 | SU-08 (engine `SceneConfigBuilder`) |
+| SR-RUN-01, -02, -04 … -08 | withdrawn; compatibility paths remain in SU-01 / SU-08 |
+| SR-RUN-03, SR-RUN-09 … SR-RUN-14, SR-RUN-19 | SU-01, SU-07, SU-08, SU-19 |
+| SR-RUN-15 | SU-08 (argument checks and engine `SceneConfigBuilder`) |
+| SR-RUN-16 … SR-RUN-18 | SU-19, SU-07, SU-01, SU-16 |
 | SR-SCENE-01 | SU-01 (photons), SU-02 |
 | SR-SCENE-02 | SU-01 |
 | SR-VIEW-01 … SR-VIEW-06 | SU-05, SU-09 |
@@ -325,7 +346,7 @@ Every SRS requirement maps to at least one unit; every unit carries at least one
 | SR-SEC-01 | all (no I/O anywhere in Studio), SU-08 (engine is called with in-memory config only) |
 | SR-ARCH-01 … SR-ARCH-04 | project files of SI-1 … SI-4 and `tests/Gcam.Studio.Tests` |
 
-SU-11 (colour bar, colormap) and SU-13 (converters) serve SR-VIEW-01 / SR-A11Y-04 and SR-RUN-07 / SR-MEAS-06
+SU-11 (colour bar, colormap) and SU-13 (converters) serve SR-VIEW-01 / SR-A11Y-04 and SR-RUN-14 / SR-MEAS-06
 indirectly (presentation only); they carry no requirement of their own.
 
 ## 8. Verification of the design (§5.3.6, §5.4.4)

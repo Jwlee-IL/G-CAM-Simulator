@@ -5,7 +5,8 @@ references `Gcam.Simulation`.
 
 | Type | Does |
 |---|---|
-| `SimulationService` | builds the config from the scene (`SceneConfigBuilder`), runs `SimulationRunner` on the thread pool with progress and cancellation, and maps the result (incl. the mm grid of both images) to `ImagingResult` |
+| `SimulationService` | builds scene configs and starts list-mode acquisition; retains `RunAsync` for batch compatibility |
+| `AcquisitionSession` | transports fresh MC histories off-thread, paces live time with an injectable clock, publishes immutable cumulative images / events at 4 Hz, and supports Stop / preset completion |
 
 WPF-bound services (e.g. `ThemeService`) live in `Gcam.Studio/Services` instead, because they need WPF.
 See [DESIGN.Architecture](../../docs/DESIGN.Architecture.md).

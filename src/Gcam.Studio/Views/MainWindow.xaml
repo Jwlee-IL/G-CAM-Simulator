@@ -97,19 +97,24 @@
                     <Button Content="{Binding ThemeToggleLabel}" Command="{Binding ToggleThemeCommand}"
                             Style="{StaticResource Button.Ghost}" Margin="{StaticResource Gap.InlineWide}"
                             AutomationProperties.AutomationId="ThemeToggle" />
-                    <TextBlock Text="Photons" Style="{StaticResource Text.Label}" Margin="{StaticResource Gap.Inline}" />
-                    <TextBox Width="{StaticResource Size.NumberInput}" Text="{Binding Photons, UpdateSourceTrigger=LostFocus, StringFormat=N0}"
+                    <TextBlock Text="Live time (s)" Style="{StaticResource Text.Label}" Margin="{StaticResource Gap.Inline}" />
+                    <TextBox Width="{StaticResource Size.NumberInput}" Text="{Binding LiveTimeS, UpdateSourceTrigger=LostFocus}"
                              IsEnabled="{Binding IsIdle}" Margin="{StaticResource Gap.InlineWide}"
-                             AutomationProperties.AutomationId="PhotonBudget" AutomationProperties.Name="Photon budget" />
-                    <Button Content="Cancel" Command="{Binding RunCancelCommand}" Style="{StaticResource Button.Ghost}"
+                             AutomationProperties.AutomationId="AcquisitionLiveTime" AutomationProperties.Name="Live time (s)" />
+                    <TextBlock Text="Speed ×" Style="{StaticResource Text.Label}" Margin="{StaticResource Gap.Inline}" />
+                    <TextBox Width="{StaticResource Size.NumberInput}" Text="{Binding Speed, UpdateSourceTrigger=LostFocus}"
+                             IsEnabled="{Binding IsIdle}" Margin="{StaticResource Gap.InlineWide}"
+                             AutomationProperties.AutomationId="AcquisitionSpeed" AutomationProperties.Name="Speed × (live seconds per wall second)" />
+                    <Button Content="Stop" Command="{Binding StopCommand}" Style="{StaticResource Button.Primary}"
                             Visibility="{Binding IsRunning, Converter={StaticResource BoolToVis}}"
-                            Margin="{StaticResource Gap.Inline}" AutomationProperties.AutomationId="CancelRun" AutomationProperties.Name="Cancel simulation" />
-                    <Button Command="{Binding RunCommand}" Style="{StaticResource Button.Primary}" IsDefault="True"
-                            AutomationProperties.AutomationId="RunSimulation" AutomationProperties.Name="Simulate">
+                            Margin="{StaticResource Gap.Inline}" AutomationProperties.AutomationId="StopAcquisition" />
+                    <Button Command="{Binding StartCommand}" Style="{StaticResource Button.Primary}" IsDefault="True"
+                            Visibility="{Binding IsIdle, Converter={StaticResource BoolToVis}}"
+                            AutomationProperties.AutomationId="StartAcquisition" AutomationProperties.Name="Start">
                         <StackPanel Orientation="Horizontal">
                             <Path Data="{StaticResource Icon.Play}" Stretch="Uniform" Width="{StaticResource Size.Icon}" Height="{StaticResource Size.Icon}"
                                   Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" Margin="{StaticResource Gap.Inline}" />
-                            <TextBlock Text="Simulate" VerticalAlignment="Center" />
+                            <TextBlock Text="Start" VerticalAlignment="Center" />
                         </StackPanel>
                     </Button>
                 </StackPanel>
@@ -423,13 +428,13 @@
                         <Style TargetType="Ellipse">
                             <Setter Property="Fill" Value="{DynamicResource Brush.Text.Disabled}" />
                             <Style.Triggers>
-                                <DataTrigger Binding="{Binding State}" Value="Running">
+                                <DataTrigger Binding="{Binding State}" Value="Acquiring">
                                     <Setter Property="Fill" Value="{DynamicResource Brush.Accent}" />
                                 </DataTrigger>
-                                <DataTrigger Binding="{Binding State}" Value="Succeeded">
+                                <DataTrigger Binding="{Binding State}" Value="Completed">
                                     <Setter Property="Fill" Value="{DynamicResource Brush.Status.Success}" />
                                 </DataTrigger>
-                                <DataTrigger Binding="{Binding State}" Value="Cancelled">
+                                <DataTrigger Binding="{Binding State}" Value="Stopped">
                                     <Setter Property="Fill" Value="{DynamicResource Brush.Status.Warning}" />
                                 </DataTrigger>
                                 <DataTrigger Binding="{Binding State}" Value="Failed">

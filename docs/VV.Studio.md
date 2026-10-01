@@ -15,9 +15,9 @@ one of a set:
 The working design guides are [DESIGN.Architecture](DESIGN.Architecture.md) and the other `DESIGN.*` pages.
 
 **At a glance**
-- 47 software requirements; **38 pass, 9 partial** (§4). 58 unit and integration tests in
-  `Gcam.Studio.Tests` and 7 service tests against the real engine in `Gcam.Studio.Services.Tests`, all passing on
-  2026-10-01.
+- 51 active software requirements plus seven withdrawn batch rows (§4). Live acquisition verification and
+  measurements are recorded in [VV.Studio.Acquisition](VV.Studio.Acquisition.md); desktop acquisition
+  validation is pending while the desktop and UI-test project are occupied.
 - Seven regression scenarios, a plot gate and a diagnostic survey are opt-in desktop tests. The latest regression / survey attempt was blocked by desktop input; the plot CPU gate passed (§5). Historical scenarios judge the running app against
   independently computed values (§5): VAL-01 … VAL-04 performed, VAL-05 partial, VAL-06 … VAL-08 open.
 - The layering that keeps the logic testable is compiler-enforced (SR-ARCH-01, -04).
@@ -62,8 +62,8 @@ stack. SI-3 is tested through the real engine.
 
 ## 3. Software requirements
 
-The requirements are specified in [VV.Studio.SRS](VV.Studio.SRS.md) — **39** in nine groups (`SR-RUN`, `SR-SCENE`,
-`SR-VIEW`, `SR-MEAS`, `SR-THEME`, `SR-ENV`, `SR-A11Y`, `SR-SEC`, `SR-ARCH`). The matrix below cites them by ID only;
+The requirements are specified in [VV.Studio.SRS](VV.Studio.SRS.md) — **51 active** in eleven groups, including
+navigation, plotting and acquisition. Seven withdrawn batch rows retain their IDs. The matrix cites IDs only;
 the SRS is the single source of their wording.
 
 ## 4. Verification
@@ -77,15 +77,26 @@ Automation. Status: **pass** (evidence on 2026-10-01), **partial**, **open** (no
 
 | Req | Level | Method | Evidence | Status |
 |---|---|---|---|---|
-| SR-RUN-01 | unit | T, I | `MainViewModelTests.Run_PassesSceneAndPublishesResult`, `MainViewModelTests.RunState_TracksOutcome_PeakTextFollowsResult`; `SimulationServiceTests.Result_IsTheEngineRunForTheSameScene`, `SimulationServiceTests.BadArguments_ThrowBeforeAnyWorkIsScheduled`; `Task.Run` in `SimulationService` (I) | pass |
-| SR-RUN-02 | unit + integration | T | `MainViewModelTests.Cancel_KeepsPreviousResult_ReenablesEditing`; `SimulationServiceTests.AlreadyCancelled_NeverRuns`, `SimulationServiceTests.CancelledMidRun_Stops`; engine side `SceneConfigBuilderTests.Runner_ReportsProgress_HonoursCancellation` | pass |
+| SR-RUN-01 | historical batch | T | unchanged batch tests remain for compatibility | withdrawn → SR-RUN-09, -19 |
+| SR-RUN-02 | historical batch | T | unchanged batch cancellation tests remain for compatibility | withdrawn → SR-RUN-10 |
 | SR-RUN-03 | unit | T | `MainViewModelTests.Failure_IsReportedNotThrown`, `MainViewModelTests.RunState_TracksOutcome_PeakTextFollowsResult` | pass |
-| SR-RUN-04 | unit + integration | T, I | `MainViewModelTests.Run_PassesSceneAndPublishesResult` (Progress = 1.0); `SceneConfigBuilderTests.Runner_ReportsProgress_HonoursCancellation` (monotonic, ends at 1.0); `SimulationServiceTests.Progress_RisesMonotonicallyToOne`; guard in `MainViewModel.RunAsync` (I) | partial — see AN-04 |
-| SR-RUN-05 | unit | T, I | `MainViewModelTests.Cancel_KeepsPreviousResult_ReenablesEditing` (add disabled while running); photon box `IsEnabled="{Binding IsIdle}"`, `CanMoveMarkers` bound to `IsIdle` (I) | pass |
-| SR-RUN-06 | unit | T | `MainViewModelTests.RemoveAll_DisablesRemoveAndRun`, `MainViewModelTests.Startup_HasOneSelectedSource` | pass |
-| SR-RUN-07 | unit | T, I | `MainViewModelTests.EditingTheSceneAfterARun_MarksTheResultStale_UntilTheNextRun`; chip bound to `IsResultStale` (I) | pass |
-| SR-RUN-08 | integration (engine) | T | `SceneConfigBuilderTests.NearestPrime_SnapsRankToNearestPrime` (4 cases), `SceneConfigBuilderTests.Build_MultiSourceFiniteMaskConfig`, `SceneConfigBuilderTests.Build_RejectsNonPositivePhotonBudget` | pass |
-| SR-SCENE-01 | unit | T, I | `MainViewModelTests.SourceItem_ClampsValues_LabelFollowsEdits`, `MainViewModelTests.IsotopePicker_OffersIr192_AndKeepsCs137AsTheDefault`; photon clamp in `MainViewModel.OnPhotonsChanged` (I only) | pass (photon clamp: I) |
+| SR-RUN-04 | historical batch | T, I | batch progress guard remains; AN-04 is scoped to that path | withdrawn → SR-RUN-11 |
+| SR-RUN-05 | historical batch | T, I | batch locking evidence retained in historical validation below | withdrawn → SR-RUN-12 |
+| SR-RUN-06 | historical batch | T | batch command tests remain | withdrawn → SR-RUN-13 |
+| SR-RUN-07 | historical batch | T | batch stale tests remain | withdrawn → SR-RUN-14 |
+| SR-RUN-08 | historical batch | T | unchanged `SceneConfigBuilderTests` retain builder verification | withdrawn → SR-RUN-15 |
+| SR-RUN-09 | unit + integration | T, I | `AcquisitionViewModelTests.Preset_Completes_NewStartClears_ResultAndEvents`; `AcquisitionServiceTests.ShortAcquisition_LocalizesAfterCountThreshold_SnapshotsAreImmutable`; worker inspected | pass (headless); desktop pending |
+| SR-RUN-10 | unit + integration | T | `AcquisitionViewModelTests.Start_SnapshotsGrow_StopKeepsData_UnlocksAndEditMarksStale`; `AcquisitionServiceTests.Stop_KeepsConsumedPrefix_AtExtremeMcLimitedSpeed` | pass (headless); desktop pending |
+| SR-RUN-11 | unit + integration | T | `AcquisitionViewModelTests.Preset_Completes_NewStartClears_ResultAndEvents`; `AcquisitionServiceTests.InjectedClock_AdvancesLiveTimeAndPresetWithoutWallDelay` | pass |
+| SR-RUN-12 | unit + inspection | T, I | acquisition ViewModel test (commands locked); source fields, `CanMoveMarkers`, live-time/speed `IsIdle` bindings inspected | pass (T/I); desktop pending |
+| SR-RUN-13 | unit + inspection | T, I | acquisition test (disabled while active); `CanStart` requires sources (I); existing empty-scene test covers collection | pass (T/I) |
+| SR-RUN-14 | unit | T | `AcquisitionViewModelTests.Start_SnapshotsGrow_StopKeepsData_UnlocksAndEditMarksStale`, `LiveTimeAndSpeed_MarkStale_WorkspaceAndMeasurementsDoNot` | pass |
+| SR-RUN-15 | integration | T | existing nearest-prime / finite-grid builder tests; `AcquisitionServiceTests.InvalidInputs_FailBeforeStarting` (4 cases) | pass |
+| SR-RUN-16 | engine + integration | T, I | `ListModeSourceTests` (weighted flood, spectrum, rate, exponential gaps, seed, no duplicates); service immutable / count conservation test | pass |
+| SR-RUN-17 | integration + inspection | T, I | injected-clock test (250 ms); acquisition ViewModel test (ROI grows, old snapshot unchanged); fixed grid and decode per tick inspected; timings in acquisition record | pass (T/I); desktop pending |
+| SR-RUN-18 | integration + unit | T | extreme MC-limited service test; virtual ViewModel test verifies note and retained prefix | pass |
+| SR-RUN-19 | unit + integration | T | preset / restart ViewModel test; service preset completion test; defaults inspected | pass |
+| SR-SCENE-01 | unit | T | `MainViewModelTests.SourceItem_ClampsValues_LabelFollowsEdits`, `MainViewModelTests.IsotopePicker_OffersIr192_AndKeepsCs137AsTheDefault` | pass |
 | SR-SCENE-02 | unit | T | `MainViewModelTests.Startup_HasOneSelectedSource`, `MainViewModelTests.AddRemove_SelectsNewSourceThenNeighbour` | pass |
 | SR-VIEW-01 | unit | T | `HeatmapViewportTests.Fit_PreservesAspectAndCentres` | pass |
 | SR-VIEW-02 | unit | T, I | `HeatmapViewportTests.Snapping_FitsWholeDevicePixelsPerCell` (100 %, 125 %, sub-pixel); `HeatmapView` passes `PixelsPerDip` and `snapToWholePixels: true` (I) | pass |
@@ -127,6 +138,10 @@ Automation. Status: **pass** (evidence on 2026-10-01), **partial**, **open** (no
 
 ### Coverage summary
 
+The tables below preserve the pre-acquisition baseline (47 rows); withdrawn RUN rows are historical evidence.
+The current eleven acquisition rows are verified above by tests / inspection. Their desktop paths are pending;
+the prior batch desktop passes must not be treated as acquisition validation.
+
 | Primary method | Requirements |
 |---|---|
 | Automated test (alone or with I / M) | 33 — NAV 01–03, PLOT 01–05, RUN 01–08, SCENE 01–02, VIEW 01–06 + 08, MEAS 01–06 + 08, THEME-01 |
@@ -148,24 +163,32 @@ Automation. Status: **pass** (evidence on 2026-10-01), **partial**, **open** (no
 | `MeasurementMathTests` | unit | 5 | 5 / 5 pass |
 | `MeasurementsViewModelTests` | unit / integration | 7 | 7 / 7 pass |
 | `MainViewModelTests` | unit / integration (with workspace and measurements) | 14 | 14 / 14 pass |
+| `AcquisitionViewModelTests` | unit / integration with virtual acquisition clock + batch callback regression | 5 | 5 / 5 pass |
 | `TickFormatterTests` | unit | 9 | 9 / 9 pass — no requirement yet (AN-10) |
-| `MinMaxPyramidTests` | unit | 6 | 6 / 6 pass |
+| `MinMaxPyramidTests` | unit | 19 | 19 / 19 pass (includes concurrent plot edge / storage cases) |
 | `PlotViewportTests` | unit | 3 | 3 / 3 pass |
 | `NiceTicksTests` | unit | 2 | 2 / 2 pass |
 | `PlotSeriesTests` | unit | 1 | 1 / 1 pass |
-| **Gcam.Studio.Tests** | | **58** | **58 / 58 pass** |
+| **Gcam.Studio.Tests** | | **76** | **76 / 76 pass** |
 | `SimulationServiceTests` (in Gcam.Studio.Services.Tests) | integration (the service against the real engine) | 7 | 7 / 7 pass |
+| `AcquisitionServiceTests` (same project) | integration, real engine + virtual scheduler | 7 | 7 / 7 pass |
 | `FloodOracleTests` (in Gcam.Studio.UiTests) | the UI scenarios' oracle, tested on its own | 10 | 10 / 10 pass |
 | `PilotTests`, `ScenarioTests` (in Gcam.Studio.UiTests) | system, desktop (opt-in) | 7 | skipped normally; latest opt-in run: 7 fail at desktop input / focus (§5) |
 | `PlotViewTests` | system, desktop (opt-in) | 1 | CPU redraw gate pass; skipped normally |
 | `PolishSurveyTests` | diagnostic, desktop (opt-in) | 1 | blocked at UIA focus; skipped normally |
 | `SceneConfigBuilderTests` (in Gcam.Tests) | integration (engine) | 7 (one theory × 4) | pass |
-| **Gcam.Tests** (engine, out of scope) | | **246** | **246 / 246 pass** |
+| `ListModeSourceTests` (engine) | physics / compatibility / throughput / decode measurements | 8 | 8 / 8 pass |
+| **Gcam.Tests** (engine, out of scope) | | **254** | **254 / 254 pass; original 246 unchanged** |
 
 The solution, including the WPF shell, built in Release without errors. Restore emitted NU1900 because NuGet
 vulnerability metadata was unreachable. Builds used one MSBuild node and disabled node reuse after the default
 restore failed without diagnostics. The final ordinary run passed 321 cases and skipped 9 desktop tests.
 This table is the dated record; `dotnet test` prints the current totals.
+
+Live-acquisition Release verification on 2026-10-01 passed 354 cases (254 engine + 76 Core + 14 service +
+10 UI oracles), skipped all nine desktop cases and launched no Studio window. Zero build errors; NU1900
+remains a restore warning. Measurements and pending desktop migration are in
+[VV.Studio.Acquisition](VV.Studio.Acquisition.md).
 
 ## 5. Validation
 
@@ -244,7 +267,7 @@ so the verdicts can fail. No app process or sandbox folder was left behind.
 | AN-01 | Measurements can only be **created** with the pointer (documented in [DESIGN.Controls](DESIGN.Controls.md#measurementadorner-via-measurementoverlay)) | keyboard users can review, select and delete, not create | keyboard crosshair |
 | AN-02 | UI automation is desktop-only and opt-in | the seven scenarios of §5 are not part of CI; zoom and pan, the refit keys, drag-snapping limits and the visual theme swap are still checked by inspection or by hand | heatmap navigation scenarios next |
 | AN-03 | No high-contrast mode | Windows high-contrast themes are not honoured | planned with the keyboard crosshair |
-| AN-04 | The progress-race test is timing-dependent: the fake reports 0.5 asynchronously, but nothing forces it to arrive after completion | the guard is covered by inspection; a regression might not fail the test every time | make the late report deterministic |
+| AN-04 | Resolved: a legacy batch progress callback could race completion or arrive in a later session | callback guard/write and terminal progress now share a per-run lock and closed flag; live acquisition uses sequential snapshots | `AcquisitionViewModelTests.LegacyBatch_LateReportCannotOverwriteANewSessionProgress` forces an obsolete report into a new active run; original progress assertion unchanged |
 | AN-05 | Literal sizes in `MainWindow.xaml` (photon box `Width="120"`, readout `Height="18"`, `Margin="0,4,0,0"`, colour-bar `Margin="0,8,0,0"`) despite the no-literals rule | cosmetic; spacing doesn't follow `Metrics.xaml` | move to named keys |
 | AN-06 | The "outdated" chip is visual only (tooltip, not a live region) | a screen reader is not told that the images no longer match the scene | announce via the status line or a live region |
 | AN-07 | WPF items (`HeatmapView` rendering, `ColorBar` ticks, `ThemeService`) have no unit tests, by design | defects show only when the app runs | covered by AN-02 plan |
@@ -261,10 +284,10 @@ No screen-reader (Narrator / NVDA) session has been run. Not verified.
 | Hazardous situation | Cause | Control | Verified by |
 |---|---|---|---|
 | Wrong position read off an image | y-flip or half-pixel error in screen ↔ mm | one mapping in `HeatmapViewport`; pixel-centre convention shared with the decoder | SR-VIEW-05 tests; VAL-03 |
-| Old image taken as current | scene edited after the run | stale flag and "outdated" chip; cancel keeps and says "previous result kept" | SR-RUN-02, SR-RUN-07 tests; AN-06 open |
+| Old image taken as current | scene edited after acquisition | stale flag and "outdated" chip; Start clears old data; Stop keeps acquired data with state text | SR-RUN-10, SR-RUN-14 tests; desktop acquisition validation pending |
 | ROI sum from the wrong image or frame | measurement not refreshed, or pane mixed up | measurements stored per pane in mm; refreshed on every result | SR-MEAS-04 tests |
 | False precision | sub-pixel ROI weighting, unrounded drags | whole pixels by centre; drags snapped to 0.1 mm; values at 0.1 resolution | SR-MEAS-03 tests; SR-MEAS-08 I + M |
-| App hangs or crashes on a long or failing run | MC on the UI thread; unhandled exception | `Task.Run` in the service; cancellation; failure → `State = Failed` | SR-RUN-01…03 tests |
+| App hangs or crashes on a long or failing acquisition | MC on the UI thread; unhandled exception | worker transport / decode; cooperative Stop; failure → `State = Failed` | SR-RUN-03, SR-RUN-09, SR-RUN-10 tests |
 | Status missed by colour-blind or screen-reader users | colour-only cues | text next to every status dot; selection by shape; live status line | SR-A11Y-04 (I); AN-06 |
 
 ## 7. Configuration and regression

@@ -8,7 +8,7 @@ Structured after IEC 62304 §5.2 (software requirements analysis). As in [VV.Stu
 **GCAM Studio is not a medical device and no compliance is claimed**; the structure is borrowed for its discipline.
 
 **At a glance**
-- **47 requirements** in eleven groups: navigation, plotting, run, scene, image view, measurement, theme (functional, §3) and environment,
+- **51 active requirements** (plus seven withdrawn rows) in eleven groups: navigation, plotting, acquisition, scene, image view, measurement, theme (functional, §3) and environment,
   accessibility, security, architecture (§4). Each is one testable present-tense statement.
 - Inputs, outputs and every status message are listed with their valid ranges (§5); risk control
   (the illustrative safety class B) maps six hazardous situations to the requirements that control them (§6);
@@ -21,7 +21,7 @@ Structured after IEC 62304 §5.2 (software requirements analysis). As in [VV.Stu
 |---|---|
 | Purpose | A desktop viewer for Gcam, a Monte Carlo simulator of a coded-aperture gamma camera: place sources, run the simulation, inspect the detector flood map and the decoded reconstruction, measure on both in mm. Intended use and safety class: [VV.Studio §1](VV.Studio.md#1-scope-and-intended-use). |
 | Users | Engineers and reviewers. They know what a flood map and a reconstruction are; they are not assumed to know the code. |
-| Inputs | A scene of point sources (isotope, lateral X / Y, distance, activity) and a photon budget. Optics are fixed defaults (`OpticsSettings`), shown read-only. |
+| Inputs | A scene of point sources (isotope, lateral X / Y, distance, activity), preset live time and acquisition speed. Optics are fixed defaults (`OpticsSettings`), shown read-only. |
 | Outputs | Two images (flood map, reconstruction) with colour bars, the decoded peak in mm, a status line, and user measurements (distance, angle, ROI statistics). Nothing is written to disk. |
 | Upward trace | Studio is subsystem SS-4 of the product concept: it implements [PR-SW-02](VV.Gcam.PRS.md#software-and-engineering-use-pr-sw) and serves user need UN-09 (engineering inspection; [VV.Gcam.URS](VV.Gcam.URS.md)). |
 | Neighbouring systems | The Gcam engine, reached only through `ISimulationService` ([VV.Studio.SDS §3](VV.Studio.SDS.md#3-interfaces-between-items-532-543)); Windows (WPF, DWM title bar, UI Automation). |
@@ -42,7 +42,7 @@ Structured after IEC 62304 §5.2 (software requirements analysis). As in [VV.Stu
 
 | ID | Requirement |
 |---|---|
-| SR-NAV-01 | One shared scene, optics, photon budget, run state and run result feed all registered workspaces; imaging owns its measurements and peak reading. |
+| SR-NAV-01 | One shared scene, optics, live time, speed, acquisition state and cumulative snapshot feed all registered workspaces; imaging owns its measurements and peak reading. |
 | SR-NAV-02 | With at least two registered workspaces, a segmented switch exposes their titles and unique `Workspace.*` AutomationIds; Ctrl+1…4 selects available workspaces, unavailable indices do nothing, and a run retains selection. A single workspace has no switch. |
 | SR-NAV-03 | Run-input edits mark an existing result outdated; workspace view settings and selection do not. |
 
@@ -56,24 +56,35 @@ Structured after IEC 62304 §5.2 (software requirements analysis). As in [VV.Stu
 | SR-PLOT-04 | Plot X zoom / pan / reset have pointer and keyboard paths; read-only pointer readout, a focus ring, theme brushes and an automation peer are exposed. Resize retains X navigation. |
 | SR-PLOT-05 | In a visible WPF window a 10-million-sample trace has CPU redraw ≤16 ms after a zoom and after a resize, including axes, query, geometry and drawing commands. Dispatcher / composition latency is recorded separately. |
 
-### Run (`SR-RUN`)
+### Acquisition (`SR-RUN`)
 
 | ID | Requirement |
 |---|---|
-| SR-RUN-01 | A run executes the simulation through `ISimulationService` off the UI thread and publishes the result, a status sentence and `State = Succeeded`. |
-| SR-RUN-02 | Cancelling a run keeps the previous result, sets `State = Cancelled` with status "Cancelled — previous result kept", and re-enables editing. |
+| SR-RUN-01 | *Withdrawn* — batch run / Succeeded; replaced by SR-RUN-09, SR-RUN-19. |
+| SR-RUN-02 | *Withdrawn* — cancel / previous run retained; replaced by SR-RUN-10. |
 | SR-RUN-03 | Any other exception becomes `State = Failed` and status "Failed: <message>"; it is never rethrown to the UI. |
-| SR-RUN-04 | Progress is accepted only while running and never moves backwards; it reads 1.0 after success. |
-| SR-RUN-05 | While running, the scene is locked: add / remove source, the photon budget and source dragging are disabled. |
-| SR-RUN-06 | Run is enabled only when the scene has at least one source. |
-| SR-RUN-07 | Editing the scene after a run marks the shown result stale ("outdated" chip) until the next successful run. Before any run nothing is stale. |
-| SR-RUN-08 | The scene → engine config is valid: MURA rank snapped to the nearest prime, non-cyclic decode, recon grid inside the fully-coded FOV, non-positive photon budget rejected. |
+| SR-RUN-04 | *Withdrawn* — photon progress; replaced by SR-RUN-11. |
+| SR-RUN-05 | *Withdrawn* — batch input locking; replaced by SR-RUN-12. |
+| SR-RUN-06 | *Withdrawn* — batch command availability; replaced by SR-RUN-13. |
+| SR-RUN-07 | *Withdrawn* — batch result staleness; replaced by SR-RUN-14. |
+| SR-RUN-08 | *Withdrawn* — photon-budget config; replaced by SR-RUN-15. |
+| SR-RUN-09 | Start executes fresh list-mode MC transport and decoding off the UI thread through `ISimulationService`'s acquisition contract; the state is Acquiring until Stopped, Completed or Failed. |
+| SR-RUN-10 | Stop cooperatively ends acquisition, retains all acquired data and measurements, sets Stopped, and re-enables editing. |
+| SR-RUN-11 | Progress equals acquired live time / preset live time, never decreases within a session, and reaches 1 at Completed. |
+| SR-RUN-12 | While Acquiring, source fields, add / remove, source dragging, live-time and speed controls are disabled. |
+| SR-RUN-13 | Start is enabled only while idle and with at least one source. |
+| SR-RUN-14 | A scene or run-input edit after acquisition marks its images outdated; Start clears the old data and stale flag. Before any acquisition nothing is stale. |
+| SR-RUN-15 | The scene config uses nearest-prime rank, non-cyclic decoding and a reconstruction grid inside the FCFOV; non-finite or non-positive preset live time and speed are rejected by the service. |
+| SR-RUN-16 | Immutable cumulative snapshots carry live time, integer counts, flood, reconstruction, estimate and the same fresh event list (pixel, true deposit in keV, Poisson arrival time in s); each event is used once. |
+| SR-RUN-17 | At 4 Hz the accumulated flood is re-decoded on its fixed grid and imaging measurements refresh without replacing their geometry. A slow consumer receives the latest cumulative snapshot. |
+| SR-RUN-18 | If MC cannot supply rate × speed, live time advances only through the acquired prefix and the status appends "MC-limited ×k" with achieved live seconds per wall second. |
+| SR-RUN-19 | Preset live time defaults to 60 s and speed to ×10; Start clears and begins a new session, and reaching the preset automatically sets Completed. |
 
 ### Scene (`SR-SCENE`)
 
 | ID | Requirement |
 |---|---|
-| SR-SCENE-01 | Source inputs are clamped: distance 200–3000 mm, activity ≤ 0 → 1 µCi, unknown isotope → Cs-137; the list label follows every edit. Photon budget < 1,000 → 1,000. |
+| SR-SCENE-01 | Source inputs are clamped: distance 200–3000 mm, activity ≤ 0 → 1 µCi, unknown isotope → Cs-137; the list label follows every edit. |
 | SR-SCENE-02 | Startup has one selected source. Adding selects the new source, offset so sources don't stack; removing selects the neighbour. |
 
 ### Image view (`SR-VIEW`)
@@ -145,7 +156,7 @@ point). They are kept as requirements so that a change breaking them fails verif
 | SR-ARCH-03 | View code-behind is `InitializeComponent()` only; views use theme keys, not literal colours or sizes. |
 | SR-ARCH-04 | Studio tests reference `Gcam.Studio.Core` only (no WPF in tests). |
 
-**39 requirements** (36 functional / usability / architecture + 3 environment and security).
+**51 active requirements**, seven withdrawn rows retained with stable IDs.
 
 ## 5. Inputs, outputs, messages (§5.2.2 b–d)
 
@@ -157,7 +168,8 @@ point). They are kept as requirements so that a change breaking them fails verif
 | Source X, Y | mm | free in the fields; dragged markers clamped to the reconstruction extent, 0.1 mm grid | SR-SCENE-01, SR-MEAS-08 |
 | Source distance | mm | 200–3000 (clamped) | SR-SCENE-01 |
 | Activity | µCi | > 0 (≤ 0 → 1) | SR-SCENE-01 |
-| Photon budget | photons | ≥ 1,000 (clamped in the UI); ≤ 0 rejected by the engine builder | SR-SCENE-01, SR-RUN-08 |
+| Preset live time | s | finite > 0; default 60; invalid UI input → 60, invalid service input rejected | SR-RUN-15, SR-RUN-19 |
+| Speed | live s / wall s | finite > 0; default 10; invalid UI input → 10, invalid service input rejected | SR-RUN-15, SR-RUN-19 |
 | Optics | mm / rank | read-only defaults in this version | — |
 | Measurement points | mm | clamped to the image extent; 2 points (distance, ROI) or 3 (angle) | SR-MEAS-05, SR-MEAS-07 |
 
@@ -175,11 +187,11 @@ point). They are kept as requirements so that a change breaking them fails verif
 | Situation | What the user sees | Requirement |
 |---|---|---|
 | Ready | "Ready" | — |
-| Running | "Simulating N photons…", progress bar, Cancel button | SR-RUN-04 |
-| Succeeded | "<counts> effective counts in <t> s · peak at (x, y) mm, ghost margin <c>" (or "no decode") | SR-RUN-01 |
-| Cancelled | "Cancelled — previous result kept" | SR-RUN-02 |
+| Acquiring | "t = 12.0 s of 60 s · 1,834 counts · 153 cps", live-time progress, Stop button; optional "MC-limited ×k" | SR-RUN-11, SR-RUN-18 |
+| Completed | "Completed · t = 60.0 s of 60 s · <counts> counts · <rate> cps" | SR-RUN-19 |
+| Stopped | "Stopped · t = <t> s of 60 s · <counts> counts · <rate> cps"; acquired data retained | SR-RUN-10 |
 | Failed | "Failed: <message>" | SR-RUN-03 |
-| Images no longer match the scene | "outdated" chip on the images | SR-RUN-07 |
+| Images no longer match the scene | "outdated" chip on the images | SR-RUN-14 |
 | ROI before any run / outside the pixels | "—" · "no image yet" / "no pixel centres inside" | SR-MEAS-04 |
 
 Every status is carried by text, not colour alone (SR-A11Y-04).
@@ -192,10 +204,10 @@ The requirements that implement the controls:
 | Hazardous situation | Risk-control requirements (RC) |
 |---|---|
 | Wrong position read off an image | SR-VIEW-05, SR-VIEW-07 |
-| Old image taken as current | SR-RUN-02, SR-RUN-07 |
+| Old image taken as current | SR-RUN-10, SR-RUN-14 |
 | ROI sum from the wrong image or frame | SR-MEAS-04 |
 | False precision | SR-MEAS-01, SR-MEAS-03, SR-MEAS-08 |
-| App hangs or crashes on a long or failing run | SR-RUN-01, SR-RUN-02, SR-RUN-03 |
+| App hangs or crashes on a long or failing run | SR-RUN-09, SR-RUN-10, SR-RUN-03 |
 | Status missed by colour-blind or screen-reader users | SR-A11Y-04 |
 
 ## 7. Not required (explicit exclusions)
