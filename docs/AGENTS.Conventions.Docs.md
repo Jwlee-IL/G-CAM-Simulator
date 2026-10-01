@@ -13,6 +13,7 @@ A document's name says **what kind of document it is** (the upper-case keyword) 
 | `DESIGN` | how GCAM Studio is designed: architecture, UI system, components | anyone changing Studio | `DESIGN.Architecture.md`, `DESIGN.Typography.md`, `DESIGN.Controls.md` |
 | `VV` | verification and validation: user / product / software requirements, the evidence behind them, design record, traceability to tests, validation scenarios, known anomalies | reviewers, anyone changing behaviour | `VV.Gcam.Overview.md`, `VV.Gcam.URS.md`, `VV.Gcam.PRS.md`, `VV.Gcam.Evidence.md`, `VV.Gcam.Limitations.md`, `VV.Gcam.Decisions.md`, `VV.Studio.SRS.md`, `VV.Studio.SDS.md`, `VV.Studio.md` |
 | `PAPER` | write-ups of the physics / results for readers | readers | `PAPER.ko.md` |
+| `PLAN` | implementation plans: goal, the author's decisions with reasons, step-by-step spec and done-criteria, written before the work and handed to whoever implements it (a person or a coding agent) | implementers, reviewers | `PLAN.Studio.Migration.md`, `PLAN.Studio.LiveAcquisition.md`, `PLAN.Studio.Spectrum.md` |
 
 Rules:
 
@@ -53,6 +54,10 @@ Rules:
 
 - A change that alters behaviour, structure or a name **updates the affected doc in the same commit**.
 - Results go to `AGENTS.Findings.md` (by theme), deferred work to `AGENTS.Backlog.md`, ready-to-start handover tasks to `AGENTS.Todo.md`.
+- **`AGENTS.Todo.md` stays a short list; a task's plan lives in a `PLAN.*` document** (one per task or task group)
+  that the task's row links. A plan opens with a `Status:` line below its scope line; when the task is done the plan
+  stays as the design record (status set to *done*, with the commit), and the Backlog's done entry links it.
+  Plans may link `AGENTS.*`; `VV.*` documents do not link plans (they are self-contained).
 - Counts that drift (test totals, command counts) are stated in one place and linked from elsewhere, or
   updated everywhere in the same commit.
 - Renaming a document: `git mv` it, then search the repository for the old name and fix every reference.
