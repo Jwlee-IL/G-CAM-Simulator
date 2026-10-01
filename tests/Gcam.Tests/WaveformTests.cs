@@ -58,6 +58,25 @@ public class WaveformTests
     }
 
     [Fact]
+    public void Blr_MatchesGolden()
+    {
+        // A trapezoid pulse on a 3000-count DC offset: the restorer tracks the offset while quiet and freezes
+        // (|x − base| ≥ gate) under the pulse, so both branches of baseline_restorer.sv are exercised.
+        var shaped = Waveform.TrapShape(Waveform.ExpPulse(400, 200, 662.0));
+        var xs = new long[shaped.Length];
+        for (int i = 0; i < xs.Length; i++) xs[i] = shaped[i] + 3000;
+        var o = Waveform.Blr(xs);
+        long max = long.MinValue, sum = 0;
+        foreach (var v in o) { if (v > max) max = v; sum += v; }
+        Assert.Equal(3000L, o[0]);                  // pre-update baseline: nothing subtracted yet
+        Assert.Equal(2858L, o[199]);                // partly converged on the DC offset
+        Assert.Equal(148932L, max);
+        Assert.Equal(2861L, o[230]);                // baseline frozen under the pulse
+        Assert.Equal(2708L, o[399]);
+        Assert.Equal(3770843L, sum);                // checksum over every sample
+    }
+
+    [Fact]
     public void TrapFlatTop_IsProportionalToEnergy()
     {
         // Linear filter: doubling the deposited energy doubles the flat top (within integer rounding).

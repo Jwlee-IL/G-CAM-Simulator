@@ -183,7 +183,7 @@ image was deleted and the capture fixed. Open a failure bundle's image before sh
 - `GCAM_UI_TESTS=1 dotnet test tests/Gcam.Studio.UiTests -c Release` — only when the desktop is free.
   Without the variable the desktop tests are **skipped** and reported as skipped, never as passed.
 - Runs are serial. A run that fails is not retried automatically; read its manifest first.
-- CI (when added) can run the oracle tests but not the desktop tests — it has no interactive session. Say so in its
+- CI (`.github/workflows/ci.yml`) runs the oracle tests but not the desktop tests — it has no interactive session. Say so in its
   summary rather than reporting the UI suite green.
 - Re-measure (stage 2) and re-pilot (stage 3) after changing AutomationIds, the window layout, the adorner's input
   handling, or the test machine's display scaling.

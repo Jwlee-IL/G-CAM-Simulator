@@ -4,7 +4,18 @@ Exits non-zero if any cocotb test fails.
 """
 import os
 import sys
-from cocotb_tools.runner import get_runner
+from cocotb_tools.runner import get_results, get_runner
+
+# Outside pytest the cocotb runner does NOT exit non-zero on a failing test - it only returns the results
+# file. Tally every run here so CI (and a shell) sees a failure.
+_tally = {"tests": 0, "failed": 0}
+
+
+def _check(results_xml):
+    tests, failed = get_results(results_xml)
+    _tally["tests"] += tests
+    _tally["failed"] += failed
+    print(f"results xml: {results_xml}  ({tests - failed}/{tests} passed)")
 
 here = os.path.dirname(os.path.abspath(__file__))
 os.chdir(here)
@@ -27,7 +38,7 @@ for top, src in [("trapezoidal_shaper", "trapezoidal_shaper.sv"),
         test_module="test_trap_shaper",
         test_dir=here,
     )
-    print(f"results xml: {results}")
+    _check(results)
 
 # Baseline restorer: driven by the SHAPED MC stream, checked bit-exact + that it removes the pole-zero walk.
 print("\n===== baseline_restorer =====")
@@ -39,7 +50,7 @@ blr.build(
     parameters={"WACC": 32, "GATE": 4096, "FRAC": 12},
     always=True,
 )
-print(f"results xml: {blr.test(hdl_toplevel='baseline_restorer', test_module='test_blr', test_dir=here)}")
+_check(blr.test(hdl_toplevel='baseline_restorer', test_module='test_blr', test_dir=here))
 
 # CR-RC^4 semi-Gaussian shaper — the classic companion to the trapezoid, checked bit-exact vs the integer ref.
 print("\n===== crrc_shaper =====")
@@ -51,4 +62,8 @@ crrc.build(
     parameters={"ORDER": 4, "A_Q16": 53656, "K_Q16": 26214},
     always=True,
 )
-print(f"results xml: {crrc.test(hdl_toplevel='crrc_shaper', test_module='test_crrc', test_dir=here)}")
+_check(crrc.test(hdl_toplevel='crrc_shaper', test_module='test_crrc', test_dir=here))
+
+print(f"\n===== cocotb total: {_tally['tests'] - _tally['failed']}/{_tally['tests']} passed =====")
+if _tally["failed"] or _tally["tests"] == 0:
+    sys.exit(1)

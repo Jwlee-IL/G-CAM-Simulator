@@ -42,6 +42,10 @@ def _ref(dut, samples):
     a = int(dut.A_Q16.value)
     k = int(dut.K_Q16.value)
     order = int(dut.ORDER.value)
+    # The reference reuses the DUT's constants, so pin them to the math (and so to C#'s Waveform): otherwise a
+    # drifted constant stays self-consistent and passes - the 53667-vs-53656 bug of commit c884d53.
+    assert a == trap_ref.CRRC_A_Q16, f"A_Q16 {a} != round(exp(-1/tau)*65536) = {trap_ref.CRRC_A_Q16}"
+    assert k == trap_ref.CRRC_K_Q16, f"K_Q16 {k} != round(65536/tau_s) = {trap_ref.CRRC_K_Q16}"
     return trap_ref.crrc_int(samples, a, k, order)
 
 
