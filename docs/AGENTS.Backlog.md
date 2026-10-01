@@ -175,6 +175,10 @@ TILT (pitch/yaw), mask WARPING.
 
 ## Done (summary — details in AGENTS.Findings by theme)
 
+- **TODO-07 Spectrum, TODO-13 live list-mode acquisition, TODO-15 spectrum graph** (2026-10-01/02): implemented,
+  headless-verified and rendered offscreen; their desktop checks are collected in TODO-22 —
+  [PLAN.Studio.Spectrum](PLAN.Studio.Spectrum.md), [PLAN.Studio.LiveAcquisition](PLAN.Studio.LiveAcquisition.md),
+  [PLAN.Studio.SpectrumPlot](PLAN.Studio.SpectrumPlot.md).
 - **TODO-10 Waveform workspace and shared chain** (2026-10-02): reference plan → Codex review (time base 72.8 cps,
   RTL bit-exact for the selected chains, double smearing, CsI fallback) → the author's rig readout (four ADCs, Anger) →
   implementation — [PLAN.Studio.Waveform](PLAN.Studio.Waveform.md); follow-ups TODO-19/20/21.
