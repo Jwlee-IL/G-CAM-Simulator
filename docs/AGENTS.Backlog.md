@@ -175,6 +175,11 @@ TILT (pitch/yaw), mask WARPING.
 
 ## Done (summary — details in AGENTS.Findings by theme)
 
+- **TODO-08 detector realism, background, per-nuclide imaging, Compton strip** (2026-10-02): Gcam.Wpf's detector
+  defaults restored, gain in one measurement stage, BSR background events, channels per isotope through the shared
+  window N, a selector with truth / found markers, Compton strip with an H-only calibration (co-located Cs + Co ×2,
+  600 s: stripped Cs 13 409 vs Cs-only 13 297, 4σ = 1 017; R = 0.48). Found peaks refined sub-cell: Cs RMS 0.17 mm;
+  Co-60 keeps a systematic −1.4 mm y bias at (−15, −8) → TODO-17 — [PLAN.Studio.ImagingOptions](PLAN.Studio.ImagingOptions.md).
 - **TODO-06 Studio workspace shell + `PlotView`** (2026-10-01, `bb3f00e`; desktop-verified the same day): workspaces,
   first-party plot (10 M samples, CPU redraw ≤ 12 ms), polish survey with issues P-01 … P-11 for the author —
   [PLAN.Studio.Shell](PLAN.Studio.Shell.md), `docs/assets/studio-polish-survey/README.md`.

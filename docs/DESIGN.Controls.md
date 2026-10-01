@@ -11,6 +11,15 @@ is therefore re-templated against the tokens in [DESIGN.Color](DESIGN.Color.md).
 
 ## Shared styles
 
+Imaging's found peaks use the existing measurement overlay's neutral halo / line / chip treatment. A diamond
+and the text "Found <isotope>" distinguish them from true-source rings without relying on colour. Found peaks
+are read-only and excluded from drag hit testing. The coordinate list provides an accessible text equivalent.
+`Size.Imaging.FoundMarker` is a 7-DIP diamond radius (matching the truth ring's scale);
+`Space.Imaging.FoundLabel` is a 4-DIP gap to its label. Both live in Metrics.xaml and are theme-independent.
+The Imaging options panel reuses the existing label, caption, mono-caption, control and gap resources; it adds
+no new colour token. It shows All / isotope, shared window N, strip, R, worker costs and found coordinates above
+the measurement tools.
+
 | Style | Key | States / notes |
 |---|---|---|
 | Focus ring | `FocusVisual` | 2 px `Brush.Focus`, 3 px outside the control, on every focusable control |

@@ -12,7 +12,7 @@ Status: in progress (2026-10-01).
 | 1 | TODO-06 workspace shell, `PlotView` | [PLAN.Studio.Shell](PLAN.Studio.Shell.md) | **done** — desktop-verified 2026-10-01 |
 | 2 | TODO-13 live list-mode acquisition | [PLAN.Studio.LiveAcquisition](PLAN.Studio.LiveAcquisition.md) | committed `0ed17e0`; desktop-verified |
 | 3 | TODO-07 Spectrum workspace | [PLAN.Studio.Spectrum](PLAN.Studio.Spectrum.md) | committed `45eece8`; desktop-verified (survey) |
-| 4 | TODO-08 detector realism, background, per-nuclide imaging, Compton strip | [PLAN.Studio.ImagingOptions](PLAN.Studio.ImagingOptions.md) | phase A done; phase B open |
+| 4 | TODO-08 detector realism, background, per-nuclide imaging, Compton strip | [PLAN.Studio.ImagingOptions](PLAN.Studio.ImagingOptions.md) | **done** 2026-10-02 |
 | 4a | TODO-15 spectrum graph (histogram steps, live zoom, Y auto-scale, bin readout, band labels) | [PLAN.Studio.SpectrumPlot](PLAN.Studio.SpectrumPlot.md) | implemented; follow-ups in its plan |
 | 4b | TODO-16 UI polish, batch 1 (design-system level) | [PLAN.Studio.Polish](PLAN.Studio.Polish.md) | batch 1 done |
 | 5 | TODO-09 editable optics + presets | — | open |

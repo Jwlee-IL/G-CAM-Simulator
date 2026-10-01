@@ -35,6 +35,8 @@
     <sys:Double x:Key="Size.ReadoutLine">16</sys:Double>
     <sys:Double x:Key="Size.Logo">16</sys:Double>
     <sys:Double x:Key="Size.Icon">12</sys:Double>
+    <sys:Double x:Key="Size.Imaging.FoundMarker">7</sys:Double>
+    <sys:Double x:Key="Space.Imaging.FoundLabel">4</sys:Double>
     <sys:Double x:Key="Size.StatusDot">8</sys:Double>
     <!-- Short acquisition numbers plus their suffix; leaves room for the workspace switch. -->
     <sys:Double x:Key="Size.NumberInput.Short">80</sys:Double>

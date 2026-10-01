@@ -299,8 +299,8 @@
                                             </Border>
                                         </DockPanel>
                                         <c:ImageStackPanel>
-                                            <c:HeatmapView x:Name="Flood" ValueUnit="counts" Style="{StaticResource ImageHeatmap}" Image="{Binding Shared.Result.Flood}"
-                                                           OriginMm="{Binding Shared.Result.FloodOriginMm}" StepMm="{Binding Shared.Result.FloodStepMm}"
+                                            <c:HeatmapView x:Name="Flood" ValueUnit="counts" Style="{StaticResource ImageHeatmap}" Image="{Binding Result.Flood}"
+                                                           OriginMm="{Binding Result.FloodOriginMm}" StepMm="{Binding Result.FloodStepMm}"
                                                            EmptyText="Run a simulation to see the flood map"
                                                            c:MeasurementOverlay.Session="{Binding Measurements}" c:MeasurementOverlay.Pane="Flood"
                                                            AutomationProperties.AutomationId="FloodView" AutomationProperties.Name="Detector flood map"
@@ -330,8 +330,9 @@
                                             </Border>
                                         </DockPanel>
                                         <c:ImageStackPanel>
-                                            <c:HeatmapView x:Name="Recon" ValueUnit="(decoded)" Style="{StaticResource ImageHeatmap}" Image="{Binding Shared.Result.Reconstruction}"
-                                                           OriginMm="{Binding Shared.Result.ReconOriginMm}" StepMm="{Binding Shared.Result.ReconStepMm}"
+                                            <c:HeatmapView x:Name="Recon" ValueUnit="(decoded)" Style="{StaticResource ImageHeatmap}" Image="{Binding Result.Reconstruction}"
+                                                           OriginMm="{Binding Result.ReconOriginMm}" StepMm="{Binding Result.ReconStepMm}"
+                                                           c:MeasurementOverlay.FoundPeaks="{Binding Peaks}"
                                                            EmptyText="Run a simulation to see the reconstruction"
                                                            c:MeasurementOverlay.Session="{Binding Measurements}" c:MeasurementOverlay.Pane="Reconstruction"
                                                            c:MeasurementOverlay.Markers="{Binding Shared.Sources}" c:MeasurementOverlay.SelectedMarker="{Binding Shared.SelectedSource}"
@@ -356,94 +357,97 @@
                         <DataTemplate DataType="{x:Type vm:ImagingWorkspaceViewModel}">
                             <!-- Measurements: tool picker · results table · detail of the selected row, top-aligned -->
                             <Border Style="{StaticResource Panel.Surface}">
-                                <StackPanel DataContext="{Binding Measurements}">
-                                    <DockPanel Style="{StaticResource PanelHeader}">
-                                        <TextBlock Text="Tools" Style="{StaticResource Text.PanelTitle}" />
-                                    </DockPanel>
-                                    <Border Style="{StaticResource Segment.Track}" Margin="{StaticResource Gap.Field}">
-                                        <UniformGrid Rows="1" AutomationProperties.Name="Pointer tool">
-                                            <RadioButton Content="_Pan" GroupName="Tool" Style="{StaticResource RadioButton.Segment}"
-                                                         IsChecked="{Binding ActiveTool, Converter={x:Static conv:EnumMatchConverter.Instance}, ConverterParameter=Pan}"
-                                                         AutomationProperties.AutomationId="ToolPan" AutomationProperties.Name="Pan tool" />
-                                            <RadioButton Content="_Distance" GroupName="Tool" Style="{StaticResource RadioButton.Segment}"
-                                                         IsChecked="{Binding ActiveTool, Converter={x:Static conv:EnumMatchConverter.Instance}, ConverterParameter=Distance}"
-                                                         AutomationProperties.AutomationId="ToolDistance" AutomationProperties.Name="Distance tool" />
-                                            <RadioButton Content="_Angle" GroupName="Tool" Style="{StaticResource RadioButton.Segment}"
-                                                         IsChecked="{Binding ActiveTool, Converter={x:Static conv:EnumMatchConverter.Instance}, ConverterParameter=Angle}"
-                                                         AutomationProperties.AutomationId="ToolAngle" AutomationProperties.Name="Angle tool" />
-                                            <RadioButton Content="_ROI" GroupName="Tool" Style="{StaticResource RadioButton.Segment}"
-                                                         IsChecked="{Binding ActiveTool, Converter={x:Static conv:EnumMatchConverter.Instance}, ConverterParameter=Roi}"
-                                                         AutomationProperties.AutomationId="ToolRoi" AutomationProperties.Name="ROI tool (region of interest)" />
-                                        </UniformGrid>
-                                    </Border>
-                                    <TextBlock Text="{Binding ToolHint}" Style="{StaticResource Text.Caption}" TextWrapping="Wrap"
-                                               Margin="{StaticResource Gap.Section}" AutomationProperties.AutomationId="ToolHint" />
-
-                                    <DockPanel Style="{StaticResource PanelHeader}">
-                                        <TextBlock DockPanel.Dock="Left" Text="Measurements" Style="{StaticResource Text.SectionTitle}" />
-                                        <Button DockPanel.Dock="Right" Content="Clear" Command="{Binding ClearCommand}"
-                                                Style="{StaticResource Button.Ghost}" ToolTip="Remove all measurements"
-                                                AutomationProperties.AutomationId="ClearMeasurements" AutomationProperties.Name="Clear all measurements" />
-                                        <Button DockPanel.Dock="Right" Content="−" Command="{Binding DeleteCommand}"
-                                                Style="{StaticResource Button.Ghost}" ToolTip="Delete selected measurement (Delete)"
-                                                AutomationProperties.AutomationId="DeleteMeasurement" AutomationProperties.Name="Delete selected measurement" />
-                                    </DockPanel>
-
-                                    <!-- Column header: same Size.Column.* keys and the same inner padding as the rows -->
-                                    <Border Padding="{StaticResource Pad.ListItem}">
-                                        <Grid>
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="{StaticResource Size.Column.Id}" />
-                                                <ColumnDefinition Width="{StaticResource Size.Column.Short}" />
-                                                <ColumnDefinition Width="{StaticResource Size.Column.Short}" />
-                                                <ColumnDefinition Width="*" />
-                                            </Grid.ColumnDefinitions>
-                                            <TextBlock Grid.Column="0" Text="#" Style="{StaticResource Text.ColumnHeader}" />
-                                            <TextBlock Grid.Column="1" Text="Image" Style="{StaticResource Text.ColumnHeader}" />
-                                            <TextBlock Grid.Column="2" Text="Kind" Style="{StaticResource Text.ColumnHeader}" />
-                                            <TextBlock Grid.Column="3" Text="Value" Style="{StaticResource Text.ColumnHeader}" HorizontalAlignment="Right" />
-                                        </Grid>
-                                    </Border>
-
-                                    <Grid Margin="{StaticResource Gap.Field}">
-                                        <ListBox MaxHeight="{StaticResource Size.ResultsList}" ItemsSource="{Binding Items}" SelectedItem="{Binding Selected}"
-                                                 AutomationProperties.AutomationId="MeasurementList" AutomationProperties.Name="Measurement results">
-                                            <ListBox.InputBindings>
-                                                <KeyBinding Key="Delete" Command="{Binding DeleteCommand}" />
-                                            </ListBox.InputBindings>
-                                            <ListBox.ItemContainerStyle>
-                                                <Style TargetType="ListBoxItem" BasedOn="{StaticResource {x:Type ListBoxItem}}">
-                                                    <Setter Property="AutomationProperties.Name" Value="{Binding Description}" />
-                                                    <Setter Property="AutomationProperties.AutomationId" Value="{Binding Name}" />
-                                                </Style>
-                                            </ListBox.ItemContainerStyle>
-                                            <ListBox.ItemTemplate>
-                                                <DataTemplate DataType="{x:Type vm:MeasurementViewModel}">
-                                                    <Grid>
-                                                        <Grid.ColumnDefinitions>
-                                                            <ColumnDefinition Width="{StaticResource Size.Column.Id}" />
-                                                            <ColumnDefinition Width="{StaticResource Size.Column.Short}" />
-                                                            <ColumnDefinition Width="{StaticResource Size.Column.Short}" />
-                                                            <ColumnDefinition Width="*" />
-                                                        </Grid.ColumnDefinitions>
-                                                        <TextBlock Grid.Column="0" Text="{Binding Name}" Style="{StaticResource Text.Mono}" />
-                                                        <TextBlock Grid.Column="1" Text="{Binding PaneLabel}" Style="{StaticResource Text.Label}" />
-                                                        <TextBlock Grid.Column="2" Text="{Binding KindLabel}" Style="{StaticResource Text.Label}" />
-                                                        <TextBlock Grid.Column="3" Text="{Binding Value}" Style="{StaticResource Text.Mono}" HorizontalAlignment="Right" />
-                                                    </Grid>
-                                                </DataTemplate>
-                                            </ListBox.ItemTemplate>
-                                        </ListBox>
-                                        <Border Padding="{StaticResource Pad.Panel}" VerticalAlignment="Top"
-                                                Visibility="{Binding HasItems, Converter={x:Static conv:InverseBoolToVisibilityConverter.Instance}}">
-                                            <TextBlock Text="No measurements yet. Pick a tool and draw on an image." Style="{StaticResource Text.Caption}"
-                                                       TextWrapping="Wrap" TextAlignment="Center" />
+                                <StackPanel>
+                                    <views:ImagingOptionsPanel />
+                                    <StackPanel DataContext="{Binding Measurements}">
+                                        <DockPanel Style="{StaticResource PanelHeader}">
+                                            <TextBlock Text="Tools" Style="{StaticResource Text.PanelTitle}" />
+                                        </DockPanel>
+                                        <Border Style="{StaticResource Segment.Track}" Margin="{StaticResource Gap.Field}">
+                                            <UniformGrid Rows="1" AutomationProperties.Name="Pointer tool">
+                                                <RadioButton Content="_Pan" GroupName="Tool" Style="{StaticResource RadioButton.Segment}"
+                                                             IsChecked="{Binding ActiveTool, Converter={x:Static conv:EnumMatchConverter.Instance}, ConverterParameter=Pan}"
+                                                             AutomationProperties.AutomationId="ToolPan" AutomationProperties.Name="Pan tool" />
+                                                <RadioButton Content="_Distance" GroupName="Tool" Style="{StaticResource RadioButton.Segment}"
+                                                             IsChecked="{Binding ActiveTool, Converter={x:Static conv:EnumMatchConverter.Instance}, ConverterParameter=Distance}"
+                                                             AutomationProperties.AutomationId="ToolDistance" AutomationProperties.Name="Distance tool" />
+                                                <RadioButton Content="_Angle" GroupName="Tool" Style="{StaticResource RadioButton.Segment}"
+                                                             IsChecked="{Binding ActiveTool, Converter={x:Static conv:EnumMatchConverter.Instance}, ConverterParameter=Angle}"
+                                                             AutomationProperties.AutomationId="ToolAngle" AutomationProperties.Name="Angle tool" />
+                                                <RadioButton Content="_ROI" GroupName="Tool" Style="{StaticResource RadioButton.Segment}"
+                                                             IsChecked="{Binding ActiveTool, Converter={x:Static conv:EnumMatchConverter.Instance}, ConverterParameter=Roi}"
+                                                             AutomationProperties.AutomationId="ToolRoi" AutomationProperties.Name="ROI tool (region of interest)" />
+                                            </UniformGrid>
                                         </Border>
-                                    </Grid>
-
-                                    <!-- Selected measurement: coordinates, size, pixel statistics — right under the table -->
-                                    <TextBlock Text="{Binding Selected.Detail}" Style="{StaticResource Text.MonoCaption}"
-                                               TextWrapping="Wrap" TextTrimming="None" AutomationProperties.AutomationId="MeasurementDetail" />
+                                        <TextBlock Text="{Binding ToolHint}" Style="{StaticResource Text.Caption}" TextWrapping="Wrap"
+                                                   Margin="{StaticResource Gap.Section}" AutomationProperties.AutomationId="ToolHint" />
+    
+                                        <DockPanel Style="{StaticResource PanelHeader}">
+                                            <TextBlock DockPanel.Dock="Left" Text="Measurements" Style="{StaticResource Text.SectionTitle}" />
+                                            <Button DockPanel.Dock="Right" Content="Clear" Command="{Binding ClearCommand}"
+                                                    Style="{StaticResource Button.Ghost}" ToolTip="Remove all measurements"
+                                                    AutomationProperties.AutomationId="ClearMeasurements" AutomationProperties.Name="Clear all measurements" />
+                                            <Button DockPanel.Dock="Right" Content="−" Command="{Binding DeleteCommand}"
+                                                    Style="{StaticResource Button.Ghost}" ToolTip="Delete selected measurement (Delete)"
+                                                    AutomationProperties.AutomationId="DeleteMeasurement" AutomationProperties.Name="Delete selected measurement" />
+                                        </DockPanel>
+    
+                                        <!-- Column header: same Size.Column.* keys and the same inner padding as the rows -->
+                                        <Border Padding="{StaticResource Pad.ListItem}">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="{StaticResource Size.Column.Id}" />
+                                                    <ColumnDefinition Width="{StaticResource Size.Column.Short}" />
+                                                    <ColumnDefinition Width="{StaticResource Size.Column.Short}" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Grid.Column="0" Text="#" Style="{StaticResource Text.ColumnHeader}" />
+                                                <TextBlock Grid.Column="1" Text="Image" Style="{StaticResource Text.ColumnHeader}" />
+                                                <TextBlock Grid.Column="2" Text="Kind" Style="{StaticResource Text.ColumnHeader}" />
+                                                <TextBlock Grid.Column="3" Text="Value" Style="{StaticResource Text.ColumnHeader}" HorizontalAlignment="Right" />
+                                            </Grid>
+                                        </Border>
+    
+                                        <Grid Margin="{StaticResource Gap.Field}">
+                                            <ListBox MaxHeight="{StaticResource Size.ResultsList}" ItemsSource="{Binding Items}" SelectedItem="{Binding Selected}"
+                                                     AutomationProperties.AutomationId="MeasurementList" AutomationProperties.Name="Measurement results">
+                                                <ListBox.InputBindings>
+                                                    <KeyBinding Key="Delete" Command="{Binding DeleteCommand}" />
+                                                </ListBox.InputBindings>
+                                                <ListBox.ItemContainerStyle>
+                                                    <Style TargetType="ListBoxItem" BasedOn="{StaticResource {x:Type ListBoxItem}}">
+                                                        <Setter Property="AutomationProperties.Name" Value="{Binding Description}" />
+                                                        <Setter Property="AutomationProperties.AutomationId" Value="{Binding Name}" />
+                                                    </Style>
+                                                </ListBox.ItemContainerStyle>
+                                                <ListBox.ItemTemplate>
+                                                    <DataTemplate DataType="{x:Type vm:MeasurementViewModel}">
+                                                        <Grid>
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="{StaticResource Size.Column.Id}" />
+                                                                <ColumnDefinition Width="{StaticResource Size.Column.Short}" />
+                                                                <ColumnDefinition Width="{StaticResource Size.Column.Short}" />
+                                                                <ColumnDefinition Width="*" />
+                                                            </Grid.ColumnDefinitions>
+                                                            <TextBlock Grid.Column="0" Text="{Binding Name}" Style="{StaticResource Text.Mono}" />
+                                                            <TextBlock Grid.Column="1" Text="{Binding PaneLabel}" Style="{StaticResource Text.Label}" />
+                                                            <TextBlock Grid.Column="2" Text="{Binding KindLabel}" Style="{StaticResource Text.Label}" />
+                                                            <TextBlock Grid.Column="3" Text="{Binding Value}" Style="{StaticResource Text.Mono}" HorizontalAlignment="Right" />
+                                                        </Grid>
+                                                    </DataTemplate>
+                                                </ListBox.ItemTemplate>
+                                            </ListBox>
+                                            <Border Padding="{StaticResource Pad.Panel}" VerticalAlignment="Top"
+                                                    Visibility="{Binding HasItems, Converter={x:Static conv:InverseBoolToVisibilityConverter.Instance}}">
+                                                <TextBlock Text="No measurements yet. Pick a tool and draw on an image." Style="{StaticResource Text.Caption}"
+                                                           TextWrapping="Wrap" TextAlignment="Center" />
+                                            </Border>
+                                        </Grid>
+    
+                                        <!-- Selected measurement: coordinates, size, pixel statistics — right under the table -->
+                                        <TextBlock Text="{Binding Selected.Detail}" Style="{StaticResource Text.MonoCaption}"
+                                                   TextWrapping="Wrap" TextTrimming="None" AutomationProperties.AutomationId="MeasurementDetail" />
+                                    </StackPanel>
                                 </StackPanel>
                             </Border>
                         </DataTemplate>

@@ -7,6 +7,7 @@ using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using Gcam.Studio.Core.Imaging;
+using Gcam.Studio.Core.Services;
 using Gcam.Studio.Core.ViewModels;
 
 namespace Gcam.Studio.Controls;
@@ -156,6 +157,20 @@ public sealed class MeasurementAdorner : Adorner
         var selectedMarker = MeasurementOverlay.GetSelectedMarker(_view);
         foreach (var marker in markers)
             DrawMarker(dc, marker, ReferenceEquals(marker, _dragMarker) || (markers.Length > 1 && ReferenceEquals(marker, selectedMarker)));
+        foreach (var peak in (MeasurementOverlay.GetFoundPeaks(_view) ?? Array.Empty<object>()).OfType<ImagingPeak>())
+            DrawFoundPeak(dc, peak);
+    }
+
+    private void DrawFoundPeak(DrawingContext dc, ImagingPeak peak)
+    {
+        double radius = (double)_view.FindResource("Size.Imaging.FoundMarker");
+        double gap = (double)_view.FindResource("Space.Imaging.FoundLabel");
+        var p = _view.MmToScreen(new Vec2(peak.Xmm, peak.Ymm));
+        // A diamond, unlike the truth marker's ring/cross; shared neutral overlay pens and chip.
+        Point[] points = [p + new Vector(0, -radius), p + new Vector(radius, 0),
+            p + new Vector(0, radius), p + new Vector(-radius, 0)];
+        for (int i = 0; i < points.Length; i++) Segment(dc, points[i], points[(i + 1) % points.Length], LinePen);
+        Chip(dc, $"Found {peak.Isotope}", p + new Vector(radius + gap, radius + gap), false);
     }
 
     private void DrawMeasurement(DrawingContext dc, MeasurementViewModel m, bool selected)

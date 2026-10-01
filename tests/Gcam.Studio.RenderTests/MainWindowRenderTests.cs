@@ -21,7 +21,7 @@ namespace Gcam.Studio.RenderTests;
 
 public sealed partial class PlotViewRenderTests
 {
-    private void RenderWindows(string theme)
+    private void RenderWindows(string theme, bool mixed = false)
     {
         // Share the existing STA/Application lifetime: WPF permits only one Application per AppDomain.
         var dictionaries = Application.Current.Resources.MergedDictionaries;
@@ -31,7 +31,16 @@ public sealed partial class PlotViewRenderTests
             { Source = new Uri($"/Gcam.Studio;component/Themes/{file}.xaml", UriKind.Relative) });
 
         var acquisition = new FixtureAcquisition();
-        var model = new MainViewModel(acquisition, new FixtureTheme(Enum.Parse<AppTheme>(theme)), new FixtureSpectrum());
+        var model = new MainViewModel(acquisition, new FixtureTheme(Enum.Parse<AppTheme>(theme)), new FixtureSpectrum(),
+            mixed ? new FixtureImaging() : null);
+        if (mixed)
+        {
+            model.Sources[0].X = 15; model.Sources[0].Y = 8;
+            model.AddSourceCommand.Execute(null);
+            model.Sources[1].Isotope = "Co-60";
+            model.Sources[1].X = -15; model.Sources[1].Y = -8;
+            model.Imaging.Strip = true;
+        }
         // The fake publishes synchronously: no MC, timers, worker thread or dispatcher wait.
         model.StartCommand.ExecuteAsync(null).GetAwaiter().GetResult();
         Assert.Equal(RunState.Completed, model.State);
@@ -40,8 +49,10 @@ public sealed partial class PlotViewRenderTests
 
         foreach (var size in new[] { new Size(1280, 800), new Size(1440, 900) })
         foreach (var workspace in model.Workspaces)
+        foreach (string isotope in mixed ? (workspace == model.Imaging ? new[] { "All", "Cs-137" } : Array.Empty<string>()) : new[] { "All" })
         {
             model.SelectedWorkspace = workspace;
+            model.Imaging.SelectedIsotope = isotope;
             // Construct XAML only. Never Show(), Run(), create an HWND, or send desktop input.
             var window = new MainWindow();
             var content = (FrameworkElement)window.Content;
@@ -60,6 +71,31 @@ public sealed partial class PlotViewRenderTests
             root.Measure(size);
             root.Arrange(new Rect(size));
             root.UpdateLayout();
+
+            if (mixed)
+            {
+                var selector = Assert.Single(Descendants(root).OfType<ComboBox>(),
+                    c => AutomationProperties.GetAutomationId(c) == "Imaging.Channel");
+                var options = Assert.Single(Descendants(root).OfType<ImagingOptionsPanel>());
+                var itemsBinding = BindingOperations.GetBindingExpression(selector, ItemsControl.ItemsSourceProperty);
+                Assert.Null(BindingOperations.GetBinding(options, FrameworkElement.DataContextProperty));
+                Assert.Same(model.Imaging, options.DataContext);
+                Assert.Equal(BindingStatus.Active, itemsBinding!.Status);
+                Assert.Same(model.Imaging, itemsBinding.DataItem);
+                output.WriteLine($"Imaging.Channel Isotopes source={itemsBinding.DataItem.GetType().FullName}; status={itemsBinding.Status}; options inherit workspace DataContext");
+                Assert.Equal(new[] { "All", "Cs-137", "Co-60" }, selector.Items.Cast<string>());
+                Assert.Equal(isotope, selector.SelectedItem);
+                var recon = Assert.Single(Descendants(root).OfType<HeatmapView>(),
+                    h => h.Name == "Recon");
+                Assert.Same(model.Imaging.Result!.Reconstruction, recon.Image);
+                Assert.Equal(isotope == "All" ? 2 : 1,
+                    MeasurementOverlay.GetFoundPeaks(recon)!.Cast<ImagingPeak>().Count());
+                // Detached render trees do not get a window Loaded event; attach production adorners explicitly.
+                foreach (var heatmap in Descendants(root).OfType<HeatmapView>().ToArray())
+                    typeof(MeasurementOverlay).GetMethod("OnLoaded", BindingFlags.Static | BindingFlags.NonPublic)!
+                        .Invoke(null, [heatmap, new RoutedEventArgs(FrameworkElement.LoadedEvent)]);
+                root.UpdateLayout();
+            }
             // Flush binding work only; no input is queued or synthesized.
             Dispatcher.CurrentDispatcher.Invoke(() => { }, DispatcherPriority.ContextIdle);
             root.UpdateLayout();
@@ -102,7 +138,7 @@ public sealed partial class PlotViewRenderTests
             string directory = Path.Combine(RepositoryRoot(), "docs", "assets", "studio-render");
             Directory.CreateDirectory(directory);
             string path = Path.Combine(directory,
-                $"{workspace.Title.ToLowerInvariant()}-{theme.ToLowerInvariant()}-{size.Width:0}x{size.Height:0}.png");
+                $"{workspace.Title.ToLowerInvariant()}{(mixed ? "-mixed-" + isotope.ToLowerInvariant() : "")}-{theme.ToLowerInvariant()}-{size.Width:0}x{size.Height:0}.png");
             using var stream = File.Create(path);
             encoder.Save(stream);
             output.WriteLine(path);
@@ -192,6 +228,34 @@ public sealed partial class PlotViewRenderTests
             return Task.FromResult(new Gcam.Studio.Core.Services.SpectrumView(centres, counts, bands,
                 6463, 0, 0.473, Resolution662, ResolvingTimeS, FrontEndParts.Default.ToString(), TimeSpan.Zero)
                 { BinEdgesKeV = Enumerable.Range(0, bins + 1).Select(i => i * width).ToArray() });
+        }
+    }
+
+    private sealed class FixtureImaging : IImagingService
+    {
+        public Task<ImagingView> ProcessAsync(Guid acquisitionId, AcquisitionSnapshot snapshot,
+            IReadOnlyList<SceneSource> scene, OpticsSettings optics, ImagingSettings settings,
+            CancellationToken cancellationToken = default)
+        {
+            // Analytic drawing fixture only; the service tests supply all physics evidence.
+            var peaks = scene.Select(s => new ImagingPeak(s.Isotope, s.X + 0.5, s.Y + 0.3, 100)).ToArray();
+            var channels = new List<ImagingChannel>();
+            ImagingResult Image(IEnumerable<SceneSource> sources)
+            {
+                var recon = new DetectorImage(41, 41);
+                for (int y = 0; y < 41; y++)
+                for (int x = 0; x < 41; x++)
+                    recon[x, y] = sources.Sum(s => 3000 * Gaussian(-56 + x * 2.8, s.X, 5)
+                        * Gaussian(-56 + y * 2.8, s.Y, 5));
+                return snapshot.Imaging with { Reconstruction = recon.ReadOnlyCopy() };
+            }
+            channels.Add(new("All", double.NaN, double.NaN, Image(scene), peaks));
+            foreach (var s in scene)
+                channels.Add(new(s.Isotope, s.Isotope == "Cs-137" ? 616 : 1110,
+                    s.Isotope == "Cs-137" ? 707 : 1236, Image([s]), peaks.Where(p => p.Isotope == s.Isotope).ToArray()));
+            return Task.FromResult(new ImagingView(channels,
+                [new StripRatio("Cs-137", "Co-60", 100000, 11000, 40000)],
+                TimeSpan.FromMilliseconds(12), TimeSpan.FromMilliseconds(250), TimeSpan.FromMilliseconds(35)));
         }
     }
 }

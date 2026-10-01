@@ -82,6 +82,7 @@ in a ViewModel is a build error, and the ViewModel tests run on any machine with
 ```csharp
 .AddSingleton<IAcquisitionService, SimulationService>()
 .AddSingleton<ISpectrumService, SpectrumService>()
+.AddSingleton<IImagingService, ImagingService>()
 .AddSingleton<ThemeService>()
 .AddSingleton<IThemeService>(sp => sp.GetRequiredService<ThemeService>())
 .AddSingleton<MainViewModel>()
@@ -138,6 +139,11 @@ resize. Transport stays behind `IAcquisitionService`; spectrum processing stays 
 Tests for maths run without WPF; the plot gate hosts the production control in a visible STA window.
 
 `SpectrumWorkspaceViewModel` follows cumulative snapshots and exposes Area series, bands and table rows.
+`MainViewModel.WindowFwhm` is the shared N for Spectrum and Imaging. ImagingWorkspaceViewModel retains the
+Start scene and optics and calls IImagingService for worker-built channels. The selector supplies one result
+to both images, bars, readouts and ROI statistics; All retains the acquisition image. Revision checks prevent
+late worker responses from replacing newer settings. Calibration, channel building and decoding have separate
+worker timings; the panel reports R and the one-pass scalar model limitation.
 `SpectrumService` serializes requests with a semaphore and performs smearing, binning and window counting in
 `Task.Run`. New events extend the histogram; an open paralyzable pile-up group survives snapshot boundaries.
 Changing acquisition, seed, pile-up or axis range resets the cache. Index-seeded pulse smearing makes replay

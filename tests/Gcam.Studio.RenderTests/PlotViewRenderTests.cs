@@ -30,6 +30,7 @@ public sealed partial class PlotViewRenderTests(ITestOutputHelper output)
                 {
                     Render(theme);
                     RenderWindows(theme);
+                    RenderWindows(theme, mixed: true);
                 }
             }
             catch (Exception ex) { failure = ex; }

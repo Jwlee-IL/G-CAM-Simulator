@@ -24,11 +24,11 @@ public sealed partial class MainViewModel : ObservableObject
     private readonly IThemeService _theme;
     private IAcquisitionSession? _session;
 
-    public MainViewModel(IAcquisitionService acquisition, IThemeService theme, ISpectrumService spectrum)
+    public MainViewModel(IAcquisitionService acquisition, IThemeService theme, ISpectrumService spectrum, IImagingService? imaging = null)
     {
         _acquisition = acquisition;
         _theme = theme;
-        Imaging = new ImagingWorkspaceViewModel(this);
+        Imaging = new ImagingWorkspaceViewModel(this, imaging);
         Spectrum = new SpectrumWorkspaceViewModel(this, spectrum);
         Workspaces = new ReadOnlyObservableCollection<WorkspaceViewModel>(new ObservableCollection<WorkspaceViewModel> { Imaging, Spectrum });
         foreach (var workspace in Workspaces) workspace.PropertyChanged += OnWorkspaceChanged;
@@ -100,7 +100,14 @@ public sealed partial class MainViewModel : ObservableObject
     [ObservableProperty] private double _liveTimeS = 60;
     [ObservableProperty] private double _speed = 10;
     [ObservableProperty] private AcquisitionSnapshot? _snapshot;
-    partial void OnSnapshotChanged(AcquisitionSnapshot? value) => Spectrum.Refresh();
+    partial void OnSnapshotChanged(AcquisitionSnapshot? value) { Spectrum.Refresh(); Imaging.RefreshChannels(); }
+    [ObservableProperty] private double _windowFwhm = 1.5;
+    partial void OnWindowFwhmChanged(double value)
+    {
+        if (!double.IsFinite(value) || value <= 0) { WindowFwhm = 1.5; return; }
+        Spectrum.NotifyWindowChanged();
+        Imaging.RefreshChannels();
+    }
 
     partial void OnLiveTimeSChanged(double value)
     {
@@ -183,6 +190,7 @@ public sealed partial class MainViewModel : ObservableObject
         double preset = LiveTimeS;
         var scene = Sources.Select(s => s.ToModel()).ToArray();
         Spectrum.Begin(scene);
+        Imaging.Begin(scene, Optics);
         try
         {
             await using var session = _acquisition.Start(scene, Optics, preset, Speed, Detector, BackgroundToSignalRatio);
@@ -194,7 +202,7 @@ public sealed partial class MainViewModel : ObservableObject
                 string limited = snapshot.IsMcLimited ? $" · MC-limited ×{snapshot.ActualSpeed:F2}" : "";
                 Status = $"t = {snapshot.LiveTimeS:F1} s of {preset:G} s · {snapshot.Counts:N0} counts · {snapshot.RateCps:F0} cps{limited}";
                 Snapshot = snapshot;
-                await Spectrum.WhenUpdated;
+                await Task.WhenAll(Spectrum.WhenUpdated, Imaging.WhenUpdated);
             }
             State = Snapshot?.IsCompleted == true ? RunState.Completed : RunState.Stopped;
             Status = $"{State} · {Status}";

@@ -92,3 +92,17 @@ the same rhythm whether or not they have actions.
 
 Stay on the 4 px grid, add a named key to `Metrics.xaml` instead of a literal in a view, and pick the kind by
 role (`Pad` for inside, `Gap` for after, `Size` for fixed dimensions).
+
+## Imaging channel options
+
+The Imaging right panel places channel options above the existing measurement tools: All / isotope selector,
+the shell-owned window N (also shown in Spectrum), Compton strip, calibrated R values, worker cost readout,
+and found-peak coordinates. It reuses Gap.Field, Gap.Tight, Gap.Section and the existing text/control roles.
+Selection changes both image grids and their bars/readouts together; ROI geometry stays in mm and its values
+refresh against the selected grid. All shows the union of isotope-labelled found markers over the acquisition
+reconstruction. A neutral diamond and "Found" label distinguish read-only peaks from draggable true-source rings.
+
+The additional render fixtures cover two isotopes with All and Cs-137 selected, both themes and both target
+sizes (1280×800 and 1440×900). Snapshot generation and visual inspection are pending local command execution;
+the panel's fit at those sizes is not claimed verified yet. Marker metrics are documented in
+[DESIGN.Controls](DESIGN.Controls.md).

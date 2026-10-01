@@ -22,7 +22,7 @@ public sealed partial class SpectrumWorkspaceViewModel : WorkspaceViewModel
     public MainViewModel Shared { get; }
     public Task WhenUpdated { get; private set; } = Task.CompletedTask;
     [ObservableProperty] private bool _logY = true;
-    [ObservableProperty] private double _windowFwhm = 1.5;
+    public double WindowFwhm { get => Shared.WindowFwhm; set => Shared.WindowFwhm = value; }
     [ObservableProperty] private bool _pileUp;
     [ObservableProperty] private SpectrumView? _view;
     [ObservableProperty] private string? _error;
@@ -44,9 +44,9 @@ public sealed partial class SpectrumWorkspaceViewModel : WorkspaceViewModel
     public string Resolution => $"{_service.Resolution662:P2} FWHM at 662 keV";
     public string ResolvingTime => $"Resolving time {_service.ResolvingTimeS * 1e9:F0} ns";
 
-    partial void OnWindowFwhmChanged(double value)
+    internal void NotifyWindowChanged()
     {
-        if (!double.IsFinite(value) || value <= 0) { WindowFwhm = 1.5; return; }
+        OnPropertyChanged(nameof(WindowFwhm));
         Refresh();
     }
     partial void OnPileUpChanged(bool value) => Refresh();

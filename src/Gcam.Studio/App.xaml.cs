@@ -18,6 +18,7 @@ public partial class App : Application
         _services = new ServiceCollection()
             .AddSingleton<IAcquisitionService, SimulationService>()
             .AddSingleton<ISpectrumService, SpectrumService>()
+            .AddSingleton<IImagingService, ImagingService>()
             .AddSingleton<ThemeService>()
             .AddSingleton<IThemeService>(sp => sp.GetRequiredService<ThemeService>())
             .AddSingleton<MainViewModel>()

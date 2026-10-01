@@ -364,12 +364,44 @@ Converters are stateless singletons. `MainWindow.xaml.cs` is `InitializeComponen
 singleton ([DESIGN.Architecture](DESIGN.Architecture.md#dependency-injection)) and maximises the window when the
 work area is smaller than its design size.
 
+### SU-23 `ImagingService` and per-nuclide presentation
+
+SU-23 belongs to SI-3 (Studio.Services). `IImagingService`, `ImagingSettings`, `ImagingChannel`, `ImagingPeak`,
+`ImagingView` and `StripRatio` belong to SI-1 (Studio.Core). SU-16's ImagingWorkspaceViewModel retains the scene
+and optics captured at Start, the selected isotope and strip toggle; SU-01 owns N. Production DI injects SU-23.
+The optional service argument is solely compatibility for existing raw-image test harnesses.
+
+The service serializes requests with a semaphore and performs measurement, window accumulation, H-only MC
+calibration and decoding inside Task.Run. New cumulative events are measured once per worker cache and
+incrementally assigned to channels. A window change re-filters the cached measured energies and recalibrates R;
+a strip-only change reuses R. Cancellation invalidates partially built caches. SU-16 revision checks reject late
+responses and refresh the selected ROI values when a view or selector changes.
+
+Primary-line windows reuse SU-20 SpectrumService.BuildBands (including unresolved neighbours). Gains and smear
+reuse MeasurementStage with the same acquisition settings and event-index seed as singles Spectrum. Spectrum's
+optional pile-up is a spectrum view setting; imaging windows use measured singles. All remains the acquisition's
+unfiltered image. Found peaks use MixedFieldStudy.TopPeaks with source-count k and one source-plane mask-cell
+separation, then PeakInterpolation.Estimate with config.Decoder.SubCellInterpolation (default Tent).
+
+Each contaminating isotope's complete H-only scene is cloned from the acquisition config with background
+disabled. A calibration accepts 100,000 fresh list-mode events; R = low-window counts / own-primary-window
+counts. Subtraction uses simultaneous raw high floods, never recursively purified floods:
+max(0, low[pixel] − sum(R × high[pixel])). The model limitation is visible in the panel. Stopwatch costs
+separate calibration, channel accumulation / correction, and channel decoding / peak extraction; queue delay,
+acquisition transport and All-image decoding are outside these costs.
+
+SU-10 draws found peaks as neutral diamonds with labelled chips; they are excluded from draggable hit testing.
+SU-16 also exposes coordinate text for accessible reading. New IDs are Imaging.Channel, Imaging.Window and
+Imaging.Strip. All existing control IDs remain stable. Validation status and numerical evidence are in
+[VV.Studio.Imaging](VV.Studio.Imaging.md); execution is pending.
+
 ## 7. Requirement allocation
 
 Every SRS requirement maps to at least one unit; every unit carries at least one requirement.
 
 | Requirement | Units |
 |---|---|
+| SR-IMG-01 … SR-IMG-06 | SU-01 (shared N), SU-16 (ImagingWorkspaceViewModel), SU-23 (worker), SU-10 (found overlays), SU-14 (selector / options panel); SU-20 (shared window and measurement response) |
 | SR-RUN-01, -02, -04 … -08 | withdrawn; batch implementation removed |
 | SR-RUN-03, SR-RUN-09 … SR-RUN-14, SR-RUN-19 | SU-01, SU-07, SU-08, SU-19 |
 | SR-RUN-15 | SU-08 (argument checks and engine `SceneConfigBuilder`) |

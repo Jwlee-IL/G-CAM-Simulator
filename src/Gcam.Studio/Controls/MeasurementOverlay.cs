@@ -39,6 +39,12 @@ public static class MeasurementOverlay
     public static IEnumerable? GetMarkers(DependencyObject d) => (IEnumerable?)d.GetValue(MarkersProperty);
     public static void SetMarkers(DependencyObject d, IEnumerable? value) => d.SetValue(MarkersProperty, value);
 
+    /// <summary>Read-only isotope-labelled found peaks, separate from draggable truth markers.</summary>
+    public static readonly DependencyProperty FoundPeaksProperty = DependencyProperty.RegisterAttached(
+        "FoundPeaks", typeof(IEnumerable), typeof(MeasurementOverlay), new PropertyMetadata(null, OnChanged));
+    public static IEnumerable? GetFoundPeaks(DependencyObject d) => (IEnumerable?)d.GetValue(FoundPeaksProperty);
+    public static void SetFoundPeaks(DependencyObject d, IEnumerable? value) => d.SetValue(FoundPeaksProperty, value);
+
     /// <summary>The highlighted marker; set by the overlay when a marker is grabbed (binds two-way by default).</summary>
     public static readonly DependencyProperty SelectedMarkerProperty = DependencyProperty.RegisterAttached(
         "SelectedMarker", typeof(object), typeof(MeasurementOverlay),

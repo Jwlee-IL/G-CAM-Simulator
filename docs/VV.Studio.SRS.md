@@ -123,6 +123,17 @@ Structured after IEC 62304 §5.2 (software requirements analysis). As in [VV.Stu
 | SR-VIEW-07 | The hovered pixel is read out as "x … mm, y … mm · value"; double-click, `0` or Home refits. |
 | SR-VIEW-08 | After a run, the reconstruction header shows the decoded peak in mm. |
 
+### Per-nuclide imaging (`SR-IMG`)
+
+| ID | Requirement |
+|---|---|
+| SR-IMG-01 | One shell-owned positive finite window multiplier N (default 1.5) is editable in Spectrum and Imaging. Both use the same per-energy FWHM bands, including unresolved-line grouping. Changing N re-filters retained acquisition events without a new acquisition. |
+| SR-IMG-02 | The worker accumulates a primary-line energy-window flood per scene isotope, using the acquisition's deterministic measured energy response, and decodes it. All retains the acquisition image of every event. |
+| SR-IMG-03 | An All / isotope selector changes the displayed flood, reconstruction, colour bar, readout, peak reading and ROI statistics together. Selecting a channel does not run transport or decoding on the UI thread. |
+| SR-IMG-04 | Each isotope channel reports up to its source count of separated found peaks, refined with the pipeline-default sub-cell interpolation. Found peaks are read-only diamonds labelled with the isotope and listed as coordinates; true-source rings remain draggable while idle. All shows the union of found peaks. Association is checked below one reconstruction-grid diagonal; localization precision is measured separately and is not implied by the marker. |
+| SR-IMG-05 | A Compton strip view toggle subtracts the simultaneous raw higher-channel floods per pixel, clamped at zero. H-only calibration at acquisition start and after N changes uses at least 20,000 accepted events per contaminating isotope, with R = low-window / own-window counts. The panel lists each R and states the one-pass scalar model limitation: exact for a clean pair, approximate for 3+ overlapping contaminants. |
+| SR-IMG-06 | Channel building, H-only calibration and decoding run on a worker and publish separate processing costs. A retained scene and optics snapshot determines processing even after edits; stale acquisitions remain marked. Cancelled or late processing cannot replace a newer view. |
+
 ### Measurement and source drag (`SR-MEAS`)
 
 | ID | Requirement |
@@ -175,11 +186,11 @@ point). They are kept as requirements so that a change breaking them fails verif
 | ID | Requirement |
 |---|---|
 | SR-ARCH-01 | `Gcam.Studio.Core` references no WPF type. |
-| SR-ARCH-02 | Only `Gcam.Studio.Services` references the simulation engine (`Gcam.Simulation`); the UI reaches transport and spectrum processing only through `IAcquisitionService` and `ISpectrumService`. |
+| SR-ARCH-02 | Only `Gcam.Studio.Services` references the simulation engine (`Gcam.Simulation`); the UI reaches transport, spectrum and imaging processing only through `IAcquisitionService`, `ISpectrumService` and `IImagingService`. |
 | SR-ARCH-03 | View code-behind is `InitializeComponent()` only; views use theme keys, not literal colours or sizes. |
 | SR-ARCH-04 | Studio tests reference `Gcam.Studio.Core` only (no WPF in tests). |
 
-**62 active requirements**, seven withdrawn rows retained with stable IDs.
+**68 active requirements**, seven withdrawn rows retained with stable IDs.
 
 ## 5. Inputs, outputs, messages (§5.2.2 b–d)
 

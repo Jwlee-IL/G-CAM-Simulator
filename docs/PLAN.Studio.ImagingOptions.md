@@ -5,9 +5,8 @@ cascades, ambient background, per-nuclide energy-window imaging and Compton stri
 phases. Builds on [PLAN.Studio.LiveAcquisition](PLAN.Studio.LiveAcquisition.md) (closes its review points R-2, R-5)
 and [PLAN.Studio.Spectrum](PLAN.Studio.Spectrum.md).
 
-Status: phase A done (2026-10-01; corrected after the implementer stopped on two wrong premises, see
-"Corrections"); phase B planned in detail (premises checked) and handed to Codex 2026-10-02. Open from phase A: the 480–620 keV valley did not fill with the absorber and
-backing (11 367 → 11 515 counts, ~1σ) — survey P-11 is not a styling issue and not explained yet.
+Status: **done** 2026-10-02 (phase A `d8b833e`, phase B committed with this status). Open: the 480–620 keV
+valley (survey P-11) and the Co-60 localisation bias (TODO-17).
 
 ## What `Gcam.Wpf` does that Studio does not
 
@@ -90,9 +89,17 @@ stripping model and its evidence (EV-15: R calibrated from a Co-only run, Cs cou
 2. **Channels.** Per isotope in the scene: the events whose measured energy (`MeasurementStage`) falls in that
    isotope's primary-line window → a flood → decode. "All" = every event (today's image). Built on the worker with
    each snapshot, incrementally where cheap. Re-filtering after an N change needs no new acquisition (view setting).
+**Correction (2026-10-02, after the implementer stopped).** The 1.5 mm tolerance borrowed from the source-drag
+scenario had no basis here: the default reconstruction grid step is 2.19 mm and `MixedFieldStudy.TopPeaks` returns
+the grid argmax without interpolation, so quantisation alone allows ~1.55 mm (measured Co-60 error 2.31 mm, its y
+part 2.28 mm — more than half a step, cause not established). Found peaks are now refined with the engine's
+`PeakInterpolation.Estimate` at the pipeline-default sub-cell method (EV-08), and the test asserts association, with
+precision measured (step 5).
+
 3. **Selector (I-5).** An Imaging-panel selector All / each isotope; the reconstruction, its colour bar and readout
    show the selected channel. Found peaks: `MixedFieldStudy.TopPeaks` per channel (k = sources of that isotope),
-   drawn as a distinct marker shape labelled with the isotope; the true-source markers stay as they are.
+   refined with `PeakInterpolation.Estimate` (pipeline-default sub-cell method), drawn as a
+   distinct marker shape labelled with the isotope; the true-source markers stay as they are.
 4. **Compton strip (I-6).** A view-setting toggle. At acquisition start (and when N changes) the worker runs an
    H-only list-mode calibration per contaminating isotope H (an isotope with a line above the lower channel's
    window): R = H events in the low window ÷ H events in H's own window, with ≥ 20 000 H events. Per pixel
@@ -101,8 +108,10 @@ stripping model and its evidence (EV-15: R calibrated from a Co-only run, Cs cou
 5. **Tests (real engine, k·σ).** Co-located Cs-137 + Co-60 (Co ×2 activity): with strip on, the Cs channel's
    in-window count matches a Cs-only acquisition of the same live time within the stated k·σ (EV-15's 0–11 % is the
    reference scale, not the tolerance — derive the tolerance from the counts); with strip off it is biased high by
-   the Co downscatter. Off-axis Cs + Co: each channel's top peak lands on its own source (≤ the source-drag
-   scenario's 1.5 mm at a stated live time). N change re-filters without a new acquisition; R is recomputed.
+   the Co downscatter. Off-axis Cs + Co: each channel's top peak is associated with its own source, error below one
+   reconstruction-grid diagonal (step × √2) after sub-cell refinement — an association check, not a precision
+   claim; the precision is **measured** (mean bias vector, RMS, max per isotope over ≥ 20 seeds, with and without
+   refinement, plus a single-isotope Co-60 control at the same position) and recorded as evidence, not asserted. N change re-filters without a new acquisition; R is recomputed.
 6. **Docs:** SR rows for channels, selector, found-peak markers and strip; SDS units; DESIGN.Layout (Imaging panel);
    VV matrix.
 

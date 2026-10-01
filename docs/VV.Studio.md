@@ -15,13 +15,26 @@ one of a set:
 The working design guides are [DESIGN.Architecture](DESIGN.Architecture.md) and the other `DESIGN.*` pages.
 
 **At a glance**
-- 62 active software requirements plus seven withdrawn batch rows (§4). Live acquisition verification and
+- 68 active software requirements plus seven withdrawn batch rows (§4). Live acquisition verification and
   measurements are recorded in [VV.Studio.Acquisition](VV.Studio.Acquisition.md); desktop acquisition
   validation is pending while the desktop and UI-test project are occupied.
 - Seven regression scenarios, a plot gate and a diagnostic survey are opt-in desktop tests. The latest regression / survey attempt was blocked by desktop input; the plot CPU gate passed (§5). Historical scenarios judge the running app against
   independently computed values (§5): VAL-01 … VAL-04 performed, VAL-05 partial, VAL-06 … VAL-08 open.
 - The layering that keeps the logic testable is compiler-enforced (SR-ARCH-01, -04).
 - Open problems are in §6 (AN-01 … AN-12); no screen-reader session has been run.
+
+TODO-08 phase B verification (Release, 2026-10-02): the reviewer reported 259 engine, 86 Studio Core,
+28 services and 10 UI-oracle tests passing and a build with 0 errors. The measured imaging results,
+including the Co-60 bias finding TODO-17 with its cause open, are in [VV.Studio.Imaging](VV.Studio.Imaging.md).
+Local `dotnet build Gcam.sln -c Release -m:1` passed with 0 warnings and 0 errors (the default parallel
+invocation exited 1 without a diagnostic error). The offscreen render opt-in passed after removing the
+options panel's Border ancestor binding, regenerating eight mixed-scene PNGs plus the existing eight
+workspace and four plot PNGs. Local `dotnet test Gcam.sln -c Release -m:1 --no-build` also completed
+successfully: 259 engine, 86 Studio Core, 28 services and 10 UI-oracle tests passed; nine desktop tests
+and the independent opt-in render case skipped. A later shell creation failed with CreateProcessAsUserW error 5; no further
+commands were launched. The final binding-identity assertions compiled in the local build but were added
+after the passing render run; their rerun and visual inspection were not performed. Desktop validation
+remains pending, and no Studio launch or desktop UI test was performed.
 
 ## 1. Scope and intended use
 
@@ -62,7 +75,7 @@ stack. SI-3 is tested through the real engine.
 
 ## 3. Software requirements
 
-The requirements are specified in [VV.Studio.SRS](VV.Studio.SRS.md) — **62 active** in twelve groups, including
+The requirements are specified in [VV.Studio.SRS](VV.Studio.SRS.md) — **68 active** in thirteen groups, including
 navigation, plotting and acquisition. Seven withdrawn batch rows retain their IDs. The matrix cites IDs only;
 the SRS is the single source of their wording.
 
@@ -77,6 +90,12 @@ Automation. Status: **pass** (evidence on 2026-10-01), **partial**, **open** (no
 
 | Req | Level | Method | Evidence | Status |
 |---|---|---|---|---|
+| SR-IMG-01 | unit + integration | T | `ImagingWorkspaceTests.SharedWindow_SelectorStripAndRoi_ReuseFrozenAcquisition`; `ImagingServiceTests.WindowChange_ReplaysRetainedEvents_RecalibratesAndMatchesFreshProcessing` | pass (headless); desktop pending |
+| SR-IMG-02 | integration | T, I | `ImagingServiceTests`; shared `SpectrumService.BuildBands` and `MeasurementStage`; [imaging evidence](VV.Studio.Imaging.md) | pass (headless); desktop pending |
+| SR-IMG-03 | unit + offscreen | T | `ImagingWorkspaceTests.SharedWindow_SelectorStripAndRoi_ReuseFrozenAcquisition`; two-isotope All / Cs-137 offscreen renders | pass (headless + offscreen); desktop pending |
+| SR-IMG-04 | integration + offscreen | T | `ImagingServiceTests.Channels_OffAxisCsAndCo_LocalizeAtTheirOwnSource`, `Precision_TwentySeeds_MeasuresMixedIsotopesAndCoOnlyControl`; diamond overlay and coordinate list | pass (headless + offscreen); measured Co-60 bias in [imaging evidence](VV.Studio.Imaging.md); desktop pending |
+| SR-IMG-05 | integration | T | `ImagingServiceTests.Strip_CoLocatedCsAndDoubleActivityCo_RecoversSameLiveTimeCsCount`, `WindowChange_ReplaysRetainedEvents_RecalibratesAndMatchesFreshProcessing` | pass (headless); desktop pending |
+| SR-IMG-06 | unit + integration | T, I | `ImagingWorkspaceTests.LateResponse_CannotReplaceNewerWindowResult`; serialized `Task.Run` worker and separate stopwatches | pass (headless); desktop pending |
 | SR-RUN-01 | historical batch | — | batch implementation and batch-only tests removed; historical desktop evidence below | withdrawn → SR-RUN-09, -19 |
 | SR-RUN-02 | historical batch | — | batch implementation and batch-only tests removed; historical desktop evidence below | withdrawn → SR-RUN-10 |
 | SR-RUN-03 | unit | T | `AcquisitionViewModelTests.Failure_ReportsMessage_KeepsAcquiredData` | pass |
