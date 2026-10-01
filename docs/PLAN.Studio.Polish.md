@@ -54,6 +54,10 @@ Fixes:
 
 ## Later batches (after the workspaces exist)
 
+- Seen in the TODO-10 renders: the chain combo boxes show the preset record text (`ScintPreset { Name = … }`)
+  instead of the part name — a bug; rate-study event labels pile on top of each other (reuse the band-label layout);
+  the "Outdated" chip touches the panel title; the collapsed optics summary is cut ("30×30 @ 0.6…").
+
 - Workspace layout: the left panel scrolls at 1280 × 800 since the Detector section was added (compact or
   collapsible sections), empty height under the images (P-04), emission-window table alignment and a Ba K row label
   (P-10), and the layouts of the Waveform / Detector workspaces when they land.

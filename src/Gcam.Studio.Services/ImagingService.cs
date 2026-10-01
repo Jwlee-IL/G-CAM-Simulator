@@ -15,7 +15,8 @@ public sealed class ImagingService : IImagingService
     // Above the specified 20,000 minimum, to reduce calibration uncertainty without reusing deposits.
     public const int CalibrationEvents = 100_000;
     private readonly SemaphoreSlim _gate = new(1);
-    private readonly FrontEndModel _model = new(FrontEndParts.Default.BuildConfig());
+    private FrontEndModel _model = new(new DetectorSettings().Chain.BuildConfig());
+    private DetectorSettings? _detector;
     private Guid _id;
     private double _n = double.NaN;
     private readonly List<double> _energies = [];
@@ -54,9 +55,11 @@ public sealed class ImagingService : IImagingService
     {
         try
         {
-            if (id != _id || snapshot.Events.Count < _energies.Count)
+            if (id != _id || snapshot.Detector != _detector || snapshot.Events.Count < _energies.Count)
             {
                 _id = id;
+                _detector = snapshot.Detector;
+                _model = new FrontEndModel(snapshot.Chain.BuildConfig());
                 _n = double.NaN;
                 _energies.Clear();
             }
@@ -163,6 +166,7 @@ public sealed class ImagingService : IImagingService
             using var source = new ListModeSource(highOnly);
             var detector = new DetectorSettings
             {
+                Chain = (_detector ?? new DetectorSettings()).Chain,
                 GainSigma = config.Detector.GainSigma, GainSeed = config.Detector.UniformitySeed
             };
             var measurement = new MeasurementStage(detector, config.Detector.PixelsX, config.Detector.PixelsY);

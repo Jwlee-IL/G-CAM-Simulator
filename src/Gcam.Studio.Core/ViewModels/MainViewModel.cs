@@ -25,13 +25,15 @@ public sealed partial class MainViewModel : ObservableObject
     private readonly IThemeService _theme;
     private IAcquisitionSession? _session;
 
-    public MainViewModel(IAcquisitionService acquisition, IThemeService theme, ISpectrumService spectrum, IImagingService? imaging = null)
+    public MainViewModel(IAcquisitionService acquisition, IThemeService theme, ISpectrumService spectrum, IImagingService? imaging = null,
+        IWaveformService? waveform = null)
     {
         _acquisition = acquisition;
         _theme = theme;
         Imaging = new ImagingWorkspaceViewModel(this, imaging);
         Spectrum = new SpectrumWorkspaceViewModel(this, spectrum);
-        Workspaces = new ReadOnlyObservableCollection<WorkspaceViewModel>(new ObservableCollection<WorkspaceViewModel> { Imaging, Spectrum });
+        Waveform = new WaveformWorkspaceViewModel(this, waveform);
+        Workspaces = new ReadOnlyObservableCollection<WorkspaceViewModel>(new ObservableCollection<WorkspaceViewModel> { Imaging, Spectrum, Waveform });
         foreach (var workspace in Workspaces) workspace.PropertyChanged += OnWorkspaceChanged;
         _selectedWorkspace = Imaging;
         Imaging.IsActive = true;
@@ -47,6 +49,7 @@ public sealed partial class MainViewModel : ObservableObject
 
     public ImagingWorkspaceViewModel Imaging { get; }
     public SpectrumWorkspaceViewModel Spectrum { get; }
+    public WaveformWorkspaceViewModel Waveform { get; }
     public ReadOnlyObservableCollection<WorkspaceViewModel> Workspaces { get; }
     public bool HasWorkspaceSwitch => Workspaces.Count >= 2;
     private void OnWorkspaceChanged(object? sender, PropertyChangedEventArgs e)
@@ -60,6 +63,7 @@ public sealed partial class MainViewModel : ObservableObject
     partial void OnSelectedWorkspaceChanged(WorkspaceViewModel value)
     {
         foreach (var workspace in Workspaces) workspace.IsActive = ReferenceEquals(workspace, value);
+        Waveform.Refresh();
     }
 
     [RelayCommand]
@@ -99,7 +103,36 @@ public sealed partial class MainViewModel : ObservableObject
         MarkStale();
     }
     partial void OnIsRunningChanged(bool value) => OpticsEditor.IsEditable = !value;
-    public DetectorSettings Detector => new() { GainSigma = GainSigmaPercent / 100, GainSeed = GainSeed };
+    public DetectorSettings Detector => new() { GainSigma = GainSigmaPercent / 100, GainSeed = GainSeed, Chain = Chain };
+    public IReadOnlyList<ScintPreset> Scintillators => FrontEndMaterials.Scintillators;
+    public IReadOnlyList<SensorPreset> Sensors => FrontEndParts.Sensors;
+    public IReadOnlyList<PreampPreset> Preamps => FrontEndParts.Preamps;
+    private ScintPreset _scintillator = FrontEndParts.Default.Scintillator;
+    private SensorPreset _sensor = FrontEndParts.Default.Sensor;
+    private PreampPreset _preamp = FrontEndParts.Default.Preamp;
+    public ScintPreset Scintillator
+    {
+        get => _scintillator;
+        set { if (!IsRunning && Scintillators.Contains(value) && SetProperty(ref _scintillator, value)) NotifyChainChanged(); }
+    }
+    public SensorPreset Sensor
+    {
+        get => _sensor;
+        set { if (!IsRunning && Sensors.Contains(value) && SetProperty(ref _sensor, value)) NotifyChainChanged(); }
+    }
+    public PreampPreset Preamp
+    {
+        get => _preamp;
+        set { if (!IsRunning && Preamps.Contains(value) && SetProperty(ref _preamp, value)) NotifyChainChanged(); }
+    }
+    public FrontEndChain Chain => new(Scintillator, Sensor, Preamp);
+    public string PendingChain => $"Next acquisition: {Chain}";
+    public string AcquiredChain => Snapshot is { } s ? $"Acquired: {s.Chain}" : "No acquired chain";
+    private void NotifyChainChanged()
+    {
+        OnPropertyChanged(nameof(Chain)); OnPropertyChanged(nameof(Detector)); OnPropertyChanged(nameof(PendingChain));
+        MarkStale();
+    }
     [ObservableProperty] private double _gainSigmaPercent = 3;
     [ObservableProperty] private int _gainSeed = 1;
     [ObservableProperty] private double _backgroundToSignalRatio;
@@ -119,7 +152,11 @@ public sealed partial class MainViewModel : ObservableObject
     [ObservableProperty] private double _liveTimeS = 60;
     [ObservableProperty] private double _speed = 10;
     [ObservableProperty] private AcquisitionSnapshot? _snapshot;
-    partial void OnSnapshotChanged(AcquisitionSnapshot? value) { Spectrum.Refresh(); Imaging.RefreshChannels(); }
+    partial void OnSnapshotChanged(AcquisitionSnapshot? value)
+    {
+        OnPropertyChanged(nameof(AcquiredChain));
+        Spectrum.Refresh(); Imaging.RefreshChannels(); Waveform.NotifySnapshot();
+    }
     [ObservableProperty] private double _windowFwhm = 1.5;
     partial void OnWindowFwhmChanged(double value)
     {
@@ -220,6 +257,7 @@ public sealed partial class MainViewModel : ObservableObject
         double preset = LiveTimeS;
         Spectrum.Begin(scene);
         Imaging.Begin(scene, acquisitionOptics);
+        Waveform.Begin();
         try
         {
             await using var session = _acquisition.Start(scene, acquisitionOptics, preset, Speed, Detector, BackgroundToSignalRatio);

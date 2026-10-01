@@ -48,9 +48,10 @@ public class MainViewModelTests
     public void Workspace_SharedResultAndSelectionSurviveSnapshot_ViewSettingsDoNotMarkStale()
     {
         var vm = new MainViewModel(new FakeAcquisition(), new FakeTheme(), new FakeSpectrumService());
-        Assert.Equal(2, vm.Workspaces.Count);
+        Assert.Equal(3, vm.Workspaces.Count);
         Assert.Same(vm.Imaging, vm.Workspaces[0]);
         Assert.Same(vm.Spectrum, vm.Workspaces[1]);
+        Assert.Same(vm.Waveform, vm.Workspaces[2]);
         Assert.Same(vm.Imaging, vm.SelectedWorkspace);
         Assert.Equal("Workspace.Imaging", vm.Imaging.AutomationId);
         Assert.True(vm.HasWorkspaceSwitch);

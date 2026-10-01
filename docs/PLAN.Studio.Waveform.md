@@ -5,8 +5,7 @@ and the selectable detection chain (scintillator, photosensor, preamp / shaper) 
 resolution and pile-up. Order of work: [PLAN.Studio.Migration](PLAN.Studio.Migration.md); procedure:
 [AGENTS.Planning](AGENTS.Planning.md).
 
-Status: revised after the implementer's measured review ([PLAN.Studio.Waveform.Review](PLAN.Studio.Waveform.Review.md))
-and the author's description of the original rig (2026-10-02). **"Decisions after review" is the specification.**
+Status: **done** 2026-10-02 (decisions D-1 … D-11 implemented; renders `docs/assets/studio-render/waveform-*`).
 
 ## What exists (checked in the code, 2026-10-02)
 

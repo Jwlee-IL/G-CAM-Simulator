@@ -36,6 +36,7 @@ public sealed class SimulationService(TimeProvider? timeProvider = null) : IAcqu
         if (!double.IsFinite(backgroundToSignalRatio) || backgroundToSignalRatio < 0)
             throw new ArgumentOutOfRangeException(nameof(backgroundToSignalRatio));
         config.Detector.EntranceAbsorberMm = detector.EntranceAbsorberMm;
+        config.Detector.Material = FrontEndMaterials.Material(detector.Chain.Scintillator);
         config.Detector.BackingScatterMm = detector.BackingScatterMm;
         config.Detector.ReflectorGapMm = detector.ReflectorGapMm;
         config.Detector.GainSigma = detector.GainSigma;

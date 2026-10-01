@@ -5,6 +5,7 @@ public sealed record PlotSeries(string Name, double[] Y, double[]? X = null,
     double Origin = 0, double Step = 1, PlotKind Kind = PlotKind.Line, PlotColourRole ColourRole = PlotColourRole.Series1,
     double[]? BinEdges = null)
 {
+    public MinMaxPyramid? PreparedPyramid { get; init; }
     public const int MaximumSamples = 10_000_000;
     public double XAt(int index) => X is null ? Origin + index * Step : X[index];
     public double EdgeAt(int index) => BinEdges is null ? Origin + index * Step : BinEdges[index];
@@ -37,6 +38,14 @@ public sealed record PlotSeries(string Name, double[] Y, double[]? X = null,
                 if (!double.IsFinite(EdgeAt(i)) || (i > 0 && EdgeAt(i) <= EdgeAt(i - 1)))
                     throw new ArgumentException("Bin edges must be finite and strictly increasing.");
             if (Y.Any(y => y < 0)) throw new ArgumentException("Histogram counts must be nonnegative.");
+        }
+        if (PreparedPyramid is not null && !PreparedPyramid.IsFor(Y))
+            throw new ArgumentException("Prepared pyramid belongs to another array.");
+        // A prepared pyramid already checked every Y value on the worker. Uniform X needs only its endpoint.
+        if (PreparedPyramid is not null && X is null)
+        {
+            if (Y.Length > 0 && !double.IsFinite(XAt(Y.Length - 1))) throw new ArgumentException("X must be finite.");
+            return;
         }
         for (int i = 0; i < Y.Length; i++)
         {

@@ -175,6 +175,9 @@ TILT (pitch/yaw), mask WARPING.
 
 ## Done (summary — details in AGENTS.Findings by theme)
 
+- **TODO-10 Waveform workspace and shared chain** (2026-10-02): reference plan → Codex review (time base 72.8 cps,
+  RTL bit-exact for the selected chains, double smearing, CsI fallback) → the author's rig readout (four ADCs, Anger) →
+  implementation — [PLAN.Studio.Waveform](PLAN.Studio.Waveform.md); follow-ups TODO-19/20/21.
 - **TODO-09 editable optics, presets, decoder-focus refocus** (2026-10-02): reference plan → Codex's measured review
   (coverage rule false, All not refocused) → revised plan → implementation — [PLAN.Studio.Optics](PLAN.Studio.Optics.md).
 - **TODO-18 configuration-scan headline** (2026-10-02): the rank-23 "±64 mm, 96 %, ~7×" result predated the 10 mm

@@ -12,6 +12,7 @@ public sealed class MinMaxPyramid
 
     /// <summary>Extra doubles stored for extrema, excluding the caller-owned samples.</summary>
     public long StoredDoubleCount { get; private set; }
+    public bool IsFor(double[] samples) => ReferenceEquals(_samples, samples);
 
     public MinMaxPyramid(double[] samples)
     {

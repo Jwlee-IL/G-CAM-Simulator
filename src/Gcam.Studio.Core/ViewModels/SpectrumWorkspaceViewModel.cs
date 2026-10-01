@@ -40,9 +40,9 @@ public sealed partial class SpectrumWorkspaceViewModel : WorkspaceViewModel
     public IReadOnlyList<SpectrumBand> Lines => View?.Bands ?? [];
     public string Summary => View is { } v
         ? $"{v.TotalCounts:N0} measured pulses · {v.InWindowShare:P1} in windows · {v.OverflowCounts:N0} above plot range" : "No acquired counts";
-    public string Chain => FrontEndParts.Default.ToString();
-    public string Resolution => $"{_service.Resolution662:P2} FWHM at 662 keV";
-    public string ResolvingTime => $"Resolving time {_service.ResolvingTimeS * 1e9:F0} ns";
+    public string Chain => Shared.Snapshot?.Chain.ToString() ?? "No acquired chain";
+    public string Resolution => $"{(View?.Resolution662 ?? _service.Resolution662):P2} FWHM at 662 keV (single channel)";
+    public string ResolvingTime => $"Effective resolving interval {(View?.ResolvingTimeS ?? _service.ResolvingTimeS) * 1e9:F0} ns";
 
     internal void NotifyWindowChanged()
     {
@@ -110,6 +110,7 @@ public sealed partial class SpectrumWorkspaceViewModel : WorkspaceViewModel
 
     private void NotifyReadings()
     {
+        OnPropertyChanged(nameof(Chain));
         OnPropertyChanged(nameof(Lines));
         OnPropertyChanged(nameof(Summary));
         OnPropertyChanged(nameof(Resolution));

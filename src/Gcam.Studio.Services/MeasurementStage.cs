@@ -17,7 +17,7 @@ public sealed class MeasurementStage
     public MeasurementStage(DetectorSettings? detector, int pixelsX, int pixelsY, int seed = 909)
     {
         _seed = seed;
-        _model = new FrontEndModel(FrontEndParts.Default.BuildConfig());
+        _model = new FrontEndModel((detector ?? new DetectorSettings()).Chain.BuildConfig());
         _width = pixelsX;
         if (detector is null) return;
         if (pixelsX <= 0 || pixelsY <= 0 || !double.IsFinite(detector.GainSigma) || detector.GainSigma < 0)

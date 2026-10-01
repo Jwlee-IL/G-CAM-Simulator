@@ -1,0 +1,27 @@
+<UserControl x:Class="Gcam.Studio.Views.ChainPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Expander Header="Detection chain" Style="{StaticResource Expander.Section}" IsExpanded="True"
+              AutomationProperties.AutomationId="Chain.Section">
+        <StackPanel>
+            <StackPanel IsEnabled="{Binding IsIdle}">
+                <TextBlock Text="Scintillator" Style="{StaticResource Text.Label}" />
+                <ComboBox ItemsSource="{Binding Scintillators}" DisplayMemberPath="Name" SelectedItem="{Binding Scintillator}"
+                          Margin="{StaticResource Gap.Field}" AutomationProperties.AutomationId="Chain.Scintillator"
+                          AutomationProperties.Name="Scintillator" />
+                <TextBlock Text="Photosensor" Style="{StaticResource Text.Label}" />
+                <ComboBox ItemsSource="{Binding Sensors}" DisplayMemberPath="Name" SelectedItem="{Binding Sensor}"
+                          Margin="{StaticResource Gap.Field}" AutomationProperties.AutomationId="Chain.Sensor"
+                          AutomationProperties.Name="Photosensor" />
+                <TextBlock Text="Preamp / shaper" Style="{StaticResource Text.Label}" />
+                <ComboBox ItemsSource="{Binding Preamps}" DisplayMemberPath="Name" SelectedItem="{Binding Preamp}"
+                          Margin="{StaticResource Gap.Field}" AutomationProperties.AutomationId="Chain.Preamp"
+                          AutomationProperties.Name="Preamp / shaper" />
+            </StackPanel>
+            <TextBlock Text="{Binding PendingChain}" Style="{StaticResource Text.Caption}" TextWrapping="Wrap"
+                       Margin="{StaticResource Gap.Tight}" AutomationProperties.AutomationId="Chain.Pending" />
+            <TextBlock Text="{Binding AcquiredChain}" Style="{StaticResource Text.Caption}" TextWrapping="Wrap"
+                       AutomationProperties.AutomationId="Chain.Acquired" />
+        </StackPanel>
+    </Expander>
+</UserControl>

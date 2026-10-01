@@ -1,0 +1,46 @@
+<UserControl x:Class="Gcam.Studio.Views.WaveformPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Border Style="{StaticResource Panel.Surface}">
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+                <DockPanel Style="{StaticResource PanelHeader}"><TextBlock Text="Scope window" Style="{StaticResource Text.PanelTitle}" /></DockPanel>
+                <CheckBox Content="Follow latest acquired event" IsChecked="{Binding FollowLatest}" Margin="{StaticResource Gap.Field}"
+                          AutomationProperties.AutomationId="Waveform.FollowLatest" />
+                <StackPanel Orientation="Horizontal" Margin="{StaticResource Gap.Field}">
+                    <Button Content="Latest" Command="{Binding LatestCommand}" Style="{StaticResource Button.Ghost}" Margin="{StaticResource Gap.Inline}"
+                            AutomationProperties.AutomationId="Waveform.Latest" />
+                    <Button Content="Next" Command="{Binding NextCommand}" Style="{StaticResource Button.Ghost}"
+                            AutomationProperties.AutomationId="Waveform.Next" />
+                </StackPanel>
+                <TextBlock Text="Acquired event index (zero-based)" Style="{StaticResource Text.Label}" />
+                <TextBox Text="{Binding TriggerIndex}" Margin="{StaticResource Gap.Field}"
+                         AutomationProperties.AutomationId="Waveform.Index" AutomationProperties.Name="Acquired event index (zero-based)" />
+                <TextBlock Text="Window length" Style="{StaticResource Text.Label}" />
+                <TextBox Text="{Binding WindowUs}" Tag="µs" Margin="{StaticResource Gap.Section}"
+                         AutomationProperties.AutomationId="Waveform.Window" AutomationProperties.Name="Window length (microseconds)" />
+                <DockPanel Style="{StaticResource PanelHeader}"><TextBlock Text="Rate study" Style="{StaticResource Text.PanelTitle}" /></DockPanel>
+                <CheckBox Content="Re-space arrivals (rate study)" IsChecked="{Binding RateStudy}" Margin="{StaticResource Gap.Field}"
+                          AutomationProperties.AutomationId="Waveform.RateStudy" />
+                <TextBlock Text="Simulated rate · energy channel" Style="{StaticResource Text.Label}" />
+                <TextBox Text="{Binding RateKcps}" Tag="kcps" IsEnabled="{Binding RateStudy}" Margin="{StaticResource Gap.Section}"
+                         AutomationProperties.AutomationId="Waveform.Rate" AutomationProperties.Name="Simulated rate in kilocounts per second" />
+                <CheckBox Content="Ideal shaper stimulus" IsChecked="{Binding Ideal}" Margin="{StaticResource Gap.Section}"
+                          AutomationProperties.AutomationId="Waveform.Ideal" />
+                <DockPanel Style="{StaticResource PanelHeader}"><TextBlock Text="Acquired chain" Style="{StaticResource Text.PanelTitle}" /></DockPanel>
+                <TextBlock Text="{Binding View.ChainReadout}" TextWrapping="Wrap" Style="{StaticResource Text.MonoCaption}" Margin="{StaticResource Gap.Section}"
+                           AutomationProperties.AutomationId="Waveform.ChainReadout" />
+                <DockPanel Style="{StaticResource PanelHeader}"><TextBlock Text="Events in window" Style="{StaticResource Text.PanelTitle}" /></DockPanel>
+                <ListBox ItemsSource="{Binding Events}" MaxHeight="{StaticResource Size.ResultsList}" AutomationProperties.AutomationId="Waveform.Events"
+                         AutomationProperties.Name="Acquired events in scope window">
+                    <ListBox.ItemContainerStyle>
+                        <Style TargetType="ListBoxItem" BasedOn="{StaticResource {x:Type ListBoxItem}}">
+                            <Setter Property="AutomationProperties.Name" Value="{Binding Description}" />
+                        </Style>
+                    </ListBox.ItemContainerStyle>
+                    <ListBox.ItemTemplate><DataTemplate><TextBlock Text="{Binding Description}" TextWrapping="Wrap" Style="{StaticResource Text.MonoCaption}" /></DataTemplate></ListBox.ItemTemplate>
+                </ListBox>
+            </StackPanel>
+        </ScrollViewer>
+    </Border>
+</UserControl>

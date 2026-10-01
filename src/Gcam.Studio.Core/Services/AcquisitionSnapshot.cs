@@ -7,6 +7,7 @@ public sealed record AcquisitionSnapshot(double LiveTimeS, long Counts, double R
     double ActualSpeed, bool IsMcLimited, ImagingResult Imaging, IReadOnlyList<DetectedEvent> Events,
     TimeSpan DecodeTime, bool IsCompleted)
 {
+    public Gcam.Configuration.FrontEndChain Chain => (Detector ?? new DetectorSettings()).Chain;
     /// <summary>Frozen measurement inputs belonging to these events, never the current editable detector.</summary>
     public DetectorSettings? Detector { get; init; }
     /// <summary>Effective physical optics frozen at Start; decoder view focus may change later.</summary>

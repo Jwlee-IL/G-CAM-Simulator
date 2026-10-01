@@ -83,6 +83,8 @@ public sealed class PlotView : FrameworkElement
     public static readonly DependencyProperty ViewRangeProperty = Register<PlotViewRange?>(nameof(ViewRange), null,
         (d, _) => ((PlotView)d).ApplyViewRange());
     public PlotViewRange? ViewRange { get => (PlotViewRange?)GetValue(ViewRangeProperty); set => SetValue(ViewRangeProperty, value); }
+    public static readonly DependencyProperty ShareViewRangeProperty = Register(nameof(ShareViewRange), false);
+    public bool ShareViewRange { get => (bool)GetValue(ShareViewRangeProperty); set => SetValue(ShareViewRangeProperty, value); }
     public static readonly DependencyProperty XUnitProperty = Register(nameof(XUnit), "");
     public string XUnit { get => (string)GetValue(XUnitProperty); set => SetValue(XUnitProperty, value); }
     public static readonly DependencyProperty YUnitProperty = Register(nameof(YUnit), "");
@@ -137,7 +139,7 @@ public sealed class PlotView : FrameworkElement
         {
             series.Validate();
             if (series.Y.Length == 0) continue;
-            var pyramid = new MinMaxPyramid(series.Y);
+            var pyramid = series.PreparedPyramid ?? new MinMaxPyramid(series.Y);
             var range = pyramid.Range(0, series.Y.Length);
             _prepared.Add((series, pyramid));
             _xMin = Math.Min(_xMin, series.Kind == PlotKind.Histogram ? series.EdgeAt(0) : series.XAt(0));
@@ -194,6 +196,8 @@ public sealed class PlotView : FrameworkElement
 
     private void NavigationChanged()
     {
+        if (ShareViewRange && _prepared.Count > 0 && ViewRange != CurrentViewRange)
+            SetCurrentValue(ViewRangeProperty, CurrentViewRange);
         AutoScale();
         UpdateHover(null);
         InvalidateVisual();

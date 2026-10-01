@@ -1,0 +1,39 @@
+<UserControl x:Class="Gcam.Studio.Views.WaveformView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:c="clr-namespace:Gcam.Studio.Controls">
+    <UserControl.Resources><BooleanToVisibilityConverter x:Key="BoolToVis" /></UserControl.Resources>
+    <Border Style="{StaticResource Panel.Surface}">
+        <DockPanel>
+            <StackPanel DockPanel.Dock="Top">
+                <DockPanel Style="{StaticResource PanelHeader}">
+                    <TextBlock Text="Waveform · energy sum" Style="{StaticResource Text.PanelTitle}" />
+                    <Border Style="{StaticResource Chip.Warning}" Visibility="{Binding Shared.IsResultStale, Converter={StaticResource BoolToVis}}">
+                        <TextBlock Text="Outdated" Style="{StaticResource Text.CaptionWarning}" />
+                    </Border>
+                </DockPanel>
+                <TextBlock Text="{Binding View.Note}" Style="{StaticResource Text.Caption}" TextWrapping="Wrap" Margin="{StaticResource Gap.Field}"
+                           AutomationProperties.AutomationId="Waveform.Note" />
+            </StackPanel>
+            <StackPanel DockPanel.Dock="Bottom">
+                <TextBlock Text="{Binding Summary}" Style="{StaticResource Text.Caption}" />
+                <TextBlock Text="{Binding View.PulseReadout}" Style="{StaticResource Text.MonoCaption}" TextWrapping="Wrap" />
+                <TextBlock Text="{Binding Error}" Style="{StaticResource Text.CaptionWarning}" TextWrapping="Wrap" />
+            </StackPanel>
+            <Grid>
+                <Grid.RowDefinitions><RowDefinition /><RowDefinition Height="Auto" /><RowDefinition /></Grid.RowDefinitions>
+                <c:PlotView Series="{Binding AdcSeries}" Markers="{Binding Markers}" ShareViewRange="True"
+                            ViewRange="{Binding ViewRange, Mode=TwoWay}" XUnit="µs" YUnit="codes"
+                            XLabel="time from trigger (µs)" YLabel="ADC codes · energy sum"
+                            EmptyText="Start acquisition and select an event" AutomationProperties.AutomationId="Waveform.Adc"
+                            AutomationProperties.Name="Waveform ADC energy sum" AutomationProperties.HelpText="Wheel or plus and minus to zoom; arrows to pan; Home to reset. Both traces share time." />
+                <Border Grid.Row="1" Style="{StaticResource Divider}" />
+                <c:PlotView Grid.Row="2" Series="{Binding ShapedSeries}" Markers="{Binding Markers}" ShareViewRange="True"
+                            ViewRange="{Binding ViewRange, Mode=TwoWay}" XUnit="µs" YUnit="codes"
+                            XLabel="time from trigger (µs)" YLabel="integer shaped output"
+                            EmptyText="Integer RTL shaper output" AutomationProperties.AutomationId="Waveform.Shaped"
+                            AutomationProperties.Name="Waveform integer shaped output" AutomationProperties.HelpText="Wheel or plus and minus to zoom; arrows to pan; Home to reset. Both traces share time." />
+            </Grid>
+        </DockPanel>
+    </Border>
+</UserControl>

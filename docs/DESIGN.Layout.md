@@ -118,3 +118,13 @@ Geometry readings carry no pass/fail glyph; sampling has a conditional precision
 hint is shown. The Imaging right panel scrolls independently so measurements remain reachable at small sizes.
 Focus changes visibly explain why reconstruction measurements were cleared; flood measurements stay.
 Offscreen render cases cover expanded/collapsed panels and F=800 at 1280×800 and 1440×900 in both themes.
+
+## Waveform workspace and shared chain (2026-10-02)
+
+The top workspace switch now includes Waveform (Ctrl+3). The shared left panel places Detection chain after the source list, before the selected-source editor and Physical optics. Its scintillator / photosensor / preamp selectors are disabled during acquisition. Separate wrapped summaries identify the pending next-acquisition chain and the chain used by retained results; changing a physical part marks results outdated without repainting retained data with pending physics.
+
+Waveform centre stacks two flexible-height PlotViews: ADC energy sum above integer shaped output. Both share the time-from-trigger axis (µs), zoom, pan and reset; Y remains independent. Event markers identify acquired index, pixel and deposit, with an event list in the right panel also giving the original absolute acquisition time. The title, outdated chip and simulation/mode/partial-window note sit above the plots; worker summary and pulse readout are below.
+
+The right ScrollViewer contains latest/next/index, Follow latest, window µs, a separate rate-study toggle and simulated energy-channel kcps, ideal stimulus, acquired-chain/readout facts and the event list. Default is real 10 µs with 20% pretrigger; wider windows may be clipped to the sample work budget. Rate study and ideal status are explicit in the centre note. No controls imply that the position channels or their pile-up behavior have been simulated.
+
+New views use the existing surface, type, field, gap and button tokens. Automation IDs are `Chain.Section`, `Chain.Scintillator`, `Chain.Sensor`, `Chain.Preamp`, `Chain.Pending`, `Chain.Acquired`, `Waveform.Adc`, `Waveform.Shaped`, `Waveform.FollowLatest`, `Waveform.Latest`, `Waveform.Next`, `Waveform.Index`, `Waveform.Window`, `Waveform.RateStudy`, `Waveform.Rate`, `Waveform.Ideal`, `Waveform.Events`, `Waveform.ChainReadout` and `Waveform.Note`. Accessible names include visible labels/units. No new desktop accessibility/layout pass is claimed; the 1280×800 and 1440×900 offscreen paths are prepared but were not executed after sandbox denial.

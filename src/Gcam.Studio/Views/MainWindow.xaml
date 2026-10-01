@@ -175,6 +175,7 @@
                             </ListBox.ItemTemplate>
                         </ListBox>
 
+                        <views:ChainPanel Margin="{StaticResource Gap.Section}" />
                         <!-- Selected source -->
                         <StackPanel DataContext="{Binding SelectedSource}"
                                     IsEnabled="{Binding DataContext.IsIdle, RelativeSource={RelativeSource AncestorType=ScrollViewer}}">
@@ -294,6 +295,7 @@
                 <ContentControl Grid.Column="2" Content="{Binding SelectedWorkspace}" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
                     <ContentControl.Resources>
                         <DataTemplate DataType="{x:Type vm:SpectrumWorkspaceViewModel}"><views:SpectrumView /></DataTemplate>
+                        <DataTemplate DataType="{x:Type vm:WaveformWorkspaceViewModel}"><views:WaveformView /></DataTemplate>
                         <DataTemplate DataType="{x:Type vm:ImagingWorkspaceViewModel}">
                             <!-- Images: square heatmap with its colour bar and readout directly beneath (ImageStackPanel) -->
                             <Grid>
@@ -368,6 +370,7 @@
                 <ContentControl Grid.Column="4" Content="{Binding SelectedWorkspace}" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
                     <ContentControl.Resources>
                         <DataTemplate DataType="{x:Type vm:SpectrumWorkspaceViewModel}"><views:SpectrumPanel /></DataTemplate>
+                        <DataTemplate DataType="{x:Type vm:WaveformWorkspaceViewModel}"><views:WaveformPanel /></DataTemplate>
                         <DataTemplate DataType="{x:Type vm:ImagingWorkspaceViewModel}">
                             <!-- Measurements: tool picker · results table · detail of the selected row, top-aligned -->
                             <Border Style="{StaticResource Panel.Surface}">

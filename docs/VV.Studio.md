@@ -470,3 +470,19 @@ the matrix in §4 is updated.
   never drift apart.
 - Renaming a test means updating its row here; a cited test that no longer exists is a defect in this document.
 - Problems found during V&V go to §6 with an `AN-` ID and stay there until fixed.
+
+## Waveform and shared-chain verification matrix (2026-10-02)
+
+The Waveform workspace and physical-chain selection are implemented; execution status is **not verified in the implementer's sandbox**. This section supersedes earlier exclusion/read-only-chain descriptions and adds traceability without increasing the verified test totals until the independent run completes. Conditions, commands and expected render paths are in [VV.Studio.Waveform](VV.Studio.Waveform.md).
+
+| Requirement | Automated verification | Current execution status |
+|---|---|---|
+| SR-CHAIN-01…03 | WaveformServiceTests chain/response tests; WaveformWorkspaceTests stale/frozen/disabled-edit tests; Evidence mixed-field calibration | Added, not run |
+| SR-WAVE-01…02 | Origin-relative window/prehistory/association tests; next/latest/held-window VM tests; actual MC offscreen scope | Added, not run |
+| SR-WAVE-03…05 | Rate-study immutability/determinism; shared response; zero-noise ideal tests; real/rate/ideal render labels | Added, not run |
+| SR-WAVE-06 | Acquired readout and invalid-energy suppression tests; no CR-RC energy precision assertion | Added, not run |
+| SR-WAVE-07 | ScopeWindow policies; empty window/noise/late timestamp tests; maximum-cap worker measurement (Evidence) | Added, not run |
+| SR-WAVE-08 | Visible-only/reuse/latest-revision/new-acquisition/error VM tests; prepared-plot identity and two-way render navigation | Added, not run |
+| Waveform UI, shared selector | Existing offscreen renderer extended to 12 MC-based scope images, two themes × two sizes × three modes | Generation pending; no desktop tests |
+
+The initially launched Studio Release build completed with 0 warnings/errors before later test/document/final edits. Subsequent shell creation failed with access denied; a final build/test count, services-suite runtime and rendered PNG inspection must come from the independent verification run. Existing engine tests were not edited; no RTL/cocotb code was changed.

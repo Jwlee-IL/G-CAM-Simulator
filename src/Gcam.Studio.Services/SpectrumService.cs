@@ -12,8 +12,8 @@ public sealed class SpectrumService : ISpectrumService
 {
     public const int BinCount = 256;
     private readonly SemaphoreSlim _gate = new(1);
-    private readonly FrontEndModel _model = new(FrontEndParts.Default.BuildConfig());
-    private readonly double _resolvingTimeS;
+    private FrontEndModel _model = new(new DetectorSettings().Chain.BuildConfig());
+    private double _resolvingTimeS;
     private Guid _acquisitionId;
     private bool _pileUp;
     private int _seed, _consumed, _groupStart;
@@ -27,7 +27,7 @@ public sealed class SpectrumService : ISpectrumService
 
     public SpectrumService()
     {
-        var pulse = FrontEndParts.Default.PulseSamples;
+        var pulse = new DetectorSettings().Chain.PulseSamples;
         _resolvingTimeS = EventStreamStudy.ResolvingSamples(pulse.RiseSamples, pulse.TailSamples)
             / FrontEndParts.AdcSampleRateHz;
     }
@@ -63,6 +63,11 @@ public sealed class SpectrumService : ISpectrumService
             settings.PixelsX != _measurementSettings?.PixelsX || settings.PixelsY != _measurementSettings?.PixelsY)
         {
             _measurementSettings = settings;
+            var chain = (settings.Detector ?? new DetectorSettings()).Chain;
+            _model = new FrontEndModel(chain.BuildConfig());
+            var pulse = chain.PulseSamples;
+            _resolvingTimeS = EventStreamStudy.ResolvingSamples(pulse.RiseSamples, pulse.TailSamples)
+                / FrontEndParts.AdcSampleRateHz;
             _measurement = new MeasurementStage(settings.Detector, settings.PixelsX, settings.PixelsY, seed);
             _acquisitionId = id;
             _pileUp = settings.PileUp;
@@ -115,7 +120,7 @@ public sealed class SpectrumService : ISpectrumService
         double union = counts.Where((_, i) => rows.Any(b => centres[i] >= b.LoKeV && centres[i] <= b.HiKeV)).Sum();
         watch.Stop();
         return new(centres, counts, Array.AsReadOnly(rows), total, overflow, total > 0 ? union / total : 0,
-            _model.FwhmFraction(662), _resolvingTimeS, FrontEndParts.Default.ToString(), watch.Elapsed)
+            _model.FwhmFraction(662), _resolvingTimeS, (settings.Detector ?? new DetectorSettings()).Chain.ToString(), watch.Elapsed)
         { BinEdgesKeV = Enumerable.Range(0, BinCount + 1).Select(i => i * width).ToArray() };
     }
 
