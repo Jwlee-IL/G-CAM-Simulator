@@ -7,6 +7,14 @@ covered: the simulation engine and the original viewer `src/Gcam.Wpf`. How the r
 Structured after IEC 62304 §5.2 (software requirements analysis). As in [VV.Studio](VV.Studio.md#1-scope-and-intended-use),
 **GCAM Studio is not a medical device and no compliance is claimed**; the structure is borrowed for its discipline.
 
+**At a glance**
+- **39 requirements** in nine groups: run, scene, image view, measurement, theme (functional, §3) and environment,
+  accessibility, security, architecture (§4). Each is one testable present-tense statement.
+- Inputs, outputs and every status message are listed with their valid ranges (§5); risk control
+  (the illustrative safety class B) maps six hazardous situations to the requirements that control them (§6);
+  what Studio deliberately does not do is in §7.
+- Verification status per requirement is in [VV.Studio §4](VV.Studio.md#4-verification).
+
 ## 1. Product context
 
 | | |
@@ -188,5 +196,5 @@ Stated so that their absence is not read as a gap in verification:
   one verification entry in the matrix. Rows whose evidence is *partial* are listed in
   [VV.Studio §4](VV.Studio.md#coverage-summary).
 - A change that adds or alters behaviour adds or edits its row here **and** its matrix row in VV.Studio in the
-  same commit ([AGENTS.Conventions.Docs](AGENTS.Conventions.Docs.md#keeping-docs-in-sync)).
+  same commit.
 - When the risk table in VV.Studio §6 changes, re-check §6 above.

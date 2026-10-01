@@ -1,8 +1,8 @@
 # VV.Studio — verification and validation of GCAM Studio
 
 Scope: the three Studio projects (`Gcam.Studio.Core`, `Gcam.Studio.Services`, `Gcam.Studio`) and their tests.
-Not covered: the simulation engine (verified by its own tests, see [AGENTS.md](../AGENTS.md#solution-layout)) and
-the original code-behind viewer `src/Gcam.Wpf`. This document says **how we know Studio does what it must**; it is
+Not covered: the simulation engine (verified by its own test project, `tests/Gcam.Tests`; the product-level
+evidence is [VV.Gcam.Evidence](VV.Gcam.Evidence.md)) and the original code-behind viewer `src/Gcam.Wpf`. This document says **how we know Studio does what it must**; it is
 one of a set:
 
 | Document | IEC 62304 activity | Holds |
@@ -13,6 +13,15 @@ one of a set:
 | VV.Studio (this page) | §5.5–5.7 verification, validation, §7 risk, §9 problems | traceability to tests, validation scenarios, anomalies, risk table |
 
 The working design guides are [DESIGN.Architecture](DESIGN.Architecture.md) and the other `DESIGN.*` pages.
+
+**At a glance**
+- 39 software requirements; **32 pass, 7 partial**, none without evidence (§4). 44 unit and integration tests in
+  `Gcam.Studio.Tests` and 7 service tests against the real engine in `Gcam.Studio.Services.Tests`, all passing on
+  2026-10-01.
+- Seven desktop scenarios drive the running app through UI Automation with real pointer input and judge it against
+  independently computed values (§5): VAL-01 … VAL-04 performed, VAL-05 partial, VAL-06 … VAL-08 open.
+- The layering that keeps the logic testable is compiler-enforced (SR-ARCH-01, -04).
+- Open problems are in §6 (AN-01 … AN-10); no screen-reader session has been run.
 
 ## 1. Scope and intended use
 
@@ -32,7 +41,7 @@ viewer does not control anything, so the worst plausible outcome is a wrong read
 non-serious injury at most, hence B rather than C. As actually used (a demo on simulated data) it would be Class A.
 
 **Engine boundary.** Physics, decoding and the scene → config builder belong to the engine. Studio relies on them
-through `ISimulationService` and does not re-verify them; the engine suite (156 cases, all passing on 2026-10-01)
+through `ISimulationService` and does not re-verify them; the engine suite (246 cases, all passing on 2026-10-01)
 is the evidence. The four `SceneConfigBuilderTests` cases that pin the Studio-facing contract are cited below.
 
 ## 2. Software items
@@ -44,11 +53,12 @@ How each item is verified:
 |---|---|---|
 | SI-1 Presentation logic | `Gcam.Studio.Core` (net9.0, no WPF) | unit tests with fakes |
 | SI-2 View geometry and measurement maths | `Gcam.Studio.Core/Imaging` | unit tests, pure maths |
-| SI-3 Simulation adapter | `Gcam.Studio.Services` | engine-level tests + inspection |
+| SI-3 Simulation adapter | `Gcam.Studio.Services` | integration tests against the real engine (`SimulationServiceTests`) + engine-level tests |
 | SI-4 WPF shell | `Gcam.Studio` (net9.0-windows) | inspection + manual UI Automation |
 | SOUP ([VV.Studio.SDS §4](VV.Studio.SDS.md#4-soup-and-required-platform-533-534)) | NuGet | used as published; not separately verified |
 
-Only SI-1 and SI-2 can be unit-tested, by design: everything with logic lives in a project that has no UI stack.
+Only SI-1 and SI-2 can be unit-tested with fakes, by design: everything with logic lives in a project that has no UI
+stack. SI-3 is tested through the real engine.
 
 ## 3. Software requirements
 
@@ -67,28 +77,28 @@ Automation. Status: **pass** (evidence on 2026-10-01), **partial**, **open** (no
 
 | Req | Level | Method | Evidence | Status |
 |---|---|---|---|---|
-| SR-RUN-01 | unit | T, I | `MainViewModelTests.Run_PassesSceneAndPublishesResult`, `MainViewModelTests.RunState_TracksOutcome_PeakTextFollowsResult`; `Task.Run` in `SimulationService` (I) | pass |
-| SR-RUN-02 | unit + integration | T | `MainViewModelTests.Cancel_KeepsPreviousResult_ReenablesEditing`; engine side `SceneConfigBuilderTests.Runner_ReportsProgress_HonoursCancellation` | pass |
+| SR-RUN-01 | unit | T, I | `MainViewModelTests.Run_PassesSceneAndPublishesResult`, `MainViewModelTests.RunState_TracksOutcome_PeakTextFollowsResult`; `SimulationServiceTests.Result_IsTheEngineRunForTheSameScene`, `SimulationServiceTests.BadArguments_ThrowBeforeAnyWorkIsScheduled`; `Task.Run` in `SimulationService` (I) | pass |
+| SR-RUN-02 | unit + integration | T | `MainViewModelTests.Cancel_KeepsPreviousResult_ReenablesEditing`; `SimulationServiceTests.AlreadyCancelled_NeverRuns`, `SimulationServiceTests.CancelledMidRun_Stops`; engine side `SceneConfigBuilderTests.Runner_ReportsProgress_HonoursCancellation` | pass |
 | SR-RUN-03 | unit | T | `MainViewModelTests.Failure_IsReportedNotThrown`, `MainViewModelTests.RunState_TracksOutcome_PeakTextFollowsResult` | pass |
-| SR-RUN-04 | unit + integration | T, I | `MainViewModelTests.Run_PassesSceneAndPublishesResult` (Progress = 1.0); `SceneConfigBuilderTests.Runner_ReportsProgress_HonoursCancellation` (monotonic, ends at 1.0); guard in `MainViewModel.RunAsync` (I) | partial — see AN-04 |
+| SR-RUN-04 | unit + integration | T, I | `MainViewModelTests.Run_PassesSceneAndPublishesResult` (Progress = 1.0); `SceneConfigBuilderTests.Runner_ReportsProgress_HonoursCancellation` (monotonic, ends at 1.0); `SimulationServiceTests.Progress_RisesMonotonicallyToOne`; guard in `MainViewModel.RunAsync` (I) | partial — see AN-04 |
 | SR-RUN-05 | unit | T, I | `MainViewModelTests.Cancel_KeepsPreviousResult_ReenablesEditing` (add disabled while running); photon box `IsEnabled="{Binding IsIdle}"`, `CanMoveMarkers` bound to `IsIdle` (I) | pass |
 | SR-RUN-06 | unit | T | `MainViewModelTests.RemoveAll_DisablesRemoveAndRun`, `MainViewModelTests.Startup_HasOneSelectedSource` | pass |
 | SR-RUN-07 | unit | T, I | `MainViewModelTests.EditingTheSceneAfterARun_MarksTheResultStale_UntilTheNextRun`; chip bound to `IsResultStale` (I) | pass |
 | SR-RUN-08 | integration (engine) | T | `SceneConfigBuilderTests.NearestPrime_SnapsRankToNearestPrime` (4 cases), `SceneConfigBuilderTests.Build_MultiSourceFiniteMaskConfig`, `SceneConfigBuilderTests.Build_RejectsNonPositivePhotonBudget` | pass |
-| SR-SCENE-01 | unit | T, I | `MainViewModelTests.SourceItem_ClampsValues_LabelFollowsEdits`; photon clamp in `MainViewModel.OnPhotonsChanged` (I only) | pass (photon clamp: I) |
+| SR-SCENE-01 | unit | T, I | `MainViewModelTests.SourceItem_ClampsValues_LabelFollowsEdits`, `MainViewModelTests.IsotopePicker_OffersIr192_AndKeepsCs137AsTheDefault`; photon clamp in `MainViewModel.OnPhotonsChanged` (I only) | pass (photon clamp: I) |
 | SR-SCENE-02 | unit | T | `MainViewModelTests.Startup_HasOneSelectedSource`, `MainViewModelTests.AddRemove_SelectsNewSourceThenNeighbour` | pass |
 | SR-VIEW-01 | unit | T | `HeatmapViewportTests.Fit_PreservesAspectAndCentres` | pass |
 | SR-VIEW-02 | unit | T, I | `HeatmapViewportTests.Snapping_FitsWholeDevicePixelsPerCell` (100 %, 125 %, sub-pixel); `HeatmapView` passes `PixelsPerDip` and `snapToWholePixels: true` (I) | pass |
 | SR-VIEW-03 | unit | T | `HeatmapViewportTests.ZoomAt_KeepsAnchorPointFixed`, `HeatmapViewportTests.ZoomAt_IsClamped_FullZoomOutRefits` | pass |
 | SR-VIEW-04 | unit | T | `HeatmapViewportTests.PanBy_CannotDragImageOutOfView` | pass |
-| SR-VIEW-05 | unit | T, I | `HeatmapViewportTests.ScreenImage_RoundTripWithYUp`, `HeatmapViewportTests.PixelAt_RespectsBoundsAndOrientation`, `HeatmapViewportTests.MmMapping_PutsPixelCentresOnGrid`; flood origin `-(N−1)/2·pitch` in `SimulationService` (I) | pass |
+| SR-VIEW-05 | unit | T, I | `HeatmapViewportTests.ScreenImage_RoundTripWithYUp`, `HeatmapViewportTests.PixelAt_RespectsBoundsAndOrientation`, `HeatmapViewportTests.MmMapping_PutsPixelCentresOnGrid`; flood origin `-(N−1)/2·pitch` in `SimulationService`, pinned by `SimulationServiceTests.FloodAxis_MatchesTheDecodersPixelCentres` | pass |
 | SR-VIEW-06 | unit | T | `HeatmapViewportTests.Configure_ResizeKeepsZoom_NewImageSizeRefits` | pass |
-| SR-VIEW-07 | system | I, M | readout format and key handling in `HeatmapView` (I); readout exposed via `ItemStatus` | partial — no dated manual record |
+| SR-VIEW-07 | system | I, M | readout format and key handling in `HeatmapView` (I); readout exposed via `ItemStatus`; UI scenario `ScenarioTests.Readout_AndOneCellRoi_MatchAbsolutePositionAndValue` (§5) | partial — readout automated; the refit keys (double-click, `0`, Home) by inspection only |
 | SR-VIEW-08 | unit | T | `MainViewModelTests.RunState_TracksOutcome_PeakTextFollowsResult` | pass |
 | SR-MEAS-01 | unit + integration | T, M | `MeasurementMathTests.Distance_IsEuclidean`, `MeasurementsViewModelTests.Add_NumbersSequentially_AndSelectsTheNewOne`; VAL-03 (12.3 mm) | pass |
 | SR-MEAS-02 | unit | T, M | `MeasurementMathTests.AngleDeg_MeasuresAtTheVertex`, `MeasurementMathTests.AngleDeg_DegenerateArm_IsZero`; VAL-03 (67.0°) | pass |
 | SR-MEAS-03 | unit | T, M | `MeasurementMathTests.Roi_CountsPixelsByCentre_CornersInAnyOrder`, `MeasurementMathTests.Roi_ClipsToTheImage_AndIsEmptyBetweenCentres`; VAL-03 (ROI on flood) | pass |
-| SR-MEAS-04 | unit + integration | T | `MeasurementsViewModelTests.Roi_HasNoValueBeforeARun_AndFollowsEachNewResult`, `MeasurementsViewModelTests.Roi_OnAPaneWithoutData_StaysEmpty`, `MainViewModelTests.NewResult_RefreshesMeasurements` | pass |
+| SR-MEAS-04 | unit + integration | T | `MeasurementsViewModelTests.Roi_HasNoValueBeforeARun_AndFollowsEachNewResult`, `MeasurementsViewModelTests.Roi_OnAPaneWithoutData_StaysEmpty`, `MeasurementsViewModelTests.Roi_WithNoPixelCentreInside_HasNoValue`, `MainViewModelTests.NewResult_RefreshesMeasurements` | pass |
 | SR-MEAS-05 | unit | T | `MeasurementsViewModelTests.Add_NumbersSequentially_AndSelectsTheNewOne`, `MeasurementsViewModelTests.Delete_SelectsTheNeighbour_ClearRestartsNumbering`, `MeasurementsViewModelTests.Add_WrongNumberOfPoints_Throws` | pass |
 | SR-MEAS-06 | unit | T | `MeasurementsViewModelTests.ToolHint_FollowsTheActiveTool` | pass |
 | SR-MEAS-07 | system | I, M | `MeasurementAdorner` (`MinDragPx = 4`, Esc / right-click / Delete handlers, `Clamp`); VAL-03 (Delete, Esc) | partial — 4 px threshold, right-click and clamping by I only |
@@ -128,33 +138,55 @@ Automation. Status: **pass** (evidence on 2026-10-01), **partial**, **open** (no
 |---|---|---|---|
 | `HeatmapViewportTests` | unit | 11 (9 methods, one theory × 3) | 11 / 11 pass |
 | `MeasurementMathTests` | unit | 5 | 5 / 5 pass |
-| `MeasurementsViewModelTests` | unit / integration | 6 | 6 / 6 pass |
-| `MainViewModelTests` | unit / integration (with `MeasurementsViewModel`) | 11 | 11 / 11 pass |
-| **Gcam.Studio.Tests** | | **33** | **33 / 33 pass** |
+| `MeasurementsViewModelTests` | unit / integration | 7 | 7 / 7 pass |
+| `MainViewModelTests` | unit / integration (with `MeasurementsViewModel`) | 12 | 12 / 12 pass |
+| `TickFormatterTests` | unit | 9 | 9 / 9 pass — no requirement yet (AN-10) |
+| **Gcam.Studio.Tests** | | **44** | **44 / 44 pass** |
+| `SimulationServiceTests` (in Gcam.Studio.Services.Tests) | integration (the service against the real engine) | 7 | 7 / 7 pass |
+| `FloodOracleTests` (in Gcam.Studio.UiTests) | the UI scenarios' oracle, tested on its own | 10 | 10 / 10 pass |
+| `PilotTests`, `ScenarioTests` (in Gcam.Studio.UiTests) | system, desktop (opt-in) | 7 | skipped in the ordinary run; dated desktop record in §5 |
 | `SceneConfigBuilderTests` (in Gcam.Tests) | integration (engine) | 7 (one theory × 4) | pass |
-| **Gcam.Tests** (engine, out of scope) | | **156** | **156 / 156 pass** |
+| **Gcam.Tests** (engine, out of scope) | | **246** | **246 / 246 pass** |
 
-The solution, including the WPF shell, built in Release without errors in the same run. Canonical test totals
-are kept in [AGENTS.md](../AGENTS.md#build--run); this table is the dated record.
+The solution, including the WPF shell, built in Release without errors or warnings in the same run. This table is
+the dated record; `dotnet test` prints the current totals.
 
 ## 5. Validation
 
 User-level scenarios run on the real app. "Performed" means driven through UI Automation with real pointer and key
-input (`SetCursorPos` + `mouse_event`, as described in [AGENTS.Studio](AGENTS.Studio.md#verifying-a-ui-change)).
+input (`SetCursorPos` + `mouse_event`): controls are found by `AutomationId`, the run state is read from the status
+line's `ItemStatus`, and each verdict is judged on the app's own state against a value computed independently of the
+app's code (an oracle that re-derives the image layout and the screen → mm mapping from the documented rules).
 
 | ID | Scenario | Acceptance criteria | Status |
 |---|---|---|---|
-| VAL-01 | Run the default scene and read the result | progress moves to 100 %; flood map and reconstruction appear with colour bars; peak chip shows mm; status line names counts and time; UI stays responsive | open — implied by VAL-03 (ROI needs a result), no separate record |
-| VAL-02 | Cancel a long run | Cancel appears only while running; images keep the previous result; status "Cancelled — previous result kept"; scene editable again | open |
-| VAL-03 | Measure on both images | distance and ROI drawn on the flood map, angle on the reconstruction; values appear in "Measurement results" and on the image; Delete removes the selected one; Esc abandons a half-drawn angle | **performed 2026-10-01** — distance 12.3 mm and an ROI on the flood map, angle 67.0° on the reconstruction, Delete and Esc behaved as specified |
-| VAL-04 | Move a source by dragging, then re-run | marker follows the pointer only with the Pan tool and when idle; X / Y fields show the snapped value; "outdated" chip appears; a re-run clears it | **partial 2026-10-01** — source dragged to (18.9, 16.1) mm on a 0.1 mm grid; chip and re-run not recorded |
-| VAL-05 | Locate a source and measure its offset from the decoded peak | Distance tool from the source marker to the peak gives the offset in mm; it agrees with the peak chip and source X / Y to within one recon step | open |
+| VAL-01 | Run the default scene and read the result | progress moves to 100 %; flood map and reconstruction appear with colour bars; peak chip shows mm; status line names counts and time; UI stays responsive | **performed 2026-10-01** (automated pilot: the run reaches Succeeded and the flood map has an image) |
+| VAL-02 | Cancel a long run | Cancel appears only while running; images keep the previous result; status "Cancelled — previous result kept"; scene editable again | **performed 2026-10-01** (automated: scene locked while running, Cancelled, peak text unchanged, editable again) |
+| VAL-03 | Measure on both images | distance and ROI drawn on the flood map, angle on the reconstruction; values appear in "Measurement results" and on the image; Delete removes the selected one; Esc abandons a half-drawn angle | **performed 2026-10-01** — by hand: distance 12.3 mm and an ROI on the flood map, angle 67.0° on the reconstruction, Delete and Esc as specified; automated: three scenarios below |
+| VAL-04 | Move a source by dragging, then re-run | marker follows the pointer only with the Pan tool and when idle; X / Y fields show the snapped value; "outdated" chip appears; a re-run clears it | **performed 2026-10-01** — by hand: source dragged to (18.9, 16.1) mm on a 0.1 mm grid; automated: chip shown after the drag, cleared by the re-run |
+| VAL-05 | Locate a source and measure its offset from the decoded peak | Distance tool from the source marker to the peak gives the offset in mm; it agrees with the peak chip and source X / Y to within one recon step | **partial 2026-10-01** — automated: after a drag and re-run the decoded peak lies within 1.5 mm of the source; the Distance-tool step is not automated |
 | VAL-06 | Use both themes | all text, focus rings, chips and overlays legible in dark and light; title bar follows | open |
 | VAL-07 | Keyboard only | every function reachable without a pointer except creating measurements (AN-01) | open |
 | VAL-08 | Small screen and display scaling | at 1366×768 the window starts maximised; at 125 % / 150 % heatmap cells stay equal width | open |
 
-**Automation plan.** Roadmap step 4 turns VAL-01 … VAL-04 into UI Automation smoke tests ([AGENTS.Studio](AGENTS.Studio.md#roadmap));
-work has started. Until then these are manual and not part of the regression run.
+### Automated scenarios (`tests/Gcam.Studio.UiTests`, opt-in with `GCAM_UI_TESTS=1`)
+
+They move the real mouse, so they run only on a free interactive desktop; in an ordinary `dotnet test` and in CI
+they are skipped and reported as skipped, not passed. Each scenario starts its own sandboxed app.
+
+| Scenario | Traces to | Oracle (independent of the app) | Result 2026-10-01 |
+|---|---|---|---|
+| `PilotTests.Pilot_SimulateThenMeasureDistance_AddsRowWithExpectedLength` | VAL-01, VAL-03 · SR-RUN-01, SR-MEAS-01 | length from screen points through the documented fit rule | 13.4 mm vs 13.400 ± 0.204 |
+| `ScenarioTests.Cancel_KeepsPreviousResult_LocksThenUnlocksScene` | VAL-02 · SR-RUN-02, SR-RUN-05 | state machine Running → Cancelled; the peak text before the cancelled run | locked while running; Cancelled; peak unchanged; editable again |
+| `ScenarioTests.Roi_OnFloodMap_CountsWholePixelsByCentre` | VAL-03 · SR-MEAS-03 | pixel count by centre, corners on cell boundaries so one pixel of error cannot change it | 42 px, 3.6 × 4.2 mm |
+| `ScenarioTests.Angle_EscAbandonsDraft_DeleteRemovesSelected` | VAL-03 · SR-MEAS-02, SR-MEAS-07 | angle from the three screen points; Esc is proven by the value | 69.8° vs 70.02 ± 2.29; Delete removed it |
+| `ScenarioTests.SourceDrag_MarksOutdated_RerunPutsPeakOnTheSource` | VAL-04, VAL-05 · SR-MEAS-08, SR-RUN-07, SR-VIEW-08 | physics: after the re-run the decoded peak must sit on the moved source (≤ 1.5 mm) | source (18.3, 13.6) → peak (18.7, 12.9); chip shown, then cleared |
+| `ScenarioTests.Readout_AndOneCellRoi_MatchAbsolutePositionAndValue` | SR-VIEW-05, SR-VIEW-07, SR-MEAS-03 | absolute mm of two cells (both signs); a one-cell ROI must sum to the readout's value | (−6.3, 5.1) and (6.3, −4.5) mm exact; sum = cell value |
+| `ScenarioTests.ThemeToggle_RelabelsAndSwitchesBack` | SR-THEME-01 | the label names the other theme; the app still simulates after two swaps | pass (the visual swap stays manual) |
+
+Record: three normal runs of all 17 UI tests (10 oracle + 7 desktop) passed; a run with every scenario's expectation
+deliberately corrupted (`GCAM_UI_BREAK_VERDICT=1`) failed all 7 desktop scenarios, each at its corrupted assertion,
+so the verdicts can fail. No app process or sandbox folder was left behind.
 
 ## 6. Known anomalies, gaps and risks
 
@@ -162,15 +194,16 @@ work has started. Until then these are manual and not part of the regression run
 
 | ID | Finding | Effect | Plan |
 |---|---|---|---|
-| AN-01 | Measurements can only be **created** with the pointer (documented in [DESIGN.Controls](DESIGN.Controls.md#measurementadorner-via-measurementoverlay)) | keyboard users can review, select and delete, not create | keyboard crosshair, step 4 |
-| AN-02 | No automated UI tests | adorner hit-testing, gestures, drag snapping, theme swap and rendering are checked only by inspection or by hand | UIA smoke tests, step 4 |
-| AN-03 | No high-contrast mode | Windows high-contrast themes are not honoured | step 4 |
+| AN-01 | Measurements can only be **created** with the pointer (documented in [DESIGN.Controls](DESIGN.Controls.md#measurementadorner-via-measurementoverlay)) | keyboard users can review, select and delete, not create | keyboard crosshair |
+| AN-02 | UI automation is desktop-only and opt-in | the seven scenarios of §5 are not part of CI; zoom and pan, the refit keys, drag-snapping limits and the visual theme swap are still checked by inspection or by hand | heatmap navigation scenarios next |
+| AN-03 | No high-contrast mode | Windows high-contrast themes are not honoured | planned with the keyboard crosshair |
 | AN-04 | The progress-race test is timing-dependent: the fake reports 0.5 asynchronously, but nothing forces it to arrive after completion | the guard is covered by inspection; a regression might not fail the test every time | make the late report deterministic |
 | AN-05 | Literal sizes in `MainWindow.xaml` (photon box `Width="120"`, readout `Height="18"`, `Margin="0,4,0,0"`, colour-bar `Margin="0,8,0,0"`) despite the no-literals rule | cosmetic; spacing doesn't follow `Metrics.xaml` | move to named keys |
 | AN-06 | The "outdated" chip is visual only (tooltip, not a live region) | a screen reader is not told that the images no longer match the scene | announce via the status line or a live region |
 | AN-07 | WPF items (`HeatmapView` rendering, `ColorBar` ticks, `ThemeService`) have no unit tests, by design | defects show only when the app runs | covered by AN-02 plan |
 | AN-08 | SDK-style project references are transitive, so the shell *could* call the engine directly | layering rule for the shell is inspection-only | optional: `PrivateAssets` on the Services → engine reference |
 | AN-09 | Photon budget clamp (≥ 1,000) is untested | low | add a test |
+| AN-10 | `TickFormatterTests` (colour-bar tick labels: one shared multiplier, one decimal count, no negative zero) test behaviour that no SRS row states | the behaviour is verified but not required, so a change to it would not be traced | add an `SR-VIEW` row for colour-bar labels |
 
 No screen-reader (Narrator / NVDA) session has been run. Not verified.
 
@@ -192,7 +225,8 @@ No screen-reader (Narrator / NVDA) session has been run. Not verified.
 ```bash
 dotnet build Gcam.sln -c Release                      # all projects incl. the WPF shell
 dotnet test  Gcam.sln -c Release                      # engine + Studio
-dotnet test  tests/Gcam.Studio.Tests -c Release       # Studio only, no UI stack needed
+dotnet test  tests/Gcam.Studio.Tests -c Release       # Studio logic only, no UI stack needed
+dotnet test  tests/Gcam.Studio.Services.Tests -c Release   # the service against the real engine
 dotnet run   --project src/Gcam.Studio -c Release     # for the §5 scenarios
 ```
 
@@ -201,10 +235,10 @@ the matrix in §4 is updated.
 
 **Rules that keep this document true**
 
-- Test names follow `Subject_ExpectedBehaviour[_Condition]`, one class per type under test
-  ([AGENTS.Conventions.Code](AGENTS.Conventions.Code.md#tests-xunit)), so a matrix row names one method.
+- Test names follow `Subject_ExpectedBehaviour[_Condition]`, one class per type under test, so a matrix row names
+  one method.
 - A change that adds or alters behaviour adds its requirement row ([SRS](VV.Studio.SRS.md)), its unit allocation
   ([SDS §7](VV.Studio.SDS.md#7-requirement-allocation)), its matrix row here and its test in the **same commit**; docs and code
-  never drift apart ([AGENTS.Conventions.Docs](AGENTS.Conventions.Docs.md#keeping-docs-in-sync)).
+  never drift apart.
 - Renaming a test means updating its row here; a cited test that no longer exists is a defect in this document.
-- Problems found during V&V go to §6 with an `AN-` ID, or to [AGENTS.Backlog](AGENTS.Backlog.md) once scheduled.
+- Problems found during V&V go to §6 with an `AN-` ID and stay there until fixed.

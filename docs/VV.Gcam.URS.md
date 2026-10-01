@@ -5,12 +5,20 @@ in. This is the top of the requirement chain URS → [PRS](VV.Gcam.PRS.md) → [
 [SDS](VV.Studio.SDS.md) → [VV](VV.Studio.md). How the needs are met is in the PRS and below; needs here are kept
 free of solutions.
 
+**At a glance**
+- **19 user needs** of three users — a radiation-safety technician, a non-specialist handed the device, and the
+  instrument engineer: 14 confirmed, 4 conditional, 1 withdrawn, all reviewed with the author on 2026-10-01.
+- The needs start from the original instrument's problems (§1): moving the isotope by hand, Co-60 read as Cs-137,
+  temperature drift, ghosts.
+- Use conditions come from standards, relaxed to the level of the same-class product, iPIX (§4); reference sources
+  are real industrial ones — Ir-192 and Co-60 radiography, Cs-137 and Co-60 gauges (§5).
+
 > **Status: reviewed — every need decided on 2026-10-01 (confirmed, conditional or withdrawn); the reasons are in
 > [VV.Gcam.Decisions](VV.Gcam.Decisions.md).** No user study exists. The needs were reconstructed from the problems the
-> author met with the original instrument and from the design discussion behind themes 1–50
-> ([AGENTS.Findings](AGENTS.Findings.md)), then reviewed with the author on 2026-10-01. Rows marked *to confirm*
+> author met with the original instrument and from the simulation results behind the concept
+> ([VV.Gcam.Evidence](VV.Gcam.Evidence.md)), then reviewed with the author on 2026-10-01. Rows marked *to confirm*
 > were hypotheses until that review. Use-condition values (§4) come from published standards, not from Gcam. Gcam is a
-> simulator and a **design-only** product concept (theme 22); no regulatory claim is made.
+> simulator and a **design-only** product concept ([PRS §2](VV.Gcam.PRS.md#2-product-concept)); no regulatory claim is made.
 
 ## 1. Background: the instrument Gcam recreates
 
@@ -44,12 +52,12 @@ Priority: **M** must, **S** should, **C** could. *Users* refers to §2.
 
 | ID | Need | Users | Prio | Origin | Status |
 |---|---|---|---|---|---|
-| UN-01 | See **where** a gamma source is relative to the visible scene, from where I stand, without walking towards it. | U1, U2 | M | rig use; theme 1 | **confirmed** 2026-10-01 |
-| UN-11 | Not be shown a source that isn't there, and be told plainly when **no source** is found — checkable on the measured energy histogram (no photopeak above background). | U1, U2 | M | split from UN-01; theme 2 ghosts | **confirmed** 2026-10-01 |
+| UN-01 | See **where** a gamma source is relative to the visible scene, from where I stand, without walking towards it. | U1, U2 | M | rig use; EV-01 | **confirmed** 2026-10-01 |
+| UN-11 | Not be shown a source that isn't there, and be told plainly when **no source** is found — checkable on the measured energy histogram (no photopeak above background). | U1, U2 | M | split from UN-01; ghosts (EV-01) | **confirmed** 2026-10-01 |
 | UN-12 | Know when a source is **outside what the device currently sees**, and which way to turn to bring it in. | U1, U2 | M | review 2026-10-01; FCFOV limit | **conditional** 2026-10-01: only after ghosting is solved — a scintillator coded-aperture camera must first not produce ghosts, or an "outside the field" cue cannot be trusted |
 | UN-02 | Know **which radionuclide** each located source is, at least among the radionuclides declared for the site; U2 needs a plain-language category, not a spectrum. | U1, U2 | M | review 2026-10-01 | **confirmed** 2026-10-01 |
 | UN-03 | Get a weaker source's position and strength right even when a stronger, higher-energy source is nearby or at the same place. | U1 | M | rig's unsolved Co-60 → Cs-137 problem | **confirmed** 2026-10-01 |
-| UN-10 | Know roughly how far away a source is, to plan the approach. | U1 | **M** | theme 18–24 depth work; author raised the priority 2026-10-01 | **confirmed** 2026-10-01 |
+| UN-10 | Know roughly how far away a source is, to plan the approach. | U1 | **M** | depth work (EV-33); author raised the priority 2026-10-01 | **confirmed** 2026-10-01 |
 
 ### Safety
 
@@ -63,7 +71,7 @@ Priority: **M** must, **S** should, **C** could. *Users* refers to §2.
 | ID | Need | Users | Prio | Origin | Status |
 |---|---|---|---|---|---|
 | UN-07 | Get a location within a stated time from the sources people actually meet — industrial radiography and gauge sources (§5) — at a stated dose rate. | U1, U2 | M | search use | **conditional** 2026-10-01: accepted as a target if the field allows it — feasibility in a real plant (background, hand motion, narrow field) is unverified, see [PRS §4](VV.Gcam.PRS.md#4-what-the-user-needs-that-the-concept-does-not-yet-meet) |
-| UN-04 | *Withdrawn* — was: carry and aim the device with one hand, wearing gloves, for a full search without tiring. | U1, U2 | — | theme 22 | *withdrawn* 2026-10-01 (author: not needed as a need) |
+| UN-04 | *Withdrawn* — was: carry and aim the device with one hand, wearing gloves, for a full search without tiring. | U1, U2 | — | hand-held concept | *withdrawn* 2026-10-01 (author: not needed as a need) |
 | UN-17 | See **how much battery is left** (a remaining-capacity indicator). Run time is a design target, not a need. | U1, U2 | M | review 2026-10-01; §4 | **conditional** 2026-10-01: indicator only |
 | UN-05 | Read the result **while aiming** (in bright light, with gloves), **and** view and control the device **from a distance** when it is set down near a source. | U1, U2 | M | author 2026-10-01 | **confirmed** 2026-10-01 |
 | UN-19 | Keep my own distance and dose low while the device measures — set it down, step back, and still see the result. | U1, U2 | S | author 2026-10-01 (dockable display) | **confirmed** 2026-10-01 |
@@ -81,7 +89,7 @@ Priority: **M** must, **S** should, **C** could. *Users* refers to §2.
 | ID | Need | Users | Prio | Origin | Status |
 |---|---|---|---|---|---|
 | UN-16 | Keep a **record** of each search — time, place, picture, result, dose rate — for the survey report. | U1 | S | review 2026-10-01 | **confirmed** 2026-10-01 |
-| UN-08 | Predict and sweep the instrument's behaviour (geometry, decoder, materials, front end) in software instead of on the bench. | U3 | M | why Gcam exists | **confirmed** ([AGENTS.md](../AGENTS.md#what-this-is)) |
+| UN-08 | Predict and sweep the instrument's behaviour (geometry, decoder, materials, front end) in software instead of on the bench. | U3 | M | why Gcam exists | **confirmed** (the repository's purpose, [README](../README.md)) |
 | UN-09 | Inspect the raw detector image and the reconstruction, and measure on them in physical units. | U3 | M | GCAM Studio | **confirmed** ([VV.Studio §1](VV.Studio.md#1-scope-and-intended-use)) |
 
 **19 needs**, all reviewed with the author on 2026-10-01: **14 confirmed** (UN-01, -02, -03, -05, -06, -08, -09, -10, -11,
@@ -136,9 +144,9 @@ of its container is the case a locator exists for):
 | RS-3 | Fixed level gauge | Cs-137 (662 keV) | 0.19 TBq (5 Ci) | 3 | ~17 mSv/h |
 | RS-4 | Fixed level gauge | Co-60 (1173, 1332 keV) | 0.19 TBq (5 Ci) | 3 | ~68 mSv/h |
 
-Ir-192 is the only one of the four that Gcam cannot simulate yet: the engine's isotope list (`Isotopes.All`) has
-Cs-137, Co-60, Co-57, Na-22 and Am-241. Co-57 stays in the isotope scope as the low-line test case (theme 14) but
-is not a reference source — it is not a high-activity source people meet in the field.
+All four can be simulated: Ir-192 joined the engine's isotope list (`Isotopes.All`: Cs-137, Co-60, Co-57, Na-22,
+Am-241, Ir-192) on 2026-10-01 (EV-20). Co-57 stays in the isotope scope as the low-line test case (EV-16) but is not
+a reference source — it is not a high-activity source people meet in the field.
 
 ### Reference conditions
 
@@ -152,10 +160,10 @@ compared on the quantity the user experiences. Distances by the inverse-square l
 | 100 µSv/h | 69 m | 89 m | 13 m | 26 m | working stand-off |
 | 10 µSv/h | 219 m | 280 m | 41 m | 82 m | weak-signal search limit (inverse-square only) |
 
-**Estimated detected count rate** of the theme-22 head (16 × 16 mm, 50 % open mask, 15 mm GAGG) at those points —
+**Estimated detected count rate** of the hand-held head (16 × 16 mm, 50 % open mask, 15 mm GAGG) at those points —
 an analytical estimate (geometry × open fraction × 662 keV stopping), which reproduces the MC lab efficiency
-within 2 % (2.44 × 10⁻⁴ vs 2.48 × 10⁻⁴ with the theme-52 crystal model) but uses 662 keV stopping for every line —
-for Ir-192 the MC gives ~7 % more (RS-1 ≈ 1.07 Mcps at 10 mSv/h, 1.07 kcps at 10 µSv/h; theme 52):
+within 2 % (2.44 × 10⁻⁴ vs 2.48 × 10⁻⁴, EV-09) but uses 662 keV stopping for every line — for Ir-192 the MC gives
+~7 % more (RS-1 ≈ 1.07 Mcps at 10 mSv/h, 1.07 kcps at 10 µSv/h; EV-20):
 
 | Dose rate at the device | RS-1 | RS-2 | RS-3 | RS-4 |
 |---|---|---|---|---|
@@ -164,8 +172,8 @@ for Ir-192 the MC gives ~7 % more (RS-1 ≈ 1.07 Mcps at 10 mSv/h, 1.07 kcps at 
 | 10 µSv/h | 1.0 kcps | 0.33 kcps | 0.56 kcps | 0.33 kcps |
 
 What this says: against realistic sources the camera is **not count-starved**. At the top of the dose-rate range
-it reaches the ~1 Mcps rate limit of the front end (theme 10), and the 250–500 counts needed for a sub-mm
-location (theme 22) arrive in well under a second even at 10 µSv/h. Time to a location is set by rate handling,
+it reaches the ~1 Mcps rate limit of the front end (EV-21), and the 250–500 counts needed for a sub-mm
+location (EV-09) arrive in well under a second even at 10 µSv/h. Time to a location is set by rate handling,
 hand motion and background, not by sensitivity.
 
 ³ IAEA Safety Standards Series RS-G-1.9, *Categorization of Radioactive Sources* (2005), Table 2
@@ -237,7 +245,7 @@ geometry should be checked against RC-1 … RC-3.
 
 | Need | Validation | State |
 |---|---|---|
-| UN-08 | the CLI study set reproduces every theme in [AGENTS.Findings](AGENTS.Findings.md) | in place |
+| UN-08 | every evidence entry in [VV.Gcam.Evidence](VV.Gcam.Evidence.md) names the CLI study or script that reproduces it | in place |
 | UN-09 | GCAM Studio validation scenarios VAL-01 … VAL-08 ([VV.Studio §5](VV.Studio.md#5-validation)) | partly performed |
 | UN-01 … UN-07, UN-10 … UN-13, UN-16 … UN-19 | simulation of the concept where possible (PRS evidence column); otherwise only a real device with users | mostly not possible without hardware |
 | UN-06, UN-15 (§4 values) | type tests on hardware | not possible in Gcam — environmental robustness is outside what a Monte Carlo can show |

@@ -22,6 +22,9 @@ Enforcement: **C** compiler / build · **T** automated test · **R** review agai
 | Report physical counts as `DetectedWeight`, not `PhotonsDetected`. | `PhotonsDetected` is a geometric-hit count that over-counts non-ideal crystals. | `AGENTS.md`, `SimulationService` | R |
 | Directional biasing is the default emission mode. | ~100× fewer photons for the same estimate, verified unbiased against 4π within ~1 %. | `AGENTS.md` | T |
 | Studio's scene builds a non-cyclic (finite-mask) decode. | Suppresses off-axis ghosts so several sources resolve separately. | `SceneConfigBuilder` | T |
+| An isotope's primary line is listed first in `Isotopes.All` (`Lines[0]`). | `Lines[0]` is used as the primary line / photopeak centre (scene → config, windows, spectrum views). | `Scene.cs` | T (`MixedFieldTests` derive centres from it) |
+| An isotope whose cascade is not modelled fails loudly in `DecayScheme`; it never falls back to another isotope's scheme. | The fallback would quietly run a Cs-137 cascade study under another isotope's name. | `DecayScheme` | H for Ir-192 only — see findings below |
+| Crystal attenuation and the photoelectric share come from tabulated per-material cross sections, never one μ for every energy. | One 662 keV μ for all energies was +54 % off at 316 keV and the photoelectric share 2.7× off; the crystal absorbed too much and earlier separation results rested on it (theme 52). | `AGENTS.Findings` theme 52, `CrystalMaterial` | T (`CrystalMaterialTests`) |
 
 ## Architecture and layering (Studio)
 
@@ -34,7 +37,7 @@ Enforcement: **C** compiler / build · **T** automated test · **R** review agai
 | Build the engine config on the caller's thread, run the transport on the pool. | Bad input fails immediately instead of inside a background task. | `SimulationService` | R |
 | Accept progress reports only while running and never let the bar move backwards. | `Progress<T>` posts asynchronously; a late report can land after completion. | `MainViewModel`, `DESIGN.Architecture` | T (timing-dependent, see the V&V anomalies) |
 | A cancelled run keeps the previous result; any other failure becomes `State = Failed`, never an unhandled crash. | The user must never lose a good image to a cancel, or the app to an exception. | `DESIGN.Architecture` | T |
-| Studio unit tests reference `Gcam.Studio.Core` only. | If a test needs WPF, the logic is in the wrong layer. | `AGENTS.Conventions.Code` | C (test project targets `net9.0`) |
+| `Gcam.Studio.Tests` references `Gcam.Studio.Core` only; `Gcam.Studio.Services.Tests` tests the service against the real engine, also without WPF. | If a test needs WPF, the logic is in the wrong layer; the service is the one place where a fake would hide the integration it exists to provide. | `AGENTS.Conventions.Code` | C (both test projects target `net9.0`) |
 
 ## Views, XAML and controls
 
@@ -126,6 +129,28 @@ Enforcement: **C** compiler / build · **T** automated test · **R** review agai
 | Say *why* a rule exists. | A rule without a reason can't be judged or safely changed — this document exists because of it. | `AGENTS.Conventions.Docs` | R |
 | Links are relative; public docs in English; no machine paths, personal emails or employer material. | Docs must work on any clone and be safe to publish. | `AGENTS.Conventions.Docs` | R |
 | Commits use the repository's public identity (repo-local `noreply` address). | The machine's global identity is a different account. | `AGENTS.Conventions.Code` | R |
+| Commit subject `<Area>: <imperative summary>` ≤ 72 characters; the body says what changed and **why**. | *Not stated in the source.* Proposed: the area makes the log scannable by subsystem; the why is what the diff cannot show. | `AGENTS.Conventions.Code` | R |
+| Results go to `AGENTS.Findings` (by theme), deferred work to `AGENTS.Backlog`, ready-to-start handover tasks to `AGENTS.Todo`; a finished TODO is deleted from `AGENTS.Todo` and recorded in the Backlog's done list (and Findings) in the same commit. | One place per kind of record; the TODO list stays a short list of live work, and a task cannot be both open and done. | `AGENTS.Conventions.Docs`, `AGENTS.Todo` | R |
+| Counts that drift (test totals, command counts) are stated in one place and linked, or updated everywhere in the same commit. | A docs pass once repeated "CLI complete" at 23 commands when there were 39. | `AGENTS.Conventions.Docs` | R |
+| Cross-verify with Codex (and an adversarial Claude reviewer) at important junctures and "is this really done?" moments. | Those reviews found real defects: hand-written config clones that dropped fields (`AGENTS.md`), a dead-time comparison against the wrong arrival rate (theme 42), a half-done docs pass (Backlog, 2026-07-20). | `CLAUDE.md` | R |
+| Run `codex exec` in the foreground with `< /dev/null`, read-only, one topic per call. | *Not stated in the source.* Proposed: a background or stdin-attached run can hang; read-only keeps the reviewer from editing; one topic keeps each answer checkable. | `CLAUDE.md` | R |
+| Design first: discuss options with a recommendation before coding, then build one clean pass and show a visual. | *Not stated in the source.* Proposed: choices are cheaper to change in discussion than in code, and a plot or map exposes a wrong result faster than a number. | `CLAUDE.md` | R |
+| Answer the author in Korean; public docs stay in English. | The author's working language; the docs are public. | `CLAUDE.md`, `AGENTS.Conventions.Docs` | R |
+| The original WPF viewer (`Gcam.Wpf`) is verified by building it. | It can't be GUI-tested headless; GCAM Studio is driven through UI Automation instead. | `CLAUDE.md` | C |
+
+## Requirements, V&V and decisions
+
+| Rule | Why | Stated in | Enforced |
+|---|---|---|---|
+| Requirement, need, unit, limitation and decision IDs are stable: add, never renumber; a withdrawn or superseded row stays, marked as such. | Traceability rows, commits and other documents refer to the IDs; renumbering silently breaks every reference. | `VV.Studio.SRS`, `VV.Gcam.URS`, `VV.Gcam.PRS`, `VV.Gcam.Decisions` | R |
+| A change that adds or alters Studio behaviour adds its SRS row, its SDS allocation, its VV matrix row and its test in the same commit. | The requirement, the unit that meets it and the test that proves it must never drift apart. | `VV.Studio` §7, `VV.Studio.SRS` §8 | R |
+| Renaming a test updates its matrix row; a cited test that no longer exists is a defect of the V&V document. | A matrix row names exactly one test method, so a stale name is a broken trace. | `VV.Studio` §7 | R |
+| A user need becomes *confirmed* only on the author's word, with the date. | The needs were reconstructed from the code; confirming them from the code again would make validation circular. | `VV.Gcam.URS` §8 | R |
+| Every PRS requirement carries the grade of its evidence (MC, RTL, AN, DEC, STD, OPEN, LAW); a grade only goes up with new evidence. | A reader must see at a glance what is simulated, what is reasoned and what is only a target. | `VV.Gcam.PRS` §1, §7 | R |
+| A decision is logged with the author's own reason; a missing reason is written as missing, never invented. | The log exists to record *why*; an invented reason is worse than none. | `VV.Gcam.Decisions` | R |
+| Benchmark the product only against imagers of the same class (scintillator / coded aperture); Compton and HPGe imagers are information only. | Different principles give different fields of view, energy ranges and sensitivities; matching them would set the wrong criteria (D-32). | `VV.Gcam.URS` §5, `VV.Gcam.Decisions` D-32 | R |
+| `VV.*` documents are self-contained: no links to `AGENTS.*` / `CLAUDE.md`; results are cited by `EV-` ID from `VV.Gcam.Evidence`, which carries result, conditions, limits, reproduce command and tests. | The V&V set is what a person reads; a number that can only be checked in a working note makes the set incomplete (author, D-35). | `AGENTS.Conventions.Docs`, `VV.Gcam.Evidence` §10, `VV.Gcam.PRS` §7, `VV.Gcam.Decisions` D-35 | R (`grep AGENTS docs/VV.*`) |
+| Every `VV.*` document opens with an at-a-glance list and keeps change history out of its requirement rows. | Requirement documents stay dense for traceability; a reader needs the summary first (D-36). | `AGENTS.Conventions.Docs`, `VV.Gcam.Decisions` D-36 | R |
 
 ## Findings while collecting
 
@@ -138,3 +163,10 @@ Enforcement: **C** compiler / build · **T** automated test · **R** review agai
 - **Rule stated but not met** (at collection time): no literal sizes in views — fixed after the audit.
 - **Enforced by review only where a compiler check is possible:** the shell → engine boundary (`PrivateAssets` on
   the Services → engine reference would make it C).
+- **Rule only partly enforced (2026-10-01 review):** `DecayScheme.From()` throws for Ir-192 but still falls back to
+  the Cs-137 scheme for every other name without a cascade model (Co-57, Am-241, a typo) — the exact silent fallback
+  the Ir-192 guard was written against. Fix: throw for any name that is not explicitly modelled.
+- **Rules without a reason in their source (2026-10-01 review):** the commit subject format, the `codex exec`
+  settings and the design-first working style. Reasons above are marked *proposed*.
+- **Record kept in two places (2026-10-01 review):** TODO-03 was recorded as done in the Backlog while still open in
+  `AGENTS.Todo` — now closed there, as the Todo rule requires.

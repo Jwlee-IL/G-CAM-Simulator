@@ -3,8 +3,16 @@
 Scope: decisions the author took while the V&V document set was built ([URS](VV.Gcam.URS.md),
 [PRS](VV.Gcam.PRS.md), [Limitations](VV.Gcam.Limitations.md), [VV.Studio.SRS](VV.Studio.SRS.md) /
 [SDS](VV.Studio.SDS.md)). Each entry gives the decision, the **reason as the author gave it** (quoted in Korean
-where it was said in Korean), what was rejected, and where it landed. Physics results are not decisions and stay
-in [AGENTS.Findings](AGENTS.Findings.md).
+where it was said in Korean), what was rejected, and where it landed. Physics results are not decisions; they are
+evidence, in [VV.Gcam.Evidence](VV.Gcam.Evidence.md).
+
+**At a glance**
+- 38 decisions (D-01 … D-38), all taken with the author on 2026-10-01, each with the author's own words.
+- The ones that shape the product most: non-cyclic decoding instead of mask rotation (D-17, D-19), no built-in
+  radioactive source (D-18), dose rate required at NSS-1 range (D-21), the software path for the narrow field of
+  view (D-16), a separate small dose counter (D-37), comparison only with same-class imagers (D-32), Korean law
+  only (D-33).
+- Still open: the current text of the laws cited.
 
 Rules: IDs are stable (`D-nn`); a reversed decision keeps its row, marked *superseded by D-nn*. A row with no
 stated reason says so instead of inventing one.
@@ -15,11 +23,11 @@ stated reason says so instead of inventing one.
 
 | ID | Decision | Reason (author) | Rejected | Lands in |
 |---|---|---|---|---|
-| D-01 | SRS and SDS are sub-sections of the VV keyword: `VV.Studio.SRS`, `VV.Studio.SDS`, then `VV.Gcam.*` | the VV keyword already covers requirements and traceability, so no new keyword is needed | new top-level keywords `SRS.*`, `SDS.*` | file names; [AGENTS.Conventions.Docs](AGENTS.Conventions.Docs.md) |
+| D-01 | SRS and SDS are sub-sections of the VV keyword: `VV.Studio.SRS`, `VV.Studio.SDS`, then `VV.Gcam.*` | the VV keyword already covers requirements and traceability, so no new keyword is needed | new top-level keywords `SRS.*`, `SDS.*` | file names |
 | D-02 | No separate RS (abstract requirement spec) layer | "지금 문서 상황에서 SRS가 그걸 대체할 수 있다면 생략해도 상관없어" — the Studio SRS fills it for the viewer; for other subsystems the PRS is the lowest level | an RS between PRS and SRS | PRS §2 |
-| D-03 | The PRS covers the **whole Gcam product**, centred on the theme-22 hand-held concept | the project already holds a "if this were built as a device" specification (theme 22) | PRS for the Studio viewer only | PRS |
+| D-03 | The PRS covers the **whole Gcam product**, centred on the hand-held concept | the project already holds a "if this were built as a device" specification (the hand-held design study, EV-24 … EV-28) | PRS for the Studio viewer only | PRS |
 | D-04 | Known product limitations get their own document, with fixes and their costs | "'Limitation' 문서를 두어서 명확하게 알리는 게 좋을 것 같아. 그를 해결할 방법, 그 대가가 무엇인지도" | burying them in the PRS gap list | [Limitations](VV.Gcam.Limitations.md) |
-| D-05 | Ir-192 is handed to the pair session as a TODO document | the pair session takes it over | doing it in this session | [AGENTS.Todo](AGENTS.Todo.md) TODO-01 (done as theme 51) |
+| D-05 | Ir-192 is handed to the pair session as a TODO document | the pair session takes it over | doing it in this session | Ir-192 in the engine (EV-20), done 2026-10-01 |
 
 ### Users and needs
 
@@ -40,17 +48,19 @@ stated reason says so instead of inventing one.
 
 | ID | Decision | Reason (author) | Rejected | Lands in |
 |---|---|---|---|---|
-| D-16 | Narrow FOV: **software path** — usable field of non-cyclic decoding (~±5°), out-of-field cue, hand sweep with IMU / VIO; rank-up + tapered channels kept as the hardware fallback | adopted after D-17 (non-cyclic decoding) and D-19 (no moving hardware on cost) made it the natural first step | pan-tilt head; mask rotation; redesign of the head now | PR-IMG-10, LIM-01 |
+| D-16 | Narrow FOV: **software path** — usable field of non-cyclic decoding (~±5°), out-of-field cue, hand sweep with IMU / VIO; rank-up + tapered channels kept as the hardware fallback | adopted after D-17 (non-cyclic decoding) and D-19 (no moving hardware on cost) made it the natural first step | pan-tilt head; mask rotation; redesign of the head now | PR-IMG-10, LIM-01 (the usable field was later simulated: ±6–7.5°, EV-02) |
 | D-17 | Ghost suppression by **non-cyclic decoding** | "비순환 디코딩 유지" | — | PR-IMG-01, LIM-07 |
 | D-18 | **No built-in radioactive source** | "내장은 안 돼. 비싸기도 하고 취급도 어려워" — it would also make the device a radiation device under 원자력안전법 제60조 | built-in reference source for gain tracking | PR-REG-01, PR-ENV-02, LIM-03 |
 | D-19 | No mask-rotation (mask / antimask) hardware | "마스크를 돌리는 하드웨어는 너무 비용이 커" | iPIX-style rotating mask | LIM-07 |
 | D-20 | Gain stability: **peak tracking + temperature-scheduled window widening** | chosen from the LIM-03 options | user check source; thermal control | PR-ENV-02, LIM-03 |
 | D-21 | **Dose-rate measurement is required**, range per IAEA NSS-1 (10 mSv/h, ±50 %), and the user's **calibration obligation** is supported | "선량률 기능은 넣어야 하고 이미 기능 자체가 있어야 할걸? 교정 의무는 추가"; "NSS 기준으로" | dose rate left to a separate survey meter | PR-SAFE-01, PR-REG-02 |
-| D-22 | **No imaging requirement in high fields** (~10 mSv/h and up) — but the dose reading keeps the NSS-1 over-range indication | "그 정도의 고선량이면 장비를 가동하기 전에 ADR이 먼저 난리치지 않을까?" — the over-range indication stays because a paralysable front end under-reads (theme 42) | faster crystal / attenuator for high-field imaging | PR-SENS-05, LIM-02 |
+| D-22 | **No imaging requirement in high fields** (~10 mSv/h and up) — but the dose reading keeps the NSS-1 over-range indication | "그 정도의 고선량이면 장비를 가동하기 전에 ADR이 먼저 난리치지 않을까?" — the over-range indication stays because a paralysable front end under-reads (EV-22) | faster crystal / attenuator for high-field imaging | PR-SENS-05, LIM-02 |
 | D-23 | **No fixed false-positive-rate target** for "no source" | "백그라운드 선량에 따라서 완전히 달라질텐데 이걸 넣는 순간 제품이 너무 엄격해진다" | a numeric false-alarm target | PR-IMG-07 |
 | D-24 | Plain category for non-specialists: **"industrial" (산업용)** only | "산업용" | a multi-category scheme | PR-NRG-06 |
 | D-25 | Search records in the product's **own file format** | "자체형식" | ANSI N42.42 | PR-SW-03 |
-| D-26 | User-interface device: **Windows tablet** | "Windows 태블릿" — it also lets GCAM Studio (WPF) grow into the product UI | Android / iOS | PR-PHY-04; PRS SS-4 note on SR-SEC-01 |
+| D-26 | User-interface device: **Windows tablet** | "Windows 태블릿" | Android / iOS | PR-PHY-04 |
+| D-37 | **Dose rate from a separate small counter** (e.g. a GM tube or a small energy-compensated scintillator) outside the tungsten shield, read by the main unit over a **data I/O link**; the imaging head is not the dose channel | "소형 계수기 같은 건 싸니까 이걸 데이터 I/O로 받는 게 더 싸고 직관적일 것 같아" — chosen from the LIM-09 options after the simulation showed the collimated imaging head reads only frontally | side-looking crystals in the shield; a frontal-only label | LIM-09, PR-SAFE-01, PR-SAFE-02, PR-SENS-05 |
+| D-34 | GCAM Studio is **not** grown into the product UI; it stays the simulator's engineering viewer, and SR-SEC-01 (no file I/O) stands | "아직은 키우지 말자. 애시당초 이 리포 시뮬레이터였고 사실 이건 내 포트폴리오용 데모거든" | Studio as the product-UI prototype | PRS SS-4 |
 
 ### Reference conditions and benchmarks
 
@@ -69,11 +79,16 @@ stated reason says so instead of inventing one.
 |---|---|---|---|---|
 | D-33 | Applicable law: **Korean law only** | "일단 관계 법령은 국내에 집중하는 걸로" | US / EU tables | PRS §6 |
 
+### Document set, continued
+
+| ID | Decision | Reason (author) | Rejected | Lands in |
+|---|---|---|---|---|
+| D-35 | The V&V documents are **self-contained**: they never send the reader to the repository's working notes; the simulation results they rest on are carried in their own evidence register | "VV 문서가 다시 AGENTS 쪽으로 보내면 안 돼. 그럼 VV 문서 자체가 완결성이 떨어진다는 소리야" | requirement rows citing the working results log by theme number | [Evidence](VV.Gcam.Evidence.md); every VV document |
+| D-36 | A one-page [Overview](VV.Gcam.Overview.md) opens the set; every VV document starts with an at-a-glance summary; change history leaves the requirement rows for the evidence register | accepted as proposed ("제안대로 작성해서 나한테 알려줘"); the proposal's reason: requirement documents stay dense for traceability, so a human reader needs a page above them | rewriting the requirement documents in a looser style | [Overview](VV.Gcam.Overview.md); every VV document |
+| D-38 | The **Limitations** document stays in the V&V set | the author first asked whether it belonged with the working notes, then accepted the recommendation ("수용"): it is the product's disclosure of what it cannot do, and the PRS gap list points to it | moving it to the working notes | [Limitations](VV.Gcam.Limitations.md) |
+
 ## Still open (not yet decided)
 
 | Item | Where |
 |---|---|
-| Crystal attenuation model (TODO-02) — changes earlier Compton results | [AGENTS.Todo](AGENTS.Todo.md) |
-| A spectrum-to-dose model in the engine for PR-SAFE-01 | PRS §4, LIM-06 |
-| Whether GCAM Studio grows into the product UI (then SR-SEC-01 must change) | PRS SS-4 |
 | Current text of 원자력안전법 and the meter-calibration rules (2016 consolidated text used) | PRS §6, PR-REG-02 |

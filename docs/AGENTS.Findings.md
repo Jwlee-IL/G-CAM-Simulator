@@ -7,6 +7,23 @@ finding, how to reproduce it (CLI command / script), and the artifact it wrote t
 Baseline scenario unless noted: Cs-137, rank-7 MURA (2×2 mosaic), 10 mm tungsten,
 12×12 / 1 mm detector, D = 60 mm (mask–detector), S = 100 mm (source–mask).
 
+**Themes cited by the V&V set.** The V&V documents never link here (D-35); they cite the evidence register
+`VV.Gcam.Evidence.md`, whose entries restate the result, conditions, limits, reproduce command and tests. When a
+theme below changes, update its EV entries in the same commit (`AGENTS.Conventions.Docs`, keeping docs in sync).
+
+| Theme | EV | Theme | EV | Theme | EV |
+|---|---|---|---|---|---|
+| 1, 2 | EV-01 | 16, 17 | EV-15 | 38 | EV-30 |
+| 3 | EV-03 | 18, 19, 24, 34 (depth) | EV-33 | 39 | EV-31 |
+| 4 | EV-04 | 22 | EV-09, EV-24 … EV-28 | 40 | EV-32 |
+| 5, 28 | EV-12 | 23 | EV-05 | 42 | EV-22 |
+| 6 | EV-19 | 25, 30–33 | EV-17 | 43 | EV-08 |
+| 7 | EV-06 | 26 | EV-10, EV-15 | 48 | EV-11 |
+| 8 | EV-18 | 36 | EV-29 | 50 | EV-13 |
+| 9 | EV-07 | 51 | EV-20 | 53 | EV-02 |
+| 10 | EV-21 | 52 | EV-09, EV-14, EV-15, EV-19, EV-20; model history | 54 | EV-23 |
+| 14 | EV-16 | 15 | EV-14, EV-15 | | |
+
 ---
 
 ## 1. Geometry & source localization
@@ -23,10 +40,10 @@ Baseline scenario unless noted: Cs-137, rank-7 MURA (2×2 mosaic), 10 mm tungste
 - Off-axis source **outside the FCFOV** aliases to a **ghost on the opposite side**
   (12 mm → estimate −6.6 mm; matches `12 − period(18.7) = −6.7`). Classic partial-coding artifact.
 - **Cyclic vs non-cyclic decoding**: over a wide search grid, non-cyclic (finite-mask)
-  decoding roughly **doubles** the correctly-localized area (cyclic ~150–170 / 625,
-  non-cyclic ~280–336 / 625). Toggle: `Decoder.Cyclic`.
-- Reproduce: `montecarlo sweep samples/scenario.json` → `samples/cyclic_vs_noncyclic.png`,
-  `sweep_cyclic.csv`, `sweep_noncyclic.csv`.
+  decoding roughly **doubles** the correctly-localized area: lab rig (`scenario.json`) cyclic 148 / non-cyclic 282
+  of 625, hand-held head (`scenario_handheld.json`, theme 22) 172 / 360 (2026-10-01, after theme 52). Toggle: `Decoder.Cyclic`.
+- Reproduce: `montecarlo sweep <scenario>` then `python samples/plot_sweep.py <scenario>` → `samples/cyclic_vs_noncyclic.png`,
+  `sweep_cyclic.csv`, `sweep_noncyclic.csv` (fixed output names — the committed ones are the hand-held run).
 
 ## 3. Configuration optimization (maximise FOV)
 - **Fundamental law: FOV ÷ resolution = rank.** Widening FOV via cell pitch or D coarsens
@@ -1479,7 +1496,10 @@ the `Gcam.Simulation`/`Gcam.Detector` layer and the app is verified to compile).
 - **CR-RC⁴ constant fix**: the RTL default + cocotb param carried the wrong `A_Q16 = 53667`; the correct value is
   `round(e^-0.2·65536) = 53656` (the C#/Python formulas). Realigned `crrc_shaper.sv` / `run_cocotb.py` /
   `trap_ref.py` — **C# ↔ RTL CR-RC is now genuinely bit-exact** (7 cocotb re-run green). The cocotb test read A from
-  the DUT, so it was self-consistent and had masked the drift.
+  the DUT, so it was self-consistent and had masked the drift. **Closed 2026-10-01:** `test_crrc.py` now asserts the
+  DUT's `A_Q16`/`K_Q16` equal the math (re-injecting 53667 fails 2 of 3 CR-RC tests), `run_cocotb.py` exits non-zero
+  on any failure (the cocotb runner does not, outside pytest), and `WaveformTests.Blr_MatchesGolden` holds the C#
+  baseline restorer to the same reference — so all three shaper paths are now C# ↔ RTL bit-exact under test, in CI.
 - **Mask μ(E) extended < 122 keV** for soft lines (Am-241 59.5 → ~47×); documented approximation (K-edge above-edge
   region + < 50 keV clamp — no isotope line there, thick mask opaque regardless). Test `MaskAttenuationTests`.
 - Docs: `docs/PAPER.ko.md` (+ rendered artifact) — a two-tier (expert/plain) physics & sweet-spot note covering
@@ -1629,8 +1649,8 @@ flag from the centroid uses the 95th percentile of the in-field centroid offsets
   reaches the detector is the plate leak (relative efficiency flattens at ~0.27), the side cue falls to chance, and
   the argmax still returns an in-field spot in ~60 % of acquisitions. That is the "is there a source at all" decision
   (PR-IMG-07), which this study does not implement — the decoder always reports its highest peak.
-- **What it means for the adopted path.** (1) Quote the usable field as ±7° along the axes at ≥ 500 on-axis counts
-  without background, ±4–6.5° with background equal to the signal. (2) The out-of-field cue works from the flood
+- **What it means for the adopted path.** (1) Quote the usable field as ±6–7.5° along the axes without background
+  (±7–7.5° at N0 5000, ±6–7° at N0 500 — corrected 2026-10-01: the table above gives 6.0° / 7.0° at N0 500), ±4–6.5° with background equal to the signal. (2) The out-of-field cue works from the flood
   alone between ~4° and ~12–14° and is what makes non-cyclic answers past 7° safe to reject; it needs a background
   estimate to keep working in a real ambient field. (3) Beyond ~14° the device is blind to direction: the hand sweep
   (IMU / VIO) has to bring the source within ~14° before any cue exists, i.e. pointings ≲ 28° apart.
@@ -1702,3 +1722,4 @@ model) now pass through, the over-range ratios include the frontal calibration e
 Reproduce: `montecarlo dose samples/scenario_handheld.json` (≈ 10 s) → `samples/dose_*.csv`;
 `python samples/plot_dose.py` → `samples/dose.png`. Tests: `DoseTests` (ICRP points, interpolation and range, held-out
 662 keV within ±25 % and collimated oblique field, paralyzable over-range and the live-time limit).
+

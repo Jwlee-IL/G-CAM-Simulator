@@ -67,8 +67,8 @@ Resource key kinds: `Color`, `Brush`, `Space`, `Pad` (padding), `Gap` (margin), 
 | Method name | `Subject_ExpectedBehaviour[_Condition]` in PascalCase segments: `ZoomAt_KeepsAnchorPointFixed`, `Cancel_KeepsPreviousResult_ReenablesEditing` |
 | Class | `<TypeUnderTest>Tests`, one file per class under test |
 | Doubles | hand-written fakes for contracts (`FakeSimulation`, `FakeTheme`), no mocking library |
-| Physics tests | assert invariants with tolerances that are justified in a comment, and seed every RNG |
-| Layers | Studio tests reference `Gcam.Studio.Core` only — if a test needs WPF, the logic is in the wrong layer |
+| Physics tests | assert invariants with tolerances that are justified in a comment, and seed every RNG; statistical tolerances use the k·σ helpers in `tests/Gcam.Tests/Harness/Stat.cs` so they follow the sample size, and shared geometries come from `Harness/Rigs.cs` (loaded from `samples/`) |
+| Layers | `Gcam.Studio.Tests` references `Gcam.Studio.Core` only — if a test needs WPF, the logic is in the wrong layer. `Gcam.Studio.Services.Tests` tests the service against the real engine, still without WPF |
 | Desktop UI tests | `tests/Gcam.Studio.UiTests`: `[DesktopFact]`, skipped unless `GCAM_UI_TESTS=1`; their oracles have plain `[Fact]` tests that always run ([AGENTS.UiAutomation](AGENTS.UiAutomation.md)) |
 
 ## Commits

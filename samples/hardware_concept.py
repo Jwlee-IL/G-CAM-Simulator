@@ -8,7 +8,8 @@ that folds in every result from this session:
                    parallax); ToF rangefinder gives z for exact b/z overlay correction
   * balance      : CoM sits over a pistol grip just behind the head; battery in the rear
                    tail acts as counterweight to the forward shield mass
-  * display      : offloaded to phone/tablet over Wi-Fi (lightest) or a small flip screen
+  * display      : a Windows tablet that docks on the tail for aiming and undocks for remote use over
+                   Wi-Fi (decisions D-15, D-26 in docs/VV.Gcam.Decisions.md)
 
 Two views: (left) side elevation with subsystems + center of mass; (right) muzzle face.
 Usage:  python samples/hardware_concept.py
@@ -56,13 +57,14 @@ box(0, 10, yc - (Hh-8)/2, Hh-8, "#34495e", label="mask\n(muzzle)", fs=6.5) # W m
 box(10, 62, yc - (Hh-16)/2, Hh-16, "#eef2f3", label="D=55mm\nstandoff", fs=7)  # coded gap (air)
 box(72, 15, yc - (Hh-16)/2, Hh-16, "#2ecc71", label="GAGG\n15mm", fs=6.5)  # crystal
 box(87, 20, yc - (Hh-18)/2, Hh-18, "#3498db", label="SiPM\n+FE", fs=6.5)   # readout
-ax.text(55, yc + Hh/2 + 4, "tungsten shield (thickness = weight knob: 8mm~2kg .. 12mm~3kg)",
-        ha="center", fontsize=7.5, color="#555")
+ax.text(34, yc + Hh/2 + 4, "tungsten shield: thickness is the weight knob (8 mm ≈ 2 kg … 12 mm ≈ 3 kg; CoM for 12 mm)",
+        ha="left", fontsize=7, color="#555")
 
 # rear tail: DAQ/FPGA + battery counterweight
 box(110, 90, yc - Hh/2 + 4, Hh - 8, "#dfe6e9", ec="k")                      # rear housing
 box(118, 40, yc - 12, 24, "#9b59b6", label="DAQ+FPGA", fs=6.5)
 box(162, 34, yc - 12, 24, "#e67e22", label="battery\n(counterwt)", fs=6)
+box(112, 84, yc + Hh/2 + 14, 10, "#d6eaf8", label="Windows tablet — docks here, undocks over Wi-Fi", fs=6)
 ax.text(200, yc, "))) Wi-Fi", fontsize=8, color="#2471a3", va="center")
 
 # camera + ToF pod on top of the muzzle (minimal baseline b, single axis)
@@ -91,7 +93,7 @@ ax.annotate("γ from scene", (-30, yc), (-8, yc), fontsize=8, color="#7f8c8d",
 ax.annotate("", (0, yc - Hh/2 - 72), (200, yc - Hh/2 - 72), arrowprops=dict(arrowstyle="<->", lw=1.2))
 ax.text(100, yc - Hh/2 - 78, "≈ 200 mm", ha="center", va="top", fontsize=9, weight="bold")
 ax.text(100, 128, "Recommended: pistol-grip 'locator' — heavy shielded head over the hand, "
-        "battery tail counterweights, screen offloaded to phone", ha="center", fontsize=9)
+        "battery tail counterweights, dockable tablet screen", ha="center", fontsize=9)
 
 ax.set_xlim(-45, 235); ax.set_ylim(-25, 135); ax.axis("off")
 ax.set_aspect("equal")

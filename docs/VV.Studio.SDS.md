@@ -2,10 +2,19 @@
 
 Scope: the architecture and detailed design of the three Studio projects, as the design record that the
 requirements in [VV.Studio.SRS](VV.Studio.SRS.md) are allocated to and that [VV.Studio](VV.Studio.md) verifies.
-Not covered: the simulation engine ([AGENTS.md](../AGENTS.md#solution-layout)) and `src/Gcam.Wpf`.
+Not covered: the simulation engine (`src/Gcam.*` outside `Gcam.Studio*`, verified by `tests/Gcam.Tests`) and
+`src/Gcam.Wpf`.
 
 Structured after IEC 62304 §5.3 (architectural design) and §5.4 (detailed design); no compliance is claimed
 ([VV.Studio §1](VV.Studio.md#1-scope-and-intended-use)).
+
+**At a glance**
+- Four software items in three projects — presentation logic and view maths (`Gcam.Studio.Core`, no WPF), the
+  simulation adapter (`Gcam.Studio.Services`, the only layer that reaches the engine) and the WPF shell — split into
+  15 units (§2); the compiler enforces the layering.
+- Interfaces between items (§3), SOUP with what Studio relies on (§4), the run state machine and the measurement
+  gesture (§5), and the detailed design of each unit (§6).
+- Every SRS requirement is allocated to the unit that meets it (§7).
 
 **Relation to the `DESIGN.*` pages.** Those are the working guides — where code goes, how to style a view — and
 they stay the place for that detail. This document is the *record*: it names every software item and unit, fixes
@@ -80,7 +89,9 @@ Task<ImagingResult> RunAsync(IReadOnlyList<SceneSource> scene, OpticsSettings op
 | Result | `ImagingResult(Flood, FloodOriginMm, FloodStepMm, Reconstruction?, ReconOriginMm, ReconStepMm, Estimate?, EffectiveCounts, Elapsed)`. Both grids: pixel *i* centred at `origin + i·step` mm, row 0 at the bottom. Flood origin = `−(N−1)/2 · pixelPitch` (detector centred on the axis). `EffectiveCounts` = `DetectedWeight` (physical count), not the raw hit count. |
 
 The engine side (`SceneConfigBuilder.Build`, `SimulationRunner.Run(config, progress, ct)`) is verified by
-`SceneConfigBuilderTests` in the engine suite.
+`SceneConfigBuilderTests` in the engine suite; the service itself — same run as the engine for the same scene, the
+flood axis on the decoder's pixel centres, argument errors before any work is scheduled, progress, cancellation —
+by `SimulationServiceTests` against the real engine.
 
 ### SI-1 ↔ SI-4: `IThemeService`
 
@@ -300,7 +311,7 @@ indirectly (presentation only); they carry no requirement of their own.
 | Layer rules hold | compiler (target frameworks, references) + inspection | hold; AN-08 (transitive reference) open |
 | Interfaces are consistent | the mm convention of §3 is shared by `SimulationService`, `HeatmapViewport` and `MeasurementMath` and pinned by `HeatmapViewportTests.MmMapping_PutsPixelCentresOnGrid` | consistent |
 | Detailed design matches the code | each §6 rule read against the source | matches |
-| Units are verifiable | SU-01 … SU-06 unit-tested; SU-07 by compilation; SU-08 by the engine suite + inspection; SU-09 … SU-15 inspection + manual UI Automation (AN-02, AN-07) | see [VV.Studio §4](VV.Studio.md#4-verification) |
+| Units are verifiable | SU-01 … SU-06 unit-tested; SU-07 by compilation; SU-08 by `SimulationServiceTests` against the real engine; SU-09 … SU-15 inspection + manual UI Automation (AN-02, AN-07) | see [VV.Studio §4](VV.Studio.md#4-verification) |
 
 A change to a unit's rule in §6, an interface in §3 or the unit list in §2 updates this page in the same commit
-as the code ([AGENTS.Conventions.Docs](AGENTS.Conventions.Docs.md#keeping-docs-in-sync)).
+as the code.

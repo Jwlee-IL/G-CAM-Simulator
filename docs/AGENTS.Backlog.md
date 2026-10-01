@@ -209,3 +209,7 @@ TILT (pitch/yaw), mask WARPING.
   statistical assertions, shared rigs from `samples/`, and `tests/Gcam.Studio.Services.Tests` for the service layer
   against the real engine. A mutation check (Poisson off-by-one, half-pixel flood origin, crystal slant path ignored)
   fails each — the last one was not caught by the earlier suite.
+- **V&V fold-in** (2026-10-01): the TODO-04 / TODO-05 hand-overs moved into the V&V set — evidence register
+  `VV.Gcam.Evidence` (EV-01 … EV-33, every theme a VV row cites), PR-IMG-08 / -10, PR-SAFE-01, PR-SENS-05 re-graded
+  to MC, LIM-01 / -07 updated, LIM-09 (frontal-only dose reading, decision open) added; one-page `VV.Gcam.Overview`;
+  the VV documents no longer link to `AGENTS.*` (D-35).

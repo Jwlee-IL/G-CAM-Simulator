@@ -1,6 +1,6 @@
 # AGENTS.Studio — working on GCAM Studio (the MVVM viewer)
 
-Scope: entry point for anyone changing `src/Gcam.Studio*` or `tests/Gcam.Studio.Tests`. GCAM Studio is the
+Scope: entry point for anyone changing `src/Gcam.Studio*` or `tests/Gcam.Studio*`. GCAM Studio is the
 MVVM rewrite of the WPF viewer; `src/Gcam.Wpf` is the original code-behind app and is left as is.
 
 ## Read first
@@ -30,7 +30,8 @@ Gcam.Studio            WPF shell — views, controls, converters, themes, DI roo
 
 ```bash
 dotnet run  --project src/Gcam.Studio -c Release
-dotnet test tests/Gcam.Studio.Tests        # ViewModels + view geometry, no WPF needed
+dotnet test tests/Gcam.Studio.Tests            # ViewModels + view geometry, no WPF needed
+dotnet test tests/Gcam.Studio.Services.Tests   # SimulationService against the real engine
 ```
 
 ## Rules that are easy to break

@@ -11,7 +11,7 @@ A document's name says **what kind of document it is** (the upper-case keyword) 
 |---|---|---|---|
 | `AGENTS` | how to work here: rules, conventions, logs, backlog | contributors and coding agents | `AGENTS.md`, `AGENTS.Studio.md`, `AGENTS.Conventions.Code.md`, `AGENTS.Findings.md`, `AGENTS.Todo.md` |
 | `DESIGN` | how GCAM Studio is designed: architecture, UI system, components | anyone changing Studio | `DESIGN.Architecture.md`, `DESIGN.Typography.md`, `DESIGN.Controls.md` |
-| `VV` | verification and validation: user / product / software requirements, design record, traceability to tests, validation scenarios, known anomalies | reviewers, anyone changing behaviour | `VV.Gcam.URS.md`, `VV.Gcam.PRS.md`, `VV.Gcam.Limitations.md`, `VV.Gcam.Decisions.md`, `VV.Studio.SRS.md`, `VV.Studio.SDS.md`, `VV.Studio.md` |
+| `VV` | verification and validation: user / product / software requirements, the evidence behind them, design record, traceability to tests, validation scenarios, known anomalies | reviewers, anyone changing behaviour | `VV.Gcam.Overview.md`, `VV.Gcam.URS.md`, `VV.Gcam.PRS.md`, `VV.Gcam.Evidence.md`, `VV.Gcam.Limitations.md`, `VV.Gcam.Decisions.md`, `VV.Studio.SRS.md`, `VV.Studio.SDS.md`, `VV.Studio.md` |
 | `PAPER` | write-ups of the physics / results for readers | readers | `PAPER.ko.md` |
 
 Rules:
@@ -56,3 +56,12 @@ Rules:
 - Counts that drift (test totals, command counts) are stated in one place and linked from elsewhere, or
   updated everywhere in the same commit.
 - Renaming a document: `git mv` it, then search the repository for the old name and fix every reference.
+- **`VV.*` documents are self-contained** (decision D-35). They link only to other `VV.*` documents, `DESIGN.*`
+  pages, `PAPER.*`, the `README.md` files and the code, tests and outputs — never to `AGENTS.*` or `CLAUDE.md`, and
+  they cite results by evidence ID (`EV-nn`), never by Findings theme number. A result a VV row rests on gets its
+  entry in `VV.Gcam.Evidence.md` (result, conditions, limits, reproduce command, tests) in the same commit as the
+  Findings theme; a changed result updates the entry and every row in its "Used by" column. The theme ↔ EV map
+  is at the top of `AGENTS.Findings.md`.
+- Every `VV.*` document opens with an **At a glance** list (≤ 6 bullets) below its scope line, and keeps change
+  history out of its requirement rows (that belongs in the evidence register's model history or in the decision
+  log).

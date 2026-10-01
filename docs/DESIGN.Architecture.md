@@ -55,6 +55,7 @@ flowchart TB
 | `Gcam.Studio.Services` | net9.0 | implementations of contracts that need the engine or the outside world (`SimulationService`) | `Gcam.Studio.Core`, `Gcam.Simulation` | UI types, ViewModel logic |
 | `Gcam.Studio` | net9.0-windows | XAML views, custom controls, converters, theme dictionaries, WPF-bound services (`ThemeService`), the DI root | `Gcam.Studio.Core`, `Gcam.Studio.Services` | business rules, direct engine calls |
 | `tests/Gcam.Studio.Tests` | net9.0 | ViewModel and geometry tests with fakes | `Gcam.Studio.Core` only | WPF |
+| `tests/Gcam.Studio.Services.Tests` | net9.0 | `SimulationService` against the real engine | `Gcam.Studio.Services` (and through it the engine) | WPF |
 
 Why the split matters in practice: `Gcam.Studio.Core` targets plain `net9.0`, so `using System.Windows.Media;`
 in a ViewModel is a build error, and the ViewModel tests run on any machine without a UI stack.
@@ -130,5 +131,6 @@ sequenceDiagram
 | Measurement maths (distance, angle, ROI by pixel centre, clipping) | `tests/Gcam.Studio.Tests/MeasurementMathTests.cs` | pure maths, no UI |
 | Measurement session (numbering, selection, delete / clear, ROI refresh on a new result), stale-result flag | `MeasurementsViewModelTests.cs`, `MainViewModelTests.cs` | ViewModels with fakes |
 | Scene → config, runner progress / cancellation | `tests/Gcam.Tests/SceneConfigBuilderTests.cs` | engine-level |
+| The service layer (same run as the engine, flood axis on the decoder's pixel centres, argument errors before scheduling, progress, cancellation) | `tests/Gcam.Studio.Services.Tests/SimulationServiceTests.cs` | the real engine, no fakes |
 | Oracles of the UI tests (where the image sits on screen, mm per pixel, row parsing) | `tests/Gcam.Studio.UiTests/FloodOracleTests.cs` | pure maths, runs everywhere |
 | The running app | `tests/Gcam.Studio.UiTests/PilotTests.cs`, `ScenarioTests.cs` — opt-in (`GCAM_UI_TESTS=1`), real window, real pointer, a fresh app per scenario | AutomationIds, run state in `ItemStatus`; sandboxed and owned process ([AGENTS.UiAutomation](AGENTS.UiAutomation.md)) |
