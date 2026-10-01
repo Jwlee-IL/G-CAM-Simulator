@@ -8,7 +8,7 @@ done list (and Findings, if it produced a result) in the same commit; its plan s
 | ID | Task | Origin | Owner | State |
 |---|---|---|---|---|
 | TODO-07 | Spectrum workspace — [PLAN.Studio.Spectrum](PLAN.Studio.Spectrum.md) | `Gcam.Wpf` Spectrum tab | Studio session | committed `45eece8`; checked on the desktop (survey) |
-| TODO-09 | Editable optics + presets (lifts the "optics read-only" exclusion in VV.Studio.SRS §7) | `Gcam.Wpf` Optics / Presets tab | Studio session | open |
+| TODO-09 | Editable optics, presets, focal-plane refocus, derived geometry readout — [PLAN.Studio.Optics](PLAN.Studio.Optics.md) | `Gcam.Wpf` Optics / Presets tab | Studio session | reference plan; Codex reviews first, then implements |
 | TODO-10 | Waveform workspace: front-end chain presets, ADC + shaped traces | `Gcam.Wpf` Waveform tab | Studio session | open (needs `PlotView` decimation) |
 | TODO-11 | Detector workspace (reflector gap, SiPM pitch, crosstalk) and depth (3D) / rangefinder in Imaging | `Gcam.Wpf` Detector tab, Imaging depth | Studio session | open |
 | TODO-12 | Delete `src/Gcam.Wpf`; update `Gcam.sln`, CI, AGENTS / README / VV.Studio; README screenshot of Studio | end of the migration | Studio session | open (last) |
