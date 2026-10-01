@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    UI automation of the running GCAM Studio (UIA client + real pointer input). Opt-in: the desktop tests skip
+    unless GCAM_UI_TESTS=1, because they take over the interactive desktop. The verdict / geometry helpers have
+    plain tests that always run. See docs/AGENTS.UiAutomation.md.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net9.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <!-- Only for System.Drawing's screen copy in failure bundles; its global usings are removed to keep WPF's Point/Rect. -->
+    <UseWindowsForms>true</UseWindowsForms>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
+    <PackageReference Include="xunit" Version="2.9.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+    <Using Include="System.IO" />
+    <Using Remove="System.Windows.Forms" />
+    <Using Remove="System.Drawing" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Build order only: the app is launched from its own output folder, never loaded into the test process. -->
+    <ProjectReference Include="..\..\src\Gcam.Studio\Gcam.Studio.csproj" ReferenceOutputAssembly="false" />
+    <!-- Default optics (detector pixels, pitch) are the oracle's inputs; the oracle's maths is independent. -->
+    <ProjectReference Include="..\..\src\Gcam.Configuration\Gcam.Configuration.csproj" />
+  </ItemGroup>
+
+</Project>

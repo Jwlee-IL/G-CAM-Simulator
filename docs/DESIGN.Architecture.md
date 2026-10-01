@@ -130,4 +130,5 @@ sequenceDiagram
 | Measurement maths (distance, angle, ROI by pixel centre, clipping) | `tests/Gcam.Studio.Tests/MeasurementMathTests.cs` | pure maths, no UI |
 | Measurement session (numbering, selection, delete / clear, ROI refresh on a new result), stale-result flag | `MeasurementsViewModelTests.cs`, `MainViewModelTests.cs` | ViewModels with fakes |
 | Scene → config, runner progress / cancellation | `tests/Gcam.Tests/SceneConfigBuilderTests.cs` | engine-level |
-| The running app | UI Automation script driving real pointer input (manual for now; automated in step 4) | controls expose `AutomationProperties.Name`; `HeatmapView` has an automation peer |
+| Oracles of the UI tests (where the image sits on screen, mm per pixel, row parsing) | `tests/Gcam.Studio.UiTests/FloodOracleTests.cs` | pure maths, runs everywhere |
+| The running app | `tests/Gcam.Studio.UiTests/PilotTests.cs` — opt-in (`GCAM_UI_TESTS=1`), real window, real pointer | AutomationIds, run state in `ItemStatus`; sandboxed and owned process ([AGENTS.UiAutomation](AGENTS.UiAutomation.md)) |

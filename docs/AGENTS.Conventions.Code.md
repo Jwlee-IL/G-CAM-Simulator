@@ -50,6 +50,11 @@ Resource key kinds: `Color`, `Brush`, `Space`, `Pad` (padding), `Gap` (margin), 
 - Text through a role style (`Style="{StaticResource Text.Label}"`).
 - `x:Name` only when something references the element (`ElementName` bindings, code).
 - Every interactive element gets `AutomationProperties.Name`; custom surfaces also get `HelpText`.
+- Anything a UI test drives or reads gets `AutomationProperties.AutomationId` — PascalCase, by meaning
+  (`RunSimulation`, `ToolDistance`, `FloodView`), unique in the window. Tests select by ID, never by name.
+- Don't set `AutomationProperties.Name` on a text element (`TextBlock`): its text *is* its name, and a fixed name
+  hides it from screen readers. List rows get their name from the item (`ItemContainerStyle`), or a reader hears
+  the ViewModel's type name.
 - Attribute order: `x:Name` / `Grid.*` / `DockPanel.Dock` → content & bindings → style → layout (size, margin)
   → automation. Long elements wrap one logical group per line.
 
@@ -62,6 +67,7 @@ Resource key kinds: `Color`, `Brush`, `Space`, `Pad` (padding), `Gap` (margin), 
 | Doubles | hand-written fakes for contracts (`FakeSimulation`, `FakeTheme`), no mocking library |
 | Physics tests | assert invariants with tolerances that are justified in a comment, and seed every RNG |
 | Layers | Studio tests reference `Gcam.Studio.Core` only — if a test needs WPF, the logic is in the wrong layer |
+| Desktop UI tests | `tests/Gcam.Studio.UiTests`: `[DesktopFact]`, skipped unless `GCAM_UI_TESTS=1`; their oracles have plain `[Fact]` tests that always run ([AGENTS.UiAutomation](AGENTS.UiAutomation.md)) |
 
 ## Commits
 

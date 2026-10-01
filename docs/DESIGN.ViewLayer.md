@@ -74,6 +74,7 @@ The grid, panel widths and window sizing policy are in [DESIGN.Layout](DESIGN.La
 - [ ] State and commands in a ViewModel, with a test.
 - [ ] XAML uses only theme keys — no literal colours, sizes or gaps.
 - [ ] Code-behind still only `InitializeComponent()`.
-- [ ] `AutomationProperties.Name` on every interactive element; a keyboard path exists.
+- [ ] `AutomationProperties.Name` on every interactive element (not on text); an `AutomationId` if a test uses it;
+      a keyboard path exists.
 - [ ] Checked in both themes (top-bar toggle).
 - [ ] The relevant `DESIGN.*` page updated in the same commit.

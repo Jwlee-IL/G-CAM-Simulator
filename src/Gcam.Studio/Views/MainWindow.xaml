@@ -71,16 +71,16 @@
                 <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
                     <Button Content="{Binding ThemeToggleLabel}" Command="{Binding ToggleThemeCommand}"
                             Style="{StaticResource Button.Ghost}" Margin="{StaticResource Gap.InlineWide}"
-                            AutomationProperties.Name="Switch theme" />
+                            AutomationProperties.AutomationId="ThemeToggle" AutomationProperties.Name="Switch theme" />
                     <TextBlock Text="Photons" Style="{StaticResource Text.Label}" Margin="{StaticResource Gap.Inline}" />
                     <TextBox Width="120" Text="{Binding Photons, UpdateSourceTrigger=LostFocus, StringFormat=N0}"
                              IsEnabled="{Binding IsIdle}" Margin="{StaticResource Gap.InlineWide}"
-                             AutomationProperties.Name="Photon budget" />
+                             AutomationProperties.AutomationId="PhotonBudget" AutomationProperties.Name="Photon budget" />
                     <Button Content="Cancel" Command="{Binding RunCancelCommand}" Style="{StaticResource Button.Ghost}"
                             Visibility="{Binding IsRunning, Converter={StaticResource BoolToVis}}"
-                            Margin="{StaticResource Gap.Inline}" AutomationProperties.Name="Cancel simulation" />
+                            Margin="{StaticResource Gap.Inline}" AutomationProperties.AutomationId="CancelRun" AutomationProperties.Name="Cancel simulation" />
                     <Button Content="▶  Simulate" Command="{Binding RunCommand}" Style="{StaticResource Button.Primary}"
-                            IsDefault="True" AutomationProperties.Name="Run simulation" />
+                            IsDefault="True" AutomationProperties.AutomationId="RunSimulation" AutomationProperties.Name="Run simulation" />
                 </StackPanel>
             </DockPanel>
         </Border>
@@ -102,14 +102,20 @@
                         <TextBlock DockPanel.Dock="Left" Text="Sources" Style="{StaticResource Text.PanelTitle}" />
                         <Button DockPanel.Dock="Right" Content="−" Command="{Binding RemoveSourceCommand}"
                                 Style="{StaticResource Button.Ghost}" ToolTip="Remove selected source"
-                                AutomationProperties.Name="Remove selected source" />
+                                AutomationProperties.AutomationId="RemoveSource" AutomationProperties.Name="Remove selected source" />
                         <Button DockPanel.Dock="Right" Content="+" Command="{Binding AddSourceCommand}"
                                 Style="{StaticResource Button.Ghost}" ToolTip="Add source"
-                                AutomationProperties.Name="Add source" />
+                                AutomationProperties.AutomationId="AddSource" AutomationProperties.Name="Add source" />
                     </DockPanel>
 
                     <ListBox Height="168" ItemsSource="{Binding Sources}" SelectedItem="{Binding SelectedSource}"
-                             Margin="{StaticResource Gap.Section}" AutomationProperties.Name="Source list">
+                             Margin="{StaticResource Gap.Section}" AutomationProperties.AutomationId="SourceList" AutomationProperties.Name="Source list">
+                        <!-- Without this a row's automation name is the ViewModel's type name. -->
+                        <ListBox.ItemContainerStyle>
+                            <Style TargetType="ListBoxItem" BasedOn="{StaticResource {x:Type ListBoxItem}}">
+                                <Setter Property="AutomationProperties.Name" Value="{Binding Label}" />
+                            </Style>
+                        </ListBox.ItemContainerStyle>
                         <ListBox.ItemTemplate>
                             <DataTemplate>
                                 <DockPanel AutomationProperties.Name="{Binding Label}">
@@ -133,23 +139,23 @@
                         <DockPanel Style="{StaticResource FieldRow}">
                             <TextBlock Text="Isotope" Style="{StaticResource FieldLabel}" />
                             <ComboBox ItemsSource="{x:Static vm:SourceItemViewModel.IsotopeNames}" SelectedItem="{Binding Isotope}"
-                                      AutomationProperties.Name="Isotope" />
+                                      AutomationProperties.AutomationId="SourceIsotope" AutomationProperties.Name="Isotope" />
                         </DockPanel>
                         <DockPanel Style="{StaticResource FieldRow}">
                             <TextBlock Text="X" Style="{StaticResource FieldLabel}" />
-                            <TextBox Text="{Binding X}" Tag="mm" AutomationProperties.Name="Source X in millimetres" />
+                            <TextBox Text="{Binding X}" Tag="mm" AutomationProperties.AutomationId="SourceX" AutomationProperties.Name="Source X in millimetres" />
                         </DockPanel>
                         <DockPanel Style="{StaticResource FieldRow}">
                             <TextBlock Text="Y" Style="{StaticResource FieldLabel}" />
-                            <TextBox Text="{Binding Y}" Tag="mm" AutomationProperties.Name="Source Y in millimetres" />
+                            <TextBox Text="{Binding Y}" Tag="mm" AutomationProperties.AutomationId="SourceY" AutomationProperties.Name="Source Y in millimetres" />
                         </DockPanel>
                         <DockPanel Style="{StaticResource FieldRow}">
                             <TextBlock Text="Distance" Style="{StaticResource FieldLabel}" />
-                            <TextBox Text="{Binding DistanceMm}" Tag="mm" AutomationProperties.Name="Source distance in millimetres" />
+                            <TextBox Text="{Binding DistanceMm}" Tag="mm" AutomationProperties.AutomationId="SourceDistance" AutomationProperties.Name="Source distance in millimetres" />
                         </DockPanel>
                         <DockPanel Style="{StaticResource FieldRow}">
                             <TextBlock Text="Activity" Style="{StaticResource FieldLabel}" />
-                            <TextBox Text="{Binding ActivityUCi}" Tag="µCi" AutomationProperties.Name="Source activity in microcuries" />
+                            <TextBox Text="{Binding ActivityUCi}" Tag="µCi" AutomationProperties.AutomationId="SourceActivity" AutomationProperties.Name="Source activity in microcuries" />
                         </DockPanel>
                     </StackPanel>
 
@@ -205,17 +211,17 @@
                                 <TextBlock Text="counts" Style="{StaticResource Text.Caption}" />
                             </Border>
                         </DockPanel>
-                        <TextBlock DockPanel.Dock="Bottom" Text="{Binding Readout, ElementName=Flood}" Style="{StaticResource Text.MonoCaption}"
+                        <TextBlock DockPanel.Dock="Bottom" AutomationProperties.AutomationId="FloodReadout" Text="{Binding Readout, ElementName=Flood}" Style="{StaticResource Text.MonoCaption}"
                                    Height="18" Margin="0,4,0,0" />
                         <c:ColorBar DockPanel.Dock="Bottom" Margin="0,8,0,0" Minimum="{Binding DataMin, ElementName=Flood}"
                                     Maximum="{Binding DataMax, ElementName=Flood}" Foreground="{DynamicResource Brush.Text.Secondary}"
-                                    FontFamily="{StaticResource Font.Mono}" AutomationProperties.Name="Flood map colour scale" />
+                                    FontFamily="{StaticResource Font.Mono}" AutomationProperties.AutomationId="FloodColorBar" AutomationProperties.Name="Flood map colour scale" />
                         <c:HeatmapView x:Name="Flood" Image="{Binding Result.Flood}" OriginMm="{Binding Result.FloodOriginMm}"
                                        StepMm="{Binding Result.FloodStepMm}" EmptyText="Run a simulation to see the flood map"
                                        ShowReadoutOverlay="False" Foreground="{DynamicResource Brush.Text.Secondary}"
                                        FrameBrush="{DynamicResource Brush.Line.Control}" FocusBrush="{DynamicResource Brush.Focus}"
                                        c:MeasurementOverlay.Session="{Binding Measurements}" c:MeasurementOverlay.Pane="Flood"
-                                       AutomationProperties.Name="Detector flood map"
+                                       AutomationProperties.AutomationId="FloodView" AutomationProperties.Name="Detector flood map"
                                        AutomationProperties.HelpText="Mouse wheel or plus and minus to zoom, drag or arrow keys to pan, double-click or 0 to reset. With a measuring tool, draw on the image; Escape cancels, Delete removes the selected measurement." />
                     </DockPanel>
                 </Border>
@@ -226,20 +232,20 @@
                             <TextBlock DockPanel.Dock="Left" Text="Reconstruction" Style="{StaticResource ImageTitle}" />
                             <Border DockPanel.Dock="Right" Style="{StaticResource Chip}" BorderBrush="{DynamicResource Brush.Accent}"
                                     Visibility="{Binding PeakText, Converter={x:Static conv:NullToCollapsedConverter.Instance}}">
-                                <TextBlock Text="{Binding PeakText}" Style="{StaticResource Text.Caption}" Foreground="{DynamicResource Brush.Accent}" />
+                                <TextBlock AutomationProperties.AutomationId="PeakText" Text="{Binding PeakText}" Style="{StaticResource Text.Caption}" Foreground="{DynamicResource Brush.Accent}" />
                             </Border>
                             <!-- The images no longer match the scene (a source was moved or edited) -->
                             <Border DockPanel.Dock="Right" Style="{StaticResource Chip}" BorderBrush="{DynamicResource Brush.Status.Warning}"
                                     Visibility="{Binding IsResultStale, Converter={StaticResource BoolToVis}}" Margin="{StaticResource Gap.Inline}"
                                     ToolTip="The scene changed after this run. Simulate again to update the images.">
-                                <TextBlock Text="outdated" Style="{StaticResource Text.Caption}" Foreground="{DynamicResource Brush.Status.Warning}" />
+                                <TextBlock AutomationProperties.AutomationId="ResultStale" Text="outdated" Style="{StaticResource Text.Caption}" Foreground="{DynamicResource Brush.Status.Warning}" />
                             </Border>
                         </DockPanel>
-                        <TextBlock DockPanel.Dock="Bottom" Text="{Binding Readout, ElementName=Recon}" Style="{StaticResource Text.MonoCaption}"
+                        <TextBlock DockPanel.Dock="Bottom" AutomationProperties.AutomationId="ReconReadout" Text="{Binding Readout, ElementName=Recon}" Style="{StaticResource Text.MonoCaption}"
                                    Height="18" Margin="0,4,0,0" />
                         <c:ColorBar DockPanel.Dock="Bottom" Margin="0,8,0,0" Minimum="{Binding DataMin, ElementName=Recon}"
                                     Maximum="{Binding DataMax, ElementName=Recon}" Foreground="{DynamicResource Brush.Text.Secondary}"
-                                    FontFamily="{StaticResource Font.Mono}" AutomationProperties.Name="Reconstruction colour scale" />
+                                    FontFamily="{StaticResource Font.Mono}" AutomationProperties.AutomationId="ReconColorBar" AutomationProperties.Name="Reconstruction colour scale" />
                         <c:HeatmapView x:Name="Recon" Image="{Binding Result.Reconstruction}" OriginMm="{Binding Result.ReconOriginMm}"
                                        StepMm="{Binding Result.ReconStepMm}" EmptyText="Run a simulation to see the reconstruction"
                                        ShowReadoutOverlay="False" Foreground="{DynamicResource Brush.Text.Secondary}"
@@ -247,7 +253,7 @@
                                        c:MeasurementOverlay.Session="{Binding Measurements}" c:MeasurementOverlay.Pane="Reconstruction"
                                        c:MeasurementOverlay.Markers="{Binding Sources}" c:MeasurementOverlay.SelectedMarker="{Binding SelectedSource}"
                                        c:MeasurementOverlay.CanMoveMarkers="{Binding IsIdle}"
-                                       AutomationProperties.Name="Reconstruction image"
+                                       AutomationProperties.AutomationId="ReconView" AutomationProperties.Name="Reconstruction image"
                                        AutomationProperties.HelpText="Mouse wheel or plus and minus to zoom, drag or arrow keys to pan, double-click or 0 to reset. Drag a source marker to move the source. With a measuring tool, draw on the image; Escape cancels, Delete removes the selected measurement." />
                     </DockPanel>
                 </Border>
@@ -261,35 +267,34 @@
                         <UniformGrid Rows="1" AutomationProperties.Name="Pointer tool">
                             <RadioButton Content="_Pan" GroupName="Tool" Style="{StaticResource RadioButton.Segment}"
                                          IsChecked="{Binding ActiveTool, Converter={x:Static conv:EnumMatchConverter.Instance}, ConverterParameter=Pan}"
-                                         AutomationProperties.Name="Pan tool" />
+                                         AutomationProperties.AutomationId="ToolPan" AutomationProperties.Name="Pan tool" />
                             <RadioButton Content="_Distance" GroupName="Tool" Style="{StaticResource RadioButton.Segment}"
                                          IsChecked="{Binding ActiveTool, Converter={x:Static conv:EnumMatchConverter.Instance}, ConverterParameter=Distance}"
-                                         AutomationProperties.Name="Distance tool" />
+                                         AutomationProperties.AutomationId="ToolDistance" AutomationProperties.Name="Distance tool" />
                             <RadioButton Content="_Angle" GroupName="Tool" Style="{StaticResource RadioButton.Segment}"
                                          IsChecked="{Binding ActiveTool, Converter={x:Static conv:EnumMatchConverter.Instance}, ConverterParameter=Angle}"
-                                         AutomationProperties.Name="Angle tool" />
+                                         AutomationProperties.AutomationId="ToolAngle" AutomationProperties.Name="Angle tool" />
                             <RadioButton Content="_ROI" GroupName="Tool" Style="{StaticResource RadioButton.Segment}"
                                          IsChecked="{Binding ActiveTool, Converter={x:Static conv:EnumMatchConverter.Instance}, ConverterParameter=Roi}"
-                                         AutomationProperties.Name="Region of interest tool" />
+                                         AutomationProperties.AutomationId="ToolRoi" AutomationProperties.Name="Region of interest tool" />
                         </UniformGrid>
                     </Border>
                     <TextBlock DockPanel.Dock="Top" Text="{Binding ToolHint}" Style="{StaticResource Text.Caption}" TextWrapping="Wrap"
-                               Margin="{StaticResource Gap.Section}" AutomationProperties.Name="Tool hint" />
+                               Margin="{StaticResource Gap.Section}" AutomationProperties.AutomationId="ToolHint" />
 
                     <DockPanel DockPanel.Dock="Top" LastChildFill="False">
                         <TextBlock DockPanel.Dock="Left" Text="Measurements" Style="{StaticResource Text.PanelTitle}" />
                         <Button DockPanel.Dock="Right" Content="Clear" Command="{Binding ClearCommand}"
                                 Style="{StaticResource Button.Ghost}" ToolTip="Remove all measurements"
-                                AutomationProperties.Name="Clear all measurements" />
+                                AutomationProperties.AutomationId="ClearMeasurements" AutomationProperties.Name="Clear all measurements" />
                         <Button DockPanel.Dock="Right" Content="−" Command="{Binding DeleteCommand}"
                                 Style="{StaticResource Button.Ghost}" ToolTip="Delete selected measurement (Delete)"
-                                AutomationProperties.Name="Delete selected measurement" />
+                                AutomationProperties.AutomationId="DeleteMeasurement" AutomationProperties.Name="Delete selected measurement" />
                     </DockPanel>
 
                     <!-- Selected measurement: coordinates, size, pixel statistics -->
                     <TextBlock DockPanel.Dock="Bottom" Text="{Binding Selected.Detail}" Style="{StaticResource Text.MonoCaption}"
-                               TextWrapping="Wrap" TextTrimming="None"
-                               AutomationProperties.Name="Selected measurement detail" />
+                               TextWrapping="Wrap" TextTrimming="None" AutomationProperties.AutomationId="MeasurementDetail" />
 
                     <Grid DockPanel.Dock="Top" Margin="{StaticResource Pad.ListItem}">
                         <Grid.ColumnDefinitions>
@@ -306,10 +311,11 @@
 
                     <Grid Margin="{StaticResource Gap.Field}">
                         <ListBox ItemsSource="{Binding Items}" SelectedItem="{Binding Selected}"
-                                 AutomationProperties.Name="Measurement results">
+                                 AutomationProperties.AutomationId="MeasurementList" AutomationProperties.Name="Measurement results">
                             <ListBox.ItemContainerStyle>
                                 <Style TargetType="ListBoxItem" BasedOn="{StaticResource {x:Type ListBoxItem}}">
                                     <Setter Property="AutomationProperties.Name" Value="{Binding Description}" />
+                                    <Setter Property="AutomationProperties.AutomationId" Value="{Binding Name}" />
                                 </Style>
                             </ListBox.ItemContainerStyle>
                             <ListBox.ItemTemplate>
@@ -343,7 +349,7 @@
             <DockPanel>
                 <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
                     <ProgressBar Width="160" Maximum="1" Value="{Binding Progress, Mode=OneWay}" VerticalAlignment="Center"
-                                 Margin="{StaticResource Gap.Inline}" AutomationProperties.Name="Simulation progress" />
+                                 Margin="{StaticResource Gap.Inline}" AutomationProperties.AutomationId="RunProgress" AutomationProperties.Name="Simulation progress" />
                     <TextBlock Text="{Binding Progress, StringFormat={}{0:P0}}" Style="{StaticResource Text.MonoCaption}" Width="36" />
                 </StackPanel>
                 <Ellipse Width="8" Height="8" Margin="{StaticResource Gap.Inline}" VerticalAlignment="Center">
@@ -368,7 +374,7 @@
                     </Ellipse.Style>
                 </Ellipse>
                 <TextBlock Text="{Binding Status}" Style="{StaticResource Text.Label}"
-                           AutomationProperties.Name="Status" AutomationProperties.LiveSetting="Polite" />
+                           AutomationProperties.AutomationId="StatusText" AutomationProperties.ItemStatus="{Binding State}" AutomationProperties.LiveSetting="Polite" />
             </DockPanel>
         </Border>
     </Grid>
