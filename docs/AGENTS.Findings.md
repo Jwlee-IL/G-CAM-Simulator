@@ -225,7 +225,7 @@ presets in `samples/isotopes/*.json`: multi-line + `cascadeCoincident` flag), ea
 
 ## 15. Crystal Compton scattering — positioning strategy + multi-isotope spatial separation — `ComptonModel`/`ComptonCrystalDetector`
 
-> **Revised 2026-10-01 — [theme 52](#52-crystal-attenuation-from-tabulated-cross-sections--crystalmaterial-2026-10-01).** With physical GAGG cross sections the single-pixel 662 keV window keeps 6 % (was 24 %), Co-60 downscatter is 55 % of that window (was 22 %), and spatial separation of Cs from Co holds only up to Co:Cs ≈ 2:1 activity (was shown at 8:1).
+> **Revised 2026-10-01 — [theme 52](#52-crystal-attenuation-from-tabulated-cross-sections--crystalmaterial-2026-10-01).** With physical GAGG cross sections the single-pixel 662 keV window keeps 6 % (was 24 %), Co-60 downscatter is 55 % of that window (was 22 %), and spatial separation of Cs from Co holds only up to Co:Cs ≈ 2:1 activity (was shown at 8:1). Argmax keeps 12 % vs per-pixel 6 % (2.0×; RMS 3.51 vs 5.65 mm at 400 photons) — the verdict below stands with larger gain.
 Crystal-internal Compton is now modelled in the C# coded-aperture pipeline: `ComptonModel` (Kahn
 exact Klein-Nishina sampler, energy-dependent photoelectric fraction and attenuation) +
 `ComptonCrystalDetector` (tracks the multi-pixel cascade, then applies a positioning strategy).
@@ -401,6 +401,8 @@ optimum, unlike the sub-cell hole (theme 20, no interior optimum). Run: `monteca
 ---
 
 ## 22. Productization — a ~3 kg handheld locator: weight, size, form, and field hardening
+
+> **Revised 2026-10-01 — [theme 52](#52-crystal-attenuation-from-tabulated-cross-sections--crystalmaterial-2026-10-01) addendum.** Re-run: efficiency 2.48e-4 vs 1.00e-4 (2.48×), floor 0.24 mm on axis / 0.53 mm at the edge, sub-mm at ≥ 250 / ≥ 500 counts; sweep 172 / 360 of 625. The 0.34 / 0.55 mm floors below predate theme 43's sub-cell default.
 A whole-instrument design pass under a "3 kg large-flashlight" constraint. Most parts are ANALYTICAL
 design models (Python) built on top of the validated MC laws; two are new MC (the recommended-config
 validation and `ShieldStudy`). Recommended baseline: **GAGG:Ce,Mg, 16×16 @1 mm, D=55 mm, 15 mm crystal,
@@ -1567,3 +1569,21 @@ committed outputs were from an older code state. They are regenerated here.
 Tests: `CrystalMaterialTests` (NIST mixture, K-edge step, photoelectric ordering by Z), two tests re-stated to the
 measured physics (theme 28 angular result; mixed-field separation at Co ×2), `SingleSourceWithLines_EmitsAllItsLines`.
 
+**Addendum — PRS rows re-measured (TODO-03, 2026-10-01).** The PRS rows marked † quoted runs made before this theme.
+Same commands on the current code:
+
+| PRS row · command | Before | Now |
+|---|---|---|
+| PR-IMG-02 · `noise samples/scenario_handheld.json` | floor 0.34 mm; sub-mm at ≥ 250 counts on axis, ≥ 500 at the 8 mm edge | floor **0.24 mm** on axis, 0.53 mm at the edge; sub-mm at ≥ 250 (0.26 mm) on axis, ≥ 500 (0.55 mm) at the edge |
+| PR-IMG-03 · `mixedfield samples/scenario.json` | Cs-137, Co-60, Co-57 each < 1 mm | unchanged — 0.55 / 0.27 / 0.93 mm, the same peak positions (only the peak heights moved) |
+| PR-NRG-03 · `compton samples/scenario.json` | Argmax 38 % vs per-pixel 24 % of the ideal counts; RMS 0.74 vs 0.78 mm | Argmax **12 %** vs per-pixel **6 %** (2.0×); RMS 3.51 vs 5.65 mm, fail 16 % vs 46 % at the 400-photon budget |
+| PR-SENS-01 ratio · `noise` on `scenario_handheld` / `scenario_orig_gagg` | 2.65e-4 / 1.08e-4 = 2.45× | 2.48e-4 / 1.00e-4 = **2.48×** |
+| PR-IMG-01 context · `sweep samples/scenario_handheld.json` | localised 171 (cyclic) / 360 (non-cyclic) of 625 | 172 / 360 |
+
+- **The lower floor is not from this theme.** The pre-theme-52 code (`af9bc96`) gives the same RMS values (0.24 mm handheld,
+  0.38 mm original rig) with the old efficiencies. The committed `noise_*.csv` dated from 2026-07-10, before theme 43 made
+  Tent sub-cell interpolation the pipeline default; the original rig's floor moves 0.55 → 0.36 mm for the same reason.
+- **Argmax gains more with the physical crystal.** Fewer events are single-site full-energy in real GAGG, so recovering
+  the Compton-split ones doubles the counts (was 1.6×). At a 400-photon budget only ~50 / ~25 counts remain, which is why
+  neither strategy reaches sub-mm here — the comparison, not the absolute RMS, is the result.
+- Regenerated: `noise_handheld.csv`, `noise_orig_gagg.csv`, `sweep_{cyclic,noncyclic}.csv` (handheld), `mixedfield*.csv`.

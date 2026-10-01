@@ -196,3 +196,4 @@ TILT (pitch/yaw), mask WARPING.
 - **52** (2026-10-01): crystal attenuation from tabulated cross sections (`CrystalMaterial`, 7 scintillators) —
   replaced fitted curves that made the crystal over-absorbing; themes 6, 15, 17, 26, 28, 37, 44, 46 re-run
   (spatial Cs/Co separation now holds only to Co:Cs ≈ 2:1); single `source` with `lines` now emits all lines.
+  TODO-03 addendum: the PRS † rows re-measured (handheld floor 0.24 mm, mixed field unchanged, Argmax 2.0× per-pixel).
