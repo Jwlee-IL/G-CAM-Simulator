@@ -20,6 +20,10 @@ cocotb RTL front-end path.
 - **Isotope scope:** core Cs-137 / Co-60 / Co-57, plus Ir-192 as the industrial reference source (theme 51; no
   cascade model) (122→1332 keV, cascade sum, low line under
   high-E Compton).
+- **The original rig's readout (author, 2026-10-02):** scintillator pixels ordered to match the SiPM array 1:1, with
+  dead regions between pixels; the array read through **four 14-bit ADC channels**, position from the relative-signal
+  (Anger-type) formula, crystal from the flood map. So pile-up is array-wide and moves the position too; the engine
+  does not model this readout yet (TODO-19).
 - **The real rig's long-unsolved problem** was 662-keV window contamination — Co-60 downscatter
   reading as Cs. Gcam's crystal-Compton **spectral** lever (per-pixel stripping, themes 16–17, 26) recovers
   the Cs count; the **spatial** lever holds only up to Co:Cs ≈ 2:1 once the crystal uses physical GAGG cross
