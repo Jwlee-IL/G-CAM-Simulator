@@ -86,7 +86,10 @@ internal sealed class AcquisitionSession : IAcquisitionSession
                 double actual = reportInterval > 0 ? (live - previousLive) / reportInterval : 0;
                 await _snapshots.Writer.WriteAsync(new AcquisitionSnapshot(live, events.Count, source.RateCps,
                     actual, limited, imaging, Array.AsReadOnly(events.ToArray()), decodeWatch.Elapsed, completed)
-                    { Detector = detector });
+                    { Detector = detector, Optics = new OpticsSettings { MuraRank = config.Mask.Rank,
+                        CellPitchMm = config.Mask.CellPitchMm, MaskDetectorDistanceMm = config.Geometry.MaskDetectorDistanceMm,
+                        DetectorPixels = config.Detector.PixelsX, PixelPitchMm = config.Detector.PixelPitchMm,
+                        FocalDistanceMm = config.Geometry.MaskDetectorDistanceMm + config.Geometry.SourceMaskDistanceMm } });
                 if (completed || _stop.IsCancellationRequested) break;
                 previous = tickStart;
                 previousPublished = clock.GetTimestamp();

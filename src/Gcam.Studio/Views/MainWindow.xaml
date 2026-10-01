@@ -206,42 +206,52 @@
 
                         <Border Style="{StaticResource Divider}" />
 
-                        <!-- Geometry (read-only for now) -->
-                        <StackPanel DataContext="{Binding Optics}">
-                            <DockPanel Style="{StaticResource PanelHeader}">
-                                <TextBlock DockPanel.Dock="Left" Text="Geometry" Style="{StaticResource Text.SectionTitle}" />
-                                <TextBlock DockPanel.Dock="Right" Text="read-only" Style="{StaticResource Text.Caption}" />
-                            </DockPanel>
-                            <DockPanel Style="{StaticResource FactRow}">
-                                <TextBlock Text="Mask" Style="{StaticResource Text.Label}" />
-                                <TextBlock Style="{StaticResource FactValue}"><Run Text="MURA rank " /><Run Text="{Binding MuraRank, Mode=OneWay}" /></TextBlock>
-                            </DockPanel>
-                            <DockPanel Style="{StaticResource FactRow}">
-                                <TextBlock Text="Cell pitch" Style="{StaticResource Text.Label}" />
-                                <TextBlock Text="{Binding CellPitchMm, StringFormat={}{0:0.##} mm}" Style="{StaticResource FactValue}" />
-                            </DockPanel>
-                            <DockPanel Style="{StaticResource FactRow}">
-                                <TextBlock Text="Mask–detector" Style="{StaticResource Text.Label}" />
-                                <TextBlock Text="{Binding MaskDetectorDistanceMm, StringFormat={}{0:0.#} mm}" Style="{StaticResource FactValue}" />
-                            </DockPanel>
-                            <DockPanel Style="{StaticResource FactRow}">
-                                <TextBlock Text="Detector" Style="{StaticResource Text.Label}" />
-                                <TextBlock Style="{StaticResource FactValue}"><Run Text="{Binding DetectorPixels, Mode=OneWay}" /><Run Text=" × " /><Run Text="{Binding PixelPitchMm, Mode=OneWay, StringFormat={}{0:0.##}}" /><Run Text=" mm" /></TextBlock>
-                            </DockPanel>
-                            <DockPanel Style="{StaticResource FactRow}">
-                                <TextBlock Text="Focal plane" Style="{StaticResource Text.Label}" />
-                                <TextBlock Text="{Binding FocalDistanceMm, StringFormat={}{0:N0} mm}" Style="{StaticResource FactValue}" />
-                            </DockPanel>
-                            <DockPanel Style="{StaticResource FactRow}">
-                                <TextBlock Text="FCFOV" Style="{StaticResource Text.Label}" />
-                                <TextBlock Text="{Binding DataContext.FcfovHalfMm, RelativeSource={RelativeSource AncestorType=ScrollViewer}, StringFormat={}± {0:0.#} mm}"
-                                           Style="{StaticResource FactValue}" />
-                            </DockPanel>
-                        </StackPanel>
+                        <Expander Header="Physical optics" Style="{StaticResource Expander.Section}"
+                                  IsExpanded="{Binding IsOpticsExpanded}" AutomationProperties.AutomationId="Optics.Section">
+                            <StackPanel DataContext="{Binding OpticsEditor}" IsEnabled="{Binding IsEditable}">
+                                <TextBlock Text="Engineering geometry" Style="{StaticResource Text.Caption}" />
+                                <ComboBox ItemsSource="{Binding Presets}" DisplayMemberPath="Name" SelectedItem="{Binding SelectedPreset}"
+                                          Margin="{StaticResource Gap.Field}" AutomationProperties.AutomationId="Optics.Preset"
+                                          AutomationProperties.Name="Engineering geometry" />
+                                <DockPanel Style="{StaticResource FieldRow}">
+                                    <TextBlock Text="Prime rank" Style="{StaticResource FieldLabel}" />
+                                    <ComboBox ItemsSource="{Binding Ranks}" SelectedItem="{Binding Rank}"
+                                              AutomationProperties.AutomationId="Optics.Rank" AutomationProperties.Name="Prime rank" />
+                                </DockPanel>
+                                <DockPanel Style="{StaticResource FieldRow}">
+                                    <TextBlock Text="Cell pitch" Style="{StaticResource FieldLabel}" />
+                                    <TextBox Text="{Binding CellPitch, UpdateSourceTrigger=PropertyChanged}" Tag="mm"
+                                             AutomationProperties.AutomationId="Optics.CellPitch" AutomationProperties.Name="Cell pitch (mm)" />
+                                </DockPanel>
+                                <DockPanel Style="{StaticResource FieldRow}">
+                                    <TextBlock Text="Mask–detector" Style="{StaticResource FieldLabel}" />
+                                    <TextBox Text="{Binding Distance, UpdateSourceTrigger=PropertyChanged}" Tag="mm"
+                                             AutomationProperties.AutomationId="Optics.Distance" AutomationProperties.Name="Mask–detector distance (mm)" />
+                                </DockPanel>
+                                <DockPanel Style="{StaticResource FieldRow}">
+                                    <TextBlock Text="Pixels / side" Style="{StaticResource FieldLabel}" />
+                                    <TextBox Text="{Binding Pixels, UpdateSourceTrigger=PropertyChanged}"
+                                             AutomationProperties.AutomationId="Optics.Pixels" AutomationProperties.Name="Pixels / side" />
+                                </DockPanel>
+                                <DockPanel Style="{StaticResource FieldRow}">
+                                    <TextBlock Text="Pixel pitch" Style="{StaticResource FieldLabel}" />
+                                    <TextBox Text="{Binding PixelPitch, UpdateSourceTrigger=PropertyChanged}" Tag="mm"
+                                             AutomationProperties.AutomationId="Optics.PixelPitch" AutomationProperties.Name="Pixel pitch (mm)" />
+                                </DockPanel>
+                                <TextBlock Text="Performance depends on source positions, counts, isotope channels and focus."
+                                           Style="{StaticResource Text.Caption}" TextWrapping="Wrap" />
+                            </StackPanel>
+                        </Expander>
+                        <TextBlock Text="{Binding OpticsEditor.Summary}" Style="{StaticResource Text.MonoCaption}" TextTrimming="CharacterEllipsis"
+                                   ToolTip="{Binding OpticsEditor.Summary}" Visibility="{Binding IsOpticsExpanded, Converter={x:Static conv:InverseBoolToVisibilityConverter.Instance}}" />
+                        <TextBlock Text="{Binding OpticsEditor.Error}" Style="{StaticResource Text.CaptionWarning}" TextWrapping="Wrap"
+                                   AutomationProperties.AutomationId="Optics.Error" />
+                        <TextBlock Text="{Binding ValidationError}" Style="{StaticResource Text.CaptionWarning}" TextWrapping="Wrap"
+                                   AutomationProperties.AutomationId="Acquisition.InputError" />
                         <Border Style="{StaticResource Divider}" />
-                        <DockPanel Style="{StaticResource PanelHeader}">
-                            <TextBlock Text="Detector" Style="{StaticResource Text.SectionTitle}" />
-                        </DockPanel>
+                        <Expander Header="Detector" Style="{StaticResource Expander.Section}" IsExpanded="{Binding IsDetectorExpanded}"
+                                  AutomationProperties.AutomationId="Detector.Section">
+                            <StackPanel>
                         <StackPanel DataContext="{Binding Detector}">
                             <DockPanel Style="{StaticResource FactRow}">
                                 <TextBlock Text="Entrance" Style="{StaticResource Text.Label}" />
@@ -273,6 +283,10 @@
                                          AutomationProperties.Name="Background BSR (detected background to signal ratio)" />
                             </DockPanel>
                         </StackPanel>
+                            </StackPanel>
+                        </Expander>
+                        <TextBlock Text="{Binding DetectorSummary}" Style="{StaticResource Text.MonoCaption}" TextTrimming="CharacterEllipsis"
+                                   ToolTip="{Binding DetectorSummary}" Visibility="{Binding IsDetectorExpanded, Converter={x:Static conv:InverseBoolToVisibilityConverter.Instance}}" />
                     </StackPanel>
                     </ScrollViewer>
                 </Border>
@@ -357,6 +371,7 @@
                         <DataTemplate DataType="{x:Type vm:ImagingWorkspaceViewModel}">
                             <!-- Measurements: tool picker · results table · detail of the selected row, top-aligned -->
                             <Border Style="{StaticResource Panel.Surface}">
+                                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                                 <StackPanel>
                                     <views:ImagingOptionsPanel />
                                     <StackPanel DataContext="{Binding Measurements}">
@@ -449,6 +464,7 @@
                                                    TextWrapping="Wrap" TextTrimming="None" AutomationProperties.AutomationId="MeasurementDetail" />
                                     </StackPanel>
                                 </StackPanel>
+                                </ScrollViewer>
                             </Border>
                         </DataTemplate>
                     </ContentControl.Resources>

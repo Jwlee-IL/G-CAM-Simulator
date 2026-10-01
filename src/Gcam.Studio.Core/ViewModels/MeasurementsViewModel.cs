@@ -81,6 +81,16 @@ public sealed partial class MeasurementsViewModel : ObservableObject
         foreach (var m in Items) Refresh(m);
     }
 
+    public int ReconstructionRevision { get; private set; }
+    /// <summary>Remove old-plane measurements and cancel only reconstruction drafts.</summary>
+    public void ClearReconstruction()
+    {
+        foreach (var item in Items.Where(m => m.Pane == ImagePane.Reconstruction).ToArray()) Items.Remove(item);
+        if (Selected?.Pane == ImagePane.Reconstruction) Selected = null;
+        ReconstructionRevision++;
+        OnPropertyChanged(nameof(ReconstructionRevision));
+    }
+
     private void Refresh(MeasurementViewModel m)
     {
         var r = _result;

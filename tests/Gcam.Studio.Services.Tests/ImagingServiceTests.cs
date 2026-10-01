@@ -66,7 +66,7 @@ public sealed class ImagingServiceTests(ITestOutputHelper output)
         Assert.True(low - expected > 4 * Math.Sqrt(low + expected), "Unstripped Co downscatter must bias the Cs count high.");
         Assert.InRange(Math.Abs(observed - expected), 0, tolerance);
         Assert.All(stripped.Channels.SelectMany(c => c.Image.Flood.Raw.ToArray()), x => Assert.True(x >= 0));
-        Assert.Same(snapshot.Imaging, raw.Channels[0].Image);
+        Assert.Same(snapshot.Imaging.Flood, raw.Channels[0].Image.Flood);
     }
 
     [Fact]
@@ -102,7 +102,7 @@ public sealed class ImagingServiceTests(ITestOutputHelper output)
         Report(first); Report(changed);
         Assert.NotEqual(first.Ratios[0].R, changed.Ratios[0].R);
         Assert.True(changed.CalibrationTime > TimeSpan.Zero);
-        Assert.Same(snapshot.Imaging, changed.Channels[0].Image);
+        Assert.Same(snapshot.Imaging.Flood, changed.Channels[0].Image.Flood);
         Assert.Equal(first.Channels[1].LoKeV > changed.Channels[1].LoKeV, true);
         for (int i = 0; i < changed.Channels.Count; i++)
             Assert.Equal(fresh.Channels[i].Image.Flood.Raw.ToArray(), changed.Channels[i].Image.Flood.Raw.ToArray());
@@ -111,7 +111,8 @@ public sealed class ImagingServiceTests(ITestOutputHelper output)
         Assert.Equal(changed.Ratios, cached.Ratios);
     }
 
-    [Fact]
+    [EvidenceFact]
+    [Trait("Category", "Evidence")]
     public async Task Precision_TwentySeeds_MeasuresMixedIsotopesAndCoOnlyControl()
     {
         const int seeds = 20;

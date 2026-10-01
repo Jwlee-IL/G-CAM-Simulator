@@ -21,7 +21,7 @@ namespace Gcam.Studio.RenderTests;
 
 public sealed partial class PlotViewRenderTests
 {
-    private void RenderWindows(string theme, bool mixed = false)
+    private void RenderWindows(string theme, bool mixed = false, bool? opticsExpanded = null)
     {
         // Share the existing STA/Application lifetime: WPF permits only one Application per AppDomain.
         var dictionaries = Application.Current.Resources.MergedDictionaries;
@@ -47,6 +47,12 @@ public sealed partial class PlotViewRenderTests
         Assert.Same(acquisition.Snapshot, model.Snapshot);
         Assert.NotEmpty(model.Spectrum.Series);
 
+        if (opticsExpanded is { } expanded)
+        {
+            model.IsOpticsExpanded = model.IsDetectorExpanded = expanded;
+            model.Imaging.FocalPlane = "800";
+            model.Imaging.WhenUpdated.GetAwaiter().GetResult();
+        }
         foreach (var size in new[] { new Size(1280, 800), new Size(1440, 900) })
         foreach (var workspace in model.Workspaces)
         foreach (string isotope in mixed ? (workspace == model.Imaging ? new[] { "All", "Cs-137" } : Array.Empty<string>()) : new[] { "All" })
@@ -100,9 +106,18 @@ public sealed partial class PlotViewRenderTests
             Dispatcher.CurrentDispatcher.Invoke(() => { }, DispatcherPriority.ContextIdle);
             root.UpdateLayout();
 
-            var fcfov = Assert.Single(Descendants(root).OfType<TextBlock>(),
-                t => BindingOperations.GetBinding(t, TextBlock.TextProperty)?.Path.Path == "DataContext.FcfovHalfMm");
-            Assert.Equal($"± {model.FcfovHalfMm:0.#} mm", fcfov.Text);
+            if (workspace == model.Imaging)
+            {
+                var geometry = Assert.Single(Descendants(root).OfType<TextBlock>(),
+                    t => AutomationProperties.GetAutomationId(t) == "Imaging.Geometry");
+                Assert.Equal(model.Imaging.GeometryText, geometry.Text);
+                var focus = Assert.Single(Descendants(root).OfType<TextBox>(),
+                    t => AutomationProperties.GetAutomationId(t) == "Imaging.FocalPlane");
+                Assert.Equal(model.Imaging.FocalPlane, focus.Text);
+            }
+            var section = Assert.Single(Descendants(root).OfType<Expander>(),
+                e => AutomationProperties.GetAutomationId(e) == "Optics.Section");
+            Assert.Equal(model.IsOpticsExpanded, section.IsExpanded);
             var pickers = Descendants(root).OfType<RadioButton>().Where(
                 b => AutomationProperties.GetAutomationId(b).StartsWith("Workspace.", StringComparison.Ordinal)).ToArray();
             Assert.Equal(model.Workspaces.Count, pickers.Length);
@@ -138,7 +153,7 @@ public sealed partial class PlotViewRenderTests
             string directory = Path.Combine(RepositoryRoot(), "docs", "assets", "studio-render");
             Directory.CreateDirectory(directory);
             string path = Path.Combine(directory,
-                $"{workspace.Title.ToLowerInvariant()}{(mixed ? "-mixed-" + isotope.ToLowerInvariant() : "")}-{theme.ToLowerInvariant()}-{size.Width:0}x{size.Height:0}.png");
+                $"{workspace.Title.ToLowerInvariant()}{(opticsExpanded.HasValue ? "-optics-" + (opticsExpanded.Value ? "expanded" : "collapsed") + "-focus800" : "")}{(mixed ? "-mixed-" + isotope.ToLowerInvariant() : "")}-{theme.ToLowerInvariant()}-{size.Width:0}x{size.Height:0}.png");
             using var stream = File.Create(path);
             encoder.Save(stream);
             output.WriteLine(path);
@@ -242,12 +257,13 @@ public sealed partial class PlotViewRenderTests
             var channels = new List<ImagingChannel>();
             ImagingResult Image(IEnumerable<SceneSource> sources)
             {
+                double scale = (settings.FocalDistanceMm ?? optics.FocalDistanceMm) / 1000;
                 var recon = new DetectorImage(41, 41);
                 for (int y = 0; y < 41; y++)
                 for (int x = 0; x < 41; x++)
-                    recon[x, y] = sources.Sum(s => 3000 * Gaussian(-56 + x * 2.8, s.X, 5)
-                        * Gaussian(-56 + y * 2.8, s.Y, 5));
-                return snapshot.Imaging with { Reconstruction = recon.ReadOnlyCopy() };
+                    recon[x, y] = sources.Sum(s => 3000 * Gaussian((-56 + x * 2.8) * scale, s.X * scale, 5 * scale)
+                        * Gaussian((-56 + y * 2.8) * scale, s.Y * scale, 5 * scale));
+                return snapshot.Imaging with { Reconstruction = recon.ReadOnlyCopy(), ReconOriginMm = -56 * scale, ReconStepMm = 2.8 * scale };
             }
             channels.Add(new("All", double.NaN, double.NaN, Image(scene), peaks));
             foreach (var s in scene)

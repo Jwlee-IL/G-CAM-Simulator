@@ -25,6 +25,50 @@
         </Setter>
     </Style>
 
+    <Style x:Key="ToggleButton.Section" TargetType="ToggleButton">
+        <Setter Property="Foreground" Value="{DynamicResource Brush.Text.Primary}" />
+        <Setter Property="Background" Value="{DynamicResource Brush.Bg.Surface}" />
+        <Setter Property="FontFamily" Value="{StaticResource Font.UI}" />
+        <Setter Property="FontSize" Value="{StaticResource FontSize.Body}" />
+        <Setter Property="FocusVisualStyle" Value="{StaticResource FocusVisual}" />
+        <Setter Property="MinHeight" Value="{StaticResource Size.Control}" />
+        <Setter Property="HorizontalContentAlignment" Value="Left" />
+        <Setter Property="Template"><Setter.Value>
+            <ControlTemplate TargetType="ToggleButton">
+                <Border Background="{TemplateBinding Background}" Padding="{StaticResource Pad.Control}" CornerRadius="{StaticResource Radius.Control}">
+                    <DockPanel>
+                        <TextBlock x:Name="Chevron" Text="▸" Style="{StaticResource Text.Label}" Margin="{StaticResource Gap.Inline}" />
+                        <ContentPresenter VerticalAlignment="Center" RecognizesAccessKey="True" />
+                    </DockPanel>
+                </Border>
+                <ControlTemplate.Triggers>
+                    <Trigger Property="IsChecked" Value="True"><Setter TargetName="Chevron" Property="Text" Value="▾" /></Trigger>
+                    <Trigger Property="IsMouseOver" Value="True"><Setter Property="Background" Value="{DynamicResource Brush.Bg.Raised}" /></Trigger>
+                </ControlTemplate.Triggers>
+            </ControlTemplate>
+        </Setter.Value></Setter>
+    </Style>
+
+    <!-- Section headers inherit palette and keyboard focus instead of the system Expander theme. -->
+    <Style x:Key="Expander.Section" TargetType="Expander">
+        <Setter Property="Foreground" Value="{DynamicResource Brush.Text.Primary}" />
+        <Setter Property="Margin" Value="{StaticResource Gap.Tight}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Expander">
+                    <StackPanel>
+                        <ToggleButton Content="{TemplateBinding Header}" Style="{StaticResource ToggleButton.Section}"
+                                      IsChecked="{Binding IsExpanded, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}" />
+                        <ContentPresenter x:Name="SectionContent" ContentSource="Content" Visibility="Collapsed" />
+                    </StackPanel>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsExpanded" Value="True"><Setter TargetName="SectionContent" Property="Visibility" Value="Visible" /></Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <!-- ===== Panels ===== -->
     <Style x:Key="Panel.Surface" TargetType="Border">
         <Setter Property="Background" Value="{DynamicResource Brush.Bg.Surface}" />

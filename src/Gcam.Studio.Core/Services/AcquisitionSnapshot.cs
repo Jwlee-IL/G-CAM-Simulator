@@ -9,4 +9,6 @@ public sealed record AcquisitionSnapshot(double LiveTimeS, long Counts, double R
 {
     /// <summary>Frozen measurement inputs belonging to these events, never the current editable detector.</summary>
     public DetectorSettings? Detector { get; init; }
+    /// <summary>Effective physical optics frozen at Start; decoder view focus may change later.</summary>
+    public Gcam.Configuration.OpticsSettings? Optics { get; init; }
 }

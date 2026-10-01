@@ -99,10 +99,9 @@ public sealed class ImagingWorkspaceTests
         var oldView = imaging.Latest!;
         var pending = imaging.Pending;
         imaging.Pending = null;
-        vm.WindowFwhm = 3; await vm.Imaging.WhenUpdated;
-        var current = vm.Imaging.View;
+        vm.WindowFwhm = 3;
         pending.SetResult(oldView); await oldTask;
-        Assert.Same(current, vm.Imaging.View);
+        Assert.NotSame(oldView, vm.Imaging.View);
         Assert.Equal(3, imaging.Requests[^1].Settings.WindowFwhm);
         Assert.False(vm.Imaging.IsProcessing);
     }

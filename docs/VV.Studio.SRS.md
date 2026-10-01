@@ -21,7 +21,7 @@ Structured after IEC 62304 §5.2 (software requirements analysis). As in [VV.Stu
 |---|---|
 | Purpose | A desktop viewer for Gcam, a Monte Carlo simulator of a coded-aperture gamma camera: place sources, run the simulation, inspect the detector flood map and the decoded reconstruction, measure on both in mm. Intended use and safety class: [VV.Studio §1](VV.Studio.md#1-scope-and-intended-use). |
 | Users | Engineers and reviewers. They know what a flood map and a reconstruction are; they are not assumed to know the code. |
-| Inputs | A scene of point sources (isotope, lateral X / Y, distance, activity), preset live time and acquisition speed. Optics are fixed defaults (`OpticsSettings`), shown read-only. |
+| Inputs | A scene of point sources (isotope, lateral X / Y, distance, activity), preset live time and acquisition speed. Optics are fixed defaults (`OpticsSettings`), editable physical run inputs; decoder focus is an Imaging view setting. |
 | Outputs | Two images (flood map, reconstruction) with colour bars, the decoded peak in mm, a status line, and user measurements (distance, angle, ROI statistics). Nothing is written to disk. |
 | Upward trace | Studio is subsystem SS-4 of the product concept: it implements [PR-SW-02](VV.Gcam.PRS.md#software-and-engineering-use-pr-sw) and serves user need UN-09 (engineering inspection; [VV.Gcam.URS](VV.Gcam.URS.md)). |
 | Neighbouring systems | The Gcam engine, reached only through `IAcquisitionService` and `ISpectrumService` ([VV.Studio.SDS §3](VV.Studio.SDS.md#3-interfaces-between-items-532-543)); Windows (WPF, DWM title bar, UI Automation). |
@@ -154,6 +154,17 @@ Structured after IEC 62304 §5.2 (software requirements analysis). As in [VV.Stu
 | SR-THEME-01 | The top-bar toggle switches dark ↔ light; its label names the theme it switches *to*. |
 | SR-THEME-02 | Switching replaces the token dictionary in place, every window repaints (`DynamicResource`), and the title bar follows (DWM). |
 
+### Editable optics and decoder focus
+
+| ID | Requirement |
+|---|---|
+| SR-OPT-01 | Rank, cell pitch, mask–detector distance, pixels per side and pixel pitch are editable physical run inputs. One validated effective record feeds configuration and preset matching. The prime selector displays the effective supported rank. Physical editors are disabled while acquiring and edits mark retained results outdated. |
+| SR-OPT-02 | Sharp (default), Baseline, Wide FOV and High-res apply their historical engineering geometries atomically. The selector shows Custom after divergence. Selecting a geometry does not move scene sources or alter decoder focus; performance is conditional on scene, focus, counts and isotope channels. |
+| SR-OPT-03 | Studio rejects non-finite, malformed, out-of-policy and cross-field-invalid inputs before transport or projection. Policy ranges are in §5; every scene source lies beyond the mask front face. Refocus uses acquired physical settings, including after pending physical edits. Grid allocation is bounded at 128×128. Errors remain visible with sections collapsed and Start expands error sections. |
+| SR-OPT-04 | Decoder focal plane is an Imaging view setting. At Acquiring, Stopped and Completed it reprojects All and isotope/stripped reconstructions, estimates and found peaks from retained floods/events without new transport, measurement, random draws or calibration. Latest revision wins; stale is neither set nor cleared. Focus changes clear reconstruction measurements/drafts with a visible explanation while retaining flood measurements. All found markers remain the union of isotope-channel markers. |
+| SR-OPT-05 | Display resolution element cF/D, nominal cyclic field ±pcF/(2D), samples per mask cell, detector coverage in periods and physical mask width. These are geometry values, not localization/usable-field guarantees; no pass/fail glyphs or depth-reach extrapolation. A conditional sampling-precision note cites the 1 m position-sweep evidence in [VV.Studio.Imaging](VV.Studio.Imaging.md). |
+| SR-OPT-06 | Physical optics and Detector sections collapse independently in the shared panel with a single-line effective summary. Focus/readout live in the Imaging panel. Controls inherit theme tokens and have accessible labels, units and stable AutomationIds; the right panel scrolls to retain tools at small sizes. |
+
 ## 4. Non-functional requirements
 
 ### Operating environment (`SR-ENV`, §5.2.2 a, j)
@@ -190,7 +201,7 @@ point). They are kept as requirements so that a change breaking them fails verif
 | SR-ARCH-03 | View code-behind is `InitializeComponent()` only; views use theme keys, not literal colours or sizes. |
 | SR-ARCH-04 | Studio tests reference `Gcam.Studio.Core` only (no WPF in tests). |
 
-**68 active requirements**, seven withdrawn rows retained with stable IDs.
+**74 active requirements**, seven withdrawn rows retained with stable IDs.
 
 ## 5. Inputs, outputs, messages (§5.2.2 b–d)
 
@@ -206,7 +217,8 @@ point). They are kept as requirements so that a change breaking them fails verif
 | Speed | live s / wall s | finite > 0; default 10; invalid UI input → 10, invalid service input rejected | SR-RUN-15, SR-RUN-19 |
 | Gain σ / seed | % / integer | σ finite ≥ 0, default 3%; invalid UI σ → 3%; seed default 1 | SR-RUN-20, -21 |
 | Background BSR | detected background / source | finite ≥ 0, default 0; invalid UI input → 0; invalid service input rejected | SR-RUN-22 |
-| Optics | mm / rank | read-only defaults in this version | — |
+| Physical optics | mm / integer | ranks 5, 7, 11, 13, 17, 19, 23; N integer 4–64; finite D ≥1, pitches ≥0.05; pixel pitch > reflector gap; source z > D+5 (10 mm slab); invalid edits block Start | SR-OPT-01, -03 |
+| Decoder focus | mm from detector | finite, > acquired D; projected grid ≤128 cells per side; invalid edits retain the last valid view | SR-OPT-03, -04 |
 | Spectrum window N | × FWHM(E) | positive finite; default 1.5; invalid numeric value → 1.5 | SR-SPEC-04, -06 |
 | Spectrum log Y / pile-up | boolean | defaults true / false; view settings | SR-SPEC-03, -06 |
 | Measurement points | mm | clamped to the image extent; 2 points (distance, ROI) or 3 (angle) | SR-MEAS-05, SR-MEAS-07 |
@@ -255,7 +267,6 @@ The requirements that implement the controls:
 
 Stated so that their absence is not read as a gap in verification:
 
-- Editing optics (mask rank, pitch, distances) — shown read-only in this version.
 - Saving or loading scenes, exporting images or measurements (SR-SEC-01 forbids file I/O today).
 - Creating measurements from the keyboard — known gap AN-01, planned.
 - High-contrast mode — known gap AN-03, planned.

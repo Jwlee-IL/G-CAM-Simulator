@@ -69,8 +69,53 @@ decides where the decoded peak lands. The default optics reach ≥ 2 samples per
 ## Reproduction and renders
 
 Run `dotnet build Gcam.sln -c Release`, then `dotnet test Gcam.sln -c Release` with GCAM_UI_TESTS unset.
-For numerical output use the detailed console logger on `tests/Gcam.Studio.Services.Tests`, filtering
-`FullyQualifiedName~ImagingServiceTests`. Set GCAM_RENDER_SNAPSHOTS=1 only for
+The 20-seed precision measurement and the full sampling regression are now long-running evidence
+tests, skipped by default and in CI. Their budgets and historical measured values above are unchanged.
+The full automated sampling sweep uses 1,000,000 biased histories per position, pitches 0.6/0.3 mm,
+y=-10..10 in 1 mm steps, x=0, a geometric Cs-137 detector at 1 m, fixed 18 mm detector size,
+seed 12345 and 0.25 mm grid. It measured RMS/max 1.0810/1.9966 mm and 0.5837/0.9511 mm;
+this is distinct from the original 3,000,000-history, three-pitch table above.
+Reproduce these automated measurements with the independent evidence opt-in:
+
+```powershell
+$env:GCAM_EVIDENCE_TESTS = '1'
+dotnet test tests/Gcam.Studio.Services.Tests -c Release --filter Category=Evidence --logger 'console;verbosity=detailed'
+Remove-Item Env:GCAM_EVIDENCE_TESTS
+```
+
+`Sampling_PositionSweepAtConstantDetectorSize_FinerPixelsReduceLocalizationError` preserves the full
+position sweep; `Precision_TwentySeeds_MeasuresMixedIsotopesAndCoOnlyControl` preserves the 20-seed
+measurement. `Sampling_SmallBudgetSeedSpread_ReportsRegressionMargin` measures noise in the separate
+small default regression budget. None of these opts into desktop input.
+
+The default sampling regression pins seed 12345, 100,000 biased histories per position at x=0,
+y={-8,-4,4,8} mm, geometric Cs-137 at 1 m and an 18 mm detector (30×0.6 / 60×0.3 mm).
+Its assertion is fine-pixel RMS < 0.85 × coarse-pixel RMS. The reduced photon/position budget was
+measured with five seeds using the original full-field 0.25 mm grid, independently of the high-budget
+0.95/0.51 mm finding:
+
+| Seed | Coarse RMS, mm | Fine RMS, mm | Fine / coarse |
+|---|---|---|---|
+| 12345 | 1.109679 | 0.631894 | 0.569438 |
+| 23456 | 1.108024 | 0.622447 | 0.561763 |
+| 34567 | 1.068757 | 0.631782 | 0.591137 |
+| 45678 | 1.124369 | 0.520752 | 0.463150 |
+| 56789 | 1.110107 | 0.632080 | 0.569386 |
+
+The observed ratio range is 0.127987; max + twice that range is 0.847111, rounded up to 0.85.
+This gives 0.258863 ratio headroom above the worst sampled seed. It is an empirical margin for a
+pinned deterministic test, not a confidence bound or a guarantee for arbitrary seeds.
+
+The calibration run above took 193.9 s: photon reduction alone did not remove full-grid decoding cost.
+The final small regression therefore uses half-extent 12.125 mm and step 0.25 mm (98×98), retaining
+the nominal half-field 56.875 mm grid's phase. All four source positions are inside this region; every
+sampled radial error is at most twice its four-position RMS (≤2.249 mm), so the measured peaks and
+their local interpolation neighbours lie inside it. Transport/flood scoring is unchanged. The same
+budget's seed-spread opt-in now uses this small grid too. Its final equivalence, runtime (<10 s target)
+and default service-suite duration could not be checked after a shell command was blocked with
+`CreateProcessAsUserW failed: 5 (access denied)`; the table records the full-grid calibration, not a
+completed execution of the final cropped-grid test.
+Set GCAM_RENDER_SNAPSHOTS=1 only for
 `tests/Gcam.Studio.RenderTests`. Never enable desktop tests for this check.
 
 Generated additional snapshot paths:

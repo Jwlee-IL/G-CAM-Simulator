@@ -11,7 +11,7 @@ Structured after IEC 62304 §5.3 (architectural design) and §5.4 (detailed desi
 **At a glance**
 - Four software items in three projects — presentation logic and view maths (`Gcam.Studio.Core`, no WPF), the
   simulation adapter (`Gcam.Studio.Services`, the only layer that reaches the engine) and the WPF shell — split into
-  22 units (§2); the compiler enforces the layering.
+  25 units (§2); the compiler enforces the layering.
 - Interfaces between items (§3), SOUP with what Studio relies on (§4), the run state machine and the measurement
   gesture (§5), and the detailed design of each unit (§6).
 - Every SRS requirement is allocated to the unit that meets it (§7).
@@ -75,6 +75,9 @@ one class, or a small group of types that only make sense together. Unit IDs are
 | SU-20 | SI-3 | `SpectrumService`, `MeasurementStage` | `Services/SpectrumService.cs`, `Services/MeasurementStage.cs` | shared gain / chain response, worker binning, incremental pile-up, resolvable-line grouping and union share |
 | SU-21 | SI-1 | `SpectrumWorkspaceViewModel`, `ISpectrumService`, spectrum records | `Core/ViewModels/SpectrumWorkspaceViewModel.cs`, `Core/Services/Spectrum*.cs`, `Core/Services/ISpectrumService.cs` | view settings, snapshot refresh, Histogram series / bands / table, selected window range, rejection of late responses |
 | SU-22 | SI-4 | `SpectrumView`, `SpectrumPanel` | `Studio/Views/Spectrum*.xaml(.cs)` | plot, readout, table and read-only chain / view-settings panel |
+| SU-23 | SI-3 | `ImagingService` | `Services/ImagingService.cs` | incremental measured windows, calibration, stripping and worker projection |
+| SU-24 | SI-1 | `OpticsEditorViewModel`, `OpticsPolicy`, `OpticsGeometry`, `OpticsPreset` | `Core/ViewModels/OpticsEditorViewModel.cs`, `Core/Optics/*.cs` | validated effective physical inputs, atomic presets, pure geometry and allocation policy |
+| SU-25 | SI-3 | `ImagingProjection` | `Services/ImagingProjection.cs` | clone acquired config for decoder focus, one projection path for retained All/window/stripped floods |
 
 Paths are relative to `src/Gcam.Studio.Core`, `src/Gcam.Studio.Services` and `src/Gcam.Studio` respectively.
 
@@ -85,7 +88,7 @@ Paths are relative to `src/Gcam.Studio.Core`, `src/Gcam.Studio.Services` and `sr
 `IAcquisitionService`: `Start(scene, optics, liveTimeS, speed, detector, backgroundToSignalRatio)` returns an
 `IAcquisitionSession`. It publishes `IAsyncEnumerable<AcquisitionSnapshot>`, exposes `Stop()` and supports
 asynchronous disposal. Snapshots contain live time, integer counts, running rate, achieved speed, MC-limited
-flag, imaging, unsmeared events, frozen detector inputs, decode time and completion. Images are detached read-only copies; the event
+flag, imaging, unsmeared events, frozen detector and effective physical optics inputs, decode time and completion. Images are detached read-only copies; the event
 array is detached and wrapped read-only. A bounded channel keeps at most two cumulative snapshots and drops
 old snapshots for a slow reader; it never drops acquired events. The ViewModel awaits on its UI context.
 `TimeProvider` is injected into the service for virtual-clock verification. Stop cancels transport and waiting,
@@ -374,13 +377,12 @@ The optional service argument is solely compatibility for existing raw-image tes
 The service serializes requests with a semaphore and performs measurement, window accumulation, H-only MC
 calibration and decoding inside Task.Run. New cumulative events are measured once per worker cache and
 incrementally assigned to channels. A window change re-filters the cached measured energies and recalibrates R;
-a strip-only change reuses R. Cancellation invalidates partially built caches. SU-16 revision checks reject late
+strip-only and focal-only changes reuse R. Focus changes coalesce behind running preparation instead of cancelling it; acquisition replacement cancels and invalidates partial caches. SU-16 revision checks reject late
 responses and refresh the selected ROI values when a view or selector changes.
 
 Primary-line windows reuse SU-20 SpectrumService.BuildBands (including unresolved neighbours). Gains and smear
 reuse MeasurementStage with the same acquisition settings and event-index seed as singles Spectrum. Spectrum's
-optional pile-up is a spectrum view setting; imaging windows use measured singles. All remains the acquisition's
-unfiltered image. Found peaks use MixedFieldStudy.TopPeaks with source-count k and one source-plane mask-cell
+optional pile-up is a spectrum view setting; imaging windows use measured singles. All retains the acquisition's unfiltered flood and reprojects its reconstruction at the selected decoder focus. Found peaks use MixedFieldStudy.TopPeaks with source-count k and one source-plane mask-cell
 separation, then PeakInterpolation.Estimate with config.Decoder.SubCellInterpolation (default Tent).
 
 Each contaminating isotope's complete H-only scene is cloned from the acquisition config with background
@@ -388,12 +390,40 @@ disabled. A calibration accepts 100,000 fresh list-mode events; R = low-window c
 counts. Subtraction uses simultaneous raw high floods, never recursively purified floods:
 max(0, low[pixel] − sum(R × high[pixel])). The model limitation is visible in the panel. Stopwatch costs
 separate calibration, channel accumulation / correction, and channel decoding / peak extraction; queue delay,
-acquisition transport and All-image decoding are outside these costs.
+acquisition transport is outside these costs; projection timing includes All-image decoding.
 
 SU-10 draws found peaks as neutral diamonds with labelled chips; they are excluded from draggable hit testing.
 SU-16 also exposes coordinate text for accessible reading. New IDs are Imaging.Channel, Imaging.Window and
 Imaging.Strip. All existing control IDs remain stable. Validation status and numerical evidence are in
 [VV.Studio.Imaging](VV.Studio.Imaging.md); execution is pending.
+
+### SU-24 / SU-25 effective optics and retained-data focus
+
+The physical editor retains numeric text, including malformed edits; only valid fields produce a new effective
+OpticsSettings record. A supported-prime selector removes ambiguity about snapping. A preset loads all physical
+fields once and preserves focus. Studio policy rejects finite-range, gap/pitch, source/front-face and projected
+allocation violations; the engine scene builder remains unchanged. Start freezes scene, detector and optics.
+The acquisition snapshot carries effective optics; the Imaging workspace also retains its Start context, never
+current pending physical inputs. Validation before transport expands both physical sections and leaves an error
+outside the collapsed content.
+
+ImagingSettings.FocalDistanceMm is independent of physical OpticsSettings. ImagingProjection.AtFocus clones the
+acquired config and changes only decoder plane and search grid. Sources retain their real z; physical mask
+channel convergence is not edited. Project performs cross-correlation and sub-cell peak extraction identically
+for All, primary-window and stripped floods. All's found marker list is the freshly projected isotope union.
+An empty snapshot creates no reconstruction, peaks or calibration. NewlyMeasuredEvents exposes cache work;
+a focus-only request reports zero and retains R. Spectrum is not refreshed by focus.
+
+SU-16 coalesces revisions while one preparation is pending. It publishes only when the completed request's
+revision is current, otherwise processes the latest snapshot/settings using the prepared cache. Begin cancels
+old-acquisition work; an old completion cannot change the new acquisition's view or processing state. It
+refreshes without requiring a new snapshot, so Stop/Completed views can refocus. Focus validation uses acquired
+D; Start additionally validates current pending physical geometry. Stale is untouched by projection.
+
+SU-03 removes reconstruction-only measurements and increments ReconstructionRevision. SU-10 cancels only a
+reconstruction draft on this notification; flood measurements/drafts remain. The panel explains the clearing.
+The heatmap viewport stays in image coordinates while its mm mapping follows the projected grid. SU-14 uses
+themed Expander.Section headers, collapsed summaries, and an independently scrollable Imaging panel.
 
 ## 7. Requirement allocation
 
@@ -401,6 +431,7 @@ Every SRS requirement maps to at least one unit; every unit carries at least one
 
 | Requirement | Units |
 |---|---|
+| SR-OPT-01 … SR-OPT-06 | SU-01, SU-16, SU-24, SU-25, SU-23, SU-03, SU-10, SU-14 |
 | SR-IMG-01 … SR-IMG-06 | SU-01 (shared N), SU-16 (ImagingWorkspaceViewModel), SU-23 (worker), SU-10 (found overlays), SU-14 (selector / options panel); SU-20 (shared window and measurement response) |
 | SR-RUN-01, -02, -04 … -08 | withdrawn; batch implementation removed |
 | SR-RUN-03, SR-RUN-09 … SR-RUN-14, SR-RUN-19 | SU-01, SU-07, SU-08, SU-19 |

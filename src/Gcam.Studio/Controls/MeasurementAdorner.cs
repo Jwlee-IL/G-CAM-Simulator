@@ -127,7 +127,8 @@ public sealed class MeasurementAdorner : Adorner
 
     private void OnSessionChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName == nameof(MeasurementsViewModel.ActiveTool)) CancelDraft();
+        if (e.PropertyName == nameof(MeasurementsViewModel.ActiveTool) ||
+            e.PropertyName == nameof(MeasurementsViewModel.ReconstructionRevision) && Pane == ImagePane.Reconstruction) CancelDraft();
         InvalidateVisual();
     }
 

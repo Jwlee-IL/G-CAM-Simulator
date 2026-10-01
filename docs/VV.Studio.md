@@ -15,7 +15,7 @@ one of a set:
 The working design guides are [DESIGN.Architecture](DESIGN.Architecture.md) and the other `DESIGN.*` pages.
 
 **At a glance**
-- 68 active software requirements plus seven withdrawn batch rows (§4). Live acquisition verification and
+- 74 active software requirements plus seven withdrawn batch rows (§4). Live acquisition verification and
   measurements are recorded in [VV.Studio.Acquisition](VV.Studio.Acquisition.md); desktop acquisition
   validation is pending while the desktop and UI-test project are occupied.
 - Seven regression scenarios, a plot gate and a diagnostic survey are opt-in desktop tests. The latest regression / survey attempt was blocked by desktop input; the plot CPU gate passed (§5). Historical scenarios judge the running app against
@@ -35,6 +35,46 @@ and the independent opt-in render case skipped. A later shell creation failed wi
 commands were launched. The final binding-identity assertions compiled in the local build but were added
 after the passing render run; their rerun and visual inspection were not performed. Desktop validation
 remains pending, and no Studio launch or desktop UI test was performed.
+
+TODO-09 adds effective editable optics and retained-data refocus. The added deterministic mixed-preset
+regressions use 20,000 accepted list-mode events per preset/plane, complete isotope lines and activities
+Cs-137:Co-60:Co-57=1:1:1.5 at normalized positions (-0.5h,-0.3h),(0.5h,-0.3h),(0,0.5h).
+The gate is one resolution element per isotope channel, with/without stripping; it is not a broadband or
+sub-mm guarantee. The sampling regression uses geometric Cs-137, 1 m, 18 mm detector, pitches 0.6/0.3 mm,
+y=-10..10 in 1 mm steps, 1,000,000 biased histories/position, seed 12345 and 0.25 mm recon grid. It asserts
+improvement with finer sampling across positions, not a universal threshold. Offscreen images are explicitly
+analytic drawing fixtures, not MC evidence. Release verification (2026-10-02):
+`dotnet build Gcam.sln -c Release -m:1` passed (0 errors; one existing xUnit2000 warning).
+`dotnet test Gcam.sln -c Release -m:1 --no-build` passed: 259 engine, 102 Core, 40 services
+and 10 UI-oracle cases; nine desktop cases and the opt-in render case skipped.
+The separately logged sampling regression (started before the command block) also passed:
+RMS/max 1.0810/1.9966 mm at 0.6 mm pitch and 0.5837/0.9511 mm at 0.3 mm pitch under
+the 1,000,000-history conditions above. This reduced-budget run is distinct from the theme-55
+3,000,000-history evidence quoted in the UI.
+With `GCAM_RENDER_SNAPSHOTS=1`, the render case passed without opening a window, generating
+16 additional F=800 expanded/collapsed optics images alongside the refreshed existing captures in
+`assets/studio-render/`. Desktop validation remains deferred; Studio was not launched.
+Visual inspection found the preset selection displayed the record's diagnostic string. A final
+`OpticsPreset.ToString()` override now returns the preset name. Its rebuild command,
+`dotnet build Gcam.sln -c Release -m:1 --no-restore`, was blocked before process creation with
+`CreateProcessAsUserW failed: 5 (access denied)`. No further verification commands were launched.
+The counts above precede this final display-only change. The planner subsequently verified the final
+Release build (0 errors), all 259/102/40/10 tests and the render case (1/1), and inspected all 16 new
+optics snapshots, including the derived geometry at F=800.
+
+Long numerical measurements now use `GCAM_EVIDENCE_TESTS=1`; ordinary test runs and CI report them
+as skipped. The full sampling sweep and the 20-seed precision measurement keep their existing budgets
+and output. Their evidence and reproduction command are in [VV.Studio.Imaging](VV.Studio.Imaging.md).
+The separate small off-axis sampling regression remains in the default suite; its seed-spread measurement
+also uses the evidence opt-in. Follow-up command execution was blocked while reading engine code
+(`CreateProcessAsUserW failed: 5`, access denied); no further commands were started, so the revised
+default service-suite duration and final regression verification are unavailable locally.
+The already-running budget calibration completed successfully: 100,000 histories/position at
+y={-8,-4,4,8}, five seeds, fine/coarse RMS ratios 0.463150..0.591137. The revised gate is <0.85
+(observed max + twice the observed range, rounded up). Full-grid calibration took 193.9 s; the
+final fast test restricts reconstruction to ±12.125 mm on the same 0.25 mm grid phase. Its margin,
+seed table and the distinction between measured calibration and unverified final runtime are in
+[VV.Studio.Imaging](VV.Studio.Imaging.md).
 
 ## 1. Scope and intended use
 
@@ -75,7 +115,7 @@ stack. SI-3 is tested through the real engine.
 
 ## 3. Software requirements
 
-The requirements are specified in [VV.Studio.SRS](VV.Studio.SRS.md) — **68 active** in thirteen groups, including
+The requirements are specified in [VV.Studio.SRS](VV.Studio.SRS.md) — **74 active** in fourteen groups, including
 navigation, plotting and acquisition. Seven withdrawn batch rows retain their IDs. The matrix cites IDs only;
 the SRS is the single source of their wording.
 
@@ -90,6 +130,11 @@ Automation. Status: **pass** (evidence on 2026-10-01), **partial**, **open** (no
 
 | Req | Level | Method | Evidence | Status |
 |---|---|---|---|---|
+| SR-OPT-01, -02 | unit + offscreen | T, I | `OpticsPolicyTests.Presets_ApplyAtomically_MatchPhysicalFieldsAndShowCustom`; `OpticsViewModelTests.Focus_AcquiringStoppedCompleted_KeepsEventsSpectrumAndStaleState`; physical input bindings | pass headless + offscreen; desktop deferred |
+| SR-OPT-03 | unit + integration | T | `OpticsPolicyTests` finite/text/cross-field cases; `OpticsViewModelTests.InvalidInput_StartExpandsSectionsAndDoesNotStartTransport`; service config validation | pass headless; desktop deferred |
+| SR-OPT-04 | unit + integration | T | `OpticsProjectionTests.Refocus_ReprojectsAllChannels_WithoutMeasurementCalibrationOrNewEvents`, `EmptySnapshot_RefocusKeepsEmptyImagesAndDoesNotCalibrate`; `OpticsViewModelTests` lifecycle/revision/acquisition tests | pass headless; desktop deferred |
+| SR-OPT-05 | unit + integration | T, I | `OpticsPolicyTests.Geometry_UsesEffectiveFieldsAndHasNoPerformanceBand`; `OpticsProjectionTests.Sampling_SmallOffAxisSample_FinerPixelsReduceLocalizationError` (default); full position sweep (GCAM_EVIDENCE_TESTS=1); [sampling evidence](VV.Studio.Imaging.md) | prior full sweep passed; revised default regression verification pending |
+| SR-OPT-06 | offscreen | T, I | `PlotViewRenderTests.Spectrum_BothThemesFullAndZoom_RenderWithoutWindow`: expanded/collapsed optics at F=800, both themes, 1280×800/1440×900; new IDs Optics.*, Detector.Section, Imaging.FocalPlane/Geometry/FocusNote | pass offscreen; desktop deferred |
 | SR-IMG-01 | unit + integration | T | `ImagingWorkspaceTests.SharedWindow_SelectorStripAndRoi_ReuseFrozenAcquisition`; `ImagingServiceTests.WindowChange_ReplaysRetainedEvents_RecalibratesAndMatchesFreshProcessing` | pass (headless); desktop pending |
 | SR-IMG-02 | integration | T, I | `ImagingServiceTests`; shared `SpectrumService.BuildBands` and `MeasurementStage`; [imaging evidence](VV.Studio.Imaging.md) | pass (headless); desktop pending |
 | SR-IMG-03 | unit + offscreen | T | `ImagingWorkspaceTests.SharedWindow_SelectorStripAndRoi_ReuseFrozenAcquisition`; two-isotope All / Cs-137 offscreen renders | pass (headless + offscreen); desktop pending |

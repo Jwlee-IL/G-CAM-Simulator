@@ -78,7 +78,10 @@ IEC 62304, no compliance claimed), and they are self-contained:
 
 ```bash
 dotnet build Gcam.sln -c Release
-dotnet test  Gcam.sln -c Release          # 254 engine + 69 Studio Core + 8 service + 10 UI oracles; 9 desktop cases skipped
+dotnet test  Gcam.sln -c Release          # engine + Studio regressions; desktop/render/evidence opt-ins skipped by default
+
+# Long numerical evidence only (PowerShell: $env:GCAM_EVIDENCE_TESTS = '1'):
+GCAM_EVIDENCE_TESTS=1 dotnet test tests/Gcam.Studio.Services.Tests -c Release --filter Category=Evidence --logger 'console;verbosity=detailed'
 
 # single scenario -> flood map + reconstruction + source estimate (ASCII)
 dotnet run --project src/Gcam.Cli -c Release -- samples/scenario.json

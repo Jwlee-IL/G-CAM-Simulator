@@ -38,7 +38,7 @@ combine a container's padding with a child's margin for the same edge.
 ```
 Row 0  Top bar (Size.Bar)          identity · workspace switch (when ≥2) · theme · live time (s) · speed × · ▶ Start / Stop
 Row 1  Content (a Border with Pad.Window)
-         Col 0  Scene panel (Size.SidePanel, scrollable)   sources · selected source · geometry · detector
+         Col 0  Scene panel (Size.SidePanel, scrollable)   sources · selected source · collapsible Physical optics · collapsible Detector
          Col 1  Gutter
          Col 2  Selected workspace centre (DataTemplate by workspace type)
                 Imaging: [flood map] Gutter [reconstruction]
@@ -47,7 +47,7 @@ Row 1  Content (a Border with Pad.Window)
                 Spectrum: stepped histogram PlotView with line bands · readout · acquired-pulse summary · emission-window table (select a row to zoom to its window)
          Col 3  Gutter
          Col 4  Selected workspace panel (DataTemplate by workspace type, Size.SidePanel)
-                Imaging: tool picker · hint · results table · selected row detail
+                Imaging: scrollable decoder focal plane / geometry evidence · channel options · tool picker · hint · results table · selected row detail
                 Spectrum: Display (log Y) · Window (N × FWHM) · Pile-up (resolving time) · Resolution (read-only chain)
 Row 2  Status bar (Size.StatusBar) state dot · live time / counts / cps / MC-limited (live region) · live-time progress
 ```
@@ -106,3 +106,15 @@ The additional render fixtures cover two isotopes with All and Cs-137 selected, 
 sizes (1280×800 and 1440×900). Snapshot generation and visual inspection are pending local command execution;
 the panel's fit at those sizes is not claimed verified yet. Marker metrics are documented in
 [DESIGN.Controls](DESIGN.Controls.md).
+
+## Editable optics and focus
+
+The shared Physical optics and Detector sections use themed `Expander.Section` headers. When collapsed,
+a one-line effective summary remains visible (full text in its tooltip). Errors are outside collapsed content;
+Start expands invalid sections. Physical fields and atomic engineering presets are disabled while acquiring.
+The decoder focal plane is a separate Imaging view setting, in mm from the detector, enabled during and after
+acquisition. Its readout uses acquired physical geometry after a run, including when pending inputs differ.
+Geometry readings carry no pass/fail glyph; sampling has a conditional precision-evidence note. No depth-reach
+hint is shown. The Imaging right panel scrolls independently so measurements remain reachable at small sizes.
+Focus changes visibly explain why reconstruction measurements were cleared; flood measurements stay.
+Offscreen render cases cover expanded/collapsed panels and F=800 at 1280×800 and 1440×900 in both themes.

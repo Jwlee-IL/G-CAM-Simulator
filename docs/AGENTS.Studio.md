@@ -34,6 +34,19 @@ dotnet test tests/Gcam.Studio.Tests            # ViewModels + view geometry, no 
 dotnet test tests/Gcam.Studio.Services.Tests   # SimulationService against the real engine
 ```
 
+Ordinary test runs and CI skip long numerical evidence tests. Set `GCAM_EVIDENCE_TESTS=1` explicitly
+to run the full sampling sweep, 20-seed imaging precision measurement and fast-budget seed-spread check:
+
+```powershell
+$env:GCAM_EVIDENCE_TESTS = '1'
+dotnet test tests/Gcam.Studio.Services.Tests -c Release --filter Category=Evidence --logger 'console;verbosity=detailed'
+Remove-Item Env:GCAM_EVIDENCE_TESTS
+```
+
+The default run retains the small deterministic off-axis sampling regression. Evidence output and
+budgets are documented in [VV.Studio.Imaging](VV.Studio.Imaging.md). The independent render opt-in
+is `GCAM_RENDER_SNAPSHOTS=1`; desktop input uses `GCAM_UI_TESTS=1`. Enabling evidence does not enable either.
+
 ## Rules that are easy to break
 
 1. Nothing in `Gcam.Studio.Core` references WPF — it targets plain `net9.0`, so it won't compile anyway.

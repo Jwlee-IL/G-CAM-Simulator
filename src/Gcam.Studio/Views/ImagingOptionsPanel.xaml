@@ -2,6 +2,16 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <StackPanel Margin="{StaticResource Gap.Section}">
+        <TextBlock Text="Decoder focal plane" Style="{StaticResource Text.SectionTitle}" Margin="{StaticResource Gap.Tight}" />
+        <TextBlock Text="mm from detector · retained-data projection" Style="{StaticResource Text.Caption}" />
+        <TextBox Text="{Binding FocalPlane, UpdateSourceTrigger=PropertyChanged}" Tag="mm" Margin="{StaticResource Gap.Field}"
+                 AutomationProperties.AutomationId="Imaging.FocalPlane" AutomationProperties.Name="Decoder focal plane (mm from detector)" />
+        <TextBlock Text="{Binding FocusError}" Style="{StaticResource Text.CaptionWarning}" TextWrapping="Wrap" />
+        <TextBlock Text="{Binding FocusNote}" Style="{StaticResource Text.Caption}" TextWrapping="Wrap"
+                   AutomationProperties.AutomationId="Imaging.FocusNote" />
+        <TextBlock Text="{Binding GeometryText}" Style="{StaticResource Text.MonoCaption}" Margin="{StaticResource Gap.Tight}"
+                   AutomationProperties.AutomationId="Imaging.Geometry" />
+        <TextBlock Text="{Binding SamplingEvidence}" Style="{StaticResource Text.Caption}" TextWrapping="Wrap" Margin="{StaticResource Gap.Field}" />
         <DockPanel Style="{StaticResource PanelHeader}"><TextBlock Text="Imaging channel" Style="{StaticResource Text.PanelTitle}" /></DockPanel>
         <ComboBox ItemsSource="{Binding Isotopes}" SelectedItem="{Binding SelectedIsotope, Mode=TwoWay}" Margin="{StaticResource Gap.Field}"
                   AutomationProperties.AutomationId="Imaging.Channel" AutomationProperties.Name="Imaging channel" />

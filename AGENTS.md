@@ -102,6 +102,10 @@ dotnet test  Gcam.sln   # 256 engine + 70 Studio + 17 service + 10 UI-oracle cas
                                        # physics invariants + one class per theme (dead time,
                                        # sub-cell, cascade, non-prop, MLEM, DOI, …). 7 cocotb tests in rtl/.
 
+# Long numerical evidence (full sampling sweep / 20-seed precision / fast-budget seed spread), skipped in normal runs and CI:
+# PowerShell: $env:GCAM_EVIDENCE_TESTS = '1'
+GCAM_EVIDENCE_TESTS=1 dotnet test tests/Gcam.Studio.Services.Tests -c Release --filter Category=Evidence --logger 'console;verbosity=detailed'
+
 # single scenario → prints flood map + reconstruction + estimate
 dotnet run --project src/Gcam.Cli -c Release -- samples/scenario.json
 

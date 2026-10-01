@@ -141,8 +141,8 @@ Tests for maths run without WPF; the plot gate hosts the production control in a
 `SpectrumWorkspaceViewModel` follows cumulative snapshots and exposes Area series, bands and table rows.
 `MainViewModel.WindowFwhm` is the shared N for Spectrum and Imaging. ImagingWorkspaceViewModel retains the
 Start scene and optics and calls IImagingService for worker-built channels. The selector supplies one result
-to both images, bars, readouts and ROI statistics; All retains the acquisition image. Revision checks prevent
-late worker responses from replacing newer settings. Calibration, channel building and decoding have separate
+to both images, bars, readouts and ROI statistics; All retains the acquisition flood and projects its reconstruction at the selected Imaging focus. Coalesced revision checks prevent
+late worker responses from replacing newer focus/window settings; effective physical optics remain frozen. Calibration, channel building and decoding have separate
 worker timings; the panel reports R and the one-pass scalar model limitation.
 `SpectrumService` serializes requests with a semaphore and performs smearing, binning and window counting in
 `Task.Run`. New events extend the histogram; an open paralyzable pile-up group survives snapshot boundaries.

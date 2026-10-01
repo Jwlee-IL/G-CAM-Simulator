@@ -5,6 +5,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Gcam.Configuration;
 using Gcam.Studio.Core.Services;
+using Gcam.Studio.Core.Optics;
 
 namespace Gcam.Studio.Core.ViewModels;
 
@@ -35,6 +36,12 @@ public sealed partial class MainViewModel : ObservableObject
         _selectedWorkspace = Imaging;
         Imaging.IsActive = true;
         Sources.CollectionChanged += OnSourcesChanged;
+        OpticsEditor.Changed += (_, _) =>
+        {
+            if (OpticsEditor.Error is null && Optics != OpticsEditor.Effective) Optics = OpticsEditor.Effective;
+            if (OpticsEditor.Error is not null) MarkStale();
+            ValidationError = OpticsEditor.Error;
+        };
         AddSource();
     }
 
@@ -79,8 +86,19 @@ public sealed partial class MainViewModel : ObservableObject
     private OpticsSettings _optics = new();
 
     /// <summary>Half-width of the fully-coded field of view at the focal plane (mm).</summary>
-    public double FcfovHalfMm => SceneConfigBuilder.FcfovHalfMm(Optics);
-    partial void OnOpticsChanged(OpticsSettings value) => MarkStale();
+    public double FcfovHalfMm => Imaging.Geometry?.NominalHalfFieldMm ?? 0;
+    public OpticsEditorViewModel OpticsEditor { get; } = new();
+    [ObservableProperty] private bool _isOpticsExpanded = true;
+    [ObservableProperty] private bool _isDetectorExpanded = true;
+    [ObservableProperty] private string? _validationError;
+    public string DetectorSummary => $"gap {Detector.ReflectorGapMm:0.##} mm · gain σ {GainSigmaPercent:0.#}%";
+    partial void OnOpticsChanged(OpticsSettings value)
+    {
+        if (OpticsEditor.Effective != value) OpticsEditor.Load(value);
+        Imaging.NotifyGeometryChanged();
+        MarkStale();
+    }
+    partial void OnIsRunningChanged(bool value) => OpticsEditor.IsEditable = !value;
     public DetectorSettings Detector => new() { GainSigma = GainSigmaPercent / 100, GainSeed = GainSeed };
     [ObservableProperty] private double _gainSigmaPercent = 3;
     [ObservableProperty] private int _gainSeed = 1;
@@ -89,6 +107,7 @@ public sealed partial class MainViewModel : ObservableObject
     {
         if (!double.IsFinite(value) || value < 0) { GainSigmaPercent = 3; return; }
         OnPropertyChanged(nameof(Detector));
+        OnPropertyChanged(nameof(DetectorSummary));
         MarkStale();
     }
     partial void OnGainSeedChanged(int value) { OnPropertyChanged(nameof(Detector)); MarkStale(); }
@@ -180,6 +199,17 @@ public sealed partial class MainViewModel : ObservableObject
     [RelayCommand(CanExecute = nameof(CanStart))]
     private async Task StartAsync()
     {
+        var scene = Sources.Select(s => s.ToModel()).ToArray();
+        ValidationError = OpticsEditor.Error ?? OpticsPolicy.Validate(Optics, Detector.ReflectorGapMm)
+            ?? OpticsPolicy.ValidateScene(Optics, scene) ?? OpticsPolicy.ValidateFocus(Optics, Imaging.FocalDistanceMm)
+            ?? Imaging.FocusError;
+        if (ValidationError is not null)
+        {
+            IsOpticsExpanded = true;
+            IsDetectorExpanded = true;
+            return;
+        }
+        var acquisitionOptics = Optics with { FocalDistanceMm = Imaging.FocalDistanceMm };
         IsRunning = true;
         State = RunState.Acquiring;
         Result = null;
@@ -188,12 +218,11 @@ public sealed partial class MainViewModel : ObservableObject
         Progress = 0;
         Status = $"t = 0 s of {LiveTimeS:G} s · 0 counts · 0 cps";
         double preset = LiveTimeS;
-        var scene = Sources.Select(s => s.ToModel()).ToArray();
         Spectrum.Begin(scene);
-        Imaging.Begin(scene, Optics);
+        Imaging.Begin(scene, acquisitionOptics);
         try
         {
-            await using var session = _acquisition.Start(scene, Optics, preset, Speed, Detector, BackgroundToSignalRatio);
+            await using var session = _acquisition.Start(scene, acquisitionOptics, preset, Speed, Detector, BackgroundToSignalRatio);
             _session = session;
             await foreach (var snapshot in session.ReadSnapshotsAsync())
             {
@@ -231,6 +260,8 @@ public sealed partial class MainViewModel : ObservableObject
     {
         if (e.PropertyName is not (nameof(SourceItemViewModel.Label) or nameof(SourceItemViewModel.MarkerLabel))) MarkStale();
     }
+
+    internal void NotifyFocalGeometryChanged() => OnPropertyChanged(nameof(FcfovHalfMm));
 
     private void MarkStale()
     {

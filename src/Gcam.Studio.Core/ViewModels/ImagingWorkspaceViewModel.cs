@@ -1,6 +1,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using Gcam.Configuration;
 using Gcam.Studio.Core.Services;
+using Gcam.Studio.Core.Optics;
 
 namespace Gcam.Studio.Core.ViewModels;
 
@@ -13,6 +14,36 @@ public sealed partial class ImagingWorkspaceViewModel(MainViewModel shared, IIma
     private OpticsSettings _optics = new();
     private CancellationTokenSource? _refresh;
     private int _revision;
+    private bool _updating;
+    [ObservableProperty] private string _focalPlane = "1000";
+    [ObservableProperty] private string? _focusError;
+    [ObservableProperty] private string? _focusNote;
+    public double FocalDistanceMm { get; private set; } = 1000;
+    public OpticsGeometry? Geometry => OpticsPolicy.ValidateFocus(ProjectionOptics, FocalDistanceMm) is null
+        ? OpticsGeometry.Calculate(ProjectionOptics, FocalDistanceMm) : null;
+    public string GeometryText => Geometry?.Description ?? "Choose a valid decoder focal plane.";
+    public string SamplingEvidence => "Position-dependent precision: a 1 m Sharp scan measured RMS 0.95 mm at 1.27 samples/cell and 0.24 mm at 3.8, at the same detector size. This is conditional evidence, not a pass threshold.";
+    private OpticsSettings ProjectionOptics => _scene.Count > 0 ? _optics : Shared.Optics;
+    partial void OnFocalPlaneChanged(string value)
+    {
+        if (!double.TryParse(value, out double focal)) { FocusError = "Enter a numeric decoder focal plane."; return; }
+        FocusError = OpticsPolicy.ValidateFocus(ProjectionOptics, focal);
+        if (FocusError is not null) return;
+        if (FocalDistanceMm == focal) return;
+        FocalDistanceMm = focal;
+        Measurements.ClearReconstruction();
+        FocusNote = "Reconstruction measurements cleared: their mm plane changed. Flood measurements retained.";
+        NotifyGeometryChanged();
+        RefreshChannels();
+    }
+    internal void NotifyGeometryChanged()
+    {
+        FocusError = double.TryParse(FocalPlane, out double focal)
+            ? OpticsPolicy.ValidateFocus(ProjectionOptics, focal) : "Enter a numeric decoder focal plane.";
+        OnPropertyChanged(nameof(Geometry));
+        OnPropertyChanged(nameof(GeometryText));
+        Shared.NotifyFocalGeometryChanged();
+    }
     public MainViewModel Shared { get; } = shared;
     public MeasurementsViewModel Measurements { get; } = new();
     public Task WhenUpdated { get; private set; } = Task.CompletedTask;
@@ -43,10 +74,14 @@ public sealed partial class ImagingWorkspaceViewModel(MainViewModel shared, IIma
     internal void Begin(IReadOnlyList<SceneSource> scene, OpticsSettings optics)
     {
         _refresh?.Cancel();
+        _refresh = new CancellationTokenSource();
+        _updating = false;
         _revision++;
         _id = Guid.NewGuid();
         _scene = scene;
         _optics = optics;
+        FocusNote = null;
+        NotifyGeometryChanged();
         View = null;
         Error = null;
         IsProcessing = false;
@@ -60,31 +95,42 @@ public sealed partial class ImagingWorkspaceViewModel(MainViewModel shared, IIma
     internal void Refresh(ImagingResult? result) => NotifyResult();
     internal void RefreshChannels()
     {
-        _refresh?.Cancel();
-        _refresh?.Dispose();
-        _refresh = new CancellationTokenSource();
-        WhenUpdated = UpdateAsync(++_revision, _refresh.Token);
+        _revision++;
+        if (_updating) return; // A running preparation keeps its caches; one latest request follows it.
+        _refresh ??= new CancellationTokenSource();
+        WhenUpdated = UpdateAsync(_refresh.Token);
     }
 
-    private async Task UpdateAsync(int revision, CancellationToken token)
+    private async Task UpdateAsync(CancellationToken token)
     {
-        // Optional service preserves the original raw-result harness; production DI always supplies it.
-        if (service is null || Shared.Snapshot is not { } snapshot || _scene.Count == 0) return;
+        if (service is null || Shared.Snapshot is null || _scene.Count == 0 || FocusError is not null) return;
+        _updating = true;
         IsProcessing = true;
+        int revision = _revision;
         try
         {
-            var view = await service.ProcessAsync(_id, snapshot, _scene, _optics,
-                new(Shared.WindowFwhm, Strip), token);
-            if (revision != _revision || token.IsCancellationRequested) return;
-            View = view;
-            OnPropertyChanged(nameof(Ratios));
-            OnPropertyChanged(nameof(WorkerCosts));
-            NotifyResult();
-            Error = null;
+            do
+            {
+                revision = _revision;
+                var snapshot = Shared.Snapshot!;
+                var view = await service.ProcessAsync(_id, snapshot, _scene, _optics,
+                    new(Shared.WindowFwhm, Strip, FocalDistanceMm), token);
+                if (token.IsCancellationRequested) return;
+                if (revision != _revision) continue;
+                View = view;
+                OnPropertyChanged(nameof(Ratios));
+                OnPropertyChanged(nameof(WorkerCosts));
+                NotifyResult();
+                Error = null;
+            } while (revision != _revision && FocusError is null);
         }
         catch (OperationCanceledException) when (token.IsCancellationRequested) { }
         catch (Exception ex) { if (revision == _revision) Error = $"Imaging failed: {ex.Message}"; }
-        finally { if (revision == _revision) IsProcessing = false; }
+        finally
+        {
+            // A cancelled old acquisition cannot change the new acquisition's worker state.
+            if (!token.IsCancellationRequested) { _updating = false; IsProcessing = false; }
+        }
     }
 
     private void NotifyResult()

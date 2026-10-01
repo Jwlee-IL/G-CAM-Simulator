@@ -35,17 +35,21 @@ public sealed class ImagingService : IImagingService
             throw new ArgumentOutOfRangeException(nameof(settings));
         if (scene.Count == 0) throw new ArgumentException("Imaging needs a source.", nameof(scene));
         // Freeze caller-owned mutable source objects before crossing the worker boundary.
-        var config = SimulationService.BuildConfig(scene, optics, snapshot.Detector ?? new DetectorSettings());
+        var physical = snapshot.Optics ?? optics;
+        var config = SimulationService.BuildConfig(scene, physical, snapshot.Detector ?? new DetectorSettings());
+        if (snapshot.Imaging.Flood.Width != config.Detector.PixelsX || snapshot.Imaging.Flood.Height != config.Detector.PixelsY)
+            throw new ArgumentException("Snapshot dimensions do not match acquired optics.", nameof(snapshot));
+        var projection = ImagingProjection.AtFocus(config, physical, settings.FocalDistanceMm ?? optics.FocalDistanceMm);
         await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
-            return await Task.Run(() => Process(acquisitionId, snapshot, config, settings, cancellationToken),
+            return await Task.Run(() => Process(acquisitionId, snapshot, config, projection, settings, cancellationToken),
                 cancellationToken).ConfigureAwait(false);
         }
         finally { _gate.Release(); }
     }
 
-    private ImagingView Process(Guid id, AcquisitionSnapshot snapshot, SimulationConfig config,
+    private ImagingView Process(Guid id, AcquisitionSnapshot snapshot, SimulationConfig config, SimulationConfig projection,
         ImagingSettings settings, CancellationToken token)
     {
         try
@@ -56,7 +60,16 @@ public sealed class ImagingService : IImagingService
                 _n = double.NaN;
                 _energies.Clear();
             }
+            int previousMeasured = _energies.Count;
             var sources = config.Sources!;
+            if (snapshot.Events.Count == 0)
+            {
+                var empty = new List<ImagingChannel> { ImagingProjection.Project(snapshot.Imaging.Flood, snapshot.Imaging, projection, "All", 0) };
+                foreach (var group in sources.GroupBy(s => s.Isotope))
+                    empty.Add(ImagingProjection.Project(new DetectorImage(config.Detector.PixelsX, config.Detector.PixelsY).ReadOnlyCopy(),
+                        snapshot.Imaging, projection, group.Key, 0));
+                return new(empty.AsReadOnly(), Array.Empty<StripRatio>(), TimeSpan.Zero, TimeSpan.Zero, TimeSpan.Zero);
+            }
             var groups = sources.GroupBy(s => s.Isotope!).ToArray();
             var lines = groups.SelectMany(g => Isotopes.Get(g.Key).Lines.Select(l => new SpectrumLine(g.Key, l.EnergyKeV))).ToArray();
             var bands = SpectrumService.BuildBands(lines, settings.WindowFwhm, _model);
@@ -107,38 +120,21 @@ public sealed class ImagingService : IImagingService
             }
             channels.Stop();
             var decode = Stopwatch.StartNew();
-            var decoder = new DefaultSimulationFactory().CreateDecoder(config)!;
-            var results = new List<ImagingChannel>();
+            var results = new List<ImagingChannel>
+            {
+                ImagingProjection.Project(snapshot.Imaging.Flood, snapshot.Imaging, projection, "All", 0)
+            };
             for (int j = 0; j < groups.Length; j++)
             {
                 token.ThrowIfCancellationRequested();
-                double count = corrected[j].Raw.ToArray().Sum();
-                var decoded = count > 0 ? decoder.Decode(corrected[j]) : null;
-                // One mask-cell shadow is a resolution element in the source plane; suppress its sidelobes.
-                double separation = config.Mask.CellPitchMm *
-                    (config.Geometry.MaskDetectorDistanceMm + config.Geometry.SourceMaskDistanceMm) /
-                    config.Geometry.MaskDetectorDistanceMm;
-                var peaks = decoded is null ? [] : MixedFieldStudy.TopPeaks(decoded.Reconstruction,
-                    decoded.ReconOriginMm, decoded.ReconStepMm, groups[j].Count(), separation)
-                    .Select(p =>
-                    {
-                        int x = (int)Math.Round((p.Xmm - decoded.ReconOriginMm) / decoded.ReconStepMm);
-                        int y = (int)Math.Round((p.Ymm - decoded.ReconOriginMm) / decoded.ReconStepMm);
-                        var (dx, dy) = PeakInterpolation.Estimate(decoded.Reconstruction, x, y, config.Decoder.SubCellInterpolation);
-                        return new ImagingPeak(groups[j].Key, p.Xmm + dx * decoded.ReconStepMm,
-                            p.Ymm + dy * decoded.ReconStepMm, p.Value);
-                    }).ToArray();
-                var image = new ImagingResult(corrected[j], snapshot.Imaging.FloodOriginMm,
-                    snapshot.Imaging.FloodStepMm, decoded?.Reconstruction.ReadOnlyCopy(),
-                    decoded?.ReconOriginMm ?? 0, decoded?.ReconStepMm ?? 0, decoded?.Estimate,
-                    count, snapshot.Imaging.Elapsed);
-                results.Add(new(groups[j].Key, windows[j].Lo, windows[j].Hi, image, Array.AsReadOnly(peaks)));
+                results.Add(ImagingProjection.Project(corrected[j], snapshot.Imaging, projection, groups[j].Key,
+                    groups[j].Count(), windows[j].Lo, windows[j].Hi));
             }
+            results[0] = results[0] with { Peaks = Array.AsReadOnly(results.Skip(1).SelectMany(c => c.Peaks).ToArray()) };
             decode.Stop();
-            results.Insert(0, new("All", double.NaN, double.NaN, snapshot.Imaging,
-                Array.AsReadOnly(results.SelectMany(c => c.Peaks).ToArray())));
             return new(Array.AsReadOnly(results.ToArray()), Array.AsReadOnly(_ratios), channels.Elapsed,
-                changed ? calibration.Elapsed : TimeSpan.Zero, decode.Elapsed);
+                changed ? calibration.Elapsed : TimeSpan.Zero, decode.Elapsed)
+                { NewlyMeasuredEvents = _energies.Count - previousMeasured };
         }
         catch
         {

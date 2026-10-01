@@ -1,5 +1,6 @@
 using Gcam.Configuration;
 using Gcam.Studio.Core.Services;
+using Gcam.Studio.Core.Optics;
 
 namespace Gcam.Studio.Services;
 
@@ -22,7 +23,10 @@ public sealed class SimulationService(TimeProvider? timeProvider = null) : IAcqu
         DetectorSettings detector, double backgroundToSignalRatio = 0)
     {
         ArgumentNullException.ThrowIfNull(detector);
-        var config = SceneConfigBuilder.Build(scene, optics, 1).Clone();
+        string? error = OpticsPolicy.Validate(optics, detector.ReflectorGapMm)
+            ?? OpticsPolicy.ValidateScene(optics, scene) ?? OpticsPolicy.ValidateFocus(optics, optics.FocalDistanceMm);
+        if (error is not null) throw new ArgumentException(error, nameof(optics));
+        var config = ImagingProjection.AtFocus(SceneConfigBuilder.Build(scene, optics, 1), optics, optics.FocalDistanceMm);
         if (!double.IsFinite(detector.GainSigma) || detector.GainSigma < 0 ||
             !double.IsFinite(detector.EntranceAbsorberMm) || detector.EntranceAbsorberMm < 0 ||
             !double.IsFinite(detector.BackingScatterMm) || detector.BackingScatterMm < 0 ||
