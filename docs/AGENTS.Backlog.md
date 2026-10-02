@@ -179,6 +179,12 @@ TILT (pitch/yaw), mask WARPING.
   headless-verified and rendered offscreen; their desktop checks are collected in TODO-22 —
   [PLAN.Studio.Spectrum](PLAN.Studio.Spectrum.md), [PLAN.Studio.LiveAcquisition](PLAN.Studio.LiveAcquisition.md),
   [PLAN.Studio.SpectrumPlot](PLAN.Studio.SpectrumPlot.md).
+- **TODO-22 final desktop pass** (2026-10-02): desktop suite 27/27 (Start / Stop / Continue / Reset, every workspace,
+  independent oracles), all 12 scenarios fail under broken verdicts, 16 ms gate (zoom 5.6 ms, resize 4.0 ms), polish
+  survey over four workspaces (P-12 … P-16), README capture — Codex in a separate worktree while the desktop was free.
+- **TODO-23 depth-from-focus bias** (2026-10-02): reference plan → Codex's measured review: the heuristic score on a
+  forward-mismatched decode, no single cause; known-bearing likelihood a few mm — [PLAN.Physics.DepthBias](PLAN.Physics.DepthBias.md),
+  Findings 57; research follow-up TODO-25.
 - **TODO-24 acquisition control Start / Stop / Reset** (2026-10-02): the author's MCA model (continue after Stop,
   Reset discards, physical inputs locked while data exist — no stale state; source drag withdrawn; a new seed per
   acquisition) → review and implementation by a substitute Claude subagent (Codex out of credits); continuation

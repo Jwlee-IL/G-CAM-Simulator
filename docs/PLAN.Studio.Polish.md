@@ -97,6 +97,10 @@ The author may override any row; desktop checks stay in TODO-22.
 
 ## Later batches (after the workspaces exist)
 
+- From the TODO-22 desktop survey (`docs/assets/studio-polish-survey/README.md`): P-12 Spectrum Co-60 line / window
+  values touch; P-13 found-peak labels crowd in the small window; P-14 locked inputs look too faint; P-15 the shaped
+  waveform's marker lines have no labels; P-16 Detector geometry panel leaves whitespace.
+
 - Seen in the TODO-10 renders: ~~the chain combo boxes show the preset record text (`ScintPreset { Name = … }`)
   instead of the part name~~ (fixed in TODO-11: the ComboBox template ignored `DisplayMemberPath`); ~~rate-study event
   labels pile on top of each other~~ (fixed in TODO-11: plot marker labels use the band-label layout — re-check the
