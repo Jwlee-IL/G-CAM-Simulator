@@ -29,6 +29,30 @@
         </ItemsControl>
         <TextBlock Text="{Binding Summary}" TextWrapping="Wrap" Style="{StaticResource Text.Caption}" Margin="{StaticResource Gap.Tight}" />
         <TextBlock Text="{Binding WorkerCosts}" TextWrapping="Wrap" Style="{StaticResource Text.Caption}" />
+        <DockPanel Style="{StaticResource PanelHeader}"><TextBlock Text="Focus sweep" Style="{StaticResource Text.SectionTitle}" /></DockPanel>
+        <TextBlock Text="Peaks to track (K)" Style="{StaticResource Text.Label}" />
+        <ComboBox ItemsSource="{Binding PeakCounts}" SelectedItem="{Binding PeakCount}" Margin="{StaticResource Gap.Field}"
+                  AutomationProperties.AutomationId="Imaging.FocusPeaks" AutomationProperties.Name="Peaks to track (K)" />
+        <StackPanel Orientation="Horizontal" Margin="{StaticResource Gap.Field}">
+            <Button Content="Sweep focus" Command="{Binding SweepCommand}" Margin="{StaticResource Gap.Inline}"
+                    AutomationProperties.AutomationId="Imaging.Sweep" />
+            <Button Content="Cancel sweep" Command="{Binding CancelSweepCommand}" Style="{StaticResource Button.Ghost}"
+                    AutomationProperties.AutomationId="Imaging.CancelSweep" />
+        </StackPanel>
+        <TextBlock Text="{Binding SweepSummary}" Style="{StaticResource Text.Caption}" TextWrapping="Wrap" Margin="{StaticResource Gap.Tight}" />
+        <ItemsControl ItemsSource="{Binding SweepResult.Tracks}">
+            <ItemsControl.ItemTemplate><DataTemplate>
+                <TextBlock Text="{Binding Description}" Style="{StaticResource Text.MonoCaption}" TextWrapping="Wrap" Margin="{StaticResource Gap.Field}" />
+            </DataTemplate></ItemsControl.ItemTemplate>
+        </ItemsControl>
+        <TextBlock Text="{Binding SweepError}" Style="{StaticResource Text.CaptionWarning}" TextWrapping="Wrap" />
+        <TextBlock Text="External surface range" Style="{StaticResource Text.Label}" />
+        <TextBox Text="{Binding ExternalRange, UpdateSourceTrigger=PropertyChanged}" Tag="mm" Margin="{StaticResource Gap.Field}"
+                 AutomationProperties.AutomationId="Imaging.ExternalRange" AutomationProperties.Name="External surface range (mm from detector)" />
+        <TextBlock Text="{Binding ExternalRangeError}" Style="{StaticResource Text.CaptionWarning}" TextWrapping="Wrap" />
+        <Button Content="Use as focus" Command="{Binding UseAsFocusCommand}" Margin="{StaticResource Gap.Field}"
+                AutomationProperties.AutomationId="Imaging.UseAsFocus" />
+        <TextBlock Text="{Binding SweepNote}" Style="{StaticResource Text.Caption}" TextWrapping="Wrap" Margin="{StaticResource Gap.Section}" />
         <TextBlock Text="{Binding Error}" TextWrapping="Wrap" Style="{StaticResource Text.CaptionWarning}" />
         <TextBlock Text="○ Truth / ◇ Found (read-only)" Style="{StaticResource Text.Caption}" Margin="{StaticResource Gap.Tight}" />
         <ItemsControl ItemsSource="{Binding Peaks}">

@@ -262,12 +262,14 @@
                                 <TextBlock Text="Backing" Style="{StaticResource Text.Label}" />
                                 <TextBlock Text="{Binding BackingScatterMm, StringFormat={}{0:0.##} mm steel}" Style="{StaticResource FactValue}" />
                             </DockPanel>
-                            <DockPanel Style="{StaticResource FactRow}">
-                                <TextBlock Text="Reflector gap" Style="{StaticResource Text.Label}" />
-                                <TextBlock Text="{Binding ReflectorGapMm, StringFormat={}{0:0.##} mm}" Style="{StaticResource FactValue}" />
-                            </DockPanel>
                         </StackPanel>
                         <StackPanel IsEnabled="{Binding IsIdle}">
+                            <DockPanel Style="{StaticResource FieldRow}">
+                                <TextBlock Text="Gap" Style="{StaticResource FieldLabel}" />
+                                <TextBox Text="{Binding ReflectorGapUm, UpdateSourceTrigger=PropertyChanged}" Tag="µm"
+                                         AutomationProperties.AutomationId="Detector.Gap" AutomationProperties.Name="Gap reflector (µm)" />
+                            </DockPanel>
+                            <TextBlock Text="{Binding GapError}" Style="{StaticResource Text.CaptionWarning}" TextWrapping="Wrap" />
                             <DockPanel Style="{StaticResource FieldRow}">
                                 <TextBlock Text="Gain σ" Style="{StaticResource FieldLabel}" />
                                 <TextBox Text="{Binding GainSigmaPercent}" Tag="%" AutomationProperties.AutomationId="Detector.GainSigma"
@@ -296,8 +298,12 @@
                     <ContentControl.Resources>
                         <DataTemplate DataType="{x:Type vm:SpectrumWorkspaceViewModel}"><views:SpectrumView /></DataTemplate>
                         <DataTemplate DataType="{x:Type vm:WaveformWorkspaceViewModel}"><views:WaveformView /></DataTemplate>
+                        <DataTemplate DataType="{x:Type vm:DetectorWorkspaceViewModel}"><views:DetectorView /></DataTemplate>
                         <DataTemplate DataType="{x:Type vm:ImagingWorkspaceViewModel}">
                             <!-- Images: square heatmap with its colour bar and readout directly beneath (ImageStackPanel) -->
+                            <DockPanel>
+                            <views:FocusSweepView DockPanel.Dock="Bottom" Height="{StaticResource Size.FocusPlot}" Margin="{StaticResource Gap.Tight}"
+                                                  Visibility="{Binding HasSweepResult, Converter={StaticResource BoolToVis}}" />
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />
@@ -364,6 +370,7 @@
                                 </Border>
                             </Grid>
 
+                            </DockPanel>
                         </DataTemplate>
                     </ContentControl.Resources>
                 </ContentControl>
@@ -371,6 +378,7 @@
                     <ContentControl.Resources>
                         <DataTemplate DataType="{x:Type vm:SpectrumWorkspaceViewModel}"><views:SpectrumPanel /></DataTemplate>
                         <DataTemplate DataType="{x:Type vm:WaveformWorkspaceViewModel}"><views:WaveformPanel /></DataTemplate>
+                        <DataTemplate DataType="{x:Type vm:DetectorWorkspaceViewModel}"><views:DetectorPanel /></DataTemplate>
                         <DataTemplate DataType="{x:Type vm:ImagingWorkspaceViewModel}">
                             <!-- Measurements: tool picker · results table · detail of the selected row, top-aligned -->
                             <Border Style="{StaticResource Panel.Surface}">

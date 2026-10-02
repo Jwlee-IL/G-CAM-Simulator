@@ -62,4 +62,5 @@
     <sys:Double x:Key="FontSize.Label">12</sys:Double>
     <sys:Double x:Key="FontSize.Body">13</sys:Double>
     <sys:Double x:Key="FontSize.Title">14</sys:Double>
+    <sys:Double x:Key="Size.FocusPlot">240</sys:Double>
 </ResourceDictionary>

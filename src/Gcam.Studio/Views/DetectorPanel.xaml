@@ -1,0 +1,19 @@
+<UserControl x:Class="Gcam.Studio.Views.DetectorPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Border Style="{StaticResource Panel.Surface}">
+        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+            <StackPanel>
+                <DockPanel Style="{StaticResource PanelHeader}"><TextBlock Text="Detector geometry" Style="{StaticResource Text.PanelTitle}" /></DockPanel>
+                <TextBlock Text="{Binding Readout}" Style="{StaticResource Text.MonoCaption}" TextWrapping="Wrap" Margin="{StaticResource Gap.Section}"
+                           AutomationProperties.AutomationId="Detector.Readout" />
+                <TextBlock Text="{Binding Pending}" Style="{StaticResource Text.Caption}" TextWrapping="Wrap" Margin="{StaticResource Gap.Section}"
+                           AutomationProperties.AutomationId="Detector.Pending" />
+                <TextBlock Text="Geometric active-area fraction describes the face, not detection efficiency. Acquired rate needs transport, energy response and a stated channel."
+                           Style="{StaticResource Text.Caption}" TextWrapping="Wrap" Margin="{StaticResource Gap.Section}" />
+                <TextBlock Text="Direct crystal assignment is the current readout. SiPM light sharing and four-channel position readout require a separate model."
+                           Style="{StaticResource Text.Caption}" TextWrapping="Wrap" />
+            </StackPanel>
+        </ScrollViewer>
+    </Border>
+</UserControl>

@@ -84,3 +84,17 @@ name a helper `Select` (the `Select-Object` alias wins).
 | Migration | One shared run, workspace templates and first-party `PlotView` (TODO-06); feature workspaces follow in TODO-07 … TODO-12 | implemented; plot CPU gate passed; existing desktop regression and polish survey blocked by desktop input / capture errors |
 | Live acquisition | Fresh list-mode MC, weight rejection, shared immutable 4 Hz snapshots, Start / Stop with preset live time and speed (TODO-13) | implemented; physics / headless validation in VV.Studio; desktop validation deferred while the desktop and UI-test project are occupied |
 | Spectrum | Shared live counts, physical default chain, per-energy windows with unresolved-line grouping, optional arrival-time pile-up (TODO-07) | implemented; headless evidence in VV.Studio; desktop validation deferred while the desktop and UI-test project are occupied |
+
+## Detector and retained-flood focus
+
+Registered workspaces are Imaging, Spectrum, Waveform and Detector (Ctrl+1…4). Reflector gap is a shared
+run input edited in µm, validated against pending pixel pitch and captured in mm with acquired settings.
+Detector face/readouts use pending inputs before acquisition and acquired detector/optics afterwards.
+`IDetectorFaceService` supplies the engine gain pattern to pure exact rectangle geometry.
+
+`IFocusSweepService` projects the selected retained channel flood on an independent cancellable worker;
+it never transports or calibrates and is not awaited by the snapshot loop. The request captures a labelled
+acquisition prefix. Setting/acquisition revisions discard obsolete responses. K is user-chosen, tracks link
+by angle and raw half-max endpoints can be censored. External surface range changes focus only through
+Use as focus. Numerical conditions, seed-spread evidence protocol and execution limits are recorded in
+[VV.Studio.Detector](VV.Studio.Detector.md). Crosstalk/SiPM pitch are deferred to the readout model.

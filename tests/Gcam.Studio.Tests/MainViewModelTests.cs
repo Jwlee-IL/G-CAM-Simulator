@@ -48,7 +48,7 @@ public class MainViewModelTests
     public void Workspace_SharedResultAndSelectionSurviveSnapshot_ViewSettingsDoNotMarkStale()
     {
         var vm = new MainViewModel(new FakeAcquisition(), new FakeTheme(), new FakeSpectrumService());
-        Assert.Equal(3, vm.Workspaces.Count);
+        Assert.Equal(4, vm.Workspaces.Count);
         Assert.Same(vm.Imaging, vm.Workspaces[0]);
         Assert.Same(vm.Spectrum, vm.Workspaces[1]);
         Assert.Same(vm.Waveform, vm.Workspaces[2]);
@@ -61,9 +61,12 @@ public class MainViewModelTests
         Assert.Equal("peak (1.0, 2.0) mm", vm.Imaging.PeakText);
         vm.Imaging.Measurements.ActiveTool = MeasureTool.Distance;
         Assert.False(vm.IsResultStale);
-        vm.SelectWorkspaceCommand.Execute("3");
+        vm.SelectWorkspaceCommand.Execute("4");
         Assert.Same(vm.Imaging, vm.SelectedWorkspace);
         Assert.True(vm.Imaging.IsActive);
+        vm.SelectWorkspaceCommand.Execute("3");
+        Assert.Same(vm.DetectorWorkspace, vm.SelectedWorkspace);
+        Assert.True(vm.DetectorWorkspace.IsActive);
     }
 
     private sealed class FakeAcquisition : IAcquisitionService

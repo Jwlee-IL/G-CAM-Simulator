@@ -56,7 +56,9 @@ public sealed partial class OpticsEditorViewModel : ObservableObject
         {
             var candidate = Effective with { MuraRank = Rank, CellPitchMm = cell,
                 MaskDetectorDistanceMm = distance, DetectorPixels = pixels, PixelPitchMm = pitch };
-            Error = OpticsPolicy.Validate(candidate);
+            // Pending gap is validated by the shell against this effective pitch. Do not embed a fixed gap
+            // in the physical editor: a valid zero-gap detector can have a pitch below the old 100 µm default.
+            Error = OpticsPolicy.Validate(candidate, reflectorGapMm: 0);
             if (Error is null) Effective = candidate;
         }
         SelectedPreset = Error is null ? OpticsPreset.Match(Effective) : OpticsPreset.All[0];

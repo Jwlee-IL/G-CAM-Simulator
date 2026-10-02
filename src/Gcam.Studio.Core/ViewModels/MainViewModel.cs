@@ -26,14 +26,15 @@ public sealed partial class MainViewModel : ObservableObject
     private IAcquisitionSession? _session;
 
     public MainViewModel(IAcquisitionService acquisition, IThemeService theme, ISpectrumService spectrum, IImagingService? imaging = null,
-        IWaveformService? waveform = null)
+        IWaveformService? waveform = null, IDetectorFaceService? detectorFace = null, IFocusSweepService? focusSweep = null)
     {
         _acquisition = acquisition;
         _theme = theme;
-        Imaging = new ImagingWorkspaceViewModel(this, imaging);
+        Imaging = new ImagingWorkspaceViewModel(this, imaging, focusSweep);
         Spectrum = new SpectrumWorkspaceViewModel(this, spectrum);
         Waveform = new WaveformWorkspaceViewModel(this, waveform);
-        Workspaces = new ReadOnlyObservableCollection<WorkspaceViewModel>(new ObservableCollection<WorkspaceViewModel> { Imaging, Spectrum, Waveform });
+        DetectorWorkspace = new DetectorWorkspaceViewModel(this, detectorFace);
+        Workspaces = new ReadOnlyObservableCollection<WorkspaceViewModel>(new ObservableCollection<WorkspaceViewModel> { Imaging, Spectrum, Waveform, DetectorWorkspace });
         foreach (var workspace in Workspaces) workspace.PropertyChanged += OnWorkspaceChanged;
         _selectedWorkspace = Imaging;
         Imaging.IsActive = true;
@@ -42,14 +43,17 @@ public sealed partial class MainViewModel : ObservableObject
         {
             if (OpticsEditor.Error is null && Optics != OpticsEditor.Effective) Optics = OpticsEditor.Effective;
             if (OpticsEditor.Error is not null) MarkStale();
-            ValidationError = OpticsEditor.Error;
+            ValidateGap();
+            ValidationError = OpticsEditor.Error ?? GapError;
         };
+        DetectorWorkspace.Refresh();
         AddSource();
     }
 
     public ImagingWorkspaceViewModel Imaging { get; }
     public SpectrumWorkspaceViewModel Spectrum { get; }
     public WaveformWorkspaceViewModel Waveform { get; }
+    public DetectorWorkspaceViewModel DetectorWorkspace { get; }
     public ReadOnlyObservableCollection<WorkspaceViewModel> Workspaces { get; }
     public bool HasWorkspaceSwitch => Workspaces.Count >= 2;
     private void OnWorkspaceChanged(object? sender, PropertyChangedEventArgs e)
@@ -95,15 +99,18 @@ public sealed partial class MainViewModel : ObservableObject
     [ObservableProperty] private bool _isOpticsExpanded = true;
     [ObservableProperty] private bool _isDetectorExpanded = true;
     [ObservableProperty] private string? _validationError;
-    public string DetectorSummary => $"gap {Detector.ReflectorGapMm:0.##} mm · gain σ {GainSigmaPercent:0.#}%";
+    public string DetectorSummary => $"gap {Detector.ReflectorGapMm * 1000:0.###} µm · gain σ {GainSigmaPercent:0.#}%";
     partial void OnOpticsChanged(OpticsSettings value)
     {
         if (OpticsEditor.Effective != value) OpticsEditor.Load(value);
         Imaging.NotifyGeometryChanged();
+        ValidateGap();
+        DetectorWorkspace.Refresh();
+        Imaging.InvalidateSweep();
         MarkStale();
     }
     partial void OnIsRunningChanged(bool value) => OpticsEditor.IsEditable = !value;
-    public DetectorSettings Detector => new() { GainSigma = GainSigmaPercent / 100, GainSeed = GainSeed, Chain = Chain };
+    public DetectorSettings Detector => new() { GainSigma = GainSigmaPercent / 100, GainSeed = GainSeed, Chain = Chain, ReflectorGapMm = PendingGapMm };
     public IReadOnlyList<ScintPreset> Scintillators => FrontEndMaterials.Scintillators;
     public IReadOnlyList<SensorPreset> Sensors => FrontEndParts.Sensors;
     public IReadOnlyList<PreampPreset> Preamps => FrontEndParts.Preamps;
@@ -131,7 +138,24 @@ public sealed partial class MainViewModel : ObservableObject
     private void NotifyChainChanged()
     {
         OnPropertyChanged(nameof(Chain)); OnPropertyChanged(nameof(Detector)); OnPropertyChanged(nameof(PendingChain));
+        DetectorWorkspace.Refresh();
         MarkStale();
+    }
+    [ObservableProperty] private string _reflectorGapUm = "100";
+    [ObservableProperty] private string? _gapError;
+    private double PendingGapMm => double.TryParse(ReflectorGapUm, out double gap) ? gap / 1000 : double.NaN;
+    partial void OnReflectorGapUmChanged(string value)
+    {
+        ValidateGap();
+        OnPropertyChanged(nameof(Detector)); OnPropertyChanged(nameof(DetectorSummary));
+        DetectorWorkspace.Refresh(); MarkStale();
+    }
+    private void ValidateGap()
+    {
+        double gap = PendingGapMm;
+        GapError = !double.IsFinite(gap) || gap < 0 || gap >= OpticsEditor.Effective.PixelPitchMm
+            ? "The reflector gap must be finite, nonnegative and less than pixel pitch." : null;
+        ValidationError = OpticsEditor.Error ?? GapError;
     }
     [ObservableProperty] private double _gainSigmaPercent = 3;
     [ObservableProperty] private int _gainSeed = 1;
@@ -141,9 +165,10 @@ public sealed partial class MainViewModel : ObservableObject
         if (!double.IsFinite(value) || value < 0) { GainSigmaPercent = 3; return; }
         OnPropertyChanged(nameof(Detector));
         OnPropertyChanged(nameof(DetectorSummary));
+        DetectorWorkspace.Refresh();
         MarkStale();
     }
-    partial void OnGainSeedChanged(int value) { OnPropertyChanged(nameof(Detector)); MarkStale(); }
+    partial void OnGainSeedChanged(int value) { OnPropertyChanged(nameof(Detector)); DetectorWorkspace.Refresh(); MarkStale(); }
     partial void OnBackgroundToSignalRatioChanged(double value)
     {
         if (!double.IsFinite(value) || value < 0) { BackgroundToSignalRatio = 0; return; }
@@ -155,12 +180,13 @@ public sealed partial class MainViewModel : ObservableObject
     partial void OnSnapshotChanged(AcquisitionSnapshot? value)
     {
         OnPropertyChanged(nameof(AcquiredChain));
-        Spectrum.Refresh(); Imaging.RefreshChannels(); Waveform.NotifySnapshot();
+        Spectrum.Refresh(); Imaging.RefreshChannels(); Waveform.NotifySnapshot(); DetectorWorkspace.Refresh();
     }
     [ObservableProperty] private double _windowFwhm = 1.5;
     partial void OnWindowFwhmChanged(double value)
     {
         if (!double.IsFinite(value) || value <= 0) { WindowFwhm = 1.5; return; }
+        Imaging.InvalidateSweep();
         Spectrum.NotifyWindowChanged();
         Imaging.RefreshChannels();
     }
@@ -194,6 +220,7 @@ public sealed partial class MainViewModel : ObservableObject
 
     /// <summary>The scene was edited after the shown result was simulated — the images no longer match it.</summary>
     [ObservableProperty] private bool _isResultStale;
+    partial void OnIsResultStaleChanged(bool value) => DetectorWorkspace.Refresh();
 
     partial void OnResultChanged(ImagingResult? value) => Imaging.Refresh(value);
 
@@ -237,7 +264,7 @@ public sealed partial class MainViewModel : ObservableObject
     private async Task StartAsync()
     {
         var scene = Sources.Select(s => s.ToModel()).ToArray();
-        ValidationError = OpticsEditor.Error ?? OpticsPolicy.Validate(Optics, Detector.ReflectorGapMm)
+        ValidationError = GapError ?? OpticsEditor.Error ?? OpticsPolicy.Validate(Optics, Detector.ReflectorGapMm)
             ?? OpticsPolicy.ValidateScene(Optics, scene) ?? OpticsPolicy.ValidateFocus(Optics, Imaging.FocalDistanceMm)
             ?? Imaging.FocusError;
         if (ValidationError is not null)

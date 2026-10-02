@@ -6,7 +6,7 @@ using Gcam.Studio.Core.Optics;
 namespace Gcam.Studio.Core.ViewModels;
 
 /// <summary>Selected channel and measurement session over a frozen acquisition scene.</summary>
-public sealed partial class ImagingWorkspaceViewModel(MainViewModel shared, IImagingService? service = null)
+public sealed partial class ImagingWorkspaceViewModel(MainViewModel shared, IImagingService? service = null, IFocusSweepService? focusService = null)
     : WorkspaceViewModel("Imaging", "Workspace.Imaging")
 {
     private Guid _id;
@@ -43,6 +43,7 @@ public sealed partial class ImagingWorkspaceViewModel(MainViewModel shared, IIma
         OnPropertyChanged(nameof(Geometry));
         OnPropertyChanged(nameof(GeometryText));
         Shared.NotifyFocalGeometryChanged();
+        UseAsFocusCommand.NotifyCanExecuteChanged();
     }
     public MainViewModel Shared { get; } = shared;
     public MeasurementsViewModel Measurements { get; } = new();
@@ -66,13 +67,15 @@ public sealed partial class ImagingWorkspaceViewModel(MainViewModel shared, IIma
     partial void OnSelectedIsotopeChanged(string value)
     {
         if (!Isotopes.Contains(value)) { SelectedIsotope = "All"; return; }
+        InvalidateSweep();
         NotifyResult();
     }
-    partial void OnStripChanged(bool value) => RefreshChannels();
-    partial void OnIsProcessingChanged(bool value) => OnPropertyChanged(nameof(Summary));
+    partial void OnStripChanged(bool value) { InvalidateSweep(); RefreshChannels(); }
+    partial void OnIsProcessingChanged(bool value) { OnPropertyChanged(nameof(Summary)); SweepCommand.NotifyCanExecuteChanged(); }
 
     internal void Begin(IReadOnlyList<SceneSource> scene, OpticsSettings optics)
     {
+        InvalidateSweep();
         _refresh?.Cancel();
         _refresh = new CancellationTokenSource();
         _updating = false;
@@ -135,6 +138,7 @@ public sealed partial class ImagingWorkspaceViewModel(MainViewModel shared, IIma
 
     private void NotifyResult()
     {
+        SweepCommand.NotifyCanExecuteChanged();
         Measurements.Refresh(Result);
         foreach (string name in new[] { nameof(SelectedChannel), nameof(Result), nameof(Peaks), nameof(PeakText), nameof(Summary) })
             OnPropertyChanged(name);

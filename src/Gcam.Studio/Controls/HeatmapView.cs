@@ -246,7 +246,16 @@ public sealed class HeatmapView : FrameworkElement
         if (_bitmap is null || Image is null)
         {
             var empty = Text(EmptyText, 13);
-            dc.DrawText(empty, new Point((ActualWidth - empty.Width) / 2, (ActualHeight - empty.Height) / 2));
+            // Wrap inside the pane: a narrow column must not clip the empty-state sentence at both edges.
+            // Centre alignment places each line inside the MaxTextWidth box, so the box (not the text) is centred.
+            double boxWidth = empty.Width;
+            if (ActualWidth > 24)
+            {
+                empty.MaxTextWidth = ActualWidth - 24;
+                empty.TextAlignment = TextAlignment.Center;
+                boxWidth = empty.MaxTextWidth;
+            }
+            dc.DrawText(empty, new Point((ActualWidth - boxWidth) / 2, (ActualHeight - empty.Height) / 2));
             DrawFocusRing(dc);
             return;
         }

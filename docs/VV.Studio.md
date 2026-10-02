@@ -486,3 +486,23 @@ The Waveform workspace and physical-chain selection are implemented; execution s
 | Waveform UI, shared selector | Existing offscreen renderer extended to 12 MC-based scope images, two themes × two sizes × three modes | Generation pending; no desktop tests |
 
 The initially launched Studio Release build completed with 0 warnings/errors before later test/document/final edits. Subsequent shell creation failed with access denied; a final build/test count, services-suite runtime and rendered PNG inspection must come from the independent verification run. Existing engine tests were not edited; no RTL/cocotb code was changed.
+
+## Detector and retained-flood focus verification matrix
+
+| Requirement | Automated verification | Execution status |
+|---|---|---|
+| SR-DET-01 | DetectorWorkspaceTests.Gap_InvalidEditPreventsStart, Gap_RevalidatesAfterPitchChange_AndConvertsUnits; FocusSweepServiceTests.Config_RejectsGapAtServiceBoundary | Passed in Release, 2026-10-02 |
+| SR-DET-02 | Face_FollowsPendingBeforeStart_AndAcquiredAfterStaleEdit; MainViewModelTests.Workspace_SharedResultAndSelectionSurviveSnapshot_ViewSettingsDoNotMarkStale | Passed in Release, 2026-10-02 |
+| SR-DET-03 | DetectorFaceTests.Geometry_ExactGapCoverageAndArea; Face_GainsMatchMeasurementPattern; DetectorGapEvidenceTests | Deterministic tests passed; opt-in seed-spread evidence awaits environment-change authorization |
+| SR-DET-04 | RenderDetectorAndFocus before/stale Detector, dark/light, two sizes | 16 Detector/focus fixture outputs prepared; generation not established |
+| SR-FOCUS-01 | FocusSweepServiceTests.Sweep_UsesRetainedFlood_WithoutEventsOrSceneTruth, Sweep_PreCancelledWorkerCannotPublish, Sweep_EmptyFloodIsUnresolved; Sweep_FreezesIdentity_UserK_AndNeverDelaysAcquisition; Sweep_DoesNotHoldSnapshotConsumption_AndLabelsFrozenPrefix | Passed in Release, 2026-10-02 |
+| SR-FOCUS-02 | Planes_UniformInverseDistance_ExactBounds; Linking_UsesAngle_NotMillimetres_AndIsOneToOne; user-K identity test | Passed in Release, 2026-10-02 |
+| SR-FOCUS-03 | Interval_InterpolatesRawHalfMaximum_WithoutNoiseInterpretation, Interval_CensorsSweepEdges, Interval_FlagsDisjointModes_AndBoundaryMaximum; resolved/censored render fixture | Deterministic tests passed; render requires opt-in authorization |
+| SR-FOCUS-04 | Sweep_RejectsLateResult_WhenIdentityChanges; ImagingWorkspaceTests.FocusSweep_ChannelChangeCancelsAndRejectsLateResult; descriptive labels and frozen-prefix identity | Passed in Release, 2026-10-02 |
+| SR-FOCUS-05 | ExternalRange_OnlyExplicitActionChangesFocus; PlotView marker assertions | Core tests passed; render requires opt-in authorization |
+
+Exact conditions, tolerance derivation, limitations and reproducible commands are self-contained in
+[VV.Studio.Detector](VV.Studio.Detector.md). The final ordinary suite passed with 259 engine, 147 Core,
+67 service and 10 UI-oracle cases; seven service evidence, nine desktop and one render cases were skipped.
+MC evidence and detached renders still require authorization to change process-local opt-in environment
+variables. No new desktop validation is claimed.

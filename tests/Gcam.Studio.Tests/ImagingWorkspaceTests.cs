@@ -54,6 +54,31 @@ public sealed class ImagingWorkspaceTests
         }
     }
 
+    private sealed class DeferredFocus : IFocusSweepService
+    {
+        public CancellationToken Token { get; private set; }
+        public FocusSweepRequest? Request { get; private set; }
+        public TaskCompletionSource<FocusSweepResult> Pending { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public Task<FocusSweepResult> SweepAsync(FocusSweepRequest request, CancellationToken cancellationToken = default)
+        { Request = request; Token = cancellationToken; return Pending.Task; }
+    }
+
+    [Fact]
+    public async Task FocusSweep_ChannelChangeCancelsAndRejectsLateResult()
+    {
+        var focus = new DeferredFocus();
+        var vm = new MainViewModel(new Acquisition(), new Theme(), new FakeSpectrumService(), new Imaging(), focusSweep: focus);
+        await vm.StartCommand.ExecuteAsync(null);
+        vm.Imaging.SelectedIsotope = "Cs-137";
+        var task = vm.Imaging.SweepCommand.ExecuteAsync(null);
+        Assert.Equal("Cs-137", focus.Request!.Identity.Channel);
+        vm.Imaging.SelectedIsotope = "All";
+        Assert.True(focus.Token.IsCancellationRequested);
+        focus.Pending.SetResult(new(focus.Request.Identity, [], TimeSpan.Zero));
+        await task;
+        Assert.Null(vm.Imaging.SweepResult);
+    }
+
     [Fact]
     public async Task SharedWindow_SelectorStripAndRoi_ReuseFrozenAcquisition()
     {

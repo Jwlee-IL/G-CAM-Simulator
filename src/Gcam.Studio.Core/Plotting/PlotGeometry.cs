@@ -18,9 +18,11 @@ public static class PlotGeometry
         return pyramid.Range(start, end);
     }
 
-    public static IReadOnlyList<PlotPoint> Build(PlotSeries series, MinMaxPyramid pyramid, double lo, double hi, int columns)
+    /// <param name="logX">Device columns are equal in log10(x) (a log X axis); <paramref name="lo"/> must then be positive.</param>
+    public static IReadOnlyList<PlotPoint> Build(PlotSeries series, MinMaxPyramid pyramid, double lo, double hi, int columns, bool logX = false)
     {
-        if (columns < 1 || !double.IsFinite(lo) || !double.IsFinite(hi) || hi <= lo) throw new ArgumentOutOfRangeException(nameof(columns));
+        if (columns < 1 || !double.IsFinite(lo) || !double.IsFinite(hi) || hi <= lo || (logX && lo <= 0)) throw new ArgumentOutOfRangeException(nameof(columns));
+        double Edge(int c) => !logX ? lo + (hi - lo) * c / columns : c == columns ? hi : lo * Math.Pow(hi / lo, (double)c / columns);
         var points = new List<PlotPoint>();
         if (series.Kind == PlotKind.Histogram)
         {
@@ -41,7 +43,7 @@ public static class PlotGeometry
         }
         for (int c = 0; c < columns; c++)
         {
-            double a = lo + (hi - lo) * c / columns, b = lo + (hi - lo) * (c + 1) / columns;
+            double a = Edge(c), b = Edge(c + 1);
             PlotRange range;
             if (series.Kind == PlotKind.Histogram) range = VisibleRange(series, pyramid, a, b);
             else
@@ -51,7 +53,7 @@ public static class PlotGeometry
                 range = pyramid.Range(begin, end);
             }
             if (range.IsEmpty) continue;
-            double x = series.Kind != PlotKind.Histogram && range.End - range.Start == 1 ? series.XAt(range.Start) : (a + b) / 2;
+            double x = series.Kind != PlotKind.Histogram && range.End - range.Start == 1 ? series.XAt(range.Start) : logX ? Math.Sqrt(a * b) : (a + b) / 2;
             points.Add(new(x, range.Min));
             points.Add(new(x, range.Max));
         }

@@ -20,6 +20,8 @@ public partial class App : Application
             .AddSingleton<ISpectrumService, SpectrumService>()
             .AddSingleton<IImagingService, ImagingService>()
             .AddSingleton<IWaveformService, WaveformService>()
+            .AddSingleton<IDetectorFaceService, DetectorFaceService>()
+            .AddSingleton<IFocusSweepService, FocusSweepService>()
             .AddSingleton<ThemeService>()
             .AddSingleton<IThemeService>(sp => sp.GetRequiredService<ThemeService>())
             .AddSingleton<MainViewModel>()

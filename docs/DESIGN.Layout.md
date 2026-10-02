@@ -59,14 +59,14 @@ inside the inputs, matching the scene fields.
 The primary action sits at the same place on every screen (top right); the status of the last run is always
 visible at the bottom, full width, regardless of which panel has focus.
 
-Imaging and Spectrum are registered: there are no placeholder workspaces. The switch uses `Segment.Track` /
+Imaging, Spectrum, Waveform and Detector are registered. The switch uses `Segment.Track` /
 `RadioButton.Segment`, workspace titles and `Workspace.*` AutomationIds. Ctrl+1…4 selects a registered workspace;
 an unavailable index leaves selection unchanged. Acquisition preserves selection. Shared scene / optics / live-time / speed inputs
 mark an existing result outdated; workspace view settings re-render without invalidating that result.
 
-Geometry contains only read-only mask, cell pitch, mask–detector distance, detector grid, focal plane and
-FCFOV facts, and carries the read-only caption. A separate Detector section contains entrance
-(0.15 mm steel-equivalent), backing (2 mm) and reflector gap (0.1 mm) facts, then editable Gain σ
+Physical optics contains editable geometry and engineering presets, while decoder focus remains a view setting.
+A separate Detector section contains entrance (0.15 mm steel-equivalent) and backing (2 mm) facts,
+then an editable reflector gap (default 100 µm), Gain σ
 (default 3, `%` suffix), Gain seed (default 1) and Background (default 0, `× signal` BSR suffix;
 detected background/source ratio at 200 keV). Short labels fit the existing 84-DIP field column.
 These inputs are disabled during
@@ -128,3 +128,23 @@ Waveform centre stacks two flexible-height PlotViews: ADC energy sum above integ
 The right ScrollViewer contains latest/next/index, Follow latest, window µs, a separate rate-study toggle and simulated energy-channel kcps, ideal stimulus, acquired-chain/readout facts and the event list. Default is real 10 µs with 20% pretrigger; wider windows may be clipped to the sample work budget. Rate study and ideal status are explicit in the centre note. No controls imply that the position channels or their pile-up behavior have been simulated.
 
 New views use the existing surface, type, field, gap and button tokens. Automation IDs are `Chain.Section`, `Chain.Scintillator`, `Chain.Sensor`, `Chain.Preamp`, `Chain.Pending`, `Chain.Acquired`, `Waveform.Adc`, `Waveform.Shaped`, `Waveform.FollowLatest`, `Waveform.Latest`, `Waveform.Next`, `Waveform.Index`, `Waveform.Window`, `Waveform.RateStudy`, `Waveform.Rate`, `Waveform.Ideal`, `Waveform.Events`, `Waveform.ChainReadout` and `Waveform.Note`. Accessible names include visible labels/units. No new desktop accessibility/layout pass is claimed; the 1280×800 and 1440×900 offscreen paths are prepared but were not executed after sandbox denial.
+
+## Detector and focus sweep
+
+Detector is Ctrl+4. Its centre draws a square vector face with exact active and reflector-gap rectangles;
+opaque viridis colours encode seeded relative gain, with a numeric colour bar and size below. Acquired
+counts/live-time rate is a separate readout. The right scrollable panel lists material, geometry, geometric
+active-area fraction, gain σ/seed and next-acquisition settings. Before acquisition the face uses pending
+settings; after acquisition it preserves acquired settings with an explicit outdated label after edits.
+The shared gap editor uses µm and retains invalid text; physical pitch edits revalidate it.
+
+Imaging's scrollable options contain K (1–4), Sweep focus/Cancel sweep, sharpest-plane and half-max
+descriptions, optional external surface range and Use as focus. A result opens FocusSweepView beneath
+the image pair at Size.FocusPlot (240 DIP), with X in detector-referenced mm, prominence on Y, half-max
+bands and sharpest/external markers. No result reserves no plot height. The bias/bound note is visible in
+the options and distinguishes descriptive width from uncertainty. Censored intervals display bounds,
+boundary maxima and disjoint modes have text labels, and empty complete-track results say unresolved.
+Gap.Field/Section/Tight and existing surface, type and control styles supply all view metrics.
+DetectorFaceView exposes an Image automation peer; all new editors/actions have meaningful unique IDs.
+The new detached fixtures cover before/stale Detector and resolved/censored Imaging in both themes and
+sizes. Their curves are drawing fixtures, not MC depth evidence; final PNG generation is not verified here.

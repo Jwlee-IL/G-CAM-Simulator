@@ -32,7 +32,7 @@ public sealed partial class PlotViewRenderTests
 
         var acquisition = new FixtureAcquisition();
         var model = new MainViewModel(acquisition, new FixtureTheme(Enum.Parse<AppTheme>(theme)), new FixtureSpectrum(),
-            mixed ? new FixtureImaging() : null);
+            mixed ? new FixtureImaging() : null, detectorFace: new Gcam.Studio.Services.DetectorFaceService());
         if (mixed)
         {
             model.Sources[0].X = 15; model.Sources[0].Y = 8;
@@ -269,8 +269,10 @@ public sealed partial class PlotViewRenderTests
             foreach (var s in scene)
                 channels.Add(new(s.Isotope, s.Isotope == "Cs-137" ? 616 : 1110,
                     s.Isotope == "Cs-137" ? 707 : 1236, Image([s]), peaks.Where(p => p.Isotope == s.Isotope).ToArray()));
+            // The strip ratio exists only when stripping is on and a Co-60 source contaminates Cs-137.
+            bool coPair = settings.Strip && scene.Any(s => s.Isotope == "Co-60") && scene.Any(s => s.Isotope == "Cs-137");
             return Task.FromResult(new ImagingView(channels,
-                [new StripRatio("Cs-137", "Co-60", 100000, 11000, 40000)],
+                coPair ? [new StripRatio("Cs-137", "Co-60", 100000, 11000, 40000)] : [],
                 TimeSpan.FromMilliseconds(12), TimeSpan.FromMilliseconds(250), TimeSpan.FromMilliseconds(35)));
         }
     }

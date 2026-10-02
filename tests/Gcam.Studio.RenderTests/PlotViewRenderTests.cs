@@ -34,6 +34,7 @@ public sealed partial class PlotViewRenderTests(ITestOutputHelper output)
                     RenderWindows(theme, mixed: true, opticsExpanded: true);
                     RenderWindows(theme, mixed: true, opticsExpanded: false);
                     RenderWaveforms(theme);
+                    RenderDetectorAndFocus(theme);
                 }
             }
             catch (Exception ex) { failure = ex; }

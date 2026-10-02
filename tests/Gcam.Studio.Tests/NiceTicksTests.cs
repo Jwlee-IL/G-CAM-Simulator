@@ -30,6 +30,22 @@ public sealed class NiceTicksTests
     }
 
     [Fact]
+    public void LogarithmicAxis_Labels125_InsideRange_FallsBackToLinearWhenNarrow()
+    {
+        // The focus sweep's plane range (D+30 = 110 mm to 3000 mm).
+        var ticks = NiceTicks.LogarithmicAxis(110, 3000);
+        Assert.Equal(new[] { 200.0, 500, 1000, 2000 }, ticks.Where(t => t.IsMajor).Select(t => t.Value));
+        Assert.Equal(new[] { "200", "500", "1,000", "2,000" }, ticks.Where(t => t.IsMajor).Select(t => t.Label));
+        Assert.All(ticks, t => Assert.InRange(t.Value, 110, 3000));
+        Assert.All(ticks.Where(t => !t.IsMajor), t => Assert.Empty(t.Label));
+        Assert.Contains(ticks, t => t.Value == 3000 && !t.IsMajor);
+        var narrow = NiceTicks.LogarithmicAxis(250, 400);   // only 300 / 400 mantissas: linear steps instead
+        Assert.Equal(NiceTicks.Linear(250, 400).Select(t => t.Value), narrow.Select(t => t.Value));
+        Assert.Empty(NiceTicks.LogarithmicAxis(0, 10));
+        Assert.Empty(NiceTicks.LogarithmicAxis(10, 10));
+    }
+
+    [Fact]
     public void Logarithmic_UsesGroupedNumbersThenSuperscriptPowers()
     {
         var major = NiceTicks.Logarithmic(1, 10_000_000).Where(t => t.IsMajor).ToArray();

@@ -1,0 +1,14 @@
+<UserControl x:Class="Gcam.Studio.Views.FocusSweepView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:c="clr-namespace:Gcam.Studio.Controls">
+    <Border Style="{StaticResource Panel.Surface}">
+        <DockPanel>
+            <TextBlock DockPanel.Dock="Top" Text="Focus curve · sharpest plane" Style="{StaticResource Text.SectionTitle}" Margin="{StaticResource Gap.Tight}" />
+            <c:PlotView Series="{Binding FocusSeries}" Bands="{Binding FocusBands}" Markers="{Binding FocusMarkers}" LogX="True"
+                        XLabel="plane (mm from detector, log scale)" YLabel="peak prominence" XUnit="mm" YUnit="prominence"
+                        EmptyText="No resolved focus curve" AutomationProperties.AutomationId="Imaging.FocusCurve"
+                        AutomationProperties.Name="Focus curve sharpest plane" AutomationProperties.HelpText="Half-max bands are descriptive, not uncertainty. External surface range is separate. Wheel to zoom, arrows to pan, Home to reset." />
+        </DockPanel>
+    </Border>
+</UserControl>

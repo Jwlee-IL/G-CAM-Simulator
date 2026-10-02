@@ -502,3 +502,46 @@ The service builds plot doubles and `MinMaxPyramid` instances on the worker. A p
 Trapezoid readout uses local FlatTop and a matched noiseless calibration. Ideal zero-rise calibration uses an explicit instantaneous reference rather than the legacy bi-exponential divide-by-zero path. Neighbor overlap, partial acquired future or saturation suppress energy recovery. CR-RC reports its integer low-signal limitation and omits recovered energy. FWHM/readout values are engine-derived in Services, not duplicated physics formulas in Core.
 
 Traceability and execution limitations: [VV.Studio.Waveform](VV.Studio.Waveform.md). Final tests and offscreen PNG generation were not run by the implementer after shell process creation was denied; no desktop verification is claimed.
+
+## Detector face and independent focus worker
+
+Core owns `DetectorFace`/`FaceRectangle`, the focus request/identity/sample/track/interval/result records,
+`FocusSweepMath`, `DetectorWorkspaceViewModel` and the focus portion of `ImagingWorkspaceViewModel`.
+Services implement `IDetectorFaceService` and `IFocusSweepService`; the composition root registers both.
+Views select DetectorView/DetectorPanel through workspace templates. Their code-behind only initializes XAML.
+`DetectorFaceView` draws exact vector rectangles with theme brushes, row zero at the bottom and an Image
+automation peer. Relative gain uses opaque viridis colours and an accompanying numeric colour bar.
+
+The face service supplies `CrystalUniformity.Gain`, exactly the pattern used by MeasurementStage. It does not
+apply an energy window or label sensitivity as efficiency. The pure geometry partitions the full face into
+active crystals and disjoint gap strips, including half gaps on the perimeter. Acquired detector/optics remain
+the face source after edits; the editor is independently validated against pending pitch. The physical optics
+editor validates its geometry without assuming a fixed gap; the shell and acquisition service validate the
+actual gap. Invalid numeric text is retained and prevents Start.
+
+FocusSweepIdentity contains acquisition ID, retained prefix counts/live time, channel, window N, strip state,
+acquired optics/detector, K and plane count. A request captures the selected immutable flood. No scene source
+count enters peak selection. Each service call runs on its own Task.Run without the acquisition or imaging
+semaphore. Cancellation is checked around each bounded projection; it cannot interrupt the decoder's internal
+loop. No caller awaits focus from the acquisition loop. Later snapshots can continue acquisition while the
+analysis retains its explicitly labelled prefix; replacement acquisition and analysis-setting edits invalidate
+the revision, cancel the token and clear old results. A returned identity must equal the request before publication.
+
+The default 81 planes interpolate 1/z between 1/(D+30) and 1/3000. Every plane passes Studio's grid validation.
+AtFocus clones projection configuration; transport is absent. Each peak's metric is (grid peak−mean)/population
+standard deviation over its reconstruction. Zero variance has no defined prominence. For K≤4 an exhaustive
+minimum-cost one-to-one assignment links nearest previous heads using squared x/z,y/z displacement. This is
+descriptive tracking, not a source-resolution guarantee; tracks missing any plane are omitted as unresolved.
+The raw half-maximum interval is the connected component containing the largest sampled prominence, with
+linear interpolation in mm at crossings. Sweep-edge reach censors that endpoint. Disconnected components,
+boundary maxima and empty complete-track sets are explicit. No standard error, statistical significance or
+fusion threshold is computed. External range has no effect until Use as focus is invoked.
+
+| Requirement allocation | Units / files |
+|---|---|
+| SR-DET-01 | MainViewModel, OpticsEditorViewModel, SimulationService; shared left-panel editor |
+| SR-DET-02…04 | DetectorWorkspaceViewModel, DetectorFace, DetectorFaceService, DetectorFaceView, DetectorView/Panel, offscreen fixtures |
+| SR-FOCUS-01…02 | IFocusSweepService, FocusSweepService, FocusSweepMath, ImagingProjection |
+| SR-FOCUS-03…05 | FocusInterval/Track, ImagingWorkspaceViewModel.Focus, FocusSweepView and ImagingOptionsPanel; existing PlotView |
+
+Execution evidence and known algorithm limits: [VV.Studio.Detector](VV.Studio.Detector.md).

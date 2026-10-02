@@ -8,7 +8,7 @@ Structured after IEC 62304 §5.2 (software requirements analysis). As in [VV.Stu
 **GCAM Studio is not a medical device and no compliance is claimed**; the structure is borrowed for its discipline.
 
 **At a glance**
-- **62 active requirements** (plus seven withdrawn rows) in twelve groups: navigation, plotting, spectrum, acquisition, scene, image view, measurement, theme (functional, §3) and environment,
+- Active requirements (plus seven withdrawn rows) cover navigation, plotting, spectrum, acquisition, scene, image view, measurement, theme (functional, §3) and environment,
   accessibility, security, architecture (§4). Each is one testable present-tense statement.
 - Inputs, outputs and every status message are listed with their valid ranges (§5); risk control
   (the illustrative safety class B) maps six hazardous situations to the requirements that control them (§6);
@@ -99,7 +99,7 @@ Structured after IEC 62304 §5.2 (software requirements analysis). As in [VV.Stu
 | SR-RUN-17 | At 4 Hz the accumulated flood is re-decoded on its fixed grid and imaging measurements refresh without replacing their geometry. A slow consumer receives the latest cumulative snapshot. |
 | SR-RUN-18 | If MC cannot supply rate × speed, live time advances only through the acquired prefix and the status appends "MC-limited ×k" with achieved live seconds per wall second. |
 | SR-RUN-19 | Preset live time defaults to 60 s and speed to ×10; Start clears and begins a new session, and reaching the preset automatically sets Completed. |
-| SR-RUN-20 | Studio explicitly supplies entrance 0.15 mm steel-equivalent, backing 2 mm, reflector gap 0.1 mm, gain σ 3% and gain seed 1. Entrance, backing and gap are read-only; gain σ and seed are editable run inputs. Existing engine scene-builder defaults are unchanged. |
+| SR-RUN-20 | Studio explicitly supplies entrance 0.15 mm steel-equivalent, backing 2 mm, default reflector gap 0.1 mm, gain σ 3% and gain seed 1. Entrance and backing are read-only; gap, gain σ and seed are editable run inputs. Existing engine scene-builder defaults are unchanged. |
 | SR-RUN-21 | Snapshots retain their acquisition detector inputs. True deposits are preserved; one shared deterministic measurement response applies the CrystalUniformity gain pattern before chain smearing. Editing gain marks results outdated and cannot change the recorded detector response. |
 | SR-RUN-22 | A finite nonnegative detected background/source ratio (default 0) adds an independent Poisson process at BSR × source rate. Each fresh background deposit comes from the existing unmasked cosine-flux crystal response at 200 keV and is placed according to the uniform detected pedestal. At zero BSR the seeded source stream is unchanged. |
 
@@ -197,11 +197,11 @@ point). They are kept as requirements so that a change breaking them fails verif
 | ID | Requirement |
 |---|---|
 | SR-ARCH-01 | `Gcam.Studio.Core` references no WPF type. |
-| SR-ARCH-02 | Only `Gcam.Studio.Services` references the simulation engine (`Gcam.Simulation`); the UI reaches transport, spectrum and imaging processing only through `IAcquisitionService`, `ISpectrumService` and `IImagingService`. |
+| SR-ARCH-02 | Only `Gcam.Studio.Services` references the simulation engine (`Gcam.Simulation`); the UI reaches acquisition, spectrum, imaging, waveform, detector-pattern and focus processing through their Core service contracts. |
 | SR-ARCH-03 | View code-behind is `InitializeComponent()` only; views use theme keys, not literal colours or sizes. |
 | SR-ARCH-04 | Studio tests reference `Gcam.Studio.Core` only (no WPF in tests). |
 
-**74 active requirements**, seven withdrawn rows retained with stable IDs.
+Seven withdrawn rows are retained with stable IDs; Detector, focus and Waveform requirements extend this baseline below.
 
 ## 5. Inputs, outputs, messages (§5.2.2 b–d)
 
@@ -216,6 +216,9 @@ point). They are kept as requirements so that a change breaking them fails verif
 | Preset live time | s | finite > 0; default 60; invalid UI input → 60, invalid service input rejected | SR-RUN-15, SR-RUN-19 |
 | Speed | live s / wall s | finite > 0; default 10; invalid UI input → 10, invalid service input rejected | SR-RUN-15, SR-RUN-19 |
 | Gain σ / seed | % / integer | σ finite ≥ 0, default 3%; invalid UI σ → 3%; seed default 1 | SR-RUN-20, -21 |
+| Reflector gap | µm editor, mm configuration | finite 0 ≤ gap < pending pixel pitch; default 100 µm; invalid text blocks Start, revalidated after pitch edits | SR-DET-01 |
+| Focus sweep K | integer | 1–4, default 1; 81 planes uniform in inverse detector-referenced distance from D+30 to 3000 mm | SR-FOCUS-01, -02 |
+| External surface range | mm from detector | optional, finite positive measurement; Use as focus requires valid decoder focus | SR-FOCUS-05 |
 | Background BSR | detected background / source | finite ≥ 0, default 0; invalid UI input → 0; invalid service input rejected | SR-RUN-22 |
 | Physical optics | mm / integer | ranks 5, 7, 11, 13, 17, 19, 23; N integer 4–64; finite D ≥1, pitches ≥0.05; pixel pitch > reflector gap; source z > D+5 (10 mm slab); invalid edits block Start | SR-OPT-01, -03 |
 | Decoder focus | mm from detector | finite, > acquired D; projected grid ≤128 cells per side; invalid edits retain the last valid view | SR-OPT-03, -04 |
@@ -270,7 +273,7 @@ Stated so that their absence is not read as a gap in verification:
 - Saving or loading scenes, exporting images or measurements (SR-SEC-01 forbids file I/O today).
 - Creating measurements from the keyboard — known gap AN-01, planned.
 - High-contrast mode — known gap AN-03, planned.
-- Front-end chain selection, per-pixel gain and correlated nuclear cascades in list-mode events, windowed imaging and Compton stripping are outside this Spectrum workspace.
+- Four-channel Anger position readout, spatial SiPM pitch and optical light sharing, including crosstalk-dependent crystal identification, are excluded from the current direct-crystal readout. Correlated nuclear cascades are excluded from list-mode acquisition.
 - Any physics accuracy claim — the engine's own suite covers it ([VV.Studio §1](VV.Studio.md#1-scope-and-intended-use)).
 
 ## 8. Re-evaluation (§5.2.5–5.2.6)
@@ -301,3 +304,19 @@ These requirements replace the earlier exclusion of the Waveform workspace and r
 | SR-WAVE-08 | Scope processing and pyramid preparation shall run on a worker only while the workspace is active. A held covered selection shall reuse its output. Obsolete requests shall be cancelled/discarded and errors shown. Viewport navigation shall not resimulate the trace. | WaveformWorkspaceTests.HiddenScope_DoesNotGenerateAndHeldTriggerReusesWindow; LatestSelectionWinsAndNewAcquisitionCancelsOldScope; ScopeFailure_IsVisibleAndLocalControlsNeverMarkStale; shared-axis render assertions |
 
 Finite warm-up resets the integer filter locally and is not a claim of acquisition-wide baseline-state equivalence. Ten million samples is an allocation ceiling, not a guaranteed 4 Hz trace-generation rate. Integer shapers retain their existing accumulator semantics; no new broad overflow/hardware validation claim is made.
+
+## Detector and retained-flood focus analysis
+
+| ID | Requirement |
+|---|---|
+| SR-DET-01 | A shared reflector-gap editor uses µm and supplies mm to acquisition. Finite nonnegative gap must be smaller than pending pixel pitch; malformed edits and pitch changes revalidate and block Start. Editing is disabled while acquiring and marks retained results outdated. |
+| SR-DET-02 | Detector is the fourth registered workspace. Before acquisition its static gain pattern and face use pending detector/optics; after acquisition they use frozen acquired inputs, with textual outdated state and a separate next-acquisition summary. |
+| SR-DET-03 | The face uses the engine's seeded gain pattern and exact active rectangles with half-gap perimeter and full-gap interior dead regions. It reports geometric active-area fraction ((pitch−gap)/pitch)² as area, independently of acquired counts/live-time rate, material and gain σ/seed. |
+| SR-DET-04 | Offscreen fixtures cover Detector before acquisition and with stale settings, both themes and 1280×800/1440×900, without creating an HWND or sending desktop input. |
+| SR-FOCUS-01 | A cancellable worker sweeps the selected channel's retained flood through ImagingProjection.AtFocus with non-cyclic decoding and Studio allocation validation, without transport or calibration and without joining the 4 Hz snapshot publisher. |
+| SR-FOCUS-02 | Sweep planes are uniform in 1/z from acquired D+30 to 3000 mm. K is user-selected from 1–4, default 1, independent of scene truth. Across planes, candidates are assigned one-to-one by minimum squared angular displacement (x/z,y/z). |
+| SR-FOCUS-03 | A plane-versus-prominence PlotView shows each complete track's curve, sharpest plane and contiguous interpolated raw half-maximum interval. Edge-reaching intervals have censored endpoints and no finite width. Boundary maxima, disconnected half-max modes and unresolved results are labelled. |
+| SR-FOCUS-04 | Acquisition replacement or edits to channel/window/strip/optics/K cancel and invalidate analysis; obsolete responses cannot publish. Results identify the frozen acquisition prefix. Visible text describes lateral-dependent near-field bias, default-optics far-edge censoring from about 700 mm, and the difference between half-max width and uncertainty. Stripped fractional clipped floods are not independent Poisson observations. |
+| SR-FOCUS-05 | Optional external surface range is separate from decoder focus and appears as a focus-curve marker. Only the explicit Use as focus action changes decoder focus. No fusion verdict, significance or automatic focus change is supplied. |
+
+The focus tool is descriptive engineering analysis, with no calibrated depth accuracy or confidence interval. Conditions and verification limits are in [VV.Studio.Detector](VV.Studio.Detector.md).

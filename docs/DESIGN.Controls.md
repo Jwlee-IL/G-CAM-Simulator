@@ -160,3 +160,13 @@ ComboBox popup and highlight · button hover background · TextBox caret / selec
 ListBox inactive-selection grey · Aero progress glow · light title bar (DWM) · `-0` labels from rounding.
 Not styled yet because unused: Slider, ContextMenu, DataGrid — style them when they are introduced
 (the results table is a `ListBox` with a column template, so it reuses the list style instead of a `DataGrid`).
+
+## DetectorFaceView
+
+`DetectorFaceView` is a static reusable FrameworkElement. Face is the pure geometric model;
+GapBrush comes from DynamicResource Brush.Bg.Canvas. It fits a square face without
+snapping thin gaps to a raster subcell. Exact vector rectangles encode active crystals and disjoint dead-area
+strips, with physical row zero at the bottom. Opaque viridis colours map the seeded relative gain range;
+the surrounding Detector view supplies a colour bar with numeric minimum/maximum and labels the static gain
+pattern. This visual mapping does not modify counts. A FrameworkElementAutomationPeer exposes Image,
+the host's accessible name and help text. The acquired face stays fixed after pending detector edits.

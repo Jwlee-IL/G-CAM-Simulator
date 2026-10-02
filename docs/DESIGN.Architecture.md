@@ -131,7 +131,7 @@ snapshot and the shared `ImagingResult`. `Workspaces` and
 `SelectedWorkspace` select the centre and right panel through type-based DataTemplates. `WorkspaceViewModel`
 supplies title, AutomationId and active state; `ImagingWorkspaceViewModel` owns `Measurements` and `PeakText`,
 and reads the shared result through `Shared`. Publishing a result refreshes imaging readings without replacing
-the workspace or measurement session. Imaging and Spectrum are registered; no empty tabs are shown.
+the workspace or measurement session. Imaging, Spectrum, Waveform and Detector are registered.
 
 Core `Plotting/` contains series / bands / markers, `PlotViewport`, `NiceTicks` and `MinMaxPyramid`, with no WPF
 types. The WPF `PlotView` caches preparation on data changes and renders exact column extrema during input or
@@ -178,3 +178,15 @@ its uniform pixel placement follows the engine's detected-pedestal model. No nuc
 Core adds `IWaveformService`, immutable settings/output/event records, pure `ScopeWindow` allocation/time policies and `WaveformWorkspaceViewModel`. Engine-derived response/readouts stay in Services. DI supplies `WaveformService`, which uses the additive fixed-length cancellable `WindowRasterizer` and the existing integer Waveform shapers. Services prepare samples and min/max pyramids on a worker; PlotView may reuse preparation only when it belongs to the exact immutable Y array. Local ViewRange sharing couples X navigation, not processing or Y scaling.
 
 The WPF shell provides a shared ChainPanel and selects WaveformView/WaveformPanel by workspace type. View code-behind remains InitializeComponent only. Scope requests are visible-only, coalesced by settings/covered acquisition prefix, cancelled when obsolete and revision-checked before publication. Acquisition continues independently; it does not wait for scope rendering. Rate/ideal controls do not mutate acquisition/spectrum/imaging inputs. Four-channel charge division, position centroid changes and CR-RC precision redesign remain separate work.
+
+## Detector and focus services
+
+Core's pure DetectorFace geometry accepts a gain pattern supplied through IDetectorFaceService; Services
+uses the engine's CrystalUniformity.Gain. DetectorWorkspaceViewModel keeps the acquired face after pending
+edits. Gap validation belongs to the shell and acquisition boundary; OpticsEditor validates physical geometry
+without embedding a detector's fixed gap. WPF draws exact vector active/gap rectangles with theme brushes.
+
+IFocusSweepService consumes one frozen selected-channel ImagingResult plus its acquisition/analysis identity.
+Its independent Task.Run uses ImagingProjection.AtFocus, never ListModeSource, transport or calibration.
+The acquisition and imaging workers share no gate with it and do not await its task. The focus VM cancels
+and rejects obsolete identities, exposes descriptive intervals and only changes focus on an explicit external-range action.

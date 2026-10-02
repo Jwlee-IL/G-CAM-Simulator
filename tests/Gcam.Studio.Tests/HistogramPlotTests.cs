@@ -100,6 +100,21 @@ public sealed class HistogramPlotTests(ITestOutputHelper output)
     }
 
     [Fact]
+    public void LineGeometry_LogColumns_KeepNearFieldSamplesSeparate()
+    {
+        // 81 planes uniform in 1/z from 110 to 3000 mm, as the focus sweep samples them.
+        double[] planes = Enumerable.Range(0, 81).Select(i => 1 / (1 / 110.0 - i * (1 / 110.0 - 1 / 3000.0) / 80)).ToArray();
+        planes[0] = 110; planes[^1] = 3000;
+        var line = new PlotSeries("focus", planes.Select((_, i) => (double)i).ToArray(), planes);
+        var linear = PlotGeometry.Build(line, new(line.Y), 110, 3000, 400);
+        var log = PlotGeometry.Build(line, new(line.Y), 110, 3000, 400, logX: true);
+        // Every sample keeps its own exact X on the log columns; linear columns merge the dense near-field planes.
+        Assert.Equal(planes, log.Where((_, i) => i % 2 == 0).Select(p => p.X));
+        Assert.True(linear.Count < log.Count);
+        Assert.Throws<ArgumentOutOfRangeException>(() => PlotGeometry.Build(line, new(line.Y), 0, 3000, 400, logX: true));
+    }
+
+    [Fact]
     public void GeometryTiming_TenMillionLineAndHistogram_Headless()
     {
         var samples = new double[PlotSeries.MaximumSamples];

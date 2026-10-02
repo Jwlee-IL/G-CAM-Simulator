@@ -33,6 +33,9 @@ public sealed class PlotView : FrameworkElement
     private IReadOnlyList<PlotTick> YTicks() => LogY
         ? NiceTicks.Logarithmic(_viewport.YMin, _viewport.YMax)
         : NiceTicks.Linear(_viewport.YMin, _viewport.YMax);
+    private IReadOnlyList<PlotTick> XTicks() => _viewport.LogX
+        ? NiceTicks.LogarithmicAxis(_viewport.XMin, _viewport.XMax)
+        : NiceTicks.Linear(_viewport.XMin, _viewport.XMax);
 
     private Rect MeasurePlotRect()
     {
@@ -43,7 +46,7 @@ public sealed class PlotView : FrameworkElement
             yWidth = Math.Max(yWidth, text.Width);
             yHeight = Math.Max(yHeight, text.Height);
         }
-        foreach (var tick in NiceTicks.Linear(_viewport.XMin, _viewport.XMax))
+        foreach (var tick in XTicks())
         {
             var text = Text(tick.Label);
             xHeight = Math.Max(xHeight, text.Height);
@@ -76,6 +79,9 @@ public sealed class PlotView : FrameworkElement
     public IReadOnlyList<PlotMarker>? Markers { get => (IReadOnlyList<PlotMarker>?)GetValue(MarkersProperty); set => SetValue(MarkersProperty, value); }
     public static readonly DependencyProperty LogYProperty = Register(nameof(LogY), false, (d, _) => ((PlotView)d).Configure(false));
     public bool LogY { get => (bool)GetValue(LogYProperty); set => SetValue(LogYProperty, value); }
+    /// <summary>Log10 X axis (used when the data range is positive, otherwise linear); zoom and pan stay in screen fractions.</summary>
+    public static readonly DependencyProperty LogXProperty = Register(nameof(LogX), false, (d, _) => ((PlotView)d).Configure(false));
+    public bool LogX { get => (bool)GetValue(LogXProperty); set => SetValue(LogXProperty, value); }
     public static readonly DependencyProperty XLabelProperty = Register(nameof(XLabel), "");
     public string XLabel { get => (string)GetValue(XLabelProperty); set => SetValue(XLabelProperty, value); }
     public static readonly DependencyProperty YLabelProperty = Register(nameof(YLabel), "");
@@ -156,7 +162,7 @@ public sealed class PlotView : FrameworkElement
     {
         if (_prepared.Count == 0)
         {
-            _viewport.Configure(0, 1, 0, 1, LogY);
+            _viewport.Configure(0, 1, 0, 1, LogY, LogX);
             _viewport.Reset();
             _hover = null;
             _hoverX = null;
@@ -165,7 +171,7 @@ public sealed class PlotView : FrameworkElement
         {
             double oldMin = _viewport.XMin, oldMax = _viewport.XMax, oldTop = _viewport.YMax;
             bool sameRange = _xMin == _fullXMin && _xMax == _fullXMax;
-            _viewport.Configure(_xMin, _xMax, _yMin, _yMax, LogY);
+            _viewport.Configure(_xMin, _xMax, _yMin, _yMax, LogY, LogX);
             AutoScale(dataUpdate && sameRange && oldMin == _viewport.XMin && oldMax == _viewport.XMax ? oldTop : null);
         }
         _fullXMin = _xMin; _fullXMax = _xMax;
@@ -251,11 +257,11 @@ public sealed class PlotView : FrameworkElement
                 double centre = (a + b) / 2;
                 dc.DrawLine(Pen(Foreground), new Point(centre, r.Top), new Point(centre, r.Bottom));
             }
-            foreach (var marker in Markers ?? [])
+            var markers = Markers ?? [];
+            foreach (var marker in markers)
             {
                 double x = ScreenX(marker.X);
                 dc.DrawLine(Pen(Foreground), new Point(x, r.Top), new Point(x, r.Bottom));
-                DrawText(dc, marker.Label, new Point(x + LabelGap, r.Top + Text(marker.Label).Height + LabelGap));
             }
             // Opaque plates draw last so edges, grid lines and traces cannot cross band text.
             var padding = BandLabelPadding;
@@ -270,6 +276,24 @@ public sealed class PlotView : FrameworkElement
                 text.MaxTextWidth = Math.Max(1, label.Width - horizontalPadding);
                 text.Trimming = TextTrimming.CharacterEllipsis;
                 var plate = new Rect(r.Left + label.Left, r.Top + LabelGap + label.Row * rowHeight,
+                    label.Width, text.Height + padding.Top + padding.Bottom);
+                dc.DrawRectangle(BandLabelBrush, null, plate);
+                dc.DrawText(text, new Point(plate.Left + padding.Left, plate.Top + padding.Top));
+            }
+            // Marker labels start right of their line, below the band-label rows, and take the first free row
+            // so close markers (a sharpest plane next to an external range) never print over each other.
+            var markerTexts = markers.Select(m => Text(m.Label)).ToArray();
+            var markerLayout = PlotBandLayout.Arrange(markers.Select((m, i) =>
+                (ScreenX(m.X) - r.Left + LabelGap + (markerTexts[i].Width + horizontalPadding) / 2,
+                 markerTexts[i].Width + horizontalPadding)).ToArray(), r.Width, LabelGap);
+            int bandRows = layout.Count == 0 ? 0 : layout.Max(l => l.Row) + 1;
+            double markerRowHeight = markerTexts.Length == 0 ? 0 : markerTexts.Max(t => t.Height) + padding.Top + padding.Bottom + LabelGap;
+            foreach (var label in markerLayout)
+            {
+                var text = markerTexts[label.Index];
+                text.MaxTextWidth = Math.Max(1, label.Width - horizontalPadding);
+                text.Trimming = TextTrimming.CharacterEllipsis;
+                var plate = new Rect(r.Left + label.Left, r.Top + LabelGap + bandRows * rowHeight + label.Row * markerRowHeight,
                     label.Width, text.Height + padding.Top + padding.Bottom);
                 dc.DrawRectangle(BandLabelBrush, null, plate);
                 dc.DrawText(text, new Point(plate.Left + padding.Left, plate.Top + padding.Top));
@@ -292,7 +316,7 @@ public sealed class PlotView : FrameworkElement
         var geometry = new StreamGeometry();
         using (var g = geometry.Open())
         {
-            var points = PlotGeometry.Build(series, pyramid, _viewport.XMin, _viewport.XMax, columns);
+            var points = PlotGeometry.Build(series, pyramid, _viewport.XMin, _viewport.XMax, columns, _viewport.LogX);
             if (points.Count > 0)
             {
                 bool filled = series.Kind != PlotKind.Line;
@@ -317,10 +341,11 @@ public sealed class PlotView : FrameworkElement
     private void DrawAxes(DrawingContext dc, Rect r)
     {
         double xTickHeight = 0;
-        foreach (var tick in NiceTicks.Linear(_viewport.XMin, _viewport.XMax))
+        foreach (var tick in XTicks())
         {
             double x = ScreenX(tick.Value);
-            dc.DrawLine(Pen(GridBrush), new Point(x, r.Top), new Point(x, r.Bottom));
+            if (tick.IsMajor) dc.DrawLine(Pen(GridBrush), new Point(x, r.Top), new Point(x, r.Bottom));
+            else dc.DrawLine(Pen(GridBrush), new Point(x, r.Bottom), new Point(x, r.Bottom + MinorTickLength));
             var text = Text(tick.Label);
             xTickHeight = Math.Max(xTickHeight, text.Height);
             dc.DrawText(text, new Point(x - text.Width / 2, r.Bottom + LabelGap));
@@ -387,7 +412,7 @@ public sealed class PlotView : FrameworkElement
         if (_drag is { } from && IsMouseCaptured && point.X != from.X)
         {
             double previousMin = _viewport.XMin, previousMax = _viewport.XMax;
-            _viewport.Pan((from.X - point.X) / PlotRect.Width * (_viewport.XMax - _viewport.XMin));
+            _viewport.PanFraction((from.X - point.X) / PlotRect.Width);
             _drag = point;
             if (_viewport.XMin != previousMin || _viewport.XMax != previousMax) NavigationChanged();
         }
@@ -430,8 +455,8 @@ public sealed class PlotView : FrameworkElement
         {
             case Key.Add or Key.OemPlus: ZoomAt(0.5, true); break;
             case Key.Subtract or Key.OemMinus: ZoomAt(0.5, false); break;
-            case Key.Left or Key.Up: _viewport.Pan(-(_viewport.XMax - _viewport.XMin) * KeyPanFraction); break;
-            case Key.Right or Key.Down: _viewport.Pan((_viewport.XMax - _viewport.XMin) * KeyPanFraction); break;
+            case Key.Left or Key.Up: _viewport.PanFraction(-KeyPanFraction); break;
+            case Key.Right or Key.Down: _viewport.PanFraction(KeyPanFraction); break;
             case Key.D0 or Key.NumPad0 or Key.Home: ResetView(); break;
             default: return;
         }
