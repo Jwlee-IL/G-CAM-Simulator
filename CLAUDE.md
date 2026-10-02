@@ -74,7 +74,7 @@ On a new computer, find the local equivalents (and update this section, or keep 
 - **RTL:** Icarus (iverilog/vvp) + **OSS CAD Suite** (yosys + nextpnr-ecp5) via scoop — needs BOTH
   `bin` AND `lib` on PATH. nextpnr is Lattice-only (ECP5 as an Fmax proxy). Vivado not installed
   (`rtl/vivado_trap.tcl` ready for exact Artix-7 Fmax whenever available).
-- **codex exec:** run FOREGROUND with `< /dev/null`, read-only (`-s read-only --skip-git-repo-check`),
+- **codex exec (cross-verification):** run FOREGROUND with `< /dev/null`, read-only (`-s read-only --skip-git-repo-check`),
   ONE topic per call.
 - **WPF** can't be GUI-tested headless — verify it *compiles* (build `src/Gcam.Wpf`).
   GCAM Studio (`src/Gcam.Studio`) is driven through UI Automation instead — see

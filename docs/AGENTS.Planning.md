@@ -10,8 +10,8 @@ feeds back into the plan, and how the result is verified and committed. Document
 | Role | Who | Does | Does not |
 |---|---|---|---|
 | Author | the repository owner | sets priorities, takes product decisions, says when to commit, frees the desktop for UI tests | — |
-| Planner | Claude (this repository's coding session) | writes and revises `PLAN.*`, checks premises in the code, reviews and re-verifies the implementer's work, runs its own investigations, writes results to the docs, commits on the author's word | implement features the plan hands to the implementer |
-| Implementer | Codex (`gpt-6.1-sol`) | reviews a plan with measurements, proposes improvements, implements the agreed plan, reports numbers | edit `PLAN.*` or `AGENTS.Todo`, change git state, run desktop UI tests without the author's go |
+| Planner | Claude (this repository's coding session) | writes and revises `PLAN.*`, checks premises in the code, reviews and re-verifies the implementer's work, runs its own investigations, writes results to the docs, commits on the author's word; when the implementer stops mid-task (quota, rate limit, crash), **hands the rest to a substitute implementer** (a Claude subagent) | implement features the plan hands to an implementer |
+| Implementer | Codex (`gpt-6.1-sol`); when Codex stops mid-task, a **substitute implementer** — a Claude subagent the planner starts (author, 2026-10-02) | reviews a plan with measurements, proposes improvements, implements the agreed plan, reports numbers | edit `PLAN.*` or `AGENTS.Todo`, change git state, run desktop UI tests without the author's go |
 
 **Why the split:** in the first week the planner's plans were wrong six times (below); the implementer, told to stop
 when a plan is wrong, caught every one. Each role checks the other.
@@ -44,14 +44,43 @@ when a plan is wrong, caught every one. Each role checks the other.
 | Item | Rule | Why |
 |---|---|---|
 | Model | `codex exec -m gpt-6.1-sol` | the author's choice |
-| Sandbox | `-s workspace-write` by default; `--dangerously-bypass-approvals-and-sandbox` only for work needing the real desktop, and only after the author says the desktop is free | the sandbox's blocked desktop access is a safety net while another session drives UI automation; an app-level "bypass" setting does not reach `codex exec` — the command-line flag decides (the log's `sandbox:` line shows what applied) |
+| Sandbox | `-s danger-full-access` **with the guard block below** in every prompt (author, 2026-10-02); `-s workspace-write` while another session drives UI automation; desktop UI tests / app launch only after the author says the desktop is free | the Windows sandbox runs each command through `CreateProcessAsUserW` with a restricted token and has repeatedly lost process creation mid-task (error 5, access denied), ending the conversation's usefulness; one level up removes that, and the guard plus the planner's audit replace the sandbox's limits. The command-line flag decides, not the app setting (the log's `sandbox:` line shows what applied) |
 | Prompt | from a file on stdin (`- < prompt.md`), report with `-o report.md`, run in the background | long tasks; the report is the turn's result |
 | One conversation per task | start once, read `session id:` from the log, continue with `codex exec -s workspace-write --skip-git-repo-check -C <repo> -o <report> resume <session-id> - < prompt.md` | the implementer keeps its findings across review, discussion and implementation |
 | Check the log head | `model:`, `sandbox:`, `session id:` match what was intended | a silent fallback (new session, other sandbox) is otherwise invisible |
 
+### Guard block (every `danger-full-access` prompt)
+
+Paste verbatim; the author set these limits on 2026-10-02 when the sandbox was lifted one level.
+
+```text
+HARD LIMITS (no sandbox is enforcing them — you are trusted to keep them; the planner audits your command log):
+1. Paths. Write only inside the repository working tree (never inside .git) and %TEMP%\gcam-*; `dotnet restore`/`build`
+   may fill the NuGet package cache. Read only the
+   repository, %TEMP%, the NuGet package cache and the .NET SDK. Do not read or write C:\Windows, C:\Program Files*,
+   C:\ProgramData, the registry, other users' folders, ~/.codex, ~/.claude, ~/.ssh, or any credential store.
+2. Irreversible commands need the author's approval: deleting (Remove-Item, rm, del, rmdir, rd, git clean),
+   moving or renaming over an existing file, `dotnet clean`, any git command that changes state (add, commit,
+   checkout, switch, reset, restore, stash, rebase, merge, push, tag, branch -d), installing or updating anything
+   (dotnet tool, winget, npm -g, pip), persistent changes to environment variables / PATH / settings (setx,
+   user or machine variables, profiles), stopping processes,
+   network uploads. Setting a variable for one command's own process (e.g. `$env:GCAM_RENDER_SNAPSHOTS='1'; dotnet
+   test …`, `GCAM_EVIDENCE_TESTS=1 dotnet test …`) is allowed: it ends with the process. Editing repository files through your edit tool is allowed (git can restore them); a new file
+   that replaces an existing one is not a reason to delete the old one.
+3. When you need one: do NOT run it. Finish everything that does not depend on it, then end your report with a section
+   "APPROVAL REQUESTS": each exact command, why, what it destroys, how to undo it. Stop there. Approval arrives in the
+   next turn, naming the exact command.
+4. No desktop: do not launch Studio or any GUI, no UI tests (GCAM_UI_TESTS), no window automation.
+```
+
+**Audit after each turn.** The planner scans the turn's log for executed commands matching
+`Remove-Item|\brm\b|\bdel\b|rmdir|\brd\b|git (add|commit|checkout|switch|reset|restore|stash|clean|rebase|merge|push|tag)|dotnet clean|Stop-Process|Set-ItemProperty|setx|winget|Program Files|\Windows\` and checks
+`git status` for unexpected deletions; any hit is reported to the author before the next turn. Codex's `rules`
+(exec-policy prefix rules) cannot enforce this: commands arrive as one `pwsh -Command "<script>"` argument.
+
 **Prompt checklist** — every implementer prompt states:
 - what to read first, and which plan section is the specification;
-- hard constraints: no git state changes; no desktop UI tests / app launch unless authorised; paths it must not
+- the guard block (for `danger-full-access`); hard constraints: no git state changes; no desktop UI tests / app launch unless authorised; paths it must not
   edit (`docs/PLAN.*`, `docs/AGENTS.Todo.md`, other sessions' areas); repository rules that are easy to break;
 - **"if the plan is wrong, or a physics test cannot meet its stated tolerance, stop and report — never loosen a
   tolerance or work around it"**;
@@ -59,12 +88,61 @@ when a plan is wrong, caught every one. Each role checks the other.
 - the final report's contents: files by group, test counts before → after, every physics number with expectation,
   tolerance and how the tolerance was derived, deviations, what could not be run.
 
+## Why the sandbox was lifted — `CreateProcessAsUserW failed: 5`
+
+Recorded so the next session does not re-investigate it (author's decision, 2026-10-02).
+
+**What the error is.** On Windows, Codex's `read-only` and `workspace-write` sandboxes do not run a shell command
+directly: they build a **restricted token** (write access limited to the workdir and temp) and start the command with
+the Win32 call `CreateProcessAsUserW` under that token. `5` is `ERROR_ACCESS_DENIED`: Windows refused to create the
+process. Nothing of the command runs, so even `Get-Content` fails; Codex's own edit tool (`apply_patch`, no process)
+keeps working. The log line looks like
+`ERROR codex_core::tools::router: error=exec_command failed: CreateProcess { … Failed to create unified exec process:
+CreateProcessAsUserW failed: 5 (액세스가 거부되었습니다.) | cwd=… | cmd=…\WindowsApps\pwsh.exe -Command … |
+si_flags=256 | creation_flags=134743040 }` — `si_flags=256` is `STARTF_USESTDHANDLES`; `134743040 = 0x08080400` is
+`CREATE_NO_WINDOW | EXTENDED_STARTUPINFO_PRESENT | CREATE_UNICODE_ENVIRONMENT`. Codex CLI v0.160.0.
+
+**Observed pattern** (one `exec_command failed` line per refused command, counted in the planner's `codex exec`
+logs of 2026-10-01 … 02): **every one of the 25 implementation / review turns ran sandboxed (`workspace-write`), and 23
+had refusals** — TODO-06 7, TODO-07b 5, TODO-08a2 8, TODO-08b2 9, TODO-09 review 6, TODO-16b 8, … Typical turns
+ran 10–30 commands first. TODO-11 made it blocking:
+
+| Turn | Ran | Refused | Note |
+|---|---|---|---|
+| TODO-11 review (new conversation) | 5 | 4 | then every read failed; no measurement possible — the planner measured |
+| TODO-11 implementation (resumed) | 0 | 2 | refused from the first command, even file reads; no edits made |
+| TODO-11 retry (resumed) | 0 | 1 | same |
+| one-line probe (new conversation, same minute) | 1 | 0 | `Get-Content AGENTS.md` succeeded |
+| TODO-11 implementation (new conversation) | 19 | 2+ | ran normally for ~10 minutes, then refusals; edits continued through `apply_patch` |
+
+- It is **not the command and not the path**: the same `pwsh.exe -Command` that is refused in one conversation runs
+  in a fresh one at the same time.
+- It **appears after a while inside a conversation and then persists** — also when that conversation is resumed.
+- Unsandboxed: the first `danger-full-access` turn (TODO-11, resumed in the conversation that had just been refused 17
+  times) ran its commands with **no refusal** — consistent with the mechanism (no restricted token → no
+  `CreateProcessAsUserW`).
+- Not established: the root cause. Candidates are a per-conversation sandbox state (restricted token / sandbox
+  account ACLs) going stale, the "unified exec" launch path with extended start-up attributes, or `pwsh.exe` being a
+  Microsoft Store app alias under `WindowsApps`, which restricted tokens often cannot start — the last does not
+  explain why a fresh conversation succeeds with the same alias.
+
+**Decision (author, 2026-10-02).** Implementation runs one level up, `-s danger-full-access`: no restricted token, so
+`CreateProcessAsUserW` is never called and the error cannot occur. The sandbox's limits are replaced by the guard
+block above and the planner's audit. `read-only` stays for short cross-verification calls (they finish before the
+failure tends to appear); `workspace-write` returns while another session drives UI automation.
+
+**If it shows up again** (a sandboxed run): (1) do not retry the same conversation — it stays broken; (2) probe with a
+one-line fresh `codex exec`; (3) continue in a fresh conversation handed the written review, or resume with
+`-s danger-full-access` and the guard block; (4) if a turn ended with edits but no build, the planner builds and tests.
+
 ## Cautions met so far
 
 | Situation | What to do |
 |---|---|
 | The implementer stops on a plan premise | treat it as a plan bug: fix the plan with a dated Correction, then resume the same conversation |
 | The sandbox refuses process creation (`CreateProcessAsUserW` access denied) mid-task | the planner runs build / tests / measurements and gives the numbers back in the next turn |
+| A resumed conversation keeps failing process creation while a fresh `codex exec` runs commands (TODO-11, 2026-10-02) | probe with a one-line fresh run; if only the resumed conversation is broken, start a new conversation for the task and hand it the written review (`PLAN.*.Review.md`) and the plan's decisions as its context |
+| The implementer stops before finishing — usage quota exhausted (the author's Codex 5-hour allowance; the log ends with `ERROR: Your workspace is out of credits` and no report file), rate limit, crash (author, 2026-10-02) | the planner does **not** implement it itself: it starts a **substitute implementer** — a Claude subagent (Agent tool, general-purpose) in the same working tree — with the same kind of prompt as a Codex turn: what to read (plan and its decisions, the review, the stopped turn's log tail / report), what is already done (`git status`), what remains, the guard block, the verification commands and the final-report contents. The subagent reports back; the planner then audits, verifies (build, tests, renders, diff) and records in the plan's Status which parts the substitute implemented, exactly as for a Codex turn — one flow, planner never the implementer. Watch the turn by its report file *and* the log's last lines — other Codex processes (the author's app) keep `codex.exe` alive, so a process check alone misses a dead turn. When the allowance returns, a short review turn of the Codex conversation may check the substitute's part; the author decides whether it is worth the allowance |
 | Two agents in one working tree | the planner investigates in a separate `git worktree` (no build collisions); commits only its own files; checks `git status` first; to commit one task while another edits shared files, build the commit from a worktree or stage reconstructed blobs — never commit a half-edited file |
 | Implementer-written docs | check for "pending" placeholders, duplicate IDs (e.g. two AN-11 rows), change history inside VV requirement rows, VV documents linking `AGENTS.*` / `PLAN.*` |
 | Implementer-written views | check for ancestor lookups (`RelativeSource AncestorType=…`) and other context tricks; the offscreen renders expose them |
