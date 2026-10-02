@@ -40,11 +40,11 @@ theme below changes, update its EV entries in the same commit (`AGENTS.Conventio
 
 ## 2. Decoding & ghost artifacts
 
-> **Seed ensemble 2026-10-02 — [theme 63](#63-evidence-quoted-over-seed-ensembles--samplesevidence-2026-10-02).** Ghost 12 → −6.40 mm (−6.4016 ± 0.0008, N = 32). Sweep medians over 64 seeds: lab rig 278 / 146 (was 282 / 148), hand-held 361 / 174 (was 360 / 172).
+> **Seed ensemble 2026-10-02 — [theme 63](#63-evidence-quoted-over-seed-ensembles--samplesevidence-2026-10-02).** Ghost 12 → −6.40 mm (−6.4016 ± 0.0008, N = 32). Sweep medians over 64 seeds: reference lab geometry 278 / 146 (was 282 / 148), hand-held 361 / 174 (was 360 / 172).
 - Off-axis source **outside the FCFOV** aliases to a **ghost on the opposite side**
   (12 mm → estimate −6.6 mm; matches `12 − period(18.7) = −6.7`). Classic partial-coding artifact.
 - **Cyclic vs non-cyclic decoding**: over a wide search grid, non-cyclic (finite-mask)
-  decoding roughly **doubles** the correctly-localized area: lab rig (`scenario.json`) cyclic 148 / non-cyclic 282
+  decoding roughly **doubles** the correctly-localized area: reference lab geometry (`scenario.json`) cyclic 148 / non-cyclic 282
   of 625, hand-held head (`scenario_handheld.json`, theme 22) 172 / 360 (2026-10-01, after theme 52). Toggle: `Decoder.Cyclic`.
 - Reproduce: `montecarlo sweep <scenario>` then `python samples/plot_sweep.py <scenario>` → `samples/cyclic_vs_noncyclic.png`,
   `sweep_cyclic.csv`, `sweep_noncyclic.csv` (fixed output names — the committed ones are the hand-held run).
@@ -75,7 +75,7 @@ theme below changes, update its EV entries in the same commit (`AGENTS.Conventio
 
 ## 4. Mask design — tungsten thickness
 
-> **Seed ensemble 2026-10-02 — [theme 63](#63-evidence-quoted-over-seed-ensembles--samplesevidence-2026-10-02).** "Optimum ≈ 8–10 mm" and "edge/center 0.56 @ 8 → 0.25 @ 32 mm" below are withdrawn: the default lab command cannot pick (every 6–32 mm row reaches its 8.87 mm sweep end in 64 / 64 seeds) and the old wide-field input was not kept. The defined wide-field recipe (lab rig, D = 20 mm) picks **~10 mm** (10 mm in 21 / 32, 14 mm in 10 / 32, 8 mm in 1 / 32); edge/center 0.80 @ 8 → 0.30 @ 32 mm. Leak: 28.8 % at 7 mm (μ = 0.178 / mm); 35 % is at 5.9 mm.
+> **Seed ensemble 2026-10-02 — [theme 63](#63-evidence-quoted-over-seed-ensembles--samplesevidence-2026-10-02).** "Optimum ≈ 8–10 mm" and "edge/center 0.56 @ 8 → 0.25 @ 32 mm" below are withdrawn: the default lab command cannot pick (every 6–32 mm row reaches its 8.87 mm sweep end in 64 / 64 seeds) and the old wide-field input was not kept. The defined wide-field recipe (reference lab geometry, D = 20 mm) picks **~10 mm** (10 mm in 21 / 32, 14 mm in 10 / 32, 8 mm in 1 / 32); edge/center 0.80 @ 8 → 0.30 @ 32 mm. Leak: 28.8 % at 7 mm (μ = 0.178 / mm); 35 % is at 5.9 mm.
 - Mask is a **ray-marched 3-D slab** (collimation modelled). **Optimum ≈ 8–10 mm.**
 - Thin (< ~7 mm): closed-cell leak > 35 % → coding contrast collapses → usable FOV → 0.
 - Thick: no FOV gain, and off-axis efficiency falls via open-channel **collimation**
@@ -217,7 +217,7 @@ both break it.
   `ballistic_deficit.csv`.
 
 ## 13. Front-end fix — charge integration + pile-up rejection (Phase A2) — `rtl/integrating_peak_detector.sv`
-The real system *measured every pulse* → contaminated energy at rate (theme 12). The fix
+A simple peak detector *measures every pulse* → contaminated energy at rate (theme 12). The fix
 (`integrating_peak_detector.sv`, driven by `shaping_pileup_study.py`) integrates CHARGE over a
 runtime `window` (= shaping time) and **rejects** piled-up events instead of mis-measuring them.
 - **Naive integration (no rejection) is WORSE than peak-hold**: when an overlapping pulse lands
@@ -281,7 +281,7 @@ exact Klein-Nishina sampler, energy-dependent photoelectric fraction and attenua
 `ComptonCrystalDetector` (tracks the multi-pixel cascade, then applies a positioning strategy).
 Run: `montecarlo compton samples/scenario.json` → `samples/compton_strategies.png`,
 `compton_contamination.png` (plot via `samples/plot_compton.py`).
-- **Multi-pixel positioning — there WAS a better way than the old rig's per-pixel LLD/ULD window.**
+- **Multi-pixel positioning — there IS a better way than a per-pixel LLD/ULD window (a common pixelated readout).**
   A 662 keV event usually Compton-scatters (electron at A, scattered photon re-absorbs at B or
   escapes), splitting the energy. The old method (per-crystal energy window on *each* pixel) passes
   only single-site full-energy events → clean position but **24 %** efficiency. **Argmax** (window on
@@ -1039,7 +1039,7 @@ editor over the tabs plus Waveform / Imaging / Spectrum / Optics tabs. The build
 - **Realistic ~1 m default** (was ~16 cm): source distance 1 m, focal/distance sliders 200–3000 mm, canvas
   auto-fits the FCFOV (grows ∝ distance), activity default 500 µCi (a 1 m source is ~40× dimmer, 1/r²). At
   1 m the optics still localize laterally to ~1 mm (`RangeLocalizationTests`); depth stays coarse.
-- **Rangefinder + focus fusion** (matches the real instrument's laser module): the focal control IS the
+- **Rangefinder + focus fusion** (an external laser rangefinder, a common add-on): the focal control IS the
   external rangefinder range (aperture gives direction, this scales it to position); `MixedFieldStudy.CheckFocus`
   cross-checks it against depth-from-focus — near it refines the range, far it only flags "target off the laser
   surface" (their error modes are orthogonal: laser ranges the surface it HIT, focus measures the SOURCE).
@@ -1047,10 +1047,10 @@ editor over the tabs plus Waveform / Imaging / Spectrum / Optics tabs. The build
 
 ## 35. Spectrum & detector realism — make the WPF Cs-137 look like a real measurement, all from physics
 
-> **Seed ensemble 2026-10-02 — [theme 63](#63-evidence-quoted-over-seed-ensembles--samplesevidence-2026-10-02).** The crystal-gap series 9 / 13 / 20 / 69 / 45 % below is **unverified history** (its recipe and denominator are lost). Labelled replacement experiment (lab rig, per-pixel ±10 % window, contact 0.4, 2 × 10⁶ photons, 32 seeds): efficiency relative to zero gap 1 / 1.59 / 2.52 / 6.60 / 5.33 at 0 / 20 / 40 / 100 / 200 µm — the optimum stays ~100 µm.
+> **Seed ensemble 2026-10-02 — [theme 63](#63-evidence-quoted-over-seed-ensembles--samplesevidence-2026-10-02).** The crystal-gap series 9 / 13 / 20 / 69 / 45 % below is **unverified history** (its recipe and denominator are lost). Labelled replacement experiment (reference lab geometry, per-pixel ±10 % window, contact 0.4, 2 × 10⁶ photons, 32 seeds): efficiency relative to zero gap 1 / 1.59 / 2.52 / 6.60 / 5.33 at 0 / 20 / 40 / 100 / 200 µm — the optimum stays ~100 µm.
 An iterative arc driven by "this looks too ideal", each step MC-verified; the recurring principle: **fill features
 from real physics, never hand-add a tail/grass**. Several of my proposals were wrong and got corrected by the data
-or the user (who built the real rig).
+or the user (the author, from hands-on experience with this camera class).
 - **Cs-137 Ba K X-rays** (`Scene.cs` isotope lines): 32.1 keV (Kα, 5.6%) + 36.4 keV (Kβ, 1.4%) are a real SOURCE
   emission (internal conversion of the 662 transition), not environmental — belongs in the line list. 661.7 stays
   `Lines[0]`. Gives a genuine low-E peak.
@@ -1081,9 +1081,9 @@ or the user (who built the real rig).
   imaging window.
 - **Seeded per-crystal gain spread** (Imaging tab `GainSigma` + `UniformitySeed`, via existing `CrystalUniformity`):
   each pixel's 662 lands slightly off-window so off-gain crystals lose part of the photopeak — the crystal-to-crystal
-  non-uniformity a real rig flood-corrects. Seed → reproducible pattern; different seed → different detector.
-- **The low-E "noise wall" was the user's real-rig noise, not gamma physics**: our stark photopeak-to-low-E contrast
-  is CORRECT for a near-ideal detector (we count only real deposits). A real (SiPM) rig fills the low-E from
+  non-uniformity a real camera flood-corrects. Seed → reproducible pattern; different seed → different detector.
+- **The low-E "noise wall" is electronic noise of a real camera, not gamma physics**: our stark photopeak-to-low-E contrast
+  is CORRECT for a near-ideal detector (we count only real deposits). A real (SiPM) camera fills the low-E from
   electronic/EMI noise + dark counts crossing the trigger, source-INDEPENDENT so it dominates at low activity. Added
   a "Noise floor (cps)" knob (a device value, honestly NOT datasheet-derived) for a falling low-E wall. Also resolved
   the DCR puzzle: SiPM dark pulses are ~0.1 keV (1 PE) — invisible in the WAVEFORM at gamma scale (so the clean
@@ -1094,8 +1094,8 @@ or the user (who built the real rig).
   per-crystal gain (colour) + reflector gaps (dark). SiPM↔crystal is modelled 1:1 (each crystal = a readout channel;
   the SiPM's light budget is lumped into `FrontEndModel`, not a separate spatial matrix) — the right choice for a
   pixelated coded-aperture camera with per-crystal LLD/ULD (light-sharing/Anger would fight that windowing).
-  *Correction (2026-10-02):* the author's rig did use Anger-type positioning (four 14-bit ADCs, crystal from the flood
-  map), so the per-crystal readout is the engine's simplification, not the rig's choice — TODO-19.
+  *Correction (2026-10-02):* a conventional four-channel Anger-type readout (crystal from the flood map) is the more common
+  design, so the per-crystal readout is the engine's simplification — TODO-19.
 - **Codex parallel cross-verification** (4 topics, `33b79c7..`): core physics all confirmed; fixed backing back-scatter
   re-entry (actual back-face crossing, not the overshoot; respect the reflector gap; require the scattered photon to
   survive escaping the backing) and a couple of display/clamp nits.
@@ -1109,12 +1109,12 @@ or the user (who built the real rig).
   exp(−gap/λ), λ≈40 µm — so ONE reflector parameter drives both the dead region (fill) and the isolation (crosstalk),
   and an OPTIMUM gap emerges (at 40% contact, windowed efficiency 9/13/20/69/45% at 0/20/40/100/200 µm — thin lets
   crosstalk dominate, thick lets dead area dominate, best ~100 µm). Reviewer (user) caught that they were wrongly
-  independent. **Reflector MATERIAL** (ceramic — the real rig — vs 3M ESR / PTFE / BaSO₄ / TiO₂, reflectance ~90–99%)
+  independent. **Reflector MATERIAL** (published options: 3M ESR / PTFE / BaSO₄ / TiO₂ / ceramic, reflectance ~90–99%)
   is deliberately NOT modelled: it enters only as a second-order tuning of λ (reflectance) and of whether gap-entering
   gammas are fully lost vs partly transmitted/scattered (Z/density) — not a first-order factor for the localization.
   *Scope (2026-10-02, theme 56):* the optimum and the efficiency numbers hold for the per-crystal windowed readout
   (`PerPixelWindow`) only. On Studio's list-mode path (total deposit, arg-max position) crosstalk changes nothing; under
-  the rig's Anger readout leaked light reaches the same four channels and moves the position, not the energy — TODO-19.
+  a four-channel Anger readout leaked light reaches the same four channels and moves the position, not the energy — TODO-19.
 - **SiPM readout pitch / crystal↔SiPM matching** (Detector-tab "SiPM pitch"): = crystal pitch is 1:1; > crystal pitch
   is light-sharing (one SiPM reads a block of crystals), modelled by AVERAGING each SiPM block of the flood before the
   decoder — sub-block position is lost, so the flood is read at the SiPM granularity (Detector tab overlays the SiPM
@@ -1131,7 +1131,7 @@ or the user (who built the real rig).
 ## 36. Thermal drift DURING an acquisition + flood-field correction — `ThermalDrift` / `ThermalDriftStudy` / `montecarlo thermal`
 
 > **Seed ensemble 2026-10-02 — [theme 63](#63-evidence-quoted-over-seed-ensembles--samplesevidence-2026-10-02).** Efficiency 90.62 ± 0.01 %, residual 6.71 %; position RMS 0.48 ± 0.03 (off) / 0.45 ± 0.03 mm (on) — a ~0.5 mm floor, not ~0.6.
-First of the "physical realism gaps" queue (Codex gap-review). The real rig's headache: SiPM cooling. We modelled
+First of the "physical realism gaps" queue (Codex gap-review). SiPM gain drift with temperature is a known problem of this camera class. We modelled
 only STATIC per-crystal gain; this adds the TIME axis and asks what a per-crystal photopeak-window system loses as
 the array's temperature drifts mid-acquisition — and what flood correction can and cannot fix.
 - **The physics, no hand-tuning**: SiPM gain ∝ over-voltage = V_bias − V_breakdown(T); V_breakdown rises ≈ +21.5 mV/°C
@@ -1139,7 +1139,7 @@ the array's temperature drifts mid-acquisition — and what flood correction can
   change of `m(t)` walks the 662 photopeak centroid by `ε = m−1` relative to the FIXED calibration window, so the
   acceptance falls asymmetrically: `½[erf((w−ε)/√2σ) + erf((w+ε)/√2σ)]` (`CrystalUniformity.PhotopeakAcceptance`,
   a strict generalization — ε = 0 reduces to the old symmetric `erf(w/√2σ)`).
-- **Two physically distinct temperature drivers** (the user flagged that ambient was missing — the rig is 거치형):
+- **Two physically distinct temperature drivers** (the user flagged that ambient was missing — a fixed-mount camera (거치형) sees room temperature swings):
   **ambient** (room/HVAC) is spatially UNIFORM → walks every crystal together → a global efficiency droop, no flood
   non-uniformity; **self-heating** has a spatial GRADIENT (centre hotspot) + exponential warm-up → the walk differs
   across the face → a flood-correction RESIDUAL. `T_i(t) = T_amb(t) + ΔT_self·(1−e^{−t/τ})·shape(r_i)`.
@@ -1154,8 +1154,8 @@ the array's temperature drifts mid-acquisition — and what flood correction can
   decoder floor) in either case.**
 - **Independent confirmation of a prior claim**: the theme-22 note "SiPM thermal drift is an ENERGY-window not a
   position issue" was asserted from design; this MC reproduces it from first principles — drift is an efficiency /
-  window-walk problem, and a smooth residual barely pulls the correlation peak. That is exactly why the real rig
-  fought it with cooling / bias-comp (an energy-stability problem), not with a position recalibration.
+  window-walk problem, and a smooth residual barely pulls the correlation peak. That is exactly why SiPM cameras
+  handle it with cooling / bias compensation (an energy-stability problem), not with a position recalibration.
 - Flood-field correction (gap #2) was already latent in `UniformityStudy` (÷ calibrated sensitivity recovers static
   non-uniformity perfectly); the honest new content is that it is powerless against the TIME-varying part. (Tests:
   `ThermalDriftTests`, +6.)
@@ -1325,7 +1325,7 @@ offset instead.
   step 2.4: 0.66 → 0.19. **Tent is the most robust** (best/tied at 0.6/0.9/1.8/2.4 mm); parabolic edges it only at an
   intermediate 1.2 mm (rounded apex favours the quadratic) and degrades at coarse steps (2.4: parab 0.26 vs tent 0.19);
   Gaussian tracks tent but also degrades coarse. The honest headline: sub-cell interpolation lets you run a COARSE
-  (cheap) recon grid and still localize ~3–4× better than the argmax floor. **Gaussian (what the real hardware used) =
+  (cheap) recon grid and still localize ~3–4× better than the argmax floor. **Gaussian (a common peak-fit choice) =
   parabolic in log-space**; both are matched only to a bump-shaped peak, which this signed-correlation tent is not.
 - Regression: defaulting the pipeline to Tent shifted one pinned bias value in `BackgroundTests` by ~0.0005 mm — the
   gradient's low-frequency residual, which the integer argmax hid, is now resolved sub-cell (loosened bit-identical →
@@ -1690,8 +1690,8 @@ Same commands on the current code:
 | PR-IMG-01 context · `sweep samples/scenario_handheld.json` | localised 171 (cyclic) / 360 (non-cyclic) of 625 | 172 / 360 |
 
 - **The lower floor is not from this theme.** The pre-theme-52 code (`af9bc96`) gives the same RMS values (0.24 mm handheld,
-  0.38 mm original rig) with the old efficiencies. The committed `noise_*.csv` dated from 2026-07-10, before theme 43 made
-  Tent sub-cell interpolation the pipeline default; the original rig's floor moves 0.55 → 0.36 mm for the same reason.
+  0.38 mm GAGG reference geometry) with the old efficiencies. The committed `noise_*.csv` dated from 2026-07-10, before theme 43 made
+  Tent sub-cell interpolation the pipeline default; the GAGG reference geometry's floor moves 0.55 → 0.36 mm for the same reason.
 - **Argmax gains more with the physical crystal.** Fewer events are single-site full-energy in real GAGG, so recovering
   the Compton-split ones doubles the counts (was 1.6×). At a 400-photon budget only ~50 / ~25 counts remain, which is why
   neither strategy reaches sub-mm here — the comparison, not the absolute RMS, is the result.
@@ -1849,7 +1849,7 @@ D 80 mm, 30 × 0.6 mm), GAGG chain (FWHM 30.2 keV at 662), Cs-137 500 µCi, wind
   that enter a wider gap still count (e.g. scatter back into a crystal) — not investigated.
 - **Optical crosstalk does nothing on this path.** Contact 0 / 0.4 / 0.9 give the same rate and window fraction: the
   list-mode sink records the total deposit before the light spread and positions by the arg-max site. Theme 35's
-  crosstalk-vs-gap optimum belongs to a per-crystal windowed readout (`PerPixelWindow`), not to the rig's Anger readout,
+  crosstalk-vs-gap optimum belongs to a per-crystal windowed readout (`PerPixelWindow`), not to a four-channel Anger readout,
   where leaked light reaches the same four channels and moves the position instead → TODO-19.
 - **Depth from focus is near-field and biased.** Peak prominence vs decoder plane on the retained flood (5 seeds,
   10 / 60 s): at 300 and 500 mm the sharpest plane is reproducible (seed spread ≤ 20 mm at 60 s) but off by
@@ -1895,7 +1895,7 @@ AD9648 14-bit / 125 MSPS, isolated pulses.
   regression fixture. C#, Python and the RTL agree on **452,608 samples with 0 mismatches**; cocotb 137 / 137 with the
   C# vectors (planner re-run).
 - **Shaping time:** order 4 kept (historically intended); K was an inherited benchmark constant, now per preset from an
-  explicit T_sum = 100 / 200 / 500 ns (K = 20972 / 10486 / 4194) — a **simulation convention, not rig evidence**.
+  explicit T_sum = 100 / 200 / 500 ns (K = 20972 / 10486 / 4194) — a **simulation convention, not hardware evidence**.
 - **Response now** (32 / 122 / 662 keV; peak in codes; full-noise resolution R_equiv %): Fast 2.23 / 8.52 / 46.1 codes,
   60.8 / 17.4 / 5.46 %; Original 2.63 / 10.0 / 54.4, 21.3 / 8.85 / 4.69 %; Slow 1.57 / 5.99 / 32.5, 16.1 / 8.08 / 4.65 %.
   The CR-RC energy readout stays off until an isolated-pulse estimator with trigger / phase behaviour is measured.
@@ -1908,7 +1908,7 @@ TODO-21 ([PLAN.Physics.CsIData](PLAN.Physics.CsIData.md), Codex). xraylib 4.3.0 
 4.51 g/cm³, Tl omitted as an activator (as NaI:Tl); K-edge grid pairs at I 33.17 and Cs 35.98 keV.
 
 - 661.7 keV: μ/ρ = 0.07435 cm²/g, photoelectric share 0.145, μ = 0.0335 /mm (GAGG 0.0773 cm²/g at 6.63 g/cm³, so CsI
-  stops about two thirds as well per mm). GAGG remains the default (the rig's crystal); CsI is a what-if in Studio.
+  stops about two thirds as well per mm). GAGG remains the default (the reference crystal); CsI is a what-if in Studio.
 - Validation like with like: photo + incoherent + coherent agrees with NIST's total within 0.011 % at 300 / 600 / 800 keV.
   K-edge jumps 3.28× (I) and 1.79× (Cs), close to NIST's 3.07× / 1.76×.
 - Above 800 keV the photoelectric term is the method's power-law extrapolation (all materials): measured against NIST

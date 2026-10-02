@@ -5,8 +5,14 @@ reads as a former employer's product description, its unsolved defects, its inte
 implementation choices, and a requirement set that can read as a company product plan. Rewrite that text as generic,
 published practice; keep the physics, numbers and conclusions. Procedure: [AGENTS.Planning](AGENTS.Planning.md).
 
-Status: **decided** 2026-10-02 — the author accepted every row below ("모두 수용"); starts after TODO-27 is committed
-(both touch Evidence, URS, Findings and PAPER). Done by the planner directly: documentation wording plus comment and preset-label string changes (author, 2026-10-02: simple doc work needs no subagent).
+Status: **done** 2026-10-02 by the planner (doc work). Applied C-1 … C-6 across docs, plans, samples, RTL scripts and
+code comments; preset renamed "CSP + CR-RC (200 ns)" (headless renders regenerated: only the label changed). Also added,
+at the author's request, an **ideal-environment notice** (no ambient background; best-case bounds) to README, Overview,
+PRS, Evidence §1 ("Ideal conditions and background", with what is expected to change under background), EV-07, LIM-06
+and PAPER, and reworded PR-SENS-02 to net source counts / a significance gate — measured in TODO-30. Kept on purpose:
+code identifiers `Rig(...)` / `Rigs.cs` in tests (renaming breaks nothing but buys nothing), file names such as
+`scenario_orig_gagg.json` (reproduce commands), git history (author). Open: the README desktop screenshot still shows
+the old preset label — retake on the author's go (desktop).
 
 ## Rule
 

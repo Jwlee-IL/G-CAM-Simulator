@@ -115,7 +115,7 @@ detailed with the intro claim corrected to match (not a blanket "terse index"). 
 
 ### Physical realism gaps (Codex gap-review after theme 35 — do one-per-session)
 A completeness sweep (4 parallel Codex reviews + user) of what a REAL gamma camera has that GCAM does not yet
-model. Ranked by impact; **★ = user-flagged / connects to the real rig**. Tackle one at a time.
+model. Ranked by impact; **★ = user-flagged / practical for real cameras**. Tackle one at a time.
 
 **Localization (coded-aperture accuracy):**
 - ~~**★ Mask fabrication tolerances**~~ — **DONE, theme 38** (`MaskFabrication` / `MaskFabricationStudy` / `montecarlo
@@ -150,7 +150,7 @@ model. Ranked by impact; **★ = user-flagged / connects to the real rig**. Tack
 - Scintillator K X-ray escape peak (GAGG Gd ~43 keV below the photopeak) — LOW-MED. A real satellite peak.
 - Room / object / operator scatter — MED. We have the entrance+backing scatterer; full environmental scatter is more.
 
-**Operational / calibration (★ real-rig pain points):**
+**Operational / calibration (★ practical pain points of real cameras):**
 - ~~**★ Thermal / gain drift DURING acquisition**~~ + ~~**★ Flood-field / uniformity correction**~~ — **DONE, theme 36**
   (`ThermalDrift` / `ThermalDriftStudy` / `montecarlo thermal`). Time-varying SiPM gain drift (ambient uniform +
   self-heating gradient, −0.7 %/°C) walks the photopeak out of the fixed per-crystal window → −9.4 % efficiency +
@@ -175,6 +175,10 @@ TILT (pitch/yaw), mask WARPING.
 
 ## Done (summary — details in AGENTS.Findings by theme)
 
+- **TODO-29 clean-room wording** (2026-10-02): text attributing a product description, unsolved defects,
+  countermeasures or implementation choices to a former instrument rewritten as known problems / published practice
+  of the camera class; design-exercise notice on the VV set; ideal-environment notice on every MC result —
+  [PLAN.Docs.CleanRoom](PLAN.Docs.CleanRoom.md).
 - **TODO-27 evidence refresh** (2026-10-02): every Monte Carlo quote in the evidence register re-measured over seed
   ensembles (32–128 seeds) and quoted with its spread; 12 author decisions (antimask ~20–30 % better but rotation still
   rejected, tungsten ~10 mm, 40 µm gate, sub-mm from ~250 counts, …); reproducible driver and aggregates in
@@ -216,7 +220,7 @@ TILT (pitch/yaw), mask WARPING.
   by Codex, finished by a substitute Claude subagent when Codex's credits ran out — [PLAN.Studio.Detector](PLAN.Studio.Detector.md);
   follow-up TODO-23 completed (Findings 57); research continuation is TODO-25.
 - **TODO-10 Waveform workspace and shared chain** (2026-10-02): reference plan → Codex review (time base 72.8 cps,
-  RTL bit-exact for the selected chains, double smearing, CsI fallback) → the author's rig readout (four ADCs, Anger) →
+  RTL bit-exact for the selected chains, double smearing, CsI fallback) → a conventional four-ADC Anger readout →
   implementation — [PLAN.Studio.Waveform](PLAN.Studio.Waveform.md); follow-up TODO-19 remains; TODO-20/21 completed below with Q12 CR-RC and CsI transport.
 - **TODO-09 editable optics, presets, decoder-focus refocus** (2026-10-02): reference plan → Codex's measured review
   (coverage rule false, All not refocused) → revised plan → implementation — [PLAN.Studio.Optics](PLAN.Studio.Optics.md).

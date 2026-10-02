@@ -6,7 +6,7 @@ carrying its Klein-Nishina Compton continuum -- and reconstructs the energy spec
 ADC gains:
 
   * Cs-137 gain (662 keV -> 3000 counts): 662 sits nicely, but usable headroom is only ~859 keV, so
-    Co-60 (1173/1332) SATURATES into a false edge -- unmeasurable. This is the real system's mistake:
+    Co-60 (1173/1332) SATURATES into a false edge -- unmeasurable. This is the classic mistake:
     tuning the gain to the primary source.
   * low gain (1332 keV under full scale): Co-60 1173/1332 resolve, AND the 122 keV line is unhurt
     (its width is set by intrinsic ~1/sqrt(E) statistics, not the gain; ADC quantization/noise are

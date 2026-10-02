@@ -28,9 +28,9 @@ synthetic focus fixtures. Planner re-verified: build 0 / 0, tests 259 / 151 / 67
 | Rangefinder (Wpf) | `OptFocal` slider 200–3000 mm, step 50 | it **is** the decoder focal plane (`Refocus` rebuilds the decoder on the same flood) |
 | Focus fusion (Wpf) | `LiveTimer_Tick` every 8 ticks → `MixedFieldStudy.CheckFocus(…, laser·0.4 … laser·2.5, 14)` | if best SNR > 1.2 × laser SNR and \|Δ\| > 150 mm: refine the range when the focus-curve FWHM < 250 mm, else only warn. **The thresholds 1.2 / 150 / 250 are not derived anywhere** |
 | Studio focus | `ImagingWorkspaceViewModel.FocalPlane`, `ImagingProjection.AtFocus`, `OpticsPolicy.ValidateFocus` | decoder focus is a view setting that re-projects All and every channel from retained data (TODO-09); grid cap 128 per side; Studio decodes **non-cyclic** (`SceneConfigBuilder`) |
-| Depth evidence | Findings 18, 19, 24, 34 | measured near field of the rig geometry (S 40–200 mm): near accurate, far degrades; peak prominence is a **heuristic biased +7 mm near, −18 mm far** (theme 24); a seeded calibrated refine reaches ~1 % of the distance. **Nothing is measured for Studio's default geometry** (rank 13, 0.7 mm, D 80, sources at ~1 m) |
-| Crosstalk evidence | Findings 35 | at 40 % contact, windowed efficiency 9 / 13 / 20 / 69 / 45 % at gap 0 / 20 / 40 / 100 / 200 µm (rig geometry) |
-| The rig | CLAUDE.md, PLAN.Studio.Waveform | SiPM matched **1:1** to the crystals with dead regions between; four 14-bit ADCs, Anger-type positioning (TODO-19, not modelled) |
+| Depth evidence | Findings 18, 19, 24, 34 | measured near field of the reference lab geometry (S 40–200 mm): near accurate, far degrades; peak prominence is a **heuristic biased +7 mm near, −18 mm far** (theme 24); a seeded calibrated refine reaches ~1 % of the distance. **Nothing is measured for Studio's default geometry** (rank 13, 0.7 mm, D 80, sources at ~1 m) |
+| Crosstalk evidence | Findings 35 | at 40 % contact, windowed efficiency 9 / 13 / 20 / 69 / 45 % at gap 0 / 20 / 40 / 100 / 200 µm (reference lab geometry) |
+| Reference readout | CLAUDE.md, PLAN.Studio.Waveform | SiPM matched **1:1** to the crystals with dead regions between; four 14-bit ADCs, Anger-type positioning (TODO-19, not modelled) |
 
 ## Proposed design (reference — the implementer may improve any of it)
 
@@ -38,7 +38,7 @@ synthetic focus fixtures. Planner re-verified: build 0 / 0, tests 259 / 151 / 67
 |---|---|---|
 | T-1 | **Reflector gap editable** (µm) as a detector input: marks the acquisition stale, disabled while acquiring, carried by the snapshot (like gain σ, decision I-2). | proposed |
 | T-2 | **Contact crosstalk** (%) added to `DetectorSettings` as a detector input (same policy); default 0 (engine default, Wpf default). The readout shows the effective value. | proposed — *verify* the theme-35 optimum (efficiency vs gap at a fixed contact) reproduces through Studio's list-mode path before quoting it in the UI or docs |
-| T-3 | **SiPM pitch is not migrated.** The block-average is not physics (a light-sharing detector resolves crystals from the flood through Anger logic), the rig was 1:1, and readout modelling belongs to TODO-19. | proposed — **author decision**; *verify* nothing else in Studio needs it |
+| T-3 | **SiPM pitch is not migrated.** The block-average is not physics (a light-sharing detector resolves crystals from the flood through Anger logic), the reference matching is 1:1, and readout modelling belongs to TODO-19. | proposed — **author decision**; *verify* nothing else in Studio needs it |
 | T-4 | **Detector workspace** (fourth workspace): the detector face at sub-pixel resolution — per-crystal gain (from the acquired detector settings, or the pending ones before Start), reflector gaps as dead area — plus a readout: fill factor (analytic) and, after an acquisition, a measured comparison, effective crosstalk, gain σ / seed, crystal material. Works with no acquisition. | proposed — *verify* which measured quantity is honest to show (e.g. detected / expected counts vs the analytic fill factor needs a reference without gaps — maybe drop it) |
 | T-5 | **Depth (3D)** in the Imaging workspace: an action on the retained data (never a new MC), per imaging channel (each nuclide's window flood, and All), reporting each peak's (x, y, z) **with the focus-curve width**, not a bare z; K not taken from the scene truth. | proposed — *verify* (a) depth precision and focus-curve width at Studio's default geometry for sources at ~300 / 500 / 1000 / 2000 mm with realistic live times (seeds, counts), (b) whether `LocalizeDepths`' peak prominence is acceptable or the theme-24 hybrid (seed-free pass, then calibrated refine) is needed, (c) the grid cap and non-cyclic decoding over the plane sweep, (d) cost per sweep on the worker |
 | T-6 | **Rangefinder = an external range input** that sets the decoder focal plane (the existing focus control relabelled or extended); no new physics. | proposed |
@@ -62,7 +62,7 @@ the tree: `SimulationService.BuildConfig` → `ListModeSource` → `MeasurementS
 The gap behaves as dead area. **Crosstalk is a no-op on Studio's path**: `ComptonCrystalDetector` hands the list-mode
 sink the total deposit *before* the light spread, and the position is the arg-max site, which the main crystal keeps for
 any leak below 0.8. Theme 35's optimum came from the engine's per-crystal window (`PerPixelWindow`), a different readout.
-Under the rig's readout (Anger), leaked light reaches the same four channels: it moves the computed position, not the
+Under a conventional four-channel Anger readout, leaked light reaches the same four channels: it moves the computed position, not the
 energy — so crosstalk is a light-sharing effect and belongs to TODO-19 with the SiPM pitch.
 
 **Depth from focus** (peak prominence vs decoder plane on the retained flood; `LocalizeDepths` with K = 1 gives the

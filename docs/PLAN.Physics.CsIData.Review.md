@@ -6,7 +6,7 @@ Status: reviewed 2026-10-02; implementation awaits the planner's adopted decisio
 
 ## Assessment and checked premises
 
-TODO-21 and [PLAN.Studio.Waveform](PLAN.Studio.Waveform.md), D-3, agree. The rig used GAGG; GAGG remains the default and CsI is a what-if comparison. There is no separate CsIData implementation plan in this checkout; this review supplies proposed decisions for the planner to adopt.
+TODO-21 and [PLAN.Studio.Waveform](PLAN.Studio.Waveform.md), D-3, agree. The reference geometry uses GAGG; GAGG remains the default and CsI is a what-if comparison. There is no separate CsIData implementation plan in this checkout; this review supplies proposed decisions for the planner to adopt.
 
 | Checked code | Finding |
 |---|---|

@@ -6,7 +6,7 @@ namespace Gcam.Detector;
 public enum ComptonStrategy
 {
     /// <summary>Per-crystal LLD/ULD energy window on EACH pixel's deposit; every pixel whose
-    /// own deposit lands in the window gets a count (the old rig's method).</summary>
+    /// own deposit lands in the window gets a count (a common pixelated-readout method).</summary>
     PerPixelWindow,
     /// <summary>Accept only single-pixel events whose deposit is in the window (reject any
     /// multi-pixel event outright).</summary>

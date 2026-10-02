@@ -14,7 +14,7 @@ its old seed sat 1.7σ from the bound.
 | Item | Where | Fact |
 |---|---|---|
 | Decay schemes | `Gcam.Simulation/DecayScheme.cs` | Cs-137, Co-60, Na-22; `Sample` returns the photons of one decay. **Co-60's W(θ) (A₂ ≈ 0.10) is approximated as independent isotropic** in the code although the doc comment describes it — *verify*; Na-22's 511 pair is back-to-back |
-| Cascade study | `CascadeSummingStudy`, Findings theme 44 | sum peak ∝ ε², measured in the rig's near geometry |
+| Cascade study | `CascadeSummingStudy`, Findings theme 44 | sum peak ∝ ε², measured in the reference near geometry |
 | List-mode | `ListModeSource` | one biased photon per history (directional biasing toward the detector, weight ≤ A/(4πz²), rejection to unweighted events), Poisson arrivals at the running rate; no decay grouping |
 | Pile-up | Studio spectrum / waveform | array-wide summing within the resolving time already exists |
 

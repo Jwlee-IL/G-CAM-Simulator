@@ -1,5 +1,5 @@
 """Validate the recommended handheld config (16x16 / D55 / GAGG:Mg 15mm) against the
-original-ish rig (12x12 / D60 / GAGG:Mg 10mm) by MONTE CARLO.
+GAGG reference lab geometry (12x12 / D60 / GAGG:Mg 10mm) by MONTE CARLO.
 
 Fair comparison is RMS vs ACQUISITION TIME (not counts): the recommended detector is
 ~2.5x more efficient, so it banks counts faster. Run first:

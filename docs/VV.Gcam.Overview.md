@@ -12,7 +12,15 @@ confidential materials. The V&V set asks *if this camera were made into a hand-h
 do, and how much of that can the simulator already show?* It is organised the way a regulated product's
 requirement set is — user needs, product requirements, evidence, limitations and decisions, each traceable to the
 next — but it is a **design study**: nothing is being built, nothing is measured on hardware, and no regulatory claim
-is made.
+is made. It is a personal design exercise by the author, not any company's product plan or roadmap; the needs and
+use conditions come from published standards, published data of same-class products and this simulator's results.
+
+**Ideal conditions.** Unless an evidence entry says otherwise, its numbers come from an **ideal environment**: only
+the simulated source(s), **no ambient (natural) background radiation**, an ideal detector response and known geometry.
+They are best-case bounds. A real field adds a source-independent Poisson background that raises every count
+threshold and widens every error; which results change, and how, is listed in
+[Evidence §1](VV.Gcam.Evidence.md#ideal-conditions-and-background) and is being measured with an absolute ambient
+background model.
 
 **In numbers:** 19 user needs (18 active) → 51 product requirements (48 active) → 33 evidence entries; 9 known limitations;
 40 decisions with the author's reasons. The engineering viewer has 102 active software requirement IDs (nine withdrawn), four workspaces, and current unit/integration
@@ -20,12 +28,12 @@ test totals in [VV.Studio](VV.Studio.md#current-test-inventory), plus 12 opt-in 
 
 ## The problems it starts from
 
-| On the original instrument | What the concept does about it |
+| Known problem of the camera class | What the concept does about it |
 |---|---|
-| Characterising the camera meant moving the radioactive source by hand | the simulator sweeps geometry, decoder, crystal and electronics in software (UN-08) |
-| Co-60 scattered into the Cs-137 energy window and read as Cs-137 — never solved | per-pixel Compton stripping recovers the Cs-137 count; spatial separation alone holds only to Co : Cs ≈ 2 : 1 (EV-15, LIM-08) |
-| The energy window walked with temperature | temperature-compensated SiPM bias, peak tracking and window widening — no built-in source (EV-28, D-18, D-20) |
-| Sources outside the field showed up as ghosts on the opposite side | finite-mask (non-cyclic) decoding plus a flood-centroid "outside the field" cue (EV-01, EV-02) |
+| Characterising a camera means moving the radioactive source by hand | the simulator sweeps geometry, decoder, crystal and electronics in software (UN-08) |
+| Co-60 downscatter lands in the Cs-137 energy window and reads as Cs-137 | per-pixel Compton stripping recovers the Cs-137 count; spatial separation alone holds only to Co : Cs ≈ 2 : 1 (EV-15, LIM-08) |
+| SiPM gain drifts with temperature, so the energy window walks | temperature-compensated SiPM bias, peak tracking and window widening — no built-in source (EV-28, D-18, D-20) |
+| Cyclic decoding shows sources outside the field as ghosts on the opposite side | finite-mask (non-cyclic) decoding plus a flood-centroid "outside the field" cue (EV-01, EV-02) |
 
 ## The concept
 
@@ -48,7 +56,7 @@ test totals in [VV.Studio](VV.Studio.md#current-test-inventory), plus 12 opt-in 
 | Usable field of view (PR-IMG-10) | wider than the ±3.6° fully coded field | **±6–7.5°** along the axes at 1 m and 5 m without background (±7–7.5° at high counts); ±5–6.5° with background equal to the signal (EV-02) | MC → DEC |
 | Say which way to turn (PR-IMG-08) | side of a source outside the field | correct side from ~1° to ~14.5°; needs a background estimate (EV-02) | MC |
 | Separate Co-60 from Cs-137 (PR-NRG-04) | weaker Cs-137 count and position | co-located count recovered within 0–1 % (oracle ratio); position only to Co : Cs ≈ 2 : 1, held in 126 / 128 seeds (EV-15) | MC |
-| Sensitivity (PR-SENS-01, -07) | iPIX parity: 2 µSv/h Cs-137 located in < 30 s | 2.48× the original rig (EV-09); ~2 s estimated ([URS §5](VV.Gcam.URS.md#reference-measurement-conditions-adopted)) | MC, AN |
+| Sensitivity (PR-SENS-01, -07) | iPIX parity: 2 µSv/h Cs-137 located in < 30 s | 2.48× the GAGG reference lab geometry (EV-09); ~2 s estimated ([URS §5](VV.Gcam.URS.md#reference-measurement-conditions-adopted)) | MC, AN |
 | Dose rate (PR-SAFE-01, -02) | ±50 % to 10 mSv/h, 60 keV – 1.33 MeV | the imaging head reads ±13 % frontally but only 0.11–0.66 of the dose 10° off axis (EV-23) — so a separate counter is the dose channel; its type test is the evidence | STD, DEC |
 | No under-reading in high fields (PR-SENS-05) | over-range indication to 1 Sv/h | method shown on the imaging front end: live-time correction to ~150 mSv/h, then the live fraction signals over-range (EV-23); to be set for the counter | AN |
 | Mass (PR-PHY-01) | ≤ 2.5 kg | ~1.5–2 kg with an 8 mm shield (EV-24, EV-25) | AN |

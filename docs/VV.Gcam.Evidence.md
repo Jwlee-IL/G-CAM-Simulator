@@ -11,7 +11,7 @@ does not need any other document to check a number. Not covered: GCAM Studio's s
   manufacturing, and range.
 - Each entry gives the grade of its evidence ([PRS §1](VV.Gcam.PRS.md#1-evidence-grades)): **MC** Monte Carlo,
   **RTL** front-end model, **AN** analytical design model.
-- Nothing here is measured on hardware, and nothing has been compared with recordings of the original instrument.
+- Nothing here is measured on hardware, and nothing has been compared with recordings of any real instrument.
 - Commands are the repository's CLI, `montecarlo <command> <scenario>` (run as
   `dotnet run --project src/Gcam.Cli -c Release -- <command> <scenario>`), or a Python script; outputs land in
   `samples/` or `rtl/`.
@@ -37,13 +37,34 @@ engine commit and the per-metric summaries are in `samples/evidence/` (`manifest
 `python samples/evidence/aggregate.py` summarises it. Deterministic numbers (budgets, analytic models, RTL
 bit-equality, synthesis timing) carry no SD.
 
+### Ideal conditions and background
+
+Unless an entry says otherwise, its MC numbers come from an **ideal environment**: only the simulated source(s), **no
+ambient (natural) background radiation**, an ideal detector response, known geometry and calibration. They are
+**best-case bounds**, not field performance. Where a study adds background, it is either a uniform pedestal or a
+Poisson event stream whose rate is set **relative to the source** (background ÷ signal, BSR) — a controlled stress
+test, not the absolute, source-independent ambient field a real camera sees (terrestrial K / U / Th lines, cosmic
+and scattered radiation at a given dose rate). An absolute ambient-background model is being added; until it is
+measured, the column "Under ambient background" states the expected direction and the evidence for it.
+
+| Entries | Background in the quoted result | Under ambient background (expected; to be measured) |
+|---|---|---|
+| EV-01, EV-03, EV-05, EV-06, EV-08, EV-09, EV-13, EV-31, EV-32 (imaging precision, field, sampling, tolerances) | none | every error grows and every count threshold rises; a weak source's coded signal competes with background Poisson noise (direction shown in EV-12: at 400 source counts RMS 0.76 mm at BSR 1, ~2.9 mm at BSR 2) |
+| EV-07 count gates (collapse below ~25, sub-mm from ~250 counts) and PR-SENS-02 | none — every count is a source count | the gates hold for **net source counts**; with background, more counts are needed for the same precision, and a raw-count gate overstates confidence |
+| EV-10, EV-11, EV-14, EV-15 (multi-source, MLEM, Compton strategies, isotope separation) | none (other isotopes only) | ambient lines and continuum add to every window; stripping must also remove the background's own downscatter |
+| EV-02 field of view | BSR 0 and 1 (relative) | wrong-spot and outside-field-cue rates at an absolute ambient rate depend on source strength and distance |
+| EV-12 background and mask / antimask | BSR 0–4 (relative, uniform pedestal) | the absolute level sets which BSR a given source and distance falls at |
+| EV-25 shield | relative background spectra (scattered, 662 keV, Co-60) | the needed shield follows the actual ambient spectrum and dose rate |
+| EV-17, EV-21, EV-22 (front end, rate, dead time) | none / source-only event streams | background adds counts to pile-up and dead time; small at natural levels |
+| EV-23 dose | source fields only | natural background adds ~0.05–0.2 µSv/h to every reading, a floor for low readings |
+
 Geometries used below:
 
 | Name | Scenario file | Head | Source plane |
 |---|---|---|---|
-| **lab rig** | `samples/scenario.json` | 12 × 12 × 1 mm pixels, rank-7 MURA (2 × 2 mosaic, 1 mm cells, 10 mm W), mask–detector D = 60 mm | 100 mm from the mask |
+| **reference lab geometry** | `samples/scenario.json` | 12 × 12 × 1 mm pixels, rank-7 MURA (2 × 2 mosaic, 1 mm cells, 10 mm W), mask–detector D = 60 mm | 100 mm from the mask |
 | **hand-held head** | `samples/scenario_handheld.json` | 16 × 16 × 1 mm GAGG:Ce,Mg, 15 mm thick, same mask, D = 55 mm | 100 mm from the mask unless the entry says 1 m / 5 m |
-| original rig, GAGG | `samples/scenario_orig_gagg.json` | the lab rig with a 10 mm GAGG crystal | 100 mm |
+| reference lab geometry, GAGG | `samples/scenario_orig_gagg.json` | the reference lab geometry with a 10 mm GAGG crystal | 100 mm |
 
 ## 2. Index
 
@@ -89,12 +110,12 @@ Geometries used below:
 
 - **Shows.** A centred source is located to **0.35 mm** (0.353 ± 0.001 mm, N = 32) and an off-axis source inside the
   fully coded field to sub-mm (6 mm → 6.03 mm, 0.20 mm error — the same grid cell in 32 / 32 seeds). The fully coded
-  field is one mask period, `rank × cell × (D+S)/D`: ±9.3 mm on the lab rig. A source outside it aliases to a
+  field is one mask period, `rank × cell × (D+S)/D`: ±9.3 mm on the reference lab geometry. A source outside it aliases to a
   **ghost on the opposite side** (12 mm → −6.40 mm, −6.4016 ± 0.0008 mm, N = 32; one period is 18.7 mm). The
   reconstruction's ghost margin (primary ÷ secondary peak) is reported with every estimate.
 - **Cyclic against non-cyclic decoding.** Both decoders search the same ±18 mm grid, wider than one period, and a
   position counts if found within 3 mm. Cyclic decoding cannot tell period replicas apart, so it fails even inside
-  the field; the finite-mask (non-cyclic) decoder roughly doubles the area: **lab rig 278 vs 146** of 625 positions
+  the field; the finite-mask (non-cyclic) decoder roughly doubles the area: **reference lab geometry 278 vs 146** of 625 positions
   (medians; quartiles 276–280 and 145–147, N = 64), **hand-held head 361 vs 174** (360–362 and 172–175, N = 64;
   period 19.7 mm). At D = 55 mm the cyclic ghost margin is only 1.35 (1.352 ± 0.003, N = 32).
 - **Reproduce.** `montecarlo samples/scenario.json` (and `scenario_offaxis.json`, `scenario_ghost.json`);
@@ -167,8 +188,8 @@ Geometries used below:
 - **Set-up.** `thickness` sweeps 2–32 mm of tungsten at a fixed budget (400 000 emitted photons, 60 Poisson repeats
   per radial point) and reports, per thickness, the largest source radius still localised within one resolution
   element in at least half the repeats; the pick is the thinnest thickness with the largest radius. **The defined
-  thickness experiment is the wide-field recipe**: the lab rig with D = 20 mm (resolution 6 mm, radial sweep to
-  20 mm), where the collimation of off-axis rays matters. On the lab rig itself (D = 60 mm) the test cannot choose:
+  thickness experiment is the wide-field recipe**: the reference lab geometry with D = 20 mm (resolution 6 mm, radial sweep to
+  20 mm), where the collimation of off-axis rays matters. On the reference lab geometry itself (D = 60 mm) the test cannot choose:
   every thickness from 6 to 32 mm reaches the end of its radial sweep (8.87 mm in 64 / 64 seeds), 2 and 4 mm do not.
 - **Shows.** Optimum **~10 mm** tungsten at 662 keV: the wide-field recipe picks 10 mm in 21 / 32 seeds, 14 mm in
   10 / 32 and 8 mm in 1 / 32. Thinner masks leak — at μ = 0.178 / mm the closed cells pass 28.8 % at 7 mm (35 % at
@@ -180,7 +201,7 @@ Geometries used below:
   wide-field figures (edge / centre 0.56 at 8 mm → 0.25 at 32 mm) came from an input that was not kept and are
   replaced by this defined recipe.
 - **Reproduce.** `montecarlo thickness samples/scenario.json samples/thickness.csv` → `samples/thickness_opt.png`
-  (lab rig); the wide-field recipe is the same command on a copy of `scenario.json` with
+  (reference lab geometry); the wide-field recipe is the same command on a copy of `scenario.json` with
   `geometry.maskDetectorDistanceMm` = 20 — `samples/evidence` family `thickness_wide`.
 - **Tests.** `PipelineTests.LeakyMask_AddsCountsVersusOpaque`, `MaskAttenuationTests`,
   `TransportInvariantTests.Mask_PassesItsOpenFractionPlusTheTungstenLeak`.
@@ -209,7 +230,7 @@ Geometries used below:
 
 ### EV-07 — Count threshold and directional biasing
 
-- **Shows — two count gates, not one.** On the lab rig with a centred source: **below ~25 detected counts
+- **Shows — two count gates, not one.** On the reference lab geometry with a centred source: **below ~25 detected counts
   localisation collapses** (failures — error above 3 mm — 38 ± 3 % at 25 counts, 10 ± 2 % at 50); **sub-mm precision
   needs ~250 counts**: RMS 2.8 ± 0.3 mm at 50 counts (sub-mm in 0 / 128 seeds), 0.86 ± 0.18 mm at 100 (99 / 128) and
   0.44 ± 0.01 mm at 250 (128 / 128; N = 128). A source at the 8 mm edge needs more (0.54 ± 0.04 mm at 250).
@@ -217,6 +238,9 @@ Geometries used below:
   biased (10⁶ photons) ÷ isotropic (10⁸ histories) = **0.999 ± 0.006** (N = 32; within 1 % in 30 / 32 seeds — the
   spread is the isotropic run's own Poisson noise, ≈ 25 000 counts). With 100× fewer photons the biased estimate is
   also the more precise one (seed spread 0.11 % against 0.59 %).
+- **Limits — ideal environment.** Every count is a source count: no ambient background, an ideal detector. The two
+  gates are best-case values for **net source counts**; under ambient background the same precision needs more
+  counts ([§1](#ideal-conditions-and-background)).
 - **Reproduce.** `montecarlo noise samples/scenario.json samples/noise.csv` → `samples/noise_study.png` (count gates;
   `samples/evidence` family `noise`, N = 128). The 4π comparison is not part of `noise`: `samples/evidence` family
   `bias` runs the same scenario twice, the second time on a clone with `Source.DirectionalBiasing = false` and
@@ -237,11 +261,11 @@ Geometries used below:
 ### EV-09 — Hand-held head: sensitivity and precision
 
 - **Shows.** Geometric efficiency for Cs-137 **2.48 × 10⁻⁴** (2.479 ± 0.002, N = 32), against 1.00 × 10⁻⁴ for the
-  original rig with GAGG (**2.48×**, 2.479 ± 0.003: detector area × stopping ≈ 2.35×, plus a solid-angle factor from
+  reference lab geometry with GAGG (**2.48×**, 2.479 ± 0.003: detector area × stopping ≈ 2.35×, plus a solid-angle factor from
   the shorter D). Localisation floor **0.25 mm RMS on axis** (0.247 ± 0.002 mm at 5000 counts, 0.242 ± 0.004 at
   500), 0.53 mm at the 8 mm edge (0.531 ± 0.009); sub-mm with ≥ 250 detected counts on axis (median 0.27 mm
   [0.26, 0.28] — a skewed spread, mean 0.33 ± 0.15) and ≥ 500 at the edge (0.54 mm [0.54, 0.55]; N = 64). The
-  original rig's floor is 0.35 mm (0.354 ± 0.001). At 1 MBq on axis at the lab distance, 250 counts take ~1.2 s.
+  GAGG reference geometry's floor is 0.35 mm (0.354 ± 0.001). At 1 MBq on axis at the lab distance, 250 counts take ~1.2 s.
   The URS §5 analytic count-rate estimate (geometry × open fraction × 662 keV stopping) gives 2.44 × 10⁻⁴ — within
   2 % of this MC value.
 - **Reproduce.** `montecarlo samples/scenario_handheld.json` and `montecarlo samples/scenario_orig_gagg.json` print the
@@ -253,7 +277,7 @@ Geometries used below:
 ### EV-10 — Several isotopes in one field
 
 - **Shows.** Cs-137 at (5, 1), Co-60 at (−6, 3) and Co-57 at (0, −6) mm, emitted together in one non-cyclic run on the
-  lab rig, are each located < 1 mm: **0.55 / 0.27 / 0.93 mm** — the same grid cells in 64 / 64 seeds (a high-count
+  reference lab geometry, are each located < 1 mm: **0.55 / 0.27 / 0.93 mm** — the same grid cells in 64 / 64 seeds (a high-count
   mean map; grid-stable in this ensemble, not a deterministic quantity). The number of sources is known; the
   reconstruction is limited to the fully coded field.
 - **Reproduce.** `montecarlo mixedfield samples/scenario.json` → `samples/mixedfield.png`.
@@ -268,7 +292,7 @@ Geometries used below:
   2 and 3 mm MLEM resolves the pair and cross-correlation does not (64 / 64 seeds each; 1.5 × 10⁶ photons,
   80 iterations, resolved = valley depth > 0.25); cross-correlation needs ~3.5 mm (64 / 64). Below 2 mm the test is
   centred on the true positions and therefore optimistic.
-- **Limits.** Ideal high-count study on the lab rig; results depend on the iteration count. The system matrix
+- **Limits.** Ideal high-count study on the reference lab geometry; results depend on the iteration count. The system matrix
   samples pixel centres (no pixel-area integration).
 - **Reproduce.** `montecarlo mlem samples/scenario.json samples/mlem.csv`.
 - **Tests.** `MlemTests`.
@@ -608,7 +632,7 @@ Numbers above are from the current engine. Changes that moved earlier results:
 | Date | Change | Effect on the evidence |
 |---|---|---|
 | 2026-10-02 | Every MC quote re-measured over a seed ensemble (32–128 outer seeds per family, same engine) instead of one realisation at seed 12345; the author decided each changed interpretation with its measured basis (D-19, D-39, D-40) | All MC entries now quote mean ± SD, median [quartiles] or k / N (§1). Moved values and withdrawn statements are listed in the table below, with the reason. The row below this one ("no entry moved beyond its seed spread") compared two generators at five to twenty seeds; the larger ensembles show that several single-seed quotes sat at the edge of their spread or outside it. |
-| 2026-10-02 | Random-number generator replaced: xoshiro256** seeded by SplitMix64 instead of the seeded legacy `System.Random`, whose streams were affine in the seed (nearby seeds gave shifted copies of one stream); Studio's per-event energy smear keyed by (seed, index); the studies' Poisson realisations drawn from their own stream instead of restarting the mean-map transport stream | **No entry moved beyond its seed spread**: every MC reproduce command above was run with both generators at five seeds (twenty where a difference was flagged); the transport itself is unchanged at 0.01–0.1 %. The figures quoted above are single-seed realisations (seed 12345); the commands now print different digits within those spreads (e.g. EV-14 per-pixel RMS 5.65 → 5.42 mm, EV-01 lab-rig sweep 282 / 148 → 273 / 144, EV-15 mixed-field R 3.97 → 4.08). Only an unquoted curve moved: the shield study's RMS at its background knee (Co-60, 8 mm W) rose from a median 0.79 to 0.96 mm over 20 seeds — `samples/shield.png` is regenerated; EV-25's thicknesses keep their seed distributions. |
+| 2026-10-02 | Random-number generator replaced: xoshiro256** seeded by SplitMix64 instead of the seeded legacy `System.Random`, whose streams were affine in the seed (nearby seeds gave shifted copies of one stream); Studio's per-event energy smear keyed by (seed, index); the studies' Poisson realisations drawn from their own stream instead of restarting the mean-map transport stream | **No entry moved beyond its seed spread**: every MC reproduce command above was run with both generators at five seeds (twenty where a difference was flagged); the transport itself is unchanged at 0.01–0.1 %. The figures quoted above are single-seed realisations (seed 12345); the commands now print different digits within those spreads (e.g. EV-14 per-pixel RMS 5.65 → 5.42 mm, EV-01 reference-geometry sweep 282 / 148 → 273 / 144, EV-15 mixed-field R 3.97 → 4.08). Only an unquoted curve moved: the shield study's RMS at its background knee (Co-60, 8 mm W) rose from a median 0.79 to 0.96 mm over 20 seeds — `samples/shield.png` is regenerated; EV-25's thicknesses keep their seed distributions. |
 | 2026-10-02 | Depth from focus measured on the viewer's list-mode path at its default optics (1 m standoff) | EV-33 extended: near-field estimate reproducible but biased by tens of mm, far field a lower bound only; earlier near-field figures unchanged |
 | 2026-10-02 | Configuration scan re-run with the engine in git (10 mm ray-marched tungsten slab); the earlier figures predated the slab model | EV-03: the max-FOV pick changes from rank 23 / 1 mm / D 20 ("±64 mm, 96 %", not reproducible: 0.149) to rank 11 / 1 mm / D 30 (±21.5 mm, 90 %); "~7×" becomes ~2.5×; high ranks collapse at short D by collimation. |
 | 2026-10-01 | Crystal attenuation and photoelectric share taken from tabulated cross sections per material, replacing one 662 keV μ and one power law for every crystal (which absorbed too much, too photoelectrically) | EV-14: per-pixel window 24 → 6 % of ideal counts; EV-15: Co-60 share of the 662 keV window 22 → 55 %, Cs-137 lost from Co × 4 (was shown at × 8); EV-09: hand-held efficiency 2.65 → 2.48 × 10⁻⁴; EV-19: same ranking, lower values. All PRS numbers were re-measured on the new model. |
@@ -622,7 +646,7 @@ quote above. Values that stayed within rounding are not listed.
 | Entry | Old | New | Reason / decision basis |
 |---|---|---|---|
 | EV-12 | calibrated subtraction "matches" mask / antimask "to 0.07 mm", so a rotating mask is not needed | at equal time the antimask has ~20–30 % lower RMS at every background level (0.38 / 0.31 … 0.91 / 0.63 mm, N = 128); both sub-mm through 4 counts / pixel | 0.07 mm was one run's largest gap between the two methods; over 128 seeds that largest gap is 0.35 ± 0.20 mm, and the mean RMS favours the antimask at every level. D-19 stands on a new basis: the rotation mechanism's cost and mechanical stability outweigh the gain (author, 2026-10-02) |
-| EV-04 | optimum "8–10 mm"; edge / centre 0.56 at 8 → 0.25 at 32 mm; "below ~7 mm leak > 35 %" | ~10 mm (10 mm in 21 / 32, 14 mm in 10 / 32, 8 mm in 1 / 32) from the defined wide-field recipe (D = 20 mm); edge / centre 0.80 at 8 → 0.30 at 32 mm; 28.8 % at 7 mm, 35 % at 5.9 mm | the lab-rig command cannot pick (every 6–32 mm row reaches its sweep end, 64 / 64); the old wide-field input was not kept; the leak line was arithmetic (exp(−0.178 × 7) = 0.288). Author: "수치는 분명히 하는 게 좋겠지" (D-40) |
+| EV-04 | optimum "8–10 mm"; edge / centre 0.56 at 8 → 0.25 at 32 mm; "below ~7 mm leak > 35 %" | ~10 mm (10 mm in 21 / 32, 14 mm in 10 / 32, 8 mm in 1 / 32) from the defined wide-field recipe (D = 20 mm); edge / centre 0.80 at 8 → 0.30 at 32 mm; 28.8 % at 7 mm, 35 % at 5.9 mm | the reference-geometry command cannot pick (every 6–32 mm row reaches its sweep end, 64 / 64); the old wide-field input was not kept; the leak line was arithmetic (exp(−0.178 × 7) = 0.288). Author: "수치는 분명히 하는 게 좋겠지" (D-40) |
 | EV-30, PR-MFG-01 | RMS "holds the ideal floor (~0.95 mm) to σ ≈ 40 µm"; requirement "within ~2× the ideal floor" | gate: seed-mean RMS ≤ 1.25 × seed-mean ideal RMS; 40 µm 1.13× (pass), 80 µm 1.43× (fail); ideal 1.35 mm | the ideal RMS spreads 0.42 mm between seeds and the per-seed 2× test passes 108 / 128 at 40 µm and 100 / 128 at 80 µm, so it does not identify 40 µm; conditional on six fixed patterns (D-39) |
 | EV-07 | "from ~50 counts it is sub-mm"; biasing "within ~1 %, ~100× fewer photons" (not produced by `noise`) | collapse below ~25 counts; sub-mm needs ~250 (RMS 2.8 / 0.86 / 0.44 mm at 50 / 100 / 250; sub-mm 0 / 99 / 128 of 128); biasing ratio 0.999 ± 0.006 (N = 32) from its own recipe | the coarse 3 mm success gate and sub-mm precision are different gates (D-40) |
 | EV-03 | "≥ 90 %" as a property of rank 11 / 1 / 30 | passes the 90 % gate in 31 / 32 seeds; ±21.6 mm | an observed gate on the selected rows; the whole grid was not repeated (D-40) |

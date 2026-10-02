@@ -40,8 +40,13 @@ The evidence itself — result, conditions, limits, reproduce command, test — 
 [VV.Gcam.Evidence](VV.Gcam.Evidence.md); the **Basis** column below cites it by `EV-` ID.
 
 **Geometry.** Unless a row says otherwise, MC localisation and sensitivity numbers are at the **lab distance** of the
-original rig (source plane 100 mm from the mask). The field-of-view (EV-02) and dose (EV-23) studies run at 1 m
+reference lab geometry (source plane 100 mm from the mask). The field-of-view (EV-02) and dose (EV-23) studies run at 1 m
 (and 5 m), where accuracy is quoted as an angle.
+
+**Environment.** Unless a row says otherwise, the MC basis is an **ideal environment** — the simulated source(s)
+only, no ambient (natural) background, an ideal detector response — so a quoted value is a best-case bound, not a
+verified field performance. What is expected to change under ambient background is listed in
+[VV.Gcam.Evidence §1](VV.Gcam.Evidence.md#ideal-conditions-and-background).
 
 ## 2. Product concept
 
@@ -84,7 +89,7 @@ source of a target), **Grade** (§1), **UN** (user need), **SS** (subsystem).
 | ID | Requirement | Basis | Grade | UN | SS |
 |---|---|---|---|---|---|
 | PR-IMG-01 | Decoding is non-cyclic (finite-mask), so a source outside the fully-coded FOV does not appear as a ghost inside it. **Chosen ghost-suppression method (2026-10-01)**; mask rotation (mask / antimask hardware) rejected on cost. | EV-01: the hand-held head localises 361 / 625 grid positions non-cyclic against 174 / 625 cyclic (medians over 64 seeds); EV-02: the ghost boundary moves from 3.6° to ~7°, it does not vanish (LIM-07) | MC | UN-01, UN-11 | SS-3 |
-| PR-IMG-02 | Localisation precision reaches a floor of **0.25 mm RMS on axis** (0.53 mm at the 8 mm edge), and is sub-mm with ≥ 250 detected counts on axis and ≥ 500 at the edge. | EV-09 (original rig 0.35 mm); EV-08 (sub-cell interpolation) | MC | UN-01, UN-07 | SS-1, SS-3 |
+| PR-IMG-02 | Localisation precision reaches a floor of **0.25 mm RMS on axis** (0.53 mm at the 8 mm edge), and is sub-mm with ≥ 250 detected counts on axis and ≥ 500 at the edge. | EV-09 (GAGG reference geometry 0.35 mm); EV-08 (sub-cell interpolation) | MC | UN-01, UN-07 | SS-1, SS-3 |
 | PR-IMG-03 | Several sources of different isotopes in one field are each localised < 1 mm inside the FCFOV in a single acquisition (Cs-137 + Co-60 + Co-57: 0.55 / 0.27 / 0.93 mm; number of sources known). | EV-10 | MC | UN-01, UN-02 | SS-3 |
 | PR-IMG-04 | An optional likelihood (MLEM) reconstruction resolves source pairs 2–3 mm apart that cross-correlation merges, with a non-negative image. | EV-11 | MC | UN-01 | SS-3 |
 | PR-IMG-05 | The source marker is registered to the scene-camera image to better than the gamma resolution (~1°) at all ranges, by reprojecting with the known camera baseline *b* and the measured range *z* (Δθ = arctan(b/z); uncorrected, b = 40 mm gives 7.6° at 0.3 m). | EV-26 | AN | UN-01, UN-05 | SS-3, SS-5 |
@@ -109,8 +114,8 @@ source of a target), **Grade** (§1), **UN** (user need), **SS** (subsystem).
 
 | ID | Requirement | Basis | Grade | UN | SS |
 |---|---|---|---|---|---|
-| PR-SENS-01 | Geometric efficiency **2.48 × 10⁻⁴** for Cs-137 in the hand-held head — **2.48×** the original rig (1.00 × 10⁻⁴) — giving a sub-mm location in ~1 s from a 1 MBq Cs-137 source on axis at the lab distance. | EV-09 | MC | UN-07 | SS-1 |
-| PR-SENS-02 | A result from fewer than ~50 detected counts is flagged as unreliable (localisation collapses below ~25); the time still needed may be shown as an **estimate**, labelled as such — never as a definite verdict. | EV-07 | MC → DEC | UN-13 | SS-3, SS-4 |
+| PR-SENS-01 | Geometric efficiency **2.48 × 10⁻⁴** for Cs-137 in the hand-held head — **2.48×** the GAGG reference lab geometry (1.00 × 10⁻⁴) — giving a sub-mm location in ~1 s from a 1 MBq Cs-137 source on axis at the lab distance. | EV-09 | MC | UN-07 | SS-1 |
+| PR-SENS-02 | A result whose evidence is too weak is flagged as unreliable; the time still needed may be shown as an **estimate**, labelled as such — never as a definite verdict. In the ideal environment (net source counts, no background) localisation collapses below ~25 detected counts and reaches sub-mm from ~250; with ambient background more counts are needed, so the gate is to be set on **net source counts or a reconstruction-significance measure**, not on raw counts (to be measured with the absolute background model). | EV-07 | MC → DEC | UN-13 | SS-3, SS-4 |
 | PR-SENS-03 | Count-rate capability holds to ~1 Mcps without afterglow collapse (rules out plain GAGG, which drops to ~4 % recovery at 1 Mcps). | EV-21 | RTL | UN-07 | SS-1, SS-2 |
 | PR-SENS-04 | Dead time is reported as a live-time fraction so rates are corrected (non-paralysable model saturates at 1/τ). | EV-22 | MC | UN-07 | SS-2, SS-3 |
 | PR-SENS-05 | **Imaging above ~10 mSv/h is not required** (author, 2026-10-01: at such fields the user's alarming personal dosimeter sends them back first). The **dose-rate reading must not under-read**: from 10 mSv/h up to 1 Sv/h it shows an over-range indication or a continuous alarm (NSS-1 §6.4.8). The method is simulated on a paralysable front end (τ = 1 µs): raw 0.86 / 0.53 / 0.004 of the Cs-137 dose at 1 / 10 / 100 mSv/h, live-time correction 0.91 up to ~150 mSv/h, and beyond that the live fraction (< 10⁻³) as the over-range signature. The dose counter of PR-SAFE-02 (a GM tube is paralysable too) applies the same method; the rates at which it holds scale with that counter's dead time and are set when it is chosen. Met by the indication, not by a number. | NSS-1 §6.4.8; EV-23, EV-22 (method, on the imaging front end) | AN | UN-14, UN-13 | SS-2, SS-3 |

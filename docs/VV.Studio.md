@@ -322,7 +322,7 @@ The existing render case now creates eight [whole-window content snapshots](asse
 at 1280 × 800 / 1440 × 900 in both themes, plus the four plot snapshots. It uses a fake acquisition
 service and schematic analytic drawing data, never shows a window or sends desktop input.
 The captures verify counts / decoded readout units, value-positioned colour ticks, centred short acquisition
-inputs, the descriptive pile-up label, original-rig preset name, grouped log decades, Y-title separation
+inputs, the descriptive pile-up label, neutral preset name, grouped log decades, Y-title separation
 and neutral window bands with contrasted edges. They are visual review evidence, not desktop validation
 or detector physics evidence. AutomationIds are unchanged; no desktop test was enabled or edited.
 

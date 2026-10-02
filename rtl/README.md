@@ -12,7 +12,7 @@ unavailable pending trigger/phase/overlap estimator validation.
 All three Studio CR-RC presets keep **order 4**. Their explicit T_sum shaping times are **100/200/500 ns**,
 separate from the DCR effective integration windows. The convention is T_sum = order × nominal Euler RC
 time, K=round(65536×order×8/T_sum): **20972/10486/4194** at 125 MSPS. This is a **simulation convention**,
-not measured rig circuitry, a peaking-time definition, or a derivation of the DCR equivalent noise window.
+not measured hardware circuitry, a peaking-time definition, or a derivation of the DCR equivalent noise window.
 A=round(exp(-1/tailSamples)×65536) remains matched to the selected scintillator/CSP tail.
 
 Bounded domain: signed-16 input, 0≤A≤65536, 1≤K≤65536, 1≤ORDER≤16, 0≤F≤12, Q=16.
@@ -112,7 +112,7 @@ higher-energy line**, and a slow crystal stays merged ~5× longer (CeBr3 80 ns v
 (3) at rate the photopeak centroid drifts and a fake sum-tail grows to ~20% at 2 Mcps.
 
 ## Front-end fix — charge integration + pile-up rejection (`integrating_peak_detector.sv`)
-The real system measured every pulse → contaminated energy at rate. This module integrates
+A simple peak detector measures every pulse → contaminated energy at rate. This module integrates
 CHARGE over a runtime `window` (= shaping time) and **rejects** piled-up events instead of
 mis-measuring them, using a **fast derivative arrival detector** that catches a 2nd pulse riding
 on the first's tail (which a level/edge detector misses on slow crystals). `shaping_pileup_study.py`

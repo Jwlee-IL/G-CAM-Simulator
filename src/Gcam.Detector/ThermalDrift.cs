@@ -6,7 +6,7 @@ namespace Gcam.Detector;
 /// <list type="bullet">
 /// <item><b>Ambient</b> — the room / HVAC temperature the whole detector shares. Spatially UNIFORM, so it
 /// walks every crystal's photopeak together: a global efficiency droop, not a flood non-uniformity. Modelled
-/// as a slow linear drift plus an optional HVAC sine. Dominant for a fixture-mounted (거치형) rig.</item>
+/// as a slow linear drift plus an optional HVAC sine. Dominant for a fixture-mounted (거치형) camera.</item>
 /// <item><b>Self-heating</b> — the array warms itself after power-on. Has a spatial GRADIENT (centre hotter
 /// than the edges) and an exponential warm-up, so the photopeak walk differs across the face → a flood
 /// non-uniformity that the calibration flood map cannot remove (it walks away from the cal snapshot).</item>

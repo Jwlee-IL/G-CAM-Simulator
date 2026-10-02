@@ -1,6 +1,6 @@
-"""Two field-hardening problems the user hit on the real rig:
-  (1) DAQ/ADC board HEAT — cooling was a headache (they held temperature for SiPM gain).
-  (2) MOTION — the rig was fixture-mounted; shaking wrecked the reconstruction.
+"""Two field-hardening problems of SiPM-based coded-aperture cameras:
+  (1) DAQ/ADC board HEAT — SiPM gain drifts with temperature, so electronics heat matters.
+  (2) MOTION — coded-aperture decoding assumes a steady pointing; motion blurs the shadow.
 
 Both are analysed here against this project's numbers.
 

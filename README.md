@@ -130,6 +130,11 @@ python rtl/run_cocotb.py
 
 ## Limitations
 
+- **Ideal environment.** Unless stated otherwise, the numbers above come from an ideal environment: the simulated
+  source(s) only, **no ambient (natural) background radiation**, an ideal detector and known geometry — best-case
+  bounds, not field performance. Where background is studied it is set relative to the source; an absolute,
+  source-independent ambient background is being added, and what changes under it is listed in
+  [Evidence §1](docs/VV.Gcam.Evidence.md#ideal-conditions-and-background).
 - **Not validated against measured data.** Correctness rests on physics invariants, tabulated cross sections
   (NIST / xraylib) and independent cross-review — not on a comparison with measured detector recordings.
 - The default geometry is small and near-field (12×12 × 1 mm pixels, source plane 100 mm from the mask);

@@ -6,7 +6,7 @@ public sealed record PreampPreset(string Name, double IntegrationNs, double Puls
     double? CrrcShapingTimeNs = null, int CrrcOrder = 4)
 {
     /// <summary>Euler coefficient for T_sum = order × nominal RC time. This is a simulation convention,
-    /// not the peaking time, the DCR noise window, or evidence of the original rig's filter.</summary>
+    /// not the peaking time, the DCR noise window, or evidence of any real instrument's filter.</summary>
     public int CrrcKQ16(double sampleRateHz = FrontEndParts.AdcSampleRateHz)
     {
         if (!Crrc || CrrcShapingTimeNs is not { } time || !double.IsFinite(time) || time <= 0 ||

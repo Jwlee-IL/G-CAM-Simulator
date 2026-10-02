@@ -135,7 +135,7 @@ public sealed class WaveformService : IWaveformService
         token.ThrowIfCancellationRequested();
         var model = new FrontEndModel(chain.BuildConfig());
         string filter = chain.Preamp.Crrc
-            ? $"CR-RC order {chain.Preamp.CrrcOrder} · Q12 state / Q16 coefficients · A={a} · K={chain.CrrcKQ16}\nShaping T_sum {chain.Preamp.CrrcShapingTimeNs:0} ns (simulation convention; not peaking time or rig evidence) · DCR noise window {chain.Preamp.IntegrationNs:0} ns"
+            ? $"CR-RC order {chain.Preamp.CrrcOrder} · Q12 state / Q16 coefficients · A={a} · K={chain.CrrcKQ16}\nShaping T_sum {chain.Preamp.CrrcShapingTimeNs:0} ns (simulation convention; not peaking time or hardware evidence) · DCR noise window {chain.Preamp.IntegrationNs:0} ns"
             : $"Trapezoid ramp 80 ns / flat 64 ns · M={m}";
         string readout = $"{chain}\nN_pe(662) {model.Photoelectrons(662):0} · FWHM {model.FwhmFraction(662):P2} (single channel; excludes pixel gain spread)\nRise / tail constants {pulse.RiseSamples * 8:0} / {pulse.TailSamples * 8:0} ns\n{filter}\nEffective resolving interval {EventStreamStudy.ResolvingSamples(pulse.RiseSamples, pulse.TailSamples) * 8:0} ns";
         string mode = settings.RateStudy ? $"Rate study: arrivals re-spaced at {settings.RateKcps:0.###} kcps — not the measured rate." : "Real acquired arrival times.";

@@ -6,7 +6,7 @@ namespace Gcam.Tests.Harness;
 /// describe. Each call returns a fresh config; override the photon budget and seed for test speed.</summary>
 public static class Rigs
 {
-    /// <summary>The original lab rig (12×12 GAGG, rank-7 mask at D = 60 mm, source plane 100 mm beyond it).</summary>
+    /// <summary>The reference lab geometry (12×12 GAGG, rank-7 mask at D = 60 mm, source plane 100 mm beyond it).</summary>
     public static SimulationConfig Lab(long photons = 300_000, int seed = 12345)
         => Load("scenario.json", photons, seed);
 

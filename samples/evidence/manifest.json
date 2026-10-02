@@ -34,7 +34,7 @@
    "config": "scenario.json",
    "seeds": "O128",
    "n": 64,
-   "evidence": "EV-01 lab-rig sweep"
+   "evidence": "EV-01 reference-geometry sweep"
   },
   {
    "id": "sweep_head",
@@ -70,7 +70,7 @@
    "config": "scenario_orig_gagg.json",
    "seeds": "O128",
    "n": 64,
-   "evidence": "EV-09 original-rig floor"
+   "evidence": "EV-09 GAGG reference-geometry floor"
   },
   {
    "id": "thickness",
@@ -88,7 +88,7 @@
    "config": "scenario.json",
    "seeds": "O128",
    "n": 32,
-   "evidence": "EV-04 defined wide-field recipe: lab rig with D = 20 mm",
+   "evidence": "EV-04 defined wide-field recipe: reference lab geometry with D = 20 mm",
    "overrides": {
     "geometry.maskDetectorDistanceMm": 20
    }

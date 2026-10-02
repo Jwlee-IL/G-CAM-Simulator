@@ -25,11 +25,11 @@ Folder maps: `rtl/README.md` (SystemVerilog front-end), `src/Gcam.Studio*/README
 ## What this is
 
 A Monte Carlo simulator for a **coded-aperture gamma-source localization** system,
-re-creating (in software) a real instrument: a **Cs-137** source emits 661.7 keV
+modelling (in software) a fixed, lab-mounted camera of this class: a **Cs-137** source emits 661.7 keV
 photons through a **tungsten MURA coded-aperture mask**, which cast a coded shadow
 onto a **12×12 pixelated scintillator (crystal) flood map**; cross-correlation
-decoding of that image localizes the source. Historically the source position was
-found by physically moving the isotope around; this project replaces that with
+decoding of that image localizes the source. Characterising such a camera on the bench
+means physically moving an isotope around; this project replaces that with
 simulation so the geometry, decoder, and mask design can be swept programmatically.
 
 Started 2026-07-08. It began as a hobby rebuild and grew into a 59-theme experiment
@@ -81,14 +81,14 @@ Coordinate frame (optical axis = z):
 ## Key domain concepts
 
 - **MURA** (Modified Uniformly Redundant Array): defined for **prime rank p**. The
-  rig uses **rank 7**, tiled **2×2 (mosaic)** for cyclic decoding. Signature: first
+  reference geometry uses **rank 7**, tiled **2×2 (mosaic)** for cyclic decoding. Signature: first
   column closed, first row (bar [0,0]) open, open fraction ≈ 0.5.
 - **FCFOV** (fully-coded field of view): the region where decoding is clean. In
   source-lateral space it is **one period wide**:
   `period = rank × cellPitch × (D+S)/D`, so `FCFOV_half = period/2`.
 - **Ghost**: a source **outside** the FCFOV aliases (via cyclic decoding's assumed
-  periodicity) to a peak on the **opposite side**. This is the real artifact the
-  original hardware exhibited. `DecoderConfig.Cyclic=false` (finite-mask decoding)
+  periodicity) to a peak on the **opposite side**. This is a real artifact of cyclically
+  decoded coded-aperture cameras. `DecoderConfig.Cyclic=false` (finite-mask decoding)
   suppresses it.
 - **Decoder grid**: `DefaultSimulationFactory` sizes the reconstruction grid to one
   FCFOV period by default (auto), so an in-FCFOV source gives a single peak. Override
@@ -240,7 +240,7 @@ The full, theme-organized results log with reproduce commands and artifacts is i
 - **Count thresholds**: localisation collapses below ~25 detected counts; sub-mm needs ~250. Directional
   biasing matches 4π (0.999 ± 0.006) with 100× fewer photons.
 - **Compton multi-isotope separation (15–17, 26)**: per-pixel spectral stripping removes a high-energy
-  isotope's downscatter from a lower line's window and recovers the Cs count (the real rig's Co-60-reads-as-Cs
+  isotope's downscatter from a lower line's window and recovers the Cs count (the classic Co-60-reads-as-Cs
   problem); spatial separation alone holds only up to Co:Cs ≈ 2:1 with physical GAGG cross sections (theme 52).
 - **Depth (18–24, 34)**: z is recoverable via near-field magnification + depth-from-focus, but
   weak far (∝z²); 3D range extends by rank, not cell pitch. At Studio's 1 m geometry the focus sweep is near-field only

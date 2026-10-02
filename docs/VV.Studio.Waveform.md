@@ -75,7 +75,7 @@ Implemented recurrence: coefficients remain Q16; input is sign-extended and shif
 and each same-sample RC update retain fractional state. Raw output is divided by 4096.0 for plotted codes.
 Existing C#/Python calls default to F=0 and retain the legacy golden 304-code peak / sample-35 value 23.
 All CR-RC presets have order 4 with explicit T_sum 100/200/500 ns, K=20972/10486/4194. These are simulation
-times under T_sum=order×nominal Euler RC time, not peaking times, rig evidence or equivalent DCR windows.
+times under T_sum=order×nominal Euler RC time, not peaking times, hardware evidence or equivalent DCR windows.
 The DCR integration fields remain independent. CR-RC energy recovery is still unavailable.
 
 The bounded arithmetic domain is signed-16 samples, A∈[0,65536], K∈[1,65536], order 1–16, F 0–12.
@@ -178,7 +178,7 @@ retain the estimator/gain definitions above, plus gated-peak diagnostics and obs
 The gated peak is a diagnostic only: selecting maxima can reduce width while biasing the mean upward.
 
 Not established here: threshold-trigger efficiency, arrival phase / variable-rise response, pile-up
-energy recovery, full-scale analog dynamic range calibration, synthesis/device Fmax, physical rig topology,
+energy recovery, full-scale analog dynamic range calibration, synthesis/device Fmax, physical hardware topology,
 desktop label layout or new offscreen renders. Four-channel charge division and hardware validation remain
 separate. All coefficients/state tolerances were kept or derived; none was loosened to obtain a pass.
 

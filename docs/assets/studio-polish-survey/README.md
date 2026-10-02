@@ -34,7 +34,7 @@ verification capture run `20261002-123249-231a4f`; no survey image was changed b
 | P-06 | Spectrum, bands | Addressed: centred / clamped labels with collision rows. Offscreen dark / light evidence in [studio-plot](../studio-plot/README.md); desktop re-survey deferred. | spectrum-* |
 | P-07 | Spectrum, readout | Addressed: bin centre, bounds and counts with units and bin-width precision. Core readout test passes; desktop hover walkthrough deferred. | spectrum-* |
 | P-08 | Spectrum, panel | Section title "Pile-up" above a checkbox labelled "Pile-up" — the label repeats. | spectrum-* |
-| P-09 | Spectrum, chain text | The default chain is named "… CSP + CR-RC (your rig)" — a leftover first-person label from `Gcam.Wpf`; say "original rig". | spectrum-* |
+| P-09 | Spectrum, chain text | The default chain carried a leftover first-person label from `Gcam.Wpf`; say "CSP + CR-RC (200 ns)". | spectrum-* |
 | P-10 | Spectrum, table | "Emission windows" columns do not line up with their headers (Counts, Share), and the Ba K row is labelled only "Cs-137". | spectrum-* |
 | P-11 | Spectrum, physics look | The 480–620 keV valley is empty and there is no backscatter peak: the bare geometry Studio uses (no entrance absorber, no backing) — fixed by TODO-08 phase A, not by styling. | spectrum-* |
 
@@ -47,7 +47,7 @@ verification capture run `20261002-123249-231a4f`; no survey image was changed b
 ## Current observations (2026-10-02)
 
 P-01 … P-11 above are the historical survey, not current defect claims. Counts chips, round colour-bar ticks,
-compact top-bar inputs, explicit pile-up wording, "original rig", Ba K emitter naming and table header alignment
+compact top-bar inputs, explicit pile-up wording, a neutral preset name, Ba K emitter naming and table header alignment
 are now visible. No layout was changed in this pass.
 
 | # | Where | Observation | Screenshot |

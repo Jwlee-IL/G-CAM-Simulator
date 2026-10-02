@@ -1,10 +1,10 @@
 """Camera / mask PARALLAX in the fused (gamma-overlay-on-video) display.
 
-The user's real product: 9" LCD at the rear, USB camera at the front overlaying the
-reconstructed gamma image on live video. The camera CANNOT be coaxial with the mask
-(the mask is opaque tungsten facing the scene; nothing can sit on the gamma axis), so
-it was mounted as close as possible -> a fixed lateral baseline b between the gamma
-axis and the camera axis.
+A common display for gamma cameras: an optical camera overlays the reconstructed gamma
+image on live video. The optical camera CANNOT be coaxial with the mask (the mask is
+opaque tungsten facing the scene; nothing can sit on the gamma axis), so it is mounted
+as close as possible -> a fixed lateral baseline b between the gamma axis and the
+camera axis.
 
 Consequence: a point source at distance z is seen along directions that differ by the
 parallax angle  Δθ ≈ b / z  (small angle). The gamma blob lands off the visible source

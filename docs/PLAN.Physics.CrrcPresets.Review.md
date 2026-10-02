@@ -8,9 +8,9 @@ Status: reviewed 2026-10-02 at detached HEAD `cf1d6b7bf764d1ad8523670e68e6338e24
 
 **A common order 4 is historically intentional; a requirement to use one K for every physical preset is not established. The measured low-energy loss is an arithmetic defect for energy measurement, and changing K/order alone does not fix it.** Keep the distinction between a generic shaper demonstration and a validated physical-preset response.
 
-The TODO-20 row correctly identifies the shared constants and reproduces the earlier amplitude result. It does not yet specify a physical shaping-time convention. `IntegrationNs` is explicitly an **effective noise integration window**, not a documented RC pole time or peaking time. Treating it as either without a new decision would introduce a new assumption. Likewise, “CR-RC” in a family name does not establish that the original instrument had one RC stage. The current evidence cannot establish the rig's actual filter order or coefficients.
+The TODO-20 row correctly identifies the shared constants and reproduces the earlier amplitude result. It does not yet specify a physical shaping-time convention. `IntegrationNs` is explicitly an **effective noise integration window**, not a documented RC pole time or peaking time. Treating it as either without a new decision would introduce a new assumption. Likewise, “CR-RC” in a family name does not establish a one-RC-stage topology. The current evidence cannot establish the rig's actual filter order or coefficients.
 
-Recommended decisions: retain order 4 for all three presets unless the author supplies contrary hardware information; introduce an explicit shaping-time specification separate from the DCR noise window; evaluate the common-order candidate below as a simulation convention, and preserve fractional state if low-energy heights are to be useful. Do not adopt the literal-name order-1 candidate as a correction to the original rig: it has no hardware evidence and performs worse in this measurement. Keep the existing legacy golden operating point as a separate regression fixture.
+Recommended decisions: retain order 4 for all three presets unless the author supplies contrary hardware information; introduce an explicit shaping-time specification separate from the DCR noise window; evaluate the common-order candidate below as a simulation convention, and preserve fractional state if low-energy heights are to be useful. Do not adopt the literal-name order-1 candidate as a correction to the 200 ns preset: it has no hardware evidence and performs worse in this measurement. Keep the existing legacy golden operating point as a separate regression fixture.
 
 ## Records and current code
 
@@ -54,7 +54,7 @@ For an explicit comparison convention, define `T_sum = order * tau_stage` and pr
 | Preset | Integration / tail ns | A_Q16 | Current order / K | Common-order candidate order / K / nominal stage ns | Literal-name alternative |
 |---|---|---|---|---|---|
 | Fast CSP + CR-RC^4 | 100 / 150 | 62132 | 4 / 26214 | 4 / 20972 / 25 | same as common-order |
-| CSP + CR-RC (original rig) | 200 / 320 | 63918 | 4 / 26214 | 4 / 10486 / 50 | order 1 / K=2621 / 200 ns |
+| CSP + CR-RC (200 ns) | 200 / 320 | 63918 | 4 / 26214 | 4 / 10486 / 50 | order 1 / K=2621 / 200 ns |
 | Slow shaping (high pileup) | 500 / 800 | 64884 | 4 / 26214 | 4 / 4194 / 125 | order 4 retained; no order in name |
 
 Measured floating pulse peak times after arrival are **80/80/80 ns** currently, **104/200/448 ns** for the common-order candidate, and **128 ns** for the order-1 original alternative. The times include the finite input rise. Historical “order*tau_s” prose is not an exact timing law for this discrete, same-sample recurrence. The slower candidate's longer pulse support is a pile-up cost; it is not validated by this isolated-pulse study.
@@ -136,7 +136,7 @@ The runner currently describes historical “7 tests”, while its code requests
 
 | Decision needed | Recommended disposition |
 |---|---|
-| Is shared order a bug? | No established bug: history shows a common CR-RC⁴ family. Keep it, make it explicit in metadata/name/readout; do not infer rig topology from a shortened name. |
+| Is shared order a bug? | No established bug: history shows a common CR-RC⁴ family. Keep it, make it explicit in metadata/name/readout; do not infer hardware topology from a shortened name. |
 | Is shared K a physical preset specification? | No evidence of that specification. It is an inherited benchmark constant; adopt an explicit shaping-time convention before calling the presets physical shaper responses. |
 | Tie shaping time to IntegrationNs? | Use the measured T_sum convention only as an explicit simulation proposal. Keep DCR effective noise window separate; deriving it from the actual weighting is future physics work. |
 | Fix low-energy state quantisation? | Yes if shaped amplitude/energy is intended. Approve a deliberate fractional-state C#/RTL/Python contract; changing time/order alone fails. Q12 is a measured candidate, not yet an approved minimum or a universal accuracy guarantee. |

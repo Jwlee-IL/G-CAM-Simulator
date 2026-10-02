@@ -137,7 +137,7 @@ public sealed class ListModeSourceTests(ITestOutputHelper output)
         double rateSigma = emission * Math.Sqrt(source.WeightBound * efficiency *
             (1.0 / weighted.PhotonsEmitted + 1.0 / source.HistoriesEmitted));
         Stat.Within(source.RateCps, emission * efficiency, rateSigma, 4, "mixed physical rate");
-        // Unlike the centred lab rig, this stresses rejection: far proposals have ~1/39 of the near weight.
+        // Unlike the centred reference lab geometry, this stresses rejection: far proposals have ~1/39 of the near weight.
         Assert.InRange(source.Acceptance, 0.0, 0.1);
         output.WriteLine($"mixed 160 mm / 1000 mm (activity 1:40): acceptance={source.Acceptance:P4}, max pixel |z|={maxZ:F3} < 5σ; rate={source.RateCps:F3} vs {emission * efficiency:F3} cps, 4σ tolerance={4 * rateSigma:F3}");
     }

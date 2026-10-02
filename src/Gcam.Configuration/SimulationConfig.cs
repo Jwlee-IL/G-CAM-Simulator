@@ -151,7 +151,7 @@ public sealed class MaskConfig
 {
     public string Type { get; set; } = "MURA";
 
-    /// <summary>MURA rank (must be prime). The old rig used 7.</summary>
+    /// <summary>MURA rank (must be prime). The reference geometry uses 7.</summary>
     public int Rank { get; set; } = 7;
 
     /// <summary>Mosaic tiling of the basic pattern.</summary>
@@ -350,7 +350,7 @@ public sealed class DetectorConfig
 /// <summary>Placement of source / mask / detector planes along the optical axis (+z).</summary>
 public sealed class GeometryConfig
 {
-    /// <summary>Mask-to-detector distance in mm (the old rig was ~50–80).</summary>
+    /// <summary>Mask-to-detector distance in mm (the reference geometry uses 60).</summary>
     public double MaskDetectorDistanceMm { get; set; } = 60.0;
 
     /// <summary>Source-to-mask distance in mm (finite = near-field magnification).</summary>

@@ -119,7 +119,7 @@ the spectral lever; it needs a calibrated downscatter / photopeak ratio and know
 | Better energy resolution (CeBr3 / LaBr3, EV-19, EV-17) | price, hygroscopic crystal |
 | Multi-pixel event reconstruction (summing Compton-split events) | already the positioning strategy (PR-NRG-03: ~2× the counts of per-pixel windowing, EV-14); it recovers counts, not the 662 keV window's purity |
 
-This bears directly on UN-03 — the original rig's unsolved Co-60 → Cs-137 problem — which is solved in counts
+This bears directly on UN-03 — the classic Co-60 → Cs-137 downscatter problem of this camera class — which is solved in counts
 (stripping) but only partly in position.
 
 ## LIM-09 — The dose reading holds only frontally
@@ -199,9 +199,13 @@ far beyond the 2.5 kg budget.
   at field stand-off only the field of view (Cs-137, 1 m and 5 m, EV-02) and the dose response (1 m, EV-23) are.
 - The field-of-view and dose studies model the shield's front plate only, no side or rear walls; oblique readings
   are upper bounds.
-- Backgrounds are flat or linearly graded pedestals; real plant backgrounds, room scatter and shielded sources are
-  not simulated.
-- Nothing is compared with recordings of the original instrument, and nothing is measured on hardware.
+- **Ideal environment.** Results without a stated background have **no ambient (natural) background** — only the
+  simulated sources, an ideal detector and known geometry; they are best-case bounds. Where background is studied it
+  is a flat or linearly graded pedestal, or an event stream, whose level is set **relative to the source** (BSR), not
+  an absolute, source-independent ambient field; real plant backgrounds, room scatter and shielded sources are not
+  simulated. What is expected to change under ambient background:
+  [VV.Gcam.Evidence §1](VV.Gcam.Evidence.md#ideal-conditions-and-background).
+- Nothing is compared with recordings of any real instrument, and nothing is measured on hardware.
 - Monte Carlo numbers are spreads over seed ensembles of the simulation, not tolerances; results that use the
   studies' fixed manufactured patterns (mask machining errors, defect maps, gain maps) hold for those patterns, not
   for every manufactured part ([VV.Gcam.Evidence §1](VV.Gcam.Evidence.md#1-the-tools-behind-the-grades)).

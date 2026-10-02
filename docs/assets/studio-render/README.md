@@ -23,7 +23,7 @@ Window chrome is outside this capture.
 
 Imaging shows B1-1 counts chip, B1-2 counts / (decoded) readouts and B1-3 value-positioned round ticks.
 Both workspaces show B1-4 centred 80 × 28 DIP inputs with suffixes. Spectrum shows B1-5 descriptive
-pile-up label, B1-6 original rig, B1-7 10,000 decade, B1-8 separate counts title row and B1-9 neutral
+pile-up label, B1-6 neutral preset name, B1-7 10,000 decade, B1-8 separate counts title row and B1-9 neutral
 bands with visible boundaries. These are review pictures, not automatic pixel baselines.
 Both workspaces also show B2-1 separate Geometry (read-only) and Detector sections, short Background
 and Gain σ labels with `× signal` / `%` suffixes, and B2-3 FCFOV `± 56.9 mm` resolved without a Window

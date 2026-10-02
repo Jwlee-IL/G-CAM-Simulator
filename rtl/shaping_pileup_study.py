@@ -3,7 +3,7 @@ energy, and the shaping (integration-window) length trades resolution against th
 
 Compares, on identical waveforms, two RTL front-ends:
   * baseline  peak_detector.sv          -- measures every pulse's peak, emits it blindly
-                                           (what the real system did -> contaminated at rate)
+                                           (a simple peak detector -> contaminated at rate)
   * fixed     integrating_peak_detector.sv -- integrates charge over `window`, and REJECTS
                                            events where a 2nd pulse lands in the window or the
                                            signal hasn't returned to baseline (tail pile-up)

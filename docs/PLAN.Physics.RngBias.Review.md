@@ -87,8 +87,8 @@ mean over seeds; z is against the stated reference.
 
 | Test | Quantity, N | Reference | Legacy (combined) | xoshiro (combined) |
 |---|---|---|---|---|
-| P1a | lab rig, biased efficiency (source 2 draws + mask 0/1), 2·10⁷ × 12 seeds | legacy − xoshiro | 2.490307e-4 ± 1.4e-8 | 2.490464e-4 ± 1.5e-8; difference −0.006 % (z −0.8) |
-| P1b | lab rig, **4π isotropic** efficiency (EV-07's 4π reference), 10⁹ × 4 seeds | biased value 2.490384e-4 ± 1.0e-8 | −0.040 % ± 0.10 % (z −0.4) | +0.017 % ± 0.10 % (z +0.2) |
+| P1a | reference lab geometry, biased efficiency (source 2 draws + mask 0/1), 2·10⁷ × 12 seeds | legacy − xoshiro | 2.490307e-4 ± 1.4e-8 | 2.490464e-4 ± 1.5e-8; difference −0.006 % (z −0.8) |
+| P1b | reference lab geometry, **4π isotropic** efficiency (EV-07's 4π reference), 10⁹ × 4 seeds | biased value 2.490384e-4 ± 1.0e-8 | −0.040 % ± 0.10 % (z −0.4) | +0.017 % ± 0.10 % (z +0.2) |
 | P2 | `Sampling.Poisson` mean, λ = 0.3 / 2 / 8 / 25 (Knuth) / 50 (Gaussian), 2·10⁷ × 4 | λ | z +0.5 / +1.2 / +0.3 / +0.1 / 0.0 | z +2.6 / +1.7 / +0.9 / +0.5 / +1.0 |
 | P2b | Knuth Poisson, successive samples: var/λ; autocorrelation lags 1–40, λ = 2 / 8 / 10 / 20, 10⁷ × 3 | 1; 0 (σ 3e-4) | var/λ 0.999–1.001; **lags with \|corr\| 0.15–0.55 % (z 5–18)**: λ 2 k16; λ 8 k5, k7, k8; λ 10 k4, k6; λ 20 k2, k3 | var/λ 0.999–1.001; max \|corr\| ≤ 0.10 % |
 | P3 | KN sampler at 662 keV, mean ε, 10⁸ × 4 | quadrature 0.6184407 | **−0.010 % (z −5.6)** | +0.003 % (z +1.5) |
@@ -140,7 +140,7 @@ numeric token of every output line across the 10 runs and computes Welch z = (me
 |---|---|---|---|---|
 | EV-01 centred error | ≈ 0.5 mm | 0.38 ± 0.045 | 0.38 ± 0.045 | unmoved |
 | EV-01 sweep, hand-held (non-cyclic / cyclic of 625) | 360 / 172 | 362.6 ± 2.9 / 175.6 ± 2.9 | 362.4 ± 1.1 / 174.4 ± 0.9 | unmoved |
-| EV-01 sweep, lab rig | 282 / 148 | 279.6 ± 2.5 / 146.2 ± 1.1 | 279.8 ± 4.6 / 145.8 ± 1.3 | unmoved |
+| EV-01 sweep, reference lab geometry | 282 / 148 | 279.6 ± 2.5 / 146.2 ± 1.1 | 279.8 ± 4.6 / 145.8 ± 1.3 | unmoved |
 | EV-02 usable half-field, N0 5000, x, 1 m / 5 m | 7.0° / 7.5° | 7.0 / 7.5 (all seeds) | 7.0 / 7.5 (all seeds) | unmoved |
 | EV-02 N0 500 + BSR 1, 1 m | 4.0° | 4.8 ± 0.45 (4.0 only at 12345) | 5.0 ± 0 | unmoved; published value is the low edge of its seed spread |
 | EV-03 rank 11 / 1 mm / D 30 usable fraction | 0.90 (±21.5 mm) | 0.907 ± 0.007 | 0.904 ± 0.004 | unmoved; sits on the 90 % gate under both |

@@ -84,7 +84,7 @@ a_vals = np.arange(6, 17, 2)        # detector half-size 6..16 mm  -> 12..32 mm 
 D_vals = np.arange(30, 91, 10)      # standoff 30..90 mm
 TC = {"GAGG:Ce,Mg": 15.0, "BGO": 12.0}   # crystal depth: BGO denser -> thinner for same stop
 
-# normalize sensitivity to the reference rig (12 mm det, D60, GAGG 10 mm)
+# normalize sensitivity to the reference geometry (12 mm det, D60, GAGG 10 mm)
 ref = design("GAGG:Ce,Mg", "pixel", 6.0, 60.0, 10.0)
 S0 = ref["sens"]
 
@@ -133,7 +133,7 @@ for cryst in CRYSTALS:
                     alpha=0.6, edgecolors="none",
                     label=f"{cryst} / {arch}")
 ax2.axvline(3.0, ls="--", color="#c0392b", lw=1.2); ax2.text(3.03, 0.5, "3 kg", color="#c0392b", fontsize=9)
-ax2.set_xlabel("total mass (kg)"); ax2.set_ylabel("sensitivity  (× reference rig)")
+ax2.set_xlabel("total mass (kg)"); ax2.set_ylabel("sensitivity  (× reference geometry)")
 ax2.set_title("(2) Sensitivity vs weight\n(bigger detector = more counts AND more shield)")
 ax2.legend(fontsize=7, loc="upper left"); ax2.grid(alpha=0.3)
 

@@ -8,31 +8,35 @@ free of solutions.
 **At a glance**
 - **19 user needs** of three users — a radiation-safety technician, a non-specialist handed the device, and the
   instrument engineer: 14 confirmed, 4 conditional, 1 withdrawn, all reviewed with the author on 2026-10-01.
-- The needs start from the original instrument's problems (§1): moving the isotope by hand, Co-60 read as Cs-137,
-  temperature drift, ghosts.
+- The needs start from known problems of fixed, pixelated-scintillator coded-aperture cameras (§1): moving the
+  isotope by hand, high-energy downscatter read as a lower line, temperature drift, ghosts.
 - Use conditions come from standards, relaxed to the level of the same-class product, iPIX (§4); reference sources
   are real industrial ones — Ir-192 and Co-60 radiography, Cs-137 and Co-60 gauges (§5).
 
+> **What this is.** A personal design exercise by the author, made for this portfolio repository — not any company's
+> product plan or roadmap. The needs, use conditions and decisions come from published standards, published data of
+> same-class products and this simulator's results; no former employer's documents, data or plans were used.
+
 > **Status: reviewed — every need decided on 2026-10-01 (confirmed, conditional or withdrawn); the reasons are in
-> [VV.Gcam.Decisions](VV.Gcam.Decisions.md).** No user study exists. The needs were reconstructed from the problems the
-> author met with the original instrument and from the simulation results behind the concept
+> [VV.Gcam.Decisions](VV.Gcam.Decisions.md).** No user study exists. The needs were reconstructed from the known problems of
+> this camera class (§1) and from the simulation results behind the concept
 > ([VV.Gcam.Evidence](VV.Gcam.Evidence.md)), then reviewed with the author on 2026-10-01. Rows marked *to confirm*
 > were hypotheses until that review. Use-condition values (§4) come from published standards, not from Gcam. Gcam is a
 > simulator and a **design-only** product concept ([PRS §2](VV.Gcam.PRS.md#2-product-concept)); no regulatory claim is made.
 
-## 1. Background: the instrument Gcam recreates
+## 1. Background: the camera class Gcam simulates
 
-The original rig (built in hardware by the author) was fixture-mounted: a rank-7 tungsten MURA mask over a 12 × 12
-crystal array read by Hamamatsu MPPCs, per-pixel LLD / ULD energy windows, a 9-inch rear LCD and a front USB camera
-whose image was overlaid with the source position ([PAPER.ko §9](PAPER.ko.md)). Problems met in use:
+Gcam simulates a fixed, lab-mounted coded-aperture camera: a rank-7 tungsten MURA mask over a 12 × 12 pixelated
+scintillator array read by SiPMs, with the source position overlaid on an optical image. Cameras of this class share
+known problems (coded-aperture and scintillator literature):
 
-| Problem with the original rig | Needs it leads to |
+| Known problem of the camera class | Needs it leads to |
 |---|---|
-| To characterise the camera, the isotope had to be moved by hand | UN-08 (the reason Gcam exists) |
-| Co-60 downscatter landed in the 662 keV window and read as Cs-137 — never solved on the rig | UN-03 |
-| The energy window walked with temperature; the operator had to hold the temperature | UN-06 |
-| Sources outside the coded field of view appeared as ghosts on the opposite side | UN-11, UN-12 |
-| Fixture-mounted with an on-board screen (*inferred* as a limitation for search use) | UN-04, UN-05 |
+| Characterising a camera means moving an isotope by hand across the field | UN-08 (the reason Gcam exists) |
+| Downscatter of a higher-energy line (e.g. Co-60) lands in a lower line's window (e.g. 662 keV) and reads as that isotope | UN-03 |
+| SiPM gain drifts with temperature, so a fixed energy window walks | UN-06 |
+| Cyclic decoding aliases a source outside the coded field of view to a ghost on the opposite side | UN-11, UN-12 |
+| A fixed mount with an on-board screen limits search use (*inferred*) | UN-04, UN-05 |
 
 ## 2. Users
 
@@ -52,11 +56,11 @@ Priority: **M** must, **S** should, **C** could. *Users* refers to §2.
 
 | ID | Need | Users | Prio | Origin | Status |
 |---|---|---|---|---|---|
-| UN-01 | See **where** a gamma source is relative to the visible scene, from where I stand, without walking towards it. | U1, U2 | M | rig use; EV-01 | **confirmed** 2026-10-01 |
+| UN-01 | See **where** a gamma source is relative to the visible scene, from where I stand, without walking towards it. | U1, U2 | M | camera use; EV-01 | **confirmed** 2026-10-01 |
 | UN-11 | Not be shown a source that isn't there, and be told plainly when **no source** is found — checkable on the measured energy histogram (no photopeak above background). | U1, U2 | M | split from UN-01; ghosts (EV-01) | **confirmed** 2026-10-01 |
 | UN-12 | Know when a source is **outside what the device currently sees**, and which way to turn to bring it in. | U1, U2 | M | review 2026-10-01; FCFOV limit | **conditional** 2026-10-01: only after ghosting is solved — a scintillator coded-aperture camera must first not produce ghosts, or an "outside the field" cue cannot be trusted |
 | UN-02 | Know **which radionuclide** each located source is, at least among the radionuclides declared for the site; U2 needs a plain-language category, not a spectrum. | U1, U2 | M | review 2026-10-01 | **confirmed** 2026-10-01 |
-| UN-03 | Get a weaker source's position and strength right even when a stronger, higher-energy source is nearby or at the same place. | U1 | M | rig's unsolved Co-60 → Cs-137 problem | **confirmed** 2026-10-01 |
+| UN-03 | Get a weaker source's position and strength right even when a stronger, higher-energy source is nearby or at the same place. | U1 | M | Co-60 → Cs-137 downscatter (§1) | **confirmed** 2026-10-01 |
 | UN-10 | Know roughly how far away a source is, to plan the approach. | U1 | **M** | depth work (EV-33); author raised the priority 2026-10-01 | **confirmed** 2026-10-01 |
 
 ### Safety
@@ -81,7 +85,7 @@ Priority: **M** must, **S** should, **C** could. *Users* refers to §2.
 
 | ID | Need | Users | Prio | Origin | Status |
 |---|---|---|---|---|---|
-| UN-06 | Keep working across the **temperature and humidity** of nuclear-plant and outdoor use without the user tending it (values §4). | U1, U2 | M | rig's thermal drift; author 2026-10-01 | **confirmed** (direction) 2026-10-01; values from standards |
+| UN-06 | Keep working across the **temperature and humidity** of nuclear-plant and outdoor use without the user tending it (values §4). | U1, U2 | M | SiPM thermal drift (§1); author 2026-10-01 | **confirmed** (direction) 2026-10-01; values from standards |
 | UN-15 | Survive **drops, knocks, rain or spray, dust** and surface decontamination wiping as met in plant use (values §4). | U1, U2 | M | author 2026-10-01 | **confirmed** (direction) 2026-10-01; values from standards |
 
 ### Records and engineering

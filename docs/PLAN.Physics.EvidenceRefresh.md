@@ -14,7 +14,7 @@ no deletions; no machine paths in `samples/evidence/`). Results: Findings 63.
 
 | Where | Quote | Today's seed-12345 output / note |
 |---|---|---|
-| EV-01 / README / Findings | "lab rig **282 vs 148**" of 625 (non-cyclic vs cyclic) | 273 / 144 |
+| EV-01 / README / Findings | "reference lab geometry **282 vs 148**" of 625 (non-cyclic vs cyclic) | 273 / 144 |
 | EV-01 | ghost position "12 mm → −6.6 mm" | differs (survey) |
 | EV-25 / `samples/plot_shield.py` | "~8 mm W", "~20 mm", "Co-60 ~30 mm (~11 kg)"; plot annotations "~6 mm W", "floor 0.34 mm" | 8 / 20 / 25 mm at seed 12345; picks spread over seeds (8 mm 16/20, 20 mm 15/20, 30 mm 6/20); `shield.csv` predated theme 52 |
 | EV-32 | floor "0.60 → 0.68 mm" | differs (survey) |

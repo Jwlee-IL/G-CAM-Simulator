@@ -8,7 +8,7 @@ namespace Gcam.Tests;
 /// <summary>
 /// Thermal drift during acquisition: the SiPM gain temperature coefficient walks the photopeak out of the
 /// fixed per-crystal window (efficiency droop) and, via the self-heating spatial gradient, leaves a flood-
-/// correction residual — while bias-compensation recovers both. Confirms the real-rig fact that drift is an
+/// correction residual — while bias-compensation recovers both. Confirms the physical fact that drift is an
 /// energy-window (efficiency) problem, not a localization one.
 /// </summary>
 public class ThermalDriftTests

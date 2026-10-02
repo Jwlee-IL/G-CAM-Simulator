@@ -3,7 +3,7 @@ using Gcam.Core;
 namespace Gcam.Detector;
 
 /// <summary>
-/// Pixelated scintillator crystal array (the old rig read out a 12×12 flood map),
+/// Pixelated scintillator crystal array (a typical lab setup reads out a 12×12 flood map),
 /// sitting on the plane z = <see cref="PlaneZ"/> and centered on the optical axis.
 /// </summary>
 public sealed class CrystalDetector : IDetector

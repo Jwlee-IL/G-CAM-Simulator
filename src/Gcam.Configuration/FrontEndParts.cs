@@ -45,7 +45,7 @@ public static class FrontEndParts
     [
         // T_sum values are a simulation convention, explicitly separate from the DCR integration window.
         new("Fast CSP + CR-RC^4",        100.0, 150.0, true, CrrcShapingTimeNs: 100.0),
-        new("CSP + CR-RC (original rig)",    200.0, 320.0, true, CrrcShapingTimeNs: 200.0),
+        new("CSP + CR-RC (200 ns)",    200.0, 320.0, true, CrrcShapingTimeNs: 200.0),
         new("Slow shaping (high pileup)", 500.0, 800.0, true, CrrcShapingTimeNs: 500.0),
         new("Trapezoid DAQ",             200.0, 320.0, false),
     ];

@@ -36,11 +36,11 @@ Neither choice is obviously right; this needs a decision backed by measurement.
 | W-6 | Readout from the chain: N_pe(662), FWHM at 662 keV, rise / tail (ns), shaper type, resolving time; flat-top amplitude of the selected pulse vs its deposit. | proposed — *verify* each number's source function |
 | W-7 | Trace length bounded by the plot's 10 M-sample cap (≈ 80 ms at 125 MSPS) with a visible note when a window is clipped. | proposed |
 
-## The original rig's readout (author, 2026-10-02)
+## Reference readout: four-channel Anger (2026-10-02)
 
-- Scintillator pixels were ordered to match the SiPM array **1:1**, with a **dead region between pixels**
+- Scintillator pixels are ordered to match the SiPM array **1:1**, with a **dead region between pixels**
   (reflector / kerf — Studio's `ReflectorGapMm`).
-- The array was read through **four 14-bit ADC channels**; the event position came from the **relative-signal
+- The array is read through **four 14-bit ADC channels**; the event position comes from the **relative-signal
   (Anger-type charge-division) formula**, the crystal from the flood map.
 
 Consequences checked against the code: every pixel feeds the same four ADCs, so pulse pile-up is **array-wide** (the
@@ -55,8 +55,8 @@ four-channel charge-division model — that is TODO-19, outside this plan.
 |---|---|---|
 | D-1 | **One chain setting, captured at Start and carried by the snapshot**; Measurement, Spectrum (bands, resolving time, label), Imaging (windows, H-only calibration) and Waveform read the **acquired** chain; a pending selection is shown separately. Caches key on the acquisition. | review W-1 |
 | D-2 | A chain change **marks the acquisition stale** and is disabled while acquiring (provenance policy, consistent with gain σ / I-2). | review W-2 (the planner's "impossible" argument corrected: it is a policy) |
-| D-3 | **Scintillator selection maps to a transport material** through an explicit table: GAGG(Ce)→GAGG, NaI(Tl)→NaI, LYSO→LYSO, BGO→BGO. **CsI(Tl) is not offered** (no transport cross sections); a name with no material is an error, never a silent GAGG fallback. A scintillator change needs a new acquisition. | review N-2; checked: `CrystalMaterial.ForConfig` falls back to GAGG for unknown names. **Author (2026-10-02): the rig used GAGG, so GAGG stays the default; the other scintillators exist for what-if comparison** — CsI returns once it has transport data (TODO-21) |
-| D-4 | **Channel model = the rig's array-wide channel**: Waveform shows the **summed (energy) channel** of the four ADCs, pulses from every pixel on one trace; Spectrum keeps its array-wide pile-up. The four position channels and pile-up mispositioning arrive with TODO-19. | author; review N-1 |
+| D-3 | **Scintillator selection maps to a transport material** through an explicit table: GAGG(Ce)→GAGG, NaI(Tl)→NaI, LYSO→LYSO, BGO→BGO. **CsI(Tl) is not offered** (no transport cross sections); a name with no material is an error, never a silent GAGG fallback. A scintillator change needs a new acquisition. | review N-2; checked: `CrystalMaterial.ForConfig` falls back to GAGG for unknown names. **Author (2026-10-02): GAGG is the reference crystal, so GAGG stays the default; the other scintillators exist for what-if comparison** — CsI returns once it has transport data (TODO-21) |
+| D-4 | **Channel model = the array-wide channel of a four-ADC Anger readout**: Waveform shows the **summed (energy) channel** of the four ADCs, pulses from every pixel on one trace; Spectrum keeps its array-wide pile-up. The four position channels and pile-up mispositioning arrive with TODO-19. | author; review N-1 |
 | D-5 | **Default view: real time base, 10 µs window triggered on a selected acquired event** (latest / next / index), with pretrigger, event markers (index, pixel, deposit, time); wider windows allowed up to the cap. | review W-3: default scene 72.8 cps, 10 µs window >1 pulse 0.07 % |
 | D-6 | **Rate study** as a separate, labelled Waveform-only mode ("arrivals re-spaced at N kcps — not the measured rate"), fixed seed, from retained deposits in order; never changes counts, live time, Spectrum, Imaging or stale state. | review W-4: 50 kcps 2–9 % distorted pairs, 1 Mcps 35–74 % |
 | D-7 | **Amplitude contract**: each event's amplitude is measured once (gain + chain response, the shared measurement stage); the rasteriser adds no second intrinsic smear (`intrinsicFwhm = 0`); the trace is labelled an ADC simulation whose shaped heights are not the analytic MCA spectrum. | review N-3 (double smearing found) |
@@ -65,7 +65,7 @@ four-channel charge-division model — that is TODO-19, outside this plan.
 | D-10 | **Window engineering**: origin-relative sample arithmetic (checked), requested length independent of the last event, empty windows show noise, warm-up includes preceding pulses within their support and shaper history; generate only when visible and when selection / window / chain changes; cancel stale work; 10 M samples is an allocation cap, not a 4 Hz promise. | review W-7, N-4, cost table |
 | D-11 | Shapers are the existing integer `CrrcInt` / `TrapShape` (RTL bit-exact for the selected coefficients: 0 mismatches over 16 384 samples against the unchanged RTL in Icarus); no floating re-implementation. | review RTL section |
 
-**Separate findings (not in TODO-10):** TODO-19 the rig's four-channel Anger readout; TODO-20 the CR-RC presets
+**Separate findings (not in TODO-10):** TODO-19 a conventional four-channel Anger readout; TODO-20 the CR-RC presets
 share one filter constant and leave a 32 keV pulse at 0–1 shaped codes.
 
 ## Steps
