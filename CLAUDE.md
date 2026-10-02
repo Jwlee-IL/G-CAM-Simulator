@@ -10,8 +10,8 @@ Architecture + build/run is in `@AGENTS.md` above; per-theme quantitative result
 
 ## What this is
 **Gcam** — a personal C#/.NET 9 Monte Carlo simulator for **coded-aperture gamma-source
-localization** (Cs-137 + multi-isotope), recreating a real coded-aperture instrument the
-author previously built in hardware: rank-7 tungsten MURA mask (2×2 mosaic, ~10 mm) → 12×12
+localization** (Cs-137 + multi-isotope), modelling a fixed, lab-mounted coded-aperture camera
+of the class the author has hands-on experience with: rank-7 tungsten MURA mask (2×2 mosaic, ~10 mm) → 12×12
 crystal flood map → ADC peak detection → cross-correlation decode. 59 themes of work;
 `Gcam.sln`, CLI `montecarlo <sub>` (41 study sub-commands), GCAM Studio (the WPF viewer; the legacy Gcam.Wpf was removed in TODO-12 (2026-10-02); last present at `85b2ed1`), and a SystemVerilog +
 cocotb RTL front-end path.
@@ -20,12 +20,12 @@ cocotb RTL front-end path.
 - **Isotope scope:** core Cs-137 / Co-60 / Co-57, plus Ir-192 as the industrial reference source (theme 51; no
   cascade model) (122→1332 keV, cascade sum, low line under
   high-E Compton).
-- **The original rig's readout (author, 2026-10-02):** scintillator pixels ordered to match the SiPM array 1:1, with
-  dead regions between pixels; the array read through **four 14-bit ADC channels**, position from the relative-signal
-  (Anger-type) formula, crystal from the flood map. So pile-up is array-wide and moves the position too; the engine
+- **Reference readout (author, 2026-10-02):** the conventional design — scintillator pixels matched to the SiPM array
+  1:1, with dead regions between pixels; the array read through **four 14-bit ADC channels**, position from the
+  relative-signal (Anger-type) formula, crystal from the flood map. So pile-up is array-wide and moves the position too; the engine
   does not model this readout yet (TODO-19).
-  The rig's scintillator was **GAGG** — GAGG is the engine default by design; the other scintillators are what-if comparisons.
-- **The real rig's long-unsolved problem** was 662-keV window contamination — Co-60 downscatter
+  The reference scintillator is **GAGG** — GAGG is the engine default by design; the other scintillators are what-if comparisons.
+- **The classic problem of this camera class** is 662-keV window contamination — Co-60 downscatter
   reading as Cs. Gcam's crystal-Compton **spectral** lever (per-pixel stripping, themes 16–17, 26) recovers
   the Cs count; the **spatial** lever holds only up to Co:Cs ≈ 2:1 once the crystal uses physical GAGG cross
   sections (theme 52 — the earlier, stronger result rested on an over-absorbing crystal model).
@@ -62,7 +62,11 @@ cocotb RTL front-end path.
   (Findings 57–61). Open (see `docs/AGENTS.Todo.md`, each with its PLAN and review in `docs/`):
   - **TODO-27** evidence refresh — **done 2026-10-02** (Findings 63; 12 author decisions ER-1…12 in the plan; MC quotes now
     carry seed spreads; driver and aggregates in `samples/evidence/`). Open question: PR-SENS-02's "~50 counts" gate.
-  - **TODO-29** clean-room wording pass — decided (`PLAN.Docs.CleanRoom.md`); the planner does it directly (doc work).
+  - **TODO-29** clean-room wording pass — **done 2026-10-02** (`PLAN.Docs.CleanRoom.md`); README desktop screenshot still
+    shows the old preset label "(original rig)" → retake on the author's go.
+  - **TODO-30** absolute ambient background — reference plan (`PLAN.Physics.AmbientBackground.md`); **every MC result so
+    far is ideal-environment** (no ambient background, or background relative to the source). Codex turn 1 on the
+    author's go.
   - **TODO-19** Anger-type SiPM readout — review done (`PLAN.Physics.RigReadout.Review.md`); next: decisions after review.
   - **TODO-25** joint depth likelihood — reviewed (Findings 62): beats the sharpest plane at 60 s; gate "not yet"
     (10 s wrong-maximum rate, count-scaled model budget, model mismatch still open).
