@@ -9,15 +9,27 @@ on:
 jobs:
   dotnet:
     name: .NET build + tests
-    # The WPF viewers (Gcam.Wpf, Gcam.Studio) and the UI-oracle tests target net9.0-windows.
+    # The WPF viewer (Gcam.Studio) and the UI-oracle tests target net9.0-windows.
     runs-on: windows-latest
+    outputs:
+      warnings: ${{ steps.warnings.outputs.count }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 9.0.x
       - name: Build
-        run: dotnet build Gcam.sln -c Release
+        # A warnings-only file log feeds the "build warnings" badge; warnings never fail the build.
+        run: dotnet build Gcam.sln -c Release "-flp:warningsonly;logfile=build-warnings.log"
+      - name: Count build warnings
+        id: warnings
+        shell: pwsh
+        run: |
+          $lines = if (Test-Path build-warnings.log) { Get-Content build-warnings.log | Where-Object { $_ -match ': warning ' } } else { @() }
+          $count = @($lines | Sort-Object -Unique).Count
+          "count=$count" >> $env:GITHUB_OUTPUT
+          "Build warnings (unique): $count" >> $env:GITHUB_STEP_SUMMARY
+          $lines | Sort-Object -Unique | ForEach-Object { "- ``$_``" } >> $env:GITHUB_STEP_SUMMARY
       - name: Test
         # Engine physics invariants, Studio ViewModels and UI oracles. The desktop UI scenarios
         # skip themselves unless GCAM_UI_TESTS=1 (they need an interactive session).
@@ -26,7 +38,7 @@ jobs:
         if: always()
         shell: pwsh
         run: |
-          "The 7 desktop UI scenarios (tests/Gcam.Studio.UiTests) need an interactive session and are SKIPPED here," >> $env:GITHUB_STEP_SUMMARY
+          "The 14 desktop UI tests (tests/Gcam.Studio.UiTests: 12 scenarios, the plot gate, the survey) need an interactive session and are SKIPPED here," >> $env:GITHUB_STEP_SUMMARY
           "not passed. Run them locally with GCAM_UI_TESTS=1 (docs/AGENTS.UiAutomation.md)." >> $env:GITHUB_STEP_SUMMARY
 
   rtl:
@@ -44,3 +56,26 @@ jobs:
           pip install cocotb==2.0.1
       - name: Run cocotb (RTL vs the integer reference shared with the C# Waveform)
         run: python rtl/run_cocotb.py
+
+  badges:
+    name: Publish badges
+    # Writes a shields.io endpoint JSON to the 'badges' branch; only for pushes to MainRoot.
+    needs: dotnet
+    if: github.event_name == 'push' && github.ref == 'refs/heads/MainRoot'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Publish the build-warnings badge
+        env:
+          COUNT: ${{ needs.dotnet.outputs.warnings }}
+          GH_REPO: ${{ github.repository }}
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          color=brightgreen; [ "$COUNT" != "0" ] && color=yellow
+          mkdir badges && cd badges
+          git init -q -b badges
+          printf '{"schemaVersion":1,"label":"build warnings","message":"%s","color":"%s"}\n' "$COUNT" "$color" > warnings.json
+          git -c user.name=github-actions -c user.email=github-actions@users.noreply.github.com add warnings.json
+          git -c user.name=github-actions -c user.email=github-actions@users.noreply.github.com commit -q -m "badges: build warnings $COUNT"
+          git push -q --force "https://x-access-token:${TOKEN}@github.com/${GH_REPO}.git" badges

@@ -6,8 +6,9 @@ read further. Every statement here is backed by a row in one of the documents li
 
 ## What this is
 
-Gcam is a Monte Carlo simulator of a coded-aperture gamma camera, rebuilt in software from an instrument the author
-worked on in industry. The V&V set asks *if this camera were made into a hand-held product, what would it have to
+Gcam is a Monte Carlo simulator of a scintillator coded-aperture gamma camera — a clean-room personal
+reimplementation that contains no former-employer source code, measurement data, proprietary schematics or
+confidential materials. The V&V set asks *if this camera were made into a hand-held product, what would it have to
 do, and how much of that can the simulator already show?* It is organised the way a regulated product's
 requirement set is — user needs, product requirements, evidence, limitations and decisions, each traceable to the
 next — but it is a **design study**: nothing is being built, nothing is measured on hardware, and no regulatory claim
