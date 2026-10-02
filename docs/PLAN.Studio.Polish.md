@@ -54,8 +54,10 @@ Fixes:
 
 ## Later batches (after the workspaces exist)
 
-- Seen in the TODO-10 renders: the chain combo boxes show the preset record text (`ScintPreset { Name = … }`)
-  instead of the part name — a bug; rate-study event labels pile on top of each other (reuse the band-label layout);
+- Seen in the TODO-10 renders: ~~the chain combo boxes show the preset record text (`ScintPreset { Name = … }`)
+  instead of the part name~~ (fixed in TODO-11: the ComboBox template ignored `DisplayMemberPath`); ~~rate-study event
+  labels pile on top of each other~~ (fixed in TODO-11: plot marker labels use the band-label layout — re-check the
+  Waveform renders: no longer on top of each other, but the plated labels now hide the tops of tall pulses — move them above the trace or thin them);
   the "Outdated" chip touches the panel title; the collapsed optics summary is cut ("30×30 @ 0.6…").
 
 - Workspace layout: the left panel scrolls at 1280 × 800 since the Detector section was added (compact or

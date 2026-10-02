@@ -17,7 +17,8 @@ Status: in progress (2026-10-01).
 | 4b | TODO-16 UI polish, batch 1 (design-system level) | [PLAN.Studio.Polish](PLAN.Studio.Polish.md) | batch 1 done |
 | 5 | TODO-09 editable optics + presets | [PLAN.Studio.Optics](PLAN.Studio.Optics.md) | **done** 2026-10-02 |
 | 6 | TODO-10 Waveform workspace, front-end chain selection | [PLAN.Studio.Waveform](PLAN.Studio.Waveform.md) | **done** 2026-10-02 |
-| 7 | TODO-11 Detector workspace, depth (3D) / rangefinder | — | open |
+| 7 | TODO-11 Detector workspace, depth (3D) / rangefinder | [PLAN.Studio.Detector](PLAN.Studio.Detector.md) | **done** 2026-10-02 |
+| 7a | TODO-19 the rig's readout (Anger, SiPM pitch, crosstalk) — moved before the deletion, author 2026-10-02 | — | open |
 | 8 | TODO-12 delete `Gcam.Wpf`, README screenshot | — | open (last) |
 
 **Order of polish and testing (author, 2026-10-01).** UI polish is the focus; **desktop UI tests run last**, once

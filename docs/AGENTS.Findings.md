@@ -1050,6 +1050,8 @@ or the user (who built the real rig).
   per-crystal gain (colour) + reflector gaps (dark). SiPM↔crystal is modelled 1:1 (each crystal = a readout channel;
   the SiPM's light budget is lumped into `FrontEndModel`, not a separate spatial matrix) — the right choice for a
   pixelated coded-aperture camera with per-crystal LLD/ULD (light-sharing/Anger would fight that windowing).
+  *Correction (2026-10-02):* the author's rig did use Anger-type positioning (four 14-bit ADCs, crystal from the flood
+  map), so the per-crystal readout is the engine's simplification, not the rig's choice — TODO-19.
 - **Codex parallel cross-verification** (4 topics, `33b79c7..`): core physics all confirmed; fixed backing back-scatter
   re-entry (actual back-face crossing, not the overshoot; respect the reflector gap; require the scattered photon to
   survive escaping the backing) and a couple of display/clamp nits.
@@ -1066,6 +1068,9 @@ or the user (who built the real rig).
   independent. **Reflector MATERIAL** (ceramic — the real rig — vs 3M ESR / PTFE / BaSO₄ / TiO₂, reflectance ~90–99%)
   is deliberately NOT modelled: it enters only as a second-order tuning of λ (reflectance) and of whether gap-entering
   gammas are fully lost vs partly transmitted/scattered (Z/density) — not a first-order factor for the localization.
+  *Scope (2026-10-02, theme 56):* the optimum and the efficiency numbers hold for the per-crystal windowed readout
+  (`PerPixelWindow`) only. On Studio's list-mode path (total deposit, arg-max position) crosstalk changes nothing; under
+  the rig's Anger readout leaked light reaches the same four channels and moves the position, not the energy — TODO-19.
 - **SiPM readout pitch / crystal↔SiPM matching** (Detector-tab "SiPM pitch"): = crystal pitch is 1:1; > crystal pitch
   is light-sharing (one SiPM reads a block of crystals), modelled by AVERAGING each SiPM block of the flood before the
   decoder — sub-block position is lost, so the flood is read at the SiPM granularity (Detector tab overlays the SiPM
@@ -1075,6 +1080,9 @@ or the user (who built the real rig).
   3 mm MPPC over a big block — which is why the 0.6 mm-crystal / 3 mm-MPPC lump is only a datasheet convenience, not a
   buildable 1:1. (The blockify is the no-Anger worst case; Anger centroiding could recover some sub-SiPM position but
   needs a light-spread model — not done.) SiPM is otherwise 1:1 implicit, its light budget lumped in `FrontEndModel`.
+  *Correction (2026-10-02):* the block average is not a light-sharing model — a light-sharing detector identifies crystals
+  from the flood map through Anger logic — so the 2.4 / 4.8 mm breakdown is an upper bound on the damage, not a
+  prediction. Not carried into GCAM Studio; SiPM pitch, light spread and crystal identification are TODO-19.
 
 ## 36. Thermal drift DURING an acquisition + flood-field correction — `ThermalDrift` / `ThermalDriftStudy` / `montecarlo thermal`
 First of the "physical realism gaps" queue (Codex gap-review). The real rig's headache: SiPM cooling. We modelled
@@ -1754,3 +1762,29 @@ up as a position-dependent bias, and it explains Studio anomaly AN-11. Consequen
 judged at the working focal plane. Reproduce: a throwaway program on `SceneConfigBuilder` + `SimulationRunner`
 (sweep in `VV.Studio.Imaging`, "Localisation bias"); a regression test is to come with TODO-09.
 
+
+## 56. Detector gap, crosstalk and depth from focus on Studio's list-mode path (2026-10-02)
+
+Measured for TODO-11 ([PLAN.Studio.Detector](PLAN.Studio.Detector.md), "Measurements by the planner") on Studio's own
+path — `SimulationService.BuildConfig` → `ListModeSource` → `MeasurementStage` — at the default optics (rank 13, 0.7 mm,
+D 80 mm, 30 × 0.6 mm), GAGG chain (FWHM 30.2 keV at 662), Cs-137 500 µCi, window 662 ± 1.5 FWHM.
+
+- **Reflector gap = dead area.** Count rate at 1 m relative to no gap: 0.702 at 100 µm, 0.450 at 200 µm, against the
+  area fraction ((p−g)/p)² = 0.694 / 0.444 (3 seeds × 60 s). The 662-window fraction stays 0.30.
+  The opt-in evidence test (8 + 4 seeds, tolerance 4·s·√(1+1/8) from the measured spread) gives 0.6943 ± 0.0167 (s)
+  at 100 µm and 0.4555 ± 0.0152 at 200 µm: the 200 µm ratio sits ~2 standard errors above the area fraction (the
+  probe's 0.450 agrees in sign). Small, not significant at the test's bound; if real, a mechanism lets a few photons
+  that enter a wider gap still count (e.g. scatter back into a crystal) — not investigated.
+- **Optical crosstalk does nothing on this path.** Contact 0 / 0.4 / 0.9 give the same rate and window fraction: the
+  list-mode sink records the total deposit before the light spread and positions by the arg-max site. Theme 35's
+  crosstalk-vs-gap optimum belongs to a per-crystal windowed readout (`PerPixelWindow`), not to the rig's Anger readout,
+  where leaked light reaches the same four channels and moves the position instead → TODO-19.
+- **Depth from focus is near-field and biased.** Peak prominence vs decoder plane on the retained flood (5 seeds,
+  10 / 60 s): at 300 and 500 mm the sharpest plane is reproducible (seed spread ≤ 20 mm at 60 s) but off by
+  +60 / +80 mm on axis and −20 / −40 mm at 30 mrad (−140 mm at 700 mm, 30 mrad); half-max interval 230–380 mm at
+  300 mm, 350–730 mm at 500 mm. From ~700 mm the interval reaches the far sweep edge (a lower bound only); at 2 m the
+  curve is nearly flat (best plane 890–2900 mm across seeds). The lateral dependence of the bias resembles theme 55's
+  undersampling (1.27 pixels per shadow cell at 1 m); cause not established → TODO-23. Studio therefore shows the focus
+  curve and its interval, labelled "sharpest plane", never a bare distance.
+- Reproduce: a throwaway probe on the path above (sources on axis and at 30 mrad, planes 110–3000 mm in 30 steps and
+  150–950 mm in 10 mm steps); the gap ratio becomes an opt-in evidence test with TODO-11.

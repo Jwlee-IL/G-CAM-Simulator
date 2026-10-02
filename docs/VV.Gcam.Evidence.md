@@ -461,7 +461,9 @@ Geometries used below:
   200 → 214 mm, with the depth resolution widening from ~50 mm at 40 mm to ~240 mm beyond 150 mm. With noise the near
   field converges to sub-mm, the far field floors at ~10 mm (S = 150 mm). Lateral position stays at ~mm while depth is
   uncertain. Depth resolution worsens about as z^1.5; for an 18 mm mask the ±10 % range reaches only ~0.15 m — a
-  coded aperture gives direction, a rangefinder gives distance.
+  coded aperture gives direction, a rangefinder gives distance. At the viewer's default optics (rank 13, 0.7 mm cell,
+  D = 80 mm) the sharpest-plane estimate is reproducible near (300–500 mm) but biased by +60…+80 mm on axis and
+  −20…−140 mm off axis, and from ~700 mm only a lower bound is measured (2026-10-02; cause open).
 - **Reproduce.** `montecarlo depth`, `depth-joint`, `depth3d`, `depthdesign`, each with `samples/scenario.json` →
   `samples/depth_estimation.png`, `depth_joint.png`, `depth3d.png`.
 - **Tests.** `DepthTests`, `DepthDesignTests`, `RangeLocalizationTests`.
@@ -472,6 +474,7 @@ Numbers above are from the current engine. Changes that moved earlier results:
 
 | Date | Change | Effect on the evidence |
 |---|---|---|
+| 2026-10-02 | Depth from focus measured on the viewer's list-mode path at its default optics (1 m standoff) | EV-33 extended: near-field estimate reproducible but biased by tens of mm, far field a lower bound only; earlier near-field figures unchanged |
 | 2026-10-02 | Configuration scan re-run with the engine in git (10 mm ray-marched tungsten slab); the earlier figures predated the slab model | EV-03: the max-FOV pick changes from rank 23 / 1 mm / D 20 ("±64 mm, 96 %", not reproducible: 0.149) to rank 11 / 1 mm / D 30 (±21.5 mm, 90 %); "~7×" becomes ~2.5×; high ranks collapse at short D by collimation. |
 | 2026-10-01 | Crystal attenuation and photoelectric share taken from tabulated cross sections per material, replacing one 662 keV μ and one power law for every crystal (which absorbed too much, too photoelectrically) | EV-14: per-pixel window 24 → 6 % of ideal counts; EV-15: Co-60 share of the 662 keV window 22 → 55 %, Cs-137 lost from Co × 4 (was shown at × 8); EV-09: hand-held efficiency 2.65 → 2.48 × 10⁻⁴; EV-19: same ranking, lower values. All PRS numbers were re-measured on the new model. |
 | 2026-10-01 | Ir-192 added; tungsten μ(E) points at 200–600 keV | EV-20; earlier lines unchanged |

@@ -227,7 +227,8 @@ The full, theme-organized results log with reproduce commands and artifacts is i
   isotope's downscatter from a lower line's window and recovers the Cs count (the real rig's Co-60-reads-as-Cs
   problem); spatial separation alone holds only up to Co:Cs ≈ 2:1 with physical GAGG cross sections (theme 52).
 - **Depth (18–24, 34)**: z is recoverable via near-field magnification + depth-from-focus, but
-  weak far (∝z²); 3D range extends by rank, not cell pitch. WPF fuses it with a rangefinder input.
+  weak far (∝z²); 3D range extends by rank, not cell pitch. At Studio's 1 m geometry the focus sweep is near-field only
+  and biased by tens of mm (theme 56); Studio shows the focus curve beside an external range, without a fusion verdict.
 - **MLEM (48)**: Poisson-likelihood reconstruction is non-negative and resolves 2–3 mm source
   pairs that cross-correlation's ±1 sidelobes merge — the main reconstruction upgrade over peak-pick.
 - **Physical-realism gaps (36–50)**: thermal drift is an energy-window (not position) issue;

@@ -179,6 +179,11 @@ TILT (pitch/yaw), mask WARPING.
   headless-verified and rendered offscreen; their desktop checks are collected in TODO-22 —
   [PLAN.Studio.Spectrum](PLAN.Studio.Spectrum.md), [PLAN.Studio.LiveAcquisition](PLAN.Studio.LiveAcquisition.md),
   [PLAN.Studio.SpectrumPlot](PLAN.Studio.SpectrumPlot.md).
+- **TODO-11 Detector workspace, focus sweep, external range** (2026-10-02): reference plan → Codex review (code only;
+  sandbox refused processes) → planner's measurements (gap = dead area; crosstalk a no-op on the list-mode path; depth
+  from focus near-field and biased — Findings 56) → SiPM pitch and crosstalk moved to TODO-19 (author) → implementation
+  by Codex, finished by a substitute Claude subagent when Codex's credits ran out — [PLAN.Studio.Detector](PLAN.Studio.Detector.md);
+  follow-up TODO-23.
 - **TODO-10 Waveform workspace and shared chain** (2026-10-02): reference plan → Codex review (time base 72.8 cps,
   RTL bit-exact for the selected chains, double smearing, CsI fallback) → the author's rig readout (four ADCs, Anger) →
   implementation — [PLAN.Studio.Waveform](PLAN.Studio.Waveform.md); follow-ups TODO-19/20/21.
