@@ -144,7 +144,7 @@ Enforcement: **C** compiler / build · **T** automated test · **R** review agai
 | Desktop UI tests, the desktop survey and README screenshots run last, once the screens are final; per step use headless tests and offscreen renders. | Running them per step re-collected the same remarks on screens still changing. | `PLAN.Studio.Migration`, `AGENTS.Planning` | R |
 | Design first: discuss options with a recommendation before coding, then build one clean pass and show a visual. | *Not stated in the source.* Proposed: choices are cheaper to change in discussion than in code, and a plot or map exposes a wrong result faster than a number. | `CLAUDE.md` | R |
 | Answer the author in Korean; public docs stay in English. | The author's working language; the docs are public. | `CLAUDE.md`, `AGENTS.Conventions.Docs` | R |
-| The original WPF viewer (`Gcam.Wpf`) is verified by building it. | It can't be GUI-tested headless; GCAM Studio is driven through UI Automation instead. | `CLAUDE.md` | C |
+| The WPF viewer is verified by building it (`src/Gcam.Studio`; the original `Gcam.Wpf` was removed in TODO-12 (2026-10-02); last present at `85b2ed1`). | It can't be GUI-tested headless; GCAM Studio is driven through UI Automation instead. | `CLAUDE.md` | C |
 
 ## Requirements, V&V and decisions
 

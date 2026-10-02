@@ -1,7 +1,7 @@
 # AGENTS.Studio — working on GCAM Studio (the MVVM viewer)
 
 Scope: entry point for anyone changing `src/Gcam.Studio*` or `tests/Gcam.Studio*`. GCAM Studio is the
-current MVVM WPF viewer; `src/Gcam.Wpf` is the original code-behind app, retained until TODO-12.
+MVVM WPF viewer; the original code-behind app `src/Gcam.Wpf` was removed in TODO-12 (2026-10-02); last present at `85b2ed1`.
 
 ## Read first
 

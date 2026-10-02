@@ -16,7 +16,7 @@ Status: **reference plan, draft** 2026-10-02 — **needs the author's rig detail
 | Other strategies | `ComptonStrategy` {PerPixelWindow, AntiCoincidence, …, Centroid} | `Centroid` positions a multi-site history at its energy centroid — the closest existing analogue of light-centroid positioning, but on deposits, not light |
 | Light budget | `FrontEndModel` | N_pe = light yield · E · collection · PDE; resolution from ENF, DCR, intrinsic floor — **one lumped channel**, no spatial light distribution |
 | Crosstalk | `ComptonCrystalDetector.ApplyOpticalCrosstalk` | redistributes deposits to 4 neighbours (contact × exp(−gap/40 µm)); on the list-mode path a no-op for energy and nearly so for position (Findings 56); inconsistent (energy before, position after the spread) |
-| SiPM pitch | `Gcam.Wpf` only (`BlockifyFlood`) | block average of the flood — not a light-sharing model; not carried into Studio |
+| SiPM pitch | the deleted `Gcam.Wpf` only (`BlockifyFlood`, at commit `85b2ed1`) | block average of the flood — not a light-sharing model; not carried into Studio |
 | Pile-up | `EventStreamStudy.ResolvingSamples`, Studio spectrum | array-wide in time and energy; **position of piled-up pulses not modelled** |
 | Waveform | `WaveformService` | the summed energy channel only; "four position channels are not modelled" is stated in the UI |
 

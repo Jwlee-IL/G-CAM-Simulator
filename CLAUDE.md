@@ -13,7 +13,7 @@ Architecture + build/run is in `@AGENTS.md` above; per-theme quantitative result
 localization** (Cs-137 + multi-isotope), recreating a real coded-aperture instrument the
 author previously built in hardware: rank-7 tungsten MURA mask (2×2 mosaic, ~10 mm) → 12×12
 crystal flood map → ADC peak detection → cross-correlation decode. 59 themes of work;
-`Gcam.sln`, CLI `montecarlo <sub>` (41 study sub-commands), GCAM Studio (the current WPF viewer; Gcam.Wpf retained until TODO-12), and a SystemVerilog +
+`Gcam.sln`, CLI `montecarlo <sub>` (41 study sub-commands), GCAM Studio (the WPF viewer; the legacy Gcam.Wpf was removed in TODO-12 (2026-10-02); last present at `85b2ed1`), and a SystemVerilog +
 cocotb RTL front-end path.
 
 ## Key decisions / context (not derivable from the code or git history)
@@ -76,6 +76,7 @@ On a new computer, find the local equivalents (and update this section, or keep 
   (`rtl/vivado_trap.tcl` ready for exact Artix-7 Fmax whenever available).
 - **codex exec (cross-verification):** run FOREGROUND with `< /dev/null`, read-only (`-s read-only --skip-git-repo-check`),
   ONE topic per call.
-- **WPF** can't be GUI-tested headless — verify it *compiles* (build `src/Gcam.Wpf`).
+- **WPF** can't be GUI-tested headless — verify it *compiles* (build `src/Gcam.Studio`; the legacy `src/Gcam.Wpf` was
+  removed in TODO-12 (2026-10-02); last present at `85b2ed1`).
   GCAM Studio (`src/Gcam.Studio`) is driven through UI Automation instead — see
   `docs/AGENTS.Studio.md` ("Verifying a UI change").

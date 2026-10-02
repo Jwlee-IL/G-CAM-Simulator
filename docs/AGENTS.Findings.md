@@ -968,6 +968,8 @@ K = 1/τ_s in Q16, each stage feeding the next same sample) → a Gamma-shaped s
   trapezoid + pipelined-trapezoid + CR-RC (+ baseline restorer), with the cusp as the paper reference.
 
 ## 34. WPF viewer app + native C# waveform + interactive source localization — `src/Gcam.Wpf`
+
+> *2026-10-02:* `src/Gcam.Wpf` was removed in TODO-12; the code described here is at commit `85b2ed1` (git history). Every kept feature lives in GCAM Studio.
 A ScottPlot WPF app (`Gcam.Wpf`, net9.0-windows) that RUNS the sim interactively — a scene
 editor over the tabs plus Waveform / Imaging / Spectrum / Optics tabs. The build arc surfaced real physics
 (several corrected my own mistakes — GUI can't be self-verified, so every claim was MC-checked):

@@ -3,7 +3,7 @@
 Scope: the architecture and detailed design of the three Studio projects, as the design record that the
 requirements in [VV.Studio.SRS](VV.Studio.SRS.md) are allocated to and that [VV.Studio](VV.Studio.md) verifies.
 Not covered: the simulation engine (`src/Gcam.*` outside `Gcam.Studio*`, verified by `tests/Gcam.Tests`) and
-`src/Gcam.Wpf`.
+the original viewer `src/Gcam.Wpf` (removed in TODO-12 (2026-10-02); last present at `85b2ed1`).
 
 Structured after IEC 62304 §5.3 (architectural design) and §5.4 (detailed design); no compliance is claimed
 ([VV.Studio §1](VV.Studio.md#1-scope-and-intended-use)).

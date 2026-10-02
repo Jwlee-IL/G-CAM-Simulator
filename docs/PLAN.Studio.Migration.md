@@ -3,8 +3,8 @@
 Scope: the umbrella for TODO-06 … TODO-13 — why, the decisions that hold for every step, the screen structure and the
 order. Each step has its own plan; the task list is [AGENTS.Todo](AGENTS.Todo.md).
 
-Status: 2026-10-02 — every `Gcam.Wpf` feature has a Studio home (steps 1–7c done) except the rig's readout model
-(TODO-19, which replaces Wpf's SiPM block average); then TODO-12 deletes `Gcam.Wpf`.
+Status: **done** 2026-10-02 — every kept `Gcam.Wpf` feature lives in Studio and `Gcam.Wpf` is deleted (TODO-12, last
+present at `85b2ed1`). The rig's readout model (TODO-19) continues as a physics task.
 
 ## Plans and order
 
@@ -22,7 +22,7 @@ Status: 2026-10-02 — every `Gcam.Wpf` feature has a Studio home (steps 1–7c 
 | 7b | TODO-24 acquisition control Start / Stop / Reset (author 2026-10-02) | [PLAN.Studio.AcquisitionControl](PLAN.Studio.AcquisitionControl.md) | **done** 2026-10-02 |
 | 7c | TODO-22 final desktop pass (UI tests, survey, 16 ms gate, README screenshot) | — | **done** 2026-10-02 |
 | 7d | TODO-19 the rig's readout (Anger, SiPM pitch, crosstalk) — moved before the deletion, author 2026-10-02 | [PLAN.Physics.RigReadout](PLAN.Physics.RigReadout.md) | draft; waiting for the author's rig details |
-| 8 | TODO-12 delete `Gcam.Wpf` (README screenshot done in TODO-22) | — | open (last) |
+| 8 | TODO-12 delete `Gcam.Wpf` (README screenshot done in TODO-22) | [PLAN.Studio.WpfRemoval](PLAN.Studio.WpfRemoval.md) | **done** 2026-10-02 (before TODO-19, author) |
 
 **Order of polish and testing (author, 2026-10-01).** UI polish is the focus; **desktop UI tests run last**, once
 the workspaces are complete and polished — running them (and the polish survey) per step only re-collects the same

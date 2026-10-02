@@ -175,6 +175,9 @@ TILT (pitch/yaw), mask WARPING.
 
 ## Done (summary — details in AGENTS.Findings by theme)
 
+- **TODO-12 legacy viewer removed** (2026-10-02): `src/Gcam.Wpf` and its solution entry deleted after every kept
+  feature moved into GCAM Studio; last present at `85b2ed1` (theme 34's code is there) —
+  [PLAN.Studio.WpfRemoval](PLAN.Studio.WpfRemoval.md).
 - **TODO-07 Spectrum, TODO-13 live list-mode acquisition, TODO-15 spectrum graph** (2026-10-01/02): implemented,
   headless-verified and rendered offscreen; their desktop checks passed in TODO-22 —
   [PLAN.Studio.Spectrum](PLAN.Studio.Spectrum.md), [PLAN.Studio.LiveAcquisition](PLAN.Studio.LiveAcquisition.md),

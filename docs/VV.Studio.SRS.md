@@ -1,7 +1,7 @@
 # VV.Studio.SRS — software requirements specification for GCAM Studio
 
 Scope: what the three Studio projects (`Gcam.Studio.Core`, `Gcam.Studio.Services`, `Gcam.Studio`) must do. Not
-covered: the simulation engine and the original viewer `src/Gcam.Wpf`. How the requirements are met is in
+covered: the simulation engine and the original viewer `src/Gcam.Wpf` (removed in TODO-12 (2026-10-02); last present at `85b2ed1`). How the requirements are met is in
 [VV.Studio.SDS](VV.Studio.SDS.md); how they are verified, and their status, is in [VV.Studio](VV.Studio.md#4-verification).
 
 Structured after IEC 62304 §5.2 (software requirements analysis). As in [VV.Studio](VV.Studio.md#1-scope-and-intended-use),

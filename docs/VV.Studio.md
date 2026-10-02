@@ -2,7 +2,7 @@
 
 Scope: the three Studio projects (`Gcam.Studio.Core`, `Gcam.Studio.Services`, `Gcam.Studio`) and their tests.
 Not covered: the simulation engine (verified by its own test project, `tests/Gcam.Tests`; the product-level
-evidence is [VV.Gcam.Evidence](VV.Gcam.Evidence.md)) and the original code-behind viewer `src/Gcam.Wpf`. This document says **how we know Studio does what it must**; it is
+evidence is [VV.Gcam.Evidence](VV.Gcam.Evidence.md)) and the original code-behind viewer `src/Gcam.Wpf` (removed in TODO-12 (2026-10-02); last present at `85b2ed1`). This document says **how we know Studio does what it must**; it is
 one of a set:
 
 | Document | IEC 62304 activity | Holds |
