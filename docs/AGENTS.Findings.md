@@ -1869,6 +1869,18 @@ at 100 mm, then a partner angle by rejection sampling (variable draw count) on t
   Klein–Nishina in `ComptonModel`). Which published numbers move, and by how much, is **not yet measured** → TODO-26.
 - Reproduce: the probe in the planner's scratch (`rngprobe`: legacy vs xoshiro256**, same loop); TODO-26 brings a
   repository test.
+- **Survey (TODO-26 review):** the bias above is pattern-specific — 4π transport efficiency, crystal stopping and
+  photopeak fraction are clean at 0.01–0.1 %, and no published number moves with xoshiro256** (43 reproduce commands ×
+  5 seeds). The real defect is that the legacy generator is **affine in its seed**: Studio's `MeasurementStage` reseeds
+  per event (`seed + index·104729`), so consecutive events' smears are correlated (−0.81; raw draws +0.555 / −0.477,
+  planner check) and Studio's window counts fluctuate far less than physically. Replaced in TODO-26.
+- **Replacement (TODO-26, 2026-10-02):** `DefaultRandom` is xoshiro256** seeded by SplitMix64 (unseeded runs expose
+  their seed); `MeasurementStage` uses a 64-bit (seed, index) key; study realisations have their own seed offset.
+  Nearby-seed stream correlation now ±0.03 (was up to +0.99); Studio smear lag-1 correlation +0.002 (was −0.81) and
+  window-count variance / binomial 1.022 (was 0.048). Klein–Nishina vs quadrature −0.3σ / +0.5σ. The only number that
+  moved beyond its spread: the shield study's knee RMS (0.79 → 0.96 mm, unquoted; `samples/shield.png` regenerated).
+  Three single-seed regression pins were re-derived from 64-seed distributions; the mask-fabrication claim became a
+  24-seed paired t-test (t = 8.95 vs k = 3, false-fail ≈ 4 × 10⁻⁶).
 
 ## 61. Per-decay cascade emission in list mode — correct, and negligible at 1 m (2026-10-02)
 

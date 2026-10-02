@@ -5,7 +5,9 @@ Scope: `DefaultRandom(seed)` wraps the legacy seeded `System.Random` (subtractiv
 paths and which published numbers are exposed, measure how much each moves with a sound generator, then replace the
 algorithm and re-pin the evidence. Procedure: [AGENTS.Planning](AGENTS.Planning.md).
 
-Status: **reference plan** 2026-10-02 — survey first (author), substitute Claude subagent (Codex out of credits).
+Status: **done** 2026-10-02 (substitute Claude subagent, worktree `C:\gw\w26`); Findings 60. Planner re-verified: build 0 errors,
+tests 298 / 179 / 83 (+7) / 13 (+14); the single-seed mask-fabrication re-pin was sent back and replaced by a 24-seed
+paired t-test.
 
 ## What is known
 
@@ -32,3 +34,23 @@ Status: **reference plan** 2026-10-02 — survey first (author), substitute Clau
 3. Replace, re-measure, re-pin; Findings / Evidence model-history rows for every moved number.
 
 **Rule:** a number that moves is reported as moved, with old and new values — never kept by widening a tolerance.
+
+## Decisions after review (2026-10-02)
+
+Review: [PLAN.Physics.RngBias.Review](PLAN.Physics.RngBias.Review.md) (substitute implementer). Result: **no published
+number moves** with xoshiro256** (43 MC reproduce commands × 5 seeds, 828 numbers, 12 flags ≈ chance; 20-seed re-runs
+cleared all but the shield study's knee RMS, 0.79 → 1.02 mm, not quoted in Evidence). Transport is clean at
+0.01–0.1 %; the planner's probe bias is pattern-specific. The **real defect** is that legacy `Random(seed)` is affine in
+its seed: `MeasurementStage` reseeds per event (`seed + index·104729`), so consecutive events' energy smears are
+correlated (−0.81; planner check: raw draws +0.555 / −0.477) and Studio's window counts fluctuate far less than
+physically. The author chose to replace the generator.
+
+| # | Decision | Basis |
+|---|---|---|
+| G-1 | `DefaultRandom` = xoshiro256** seeded by SplitMix64 from the existing seed, 53-bit doubles, `IRandom` unchanged; the unseeded path seeds from `Random.Shared` and exposes the chosen seed | review S-5 |
+| G-2 | `MeasurementStage` keyed by a 64-bit (seed, index) hash — no per-event reseeding of an affine generator | review S-2 |
+| G-3 | Studies' Poisson-realisation streams get their own seed offset (no reuse of the mean-map stream) | review S-1 |
+| G-4 | The three single-seed regression pins are re-pinned from their **measured** multi-seed distributions (stated); the histogram-index test defect is fixed; `RandomQualityTests` added (cross-seed independence, window-count variance vs binomial, Klein–Nishina vs quadrature) | review S-4 |
+| G-5 | Direct `System.Random` users with fixed manufactured patterns and the frozen `rtl/event_stream.txt` / C# vector stimuli stay as they are | review S-5 |
+| G-6 | Re-measure the Studio evidence tolerances and the shield knee; regenerate renders / `samples/shield.png` where they change; Findings and Evidence model-history rows for what moved | rule |
+| G-7 | Published values that already differ from today's seed-12345 output independent of the generator (EV-01 ghost, EV-32 floor, EV-25 lightest shield, theme 44 slope) → **TODO-27**, re-measured over seeds after this change | author |
