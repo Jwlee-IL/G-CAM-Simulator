@@ -3,6 +3,8 @@ Run `montecarlo masktaper samples/scenario.json` first. A thick STRAIGHT mask co
 off-axis rays (edge/center efficiency < 1); bevelling the walls (code stays at the mid-plane)
 recovers the edge while keeping the code sharp. Distinct from focusing (theme 20), which
 NARROWS the FOV to a focal point.
+The curves are one run (samples/masktaper.csv, seed 12345); the annotated values are 64-seed means from
+samples/evidence/results/aggregate.csv (TODO-27).
 Usage:  python samples/plot_masktaper.py
 """
 import os, csv
@@ -19,6 +21,13 @@ effC = np.array([float(r["eff_center"]) for r in rows])
 effE = np.array([float(r["eff_edge"]) for r in rows])
 ratio = np.array([float(r["edge_ratio"]) for r in rows])
 rms = np.array([float(r["rms_edge_mm"]) for r in rows])
+
+# Seed-ensemble means for the annotations: {key: (mean, sd, N)}.
+agg = {r["key"]: (float(r["mean"]), float(r["sd"]), int(r["N"]))
+       for r in csv.DictReader(open(os.path.join(here, "evidence", "results", "aggregate.csv")))
+       if r["key"].startswith("masktaper/")}
+straight, bevel4 = agg["masktaper/masktaper.csv/0.0/edge_ratio"], agg["masktaper/masktaper.csv/4.0/edge_ratio"]
+rms0, rms4 = agg["masktaper/masktaper.csv/0.0/rms_edge_mm"], agg["masktaper/masktaper.csv/4.0/rms_edge_mm"]
 
 fig, (axs, axr) = plt.subplots(1, 2, figsize=(13.5, 5.4), gridspec_kw={"width_ratios": [1, 1.3]})
 
@@ -53,20 +62,20 @@ axs.set_title("(1) Straight collimates off-axis; hourglass passes it", fontsize=
 # --- (right) recovery curves ---
 axr.plot(tap, ratio, "o-", color="#2e8b57", lw=2, label="edge/center efficiency")
 axr.axhline(1.0, ls=":", color="#888")
-axr.annotate("straight: 0.82\n(thick mask collimates)", (0, 0.82), (3, 0.7),
+axr.annotate(f"straight: {straight[0]:.3f}\n(thick mask collimates)", (0, straight[0]), (12, 0.64),
              fontsize=8, color="#c0392b", arrowprops=dict(arrowstyle="->", color="#c0392b"))
-axr.annotate("~4° bevel → 0.99\n(uniform FOV)", (4, 0.99), (8, 0.86),
+axr.annotate(f"~4° bevel → {bevel4[0]:.3f}\n(uniform FOV; mean of {bevel4[2]} seeds)", (4, bevel4[0]), (8, 0.86),
              fontsize=8, color="#2e8b57", arrowprops=dict(arrowstyle="->", color="#2e8b57"))
 axr.set_xlabel("channel wall taper (deg)"); axr.set_ylabel("edge/center efficiency", color="#2e8b57")
 axr.set_ylim(0.6, 1.05); axr.grid(alpha=0.3)
 ax2 = axr.twinx()
 ax2.plot(tap, rms, "s--", color="#3b6ea5", lw=1.4, label="RMS @ edge")
 ax2.set_ylabel("localization RMS @ edge (mm)", color="#3b6ea5"); ax2.set_ylim(0, 1.0)
-ax2.text(10, 0.50, "RMS flat ~0.43 mm\n(code stays sharp)", fontsize=8, color="#3b6ea5")
+ax2.text(10, 0.50, f"RMS flat: {rms0[0]:.2f} → {rms4[0]:.2f} mm\n(code stays sharp)", fontsize=8, color="#3b6ea5")
 axr.set_title("(2) A ~4° bevel recovers the FOV uniformity of a 25 mm mask\n(unlike focusing, which narrows the FOV)", fontsize=9.5)
 
-fig.suptitle("Tapered (hourglass) channels: the real wide-FOV fix for a THICK mask — bevelled walls remove the "
-             "off-axis collimation (edge/center 0.82→0.99 at ~4°) while the mid-plane keeps the code sharp.", fontsize=9.5)
+fig.suptitle("Tapered (hourglass) channels: the real wide-FOV fix for a THICK mask — bevelled walls remove the\n"
+             f"off-axis collimation (edge/center {straight[0]:.2f}→{bevel4[0]:.2f} at ~4°, {bevel4[2]} seeds) while the mid-plane keeps the code sharp.", fontsize=9.5)
 fig.tight_layout(rect=[0, 0, 1, 0.94])
 out = os.path.join(here, "masktaper.png")
 fig.savefig(out, dpi=130); print("saved", out)

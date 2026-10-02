@@ -48,7 +48,7 @@ imaging principle, specifies 41–49°.
 | Cause | Numbers |
 |---|---|
 | Field of view ÷ angular resolution = rank (EV-03) | angular resolution ≈ cell / D = 1 mm / 55 mm ≈ **1.04°**; fully-coded field ≈ rank × that ≈ **7.3°**. Good resolution and a narrow field are the same design choice at rank 7. |
-| A thick mask collimates | 10 mm tungsten with 1 mm holes is a 10 : 1 channel; rays more than ~atan(1/10) ≈ **5.7°** off its axis are clipped (EV-04: edge / centre efficiency 0.56 at 8 mm, 0.25 at 32 mm in a wide-field test geometry; a 25 mm mask's is 0.82, EV-05). The 10 mm is needed to stop 662 keV – 1.3 MeV. |
+| A thick mask collimates | 10 mm tungsten with 1 mm holes is a 10 : 1 channel; rays more than ~atan(1/10) ≈ **5.7°** off its axis are clipped (EV-04: edge / centre efficiency 0.80 at 8 mm, 0.30 at 32 mm in the wide-field test geometry, D = 20 mm; a 25 mm mask's is 0.82, EV-05). The 10 mm is needed to stop 662 keV – 1.3 MeV. |
 | Partially-coded field | detector 16 mm + mask 14 mm over D = 55 mm → outer limit ≈ ±15°, where only part of the mask shadow lands on the detector. |
 
 **Ways to widen it, and what each costs**
@@ -58,7 +58,7 @@ imaging principle, specifies 41–49°.
 | A. Scan / panorama | sweep by hand with the IMU de-rotation and VIO already planned (PR-ENV-04), or a pan-tilt head, and stitch tiles | any | **time** ≈ number of tiles: a 45° × 45° room view is ~10–14 pointings at the ±6–7.5° usable field; sources near tile edges are partially coded; a pan-tilt head adds mass and setup |
 | B. Higher rank, same cell and D | rank 13 or 23 MURA | ×13/7 ≈ 1.9 or ×23/7 ≈ 3.3, resolution unchanged | the detector must hold ~2 pixels per cell shadow over a period (EV-06): ~26 × 26 or ~46 × 46 px at 1 mm instead of 16 × 16. Bigger crystal → bigger **shield** (the master weight: a 12 → 20 mm detector already moves ~2.7 → 3.4 kg, EV-24); 3–8× the readout channels, power and heat (256 pixel channels are already ~12 W, EV-27); collapses if the detector cannot hold one shadow period (EV-03) |
 | C. Shorter D or larger cells | e.g. D = 27 mm | ×2 | angular resolution **worse by the same factor** (field ÷ resolution stays 7); sensitivity rises (larger solid angle); depth-from-focus weakens (EV-33) |
-| D. Thinner mask | e.g. 4–6 mm W | removes the ~5.7° collimation | more leakage at high energy → lower contrast for Co-60 / Cs-137 (8–10 mm is the optimum at 662 keV, EV-04) |
+| D. Thinner mask | e.g. 4–6 mm W | removes the ~5.7° collimation | more leakage at high energy → lower contrast for Co-60 / Cs-137 (~10 mm is the optimum at 662 keV, EV-04) |
 | E. Tapered (bevelled) channels | flare the hole walls toward both faces | thick-mask field close to a thin mask's (edge / centre 0.82 → 0.99 at ~4° bevel, EV-05) | harder machining of tungsten (fabrication σ ≲ 40 µm still required, EV-30); less tungsten near the faces, so not full 10 mm opacity everywhere; the model is an idealised upper bound |
 | F. Use the partially-coded field | decode ±15° with a finite-mask model or MLEM (EV-11) | ±15° | lower signal-to-noise and artefacts at the edge; the plain non-cyclic decoder answers wrongly past ~7.5° (EV-02); an MLEM forward model of the edge is **not quantified** |
 | G. Out-of-field cue (not imaging) | read the side from the flood centroid: the lit side of the array is opposite the source | none (direction hint only) | meets UN-12, not UN-01; no hardware. Correct side from ~1° to ~14.5°, "outside" flag ≥ 90 % at 4–12.5°; needs a background estimate (EV-02) |
@@ -69,7 +69,7 @@ B + E buys a ~25–45° field in hardware and pays in mass, power and cost; C tr
 **Adopted path (author, 2026-10-01 — D-16).** With non-cyclic decoding chosen (LIM-07) and moving hardware ruled out
 on cost, the software-only path:
 
-1. *Usable field from non-cyclic decoding:* **±6–7.5° along the axes** without background (7.0° at 1 m and 7.5° at 5 m with 5000 on-axis counts; 6.0° / 7.0° with 500), the same at 1 m and 5 m; ±4–6.5° with background equal to the signal; on the diagonal at low counts with background it is worse
+1. *Usable field from non-cyclic decoding:* **±6–7.5° along the axes** without background (7.0° at 1 m and 7.5° at 5 m with 5000 on-axis counts; 6.0° / 7.0° with 500), the same at 1 m and 5 m; ±5–6.5° with background equal to the signal; on the diagonal at low counts with background it is worse
    than cyclic decoding *(MC, EV-02)*. A usable-field claim needs a count level and a direction.
 2. *Option G — out-of-field cue:* the flood centroid tells the user which way to turn and flags the wrong in-field
    answers past ~7° *(MC, EV-02)*.
@@ -94,22 +94,22 @@ ghosts are reliably suppressed, a "source outside the field — turn left" cue (
 
 | Option | Cost |
 |---|---|
-| **Chosen (2026-10-01):** non-cyclic (finite-mask) decoding — the default (PR-IMG-01) | it **moves** the ghost boundary from 3.6° to ~7°, it does not remove it: at 7.5–11° off axis 50–90 % of acquisitions return a wrong spot inside the field (EV-02). The flood centroid flags those (≤ 3 % unflagged without background), but with background equal to the signal 10–45 % go unflagged |
-| *Rejected (cost):* mask / antimask (rotating the mask, as iPIX does) | a second exposure (time) and a rotation mechanism; it helps against diffuse background — which a calibrated background subtraction matches — and not against a directional coded interferer (EV-12) |
+| **Chosen (2026-10-01):** non-cyclic (finite-mask) decoding — the default (PR-IMG-01) | it **moves** the ghost boundary from 3.6° to ~7°, it does not remove it: at 7.5–11° off axis 50–90 % of acquisitions return a wrong spot inside the field (EV-02). The flood centroid flags most of those (≤ 7 % of acquisitions unflagged without background), but with background equal to the signal up to 29–49 % go unflagged |
+| *Rejected (cost, mechanical stability):* mask / antimask (rotating the mask, as iPIX does) | a rotation mechanism — its cost and mechanical stability outweigh the gain (D-19). The gain is real: at equal total time the antimask has ~20–30 % lower RMS than a calibrated background subtraction at every background level, both sub-mm through 4 background counts per pixel (EV-12); neither helps against a directional coded interferer |
 | MLEM with a full forward model including the partially-coded field (EV-11) | computation; the model must be right at the edges |
 | Cross-check with the energy histogram (author, UN-11) | needs a photopeak; does not tell *where* |
 
-**Status.** Non-cyclic decoding chosen, mask rotation rejected (author, 2026-10-01). Remaining risk: the centroid
+**Status.** Non-cyclic decoding chosen, mask rotation rejected (author, 2026-10-01; basis restated 2026-10-02 after the seed-ensemble measurement, D-19). Remaining risk: the centroid
 flag that makes non-cyclic answers past ~7° safe to reject needs a background estimate, and several sources at once
 are not studied. PR-IMG-08 stays dependent on PR-IMG-01; LIM-01 option G inherits this condition.
 
 ## LIM-08 — Spatial isotope separation is limited
 
 **What the user sees.** With a strong Co-60 source in the scene, a weaker Cs-137 source is lost in the 662 keV
-image once Co-60 is about **4× stronger** (holds at 2×); in an equal-photon-budget demonstration Co-60 downscatter
+image once Co-60 is about **4× stronger** (holds at 2× in 126 / 128 seeds); in an equal-photon-budget demonstration Co-60 downscatter
 makes up ~55 % of the 662 keV window in 1 mm GAGG pixels *(MC, EV-15)*.
 
-**What still works.** Per-pixel Compton stripping recovers the co-located Cs-137 count (0–4 % error, EV-15) —
+**What still works.** Per-pixel Compton stripping recovers the co-located Cs-137 count (0–1 % error with an oracle ratio, EV-15) —
 the spectral lever; it needs a calibrated downscatter / photopeak ratio and known lines.
 
 | Option | Cost |
@@ -189,7 +189,7 @@ limited by resolution.
 
 ## LIM-05 — Co-60-class background cannot be shielded
 
-Shielding 1.25 MeV background takes ~30 mm W, ~11 kg *(MC, EV-25)*; the concept shields to ~8 mm and handles
+Shielding 1.25 MeV background takes 25–30 mm W, 6.8–9.8 kg of shield *(MC, EV-25: 25 mm in 83 / 128 seeds, 30 mm in 45)*; the concept shields to ~8 mm and handles
 high-energy background by coded separation and Compton stripping in software (EV-15). Cost of the alternative: mass
 far beyond the 2.5 kg budget.
 
@@ -202,5 +202,8 @@ far beyond the 2.5 kg budget.
 - Backgrounds are flat or linearly graded pedestals; real plant backgrounds, room scatter and shielded sources are
   not simulated.
 - Nothing is compared with recordings of the original instrument, and nothing is measured on hardware.
+- Monte Carlo numbers are spreads over seed ensembles of the simulation, not tolerances; results that use the
+  studies' fixed manufactured patterns (mask machining errors, defect maps, gain maps) hold for those patterns, not
+  for every manufactured part ([VV.Gcam.Evidence §1](VV.Gcam.Evidence.md#1-the-tools-behind-the-grades)).
 - The engine's model changes that moved earlier numbers are listed in
   [VV.Gcam.Evidence §9](VV.Gcam.Evidence.md#9-model-history).

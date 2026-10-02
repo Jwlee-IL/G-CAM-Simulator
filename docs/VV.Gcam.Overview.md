@@ -15,7 +15,7 @@ next — but it is a **design study**: nothing is being built, nothing is measur
 is made.
 
 **In numbers:** 19 user needs (18 active) → 51 product requirements (48 active) → 33 evidence entries; 9 known limitations;
-38 decisions with the author's reasons. The engineering viewer has 102 active software requirement IDs (nine withdrawn), four workspaces, and current unit/integration
+40 decisions with the author's reasons. The engineering viewer has 102 active software requirement IDs (nine withdrawn), four workspaces, and current unit/integration
 test totals in [VV.Studio](VV.Studio.md#current-test-inventory), plus 12 opt-in desktop regression scenarios, a plot gate and a survey.
 
 ## The problems it starts from
@@ -44,10 +44,10 @@ test totals in [VV.Studio](VV.Studio.md#current-test-inventory), plus 12 opt-in 
 
 | Requirement | Target | Evidence | Grade |
 |---|---|---|---|
-| Locate a source (PR-IMG-02) | sub-mm with ≥ 250 counts | 0.24 mm floor on axis, 0.53 mm at the field edge (EV-09) | MC |
-| Usable field of view (PR-IMG-10) | wider than the ±3.6° fully coded field | **±6–7.5°** along the axes at 1 m and 5 m without background (±7–7.5° at high counts); ±4–6.5° with background equal to the signal (EV-02) | MC → DEC |
+| Locate a source (PR-IMG-02) | sub-mm with ≥ 250 counts | 0.25 mm floor on axis, 0.53 mm at the field edge (EV-09) | MC |
+| Usable field of view (PR-IMG-10) | wider than the ±3.6° fully coded field | **±6–7.5°** along the axes at 1 m and 5 m without background (±7–7.5° at high counts); ±5–6.5° with background equal to the signal (EV-02) | MC → DEC |
 | Say which way to turn (PR-IMG-08) | side of a source outside the field | correct side from ~1° to ~14.5°; needs a background estimate (EV-02) | MC |
-| Separate Co-60 from Cs-137 (PR-NRG-04) | weaker Cs-137 count and position | count recovered within 0–4 %; position only to Co : Cs ≈ 2 : 1 (EV-15) | MC |
+| Separate Co-60 from Cs-137 (PR-NRG-04) | weaker Cs-137 count and position | co-located count recovered within 0–1 % (oracle ratio); position only to Co : Cs ≈ 2 : 1, held in 126 / 128 seeds (EV-15) | MC |
 | Sensitivity (PR-SENS-01, -07) | iPIX parity: 2 µSv/h Cs-137 located in < 30 s | 2.48× the original rig (EV-09); ~2 s estimated ([URS §5](VV.Gcam.URS.md#reference-measurement-conditions-adopted)) | MC, AN |
 | Dose rate (PR-SAFE-01, -02) | ±50 % to 10 mSv/h, 60 keV – 1.33 MeV | the imaging head reads ±13 % frontally but only 0.11–0.66 of the dose 10° off axis (EV-23) — so a separate counter is the dose channel; its type test is the evidence | STD, DEC |
 | No under-reading in high fields (PR-SENS-05) | over-range indication to 1 Sv/h | method shown on the imaging front end: live-time correction to ~150 mSv/h, then the live fraction signals over-range (EV-23); to be set for the counter | AN |
@@ -66,7 +66,7 @@ rest on MC, 4 on RTL, 11 on AN; 5 are decisions, 7 hardware targets and 4 still 
 | **Ghosts move, they don't vanish** — past ~7° the decoder answers with a wrong in-field spot (LIM-07) | the flood centroid flags those answers; weaker in strong background |
 | **Spatial isotope separation is limited** (LIM-08) | stripping recovers the count, not the position |
 | **The imaging head reads dose only frontally** — it is a collimator (LIM-09) | decided: a separate small counter over data I/O (D-37); the counter is not yet chosen or simulated |
-| **The evidence has limits** (LIM-06) | precision and sensitivity at the lab distance; no side walls in the field studies; nothing measured on hardware |
+| **The evidence has limits** (LIM-06) | precision and sensitivity at the lab distance; no side walls in the field studies; nothing measured on hardware; MC numbers are seed-ensemble spreads, conditional on fixed manufactured patterns where a study uses them |
 
 ## Decisions that shaped it
 

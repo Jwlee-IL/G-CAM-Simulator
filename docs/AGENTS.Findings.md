@@ -22,11 +22,13 @@ theme below changes, update its EV entries in the same commit (`AGENTS.Conventio
 | 8 | EV-18 | 36 | EV-29 | 50 | EV-13 |
 | 9 | EV-07 | 51 | EV-20 | 53 | EV-02 |
 | 10 | EV-21 | 52 | EV-09, EV-14, EV-15, EV-19, EV-20; model history | 54 | EV-23 |
-| 14 | EV-16 | 15 | EV-14, EV-15 | | |
+| 14 | EV-16 | 15 | EV-14, EV-15 | 63 | every MC entry; model history |
 
 ---
 
 ## 1. Geometry & source localization
+
+> **Seed ensemble 2026-10-02 — [theme 63](#63-evidence-quoted-over-seed-ensembles--samplesevidence-2026-10-02).** Centred error 0.353 ± 0.001 mm (N = 32, not ≈ 0.5); off-axis 6 → 6.03 mm (0.20 mm, the same cell in 32 / 32 seeds).
 - Distance fall-off (1/r²), near-field magnification, and off-axis shadow shift are all
   **emergent from the geometry** — none are coded explicitly; they appear once the ray↔plane
   intersections run.
@@ -37,6 +39,8 @@ theme below changes, update its EV entries in the same commit (`AGENTS.Conventio
   `samples/fcfov_map.png`.
 
 ## 2. Decoding & ghost artifacts
+
+> **Seed ensemble 2026-10-02 — [theme 63](#63-evidence-quoted-over-seed-ensembles--samplesevidence-2026-10-02).** Ghost 12 → −6.40 mm (−6.4016 ± 0.0008, N = 32). Sweep medians over 64 seeds: lab rig 278 / 146 (was 282 / 148), hand-held 361 / 174 (was 360 / 172).
 - Off-axis source **outside the FCFOV** aliases to a **ghost on the opposite side**
   (12 mm → estimate −6.6 mm; matches `12 − period(18.7) = −6.7`). Classic partial-coding artifact.
 - **Cyclic vs non-cyclic decoding**: over a wide search grid, non-cyclic (finite-mask)
@@ -46,6 +50,8 @@ theme below changes, update its EV entries in the same commit (`AGENTS.Conventio
   `sweep_cyclic.csv`, `sweep_noncyclic.csv` (fixed output names — the committed ones are the hand-held run).
 
 ## 3. Configuration optimization (maximise FOV)
+
+> **Seed ensemble 2026-10-02 — [theme 63](#63-evidence-quoted-over-seed-ensembles--samplesevidence-2026-10-02).** Rank 11 / 1 / 30: ±21.6 mm (21.57 ± 0.09), usable 0.907 ± 0.007; passes the 90 % gate in 31 / 32 seeds — an observed gate on the selected rows, not a re-certified global optimum (the whole grid was not repeated). Rank 23 / 1 / 20: 0.150 ± 0.003; thin 0.5 mm: 0.764 ± 0.007.
 - **Geometric identity: nominal FOV ÷ resolution = rank.** Widening the field via cell pitch or D
   coarsens resolution by the same factor. A larger rank widens the *nominal* field at the same
   resolution — but whether that field is *usable* depends on the mask slab (below).
@@ -68,6 +74,8 @@ theme below changes, update its EV entries in the same commit (`AGENTS.Conventio
   `python samples/plot_scan.py` → `samples/scan_collapse.png`, `samples/scan_pareto.png`.
 
 ## 4. Mask design — tungsten thickness
+
+> **Seed ensemble 2026-10-02 — [theme 63](#63-evidence-quoted-over-seed-ensembles--samplesevidence-2026-10-02).** "Optimum ≈ 8–10 mm" and "edge/center 0.56 @ 8 → 0.25 @ 32 mm" below are withdrawn: the default lab command cannot pick (every 6–32 mm row reaches its 8.87 mm sweep end in 64 / 64 seeds) and the old wide-field input was not kept. The defined wide-field recipe (lab rig, D = 20 mm) picks **~10 mm** (10 mm in 21 / 32, 14 mm in 10 / 32, 8 mm in 1 / 32); edge/center 0.80 @ 8 → 0.30 @ 32 mm. Leak: 28.8 % at 7 mm (μ = 0.178 / mm); 35 % is at 5.9 mm.
 - Mask is a **ray-marched 3-D slab** (collimation modelled). **Optimum ≈ 8–10 mm.**
 - Thin (< ~7 mm): closed-cell leak > 35 % → coding contrast collapses → usable FOV → 0.
 - Thick: no FOV gain, and off-axis efficiency falls via open-channel **collimation**
@@ -75,6 +83,8 @@ theme below changes, update its EV entries in the same commit (`AGENTS.Conventio
 - Reproduce: `montecarlo thickness samples/scenario.json` → `samples/thickness_opt.png`.
 
 ## 5. Mask / antimask (two-exposure technique)
+
+> **Seed ensemble 2026-10-02 — [theme 63](#63-evidence-quoted-over-seed-ensembles--samplesevidence-2026-10-02).** The "identical (max diff 0.07 mm)" below is withdrawn: 0.07 mm was one run. Over 128 seeds, at equal total time, the antimask has ~20–30 % lower RMS than calibrated subtraction at every level (0.38 / 0.31 mm with no background … 0.91 / 0.63 mm at 8 counts/px); both sub-mm through 4 counts/px. Mask rotation stays rejected — on mechanism cost and mechanical stability (D-19), not on equivalence.
 - **Redundant with no background** (identical to single mask), **essential once additive
   background is significant**: at 8 counts/px background (source ≈ 2.8/px) single-mask fails
   32 % while mask/antimask stays sub-mm. Crossover ≈ 1–2 counts/px. Structured (gradient)
@@ -114,6 +124,8 @@ theme below changes, update its EV entries in the same commit (`AGENTS.Conventio
 - Reproduce: presets in `samples/materials/*.json`; `samples/crystal_materials.png`.
 
 ## 7. Detector array (sampling)
+
+> **Seed ensemble 2026-10-02 — [theme 63](#63-evidence-quoted-over-seed-ensembles--samplesevidence-2026-10-02).** 6×6 fails 20 ± 3 % (N = 128). "16×16 ≈ halves the error" is withdrawn: it reduces the 12×12 RMS by about a third (ratio median 0.63 [0.49, 0.82], better in 114 / 128 seeds); seed 12345 was an outlier (ratio 1.20).
 - The mask-cell shadow must span **≳ 1 detector pixel** (Nyquist). Below that (6×6, 0.8 px/cell)
   it aliases and localization collapses (21 % failure). **~2 px/cell (16×16) is the sweet spot**
   (sub-mm); finer only marginally helps. Original 12×12 (1.6 px/cell) is adequate; 16×16 ≈ halves
@@ -121,6 +133,8 @@ theme below changes, update its EV entries in the same commit (`AGENTS.Conventio
 - Reproduce: `montecarlo array samples/scenario.json` → `samples/array_sampling.png`.
 
 ## 8. Crystal uniformity — position robust, energy fragile
+
+> **Seed ensemble 2026-10-02 — [theme 63](#63-evidence-quoted-over-seed-ensembles--samplesevidence-2026-10-02).** Energy smear 7.3 → 18.4 % at 15 % gain σ, calibrated 7.29 % (32 stimulus seeds, fixed gain map); position 0.49 ± 0.02 → 0.55 ± 0.07 mm at gain σ 0.4 + gradient 0.6 (N = 64, one fixed uniformity pattern).
 - **Position (coded-aperture) is robust**: random per-pixel gain averages over the 144 pixels;
   even a 120 % gain gradient barely shifts the correlation argmax (balanced MURA strongly
   *suppresses sensitivity to* smooth multiplicative distortion — finite/discrete geometry can
@@ -133,6 +147,8 @@ theme below changes, update its EV entries in the same commit (`AGENTS.Conventio
   RTL `rtl/pixel_uniformity_study.py` → `rtl/pixel_uniformity.png`.
 
 ## 9. Statistics & variance reduction
+
+> **Seed ensemble 2026-10-02 — [theme 63](#63-evidence-quoted-over-seed-ensembles--samplesevidence-2026-10-02).** Two gates, not one: below ~25 counts localisation collapses (failure = error > 3 mm, 38 % at 25); **sub-mm needs ~250 counts** (RMS 2.8 / 0.86 / 0.44 mm at 50 / 100 / 250; sub-mm in 0 / 99 / 128 of 128 seeds). "By ~50 it's solid (sub-mm)" is withdrawn. Biasing measured with its own recipe (DirectionalBiasing off, 10⁸ histories): ratio 0.999 ± 0.006 (N = 32).
 - **Count threshold**: below ~25 detected counts localization collapses; by ~50 it's solid
   (sub-mm). A ~0.55 mm floor above that is set by the decoder grid, not noise. FCFOV-edge sources
   need more counts. At 1 MBq, ~50 counts ≈ 0.3 s of acquisition.
@@ -141,6 +157,8 @@ theme below changes, update its EV entries in the same commit (`AGENTS.Conventio
 - Reproduce: `montecarlo noise samples/scenario.json` → `samples/noise_study.png`.
 
 ## 10. RTL front-end (energy & rate) — `rtl/`
+
+> **Seed ensemble 2026-10-02 — [theme 63](#63-evidence-quoted-over-seed-ensembles--samplesevidence-2026-10-02).** Over 128 stimulus seeds GAGG keeps **4.3 ± 1.9 %** at 1 Mcps (the 0.2 % below was one unrepresentative run), CeBr3 86 ± 1 % at 2 Mcps; the peak detector 45 ± 1 % at 1.5 Mcps (N = 32).
 - The SystemVerilog peak detector (Icarus) **reconstructs the Cs-137 spectrum**: 662 keV
   photopeak at ~7 % FWHM at low rate; **pile-up** drops efficiency to ~44 % at 1.5 Mcps.
   (`rtl/run.sh` → `rtl/rtl_lowrate.png`, `rtl_highrate.png`.)
@@ -225,6 +243,8 @@ runtime `window` (= shaping time) and **rejects** piled-up events instead of mis
 - Reproduce: `python rtl/shaping_pileup_study.py` → `rtl/shaping_pileup.png`, `shaping_pileup.csv`.
 
 ## 14. Multi-isotope discrimination + ADC dynamic range (Phase B) — `rtl/multi_isotope_study.py`
+
+> **Seed ensemble 2026-10-02 — [theme 63](#63-evidence-quoted-over-seed-ensembles--samplesevidence-2026-10-02).** 122 keV FWHM 15.9 ± 0.2 → 16.3 ± 0.2 % (32 field seeds, noise fixture 9).
 Drives the A2 charge-integrating + reject front-end with a **Cs-137 + Co-60 + Co-57** field (isotope
 presets in `samples/isotopes/*.json`: multi-line + `cascadeCoincident` flag), each line carrying its
 **Klein-Nishina Compton continuum**, and reconstructs the spectrum.
@@ -252,6 +272,8 @@ presets in `samples/isotopes/*.json`: multi-line + `cascadeCoincident` flag), ea
   imaging).
 
 ## 15. Crystal Compton scattering — positioning strategy + multi-isotope spatial separation — `ComptonModel`/`ComptonCrystalDetector`
+
+> **Seed ensemble 2026-10-02 — [theme 63](#63-evidence-quoted-over-seed-ensembles--samplesevidence-2026-10-02).** Argmax / per-pixel RMS 3.6 ± 0.3 / 5.5 ± 0.3 mm, failures 18 ± 3 / 40 ± 4 % (N = 64); Co-60 share of the 662 window 55.3 ± 0.5 %; at Co × 2 the Cs source stays sub-mm in 126 / 128 seeds, lost in 128 / 128 at × 4 and × 8.
 
 > **Revised 2026-10-01 — [theme 52](#52-crystal-attenuation-from-tabulated-cross-sections--crystalmaterial-2026-10-01).** With physical GAGG cross sections the single-pixel 662 keV window keeps 6 % (was 24 %), Co-60 downscatter is 55 % of that window (was 22 %), and spatial separation of Cs from Co holds only up to Co:Cs ≈ 2:1 activity (was shown at 8:1). Argmax keeps 12 % vs per-pixel 6 % (2.0×; RMS 3.51 vs 5.65 mm at 400 photons) — the verdict below stands with larger gain.
 Crystal-internal Compton is now modelled in the C# coded-aperture pipeline: `ComptonModel` (Kahn
@@ -304,6 +326,8 @@ it from all lower channels.
 
 ## 17. Combined lever — per-pixel Compton stripping inside the coded pipeline — `ComptonStudy.RunStripping`
 
+> **Seed ensemble 2026-10-02 — [theme 63](#63-evidence-quoted-over-seed-ensembles--samplesevidence-2026-10-02).** Oracle R 0.469 ± 0.001; stripped error 0–1 % co-located, 4–5 % separated (N = 64).
+
 > **Revised 2026-10-01 — [theme 52](#52-crystal-attenuation-from-tabulated-cross-sections--crystalmaterial-2026-10-01).** Stripping still recovers the Cs count (stripped error 0–4 %), but the true in-window Cs count falls 93 → 30 and R rises 0.15 → 0.47.
 Themes 15 (spatial) and 16 (spectral) joined: strip the Co-60 downscatter out of the Cs-137 662 keV
 window **per pixel** (subtract `R × the pixel's Co-60-photopeak count`, R = the aggregate
@@ -331,6 +355,8 @@ so it removes the contamination *where it actually landed*. Run: `montecarlo com
   `strip_*.csv` (those hold only the reconstruction grids).
 
 ## 18. Source distance (z) estimation by coded-aperture refocusing — `DepthStudy`
+
+> **Seed ensemble 2026-10-02 — [theme 63](#63-evidence-quoted-over-seed-ensembles--samplesevidence-2026-10-02).** Estimates 39.0 / 60.0 / 97.4 / 140.0 / 214.0 mm at S = 40 / 60 / 100 / 150 / 200 (spread ≤ 0.12 mm, N = 64). The plotted focus width reaches 240 mm at 150 and 200 mm because it fills the 20–260 mm search window: censored, not a resolved width.
 The pipeline had assumed the source distance S known; it can be *recovered*. The mask-shadow
 magnification **M = (D+S)/S** depends on S, and the decoder back-projects with `frac = D/(D+S)`.
 Decoding one flood map at a range of ASSUMED S, the correlation at the (on-axis) source position is
@@ -429,6 +455,8 @@ optimum, unlike the sub-cell hole (theme 20, no interior optimum). Run: `monteca
 ---
 
 ## 22. Productization — a ~3 kg handheld locator: weight, size, form, and field hardening
+
+> **Seed ensemble 2026-10-02 — [theme 63](#63-evidence-quoted-over-seed-ensembles--samplesevidence-2026-10-02).** Shield picks are frequencies over 128 seeds: scattered 8 mm (0.98 kg) in 109, 662 keV 20 mm (4.5 kg) in 100, Co-60 25 mm (6.8 kg) in 83 or 30 mm (9.8 kg) in 45 — "~30 mm / 11 kg" below is withdrawn, the "not carriable" conclusion stands against PR-PHY-01 (≤ 2.5 kg). The side-wall leak does not move the pick in 88 / 128 seeds (no fixed 6 → 8 mm increment). Hand-held floor 0.247 ± 0.002 mm, efficiency ratio 2.479 ± 0.003.
 
 > **Revised 2026-10-01 — [theme 52](#52-crystal-attenuation-from-tabulated-cross-sections--crystalmaterial-2026-10-01) addendum.** Re-run: efficiency 2.48e-4 vs 1.00e-4 (2.48×), floor 0.24 mm on axis / 0.53 mm at the edge, sub-mm at ≥ 250 / ≥ 500 counts; sweep 172 / 360 of 625. The 0.34 / 0.55 mm floors below predate theme 43's sub-cell default.
 A whole-instrument design pass under a "3 kg large-flashlight" constraint. Most parts are ANALYTICAL
@@ -532,6 +560,8 @@ rank-7, non-cyclic decode.**
 ---
 
 ## 23. Mask geometry follow-ups — tapered channels (wide FOV) + empirical open fraction
+
+> **Seed ensemble 2026-10-02 — [theme 63](#63-evidence-quoted-over-seed-ensembles--samplesevidence-2026-10-02).** Edge/center 0.825 ± 0.002 → 0.991 ± 0.001 at 4°, centre gain 35.2 ± 0.2 %, edge RMS 0.26 mm (the ~0.43 mm below was an older run). MURA vs random array (Python model) 3.98 ± 0.05 (N = 32).
 Two backlog items closing the mask-geometry thread.
 - **Tapered (hourglass) channels are the REAL wide-FOV fix for a THICK mask** — `CodedApertureMask`
   gained `TaperAngleDeg` (config `Mask.TaperAngleDeg`); `montecarlo masktaper` → `samples/masktaper.png`.
@@ -652,6 +682,8 @@ project's first cocotb co-simulation — it drives the DUT directly, replacing t
 
 ## 26. Mixed-isotope field imaged in one run — `MixedFieldSource` / `MixedFieldStudy`
 
+> **Seed ensemble 2026-10-02 — [theme 63](#63-evidence-quoted-over-seed-ensembles--samplesevidence-2026-10-02).** Three-source errors 0.55 / 0.27 / 0.93 mm in 64 / 64 seeds (grid-stable). `mixedstrip`: R 3.99 ± 0.04 (was 3.97), stripped error median 13 % [8, 20] co-located and 18 % [13, 23] separated from ~3 true counts — the 0–11 % was one realisation.
+
 > **Revised 2026-10-01 — [theme 52](#52-crystal-attenuation-from-tabulated-cross-sections--crystalmaterial-2026-10-01).** `mixediso` at Co ×8: Cs NOT localised (8.75 mm); holds at Co ×2. `mixedstrip`: stripping still recovers Cs (≤ 11 %) but from 3 true counts (was 12).
 The core-capability gap closed: a REAL mixed field (several sources, each multi-line) imaged through the
 coded aperture in ONE Monte-Carlo run, instead of summing per-line runs. Config: `SimulationConfig.Sources[]`
@@ -747,6 +779,8 @@ Poisson pile-up. End-to-end loop: MC physics → event stream → ADC waveform �
   and `python event_stream_study.py`.
 
 ## 28. Ambient background — a controllable, opt-in noise field — `BackgroundConfig` / `BackgroundStudy`
+
+> **Seed ensemble 2026-10-02 — [theme 63](#63-evidence-quoted-over-seed-ensembles--samplesevidence-2026-10-02).** BSR 1 / 2 / 4: RMS 0.76 ± 0.13 / 2.9 ± 0.3 / 7.3 ± 0.2 mm, failures 0.1 / 10 ± 2 / 66 ± 4 % (N = 64). Calibrated subtraction vs antimask: see theme 5's note (a trade, not an equivalence).
 
 > **Revised 2026-10-01 — [theme 52](#52-crystal-attenuation-from-tabulated-cross-sections--crystalmaterial-2026-10-01).** The isotropic-vs-normal photopeak difference is not significant with physical cross sections (71.0 % vs 71.2 % at 300 keV, 40 000 events); the 90.9 / 92.0 % figures below came from the over-absorbing model.
 The simulation had **no ambient/environmental background** (only source counting-noise + mask leakage +
@@ -855,6 +889,8 @@ study worked around it by reading each flat top *relative* to the local pre-puls
   `python blr_study.py`.
 
 ## 30. Realistic ADC front-end — the shaper stops seeing an idealized signal — `rtl/event_stream.py`
+
+> **Seed ensemble 2026-10-02 — [theme 63](#63-evidence-quoted-over-seed-ensembles--samplesevidence-2026-10-02).** Full chain **6.16 ± 0.25 %** (was 6.4 %), intrinsic-only 5.92 ± 0.25 % (32 timing / noise seeds). The "electronic-only 2.3 %" below came from a > 620 keV selection that also carries Compton-tail width (now 1.70 ± 0.06 %); it is not called electronic ENC.
 The waveform driving the RTL (theme 27) was near-ideal: instantaneous-rise single-exponential pulses,
 **zero noise**, no clipping — so the recovered photopeak was a delta function and the trapezoidal shaper had
 nothing to fight (its whole purpose is to maximize SNR against a noise floor). Made the front-end realistic
@@ -901,6 +937,8 @@ nothing to fight (its whole purpose is to maximize SNR against a noise floor). M
   Swap with `rasterize(..., adc=event_stream.load_adc("ad9268"))`.
 
 ## 31. Pulse-shaper comparison — CR-RC vs trapezoidal vs cusp — `rtl/shapers.py` / `rtl/shaper_compare.py`
+
+> **Seed ensemble 2026-10-02 — [theme 63](#63-evidence-quoted-over-seed-ensembles--samplesevidence-2026-10-02).** Cusp 1.01 ± 0.03 < CR-RC⁴ 1.09 ± 0.04 < trapezoid 1.69 ± 0.06 % (cusp below CR-RC⁴ in 32 / 32); within ±5 % at 2 Mcps: 71 / 69 / 42 %.
 With a real electronic-noise floor + realistic pile-up (theme 30) the shaper comparison finally MEANS something
 (on a noiseless input every filter gives perfect resolution). All three run on the same ADC stream: each
 deconvolves the exp tail (`imp[n]=x[n]-e^{-1/τ}x[n-1]`, pole-zero) then applies its weighting —
@@ -969,6 +1007,8 @@ K = 1/τ_s in Q16, each stage feeding the next same sample) → a Gamma-shaped s
 
 ## 34. WPF viewer app + native C# waveform + interactive source localization — `src/Gcam.Wpf`
 
+> **Seed ensemble 2026-10-02 — [theme 63](#63-evidence-quoted-over-seed-ensembles--samplesevidence-2026-10-02).** Depth width on the sharp optics grows as **z^1.74** (empirical fit over six distances; not z^1.5) and the ±10 % range is **< 0.15 m** — 150 mm is the first sampled distance, which already fails (width/z 0.236); the analysis returns it as a clamp.
+
 > *2026-10-02:* `src/Gcam.Wpf` was removed in TODO-12; the code described here is at commit `85b2ed1` (git history). Every kept feature lives in GCAM Studio.
 A ScottPlot WPF app (`Gcam.Wpf`, net9.0-windows) that RUNS the sim interactively — a scene
 editor over the tabs plus Waveform / Imaging / Spectrum / Optics tabs. The build arc surfaced real physics
@@ -1006,6 +1046,8 @@ editor over the tabs plus Waveform / Imaging / Spectrum / Optics tabs. The build
   `FocusFusionTests`.
 
 ## 35. Spectrum & detector realism — make the WPF Cs-137 look like a real measurement, all from physics
+
+> **Seed ensemble 2026-10-02 — [theme 63](#63-evidence-quoted-over-seed-ensembles--samplesevidence-2026-10-02).** The crystal-gap series 9 / 13 / 20 / 69 / 45 % below is **unverified history** (its recipe and denominator are lost). Labelled replacement experiment (lab rig, per-pixel ±10 % window, contact 0.4, 2 × 10⁶ photons, 32 seeds): efficiency relative to zero gap 1 / 1.59 / 2.52 / 6.60 / 5.33 at 0 / 20 / 40 / 100 / 200 µm — the optimum stays ~100 µm.
 An iterative arc driven by "this looks too ideal", each step MC-verified; the recurring principle: **fill features
 from real physics, never hand-add a tail/grass**. Several of my proposals were wrong and got corrected by the data
 or the user (who built the real rig).
@@ -1087,6 +1129,8 @@ or the user (who built the real rig).
   prediction. Not carried into GCAM Studio; SiPM pitch, light spread and crystal identification are TODO-19.
 
 ## 36. Thermal drift DURING an acquisition + flood-field correction — `ThermalDrift` / `ThermalDriftStudy` / `montecarlo thermal`
+
+> **Seed ensemble 2026-10-02 — [theme 63](#63-evidence-quoted-over-seed-ensembles--samplesevidence-2026-10-02).** Efficiency 90.62 ± 0.01 %, residual 6.71 %; position RMS 0.48 ± 0.03 (off) / 0.45 ± 0.03 mm (on) — a ~0.5 mm floor, not ~0.6.
 First of the "physical realism gaps" queue (Codex gap-review). The real rig's headache: SiPM cooling. We modelled
 only STATIC per-crystal gain; this adds the TIME axis and asks what a per-crystal photopeak-window system loses as
 the array's temperature drifts mid-acquisition — and what flood correction can and cannot fix.
@@ -1145,6 +1189,8 @@ realize the pile-up in the energy domain by MERGING the timed MC event stream, n
   peak so the continuum is visible. Ties the spectrum realism to the operating count rate. (Tests: `PileUpTests`, +6.)
 
 ## 38. Mask fabrication tolerances — a mis-machined tungsten mask vs an ideal decoder — `MaskFabrication` / `MaskFabricationStudy` / `montecarlo maskfab`
+
+> **Seed ensemble 2026-10-02 — [theme 63](#63-evidence-quoted-over-seed-ensembles--samplesevidence-2026-10-02).** "Floor ~0.95 mm" and "within ~2× the ideal" below are withdrawn. Over 128 seeds the mean RMS is 1.35 (ideal) / 1.52 (40 µm) / 1.93 (80 µm) / 3.65 mm (160 µm); the defined gate **seed-mean RMS ≤ 1.25 × ideal** passes 40 µm (1.13×) and fails 80 µm (1.43×) (D-39). The per-seed 2× test does not separate them (108 vs 100 of 128). PSR 4.38 → 3.77. Conditional on the six fixed patterns.
 Third physical-realism gap, user-flagged (★): tungsten is hard to machine, so a real mask is not the ideal MURA the
 decoder assumes. The user's key steer: **model the CONSERVATIVE, usable tolerance, not the best-case a machine can
 momentarily hit** — "machinable" ≠ "deployable", especially for a thick brittle tungsten slab.
@@ -1167,6 +1213,8 @@ momentarily hit** — "machinable" ≠ "deployable", especially for a thick brit
   distinct structural defect, deliberately deferred. (Tests: `MaskFabricationTests`, +5.)
 
 ## 39. Mask–detector alignment / pose error — `CodedApertureMask` pose + `AlignmentStudy` / `montecarlo align`
+
+> **Seed ensemble 2026-10-02 — [theme 63](#63-evidence-quoted-over-seed-ensembles--samplesevidence-2026-10-02).** 1 mm offset → 2.62 ± 0.01 mm bias (2.66 ± 0.04 mm change); 2 mm spacing → 0.38 ± 0.06 mm; 2° roll → 0.13 ± 0.03 mm (N = 64).
 Fourth physical-realism gap (HIGH). The decoder back-projects the IDEAL geometry (mask centred at its nominal
 plane, unrotated); a rigid-body mis-registration of the real mask casts a systematically shifted/rotated coded
 shadow → a SYSTEMATIC localization bias, not just scatter. The other big localization gap after fabrication.
@@ -1187,6 +1235,8 @@ shadow → a SYSTEMATIC localization bias, not just scatter. The other big local
   is deliberately deferred, like warping. (Tests: `AlignmentTests`, +4.)
 
 ## 40. Bad (dead / hot) detector pixels + bad-pixel-map repair — `DetectorDefects` / `DetectorDefectStudy` / `montecarlo defects`
+
+> **Seed ensemble 2026-10-02 — [theme 63](#63-evidence-quoted-over-seed-ensembles--samplesevidence-2026-10-02).** Repaired 0.48 ± 0.04 → 0.51 ± 0.03 mm over 0 → 8 % bad pixels (N = 64; was 0.60 → 0.68, an earlier-generator run); raw 1.15 ± 0.12 mm at 8 %. Conditional on the eight fixed maps.
 Fifth physical-realism gap (MED-HIGH). We modelled per-crystal gain non-uniformity (theme 36) but not the discrete
 channel defects a real SiPM array carries. **Dead** pixels (disconnected/failed channel) punch holes in the flood;
 **hot** pixels (dark-count / breakdown runaway) add source-INDEPENDENT spikes — both imprint fixed structure that is
@@ -1228,6 +1278,8 @@ photoelectric absorption above the K-edge) fluoresces a W K X-ray, and some head
   scatter. (Tests: `MaskSecondaryTests`, +5.)
 
 ## 42. Counting-system dead time / count-rate saturation — `DeadTime` / `DeadTimeStudy` / `montecarlo deadtime`
+
+> **Seed ensemble 2026-10-02 — [theme 63](#63-evidence-quoted-over-seed-ensembles--samplesevidence-2026-10-02).** Non-paralysable 912.5 ± 0.7 kcps at 10 Mcps; paralysable 366.4 ± 0.8 kcps at 1 Mcps and 500 ± 140 cps at 10 Mcps (N = 64).
 Seventh physical-realism gap, the count-rate companion to pile-up (theme 37): pile-up SUMS overlapping pulses in the
 spectrum; dead time is the counting THROUGHPUT loss while the DAQ processes each pulse. Reuses the same timed MC event
 stream (`EventStreamStudy`), so the loss comes from the real Poisson arrival statistics.
@@ -1250,6 +1302,8 @@ stream (`EventStreamStudy`), so the loss comes from the real Poisson arrival sta
   is unchanged to within 1/nTrue; background-on is now correct too.
 
 ## 43. Sub-cell peak interpolation — `PeakInterpolation` / `SubCellStudy` / `montecarlo subcell`
+
+> **Seed ensemble 2026-10-02 — [theme 63](#63-evidence-quoted-over-seed-ensembles--samplesevidence-2026-10-02).** Step 1.8 mm: 0.527 ± 0.004 → 0.131 ± 0.002 mm; step 2.4 mm: 0.664 → 0.194 ± 0.002 mm (N = 64).
 A precision WIN (not a physics gap): the decoder samples the source plane on a grid of step `ReconStepMm` and
 `FindPeak` reported the **integer argmax cell**, so the estimate was quantized to one cell — a deterministic sawtooth
 of amplitude ±step/2, **RMS = step/√12, independent of counts**. No amount of statistics beats it; only a finer (more
@@ -1286,6 +1340,8 @@ offset instead.
   (which proves only that interpolation beats the argmax and tent beats the floor).
 
 ## 44. True (cascade) coincidence summing — `DecayScheme` / `CascadeSummingStudy` / `montecarlo cascade`
+
+> **Seed ensemble 2026-10-02 — [theme 63](#63-evidence-quoted-over-seed-ensembles--samplesevidence-2026-10-02).** No per-seed slope is quoted any more (1.71 ± 0.46 over 128 seeds; ~2.7 of the 7 distances have no sum event and are dropped by the CLI fit). **One pooled Poisson fit over all 896 (seed, distance) rows, zero rows included: slope 2.00 ± 0.03** (seed bootstrap 95 % 1.95–2.06; Pearson dispersion 1.05). The slope the geometry implies for these distances — solid angle of the 14 mm face plus the W(θ) correlation — is 1.99 (2.00 with summing-out at its upper bound): consistent with ε². Sum yield at 18 mm 4.3 ± 0.7 × 10⁻⁶ per decay. `samples/evidence/cascade_fit.py`.
 
 > *Correction (2026-10-02, TODO-14 review):* the angular correlation is not a "~10 % close-geometry correction" — at
 > 1 m the correlated ε²-expectation is 11 % above the isotropic one and the effect shrinks only at very close range;
@@ -1362,6 +1418,8 @@ impact + energy-window mitigation.
 
 ## 46. Scintillator non-proportionality — the intrinsic-resolution COMPONENT from first principles — `NonProportionality` / `NonProportionalityStudy` / `montecarlo nonprop`
 
+> **Seed ensemble 2026-10-02 — [theme 63](#63-evidence-quoted-over-seed-ensembles--samplesevidence-2026-10-02).** GAGG at 662 keV: intrinsic 1.366 ± 0.002 % (~1.4 %), peak shift 0.889 ± 0.001 % (N = 64).
+
 > **Revised 2026-10-01 — [theme 52](#52-crystal-attenuation-from-tabulated-cross-sections--crystalmaterial-2026-10-01).** Resolution components shift by 10–30 % (re-run CSV in `samples/`); the qualitative conclusions stand.
 Next physics-realism-audit item (crystal subsystem, item D): the front-end sets the crystal's intrinsic resolution as
 a hand-tuned CONSTANT (`FrontEndConfig.IntrinsicResolutionFwhm`, "GAGG ~0.05"). Its real origin is NON-PROPORTIONALITY:
@@ -1422,6 +1480,8 @@ finite active pellet in a sealed capsule. Two effects:
   a half-max crossing is missing.
 
 ## 48. MLEM (Poisson-likelihood) reconstruction — `MlemDecoder` / `MlemStudy` / `montecarlo mlem`
+
+> **Seed ensemble 2026-10-02 — [theme 63](#63-evidence-quoted-over-seed-ensembles--samplesevidence-2026-10-02).** Current command: 1.5 × 10⁶ photons, 80 iterations (not 800 k). MLEM resolves 1.5 / 2 / 3 mm pairs and cross-correlation does not in 64 / 64 seeds; valley at 3 mm 0.822 vs 0.170; single-source FWHM **1.93 ± 0.05** vs 2.50 mm (the 1.76 below was an older run); bias 0.87 / 0.55 mm in 64 / 64.
 The biggest physics-realism-audit item (reconstruction subsystem, item C): the only decoder was cross-correlation — a
 single linear back-projection with the ±1 decoding array. It is fast but leaves NEGATIVE sidelobes, aliases off-axis
 sources into a ghost, and MERGES nearby sources into one blurred peak that its argmax then picks. `MlemDecoder` adds
@@ -1476,6 +1536,8 @@ generation, so **DCR keeps climbing with temperature even under a comp loop**.
   modelled discriminator false-trigger rate.
 
 ## 50. Depth-of-interaction (DOI) parallax in reconstruction — `DoiParallaxStudy` / `montecarlo doi`
+
+> **Seed ensemble 2026-10-02 — [theme 63](#63-evidence-quoted-over-seed-ensembles--samplesevidence-2026-10-02).** At 9 mm off axis: 0.093 ± 0.002 mm (5 mm crystal), 0.299 ± 0.001 mm (30 mm); on axis |shift| < 0.01 mm (N = 64).
 Physics-realism-audit item F (decoder vs detector response): the decoder back-projects the pixel-CENTRE front-face
 crossing, but a gamma interacts at a random DEPTH in the crystal. For an OBLIQUE (off-axis) ray the scintillation
 centroid the detector reads is displaced from the front face by depth·tan(incidence) — a parallax the centre-back-
@@ -1637,6 +1699,8 @@ Same commands on the current code:
 
 ## 53. Field of view at field distance + out-of-field cue — `FieldOfViewStudy` / `montecarlo fov` (2026-10-01)
 
+> **Seed ensemble 2026-10-02 — [theme 63](#63-evidence-quoted-over-seed-ensembles--samplesevidence-2026-10-02).** Thresholded angles over 64 seeds (frequencies in EV-02): x, 1 m, N0 500 + background **5.0°** in 56 / 64 (the 4.0° below occurred in 6 / 64); 5 m cyclic at N0 500 3.5° in 48 / 64; diagonal 5 m N0 5000 7.5° in 40 / 64 or 4.5° in 24; unflagged wrong spots ≤ 7 % without background (N0 500), up to 29–49 % with background equal to the signal.
+
 TODO-04 / LIM-01 / D-16: the adopted narrow-FOV path relies on (1) the usable field of non-cyclic decoding, estimated at
 ±5° from the lab-geometry area ratio, and (2) an out-of-field cue. Neither had been simulated at field distance.
 
@@ -1692,6 +1756,8 @@ Reproduce: `montecarlo fov samples/scenario_handheld.json` (≈ 3 min) → `samp
 flag at 10°, no cue at 18°, reproducibility, argument guard).
 
 ## 54. Dose rate from the detector spectrum — `DoseStudy` / `montecarlo dose` (2026-10-01)
+
+> **Seed ensemble 2026-10-02 — [theme 63](#63-evidence-quoted-over-seed-ensembles--samplesevidence-2026-10-02).** Frontal ±13 % holds in 63 / 64 seeds (largest deviation 12.5 ± 0.3 %, at 250 keV); live-time corrected Cs-137 0.91 (± 0.003). Every ratio's seed spread ≤ 0.004.
 
 TODO-05 / PR-SAFE-01 / PR-SENS-05 / D-21: the dose-rate function is required (up to 10 mSv/h within ±50 % over
 60 keV – 1.33 MeV, NSS-1) but the engine had no dose model. A scintillator meter weights its pulse-height spectrum
@@ -1920,3 +1986,57 @@ window; intensity and flat background profiled; parameters bearing + v = 1/(z �
 - **Gate (L-5): not yet.** Open: the 10 s wrong-maximum rate with the final search (v2 gave 11 / 192), count-scaled
   model budget, and model mismatch (e.g. mask–detector distance; a 0.5 mm error ≈ −6 mm at 1 m, derived not measured).
   The sharpest plane stays in Studio until these are measured.
+
+## 63. Evidence quoted over seed ensembles — `samples/evidence` (2026-10-02)
+
+TODO-27 ([PLAN.Physics.EvidenceRefresh](PLAN.Physics.EvidenceRefresh.md), measured review
+[PLAN.Physics.EvidenceRefresh.Review](PLAN.Physics.EvidenceRefresh.Review.md), implementation by a substitute Claude
+subagent). Every Monte Carlo number in the evidence register was a single realisation at seed 12345. All 33
+quotation families were re-measured over 32–128 outer seeds on one engine build (`55af615`; nothing under `src/`,
+`samples/` or `rtl/` changed since) and are now quoted as mean ± SD or median [quartiles] with N, picks and gates as
+k / N. The author decided every changed interpretation from its measured numbers (ER-1 … ER-12 in the plan; D-19,
+D-39, D-40 in `VV.Gcam.Decisions`).
+
+- **Withdrawn or re-interpreted** (decision row → where): calibrated subtraction "matches" the antimask to 0.07 mm →
+  the antimask is ~20–30 % better at equal time, rotation still rejected on cost and stability (ER-1, D-19; EV-12,
+  LIM-07, theme 5); tungsten "8–10 mm" → ~10 mm from the defined D = 20 mm recipe (21 / 32), the lab command cannot
+  pick; 7 mm leaks 28.8 % (ER-2; EV-04, theme 4); PR-MFG-01 "within ~2×" → gate seed-mean RMS ≤ 1.25 × ideal, 40 µm
+  1.13× passes, 80 µm 1.43× fails (ER-3, D-39; EV-30, theme 38); "sub-mm from ~50 counts" → collapse below ~25, sub-mm
+  from ~250 (ER-4; EV-07, theme 9); rank 11 "≥ 90 %" → passes in 31 / 32, PAPER's ~7× → ~2.5× (ER-5); 16 × 16
+  "halves" → about a third (ER-6); shield picks as frequencies, Co-60 25 mm 6.8 kg (83 / 128) or 30 mm 9.8 kg (45),
+  "not carriable" against PR-PHY-01, no 6 → 8 mm increment (ER-7; EV-25, theme 22); cascade slope → pooled Poisson fit
+  (ER-8, below); depth range < 0.15 m (clamp), 240 mm width censored, z^1.74 empirical, two viewer estimators
+  separated (ER-9; EV-33); front end 6.16 ± 0.25 %, the 1.70 % proxy not called electronic noise (ER-10; EV-17);
+  Co × 2 spatial limit holds in 126 / 128 (ER-11; EV-15); crystal-gap 9 / 13 / 20 / 69 / 45 % unverified, replaced by
+  a labelled experiment 1 / 1.59 / 2.52 / 6.60 / 5.33 relative to zero gap (ER-12; PAPER §4, theme 35).
+- **Moved without a change of conclusion** (one realisation, often from the earlier generator): EV-01 centred 0.35 mm,
+  ghost −6.40 mm, sweeps 278 / 146 and 361 / 174; EV-02 5.0° with background (56 / 64); EV-05 edge RMS 0.26 mm; EV-09
+  floor 0.25 mm; EV-11 MLEM FWHM 1.93 mm at the current 1.5 × 10⁶ photons; EV-15 mixed-field R 3.99, stripped error
+  13–18 %; EV-21 plain GAGG 4 ± 2 % at 1 Mcps (not 0.2 %); EV-29 ~0.5 mm; EV-32 0.48 → 0.51 mm. **Stayed** (within
+  rounding): efficiencies (EV-09, EV-19, EV-20), dose ratios (EV-23), DOI (EV-13), sub-cell (EV-08), alignment (EV-31),
+  dead time (EV-22), the three-source map (EV-10, grid-stable in 64 / 64).
+- **ER-8 cascade.** `samples/evidence/cascade_fit.py` fits sum_count ~ Poisson(8 × 10⁶ · exp(a + b · ln single)) over
+  all 128 × 7 rows (344 zero-count rows included): **b = 2.001 ± 0.027** (Wald; seed bootstrap SD 0.028, 95 % 1.95–2.06;
+  Pearson χ² / dof 1.05; the per-distance pooled fit gives 2.001 ± 0.027). Expected for this geometry: ln P₂ against
+  ln P₁ over the CLI's distances, P₁ the solid angle of the ±7 mm face and P₂ both cascade photons hitting it with the
+  engine's W(θ) = 1 + cos²θ/8 + cos⁴θ/24 — **1.99** (2.00 with summing-out at its upper bound; the open-fraction test
+  and the normal-incidence crystal deposit do not depend on distance). Consistent with ε² (z = 0.4).
+- **ER-3 gate.** Seed-mean RMS over 128 seeds ÷ seed-mean ideal (1.346 mm): 0.96 (10 µm), 1.05 (20), **1.13 (40)**,
+  **1.43 (80)**, 2.71 (160) — from `maskfab/maskfab.csv/<σ>/rms_mm` in `samples/evidence/results/aggregate.csv`.
+- **ER-4 biasing.** Measured with its own recipe (`probe` mode `bias`: same scenario, then a clone with
+  `DirectionalBiasing = false` and 10⁸ histories), 32 seeds, rerun through the committed driver bit-identical to the
+  review: biased ÷ 4π = **0.999 ± 0.006** (within 1 % in 30 / 32; the spread is the 4π run's Poisson noise); at 10⁶
+  photons the biased estimate's own seed spread is 0.11 % against 0.59 % for 10⁸ isotropic histories.
+- **Artefacts** (`samples/evidence/`): `seeds.json` (O128, F128 and the RTL lists), `manifest.json` (49 families: recipe,
+  N, scenario SHA-256, fixed in-study patterns, engine commit), `run_seeds.py` (driver: complete JSON clone, only Seed
+  and declared overrides changed, isolated cwd per run, stdout / stderr / exit / timing captured, refuses changed
+  scenarios), `aggregate.py` (parsers ported from the review; refuses missing, failed or schema-mismatched runs),
+  `probe/` (headless recipes the CLI lacks: precise, scan, bias, fov, gap, spatial, depthsharp, materials, viewer — not
+  in `Gcam.sln`), `rtl_seeds.py` (Python / RTL studies with their own generators and fixtures), `cascade_fit.py`,
+  `results/` (`aggregate.csv` per-metric summary, `aggregate_discrete.csv` frequencies, `values.json` per-seed values
+  of the quoted keys, `cascade_fit.json`). `aggregate.py` run over the review's raw runs reproduces 3,539 of its 3,540
+  metric summaries exactly (the missing one came from rounded CLI output superseded by the materials probe).
+- Not done: the full rank × pitch × D grid and an arbitrary-pattern population (mask, defect, gain maps) were not
+  re-run over seeds, so no global optimum or all-device tolerance is claimed; no RTL vectors were regenerated.
+- Plots: `shield.png`, `masktaper.png`, `handheld_validation.png` read their annotations from `results/` (curves stay
+  one labelled run); `cyclic_vs_noncyclic.png` regenerated at seed 12345 with the current engine (362 / 173).

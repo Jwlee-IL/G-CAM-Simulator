@@ -10,7 +10,7 @@ design, traced up to the [URS](VV.Gcam.URS.md) and down to subsystems. The viewe
   model (RTL), 11 analytical (AN), 5 design decisions, 7 hardware type-test targets (STD), 4 with no design yet.
 - The concept (§2): rank-7 tungsten MURA mask, 16 × 16 GAGG:Ce,Mg at 1 mm, D = 55 mm, non-cyclic decoding, ~8 mm
   tungsten shield, a separate small dose counter, pistol grip and a docking Windows tablet; ≤ 2.5 kg.
-- Strongest evidence: sub-mm localisation (0.24 mm floor), a usable field of ±6–7.5° at field distance, Compton
+- Strongest evidence: sub-mm localisation (0.25 mm floor), a usable field of ±6–7.5° at field distance, Compton
   stripping of Co-60 downscatter.
 - Largest gaps (§4): narrow field of view, a dose counter chosen but not yet specified, no "no source" test,
   nothing measured on hardware.
@@ -28,7 +28,7 @@ what is reasoned:
 
 | Grade | Meaning |
 |---|---|
-| **MC** | Gcam Monte Carlo (C#), reproducible by a CLI study and pinned by a test |
+| **MC** | Gcam Monte Carlo (C#), reproducible by a CLI study and pinned by a test; the numbers are seed-ensemble values ([Evidence §1](VV.Gcam.Evidence.md#1-the-tools-behind-the-grades)) |
 | **RTL** | front-end model: SystemVerilog + cocotb, or the Python front-end models in `rtl/` |
 | **AN** | analytical design model (Python) built on MC-validated laws; first-order, not transport-grade |
 | **DEC** | design decision derived from MC / RTL / AN results; nothing further to measure in simulation |
@@ -51,7 +51,7 @@ original rig (source plane 100 mm from the mask). The field-of-view (EV-02) and 
 
 | Part | Choice | Why |
 |---|---|---|
-| Mask | rank-7 MURA, 2 × 2 mosaic, 1 mm cell, 10 mm tungsten | field ÷ resolution = rank (EV-03); 8–10 mm W balances leak against collimation (EV-04) |
+| Mask | rank-7 MURA, 2 × 2 mosaic, 1 mm cell, 10 mm tungsten | field ÷ resolution = rank (EV-03); ~10 mm W balances leak against collimation (EV-04) |
 | Detector | 16 × 16 pixels @ 1 mm, 15 mm thick GAGG:Ce,Mg, SiPM readout | ~2 pixels per mask-cell shadow (EV-06); dense, rugged, non-hygroscopic, low-voltage, low afterglow (EV-19, EV-21) |
 | Geometry | mask–detector D = 55 mm | sensitivity against ghost margin (EV-01, EV-09) |
 | Decode | non-cyclic (finite mask) | suppresses ghosts; the cyclic ghost margin at D = 55 mm is only 1.35 (EV-01) |
@@ -83,26 +83,26 @@ source of a target), **Grade** (§1), **UN** (user need), **SS** (subsystem).
 
 | ID | Requirement | Basis | Grade | UN | SS |
 |---|---|---|---|---|---|
-| PR-IMG-01 | Decoding is non-cyclic (finite-mask), so a source outside the fully-coded FOV does not appear as a ghost inside it. **Chosen ghost-suppression method (2026-10-01)**; mask rotation (mask / antimask hardware) rejected on cost. | EV-01: the hand-held head localises 360 / 625 grid positions non-cyclic against 172 / 625 cyclic; EV-02: the ghost boundary moves from 3.6° to ~7°, it does not vanish (LIM-07) | MC | UN-01, UN-11 | SS-3 |
-| PR-IMG-02 | Localisation precision reaches a floor of **0.24 mm RMS on axis** (0.53 mm at the 8 mm edge), and is sub-mm with ≥ 250 detected counts on axis and ≥ 500 at the edge. | EV-09 (original rig 0.36 mm); EV-08 (sub-cell interpolation) | MC | UN-01, UN-07 | SS-1, SS-3 |
+| PR-IMG-01 | Decoding is non-cyclic (finite-mask), so a source outside the fully-coded FOV does not appear as a ghost inside it. **Chosen ghost-suppression method (2026-10-01)**; mask rotation (mask / antimask hardware) rejected on cost. | EV-01: the hand-held head localises 361 / 625 grid positions non-cyclic against 174 / 625 cyclic (medians over 64 seeds); EV-02: the ghost boundary moves from 3.6° to ~7°, it does not vanish (LIM-07) | MC | UN-01, UN-11 | SS-3 |
+| PR-IMG-02 | Localisation precision reaches a floor of **0.25 mm RMS on axis** (0.53 mm at the 8 mm edge), and is sub-mm with ≥ 250 detected counts on axis and ≥ 500 at the edge. | EV-09 (original rig 0.35 mm); EV-08 (sub-cell interpolation) | MC | UN-01, UN-07 | SS-1, SS-3 |
 | PR-IMG-03 | Several sources of different isotopes in one field are each localised < 1 mm inside the FCFOV in a single acquisition (Cs-137 + Co-60 + Co-57: 0.55 / 0.27 / 0.93 mm; number of sources known). | EV-10 | MC | UN-01, UN-02 | SS-3 |
 | PR-IMG-04 | An optional likelihood (MLEM) reconstruction resolves source pairs 2–3 mm apart that cross-correlation merges, with a non-negative image. | EV-11 | MC | UN-01 | SS-3 |
 | PR-IMG-05 | The source marker is registered to the scene-camera image to better than the gamma resolution (~1°) at all ranges, by reprojecting with the known camera baseline *b* and the measured range *z* (Δθ = arctan(b/z); uncorrected, b = 40 mm gives 7.6° at 0.3 m). | EV-26 | AN | UN-01, UN-05 | SS-3, SS-5 |
-| PR-IMG-06 | The detector samples each mask-cell shadow with ≥ 1 pixel (Nyquist), ~2 nominal. | EV-06 (16 × 16 ≈ halves the 12 × 12 error) | MC | UN-01 | SS-1 |
+| PR-IMG-06 | The detector samples each mask-cell shadow with ≥ 1 pixel (Nyquist), ~2 nominal. | EV-06 (16 × 16 reduces the 12 × 12 error by about a third) | MC | UN-01 | SS-1 |
 | PR-IMG-07 | The device reports "no source" when the energy histogram shows no photopeak above background **and** no reconstruction peak passes a significance test (ghost margin / peak-to-sidelobe). **No fixed false-positive-rate target** (author, 2026-10-01): it depends on the local background and would make the product needlessly strict; the evidence behind each verdict is shown instead. | author 2026-10-01 (energy histogram); ghost margin EV-01; peak-to-sidelobe EV-30; EV-02: past ~14° the decoder still reports an in-field spot in ~60 % of acquisitions, so the test is needed — threshold and rates not studied | OPEN | UN-11 | SS-3, SS-4 |
-| PR-IMG-08 | **Depends on ghost suppression (PR-IMG-01) holding at field conditions.** The device detects when the dominant signal comes from outside the fully-coded field and tells the user which way to turn. The flood centroid gives the correct side from ~1° to ~14.5° off axis (≥ 95 %) and flags "outside" in ≥ 90 % of acquisitions at 4–12.5° (N0 5000) / 6–11.5° (N0 500); with background equal to the signal the flag weakens to ≤ 68 %, so the cue needs a background estimate. Past ~14° no direction can be given. | EV-02 | MC | UN-12 | SS-3, SS-4 |
+| PR-IMG-08 | **Depends on ghost suppression (PR-IMG-01) holding at field conditions.** The device detects when the dominant signal comes from outside the fully-coded field and tells the user which way to turn. The flood centroid gives the correct side from ~1° to ~14.5° off axis (≥ 95 %) and flags "outside" in ≥ 90 % of acquisitions at 4–12.5° (N0 5000) / 6–11.5° (N0 500); with background equal to the signal the flag rate peaks at ~70 %, so the cue needs a background estimate. Past ~14° no direction can be given. | EV-02 | MC | UN-12 | SS-3, SS-4 |
 | PR-IMG-09 | Angular resolution ≈ 1° (one mask cell over D: 1 mm / 55 mm); iPIX, the closest coded-aperture comparator, specifies 2.5–6°. | URS §5 benchmark; geometry; EV-03 | AN | UN-01 | SS-1, SS-3 |
-| PR-IMG-10 | **Adopted path (2026-10-01, D-16):** software only — the usable field of non-cyclic decoding, **±6–7.5° along the axes** without background (7.0° at 1 m and 7.5° at 5 m with 5000 on-axis counts; 6.0° / 7.0° with 500); ±4–6.5° with background equal to the signal; worse on the diagonal at low counts — instead of the ±3.6° fully-coded field; an out-of-field cue that tells the user which way to turn (PR-IMG-08); and a hand sweep stitched with IMU / VIO, ~10–14 pointings for a 45° × 45° view, no more than ~28° apart so the cue always has a source within ~14°. Rank-up + tapered channels (LIM-01 B + E) stay the hardware fallback if field trials show the search takes too long. | EV-02; LIM-01; EV-03, EV-05 | DEC | UN-01, UN-12 | SS-1, SS-3 |
+| PR-IMG-10 | **Adopted path (2026-10-01, D-16):** software only — the usable field of non-cyclic decoding, **±6–7.5° along the axes** without background (7.0° at 1 m and 7.5° at 5 m with 5000 on-axis counts; 6.0° / 7.0° with 500); ±5–6.5° with background equal to the signal; worse on the diagonal at low counts — instead of the ±3.6° fully-coded field; an out-of-field cue that tells the user which way to turn (PR-IMG-08); and a hand sweep stitched with IMU / VIO, ~10–14 pointings for a 45° × 45° view, no more than ~28° apart so the cue always has a source within ~14°. Rank-up + tapered channels (LIM-01 B + E) stay the hardware fallback if field trials show the search takes too long. | EV-02; LIM-01; EV-03, EV-05 | DEC | UN-01, UN-12 | SS-1, SS-3 |
 
 ### Energy and isotope separation (`PR-NRG`)
 
 | ID | Requirement | Basis | Grade | UN | SS |
 |---|---|---|---|---|---|
 | PR-NRG-01 | One gain setting covers 122–1332 keV (gain set by the highest line, not the primary source), without degrading the 122 keV line. | EV-16 | RTL | UN-02 | SS-2 |
-| PR-NRG-02 | Energy resolution ≈ 6–7 % FWHM at 662 keV with realistic noise (intrinsic ~6 %, electronic ~2.3 %, in quadrature 6.4 %). | EV-17 (GAGG photo-electron budget 5.7 %) | RTL, MC | UN-02 | SS-1, SS-2 |
-| PR-NRG-03 | Events are positioned by total-energy window + largest-deposit pixel (Argmax), giving **~2× the counts** of per-pixel windowing (12 % vs 6 % of the ideal counts) and a lower RMS and failure rate (3.51 vs 5.65 mm, 16 % vs 46 % fails at a 400-photon budget — the comparison, not the absolute RMS, is the result). | EV-14 | MC | UN-07 | SS-3 |
-| PR-NRG-04 | A higher-energy isotope's downscatter in a lower line's window is removed by **per-pixel Compton stripping**, which recovers a co-located Cs-137 count (0–4 % error, R = 0.469). **Spatial separation alone is limited:** in a 662 keV window with 1 mm GAGG pixels, Co-60 downscatter is ~55 % of the window (equal-photon-budget demonstration) and the Cs-137 peak is lost once Co-60 is ~4× stronger (holds at 2×). Requires a calibrated downscatter / photopeak ratio — not blind separation. | EV-15 | MC | UN-03 | SS-3 |
-| PR-NRG-05 | Energy gain is calibrated per channel; position needs no per-pixel uniformity correction. | EV-18 (15 % gain σ smears 7.4 → 18 % FWHM; calibration restores it) | RTL, MC | UN-02 | SS-2, SS-3 |
+| PR-NRG-02 | Energy resolution ≈ 6–7 % FWHM at 662 keV with realistic noise (intrinsic ~6 % dominates; 6.2 % with the full noise chain). | EV-17 (GAGG photo-electron budget 5.7 %) | RTL, MC | UN-02 | SS-1, SS-2 |
+| PR-NRG-03 | Events are positioned by total-energy window + largest-deposit pixel (Argmax), giving **~2× the counts** of per-pixel windowing (12 % vs 6 % of the ideal counts) and a lower RMS and failure rate (3.6 vs 5.5 mm, 18 % vs 40 % fails at a budget of 400 ideal effective counts — the comparison, not the absolute RMS, is the result). | EV-14 | MC | UN-07 | SS-3 |
+| PR-NRG-04 | A higher-energy isotope's downscatter in a lower line's window is removed by **per-pixel Compton stripping**, which recovers a co-located Cs-137 count (0–1 % error, R = 0.469). **Spatial separation alone is limited:** in a 662 keV window with 1 mm GAGG pixels, Co-60 downscatter is ~55 % of the window (equal-photon-budget demonstration) and the Cs-137 peak is lost once Co-60 is ~4× stronger (holds at 2× in 126 / 128 seeds). Requires a calibrated downscatter / photopeak ratio — not blind separation. | EV-15 | MC | UN-03 | SS-3 |
+| PR-NRG-05 | Energy gain is calibrated per channel; position needs no per-pixel uniformity correction. | EV-18 (15 % gain σ smears 7.3 → 18.4 % FWHM; calibration restores it) | RTL, MC | UN-02 | SS-2, SS-3 |
 | PR-NRG-06 | Each located source is labelled with its radionuclide from the declared set (Cs-137, Co-60, Ir-192; Co-57 for tests), and for U2 with the plain category **"industrial" (산업용)** — the only category used (2026-10-01). Identification against a full library over 30 keV – 3 MeV is **not** in the concept. | EV-16, EV-10 (known lines only); NSS-1 §6.4.1, §6.4.18 for the RID scope | OPEN | UN-02, UN-18 | SS-3, SS-4 |
 
 ### Sensitivity, rate and time to result (`PR-SENS`)
@@ -111,9 +111,9 @@ source of a target), **Grade** (§1), **UN** (user need), **SS** (subsystem).
 |---|---|---|---|---|---|
 | PR-SENS-01 | Geometric efficiency **2.48 × 10⁻⁴** for Cs-137 in the hand-held head — **2.48×** the original rig (1.00 × 10⁻⁴) — giving a sub-mm location in ~1 s from a 1 MBq Cs-137 source on axis at the lab distance. | EV-09 | MC | UN-07 | SS-1 |
 | PR-SENS-02 | A result from fewer than ~50 detected counts is flagged as unreliable (localisation collapses below ~25); the time still needed may be shown as an **estimate**, labelled as such — never as a definite verdict. | EV-07 | MC → DEC | UN-13 | SS-3, SS-4 |
-| PR-SENS-03 | Count-rate capability holds to ~1 Mcps without afterglow collapse (rules out plain GAGG, which drops to 0.2 % recovery at 1 Mcps). | EV-21 | RTL | UN-07 | SS-1, SS-2 |
+| PR-SENS-03 | Count-rate capability holds to ~1 Mcps without afterglow collapse (rules out plain GAGG, which drops to ~4 % recovery at 1 Mcps). | EV-21 | RTL | UN-07 | SS-1, SS-2 |
 | PR-SENS-04 | Dead time is reported as a live-time fraction so rates are corrected (non-paralysable model saturates at 1/τ). | EV-22 | MC | UN-07 | SS-2, SS-3 |
-| PR-SENS-05 | **Imaging above ~10 mSv/h is not required** (author, 2026-10-01: at such fields the user's alarming personal dosimeter sends them back first). The **dose-rate reading must not under-read**: from 10 mSv/h up to 1 Sv/h it shows an over-range indication or a continuous alarm (NSS-1 §6.4.8). The method is simulated on a paralysable front end (τ = 1 µs): raw 0.86 / 0.53 / 0.004 of the Cs-137 dose at 1 / 10 / 100 mSv/h, live-time correction 0.90 up to ~150 mSv/h, and beyond that the live fraction (< 10⁻³) as the over-range signature. The dose counter of PR-SAFE-02 (a GM tube is paralysable too) applies the same method; the rates at which it holds scale with that counter's dead time and are set when it is chosen. Met by the indication, not by a number. | NSS-1 §6.4.8; EV-23, EV-22 (method, on the imaging front end) | AN | UN-14, UN-13 | SS-2, SS-3 |
+| PR-SENS-05 | **Imaging above ~10 mSv/h is not required** (author, 2026-10-01: at such fields the user's alarming personal dosimeter sends them back first). The **dose-rate reading must not under-read**: from 10 mSv/h up to 1 Sv/h it shows an over-range indication or a continuous alarm (NSS-1 §6.4.8). The method is simulated on a paralysable front end (τ = 1 µs): raw 0.86 / 0.53 / 0.004 of the Cs-137 dose at 1 / 10 / 100 mSv/h, live-time correction 0.91 up to ~150 mSv/h, and beyond that the live fraction (< 10⁻³) as the over-range signature. The dose counter of PR-SAFE-02 (a GM tube is paralysable too) applies the same method; the rates at which it holds scale with that counter's dead time and are set when it is chosen. Met by the indication, not by a number. | NSS-1 §6.4.8; EV-23, EV-22 (method, on the imaging front end) | AN | UN-14, UN-13 | SS-2, SS-3 |
 | PR-SENS-06 | *Withdrawn 2026-10-01 — replaced by PR-SENS-07 / -08 (benchmark parity).* Was: a location within 2 s at 10 µSv/h from each reference source (estimated 0.3–1 kcps, so the 250–500 counts of PR-IMG-02 take < 2 s). | [URS §5](VV.Gcam.URS.md#5-reference-sources) estimate | AN | UN-07 | SS-1, SS-3 |
 | PR-SENS-07 | **RC-1 (iPIX parity):** a Cs-137 source giving 2 µSv/h above background at the device is located in < 30 s. Estimate ~110 cps → 250 counts in ~2 s. | [URS §5](VV.Gcam.URS.md#reference-measurement-conditions-adopted); EV-09 | AN | UN-07 | SS-1, SS-3 |
 | PR-SENS-08 | *Withdrawn 2026-10-01 — Polaris-H is a Compton camera, not a comparator for a scintillator coded-aperture camera; RC-2 is kept in URS §5 as information only.* | — | — | — | — |
@@ -165,15 +165,15 @@ None can be shown by simulation; they are type-test requirements for hardware.
 
 | ID | Requirement | Basis | Grade | UN | SS |
 |---|---|---|---|---|---|
-| PR-RNG-01 | Source range comes from a ToF / LiDAR sensor; coded-aperture refocusing is a near-field complement only (depth resolution worsens about as z^1.5). | EV-33, EV-26 | MC, AN | UN-10 | SS-3, SS-5 |
+| PR-RNG-01 | Source range comes from a ToF / LiDAR sensor; coded-aperture refocusing is a near-field complement only (depth resolution worsens about as z^1.7). | EV-33, EV-26 | MC, AN | UN-10 | SS-3, SS-5 |
 
 ### Manufacturing and calibration (`PR-MFG`)
 
 | ID | Requirement | Basis | Grade | UN | SS |
 |---|---|---|---|---|---|
-| PR-MFG-01 | Mask machining tolerance σ ≲ 40 µm (hole placement, size, drill wander) to stay within ~2× the ideal localisation floor. | EV-30 | MC | UN-01 | SS-1 |
+| PR-MFG-01 | Mask machining tolerance σ ≲ 40 µm (hole placement, size, drill wander), checked by the gate: seed-mean localisation RMS ≤ 1.25 × the ideal mask's (40 µm: 1.13×; 80 µm: 1.43×). | EV-30; D-39 | MC | UN-01 | SS-1 |
 | PR-MFG-02 | Mask–detector in-plane registration ≲ 0.4 mm for a ~1 mm source-bias budget (offset is amplified by (D+S)/D; spacing and roll are far more forgiving). Value at the lab geometry D = 60, S = 100 mm. | EV-31 | MC | UN-01 | SS-1, SS-6 |
-| PR-MFG-03 | A calibrated bad-pixel map with neighbour repair keeps localisation at the ~0.6 mm floor (0.60 → 0.68 mm) with up to 8 % dead or hot pixels (12 × 12 array). | EV-32 | MC | UN-01 | SS-3 |
+| PR-MFG-03 | A calibrated bad-pixel map with neighbour repair keeps localisation at the ~0.5 mm floor (0.48 → 0.51 mm) with up to 8 % dead or hot pixels (12 × 12 array). | EV-32 | MC | UN-01 | SS-3 |
 
 ### Software and engineering use (`PR-SW`)
 
@@ -197,11 +197,11 @@ this table is the requirement-side view.
 | **The dose counter is chosen but not specified** (D-37): its energy and angular response, dead time and over-range behaviour come from the part chosen and its type test; Gcam has simulated only why the imaging head cannot be the dose channel ([LIM-09](VV.Gcam.Limitations.md#lim-09--the-dose-reading-holds-only-frontally), EV-23) | UN-14 | PR-SAFE-01, -02, PR-SENS-05, PR-REG-02 |
 | **Narrow field of view**: fully coded ±3.6° against 41–49° for iPIX; the software path (D-16) gives a usable ±6–7.5° (EV-02), the hand sweep and its stitching are not simulated ([LIM-01](VV.Gcam.Limitations.md#lim-01--narrow-field-of-view)) | UN-01, UN-12 | PR-IMG-10 |
 | No "no source" decision: past ~14° the decoder still reports an in-field spot in ~60 % of acquisitions; the significance test, its threshold and its rates are not studied | UN-11 | PR-IMG-07 |
-| The out-of-field cue weakens in background (flag ≤ 68 % at background equal to the signal); it needs a background estimate, not yet designed | UN-12 | PR-IMG-08 |
+| The out-of-field cue weakens in background (flag rate peaks at ~70 % with background equal to the signal); it needs a background estimate, not yet designed | UN-12 | PR-IMG-08 |
 | Localisation precision and sensitivity are simulated at the lab distance only; at field stand-off only the field of view (Cs-137) and the dose response are | UN-01, UN-07 | §1 geometry |
 | Nuclide labelling only against known lines; no full-library identification | UN-02, UN-18 | PR-NRG-06 |
 | No blind isotope separation — stripping needs a calibrated ratio and known lines; **spatial separation holds only to Co : Cs ≈ 2 : 1** ([LIM-08](VV.Gcam.Limitations.md#lim-08--spatial-isotope-separation-is-limited)) | UN-03 | PR-NRG-04 |
-| Co-60-class background cannot be shielded within the mass budget (~30 mm W, ~11 kg, EV-25); handled in software only | UN-03 | PR-NRG-04 |
+| Co-60-class background cannot be shielded within the mass budget (25–30 mm W, 6.8–9.8 kg against ≤ 2.5 kg, EV-25); handled in software only | UN-03 | PR-NRG-04 |
 | No product UI: the basic search mode and the search record are unspecified; only the desktop engineering viewer exists | UN-05, UN-16, UN-18 | PR-UX-01, PR-SW-03 |
 | Weak sources (< ~240 cps) need a brace even with de-rotation | UN-07 | PR-ENV-04 |
 | **Field feasibility of RC-1 is unverified** (UN-07 is conditional): plant backgrounds of µSv/h and more are expected (iPIX ships separate masks for backgrounds < 0.5, < 10 and > 10 µSv/h), not natural background; hand motion smears beyond ~0.8 s; with a ±6–7.5° usable field the source must first be found before the 30 s clock means anything; scattered and shielded sources add an uncoded continuum. Needs MC at field distance with background and motion | UN-07 | PR-SENS-07; LIM-01 |

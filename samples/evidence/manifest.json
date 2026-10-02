@@ -1,0 +1,459 @@
+{
+ "_about": "TODO-27 evidence ensembles: one family per recipe. kind cli = the Release CLI on a complete clone of samples/<config> with only Seed (and the listed overrides) changed; probe = probe/Program.cs <mode>; rtl = rtl_seeds.py <mode>. n = seeds measured (a prefix of the named list in seeds.json). The CLI single-scenario runs (scenario*.json without a command) and the material presets are measured unrounded through the precise / materials probes instead.",
+ "measured": "2026-10-02",
+ "engine_commit": "55af61591ab21eaa4c90c6dac74f91c14af8f765",
+ "engine_note": "No file under src/, samples/ or rtl/ changed between that commit and the commit that adds this folder.",
+ "config_sha256": {
+  "scenario.json": "eb5b96835c0b68a88c5c26965540f85f1a313acf1cc0b49955cf7921463edddc",
+  "scenario_handheld.json": "f988784c8ee266e6dd28eb898cdbbfac0e2452cb01fd3929874fd866edc98795",
+  "scenario_orig_gagg.json": "b2911471bb086b326ff026b4082dc267b390a7a260254b4e173ac6cb92ce567c",
+  "scenario_co60.json": "41f580984da5a32221f7e3ff170a8e9cb792418b5ff2c61bcab258e539ecc428",
+  "scenario_offaxis.json": "4608915355bbf64519712159a9da779ec31625028d0b208e95ccefbe335d8a60",
+  "scenario_ghost.json": "fa1ac08581cd33528cb42f876b518947144750409020d3027fc91d13751e634e",
+  "scenario_ir192.json": "010d1837c60b8658289b4ca6d65fb72c7a79d83209eb8259217824362efe390d",
+  "scenario_handheld_ir192.json": "5064c9e4c5eacab1c005785e715719ae5a1e28a063ce922b606be75ae124fcfd",
+  "materials/NaI.json": "202d56003e9421ac6a5ee9982ca37f267a1d96ac9b2a69cad30a9e495db569c9",
+  "materials/LaBr3.json": "c7f9c2e3a033d0be989c3edb1ec130afa4e92be2098d48e5633469bb3fe0b743",
+  "materials/CeBr3.json": "106dad8c3c4ee60b095f93171876a06102664031faf2ce57fae04011f280e7ac",
+  "materials/GAGG.json": "ef4435d1bef58843628ea3b781014d8c225bee67a288aa6ac9cdef36521eeac9",
+  "materials/LYSO.json": "2ce1bd5d37a263d57e93ec1d9d099bc28bc6a893f2548645447c9189ba8aa031",
+  "materials/BGO.json": "fe494a19bbb92c5622ce1f8ac789504d38403f037bbdc5fdaaff0fcd93bd9623"
+ },
+ "fixed_inside_studies": {
+  "maskfab": "mask patterns 100-105",
+  "defects": "defect maps 200-207",
+  "uniformity": "Detector.UniformitySeed of the scenario",
+  "rtl_pixel": "gain/decay map NumPy seed 999",
+  "rtl_multi": "noise draw NumPy seed 9"
+ },
+ "families": [
+  {
+   "id": "sweep",
+   "kind": "cli",
+   "command": "sweep",
+   "config": "scenario.json",
+   "seeds": "O128",
+   "n": 64,
+   "evidence": "EV-01 lab-rig sweep"
+  },
+  {
+   "id": "sweep_head",
+   "kind": "cli",
+   "command": "sweep",
+   "config": "scenario_handheld.json",
+   "seeds": "O128",
+   "n": 64,
+   "evidence": "EV-01 hand-held sweep"
+  },
+  {
+   "id": "noise",
+   "kind": "cli",
+   "command": "noise",
+   "config": "scenario.json",
+   "seeds": "O128",
+   "n": 128,
+   "evidence": "EV-07 count threshold"
+  },
+  {
+   "id": "noise_head",
+   "kind": "cli",
+   "command": "noise",
+   "config": "scenario_handheld.json",
+   "seeds": "O128",
+   "n": 64,
+   "evidence": "EV-09 hand-held precision"
+  },
+  {
+   "id": "noise_orig",
+   "kind": "cli",
+   "command": "noise",
+   "config": "scenario_orig_gagg.json",
+   "seeds": "O128",
+   "n": 64,
+   "evidence": "EV-09 original-rig floor"
+  },
+  {
+   "id": "thickness",
+   "kind": "cli",
+   "command": "thickness",
+   "config": "scenario.json",
+   "seeds": "O128",
+   "n": 64,
+   "evidence": "EV-04 default lab recipe (radius ties)"
+  },
+  {
+   "id": "thickness_wide",
+   "kind": "cli",
+   "command": "thickness",
+   "config": "scenario.json",
+   "seeds": "O128",
+   "n": 32,
+   "evidence": "EV-04 defined wide-field recipe: lab rig with D = 20 mm",
+   "overrides": {
+    "geometry.maskDetectorDistanceMm": 20
+   }
+  },
+  {
+   "id": "uniformity",
+   "kind": "cli",
+   "command": "uniformity",
+   "config": "scenario.json",
+   "seeds": "O128",
+   "n": 64,
+   "evidence": "EV-18 position robustness (fixed UniformitySeed)"
+  },
+  {
+   "id": "array",
+   "kind": "cli",
+   "command": "array",
+   "config": "scenario.json",
+   "seeds": "O128",
+   "n": 128,
+   "evidence": "EV-06"
+  },
+  {
+   "id": "masktaper",
+   "kind": "cli",
+   "command": "masktaper",
+   "config": "scenario.json",
+   "seeds": "O128",
+   "n": 64,
+   "evidence": "EV-05"
+  },
+  {
+   "id": "subcell",
+   "kind": "cli",
+   "command": "subcell",
+   "config": "scenario.json",
+   "seeds": "O128",
+   "n": 64,
+   "evidence": "EV-08"
+  },
+  {
+   "id": "mixedfield",
+   "kind": "cli",
+   "command": "mixedfield",
+   "config": "scenario.json",
+   "seeds": "O128",
+   "n": 64,
+   "evidence": "EV-10"
+  },
+  {
+   "id": "mixediso",
+   "kind": "cli",
+   "command": "mixediso",
+   "config": "scenario.json",
+   "seeds": "O128",
+   "n": 64,
+   "evidence": "EV-15 Co x8 failure"
+  },
+  {
+   "id": "mixedstrip",
+   "kind": "cli",
+   "command": "mixedstrip",
+   "config": "scenario.json",
+   "seeds": "O128",
+   "n": 64,
+   "evidence": "EV-15 mixed-field stripping"
+  },
+  {
+   "id": "mlem",
+   "kind": "cli",
+   "command": "mlem",
+   "config": "scenario.json",
+   "seeds": "O128",
+   "n": 64,
+   "evidence": "EV-11"
+  },
+  {
+   "id": "background",
+   "kind": "cli",
+   "command": "background",
+   "config": "scenario.json",
+   "seeds": "O128",
+   "n": 64,
+   "evidence": "EV-12 background sweep / gradient"
+  },
+  {
+   "id": "antimask",
+   "kind": "cli",
+   "command": "antimask",
+   "config": "scenario.json",
+   "seeds": "O128",
+   "n": 128,
+   "evidence": "EV-12 calibrated subtraction vs antimask"
+  },
+  {
+   "id": "doi",
+   "kind": "cli",
+   "command": "doi",
+   "config": "scenario.json",
+   "seeds": "O128",
+   "n": 64,
+   "evidence": "EV-13"
+  },
+  {
+   "id": "compton",
+   "kind": "cli",
+   "command": "compton",
+   "config": "scenario.json",
+   "seeds": "O128",
+   "n": 64,
+   "evidence": "EV-14, EV-15 window share"
+  },
+  {
+   "id": "compton-strip",
+   "kind": "cli",
+   "command": "compton-strip",
+   "config": "scenario.json",
+   "seeds": "O128",
+   "n": 64,
+   "evidence": "EV-15 oracle stripping"
+  },
+  {
+   "id": "deadtime",
+   "kind": "cli",
+   "command": "deadtime",
+   "config": "scenario.json",
+   "seeds": "O128",
+   "n": 64,
+   "evidence": "EV-22"
+  },
+  {
+   "id": "dose",
+   "kind": "cli",
+   "command": "dose",
+   "config": "scenario_handheld.json",
+   "seeds": "O128",
+   "n": 64,
+   "evidence": "EV-23"
+  },
+  {
+   "id": "shield",
+   "kind": "cli",
+   "command": "shield",
+   "config": "scenario.json",
+   "seeds": "O128",
+   "n": 128,
+   "evidence": "EV-25"
+  },
+  {
+   "id": "thermal",
+   "kind": "cli",
+   "command": "thermal",
+   "config": "scenario.json",
+   "seeds": "O128",
+   "n": 64,
+   "evidence": "EV-29"
+  },
+  {
+   "id": "maskfab",
+   "kind": "cli",
+   "command": "maskfab",
+   "config": "scenario.json",
+   "seeds": "O128",
+   "n": 128,
+   "evidence": "EV-30 (fixed mask patterns 100-105)"
+  },
+  {
+   "id": "align",
+   "kind": "cli",
+   "command": "align",
+   "config": "scenario.json",
+   "seeds": "O128",
+   "n": 64,
+   "evidence": "EV-31"
+  },
+  {
+   "id": "defects",
+   "kind": "cli",
+   "command": "defects",
+   "config": "scenario.json",
+   "seeds": "O128",
+   "n": 64,
+   "evidence": "EV-32 (fixed defect maps 200-207)"
+  },
+  {
+   "id": "depth",
+   "kind": "cli",
+   "command": "depth",
+   "config": "scenario.json",
+   "seeds": "O128",
+   "n": 64,
+   "evidence": "EV-33 lab refocusing"
+  },
+  {
+   "id": "depth-joint",
+   "kind": "cli",
+   "command": "depth-joint",
+   "config": "scenario.json",
+   "seeds": "O128",
+   "n": 64,
+   "evidence": "EV-33"
+  },
+  {
+   "id": "depth3d",
+   "kind": "cli",
+   "command": "depth3d",
+   "config": "scenario.json",
+   "seeds": "O128",
+   "n": 64,
+   "evidence": "EV-33"
+  },
+  {
+   "id": "depthdesign",
+   "kind": "cli",
+   "command": "depthdesign",
+   "config": "scenario.json",
+   "seeds": "O128",
+   "n": 64,
+   "evidence": "EV-33 (14 mm aperture default)"
+  },
+  {
+   "id": "nonprop",
+   "kind": "cli",
+   "command": "nonprop",
+   "config": "scenario.json",
+   "seeds": "O128",
+   "n": 64,
+   "evidence": "PAPER §4 non-proportionality"
+  },
+  {
+   "id": "cascade",
+   "kind": "cli",
+   "command": "cascade",
+   "config": "scenario_co60.json",
+   "seeds": "O128",
+   "n": 128,
+   "evidence": "Findings 44 cascade summing (ER-8 pooled fit: cascade_fit.py)"
+  },
+  {
+   "id": "precise",
+   "kind": "probe",
+   "mode": "precise",
+   "seeds": "O128",
+   "n": 32,
+   "evidence": "EV-01, EV-09, EV-20 single-scenario efficiency / estimate / margin"
+  },
+  {
+   "id": "scan",
+   "kind": "probe",
+   "mode": "scan",
+   "seeds": "O128",
+   "n": 32,
+   "evidence": "EV-03 selected scan rows"
+  },
+  {
+   "id": "scanextra",
+   "kind": "probe",
+   "mode": "scanextra",
+   "seeds": "O128",
+   "n": 32,
+   "evidence": "EV-03 thin-slab and 2 mm-cell rows"
+  },
+  {
+   "id": "bias",
+   "kind": "probe",
+   "mode": "bias",
+   "seeds": "O128",
+   "n": 32,
+   "evidence": "EV-07 directional biasing vs 4pi"
+  },
+  {
+   "id": "fov",
+   "kind": "probe",
+   "mode": "fov",
+   "seeds": "F128",
+   "n": 64,
+   "evidence": "EV-02"
+  },
+  {
+   "id": "gap",
+   "kind": "probe",
+   "mode": "gap",
+   "seeds": "O128",
+   "n": 32,
+   "evidence": "PAPER §4 crystal gap (replacement experiment)"
+  },
+  {
+   "id": "spatial",
+   "kind": "probe",
+   "mode": "spatial",
+   "seeds": "O128",
+   "n": 128,
+   "evidence": "EV-15 activity-ratio spatial limit"
+  },
+  {
+   "id": "depthsharp",
+   "kind": "probe",
+   "mode": "depthsharp",
+   "seeds": "O128",
+   "n": 32,
+   "evidence": "EV-33 sharp optics depth width"
+  },
+  {
+   "id": "materials",
+   "kind": "probe",
+   "mode": "materials",
+   "seeds": "O128",
+   "n": 64,
+   "evidence": "EV-19"
+  },
+  {
+   "id": "viewer",
+   "kind": "probe",
+   "mode": "viewer",
+   "seeds": "O128",
+   "n": 32,
+   "evidence": "EV-33 viewer list-mode focus"
+  },
+  {
+   "id": "rtl_material",
+   "kind": "rtl",
+   "mode": "material",
+   "seeds": "O128",
+   "n": 128,
+   "evidence": "EV-21 rate capability"
+  },
+  {
+   "id": "rtl_peak",
+   "kind": "rtl",
+   "mode": "peak",
+   "seeds": "O128",
+   "n": 32,
+   "evidence": "EV-21 peak detector at 1.5 Mcps"
+  },
+  {
+   "id": "rtl_pixel",
+   "kind": "rtl",
+   "mode": "pixel",
+   "seeds": "RTL_PIXEL32",
+   "n": 32,
+   "evidence": "EV-18 energy (fixed gain/decay fixture 999)"
+  },
+  {
+   "id": "rtl_multi",
+   "kind": "rtl",
+   "mode": "multi",
+   "seeds": "RTL_MULTI32",
+   "n": 32,
+   "evidence": "EV-16 (noise fixture 9)"
+  },
+  {
+   "id": "rtl_frontend",
+   "kind": "rtl",
+   "mode": "frontend",
+   "seeds": "O128",
+   "n": 32,
+   "evidence": "EV-17 resolution budget and shapers"
+  },
+  {
+   "id": "openfraction",
+   "kind": "rtl",
+   "mode": "openfraction",
+   "seeds": "O128",
+   "n": 32,
+   "evidence": "PAPER §3 MURA vs random array"
+  }
+ ]
+}

@@ -7,7 +7,8 @@ where it was said in Korean), what was rejected, and where it landed. Physics re
 evidence, in [VV.Gcam.Evidence](VV.Gcam.Evidence.md).
 
 **At a glance**
-- 38 decisions (D-01 … D-38), all taken with the author on 2026-10-01, each with the author's own words.
+- 40 decisions (D-01 … D-40), taken with the author on 2026-10-01 and 2026-10-02, each with the author's own words
+  or a note that none was given.
 - The ones that shape the product most: non-cyclic decoding instead of mask rotation (D-17, D-19), no built-in
   radioactive source (D-18), dose rate required at NSS-1 range (D-21), the software path for the narrow field of
   view (D-16), a separate small dose counter (D-37), comparison only with same-class imagers (D-32), Korean law
@@ -51,7 +52,7 @@ stated reason says so instead of inventing one.
 | D-16 | Narrow FOV: **software path** — usable field of non-cyclic decoding (~±5°), out-of-field cue, hand sweep with IMU / VIO; rank-up + tapered channels kept as the hardware fallback | adopted after D-17 (non-cyclic decoding) and D-19 (no moving hardware on cost) made it the natural first step | pan-tilt head; mask rotation; redesign of the head now | PR-IMG-10, LIM-01 (the usable field was later simulated: ±6–7.5°, EV-02) |
 | D-17 | Ghost suppression by **non-cyclic decoding** | "비순환 디코딩 유지" | — | PR-IMG-01, LIM-07 |
 | D-18 | **No built-in radioactive source** | "내장은 안 돼. 비싸기도 하고 취급도 어려워" — it would also make the device a radiation device under 원자력안전법 제60조 | built-in reference source for gain tracking | PR-REG-01, PR-ENV-02, LIM-03 |
-| D-19 | No mask-rotation (mask / antimask) hardware | "마스크를 돌리는 하드웨어는 너무 비용이 커" | iPIX-style rotating mask | LIM-07 |
+| D-19 | No mask-rotation (mask / antimask) hardware | "마스크를 돌리는 하드웨어는 너무 비용이 커". **Basis restated 2026-10-02:** the seed-ensemble measurement withdrew the earlier "a calibrated background subtraction matches the antimask" — at equal total time the antimask has ~20–30 % lower RMS at every background level, both sub-mm (EV-12). The author kept the decision: "어차피 더 좋았어도 기구 제작 측면에서 비용이나 안정성 측면에서 디메리트가 커서 마스크 회전은 기각하려고 했어" — the rotation mechanism's cost and mechanical stability outweigh the gain | iPIX-style rotating mask | LIM-07 |
 | D-20 | Gain stability: **peak tracking + temperature-scheduled window widening** | chosen from the LIM-03 options | user check source; thermal control | PR-ENV-02, LIM-03 |
 | D-21 | **Dose-rate measurement is required**, range per IAEA NSS-1 (10 mSv/h, ±50 %), and the user's **calibration obligation** is supported | "선량률 기능은 넣어야 하고 이미 기능 자체가 있어야 할걸? 교정 의무는 추가"; "NSS 기준으로" | dose rate left to a separate survey meter | PR-SAFE-01, PR-REG-02 |
 | D-22 | **No imaging requirement in high fields** (~10 mSv/h and up) — but the dose reading keeps the NSS-1 over-range indication | "그 정도의 고선량이면 장비를 가동하기 전에 ADR이 먼저 난리치지 않을까?" — the over-range indication stays because a paralysable front end under-reads (EV-22) | faster crystal / attenuator for high-field imaging | PR-SENS-05, LIM-02 |
@@ -86,6 +87,19 @@ stated reason says so instead of inventing one.
 | D-35 | The V&V documents are **self-contained**: they never send the reader to the repository's working notes; the simulation results they rest on are carried in their own evidence register | "VV 문서가 다시 AGENTS 쪽으로 보내면 안 돼. 그럼 VV 문서 자체가 완결성이 떨어진다는 소리야" | requirement rows citing the working results log by theme number | [Evidence](VV.Gcam.Evidence.md); every VV document |
 | D-36 | A one-page [Overview](VV.Gcam.Overview.md) opens the set; every VV document starts with an at-a-glance summary; change history leaves the requirement rows for the evidence register | accepted as proposed ("제안대로 작성해서 나한테 알려줘"); the proposal's reason: requirement documents stay dense for traceability, so a human reader needs a page above them | rewriting the requirement documents in a looser style | [Overview](VV.Gcam.Overview.md); every VV document |
 | D-38 | The **Limitations** document stays in the V&V set | the author first asked whether it belonged with the working notes, then accepted the recommendation ("수용"): it is the product's disclosure of what it cannot do, and the PRS gap list points to it | moving it to the working notes | [Limitations](VV.Gcam.Limitations.md) |
+
+## 2026-10-02
+
+### Evidence refresh over seed ensembles
+
+The Monte Carlo quotes were re-measured over 32–128 seeds per study; each change of interpretation was put to the
+author with its measured numbers and a recommendation (the numbers are in
+[Evidence §9](VV.Gcam.Evidence.md#9-model-history)).
+
+| ID | Decision | Reason (author) | Rejected | Lands in |
+|---|---|---|---|---|
+| D-39 | PR-MFG-01's 40 µm machining tolerance gets a **defined gate**: seed-mean localisation RMS ≤ 1.25 × the seed-mean RMS of the ideal mask (40 µm: 1.13×, passes; 80 µm: 1.43×, fails). The old "within ~2× the ideal floor" criterion is withdrawn; the result holds for the study's six fixed manufactured patterns, not for an arbitrary mask | accepted as proposed; no further reason stated. The proposal's reason: the ideal RMS spreads too much between seeds for a per-seed 2× test to separate 40 from 80 µm (108 / 128 against 100 / 128 seeds pass) | keeping 40 µm only as an author-chosen conservative target with no gate | PR-MFG-01, EV-30 |
+| D-40 | **Every MC number is quoted over a seed ensemble** (mean ± SD or median [quartiles] with N; picks and gates as k / N), and the measured reinterpretations are accepted: thickness ~10 mm from a defined wide-field recipe; two count gates (collapse below ~25, sub-mm from ~250); the rank-11 field as an observed 31 / 32 pass; 16 × 16 "about a third" better; shield picks with frequencies, "not carriable" judged against PR-PHY-01; one pooled cascade fit; depth range < 0.15 m and censored widths; the front-end width not called electronic noise; the Co × 2 spatial limit as 126 / 128; the old crystal-gap series kept as unverified, replaced by a labelled new experiment | for the thickness: "수치는 분명히 하는 게 좋겠지"; for the rest, after reading them: "나머지 9건도 읽어보니 합리적이야. 수용." | single-seed quotes; rewriting conclusions without the author | every EV entry with an MC number; PR-IMG-06, PR-IMG-10, PR-NRG-02 … -05, PR-SENS-03, PR-MFG-03, PR-RNG-01 |
 
 ## Still open (not yet decided)
 

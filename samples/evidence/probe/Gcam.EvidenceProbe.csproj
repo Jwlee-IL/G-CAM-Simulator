@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Headless evidence recipes for TODO-27 that the CLI does not expose (see Program.cs). Not part of Gcam.sln and
+       not shipped: it only calls the engine (and, for the viewer recipe, Studio's service layer) as they are. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net9.0</TargetFramework>
+    <RootNamespace>Gcam.EvidenceProbe</RootNamespace>
+    <InvariantGlobalization>true</InvariantGlobalization>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\Gcam.Core\Gcam.Core.csproj" />
+    <ProjectReference Include="..\..\..\src\Gcam.Configuration\Gcam.Configuration.csproj" />
+    <ProjectReference Include="..\..\..\src\Gcam.Masks\Gcam.Masks.csproj" />
+    <ProjectReference Include="..\..\..\src\Gcam.Simulation\Gcam.Simulation.csproj" />
+    <ProjectReference Include="..\..\..\src\Gcam.Detector\Gcam.Detector.csproj" />
+    <ProjectReference Include="..\..\..\src\Gcam.Decoding\Gcam.Decoding.csproj" />
+    <ProjectReference Include="..\..\..\src\Gcam.Studio.Core\Gcam.Studio.Core.csproj" />
+    <ProjectReference Include="..\..\..\src\Gcam.Studio.Services\Gcam.Studio.Services.csproj" />
+  </ItemGroup>
+
+</Project>

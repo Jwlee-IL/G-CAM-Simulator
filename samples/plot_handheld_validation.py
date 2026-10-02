@@ -2,9 +2,11 @@
 original-ish rig (12x12 / D60 / GAGG:Mg 10mm) by MONTE CARLO.
 
 Fair comparison is RMS vs ACQUISITION TIME (not counts): the recommended detector is
-~2.45x more efficient, so it banks counts faster. Run first:
+~2.5x more efficient, so it banks counts faster. Run first:
   montecarlo noise samples/scenario_handheld.json   samples/noise_handheld.csv
   montecarlo noise samples/scenario_orig_gagg.json  samples/noise_orig_gagg.csv
+The curves are one run each (seed 12345); the efficiency ratio and the floors in the annotations are seed-ensemble
+means from samples/evidence/results/aggregate.csv (TODO-27).
 Usage:  python samples/plot_handheld_validation.py
 """
 import os, csv
@@ -25,8 +27,17 @@ def load(fn):
         d[k] = np.array(sorted(d[k]))
     return d
 
-rec = load("noise_handheld.csv")     # 16x16 / D55 / 15mm  eff 2.65e-4
-org = load("noise_orig_gagg.csv")    # 12x12 / D60 / 10mm  eff 1.08e-4
+rec = load("noise_handheld.csv")     # 16x16 / D55 / 15mm
+org = load("noise_orig_gagg.csv")    # 12x12 / D60 / 10mm
+
+# Seed-ensemble means for the annotations: {key: (mean, N)}.
+agg = {r["key"]: (float(r["mean"]), int(r["N"]))
+       for r in csv.DictReader(open(os.path.join(here, "evidence", "results", "aggregate.csv")))}
+gain = agg["head/ratio"]                                              # efficiency ratio, hand-held / original
+floor_rec = agg["noise_head/noise.csv/centered/5000/rms_error_mm"]   # on-axis floor at 5000 counts
+floor_org = agg["noise_orig/noise.csv/centered/5000/rms_error_mm"]
+eff_rec = agg["precise/scenario_handheld/eff"][0]
+eff_org = agg["precise/scenario_orig_gagg/eff"][0]
 
 fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(13.5, 5.4))
 
@@ -39,7 +50,8 @@ for cfg, d, col in [("recommended 16×16/D55/15mm", rec, "#2e8b57"),
                    label=f"{cfg} — {src.replace('_',' ')}")
 ax1.axhline(1.0, color="#888", ls=":", lw=1); ax1.text(0.012, 1.06, "1 mm", color="#888", fontsize=8)
 ax1.set_xlabel("acquisition time @ 1 MBq (s)"); ax1.set_ylabel("localization RMS (mm)")
-ax1.set_title("(1) Fair test: RMS vs TIME\nrecommended is ~2.45× more efficient → sub-mm sooner")
+ax1.set_title(f"(1) Fair test: RMS vs TIME — recommended is {gain[0]:.2f}× more efficient\n"
+              f"({eff_rec * 1e4:.2f} vs {eff_org * 1e4:.2f} × 1e-4, {gain[1]} seeds) → sub-mm sooner")
 ax1.legend(fontsize=7.5); ax1.grid(alpha=0.3, which="both")
 
 # (2) RMS vs detected counts (decoder-limited floor)
@@ -49,16 +61,17 @@ for cfg, d, col in [("recommended", rec, "#2e8b57"), ("original", org, "#b8860b"
         ax2.loglog(n, rms, ls, marker=mk, color=col, lw=1.8, ms=5,
                    label=f"{cfg} — {src.replace('_',' ')}")
 ax2.axhline(1.0, color="#888", ls=":", lw=1)
-ax2.annotate("floor 0.34 mm", (250, 0.34), (300, 0.20), fontsize=8, color="#2e8b57",
-             arrowprops=dict(arrowstyle="->", color="#2e8b57"))
-ax2.annotate("floor 0.55 mm", (1000, 0.55), (900, 0.9), fontsize=8, color="#b8860b",
-             arrowprops=dict(arrowstyle="->", color="#b8860b"))
+ax2.annotate(f"floor {floor_rec[0]:.2f} mm ({floor_rec[1]} seeds)", (5000, floor_rec[0]), (12, 0.3), fontsize=8,
+             color="#2e8b57", arrowprops=dict(arrowstyle="->", color="#2e8b57"))
+ax2.annotate(f"floor {floor_org[0]:.2f} mm ({floor_org[1]} seeds)", (5000, floor_org[0]), (900, 0.9), fontsize=8,
+             color="#b8860b", arrowprops=dict(arrowstyle="->", color="#b8860b"))
 ax2.set_xlabel("detected counts"); ax2.set_ylabel("localization RMS (mm)")
 ax2.set_title("(2) RMS vs counts\nbigger array samples the shadow finer → lower floor")
 ax2.legend(fontsize=7.5); ax2.grid(alpha=0.3, which="both")
 
-fig.suptitle("MC validation of the recommended handheld config: ~2.45× sensitivity, 0.34 mm floor (vs 0.55), "
-             "sub-mm ≥250 counts (~1 s @1MBq). Use non-cyclic decoding for the FOV.", fontsize=11)
+fig.suptitle(f"MC validation of the recommended handheld config: {gain[0]:.2f}× sensitivity, "
+             f"{floor_rec[0]:.2f} mm on-axis floor (vs {floor_org[0]:.2f}),\n"
+             "sub-mm ≥250 counts (~1.2 s @1MBq). Use non-cyclic decoding for the FOV.", fontsize=11)
 fig.tight_layout(rect=[0, 0, 1, 0.94])
 out = os.path.join(here, "handheld_validation.png")
 fig.savefig(out, dpi=130); print("saved", out)

@@ -202,27 +202,43 @@ Sample scenarios in `samples/`: `scenario.json` (centered), `scenario_offaxis.js
 land in `samples/`. Plots are generated with a standalone Python+matplotlib script
 (not part of the C# build).
 
+**Seed ensembles** (theme 63): every Monte Carlo number in the evidence register is quoted over N outer seeds.
+`samples/evidence/` holds the seed lists (`seeds.json`), one recipe per study family with its N and the scenario
+hashes (`manifest.json`), the headless recipes the CLI lacks (`probe/`, `rtl_seeds.py`), the driver and the
+aggregator, and the committed summaries (`results/`):
+
+```bash
+dotnet build samples/evidence/probe/Gcam.EvidenceProbe.csproj -c Release    # after dotnet build Gcam.sln -c Release
+python samples/evidence/run_seeds.py --out <dir> --family maskfab           # one isolated cwd per (family, seed)
+python samples/evidence/aggregate.py --runs <dir> --family maskfab          # refuses missing / failed runs
+python samples/evidence/cascade_fit.py --runs <dir>                         # pooled Poisson fit of the cascade
+```
+
 ## Findings so far
 
 The full, theme-organized results log with reproduce commands and artifacts is in
 **`docs/AGENTS.Findings.md`** — keep new results there, not in this file. Headlines:
 
 - **Localization + ghost**: sub-mm inside the FCFOV; off-axis beyond it aliases to an
-  opposite-side ghost. Non-cyclic decoding ≈ doubles the usable area; at field
-  distance it localizes to ±7° (fully coded ±3.6°) and a flood-centroid cue flags sources out to ~14° (theme 53).
+  opposite-side ghost. Non-cyclic decoding ≈ doubles the usable area; at field distance it localizes
+  to ±7° (fully coded ±3.6°) and a flood-centroid cue flags sources out to ~14° (theme 53). MC numbers are
+  quoted over seed ensembles — seed lists, recipes and summaries in `samples/evidence/` (theme 63).
 - **FOV ÷ resolution = rank** — nominally; the usable field is limited by the 10 mm W slab's collimation at
-  short D. Widest ≥ 90 %-usable pick: rank 11 / pitch 1 / D 30 mm → ±21.5 mm (~2.5× the original); high ranks
-  collapse at short D (corrected 2026-10-02 — the old rank-23 "~7×" predated the slab model).
-- **Tungsten ~8–10 mm** optimum (thin leaks, thick collimates). **Array**: ≳1 detector pixel
-  per mask-cell shadow (Nyquist); ~2 is the sweet spot.
+  short D. Widest ≥ 90 %-usable pick: rank 11 / pitch 1 / D 30 mm → ±21.6 mm (passes in 31 / 32 seeds; ~2.5× the
+  original); high ranks collapse at short D (corrected 2026-10-02 — the old rank-23 thin-mask-era figure predated
+  the slab model).
+- **Tungsten ~10 mm** optimum (thin leaks, thick collimates; 10 mm in 21 / 32 seeds of the wide-field recipe).
+  **Array**: ≳1 detector pixel per mask-cell shadow (Nyquist); ~2 is the sweet spot (16 × 16 cuts the 12 × 12
+  error by about a third).
 - **Crystal**: efficiency ∝ density (GAGG is dense; its weakness is resolution + afterglow →
   prefer GAGG:Ce,Mg or CeBr3). Position is uniformity-robust; **energy needs per-channel
   calibration**. GAGG's afterglow collapses rate capability at ~1 Mcps (RTL).
-- **Mask/antimask**: redundant with no background; helps against **diffuse/common-mode**
-  background — but a calibrated background subtraction matches it (physical mask rotation is
-  then unnecessary), and it does **not** remove a directional coded interferer (themes 28, and
-  the mask/antimask trade note).
-- **Count threshold** ~25–50 detected counts; biasing gives ~100× fewer photons, unbiased.
+- **Mask/antimask**: helps against **diffuse/common-mode** background; at equal time it beats a
+  calibrated background subtraction by ~20–30 % RMS at every background level (both sub-mm) — mask
+  rotation is still rejected on mechanism cost and stability (D-19), not on equivalence; it does **not**
+  remove a directional coded interferer (themes 5, 28, 63).
+- **Count thresholds**: localisation collapses below ~25 detected counts; sub-mm needs ~250. Directional
+  biasing matches 4π (0.999 ± 0.006) with 100× fewer photons.
 - **Compton multi-isotope separation (15–17, 26)**: per-pixel spectral stripping removes a high-energy
   isotope's downscatter from a lower line's window and recovers the Cs count (the real rig's Co-60-reads-as-Cs
   problem); spatial separation alone holds only up to Co:Cs ≈ 2:1 with physical GAGG cross sections (theme 52).
@@ -265,7 +281,7 @@ ECP5 as the Fmax proxy; `rtl/vivado_trap.tcl` ready for exact Artix-7 whenever i
 - Emission uses **directional biasing** by default (`Source.DirectionalBiasing`):
   `DetectorBiasedSource` aims photons at the detector rectangle and weights them by
   `A·cosθ/(4π r²)`, giving an **unbiased** estimate of the 4π result with ~100× fewer
-  photons (validated: efficiency matches 4π within ~1%). Set `DirectionalBiasing:false`
+  photons (validated: biased ÷ 4π efficiency = 0.999 ± 0.006 over 32 seeds). Set `DirectionalBiasing:false`
   for a plain 4π `IsotropicSource` check. Sensitivity is reported as geometric
   **efficiency** (`DetectedWeight/emitted`), which is invariant across both modes.
 - The mask is a **finite-thickness slab** (`CodedApertureMask` ray-marches 12 sub-steps

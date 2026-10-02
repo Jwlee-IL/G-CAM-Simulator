@@ -1,0 +1,134 @@
+{
+ "estimand": "Poisson GLM, log link: sum_count ~ Poisson(decays * exp(a + b ln single_per_decay)), all (seed, distance) rows including zero sum counts",
+ "seeds": "O128",
+ "N_seeds": 128,
+ "rows": 896,
+ "zero_rows": 344,
+ "decays_per_row": 8000000,
+ "slope": 2.000593464960095,
+ "slope_se_wald": 0.02658414088648231,
+ "intercept": -1.3704866228951216,
+ "deviance": 788.4733205513578,
+ "pearson_chi2": 937.3118123529863,
+ "dof": 894,
+ "dispersion_pearson": 1.0484472173970765,
+ "pooled_by_distance": {
+  "slope": 2.0013996850340017,
+  "slope_se_wald": 0.026596270125717598,
+  "deviance": 7.18576877930448,
+  "pearson_chi2": 7.983841298415861,
+  "dof": 5,
+  "rows": [
+   {
+    "distance_mm": 18.0,
+    "sum_counts_total": 4371,
+    "zero_rows": 0,
+    "mean_single_per_decay": 0.00409940390625
+   },
+   {
+    "distance_mm": 24.0,
+    "sum_counts_total": 1556,
+    "zero_rows": 0,
+    "mean_single_per_decay": 0.0024460476562499995
+   },
+   {
+    "distance_mm": 32.0,
+    "sum_counts_total": 494,
+    "zero_rows": 4,
+    "mean_single_per_decay": 0.00142550625
+   },
+   {
+    "distance_mm": 43.0,
+    "sum_counts_total": 172,
+    "zero_rows": 30,
+    "mean_single_per_decay": 0.0008065936718750001
+   },
+   {
+    "distance_mm": 57.0,
+    "sum_counts_total": 56,
+    "zero_rows": 85,
+    "mean_single_per_decay": 0.00046450992187499994
+   },
+   {
+    "distance_mm": 76.0,
+    "sum_counts_total": 28,
+    "zero_rows": 102,
+    "mean_single_per_decay": 0.00026315359375
+   },
+   {
+    "distance_mm": 100.0,
+    "sum_counts_total": 5,
+    "zero_rows": 123,
+    "mean_single_per_decay": 0.0001521975
+   }
+  ]
+ },
+ "seed_bootstrap": {
+  "replicates": 2000,
+  "stdlib_seed": 27,
+  "sd": 0.027938040839658666,
+  "q025": 1.946139472058137,
+  "q975": 2.0592819986352797
+ },
+ "geometric_expectation": {
+  "half_width_mm": 7.0,
+  "rows": [
+   {
+    "distance_mm": 18.0,
+    "P1": 0.04193672246334145,
+    "partner_given_first": 0.04545775,
+    "P2": 0.0019063490455579599
+   },
+   {
+    "distance_mm": 24.0,
+    "P1": 0.024981131123012982,
+    "partner_given_first": 0.02729675,
+    "P2": 0.0006819036909821046
+   },
+   {
+    "distance_mm": 32.0,
+    "P1": 0.014541109617774516,
+    "partner_given_first": 0.0159395,
+    "P2": 0.00023177801675251688
+   },
+   {
+    "distance_mm": 43.0,
+    "P1": 0.008218607759988616,
+    "partner_given_first": 0.009017,
+    "P2": 7.410718617181736e-05
+   },
+   {
+    "distance_mm": 57.0,
+    "P1": 0.004729459767557318,
+    "partner_given_first": 0.005222,
+    "P2": 2.4697238906184316e-05
+   },
+   {
+    "distance_mm": 76.0,
+    "P1": 0.002677659807200478,
+    "partner_given_first": 0.00301575,
+    "P2": 8.075152563564842e-06
+   },
+   {
+    "distance_mm": 100.0,
+    "P1": 0.0015521192388498568,
+    "partner_given_first": 0.0017235,
+    "P2": 2.6750775081577283e-06
+   }
+  ],
+  "slope_lnP2_vs_lnP1": 1.9909391815060176,
+  "slope_if_summing_out_at_its_upper_bound": 2.0033219552808363,
+  "summing_out_upper_bound_per_distance": [
+   0.022728875,
+   0.013648375,
+   0.00796975,
+   0.0045085,
+   0.002611,
+   0.001507875,
+   0.00086175
+  ],
+  "mc_first_photons_per_distance": 4000000,
+  "numpy_seed": 27
+ },
+ "z_vs_geometric": 0.36315950533450087
+}

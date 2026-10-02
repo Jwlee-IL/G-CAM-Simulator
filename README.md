@@ -16,28 +16,31 @@ bit-for-bit in SystemVerilog.**
 <sub>Localization error over a grid of source positions (black = found within 3 mm), both decoders searching the
 same ±18 mm grid — wider than one 19.7 mm mask period. Classical cyclic decoding assumes the shadow repeats, so a
 source can land on any period replica (errors ≈ 19 mm, even inside the fully-coded field, cyan box) and sources
-outside it ghost to the opposite side; finite-mask (non-cyclic) decoding breaks that ambiguity: 360/625 positions
-vs 172/625. Hand-held head: rank-7 MURA, 16×16 × 1 mm pixels, mask–detector 55 mm, source plane 100 mm from the mask.
+outside it ghost to the opposite side; finite-mask (non-cyclic) decoding breaks that ambiguity: in this run (seed
+12345) 362/625 positions vs 173/625; over 64 seeds 361 vs 174 (medians, quartiles 360–362 and 172–175). Hand-held
+head: rank-7 MURA, 16×16 × 1 mm pixels, mask–detector 55 mm, source plane 100 mm from the mask.
 Plot: <code>samples/plot_sweep.py</code>.</sub>
 
 ## Headline results
 
 | Result | Condition |
 |---|---|
-| Non-cyclic decoding roughly **doubles the correctly localized area** (360 vs 172 of 625 positions within 3 mm) | hand-held head, ±18 mm search grid, figure above (282 vs 148 on the 12×12 reference geometry) |
-| **MLEM separates two sources 2 mm apart** (≈1.1° seen from the mask); cross-correlation still merges them at 3 mm | ideal, high-count (800 k photons), source plane 100 mm from the mask |
-| A classic problem of scintillator coded-aperture cameras — **Co-60 downscatter counted as Cs-137** — is reproduced; per-pixel spectral stripping removes it from the 662 keV window, while spatial separation alone holds only up to Co:Cs ≈ 2:1 | GAGG crystal, physical cross sections |
+| Non-cyclic decoding roughly **doubles the correctly localized area** (361 vs 174 of 625 positions within 3 mm, medians over 64 seeds) | hand-held head, ±18 mm search grid, figure above (278 vs 146 on the 12×12 reference geometry) |
+| **MLEM separates two sources 2 mm apart** (≈1.1° seen from the mask); cross-correlation still merges them at 3 mm | ideal, high-count (1.5 M photons, 80 iterations), source plane 100 mm from the mask; the same in 64 / 64 seeds |
+| A classic problem of scintillator coded-aperture cameras — **Co-60 downscatter counted as Cs-137** — is reproduced; per-pixel spectral stripping removes it from the 662 keV window, while spatial separation alone holds only up to Co:Cs ≈ 2:1 (in 126 / 128 seeds) | GAGG crystal, physical cross sections |
 | C# ↔ RTL **bit-exact** on all three shaper paths (CR-RC with Q12 fractional state: 452,608 samples, 0 mismatches); pipelined shaper **59 → 119 MHz** | cocotb + Icarus; ECP5 nextpnr as the Fmax proxy |
 
 The evidence behind these numbers — conditions, limits, reproduce command and, where one exists, the test that pins
-it: [`docs/VV.Gcam.Evidence.md`](docs/VV.Gcam.Evidence.md) (EV-01, EV-11, EV-15, EV-17).
+it: [`docs/VV.Gcam.Evidence.md`](docs/VV.Gcam.Evidence.md) (EV-01, EV-11, EV-15, EV-17). Monte Carlo numbers are
+quoted over seed ensembles, not single runs; the seed lists, recipes and per-metric summaries are in
+[`samples/evidence/`](samples/evidence/).
 The full working log of all 59 study themes: [`docs/AGENTS.Findings.md`](docs/AGENTS.Findings.md).
 
 ## What it demonstrates
 
 | | |
 |---|---|
-| **Physics engine** | Photon transport with directional biasing (unbiased vs. 4π, ~100× fewer photons), Klein–Nishina Compton in the crystal, tabulated tungsten / scintillator cross sections, cross-correlation and **MLEM** decoders. One JSON config describes a scenario; 41 CLI studies sweep it. |
+| **Physics engine** | Photon transport with directional biasing (ratio to 4π 0.999 ± 0.006 over 32 seeds, with 100× fewer photons), Klein–Nishina Compton in the crystal, tabulated tungsten / scintillator cross sections, cross-correlation and **MLEM** decoders. One JSON config describes a scenario; 41 CLI studies sweep it. |
 | **Tests that check physics, not snapshots** | 550+ .NET tests. Each transport stage is held to a closed form — biased-source weight = the detector's solid angle, crystal stopping 1 − exp(−μt/cosθ), mask transmission = open fraction + tungsten leak, Compton energy conservation, decoder peak on an analytic shadow — with k·σ tolerances that follow the sample size; study-level tests assert physics (MLEM is non-negative and out-resolves cross-correlation, ghosts appear outside the fully-coded field) rather than pinning output numbers. A mutation check (Poisson off-by-one, half-pixel flood origin, slant path ignored) fails each one. |
 | **Hardware path** | CR-RC⁴ / trapezoidal shapers and a baseline restorer in SystemVerilog. The RTL (cocotb + Icarus) and the native C# `Waveform` model (xUnit golden values) are each held **bit-exact** to one shared fixed-point reference (Q12 CR-RC state; legacy F=0 goldens retained), both in CI. Pipelining raised Fmax from 59 to 119 MHz (ECP5, nextpnr timing). |
 | **Viewer** | GCAM Studio: live list-mode acquisition (Start / Stop / Continue / Reset over live time, with physical inputs locked until Reset); Imaging, Spectrum, Waveform and Detector workspaces — every count is one independent Compton-transported event, so in-crystal scatter mispositioning is part of the image. WPF + CommunityToolkit.Mvvm, split into `Studio.Core` (no WPF) → `Studio.Services` (only layer touching the engine) → `Studio` (views), so the boundaries are compiler-enforced; ViewModel tests plus a UI-automation harness with independent oracles. |
@@ -91,7 +94,7 @@ IEC 62304, no compliance claimed), and they are self-contained:
 | [PRS](docs/VV.Gcam.PRS.md) | 51 product requirements, each with its evidence and grade (simulated / analytical / standard / open), traced to the needs; Korean law |
 | [Evidence](docs/VV.Gcam.Evidence.md) | 33 simulation and design-model results behind those numbers, each with the command that reproduces it and, where one exists, the test that pins it |
 | [Limitations](docs/VV.Gcam.Limitations.md) | 9 things the concept cannot do, every fix and its cost |
-| [Decisions](docs/VV.Gcam.Decisions.md) | 38 decisions with the author's reasons, and what is still open |
+| [Decisions](docs/VV.Gcam.Decisions.md) | 40 decisions with the author's reasons, and what is still open |
 | [Studio SRS](docs/VV.Studio.SRS.md) · [SDS](docs/VV.Studio.SDS.md) · [V&V](docs/VV.Studio.md) | the engineering viewer as a software item: requirements, design record, test traceability, UI-automation validation |
 
 ## A 10-minute tour for reviewers

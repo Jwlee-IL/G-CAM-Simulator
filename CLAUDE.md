@@ -34,7 +34,7 @@ cocotb RTL front-end path.
   an **energy-window** issue, not a position issue.
 - **Requirement set (2026-10-01, design-only)** — `docs/VV.Gcam.{Overview,URS,PRS,Evidence,Limitations,Decisions}.md`
   (+ `VV.Studio.{SRS,SDS}` for the viewer). Author decisions with reasons are logged in
-  `VV.Gcam.Decisions.md` (D-01…D-38); headlines:
+  `VV.Gcam.Decisions.md` (D-01…D-40); headlines:
   - The product is a **scintillator coded-aperture camera**: compare only with same-class imagers (iPIX),
     never with Compton / HPGe cameras (Polaris-H, GeGI). Use conditions **relaxed to iPIX level**
     (−10…+45 °C, 93 % RH, IP65, 60 cm drop, ≤ 2.5 kg).
@@ -60,8 +60,9 @@ cocotb RTL front-end path.
 ## Handoff — where work stood (2026-10-02 evening, moving to another computer)
 - Done: the Gcam.Wpf → GCAM Studio migration (Gcam.Wpf deleted, TODO-12) and physics TODO-14/17/18/20/21/23/26
   (Findings 57–61). Open (see `docs/AGENTS.Todo.md`, each with its PLAN and review in `docs/`):
-  - **TODO-27** evidence refresh — review done (`PLAN.Physics.EvidenceRefresh.Review.md`): 32 quote groups re-measured
-    over seeds; **11 flagged conclusion / interpretation changes need the author's decision** before any rewrite.
+  - **TODO-27** evidence refresh — **done 2026-10-02** (Findings 63; 12 author decisions ER-1…12 in the plan; MC quotes now
+    carry seed spreads; driver and aggregates in `samples/evidence/`). Open question: PR-SENS-02's "~50 counts" gate.
+  - **TODO-29** clean-room wording pass — decided (`PLAN.Docs.CleanRoom.md`); the planner does it directly (doc work).
   - **TODO-19** Anger-type SiPM readout — review done (`PLAN.Physics.RigReadout.Review.md`); next: decisions after review.
   - **TODO-25** joint depth likelihood — reviewed (Findings 62): beats the sharpest plane at 60 s; gate "not yet"
     (10 s wrong-maximum rate, count-scaled model budget, model mismatch still open).
@@ -83,6 +84,9 @@ Use Codex + an adversarial Claude reviewer for "did I really finish / is this ri
 **Delegation (since 2026-10-01):** Claude plans and verifies, Codex (`gpt-6.1-sol`) implements — reference plan →
 Codex's measured review → "Decisions after review" → implementation in the same Codex conversation (`resume`);
 desktop UI tests last. Procedure, call rules and cautions: `docs/AGENTS.Planning.md`.
+**Commit messages (author, 2026-10-02):** end with the `Co-Authored-By: Claude …` line only — **never add a
+`Claude-Session:` link** (or any other claude.ai session/conversation URL) to a commit, PR or file: the repo is public and
+the sessions hold private context. Earlier commits keep theirs (history is not rewritten); those sessions are never shared.
 **Verify inherited "it's done" claims against the actual code before propagating them** (a docs
 pass once trusted a summary's "CLI complete" and was wrong — 39 commands, not 23).
 
