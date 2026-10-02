@@ -29,6 +29,7 @@ public sealed class PlotView : FrameworkElement
     private double? _hoverX;
     private bool _pendingViewRange;
     private Rect PlotRect => _plotRect;
+    private double LabelStripTop => OuterPadding + (string.IsNullOrEmpty(YLabel) ? 0 : Text(YLabel).Height + LabelGap);
 
     private IReadOnlyList<PlotTick> YTicks() => LogY
         ? NiceTicks.Logarithmic(_viewport.YMin, _viewport.YMax)
@@ -37,7 +38,9 @@ public sealed class PlotView : FrameworkElement
         ? NiceTicks.LogarithmicAxis(_viewport.XMin, _viewport.XMax)
         : NiceTicks.Linear(_viewport.XMin, _viewport.XMax);
 
-    private Rect MeasurePlotRect()
+    /// <summary>The plot rectangle with <paramref name="labelStrip"/> DIPs of label rows reserved above it (below the
+    /// Y title row). Left and width do not depend on the strip, so labels can be laid out before it is known.</summary>
+    private Rect MeasurePlotRect(double labelStrip = 0)
     {
         double yWidth = 0, yHeight = 0, xHeight = 0, xHalfWidth = 0;
         foreach (var tick in YTicks())
@@ -54,7 +57,7 @@ public sealed class PlotView : FrameworkElement
         }
         double left = OuterPadding + Math.Max(yWidth + LabelGap, xHalfWidth);
         double titleRow = string.IsNullOrEmpty(YLabel) ? 0 : Text(YLabel).Height + LabelGap;
-        double top = OuterPadding + titleRow + yHeight / 2;
+        double top = OuterPadding + titleRow + labelStrip + yHeight / 2;
         double right = OuterPadding + xHalfWidth;
         double bottom = OuterPadding + xHeight + LabelGap + Text(XLabel).Height + LabelGap;
         return new(left, top, Math.Max(1, ActualWidth - left - right), Math.Max(1, ActualHeight - top - bottom));
@@ -89,6 +92,9 @@ public sealed class PlotView : FrameworkElement
     public static readonly DependencyProperty ViewRangeProperty = Register<PlotViewRange?>(nameof(ViewRange), null,
         (d, _) => ((PlotView)d).ApplyViewRange());
     public PlotViewRange? ViewRange { get => (PlotViewRange?)GetValue(ViewRangeProperty); set => SetValue(ViewRangeProperty, value); }
+    /// <summary>Draw the marker labels (off for a plot that shares its time axis and markers with one above it).</summary>
+    public static readonly DependencyProperty ShowMarkerLabelsProperty = Register(nameof(ShowMarkerLabels), true);
+    public bool ShowMarkerLabels { get => (bool)GetValue(ShowMarkerLabelsProperty); set => SetValue(ShowMarkerLabelsProperty, value); }
     public static readonly DependencyProperty ShareViewRangeProperty = Register(nameof(ShareViewRange), false);
     public bool ShareViewRange { get => (bool)GetValue(ShareViewRangeProperty); set => SetValue(ShareViewRangeProperty, value); }
     public static readonly DependencyProperty XUnitProperty = Register(nameof(XUnit), "");
@@ -235,9 +241,31 @@ public sealed class PlotView : FrameworkElement
         if (_prepared.Count == 0) DrawText(dc, EmptyText, new Point(r.Left, r.Top));
         else
         {
+            // Band and marker labels sit in a strip ABOVE the plot, so no label covers data (L-9). Their x positions
+            // depend only on the plot's left edge and width, which the strip does not change: lay them out first.
+            var visibleBands = (Bands ?? []).Where(b => b.Hi >= _viewport.XMin && b.Lo <= _viewport.XMax).ToArray();
+            var markers = (Markers ?? []).Where(m => m.X >= _viewport.XMin && m.X <= _viewport.XMax).ToArray();
+            var padding = BandLabelPadding;
+            double horizontalPadding = padding.Left + padding.Right;
+            var labels = visibleBands.Select(b => Text(b.Label)).ToArray();
+            var layout = PlotBandLayout.Arrange(visibleBands.Select((b, i) =>
+                (ScreenX((b.Lo + b.Hi) / 2) - r.Left, labels[i].Width + horizontalPadding)).ToArray(), r.Width, LabelGap);
+            double rowHeight = labels.Length == 0 ? 0 : labels.Max(t => t.Height) + padding.Top + padding.Bottom + LabelGap;
+            // Marker labels start right of their line and take the first free row, so close markers (a sharpest
+            // plane next to an external range) never print over each other.
+            var markerTexts = ShowMarkerLabels ? markers.Select(m => Text(m.Label)).ToArray() : [];
+            var markerLayout = PlotBandLayout.Arrange(markerTexts.Select((t, i) =>
+                (ScreenX(markers[i].X) - r.Left + LabelGap + (t.Width + horizontalPadding) / 2,
+                 t.Width + horizontalPadding)).ToArray(), r.Width, LabelGap);
+            int bandRows = layout.Count == 0 ? 0 : layout.Max(l => l.Row) + 1;
+            int markerRows = markerLayout.Count == 0 ? 0 : markerLayout.Max(l => l.Row) + 1;
+            double markerRowHeight = markerTexts.Length == 0 ? 0 : markerTexts.Max(t => t.Height) + padding.Top + padding.Bottom + LabelGap;
+            double strip = bandRows * rowHeight + markerRows * markerRowHeight;
+            double stripTop = LabelStripTop;
+            if (strip > 0) r = _plotRect = MeasurePlotRect(strip);
+
             DrawAxes(dc, r);
             dc.PushClip(new RectangleGeometry(r));
-            var visibleBands = (Bands ?? []).Where(b => b.Hi >= _viewport.XMin && b.Lo <= _viewport.XMax).ToArray();
             foreach (var band in visibleBands)
             {
                 double a = ScreenX(band.Lo), b = ScreenX(band.Hi);
@@ -257,48 +285,38 @@ public sealed class PlotView : FrameworkElement
                 double centre = (a + b) / 2;
                 dc.DrawLine(Pen(Foreground), new Point(centre, r.Top), new Point(centre, r.Bottom));
             }
-            var markers = Markers ?? [];
             foreach (var marker in markers)
             {
                 double x = ScreenX(marker.X);
                 dc.DrawLine(Pen(Foreground), new Point(x, r.Top), new Point(x, r.Bottom));
             }
-            // Opaque plates draw last so edges, grid lines and traces cannot cross band text.
-            var padding = BandLabelPadding;
-            double horizontalPadding = padding.Left + padding.Right;
-            var labels = visibleBands.Select(b => Text(b.Label)).ToArray();
-            var layout = PlotBandLayout.Arrange(visibleBands.Select((b, i) =>
-                (ScreenX((b.Lo + b.Hi) / 2) - r.Left, labels[i].Width + horizontalPadding)).ToArray(), r.Width, LabelGap);
-            double rowHeight = labels.Length == 0 ? 0 : labels.Max(t => t.Height) + padding.Top + padding.Bottom + LabelGap;
+            dc.Pop();
+            // Plates keep their text on an opaque ground (no grid or edge reaches the strip, but a wide label may).
             foreach (var label in layout)
             {
                 var text = labels[label.Index];
                 text.MaxTextWidth = Math.Max(1, label.Width - horizontalPadding);
                 text.Trimming = TextTrimming.CharacterEllipsis;
-                var plate = new Rect(r.Left + label.Left, r.Top + LabelGap + label.Row * rowHeight,
+                text.MaxLineCount = 1;   // one row per label: a label wider than the plot is cut, never wrapped
+                var plate = new Rect(r.Left + label.Left, stripTop + label.Row * rowHeight,
                     label.Width, text.Height + padding.Top + padding.Bottom);
                 dc.DrawRectangle(BandLabelBrush, null, plate);
                 dc.DrawText(text, new Point(plate.Left + padding.Left, plate.Top + padding.Top));
             }
-            // Marker labels start right of their line, below the band-label rows, and take the first free row
-            // so close markers (a sharpest plane next to an external range) never print over each other.
-            var markerTexts = markers.Select(m => Text(m.Label)).ToArray();
-            var markerLayout = PlotBandLayout.Arrange(markers.Select((m, i) =>
-                (ScreenX(m.X) - r.Left + LabelGap + (markerTexts[i].Width + horizontalPadding) / 2,
-                 markerTexts[i].Width + horizontalPadding)).ToArray(), r.Width, LabelGap);
-            int bandRows = layout.Count == 0 ? 0 : layout.Max(l => l.Row) + 1;
-            double markerRowHeight = markerTexts.Length == 0 ? 0 : markerTexts.Max(t => t.Height) + padding.Top + padding.Bottom + LabelGap;
             foreach (var label in markerLayout)
             {
                 var text = markerTexts[label.Index];
                 text.MaxTextWidth = Math.Max(1, label.Width - horizontalPadding);
                 text.Trimming = TextTrimming.CharacterEllipsis;
-                var plate = new Rect(r.Left + label.Left, r.Top + LabelGap + bandRows * rowHeight + label.Row * markerRowHeight,
+                text.MaxLineCount = 1;   // one row per label: a label wider than the plot is cut, never wrapped
+                var plate = new Rect(r.Left + label.Left, stripTop + bandRows * rowHeight + label.Row * markerRowHeight,
                     label.Width, text.Height + padding.Top + padding.Bottom);
+                // A leader from the label row down to the plot ties the label to its marker line.
+                double x = ScreenX(markers[label.Index].X);
+                dc.DrawLine(Pen(Foreground), new Point(x, plate.Top + plate.Height / 2), new Point(x, r.Top));
                 dc.DrawRectangle(BandLabelBrush, null, plate);
                 dc.DrawText(text, new Point(plate.Left + padding.Left, plate.Top + padding.Top));
             }
-            dc.Pop();
         }
         if (IsKeyboardFocused) dc.DrawRectangle(null, Pen(FocusBrush, FocusWidth), new Rect(FocusInset, FocusInset,
             Math.Max(0, ActualWidth - FocusInset * 2), Math.Max(0, ActualHeight - FocusInset * 2)));

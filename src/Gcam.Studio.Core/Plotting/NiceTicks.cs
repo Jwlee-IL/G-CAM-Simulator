@@ -15,8 +15,8 @@ public static class NiceTicks
         double first = Math.Ceiling(min / step) * step;
         int n = Math.Max(0, (int)Math.Floor((max - first) / step + 1e-10) + 1);
         if (n == 0) return [];
-        var labels = TickFormatter.Labels(first, first + step * (n - 1), Math.Max(2, n));
-        return Enumerable.Range(0, n).Select(i => new PlotTick(first + i * step, labels[n == 1 ? 1 : i])).ToArray();
+        var labels = TickFormatter.StepLabels(first, step, n);
+        return Enumerable.Range(0, n).Select(i => new PlotTick(first + i * step, labels[i])).ToArray();
     }
 
     /// <summary>

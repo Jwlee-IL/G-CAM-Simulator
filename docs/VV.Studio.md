@@ -133,8 +133,8 @@ Automation. Status: **pass** (evidence on 2026-10-01), **partial**, **open** (no
 | SR-OPT-01, -02 | unit + offscreen | T, I | `OpticsPolicyTests.Presets_ApplyAtomically_MatchPhysicalFieldsAndShowCustom`; `OpticsViewModelTests.Focus_AcquiringStoppedCompleted_KeepsEventsSpectrumAndStaleState`; physical input bindings | pass headless + offscreen; desktop deferred |
 | SR-OPT-03 | unit + integration | T | `OpticsPolicyTests` finite/text/cross-field cases; `OpticsViewModelTests.InvalidInput_StartExpandsSectionsAndDoesNotStartTransport`; service config validation | pass headless; desktop deferred |
 | SR-OPT-04 | unit + integration | T | `OpticsProjectionTests.Refocus_ReprojectsAllChannels_WithoutMeasurementCalibrationOrNewEvents`, `EmptySnapshot_RefocusKeepsEmptyImagesAndDoesNotCalibrate`; `OpticsViewModelTests` lifecycle/revision/acquisition tests | pass headless; desktop deferred |
-| SR-OPT-05 | unit + integration | T, I | `OpticsPolicyTests.Geometry_UsesEffectiveFieldsAndHasNoPerformanceBand`; `OpticsProjectionTests.Sampling_SmallOffAxisSample_FinerPixelsReduceLocalizationError` (default); full position sweep (GCAM_EVIDENCE_TESTS=1); [sampling evidence](VV.Studio.Imaging.md) | prior full sweep passed; revised default regression verification pending |
-| SR-OPT-06 | offscreen | T, I | `PlotViewRenderTests.Spectrum_BothThemesFullAndZoom_RenderWithoutWindow`: expanded/collapsed optics at F=800, both themes, 1280×800/1440×900; new IDs Optics.*, Detector.Section, Imaging.FocalPlane/Geometry/FocusNote | pass offscreen; desktop deferred |
+| SR-OPT-05 | unit + integration + offscreen | T, I | `OpticsPolicyTests.Geometry_UsesEffectiveFieldsAndHasNoPerformanceBand`; `OpticsProjectionTests.Sampling_SmallOffAxisSample_FinerPixelsReduceLocalizationError` (default); full position sweep (GCAM_EVIDENCE_TESTS=1); [sampling evidence](VV.Studio.Imaging.md); one-line caption with the figures as tooltip / help text (`Imaging.SamplingEvidence`) inspected in the renders | prior full sweep passed; revised default regression verification pending |
+| SR-OPT-06 | offscreen | T, I | `PlotViewRenderTests.Spectrum_BothThemesFullAndZoom_RenderWithoutWindow`: expanded/collapsed optics at F=800, both themes, 1280×800/1440×900; asserts the default scene panel has no scrollable overflow in every workspace at both sizes; IDs Optics.*, Detector.Section, Chain.Section, Imaging.FocalPlane/Geometry/FocusNote, Imaging.FocalSection/ChannelSection/SweepSection; Tools and measurements under the images inspected | pass offscreen; desktop deferred |
 | SR-IMG-01 | unit + integration | T | `ImagingWorkspaceTests.SharedWindow_SelectorStripAndRoi_ReuseFrozenAcquisition`; `ImagingServiceTests.WindowChange_ReplaysRetainedEvents_RecalibratesAndMatchesFreshProcessing` | pass (headless); desktop pending |
 | SR-IMG-02 | integration | T, I | `ImagingServiceTests`; shared `SpectrumService.BuildBands` and `MeasurementStage`; [imaging evidence](VV.Studio.Imaging.md) | pass (headless); desktop pending |
 | SR-IMG-03 | unit + offscreen | T | `ImagingWorkspaceTests.SharedWindow_SelectorStripAndRoi_ReuseFrozenAcquisition`; two-isotope All / Cs-137 offscreen renders | pass (headless + offscreen); desktop pending |
@@ -171,8 +171,9 @@ Automation. Status: **pass** (evidence on 2026-10-01), **partial**, **open** (no
 | SR-VIEW-04 | unit | T | `HeatmapViewportTests.PanBy_CannotDragImageOutOfView` | pass |
 | SR-VIEW-05 | unit + integration | T, I | `HeatmapViewportTests.ScreenImage_RoundTripWithYUp`, `HeatmapViewportTests.PixelAt_RespectsBoundsAndOrientation`, `HeatmapViewportTests.MmMapping_PutsPixelCentresOnGrid`; flood origin `-(N−1)/2·pitch` in `AcquisitionSession` (I), pinned by `AcquisitionServiceTests.FloodAxis_MatchesTheDecodersPixelCentres` | pass |
 | SR-VIEW-06 | unit | T | `HeatmapViewportTests.Configure_ResizeKeepsZoom_NewImageSizeRefits` | pass |
-| SR-VIEW-07 | system | I, M | readout format and key handling in `HeatmapView` (I); readout exposed via `ItemStatus`; UI scenario `ScenarioTests.Readout_AndOneCellRoi_MatchAbsolutePositionAndValue` (§5) | partial — readout automated; the refit keys (double-click, `0`, Home) by inspection only |
-| SR-VIEW-08 | unit | T | `MainViewModelTests.Workspace_SharedResultAndSelectionSurviveSnapshot_ViewSettingsDoNotMarkStale` | pass |
+| SR-VIEW-07 | system + unit | T, I, M | readout format and key handling in `HeatmapView` (I); value format `TickFormatterTests.Significant_FourDigitsGroupedWithoutTrailingZeros` (7 cases); readout exposed via `ItemStatus`; UI scenario `ScenarioTests.Readout_AndOneCellRoi_MatchAbsolutePositionAndValue` (§5) | partial — readout automated; the refit keys (double-click, `0`, Home) by inspection only |
+| SR-VIEW-08 | unit | T | `MainViewModelTests.Workspace_SharedResultAndSelectionSurviveSnapshot_ViewSettingsDoNotMarkStale`; `ImagingWorkspaceTests.PeakChip_CountsSeveralFoundPeaks_AndNamesASingleOne` | pass |
+| SR-VIEW-09 | offscreen | I | colour bar and readout at the drawn image width (flood, reconstruction, Detector face) inspected in the 1280×800 / 1440×900 renders | pass offscreen; desktop deferred |
 | SR-MEAS-01 | unit + integration | T, M | `MeasurementMathTests.Distance_IsEuclidean`, `MeasurementsViewModelTests.Add_NumbersSequentially_AndSelectsTheNewOne`; VAL-03 (12.3 mm) | pass |
 | SR-MEAS-02 | unit | T, M | `MeasurementMathTests.AngleDeg_MeasuresAtTheVertex`, `MeasurementMathTests.AngleDeg_DegenerateArm_IsZero`; VAL-03 (67.0°) | pass |
 | SR-MEAS-03 | unit | T, M | `MeasurementMathTests.Roi_CountsPixelsByCentre_CornersInAnyOrder`, `MeasurementMathTests.Roi_ClipsToTheImage_AndIsEmptyBetweenCentres`; VAL-03 (ROI on flood) | pass |
@@ -198,7 +199,7 @@ Automation. Status: **pass** (evidence on 2026-10-01), **partial**, **open** (no
 | SR-NAV-02 | unit + system | T, I | workspace tests, `WorkspaceActivation_SelectsShell_WhenActiveIsSetWithoutCommand` and `Spectrum_SnapshotsGrow_ViewSettingsReuseAcquisition_SelectionSurvives`: checked-state activation, identities, unavailable index and retained selection; segmented switch / Ctrl+1…4 inspected | partial — desktop SelectionItem switching pending |
 | SR-NAV-03 | unit | T | `AcquisitionViewModelTests.LiveTimeAndSpeed_MarkStale_WorkspaceAndMeasurementsDoNot`, `Workspace_SharedResultAndSelectionSurviveSnapshot_ViewSettingsDoNotMarkStale` | pass |
 | SR-PLOT-01 | unit + I | T, I | `PlotSeriesTests.LowerBound_HandlesUniformAndIrregularX_AndEnds`; validation / cap / band / marker properties inspected | pass |
-| SR-PLOT-02 | unit | T | `PlotViewportTests.Mapping_RoundTrips_AndClampsLogFloor`, `NiceTicksTests.Linear_Uses125Steps_EngineeringLabels_NoNegativeZero`, `Logarithmic_LabelsDecades_WithEightMinorTicks` | pass |
+| SR-PLOT-02 | unit | T | `PlotViewportTests.Mapping_RoundTrips_AndClampsLogFloor`, `NiceTicksTests.Linear_Uses125Steps_EngineeringLabels_NoNegativeZero`, `Logarithmic_LabelsDecades_WithEightMinorTicks`, `TickFormatterTests.StepLabels_TakeDecimalsFromTheStep_AndGroupThousands` | pass |
 | SR-PLOT-03 | unit | T | `MinMaxPyramidTests.Query_EqualsBruteForce_IncludingBothEnds` (5 cases), `Range_ClipsOutsideData_RejectsNonFiniteSamples` | pass |
 | SR-PLOT-04 | unit + system | T, I | `PlotViewportTests.ZoomPanReset_PreservesAnchor_AndBounds`; `PlotViewTests.TenMillionSamples_ZoomAndResizeRedraw_Within16Milliseconds` checks production peer, + key and reset; pointer / other keys / readout by inspection | partial — full input walkthrough pending |
 | SR-PLOT-05 | system | T | `PlotViewTests.TenMillionSamples_ZoomAndResizeRedraw_Within16Milliseconds`; measured record in §5 | pass (CPU redraw only) |
@@ -206,13 +207,13 @@ Automation. Status: **pass** (evidence on 2026-10-01), **partial**, **open** (no
 | SR-PLOT-07 | unit + offscreen render | T | `Configure_PreservesZoomAndPanUntilRangeChanges_AndResetStillFits`; acquisition snapshot VM test; render test replaces counts under zoom | pass headless |
 | SR-PLOT-08 | unit + offscreen render | T | `VisibleExtent_ExcludesDistantPeak_IncludesIntersectingBins`; render test checks live top retention | pass headless |
 | SR-PLOT-09 | unit + inspection | T, I | `BinLookup_UsesHalfOpenEdges_AndReadoutUsesCountsAndUnits`; `PlotView.UpdateHover` and drawing inspected | pass headless; desktop pointer walkthrough deferred |
-| SR-PLOT-10 | unit + offscreen render | T | `Labels_ClampBothEdges_AndUseAdditionalRowsWithoutCollisions`; dark / light full PNGs show complete Ba K label | pass headless |
+| SR-PLOT-10 | unit + offscreen render | T, I | `Labels_ClampBothEdges_AndUseAdditionalRowsWithoutCollisions`; Spectrum, Waveform and focus-curve renders show band / marker labels in the strip above the data, the shaped waveform plot without marker labels | pass headless |
 | SR-PLOT-11 | offscreen render | T | `PlotViewRenderTests.Spectrum_BothThemesFullAndZoom_RenderWithoutWindow`, independent opt-in, four PNGs | pass |
 | SR-SPEC-01 | integration + I | T, I | `SpectrumServiceTests.CsAcquisition_PhotopeakBinAndFwhmMatchChain`; Histogram binding / explicit edges, axis labels and no synthetic noise inspected | pass headless; live desktop appearance pending |
 | SR-SPEC-02 | integration | T | `CsAcquisition_PhotopeakBinAndFwhmMatchChain`; engine `FrontEndPartsTests` verifies legacy chain and pulse compatibility | pass |
 | SR-SPEC-03 | integration | T | `HighRate_PileUpLosesPulsesAndMovesCountsAbovePhotopeak`; exact pulse-count agreement with engine `ApplyPileUp` | pass |
 | SR-SPEC-04 | integration + unit | T | `MixedCsCo_HasFourBandsAndUnionCountsEachBinOnce`, `Merge_UsesResolutionRatherThanWindowOverlap` (2 cases), `Merge_SingleLineGivesOneBand` | pass |
-| SR-SPEC-05 | integration + I | T, I | `MixedCsCo_HasFourBandsAndUnionCountsEachBinOnce`; table columns and bin-centre selection inspected | pass headless; desktop table pending |
+| SR-SPEC-05 | integration + unit + I | T, I | `MixedCsCo_HasFourBandsAndUnionCountsEachBinOnce`; `SpectrumBandTests.BandOfXRayLines_IsNamedByEmitter_GammaBandByIsotope`; engine `EmissionKindTests` (3 cases); right-aligned columns and bin-centre selection inspected | pass headless; desktop table pending |
 | SR-SPEC-06 | unit + I | T, I | `AcquisitionViewModelTests.Spectrum_SnapshotsGrow_ViewSettingsReuseAcquisition_SelectionSurvives`; shared stale binding inspected | pass headless; desktop controls pending |
 | SR-SPEC-07 | integration + I | T, I | `SeedAndSnapshotPartition_AreDeterministic_ToggleReplaysExactly` (2 cases), `Processing_MeasuresFullAndIncrementalWorkAt100000Events`; service `Task.Run` inspected | pass |
 | SR-SPEC-08 | inspection + system | I | `SpectrumView.xaml`, `SpectrumPanel.xaml`, inherited `PlotView` peer | partial — desktop accessibility and themes pending |
@@ -487,6 +488,19 @@ The Waveform workspace and physical-chain selection are implemented; execution s
 
 The initially launched Studio Release build completed with 0 warnings/errors before later test/document/final edits. Subsequent shell creation failed with access denied; a final build/test count, services-suite runtime and rendered PNG inspection must come from the independent verification run. Existing engine tests were not edited; no RTL/cocotb code was changed.
 
+UI polish batch 3 (workspace layout, 2026-10-02) Release verification: 262 engine, 162 Core, 67 service and
+10 UI-oracle cases pass (previous 259 / 151 / 67 / 10); seven service evidence, nine desktop and the render case
+skip in the normal run, and the render opt-in passes separately. New cases: three engine `EmissionKindTests`
+(Cs-137 32.1 / 36.4 keV are X-rays emitted by barium, "Ba K", every other line gamma without an X-ray origin, an energy–intensity pair converts to a gamma line; no
+energy or intensity changed), the peak-chip, X-ray band name, step-tick, significant-digit and grouped-fraction
+Core cases. The renders are now reproducible byte for byte (fixture-supplied waveform worker time; two
+consecutive render runs gave identical PNGs) and use the window's own Display text formatting in every
+workspace. The Waveform fixture's live time ends at its last event, and the imaging fixture reports each
+channel's argmax as its estimate. The status-bar rate and the outdated indicators are unchanged in this batch.
+Visual review evidence only; no desktop test was enabled. The desktop-test readout parser
+(`FloodOracle.ParseReadout`) now accepts the unit suffix and grouped four-digit values, checked by the non-desktop
+`FloodOracleTests.ReadoutAndSumParsers_ReadTheAppsFormats`.
+
 ## Detector and retained-flood focus verification matrix
 
 | Requirement | Automated verification | Execution status |
@@ -494,7 +508,7 @@ The initially launched Studio Release build completed with 0 warnings/errors bef
 | SR-DET-01 | DetectorWorkspaceTests.Gap_InvalidEditPreventsStart, Gap_RevalidatesAfterPitchChange_AndConvertsUnits; FocusSweepServiceTests.Config_RejectsGapAtServiceBoundary | Passed in Release, 2026-10-02 |
 | SR-DET-02 | Face_FollowsPendingBeforeStart_AndAcquiredAfterStaleEdit; MainViewModelTests.Workspace_SharedResultAndSelectionSurviveSnapshot_ViewSettingsDoNotMarkStale | Passed in Release, 2026-10-02 |
 | SR-DET-03 | DetectorFaceTests.Geometry_ExactGapCoverageAndArea; Face_GainsMatchMeasurementPattern; DetectorGapEvidenceTests | Deterministic tests passed; opt-in seed-spread evidence awaits environment-change authorization |
-| SR-DET-04 | RenderDetectorAndFocus before/stale Detector, dark/light, two sizes | 16 Detector/focus fixture outputs prepared; generation not established |
+| SR-DET-04 | RenderDetectorAndFocus before/stale Detector, dark/light, two sizes | Generated and inspected 2026-10-02 (batch-3 layout pass) |
 | SR-FOCUS-01 | FocusSweepServiceTests.Sweep_UsesRetainedFlood_WithoutEventsOrSceneTruth, Sweep_PreCancelledWorkerCannotPublish, Sweep_EmptyFloodIsUnresolved; Sweep_FreezesIdentity_UserK_AndNeverDelaysAcquisition; Sweep_DoesNotHoldSnapshotConsumption_AndLabelsFrozenPrefix | Passed in Release, 2026-10-02 |
 | SR-FOCUS-02 | Planes_UniformInverseDistance_ExactBounds; Linking_UsesAngle_NotMillimetres_AndIsOneToOne; user-K identity test | Passed in Release, 2026-10-02 |
 | SR-FOCUS-03 | Interval_InterpolatesRawHalfMaximum_WithoutNoiseInterpretation, Interval_CensorsSweepEdges, Interval_FlagsDisjointModes_AndBoundaryMaximum; resolved/censored render fixture | Deterministic tests passed; render requires opt-in authorization |

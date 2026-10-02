@@ -96,8 +96,11 @@ public sealed partial class MainViewModel : ObservableObject
     /// <summary>Half-width of the fully-coded field of view at the focal plane (mm).</summary>
     public double FcfovHalfMm => Imaging.Geometry?.NominalHalfFieldMm ?? 0;
     public OpticsEditorViewModel OpticsEditor { get; } = new();
-    [ObservableProperty] private bool _isOpticsExpanded = true;
-    [ObservableProperty] private bool _isDetectorExpanded = true;
+    // Optics and detector are set up once and rarely edited, so they start collapsed to their one-line summaries
+    // (Start expands a section whose input is invalid); the detection chain is chosen more often and starts open.
+    [ObservableProperty] private bool _isOpticsExpanded;
+    [ObservableProperty] private bool _isDetectorExpanded;
+    [ObservableProperty] private bool _isChainExpanded = true;
     [ObservableProperty] private string? _validationError;
     public string DetectorSummary => $"gap {Detector.ReflectorGapMm * 1000:0.###} µm · gain σ {GainSigmaPercent:0.#}%";
     partial void OnOpticsChanged(OpticsSettings value)
@@ -134,10 +137,15 @@ public sealed partial class MainViewModel : ObservableObject
     }
     public FrontEndChain Chain => new(Scintillator, Sensor, Preamp);
     public string PendingChain => $"Next acquisition: {Chain}";
-    public string AcquiredChain => Snapshot is { } s ? $"Acquired: {s.Chain}" : "No acquired chain";
+    public string AcquiredChain => Snapshot is { } s ? $"Results acquired with: {s.Chain}" : "No acquired chain";
+    /// <summary>The retained results come from a different chain than the one selected above: only then are the two
+    /// chain lines shown (otherwise the combo boxes already say everything).</summary>
+    public bool ChainDiffers => Snapshot is { } s && s.Chain != Chain;
+    public string ChainSummary => Chain.ToString();
     private void NotifyChainChanged()
     {
         OnPropertyChanged(nameof(Chain)); OnPropertyChanged(nameof(Detector)); OnPropertyChanged(nameof(PendingChain));
+        OnPropertyChanged(nameof(ChainDiffers)); OnPropertyChanged(nameof(ChainSummary));
         DetectorWorkspace.Refresh();
         MarkStale();
     }
@@ -179,7 +187,7 @@ public sealed partial class MainViewModel : ObservableObject
     [ObservableProperty] private AcquisitionSnapshot? _snapshot;
     partial void OnSnapshotChanged(AcquisitionSnapshot? value)
     {
-        OnPropertyChanged(nameof(AcquiredChain));
+        OnPropertyChanged(nameof(AcquiredChain)); OnPropertyChanged(nameof(ChainDiffers));
         Spectrum.Refresh(); Imaging.RefreshChannels(); Waveform.NotifySnapshot(); DetectorWorkspace.Refresh();
     }
     [ObservableProperty] private double _windowFwhm = 1.5;

@@ -6,8 +6,8 @@
     <Border Style="{StaticResource Panel.Surface}">
         <DockPanel>
             <DockPanel DockPanel.Dock="Top" Style="{StaticResource PanelHeader}">
-                <TextBlock Text="Spectrum" Style="{StaticResource Text.PanelTitle}" />
-                <Border Style="{StaticResource Chip.Warning}" Visibility="{Binding Shared.IsResultStale, Converter={StaticResource BoolToVis}}">
+                <TextBlock DockPanel.Dock="Left" Text="Spectrum" Style="{StaticResource Text.PanelTitle}" />
+                <Border DockPanel.Dock="Right" Style="{StaticResource Chip.Warning}" Visibility="{Binding Shared.IsResultStale, Converter={StaticResource BoolToVis}}">
                     <TextBlock Text="Outdated" Style="{StaticResource Text.CaptionWarning}" />
                 </Border>
             </DockPanel>
@@ -19,14 +19,23 @@
                 <DockPanel Style="{StaticResource PanelHeader}">
                     <TextBlock Text="Emission windows" Style="{StaticResource Text.PanelTitle}" />
                 </DockPanel>
-                <Grid Margin="{StaticResource Gap.Tight}">
-                    <Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition /><ColumnDefinition /><ColumnDefinition /><ColumnDefinition /></Grid.ColumnDefinitions>
-                    <TextBlock Text="Isotope" Style="{StaticResource Text.Label}" />
-                    <TextBlock Grid.Column="1" Text="Line (keV)" Style="{StaticResource Text.Label}" />
-                    <TextBlock Grid.Column="2" Text="Window (keV)" Style="{StaticResource Text.Label}" />
-                    <TextBlock Grid.Column="3" Text="Counts" Style="{StaticResource Text.Label}" />
-                    <TextBlock Grid.Column="4" Text="Share" Style="{StaticResource Text.Label}" />
+                <!-- Column header: same columns and the same inner padding (Pad.ListItem) as the rows; numbers right-aligned -->
+                <Border Padding="{StaticResource Pad.ListItem}" Margin="{StaticResource Gap.Tight}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="{StaticResource Size.Column.Value}" />
+                        <ColumnDefinition Width="{StaticResource Size.Column.Value}" />
+                        <ColumnDefinition Width="{StaticResource Size.Column.Value}" />
+                        <ColumnDefinition Width="{StaticResource Size.Column.Short}" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="Emission" Style="{StaticResource Text.ColumnHeader}" />
+                    <TextBlock Grid.Column="1" Text="Line (keV)" Style="{StaticResource Text.ColumnHeader}" HorizontalAlignment="Right" />
+                    <TextBlock Grid.Column="2" Text="Window (keV)" Style="{StaticResource Text.ColumnHeader}" HorizontalAlignment="Right" />
+                    <TextBlock Grid.Column="3" Text="Counts" Style="{StaticResource Text.ColumnHeader}" HorizontalAlignment="Right" />
+                    <TextBlock Grid.Column="4" Text="Share" Style="{StaticResource Text.ColumnHeader}" HorizontalAlignment="Right" />
                 </Grid>
+                </Border>
                 <ListBox ItemsSource="{Binding Lines}" SelectedItem="{Binding SelectedLine, Mode=TwoWay}" MaxHeight="{StaticResource Size.ResultsList}"
                          AutomationProperties.AutomationId="Spectrum.Lines" AutomationProperties.Name="Spectrum emission windows">
                     <ListBox.ItemContainerStyle>
@@ -38,12 +47,18 @@
                     <ListBox.ItemTemplate>
                         <DataTemplate>
                             <Grid>
-                                <Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition /><ColumnDefinition /><ColumnDefinition /><ColumnDefinition /></Grid.ColumnDefinitions>
-                                <TextBlock Text="{Binding Isotope}" Style="{StaticResource Text.Mono}" />
-                                <TextBlock Grid.Column="1" Text="{Binding Energies}" Style="{StaticResource Text.Mono}" />
-                                <TextBlock Grid.Column="2" Text="{Binding Window}" Style="{StaticResource Text.Mono}" />
-                                <TextBlock Grid.Column="3" Text="{Binding Counts, StringFormat=N0}" Style="{StaticResource Text.Mono}" />
-                                <TextBlock Grid.Column="4" Text="{Binding Share, StringFormat=P1}" Style="{StaticResource Text.Mono}" />
+                                <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="{StaticResource Size.Column.Value}" />
+                                                <ColumnDefinition Width="{StaticResource Size.Column.Value}" />
+                                                <ColumnDefinition Width="{StaticResource Size.Column.Value}" />
+                                                <ColumnDefinition Width="{StaticResource Size.Column.Short}" />
+                                            </Grid.ColumnDefinitions>
+                                <TextBlock Text="{Binding Name}" Style="{StaticResource Text.Body}" />
+                                <TextBlock Grid.Column="1" Text="{Binding Energies}" Style="{StaticResource Text.Mono}" HorizontalAlignment="Right" />
+                                <TextBlock Grid.Column="2" Text="{Binding Window}" Style="{StaticResource Text.Mono}" HorizontalAlignment="Right" />
+                                <TextBlock Grid.Column="3" Text="{Binding Counts, StringFormat=N0}" Style="{StaticResource Text.Mono}" HorizontalAlignment="Right" />
+                                <TextBlock Grid.Column="4" Text="{Binding Share, StringFormat=P1}" Style="{StaticResource Text.Mono}" HorizontalAlignment="Right" />
                             </Grid>
                         </DataTemplate>
                     </ListBox.ItemTemplate>

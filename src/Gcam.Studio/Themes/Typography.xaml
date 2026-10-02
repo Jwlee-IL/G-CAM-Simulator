@@ -54,9 +54,18 @@
         <Setter Property="Foreground" Value="{DynamicResource Brush.Text.Secondary}" />
     </Style>
 
-    <!-- Caption in the warning colour, for a status chip ("outdated") -->
+    <!-- Caption in the warning colour, for a status chip ("outdated") or a validation message. A message line with
+         no message takes no height: an empty TextBlock would otherwise still measure one line. -->
     <Style x:Key="Text.CaptionWarning" TargetType="TextBlock" BasedOn="{StaticResource Text.Caption}">
         <Setter Property="Foreground" Value="{DynamicResource Brush.Status.Warning}" />
+        <Style.Triggers>
+            <Trigger Property="Text" Value="">
+                <Setter Property="Visibility" Value="Collapsed" />
+            </Trigger>
+            <Trigger Property="Text" Value="{x:Null}">
+                <Setter Property="Visibility" Value="Collapsed" />
+            </Trigger>
+        </Style.Triggers>
     </Style>
 
     <!-- Table column headers -->

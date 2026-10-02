@@ -28,7 +28,7 @@ public sealed partial class PlotViewRenderTests
             resources.Add(new ResourceDictionary { Source = new Uri($"/Gcam.Studio;component/Themes/{file}.xaml", UriKind.Relative) });
         var acquisition = new WaveformAcquisition();
         var model = new MainViewModel(acquisition, new FixtureTheme(Enum.Parse<AppTheme>(theme)), new FixtureSpectrum(),
-            waveform: new WaveformService());
+            waveform: new FixedTimeWaveformService());
         model.StartCommand.ExecuteAsync(null).GetAwaiter().GetResult();
         model.IsOpticsExpanded = model.IsDetectorExpanded = false;
         model.SelectedWorkspace = model.Waveform;
@@ -50,19 +50,7 @@ public sealed partial class PlotViewRenderTests
             Assert.Equal(mode == "rate-study", model.Waveform.View.Note.Contains("not the measured rate"));
             foreach (var size in new[] { new Size(1280, 800), new Size(1440, 900) })
             {
-                var window = new MainWindow();
-                var content = (FrameworkElement)window.Content;
-                window.Content = null;
-                content.Resources.MergedDictionaries.Add(window.Resources);
-                content.DataContext = model;
-                TextElement.SetFontFamily(content, (FontFamily)Application.Current.FindResource("Font.UI"));
-                content.UseLayoutRounding = true;
-                var root = new Border
-                {
-                    Background = (Brush)Application.Current.FindResource("Brush.Bg.Canvas"),
-                    Child = new AdornerDecorator { Child = content }
-                };
-                root.Measure(size); root.Arrange(new Rect(size)); root.UpdateLayout();
+                var (root, content) = DetachMainWindow(model, size);
                 Dispatcher.CurrentDispatcher.Invoke(() => { }, DispatcherPriority.ContextIdle);
                 root.UpdateLayout();
                 var plots = Descendants(root).OfType<PlotView>().ToArray();
@@ -133,9 +121,20 @@ public sealed partial class PlotViewRenderTests
                 events.Add(ev); flood.Add(ev.PixelX, ev.PixelY, 1);
             }
             var image = new ImagingResult(flood.ReadOnlyCopy(), -8.7, .6, null, 0, 0, null, events.Count, TimeSpan.Zero);
-            var snapshot = new AcquisitionSnapshot(events[^1].ArrivalTimeS + 1, events.Count, source.RateCps,
-                1, false, image, events.AsReadOnly(), TimeSpan.Zero, true) { Detector = detector, Optics = optics };
+            // Live time ends at the last consumed arrival, as AcquisitionSession's MC-limited branch does: counts /
+            // live time is then the observed rate. A 128-event prefix of a 60 s preset is a stopped acquisition.
+            var snapshot = new AcquisitionSnapshot(events[^1].ArrivalTimeS, events.Count, source.RateCps,
+                1, false, image, events.AsReadOnly(), TimeSpan.Zero, false) { Detector = detector, Optics = optics };
             return new FixtureSession(snapshot);
         }
+    }
+
+    /// <summary>The real scope service with a fixed worker time, so the summary line (and the PNG) is reproducible.</summary>
+    private sealed class FixedTimeWaveformService : IWaveformService
+    {
+        private readonly WaveformService _inner = new();
+        public async Task<Gcam.Studio.Core.Services.WaveformView> ProcessAsync(AcquisitionSnapshot snapshot,
+            WaveformSettings settings, CancellationToken cancellationToken = default)
+            => await _inner.ProcessAsync(snapshot, settings, cancellationToken) with { ProcessingTime = TimeSpan.FromMilliseconds(0.4) };
     }
 }

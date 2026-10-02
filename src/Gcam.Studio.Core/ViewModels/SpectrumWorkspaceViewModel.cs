@@ -56,7 +56,7 @@ public sealed partial class SpectrumWorkspaceViewModel : WorkspaceViewModel
         _refresh?.Cancel();
         _revision++;
         _acquisitionId = Guid.NewGuid();
-        _lines = scene.SelectMany(s => Isotopes.Get(s.Isotope).Lines.Select(l => new SpectrumLine(s.Isotope, l.EnergyKeV)))
+        _lines = scene.SelectMany(s => Isotopes.Get(s.Isotope).Lines.Select(l => new SpectrumLine(s.Isotope, l.EnergyKeV, l.Kind, l.XRayOrigin)))
             .Distinct().ToArray();
         View = null;
         Series = [];

@@ -5,5 +5,5 @@ public sealed record WaveformEvent(int Index, int PixelX, int PixelY, double Dep
     double AcquisitionTimeS, double RelativeTimeUs, double AmplitudeKeV)
 {
     public string Label => $"#{Index} ({PixelX},{PixelY}) {DepositKeV:0.#} keV";
-    public string Description => $"{Label} · acquired {AcquisitionTimeS:0.000000000} s · scope {RelativeTimeUs:0.###} µs";
+    public string Description => $"{Label} · acquired {Gcam.Studio.Core.Imaging.NumberFormat.GroupedFraction(AcquisitionTimeS, 9)} s · scope {RelativeTimeUs:0.###} µs";
 }

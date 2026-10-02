@@ -107,7 +107,7 @@ unaligned head / tail fragments within 64-sample blocks. Axis margins use measur
 labels are centred by their measured width.
 One frozen `StreamGeometry` per series preserves column extrema (about two points per device column), with a
 translucent baseline fill for Area. Log Y clamps counts at 1, matching the legacy spectrum; linear ticks use
-1–2–5 steps with `TickFormatter` engineering labels. Log ticks have decades and 2…9 minor ticks;
+1–2–5 steps with `TickFormatter.StepLabels` (decimals from the step, grouped thousands, engineering ×10ⁿ). Log ticks have decades and 2…9 minor ticks;
 decades through 10⁵ use grouped numbers ("10,000"), higher decades use superscript powers ("10⁶").
 The Y title occupies its own measured text row plus a 4-DIP gap above the top tick label.
 Bands use neutral `BandBrush` tint and `BandEdgeBrush` boundaries drawn above the series fill, so windows
@@ -130,9 +130,12 @@ Data updates only grow the top; navigation and log changes recompute it. Histogr
 draws a thin centre cursor with a readout such as `662.4 keV (660.9 – 663.9) · 1,234 counts`; default precision
 follows bin width, with optional X / Y formats. Line readout retains continuous coordinates without redrawing.
 Core `PlotBandLayout` centres labels on bands, clamps them to the plot and moves collisions to additional rows;
-text wider than the plot is ellipsized. Layout includes `BandLabelPadding` from `Pad.Plot.BandLabel`
-(4 DIP on every side). Labels draw last on opaque `BandLabelBrush` plates using `Brush.Bg.Surface`,
-so band edges, grid lines and data cannot cross the text, even when the label is wider than its band.
+text wider than the plot is ellipsized on one line. Layout includes `BandLabelPadding` from `Pad.Plot.BandLabel`
+(4 DIP on every side). Band rows, then marker rows, sit in a **label strip above the plot area** (below the Y title):
+labels never cover data. Marker labels start right of their marker and carry a leader line down to the plot;
+`ShowMarkerLabels="False"` keeps only the lines (the lower Waveform plot, which shares the time axis). Waveform
+markers are short ("#64"); pixel and deposit are in the event list. Plates use opaque `BandLabelBrush`
+(`Brush.Bg.Surface`).
 
 Spectrum table selection requests the window plus one window width on each side. Snapshot row replacement
 retains selection without re-requesting zoom. Whole-window content and plot offscreen evidence uses `Gcam.Studio.RenderTests`, opt-in with
@@ -149,6 +152,12 @@ of ten when values are very small or large (`1.6 … 16.1 ×10⁻³` instead of 
 of decimals on every tick, never `-0`.
 
 ### ImageStackPanel
+
+The first child is offered the largest square; the legend (colour bar, readout) is laid out at the width the child
+actually asks for. `HeatmapView` measures to its fit size with whole-device-pixel cells (and `DetectorFaceView` to
+its square), so the colour bar never overhangs the drawn image. A legend that becomes narrower is measured again
+(it may wrap). `ImageAreaPanel` stacks the Imaging image pair (its desired height, at most the panel less
+`Size.Imaging.Lower`) above the measurements / focus curve, which fill the rest.
 
 Lays out an image with its legend: the first child stays **square** and as large as fits; the colour bar and the
 readout stack directly beneath it at the image's width; spare height collects below. The images are square grids —

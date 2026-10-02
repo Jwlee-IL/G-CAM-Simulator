@@ -52,6 +52,20 @@ Plot Y titles reserve a measured text-height row and a 4-DIP gap above the plot;
 label keeps its own half-height margin. Log decades use grouped integer labels through 100,000,
 then superscript powers, avoiding a second shared multiplier on an individual log tick.
 
+## Numbers
+
+One rule per kind of number (Core `TickFormatter`, `NumberFormat`, unit-tested):
+
+| Kind | Rule | Example |
+|---|---|---|
+| Linear tick (axis, colour bar) | decimals the tick **step** needs, thousands grouped, shared ×10ⁿ outside 0.1…9999 | `0 10 20`, `1,000 2,000`, `−2 0 2` |
+| Continuous reading (decoded intensity, ratio R) | four significant digits, grouped, trailing fractional zeros dropped; integers in full | `18.53`, `3,077`, `0.275` |
+| Counts | integer, grouped | `6,463` |
+| Fixed-resolution time (event acquisition time) | all digits kept (ns), fraction grouped in threes by a narrow no-break space | `0.853 889 538 s` |
+| Percent | gain σ at most one decimal (`3%`); a resolution keeps its stated two decimals (`4.57%`) | `3%`, `4.57%` |
+
+Message lines (`Text.CaptionWarning`) collapse when they have no text, so an empty error takes no height.
+
 ## Adding a role
 
 Derive from the nearest existing role (`BasedOn`), change one or two properties, name it `Text.<Purpose>`, and

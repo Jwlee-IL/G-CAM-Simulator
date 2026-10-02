@@ -24,6 +24,8 @@
     <Thickness x:Key="Gap.Inline">0,0,8,0</Thickness>
     <Thickness x:Key="Gap.InlineWide">0,0,16,0</Thickness>
     <GridLength x:Key="Gutter">12</GridLength>
+    <!-- Vertical gutter between stacked panels: the same 12 as the column gutter -->
+    <Thickness x:Key="Gap.Row">0,0,0,12</Thickness>
 
     <!-- Sizes -->
     <sys:Double x:Key="Size.Control">28</sys:Double>
@@ -48,6 +50,8 @@
     <!-- Results-table columns (the last column takes the rest) -->
     <GridLength x:Key="Size.Column.Id">36</GridLength>
     <GridLength x:Key="Size.Column.Short">60</GridLength>
+    <!-- Numeric table columns wide enough for "616.3–707.1" in the mono face (emission-window table) -->
+    <GridLength x:Key="Size.Column.Value">96</GridLength>
 
     <!-- Shape -->
     <CornerRadius x:Key="Radius.Control">3</CornerRadius>
@@ -62,5 +66,6 @@
     <sys:Double x:Key="FontSize.Label">12</sys:Double>
     <sys:Double x:Key="FontSize.Body">13</sys:Double>
     <sys:Double x:Key="FontSize.Title">14</sys:Double>
-    <sys:Double x:Key="Size.FocusPlot">240</sys:Double>
+    <!-- Imaging centre: height always left under the image pair for measurements and the focus curve -->
+    <sys:Double x:Key="Size.Imaging.Lower">240</sys:Double>
 </ResourceDictionary>

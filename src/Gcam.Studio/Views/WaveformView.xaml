@@ -7,8 +7,8 @@
         <DockPanel>
             <StackPanel DockPanel.Dock="Top">
                 <DockPanel Style="{StaticResource PanelHeader}">
-                    <TextBlock Text="Waveform · energy sum" Style="{StaticResource Text.PanelTitle}" />
-                    <Border Style="{StaticResource Chip.Warning}" Visibility="{Binding Shared.IsResultStale, Converter={StaticResource BoolToVis}}">
+                    <TextBlock DockPanel.Dock="Left" Text="Waveform · energy sum" Style="{StaticResource Text.PanelTitle}" />
+                    <Border DockPanel.Dock="Right" Style="{StaticResource Chip.Warning}" Visibility="{Binding Shared.IsResultStale, Converter={StaticResource BoolToVis}}">
                         <TextBlock Text="Outdated" Style="{StaticResource Text.CaptionWarning}" />
                     </Border>
                 </DockPanel>
@@ -28,7 +28,7 @@
                             EmptyText="Start acquisition and select an event" AutomationProperties.AutomationId="Waveform.Adc"
                             AutomationProperties.Name="Waveform ADC energy sum" AutomationProperties.HelpText="Wheel or plus and minus to zoom; arrows to pan; Home to reset. Both traces share time." />
                 <Border Grid.Row="1" Style="{StaticResource Divider}" />
-                <c:PlotView Grid.Row="2" Series="{Binding ShapedSeries}" Markers="{Binding Markers}" ShareViewRange="True"
+                <c:PlotView Grid.Row="2" Series="{Binding ShapedSeries}" Markers="{Binding Markers}" ShowMarkerLabels="False" ShareViewRange="True"
                             ViewRange="{Binding ViewRange, Mode=TwoWay}" XUnit="µs" YUnit="codes"
                             XLabel="time from trigger (µs)" YLabel="integer shaped output"
                             EmptyText="Integer RTL shaper output" AutomationProperties.AutomationId="Waveform.Shaped"

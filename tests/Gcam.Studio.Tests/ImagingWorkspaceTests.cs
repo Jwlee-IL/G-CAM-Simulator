@@ -42,13 +42,15 @@ public sealed class ImagingWorkspaceTests
             IReadOnlyList<SceneSource> scene, OpticsSettings optics, ImagingSettings settings, CancellationToken cancellationToken = default)
         {
             Requests.Add((acquisitionId, snapshot, scene, optics, settings));
-            var channels = new List<ImagingChannel> { new("All", double.NaN, double.NaN, snapshot.Imaging, []) };
+            var channels = new List<ImagingChannel>();
             foreach (var isotope in scene.Select(s => s.Isotope).Distinct())
             {
                 var flood = new DetectorImage(4, 4); flood[1, 1] = settings.Strip ? 3 : 5;
-                channels.Add(new(isotope, 600, 720, snapshot.Imaging with { Flood = flood, EffectiveCounts = flood[1, 1] },
-                    [new(isotope, 2, 3, 10)]));
+                channels.Add(new(isotope, 600, 720, snapshot.Imaging with { Flood = flood, EffectiveCounts = flood[1, 1],
+                    Estimate = new SourceEstimate(new Vector3(2, 3, 1000), 1) }, [new(isotope, 2, 3, 10)]));
             }
+            // As the service: All carries the union of the isotope channels' found peaks.
+            channels.Insert(0, new("All", double.NaN, double.NaN, snapshot.Imaging, channels.SelectMany(c => c.Peaks).ToArray()));
             Latest = new(channels, [new("Cs-137", "Co-60", 20000, 1000, 5000)], TimeSpan.Zero, TimeSpan.Zero, TimeSpan.Zero);
             return Pending?.Task ?? Task.FromResult(Latest!);
         }
@@ -110,6 +112,19 @@ public sealed class ImagingWorkspaceTests
         Assert.Equal(request.Id, imaging.Requests[^1].Id);
         Assert.Same(request.Snapshot, imaging.Requests[^1].Snapshot);
         Assert.Equal(1, acquisition.Starts);
+    }
+
+    [Fact]
+    public async Task PeakChip_CountsSeveralFoundPeaks_AndNamesASingleOne()
+    {
+        var vm = new MainViewModel(new Acquisition(), new Theme(), new FakeSpectrumService(), new Imaging());
+        vm.AddSourceCommand.Execute(null); vm.Sources[1].Isotope = "Co-60";
+        await vm.StartCommand.ExecuteAsync(null);
+        await vm.Imaging.WhenUpdated;
+        Assert.Equal(2, vm.Imaging.Peaks.Count);
+        Assert.Equal("2 peaks found", vm.Imaging.PeakText);
+        vm.Imaging.SelectedIsotope = "Cs-137";
+        Assert.Equal("peak (2.0, 3.0) mm", vm.Imaging.PeakText);
     }
 
     [Fact]

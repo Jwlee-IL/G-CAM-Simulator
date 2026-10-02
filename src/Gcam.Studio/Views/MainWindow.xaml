@@ -243,7 +243,7 @@
                                            Style="{StaticResource Text.Caption}" TextWrapping="Wrap" />
                             </StackPanel>
                         </Expander>
-                        <TextBlock Text="{Binding OpticsEditor.Summary}" Style="{StaticResource Text.MonoCaption}" TextTrimming="CharacterEllipsis"
+                        <TextBlock Text="{Binding OpticsEditor.Summary}" Style="{StaticResource Text.MonoCaption}" TextWrapping="Wrap" TextTrimming="None"
                                    ToolTip="{Binding OpticsEditor.Summary}" Visibility="{Binding IsOpticsExpanded, Converter={x:Static conv:InverseBoolToVisibilityConverter.Instance}}" />
                         <TextBlock Text="{Binding OpticsEditor.Error}" Style="{StaticResource Text.CaptionWarning}" TextWrapping="Wrap"
                                    AutomationProperties.AutomationId="Optics.Error" />
@@ -288,7 +288,7 @@
                         </StackPanel>
                             </StackPanel>
                         </Expander>
-                        <TextBlock Text="{Binding DetectorSummary}" Style="{StaticResource Text.MonoCaption}" TextTrimming="CharacterEllipsis"
+                        <TextBlock Text="{Binding DetectorSummary}" Style="{StaticResource Text.MonoCaption}" TextWrapping="Wrap" TextTrimming="None"
                                    ToolTip="{Binding DetectorSummary}" Visibility="{Binding IsDetectorExpanded, Converter={x:Static conv:InverseBoolToVisibilityConverter.Instance}}" />
                     </StackPanel>
                     </ScrollViewer>
@@ -300,11 +300,10 @@
                         <DataTemplate DataType="{x:Type vm:WaveformWorkspaceViewModel}"><views:WaveformView /></DataTemplate>
                         <DataTemplate DataType="{x:Type vm:DetectorWorkspaceViewModel}"><views:DetectorView /></DataTemplate>
                         <DataTemplate DataType="{x:Type vm:ImagingWorkspaceViewModel}">
-                            <!-- Images: square heatmap with its colour bar and readout directly beneath (ImageStackPanel) -->
-                            <DockPanel>
-                            <views:FocusSweepView DockPanel.Dock="Bottom" Height="{StaticResource Size.FocusPlot}" Margin="{StaticResource Gap.Tight}"
-                                                  Visibility="{Binding HasSweepResult, Converter={StaticResource BoolToVis}}" />
-                            <Grid>
+                            <!-- Image pair on top (each a square heatmap with its colour bar and readout beneath, ImageStackPanel);
+                                 measurements and, after a sweep, the focus curve fill the height below (ImageAreaPanel) -->
+                            <c:ImageAreaPanel MinRestHeight="{StaticResource Size.Imaging.Lower}">
+                            <Grid Margin="{StaticResource Gap.Row}">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="{StaticResource Gutter}" />
@@ -369,27 +368,35 @@
                                     </DockPanel>
                                 </Border>
                             </Grid>
-
-                            </DockPanel>
-                        </DataTemplate>
-                    </ContentControl.Resources>
-                </ContentControl>
-                <ContentControl Grid.Column="4" Content="{Binding SelectedWorkspace}" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
-                    <ContentControl.Resources>
-                        <DataTemplate DataType="{x:Type vm:SpectrumWorkspaceViewModel}"><views:SpectrumPanel /></DataTemplate>
-                        <DataTemplate DataType="{x:Type vm:WaveformWorkspaceViewModel}"><views:WaveformPanel /></DataTemplate>
-                        <DataTemplate DataType="{x:Type vm:DetectorWorkspaceViewModel}"><views:DetectorPanel /></DataTemplate>
-                        <DataTemplate DataType="{x:Type vm:ImagingWorkspaceViewModel}">
-                            <!-- Measurements: tool picker · results table · detail of the selected row, top-aligned -->
-                            <Border Style="{StaticResource Panel.Surface}">
-                                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-                                <StackPanel>
-                                    <views:ImagingOptionsPanel />
-                                    <StackPanel DataContext="{Binding Measurements}">
-                                        <DockPanel Style="{StaticResource PanelHeader}">
-                                            <TextBlock Text="Tools" Style="{StaticResource Text.PanelTitle}" />
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="{StaticResource Gutter}" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <!-- Measurements: full width, or the left half beside the focus curve once a sweep has a result -->
+                                <Border>
+                                    <Border.Style>
+                                        <Style TargetType="Border" BasedOn="{StaticResource Panel.Surface}">
+                                            <Setter Property="Grid.ColumnSpan" Value="3" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding HasSweepResult}" Value="True">
+                                                    <Setter Property="Grid.ColumnSpan" Value="1" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
+                                    <DockPanel DataContext="{Binding Measurements}">
+                                        <DockPanel DockPanel.Dock="Top" Style="{StaticResource PanelHeader}">
+                                            <TextBlock DockPanel.Dock="Left" Text="Measurements" Style="{StaticResource Text.PanelTitle}" />
+                                            <Button DockPanel.Dock="Right" Content="Clear" Command="{Binding ClearCommand}"
+                                                    Style="{StaticResource Button.Ghost}" ToolTip="Remove all measurements"
+                                                    AutomationProperties.AutomationId="ClearMeasurements" AutomationProperties.Name="Clear all measurements" />
+                                            <Button DockPanel.Dock="Right" Content="−" Command="{Binding DeleteCommand}"
+                                                    Style="{StaticResource Button.Ghost}" ToolTip="Delete selected measurement (Delete)"
+                                                    AutomationProperties.AutomationId="DeleteMeasurement" AutomationProperties.Name="Delete selected measurement" />
                                         </DockPanel>
-                                        <Border Style="{StaticResource Segment.Track}" Margin="{StaticResource Gap.Field}">
+                                        <Border DockPanel.Dock="Top" Style="{StaticResource Segment.Track}" HorizontalAlignment="Left" Margin="{StaticResource Gap.Field}">
                                             <UniformGrid Rows="1" AutomationProperties.Name="Pointer tool">
                                                 <RadioButton Content="_Pan" GroupName="Tool" Style="{StaticResource RadioButton.Segment}"
                                                              IsChecked="{Binding ActiveTool, Converter={x:Static conv:EnumMatchConverter.Instance}, ConverterParameter=Pan}"
@@ -405,21 +412,10 @@
                                                              AutomationProperties.AutomationId="ToolRoi" AutomationProperties.Name="ROI tool (region of interest)" />
                                             </UniformGrid>
                                         </Border>
-                                        <TextBlock Text="{Binding ToolHint}" Style="{StaticResource Text.Caption}" TextWrapping="Wrap"
-                                                   Margin="{StaticResource Gap.Section}" AutomationProperties.AutomationId="ToolHint" />
-    
-                                        <DockPanel Style="{StaticResource PanelHeader}">
-                                            <TextBlock DockPanel.Dock="Left" Text="Measurements" Style="{StaticResource Text.SectionTitle}" />
-                                            <Button DockPanel.Dock="Right" Content="Clear" Command="{Binding ClearCommand}"
-                                                    Style="{StaticResource Button.Ghost}" ToolTip="Remove all measurements"
-                                                    AutomationProperties.AutomationId="ClearMeasurements" AutomationProperties.Name="Clear all measurements" />
-                                            <Button DockPanel.Dock="Right" Content="−" Command="{Binding DeleteCommand}"
-                                                    Style="{StaticResource Button.Ghost}" ToolTip="Delete selected measurement (Delete)"
-                                                    AutomationProperties.AutomationId="DeleteMeasurement" AutomationProperties.Name="Delete selected measurement" />
-                                        </DockPanel>
-    
+                                        <TextBlock DockPanel.Dock="Top" Text="{Binding ToolHint}" Style="{StaticResource Text.Caption}" TextWrapping="Wrap"
+                                                   Margin="{StaticResource Gap.Field}" AutomationProperties.AutomationId="ToolHint" />
                                         <!-- Column header: same Size.Column.* keys and the same inner padding as the rows -->
-                                        <Border Padding="{StaticResource Pad.ListItem}">
+                                        <Border DockPanel.Dock="Top" Padding="{StaticResource Pad.ListItem}">
                                             <Grid>
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="{StaticResource Size.Column.Id}" />
@@ -434,8 +430,11 @@
                                             </Grid>
                                         </Border>
     
-                                        <Grid Margin="{StaticResource Gap.Field}">
-                                            <ListBox MaxHeight="{StaticResource Size.ResultsList}" ItemsSource="{Binding Items}" SelectedItem="{Binding Selected}"
+                                        <!-- Selected measurement: coordinates, size, pixel statistics — under the table -->
+                                        <TextBlock DockPanel.Dock="Bottom" Text="{Binding Selected.Detail}" Style="{StaticResource Text.MonoCaption}"
+                                                   TextWrapping="Wrap" TextTrimming="None" AutomationProperties.AutomationId="MeasurementDetail" />
+                                        <Grid Margin="{StaticResource Gap.Tight}">
+                                            <ListBox ItemsSource="{Binding Items}" SelectedItem="{Binding Selected}"
                                                      AutomationProperties.AutomationId="MeasurementList" AutomationProperties.Name="Measurement results">
                                                 <ListBox.InputBindings>
                                                     <KeyBinding Key="Delete" Command="{Binding DeleteCommand}" />
@@ -470,11 +469,25 @@
                                             </Border>
                                         </Grid>
     
-                                        <!-- Selected measurement: coordinates, size, pixel statistics — right under the table -->
-                                        <TextBlock Text="{Binding Selected.Detail}" Style="{StaticResource Text.MonoCaption}"
-                                                   TextWrapping="Wrap" TextTrimming="None" AutomationProperties.AutomationId="MeasurementDetail" />
-                                    </StackPanel>
-                                </StackPanel>
+                                    </DockPanel>
+                                </Border>
+                                <views:FocusSweepView Grid.Column="2"
+                                                      Visibility="{Binding HasSweepResult, Converter={StaticResource BoolToVis}}" />
+                            </Grid>
+                            </c:ImageAreaPanel>
+                        </DataTemplate>
+                    </ContentControl.Resources>
+                </ContentControl>
+                <ContentControl Grid.Column="4" Content="{Binding SelectedWorkspace}" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
+                    <ContentControl.Resources>
+                        <DataTemplate DataType="{x:Type vm:SpectrumWorkspaceViewModel}"><views:SpectrumPanel /></DataTemplate>
+                        <DataTemplate DataType="{x:Type vm:WaveformWorkspaceViewModel}"><views:WaveformPanel /></DataTemplate>
+                        <DataTemplate DataType="{x:Type vm:DetectorWorkspaceViewModel}"><views:DetectorPanel /></DataTemplate>
+                        <DataTemplate DataType="{x:Type vm:ImagingWorkspaceViewModel}">
+                            <!-- Imaging settings: focal plane · channel · focus sweep (tools and measurements are under the images) -->
+                            <Border Style="{StaticResource Panel.Surface}">
+                                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                                    <views:ImagingOptionsPanel />
                                 </ScrollViewer>
                             </Border>
                         </DataTemplate>

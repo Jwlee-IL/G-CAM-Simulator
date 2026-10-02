@@ -60,23 +60,7 @@ public sealed partial class PlotViewRenderTests
             model.SelectedWorkspace = workspace;
             model.Imaging.SelectedIsotope = isotope;
             // Construct XAML only. Never Show(), Run(), create an HWND, or send desktop input.
-            var window = new MainWindow();
-            var content = (FrameworkElement)window.Content;
-            window.Content = null;
-            content.Resources.MergedDictionaries.Add(window.Resources);
-            content.DataContext = model;
-            TextElement.SetFontFamily(content, (FontFamily)Application.Current.FindResource("Font.UI"));
-            content.UseLayoutRounding = true;
-            content.SnapsToDevicePixels = true;
-            System.Windows.Media.TextOptions.SetTextFormattingMode(content, TextFormattingMode.Display);
-            var root = new Border
-            {
-                Background = (Brush)Application.Current.FindResource("Brush.Bg.Canvas"),
-                Child = new AdornerDecorator { Child = content }
-            };
-            root.Measure(size);
-            root.Arrange(new Rect(size));
-            root.UpdateLayout();
+            var (root, content) = DetachMainWindow(model, size);
 
             if (mixed)
             {
@@ -115,6 +99,11 @@ public sealed partial class PlotViewRenderTests
                     t => AutomationProperties.GetAutomationId(t) == "Imaging.FocalPlane");
                 Assert.Equal(model.Imaging.FocalPlane, focus.Text);
             }
+            var scene = Descendants(root).OfType<ScrollViewer>().First(v => v.Content is StackPanel p
+                && Descendants(p).OfType<Expander>().Any(e => AutomationProperties.GetAutomationId(e) == "Optics.Section"));
+            output.WriteLine($"scene panel overflow {scene.ScrollableHeight:F0} px ({workspace.Title}, {size.Width:0}x{size.Height:0}, optics expanded {model.IsOpticsExpanded})");
+            // Default state (sections as the app starts them) fits the minimum window without a scroll bar.
+            if (opticsExpanded is null) Assert.Equal(0, scene.ScrollableHeight);
             var section = Assert.Single(Descendants(root).OfType<Expander>(),
                 e => AutomationProperties.GetAutomationId(e) == "Optics.Section");
             Assert.Equal(model.IsOpticsExpanded, section.IsExpanded);
@@ -163,6 +152,33 @@ public sealed partial class PlotViewRenderTests
             root.UpdateLayout();
             Dispatcher.CurrentDispatcher.Invoke(() => { }, DispatcherPriority.ContextIdle);
         }
+    }
+
+    /// <summary>
+    /// The main window's content, detached and laid out at <paramref name="size"/> with the window's own text and
+    /// pixel settings (Display text formatting, layout rounding, device-pixel snapping), so every render matches the
+    /// app's text metrics. No HWND is created; the window is never shown.
+    /// </summary>
+    private static (Border Root, FrameworkElement Content) DetachMainWindow(MainViewModel model, Size size)
+    {
+        var window = new MainWindow();
+        var content = (FrameworkElement)window.Content;
+        window.Content = null;
+        content.Resources.MergedDictionaries.Add(window.Resources);
+        content.DataContext = model;
+        TextElement.SetFontFamily(content, (FontFamily)Application.Current.FindResource("Font.UI"));
+        content.UseLayoutRounding = window.UseLayoutRounding;
+        content.SnapsToDevicePixels = window.SnapsToDevicePixels;
+        TextOptions.SetTextFormattingMode(content, TextOptions.GetTextFormattingMode(window));
+        var root = new Border
+        {
+            Background = (Brush)Application.Current.FindResource("Brush.Bg.Canvas"),
+            Child = new AdornerDecorator { Child = content }
+        };
+        root.Measure(size);
+        root.Arrange(new Rect(size));
+        root.UpdateLayout();
+        return (root, content);
     }
 
     private static IEnumerable<DependencyObject> Descendants(DependencyObject root)
@@ -237,7 +253,7 @@ public sealed partial class PlotViewRenderTests
                 + 1600 * Gaussian(x, 661.7, 14) + (x < 478 ? 80 * Math.Exp(-x / 300) : 0))).ToArray();
             SpectrumBand[] bands =
             [
-                new([new("Cs-137", 32.1), new("Cs-137", 36.4)], 25.5, 43.5, 1094, 0.169),
+                new([new("Cs-137", 32.1, EmissionKind.XRay, "Ba K"), new("Cs-137", 36.4, EmissionKind.XRay, "Ba K")], 25.5, 43.5, 1094, 0.169),
                 new([new("Cs-137", 661.7)], 616.3, 707.1, 1966, 0.304)
             ];
             return Task.FromResult(new Gcam.Studio.Core.Services.SpectrumView(centres, counts, bands,
@@ -263,7 +279,13 @@ public sealed partial class PlotViewRenderTests
                 for (int x = 0; x < 41; x++)
                     recon[x, y] = sources.Sum(s => 3000 * Gaussian((-56 + x * 2.8) * scale, s.X * scale, 5 * scale)
                         * Gaussian((-56 + y * 2.8) * scale, s.Y * scale, 5 * scale));
-                return snapshot.Imaging with { Reconstruction = recon.ReadOnlyCopy(), ReconOriginMm = -56 * scale, ReconStepMm = 2.8 * scale };
+                // The estimate is this reconstruction's argmax, as the decoder reports it (never the snapshot's).
+                int best = 0;
+                for (int i = 1; i < 41 * 41; i++) if (recon[i % 41, i / 41] > recon[best % 41, best / 41]) best = i;
+                var estimate = new SourceEstimate(new Gcam.Core.Vector3((-56 + best % 41 * 2.8) * scale,
+                    (-56 + best / 41 * 2.8) * scale, settings.FocalDistanceMm ?? optics.FocalDistanceMm), 1);
+                return snapshot.Imaging with { Reconstruction = recon.ReadOnlyCopy(), ReconOriginMm = -56 * scale,
+                    ReconStepMm = 2.8 * scale, Estimate = estimate };
             }
             channels.Add(new("All", double.NaN, double.NaN, Image(scene), peaks));
             foreach (var s in scene)

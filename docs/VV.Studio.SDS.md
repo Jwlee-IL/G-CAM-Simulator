@@ -66,7 +66,7 @@ one class, or a small group of types that only make sense together. Unit IDs are
 | SU-11 | SI-4 | `ColorBar`, `Colormap` | `Studio/Controls/ColorBar.cs`, `Studio/Rendering/Colormap.cs` | viridis lookup table; colour scale with ticks |
 | SU-12 | SI-4 | `ThemeService` | `Studio/Services/ThemeService.cs` | swap the token dictionary in place; DWM title bar |
 | SU-13 | SI-4 | `NullToCollapsedConverter`, `InverseBoolToVisibilityConverter`, `EnumMatchConverter` | `Studio/Converters/*.cs` | value → visibility / radio-button mapping |
-| SU-14 | SI-4 | `MainWindow`, theme dictionaries | `Studio/Views/MainWindow.xaml(.cs)`, `Studio/Themes/*.xaml` | screen layout and bindings; tokens, metrics, typography, control styles ([DESIGN.Layout](DESIGN.Layout.md), [DESIGN.Color](DESIGN.Color.md), [DESIGN.Typography](DESIGN.Typography.md), [DESIGN.Controls](DESIGN.Controls.md)) |
+| SU-14 | SI-4 | `MainWindow`, theme dictionaries, `ImageStackPanel`, `ImageAreaPanel` | `Studio/Views/MainWindow.xaml(.cs)`, `Studio/Themes/*.xaml`, `Studio/Controls/Image*Panel.cs` | screen layout and bindings (a square image with its legend at the drawn width; the image pair above the measurements, which take the remaining height); tokens, metrics, typography, control styles ([DESIGN.Layout](DESIGN.Layout.md), [DESIGN.Color](DESIGN.Color.md), [DESIGN.Typography](DESIGN.Typography.md), [DESIGN.Controls](DESIGN.Controls.md)) |
 | SU-15 | SI-4 | `App` | `Studio/App.xaml(.cs)` | DI composition root, startup window placement, title-bar hook |
 | SU-16 | SI-1 | `WorkspaceViewModel`, `ImagingWorkspaceViewModel` | `Core/ViewModels/*WorkspaceViewModel.cs` | title, automation key, active state; imaging measurements and peak over the shared result |
 | SU-17 | SI-2 | `PlotSeries`, `PlotBand`, `PlotMarker`, `PlotViewport`, `NiceTicks`, `MinMaxPyramid`, `PlotGeometry`, `PlotAutoScale`, `PlotBinReadout`, `PlotBandLayout`, `PlotViewRange` | `Core/Plotting/*.cs` | finite / increasing inputs, sample limit, linear / log mapping, X navigation, ticks, exact range extrema |
@@ -258,7 +258,8 @@ additional source RNG draws. Nuclear emissions remain independent singles.
 ### SU-16 workspaces / SU-17 plotting / SU-18 `PlotView`
 
 The shell registers Imaging once and retains its identity on completion, Stop and failure. `Shared.Result`
-is the acquisition source of truth; publishing it refreshes the imaging measurement session and notifies `PeakText`.
+is the acquisition source of truth; publishing it refreshes the imaging measurement session and notifies `PeakText`,
+which names the decoder estimate for one found peak and counts the found peaks when there are two or more.
 The two `ContentControl`s use workspace-type DataTemplates for centre and panel. Only registered indices are
 selected by Ctrl+1…4; switch visibility requires at least two workspaces.
 Setting a registered workspace's `IsActive` true selects it in the shell and clears the other active state.
@@ -281,8 +282,11 @@ pixels; otherwise it queries bins intersecting each device column through the py
 column query stays bounded by resolution. `PlotViewport.Configure` resets only on full-range change.
 `PlotAutoScale` applies visible extrema and headroom; `PlotView` retains the previous top for same-range data
 updates, recomputing on navigation / log change. `PlotBinReadout` reports real half-open bin bounds.
-`PlotBandLayout` takes measured widths and returns clamped positions and collision rows; WPF ellipsizes text
-wider than the plot. A one-way `ViewRange` requests X navigation. Offscreen verification uses a separate
+`PlotBandLayout` takes measured widths and returns clamped positions and collision rows; `PlotView` places those rows
+in a label strip above the plot area (laid out first: x positions depend only on the plot's left edge and width) and
+ellipsizes text wider than the plot on one line. Marker labels carry a leader to their line and can be hidden per
+plot. Linear tick labels take their decimals from the tick step and group thousands (`TickFormatter.StepLabels`);
+continuous readings use four significant digits (`NumberFormat.Significant`). A one-way `ViewRange` requests X navigation. Offscreen verification uses a separate
 opt-in STA test project, with base WPF resource infrastructure but no Studio App startup or desktop input.
 
 ### SU-20 … SU-22 Spectrum
@@ -443,6 +447,7 @@ Every SRS requirement maps to at least one unit; every unit carries at least one
 | SR-VIEW-01 … SR-VIEW-06 | SU-05, SU-09 |
 | SR-VIEW-07 | SU-09 |
 | SR-VIEW-08 | SU-16, SU-14 |
+| SR-VIEW-09 | SU-09, SU-14 (`ImageStackPanel`) |
 | SR-NAV-01 … SR-NAV-03 | SU-01, SU-16, SU-14 (type-based centre / panel templates) |
 | SR-PLOT-01 … SR-PLOT-03 | SU-17, SU-18 |
 | SR-PLOT-04, SR-PLOT-05 | SU-18, SU-17, SU-14 (theme styles) |

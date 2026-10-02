@@ -61,6 +61,7 @@ public sealed partial class ImagingWorkspaceViewModel
     partial void OnSweepResultChanged(FocusSweepResult? value)
     {
         foreach (string name in new[] { nameof(FocusSeries), nameof(FocusBands), nameof(FocusMarkers), nameof(SweepSummary), nameof(HasSweepResult) }) OnPropertyChanged(name);
+        if (value is not null) IsSweepExpanded = true; // a result opens its section so its tracks and caveats are read
     }
     internal void InvalidateSweep()
     {

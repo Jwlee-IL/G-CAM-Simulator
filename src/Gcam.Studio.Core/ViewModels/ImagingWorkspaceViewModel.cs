@@ -22,7 +22,15 @@ public sealed partial class ImagingWorkspaceViewModel(MainViewModel shared, IIma
     public OpticsGeometry? Geometry => OpticsPolicy.ValidateFocus(ProjectionOptics, FocalDistanceMm) is null
         ? OpticsGeometry.Calculate(ProjectionOptics, FocalDistanceMm) : null;
     public string GeometryText => Geometry?.Description ?? "Choose a valid decoder focal plane.";
+    /// <summary>One line in the panel; <see cref="SamplingEvidence"/> is its tooltip (SR-OPT-05).</summary>
+    public string SamplingCaption => "Precision is position-dependent (conditional evidence; hover for numbers).";
     public string SamplingEvidence => "Position-dependent precision: a 1 m Sharp scan measured RMS 0.95 mm at 1.27 samples/cell and 0.24 mm at 3.8, at the same detector size. This is conditional evidence, not a pass threshold.";
+    // Right-panel sections: focal plane and channel are used on every acquisition, the sweep only on demand.
+    [ObservableProperty] private bool _isFocalExpanded = true;
+    [ObservableProperty] private bool _isChannelExpanded = true;
+    [ObservableProperty] private bool _isSweepExpanded;
+    public string FocalSummary => Geometry is { } g ? $"{FocalDistanceMm:0.#} mm · element {g.ResolutionElementMm:0.##} mm" : $"{FocalPlane} mm";
+    public string ChannelSummary => $"{SelectedIsotope} · window {Shared.WindowFwhm:0.##} × FWHM{(Strip ? " · strip" : "")}";
     private OpticsSettings ProjectionOptics => _scene.Count > 0 ? _optics : Shared.Optics;
     partial void OnFocalPlaneChanged(string value)
     {
@@ -42,6 +50,7 @@ public sealed partial class ImagingWorkspaceViewModel(MainViewModel shared, IIma
             ? OpticsPolicy.ValidateFocus(ProjectionOptics, focal) : "Enter a numeric decoder focal plane.";
         OnPropertyChanged(nameof(Geometry));
         OnPropertyChanged(nameof(GeometryText));
+        OnPropertyChanged(nameof(FocalSummary));
         Shared.NotifyFocalGeometryChanged();
         UseAsFocusCommand.NotifyCanExecuteChanged();
     }
@@ -59,7 +68,10 @@ public sealed partial class ImagingWorkspaceViewModel(MainViewModel shared, IIma
     public ImagingResult? Result => SelectedChannel?.Image ?? (SelectedIsotope == "All" ? Shared.Result : null);
     public IReadOnlyList<ImagingPeak> Peaks => SelectedChannel?.Peaks ?? [];
     public IReadOnlyList<StripRatio> Ratios => View?.Ratios ?? [];
-    public string? PeakText => Result?.Estimate is { } e ? $"peak ({e.Position.X:F1}, {e.Position.Y:F1}) mm" : null;
+    /// <summary>The decoder's single argmax names one position; with several found peaks it would silently name only the
+    /// brightest, so the chip then counts them (their positions are listed in the panel and marked on the image).</summary>
+    public string? PeakText => Peaks.Count >= 2 ? $"{Peaks.Count} peaks found"
+        : Result?.Estimate is { } e ? $"peak ({e.Position.X:F1}, {e.Position.Y:F1}) mm" : null;
     public string Summary => IsProcessing ? "Building channels / calibrating…" : Result is { } r
         ? $"{SelectedIsotope} · {r.EffectiveCounts:N0} counts · {Peaks.Count} found" : "No acquired counts";
     public string WorkerCosts => View is { } v
@@ -98,6 +110,7 @@ public sealed partial class ImagingWorkspaceViewModel(MainViewModel shared, IIma
     internal void Refresh(ImagingResult? result) => NotifyResult();
     internal void RefreshChannels()
     {
+        OnPropertyChanged(nameof(ChannelSummary)); // window N and strip change here
         _revision++;
         if (_updating) return; // A running preparation keeps its caches; one latest request follows it.
         _refresh ??= new CancellationTokenSource();
@@ -140,7 +153,7 @@ public sealed partial class ImagingWorkspaceViewModel(MainViewModel shared, IIma
     {
         SweepCommand.NotifyCanExecuteChanged();
         Measurements.Refresh(Result);
-        foreach (string name in new[] { nameof(SelectedChannel), nameof(Result), nameof(Peaks), nameof(PeakText), nameof(Summary) })
+        foreach (string name in new[] { nameof(SelectedChannel), nameof(Result), nameof(Peaks), nameof(PeakText), nameof(Summary), nameof(ChannelSummary) })
             OnPropertyChanged(name);
     }
 }

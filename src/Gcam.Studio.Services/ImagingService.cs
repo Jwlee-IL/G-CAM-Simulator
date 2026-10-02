@@ -74,7 +74,7 @@ public sealed class ImagingService : IImagingService
                 return new(empty.AsReadOnly(), Array.Empty<StripRatio>(), TimeSpan.Zero, TimeSpan.Zero, TimeSpan.Zero);
             }
             var groups = sources.GroupBy(s => s.Isotope!).ToArray();
-            var lines = groups.SelectMany(g => Isotopes.Get(g.Key).Lines.Select(l => new SpectrumLine(g.Key, l.EnergyKeV))).ToArray();
+            var lines = groups.SelectMany(g => Isotopes.Get(g.Key).Lines.Select(l => new SpectrumLine(g.Key, l.EnergyKeV, l.Kind, l.XRayOrigin))).ToArray();
             var bands = SpectrumService.BuildBands(lines, settings.WindowFwhm, _model);
             var windows = groups.Select(g =>
             {

@@ -30,6 +30,30 @@ public static class TickFormatter
         return labels;
     }
 
+    /// <summary>
+    /// Labels for ticks at <paramref name="first"/> + i·<paramref name="step"/>: the decimals are those the
+    /// <b>step</b> needs (a 0–20 count scale in steps of 10 reads "0 10 20", not "0.0 10.0 20.0"), thousands are
+    /// grouped ("1,000"), and the shared ×10ⁿ rule of <see cref="Labels"/> applies to the last label.
+    /// </summary>
+    public static IReadOnlyList<string> StepLabels(double first, double step, int count)
+    {
+        count = Math.Max(1, count);
+        double last = first + step * (count - 1);
+        int exponent = SharedExponent(Math.Max(Math.Abs(first), Math.Abs(last)));
+        double scale = Math.Pow(10, -exponent);
+        double scaledStep = Math.Abs(step) * scale;
+        int decimals = scaledStep > 0 ? Math.Clamp(-(int)Math.Floor(Math.Log10(scaledStep) + 1e-9), 0, 3) : 0;
+        var labels = new string[count];
+        for (int i = 0; i < count; i++)
+        {
+            double v = (first + step * i) * scale;
+            if (Math.Round(v, decimals) == 0) v = 0;   // never "-0"
+            labels[i] = v.ToString("N" + decimals, CultureInfo.InvariantCulture);
+        }
+        if (exponent != 0) labels[^1] += " ×10" + Superscript(exponent);
+        return labels;
+    }
+
     /// <summary>0 for values that read well as they are (0.1 … 9999); otherwise a multiple of 3 (engineering style).</summary>
     public static int SharedExponent(double maxAbs)
     {

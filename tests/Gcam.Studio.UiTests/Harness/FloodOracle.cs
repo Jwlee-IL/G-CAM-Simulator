@@ -137,16 +137,19 @@ public static class Verdict
                 double.Parse(m.Groups["y"].Value, NumberStyles.Float, CultureInfo.CurrentCulture));
     }
 
-    private static readonly Regex Readout = new(@"^x (?<x>-?[\d.]+) mm, y (?<y>-?[\d.]+) mm · (?<v>\S+)$");
+    // The value is grouped ("3,077", four significant digits) and may be followed by the heatmap's unit
+    // ("counts", "(decoded)").
+    private static readonly Regex Readout = new(@"^x (?<x>-?[\d.]+) mm, y (?<y>-?[\d.]+) mm · (?<v>-?[\d,]+(?:\.\d+)?)(?: .+)?$");
 
-    /// <summary>The heatmap readout "x -6.3 mm, y 5.1 mm · 0.01067" (invariant culture) → (x, y, value).</summary>
+    /// <summary>The heatmap readout "x -6.3 mm, y 5.1 mm · 3,077 counts" (invariant culture) → (x, y, value);
+    /// the unit suffix is optional.</summary>
     public static (double X, double Y, double Value) ParseReadout(string text)
     {
         var m = Readout.Match(text);
         if (!m.Success) throw new FormatException($"unexpected readout '{text}'");
         return (double.Parse(m.Groups["x"].Value, CultureInfo.InvariantCulture),
                 double.Parse(m.Groups["y"].Value, CultureInfo.InvariantCulture),
-                double.Parse(m.Groups["v"].Value, NumberStyles.Float, CultureInfo.InvariantCulture));
+                double.Parse(m.Groups["v"].Value, NumberStyles.Float | NumberStyles.AllowThousands, CultureInfo.InvariantCulture));
     }
 
     /// <summary>"Σ 0.0107" (the app's culture) → 0.0107.</summary>

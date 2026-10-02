@@ -9,7 +9,11 @@
                 <TextBlock Text="{Binding Identity}" Style="{StaticResource Text.CaptionWarning}" Margin="{StaticResource Gap.Field}"
                            AutomationProperties.AutomationId="Detector.Identity" />
             </StackPanel>
-            <StackPanel DockPanel.Dock="Bottom" Margin="{StaticResource Gap.Field}">
+            <!-- Square face with its colour bar and legend directly beneath, at the face's width (ImageStackPanel) -->
+            <c:ImageStackPanel>
+                <c:DetectorFaceView Margin="{StaticResource Gap.Field}" Face="{Binding Face}" GapBrush="{DynamicResource Brush.Bg.Canvas}"
+                                AutomationProperties.AutomationId="Detector.Face" AutomationProperties.Name="Detector face gain pattern"
+                                AutomationProperties.HelpText="Static crystal gain pattern with exact reflector-gap rectangles. Geometric area is separate from acquired count rate." />
                 <c:ColorBar Minimum="{Binding MinimumGain}" Maximum="{Binding MaximumGain}"
                             BarHeight="{StaticResource Size.ColorBar}" Foreground="{DynamicResource Brush.Text.Secondary}"
                             FontFamily="{StaticResource Font.Mono}" Margin="{StaticResource Gap.Tight}"
@@ -18,10 +22,7 @@
                 <TextBlock Text="Static relative gain · viridis scale · gaps are dead geometric area"
                            Style="{StaticResource Text.Caption}" TextWrapping="Wrap" />
                 <TextBlock Text="{Binding Counts}" Style="{StaticResource Text.MonoCaption}" TextWrapping="Wrap" />
-            </StackPanel>
-            <c:DetectorFaceView Face="{Binding Face}" GapBrush="{DynamicResource Brush.Bg.Canvas}"
-                                AutomationProperties.AutomationId="Detector.Face" AutomationProperties.Name="Detector face gain pattern"
-                                AutomationProperties.HelpText="Static crystal gain pattern with exact reflector-gap rectangles. Geometric area is separate from acquired count rate." />
+            </c:ImageStackPanel>
         </DockPanel>
     </Border>
 </UserControl>

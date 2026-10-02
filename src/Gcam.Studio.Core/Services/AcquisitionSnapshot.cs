@@ -7,6 +7,9 @@ public sealed record AcquisitionSnapshot(double LiveTimeS, long Counts, double R
     double ActualSpeed, bool IsMcLimited, ImagingResult Imaging, IReadOnlyList<DetectedEvent> Events,
     TimeSpan DecodeTime, bool IsCompleted)
 {
+    /// <summary>Observed count rate, counts / live time — the one rate the UI shows. <see cref="RateCps"/> is the MC's
+    /// running expected rate, which the observed rate scatters around.</summary>
+    public double ObservedRateCps => LiveTimeS > 0 ? Counts / LiveTimeS : 0;
     public Gcam.Configuration.FrontEndChain Chain => (Detector ?? new DetectorSettings()).Chain;
     /// <summary>Frozen measurement inputs belonging to these events, never the current editable detector.</summary>
     public DetectorSettings? Detector { get; init; }

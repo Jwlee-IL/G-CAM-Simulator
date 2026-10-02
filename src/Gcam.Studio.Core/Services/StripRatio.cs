@@ -5,5 +5,5 @@ public sealed record StripRatio(string LowIsotope, string HighIsotope, long Even
     long LowCounts, long HighCounts)
 {
     public double R => (double)LowCounts / HighCounts;
-    public string Description => $"{HighIsotope} → {LowIsotope}: R = {R:F4} ({LowCounts:N0}/{HighCounts:N0})";
+    public string Description => $"{HighIsotope} → {LowIsotope}: R = {Gcam.Studio.Core.Imaging.NumberFormat.Significant(R)} ({LowCounts:N0}/{HighCounts:N0})";
 }

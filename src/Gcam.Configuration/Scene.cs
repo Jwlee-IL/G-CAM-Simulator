@@ -4,7 +4,20 @@ namespace Gcam.Configuration;
 
 /// <summary>A gamma-emitting isotope: its decay half-life (info) and emission lines (energy keV, intensity
 /// = photons per decay). Intensity is the emission weight the mixed-field source allocates photons by.</summary>
-public sealed record IsotopeInfo(string Name, double HalfLifeYears, (double EnergyKeV, double Intensity)[] Lines);
+public sealed record IsotopeInfo(string Name, double HalfLifeYears, IsotopeLine[] Lines);
+
+/// <summary>Where a line's photon comes from: a nuclear transition (gamma) or atomic K-shell fluorescence after
+/// internal conversion (X-ray). Descriptive only — transport treats every photon by its energy.</summary>
+public enum EmissionKind { Gamma, XRay }
+
+/// <summary>One emission line: energy (keV), photons per decay, its kind (gamma unless stated) and, for an X-ray, the
+/// emitting atom and shell (<paramref name="XRayOrigin"/>, e.g. "Ba K" — Cs-137's X-rays come from the daughter
+/// Ba-137m after internal conversion, not from caesium). A plain <c>(energy, intensity)</c> pair converts to a gamma line.</summary>
+public readonly record struct IsotopeLine(double EnergyKeV, double Intensity, EmissionKind Kind = EmissionKind.Gamma,
+    string? XRayOrigin = null)
+{
+    public static implicit operator IsotopeLine((double EnergyKeV, double Intensity) line) => new(line.EnergyKeV, line.Intensity);
+}
 
 public static class Isotopes
 {
@@ -16,7 +29,7 @@ public static class Isotopes
         // so they belong in the line list — they put a genuine low-energy peak in the spectrum. Kα1/Kα2 (32.19/
         // 31.82) merge under the detector resolution, so they're lumped as one 32.1 keV line. Intensities are
         // per-decay (Kα ~5.6%, Kβ ~1.4%). 661.7 stays FIRST so it remains the primary line / photopeak centre.
-        new IsotopeInfo("Cs-137", 30.1,  [(661.7, 0.851), (32.1, 0.056), (36.4, 0.014)]),
+        new IsotopeInfo("Cs-137", 30.1,  [(661.7, 0.851), new(32.1, 0.056, EmissionKind.XRay, "Ba K"), new(36.4, 0.014, EmissionKind.XRay, "Ba K")]),
         new IsotopeInfo("Co-60",   5.27, [(1173.2, 0.999), (1332.5, 0.999)]),
         new IsotopeInfo("Co-57",   0.744,[(122.1, 0.856), (136.5, 0.107)]),
         new IsotopeInfo("Na-22",   2.60, [(511.0, 1.798), (1274.5, 0.999)]),   // 511 = β+ annihilation pair

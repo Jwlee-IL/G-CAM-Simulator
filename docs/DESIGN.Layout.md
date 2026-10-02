@@ -10,7 +10,7 @@ Scope: GCAM Studio layout metrics (`src/Gcam.Studio/Themes/Metrics.xaml`) and ho
 | Padding (`Pad.*`, inside a container) | `Pad.Window` 12 · `Pad.Panel` 12 · `Pad.Bar` 16,0 · `Pad.Control` 8,0 · `Pad.Button` 12,0 · `Pad.ListItem` 8,0 |
 | Plot label plate | `Pad.Plot.BandLabel` 4 on every side — prevents edges, grid and traces from touching band text; padded widths also determine collision rows |
 | Margin (`Gap.*`, after an element) | `Gap.Tight` 0,0,0,4 · `Gap.Field` 0,0,0,8 · `Gap.Section` 0,0,0,16 · `Gap.Title` 0,0,0,8 · `Gap.Inline` 0,0,8,0 · `Gap.InlineWide` 0,0,16,0 |
-| Grid gutter | `Gutter` 12 (a `GridLength` for gutter columns) |
+| Grid gutter | `Gutter` 12 (a `GridLength` for gutter columns) · `Gap.Row` 0,0,0,12 (the same gutter between stacked panels) |
 
 **Padding vs margin rule.** A container owns its inner space (`Pad.*`). Space *between siblings* is the
 preceding sibling's bottom or right margin (`Gap.*`) — never split one gap between two elements, and never
@@ -28,7 +28,8 @@ combine a container's padding with a child's margin for the same edge.
 | `Size.NumberInput.Short` | 80 | short live-time / speed values with s / × suffixes; preserves top-bar space |
 | `Size.ColorBar` · `Size.ReadoutLine` | 8 · 16 | colour-bar strip · the reserved readout line under an image |
 | `Size.Logo` · `Size.Icon` · `Size.StatusDot` | 16 · 12 · 8 | top-bar mark · button icon · run-state dot |
-| `Size.Column.Id` / `Size.Column.Short` | 36 / 60 | fixed columns of the results table (header and rows share them; the value column takes the rest) |
+| `Size.Column.Id` / `Size.Column.Short` / `Size.Column.Value` | 36 / 60 / 96 | fixed columns of the results and emission-window tables (header and rows share them and `Pad.ListItem`; the label column takes the rest; numbers right-aligned) |
+| `Size.Imaging.Lower` | 240 | height always left under the Imaging image pair for measurements and the focus curve |
 | `Size.FieldLabel` | 84 | label column in forms |
 | `Radius.Control` / `Radius.Panel` / `Radius.Chip` | 3 / 6 / 10 | corners |
 | `Border.Hairline` | 1 | all borders |
@@ -38,16 +39,19 @@ combine a container's padding with a child's margin for the same edge.
 ```
 Row 0  Top bar (Size.Bar)          identity · workspace switch (when ≥2) · theme · live time (s) · speed × · ▶ Start / Stop
 Row 1  Content (a Border with Pad.Window)
-         Col 0  Scene panel (Size.SidePanel, scrollable)   sources · selected source · collapsible Physical optics · collapsible Detector
+         Col 0  Scene panel (Size.SidePanel, scrollable)   sources · collapsible Detection chain · selected source · collapsible Physical optics · collapsible Detector
          Col 1  Gutter
          Col 2  Selected workspace centre (DataTemplate by workspace type)
-                Imaging: [flood map] Gutter [reconstruction]
-                each = PanelHeader (title + chips) · ImageStackPanel: square HeatmapView (+ adorner), ColorBar and
-                readout directly beneath, at the image's width; spare height collects below
+                Imaging (ImageAreaPanel): [flood map] Gutter [reconstruction] on top, each = PanelHeader (title + chips) ·
+                ImageStackPanel: square HeatmapView (+ adorner), ColorBar and readout directly beneath, at the drawn
+                image's width; below (Gap.Row), filling the remaining height: Measurements (header with − / Clear,
+                tool picker, hint, table, selected-row detail) full width, or left half beside the focus curve
                 Spectrum: stepped histogram PlotView with line bands · readout · acquired-pulse summary · emission-window table (select a row to zoom to its window)
          Col 3  Gutter
          Col 4  Selected workspace panel (DataTemplate by workspace type, Size.SidePanel)
-                Imaging: scrollable decoder focal plane / geometry evidence · channel options · tool picker · hint · results table · selected row detail
+                Imaging: scrollable collapsible sections — Decoder focal plane (geometry facts, one-line precision caption
+                with the evidence as tooltip) · Imaging channel (selector, window N, strip, ratios, found peaks) · Focus sweep
+                (collapsed until used; opens on a result)
                 Spectrum: Display (log Y) · Window (N × FWHM) · Pile-up (resolving time) · Resolution (read-only chain)
 Row 2  Status bar (Size.StatusBar) state dot · live time / counts / cps / MC-limited (live region) · live-time progress
 ```
@@ -70,8 +74,9 @@ then an editable reflector gap (default 100 µm), Gain σ
 (default 3, `%` suffix), Gain seed (default 1) and Background (default 0, `× signal` BSR suffix;
 detected background/source ratio at 200 keV). Short labels fit the existing 84-DIP field column.
 These inputs are disabled during
-acquisition and mark retained results outdated after an edit. The left panel scrolls when needed so all fields
-remain reachable at the minimum window height. Workspace activation follows `IsActive` as well as commands,
+acquisition and mark retained results outdated after an edit. Physical optics and Detector start collapsed (Start
+expands a section with an invalid input), Detection chain starts expanded, so the default left panel fits 1280 × 800
+without scrolling (asserted in the offscreen renders); expanded sections scroll. Workspace activation follows `IsActive` as well as commands,
 so a UI Automation SelectionItem selection changes the centre and right panel.
 
 ## Window sizing: fixed grid, flexible centre
@@ -95,7 +100,7 @@ role (`Pad` for inside, `Gap` for after, `Size` for fixed dimensions).
 
 ## Imaging channel options
 
-The Imaging right panel places channel options above the existing measurement tools: All / isotope selector,
+The Imaging right panel's Imaging channel section holds: All / isotope selector,
 the shell-owned window N (also shown in Spectrum), Compton strip, calibrated R values, worker cost readout,
 and found-peak coordinates. It reuses Gap.Field, Gap.Tight, Gap.Section and the existing text/control roles.
 Selection changes both image grids and their bars/readouts together; ROI geometry stays in mm and its values
@@ -121,7 +126,7 @@ Offscreen render cases cover expanded/collapsed panels and F=800 at 1280×800 an
 
 ## Waveform workspace and shared chain (2026-10-02)
 
-The top workspace switch now includes Waveform (Ctrl+3). The shared left panel places Detection chain after the source list, before the selected-source editor and Physical optics. Its scintillator / photosensor / preamp selectors are disabled during acquisition. Separate wrapped summaries identify the pending next-acquisition chain and the chain used by retained results; changing a physical part marks results outdated without repainting retained data with pending physics.
+The top workspace switch now includes Waveform (Ctrl+3). The shared left panel places Detection chain after the source list, before the selected-source editor and Physical optics. Its scintillator / photosensor / preamp selectors are disabled during acquisition; collapsed, it shows the selected chain on one wrapped line. The pending next-acquisition chain and the chain used by retained results are shown as two wrapped lines only when they differ; changing a physical part marks results outdated without repainting retained data with pending physics.
 
 Waveform centre stacks two flexible-height PlotViews: ADC energy sum above integer shaped output. Both share the time-from-trigger axis (µs), zoom, pan and reset; Y remains independent. Event markers identify acquired index, pixel and deposit, with an event list in the right panel also giving the original absolute acquisition time. The title, outdated chip and simulation/mode/partial-window note sit above the plots; worker summary and pulse readout are below.
 
@@ -139,9 +144,10 @@ settings; after acquisition it preserves acquired settings with an explicit outd
 The shared gap editor uses µm and retains invalid text; physical pitch edits revalidate it.
 
 Imaging's scrollable options contain K (1–4), Sweep focus/Cancel sweep, sharpest-plane and half-max
-descriptions, optional external surface range and Use as focus. A result opens FocusSweepView beneath
-the image pair at Size.FocusPlot (240 DIP), with X in detector-referenced mm, prominence on Y, half-max
-bands and sharpest/external markers. No result reserves no plot height. The bias/bound note is visible in
+descriptions, optional external surface range and Use as focus. A result opens FocusSweepView beside the
+measurements under the image pair (each half the centre width, the height the images leave), with X in
+detector-referenced mm, prominence on Y, half-max bands and sharpest/external markers in the label strip above
+the plot. No result: the measurements take the full width. The bias/bound note is visible in
 the options and distinguishes descriptive width from uncertainty. Censored intervals display bounds,
 boundary maxima and disjoint modes have text labels, and empty complete-track results say unresolved.
 Gap.Field/Section/Tight and existing surface, type and control styles supply all view metrics.

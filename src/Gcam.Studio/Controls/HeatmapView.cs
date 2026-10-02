@@ -43,7 +43,8 @@ public sealed class HeatmapView : FrameworkElement
 
     public static readonly DependencyProperty ImageProperty = DependencyProperty.Register(
         nameof(Image), typeof(DetectorImage), typeof(HeatmapView),
-        new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.AffectsRender, (d, _) => ((HeatmapView)d).OnImageChanged()));
+        new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.AffectsRender | FrameworkPropertyMetadataOptions.AffectsMeasure,
+            (d, _) => ((HeatmapView)d).OnImageChanged()));
 
     /// <summary>The grid to draw (row 0 at the bottom).</summary>
     public DetectorImage? Image { get => (DetectorImage?)GetValue(ImageProperty); set => SetValue(ImageProperty, value); }
@@ -211,6 +212,20 @@ public sealed class HeatmapView : FrameworkElement
     }
 
     // ---- rendering ---------------------------------------------------------------------------------
+
+    /// <summary>
+    /// Asks for the size the image draws at fit (whole device pixels per cell), so a host such as ImageStackPanel can
+    /// size the colour bar to the image rather than to the space offered. Without an image the whole space is used
+    /// for the empty-state text.
+    /// </summary>
+    protected override Size MeasureOverride(Size availableSize)
+    {
+        double w = double.IsInfinity(availableSize.Width) ? 0 : availableSize.Width;
+        double h = double.IsInfinity(availableSize.Height) ? w : availableSize.Height;
+        if (Image is not { } img || w <= 0 || h <= 0) return new Size(w, h);
+        double scale = HeatmapViewport.FitScaleFor(img.Width, img.Height, w, h, VisualTreeHelper.GetDpi(this).PixelsPerDip, snapToWholePixels: true);
+        return new Size(Math.Min(w, img.Width * scale), Math.Min(h, img.Height * scale));
+    }
 
     protected override void OnRenderSizeChanged(SizeChangedInfo sizeInfo)
     {
@@ -430,7 +445,7 @@ public sealed class HeatmapView : FrameworkElement
         if (_hover is { } h && img is not null)
         {
             var mm = HeatmapViewport.ImageToMm(new Vec2(h.X + 0.5, h.Y + 0.5), OriginMm, StepMm);
-            readout = string.Format(CultureInfo.InvariantCulture, "x {0:F1} mm, y {1:F1} mm · {2:#,0.####}", mm.X, mm.Y, img[h.X, h.Y])
+            readout = string.Format(CultureInfo.InvariantCulture, "x {0:F1} mm, y {1:F1} mm · {2}", mm.X, mm.Y, NumberFormat.Significant(img[h.X, h.Y]))
                 .Replace("-0.0 mm", "0.0 mm");   // a tiny negative coordinate shouldn't read as "-0.0"
             if (!string.IsNullOrWhiteSpace(ValueUnit)) readout += " " + ValueUnit;
         }

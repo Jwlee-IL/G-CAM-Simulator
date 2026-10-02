@@ -21,6 +21,14 @@ public sealed class DetectorFaceView : FrameworkElement
     public static readonly DependencyProperty GapBrushProperty = DependencyProperty.Register(nameof(GapBrush), typeof(Brush),
         typeof(DetectorFaceView), new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.AffectsRender));
     public Brush? GapBrush { get => (Brush?)GetValue(GapBrushProperty); set => SetValue(GapBrushProperty, value); }
+    /// <summary>The face is square: ask for the largest square that fits, so a legend below can match its width.</summary>
+    protected override Size MeasureOverride(Size availableSize)
+    {
+        double w = double.IsInfinity(availableSize.Width) ? availableSize.Height : availableSize.Width;
+        double h = double.IsInfinity(availableSize.Height) ? w : availableSize.Height;
+        double side = double.IsInfinity(w) ? 0 : Math.Max(0, Math.Min(w, h));
+        return new Size(side, side);
+    }
     protected override void OnRender(DrawingContext drawing)
     {
         base.OnRender(drawing);

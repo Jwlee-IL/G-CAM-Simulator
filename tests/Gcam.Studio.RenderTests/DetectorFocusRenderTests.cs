@@ -69,14 +69,7 @@ public sealed partial class PlotViewRenderTests
         {
             foreach (var size in new[] { new Size(1280, 800), new Size(1440, 900) })
             {
-                var window = new MainWindow();
-                var content = (FrameworkElement)window.Content; window.Content = null;
-                content.Resources.MergedDictionaries.Add(window.Resources);
-                content.DataContext = model;
-                TextElement.SetFontFamily(content, (FontFamily)Application.Current.FindResource("Font.UI"));
-                var root = new Border { Background = (Brush)Application.Current.FindResource("Brush.Bg.Canvas"),
-                    Child = new AdornerDecorator { Child = content } };
-                root.Measure(size); root.Arrange(new Rect(size)); root.UpdateLayout();
+                var (root, content) = DetachMainWindow(model, size);
                 Dispatcher.CurrentDispatcher.Invoke(() => { }, DispatcherPriority.ContextIdle); root.UpdateLayout();
                 if (model.SelectedWorkspace == model.DetectorWorkspace)
                 {

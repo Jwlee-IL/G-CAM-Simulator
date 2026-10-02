@@ -26,9 +26,10 @@ public sealed partial class WaveformWorkspaceViewModel(MainViewModel shared, IWa
     [ObservableProperty] private PlotViewRange? _viewRange;
     public IReadOnlyList<PlotSeries> AdcSeries => View is { } v ? new[] { v.Adc } : [];
     public IReadOnlyList<PlotSeries> ShapedSeries => View is { } v ? new[] { v.Shaped } : [];
-    public IReadOnlyList<PlotMarker> Markers => View?.Events.Select(e => new PlotMarker(e.RelativeTimeUs, e.Label)).ToArray() ?? [];
+    /// <summary>Short "#index" labels: nine markers fit one label row above the plot; pixel and deposit are in the event list.</summary>
+    public IReadOnlyList<PlotMarker> Markers => View?.Events.Select(e => new PlotMarker(e.RelativeTimeUs, $"#{e.Index}")).ToArray() ?? [];
     public IReadOnlyList<WaveformEvent> Events => View?.Events ?? [];
-    public string Summary => View is { } v ? $"{v.Events.Count} events · {v.WindowUs:0.###} µs · worker {v.ProcessingTime.TotalMilliseconds:0.##} ms" : "Select an acquired event";
+    public string Summary => View is { } v ? $"{v.Events.Count} {(v.Events.Count == 1 ? "event" : "events")} · {v.WindowUs:0.###} µs · worker {v.ProcessingTime.TotalMilliseconds:0.##} ms" : "Select an acquired event";
     partial void OnTriggerIndexChanged(int value) { if (!_updating) { FollowLatest = false; Refresh(); } }
     partial void OnFollowLatestChanged(bool value) => NotifySnapshot();
     partial void OnWindowUsChanged(double value) { ViewRange = null; Refresh(); }

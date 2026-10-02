@@ -60,7 +60,9 @@ public sealed class WaveformWorkspaceTests
         var model = new MainViewModel(acquisition, new Theme(), new Spectrum(), waveform: waveform);
         await model.StartCommand.ExecuteAsync(null);
         var acquired = model.Snapshot!.Chain;
+        Assert.False(model.ChainDiffers); // same chain: the combo boxes say it all, no chain lines
         model.Preamp = FrontEndParts.Preamps[3];
+        Assert.True(model.ChainDiffers);
         Assert.True(model.IsResultStale);
         Assert.Equal(acquired, model.Snapshot.Chain);
         Assert.NotEqual(model.Chain, model.Snapshot.Chain);

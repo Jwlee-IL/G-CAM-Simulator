@@ -26,11 +26,11 @@ public sealed partial class DetectorWorkspaceViewModel(MainViewModel shared, IDe
             var optics = Shared.Snapshot?.Optics ?? Shared.Optics;
             return $"{detector.Chain.Scintillator.Name}\n{optics.DetectorPixels} × {optics.DetectorPixels} crystals · pitch {optics.PixelPitchMm:0.###} mm\n"
                 + $"Gap {detector.ReflectorGapMm * 1000:0.###} µm · active width {optics.PixelPitchMm - detector.ReflectorGapMm:0.###} mm\n"
-                + $"Gain σ {detector.GainSigma:P1} · seed {detector.GainSeed}\nGeometric active-area fraction: {Face?.ActiveAreaFraction:P2}";
+                + $"Gain σ {detector.GainSigma * 100:0.#}% · seed {detector.GainSeed}\nGeometric active-area fraction: {Face?.ActiveAreaFraction:P2}";
         }
     }
     public string Counts => Shared.Snapshot is { } s
-        ? $"Acquired {s.Counts:N0} counts · {(s.LiveTimeS > 0 ? s.Counts / s.LiveTimeS : 0):0.0} cps (counts / live time)"
+        ? $"Acquired {s.Counts:N0} counts · {s.ObservedRateCps:0.0} cps (counts / live time)"
         : "No acquired counts";
     internal void Refresh()
     {

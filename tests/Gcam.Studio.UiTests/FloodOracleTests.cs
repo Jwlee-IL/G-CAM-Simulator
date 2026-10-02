@@ -83,6 +83,12 @@ public class FloodOracleTests
     public void ReadoutAndSumParsers_ReadTheAppsFormats()
     {
         Assert.Equal((-6.3, 5.1, 0.01067), Verdict.ParseReadout("x -6.3 mm, y 5.1 mm · 0.01067"));
+        // Current HeatmapView formats: unit suffix, grouped four-significant-digit values.
+        Assert.Equal((0.3, 0.3, 10), Verdict.ParseReadout("x 0.3 mm, y 0.3 mm · 10 counts"));
+        Assert.Equal((0.0, 0.0, 3077), Verdict.ParseReadout("x 0.0 mm, y 0.0 mm · 3,077 (decoded)"));
+        Assert.Equal((-6.3, 5.1, 18.53), Verdict.ParseReadout("x -6.3 mm, y 5.1 mm · 18.53 (decoded)"));
+        Assert.Equal((1.5, -2.1, -0.275), Verdict.ParseReadout("x 1.5 mm, y -2.1 mm · -0.275"));
+        Assert.Throws<FormatException>(() => Verdict.ParseReadout("x 1.5 mm, y -2.1 mm · counts"));
         Assert.Equal(0.0107, Verdict.ParseSum($"Σ {0.0107:G3}"), 9);
         Assert.Throws<FormatException>(() => Verdict.ParseReadout(""));
         Assert.Throws<FormatException>(() => Verdict.ParseSum("—"));
