@@ -57,6 +57,24 @@ cocotb RTL front-end path.
   Claude agent) cross-verify at important junctures. Many effects turned out honestly **small**
   for this camera — reported as such, not inflated.
 
+## Handoff — where work stood (2026-10-02 evening, moving to another computer)
+- Done: the Gcam.Wpf → GCAM Studio migration (Gcam.Wpf deleted, TODO-12) and physics TODO-14/17/18/20/21/23/26
+  (Findings 57–61). Open (see `docs/AGENTS.Todo.md`, each with its PLAN and review in `docs/`):
+  - **TODO-27** evidence refresh — review done (`PLAN.Physics.EvidenceRefresh.Review.md`): 32 quote groups re-measured
+    over seeds; **11 flagged conclusion / interpretation changes need the author's decision** before any rewrite.
+  - **TODO-19** Anger-type SiPM readout — review done (`PLAN.Physics.RigReadout.Review.md`); next: decisions after review.
+  - **TODO-25** joint depth likelihood — review is an **unfinished draft** (design only, no results).
+  - **TODO-28** test documentation + automatically generated Test Result report — follow the procedure from the
+    author's other project (ask the author where it is; adopt the process only, copy no content).
+- Codex conversations, worktrees (`C:\gw\…`) and probe outputs (`%TEMP%\gcam-*`) were local and do not travel: start
+  new implementer turns from the review files. Procedure, guard block and the substitute-subagent rule:
+  `docs/AGENTS.Planning.md`.
+- **Confidentiality (author, 2026-10-02):** this is a clean-room public repo. Never write specifics of the author's
+  former-employer instrument (readout network, thresholds, LUT method, digitisation, pitch, reflector thickness, …)
+  into any file, commit, plan, review or implementer prompt; model readout choices from published practice with
+  defaults chosen by physics / measurement. Already-public generic statements (four-channel Anger-type readout, GAGG)
+  stay as they are.
+
 ## Working style
 Design-first discussion before coding; give options with a recommendation, then build one clean
 pass and **show a visual** (ASCII map or a matplotlib PNG). Honest self-correction from the data.

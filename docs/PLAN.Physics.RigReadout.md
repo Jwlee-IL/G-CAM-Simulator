@@ -6,7 +6,7 @@ crystal identified from the flood map — and with it the SiPM pitch, light spre
 crystal mis-identification. Today the engine assigns each event directly to its crystal (arg-max site). Procedure:
 [AGENTS.Planning](AGENTS.Planning.md). Runs before TODO-12 (author, 2026-10-02).
 
-Status: **reference plan, draft** 2026-10-02 — **needs the author's rig details** (table below) before the review.
+Status: **reviewed** 2026-10-02 ([PLAN.Physics.RigReadout.Review](PLAN.Physics.RigReadout.Review.md), Codex, rewritten without instrument references) — decisions after review next.
 
 ## What exists (checked in the code, 2026-10-02)
 
@@ -20,6 +20,25 @@ Status: **reference plan, draft** 2026-10-02 — **needs the author's rig detail
 | Pile-up | `EventStreamStudy.ResolvingSamples`, Studio spectrum | array-wide in time and energy; **position of piled-up pulses not modelled** |
 | Waveform | `WaveformService` | the summed energy channel only; "four position channels are not modelled" is stated in the UI |
 
+## Readout preset and defaults (2026-10-02)
+
+**Confidentiality.** This is a clean-room project: the repository holds no former-employer design data. The readout
+model is therefore built from **standard, published practice**, and its defaults are chosen here by physics and by
+measurement — not taken from any specific instrument.
+
+| Choice | "Conventional Anger" preset (literature practice) | Alternatives the study sweeps |
+|---|---|---|
+| Charge division | symmetric resistive network, four outputs | per-SiPM readout; row / column summing |
+| Position | four-corner Anger ratio, no correction | linearised / LUT-corrected positioning |
+| Trigger | per-channel thresholds, set to reject low-energy background | sum trigger; threshold swept |
+| Crystal identification | flood-map LUT by watershed on a Gaussian-smoothed flood | nearest-peak (Voronoi), other segmentations |
+| Digitisation | peak-hold, the four channels sampled together | continuous sampling with digital shaping |
+| Coupling | direct (no light guide) | light guide, thickness swept |
+| Geometry | crystal pitch, reflector wall and SiPM size are **parameters**; defaults from a commercial SiPM (the engine's S13360-3050 preset) and literature reflector thicknesses, set in "Decisions after review" | pitch, wall and SiPM size swept |
+
+**Goal (author, 2026-10-02):** simulate the **best combination physically**. The conventional preset is one point; the
+default becomes whatever the measurement shows is best.
+
 ## Model sketch (reference — to be reviewed and measured)
 
 Per detected history:
@@ -28,8 +47,7 @@ Per detected history:
    (if any); each SiPM collects its share × PDE × fill factor → Poisson photoelectrons, plus ENF and dark counts.
 2. The SiPM signals go through the **charge-division network** into four outputs (A, B, C, D); each is digitised
    (14-bit, the chain's shaping, noise).
-3. Position (X, Y) from the Anger ratios (e.g. X = (A+B−C−D)/Σ, Y = (A−B+C−D)/Σ — the rig's exact formula is an author
-   input); energy from Σ.
+3. Position (X, Y) from the Anger ratios (e.g. X = (A+B−C−D)/Σ, Y = (A−B+C−D)/Σ — the conventional four-corner form); energy from Σ.
 4. Crystal identification: a flood-map **LUT** built from a calibration flood (peak finding / segmentation), applied
    to every event → crystal index; mis-identification near dead regions and at the array edge emerges from the model.
 5. Pile-up: two pulses within the resolving time sum in all four channels → energy sum **and** a position at their
@@ -39,22 +57,13 @@ Validation targets: the flood map shows separated crystal spots with edge compre
 mis-identification rate are measured, not assumed; with 1:1 coupling and no noise the model must reproduce today's
 direct assignment.
 
-## Author input needed (the plan cannot be finished without it)
+## Instrument details
 
-| # | Question | If unknown |
-|---|---|---|
-| Q-1 | Charge-division network: resistor topology (e.g. a DPC / symmetric resistive chain per row and column), which four outputs | a standard symmetric resistive network from the literature, stated as an assumption |
-| Q-2 | The exact position formula used (Anger ratios, any correction) | the standard four-corner Anger formula |
-| Q-3 | Trigger and thresholds: on the sum? per channel? | trigger on the sum |
-| Q-4 | How the crystal LUT was built from the flood map (manual, watershed, peak finding), and how often | peak finding + nearest-peak (Voronoi) segmentation |
-| Q-5 | ADC sampling: the four channels sampled continuously (125 MSPS like the engine's AD9648?) or peak-held per event | the engine's AD9648 settings |
-| Q-6 | Light guide between crystals and SiPMs: present? thickness? | none (direct coupling) |
-| Q-7 | SiPM device: size, pitch, active-area fill factor (the engine preset is Hamamatsu S13360-3050 — 3 mm, 50 µm cells) | the preset's datasheet values |
-| Q-8 | Crystal pixel size and count of the rig (12 × 12? pitch?) and reflector material (ceramic, per Findings 35) | 12 × 12 at the rig pitch from the scenario files |
+Not recorded here. The author decided (2026-10-02) that defaults are chosen by physics and measurement; details of any
+former-employer instrument stay out of the repository (clean-room rule).
 
 ## Steps
 
-1. Author answers Q-1 … Q-8 (or accepts the fallbacks).
 2. Implementer's review: check the rows, propose the light-spread model (measured / cited, not invented), estimate the
    cost per event, propose validation; write `docs/PLAN.Physics.RigReadout.Review.md`.
 3. Decisions after review; implementation in the engine (readout model behind a config switch, default = today's
