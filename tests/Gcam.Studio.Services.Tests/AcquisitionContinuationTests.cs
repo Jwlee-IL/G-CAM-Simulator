@@ -17,6 +17,9 @@ public sealed class AcquisitionContinuationTests(ITestOutputHelper output)
         new() { X = 0, Y = 0, DistanceMm = 1000, ActivityUCi = 500 },
         new() { Isotope = "Co-60", X = 20, Y = 0, DistanceMm = 1000, ActivityUCi = 300 },
     ];
+    // Co-60 close to the camera: per-decay emission with true-coincidence summed events in the stream (TODO-14).
+    private static readonly SceneSource[] Co60Near = [new() { Isotope = "Co-60", X = 3, Y = -2, DistanceMm = 100, ActivityUCi = 500 }];
+    private static SceneSource[] Scene(string name) => name == "co60-near" ? Co60Near : Mixed;
 
     /// <summary>Reads one segment on the virtual clock: one 250 ms tick per snapshot; Stop after
     /// <paramref name="stopAfterTicks"/> ticks (null: run to the preset).</summary>
@@ -36,29 +39,35 @@ public sealed class AcquisitionContinuationTests(ITestOutputHelper output)
         return snapshots;
     }
 
-    private static List<DetectedEvent> Truth(double bsr, double liveTimeS)
+    private static (List<DetectedEvent> Events, long Coincident) Truth(SceneSource[] scene, double bsr, double liveTimeS)
     {
-        var config = SimulationService.BuildConfig(Mixed, new OpticsSettings(), new DetectorSettings(), bsr);
+        var config = SimulationService.BuildConfig(scene, new OpticsSettings(), new DetectorSettings(), bsr);
         config.Seed = Seed;
         using var source = new ListModeSource(config);
         var events = new List<DetectedEvent>();
         while (true)
-            if (source.Advance() is { } e) { if (e.ArrivalTimeS > liveTimeS) return events; events.Add(e); }
+            if (source.Advance() is { } e)
+            {
+                if (e.ArrivalTimeS > liveTimeS) return (events, source.CoincidentHistories);
+                events.Add(e);
+            }
     }
 
     [Theory]
-    [InlineData(0.0)]
-    [InlineData(0.5)] // background: a second look-ahead lives inside the list-mode source
-    public async Task StopAndContinue_ReproducesTheUninterruptedEventStream(double bsr)
+    [InlineData("mixed", 0.0)]
+    [InlineData("mixed", 0.5)] // background: a second look-ahead lives inside the list-mode source
+    [InlineData("co60-near", 0.0)] // one summed event per decay keeps the single look-ahead slot sufficient
+    public async Task StopAndContinue_ReproducesTheUninterruptedEventStream(string sceneName, double bsr)
     {
         const double preset = 12;
+        var scene = Scene(sceneName);
         var clock = new ManualTimeProvider();
         var service = new SimulationService(clock);
-        await using var whole = service.Start(Mixed, new OpticsSettings(), preset, 4, new DetectorSettings(), bsr, Seed);
+        await using var whole = service.Start(scene, new OpticsSettings(), preset, 4, new DetectorSettings(), bsr, Seed);
         var uninterrupted = (await Segment(whole, clock, null))[^1];
         Assert.True(uninterrupted.IsCompleted);
 
-        await using var paused = service.Start(Mixed, new OpticsSettings(), preset, 4, new DetectorSettings(), bsr, Seed);
+        await using var paused = service.Start(scene, new OpticsSettings(), preset, 4, new DetectorSettings(), bsr, Seed);
         var all = new List<AcquisitionSnapshot>();
         var stops = new List<(double Live, long Counts)>();
         var resumed = new List<AcquisitionSnapshot>();
@@ -77,7 +86,9 @@ public sealed class AcquisitionContinuationTests(ITestOutputHelper output)
             clock.Advance(TimeSpan.FromSeconds(100));
         }
         var final = all[^1];
-        var truth = Truth(bsr, preset);
+        var (truth, coincident) = Truth(scene, bsr, preset);
+        if (sceneName == "co60-near")
+            Assert.Contains(truth, e => e.DepositKeV > 1332.5 + 1e-6); // a summed decay is in the compared stream
 
         Assert.True(final.IsCompleted);
         Assert.Equal(preset, final.LiveTimeS);
@@ -99,7 +110,7 @@ public sealed class AcquisitionContinuationTests(ITestOutputHelper output)
             Assert.Equal(counts, first.Counts);
         }
         Assert.True(stops.Select(s => s.Live).Distinct().Count() == stops.Count, "every stop at a new live time");
-        output.WriteLine($"BSR {bsr}: {final.Counts} events in {preset} s; {stops.Count} stops at live " +
+        output.WriteLine($"{sceneName}, BSR {bsr}: {coincident} coincident decays; {final.Counts} events in {preset} s; {stops.Count} stops at live " +
             string.Join(", ", stops.Select(s => $"{s.Live:0.###} s/{s.Counts}")) + "; identical to the uninterrupted run and the direct source stream");
     }
 

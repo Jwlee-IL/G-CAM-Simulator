@@ -32,7 +32,10 @@ public static class Isotopes
         new IsotopeInfo("Cs-137", 30.1,  [(661.7, 0.851), new(32.1, 0.056, EmissionKind.XRay, "Ba K"), new(36.4, 0.014, EmissionKind.XRay, "Ba K")]),
         new IsotopeInfo("Co-60",   5.27, [(1173.2, 0.999), (1332.5, 0.999)]),
         new IsotopeInfo("Co-57",   0.744,[(122.1, 0.856), (136.5, 0.107)]),
-        new IsotopeInfo("Na-22",   2.60, [(511.0, 1.798), (1274.5, 0.999)]),   // 511 = β+ annihilation pair
+        // Na-22: ENSDF, M. Shamsuzzoha Basunia, Nucl. Data Sheets 127, 69 (2015), via NNDC NuDat (checked 2026-10-02):
+        // β⁺ 89.96 % per decay, 1274.537 keV γ 99.940 %. The 511 line is the annihilation PAIR, 2 × β⁺ (NuDat lists
+        // 179.91 %). DecayScheme derives its per-decay branches from these two values (one table, one value).
+        new IsotopeInfo("Na-22",   2.60, [(511.0, 2 * 0.8996), (1274.5, 0.9994)]),
         new IsotopeInfo("Am-241", 432.0, [(59.5, 0.359)]),
         // Ir-192 (industrial radiography, URS reference source RS-1). ENSDF, C. M. Baglin, Nucl. Data Sheets 113, 1871
         // (2012), via IAEA LiveChart and NNDC NuDat (same evaluation; values checked line by line on 2026-10-01):

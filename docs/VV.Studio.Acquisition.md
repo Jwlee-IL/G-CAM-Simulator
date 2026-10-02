@@ -107,7 +107,8 @@ Studio supplies detector settings explicitly after cloning the scene config; exi
 the bare geometry. List-mode deposits remain unsmeared and unwindowed, located by Argmax. Measurement applies
 the seeded CrystalUniformity gain pattern before one chain smear. Snapshots retain their acquisition inputs,
 and the gain inputs are locked while data exist, so the recorded response cannot change. Spectrum windows and optional
-pile-up reuse these events. Per-nuclide imaging, stripping and nuclear decay cascades are outside this scope.
+pile-up reuse these events. Per-nuclide imaging and stripping are outside this scope. A Co-60 or Na-22 decay is one event:
+the summed deposit of its detected gammas at the largest-deposit pixel over their merged sites, one arrival time.
 
 ## Detector realism and background
 
@@ -188,6 +189,7 @@ wall time while stopped each time):
 |---|---|---|
 | BSR 0 | 1,810 | identical to the uninterrupted session and to the direct source stream; arrival times strictly increasing; each continued segment starts at the stopped live time and counts |
 | BSR 0.5 | 2,728 | identical, as above |
+| Co-60 500 µCi at (3, −2) mm, 100 mm, BSR 0 (same stops) | 139,747 (48 decays with both gammas detected) | identical, as above; one event per decay keeps the single look-ahead event sufficient |
 
 A raised preset after Completed (3 s → 6 s) continues identically to an uninterrupted 6 s acquisition; the same
 seed reproduces an acquisition and the next seed gives an independent one. Sensitivity check: with the look-ahead

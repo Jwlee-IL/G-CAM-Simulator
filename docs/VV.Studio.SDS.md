@@ -329,7 +329,9 @@ the overall share uses the union of bands, so overlapping resolved windows count
 Spectrum follows the acquisition scene captured at Start (kept across Continue, cleared by Reset), and reprocesses
 view settings without acquisition. Log Y only redraws `PlotView`. No independent pool or noise wall is added.
 Acquisition snapshots retain their detector settings; gain inputs are locked while data exist, so recorded events are never resmeared.
-The chain-only resolution readout excludes pixel gain spread. Correlated nuclear cascades remain unavailable.
+The chain-only resolution readout excludes pixel gain spread. A Co-60 or Na-22 decay arrives as one event whose deposit is
+the sum of its detected gammas (true-coincidence summing in the event itself, independent of the pile-up option); its
+pixel gain is that of the event's largest-deposit pixel.
 Measurements and real-engine checks are recorded in [VV.Studio](VV.Studio.md).
 
 Spectrum publishes explicit edges from the count-binning width; centres remain for window statistics.

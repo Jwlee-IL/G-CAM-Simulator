@@ -38,6 +38,7 @@ public sealed class ComptonCrystalDetector : IDetector
     private readonly double[]? _sensitivity;
     private readonly Action<double, double>? _eventSink;
     private readonly Action<int, int, double, double>? _pixelEventSink;
+    private readonly Action<IReadOnlyList<(int X, int Y, double DepositKeV)>, double>? _pixelSitesSink;
     private readonly FrontEndModel? _frontEnd;
     private readonly IRandom? _frontEndRng;
     private readonly EntranceAbsorber? _entrance;   // passive window/encapsulation in front (null = none)
@@ -55,7 +56,8 @@ public sealed class ComptonCrystalDetector : IDetector
         FrontEndModel? frontEnd = null, IRandom? frontEndRng = null,
         EntranceAbsorber? entranceAbsorber = null, EntranceAbsorber? backingScatterer = null,
         double reflectorGapMm = 0.0, double opticalCrosstalk = 0.0, CrystalMaterial? material = null,
-        Action<int, int, double, double>? pixelEventSink = null)
+        Action<int, int, double, double>? pixelEventSink = null,
+        Action<IReadOnlyList<(int X, int Y, double DepositKeV)>, double>? pixelSitesSink = null)
     {
         _image = new DetectorImage(pixelsX, pixelsY);
         _pitch = pixelPitchMm;
@@ -72,6 +74,7 @@ public sealed class ComptonCrystalDetector : IDetector
         _sensitivity = sensitivity;
         _eventSink = eventSink;
         _pixelEventSink = pixelEventSink;
+        _pixelSitesSink = pixelSitesSink;
         _frontEnd = frontEnd;
         _frontEndRng = frontEndRng;
         _entrance = entranceAbsorber;
@@ -200,7 +203,7 @@ public sealed class ComptonCrystalDetector : IDetector
         // resampled back to the physical detected-event spectrum (unweighted would over-represent the
         // biased proposal at positions/angles where deposit/escape probability differs).
         double pulseDeposit = 0.0;
-        if (_eventSink is not null || _pixelEventSink is not null)
+        if (_eventSink is not null || _pixelEventSink is not null || _pixelSitesSink is not null)
         {
             foreach (var (_, _, dep) in _sites) pulseDeposit += dep;
             _eventSink?.Invoke(pulseDeposit, weight);   // TRUE total light before the spread
@@ -227,6 +230,10 @@ public sealed class ComptonCrystalDetector : IDetector
             }
             _pixelEventSink(bx, by, pulseDeposit, weight);
         }
+        // The same history's interaction sites (after the light spread, as the Argmax above sees them) and its total
+        // deposit, for a caller that merges several photons of ONE decay into one pulse (ListModeSource). The list is
+        // reused by the next Score: copy it before returning.
+        _pixelSitesSink?.Invoke(_sites, pulseDeposit);
         Deposit(weight);
         return true;
     }

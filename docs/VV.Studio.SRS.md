@@ -95,7 +95,7 @@ Structured after IEC 62304 §5.2 (software requirements analysis). As in [VV.Stu
 | SR-RUN-13 | Without acquired data, Start is enabled when at least one source exists. With data the button reads Continue and is enabled only in Stopped or Completed when the preset exceeds the acquired live time. The command re-checks its condition when invoked; it is not the window's default button. |
 | SR-RUN-14 | *Withdrawn* — outdated / stale result marking; replaced by SR-RUN-12, SR-RUN-23, SR-RUN-26. |
 | SR-RUN-15 | The scene config uses nearest-prime rank, non-cyclic decoding and a reconstruction grid inside the FCFOV; non-finite or non-positive preset live time and speed are rejected by the service. |
-| SR-RUN-16 | Immutable cumulative snapshots carry live time, integer counts, flood, reconstruction, estimate and the same fresh event list (pixel, true deposit in keV, Poisson arrival time in s); each event is used once. The flood adds one count at each ComptonCrystalDetector event’s Argmax pixel, so in-crystal Compton scatter mispositioning is part of the image. |
+| SR-RUN-16 | Immutable cumulative snapshots carry live time, integer counts, flood, reconstruction, estimate and the same fresh event list (pixel, true deposit in keV, Poisson arrival time in s); each event is used once. The flood adds one count at each ComptonCrystalDetector event’s Argmax pixel, so in-crystal Compton scatter mispositioning is part of the image. A decay of an isotope with correlated gammas (Co-60 with its 1173 / 1332 keV angular correlation, Na-22 with its back-to-back annihilation pair) is one event: the deposits of all its detected gammas summed, at the largest-deposit pixel over their merged interaction sites, with one arrival time (true-coincidence summing). |
 | SR-RUN-17 | At 4 Hz the accumulated flood is re-decoded on its fixed grid and imaging measurements refresh without replacing their geometry. A slow consumer receives the latest cumulative snapshot. |
 | SR-RUN-18 | If MC cannot supply rate × speed, live time advances only through the acquired prefix and the status appends "MC-limited ×k" with achieved live seconds per wall second. |
 | SR-RUN-19 | Preset live time defaults to 60 s and speed to ×10; reaching the preset automatically sets Completed. |
@@ -283,7 +283,7 @@ Stated so that their absence is not read as a gap in verification:
 - Saving or loading scenes, exporting images or measurements (SR-SEC-01 forbids file I/O today).
 - Creating measurements from the keyboard — known gap AN-01, planned.
 - High-contrast mode — known gap AN-03, planned.
-- Four-channel Anger position readout, spatial SiPM pitch and optical light sharing, including crosstalk-dependent crystal identification, are excluded from the current direct-crystal readout. Correlated nuclear cascades are excluded from list-mode acquisition.
+- Four-channel Anger position readout, spatial SiPM pitch and optical light sharing, including crosstalk-dependent crystal identification, are excluded from the current direct-crystal readout. Correlated cascades are modelled for Co-60 and Na-22 only; Ir-192's cascades are emitted as independent lines.
 - Any physics accuracy claim — the engine's own suite covers it ([VV.Studio §1](VV.Studio.md#1-scope-and-intended-use)).
 
 ## 8. Re-evaluation (§5.2.5–5.2.6)
