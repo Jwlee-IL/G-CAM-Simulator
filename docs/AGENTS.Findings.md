@@ -1902,3 +1902,21 @@ directional biasing aims one randomly chosen gamma, weight n·w_k / (n̄·H), so
   1274.5 keV = 0.9994 (was 1.798 in `Isotopes`, 1.806 in `DecayScheme`); one table now.
 - Not changed: single-photon isotopes keep their draws; Ir-192 stays independent (no scheme). With pile-up off the
   Spectrum axis ends at 1.15 × the top line, so a 2505 keV sum lands in overflow (counted in the total).
+
+## 62. Joint forward-likelihood depth beats the sharpest plane — but is not yet a Studio replacement (2026-10-02)
+
+TODO-25 ([PLAN.Physics.DepthLikelihood](PLAN.Physics.DepthLikelihood.md), research review by a substitute Claude
+subagent; [review](PLAN.Physics.DepthLikelihood.Review.md)). Forward model = the engine's own transport replayed with
+common random numbers (no template library), exact expected mask transmission, the engine's crystal, analytic 662 keV
+window; intensity and flat background profiled; parameters bearing + v = 1/(z − D); no step uses the truth.
+
+- **60 s, default Cs-137 500 µCi, all events (12 seeds, 0 / 30 mrad):** spread 0.7 / 3.0–3.4 / 4.9–5.1 / 16–20 mm at
+  300 / 500 / 700 / 1000 mm; mean error at most 0.64 × the spread (Studio's sharpest plane on the same floods: +51 / −19,
+  +69 / −40, −70 / −131 mm, and seed SD up to 350 mm at 1 m). Wrong maxima 0 / 190 at 60 s.
+- Coverage of 68 / 95 % likelihood-ratio intervals 0.633 / 0.934 at 60 s; at 300 mm with ~46,000 counts the model budget
+  (0.9M histories) under-covers — the budget must scale with the data's counts.
+- Template-interpolation error measured without MC noise: ≤ 0.45 mm at 20 mm nodes; theme 57's library offsets were
+  template noise. Cost: 70–130 s per channel single-threaded per flood — a background job, not a live update.
+- **Gate (L-5): not yet.** Open: the 10 s wrong-maximum rate with the final search (v2 gave 11 / 192), count-scaled
+  model budget, and model mismatch (e.g. mask–detector distance; a 0.5 mm error ≈ −6 mm at 1 m, derived not measured).
+  The sharpest plane stays in Studio until these are measured.

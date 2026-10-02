@@ -63,7 +63,8 @@ cocotb RTL front-end path.
   - **TODO-27** evidence refresh — review done (`PLAN.Physics.EvidenceRefresh.Review.md`): 32 quote groups re-measured
     over seeds; **11 flagged conclusion / interpretation changes need the author's decision** before any rewrite.
   - **TODO-19** Anger-type SiPM readout — review done (`PLAN.Physics.RigReadout.Review.md`); next: decisions after review.
-  - **TODO-25** joint depth likelihood — review is an **unfinished draft** (design only, no results).
+  - **TODO-25** joint depth likelihood — reviewed (Findings 62): beats the sharpest plane at 60 s; gate "not yet"
+    (10 s wrong-maximum rate, count-scaled model budget, model mismatch still open).
   - **TODO-28** test documentation + automatically generated Test Result report — follow the procedure from the
     author's other project (ask the author where it is; adopt the process only, copy no content).
 - Codex conversations, worktrees (`C:\gw\…`) and probe outputs (`%TEMP%\gcam-*`) were local and do not travel: start
