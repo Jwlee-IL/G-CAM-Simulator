@@ -1,0 +1,4 @@
+COST,300,0,10,histories=414630000,seconds=3134.6,us_per_history=7.560
+COST,300,0,60,histories=340200000,seconds=4339.5,us_per_history=12.756
+COST,1000,30,10,histories=369990000,seconds=1079.7,us_per_history=2.918
+COST,1000,30,60,histories=218160000,seconds=330.8,us_per_history=1.516
