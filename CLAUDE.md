@@ -64,14 +64,18 @@ cocotb RTL front-end path.
     carry seed spreads; driver and aggregates in `samples/evidence/`). Open question: PR-SENS-02's "~50 counts" gate.
   - **TODO-29** clean-room wording pass — **done 2026-10-02** (`PLAN.Docs.CleanRoom.md`); README desktop screenshot still
     shows the old preset label "(original rig)" → retake on the author's go.
-  - **TODO-30** absolute ambient background — reference plan (`PLAN.Physics.AmbientBackground.md`); **every MC result so
-    far is ideal-environment** (no ambient background, or background relative to the source). Codex turn 1 on the
-    author's go.
+  - **TODO-30** absolute ambient background — **paused 2026-10-03** (Codex allowance): baseline decided (AB-1…9, 4a–4c);
+    engine / Studio / tests implemented but **uncommitted** in the working tree; spectrum stopped at Bi-214 β data —
+    proposed AB-4d (evaluated lines only + UNSCEAR ratio) awaits the author. **Every MC result so far is
+    ideal-environment.** Deferred: TODO-31 high-energy transport, TODO-32 realistic head housing. Status in the plan.
   - **TODO-19** Anger-type SiPM readout — review done (`PLAN.Physics.RigReadout.Review.md`); next: decisions after review.
   - **TODO-25** joint depth likelihood — reviewed (Findings 62): beats the sharpest plane at 60 s; gate "not yet"
     (10 s wrong-maximum rate, count-scaled model budget, model mismatch still open).
   - **TODO-28** test documentation + automatically generated Test Result report — follow the procedure from the
     author's other project (ask the author where it is; adopt the process only, copy no content).
+- **Moved into the repo for the hand-off (2026-10-03):** TODO-30 prompts and turn reports
+  (`samples/evidence/results/ambient-baseline-v1-*`, start a new Codex conversation from them + the plan Status); TODO-25
+  probe and raw results incl. the finished 10 s v3 run, not yet analysed (`samples/evidence/depthlik/`).
 - Codex conversations, worktrees (`C:\gw\…`) and probe outputs (`%TEMP%\gcam-*`) were local and do not travel: start
   new implementer turns from the review files. Procedure, guard block and the substitute-subagent rule:
   `docs/AGENTS.Planning.md`.

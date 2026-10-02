@@ -48,6 +48,7 @@ when a plan is wrong, caught every one. Each role checks the other.
 | Prompt | from a file on stdin (`- < prompt.md`), report with `-o report.md`, run in the background | long tasks; the report is the turn's result |
 | One conversation per task | start once, read `session id:` from the log, continue with `codex exec -s workspace-write --skip-git-repo-check -C <repo> -o <report> resume <session-id> - < prompt.md` | the implementer keeps its findings across review, discussion and implementation |
 | Check the log head | `model:`, `sandbox:`, `session id:` match what was intended | a silent fallback (new session, other sandbox) is otherwise invisible |
+| Watch for completion | launch `codex exec` through the shell tool's own background mode (or a monitor), **never a detached `&` / `start`**, so the planner is notified when the turn ends; on notification read the report and audit at once | 2026-10-02: a detached turn finished at 23:15 and the planner did not notice until the author asked |
 
 ### Guard block (every `danger-full-access` prompt)
 

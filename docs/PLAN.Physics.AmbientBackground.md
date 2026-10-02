@@ -6,9 +6,17 @@ depend on the source: removing the source leaves it, and a weaker source is buri
 (dose rate + spectrum → fluence → transport through the head → Poisson events), re-measure the results it changes, and
 fill the "Under ambient background" column of Evidence §1. Procedure: [AGENTS.Planning](AGENTS.Planning.md).
 
-Status: **reference plan** 2026-10-02 (author: "백그라운드 방사선도 포아송 분포로 발생할 수 있음을 전제하에 만들었던 것
-같은데, 그게 빠져있으면 반쪽짜리 시뮬레이터야"). Implementer: **Codex** — turn 1 is the review; the planner waits for the
-author's go to start it.
+Status: **in progress, paused** 2026-10-03 01:50 (Codex allowance). Codex conversation `01a0fcdc-162b-7cb1-a3ad-a3fb9fc40914`
+(local only), turns 1–5; reports in `samples/evidence/results/ambient-baseline-v1-*`. **Done (uncommitted):** ambient
+config and engine (source-independent field, bare / front-only bounds, deposit-site pixels, Poisson timing),
+background-only fixed-time acquisition, Studio input (default off), legacy bit-compatibility tests, energy × zenith
+sampler, uncollided half-space kernel (MC / analytic 0.9992 ± 0.0024), Po-218 and Bi-214 α omissions under AB-4c; tests
+engine 298 → 330, Core 179 → 184, services 83 → 87 (+7 skipped), UI 13 (+14 skipped); build 0 errors / 2 warnings (Codex's
+numbers — **re-verify before commit**). **Stopped:** Bi-214 β — ENSDF has low-energy transitions (36.8 / 61.0 / 71.1 /
+104.4 keV) without photon intensities and lower-limit feedings, so no strict bound passes AB-4c's 10⁻⁴. **Pending
+author decision — proposed AB-4d:** use evaluated photon lines only, list transitions without intensities as "not
+included", validate by the kerma / UNSCEAR ratio, tolerance decided after seeing the ratio. Not started: collided
+spectrum generation, UNSCEAR comparison, gate study (AB-7), EV re-measurements (AB-9), docs.
 
 ## What exists (checked in the code, 2026-10-02 — *verify*)
 
@@ -36,6 +44,60 @@ author's go to start it.
 | A-8 | **Count gate (PR-SENS-02):** re-measure the EV-07 gates with ambient background over source activity × distance; measure a reconstruction-significance quantity (peak-to-sidelobe or background-subtracted SNR) against localisation error; propose a gate on net source counts or significance that holds with background | — |
 | A-9 | **Re-measure what changes:** with the TODO-27 seed driver (`samples/evidence/`), re-run the families listed in Evidence §1 "Ideal conditions and background" under the default ambient field at stated source activities and distances; fill that table's last column with measured values (N seeds), keep the ideal values as the best-case bound | — |
 | A-10 | **Sanity anchors:** compare the simulated background count rate and spectrum of a bare crystal with a published measurement of a similar scintillator at a stated dose rate (cite); the dose-rate path (EV-23) reads the ambient field back within its stated accuracy | verify: which published anchor |
+
+## Decisions after review (2026-10-03)
+
+Review: [PLAN.Physics.AmbientBackground.Review](PLAN.Physics.AmbientBackground.Review.md) (Codex). It stopped A-1/A-2
+(no citable numerical incident spectrum), A-3 (no ray-traced head shield; crystal entry is top-face only), the high-energy
+physics (tungsten μ clamps above 1332 keV, no pair production, dose path cuts deposits ≥ 2000 keV), A-4 (source-free
+acquisition impossible), and corrected A-8 (net counts alone do not keep a precision gate). Its order-of-magnitude
+estimate: at the lab distance ambient is a few % of the source, but **1 MBq at ~1 m gives BSR ~2.5–3**, so the
+250-count sub-mm gate can become ~1000 counts. The author decided a **baseline first** and deferred the rest.
+
+| # | Decision | Basis |
+|---|---|---|
+| AB-1 | **Baseline scope:** absolute ambient field (photon H*(10) µSv/h + spectrum → fluence by the existing ICRP 74 table), source-independent, Poisson in time (list mode) and per pixel (flood map), **pixel from the actual deposit site** (no random placement) | author, 2026-10-03: "먼저 베이스라인부터 잡아내는 게 좋겠어" |
+| AB-2 | **Two bounding geometries instead of a housing model:** upper = bare crystal exposed on all faces (needs ray–box entry on every face); lower = entry through the front (mask) only, sides / rear perfectly shielded. Report every ambient result as this range | review §1 / §4.4; realistic housing deferred to **TODO-32** |
+| AB-3 | Lines above 1332 keV (K-40 1461, Bi-214 1764, Tl-208 2614) are **included with today's physics** and the limits stated (tungsten μ clamped, no pair production, dose cut); high-energy transport deferred to **TODO-31** | author: the high-energy correction is a later task |
+| AB-4 | **Spectrum built by the engine, not borrowed:** UNSCEAR 2000 Annex B population-weighted soil activities K / U / Th = 420 / 33 / 45 Bq/kg in a uniform soil half-space, transported through air to a detector height of 1 m; line + scattered continuum and angular distribution come out of that transport. Decay data from an evaluated source (ENSDF / DDEP / NNDC — cite; never from memory). **Validation oracle:** the computed air kerma per Bq/kg against UNSCEAR's 0.0417 / 0.462 / 0.604 nGy/h, tolerance derived from the MC sample size plus the stated limits of AB-3; a discrepancy is reported, not tuned away. The result is a versioned, hashed spectrum file | planner recommendation, accepted ("2~6 수용") |
+| AB-5 | **Studio:** ambient input (photon H*(10), preset spectrum named) **default 0 / off with the "ideal environment" label** until AB-4 is validated; then the default becomes 0.10 µSv/h (a later decision row). BSR stays an editable, separate stress input; a derived ambient BSR readout | accepted |
+| AB-6 | **Source-free (background-only) acquisitions** allowed in engine and Studio, with a fixed-time event API that progresses through empty intervals | review A-4 |
+| AB-7 | **PR-SENS-02 gate targets:** ≤ 1 % false trusted location per acquisition on background-only acquisitions (≥ 1000 null acquisitions per configuration; 299 is the zero-failure minimum), plus ≥ 95 % within one declared angular resolution element for located sources; calibrated search statistic per review §7, gate chosen and validated on separate seeds | accepted |
+| AB-8 | **Compatibility:** with ambient off, legacy BSR and disabled paths stay **bit-for-bit identical** (including Stop / Continue and RNG draw order). Intrinsic crystal activity (LYSO, LaBr3, …) is out of scope (later task); EV-23 dose / separate counter unchanged | accepted |
+| AB-9 | **Re-measurement priority:** EV-07 / PR-SENS-02, EV-02, EV-12, EV-15, EV-01 / EV-09 first, through the seed driver with versioned ambient manifests (field, activity, distance, exposure, window, bound); other families get a written "unchanged / why" or wait. Every quote keeps the ideal value as the best-case bound | accepted |
+
+**Correction AB-4a (planner, 2026-10-03, implementation turn 2).** Codex stopped on Po-218: no evaluated photon
+emission data is reachable (IAEA LiveChart returns no gamma rows; the ENSDF α-decay evaluation, Nucl. Data Sheets 175,
+1 (2021), gives an excited Pb-214 level fed by a very weak α branch but no photon intensities; DDEP unreachable). Rule
+adopted: a nuclide (or branch) without evaluated photon data **may be omitted only with a quantified upper bound** —
+photon yield per decay ≤ the evaluated α / β feeding of excited levels, and emitted photon energy per decay ≤ Σ feeding ×
+level energy; the bound on its share of the chain's photon fluence and air kerma is computed from the evaluated
+feeding and written next to the spectrum. If a bound exceeds **10⁻³ of its chain's air kerma**, stop and report
+instead of omitting. Feeding data are used only for the bound, never as substitute line intensities. Also: committed
+result files carry no machine paths (snapshot paths relative to the TEMP work folder or omitted; hashes kept).
+
+**Correction AB-4b (planner, 2026-10-03, turn 3).** Codex was right: "photon yield ≤ feeding" is false when one feeding
+can de-excite through a cascade (the adopted Pb-214 scheme has a two-photon cascade). Replace the count bound: each
+γ step moves to a strictly lower level, so photons per feeding ≤ the number of levels between the fed level and the
+ground state in the **adopted level scheme** (cited); conversion electrons only lower it. Energy bound unchanged
+(≤ Σ feeding × level energy). Kerma bound: energy bound × the maximum air μ_en/ρ over [smallest level spacing below the
+fed level, fed-level energy] (cited μ_en/ρ table). The 10⁻³-of-chain-kerma threshold and the stop rule are unchanged.
+
+**Correction AB-4c (planner, 2026-10-03, turn 4) — supersedes the kerma part of AB-4a/4b.** Codex showed the kerma
+bound was ill-posed (energy × μ_en/ρ is not a kerma at 1 m without a transport response, and soil / air scatter makes
+photons below any level spacing) and that the At-218 record has no Po-218 β-feeding data. The omission criterion moves
+to the **source term**: an unresolved branch may be omitted when its **emitted photon energy per chain decay is ≤ 10⁻⁴
+of the chain's evaluated emitted photon energy**. Upper bounds: α branch = Σ feeding × level energy (AB-4b count bound
+kept for the record); β branch without feeding data = branch fraction × Q_β (all decay energy taken as photons — a
+strict bound needing no level data). This is a declared **modelling approximation** of the source term, not a certified
+transported-kerma bound; the spectrum file lists every omitted branch with its bound, and the UNSCEAR comparison states
+it. Exceeding 10⁻⁴ → stop and report.
+
+**Angular distribution (AB-4 addendum).** Representation: a tabulated joint distribution, energy bins × zenith-cosine
+bins at the detector point (azimuth uniform), versioned with the spectrum. Acceptance oracle: the **uncollided** line
+fluence per Bq/kg and its zenith distribution from the MC against the analytic uniform-half-space result (soil μ, air μ,
+height h; Beck-type exponential-integral form, cited) within the MC's own statistical error; the total (collided +
+uncollided) is then checked only through the UNSCEAR kerma comparison.
 
 ## Steps
 1. **Turn 1 — review and measurement (Codex):** verify the "What exists" table and every *verify* row in the code; find
