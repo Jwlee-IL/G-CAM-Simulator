@@ -179,6 +179,12 @@ TILT (pitch/yaw), mask WARPING.
   headless-verified and rendered offscreen; their desktop checks are collected in TODO-22 —
   [PLAN.Studio.Spectrum](PLAN.Studio.Spectrum.md), [PLAN.Studio.LiveAcquisition](PLAN.Studio.LiveAcquisition.md),
   [PLAN.Studio.SpectrumPlot](PLAN.Studio.SpectrumPlot.md).
+- **TODO-24 acquisition control Start / Stop / Reset** (2026-10-02): the author's MCA model (continue after Stop,
+  Reset discards, physical inputs locked while data exist — no stale state; source drag withdrawn; a new seed per
+  acquisition) → review and implementation by a substitute Claude subagent (Codex out of credits); continuation
+  measured event-identical to an uninterrupted run — [PLAN.Studio.AcquisitionControl](PLAN.Studio.AcquisitionControl.md).
+- **TODO-16 layout batch 3** (2026-10-02): workspace layout from the renders, review-corrected causes, Ba K X-ray origin
+  in the line data — [PLAN.Studio.Polish](PLAN.Studio.Polish.md).
 - **TODO-11 Detector workspace, focus sweep, external range** (2026-10-02): reference plan → Codex review (code only;
   sandbox refused processes) → planner's measurements (gap = dead area; crosstalk a no-op on the list-mode path; depth
   from focus near-field and biased — Findings 56) → SiPM pitch and crosstalk moved to TODO-19 (author) → implementation

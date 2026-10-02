@@ -4,7 +4,10 @@ Scope: replacing GCAM Studio's acquisition control (Start always starts afresh, 
 results "Outdated") with the multichannel-analyser model the author chose: **Start / Stop / Reset**. Procedure:
 [AGENTS.Planning](AGENTS.Planning.md); live acquisition design: [PLAN.Studio.LiveAcquisition](PLAN.Studio.LiveAcquisition.md).
 
-Status: **reference plan** 2026-10-02 — waiting for the implementer's review.
+Status: **done** 2026-10-02 (E-1 … E-10) by the substitute implementer (Codex out of credits). Stop / continue
+equivalence re-measured on the real session (1,810 and 2,728 events identical to the uninterrupted run with stops at
+×0.7–×11; the test fails when the look-ahead event is dropped). Planner re-verified: tests 262 / 164 / 72 (+7) / 10 (+9),
+renders reviewed. Rewritten desktop scenarios run in TODO-22. Unused drag code in `MeasurementAdorner` remains.
 
 ## Author's decisions (2026-10-02)
 
@@ -32,6 +35,26 @@ Status: **reference plan** 2026-10-02 — waiting for the implementer's review.
 | F-4 | Physical inputs editable only in Empty (A-2). Remove `IsResultStale` / `MarkStale`, the Outdated chips, the Detector stale scene and the pending-vs-acquired dual displays (in a state with data, pending = acquired). The Detector workspace shows the locked settings. | proposed |
 | F-5 | Top bar: Start (label "Start" / "Continue" by state), Stop, Reset (asks no confirmation? *verify*: Reset discards data — a confirmation, or an undo-free but deliberate placement); status bar shows the state name. Keyboard and AutomationIds: `StartAcquisition`, `StopAcquisition`, new `ResetAcquisition`. | proposed — *verify* the confirmation question against DESIGN.Controls |
 | F-6 | Tests: the state table (every command × state), continue-after-stop accumulates (counts and live time add up, no event used twice, arrival times strictly increasing across the pause), lock enforcement, Reset clears every workspace; UI-oracle and desktop test updates (desktop run stays in TODO-22). | proposed |
+
+## Decisions after review (2026-10-02)
+
+Review: [PLAN.Studio.AcquisitionControl.Review](PLAN.Studio.AcquisitionControl.Review.md). Measured there: a stopped and
+continued acquisition reproduces the uninterrupted event stream exactly (25 stops at ×0.5–×10, preset raised after
+Completed) **provided the session keeps its one already-drawn pending event**; dropping it loses one real count per
+stop. Speed only paces events; decoder focus does not change them.
+
+| # | Decision | Basis |
+|---|---|---|
+| E-1 | The session runs in **segments**: state in fields, one worker per Start / Continue; `IAcquisitionSession.Continue(preset, speed)` (default interface method so test fakes compile); the pending event, RNG streams, live-time clock and acquisition id persist; workspaces are not re-`Begin`-ed on Continue. A service test re-measures the equivalence on the real session (event-by-event, arrival times strictly increasing). | review F-2, measurement |
+| E-2 | States Empty / Acquiring / Stopped / Completed / Failed with the review's state table; Failed with data keeps it, locks inputs, offers only Reset; Failed with no data behaves as Empty. | review |
+| E-3 | Preset may be **raised** in Stopped and Completed; Start/Continue enabled only when preset > acquired live time; lower values rejected; SR-RUN-11 reworded (progress is relative to the current preset). Speed editable in every state but Acquiring. | review F-3 |
+| E-4 | **Locks in the view model**, not only in XAML: every physical setter (sources, optics incl. the public `Optics` setter, detector, chain, background, live-time lowering) guarded by state; command guards inside the commands (`ExecuteAsync` skips `CanExecute`). | review (edit locks mostly view-only) |
+| E-5 | Remove the stale concept entirely (the review's list: 11 `MarkStale` sites, `IsResultStale`, Outdated chips, Pending lines, Detector identity text) and the held batch-3 rows L-14 / L-15 / L-10 status bar resolve with it (status bar shows the state and counts / live time). | review, A-2 |
+| E-6 | Reset: non-primary button, enabled only in Stopped / Completed / Failed-with-data, no shortcut, **no confirmation dialog**; clears every workspace and the scene Imaging froze at Start; keeps the measurement-tool list. Start is no longer `IsDefault` (Enter in a field must not resume counting). | review F-5, DESIGN.Controls |
+| E-7 | **Source drag is withdrawn** (author, 2026-10-02): under A-2 it could never run; source positions are edited in the left panel. | author, review N-1 |
+| E-8 | **A new seed per acquisition** (author, 2026-10-02): Reset + Start is an independent measurement; the seed is shown (status / provenance) and can be fixed in an input for reproduction; tests and render fixtures fix it explicitly. Continue keeps the acquisition's seed. | author, review N-2; physics: independent events |
+| E-9 | Detector workspace shows the acquired (locked) settings with a neutral caption; no Pending line. | review |
+| E-10 | Desktop scenarios that contradict A-1 / A-2 / E-7 are rewritten (not run — TODO-22). | review |
 
 ## Steps
 

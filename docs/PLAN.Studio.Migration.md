@@ -18,7 +18,7 @@ Status: in progress (2026-10-01).
 | 5 | TODO-09 editable optics + presets | [PLAN.Studio.Optics](PLAN.Studio.Optics.md) | **done** 2026-10-02 |
 | 6 | TODO-10 Waveform workspace, front-end chain selection | [PLAN.Studio.Waveform](PLAN.Studio.Waveform.md) | **done** 2026-10-02 |
 | 7 | TODO-11 Detector workspace, depth (3D) / rangefinder | [PLAN.Studio.Detector](PLAN.Studio.Detector.md) | **done** 2026-10-02 |
-| 7b | TODO-24 acquisition control Start / Stop / Reset (author 2026-10-02) | [PLAN.Studio.AcquisitionControl](PLAN.Studio.AcquisitionControl.md) | reference plan |
+| 7b | TODO-24 acquisition control Start / Stop / Reset (author 2026-10-02) | [PLAN.Studio.AcquisitionControl](PLAN.Studio.AcquisitionControl.md) | **done** 2026-10-02 |
 | 7a | TODO-19 the rig's readout (Anger, SiPM pitch, crosstalk) — moved before the deletion, author 2026-10-02 | — | open |
 | 8 | TODO-12 delete `Gcam.Wpf`, README screenshot | — | open (last) |
 
