@@ -7,8 +7,6 @@
                 <DockPanel Style="{StaticResource PanelHeader}"><TextBlock Text="Detector geometry" Style="{StaticResource Text.PanelTitle}" /></DockPanel>
                 <TextBlock Text="{Binding Readout}" Style="{StaticResource Text.MonoCaption}" TextWrapping="Wrap" Margin="{StaticResource Gap.Section}"
                            AutomationProperties.AutomationId="Detector.Readout" />
-                <TextBlock Text="{Binding Pending}" Style="{StaticResource Text.Caption}" TextWrapping="Wrap" Margin="{StaticResource Gap.Section}"
-                           AutomationProperties.AutomationId="Detector.Pending" />
                 <TextBlock Text="Geometric active-area fraction describes the face, not detection efficiency. Acquired rate needs transport, energy response and a stated channel."
                            Style="{StaticResource Text.Caption}" TextWrapping="Wrap" Margin="{StaticResource Gap.Section}" />
                 <TextBlock Text="Direct crystal assignment is the current readout. SiPM light sharing and four-channel position readout require a separate model."

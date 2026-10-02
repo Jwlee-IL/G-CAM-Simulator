@@ -67,6 +67,13 @@ public sealed partial class SpectrumWorkspaceViewModel : WorkspaceViewModel
         NotifyReadings();
     }
 
+    /// <summary>Reset: no acquisition, no lines, nothing shown.</summary>
+    internal void Reset()
+    {
+        Begin([]);
+        _acquisitionId = Guid.Empty;
+    }
+
     internal void Refresh()
     {
         _refresh?.Cancel();

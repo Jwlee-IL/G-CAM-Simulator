@@ -165,7 +165,7 @@ its uniform pixel placement follows the engine's detected-pedestal model. No nuc
 | ViewModel behaviour (commands, can-execute, acquisition state, Stop, failure, theme toggle) | `tests/Gcam.Studio.Tests/MainViewModelTests.cs`, `AcquisitionViewModelTests.cs` | fakes for the service contracts |
 | View geometry (fit, snapping, zoom anchor, pan limits, screen ↔ image ↔ mm) | `tests/Gcam.Studio.Tests/HeatmapViewportTests.cs` | pure maths, no UI |
 | Measurement maths (distance, angle, ROI by pixel centre, clipping) | `tests/Gcam.Studio.Tests/MeasurementMathTests.cs` | pure maths, no UI |
-| Measurement session (numbering, selection, delete / clear, ROI refresh on a new result), stale-result flag | `MeasurementsViewModelTests.cs`, `MainViewModelTests.cs`, `AcquisitionViewModelTests.cs` | ViewModels with fakes |
+| Measurement session (numbering, selection, delete / clear, ROI refresh on a new result), acquisition state machine and input locks | `MeasurementsViewModelTests.cs`, `MainViewModelTests.cs`, `AcquisitionViewModelTests.cs` | ViewModels with fakes |
 | Scene → config, runner progress / cancellation | `tests/Gcam.Tests/SceneConfigBuilderTests.cs` | engine-level |
 | The acquisition service (localization, immutable snapshots, count conservation, input checks, live-time pacing and Stop) | `tests/Gcam.Studio.Services.Tests/AcquisitionServiceTests.cs` | the real engine, no fakes |
 | Oracles of the UI tests (where the image sits on screen, mm per pixel, row parsing) | `tests/Gcam.Studio.UiTests/FloodOracleTests.cs` | pure maths, runs everywhere |

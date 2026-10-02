@@ -15,17 +15,20 @@ public sealed class AcquisitionViewModelTests
         public void Apply(AppTheme theme) => Current = theme;
     }
 
-    // A virtual acquisition clock: advancing wall time publishes physical data at the requested speed.
-    private sealed class VirtualSession(double preset, double speed) : IAcquisitionSession
+    // A virtual acquisition clock: advancing wall time publishes physical data at the requested speed. Segments
+    // continue the same live time and event list, like the real session.
+    private sealed class VirtualSession(double preset, double speed, int? seed) : IAcquisitionSession
     {
-        private readonly Channel<AcquisitionSnapshot> _channel = Channel.CreateUnbounded<AcquisitionSnapshot>();
+        private Channel<AcquisitionSnapshot> _channel = Channel.CreateUnbounded<AcquisitionSnapshot>();
         private readonly List<DetectedEvent> _events = [];
         private double _live;
         private readonly DetectorImage _flood = new(4, 4);
+        public int Continues { get; private set; }
+        public bool Disposed { get; private set; }
         public void AdvanceWallTime(double wallTime, bool mcLimited = false)
         {
             _live = Math.Min(preset, _live + wallTime * (mcLimited ? speed / 2 : speed));
-            int count = (int)(_live * 10);
+            int count = (int)Math.Round(_live * 10);
             while (_events.Count < count)
             {
                 _events.Add(new DetectedEvent(1, 1, 661.7, (_events.Count + 1) / 10.0));
@@ -34,13 +37,20 @@ public sealed class AcquisitionViewModelTests
             var image = new ImagingResult(_flood.ReadOnlyCopy(), -1.5, 1, null, 0, 0,
                 new SourceEstimate(new Vector3(0, 0, 1000), 2), count, TimeSpan.FromSeconds(wallTime));
             _channel.Writer.TryWrite(new AcquisitionSnapshot(_live, count, 10, mcLimited ? speed / 2 : speed,
-                mcLimited, image, Array.AsReadOnly(_events.ToArray()), TimeSpan.Zero, _live >= preset));
+                mcLimited, image, Array.AsReadOnly(_events.ToArray()), TimeSpan.Zero, _live >= preset) { Seed = seed });
             if (_live >= preset) _channel.Writer.TryComplete();
         }
         public IAsyncEnumerable<AcquisitionSnapshot> ReadSnapshotsAsync(CancellationToken cancellationToken = default)
             => _channel.Reader.ReadAllAsync(cancellationToken);
         public void Stop() => _channel.Writer.TryComplete();
-        public ValueTask DisposeAsync() { Stop(); return ValueTask.CompletedTask; }
+        public void Continue(double presetLiveTimeS, double speedValue)
+        {
+            Continues++;
+            preset = presetLiveTimeS;
+            speed = speedValue;
+            _channel = Channel.CreateUnbounded<AcquisitionSnapshot>();
+        }
+        public ValueTask DisposeAsync() { Disposed = true; Stop(); return ValueTask.CompletedTask; }
         public void Fail(Exception error) => _channel.Writer.TryComplete(error);
     }
 
@@ -50,23 +60,34 @@ public sealed class AcquisitionViewModelTests
         public VirtualSession Session { get; private set; } = null!;
         public DetectorSettings? Detector { get; private set; }
         public double BackgroundToSignalRatio { get; private set; }
+        public List<int?> Seeds { get; } = [];
         public IAcquisitionSession Start(IReadOnlyList<SceneSource> scene, OpticsSettings optics, double liveTimeS, double speed,
-            DetectorSettings? detector = null, double backgroundToSignalRatio = 0)
+            DetectorSettings? detector = null, double backgroundToSignalRatio = 0, int? seed = null)
         {
             Detector = detector;
             BackgroundToSignalRatio = backgroundToSignalRatio;
             Starts++;
-            return Session = new VirtualSession(liveTimeS, speed);
+            Seeds.Add(seed);
+            return Session = new VirtualSession(liveTimeS, speed, seed);
         }
     }
 
+    private static async Task WaitForSnapshot(MainViewModel vm, double live)
+    {
+        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+        while (vm.Snapshot?.LiveTimeS != live) await Task.Delay(1, timeout.Token);
+    }
+
+    private static MainViewModel Model(Service service, double liveTime = 60) =>
+        new(service, new Theme(), new FakeSpectrumService()) { LiveTimeS = liveTime, SeedText = "42" };
+
     [Fact]
-    public async Task Start_CapturesDetectorInputs_AndEditingMarksOnlyTheResultStale()
+    public async Task Start_CapturesDetectorInputs_AndLocksThemWhileDataExist()
     {
         var acquisition = new Service();
         var spectrum = new FakeSpectrumService();
         var vm = new MainViewModel(acquisition, new Theme(), spectrum)
-            { LiveTimeS = 5, GainSigmaPercent = 4, GainSeed = 7, BackgroundToSignalRatio = 1 };
+            { LiveTimeS = 5, GainSigmaPercent = 4, GainSeed = 7, BackgroundToSignalRatio = 1, SeedText = "42" };
         var run = vm.StartCommand.ExecuteAsync(null);
         Assert.Equal(0.04, acquisition.Detector!.GainSigma);
         Assert.Equal(7, acquisition.Detector.GainSeed);
@@ -76,36 +97,53 @@ public sealed class AcquisitionViewModelTests
         vm.Snapshot = vm.Snapshot! with { Detector = acquisition.Detector };
         await vm.Spectrum.WhenUpdated;
         int calls = spectrum.Calls;
-        vm.GainSeed = 9;
-        Assert.True(vm.IsResultStale);
-        Assert.Equal(7, acquisition.Detector.GainSeed);
+        // Every physical writer is refused while data exist, not only the disabled fields.
+        vm.GainSeed = 9; vm.GainSigmaPercent = 8; vm.BackgroundToSignalRatio = 3; vm.ReflectorGapUm = "50";
+        vm.Optics = vm.Optics with { CellPitchMm = 1 }; vm.OpticsEditor.CellPitch = "0.9"; vm.SeedText = "7";
+        vm.Sources[0].X = 12; vm.Sources[0].Isotope = "Co-60"; vm.Sources[0].DistanceMm = 500; vm.Sources[0].ActivityUCi = 9;
+        var scintillator = vm.Scintillator;
+        vm.Scintillator = vm.Scintillators.First(s => s != scintillator);
+        Assert.Equal(7, vm.GainSeed);
+        Assert.Equal(4, vm.GainSigmaPercent);
+        Assert.Equal(1, vm.BackgroundToSignalRatio);
+        Assert.Equal("100", vm.ReflectorGapUm);
+        Assert.Equal(0.7, vm.Optics.CellPitchMm);
+        Assert.Equal("0.7", vm.OpticsEditor.CellPitch);
+        Assert.Equal("42", vm.SeedText);
+        Assert.Equal((0d, "Cs-137", 1000d, 500d), (vm.Sources[0].X, vm.Sources[0].Isotope, vm.Sources[0].DistanceMm, vm.Sources[0].ActivityUCi));
+        Assert.Equal(scintillator, vm.Scintillator);
+        Assert.False(vm.CanEditInputs);
+        Assert.False(vm.OpticsEditor.IsEditable);
+        Assert.False(vm.Sources[0].IsEditable);
+        Assert.False(vm.AddSourceCommand.CanExecute(null));
+        vm.AddSourceCommand.Execute(null);
+        Assert.Single(vm.Sources);
         Assert.Equal(calls, spectrum.Calls);
         Assert.Equal(1, acquisition.Starts);
-        vm.Spectrum.WindowFwhm = 2;
+        vm.Spectrum.WindowFwhm = 2; // a view setting stays editable
         await vm.Spectrum.WhenUpdated;
         Assert.Equal(7, spectrum.Settings[^1].Detector!.GainSeed);
         Assert.Equal(0.04, spectrum.Settings[^1].Detector!.GainSigma);
     }
 
-    private static async Task WaitForSnapshot(MainViewModel vm, double live)
-    {
-        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(5));
-        while (vm.Snapshot?.LiveTimeS != live) await Task.Delay(1, timeout.Token);
-    }
-
     [Fact]
-    public async Task Start_SnapshotsGrow_StopKeepsData_UnlocksAndEditMarksStale()
+    public async Task Start_SnapshotsGrow_StopKeepsDataAndLocks_ContinueAccumulates()
     {
         var service = new Service();
-        var vm = new MainViewModel(service, new Theme(), new FakeSpectrumService());
+        var vm = Model(service);
         vm.Imaging.Measurements.AddCommand.Execute(new MeasurementDraft(ImagePane.Flood, MeasurementKind.Roi,
             [new Vec2(-2, -2), new Vec2(2, 2)]));
+        Assert.Equal(RunState.Empty, vm.State);
+        Assert.Equal("Start", vm.StartLabel);
         var run = vm.StartCommand.ExecuteAsync(null);
         Assert.Equal(RunState.Acquiring, vm.State);
         Assert.True(vm.IsRunning);
         Assert.False(vm.AddSourceCommand.CanExecute(null));
         Assert.False(vm.RemoveSourceCommand.CanExecute(null));
         Assert.False(vm.StartCommand.CanExecute(null));
+        Assert.False(vm.ResetCommand.CanExecute(null));
+        Assert.False(vm.CanEditLiveTime);
+        Assert.False(vm.CanEditSpeed);
         service.Session.AdvanceWallTime(0.25);
         await WaitForSnapshot(vm, 2.5);
         var first = vm.Snapshot!;
@@ -113,49 +151,133 @@ public sealed class AcquisitionViewModelTests
         Assert.Equal("Σ 25", vm.Imaging.Measurements.Items[0].Value);
         service.Session.AdvanceWallTime(0.25, mcLimited: true);
         await WaitForSnapshot(vm, 3.75);
-        Assert.True(vm.Snapshot!.Counts >= first.Counts);
         Assert.Contains("MC-limited ×5.00", vm.Status);
-        var last = vm.Snapshot;
+        Assert.Contains("seed 42", vm.Status);
+        var last = vm.Snapshot!;
         vm.StopCommand.Execute(null);
         await run;
         Assert.Equal(RunState.Stopped, vm.State);
+        Assert.StartsWith("Stopped · t = ", vm.Status);
+        Assert.Contains($"{last.Counts:N0} counts · {last.ObservedRateCps:F0} cps · seed 42", vm.Status); // observed rate (L-10)
         Assert.Same(last, vm.Snapshot);
         Assert.Same(last.Imaging, vm.Result);
-        Assert.True(vm.IsIdle);
-        Assert.True(vm.AddSourceCommand.CanExecute(null));
-        Assert.False(vm.IsResultStale);
-        vm.Sources[0].X = 10;
-        Assert.True(vm.IsResultStale);
-        Assert.Equal(25, first.Counts);
-        Assert.Equal(25, first.Imaging.Flood.Raw.ToArray().Sum());
+        Assert.False(vm.CanEditInputs);            // data exist: locked (A-2)
+        Assert.False(vm.AddSourceCommand.CanExecute(null));
+        Assert.True(vm.CanEditLiveTime);
+        Assert.True(vm.CanEditSpeed);
+        Assert.Equal("Continue", vm.StartLabel);
+        Assert.True(vm.StartCommand.CanExecute(null));
+        Assert.True(vm.ResetCommand.CanExecute(null));
+
+        vm.Speed = 20;
+        var resumed = vm.StartCommand.ExecuteAsync(null);
+        Assert.Equal(1, service.Starts);           // Continue, not a new acquisition
+        Assert.Equal(1, service.Session.Continues);
+        Assert.Equal(RunState.Acquiring, vm.State);
+        service.Session.AdvanceWallTime(0.25);
+        await WaitForSnapshot(vm, 8.75);
+        Assert.True(vm.Snapshot!.Counts > last.Counts);
+        Assert.Equal(last.Events, vm.Snapshot.Events.Take(last.Events.Count)); // accumulated onto the same events
+        Assert.Equal($"Σ {vm.Snapshot.Counts}", vm.Imaging.Measurements.Items[0].Value);
+        vm.StopCommand.Execute(null);
+        await resumed;
+        Assert.Equal(RunState.Stopped, vm.State);
     }
 
     [Fact]
-    public async Task Preset_Completes_NewStartClears_ResultAndEvents()
+    public async Task Completed_StartDisabledUntilPresetRaised_LowerPresetRejected_ProgressFollowsPreset()
     {
         var service = new Service();
-        var vm = new MainViewModel(service, new Theme(), new FakeSpectrumService()) { LiveTimeS = 5, Speed = 10 };
+        var vm = Model(service, liveTime: 5);
+        vm.Speed = 10;
         var run = vm.StartCommand.ExecuteAsync(null);
         service.Session.AdvanceWallTime(0.5);
         await run;
         Assert.Equal(RunState.Completed, vm.State);
         Assert.Equal(1, vm.Progress);
         Assert.Equal(50, vm.Snapshot!.Counts);
-        var again = vm.StartCommand.ExecuteAsync(null);
-        Assert.Null(vm.Result);
-        Assert.Null(vm.Snapshot);
-        Assert.False(vm.IsResultStale);
-        vm.StopCommand.Execute(null);
-        await again;
-        Assert.Equal(RunState.Stopped, vm.State);
-        Assert.Null(vm.Snapshot);
+        Assert.False(vm.StartCommand.CanExecute(null));
+        await vm.StartCommand.ExecuteAsync(null); // the guard inside the command, not only CanExecute
+        Assert.Equal(0, service.Session.Continues);
+        vm.LiveTimeS = 4;
+        Assert.Equal(5, vm.LiveTimeS);
+        Assert.NotNull(vm.LiveTimeError);
+        vm.LiveTimeS = 10;
+        Assert.Null(vm.LiveTimeError);
+        Assert.True(vm.StartCommand.CanExecute(null));
+        var more = vm.StartCommand.ExecuteAsync(null);
+        service.Session.AdvanceWallTime(0.25);
+        await WaitForSnapshot(vm, 7.5);
+        Assert.Equal(0.75, vm.Progress);           // relative to the current preset
+        service.Session.AdvanceWallTime(0.25);
+        await more;
+        Assert.Equal(RunState.Completed, vm.State);
+        Assert.Equal(100, vm.Snapshot!.Counts);
+        Assert.Equal(1, service.Starts);
     }
 
     [Fact]
-    public async Task Failure_ReportsMessage_KeepsAcquiredData()
+    public async Task Reset_DiscardsData_UnlocksInputs_NextStartIsANewAcquisitionWithANewSeed()
     {
         var service = new Service();
-        var vm = new MainViewModel(service, new Theme(), new FakeSpectrumService());
+        var vm = new MainViewModel(service, new Theme(), new FakeSpectrumService()) { LiveTimeS = 5 };
+        vm.Imaging.Measurements.AddCommand.Execute(new MeasurementDraft(ImagePane.Flood, MeasurementKind.Roi,
+            [new Vec2(-2, -2), new Vec2(2, 2)]));
+        Assert.False(vm.ResetCommand.CanExecute(null));
+        var run = vm.StartCommand.ExecuteAsync(null);
+        var firstSession = service.Session;
+        firstSession.AdvanceWallTime(0.5);
+        await run;
+        int? firstSeed = vm.AcquisitionSeed;
+        Assert.NotNull(firstSeed);
+        Assert.Equal(firstSeed, service.Seeds[0]);
+        await vm.ResetCommand.ExecuteAsync(null);
+        Assert.True(firstSession.Disposed);
+        Assert.Equal(RunState.Empty, vm.State);
+        Assert.Equal("Ready", vm.Status);
+        Assert.Null(vm.Snapshot);
+        Assert.Null(vm.Result);
+        Assert.Null(vm.AcquisitionSeed);
+        Assert.Null(vm.Spectrum.View);
+        Assert.Null(vm.Imaging.View);
+        Assert.Empty(vm.Spectrum.Series);
+        Assert.Equal(0, vm.Progress);
+        Assert.True(vm.CanEditInputs);
+        Assert.True(vm.Sources[0].IsEditable);
+        Assert.True(vm.OpticsEditor.IsEditable);
+        Assert.Single(vm.Imaging.Measurements.Items); // measurement shapes stay, as across Start
+        vm.Sources[0].X = 10;
+        Assert.Equal(10, vm.Sources[0].X);
+        Assert.Equal("Start", vm.StartLabel);
+        var again = vm.StartCommand.ExecuteAsync(null);
+        Assert.Equal(2, service.Starts);
+        Assert.NotEqual(firstSeed, service.Seeds[1]); // independent measurement (author, E-8)
+        service.Session.AdvanceWallTime(0.5);
+        await again;
+        Assert.Equal(service.Seeds[1], vm.Snapshot!.Seed);
+        // A fixed seed reaches the service unchanged.
+        await vm.ResetCommand.ExecuteAsync(null);
+        vm.SeedText = "123";
+        var fixedRun = vm.StartCommand.ExecuteAsync(null);
+        Assert.Equal(123, service.Seeds[2]);
+        service.Session.AdvanceWallTime(0.5);
+        await fixedRun;
+        Assert.Equal(123, vm.AcquisitionSeed);
+        Assert.Contains("seed 123", vm.Status);
+        vm.SeedText = "x";
+        Assert.Equal("123", vm.SeedText);           // locked with data
+        await vm.ResetCommand.ExecuteAsync(null);
+        vm.SeedText = "x";
+        Assert.NotNull(vm.SeedError);
+        await vm.StartCommand.ExecuteAsync(null);
+        Assert.Equal(3, service.Starts);            // an invalid seed does not start
+    }
+
+    [Fact]
+    public async Task Failure_WithData_KeepsItLocked_ResetOnly()
+    {
+        var service = new Service();
+        var vm = Model(service);
         var run = vm.StartCommand.ExecuteAsync(null);
         service.Session.AdvanceWallTime(0.25);
         await WaitForSnapshot(vm, 2.5);
@@ -165,7 +287,30 @@ public sealed class AcquisitionViewModelTests
         Assert.Equal(RunState.Failed, vm.State);
         Assert.Equal("Failed: MC failed", vm.Status);
         Assert.Same(last, vm.Result);
-        Assert.True(vm.IsIdle);
+        Assert.True(service.Session.Disposed);
+        Assert.False(vm.CanEditInputs);
+        Assert.False(vm.CanEditLiveTime);
+        Assert.False(vm.StartCommand.CanExecute(null));
+        Assert.True(vm.ResetCommand.CanExecute(null));
+        await vm.ResetCommand.ExecuteAsync(null);
+        Assert.Equal(RunState.Empty, vm.State);
+        Assert.True(vm.StartCommand.CanExecute(null));
+    }
+
+    [Fact]
+    public async Task Failure_WithoutData_BehavesAsEmpty()
+    {
+        var service = new Service();
+        var vm = Model(service);
+        var run = vm.StartCommand.ExecuteAsync(null);
+        service.Session.Fail(new InvalidOperationException("no source"));
+        await run;
+        Assert.Equal(RunState.Failed, vm.State);
+        Assert.Null(vm.Snapshot);
+        Assert.True(vm.CanEditInputs);
+        Assert.True(vm.StartCommand.CanExecute(null));
+        Assert.False(vm.ResetCommand.CanExecute(null));
+        Assert.Equal("Start", vm.StartLabel);
     }
 
     [Fact]
@@ -173,7 +318,7 @@ public sealed class AcquisitionViewModelTests
     {
         var acquisition = new Service();
         var spectrum = new FakeSpectrumService();
-        var vm = new MainViewModel(acquisition, new Theme(), spectrum) { LiveTimeS = 5 };
+        var vm = new MainViewModel(acquisition, new Theme(), spectrum) { LiveTimeS = 5, SeedText = "1" };
         vm.SelectWorkspaceCommand.Execute("1");
         var run = vm.StartCommand.ExecuteAsync(null);
         acquisition.Session.AdvanceWallTime(0.25);
@@ -210,28 +355,24 @@ public sealed class AcquisitionViewModelTests
         Assert.Equal(new SpectrumSettings(2, true), spectrum.Settings[^1]);
         Assert.Equal(1, acquisition.Starts);
         Assert.Same(snapshot, vm.Snapshot);
-        Assert.False(vm.IsResultStale);
         Assert.Equal(50, vm.Spectrum.View.TotalCounts);
         Assert.Equal(Gcam.Studio.Core.Plotting.PlotKind.Histogram, Assert.Single(vm.Spectrum.Series).Kind);
         Assert.NotEmpty(vm.Spectrum.Bands);
     }
 
     [Fact]
-    public async Task LiveTimeAndSpeed_MarkStale_WorkspaceAndMeasurementsDoNot()
+    public async Task LiveTimeAndSpeed_LockedWhileAcquiring_InvalidValuesFallBack()
     {
         var service = new Service();
-        var vm = new MainViewModel(service, new Theme(), new FakeSpectrumService()) { LiveTimeS = 5 };
+        var vm = Model(service, liveTime: 5);
         var run = vm.StartCommand.ExecuteAsync(null);
+        vm.LiveTimeS = 30; vm.Speed = 3;
+        Assert.Equal(5, vm.LiveTimeS);
+        Assert.Equal(10, vm.Speed);
         service.Session.AdvanceWallTime(0.5);
         await run;
-        vm.SelectWorkspaceCommand.Execute("0");
-        vm.Imaging.Measurements.ActiveTool = MeasureTool.Distance;
-        Assert.False(vm.IsResultStale);
-        vm.LiveTimeS = 10;
-        Assert.True(vm.IsResultStale);
-        vm.IsResultStale = false;
         vm.Speed = 20;
-        Assert.True(vm.IsResultStale);
+        Assert.Equal(20, vm.Speed);
         vm.LiveTimeS = double.NaN;
         vm.Speed = 0;
         Assert.Equal(60, vm.LiveTimeS);

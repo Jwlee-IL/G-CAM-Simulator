@@ -100,22 +100,33 @@
                             AutomationProperties.AutomationId="ThemeToggle" />
                     <TextBlock Text="Live time" Style="{StaticResource Text.Label}" Margin="{StaticResource Gap.Inline}" />
                     <TextBox Width="{StaticResource Size.NumberInput.Short}" Height="{StaticResource Size.Control}" VerticalAlignment="Center" Tag="s" Text="{Binding LiveTimeS, UpdateSourceTrigger=LostFocus}"
-                             IsEnabled="{Binding IsIdle}" Margin="{StaticResource Gap.InlineWide}"
+                             IsEnabled="{Binding CanEditLiveTime}" Margin="{StaticResource Gap.InlineWide}"
+                             ToolTip="Preset live time. After Stop or Completed it can be raised to continue, never lowered below the acquired live time."
                              AutomationProperties.AutomationId="AcquisitionLiveTime" AutomationProperties.Name="Live time (s)" />
                     <TextBlock Text="Speed" Style="{StaticResource Text.Label}" Margin="{StaticResource Gap.Inline}" />
                     <TextBox Width="{StaticResource Size.NumberInput.Short}" Height="{StaticResource Size.Control}" VerticalAlignment="Center" Tag="×" Text="{Binding Speed, UpdateSourceTrigger=LostFocus}"
-                             IsEnabled="{Binding IsIdle}" Margin="{StaticResource Gap.InlineWide}"
+                             IsEnabled="{Binding CanEditSpeed}" Margin="{StaticResource Gap.InlineWide}"
                              AutomationProperties.AutomationId="AcquisitionSpeed" AutomationProperties.Name="Speed × (live seconds per wall second)" />
+                    <TextBlock Text="Seed" Style="{StaticResource Text.Label}" Margin="{StaticResource Gap.Inline}" />
+                    <TextBox Width="{StaticResource Size.NumberInput.Short}" Height="{StaticResource Size.Control}" VerticalAlignment="Center" Text="{Binding SeedText, UpdateSourceTrigger=LostFocus}"
+                             IsEnabled="{Binding CanEditInputs}" Margin="{StaticResource Gap.InlineWide}"
+                             ToolTip="Monte Carlo seed. Blank: a new seed for every acquisition (independent measurements). A number fixes it to reproduce an acquisition."
+                             AutomationProperties.AutomationId="AcquisitionSeed" AutomationProperties.Name="Seed (blank: new for every acquisition)" />
+                    <!-- Reset discards the acquisition: an ordinary button apart from the primary action, no shortcut, no default -->
+                    <Button Content="Reset" Command="{Binding ResetCommand}" Margin="{StaticResource Gap.InlineWide}"
+                            ToolTip="Discard the acquired data and unlock the physical inputs"
+                            AutomationProperties.AutomationId="ResetAcquisition" />
                     <Button Content="Stop" Command="{Binding StopCommand}" Style="{StaticResource Button.Primary}"
                             Visibility="{Binding IsRunning, Converter={StaticResource BoolToVis}}"
                             Margin="{StaticResource Gap.Inline}" AutomationProperties.AutomationId="StopAcquisition" />
-                    <Button Command="{Binding StartCommand}" Style="{StaticResource Button.Primary}" IsDefault="True"
+                    <!-- Start, or Continue once data exist; not IsDefault: Enter in a field must not resume counting -->
+                    <Button Command="{Binding StartCommand}" Style="{StaticResource Button.Primary}"
                             Visibility="{Binding IsIdle, Converter={StaticResource BoolToVis}}"
-                            AutomationProperties.AutomationId="StartAcquisition" AutomationProperties.Name="Start">
+                            AutomationProperties.AutomationId="StartAcquisition" AutomationProperties.Name="{Binding StartLabel}">
                         <StackPanel Orientation="Horizontal">
                             <Path Data="{StaticResource Icon.Play}" Stretch="Uniform" Width="{StaticResource Size.Icon}" Height="{StaticResource Size.Icon}"
                                   Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" Margin="{StaticResource Gap.Inline}" />
-                            <TextBlock Text="Start" VerticalAlignment="Center" />
+                            <TextBlock Text="{Binding StartLabel}" VerticalAlignment="Center" />
                         </StackPanel>
                     </Button>
                 </StackPanel>
@@ -178,7 +189,7 @@
                         <views:ChainPanel Margin="{StaticResource Gap.Section}" />
                         <!-- Selected source -->
                         <StackPanel DataContext="{Binding SelectedSource}"
-                                    IsEnabled="{Binding DataContext.IsIdle, RelativeSource={RelativeSource AncestorType=ScrollViewer}}">
+                                    IsEnabled="{Binding IsEditable}">
                             <DockPanel Style="{StaticResource PanelHeader}">
                                 <TextBlock Text="Selected source" Style="{StaticResource Text.SectionTitle}" />
                             </DockPanel>
@@ -263,7 +274,7 @@
                                 <TextBlock Text="{Binding BackingScatterMm, StringFormat={}{0:0.##} mm steel}" Style="{StaticResource FactValue}" />
                             </DockPanel>
                         </StackPanel>
-                        <StackPanel IsEnabled="{Binding IsIdle}">
+                        <StackPanel IsEnabled="{Binding CanEditInputs}">
                             <DockPanel Style="{StaticResource FieldRow}">
                                 <TextBlock Text="Gap" Style="{StaticResource FieldLabel}" />
                                 <TextBox Text="{Binding ReflectorGapUm, UpdateSourceTrigger=PropertyChanged}" Tag="µm"
@@ -322,7 +333,7 @@
                                         <c:ImageStackPanel>
                                             <c:HeatmapView x:Name="Flood" ValueUnit="counts" Style="{StaticResource ImageHeatmap}" Image="{Binding Result.Flood}"
                                                            OriginMm="{Binding Result.FloodOriginMm}" StepMm="{Binding Result.FloodStepMm}"
-                                                           EmptyText="Run a simulation to see the flood map"
+                                                           EmptyText="Start an acquisition to see the flood map"
                                                            c:MeasurementOverlay.Session="{Binding Measurements}" c:MeasurementOverlay.Pane="Flood"
                                                            AutomationProperties.AutomationId="FloodView" AutomationProperties.Name="Detector flood map"
                                                            AutomationProperties.HelpText="Mouse wheel or plus and minus to zoom, drag or arrow keys to pan, double-click or 0 to reset. With a measuring tool, draw on the image; Escape cancels, Delete removes the selected measurement." />
@@ -343,23 +354,17 @@
                                                     Visibility="{Binding PeakText, Converter={x:Static conv:NullToCollapsedConverter.Instance}}">
                                                 <TextBlock Text="{Binding PeakText}" Style="{StaticResource Text.MonoCaption}" AutomationProperties.AutomationId="PeakText" />
                                             </Border>
-                                            <!-- The images no longer match the scene (a source was moved or edited) -->
-                                            <Border DockPanel.Dock="Right" Style="{StaticResource Chip.Warning}" Margin="{StaticResource Gap.Inline}"
-                                                    Visibility="{Binding Shared.IsResultStale, Converter={StaticResource BoolToVis}}"
-                                                    ToolTip="The scene changed after this run. Simulate again to update the images.">
-                                                <TextBlock Text="outdated" Style="{StaticResource Text.CaptionWarning}" AutomationProperties.AutomationId="ResultStale" />
-                                            </Border>
                                         </DockPanel>
                                         <c:ImageStackPanel>
                                             <c:HeatmapView x:Name="Recon" ValueUnit="(decoded)" Style="{StaticResource ImageHeatmap}" Image="{Binding Result.Reconstruction}"
                                                            OriginMm="{Binding Result.ReconOriginMm}" StepMm="{Binding Result.ReconStepMm}"
                                                            c:MeasurementOverlay.FoundPeaks="{Binding Peaks}"
-                                                           EmptyText="Run a simulation to see the reconstruction"
+                                                           EmptyText="Start an acquisition to see the reconstruction"
                                                            c:MeasurementOverlay.Session="{Binding Measurements}" c:MeasurementOverlay.Pane="Reconstruction"
                                                            c:MeasurementOverlay.Markers="{Binding Shared.Sources}" c:MeasurementOverlay.SelectedMarker="{Binding Shared.SelectedSource}"
-                                                           c:MeasurementOverlay.CanMoveMarkers="{Binding Shared.IsIdle}"
+                                                           c:MeasurementOverlay.CanMoveMarkers="False"
                                                            AutomationProperties.AutomationId="ReconView" AutomationProperties.Name="Reconstruction image"
-                                                           AutomationProperties.HelpText="Mouse wheel or plus and minus to zoom, drag or arrow keys to pan, double-click or 0 to reset. Drag a source marker to move the source. With a measuring tool, draw on the image; Escape cancels, Delete removes the selected measurement." />
+                                                           AutomationProperties.HelpText="Mouse wheel or plus and minus to zoom, drag or arrow keys to pan, double-click or 0 to reset. With a measuring tool, draw on the image; Escape cancels, Delete removes the selected measurement." />
                                             <c:ColorBar Style="{StaticResource ImageColorBar}" Minimum="{Binding DataMin, ElementName=Recon}" Maximum="{Binding DataMax, ElementName=Recon}"
                                                         AutomationProperties.AutomationId="ReconColorBar" AutomationProperties.Name="Reconstruction colour scale" />
                                             <TextBlock Text="{Binding Readout, ElementName=Recon}" Style="{StaticResource Text.Readout}"
@@ -507,6 +512,13 @@
                                  Margin="{StaticResource Gap.Inline}" AutomationProperties.AutomationId="RunProgress" AutomationProperties.Name="Simulation progress" />
                     <TextBlock Text="{Binding Progress, StringFormat={}{0:P0}}" Style="{StaticResource Text.MonoCaption}" />
                 </StackPanel>
+                <!-- Top-bar input messages (the bar has no room under its fields): a rejected preset, an invalid seed -->
+                <TextBlock DockPanel.Dock="Right" Text="{Binding LiveTimeError}" Style="{StaticResource Text.CaptionWarning}" VerticalAlignment="Center"
+                           Visibility="{Binding LiveTimeError, Converter={x:Static conv:NullToCollapsedConverter.Instance}}"
+                           Margin="{StaticResource Gap.InlineWide}" AutomationProperties.AutomationId="AcquisitionLiveTimeError" />
+                <TextBlock DockPanel.Dock="Right" Text="{Binding SeedError}" Style="{StaticResource Text.CaptionWarning}" VerticalAlignment="Center"
+                           Visibility="{Binding SeedError, Converter={x:Static conv:NullToCollapsedConverter.Instance}}"
+                           Margin="{StaticResource Gap.InlineWide}" AutomationProperties.AutomationId="AcquisitionSeedError" />
                 <Ellipse Width="{StaticResource Size.StatusDot}" Height="{StaticResource Size.StatusDot}" Margin="{StaticResource Gap.Inline}" VerticalAlignment="Center">
                     <Ellipse.Style>
                         <Style TargetType="Ellipse">

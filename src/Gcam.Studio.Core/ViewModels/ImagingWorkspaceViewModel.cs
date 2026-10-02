@@ -107,6 +107,14 @@ public sealed partial class ImagingWorkspaceViewModel(MainViewModel shared, IIma
         NotifyResult();
     }
 
+    /// <summary>Reset: forget the frozen scene and optics (geometry follows the pending optics again), the channels and
+    /// the focus sweep. Measurement shapes stay, as across Start.</summary>
+    internal void Reset()
+    {
+        Begin([], Shared.Optics);
+        _id = Guid.Empty;
+    }
+
     internal void Refresh(ImagingResult? result) => NotifyResult();
     internal void RefreshChannels()
     {

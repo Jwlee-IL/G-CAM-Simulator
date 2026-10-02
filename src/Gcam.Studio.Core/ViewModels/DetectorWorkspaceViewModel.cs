@@ -4,7 +4,7 @@ using Gcam.Studio.Core.Services;
 
 namespace Gcam.Studio.Core.ViewModels;
 
-/// <summary>Static response pattern, frozen to acquired detector and optics once counts are retained.</summary>
+/// <summary>Static response pattern: pending detector and optics in Empty, the acquired (locked) ones once data exist.</summary>
 public sealed partial class DetectorWorkspaceViewModel(MainViewModel shared, IDetectorFaceService? service)
     : WorkspaceViewModel("Detector", "Workspace.Detector")
 {
@@ -15,9 +15,8 @@ public sealed partial class DetectorWorkspaceViewModel(MainViewModel shared, IDe
     public double MinimumGain => Face?.Crystals.Min(c => c.Gain) ?? 0;
     public double MaximumGain => Face?.Crystals.Max(c => c.Gain) ?? 0;
     public string GainLegend => Face is { } f ? $"Relative gain {f.Crystals.Min(c => c.Gain):0.000}–{f.Crystals.Max(c => c.Gain):0.000} · face {f.SizeMm:0.###} mm square" : "Enter valid detector settings";
-    public string Identity => Shared.Snapshot is null ? "Pending detector · no acquisition" :
-        Shared.IsResultStale ? "Acquired detector · settings outdated" : "Acquired detector";
-    public string Pending => $"Next: gap {Shared.Detector.ReflectorGapMm * 1000:0.###} µm · gain σ {Shared.GainSigmaPercent:0.#}% · seed {Shared.GainSeed}";
+    /// <summary>Whose settings the face shows: the next acquisition's (Empty) or the acquired, locked ones.</summary>
+    public string Identity => Shared.Snapshot is null ? "Settings for the next acquisition" : "Acquired settings · locked until Reset";
     public string Readout
     {
         get
@@ -45,6 +44,6 @@ public sealed partial class DetectorWorkspaceViewModel(MainViewModel shared, IDe
             }
         }
         else { Face = null; _faceOptics = null; _faceDetector = null; }
-        foreach (string name in new[] { nameof(Identity), nameof(Pending), nameof(Readout), nameof(Counts), nameof(GainLegend), nameof(MinimumGain), nameof(MaximumGain) }) OnPropertyChanged(name);
+        foreach (string name in new[] { nameof(Identity), nameof(Readout), nameof(Counts), nameof(GainLegend), nameof(MinimumGain), nameof(MaximumGain) }) OnPropertyChanged(name);
     }
 }

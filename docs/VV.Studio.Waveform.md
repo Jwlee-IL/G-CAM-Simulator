@@ -4,7 +4,7 @@ Scope: shared physical detection-chain selection and the array-wide Waveform wor
 
 ## At a glance
 
-- Shared chain is captured in DetectorSettings at Start; retained results use acquired settings, pending edits mark outdated.
+- Shared chain is captured in DetectorSettings at Start; retained results use acquired settings, and the chain is locked while data exist.
 - GAGG / NaI / LYSO / BGO map explicitly to transport materials; unsupported CsI is unavailable.
 - Default scope uses real acquired times, 10 µs with 20% pretrigger; rate study explicitly re-spaces retained deposits.
 - Realistic response is applied once before ADC simulation; ideal removes smear/noise/rise while retaining gain/tail/filter.
@@ -19,7 +19,7 @@ Scope: shared physical detection-chain selection and the array-wide Waveform wor
 | Shared response | Four preamps: waveform amplitudes equal the index-addressed measurement, Spectrum bins agree, Imaging uses the same response/windows; acquired identities/cache reset | Not run |
 | ADC waveform | Fixed-length raster compared to legacy without second intrinsic smear; actual retained MC associations; real-time/prehistory/pixel pooling; late timestamps; empty noise windows; ideal noise removal | Not run |
 | Local study/readout | Fixed-seed rate-study identity/immutability; matched trapezoid readout; suppression on overlap/saturation/partial windows; CR-RC caveat | Not run |
-| Core requests/policies | Pure sample cap/conversion; prepared-pyramid identity; visible-only generation; held-event reuse; latest/next; stale/acquired policy; active-edit rejection; cancellation/latest-revision/new-run isolation; error reporting | Not run |
+| Core requests/policies | Pure sample cap/conversion; prepared-pyramid identity; visible-only generation; held-event reuse; latest/next; acquired-chain policy; active-edit rejection; cancellation/latest-revision/new-run isolation; error reporting | Not run |
 | Evidence | Maximum window cost/cap; retained MC pulse readouts across supported parts/energies/modes; acquired mixed-field chain calibration and independent-service comparison | Opt-in, not run |
 | Offscreen WPF | Real retained MC 10 µs / rate study / ideal, shared chain selector and pending/acquired labels, shared zoom/reset, both themes and sizes | Renderer edited, PNG generation not run |
 

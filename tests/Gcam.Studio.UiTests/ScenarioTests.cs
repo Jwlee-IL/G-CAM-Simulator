@@ -16,15 +16,17 @@ public sealed class ScenarioTests(ITestOutputHelper output)
     /// <summary>With GCAM_UI_BREAK_VERDICT=1 every scenario corrupts its own expectation and must then fail.</summary>
     private static bool Broken => Environment.GetEnvironmentVariable(PilotTests.BreakVerdictVariable) == "1";
 
-    /// <summary>VAL-02 · SR-RUN-10, SR-RUN-12, SR-RUN-14, SR-RUN-19.</summary>
+    /// <summary>VAL-02 · SR-RUN-10, SR-RUN-12, SR-RUN-13, SR-RUN-23, SR-RUN-26 (Start / Stop / Continue / Reset).</summary>
     [DesktopFact]
-    public void Stop_KeepsAcquiredData_LocksThenUnlocksScene() =>
-        Scenario.Run(nameof(Stop_KeepsAcquiredData_LocksThenUnlocksScene), output, (ui, record) =>
+    public void StopContinueReset_KeepsAccumulatesAndDiscards() =>
+        Scenario.Run(nameof(StopContinueReset_KeepsAccumulatesAndDiscards), output, (ui, record) =>
         {
             // A preset long enough to still be acquiring when we stop: 600 s at x1 is 10 wall minutes.
             ui.SetText("AcquisitionLiveTime", "600", commitBy: "SourceY");
             ui.SetText("AcquisitionSpeed", "1", commitBy: "SourceY");
+            ui.SetText("AcquisitionSeed", "12345", commitBy: "SourceY");   // reproducible (seed fixed explicitly)
             Assert.Equal("600", ui.Value("AcquisitionLiveTime"));
+            Assert.Equal("Start", ui.Text("StartAcquisition"));
 
             ui.Invoke("StartAcquisition");
             StudioWindow.WaitUntil(() => ui.RunState == "Acquiring", TimeSpan.FromSeconds(5), "acquisition started");
@@ -33,6 +35,7 @@ public sealed class ScenarioTests(ITestOutputHelper output)
             Assert.False(ui.IsEnabled("AddSource"));                 // scene locked
             Assert.False(ui.IsEnabled("AcquisitionLiveTime"));
             Assert.False(ui.IsEnabled("AcquisitionSpeed"));
+            Assert.False(ui.IsEnabled("ResetAcquisition"), "no Reset while acquiring");
             Assert.True(ui.IsEnabled("StopAcquisition"), "Stop is offered while acquiring");
             record.Step($"acquiring, scene locked, {ui.Counts} counts");
 
@@ -42,21 +45,35 @@ public sealed class ScenarioTests(ITestOutputHelper output)
             long kept = ui.Counts;
             Assert.True(kept > 0, $"counts kept after Stop: {ui.Text("StatusText")}");
             Assert.StartsWith("Stopped", ui.Text("StatusText"));
+            Assert.Contains("seed 12345", ui.Text("StatusText"));
             Assert.StartsWith("zoom", ui.ById("FloodView").Current.ItemStatus);   // image still there
             Thread.Sleep(600);                                       // two refresh periods: nothing more arrives
             Assert.Equal(Broken ? kept + 1 : kept, ui.Counts);
-            Assert.True(ui.IsEnabled("AddSource"));                  // scene editable again
-            Assert.True(ui.IsEnabled("StartAcquisition"));
+            Assert.False(ui.IsEnabled("AddSource"), "physical inputs stay locked while data exist");
+            Assert.False(ui.IsEnabled("SourceX"));
+            Assert.True(ui.IsEnabled("AcquisitionLiveTime"), "the preset may be raised");
+            Assert.True(ui.IsEnabled("ResetAcquisition"));
+            Assert.Equal("Continue", ui.Text("StartAcquisition"));
             Assert.False(ui.Exists("StopAcquisition"));
 
-            // Start clears: the new session begins from zero, below what the stopped one had kept.
+            // Continue accumulates onto the same acquisition.
             ui.Invoke("StartAcquisition");
-            StudioWindow.WaitUntil(() => ui.RunState == "Acquiring", TimeSpan.FromSeconds(5), "second acquisition started");
-            long restarted = ui.Counts;
+            StudioWindow.WaitUntil(() => ui.RunState == "Acquiring", TimeSpan.FromSeconds(5), "acquisition continued");
+            StudioWindow.WaitUntil(() => ui.Counts > kept, TimeSpan.FromSeconds(20), "counts grow after Continue");
             ui.Invoke("StopAcquisition");
-            StudioWindow.WaitUntil(() => ui.RunState == "Stopped", TimeSpan.FromSeconds(5), "second acquisition stopped");
-            record.Set("actual", new { kept, restarted, status = ui.Text("StatusText") });
-            Assert.True(restarted < kept, $"Start cleared the previous data: {restarted} vs {kept}");
+            StudioWindow.WaitUntil(() => ui.RunState == "Stopped", TimeSpan.FromSeconds(5), "continued acquisition stopped");
+            long continued = ui.Counts;
+            Assert.True(continued > kept, $"Continue accumulated: {continued} vs {kept}");
+
+            // Reset discards and unlocks.
+            ui.Invoke("ResetAcquisition");
+            StudioWindow.WaitUntil(() => ui.RunState == "Empty", TimeSpan.FromSeconds(5), "acquisition reset");
+            Assert.Equal("Ready", ui.Text("StatusText"));
+            Assert.True(ui.IsEnabled("AddSource"));
+            Assert.True(ui.IsEnabled("SourceX"));
+            Assert.False(ui.IsEnabled("ResetAcquisition"));
+            Assert.Equal("Start", ui.Text("StartAcquisition"));
+            record.Set("actual", new { kept, continued, status = ui.Text("StatusText") });
         });
 
     /// <summary>VAL-03 (ROI part) · SR-MEAS-03.</summary>
@@ -170,42 +187,41 @@ public sealed class ScenarioTests(ITestOutputHelper output)
             StudioWindow.WaitUntil(() => ui.Rows("MeasurementList").Count == 0, TimeSpan.FromSeconds(3), "row deleted");
         });
 
-    /// <summary>VAL-04, VAL-05 · SR-MEAS-08, SR-RUN-07, SR-VIEW-08.</summary>
+    /// <summary>VAL-04, VAL-05 · SR-RUN-12, SR-RUN-26, SR-VIEW-08. The marker drag is withdrawn: with data the source is
+    /// locked; Reset unlocks it, the fields move it, and a new acquisition must decode the peak on it.</summary>
     [DesktopFact]
-    public void SourceDrag_MarksOutdated_RerunPutsPeakOnTheSource() =>
-        Scenario.Run(nameof(SourceDrag_MarksOutdated_RerunPutsPeakOnTheSource), output, (ui, record) =>
+    public void MoveSource_ResetEditStart_PutsPeakOnTheSource() =>
+        Scenario.Run(nameof(MoveSource_ResetEditStart_PutsPeakOnTheSource), output, (ui, record) =>
         {
+            ui.SetText("AcquisitionSeed", "12345", commitBy: "SourceY");   // reproducible (seed fixed explicitly)
             Assert.Equal("Completed", ui.Acquire(RunTimeout));
-            Assert.False(ui.Exists("ResultStale"));
             Assert.Equal(("0", "0"), (ui.Value("SourceX"), ui.Value("SourceY")));
-            Assert.True(StudioWindow.Pattern<System.Windows.Automation.SelectionItemPattern>(
-                ui.ById("ToolPan"), System.Windows.Automation.SelectionItemPattern.Pattern).Current.IsSelected);
+            Assert.False(ui.IsEnabled("SourceX"), "source fields locked while data exist");
 
-            // The single source starts at (0, 0) mm, the centre of the reconstruction; drag it right and up.
+            // A drag on the marker must not move the source any more.
             var view = ui.Bounds("ReconView");
             var start = new Point(Math.Round(view.X + view.Width / 2), Math.Round(view.Y + view.Height / 2));
-            var end = start + new Vector(60, -45);
-            Pointer.Drag(start, end);
+            Pointer.Drag(start, start + new Vector(60, -45));
+            Assert.Equal(("0", "0"), (ui.Value("SourceX"), ui.Value("SourceY")));
 
-            double x = double.Parse(ui.Value("SourceX"), System.Globalization.CultureInfo.CurrentCulture);
-            double y = double.Parse(ui.Value("SourceY"), System.Globalization.CultureInfo.CurrentCulture);
-            record.Set("dragged", new { start = start.ToString(), end = end.ToString(), x, y });
-            Assert.True(x > 5 && y > 5, $"source should have moved right and up, got ({x}, {y})");
-            Assert.Equal(x, Math.Round(x, 1));         // snapped to 0.1 mm
-            Assert.Equal(y, Math.Round(y, 1));
-            Assert.True(ui.Exists("ResultStale"), "outdated chip after moving the source");
+            ui.Invoke("ResetAcquisition");
+            StudioWindow.WaitUntil(() => ui.RunState == "Empty", TimeSpan.FromSeconds(5), "acquisition reset");
+            // The position of the earlier drag scenario (21.4, 16.0) mm, now typed (see AN-11 for its 1.43 mm result).
+            const double x = 21.4, y = 16.0;
+            ui.SetText("SourceX", x.ToString(System.Globalization.CultureInfo.CurrentCulture), commitBy: "SourceDistance");
+            ui.SetText("SourceY", y.ToString(System.Globalization.CultureInfo.CurrentCulture), commitBy: "SourceDistance");
+            record.Set("moved", new { x, y });
 
             Assert.Equal("Completed", ui.Acquire(RunTimeout));
-            Assert.False(ui.Exists("ResultStale"));
             var (px, py) = Verdict.ParsePeak(ui.Text("PeakText"));
             // Localisation inside the fully-coded field is sub-mm for this camera (AGENTS.md findings); 1.5 mm
-            // allows for the photon noise of a 500 k-photon run while still failing if the peak didn't follow.
+            // allows for the photon noise of a 60 s acquisition while still failing if the peak didn't follow.
             const double LocalisationToleranceMm = 1.5;
-            if (Broken) x += 3;
-            record.Set("actual", new { peak = new { px, py }, source = new { x, y }, tolerance = LocalisationToleranceMm });
-            output.WriteLine($"source ({x}, {y}) mm, peak ({px}, {py}) mm");
-            Assert.True(Math.Abs(px - x) <= LocalisationToleranceMm && Math.Abs(py - y) <= LocalisationToleranceMm,
-                $"peak ({px}, {py}) is not within {LocalisationToleranceMm} mm of the source ({x}, {y})");
+            double expectedX = Broken ? x + 3 : x;
+            record.Set("actual", new { peak = new { px, py }, source = new { x = expectedX, y }, tolerance = LocalisationToleranceMm });
+            output.WriteLine($"source ({expectedX}, {y}) mm, peak ({px}, {py}) mm");
+            Assert.True(Math.Abs(px - expectedX) <= LocalisationToleranceMm && Math.Abs(py - y) <= LocalisationToleranceMm,
+                $"peak ({px}, {py}) is not within {LocalisationToleranceMm} mm of the source ({expectedX}, {y})");
         });
 
     /// <summary>SR-THEME-01 (the visual result of the swap stays a manual check).</summary>

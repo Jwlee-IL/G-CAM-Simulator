@@ -29,7 +29,9 @@ public sealed partial class OpticsEditorViewModel : ObservableObject
     partial void OnPixelPitchChanged(string value) => Validate();
     partial void OnSelectedPresetChanged(OpticsPreset value)
     {
-        if (!_loading && IsEditable && value.Settings is { } settings) Load(settings with { FocalDistanceMm = Effective.FocalDistanceMm });
+        if (_loading) return;
+        if (!IsEditable) { Load(Effective); return; } // locked: the selector snaps back to the effective geometry
+        if (value.Settings is { } settings) Load(settings with { FocalDistanceMm = Effective.FocalDistanceMm });
     }
 
     public void Load(OpticsSettings value)
@@ -42,12 +44,14 @@ public sealed partial class OpticsEditorViewModel : ObservableObject
         PixelPitch = value.PixelPitchMm.ToString("G", CultureInfo.CurrentCulture);
         Effective = value;
         _loading = false;
-        Validate();
+        Validate(loading: true);
     }
 
-    private void Validate()
+    private void Validate(bool loading = false)
     {
         if (_loading) return;
+        // Locked while the shell holds acquired data: any writer is reverted to the effective geometry.
+        if (!IsEditable && !loading) { Load(Effective); return; }
         _loading = true;
         if (!double.TryParse(CellPitch, out double cell) || !double.TryParse(Distance, out double distance) ||
             !int.TryParse(Pixels, out int pixels) || !double.TryParse(PixelPitch, out double pitch))

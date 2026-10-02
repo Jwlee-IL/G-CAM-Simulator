@@ -54,26 +54,24 @@ public sealed class WaveformWorkspaceTests
     }
 
     [Fact]
-    public async Task Chain_EditMarksStaleButKeepsAcquiredIdentity()
+    public async Task Chain_LockedWithData_ScopeUsesAcquiredChain()
     {
         var acquisition = new Acquisition(); var waveform = new Scope();
         var model = new MainViewModel(acquisition, new Theme(), new Spectrum(), waveform: waveform);
         await model.StartCommand.ExecuteAsync(null);
         var acquired = model.Snapshot!.Chain;
-        Assert.False(model.ChainDiffers); // same chain: the combo boxes say it all, no chain lines
-        model.Preamp = FrontEndParts.Preamps[3];
-        Assert.True(model.ChainDiffers);
-        Assert.True(model.IsResultStale);
+        model.Preamp = FrontEndParts.Preamps[3]; // locked while data exist (A-2): refused
+        Assert.Equal(acquired, model.Chain);
         Assert.Equal(acquired, model.Snapshot.Chain);
-        Assert.NotEqual(model.Chain, model.Snapshot.Chain);
-        Assert.Contains("Next acquisition", model.PendingChain);
         model.SelectedWorkspace = model.Waveform;
         await model.Waveform.WhenUpdated;
         Assert.Equal(acquired, waveform.Calls.Last().Snapshot.Chain);
         model.Waveform.Ideal = true; model.Waveform.RateStudy = true;
         await model.Waveform.WhenUpdated;
-        Assert.True(model.IsResultStale);
         Assert.Same(acquisition.Published, model.Snapshot);
+        await model.ResetCommand.ExecuteAsync(null);
+        model.Preamp = FrontEndParts.Preamps[3];
+        Assert.Equal(FrontEndParts.Preamps[3], model.Chain.Preamp);
     }
 
     [Fact]
@@ -128,6 +126,7 @@ public sealed class WaveformWorkspaceTests
         Assert.Equal("latest", model.Waveform.View!.Note);
         model.Waveform.WindowUs = 30;
         var obsolete = scope.Calls.Last(); var obsoleteTask = model.Waveform.WhenUpdated;
+        await model.ResetCommand.ExecuteAsync(null); // a new acquisition needs Reset first
         var run = model.StartCommand.ExecuteAsync(null);
         var current = scope.Calls.Last(); current.Completion.SetResult(Scope.View("new acquisition"));
         await model.Waveform.WhenUpdated; await run;
@@ -137,7 +136,7 @@ public sealed class WaveformWorkspaceTests
     }
 
     [Fact]
-    public async Task ScopeFailure_IsVisibleAndLocalControlsNeverMarkStale()
+    public async Task ScopeFailure_IsVisibleAndLocalControlsKeepTheAcquisition()
     {
         var acquisition = new Acquisition(); var waveform = new Scope { Fail = true };
         var model = new MainViewModel(acquisition, new Theme(), new Spectrum(), waveform: waveform);
@@ -146,7 +145,8 @@ public sealed class WaveformWorkspaceTests
         Assert.Contains("test failure", model.Waveform.Error);
         model.Waveform.RateStudy = true; model.Waveform.Ideal = true; model.Waveform.WindowUs = 100;
         await model.Waveform.WhenUpdated;
-        Assert.False(model.IsResultStale);
+        Assert.Same(acquisition.Published, model.Snapshot);
+        Assert.NotEqual(RunState.Failed, model.State); // a scope error is the workspace's, not the acquisition's
     }
 
     private sealed class Theme : IThemeService
@@ -168,7 +168,7 @@ public sealed class WaveformWorkspaceTests
         public TaskCompletionSource Release { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
         public AcquisitionSnapshot? Published { get; private set; }
         public IAcquisitionSession Start(IReadOnlyList<SceneSource> scene, OpticsSettings optics, double liveTimeS, double speed,
-            DetectorSettings? detector = null, double backgroundToSignalRatio = 0)
+            DetectorSettings? detector = null, double backgroundToSignalRatio = 0, int? seed = null)
         {
             Published = Snapshot() with { Detector = detector };
             return new Session(Published, Hold ? Release.Task : Task.CompletedTask);

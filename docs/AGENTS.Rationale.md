@@ -89,9 +89,10 @@ Enforcement: **C** compiler / build · **T** automated test · **R** review agai
 |---|---|---|---|
 | An ROI counts whole pixels **by centre**, never fractional area. | A flood-map pixel is one crystal; a partial count is a number no detector ever read out. | `MeasurementMath` | T |
 | ROI values are recomputed on every new result; lengths and angles are not. | The image under an ROI changes; geometry doesn't. | `MeasurementsViewModel` | T |
-| A dragged source lands on a 0.1 mm grid, clamped to the image. | *Not stated in the source.* Proposed: the X / Y fields show one decimal; finer positions would be false precision. Clamping keeps the marker on screen; positions outside the reconstruction (e.g. to show a ghost) are typed into X / Y. | `DESIGN.Controls` | R, T (UI scenario checks the snap) |
 | An ROI with no pixel centre inside has no value ("—"), not "Σ 0". | A plausible number for an invalid region is worse than none. | `MeasurementViewModel` | T |
-| Editing the scene after a run marks the result "outdated" until the next run. | An old image must not be read as current. | `MainViewModel` | T |
+| Physical inputs (sources, optics, detector, chain, seed) are locked while acquired data exist; Reset discards the data and unlocks them. Source markers are display-only. | An image must always belong to the inputs shown; Start after Stop continues the same acquisition (multichannel-analyser model), so a changed input would mix two measurements (author, 2026-10-02). | `MainViewModel` (guards in the setters as well as in the view) | T |
+| Reset asks no confirmation and is never the primary button; Start is not the default button. | A new acquisition is an independent measurement and a fixed seed reproduces a discarded one, so a dialog would cost more than it protects; Enter in a field must not resume counting. | `MainWindow` top bar | I |
+| Each acquisition draws a new Monte Carlo seed unless the Seed input fixes one; Continue keeps it. | Repeated measurements are independent, as a real camera's are; a fixed seed makes one reproducible (author, 2026-10-02). | `MainViewModel`, `SimulationService` | T |
 
 ## Accessibility and test hooks
 

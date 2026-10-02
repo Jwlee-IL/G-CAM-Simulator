@@ -23,8 +23,8 @@ the measurement tools.
 | Style | Key | States / notes |
 |---|---|---|
 | Focus ring | `FocusVisual` | 2 px `Brush.Focus`, 3 px outside the control, on every focusable control |
-| Button | implicit | raised fill · hover · pressed · disabled |
-| Primary button | `Button.Primary` | accent fill, `OnAccent` text — **one per screen** (Simulate) |
+| Button | implicit | raised fill · hover · pressed · disabled; e.g. Reset in the top bar (a discarding action is never primary and has no confirmation dialog: a fixed seed reproduces an acquisition) |
+| Primary button | `Button.Primary` | accent fill, `OnAccent` text — **one per screen** (Start / Continue, or Stop while acquiring) |
 | Ghost button | `Button.Ghost` | borderless, for bars and panel headers |
 | TextBox | implicit | mono text; unit suffix via `Tag` (`Tag="mm"`); accent 2 px border on focus; error border + tooltip when `Validation.HasError`; themed caret and selection |
 | CheckBox | implicit | themed box and visible check mark, focus ring, hover border and disabled state; used for Spectrum log Y / pile-up; DockPanel constrains wrapping content to the available width |

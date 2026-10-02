@@ -14,21 +14,40 @@ public sealed partial class SourceItemViewModel : ObservableObject, IPlaneMarker
     [ObservableProperty] private double _y;
     [ObservableProperty] private double _distanceMm = 1000;
     [ObservableProperty] private double _activityUCi = 500;
+    /// <summary>False while the shell holds acquired data (physical inputs are locked); a change is then reverted.</summary>
+    [ObservableProperty] private bool _isEditable = true;
+    private bool _reverting;
 
-    partial void OnDistanceMmChanged(double value)
+    private bool Locked(Action revert)
     {
-        double clamped = Math.Clamp(value, 200, 3000);
-        if (clamped != value) DistanceMm = clamped;
+        if (_reverting) return true;
+        if (IsEditable) return false;
+        _reverting = true;
+        try { revert(); }
+        finally { _reverting = false; }
+        return true;
     }
 
-    partial void OnActivityUCiChanged(double value)
+    partial void OnXChanged(double oldValue, double newValue) => Locked(() => X = oldValue);
+    partial void OnYChanged(double oldValue, double newValue) => Locked(() => Y = oldValue);
+
+    partial void OnDistanceMmChanged(double oldValue, double newValue)
     {
-        if (value <= 0) ActivityUCi = 1;
+        if (Locked(() => DistanceMm = oldValue)) return;
+        double clamped = Math.Clamp(newValue, 200, 3000);
+        if (clamped != newValue) DistanceMm = clamped;
     }
 
-    partial void OnIsotopeChanged(string value)
+    partial void OnActivityUCiChanged(double oldValue, double newValue)
     {
-        if (!IsotopeNames.Contains(value)) Isotope = IsotopeNames[0];
+        if (Locked(() => ActivityUCi = oldValue)) return;
+        if (newValue <= 0) ActivityUCi = 1;
+    }
+
+    partial void OnIsotopeChanged(string? oldValue, string newValue)
+    {
+        if (Locked(() => Isotope = oldValue!)) return;
+        if (!IsotopeNames.Contains(newValue)) Isotope = IsotopeNames[0];
     }
 
     // Keep the list label in sync with whatever was edited.
@@ -36,7 +55,7 @@ public sealed partial class SourceItemViewModel : ObservableObject, IPlaneMarker
     {
         base.OnPropertyChanged(e);
         if (e.PropertyName == nameof(Isotope)) OnPropertyChanged(nameof(MarkerLabel));
-        if (e.PropertyName is not (nameof(Label) or nameof(MarkerLabel))) OnPropertyChanged(nameof(Label));
+        if (e.PropertyName is not (nameof(Label) or nameof(MarkerLabel) or nameof(IsEditable))) OnPropertyChanged(nameof(Label));
     }
 
     /// <summary>Text next to the source's marker on the reconstruction.</summary>

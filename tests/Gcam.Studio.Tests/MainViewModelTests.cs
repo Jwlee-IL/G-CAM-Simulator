@@ -20,32 +20,31 @@ public class MainViewModelTests
         vm.SelectedWorkspace = vm.Spectrum;
         Assert.True(vm.Spectrum.IsActive);
         Assert.False(vm.Imaging.IsActive);
-        Assert.False(vm.IsResultStale);
+        Assert.Equal(RunState.Empty, vm.State);
     }
 
     [Fact]
-    public void DetectorInputs_DefaultsAndStaleStateFollowEdits()
+    public void DetectorInputs_DefaultsAndValidationFallbacks_EditableWithoutData()
     {
         var vm = new MainViewModel(new FakeAcquisition(), new FakeTheme(), new FakeSpectrumService());
         Assert.Equal(new DetectorSettings(), vm.Detector);
+        Assert.True(vm.CanEditInputs);
         vm.GainSigmaPercent = 4;
-        Assert.False(vm.IsResultStale);
-        vm.Result = Image;
         vm.GainSeed = 5;
-        Assert.True(vm.IsResultStale);
-        vm.IsResultStale = false;
-        vm.GainSigmaPercent = 3;
-        Assert.True(vm.IsResultStale);
-        vm.IsResultStale = false;
         vm.BackgroundToSignalRatio = 1;
-        Assert.True(vm.IsResultStale);
+        Assert.Equal(0.04, vm.Detector.GainSigma);
+        Assert.Equal(5, vm.Detector.GainSeed);
+        Assert.Equal(1, vm.BackgroundToSignalRatio);
+        vm.Result = Image; // a result alone is not acquired data: nothing locks
+        vm.GainSeed = 6;
+        Assert.Equal(6, vm.GainSeed);
         vm.GainSigmaPercent = double.NaN;
         vm.BackgroundToSignalRatio = -1;
         Assert.Equal(3, vm.GainSigmaPercent);
         Assert.Equal(0, vm.BackgroundToSignalRatio);
     }
     [Fact]
-    public void Workspace_SharedResultAndSelectionSurviveSnapshot_ViewSettingsDoNotMarkStale()
+    public void Workspace_SharedResultAndSelectionSurviveSnapshot_ViewSettingsKeepState()
     {
         var vm = new MainViewModel(new FakeAcquisition(), new FakeTheme(), new FakeSpectrumService());
         Assert.Equal(4, vm.Workspaces.Count);
@@ -60,7 +59,7 @@ public class MainViewModelTests
         Assert.Same(vm.Result, vm.Imaging.Shared.Result);
         Assert.Equal("peak (1.0, 2.0) mm", vm.Imaging.PeakText);
         vm.Imaging.Measurements.ActiveTool = MeasureTool.Distance;
-        Assert.False(vm.IsResultStale);
+        Assert.Equal(RunState.Empty, vm.State);
         vm.SelectWorkspaceCommand.Execute("4");
         Assert.Same(vm.Imaging, vm.SelectedWorkspace);
         Assert.True(vm.Imaging.IsActive);
@@ -72,7 +71,7 @@ public class MainViewModelTests
     private sealed class FakeAcquisition : IAcquisitionService
     {
         public IAcquisitionSession Start(IReadOnlyList<SceneSource> scene, OpticsSettings optics,
-            double liveTimeS, double speed, DetectorSettings? detector = null, double backgroundToSignalRatio = 0)
+            double liveTimeS, double speed, DetectorSettings? detector = null, double backgroundToSignalRatio = 0, int? seed = null)
             => throw new NotSupportedException();
     }
 

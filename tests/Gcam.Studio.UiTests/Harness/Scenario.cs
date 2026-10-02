@@ -28,8 +28,8 @@ public static class Scenario
             var ui = new StudioWindow(window);
             ui.Normalise(WindowWidth, WindowHeight);
             record.Set("window", window.Current.BoundingRectangle.ToString());
-            Assert.Equal("Idle", ui.RunState);   // declared start state
-            record.Step("window ready, state Idle");
+            Assert.Equal("Empty", ui.RunState);   // declared start state
+            record.Step("window ready, state Empty");
 
             body(ui, record);
             result = "passed";

@@ -53,7 +53,7 @@ one class, or a small group of types that only make sense together. Unit IDs are
 
 | Unit | Item | Type(s) | File(s) | Responsibility |
 |---|---|---|---|---|
-| SU-01 | SI-1 | `MainViewModel`, `RunState` | `Core/ViewModels/MainViewModel.cs` | scene list and selection, live time / speed, snapshots, workspace selection, Start / Stop / failure state machine, progress, stale flag, theme toggle |
+| SU-01 | SI-1 | `MainViewModel`, `RunState` | `Core/ViewModels/MainViewModel.cs` | scene list and selection, live time / speed / seed, snapshots, workspace selection, Start / Continue / Stop / Reset / failure state machine with its command table and input locks, progress, theme toggle |
 | SU-02 | SI-1 | `SourceItemViewModel` | `Core/ViewModels/SourceItemViewModel.cs` | one editable source; input clamping; list and marker labels; `IPlaneMarker`; → `SceneSource` |
 | SU-03 | SI-1 | `MeasurementsViewModel`, `MeasureTool` | `Core/ViewModels/MeasurementsViewModel.cs`, `MeasureTool.cs` | measurement session: active tool and hint, numbering, add / delete / clear, selection, refresh on a new result |
 | SU-04 | SI-1 | `MeasurementViewModel`, `MeasurementKind`, `ImagePane`, `MeasurementDraft` | `Core/ViewModels/Measurement*.cs`, `ImagePane.cs` | one measurement: point-count check, value and detail text, description for screen readers |
@@ -62,7 +62,7 @@ one class, or a small group of types that only make sense together. Unit IDs are
 | SU-07 | SI-1 | `IAcquisitionService`, `IAcquisitionSession`, `AcquisitionSnapshot`, `ImagingResult`, `IThemeService`, `AppTheme`, `IPlaneMarker` | `Core/Services/*.cs`, `Core/Imaging/IPlaneMarker.cs` | contracts between items (§3) |
 | SU-08 | SI-3 | `SimulationService` | `Services/SimulationService.cs` | validate inputs, build the engine config and start an acquisition session |
 | SU-09 | SI-4 | `HeatmapView` (+ `HeatmapViewAutomationPeer`) | `Studio/Controls/HeatmapView.cs` | draw a grid with the colormap, zoom / pan input, hover readout, automation peer, exposes data range and mm mapping |
-| SU-10 | SI-4 | `MeasurementAdorner`, `MeasurementOverlay` | `Studio/Controls/Measurement*.cs` | draw measurements and source markers over a heatmap; turn gestures into `MeasurementDraft`s; marker drag |
+| SU-10 | SI-4 | `MeasurementAdorner`, `MeasurementOverlay` | `Studio/Controls/Measurement*.cs` | draw measurements and (display-only) source markers over a heatmap; turn gestures into `MeasurementDraft`s |
 | SU-11 | SI-4 | `ColorBar`, `Colormap` | `Studio/Controls/ColorBar.cs`, `Studio/Rendering/Colormap.cs` | viridis lookup table; colour scale with ticks |
 | SU-12 | SI-4 | `ThemeService` | `Studio/Services/ThemeService.cs` | swap the token dictionary in place; DWM title bar |
 | SU-13 | SI-4 | `NullToCollapsedConverter`, `InverseBoolToVisibilityConverter`, `EnumMatchConverter` | `Studio/Converters/*.cs` | value → visibility / radio-button mapping |
@@ -71,7 +71,7 @@ one class, or a small group of types that only make sense together. Unit IDs are
 | SU-16 | SI-1 | `WorkspaceViewModel`, `ImagingWorkspaceViewModel` | `Core/ViewModels/*WorkspaceViewModel.cs` | title, automation key, active state; imaging measurements and peak over the shared result |
 | SU-17 | SI-2 | `PlotSeries`, `PlotBand`, `PlotMarker`, `PlotViewport`, `NiceTicks`, `MinMaxPyramid`, `PlotGeometry`, `PlotAutoScale`, `PlotBinReadout`, `PlotBandLayout`, `PlotViewRange` | `Core/Plotting/*.cs` | finite / increasing inputs, sample limit, linear / log mapping, X navigation, ticks, exact range extrema |
 | SU-18 | SI-4 | `PlotView` (+ automation peer) | `Studio/Controls/PlotView.cs` | cached preparation, frozen geometry, themed axes / series / bands / markers, readout, pointer / key input, measured CPU redraw |
-| SU-19 | SI-3 | `AcquisitionSession` | `Services/AcquisitionSession.cs` | fresh MC histories, consumed event prefix, live-time pacing, immutable cumulative snapshots, Stop and automatic completion |
+| SU-19 | SI-3 | `AcquisitionSession` | `Services/AcquisitionSession.cs` | fresh MC histories, consumed event prefix, live-time pacing, immutable cumulative snapshots, Stop, Continue (segments over retained state) and automatic completion |
 | SU-20 | SI-3 | `SpectrumService`, `MeasurementStage` | `Services/SpectrumService.cs`, `Services/MeasurementStage.cs` | shared gain / chain response, worker binning, incremental pile-up, resolvable-line grouping and union share |
 | SU-21 | SI-1 | `SpectrumWorkspaceViewModel`, `ISpectrumService`, spectrum records | `Core/ViewModels/SpectrumWorkspaceViewModel.cs`, `Core/Services/Spectrum*.cs`, `Core/Services/ISpectrumService.cs` | view settings, snapshot refresh, Histogram series / bands / table, selected window range, rejection of late responses |
 | SU-22 | SI-4 | `SpectrumView`, `SpectrumPanel` | `Studio/Views/Spectrum*.xaml(.cs)` | plot, readout, table and read-only chain / view-settings panel |
@@ -129,8 +129,8 @@ not a user-reachable state).
 |---|---|---|
 | View → ViewModel | commands | `StartCommand` / `StopCommand`, `AddSourceCommand`, `RemoveSourceCommand`, `ToggleThemeCommand`; `Measurements.AddCommand(MeasurementDraft)`, `DeleteCommand`, `ClearCommand` |
 | View ↔ ViewModel | two-way bindings | source fields, live time, speed, selected source, selected measurement, `ActiveTool` (radio group through `EnumMatchConverter`) |
-| ViewModel → View | one-way bindings | `Result` (images and mm mapping), `Progress`, `Status`, `State`, `IsIdle`, `IsResultStale`, `PeakText`, `ThemeToggleLabel`, `ToolHint`, `Items` |
-| Overlay → ViewModel | attached properties on `HeatmapView` (`MeasurementOverlay.Session`, `Pane`, `Markers`, `SelectedMarker`, `CanMoveMarkers`) | the adorner reads the session's tool and items, sends `MeasurementDraft(Pane, Kind, PointsMm)` through `AddCommand`, and writes `X` / `Y` of an `IPlaneMarker` while dragging |
+| ViewModel → View | one-way bindings | `Result` (images and mm mapping), `Progress`, `Status`, `State`, `IsIdle`, `CanEditInputs`, `CanEditLiveTime`, `CanEditSpeed`, `StartLabel`, `PeakText`, `ThemeToggleLabel`, `ToolHint`, `Items` |
+| Overlay → ViewModel | attached properties on `HeatmapView` (`MeasurementOverlay.Session`, `Pane`, `Markers`, `SelectedMarker`, `CanMoveMarkers`) | the adorner reads the session's tool and items and sends `MeasurementDraft(Pane, Kind, PointsMm)` through `AddCommand`; Studio sets `CanMoveMarkers = False`, so source markers are display-only |
 | Control → sibling | read-only dependency properties bound by `ElementName` | `HeatmapView.DataMin` / `DataMax` → `ColorBar`; `HeatmapView.Readout` |
 
 `IPlaneMarker` (`MarkerLabel`, `X`, `Y`) lets SU-10 move a scene source without knowing it is a
@@ -171,20 +171,31 @@ and are verified by their own suite.
 
 ```mermaid
 stateDiagram-v2
-    [*] --> Idle
-    Idle --> Acquiring: Start (≥ 1 source)
-    Completed --> Acquiring: Start
-    Stopped --> Acquiring: Start
-    Failed --> Acquiring: Start
-    Acquiring --> Completed: preset reached
+    [*] --> Empty
+    Empty --> Acquiring: Start (≥ 1 source, new seed)
     Acquiring --> Stopped: Stop
+    Acquiring --> Completed: preset reached
+    Stopped --> Acquiring: Continue (preset > live)
+    Completed --> Acquiring: Continue (preset raised)
     Acquiring --> Failed: exception
+    Stopped --> Empty: Reset
+    Completed --> Empty: Reset
+    Failed --> Empty: Reset (with data)
+    Failed --> Acquiring: Start (no data)
 ```
 
-While `Acquiring`: `IsRunning = true`, `IsIdle = false` → source fields, add / remove, live time / speed and
-marker drag disabled (SR-RUN-12). Start clears old data; every snapshot refreshes images and ROI values without
-replacing measurement geometry. Completed has progress 1; Stop / Failed retain acquired data. `IsRunning` resets
-in `finally`.
+The command table is computed from three facts: `IsRunning`, `HasData` (`Snapshot ≠ null`) and whether a
+continuable session is held. `CanEditInputs = !IsRunning && !HasData` gates every physical input (sources,
+optics, gap, gain, BSR, chain, seed); `CanEditLiveTime = !IsRunning && (!HasData || session held)`;
+`CanEditSpeed = !IsRunning`. Start reads "Continue" with data and is enabled only when the preset exceeds the
+acquired live time; Reset only with data and not while running. The guards are repeated inside the commands and
+in every physical setter (a refused change is reverted), so the locks hold for any writer, not only for the
+disabled controls (SR-RUN-12). Start draws the seed, freezes the scene in the workspaces (`Begin`) and starts a
+session; Continue calls `IAcquisitionSession.Continue(preset, speed)` on the held session and does not `Begin`
+the workspaces, so they keep appending under one acquisition id. Reset disposes the session and clears the
+snapshot, result and workspace views (Imaging also forgets its frozen scene, so geometry follows the pending
+optics again); measurement shapes stay. A failure disposes the session: with data the inputs stay locked and only
+Reset is offered; without data the inputs are editable. `IsRunning` resets in `finally`.
 
 ### Measurement gesture (SU-10 → SU-03)
 
@@ -232,11 +243,12 @@ Only the rules a reviewer needs to check a requirement; the rest is in the code 
 | Rule | Definition |
 |---|---|
 | Progress | acquisition live time / preset, from sequential cumulative snapshots. |
-| Stale flag | set when `Result ≠ null` and scene, live time / speed / optics / gain / background change; cleared at Start. |
+| Input locks | physical setters revert any change while `HasData` or `IsRunning`; a preset below the acquired live time is reverted with `LiveTimeError`; speed reverts only while running. |
+| Seed | blank `SeedText` draws `Random.Shared.Next(1, int.MaxValue)` per new acquisition; a nonnegative integer is used as given; `AcquisitionSeed` holds the acquisition's seed until Reset. |
 | Inputs | default 60 s and ×10; invalid non-positive / non-finite UI values return to defaults; service rejects them. |
 | Add source | new source at `X = 15 mm · count`, `Y = 0`, selected. |
 | Remove source | select the item now at the removed index, or the new last item; `null` when empty. |
-| Status text | `"t = {live:F1} s of {preset:G} s · {counts:N0} counts · {rate:F0} cps"`; MC-limited appends achieved speed; terminal text prefixes Stopped / Completed. |
+| Status text | `"t = {live:F1} s of {preset:G} s · {counts:N0} counts · {counts / live:F0} cps · seed {seed}"` (observed rate); MC-limited appends achieved speed; terminal text prefixes Stopped / Completed; Reset shows "Ready". |
 
 ### SU-19 `AcquisitionSession`
 
@@ -254,6 +266,15 @@ pixel assignment follows the engine's detected-pedestal model, not a transported
 detected-count ratio, not an incident-flux prediction; entrance, backing and reflector effects apply to source
 transport, while the ambient response matches `BackgroundDepositSpectrum`. Disabled background consumes no
 additional source RNG draws. Nuclear emissions remain independent singles.
+
+The session runs in segments: Start runs the first, each `Continue(preset, speed)` one more, on a fresh worker,
+channel and stop token. Everything a continuation needs lives in fields — the `ListModeSource` with all its RNG
+streams, the one already-drawn look-ahead event (dropping it at Stop would lose a real count), the events, flood,
+decoder and live time — so a stopped and continued acquisition produces, event for event, the uninterrupted one.
+A segment's first refresh republishes the retained state; its wall-clock references start at the segment, so
+live time never advances while stopped. `ReadSnapshotsAsync` awaits its worker before completing, so the next
+segment starts only after the previous one left the shared state. `Continue` rejects a running segment, a failed
+session and a preset not above the acquired live time. Snapshots carry the acquisition seed.
 
 ### SU-16 workspaces / SU-17 plotting / SU-18 `PlotView`
 
@@ -305,9 +326,9 @@ Axis range is 1.15 × highest emission energy (2.15 × with pile-up); pulses abo
 Sorted adjacent emissions merge when their separation is less than FWHM at their mean energy. Band limits
 are the union span of E ± N·FWHM(E); labels retain every energy and isotope. Counts use bin centres, and
 the overall share uses the union of bands, so overlapping resolved windows count a bin only once.
-Spectrum follows the acquisition scene captured at Start, retains stale status after edits, and reprocesses
+Spectrum follows the acquisition scene captured at Start (kept across Continue, cleared by Reset), and reprocesses
 view settings without acquisition. Log Y only redraws `PlotView`. No independent pool or noise wall is added.
-Acquisition snapshots retain their detector settings; gain edits never resmear recorded events with a new pattern.
+Acquisition snapshots retain their detector settings; gain inputs are locked while data exist, so recorded events are never resmeared.
 The chain-only resolution readout excludes pixel gain spread. Correlated nuclear cascades remain unavailable.
 Measurements and real-engine checks are recorded in [VV.Studio](VV.Studio.md).
 
@@ -332,7 +353,7 @@ Any property change raises `Label`; an isotope change also raises `MarkerLabel`.
 ### SU-08 `SimulationService`
 
 `Start` validates live time, speed and the nonempty scene, builds the config on the caller's thread with
-`SceneConfigBuilder.Build(scene, optics, 1)`, clones it, applies explicit `DetectorSettings` and BSR, and returns
+`SceneConfigBuilder.Build(scene, optics, 1)`, clones it, applies explicit `DetectorSettings`, BSR and the acquisition seed (the builder default 12345 when none is given), and returns
 SU-19 with frozen settings and the injected `TimeProvider`. The placeholder
 photon budget is required by the config builder; acquisition ends by live time or Stop. Decoder settings come
 from the builder: non-cyclic, recon half-extent `0.95 · rank · pitch / (D/F) / 2`, step
@@ -356,6 +377,8 @@ from the builder: non-cyclic, recon half-extent `0.95 · rank · pitch / (D/F) /
 - Constants: marker hit radius 11 px, minimum drag 4 px, marker snap 0.1 mm (`Math.Round(·, 1)`).
 - A measurement must start inside the image; later points and dragged markers are clamped to the image's outer
   mm extent.
+- Marker dragging is a capability of the control behind `CanMoveMarkers`; Studio sets it `False` (source positions
+  are physical inputs, locked while data exist), so the marker rules above are unused in the app.
 - Esc (draft open) and right-click cancel the draft; Delete on the focused heatmap runs `DeleteCommand`.
 - Holds no screen geometry between renders: every render maps the mm points through `HeatmapView.MmToScreen`.
 
@@ -420,9 +443,9 @@ a focus-only request reports zero and retains R. Spectrum is not refreshed by fo
 
 SU-16 coalesces revisions while one preparation is pending. It publishes only when the completed request's
 revision is current, otherwise processes the latest snapshot/settings using the prepared cache. Begin cancels
-old-acquisition work; an old completion cannot change the new acquisition's view or processing state. It
-refreshes without requiring a new snapshot, so Stop/Completed views can refocus. Focus validation uses acquired
-D; Start additionally validates current pending physical geometry. Stale is untouched by projection.
+old-acquisition work (Reset too); an old completion cannot change the new acquisition's view or processing state.
+It refreshes without requiring a new snapshot, so Stop/Completed views can refocus. Focus validation uses acquired
+D; Start additionally validates current pending physical geometry. Projection does not change the acquisition state.
 
 SU-03 removes reconstruction-only measurements and increments ReconstructionRevision. SU-10 cancels only a
 reconstruction draft on this notification; flood measurements/drafts remain. The panel explains the clearing.
@@ -438,7 +461,9 @@ Every SRS requirement maps to at least one unit; every unit carries at least one
 | SR-OPT-01 … SR-OPT-06 | SU-01, SU-16, SU-24, SU-25, SU-23, SU-03, SU-10, SU-14 |
 | SR-IMG-01 … SR-IMG-06 | SU-01 (shared N), SU-16 (ImagingWorkspaceViewModel), SU-23 (worker), SU-10 (found overlays), SU-14 (selector / options panel); SU-20 (shared window and measurement response) |
 | SR-RUN-01, -02, -04 … -08 | withdrawn; batch implementation removed |
-| SR-RUN-03, SR-RUN-09 … SR-RUN-14, SR-RUN-19 | SU-01, SU-07, SU-08, SU-19 |
+| SR-RUN-03, SR-RUN-09 … SR-RUN-13, SR-RUN-19 | SU-01, SU-07, SU-08, SU-19 |
+| SR-RUN-14 | withdrawn; stale marking removed |
+| SR-RUN-23 … SR-RUN-28 | SU-01 (state machine, locks, seed, status), SU-19 (segments), SU-08 (seed), SU-16 (workspace reset), SU-14 (top-bar controls) |
 | SR-RUN-15 | SU-08 (argument checks and engine `SceneConfigBuilder`) |
 | SR-RUN-16 … SR-RUN-18 | SU-19, SU-07, SU-01, SU-16 |
 | SR-RUN-20 … SR-RUN-22 | SU-08, SU-19, SU-20 (`MeasurementStage`), SU-01, engine list-mode background producer |
@@ -463,7 +488,7 @@ Every SRS requirement maps to at least one unit; every unit carries at least one
 | SR-MEAS-04 | SU-01, SU-16, SU-03, SU-04 |
 | SR-MEAS-05, SR-MEAS-06 | SU-03, SU-04 |
 | SR-MEAS-07 | SU-10 |
-| SR-MEAS-08 | SU-02 (`IPlaneMarker`), SU-10, SU-01 (stale) |
+| SR-MEAS-08 | withdrawn; Studio sets `CanMoveMarkers = False` |
 | SR-THEME-01 | SU-01, SU-07 |
 | SR-THEME-02 | SU-12, SU-14 |
 | SR-ENV-01 | SU-12, SU-15 (project targets) |
@@ -474,7 +499,7 @@ Every SRS requirement maps to at least one unit; every unit carries at least one
 | SR-SEC-01 | all (no I/O anywhere in Studio), SU-08 (engine is called with in-memory config only) |
 | SR-ARCH-01 … SR-ARCH-04 | project files of SI-1 … SI-4 and `tests/Gcam.Studio.Tests` |
 
-SU-11 (colour bar, colormap) and SU-13 (converters) serve SR-VIEW-01 / SR-A11Y-04 and SR-RUN-14 / SR-MEAS-06
+SU-11 (colour bar, colormap) and SU-13 (converters) serve SR-VIEW-01 / SR-A11Y-04 and SR-MEAS-06
 indirectly (presentation only); they carry no requirement of their own.
 
 ## 8. Verification of the design (§5.3.6, §5.4.4)
@@ -492,11 +517,11 @@ as the code.
 
 ## Waveform and acquired-chain design (2026-10-02)
 
-The detection chain is part of immutable `DetectorSettings`, captured by `SimulationService.Start` and published by `AcquisitionSession`; `AcquisitionSnapshot.Chain` exposes the captured setting. `MainViewModel` owns pending part selectors and rejects physical edits while running. Spectrum/Imaging/Measurement read snapshot settings; physical scintillators map through `FrontEndMaterials` to explicit transport keys. Unsupported CsI is absent from Studio selection. Default transport remains the GAGG behavior of the earlier Compton path.
+The detection chain is part of immutable `DetectorSettings`, captured by `SimulationService.Start` and published by `AcquisitionSession`; `AcquisitionSnapshot.Chain` exposes the captured setting. `MainViewModel` owns the part selectors and rejects physical edits while running or while data exist. Spectrum/Imaging/Measurement read snapshot settings; physical scintillators map through `FrontEndMaterials` to explicit transport keys. Unsupported CsI is absent from Studio selection. Default transport remains the GAGG behavior of the earlier Compton path.
 
 `SpectrumService` rebuilds its analytic model, effective resolving interval, measurements and bins when acquired detector identity changes. `ImagingService` invalidates energies, windows and H-only ratios on acquired detector identity as well as acquisition ID. Calibration builds the same acquired measurement chain. Array-wide Spectrum pile-up remains a sum-before-smear grouping model; Imaging still uses ungrouped event positions. Four ADC position signals and Anger mispositioning are outside this design.
 
-`IWaveformService` returns `WaveformView`: two prepared uniform-X PlotSeries, event identity/amplitude records, acquired-chain readouts and limitation labels. `WaveformWorkspaceViewModel` owns local trigger/window/ideal/rate-study settings. It requests work only when active, cancels old requests, rejects late revisions and reuses a held window once its requested interval is covered. New acquisition clears retained scope identity; pending physical settings do not replace the acquired response. In rate study, the retained prefix is re-spaced with a fixed seed in original order; the snapshot is never mutated.
+`IWaveformService` returns `WaveformView`: two prepared uniform-X PlotSeries, event identity/amplitude records, acquired-chain readouts and limitation labels. `WaveformWorkspaceViewModel` owns local trigger/window/ideal/rate-study settings. It requests work only when active, cancels old requests, rejects late revisions and reuses a held window once its requested interval is covered. A new acquisition or Reset clears retained scope identity; Continue keeps it. In rate study, the retained prefix is re-spaced with a fixed seed in original order; the snapshot is never mutated.
 
 `WaveformService` serializes requests on a semaphore and runs CPU work via Task.Run. It computes each event response once with the same index-addressed `MeasurementStage` as Spectrum/Imaging. Ideal stimulus uses gain-only amplitudes. `WindowRasterizer` is an additive engine utility with explicit sample count, clipped pulse support, optional ADC/analog noise and cancellation checks; it does not perform intrinsic smearing. Existing `Waveform.CrrcInt`/`TrapShape` remain the shapers with tail-matched pole-zero coefficients. Cancellation checks surround these bounded integer calls; they do not interrupt their internal loops.
 
@@ -519,8 +544,8 @@ automation peer. Relative gain uses opaque viridis colours and an accompanying n
 
 The face service supplies `CrystalUniformity.Gain`, exactly the pattern used by MeasurementStage. It does not
 apply an energy window or label sensitivity as efficiency. The pure geometry partitions the full face into
-active crystals and disjoint gap strips, including half gaps on the perimeter. Acquired detector/optics remain
-the face source after edits; the editor is independently validated against pending pitch. The physical optics
+active crystals and disjoint gap strips, including half gaps on the perimeter. With data, the acquired detector/optics
+are the face source (inputs are locked); the editor is independently validated against pending pitch. The physical optics
 editor validates its geometry without assuming a fixed gap; the shell and acquisition service validate the
 actual gap. Invalid numeric text is retained and prevents Start.
 

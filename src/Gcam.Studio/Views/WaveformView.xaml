@@ -2,15 +2,11 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:c="clr-namespace:Gcam.Studio.Controls">
-    <UserControl.Resources><BooleanToVisibilityConverter x:Key="BoolToVis" /></UserControl.Resources>
     <Border Style="{StaticResource Panel.Surface}">
         <DockPanel>
             <StackPanel DockPanel.Dock="Top">
                 <DockPanel Style="{StaticResource PanelHeader}">
                     <TextBlock DockPanel.Dock="Left" Text="Waveform · energy sum" Style="{StaticResource Text.PanelTitle}" />
-                    <Border DockPanel.Dock="Right" Style="{StaticResource Chip.Warning}" Visibility="{Binding Shared.IsResultStale, Converter={StaticResource BoolToVis}}">
-                        <TextBlock Text="Outdated" Style="{StaticResource Text.CaptionWarning}" />
-                    </Border>
                 </DockPanel>
                 <TextBlock Text="{Binding View.Note}" Style="{StaticResource Text.Caption}" TextWrapping="Wrap" Margin="{StaticResource Gap.Field}"
                            AutomationProperties.AutomationId="Waveform.Note" />

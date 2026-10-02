@@ -42,12 +42,12 @@ and their exact best planes are not silently asserted for this grid. Width is ne
 
 | Scope | Test / fixture | Execution record |
 |---|---|---|
-| Units, validation, snapshot and stale face | DetectorWorkspaceTests; DetectorFaceTests; Face_GainsMatchMeasurementPattern; Config_RejectsGapAtServiceBoundary | Passed in Release, 2026-10-02 |
+| Units, validation, snapshot and acquired (locked) face | DetectorWorkspaceTests; DetectorFaceTests; Face_GainsMatchMeasurementPattern; Config_RejectsGapAtServiceBoundary | Passed in Release, 2026-10-02 |
 | Plane sampling, exact half-max crossings, censored edges, modes and angle linking | FocusSweepMathTests | Passed in Release, 2026-10-02 |
 | Frozen identity, K, cancellation, snapshot consumption and obsolete-result rejection | FocusSweepViewModelTests; ImagingWorkspaceTests channel invalidation | Passed in Release, 2026-10-02 |
 | Retained flood, no events/truth, empty flood and cancellation | FocusSweepServiceTests | Passed in Release, 2026-10-02 |
 | Area/rate relation | DetectorGapEvidenceTests (Evidence) | Requires opt-in run; no measured s or numeric tolerance obtained in this turn |
-| Both themes and sizes | RenderDetectorAndFocus: detector-before, detector-stale, focus-near-resolved, focus-far-censored | Fixture prepared; 16 new PNGs not generated or inspected in this turn |
+| Both themes and sizes | RenderDetectorAndFocus: detector-before, detector-acquired, focus-near-resolved, focus-far-censored | Fixture prepared; 16 new PNGs not generated or inspected in this turn |
 
 The render curves are analytic drawing fixtures, not synthetic physics evidence. The face fixture uses
 the actual engine gain pattern. All fixtures detach MainWindow content, never Show/Run, create an HWND

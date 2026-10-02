@@ -17,7 +17,9 @@ public sealed class OpticsViewModelTests
     }
     private sealed class Session : IAcquisitionSession
     {
-        private readonly Channel<AcquisitionSnapshot> _channel = Channel.CreateUnbounded<AcquisitionSnapshot>();
+        private Channel<AcquisitionSnapshot> _channel = Channel.CreateUnbounded<AcquisitionSnapshot>();
+        public int Continues { get; private set; }
+        public void Continue(double presetLiveTimeS, double speed) { Continues++; _channel = Channel.CreateUnbounded<AcquisitionSnapshot>(); }
         public void Publish(int count, bool completed)
         {
             var flood = new DetectorImage(30, 30); flood[15, 15] = count;
@@ -36,7 +38,7 @@ public sealed class OpticsViewModelTests
         public int Starts { get; private set; }
         public Session Session { get; private set; } = null!;
         public IAcquisitionSession Start(IReadOnlyList<SceneSource> scene, OpticsSettings optics, double liveTimeS,
-            double speed, DetectorSettings? detector = null, double backgroundToSignalRatio = 0)
+            double speed, DetectorSettings? detector = null, double backgroundToSignalRatio = 0, int? seed = null)
         { Starts++; return Session = new(); }
     }
     private sealed class Imaging : IImagingService
@@ -62,7 +64,7 @@ public sealed class OpticsViewModelTests
     }
 
     [Fact]
-    public async Task Focus_AcquiringStoppedCompleted_KeepsEventsSpectrumAndStaleState()
+    public async Task Focus_AcquiringStoppedCompleted_KeepsEventsAndSpectrum_OpticsLockedWithData()
     {
         var acquisition = new Acquisition(); var imaging = new Imaging(); var spectrum = new FakeSpectrumService();
         var vm = new MainViewModel(acquisition, new Theme(), spectrum, imaging);
@@ -78,21 +80,26 @@ public sealed class OpticsViewModelTests
         vm.Imaging.Measurements.AddCommand.Execute(new MeasurementDraft(ImagePane.Flood, MeasurementKind.Roi, [new(-1, -1), new(1, 1)]));
         vm.Imaging.Measurements.AddCommand.Execute(new MeasurementDraft(ImagePane.Reconstruction, MeasurementKind.Distance, [new(0, 0), new(1, 1)]));
         vm.Imaging.FocalPlane = "600"; await vm.Imaging.WhenUpdated;
-        Assert.False(vm.IsResultStale);
+        Assert.Equal(RunState.Stopped, vm.State);
         Assert.Single(vm.Imaging.Measurements.Items);
         Assert.Equal(ImagePane.Flood, vm.Imaging.Measurements.Items[0].Pane);
         Assert.NotNull(vm.Imaging.FocusNote);
-        vm.OpticsEditor.CellPitch = "0.8";
-        Assert.True(vm.IsResultStale);
-        vm.Imaging.FocalPlane = "500"; await vm.Imaging.WhenUpdated;
-        Assert.True(vm.IsResultStale);
+        Assert.False(vm.OpticsEditor.IsEditable);
+        vm.OpticsEditor.CellPitch = "0.8"; // locked with data: reverted
+        Assert.Equal("0.7", vm.OpticsEditor.CellPitch);
+        vm.Imaging.FocalPlane = "500"; await vm.Imaging.WhenUpdated; // focus stays a view setting
         Assert.Same(snapshot, vm.Snapshot);
         Assert.Equal(spectrumCalls, spectrum.Calls);
         Assert.Equal(0.7, imaging.Requests[^1].Optics.CellPitchMm);
         Assert.Equal(1, acquisition.Starts);
-        run = vm.StartCommand.ExecuteAsync(null);
-        acquisition.Session.Publish(1, true); await run;
+        var id = imaging.Requests[^1].Id;
+        run = vm.StartCommand.ExecuteAsync(null); // Continue
+        Assert.Equal(1, acquisition.Session.Continues);
+        acquisition.Session.Publish(2, true); await run;
         Assert.Equal(RunState.Completed, vm.State);
+        Assert.Equal(1, acquisition.Starts);
+        Assert.Equal(id, imaging.Requests[^1].Id); // the services keep appending to one acquisition
+        Assert.Equal(2, imaging.Requests[^1].Count);
         vm.Imaging.FocalPlane = "400"; await vm.Imaging.WhenUpdated;
         Assert.Equal(-400, vm.Imaging.Result!.ReconOriginMm);
     }
@@ -132,6 +139,7 @@ public sealed class OpticsViewModelTests
         vm.Imaging.FocalPlane = "800";
         var pending = imaging.Pending; var oldView = imaging.PendingView!; var oldTask = vm.Imaging.WhenUpdated;
         imaging.Pending = null;
+        await vm.ResetCommand.ExecuteAsync(null); // a new acquisition (not Continue) starts after Reset
         run = vm.StartCommand.ExecuteAsync(null);
         acquisition.Session.Publish(2, true); await run;
         var current = vm.Imaging.View;

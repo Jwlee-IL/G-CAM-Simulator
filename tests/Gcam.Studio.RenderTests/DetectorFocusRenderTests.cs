@@ -26,29 +26,30 @@ public sealed partial class PlotViewRenderTests
         foreach (string file in new[] { $"Tokens.{theme}", "Metrics", "Typography", "Controls" })
             dictionaries.Add(new ResourceDictionary { Source = new Uri($"/Gcam.Studio;component/Themes/{file}.xaml", UriKind.Relative) });
         var model = new MainViewModel(new WaveformAcquisition(), new FixtureTheme(Enum.Parse<AppTheme>(theme)),
-            new FixtureSpectrum(), detectorFace: new DetectorFaceService());
+            new FixtureSpectrum(), detectorFace: new DetectorFaceService()) { SeedText = "12345" };
         model.IsOpticsExpanded = model.IsDetectorExpanded = false;
         model.SelectedWorkspace = model.DetectorWorkspace;
         Capture("detector-before");
         model.StartCommand.ExecuteAsync(null).GetAwaiter().GetResult();
-        model.ReflectorGapUm = "20";
-        Assert.True(model.IsResultStale);
+        model.ReflectorGapUm = "20"; // locked while data exist (A-2): refused, the face keeps the acquired gap
+        Assert.Equal("100", model.ReflectorGapUm);
+        Assert.Equal("Acquired settings · locked until Reset", model.DetectorWorkspace.Identity);
         Assert.Equal(Math.Pow(5d / 6, 2), model.DetectorWorkspace.Face!.ActiveAreaFraction, 12);
-        Capture("detector-stale");
+        Capture("detector-acquired");
         foreach (bool far in new[] { false, true })
         {
-            // Each focus scene is its own fresh, non-stale acquisition whose only source sits where the sweep
+            // Each focus scene is its own fresh acquisition whose only source sits where the sweep
             // finds it: 300 mm (resolved near field) or 1000 mm (far edge censored). SYNTHETIC drawing fixture:
             // the snapshot, reconstruction (FixtureImaging) and focus curve are analytic stand-ins, not MC
             // results and not evidence about depth accuracy; FocusSweepMath.Describe still builds the interval.
             double sourceMm = far ? 1000 : 300;
             model = new MainViewModel(new FixtureAcquisition(), new FixtureTheme(Enum.Parse<AppTheme>(theme)),
-                new FixtureSpectrum(), new FixtureImaging(), detectorFace: new DetectorFaceService());
+                new FixtureSpectrum(), new FixtureImaging(), detectorFace: new DetectorFaceService()) { SeedText = "12345" };
             model.IsOpticsExpanded = model.IsDetectorExpanded = false;
             model.Sources[0].DistanceMm = sourceMm;
             model.StartCommand.ExecuteAsync(null).GetAwaiter().GetResult();
             model.Imaging.WhenUpdated.GetAwaiter().GetResult();
-            Assert.False(model.IsResultStale);
+            Assert.True(model.HasData);
             Assert.NotNull(model.Imaging.Result?.Reconstruction);
             model.SelectedWorkspace = model.Imaging;
             // A laser range to the surface in front of the source, a little short of it.

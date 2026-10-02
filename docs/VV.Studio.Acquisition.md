@@ -70,12 +70,12 @@ Core's 69 cases include concurrent additions to the existing plot tests and four
 
 [VV.Studio.SRS](VV.Studio.SRS.md): SR-RUN-01, -02, -04, -05, -06, -07, -08 retain their IDs marked withdrawn.
 SR-RUN-03 (failure handling) remains active. SR-RUN-09 … -19 cover background acquisition, Stop retention,
-live-time progress, input locking, Start availability, stale state, input validation, immutable shared events,
-4 Hz decode / measurement refresh, MC limitation and preset/restart behavior. There are 51 active requirements
-and seven withdrawn rows. The matrix is in [VV.Studio](VV.Studio.md); SU-19 is added in
+live-time progress, input locking, Start availability, input validation, immutable shared events,
+4 Hz decode / measurement refresh, MC limitation and preset completion; SR-RUN-14 (stale marking) is withdrawn and
+SR-RUN-23 … -28 add Continue, the raised preset, the seed, Reset, failure handling and the observed status rate. The matrix is in [VV.Studio](VV.Studio.md); SU-19 is added in
 [VV.Studio.SDS](VV.Studio.SDS.md).
 
-Virtual-clock tests verify snapshots grow, preset completion, Stop retention, stale edits, measurement geometry
+Virtual-clock tests verify snapshots grow, preset completion, Stop retention, Continue, Reset, measurement geometry
 and input locking. Service tests verify real transport/localization, detached immutable snapshots, count/flood
 conservation, flood pixel centres matching the decoder to nine decimal places, look-ahead boundaries, input rejection and an extreme MC-limited Stop on an injected clock.
 Read-only cross-review identified and rechecked fixes for Stop's live horizon and true deposits before optical
@@ -104,7 +104,7 @@ mispositioning is included in the image. No quantitative size of this change is 
 Studio supplies detector settings explicitly after cloning the scene config; existing builder callers keep
 the bare geometry. List-mode deposits remain unsmeared and unwindowed, located by Argmax. Measurement applies
 the seeded CrystalUniformity gain pattern before one chain smear. Snapshots retain their acquisition inputs,
-so later gain edits mark results outdated without changing recorded response. Spectrum windows and optional
+and the gain inputs are locked while data exist, so the recorded response cannot change. Spectrum windows and optional
 pile-up reuse these events. Per-nuclide imaging, stripping and nuclear decay cascades are outside this scope.
 
 ## Detector realism and background
@@ -164,5 +164,33 @@ desktop regression. No Studio window was launched and the UI-test project was no
 
 Needed UI additions: select both workspaces through SelectionItemPattern and assert the displayed content;
 verify detector defaults, field reachability in both themes at minimum size, gain / seed / BSR locking during
-acquisition, stale state after edits, preserved spectrum response after a later window change, and live BSR
+acquisition and while data exist, preserved spectrum response after a later window change, and live BSR
 count/rate presentation. Existing desktop tolerances remain unchanged.
+
+## Start / Stop / Continue / Reset (2026-10-02)
+
+The acquisition follows the multichannel-analyser model: Start acquires, Stop pauses keeping everything, Start
+again (labelled Continue) resumes the same acquisition, Reset discards it. Physical inputs are locked while data
+exist; view settings are not. Each new acquisition uses a new Monte Carlo seed unless one is fixed.
+
+**Continuation is exact.** The session keeps the list-mode source with all its random streams, the events, flood,
+decoder, live-time clock and the one event already drawn beyond the acquired live time. A stopped and continued
+acquisition therefore produces the uninterrupted event stream, event for event. Measured on the real session with
+an injected clock (`AcquisitionContinuationTests`, Cs-137 500 µCi at (0, 0) + Co-60 300 µCi at (20, 0) mm, 1 m,
+seed 4711, preset 12 s, four stops at live 1, 2.125, 7.625 and 8.5 s at speeds ×4, ×1.5, ×11, ×0.7, ×6, 100 s of
+wall time while stopped each time):
+
+| Background | Events in 12 s | Result |
+|---|---|---|
+| BSR 0 | 1,810 | identical to the uninterrupted session and to the direct source stream; arrival times strictly increasing; each continued segment starts at the stopped live time and counts |
+| BSR 0.5 | 2,728 | identical, as above |
+
+A raised preset after Completed (3 s → 6 s) continues identically to an uninterrupted 6 s acquisition; the same
+seed reproduces an acquisition and the next seed gives an independent one. Sensitivity check: with the look-ahead
+event deliberately dropped at each Stop, all three continuation tests fail at the first stop (one real count lost
+per stop). Wall-clock pacing never enters the events: speed only decides when the worker consumes them, and live
+time, not wall time, is the physical clock, so it does not advance while stopped. The Poisson arrival process is
+continued, not restarted: the next arrival is the one drawn after the last event.
+
+Not verified here: the desktop (Reset placement, keyboard order, Continue label) — the rewritten desktop scenarios
+are not run.

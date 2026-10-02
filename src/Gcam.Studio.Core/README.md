@@ -6,7 +6,7 @@ Targets plain `net9.0` on purpose: a ViewModel that reaches for a WPF type does 
 
 | Folder | Contents |
 |---|---|
-| `ViewModels/` | `MainViewModel` (scene, live time / speed, Start / Stop, snapshot, stale result, theme toggle), workspaces, `SourceItemViewModel` (one source, clamped input), measurement session / values |
+| `ViewModels/` | `MainViewModel` (scene, live time / speed / seed, Start / Continue / Stop / Reset with input locks, snapshot, theme toggle), workspaces, `SourceItemViewModel` (one source, clamped input), measurement session / values |
 | `Services/` | `IAcquisitionService`; `IAcquisitionSession`, `AcquisitionSnapshot`, `ImagingResult`, `IThemeService`; `ISpectrumService` and spectrum settings / view / line / band records |
 | `Imaging/` | `HeatmapViewport` — fit, whole-pixel snapping, zoom about a point, pan limits, screen ↔ image ↔ mm; `MeasurementMath` — distance, angle, ROI stats; `TickFormatter` — colour-scale labels; `IPlaneMarker` — what an overlay can drag |
 

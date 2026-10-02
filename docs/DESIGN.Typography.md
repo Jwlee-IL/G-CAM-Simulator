@@ -34,7 +34,7 @@ Views pick a role; they never set `FontSize`, `FontWeight` or `Foreground` on a 
 | `Text.Body` | Body · Regular · Primary | default text |
 | `Text.Label` | Label · Regular · Secondary | field labels, secondary text, status sentence |
 | `Text.Caption` | Caption · Regular · Secondary | chips, small notes |
-| `Text.CaptionWarning` | Caption · Regular · Status.Warning | a status chip ("outdated") |
+| `Text.CaptionWarning` | Caption · Regular · Status.Warning | a validation or input message (e.g. a rejected preset) |
 | `Text.ColumnHeader` | Caption · SemiBold · Secondary | table column headers |
 | `Text.Mono` | Label · Mono · Primary | coordinates, values with units |
 | `Text.MonoCaption` | Caption · Mono · Secondary | unit suffixes, the peak chip, measurement detail |

@@ -64,7 +64,8 @@ public sealed class StudioWindow(AutomationElement window)
         Thread.Sleep(150);
     }
 
-    /// <summary>Starts an acquisition and waits for a terminal state (Completed / Stopped / Failed).</summary>
+    /// <summary>Starts (or continues) an acquisition and waits for a terminal state (Completed / Stopped / Failed). A new
+    /// acquisition after one exists needs <c>ResetAcquisition</c> first.</summary>
     public string Acquire(TimeSpan timeout)
     {
         Invoke("StartAcquisition");
@@ -75,7 +76,7 @@ public sealed class StudioWindow(AutomationElement window)
 
     private static bool IsTerminal(string state) => state is "Completed" or "Stopped" or "Failed";
 
-    /// <summary>Acquisition state published by the status line (Idle / Acquiring / Stopped / Completed / Failed).</summary>
+    /// <summary>Acquisition state published by the status line (Empty / Acquiring / Stopped / Completed / Failed).</summary>
     public string RunState => ById("StatusText").Current.ItemStatus;
 
     /// <summary>Counts in the status sentence ("t = 1.2 s of 60 s · 1,834 counts · 153 cps").</summary>

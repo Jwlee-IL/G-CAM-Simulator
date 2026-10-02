@@ -41,20 +41,24 @@ public sealed class DetectorWorkspaceTests
         Assert.Equal(.05, vm.Optics.PixelPitchMm);
     }
     [Fact]
-    public async Task Face_FollowsPendingBeforeStart_AndAcquiredAfterStaleEdit()
+    public async Task Face_FollowsPendingBeforeStart_AcquiredAndLockedAfter_PendingAgainAfterReset()
     {
         var vm = Model(); vm.ReflectorGapUm = "20";
-        Assert.Contains("Pending", vm.DetectorWorkspace.Identity);
+        Assert.Equal("Settings for the next acquisition", vm.DetectorWorkspace.Identity);
         double area = vm.DetectorWorkspace.Face!.ActiveAreaFraction;
         await vm.StartCommand.ExecuteAsync(null);
         Assert.Equal(.02, vm.Snapshot!.Detector!.ReflectorGapMm);
-        vm.ReflectorGapUm = "100"; vm.GainSeed = 2;
-        Assert.True(vm.IsResultStale); Assert.Contains("outdated", vm.DetectorWorkspace.Identity);
+        Assert.Equal("Acquired settings · locked until Reset", vm.DetectorWorkspace.Identity);
+        vm.ReflectorGapUm = "100"; vm.GainSeed = 2; // locked: reverted
+        Assert.Equal("20", vm.ReflectorGapUm);
+        Assert.Equal(1, vm.GainSeed);
         Assert.Equal(area, vm.DetectorWorkspace.Face!.ActiveAreaFraction);
-        Assert.Equal(.02, vm.Snapshot.Detector.ReflectorGapMm);
-        Assert.Equal(1, vm.Snapshot.Detector.GainSeed);
-        Assert.Contains("100 µm", vm.DetectorWorkspace.Pending);
-        vm.IsRunning = true; Assert.False(vm.IsIdle);
+        Assert.Contains("Gap 20 µm", vm.DetectorWorkspace.Readout);
+        await vm.ResetCommand.ExecuteAsync(null);
+        Assert.Equal("Settings for the next acquisition", vm.DetectorWorkspace.Identity);
+        vm.ReflectorGapUm = "100";
+        Assert.Contains("Gap 100 µm", vm.DetectorWorkspace.Readout);
+        Assert.NotEqual(area, vm.DetectorWorkspace.Face!.ActiveAreaFraction);
     }
     private sealed class Face : IDetectorFaceService
     {
@@ -70,7 +74,7 @@ public sealed class DetectorWorkspaceTests
     private sealed class Acquisition : IAcquisitionService
     {
         public IAcquisitionSession Start(IReadOnlyList<SceneSource> scene, OpticsSettings optics,
-            double liveTimeS, double speed, DetectorSettings? detector = null, double backgroundToSignalRatio = 0)
+            double liveTimeS, double speed, DetectorSettings? detector = null, double backgroundToSignalRatio = 0, int? seed = null)
             => new Session(optics, detector!);
     }
     private sealed class Session(OpticsSettings optics, DetectorSettings detector) : IAcquisitionSession

@@ -7,13 +7,15 @@ namespace Gcam.Studio.Services;
 public sealed class SimulationService(TimeProvider? timeProvider = null) : IAcquisitionService
 {
     public IAcquisitionSession Start(IReadOnlyList<SceneSource> scene, OpticsSettings optics,
-        double liveTimeS, double speed, DetectorSettings? detector = null, double backgroundToSignalRatio = 0)
+        double liveTimeS, double speed, DetectorSettings? detector = null, double backgroundToSignalRatio = 0,
+        int? seed = null)
     {
         if (!(liveTimeS > 0) || !double.IsFinite(liveTimeS)) throw new ArgumentOutOfRangeException(nameof(liveTimeS));
         if (!(speed > 0) || !double.IsFinite(speed)) throw new ArgumentOutOfRangeException(nameof(speed));
         if (scene.Count == 0) throw new ArgumentException("Acquisition needs at least one source.", nameof(scene));
         detector ??= new DetectorSettings();
         var config = BuildConfig(scene, optics, detector, backgroundToSignalRatio);
+        if (seed is { } fixedSeed) config.Seed = fixedSeed;
         return new AcquisitionSession(config, detector, liveTimeS, speed,
             timeProvider ?? TimeProvider.System);
     }

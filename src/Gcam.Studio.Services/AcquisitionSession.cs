@@ -8,104 +8,170 @@ using Gcam.Studio.Core.Services;
 
 namespace Gcam.Studio.Services;
 
-/// <summary>Transport and decoding run on one worker. Backpressure bounds unpublished snapshots.</summary>
+/// <summary>Transport and decoding run on one worker per segment (Start, then each Continue). Everything a continuation
+/// needs — the list-mode source with its RNG streams, the one already-drawn look-ahead event, the events, flood and
+/// live-time clock — lives in fields, so a stopped and continued acquisition is event-for-event the uninterrupted one.
+/// Backpressure bounds unpublished snapshots.</summary>
 internal sealed class AcquisitionSession : IAcquisitionSession
 {
     private static readonly TimeSpan RefreshInterval = TimeSpan.FromMilliseconds(250);
     private static readonly TimeSpan TransportBudget = TimeSpan.FromMilliseconds(200);
-    private readonly CancellationTokenSource _stop = new();
-    private readonly Channel<AcquisitionSnapshot> _snapshots = Channel.CreateBounded<AcquisitionSnapshot>(
-        new BoundedChannelOptions(2) { SingleReader = true, SingleWriter = true, FullMode = BoundedChannelFullMode.DropOldest });
-    private readonly Task _worker;
+    private readonly SimulationConfig _config;
+    private readonly DetectorSettings _detector;
+    private readonly TimeProvider _clock;
+    private readonly OpticsSettings _optics;
+    private readonly DetectorImage _flood;
+    private readonly List<DetectedEvent> _events = [];
+    private ListModeSource? _source;
+    private IDecoder? _decoder;
+    private bool _decoderBuilt;
+    // Look-ahead: drawn, but later than the acquired live time. Dropping it at Stop would lose a real count.
+    private DetectedEvent? _pending;
+    private double _live;
+    private volatile bool _failed;
+    private CancellationTokenSource _stop = new();
+    private Channel<AcquisitionSnapshot> _snapshots = NewChannel();
+    private Task _worker;
 
     public AcquisitionSession(SimulationConfig config, DetectorSettings detector, double preset, double speed, TimeProvider clock)
-        => _worker = Task.Run(() => ProduceAsync(config, detector, preset, speed, clock));
+    {
+        _config = config;
+        _detector = detector;
+        _clock = clock;
+        _flood = new DetectorImage(config.Detector.PixelsX, config.Detector.PixelsY);
+        _optics = new OpticsSettings
+        {
+            MuraRank = config.Mask.Rank, CellPitchMm = config.Mask.CellPitchMm,
+            MaskDetectorDistanceMm = config.Geometry.MaskDetectorDistanceMm,
+            DetectorPixels = config.Detector.PixelsX, PixelPitchMm = config.Detector.PixelPitchMm,
+            FocalDistanceMm = config.Geometry.MaskDetectorDistanceMm + config.Geometry.SourceMaskDistanceMm
+        };
+        _worker = StartSegment(preset, speed);
+    }
+
+    private static Channel<AcquisitionSnapshot> NewChannel() => Channel.CreateBounded<AcquisitionSnapshot>(
+        new BoundedChannelOptions(2) { SingleReader = true, SingleWriter = true, FullMode = BoundedChannelFullMode.DropOldest });
+
+    private Task StartSegment(double preset, double speed)
+    {
+        var stop = _stop;
+        var channel = _snapshots;
+        return Task.Run(() => ProduceAsync(preset, speed, stop, channel));
+    }
 
     public void Stop() => _stop.Cancel();
+
+    public void Continue(double presetLiveTimeS, double speed)
+    {
+        if (!(presetLiveTimeS > 0) || !double.IsFinite(presetLiveTimeS)) throw new ArgumentOutOfRangeException(nameof(presetLiveTimeS));
+        if (!(speed > 0) || !double.IsFinite(speed)) throw new ArgumentOutOfRangeException(nameof(speed));
+        if (!_worker.IsCompleted) throw new InvalidOperationException("A segment is still running; stop it first.");
+        if (_failed) throw new InvalidOperationException("A failed acquisition cannot continue.");
+        if (!(presetLiveTimeS > _live))
+            throw new ArgumentOutOfRangeException(nameof(presetLiveTimeS), "The preset must exceed the acquired live time.");
+        _stop.Dispose();
+        _stop = new CancellationTokenSource();
+        _snapshots = NewChannel();
+        _worker = StartSegment(presetLiveTimeS, speed);
+    }
 
     public async IAsyncEnumerable<AcquisitionSnapshot> ReadSnapshotsAsync(
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
+        var channel = _snapshots;
+        var worker = _worker;
         using var registration = cancellationToken.Register(Stop);
-        // Cancellation requests Stop; drain the terminal snapshot instead of throwing away acquired data.
-        await foreach (var snapshot in _snapshots.Reader.ReadAllAsync()) yield return snapshot;
+        try
+        {
+            // Cancellation requests Stop; drain the terminal snapshot instead of throwing away acquired data.
+            await foreach (var snapshot in channel.Reader.ReadAllAsync()) yield return snapshot;
+        }
+        finally
+        {
+            // The next segment may start only after this worker has left the shared state.
+            await worker.ConfigureAwait(false);
+        }
     }
 
-    private async Task ProduceAsync(SimulationConfig config, DetectorSettings detector, double preset, double speed, TimeProvider clock)
+    private async Task ProduceAsync(double preset, double speed, CancellationTokenSource stop, Channel<AcquisitionSnapshot> channel)
     {
         try
         {
-            using var source = new ListModeSource(config);
-            var decoder = new DefaultSimulationFactory().CreateDecoder(config);
-            var flood = new DetectorImage(config.Detector.PixelsX, config.Detector.PixelsY);
-            var events = new List<DetectedEvent>();
-            DetectedEvent? pending = null;
-            double live = 0;
-            long start = clock.GetTimestamp(), previous = start;
+            _source ??= new ListModeSource(_config);
+            if (!_decoderBuilt)
+            {
+                _decoder = new DefaultSimulationFactory().CreateDecoder(_config);
+                _decoderBuilt = true;
+            }
+            var source = _source;
+            long start = _clock.GetTimestamp(), previous = start;
             long previousPublished = start;
             bool firstRefresh = true;
-            double previousLive = 0;
+            double previousLive = _live;
             while (true)
             {
-                double wall = clock.GetElapsedTime(start).TotalSeconds;
-                long tickStart = clock.GetTimestamp();
+                double wall = _clock.GetElapsedTime(start).TotalSeconds;
+                long tickStart = _clock.GetTimestamp();
                 // After a compute-limited tick, keep aiming at the requested speed from the current live time.
-                double dt = clock.GetElapsedTime(previous).TotalSeconds;
-                double target = Math.Min(preset, live + speed * dt);
-                if (firstRefresh) target = 0;
-                if (_stop.IsCancellationRequested) target = live;
+                double dt = _clock.GetElapsedTime(previous).TotalSeconds;
+                double target = Math.Min(preset, _live + speed * dt);
+                // A segment's first refresh republishes the retained state: live time never advances while stopped.
+                if (firstRefresh || stop.IsCancellationRequested) target = _live;
                 var compute = Stopwatch.StartNew();
                 try
                 {
-                    while (!_stop.IsCancellationRequested && compute.Elapsed < TransportBudget)
+                    while (!stop.IsCancellationRequested && compute.Elapsed < TransportBudget)
                     {
-                        if (pending is { } next)
+                        if (_pending is { } next)
                         {
                             if (next.ArrivalTimeS > target) break;
-                            events.Add(next);
-                            flood.Add(next.PixelX, next.PixelY, 1);
-                            pending = null;
+                            _events.Add(next);
+                            _flood.Add(next.PixelX, next.PixelY, 1);
+                            _pending = null;
                         }
                         if (source.ArrivalTimeS >= target) break;
-                        pending = source.Advance(_stop.Token);
+                        // Advance checks the token before any random draw, so a cancelled call consumes nothing.
+                        _pending = source.Advance(stop.Token);
                     }
                 }
-                catch (OperationCanceledException) when (_stop.IsCancellationRequested) { }
+                catch (OperationCanceledException) when (stop.IsCancellationRequested) { }
                 // A look-ahead event proves that no counts were skipped in the intervening empty live time.
-                bool limited = source.ArrivalTimeS < target || pending is { } waiting && waiting.ArrivalTimeS <= target;
+                bool limited = source.ArrivalTimeS < target || _pending is { } waiting && waiting.ArrivalTimeS <= target;
                 // Only the consumed prefix belongs to the acquisition. A pending event is look-ahead, not a count.
-                live = limited ? Math.Max(live, events.Count == 0 ? 0 : events[^1].ArrivalTimeS) : target;
-                bool completed = live >= preset;
+                _live = limited ? Math.Max(_live, _events.Count == 0 ? 0 : _events[^1].ArrivalTimeS) : target;
+                bool completed = _live >= preset;
                 var decodeWatch = Stopwatch.StartNew();
-                var decoded = events.Count > 0 ? decoder?.Decode(flood) : null;
+                var decoded = _events.Count > 0 ? _decoder?.Decode(_flood) : null;
                 decodeWatch.Stop();
-                var imaging = new ImagingResult(flood.ReadOnlyCopy(), -(flood.Width - 1) * config.Detector.PixelPitchMm / 2,
-                    config.Detector.PixelPitchMm, decoded?.Reconstruction.ReadOnlyCopy(), decoded?.ReconOriginMm ?? 0,
-                    decoded?.ReconStepMm ?? 0, decoded?.Estimate, events.Count, TimeSpan.FromSeconds(wall));
-                double reportInterval = clock.GetElapsedTime(previousPublished).TotalSeconds;
-                double actual = reportInterval > 0 ? (live - previousLive) / reportInterval : 0;
-                await _snapshots.Writer.WriteAsync(new AcquisitionSnapshot(live, events.Count, source.RateCps,
-                    actual, limited, imaging, Array.AsReadOnly(events.ToArray()), decodeWatch.Elapsed, completed)
-                    { Detector = detector, Optics = new OpticsSettings { MuraRank = config.Mask.Rank,
-                        CellPitchMm = config.Mask.CellPitchMm, MaskDetectorDistanceMm = config.Geometry.MaskDetectorDistanceMm,
-                        DetectorPixels = config.Detector.PixelsX, PixelPitchMm = config.Detector.PixelPitchMm,
-                        FocalDistanceMm = config.Geometry.MaskDetectorDistanceMm + config.Geometry.SourceMaskDistanceMm } });
-                if (completed || _stop.IsCancellationRequested) break;
+                var imaging = new ImagingResult(_flood.ReadOnlyCopy(), -(_flood.Width - 1) * _config.Detector.PixelPitchMm / 2,
+                    _config.Detector.PixelPitchMm, decoded?.Reconstruction.ReadOnlyCopy(), decoded?.ReconOriginMm ?? 0,
+                    decoded?.ReconStepMm ?? 0, decoded?.Estimate, _events.Count, TimeSpan.FromSeconds(wall));
+                double reportInterval = _clock.GetElapsedTime(previousPublished).TotalSeconds;
+                double actual = reportInterval > 0 ? (_live - previousLive) / reportInterval : 0;
+                await channel.Writer.WriteAsync(new AcquisitionSnapshot(_live, _events.Count, source.RateCps,
+                    actual, limited, imaging, Array.AsReadOnly(_events.ToArray()), decodeWatch.Elapsed, completed)
+                    { Detector = _detector, Optics = _optics, Seed = _config.Seed });
+                if (completed || stop.IsCancellationRequested) break;
                 previous = tickStart;
-                previousPublished = clock.GetTimestamp();
+                previousPublished = _clock.GetTimestamp();
                 firstRefresh = false;
-                previousLive = live;
+                previousLive = _live;
                 // Include transport/decode in the 250 ms refresh interval.
-                var wait = RefreshInterval - clock.GetElapsedTime(start) + TimeSpan.FromSeconds(wall);
+                var wait = RefreshInterval - _clock.GetElapsedTime(start) + TimeSpan.FromSeconds(wall);
                 if (wait > TimeSpan.Zero)
                 {
-                    try { await Task.Delay(wait, clock, _stop.Token); }
-                    catch (OperationCanceledException) when (_stop.IsCancellationRequested) { }
+                    try { await Task.Delay(wait, _clock, stop.Token); }
+                    catch (OperationCanceledException) when (stop.IsCancellationRequested) { }
                 }
             }
-            _snapshots.Writer.TryComplete();
+            channel.Writer.TryComplete();
         }
-        catch (Exception ex) { _snapshots.Writer.TryComplete(ex); }
+        catch (Exception ex)
+        {
+            // The source may be mid-history: published data stay valid, but the acquisition cannot continue.
+            _failed = true;
+            channel.Writer.TryComplete(ex);
+        }
     }
 
     public async ValueTask DisposeAsync()
@@ -113,5 +179,6 @@ internal sealed class AcquisitionSession : IAcquisitionSession
         Stop();
         await _worker;
         _stop.Dispose();
+        _source?.Dispose();
     }
 }

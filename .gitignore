@@ -28,3 +28,4 @@ Thumbs.db
 
 # Result PNGs and CSVs are kept on purpose: they are the visual/quantitative findings
 # record referenced by AGENTS.findings.md (each finding lists its "Reproduce:" command).
+TestResults/

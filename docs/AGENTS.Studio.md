@@ -63,7 +63,7 @@ is `GCAM_RENDER_SNAPSHOTS=1`; desktop input uses `GCAM_UI_TESTS=1`. Enabling evi
 
 Build and test, then run the app and check the change **in both themes** (top-bar toggle) and with the
 keyboard only. The automated path is `tests/Gcam.Studio.UiTests` (opt-in, `GCAM_UI_TESTS=1`): controls are found
-by `AutomationId` (`RunSimulation`, `ToolDistance`, `MeasurementList`, …), the run state is the status line's
+by `AutomationId` (`StartAcquisition`, `ResetAcquisition`, `ToolDistance`, `MeasurementList`, …), the run state is the status line's
 `ItemStatus`, and the measuring tools get real pointer input. How it is kept safe and what it has verified:
 [AGENTS.UiAutomation](AGENTS.UiAutomation.md).
 
@@ -84,6 +84,14 @@ name a helper `Select` (the `Select-Object` alias wins).
 | Migration | One shared run, workspace templates and first-party `PlotView` (TODO-06); feature workspaces follow in TODO-07 … TODO-12 | implemented; plot CPU gate passed; existing desktop regression and polish survey blocked by desktop input / capture errors |
 | Live acquisition | Fresh list-mode MC, weight rejection, shared immutable 4 Hz snapshots, Start / Stop with preset live time and speed (TODO-13) | implemented; physics / headless validation in VV.Studio; desktop validation deferred while the desktop and UI-test project are occupied |
 | Spectrum | Shared live counts, physical default chain, per-energy windows with unresolved-line grouping, optional arrival-time pile-up (TODO-07) | implemented; headless evidence in VV.Studio; desktop validation deferred while the desktop and UI-test project are occupied |
+| Acquisition control | Start / Stop / Continue / Reset (multichannel-analyser model): the session runs in segments and continues event for event; physical inputs locked while data exist (stale state removed); new seed per acquisition, fixable; source drag withdrawn (TODO-24, [PLAN.Studio.AcquisitionControl](PLAN.Studio.AcquisitionControl.md)) | implemented; headless + render evidence in VV.Studio.Acquisition; rewritten desktop scenarios not run (TODO-22) |
+
+**Acquisition control in code.** `MainViewModel` derives its command table from `IsRunning`, `HasData` and whether a
+continuable session is held (`CanEditInputs`, `CanEditLiveTime`, `CanEditSpeed`, `StartLabel`); every physical setter
+also reverts a change while locked, so tests and other writers meet the same lock as the disabled controls. Continue
+calls `IAcquisitionSession.Continue` and must not `Begin` the workspaces (the services append under one acquisition
+id); Reset disposes the session and resets the workspaces. `AcquisitionSession` keeps its look-ahead event across
+Stop — dropping it loses a real count (the continuation tests catch it).
 
 ## Detector and retained-flood focus
 

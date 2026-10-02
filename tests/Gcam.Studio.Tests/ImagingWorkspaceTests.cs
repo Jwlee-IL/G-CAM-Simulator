@@ -18,7 +18,7 @@ public sealed class ImagingWorkspaceTests
     {
         public int Starts { get; private set; }
         public IAcquisitionSession Start(IReadOnlyList<SceneSource> scene, OpticsSettings optics,
-            double liveTimeS, double speed, DetectorSettings? detector = null, double backgroundToSignalRatio = 0)
+            double liveTimeS, double speed, DetectorSettings? detector = null, double backgroundToSignalRatio = 0, int? seed = null)
         { Starts++; return new Session(); }
     }
     private sealed class Session : IAcquisitionSession
@@ -104,9 +104,10 @@ public sealed class ImagingWorkspaceTests
         vm.Imaging.Strip = true; await vm.Imaging.WhenUpdated;
         Assert.Contains("3", vm.Imaging.Measurements.Items[0].Value);
         var request = imaging.Requests[^1];
-        vm.Sources[1].Isotope = "Co-57"; vm.Optics = new() { CellPitchMm = 1 };
+        vm.Sources[1].Isotope = "Co-57"; vm.Optics = new() { CellPitchMm = 1 }; // locked with data: refused
         vm.WindowFwhm = 1; await Task.WhenAll(vm.Imaging.WhenUpdated, vm.Spectrum.WhenUpdated);
-        Assert.True(vm.IsResultStale);
+        Assert.Equal("Co-60", vm.Sources[1].Isotope);
+        Assert.Equal(0.7, vm.Optics.CellPitchMm);
         Assert.Equal("Co-60", imaging.Requests[^1].Scene[1].Isotope);
         Assert.Equal(request.Optics, imaging.Requests[^1].Optics);
         Assert.Equal(request.Id, imaging.Requests[^1].Id);

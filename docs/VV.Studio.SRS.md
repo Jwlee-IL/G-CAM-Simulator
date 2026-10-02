@@ -8,7 +8,7 @@ Structured after IEC 62304 §5.2 (software requirements analysis). As in [VV.Stu
 **GCAM Studio is not a medical device and no compliance is claimed**; the structure is borrowed for its discipline.
 
 **At a glance**
-- Active requirements (plus seven withdrawn rows) cover navigation, plotting, spectrum, acquisition, scene, image view, measurement, theme (functional, §3) and environment,
+- Active requirements (plus nine withdrawn rows) cover navigation, plotting, spectrum, acquisition, scene, image view, measurement, theme (functional, §3) and environment,
   accessibility, security, architecture (§4). Each is one testable present-tense statement.
 - Inputs, outputs and every status message are listed with their valid ranges (§5); risk control
   (the illustrative safety class B) maps six hazardous situations to the requirements that control them (§6);
@@ -21,7 +21,7 @@ Structured after IEC 62304 §5.2 (software requirements analysis). As in [VV.Stu
 |---|---|
 | Purpose | A desktop viewer for Gcam, a Monte Carlo simulator of a coded-aperture gamma camera: place sources, run the simulation, inspect the detector flood map and the decoded reconstruction, measure on both in mm. Intended use and safety class: [VV.Studio §1](VV.Studio.md#1-scope-and-intended-use). |
 | Users | Engineers and reviewers. They know what a flood map and a reconstruction are; they are not assumed to know the code. |
-| Inputs | A scene of point sources (isotope, lateral X / Y, distance, activity), preset live time and acquisition speed. Optics are fixed defaults (`OpticsSettings`), editable physical run inputs; decoder focus is an Imaging view setting. |
+| Inputs | A scene of point sources (isotope, lateral X / Y, distance, activity), preset live time, acquisition speed and an optional fixed Monte Carlo seed. Optics are fixed defaults (`OpticsSettings`), editable physical run inputs; decoder focus is an Imaging view setting. |
 | Outputs | Two images (flood map, reconstruction) with colour bars, the decoded peak in mm, a status line, and user measurements (distance, angle, ROI statistics). Nothing is written to disk. |
 | Upward trace | Studio is subsystem SS-4 of the product concept: it implements [PR-SW-02](VV.Gcam.PRS.md#software-and-engineering-use-pr-sw) and serves user need UN-09 (engineering inspection; [VV.Gcam.URS](VV.Gcam.URS.md)). |
 | Neighbouring systems | The Gcam engine, reached only through `IAcquisitionService` and `ISpectrumService` ([VV.Studio.SDS §3](VV.Studio.SDS.md#3-interfaces-between-items-532-543)); Windows (WPF, DWM title bar, UI Automation). |
@@ -42,9 +42,9 @@ Structured after IEC 62304 §5.2 (software requirements analysis). As in [VV.Stu
 
 | ID | Requirement |
 |---|---|
-| SR-NAV-01 | One shared scene, optics, detector inputs, background ratio, live time, speed, acquisition state and cumulative snapshot feed all registered workspaces; imaging owns its measurements and peak reading. |
+| SR-NAV-01 | One shared scene, optics, detector inputs, background ratio, live time, speed, seed, acquisition state and cumulative snapshot feed all registered workspaces; imaging owns its measurements and peak reading. |
 | SR-NAV-02 | With at least two registered workspaces, a segmented switch exposes their titles and unique `Workspace.*` AutomationIds; activating a workspace through its checked state, click or Ctrl+1…4 changes the selected workspace. Unavailable indices do nothing, and a run retains selection. A single workspace has no switch. |
-| SR-NAV-03 | Run-input edits mark an existing result outdated; workspace view settings and selection do not. |
+| SR-NAV-03 | Physical run inputs are editable only while no acquired data exist (SR-RUN-12); workspace view settings and selection are editable in every state and only re-project retained data. |
 
 ### Plot surface (`SR-PLOT`)
 
@@ -71,7 +71,7 @@ Structured after IEC 62304 §5.2 (software requirements analysis). As in [VV.Stu
 | SR-SPEC-03 | Optional pile-up sums gained amplitudes whose actual arrival gaps are below the chain-derived resolving time, extending the interval after each pulse, then smears the summed pulse once; toggling it reprocesses retained events. |
 | SR-SPEC-04 | Each emission window spans E ± N·FWHM(E); adjacent lines separated by less than FWHM at their mean merge into one labelled band spanning their windows. Resolved lines keep separate bands even if their windows overlap. |
 | SR-SPEC-05 | The emission table gives isotope, every grouped line energy, window limits, counts and share selected by bin centre; the total in-window share counts each bin once across all bands. A band whose lines are all X-rays in the engine isotope table is named by their emitter from that table with the source in brackets ("Ba K X-rays (Cs-137)"; the photons come from the daughter barium). Numbers are right-aligned under right-aligned headers that share the rows' columns and padding.
-| SR-SPEC-06 | Log Y, positive finite window multiplier (default 1.5) and pile-up are view settings: they reuse acquired events without starting acquisition or marking results stale. Spectrum shares Imaging's outdated state. |
+| SR-SPEC-06 | Log Y, positive finite window multiplier (default 1.5) and pile-up are view settings: they reuse acquired events without starting acquisition or changing the acquisition state. |
 | SR-SPEC-07 | Same events, settings and seed produce identical histogram counts regardless of snapshot partition or pile-up toggle replay; new events are processed incrementally and CPU processing runs in a service worker. |
 | SR-SPEC-08 | Spectrum exposes the plot and readout, table and right-panel controls with accessible names and AutomationIds `Spectrum.Plot`, `Spectrum.Lines`, `Spectrum.LogY`, `Spectrum.Window` and `Spectrum.PileUp`. |
 | SR-SPEC-09 | Counts carry explicit bin edges; the graph uses keV and counts. Selecting an emission-window row requests its range plus one window width on each side, clamped to the axis. Snapshot replacement retains selection without another zoom request. |
@@ -88,20 +88,26 @@ Structured after IEC 62304 §5.2 (software requirements analysis). As in [VV.Stu
 | SR-RUN-06 | *Withdrawn* — batch command availability; replaced by SR-RUN-13. |
 | SR-RUN-07 | *Withdrawn* — batch result staleness; replaced by SR-RUN-14. |
 | SR-RUN-08 | *Withdrawn* — photon-budget config; replaced by SR-RUN-15. |
-| SR-RUN-09 | Start executes fresh list-mode MC transport and decoding off the UI thread through `IAcquisitionService`; the state is Acquiring until Stopped, Completed or Failed. |
-| SR-RUN-10 | Stop cooperatively ends acquisition, retains all acquired data and measurements, sets Stopped, and re-enables editing. |
-| SR-RUN-11 | Progress equals acquired live time / preset live time, never decreases within a session, and reaches 1 at Completed. |
-| SR-RUN-12 | While Acquiring, source fields, add / remove, source dragging, detector gain / seed, background ratio, live-time and speed controls are disabled. |
-| SR-RUN-13 | Start is enabled only while idle and with at least one source. |
-| SR-RUN-14 | A scene or run-input edit after acquisition marks its images outdated; Start clears the old data and stale flag. Before any acquisition nothing is stale. |
+| SR-RUN-09 | Start without acquired data executes fresh list-mode MC transport and decoding off the UI thread through `IAcquisitionService`, with the acquisition's Monte Carlo seed (SR-RUN-25); the state is Acquiring until Stopped, Completed or Failed. |
+| SR-RUN-10 | Stop cooperatively ends the current acquisition segment, retains all acquired data, measurements and the session, and sets Stopped; physical inputs stay locked (SR-RUN-12). |
+| SR-RUN-11 | Progress equals acquired live time / current preset live time, never decreases within a segment and reaches 1 at Completed; raising the preset (SR-RUN-24) lowers it accordingly. |
+| SR-RUN-12 | Physical run inputs — sources (add / remove, isotope, X, Y, distance, activity), optics, reflector gap, gain σ / seed, background ratio, detection chain and the Monte Carlo seed — are editable only in Empty or after a failure without data. Any other change is refused by the view model, not only disabled in the view. While Acquiring, live time and speed are locked too. |
+| SR-RUN-13 | Without acquired data, Start is enabled when at least one source exists. With data the button reads Continue and is enabled only in Stopped or Completed when the preset exceeds the acquired live time. The command re-checks its condition when invoked; it is not the window's default button. |
+| SR-RUN-14 | *Withdrawn* — outdated / stale result marking; replaced by SR-RUN-12, SR-RUN-23, SR-RUN-26. |
 | SR-RUN-15 | The scene config uses nearest-prime rank, non-cyclic decoding and a reconstruction grid inside the FCFOV; non-finite or non-positive preset live time and speed are rejected by the service. |
 | SR-RUN-16 | Immutable cumulative snapshots carry live time, integer counts, flood, reconstruction, estimate and the same fresh event list (pixel, true deposit in keV, Poisson arrival time in s); each event is used once. The flood adds one count at each ComptonCrystalDetector event’s Argmax pixel, so in-crystal Compton scatter mispositioning is part of the image. |
 | SR-RUN-17 | At 4 Hz the accumulated flood is re-decoded on its fixed grid and imaging measurements refresh without replacing their geometry. A slow consumer receives the latest cumulative snapshot. |
 | SR-RUN-18 | If MC cannot supply rate × speed, live time advances only through the acquired prefix and the status appends "MC-limited ×k" with achieved live seconds per wall second. |
-| SR-RUN-19 | Preset live time defaults to 60 s and speed to ×10; Start clears and begins a new session, and reaching the preset automatically sets Completed. |
+| SR-RUN-19 | Preset live time defaults to 60 s and speed to ×10; reaching the preset automatically sets Completed. |
 | SR-RUN-20 | Studio explicitly supplies entrance 0.15 mm steel-equivalent, backing 2 mm, default reflector gap 0.1 mm, gain σ 3% and gain seed 1. Entrance and backing are read-only; gap, gain σ and seed are editable run inputs. Existing engine scene-builder defaults are unchanged. |
-| SR-RUN-21 | Snapshots retain their acquisition detector inputs. True deposits are preserved; one shared deterministic measurement response applies the CrystalUniformity gain pattern before chain smearing. Editing gain marks results outdated and cannot change the recorded detector response. |
+| SR-RUN-21 | Snapshots retain their acquisition detector inputs. True deposits are preserved; one shared deterministic measurement response applies the CrystalUniformity gain pattern before chain smearing. Gain inputs are locked while data exist, so the recorded detector response cannot change. |
 | SR-RUN-22 | A finite nonnegative detected background/source ratio (default 0) adds an independent Poisson process at BSR × source rate. Each fresh background deposit comes from the existing unmasked cosine-flux crystal response at 200 keV and is placed according to the uniform detected pedestal. At zero BSR the seeded source stream is unchanged. |
+| SR-RUN-23 | Continue (Start with data) resumes the same acquisition: the same list-mode source and random streams, the already-drawn look-ahead event, the events, flood, live-time clock, seed and acquisition identity. Live time does not advance while stopped. The continued event stream equals, event for event, that of an uninterrupted acquisition to the same live time, and the workspaces append to their retained processing. |
+| SR-RUN-24 | In Stopped and Completed the preset live time may be raised to continue; a value below the acquired live time is rejected with a message and the previous value restored. Speed only paces the acquisition and is editable in every state but Acquiring. |
+| SR-RUN-25 | Each new acquisition draws a new Monte Carlo seed unless the Seed input fixes one (blank: new; a nonnegative integer: fixed). Every random stream of the acquisition derives from it, the same seed reproduces the acquisition, and the status line shows it. |
+| SR-RUN-26 | Reset — enabled only in Stopped, Completed or Failed with data, never while acquiring — discards the acquisition without a confirmation: session, snapshot, images, spectrum, scope, focus sweep and the scene frozen at Start. The state returns to Empty ("Ready") and the physical inputs unlock; measurement shapes are kept. |
+| SR-RUN-27 | A failure after data keeps the last published data visible and locked and offers only Reset; a failure before any data leaves the inputs editable and Start enabled. Both show "Failed: <message>". |
+| SR-RUN-28 | The status line's rate is the observed count rate, counts / live time — the definition the Detector workspace uses. |
 
 ### Scene (`SR-SCENE`)
 
@@ -131,11 +137,11 @@ Structured after IEC 62304 §5.2 (software requirements analysis). As in [VV.Stu
 | SR-IMG-01 | One shell-owned positive finite window multiplier N (default 1.5) is editable in Spectrum and Imaging. Both use the same per-energy FWHM bands, including unresolved-line grouping. Changing N re-filters retained acquisition events without a new acquisition. |
 | SR-IMG-02 | The worker accumulates a primary-line energy-window flood per scene isotope, using the acquisition's deterministic measured energy response, and decodes it. All retains the acquisition image of every event. |
 | SR-IMG-03 | An All / isotope selector changes the displayed flood, reconstruction, colour bar, readout, peak reading and ROI statistics together. Selecting a channel does not run transport or decoding on the UI thread. |
-| SR-IMG-04 | Each isotope channel reports up to its source count of separated found peaks, refined with the pipeline-default sub-cell interpolation. Found peaks are read-only diamonds labelled with the isotope and listed as coordinates; true-source rings remain draggable while idle. All shows the union of found peaks. Association is checked below one reconstruction-grid diagonal; localization precision is measured separately and is not implied by the marker. |
+| SR-IMG-04 | Each isotope channel reports up to its source count of separated found peaks, refined with the pipeline-default sub-cell interpolation. Found peaks are read-only diamonds labelled with the isotope and listed as coordinates; true-source rings are display-only. All shows the union of found peaks. Association is checked below one reconstruction-grid diagonal; localization precision is measured separately and is not implied by the marker. |
 | SR-IMG-05 | A Compton strip view toggle subtracts the simultaneous raw higher-channel floods per pixel, clamped at zero. H-only calibration at acquisition start and after N changes uses at least 20,000 accepted events per contaminating isotope, with R = low-window / own-window counts. The panel lists each R and states the one-pass scalar model limitation: exact for a clean pair, approximate for 3+ overlapping contaminants. |
-| SR-IMG-06 | Channel building, H-only calibration and decoding run on a worker and publish separate processing costs. A retained scene and optics snapshot determines processing even after edits; stale acquisitions remain marked. Cancelled or late processing cannot replace a newer view. |
+| SR-IMG-06 | Channel building, H-only calibration and decoding run on a worker and publish separate processing costs. The scene and optics frozen at Start determine processing for the whole acquisition, including continued segments. Cancelled or late processing cannot replace a newer view. |
 
-### Measurement and source drag (`SR-MEAS`)
+### Measurement (`SR-MEAS`)
 
 | ID | Requirement |
 |---|---|
@@ -146,7 +152,7 @@ Structured after IEC 62304 §5.2 (software requirements analysis). As in [VV.Stu
 | SR-MEAS-05 | Measurements are numbered M1, M2, …; a new one is selected; delete selects the neighbour; clear restarts numbering; a draft with the wrong point count is rejected. |
 | SR-MEAS-06 | The tool hint follows the active tool. |
 | SR-MEAS-07 | Gestures: drags shorter than 4 px are ignored; Esc or right-click abandons a draft; Delete on the focused heatmap removes the selected measurement; points are clamped to the image. Geometry is stored in mm, so it follows zoom and pan. |
-| SR-MEAS-08 | With the Pan tool and while idle, a source marker on the reconstruction can be dragged; it lands on a 0.1 mm grid, clamped to the image extent, and marks the result stale. |
+| SR-MEAS-08 | *Withdrawn* — source-marker drag; source positions are physical inputs (SR-RUN-12), edited in the left panel. |
 
 ### Theme (`SR-THEME`)
 
@@ -159,10 +165,10 @@ Structured after IEC 62304 §5.2 (software requirements analysis). As in [VV.Stu
 
 | ID | Requirement |
 |---|---|
-| SR-OPT-01 | Rank, cell pitch, mask–detector distance, pixels per side and pixel pitch are editable physical run inputs. One validated effective record feeds configuration and preset matching. The prime selector displays the effective supported rank. Physical editors are disabled while acquiring and edits mark retained results outdated. |
+| SR-OPT-01 | Rank, cell pitch, mask–detector distance, pixels per side and pixel pitch are editable physical run inputs. One validated effective record feeds configuration and preset matching. The prime selector displays the effective supported rank. Physical editors are editable only while no acquired data exist (SR-RUN-12). |
 | SR-OPT-02 | Sharp (default), Baseline, Wide FOV and High-res apply their historical engineering geometries atomically. The selector shows Custom after divergence. Selecting a geometry does not move scene sources or alter decoder focus; performance is conditional on scene, focus, counts and isotope channels. |
-| SR-OPT-03 | Studio rejects non-finite, malformed, out-of-policy and cross-field-invalid inputs before transport or projection. Policy ranges are in §5; every scene source lies beyond the mask front face. Refocus uses acquired physical settings, including after pending physical edits. Grid allocation is bounded at 128×128. Errors remain visible with sections collapsed and Start expands error sections. |
-| SR-OPT-04 | Decoder focal plane is an Imaging view setting. At Acquiring, Stopped and Completed it reprojects All and isotope/stripped reconstructions, estimates and found peaks from retained floods/events without new transport, measurement, random draws or calibration. Latest revision wins; stale is neither set nor cleared. Focus changes clear reconstruction measurements/drafts with a visible explanation while retaining flood measurements. All found markers remain the union of isotope-channel markers. |
+| SR-OPT-03 | Studio rejects non-finite, malformed, out-of-policy and cross-field-invalid inputs before transport or projection. Policy ranges are in §5; every scene source lies beyond the mask front face. Refocus uses the acquired physical settings. Grid allocation is bounded at 128×128. Errors remain visible with sections collapsed and Start expands error sections. |
+| SR-OPT-04 | Decoder focal plane is an Imaging view setting. At Acquiring, Stopped and Completed it reprojects All and isotope/stripped reconstructions, estimates and found peaks from retained floods/events without new transport, measurement, random draws or calibration. Latest revision wins; the acquisition state is unchanged. Focus changes clear reconstruction measurements/drafts with a visible explanation while retaining flood measurements. All found markers remain the union of isotope-channel markers. |
 | SR-OPT-05 | Display resolution element cF/D, nominal cyclic field ±pcF/(2D), samples per mask cell, detector coverage in periods and physical mask width. These are geometry values, not localization/usable-field guarantees; no pass/fail glyphs or depth-reach extrapolation. A one-line caption states that precision is position-dependent conditional evidence; the 1 m position-sweep figures are its tooltip and accessible help text, and are recorded in [VV.Studio.Imaging](VV.Studio.Imaging.md).
 | SR-OPT-06 | Detection chain, Physical optics and Detector collapse independently in the shared panel, each with a single-line effective summary; Physical optics and Detector start collapsed, the chain expanded, so the default left panel fits 1280×800 without scrolling. The Imaging right panel holds collapsible Decoder focal plane, Imaging channel and Focus sweep sections (the sweep opens when a result arrives) and scrolls when needed; Tools and the measurement table sit under the image pair and take the height the width-limited images leave. Controls inherit theme tokens and have accessible labels, units and stable AutomationIds.
 
@@ -211,11 +217,12 @@ Seven withdrawn rows are retained with stable IDs; Detector, focus and Waveform 
 | Input | Unit | Valid range / handling | Requirement |
 |---|---|---|---|
 | Isotope | — | one of the engine's `Isotopes.All`; anything else → Cs-137 | SR-SCENE-01 |
-| Source X, Y | mm | free in the fields; dragged markers clamped to the reconstruction extent, 0.1 mm grid | SR-SCENE-01, SR-MEAS-08 |
+| Source X, Y | mm | free in the fields while editable | SR-SCENE-01, SR-RUN-12 |
 | Source distance | mm | 200–3000 (clamped) | SR-SCENE-01 |
 | Activity | µCi | > 0 (≤ 0 → 1) | SR-SCENE-01 |
-| Preset live time | s | finite > 0; default 60; invalid UI input → 60, invalid service input rejected | SR-RUN-15, SR-RUN-19 |
-| Speed | live s / wall s | finite > 0; default 10; invalid UI input → 10, invalid service input rejected | SR-RUN-15, SR-RUN-19 |
+| Preset live time | s | finite > 0; default 60; invalid UI input → 60, invalid service input rejected; with data only ≥ the acquired live time | SR-RUN-15, SR-RUN-19, SR-RUN-24 |
+| Speed | live s / wall s | finite > 0; default 10; invalid UI input → 10, invalid service input rejected | SR-RUN-15, SR-RUN-19, SR-RUN-24 |
+| Seed | integer | blank (default: a new seed per acquisition) or a nonnegative integer; anything else blocks Start with a message | SR-RUN-25 |
 | Gain σ / seed | % / integer | σ finite ≥ 0, default 3%; invalid UI σ → 3%; seed default 1 | SR-RUN-20, -21 |
 | Reflector gap | µm editor, mm configuration | finite 0 ≤ gap < pending pixel pitch; default 100 µm; invalid text blocks Start, revalidated after pitch edits | SR-DET-01 |
 | Focus sweep K | integer | 1–4, default 1; 81 planes uniform in inverse detector-referenced distance from D+30 to 3000 mm | SR-FOCUS-01, -02 |
@@ -242,13 +249,14 @@ Seven withdrawn rows are retained with stable IDs; Detector, focus and Waveform 
 
 | Situation | What the user sees | Requirement |
 |---|---|---|
-| Ready | "Ready" | — |
-| Acquiring | "t = 12.0 s of 60 s · 1,834 counts · 153 cps", live-time progress, Stop button; optional "MC-limited ×k" | SR-RUN-11, SR-RUN-18 |
-| Completed | "Completed · t = 60.0 s of 60 s · <counts> counts · <rate> cps" | SR-RUN-19 |
-| Stopped | "Stopped · t = <t> s of 60 s · <counts> counts · <rate> cps"; acquired data retained | SR-RUN-10 |
-| Failed | "Failed: <message>" | SR-RUN-03 |
+| Ready (Empty) | "Ready" after launch and after Reset; Start | SR-RUN-26 |
+| Acquiring | "t = 12.0 s of 60 s · 1,834 counts · 153 cps · seed 81236", live-time progress, Stop button; optional "MC-limited ×k"; the rate is counts / live time | SR-RUN-11, SR-RUN-18, SR-RUN-25, SR-RUN-28 |
+| Completed | "Completed · t = 60.0 s of 60 s · <counts> counts · <rate> cps · seed <n>"; Continue enabled once the preset is raised; Reset | SR-RUN-19, SR-RUN-24 |
+| Stopped | "Stopped · t = <t> s of 60 s · <counts> counts · <rate> cps · seed <n>"; acquired data retained; Continue, Reset | SR-RUN-10, SR-RUN-23 |
+| Failed | "Failed: <message>"; with data only Reset | SR-RUN-03, SR-RUN-27 |
+| Preset below the acquired live time | "The preset cannot be below the acquired live time (<t> s)." in the status bar; previous value restored | SR-RUN-24 |
+| Invalid seed | "The seed must be blank (new each acquisition) or a nonnegative integer." in the status bar | SR-RUN-25 |
 | Spectrum processing failure | "Spectrum failed: <message>"; acquired data retained | SR-SPEC-01, -07 |
-| Images no longer match the scene | "outdated" chip on the images | SR-RUN-14 |
 | ROI before any run / outside the pixels | "—" · "no image yet" / "no pixel centres inside" | SR-MEAS-04 |
 
 Every status is carried by text, not colour alone (SR-A11Y-04).
@@ -261,9 +269,9 @@ The requirements that implement the controls:
 | Hazardous situation | Risk-control requirements (RC) |
 |---|---|
 | Wrong position read off an image | SR-VIEW-05, SR-VIEW-07 |
-| Old image taken as current | SR-RUN-10, SR-RUN-14 |
+| Old image taken as current | SR-RUN-10, SR-RUN-12, SR-RUN-26 |
 | ROI sum from the wrong image or frame | SR-MEAS-04 |
-| False precision | SR-MEAS-01, SR-MEAS-03, SR-MEAS-08 |
+| False precision | SR-MEAS-01, SR-MEAS-03 |
 | App hangs or crashes on a long or failing run | SR-RUN-09, SR-RUN-10, SR-RUN-03 |
 | Status missed by colour-blind or screen-reader users | SR-A11Y-04 |
 
@@ -293,16 +301,16 @@ These requirements replace the earlier exclusion of the Waveform workspace and r
 | ID | Requirement | Verification |
 |---|---|---|
 | SR-CHAIN-01 | A shared scintillator / photosensor / preamp selection shall be frozen at Start in the acquisition's detector settings. Measurement, spectrum bands/grouping/label, isotope windows/calibration and waveform shall use that acquired chain. | WaveformServiceTests.Response_AgreesAcrossWaveformSpectrumAndImaging; MixedFieldCalibration_UsesAcquiredChainAndInvalidatesRatios (Evidence) |
-| SR-CHAIN-02 | Chain editing shall be disabled during acquisition; subsequent edits shall mark retained results outdated without remeasuring retained data with pending settings. The pending and acquired chain identities shall be shown, as two separate lines, exactly when they differ. | WaveformWorkspaceTests.Chain_EditMarksStaleButKeepsAcquiredIdentity; ActiveAcquisition_DisablesPhysicalChainChanges; offscreen chain selector assertions |
+| SR-CHAIN-02 | Chain editing shall be disabled during acquisition and while acquired data exist; retained data shall never be remeasured with other settings. | WaveformWorkspaceTests.Chain_LockedWithData_ScopeUsesAcquiredChain; ActiveAcquisition_DisablesPhysicalChainChanges; offscreen chain selector assertions |
 | SR-CHAIN-03 | Studio shall explicitly map GAGG(Ce), NaI(Tl), LYSO and BGO to their transport material. CsI(Tl) shall not be offered; unmapped scintillators shall fail before acquisition. | WaveformServiceTests.Chain_SetsTransportMaterialWithoutChangingEngineDefaults; Chain_RejectsUnsupportedMaterial |
 | SR-WAVE-01 | Waveform shall display ADC and existing integer-shaper traces of the array-wide energy channel, sharing a navigable time axis, in a default 10 µs window with 20% pretrigger. | WaveformServiceTests.Window_PreservesRequestedLengthAndPrecedingPulseAcrossPixels; offscreen real10us renders and shared navigation assertions |
 | SR-WAVE-02 | A user shall select latest / next / zero-based acquired event index. Window events shall retain index, pixel, true deposit and absolute acquired time. Default scope time shall preserve recorded arrivals. | WaveformWorkspaceTests.HiddenScope_DoesNotGenerateAndHeldTriggerReusesWindow; WaveformServiceTests.RetainedMonteCarloEvents_PreserveAssociationAndTime |
-| SR-WAVE-03 | Rate study shall deterministically re-space retained events in order at a labelled simulated detected rate for the energy channel; it shall not alter events, counts, live time, other workspaces or stale state. | WaveformServiceTests.RateStudy_IsDeterministicAndLeavesAcquisitionUntouched; WaveformWorkspaceTests.ScopeFailure_IsVisibleAndLocalControlsNeverMarkStale |
+| SR-WAVE-03 | Rate study shall deterministically re-space retained events in order at a labelled simulated detected rate for the energy channel; it shall not alter events, counts, live time, other workspaces or the acquisition state. | WaveformServiceTests.RateStudy_IsDeterministicAndLeavesAcquisitionUntouched; WaveformWorkspaceTests.ScopeFailure_IsVisibleAndLocalControlsKeepTheAcquisition |
 | SR-WAVE-04 | Realistic stimulus amplitudes shall apply acquired pixel gain and the shared index-addressed chain response once, with no second intrinsic raster smearing. Labels shall distinguish the ADC simulation's shaped heights from the analytic MCA. | WaveformServiceTests.Response_AgreesAcrossWaveformSpectrumAndImaging; Rasterizer_MatchesLegacyWithoutSecondIntrinsicSmear |
 | SR-WAVE-05 | Ideal shaper stimulus shall remove chain smearing, analog and ADC noise, and finite rise, retaining fixed pixel gain, selected tail and integer filter. | WaveformServiceTests.Ideal_HasNoNoiseOrSmearAndKeepsTail; ideal offscreen renders |
 | SR-WAVE-06 | Readouts shall identify acquired chain, photoelectron budget, single-channel FWHM excluding pixel gain spread, pulse time constants, actual integer filter coefficients and effective resolving interval. Trapezoidal energy shall use matched local flat-top calibration and be unavailable for overlap/saturation/partial windows. CR-RC shall show its quantization limitation without claiming recovered energy. | WaveformServiceTests.AcquiredChain_IsUsedAfterPendingSelectionChanges; Readout_SuppressesPartialOverlapAndSaturation |
 | SR-WAVE-07 | Scope work shall use checked origin-relative sample conversion, explicit requested length, warm-up covering preceding pulse support and filter history, and a total raster allocation cap of 10 million samples. Clipping and missing acquired future shall be labelled; an empty acquired window shall show simulated baseline noise. | ScopeWindow tests; WaveformServiceTests.TimeBase_IsOriginRelativeAtLateAcquisitionTime; Ideal_HasNoNoiseOrSmearAndKeepsTail; MaximumWindow_ReportsWorkerCostAndBoundedPlotSamples (Evidence) |
-| SR-WAVE-08 | Scope processing and pyramid preparation shall run on a worker only while the workspace is active. A held covered selection shall reuse its output. Obsolete requests shall be cancelled/discarded and errors shown. Viewport navigation shall not resimulate the trace. | WaveformWorkspaceTests.HiddenScope_DoesNotGenerateAndHeldTriggerReusesWindow; LatestSelectionWinsAndNewAcquisitionCancelsOldScope; ScopeFailure_IsVisibleAndLocalControlsNeverMarkStale; shared-axis render assertions |
+| SR-WAVE-08 | Scope processing and pyramid preparation shall run on a worker only while the workspace is active. A held covered selection shall reuse its output. Obsolete requests shall be cancelled/discarded and errors shown. Viewport navigation shall not resimulate the trace. | WaveformWorkspaceTests.HiddenScope_DoesNotGenerateAndHeldTriggerReusesWindow; LatestSelectionWinsAndNewAcquisitionCancelsOldScope; ScopeFailure_IsVisibleAndLocalControlsKeepTheAcquisition; shared-axis render assertions |
 
 Finite warm-up resets the integer filter locally and is not a claim of acquisition-wide baseline-state equivalence. Ten million samples is an allocation ceiling, not a guaranteed 4 Hz trace-generation rate. Integer shapers retain their existing accumulator semantics; no new broad overflow/hardware validation claim is made.
 
@@ -310,14 +318,14 @@ Finite warm-up resets the integer filter locally and is not a claim of acquisiti
 
 | ID | Requirement |
 |---|---|
-| SR-DET-01 | A shared reflector-gap editor uses µm and supplies mm to acquisition. Finite nonnegative gap must be smaller than pending pixel pitch; malformed edits and pitch changes revalidate and block Start. Editing is disabled while acquiring and marks retained results outdated. |
-| SR-DET-02 | Detector is the fourth registered workspace. Before acquisition its static gain pattern and face use pending detector/optics; after acquisition they use frozen acquired inputs, with textual outdated state and a separate next-acquisition summary. |
+| SR-DET-01 | A shared reflector-gap editor uses µm and supplies mm to acquisition. Finite nonnegative gap must be smaller than pending pixel pitch; malformed edits and pitch changes revalidate and block Start. Editing is possible only while no acquired data exist (SR-RUN-12). |
+| SR-DET-02 | Detector is the fourth registered workspace. Without acquired data its static gain pattern and face use the pending detector / optics, captioned "Settings for the next acquisition"; with data they use the acquired (locked) inputs, captioned "Acquired settings · locked until Reset". The caption is neutral text, not a warning. |
 | SR-DET-03 | The face uses the engine's seeded gain pattern and exact active rectangles with half-gap perimeter and full-gap interior dead regions. It reports geometric active-area fraction ((pitch−gap)/pitch)² as area, independently of acquired counts/live-time rate, material and gain σ/seed. |
-| SR-DET-04 | Offscreen fixtures cover Detector before acquisition and with stale settings, both themes and 1280×800/1440×900, without creating an HWND or sending desktop input. |
+| SR-DET-04 | Offscreen fixtures cover Detector before acquisition and with acquired (locked) settings, both themes and 1280×800/1440×900, without creating an HWND or sending desktop input. |
 | SR-FOCUS-01 | A cancellable worker sweeps the selected channel's retained flood through ImagingProjection.AtFocus with non-cyclic decoding and Studio allocation validation, without transport or calibration and without joining the 4 Hz snapshot publisher. |
 | SR-FOCUS-02 | Sweep planes are uniform in 1/z from acquired D+30 to 3000 mm. K is user-selected from 1–4, default 1, independent of scene truth. Across planes, candidates are assigned one-to-one by minimum squared angular displacement (x/z,y/z). |
 | SR-FOCUS-03 | A plane-versus-prominence PlotView shows each complete track's curve, sharpest plane and contiguous interpolated raw half-maximum interval. Edge-reaching intervals have censored endpoints and no finite width. Boundary maxima, disconnected half-max modes and unresolved results are labelled. |
-| SR-FOCUS-04 | Acquisition replacement or edits to channel/window/strip/optics/K cancel and invalidate analysis; obsolete responses cannot publish. Results identify the frozen acquisition prefix. Visible text describes lateral-dependent near-field bias, default-optics far-edge censoring from about 700 mm, and the difference between half-max width and uncertainty. Stripped fractional clipped floods are not independent Poisson observations. |
+| SR-FOCUS-04 | Reset, a new acquisition or edits to channel/window/strip/K cancel and invalidate analysis (optics cannot change while data exist); obsolete responses cannot publish. Results identify the frozen acquisition prefix. Visible text describes lateral-dependent near-field bias, default-optics far-edge censoring from about 700 mm, and the difference between half-max width and uncertainty. Stripped fractional clipped floods are not independent Poisson observations. |
 | SR-FOCUS-05 | Optional external surface range is separate from decoder focus and appears as a focus-curve marker. Only the explicit Use as focus action changes decoder focus. No fusion verdict, significance or automatic focus change is supplied. |
 
 The focus tool is descriptive engineering analysis, with no calibrated depth accuracy or confidence interval. Conditions and verification limits are in [VV.Studio.Detector](VV.Studio.Detector.md).

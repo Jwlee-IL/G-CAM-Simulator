@@ -130,7 +130,7 @@ Automation. Status: **pass** (evidence on 2026-10-01), **partial**, **open** (no
 
 | Req | Level | Method | Evidence | Status |
 |---|---|---|---|---|
-| SR-OPT-01, -02 | unit + offscreen | T, I | `OpticsPolicyTests.Presets_ApplyAtomically_MatchPhysicalFieldsAndShowCustom`; `OpticsViewModelTests.Focus_AcquiringStoppedCompleted_KeepsEventsSpectrumAndStaleState`; physical input bindings | pass headless + offscreen; desktop deferred |
+| SR-OPT-01, -02 | unit + offscreen | T, I | `OpticsPolicyTests.Presets_ApplyAtomically_MatchPhysicalFieldsAndShowCustom`; `OpticsViewModelTests.Focus_AcquiringStoppedCompleted_KeepsEventsAndSpectrum_OpticsLockedWithData`; physical input bindings | pass headless + offscreen; desktop deferred |
 | SR-OPT-03 | unit + integration | T | `OpticsPolicyTests` finite/text/cross-field cases; `OpticsViewModelTests.InvalidInput_StartExpandsSectionsAndDoesNotStartTransport`; service config validation | pass headless; desktop deferred |
 | SR-OPT-04 | unit + integration | T | `OpticsProjectionTests.Refocus_ReprojectsAllChannels_WithoutMeasurementCalibrationOrNewEvents`, `EmptySnapshot_RefocusKeepsEmptyImagesAndDoesNotCalibrate`; `OpticsViewModelTests` lifecycle/revision/acquisition tests | pass headless; desktop deferred |
 | SR-OPT-05 | unit + integration + offscreen | T, I | `OpticsPolicyTests.Geometry_UsesEffectiveFieldsAndHasNoPerformanceBand`; `OpticsProjectionTests.Sampling_SmallOffAxisSample_FinerPixelsReduceLocalizationError` (default); full position sweep (GCAM_EVIDENCE_TESTS=1); [sampling evidence](VV.Studio.Imaging.md); one-line caption with the figures as tooltip / help text (`Imaging.SamplingEvidence`) inspected in the renders | prior full sweep passed; revised default regression verification pending |
@@ -143,26 +143,32 @@ Automation. Status: **pass** (evidence on 2026-10-01), **partial**, **open** (no
 | SR-IMG-06 | unit + integration | T, I | `ImagingWorkspaceTests.LateResponse_CannotReplaceNewerWindowResult`; serialized `Task.Run` worker and separate stopwatches | pass (headless); desktop pending |
 | SR-RUN-01 | historical batch | — | batch implementation and batch-only tests removed; historical desktop evidence below | withdrawn → SR-RUN-09, -19 |
 | SR-RUN-02 | historical batch | — | batch implementation and batch-only tests removed; historical desktop evidence below | withdrawn → SR-RUN-10 |
-| SR-RUN-03 | unit | T | `AcquisitionViewModelTests.Failure_ReportsMessage_KeepsAcquiredData` | pass |
+| SR-RUN-03 | unit | T | `AcquisitionViewModelTests.Failure_WithData_KeepsItLocked_ResetOnly`, `Failure_WithoutData_BehavesAsEmpty` | pass |
 | SR-RUN-04 | historical batch | — | batch implementation and batch-only tests removed; historical desktop evidence below | withdrawn → SR-RUN-11 |
 | SR-RUN-05 | historical batch | — | batch implementation and batch-only tests removed; historical desktop evidence below | withdrawn → SR-RUN-12 |
 | SR-RUN-06 | historical batch | — | batch implementation and batch-only tests removed; historical desktop evidence below | withdrawn → SR-RUN-13 |
 | SR-RUN-07 | historical batch | — | batch implementation and batch-only tests removed; historical desktop evidence below | withdrawn → SR-RUN-14 |
 | SR-RUN-08 | historical batch | — | batch implementation and batch-only tests removed; historical desktop evidence below | withdrawn → SR-RUN-15 |
-| SR-RUN-09 | unit + integration | T, I | `AcquisitionViewModelTests.Preset_Completes_NewStartClears_ResultAndEvents`; `AcquisitionServiceTests.ShortAcquisition_LocalizesAfterCountThreshold_SnapshotsAreImmutable`; worker inspected | pass (headless); desktop pending |
-| SR-RUN-10 | unit + integration | T | `AcquisitionViewModelTests.Start_SnapshotsGrow_StopKeepsData_UnlocksAndEditMarksStale`; `AcquisitionServiceTests.Stop_KeepsConsumedPrefix_AtExtremeMcLimitedSpeed` | pass (headless); desktop pending |
-| SR-RUN-11 | unit + integration | T | `AcquisitionViewModelTests.Preset_Completes_NewStartClears_ResultAndEvents`; `AcquisitionServiceTests.InjectedClock_AdvancesLiveTimeAndPresetWithoutWallDelay` | pass |
-| SR-RUN-12 | unit + inspection | T, I | acquisition ViewModel test (commands locked); source fields, `CanMoveMarkers`, live-time/speed `IsIdle` bindings inspected | pass (T/I); desktop pending |
-| SR-RUN-13 | unit + inspection | T, I | acquisition test (disabled while active); `CanStart` requires sources (I); existing empty-scene test covers collection | pass (T/I) |
-| SR-RUN-14 | unit | T | `AcquisitionViewModelTests.Start_SnapshotsGrow_StopKeepsData_UnlocksAndEditMarksStale`, `LiveTimeAndSpeed_MarkStale_WorkspaceAndMeasurementsDoNot` | pass |
+| SR-RUN-09 | unit + integration | T, I | `AcquisitionViewModelTests.Reset_DiscardsData_UnlocksInputs_NextStartIsANewAcquisitionWithANewSeed`; `AcquisitionServiceTests.ShortAcquisition_LocalizesAfterCountThreshold_SnapshotsAreImmutable`; worker inspected | pass (headless); desktop pending |
+| SR-RUN-10 | unit + integration | T | `AcquisitionViewModelTests.Start_SnapshotsGrow_StopKeepsDataAndLocks_ContinueAccumulates`; `AcquisitionServiceTests.Stop_KeepsConsumedPrefix_AtExtremeMcLimitedSpeed` | pass (headless); desktop pending |
+| SR-RUN-11 | unit + integration | T | `AcquisitionViewModelTests.Completed_StartDisabledUntilPresetRaised_LowerPresetRejected_ProgressFollowsPreset`; `AcquisitionServiceTests.InjectedClock_AdvancesLiveTimeAndPresetWithoutWallDelay` | pass |
+| SR-RUN-12 | unit + offscreen + inspection | T, I | `AcquisitionViewModelTests.Start_CapturesDetectorInputs_AndLocksThemWhileDataExist` (every physical writer refused with data), `LiveTimeAndSpeed_LockedWhileAcquiring_InvalidValuesFallBack`; render assertions: source editor and chain selectors disabled with data; `CanEditInputs` bindings inspected | pass (T/I); desktop pending |
+| SR-RUN-13 | unit + inspection | T, I | `AcquisitionViewModelTests.Start_SnapshotsGrow_StopKeepsDataAndLocks_ContinueAccumulates` (Start / Continue label and availability), `Completed_StartDisabledUntilPresetRaised_LowerPresetRejected_ProgressFollowsPreset` (guard inside the command); `IsDefault` removed (I) | pass (T/I) |
+| SR-RUN-14 | removed | — | stale flag, chips and their tests removed | withdrawn → SR-RUN-12, SR-RUN-23, SR-RUN-26 |
 | SR-RUN-15 | integration | T | existing nearest-prime / finite-grid builder tests; `AcquisitionServiceTests.InvalidInputs_FailBeforeStarting` (4 cases) | pass |
 | SR-RUN-16 | engine + integration | T, I | `ListModeSourceTests` (weighted flood, spectrum, rate, exponential gaps, seed, no duplicates); service immutable / count conservation test | pass |
 | SR-RUN-17 | integration + inspection | T, I | injected-clock test (250 ms); acquisition ViewModel test (ROI grows, old snapshot unchanged); fixed grid and decode per tick inspected; timings in acquisition record | pass (T/I); desktop pending |
 | SR-RUN-18 | integration + unit | T | extreme MC-limited service test; virtual ViewModel test verifies note and retained prefix | pass |
-| SR-RUN-19 | unit + integration | T | preset / restart ViewModel test; service preset completion test; defaults inspected | pass |
-| SR-RUN-20 | integration + unit + inspection | T, I | `DetectorRealismTests.StudioDefaults_AreExplicit_AndSceneBuilderRemainsBare`; `MainViewModelTests.DetectorInputs_DefaultsAndStaleStateFollowEdits`; geometry fields and IsIdle binding inspected | pass headless; desktop fields pending |
-| SR-RUN-21 | integration + unit | T | `DetectorRealismTests.Gain_WidensPhotopeakInQuadrature_AndReducesTightWindowAcceptance`, `Measurement_UsesFrozenInputs_AndReplaysAcrossSnapshotsAndPileUp`; `AcquisitionViewModelTests.Start_CapturesDetectorInputs_AndEditingMarksOnlyTheResultStale` | pass |
+| SR-RUN-19 | unit + integration | T | Completed ViewModel test; service preset completion test; defaults inspected | pass |
+| SR-RUN-20 | integration + unit + inspection | T, I | `DetectorRealismTests.StudioDefaults_AreExplicit_AndSceneBuilderRemainsBare`; `MainViewModelTests.DetectorInputs_DefaultsAndValidationFallbacks_EditableWithoutData`; geometry fields and `CanEditInputs` binding inspected | pass headless; desktop fields pending |
+| SR-RUN-21 | integration + unit | T | `DetectorRealismTests.Gain_WidensPhotopeakInQuadrature_AndReducesTightWindowAcceptance`, `Measurement_UsesFrozenInputs_AndReplaysAcrossSnapshotsAndPileUp`; `AcquisitionViewModelTests.Start_CapturesDetectorInputs_AndLocksThemWhileDataExist` | pass |
 | SR-RUN-22 | engine + inspection | T, I | `ListModeBackgroundTests` verifies rate, spatial profile, energy response, exact disabled stream, seed and cancellation; BSR field and worker inspected | pass headless; desktop BSR input pending |
+| SR-RUN-23 | integration + unit | T | `AcquisitionContinuationTests.StopAndContinue_ReproducesTheUninterruptedEventStream` (2 cases, real session), `Completed_RaisedPreset_ContinuesExactly`, `Continue_IsRejectedWhileRunning`; `OpticsViewModelTests.Focus_AcquiringStoppedCompleted_KeepsEventsAndSpectrum_OpticsLockedWithData` (one acquisition id across Continue) | pass |
+| SR-RUN-24 | unit | T | `AcquisitionViewModelTests.Completed_StartDisabledUntilPresetRaised_LowerPresetRejected_ProgressFollowsPreset`, `LiveTimeAndSpeed_LockedWhileAcquiring_InvalidValuesFallBack` | pass |
+| SR-RUN-25 | integration + unit | T | `AcquisitionContinuationTests.Seed_FixedReproduces_OtherSeedIsAnIndependentAcquisition`; `AcquisitionViewModelTests.Reset_DiscardsData_UnlocksInputs_NextStartIsANewAcquisitionWithANewSeed` | pass |
+| SR-RUN-26 | unit + offscreen | T, I | `AcquisitionViewModelTests.Reset_DiscardsData_UnlocksInputs_NextStartIsANewAcquisitionWithANewSeed`; `DetectorWorkspaceTests.Face_FollowsPendingBeforeStart_AcquiredAndLockedAfter_PendingAgainAfterReset`; `FocusSweepViewModelTests.Sweep_RejectsLateResult_WhenIdentityChanges` ("reset"); Reset button placement in the renders (I) | pass headless; desktop pending |
+| SR-RUN-27 | unit | T | `AcquisitionViewModelTests.Failure_WithData_KeepsItLocked_ResetOnly`, `Failure_WithoutData_BehavesAsEmpty` | pass |
+| SR-RUN-28 | unit + offscreen | T, I | `AcquisitionViewModelTests.Start_SnapshotsGrow_StopKeepsDataAndLocks_ContinueAccumulates` (status rate = counts / live time); status bar and Detector panel agree in the renders (84 vs 83.6 cps) | pass |
 | SR-SCENE-01 | unit | T | `MainViewModelTests.SourceItem_ClampsValues_LabelFollowsEdits`, `MainViewModelTests.IsotopePicker_OffersIr192_AndKeepsCs137AsTheDefault` | pass |
 | SR-SCENE-02 | unit | T | `MainViewModelTests.Startup_HasOneSelectedSource`, `MainViewModelTests.AddRemove_SelectsNewSourceThenNeighbour` | pass |
 | SR-VIEW-01 | unit | T | `HeatmapViewportTests.Fit_PreservesAspectAndCentres` | pass |
@@ -172,7 +178,7 @@ Automation. Status: **pass** (evidence on 2026-10-01), **partial**, **open** (no
 | SR-VIEW-05 | unit + integration | T, I | `HeatmapViewportTests.ScreenImage_RoundTripWithYUp`, `HeatmapViewportTests.PixelAt_RespectsBoundsAndOrientation`, `HeatmapViewportTests.MmMapping_PutsPixelCentresOnGrid`; flood origin `-(N−1)/2·pitch` in `AcquisitionSession` (I), pinned by `AcquisitionServiceTests.FloodAxis_MatchesTheDecodersPixelCentres` | pass |
 | SR-VIEW-06 | unit | T | `HeatmapViewportTests.Configure_ResizeKeepsZoom_NewImageSizeRefits` | pass |
 | SR-VIEW-07 | system + unit | T, I, M | readout format and key handling in `HeatmapView` (I); value format `TickFormatterTests.Significant_FourDigitsGroupedWithoutTrailingZeros` (7 cases); readout exposed via `ItemStatus`; UI scenario `ScenarioTests.Readout_AndOneCellRoi_MatchAbsolutePositionAndValue` (§5) | partial — readout automated; the refit keys (double-click, `0`, Home) by inspection only |
-| SR-VIEW-08 | unit | T | `MainViewModelTests.Workspace_SharedResultAndSelectionSurviveSnapshot_ViewSettingsDoNotMarkStale`; `ImagingWorkspaceTests.PeakChip_CountsSeveralFoundPeaks_AndNamesASingleOne` | pass |
+| SR-VIEW-08 | unit | T | `MainViewModelTests.Workspace_SharedResultAndSelectionSurviveSnapshot_ViewSettingsKeepState`; `ImagingWorkspaceTests.PeakChip_CountsSeveralFoundPeaks_AndNamesASingleOne` | pass |
 | SR-VIEW-09 | offscreen | I | colour bar and readout at the drawn image width (flood, reconstruction, Detector face) inspected in the 1280×800 / 1440×900 renders | pass offscreen; desktop deferred |
 | SR-MEAS-01 | unit + integration | T, M | `MeasurementMathTests.Distance_IsEuclidean`, `MeasurementsViewModelTests.Add_NumbersSequentially_AndSelectsTheNewOne`; VAL-03 (12.3 mm) | pass |
 | SR-MEAS-02 | unit | T, M | `MeasurementMathTests.AngleDeg_MeasuresAtTheVertex`, `MeasurementMathTests.AngleDeg_DegenerateArm_IsZero`; VAL-03 (67.0°) | pass |
@@ -181,7 +187,7 @@ Automation. Status: **pass** (evidence on 2026-10-01), **partial**, **open** (no
 | SR-MEAS-05 | unit | T | `MeasurementsViewModelTests.Add_NumbersSequentially_AndSelectsTheNewOne`, `MeasurementsViewModelTests.Delete_SelectsTheNeighbour_ClearRestartsNumbering`, `MeasurementsViewModelTests.Add_WrongNumberOfPoints_Throws` | pass |
 | SR-MEAS-06 | unit | T | `MeasurementsViewModelTests.ToolHint_FollowsTheActiveTool` | pass |
 | SR-MEAS-07 | system | I, M | `MeasurementAdorner` (`MinDragPx = 4`, Esc / right-click / Delete handlers, `Clamp`); VAL-03 (Delete, Esc) | partial — 4 px threshold, right-click and clamping by I only |
-| SR-MEAS-08 | system + unit | I, M, T | `MeasurementAdorner` (`MarkerSnapDigits = 1`, `Clamp`, `HitTestCore` honours `CanMoveMarkers`); VAL-04 drag to (18.9, 16.1) mm; stale part by `AcquisitionViewModelTests.Start_SnapshotsGrow_StopKeepsData_UnlocksAndEditMarksStale` | pass |
+| SR-MEAS-08 | removed | — | Studio sets `CanMoveMarkers = False`; drag scenario rewritten | withdrawn → SR-RUN-12 |
 | SR-THEME-01 | unit | T | `MainViewModelTests.ThemeToggle_FlipsThemeAndRelabels` (with `FakeTheme`) | pass |
 | SR-THEME-02 | system | I, M | `ThemeService.Apply` replaces in place (I); both-theme visual check | partial — no dated manual record |
 | SR-ENV-01 | build | C, I | `Gcam.Studio.csproj` targets `net9.0-windows`, the other two `net9.0` (C); DWM return values ignored in `ThemeService.ApplyTitleBar` (I) | pass — run on Windows 11 only |
@@ -195,9 +201,9 @@ Automation. Status: **pass** (evidence on 2026-10-01), **partial**, **open** (no
 | SR-ARCH-02 | build | C, I | Core has no reference to `Gcam.Simulation` (C); the shell could reach it transitively through Services, so for the shell it is I only | pass — see AN-08 |
 | SR-ARCH-03 | inspection | I | `MainWindow.xaml.cs` is `InitializeComponent()` only; literal sizes found — AN-05 | partial |
 | SR-ARCH-04 | build | C, I | `Gcam.Studio.Tests.csproj` references only `Gcam.Studio.Core` and targets `net9.0` | pass |
-| SR-NAV-01 | unit + I | T, I | `MainViewModelTests.Workspace_SharedResultAndSelectionSurviveSnapshot_ViewSettingsDoNotMarkStale`; workspace-type centre / panel templates | pass |
+| SR-NAV-01 | unit + I | T, I | `MainViewModelTests.Workspace_SharedResultAndSelectionSurviveSnapshot_ViewSettingsKeepState`; workspace-type centre / panel templates | pass |
 | SR-NAV-02 | unit + system | T, I | workspace tests, `WorkspaceActivation_SelectsShell_WhenActiveIsSetWithoutCommand` and `Spectrum_SnapshotsGrow_ViewSettingsReuseAcquisition_SelectionSurvives`: checked-state activation, identities, unavailable index and retained selection; segmented switch / Ctrl+1…4 inspected | partial — desktop SelectionItem switching pending |
-| SR-NAV-03 | unit | T | `AcquisitionViewModelTests.LiveTimeAndSpeed_MarkStale_WorkspaceAndMeasurementsDoNot`, `Workspace_SharedResultAndSelectionSurviveSnapshot_ViewSettingsDoNotMarkStale` | pass |
+| SR-NAV-03 | unit | T | `AcquisitionViewModelTests.Start_CapturesDetectorInputs_AndLocksThemWhileDataExist` (physical writers refused, window N still applied), `Workspace_SharedResultAndSelectionSurviveSnapshot_ViewSettingsKeepState` | pass |
 | SR-PLOT-01 | unit + I | T, I | `PlotSeriesTests.LowerBound_HandlesUniformAndIrregularX_AndEnds`; validation / cap / band / marker properties inspected | pass |
 | SR-PLOT-02 | unit | T | `PlotViewportTests.Mapping_RoundTrips_AndClampsLogFloor`, `NiceTicksTests.Linear_Uses125Steps_EngineeringLabels_NoNegativeZero`, `Logarithmic_LabelsDecades_WithEightMinorTicks`, `TickFormatterTests.StepLabels_TakeDecimalsFromTheStep_AndGroupThousands` | pass |
 | SR-PLOT-03 | unit | T | `MinMaxPyramidTests.Query_EqualsBruteForce_IncludingBothEnds` (5 cases), `Range_ClipsOutsideData_RejectsNonFiniteSamples` | pass |
@@ -214,7 +220,7 @@ Automation. Status: **pass** (evidence on 2026-10-01), **partial**, **open** (no
 | SR-SPEC-03 | integration | T | `HighRate_PileUpLosesPulsesAndMovesCountsAbovePhotopeak`; exact pulse-count agreement with engine `ApplyPileUp` | pass |
 | SR-SPEC-04 | integration + unit | T | `MixedCsCo_HasFourBandsAndUnionCountsEachBinOnce`, `Merge_UsesResolutionRatherThanWindowOverlap` (2 cases), `Merge_SingleLineGivesOneBand` | pass |
 | SR-SPEC-05 | integration + unit + I | T, I | `MixedCsCo_HasFourBandsAndUnionCountsEachBinOnce`; `SpectrumBandTests.BandOfXRayLines_IsNamedByEmitter_GammaBandByIsotope`; engine `EmissionKindTests` (3 cases); right-aligned columns and bin-centre selection inspected | pass headless; desktop table pending |
-| SR-SPEC-06 | unit + I | T, I | `AcquisitionViewModelTests.Spectrum_SnapshotsGrow_ViewSettingsReuseAcquisition_SelectionSurvives`; shared stale binding inspected | pass headless; desktop controls pending |
+| SR-SPEC-06 | unit + I | T, I | `AcquisitionViewModelTests.Spectrum_SnapshotsGrow_ViewSettingsReuseAcquisition_SelectionSurvives` (acquisition and its state unchanged) | pass headless; desktop controls pending |
 | SR-SPEC-07 | integration + I | T, I | `SeedAndSnapshotPartition_AreDeterministic_ToggleReplaysExactly` (2 cases), `Processing_MeasuresFullAndIncrementalWorkAt100000Events`; service `Task.Run` inspected | pass |
 | SR-SPEC-08 | inspection + system | I | `SpectrumView.xaml`, `SpectrumPanel.xaml`, inherited `PlotView` peer | partial — desktop accessibility and themes pending |
 | SR-SPEC-09 | unit + integration + inspection | T, I | acquisition VM test checks range request / selection persistence; spectrum service verifies every bin edge / centre; XAML one-way range / units inspected | pass headless; desktop selection walkthrough deferred |
@@ -341,7 +347,7 @@ waiting, includes worker preemption). No hard timing tolerance is imposed on thi
 
 Full processing exceeds a few ms, so it stays on the service worker. This is processing evidence, not a
 desktop responsiveness measurement. Once the desktop and UI-test project are free, add live-count growth /
-Stop retention, Cs photopeak / Ba K and mixed four-band display, setting reuse without stale, workspace switching
+Stop retention, Cs photopeak / Ba K and mixed four-band display, setting reuse, workspace switching
 and selection retention, plot keyboard / readout / focus, accessible control and table names, and both-theme checks.
 
 ## 5. Validation
@@ -356,8 +362,8 @@ app's code (an oracle that re-derives the image layout and the screen → mm map
 | VAL-01 | Run the default scene and read the result | progress moves to 100 %; flood map and reconstruction appear with colour bars; peak chip shows mm; status line names counts and time; UI stays responsive | **performed 2026-10-01** (automated pilot: the run reaches Succeeded and the flood map has an image) |
 | VAL-02 | Cancel a long run | Cancel appears only while running; images keep the previous result; status "Cancelled — previous result kept"; scene editable again | **performed 2026-10-01** (automated: scene locked while running, Cancelled, peak text unchanged, editable again) |
 | VAL-03 | Measure on both images | distance and ROI drawn on the flood map, angle on the reconstruction; values appear in "Measurement results" and on the image; Delete removes the selected one; Esc abandons a half-drawn angle | **performed 2026-10-01** — by hand: distance 12.3 mm and an ROI on the flood map, angle 67.0° on the reconstruction, Delete and Esc as specified; automated: three scenarios below |
-| VAL-04 | Move a source by dragging, then re-run | marker follows the pointer only with the Pan tool and when idle; X / Y fields show the snapped value; "outdated" chip appears; a re-run clears it | **performed 2026-10-01** — by hand: source dragged to (18.9, 16.1) mm on a 0.1 mm grid; automated: chip shown after the drag, cleared by the re-run |
-| VAL-05 | Locate a source and measure its offset from the decoded peak | Distance tool from the source marker to the peak gives the offset in mm; it agrees with the peak chip and source X / Y to within one recon step | **partial 2026-10-01** — automated: after a drag and re-run the decoded peak lies within 1.5 mm of the source; the Distance-tool step is not automated |
+| VAL-04 | Move a source after an acquisition | with data, the source fields are disabled and source markers do not move; Reset unlocks them; X / Y edited in the fields; Start acquires at the new position | open — desktop scenario rewritten 2026-10-02 (Reset, edit, Start), not run. Earlier (2026-10-01) the withdrawn drag gesture was performed by hand and automated |
+| VAL-05 | Locate a source and measure its offset from the decoded peak | Distance tool from the source marker to the peak gives the offset in mm; it agrees with the peak chip and source X / Y to within one recon step | **partial 2026-10-01** — automated: after moving the source and re-acquiring, the decoded peak lay within 1.5 mm of the source; the Distance-tool step is not automated |
 | VAL-06 | Use both themes | all text, focus rings, chips and overlays legible in dark and light; title bar follows | open |
 | VAL-07 | Keyboard only | every function reachable without a pointer except creating measurements (AN-01) | open |
 | VAL-08 | Small screen and display scaling | at 1366×768 the window starts maximised; at 125 % / 150 % heatmap cells stay equal width | open |
@@ -401,10 +407,10 @@ they are skipped and reported as skipped, not passed. Each scenario starts its o
 | Scenario | Traces to | Oracle (independent of the app) | Result 2026-10-01 |
 |---|---|---|---|
 | `PilotTests.Pilot_SimulateThenMeasureDistance_AddsRowWithExpectedLength` | VAL-01, VAL-03 · SR-RUN-09, SR-MEAS-01 | length from screen points through the documented fit rule | 13.4 mm vs 13.400 ± 0.204 |
-| `ScenarioTests.Stop_KeepsAcquiredData_LocksThenUnlocksScene` | VAL-02 · SR-RUN-10, SR-RUN-12, SR-RUN-14, SR-RUN-19 | state machine Acquiring → Stopped; counts frozen after Stop; Start clears | inputs locked; 35 counts kept and unchanged; editable again; restart began at 0 |
+| `ScenarioTests.StopContinueReset_KeepsAccumulatesAndDiscards` | VAL-02 · SR-RUN-10, SR-RUN-12, SR-RUN-13, SR-RUN-23, SR-RUN-26 | state machine Acquiring → Stopped → Acquiring (Continue) → Stopped → Reset → Empty; counts frozen after Stop, growing after Continue, zero after Reset; inputs locked until Reset | rewritten 2026-10-02, not run (earlier Start-clears version: 35 counts kept, restart at 0) |
 | `ScenarioTests.Roi_OnFloodMap_CountsWholePixelsByCentre` | VAL-03 · SR-MEAS-03 | pixel count by centre, corners on cell boundaries so one pixel of error cannot change it | 42 px, 3.6 × 4.2 mm |
 | `ScenarioTests.Angle_EscAbandonsDraft_DeleteRemovesSelected` | VAL-03 · SR-MEAS-02, SR-MEAS-07 | angle from the three screen points; Esc is proven by the value | 69.8° vs 70.02 ± 2.29; Delete removed it |
-| `ScenarioTests.SourceDrag_MarksOutdated_RerunPutsPeakOnTheSource` | VAL-04, VAL-05 · SR-MEAS-08, SR-RUN-14, SR-VIEW-08 | physics: after the re-run the decoded peak must sit on the moved source (≤ 1.5 mm) | 60 s list-mode: 1.43 mm (source (21.4, 16.0), peak (21.7, 17.4)) — near the tolerance; chip shown, then cleared |
+| `ScenarioTests.MoveSource_ResetEditStart_PutsPeakOnTheSource` | VAL-04, VAL-05 · SR-RUN-12, SR-RUN-26, SR-VIEW-08 | physics: after Reset, an X / Y edit and a new acquisition the decoded peak must sit on the moved source (≤ 1.5 mm) | rewritten 2026-10-02, not run (earlier drag version, 60 s: 1.43 mm, see AN-11) |
 | `ScenarioTests.Readout_AndOneCellRoi_MatchAbsolutePositionAndValue` | SR-VIEW-05, SR-VIEW-07, SR-MEAS-03 | absolute mm of two cells (both signs); a one-cell ROI must sum to the readout's value | (−6.3, 5.1) and (6.3, −4.5) mm exact; sum = cell value |
 | `ScenarioTests.ThemeToggle_RelabelsAndSwitchesBack` | SR-THEME-01 | the label names the other theme; the app still simulates after two swaps | pass (the visual swap stays manual) |
 
@@ -422,9 +428,9 @@ folder was left behind. UIA Select on the workspace switch does not change the w
 | AN-01 | Measurements can only be **created** with the pointer (documented in [DESIGN.Controls](DESIGN.Controls.md#measurementadorner-via-measurementoverlay)) | keyboard users can review, select and delete, not create | keyboard crosshair |
 | AN-02 | UI automation is desktop-only and opt-in | the seven scenarios of §5 are not part of CI; zoom and pan, the refit keys, drag-snapping limits and the visual theme swap are still checked by inspection or by hand | heatmap navigation scenarios next |
 | AN-03 | No high-contrast mode | Windows high-contrast themes are not honoured | planned with the keyboard crosshair |
-| AN-04 | Closed: legacy batch progress race | unused batch progress implementation removed; acquisition uses sequential snapshots | batch regression removed with the code it guarded; acquisition progress verified by `AcquisitionViewModelTests.Preset_Completes_NewStartClears_ResultAndEvents` |
+| AN-04 | Closed: legacy batch progress race | unused batch progress implementation removed; acquisition uses sequential snapshots | batch regression removed with the code it guarded; acquisition progress verified by `AcquisitionViewModelTests.Completed_StartDisabledUntilPresetRaised_LowerPresetRejected_ProgressFollowsPreset` |
 | AN-05 | Literal sizes in `MainWindow.xaml` (photon box `Width="120"`, readout `Height="18"`, `Margin="0,4,0,0"`, colour-bar `Margin="0,8,0,0"`) despite the no-literals rule | cosmetic; spacing doesn't follow `Metrics.xaml` | move to named keys |
-| AN-06 | The "outdated" chip is visual only (tooltip, not a live region) | a screen reader is not told that the images no longer match the scene | announce via the status line or a live region |
+| AN-06 | Closed (2026-10-02): the "outdated" chip was removed with the stale state | physical inputs are locked while data exist, so images always match the inputs shown; the state is announced by the status line (live region) | — |
 | AN-07 | WPF items (`HeatmapView` rendering, `ColorBar` ticks, `ThemeService`) have no unit tests, by design | defects show only when the app runs | covered by AN-02 plan |
 | AN-08 | SDK-style project references are transitive, so the shell *could* call the engine directly | layering rule for the shell is inspection-only | optional: `PrivateAssets` on the Services → engine reference |
 | AN-09 | *Closed* — the photon budget no longer exists (list-mode acquisition) | — | — |
@@ -441,9 +447,9 @@ No screen-reader (Narrator / NVDA) session has been run. Not verified.
 | Hazardous situation | Cause | Control | Verified by |
 |---|---|---|---|
 | Wrong position read off an image | y-flip or half-pixel error in screen ↔ mm | one mapping in `HeatmapViewport`; pixel-centre convention shared with the decoder | SR-VIEW-05 tests; VAL-03 |
-| Old image taken as current | scene edited after acquisition | stale flag and "outdated" chip; Start clears old data; Stop keeps acquired data with state text | SR-RUN-10, SR-RUN-14 tests; desktop acquisition validation pending |
+| Old image taken as current | scene edited after acquisition | physical inputs locked while data exist; Reset discards the data before an edit; Stop keeps acquired data with state text | SR-RUN-10, SR-RUN-12, SR-RUN-26 tests; desktop acquisition validation pending |
 | ROI sum from the wrong image or frame | measurement not refreshed, or pane mixed up | measurements stored per pane in mm; refreshed on every result | SR-MEAS-04 tests |
-| False precision | sub-pixel ROI weighting, unrounded drags | whole pixels by centre; drags snapped to 0.1 mm; values at 0.1 resolution | SR-MEAS-03 tests; SR-MEAS-08 I + M |
+| False precision | sub-pixel ROI weighting | whole pixels by centre; values at 0.1 resolution | SR-MEAS-03 tests |
 | App hangs or crashes on a long or failing acquisition | MC on the UI thread; unhandled exception | worker transport / decode; cooperative Stop; failure → `State = Failed` | SR-RUN-03, SR-RUN-09, SR-RUN-10 tests |
 | Status missed by colour-blind or screen-reader users | colour-only cues | text next to every status dot; selection by shape; live status line | SR-A11Y-04 (I); AN-06 |
 
@@ -478,7 +484,7 @@ The Waveform workspace and physical-chain selection are implemented; execution s
 
 | Requirement | Automated verification | Current execution status |
 |---|---|---|
-| SR-CHAIN-01…03 | WaveformServiceTests chain/response tests; WaveformWorkspaceTests stale/frozen/disabled-edit tests; Evidence mixed-field calibration | Added, not run |
+| SR-CHAIN-01…03 | WaveformServiceTests chain/response tests; WaveformWorkspaceTests locked/frozen/disabled-edit tests; Evidence mixed-field calibration | Added, not run |
 | SR-WAVE-01…02 | Origin-relative window/prehistory/association tests; next/latest/held-window VM tests; actual MC offscreen scope | Added, not run |
 | SR-WAVE-03…05 | Rate-study immutability/determinism; shared response; zero-noise ideal tests; real/rate/ideal render labels | Added, not run |
 | SR-WAVE-06 | Acquired readout and invalid-energy suppression tests; no CR-RC energy precision assertion | Added, not run |
@@ -501,14 +507,22 @@ Visual review evidence only; no desktop test was enabled. The desktop-test reado
 (`FloodOracle.ParseReadout`) now accepts the unit suffix and grouped four-digit values, checked by the non-desktop
 `FloodOracleTests.ReadoutAndSumParsers_ReadTheAppsFormats`.
 
+Acquisition control (Start / Stop / Continue / Reset, 2026-10-02) Release verification: 262 engine, 164 Core, 72
+service and 10 UI-oracle cases pass (previous 262 / 162 / 67 / 10); seven service evidence, nine desktop and the
+render case skip in the normal run; the render opt-in passes and its PNGs were regenerated (Detector "stale"
+fixture replaced by "acquired"). New service cases: `AcquisitionContinuationTests` (stop-and-continue equals the
+uninterrupted stream event for event, with and without background; raised preset; Continue rejected while running;
+seed reproduces / differs). The two rewritten desktop scenarios (`StopContinueReset_KeepsAccumulatesAndDiscards`,
+`MoveSource_ResetEditStart_PutsPeakOnTheSource`) were not run. Measurements: [VV.Studio.Acquisition](VV.Studio.Acquisition.md).
+
 ## Detector and retained-flood focus verification matrix
 
 | Requirement | Automated verification | Execution status |
 |---|---|---|
 | SR-DET-01 | DetectorWorkspaceTests.Gap_InvalidEditPreventsStart, Gap_RevalidatesAfterPitchChange_AndConvertsUnits; FocusSweepServiceTests.Config_RejectsGapAtServiceBoundary | Passed in Release, 2026-10-02 |
-| SR-DET-02 | Face_FollowsPendingBeforeStart_AndAcquiredAfterStaleEdit; MainViewModelTests.Workspace_SharedResultAndSelectionSurviveSnapshot_ViewSettingsDoNotMarkStale | Passed in Release, 2026-10-02 |
+| SR-DET-02 | Face_FollowsPendingBeforeStart_AcquiredAndLockedAfter_PendingAgainAfterReset; MainViewModelTests.Workspace_SharedResultAndSelectionSurviveSnapshot_ViewSettingsKeepState | Passed in Release, 2026-10-02 |
 | SR-DET-03 | DetectorFaceTests.Geometry_ExactGapCoverageAndArea; Face_GainsMatchMeasurementPattern; DetectorGapEvidenceTests | Deterministic tests passed; opt-in seed-spread evidence awaits environment-change authorization |
-| SR-DET-04 | RenderDetectorAndFocus before/stale Detector, dark/light, two sizes | Generated and inspected 2026-10-02 (batch-3 layout pass) |
+| SR-DET-04 | RenderDetectorAndFocus before/acquired Detector, dark/light, two sizes | Generated and inspected 2026-10-02 (acquisition-control pass) |
 | SR-FOCUS-01 | FocusSweepServiceTests.Sweep_UsesRetainedFlood_WithoutEventsOrSceneTruth, Sweep_PreCancelledWorkerCannotPublish, Sweep_EmptyFloodIsUnresolved; Sweep_FreezesIdentity_UserK_AndNeverDelaysAcquisition; Sweep_DoesNotHoldSnapshotConsumption_AndLabelsFrozenPrefix | Passed in Release, 2026-10-02 |
 | SR-FOCUS-02 | Planes_UniformInverseDistance_ExactBounds; Linking_UsesAngle_NotMillimetres_AndIsOneToOne; user-K identity test | Passed in Release, 2026-10-02 |
 | SR-FOCUS-03 | Interval_InterpolatesRawHalfMaximum_WithoutNoiseInterpretation, Interval_CensorsSweepEdges, Interval_FlagsDisjointModes_AndBoundaryMaximum; resolved/censored render fixture | Deterministic tests passed; render requires opt-in authorization |

@@ -15,4 +15,6 @@ public sealed record AcquisitionSnapshot(double LiveTimeS, long Counts, double R
     public DetectorSettings? Detector { get; init; }
     /// <summary>Effective physical optics frozen at Start; decoder view focus may change later.</summary>
     public Gcam.Configuration.OpticsSettings? Optics { get; init; }
+    /// <summary>Monte Carlo seed of the acquisition these events come from (provenance; reproduces them).</summary>
+    public int? Seed { get; init; }
 }

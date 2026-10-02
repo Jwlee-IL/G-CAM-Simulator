@@ -41,7 +41,7 @@ public sealed partial class MeasurementsViewModel : ObservableObject
         MeasureTool.Distance => "Drag from one point to another.",
         MeasureTool.Angle => "Click three points; the second is the vertex. Esc cancels.",
         MeasureTool.Roi => "Drag a rectangle. Sums the pixels whose centres are inside.",
-        _ => "Drag to pan. On the reconstruction, drag a source marker to move it.",
+        _ => "Drag to pan. Source positions are edited in the left panel (after Reset when data exist).",
     };
 
     /// <summary>Adds a measurement from a finished overlay gesture and selects it.</summary>

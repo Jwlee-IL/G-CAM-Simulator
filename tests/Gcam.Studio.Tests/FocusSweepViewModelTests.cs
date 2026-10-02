@@ -31,7 +31,7 @@ public sealed class FocusSweepViewModelTests
     {
         public Channel<AcquisitionSnapshot> Snapshots { get; } = Channel.CreateUnbounded<AcquisitionSnapshot>();
         public IAcquisitionSession Start(IReadOnlyList<SceneSource> scene, OpticsSettings optics, double liveTimeS,
-            double speed, DetectorSettings? detector = null, double backgroundToSignalRatio = 0)
+            double speed, DetectorSettings? detector = null, double backgroundToSignalRatio = 0, int? seed = null)
         { Snapshots.Writer.TryWrite(Snapshot(10)); return this; }
         public IAsyncEnumerable<AcquisitionSnapshot> ReadSnapshotsAsync(CancellationToken cancellationToken = default)
             => Snapshots.Reader.ReadAllAsync(cancellationToken);
@@ -60,7 +60,7 @@ public sealed class FocusSweepViewModelTests
     [Theory]
     [InlineData("window")]
     [InlineData("strip")]
-    [InlineData("optics")]
+    [InlineData("reset")]
     [InlineData("K")]
     [InlineData("cancel")]
     [InlineData("acquisition")]
@@ -73,10 +73,10 @@ public sealed class FocusSweepViewModelTests
         {
             case "window": vm.WindowFwhm = 2; break;
             case "strip": vm.Imaging.Strip = true; break;
-            case "optics": vm.Optics = vm.Optics with { CellPitchMm = 1 }; break;
+            case "reset": await vm.ResetCommand.ExecuteAsync(null); break;
             case "K": vm.Imaging.PeakCount = 2; break;
             case "cancel": vm.Imaging.CancelSweepCommand.Execute(null); break;
-            case "acquisition": await vm.StartCommand.ExecuteAsync(null); break;
+            case "acquisition": await vm.ResetCommand.ExecuteAsync(null); await vm.StartCommand.ExecuteAsync(null); break;
         }
         Assert.True(service.Token.IsCancellationRequested);
         service.Complete(); await task;
@@ -90,7 +90,7 @@ public sealed class FocusSweepViewModelTests
         Assert.Equal(1000, vm.Imaging.FocalDistanceMm);
         Assert.Single(vm.Imaging.FocusMarkers);
         vm.Imaging.UseAsFocusCommand.Execute(null);
-        Assert.Equal(500, vm.Imaging.FocalDistanceMm); Assert.False(vm.IsResultStale);
+        Assert.Equal(500, vm.Imaging.FocalDistanceMm); Assert.Equal(Gcam.Studio.Core.ViewModels.RunState.Empty, vm.State);
         vm.Imaging.ExternalRange = "NaN";
         Assert.NotNull(vm.Imaging.ExternalRangeError); Assert.False(vm.Imaging.UseAsFocusCommand.CanExecute(null));
         vm.Imaging.ExternalRange = ""; Assert.Null(vm.Imaging.ExternalRangeError);

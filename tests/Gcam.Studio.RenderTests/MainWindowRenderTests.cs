@@ -32,7 +32,8 @@ public sealed partial class PlotViewRenderTests
 
         var acquisition = new FixtureAcquisition();
         var model = new MainViewModel(acquisition, new FixtureTheme(Enum.Parse<AppTheme>(theme)), new FixtureSpectrum(),
-            mixed ? new FixtureImaging() : null, detectorFace: new Gcam.Studio.Services.DetectorFaceService());
+            mixed ? new FixtureImaging() : null, detectorFace: new Gcam.Studio.Services.DetectorFaceService())
+            { SeedText = "12345" }; // fixed seed: the status line and the PNGs are reproducible (E-8)
         if (mixed)
         {
             model.Sources[0].X = 15; model.Sources[0].Y = 8;
@@ -114,7 +115,8 @@ public sealed partial class PlotViewRenderTests
                 Assert.Same(model.ActivateWorkspaceCommand, picker.Command);
             var sourceEditor = Assert.Single(Descendants(root).OfType<StackPanel>(),
                 p => ReferenceEquals(p.DataContext, model.SelectedSource));
-            Assert.Equal(model.IsIdle, sourceEditor.IsEnabled);
+            Assert.Equal(model.CanEditInputs, sourceEditor.IsEnabled); // locked while data exist (A-2)
+            Assert.False(sourceEditor.IsEnabled);
             Assert.Equal(BindingStatus.Active,
                 BindingOperations.GetBindingExpression(sourceEditor, UIElement.IsEnabledProperty)!.Status);
 
@@ -127,7 +129,7 @@ public sealed partial class PlotViewRenderTests
                 Assert.Contains(heatmap.ValueUnit, heatmap.Readout);
                 Assert.DoesNotContain("E+", heatmap.Readout);
             }
-            foreach (string id in new[] { "AcquisitionLiveTime", "AcquisitionSpeed" })
+            foreach (string id in new[] { "AcquisitionLiveTime", "AcquisitionSpeed", "AcquisitionSeed" })
             {
                 var input = Assert.Single(Descendants(root).OfType<TextBox>(),
                     t => AutomationProperties.GetAutomationId(t) == id);
@@ -201,7 +203,7 @@ public sealed partial class PlotViewRenderTests
     {
         public AcquisitionSnapshot Snapshot { get; } = CreateSnapshot();
         public IAcquisitionSession Start(IReadOnlyList<SceneSource> scene, OpticsSettings optics,
-            double liveTimeS, double speed, DetectorSettings? detector = null, double backgroundToSignalRatio = 0)
+            double liveTimeS, double speed, DetectorSettings? detector = null, double backgroundToSignalRatio = 0, int? seed = null)
             => new FixtureSession(Snapshot);
 
         private static AcquisitionSnapshot CreateSnapshot()
@@ -220,7 +222,7 @@ public sealed partial class PlotViewRenderTests
                 6463, TimeSpan.FromMilliseconds(25));
             return new(60, 6463, 6463.0 / 60, 10, false, imaging,
                 Array.AsReadOnly(new[] { new DetectedEvent(15, 15, 661.7, 1) }), TimeSpan.FromMilliseconds(25), true)
-                { Detector = new DetectorSettings() };
+                { Detector = new DetectorSettings(), Seed = 12345 };
         }
     }
 

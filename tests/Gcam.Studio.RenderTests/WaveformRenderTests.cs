@@ -28,7 +28,7 @@ public sealed partial class PlotViewRenderTests
             resources.Add(new ResourceDictionary { Source = new Uri($"/Gcam.Studio;component/Themes/{file}.xaml", UriKind.Relative) });
         var acquisition = new WaveformAcquisition();
         var model = new MainViewModel(acquisition, new FixtureTheme(Enum.Parse<AppTheme>(theme)), new FixtureSpectrum(),
-            waveform: new FixedTimeWaveformService());
+            waveform: new FixedTimeWaveformService()) { SeedText = "12345" };
         model.StartCommand.ExecuteAsync(null).GetAwaiter().GetResult();
         model.IsOpticsExpanded = model.IsDetectorExpanded = false;
         model.SelectedWorkspace = model.Waveform;
@@ -36,8 +36,10 @@ public sealed partial class PlotViewRenderTests
         model.Waveform.FollowLatest = false;
         model.Waveform.TriggerIndex = 64;
         CompleteWaveform(model.Waveform.WhenUpdated);
-        // Pending physical selection differs from the captured chain, to expose both identities in the render.
+        // Physical inputs are locked while data exist (A-2): a chain change is refused.
+        var acquiredPreamp = model.Preamp;
         model.Preamp = FrontEndParts.Preamps[3];
+        Assert.Same(acquiredPreamp, model.Preamp);
         foreach (string mode in new[] { "real10us", "rate-study", "ideal" })
         {
             model.Waveform.RateStudy = mode == "rate-study";
@@ -70,12 +72,9 @@ public sealed partial class PlotViewRenderTests
                 Assert.Same(model.Scintillator, scintillator.SelectedItem);
                 Assert.Equal(4, scintillator.Items.Count);
                 Assert.DoesNotContain(scintillator.Items.Cast<ScintPreset>(), s => s.Name == "CsI(Tl)");
-                var pending = Assert.Single(Descendants(root).OfType<TextBlock>(),
-                    c => AutomationProperties.GetAutomationId(c) == "Chain.Pending");
-                var acquired = Assert.Single(Descendants(root).OfType<TextBlock>(),
-                    c => AutomationProperties.GetAutomationId(c) == "Chain.Acquired");
-                Assert.Equal(model.PendingChain, pending.Text); Assert.Equal(model.AcquiredChain, acquired.Text);
-                Assert.NotEqual(pending.Text, acquired.Text);
+                Assert.False(scintillator.IsEnabled, "chain selectors are locked while data exist");
+                Assert.DoesNotContain(Descendants(root).OfType<TextBlock>(),
+                    c => AutomationProperties.GetAutomationId(c) is "Chain.Pending" or "Chain.Acquired");
                 var note = Assert.Single(Descendants(root).OfType<TextBlock>(),
                     c => AutomationProperties.GetAutomationId(c) == "Waveform.Note");
                 Assert.Equal(model.Waveform.View.Note, note.Text);
@@ -109,10 +108,10 @@ public sealed partial class PlotViewRenderTests
     private sealed class WaveformAcquisition : IAcquisitionService
     {
         public IAcquisitionSession Start(IReadOnlyList<SceneSource> scene, OpticsSettings optics,
-            double liveTimeS, double speed, DetectorSettings? detector = null, double backgroundToSignalRatio = 0)
+            double liveTimeS, double speed, DetectorSettings? detector = null, double backgroundToSignalRatio = 0, int? seed = null)
         {
             detector ??= new DetectorSettings();
-            var config = SimulationService.BuildConfig(scene, optics, detector); config.Seed = 12345;
+            var config = SimulationService.BuildConfig(scene, optics, detector); config.Seed = seed ?? 12345;
             using var source = new ListModeSource(config);
             var events = new List<DetectedEvent>(); var flood = new DetectorImage(30, 30);
             while (events.Count < 128)
@@ -124,7 +123,7 @@ public sealed partial class PlotViewRenderTests
             // Live time ends at the last consumed arrival, as AcquisitionSession's MC-limited branch does: counts /
             // live time is then the observed rate. A 128-event prefix of a 60 s preset is a stopped acquisition.
             var snapshot = new AcquisitionSnapshot(events[^1].ArrivalTimeS, events.Count, source.RateCps,
-                1, false, image, events.AsReadOnly(), TimeSpan.Zero, false) { Detector = detector, Optics = optics };
+                1, false, image, events.AsReadOnly(), TimeSpan.Zero, false) { Detector = detector, Optics = optics, Seed = config.Seed };
             return new FixtureSession(snapshot);
         }
     }

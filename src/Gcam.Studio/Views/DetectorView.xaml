@@ -6,7 +6,7 @@
         <DockPanel>
             <StackPanel DockPanel.Dock="Top">
                 <DockPanel Style="{StaticResource PanelHeader}"><TextBlock Text="Detector face · gain pattern" Style="{StaticResource Text.PanelTitle}" /></DockPanel>
-                <TextBlock Text="{Binding Identity}" Style="{StaticResource Text.CaptionWarning}" Margin="{StaticResource Gap.Field}"
+                <TextBlock Text="{Binding Identity}" Style="{StaticResource Text.Caption}" Margin="{StaticResource Gap.Field}"
                            AutomationProperties.AutomationId="Detector.Identity" />
             </StackPanel>
             <!-- Square face with its colour bar and legend directly beneath, at the face's width (ImageStackPanel) -->

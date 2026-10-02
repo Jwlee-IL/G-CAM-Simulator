@@ -37,7 +37,7 @@ combine a container's padding with a child's margin for the same edge.
 ## Screen grid (`MainWindow`)
 
 ```
-Row 0  Top bar (Size.Bar)          identity · workspace switch (when ≥2) · theme · live time (s) · speed × · ▶ Start / Stop
+Row 0  Top bar (Size.Bar)          identity · workspace switch (when ≥2) · theme · live time (s) · speed × · seed · Reset · ▶ Start / Continue / Stop
 Row 1  Content (a Border with Pad.Window)
          Col 0  Scene panel (Size.SidePanel, scrollable)   sources · collapsible Detection chain · selected source · collapsible Physical optics · collapsible Detector
          Col 1  Gutter
@@ -57,16 +57,21 @@ Row 2  Status bar (Size.StatusBar) state dot · live time / counts / cps / MC-li
 ```
 
 Top-bar live-time and speed inputs are vertically centred at `Size.Control` (28 DIP), with
-`Size.NumberInput.Short` width (80 DIP). Labels are "Live time" / "Speed"; `Tag` supplies "s" / "×"
-inside the inputs, matching the scene fields.
+`Size.NumberInput.Short` width (80 DIP). Labels are "Live time" / "Speed" / "Seed"; `Tag` supplies "s" / "×"
+inside the inputs, matching the scene fields (the seed has no unit; blank means a new seed per acquisition).
+Reset is an ordinary (implicit-style) button left of the primary action, never primary, with no shortcut and no
+default; the primary button reads Start without data and Continue with data, and is not the window's default
+button, so Enter in a field cannot resume counting. Messages of the top-bar inputs (a rejected preset, an invalid
+seed) appear at the right of the status bar, which has room for them.
 
 The primary action sits at the same place on every screen (top right); the status of the last run is always
 visible at the bottom, full width, regardless of which panel has focus.
 
 Imaging, Spectrum, Waveform and Detector are registered. The switch uses `Segment.Track` /
 `RadioButton.Segment`, workspace titles and `Workspace.*` AutomationIds. Ctrl+1…4 selects a registered workspace;
-an unavailable index leaves selection unchanged. Acquisition preserves selection. Shared scene / optics / live-time / speed inputs
-mark an existing result outdated; workspace view settings re-render without invalidating that result.
+an unavailable index leaves selection unchanged. Acquisition preserves selection. Physical inputs (scene, optics,
+detector, chain, seed) are disabled while acquired data exist and unlock after Reset; workspace view settings stay
+editable in every state and only re-render retained data.
 
 Physical optics contains editable geometry and engineering presets, while decoder focus remains a view setting.
 A separate Detector section contains entrance (0.15 mm steel-equivalent) and backing (2 mm) facts,
@@ -74,7 +79,7 @@ then an editable reflector gap (default 100 µm), Gain σ
 (default 3, `%` suffix), Gain seed (default 1) and Background (default 0, `× signal` BSR suffix;
 detected background/source ratio at 200 keV). Short labels fit the existing 84-DIP field column.
 These inputs are disabled during
-acquisition and mark retained results outdated after an edit. Physical optics and Detector start collapsed (Start
+acquisition and while acquired data exist (until Reset). Physical optics and Detector start collapsed (Start
 expands a section with an invalid input), Detection chain starts expanded, so the default left panel fits 1280 × 800
 without scrolling (asserted in the offscreen renders); expanded sections scroll. Workspace activation follows `IsActive` as well as commands,
 so a UI Automation SelectionItem selection changes the centre and right panel.
@@ -126,9 +131,9 @@ Offscreen render cases cover expanded/collapsed panels and F=800 at 1280×800 an
 
 ## Waveform workspace and shared chain (2026-10-02)
 
-The top workspace switch now includes Waveform (Ctrl+3). The shared left panel places Detection chain after the source list, before the selected-source editor and Physical optics. Its scintillator / photosensor / preamp selectors are disabled during acquisition; collapsed, it shows the selected chain on one wrapped line. The pending next-acquisition chain and the chain used by retained results are shown as two wrapped lines only when they differ; changing a physical part marks results outdated without repainting retained data with pending physics.
+The top workspace switch now includes Waveform (Ctrl+3). The shared left panel places Detection chain after the source list, before the selected-source editor and Physical optics. Its scintillator / photosensor / preamp selectors are disabled during acquisition and while acquired data exist; collapsed, it shows the selected chain on one wrapped line. Retained data are never repainted with other physics.
 
-Waveform centre stacks two flexible-height PlotViews: ADC energy sum above integer shaped output. Both share the time-from-trigger axis (µs), zoom, pan and reset; Y remains independent. Event markers identify acquired index, pixel and deposit, with an event list in the right panel also giving the original absolute acquisition time. The title, outdated chip and simulation/mode/partial-window note sit above the plots; worker summary and pulse readout are below.
+Waveform centre stacks two flexible-height PlotViews: ADC energy sum above integer shaped output. Both share the time-from-trigger axis (µs), zoom, pan and reset; Y remains independent. Event markers identify acquired index, pixel and deposit, with an event list in the right panel also giving the original absolute acquisition time. The title and simulation/mode/partial-window note sit above the plots; worker summary and pulse readout are below.
 
 The right ScrollViewer contains latest/next/index, Follow latest, window µs, a separate rate-study toggle and simulated energy-channel kcps, ideal stimulus, acquired-chain/readout facts and the event list. Default is real 10 µs with 20% pretrigger; wider windows may be clipped to the sample work budget. Rate study and ideal status are explicit in the centre note. No controls imply that the position channels or their pile-up behavior have been simulated.
 
@@ -139,8 +144,9 @@ New views use the existing surface, type, field, gap and button tokens. Automati
 Detector is Ctrl+4. Its centre draws a square vector face with exact active and reflector-gap rectangles;
 opaque viridis colours encode seeded relative gain, with a numeric colour bar and size below. Acquired
 counts/live-time rate is a separate readout. The right scrollable panel lists material, geometry, geometric
-active-area fraction, gain σ/seed and next-acquisition settings. Before acquisition the face uses pending
-settings; after acquisition it preserves acquired settings with an explicit outdated label after edits.
+active-area fraction and gain σ/seed. Without data the face uses the pending settings, captioned "Settings for the
+next acquisition"; with data it shows the acquired, locked settings, captioned "Acquired settings · locked until
+Reset" — neutral caption text, not the warning colour.
 The shared gap editor uses µm and retains invalid text; physical pitch edits revalidate it.
 
 Imaging's scrollable options contain K (1–4), Sweep focus/Cancel sweep, sharpest-plane and half-max
@@ -152,5 +158,5 @@ the options and distinguishes descriptive width from uncertainty. Censored inter
 boundary maxima and disjoint modes have text labels, and empty complete-track results say unresolved.
 Gap.Field/Section/Tight and existing surface, type and control styles supply all view metrics.
 DetectorFaceView exposes an Image automation peer; all new editors/actions have meaningful unique IDs.
-The new detached fixtures cover before/stale Detector and resolved/censored Imaging in both themes and
+The new detached fixtures cover before/acquired Detector and resolved/censored Imaging in both themes and
 sizes. Their curves are drawing fixtures, not MC depth evidence; final PNG generation is not verified here.

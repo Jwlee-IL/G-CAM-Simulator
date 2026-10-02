@@ -180,7 +180,7 @@ None can be shown by simulation; they are type-test requirements for hardware.
 | ID | Requirement | Basis | Grade | UN | SS |
 |---|---|---|---|---|---|
 | PR-SW-01 | Every number in this PRS is reproducible from the CLI study or script named in its evidence entry ([VV.Gcam.Evidence](VV.Gcam.Evidence.md)). | repository | DEC | UN-08 | — |
-| PR-SW-02 | An engineering viewer shows the flood map and the reconstruction, runs and cancels simulations, measures distance / angle / ROI in mm and flags stale results — specified in [VV.Studio.SRS](VV.Studio.SRS.md). | GCAM Studio | see VV.Studio | UN-09 | SS-4 |
+| PR-SW-02 | An engineering viewer shows the flood map and the reconstruction, starts, stops, continues and resets acquisitions, locks the physical inputs while acquired data exist, and measures distance / angle / ROI in mm — specified in [VV.Studio.SRS](VV.Studio.SRS.md). | GCAM Studio | see VV.Studio | UN-09 | SS-4 |
 | PR-SW-03 | Each search is recorded — time, location, scene picture, reconstruction, located sources with nuclide, dose rate — in the product's **own file format** (decided 2026-10-01) and can be exported for the survey report. | URS review 2026-10-01 | OPEN | UN-16 | SS-4 |
 
 **51 product requirements** in §3 (48 active; PR-SENS-06, PR-SENS-08, PR-DUR-05 withdrawn) + 5 regulatory in §6 —
