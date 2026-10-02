@@ -1788,3 +1788,23 @@ D 80 mm, 30 × 0.6 mm), GAGG chain (FWHM 30.2 keV at 662), Cs-137 500 µCi, wind
   curve and its interval, labelled "sharpest plane", never a bare distance.
 - Reproduce: a throwaway probe on the path above (sources on axis and at 30 mrad, planes 110–3000 mm in 30 steps and
   150–950 mm in 10 mm steps); the gap ratio becomes an opt-in evidence test with TODO-11.
+
+## 57. Why the focus sweep's depth is biased — a heuristic score on a mismatched forward model (2026-10-02)
+
+TODO-23 ([PLAN.Physics.DepthBias](PLAN.Physics.DepthBias.md), review by Codex). Studio defaults, Cs-137, sources at
+300 / 500 / 700 mm, 0 / 15 / 30 mrad; noise-free mean floods and the list-mode path (60 s, 5 seeds).
+
+- **The bias needs no noise and no physics:** a single-line ideal geometric detector already gives the +60 / +80 mm
+  on-axis offsets of theme 56. Scatter, slab clipping and cyclic vs non-cyclic decoding modify it; none causes it.
+- **No single cause.** Peak-node sampling, the field normalisation, shadow undersampling (0.6 → 0.3 → 0.2 mm pitch) each
+  move some of the nine maxima and spoil others (e.g. 700 mm → 160 mm); a fine lateral sweep at 500 mm puts the sharpest
+  plane anywhere in 430–600 mm, oscillating with position — not a correctable offset.
+- **Root:** the prominence score is a heuristic on a thin-plane, pixel-centre decode, while the acquisition integrates
+  pixel area and slab transmission. A forward likelihood that models that integration gives −1…+1 mm on noise-free
+  geometric controls; on the physical 60 s path, **with the bearing known**, it gives biases of a few mm and seed spreads
+  of 1–11 mm (broadband, 300–700 mm). Without a known bearing no unbiased estimator was demonstrated.
+- Premises corrected: the reconstruction grid's angular phase does not change with the plane; theme 24's seeded refine
+  does not reach ~1 % at this geometry (−82 mm at 700 mm, 15 mrad).
+- Consequence: Studio keeps the descriptive "sharpest plane" with its interval; a joint x/y/z forward-likelihood depth
+  estimator is a research task (TODO-25). Reproduce: the probe programs and commands in
+  [PLAN.Physics.DepthBias.Review](PLAN.Physics.DepthBias.Review.md).

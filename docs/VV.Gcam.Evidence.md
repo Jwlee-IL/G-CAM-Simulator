@@ -463,7 +463,9 @@ Geometries used below:
   uncertain. Depth resolution worsens about as z^1.5; for an 18 mm mask the ±10 % range reaches only ~0.15 m — a
   coded aperture gives direction, a rangefinder gives distance. At the viewer's default optics (rank 13, 0.7 mm cell,
   D = 80 mm) the sharpest-plane estimate is reproducible near (300–500 mm) but biased by +60…+80 mm on axis and
-  −20…−140 mm off axis, and from ~700 mm only a lower bound is measured (2026-10-02; cause open).
+  −20…−140 mm off axis, and from ~700 mm only a lower bound is measured (2026-10-02). The cause is the focus score itself — a heuristic on a decode that does
+  not model pixel area and slab transmission; a forward likelihood with a known bearing reduces the bias to a few mm,
+  but no unbiased estimator without a known bearing has been shown.
 - **Reproduce.** `montecarlo depth`, `depth-joint`, `depth3d`, `depthdesign`, each with `samples/scenario.json` →
   `samples/depth_estimation.png`, `depth_joint.png`, `depth3d.png`.
 - **Tests.** `DepthTests`, `DepthDesignTests`, `RangeLocalizationTests`.
