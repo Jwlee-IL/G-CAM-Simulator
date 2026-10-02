@@ -9,7 +9,7 @@ Status: batch 1 done 2026-10-01 (renders in `docs/assets/studio-render/`); batch
 Window-ancestor bindings; FCFOV now in the renders); batch 3 (workspace layout) **done** 2026-10-02 by the substitute implementer (Codex out of credits): all rows except L-14, L-15
 and the status-bar part of L-10, held for TODO-24 (Start / Stop / Reset removes the stale state); plus the Ba K X-ray
 origin in the engine's line data and the desktop-test readout parser. Planner re-verified: build 0 / 0, tests
-262 / 162 / 67 (+7) / 10 (+9), renders reviewed.
+262 / 162 / 67 (+7) / 10 (+9), renders reviewed. Batch 4 (desktop-survey items P-12 … P-16) **done** 2026-10-02 (Codex).
 
 ## Batch 1 — design-system level (new workspaces inherit these)
 
@@ -95,11 +95,32 @@ each group): **1** L-11, L-16, L-17, L-18 → **2** L-5 + L-14 + L-15, L-6, L-3,
 
 The author may override any row; desktop checks stay in TODO-22.
 
+## Batch 4 — desktop survey items (reference plan, 2026-10-02)
+
+From the TODO-22 desktop survey (`docs/assets/studio-polish-survey/README.md`). Causes unchecked — *verify* rows.
+
+| # | Issue | Proposed direction |
+|---|---|---|
+| P-12 | Spectrum emission table: a 4-digit line energy touches its window column ("1173.2" + "1100.4–1246.0") | column widths from the widest formatted value (or a minimum gap token), both sizes |
+| P-13 | Imaging, 1280 × 800: found-peak labels of nearby sources crowd / nearly touch | reuse the label layout (collision avoidance) for overlay labels, or shorten "Found Cs-137" when crowded |
+| P-14 | Locked (disabled) inputs look too faint, especially in light theme | measure the disabled text contrast in both themes; raise it to a stated target (design-system token), keeping "disabled" distinguishable |
+| P-15 | Shaped waveform: marker lines without labels | **intended** (batch-3 L-9 decision: labels only on the upper plot) — *verify*; if kept, say so in the survey README instead of changing it |
+| P-16 | Detector: empty space under the geometry panel's text | *verify* whether useful content belongs there (e.g. the per-crystal gain statistics) or the panel should shrink |
+
+### Batch 4 — decisions after review (2026-10-02)
+
+**Done** 2026-10-02 (Codex): disabled-text contrast now 5.16 / 5.65 / 4.52 : 1 (dark: surface / canvas / raised) and
+5.15 / 4.72 / 4.63 : 1 (light); planner re-verified build 0 / 0, tests 262 / 178 / 72 (+7) / 13 (+14), renders reviewed.
+
+Review: [PLAN.Studio.Polish.Batch4.Review](PLAN.Studio.Polish.Batch4.Review.md) — adopted as written: P-12 content-sized
+numeric columns with `Gap.Inline`; P-13 overlay chips measured and laid out as a group (minimum gap, bounds clamp),
+markers unmoved; P-14 the shared disabled-text token raised to **≥ 4.5 : 1** on the disabled surface in both themes
+(measured 3.67 dark / 2.51 light), inputs stay visibly disabled; P-15 dropped as a defect (upper-only labels are the
+batch-3 decision; the survey README says so); P-16 the Detector panel card top-aligned to its content.
+
 ## Later batches (after the workspaces exist)
 
-- From the TODO-22 desktop survey (`docs/assets/studio-polish-survey/README.md`): P-12 Spectrum Co-60 line / window
-  values touch; P-13 found-peak labels crowd in the small window; P-14 locked inputs look too faint; P-15 the shaped
-  waveform's marker lines have no labels; P-16 Detector geometry panel leaves whitespace.
+- The TODO-22 survey items P-12 … P-16 are batch 4 above.
 
 - Seen in the TODO-10 renders: ~~the chain combo boxes show the preset record text (`ScintPreset { Name = … }`)
   instead of the part name~~ (fixed in TODO-11: the ComboBox template ignored `DisplayMemberPath`); ~~rate-study event

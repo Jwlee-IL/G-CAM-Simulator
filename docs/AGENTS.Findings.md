@@ -1808,3 +1808,39 @@ TODO-23 ([PLAN.Physics.DepthBias](PLAN.Physics.DepthBias.md), review by Codex). 
 - Consequence: Studio keeps the descriptive "sharpest plane" with its interval; a joint x/y/z forward-likelihood depth
   estimator is a research task (TODO-25). Reproduce: the probe programs and commands in
   [PLAN.Physics.DepthBias.Review](PLAN.Physics.DepthBias.Review.md).
+
+## 58. CR-RC shaper: whole-code state lost low-energy pulses; Q12 fractional state and explicit shaping times (2026-10-02)
+
+TODO-20 ([PLAN.Physics.CrrcPresets](PLAN.Physics.CrrcPresets.md), review and implementation by Codex). GAGG, S13360-3050,
+AD9648 14-bit / 125 MSPS, isolated pulses.
+
+- **Cause:** the integer CR-RC⁴ recurrence (C#, Python reference and `crrc_shaper.sv`, bit-exact to each other) kept
+  whole output codes in every accumulator and floored each update, so a 32 keV pulse left 0 shaped codes and a
+  662 keV-calibrated readout put 122 keV at 70 / 103 / 99 keV (Fast / Original / Slow). Not a preset value: changing
+  K or order alone made it worse.
+- **Fix:** Q12 fractional state (input sign-extended and shifted 12, coefficients Q16), output kept fractional; widths
+  bounded — the largest product is 35,184,372,219,904 < 2⁴⁶, so signed 48-bit is safe; the legacy F = 0 path stays as a
+  regression fixture. C#, Python and the RTL agree on **452,608 samples with 0 mismatches**; cocotb 137 / 137 with the
+  C# vectors (planner re-run).
+- **Shaping time:** order 4 kept (historically intended); K was an inherited benchmark constant, now per preset from an
+  explicit T_sum = 100 / 200 / 500 ns (K = 20972 / 10486 / 4194) — a **simulation convention, not rig evidence**.
+- **Response now** (32 / 122 / 662 keV; peak in codes; full-noise resolution R_equiv %): Fast 2.23 / 8.52 / 46.1 codes,
+  60.8 / 17.4 / 5.46 %; Original 2.63 / 10.0 / 54.4, 21.3 / 8.85 / 4.69 %; Slow 1.57 / 5.99 / 32.5, 16.1 / 8.08 / 4.65 %.
+  The CR-RC energy readout stays off until an isolated-pulse estimator with trigger / phase behaviour is measured.
+- Reproduce: `rtl/README.md` (vector export + `run_cocotb.py --csharp-vectors`); the measurement project and CSV in the
+  Waveform VV record.
+
+## 59. CsI(Tl) added to the crystal table — what-if material, same method as theme 52 (2026-10-02)
+
+TODO-21 ([PLAN.Physics.CsIData](PLAN.Physics.CsIData.md), Codex). xraylib 4.3.0 through the repository generator; CsI,
+4.51 g/cm³, Tl omitted as an activator (as NaI:Tl); K-edge grid pairs at I 33.17 and Cs 35.98 keV.
+
+- 661.7 keV: μ/ρ = 0.07435 cm²/g, photoelectric share 0.145, μ = 0.0335 /mm (GAGG 0.0773 cm²/g at 6.63 g/cm³, so CsI
+  stops about two thirds as well per mm). GAGG remains the default (the rig's crystal); CsI is a what-if in Studio.
+- Validation like with like: photo + incoherent + coherent agrees with NIST's total within 0.011 % at 300 / 600 / 800 keV.
+  K-edge jumps 3.28× (I) and 1.79× (Cs), close to NIST's 3.07× / 1.76×.
+- Above 800 keV the photoelectric term is the method's power-law extrapolation (all materials): measured against NIST
+  photo + incoherent it is +0.07 % at 1000 keV and **−0.35 % at 1250 keV** — the extension's approximation error,
+  recorded, not hidden. The plan twice set a wrong check (a bound borrowed from GAGG, then omitting this extrapolation
+  error); the implementer stopped both times.
+- Evidence: `samples/materials/evidence/crystal_tables.json`, `CsI_checks.txt`, the NIST XCOM inputs.

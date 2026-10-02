@@ -159,3 +159,4 @@ one-line fresh `codex exec`; (3) continue in a fresh conversation handed the wri
 | Imaging options A | "the Ba K tallest bin holds only for the bare geometry" (over-correction) | measurement (2.32 with the absorber) |
 | Imaging options B | a 1.5 mm localisation tolerance borrowed from another scenario (grid step 2.19 mm) | implementer stopped |
 | Optics | the inherited coverage 0.9–1.4 rule | implementer's measured review |
+| CsI data (TODO-21, later) | a 0.92–1.0 model / NIST bound borrowed from the GAGG test (CsI's coherent share differs) | implementer stopped at the check |

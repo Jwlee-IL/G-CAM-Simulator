@@ -3,7 +3,8 @@
 Scope: the umbrella for TODO-06 … TODO-13 — why, the decisions that hold for every step, the screen structure and the
 order. Each step has its own plan; the task list is [AGENTS.Todo](AGENTS.Todo.md).
 
-Status: in progress (2026-10-01).
+Status: 2026-10-02 — every `Gcam.Wpf` feature has a Studio home (steps 1–7c done) except the rig's readout model
+(TODO-19, which replaces Wpf's SiPM block average); then TODO-12 deletes `Gcam.Wpf`.
 
 ## Plans and order
 
@@ -14,14 +15,14 @@ Status: in progress (2026-10-01).
 | 3 | TODO-07 Spectrum workspace | [PLAN.Studio.Spectrum](PLAN.Studio.Spectrum.md) | committed `45eece8`; desktop-verified (survey) |
 | 4 | TODO-08 detector realism, background, per-nuclide imaging, Compton strip | [PLAN.Studio.ImagingOptions](PLAN.Studio.ImagingOptions.md) | **done** 2026-10-02 |
 | 4a | TODO-15 spectrum graph (histogram steps, live zoom, Y auto-scale, bin readout, band labels) | [PLAN.Studio.SpectrumPlot](PLAN.Studio.SpectrumPlot.md) | implemented; follow-ups in its plan |
-| 4b | TODO-16 UI polish, batch 1 (design-system level) | [PLAN.Studio.Polish](PLAN.Studio.Polish.md) | batch 1 done |
+| 4b | TODO-16 UI polish, batches 1–4 | [PLAN.Studio.Polish](PLAN.Studio.Polish.md) | **done** 2026-10-02 |
 | 5 | TODO-09 editable optics + presets | [PLAN.Studio.Optics](PLAN.Studio.Optics.md) | **done** 2026-10-02 |
 | 6 | TODO-10 Waveform workspace, front-end chain selection | [PLAN.Studio.Waveform](PLAN.Studio.Waveform.md) | **done** 2026-10-02 |
 | 7 | TODO-11 Detector workspace, depth (3D) / rangefinder | [PLAN.Studio.Detector](PLAN.Studio.Detector.md) | **done** 2026-10-02 |
 | 7b | TODO-24 acquisition control Start / Stop / Reset (author 2026-10-02) | [PLAN.Studio.AcquisitionControl](PLAN.Studio.AcquisitionControl.md) | **done** 2026-10-02 |
 | 7c | TODO-22 final desktop pass (UI tests, survey, 16 ms gate, README screenshot) | — | **done** 2026-10-02 |
-| 7a | TODO-19 the rig's readout (Anger, SiPM pitch, crosstalk) — moved before the deletion, author 2026-10-02 | — | open |
-| 8 | TODO-12 delete `Gcam.Wpf`, README screenshot | — | open (last) |
+| 7d | TODO-19 the rig's readout (Anger, SiPM pitch, crosstalk) — moved before the deletion, author 2026-10-02 | [PLAN.Physics.RigReadout](PLAN.Physics.RigReadout.md) | draft; waiting for the author's rig details |
+| 8 | TODO-12 delete `Gcam.Wpf` (README screenshot done in TODO-22) | — | open (last) |
 
 **Order of polish and testing (author, 2026-10-01).** UI polish is the focus; **desktop UI tests run last**, once
 the workspaces are complete and polished — running them (and the polish survey) per step only re-collects the same

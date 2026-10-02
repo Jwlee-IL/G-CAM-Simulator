@@ -176,9 +176,15 @@ TILT (pitch/yaw), mask WARPING.
 ## Done (summary — details in AGENTS.Findings by theme)
 
 - **TODO-07 Spectrum, TODO-13 live list-mode acquisition, TODO-15 spectrum graph** (2026-10-01/02): implemented,
-  headless-verified and rendered offscreen; their desktop checks are collected in TODO-22 —
+  headless-verified and rendered offscreen; their desktop checks passed in TODO-22 —
   [PLAN.Studio.Spectrum](PLAN.Studio.Spectrum.md), [PLAN.Studio.LiveAcquisition](PLAN.Studio.LiveAcquisition.md),
   [PLAN.Studio.SpectrumPlot](PLAN.Studio.SpectrumPlot.md).
+- **TODO-20 CR-RC presets** (2026-10-02): whole-code state lost low-energy pulses → Q12 fractional state in C# / Python /
+  RTL (48-bit, bit-exact on 452,608 samples), explicit per-preset shaping time (simulation convention) —
+  [PLAN.Physics.CrrcPresets](PLAN.Physics.CrrcPresets.md), Findings 58.
+- **TODO-21 CsI(Tl) data** (2026-10-02): theme-52 method, NIST like-with-like within 0.011 %, offered in Studio as a what-if —
+  [PLAN.Physics.CsIData](PLAN.Physics.CsIData.md), Findings 59.
+- **TODO-16 layout batch 4** (2026-10-02): desktop-survey items P-12 … P-16 — [PLAN.Studio.Polish](PLAN.Studio.Polish.md).
 - **TODO-22 final desktop pass** (2026-10-02): desktop suite 27/27 (Start / Stop / Continue / Reset, every workspace,
   independent oracles), all 12 scenarios fail under broken verdicts, 16 ms gate (zoom 5.6 ms, resize 4.0 ms), polish
   survey over four workspaces (P-12 … P-16), README capture — Codex in a separate worktree while the desktop was free.
@@ -195,10 +201,10 @@ TILT (pitch/yaw), mask WARPING.
   sandbox refused processes) → planner's measurements (gap = dead area; crosstalk a no-op on the list-mode path; depth
   from focus near-field and biased — Findings 56) → SiPM pitch and crosstalk moved to TODO-19 (author) → implementation
   by Codex, finished by a substitute Claude subagent when Codex's credits ran out — [PLAN.Studio.Detector](PLAN.Studio.Detector.md);
-  follow-up TODO-23.
+  follow-up TODO-23 completed (Findings 57); research continuation is TODO-25.
 - **TODO-10 Waveform workspace and shared chain** (2026-10-02): reference plan → Codex review (time base 72.8 cps,
   RTL bit-exact for the selected chains, double smearing, CsI fallback) → the author's rig readout (four ADCs, Anger) →
-  implementation — [PLAN.Studio.Waveform](PLAN.Studio.Waveform.md); follow-ups TODO-19/20/21.
+  implementation — [PLAN.Studio.Waveform](PLAN.Studio.Waveform.md); follow-up TODO-19 remains; TODO-20/21 completed below with Q12 CR-RC and CsI transport.
 - **TODO-09 editable optics, presets, decoder-focus refocus** (2026-10-02): reference plan → Codex's measured review
   (coverage rule false, All not refocused) → revised plan → implementation — [PLAN.Studio.Optics](PLAN.Studio.Optics.md).
 - **TODO-18 configuration-scan headline** (2026-10-02): the rank-23 "±64 mm, 96 %, ~7×" result predated the 10 mm
@@ -210,7 +216,7 @@ TILT (pitch/yaw), mask WARPING.
   defaults restored, gain in one measurement stage, BSR background events, channels per isotope through the shared
   window N, a selector with truth / found markers, Compton strip with an H-only calibration (co-located Cs + Co ×2,
   600 s: stripped Cs 13 409 vs Cs-only 13 297, 4σ = 1 017; R = 0.48). Found peaks refined sub-cell: Cs RMS 0.17 mm;
-  Co-60 keeps a systematic −1.4 mm y bias at (−15, −8) → TODO-17 — [PLAN.Studio.ImagingOptions](PLAN.Studio.ImagingOptions.md).
+  Co-60 keeps a systematic −1.4 mm y bias at (−15, −8) → TODO-17 (cause found: undersampling; see its completed entry above) — [PLAN.Studio.ImagingOptions](PLAN.Studio.ImagingOptions.md).
 - **TODO-06 Studio workspace shell + `PlotView`** (2026-10-01, `bb3f00e`; desktop-verified the same day): workspaces,
   first-party plot (10 M samples, CPU redraw ≤ 12 ms), polish survey with issues P-01 … P-11 for the author —
   [PLAN.Studio.Shell](PLAN.Studio.Shell.md), `docs/assets/studio-polish-survey/README.md`.
