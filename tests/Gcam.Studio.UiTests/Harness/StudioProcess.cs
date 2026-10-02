@@ -4,29 +4,26 @@ using System.Windows.Automation;
 namespace Gcam.Studio.UiTests.Harness;
 
 /// <summary>
-/// Starts GCAM Studio in an owned sandbox and is the only thing allowed to stop it.
+/// Starts GCAM Studio in an owned sandbox and requests graceful closure of its own window.
 /// </summary>
 /// <remarks>
 /// <para><b>Isolation.</b> The app has no write surfaces of its own (no file, registry, network or process API is
 /// reachable from Studio — see docs/AGENTS.UiAutomation.md, G1). As a technical boundary anyway, APPDATA,
 /// LOCALAPPDATA, TEMP and TMP point into a fresh folder under %TEMP% that carries an owner marker; after the run the
-/// folder is checked for files and deleted only if the marker is still ours.</para>
+/// folder is checked for files and retained for audit; deletion requires author approval.</para>
 /// <para><b>Ownership.</b> An already-running Gcam.Studio that we did not start is a conflict: the run fails, and
-/// that process is never attached to or killed. On dispose only the PID recorded at start is closed (and killed if
-/// it does not exit), never "any process with this name".</para>
+/// that process is never attached to or killed. On dispose only the PID recorded at start receives a graceful
+/// close request; a timeout is reported without killing it.</para>
 /// </remarks>
 public sealed class StudioProcess : IDisposable
 {
     public const string ProcessName = "Gcam.Studio";
     private const string MarkerFile = ".gcam-uia-owner";
 
-    private readonly string _marker;
-
-    private StudioProcess(Process process, string sandbox, string marker, string exePath)
+    private StudioProcess(Process process, string sandbox, string exePath)
     {
         Process = process;
         Sandbox = sandbox;
-        _marker = marker;
         ExePath = exePath;
         StartedAt = process.StartTime;
         ProductVersion = FileVersionInfo.GetVersionInfo(exePath).ProductVersion ?? "unknown";
@@ -70,7 +67,7 @@ public sealed class StudioProcess : IDisposable
         psi.Environment["TMP"] = Path.Combine(sandbox, "Temp");
         psi.Environment["GCAM_UIA_RUN"] = runId;   // marker a later handoff check could look for
         var process = Process.Start(psi) ?? throw new InvalidOperationException($"could not start {exe}");
-        return new StudioProcess(process, sandbox, marker, exe);
+        return new StudioProcess(process, sandbox, exe);
     }
 
     /// <summary>The main window, once it exists (bounded wait).</summary>
@@ -96,9 +93,7 @@ public sealed class StudioProcess : IDisposable
                 Process.CloseMainWindow();
                 if (!Process.WaitForExit(5000))
                 {
-                    Process.Kill();
-                    Process.WaitForExit(5000);
-                    Ending = "killed after 5 s";
+                    Ending = "still running after graceful close (force-stop requires approval)";
                 }
             }
             if (Ending == "running") Ending = Process.HasExited ? $"exit {Process.ExitCode}" : "still running";
@@ -110,19 +105,9 @@ public sealed class StudioProcess : IDisposable
                     .Where(f => Path.GetFileName(f) != MarkerFile)
                     .Select(f => Path.GetRelativePath(Sandbox, f)).ToArray()
                 : [];
-            DeleteSandboxIfOwned();
+            // Retain the owned sandbox for audit; deletion requires the author's approval.
             Process.Dispose();
         }
     }
 
-    // Recursive delete only for a folder under %TEMP% whose marker is still exactly ours.
-    private void DeleteSandboxIfOwned()
-    {
-        string full = Path.GetFullPath(Sandbox);
-        string temp = Path.GetFullPath(Path.GetTempPath());
-        string markerPath = Path.Combine(full, MarkerFile);
-        if (!full.StartsWith(temp, StringComparison.OrdinalIgnoreCase) || !File.Exists(markerPath)) return;
-        if (File.ReadAllText(markerPath) != _marker) return;
-        Directory.Delete(full, recursive: true);
-    }
 }

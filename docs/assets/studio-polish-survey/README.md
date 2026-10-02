@@ -2,10 +2,25 @@
 
 Diagnostic captures only; no visual baselines or automatic pixel verdicts. The author chooses which issues to fix.
 
-Captured 2026-10-01 by `PolishSurveyTests.Imaging_BothThemesAndWindowSizes_CapturesPolishSurvey` on the real
-desktop (Windows 11, 100 % scaling) after one 60 s list-mode acquisition of the default Cs-137 scene, a distance
-measurement and a Tab focus step: `imaging-{dark,light}-{1280x800,1440x900}.png` and
-`spectrum-{dark,light}-{1280x800,1440x900}.png`.
+Captured 2026-10-02 by `PolishSurveyTests.AllWorkspaces_BothThemesAndWindowSizes_CapturesPolishSurvey`
+on the real desktop (Windows 11, 100 % scaling), Release at b8fddcd plus the desktop-test changes.
+All 16 visible-window frames were opened and inspected. Sizes are the requested outer window sizes;
+the captured visible frame excludes invisible resize borders.
+
+One shared 60 s acquisition, speed ×10, seed 12345: Cs-137 at (−20, 0) mm, 500 µCi;
+Co-60 at (20, 0) mm, 20 µCi; both at 1000 mm from the detector, default optics / chain.
+Acquired 4,223 counts. Imaging uses All, N=1.5, strip off, 1000 mm focus; Waveform selects event #10,
+10 µs window, real arrivals. The measurement table is empty. No focus sweep is displayed in this survey.
+
+Files: `{imaging,spectrum,waveform,detector}-{dark,light}-{1280x800,1440x900}.png`.
+The repository README uses a separate Imaging / dark / 1440×900
+[studio-desktop-imaging.png](../studio-desktop-imaging.png) capture, retaken with Co-60 at **200 µCi**;
+Cs-137 remains 500 µCi and the positions, distance, seed, live time and other settings are unchanged.
+It has 6,974 counts and found peaks Cs-137 (−20.6, 0.3) mm / Co-60 (20.2, 0.5) mm.
+Their unrounded position errors, 0.676 / 0.546 mm, are below one 8.75 mm resolution element.
+Run `20261002-130331-aa0ebe`; hash and raw coordinates are in [desktop evidence](../studio-desktop-evidence.json).
+The 16 survey frames retain their original 20 µCi Co-60 scene. Their current hashes identify the planner's
+verification capture run `20261002-123249-231a4f`; no survey image was changed by the README retake.
 
 ## Issues
 
@@ -28,3 +43,20 @@ measurement and a Tab focus step: `imaging-{dark,light}-{1280x800,1440x900}.png`
 - Focus rings are visible in both themes (Distance tool after Tab; the theme button after `Ctrl+2`).
 - The status line reads well: "Completed · t = 60.0 s of 60 s · 6,463 counts · 110 cps".
 - The workspace switch is legible in both themes; its UIA Select defect is a behaviour bug (VV.Studio AN-10).
+
+## Current observations (2026-10-02)
+
+P-01 … P-11 above are the historical survey, not current defect claims. Counts chips, round colour-bar ticks,
+compact top-bar inputs, explicit pile-up wording, "original rig", Ba K emitter naming and table header alignment
+are now visible. No layout was changed in this pass.
+
+| # | Where | Observation | Screenshot |
+|---|---|---|---|
+| P-12 | Spectrum emission table | The Co-60 line energy and window bounds touch: `1173.2` immediately precedes `1100.4–1246.0`. The same fixed columns touch at both window sizes and in both themes. | spectrum-* |
+| P-13 | Imaging found-source overlays | At 1280×800 the found Cs-137 and Co-60 text labels nearly touch; truth and found markers are close together. At 1440×900 there is more room. | imaging-*-1280x800 |
+| P-14 | Shared locked inputs | Disabled chain selectors, source fields and seed are faint, especially in light theme. They remain readable in these captures; this is a visual observation, not a contrast measurement. | all light frames |
+| P-15 | Waveform | The ADC event #10 label is visible; the shaped trace has its marker line but no #10 text above the plot. Event #10 remains listed on the right. | waveform-* |
+| P-16 | Detector | The face and gain legend fit in both sizes and themes; the acquired-settings caption clearly says locked until Reset. The right geometry panel has substantial empty space below its explanatory text. | detector-* |
+
+The status bar, four workspace selectors, complete Spectrum table and both Waveform plots fit in all inspected
+frames. The focus-sweep interval is verified numerically by its desktop scenario, not by these captures.

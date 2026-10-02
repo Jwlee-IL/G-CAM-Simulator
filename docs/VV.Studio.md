@@ -17,11 +17,12 @@ The working design guides are [DESIGN.Architecture](DESIGN.Architecture.md) and 
 **At a glance**
 - 74 active software requirements plus seven withdrawn batch rows (§4). Live acquisition verification and
   measurements are recorded in [VV.Studio.Acquisition](VV.Studio.Acquisition.md); desktop acquisition
-  validation is pending while the desktop and UI-test project are occupied.
-- Seven regression scenarios, a plot gate and a diagnostic survey are opt-in desktop tests. The latest regression / survey attempt was blocked by desktop input; the plot CPU gate passed (§5). Historical scenarios judge the running app against
-  independently computed values (§5): VAL-01 … VAL-04 performed, VAL-05 partial, VAL-06 … VAL-08 open.
+  validation passed in the final desktop pass on 2026-10-02.
+- Twelve regression scenarios, a plot gate and a 16-frame diagnostic survey are opt-in desktop tests.
+  Scenarios judge product state using independent oracles; every corrupted verdict fails. VAL-09 … VAL-13 below
+  cover Spectrum, Waveform, Detector, isotope imaging and retained-flood focus. Screenshots never decide a numerical verdict.
 - The layering that keeps the logic testable is compiler-enforced (SR-ARCH-01, -04).
-- Open problems are in §6 (AN-01 … AN-12); no screen-reader session has been run.
+- Open problems are in §6 (AN-01 … AN-14); no screen-reader session has been run.
 
 TODO-08 phase B verification (Release, 2026-10-02): the reviewer reported 259 engine, 86 Studio Core,
 28 services and 10 UI-oracle tests passing and a build with 0 errors. The measured imaging results,
@@ -359,12 +360,12 @@ app's code (an oracle that re-derives the image layout and the screen → mm map
 
 | ID | Scenario | Acceptance criteria | Status |
 |---|---|---|---|
-| VAL-01 | Run the default scene and read the result | progress moves to 100 %; flood map and reconstruction appear with colour bars; peak chip shows mm; status line names counts and time; UI stays responsive | **performed 2026-10-01** (automated pilot: the run reaches Succeeded and the flood map has an image) |
-| VAL-02 | Cancel a long run | Cancel appears only while running; images keep the previous result; status "Cancelled — previous result kept"; scene editable again | **performed 2026-10-01** (automated: scene locked while running, Cancelled, peak text unchanged, editable again) |
+| VAL-01 | Start the default scene and read the result | Completed status, flood and reconstruction present, counts / live time shown | Performed 2026-10-02: pilot passes |
+| VAL-02 | Stop, Continue and Reset an acquisition | Stop freezes counts and retains locked data; Continue adds counts under one acquisition; Reset discards and unlocks | Performed 2026-10-02: rewritten acquisition scenario passes |
 | VAL-03 | Measure on both images | distance and ROI drawn on the flood map, angle on the reconstruction; values appear in "Measurement results" and on the image; Delete removes the selected one; Esc abandons a half-drawn angle | **performed 2026-10-01** — by hand: distance 12.3 mm and an ROI on the flood map, angle 67.0° on the reconstruction, Delete and Esc as specified; automated: three scenarios below |
-| VAL-04 | Move a source after an acquisition | with data, the source fields are disabled and source markers do not move; Reset unlocks them; X / Y edited in the fields; Start acquires at the new position | open — desktop scenario rewritten 2026-10-02 (Reset, edit, Start), not run. Earlier (2026-10-01) the withdrawn drag gesture was performed by hand and automated |
+| VAL-04 | Move a source after an acquisition | Data lock fields / markers; Reset unlocks; edit X / Y and Start; found peak follows the new position | Performed 2026-10-02: reset/edit/start scenario passes |
 | VAL-05 | Locate a source and measure its offset from the decoded peak | Distance tool from the source marker to the peak gives the offset in mm; it agrees with the peak chip and source X / Y to within one recon step | **partial 2026-10-01** — automated: after moving the source and re-acquiring, the decoded peak lay within 1.5 mm of the source; the Distance-tool step is not automated |
-| VAL-06 | Use both themes | all text, focus rings, chips and overlays legible in dark and light; title bar follows | open |
+| VAL-06 | Use both themes | Text, chips, plots and overlays inspected in all four workspaces at two sizes | Performed 2026-10-02: 16-frame desktop survey; faint locked inputs recorded; keyboard-focus walkthrough excluded |
 | VAL-07 | Keyboard only | every function reachable without a pointer except creating measurements (AN-01) | open |
 | VAL-08 | Small screen and display scaling | at 1366×768 the window starts maximised; at 125 % / 150 % heatmap cells stay equal width | open |
 
@@ -407,10 +408,10 @@ they are skipped and reported as skipped, not passed. Each scenario starts its o
 | Scenario | Traces to | Oracle (independent of the app) | Result 2026-10-01 |
 |---|---|---|---|
 | `PilotTests.Pilot_SimulateThenMeasureDistance_AddsRowWithExpectedLength` | VAL-01, VAL-03 · SR-RUN-09, SR-MEAS-01 | length from screen points through the documented fit rule | 13.4 mm vs 13.400 ± 0.204 |
-| `ScenarioTests.StopContinueReset_KeepsAccumulatesAndDiscards` | VAL-02 · SR-RUN-10, SR-RUN-12, SR-RUN-13, SR-RUN-23, SR-RUN-26 | state machine Acquiring → Stopped → Acquiring (Continue) → Stopped → Reset → Empty; counts frozen after Stop, growing after Continue, zero after Reset; inputs locked until Reset | rewritten 2026-10-02, not run (earlier Start-clears version: 35 counts kept, restart at 0) |
+| `ScenarioTests.StopContinueReset_KeepsAccumulatesAndDiscards` | VAL-02 · SR-RUN-10, SR-RUN-12, SR-RUN-13, SR-RUN-23, SR-RUN-26 | state machine Acquiring → Stopped → Acquiring (Continue) → Stopped → Reset → Empty; counts frozen after Stop, growing after Continue, zero after Reset; inputs locked until Reset | pass 2026-10-02: frozen after Stop, accumulated after Continue, unlocked after Reset |
 | `ScenarioTests.Roi_OnFloodMap_CountsWholePixelsByCentre` | VAL-03 · SR-MEAS-03 | pixel count by centre, corners on cell boundaries so one pixel of error cannot change it | 42 px, 3.6 × 4.2 mm |
 | `ScenarioTests.Angle_EscAbandonsDraft_DeleteRemovesSelected` | VAL-03 · SR-MEAS-02, SR-MEAS-07 | angle from the three screen points; Esc is proven by the value | 69.8° vs 70.02 ± 2.29; Delete removed it |
-| `ScenarioTests.MoveSource_ResetEditStart_PutsPeakOnTheSource` | VAL-04, VAL-05 · SR-RUN-12, SR-RUN-26, SR-VIEW-08 | physics: after Reset, an X / Y edit and a new acquisition the decoded peak must sit on the moved source (≤ 1.5 mm) | rewritten 2026-10-02, not run (earlier drag version, 60 s: 1.43 mm, see AN-11) |
+| `ScenarioTests.MoveSource_ResetEditStart_PutsPeakOnTheSource` | VAL-04, VAL-05 · SR-RUN-12, SR-RUN-26, SR-VIEW-08 | physics: after Reset, an X / Y edit and a new acquisition the decoded peak must sit on the moved source (≤ 1.5 mm) | pass 2026-10-02: peak (21.6, 17.1), source (21.4, 16.0) mm; existing 1.5 mm tolerance |
 | `ScenarioTests.Readout_AndOneCellRoi_MatchAbsolutePositionAndValue` | SR-VIEW-05, SR-VIEW-07, SR-MEAS-03 | absolute mm of two cells (both signs); a one-cell ROI must sum to the readout's value | (−6.3, 5.1) and (6.3, −4.5) mm exact; sum = cell value |
 | `ScenarioTests.ThemeToggle_RelabelsAndSwitchesBack` | SR-THEME-01 | the label names the other theme; the app still simulates after two swaps | pass (the visual swap stays manual) |
 
@@ -426,7 +427,7 @@ folder was left behind. UIA Select on the workspace switch does not change the w
 | ID | Finding | Effect | Plan |
 |---|---|---|---|
 | AN-01 | Measurements can only be **created** with the pointer (documented in [DESIGN.Controls](DESIGN.Controls.md#measurementadorner-via-measurementoverlay)) | keyboard users can review, select and delete, not create | keyboard crosshair |
-| AN-02 | UI automation is desktop-only and opt-in | the seven scenarios of §5 are not part of CI; zoom and pan, the refit keys, drag-snapping limits and the visual theme swap are still checked by inspection or by hand | heatmap navigation scenarios next |
+| AN-02 | UI automation is desktop-only and opt-in | the twelve scenarios are not part of CI; keyboard-only flows and other display scaling remain unverified | heatmap navigation scenarios next |
 | AN-03 | No high-contrast mode | Windows high-contrast themes are not honoured | planned with the keyboard crosshair |
 | AN-04 | Closed: legacy batch progress race | unused batch progress implementation removed; acquisition uses sequential snapshots | batch regression removed with the code it guarded; acquisition progress verified by `AcquisitionViewModelTests.Completed_StartDisabledUntilPresetRaised_LowerPresetRejected_ProgressFollowsPreset` |
 | AN-05 | Literal sizes in `MainWindow.xaml` (photon box `Width="120"`, readout `Height="18"`, `Margin="0,4,0,0"`, colour-bar `Margin="0,8,0,0"`) despite the no-literals rule | cosmetic; spacing doesn't follow `Metrics.xaml` | move to named keys |
@@ -436,9 +437,9 @@ folder was left behind. UIA Select on the workspace switch does not change the w
 | AN-09 | *Closed* — the photon budget no longer exists (list-mode acquisition) | — | — |
 | AN-10 | Workspace checked-state activation now selects the shell workspace; `WorkspaceActivation_SelectsShell_WhenActiveIsSetWithoutCommand` passes | screen-reader SelectionItem switching still needs desktop verification | ViewModel fix implemented; add a desktop Select regression and verify the displayed workspace, without relying on the checked state alone |
 | AN-11 | The source-drag scenario localised at 1.43 mm against its 1.5 mm tolerance. **Cause found (2026-10-02):** with the default optics at a 1 m focal plane the detector samples the mask-cell shadow at 1.27 pixels per cell (0.761 mm shadow, 0.6 mm pixels), below Nyquist, so the decoded peak shifts with the source position (RMS 0.95 mm, max 1.91 mm over y = −10 … 10 mm; 0.24 / 0.41 mm at 3.8 samples per cell) — see VV.Studio.Imaging | the scenario passes or fails depending on where the source is dropped | optics with ≥ 2 samples per cell at the working focal plane (TODO-09 presets); do not widen the tolerance |
-| AN-12 | Latest desktop input and screen capture unavailable | regression scenarios and four-view polish survey remain unverified in this working tree | re-run on an accessible interactive desktop; preserve verdicts |
-| AN-12 | CPU plot redraw meets the gate, but resize event-to-render delay is 280–316 ms | CPU evidence does not establish end-to-end responsiveness | distinguish timings; investigate dispatcher / desktop latency before making a presentation-latency claim |
-| AN-10 | `TickFormatterTests` (colour-bar tick labels: one shared multiplier, one decimal count, no negative zero) test behaviour that no SRS row states | the behaviour is verified but not required, so a change to it would not be traced | add an `SR-VIEW` row for colour-bar labels |
+| AN-12 | Closed: desktop input and screen capture available in the final pass (2026-10-02) | all scenarios, the plot gate and four-workspace survey executed | evidence below |
+| AN-13 | CPU plot redraw meets the gate, but resize event-to-render delay is materially larger | CPU evidence does not establish end-to-end responsiveness | distinguish timings; investigate dispatcher / desktop latency before making a presentation-latency claim |
+| AN-14 | `TickFormatterTests` (colour-bar tick labels: one shared multiplier, one decimal count, no negative zero) test behaviour that no SRS row states | the behaviour is verified but not required, so a change to it would not be traced | add an `SR-VIEW` row for colour-bar labels |
 
 No screen-reader (Narrator / NVDA) session has been run. Not verified.
 
@@ -534,3 +535,67 @@ Exact conditions, tolerance derivation, limitations and reproducible commands ar
 67 service and 10 UI-oracle cases; seven service evidence, nine desktop and one render cases were skipped.
 MC evidence and detached renders still require authorization to change process-local opt-in environment
 variables. No new desktop validation is claimed.
+
+## Final desktop verification and validation (2026-10-02)
+
+Release at b8fddcd plus the final desktop-pass changes, Windows 11, 100 % display scaling, .NET 9.0.13.
+This record supersedes earlier desktop-unavailable / not-run statements above. Build: zero warnings / errors.
+Ordinary tests: 262 engine, 164 Studio Core, 72 services and 13 UI-oracle cases pass; seven service evidence,
+14 desktop and one render case skip by their explicit opt-ins. Desktop: 27/27 pass (13 oracle, 12 scenarios,
+plot gate, survey). Corrupted-verdict run: all 12/12 scenarios fail at their deliberately corrupted assertions;
+their manifests were inspected, every owned process exited with code 0, and no sandbox writes occurred.
+Temporary owned sandboxes are retained for audit; no automatic deletion or forced process termination.
+
+Commands (PowerShell; opt-ins apply only to the shell process running that invocation):
+
+```powershell
+dotnet build Gcam.sln -c Release
+dotnet test Gcam.sln -c Release --no-build
+$env:GCAM_UI_TESTS='1'; dotnet test tests/Gcam.Studio.UiTests -c Release --no-build
+$env:GCAM_UI_TESTS='1'; $env:GCAM_UI_BREAK_VERDICT='1'; dotnet test tests/Gcam.Studio.UiTests -c Release --no-build --filter 'FullyQualifiedName~ScenarioTests|FullyQualifiedName~PilotTests'
+```
+
+The positive recovery run uses a fresh command process without the break-verdict variable. Per-run manifests,
+inputs, expected / actual values, build stamp, dirty-file count and failure bundles are recorded under the test
+output's `ui-runs`. A compact reviewable record is [desktop evidence](assets/studio-desktop-evidence.json).
+The numerical automation evidence is read-only, enabled only in a harness-owned process. Expected values are
+computed in `WorkspaceOracle` or in the scenario, without calling the production band counter, peak finder,
+stripper or focus-interval implementation. Bound plot / heatmap arrays and markers are checked as well as the
+workspace results. Screenshot pixels are never a numerical oracle.
+
+The ten-million-sample plot CPU gate passed: maximum zoom redraw 5.5822 ms and resize redraw 3.9559 ms
+(limit 16 ms). Resize event-to-render samples were 238.0788–595.2849 ms; no end-to-end ≤16 ms claim is made.
+
+| Requirement | New desktop verification (`WorkspaceScenarioTests`) | Result |
+|---|---|---|
+| SR-SPEC-05, SR-SPEC-06, SR-IMG-01 | `Spectrum_BandCountAndWindowChange_MatchRetainedHistogram` | N=1: 1,143; N=2: 1,373 counts in the 661.7 keV band, independently summed by bin centre; unchanged retained histogram; bound plot matches |
+| SR-WAVE-01, SR-WAVE-02, SR-WAVE-03 | `Waveform_SelectedEventListAndMarkers_MatchArrivalWindow` | Selected #10 is the sole event in the 10 µs arrival window; both plots' labels and marker times agree; rate-study label is shown, acquired arrivals unchanged |
+| SR-DET-02, SR-DET-04, SR-RUN-26 | `Detector_FaceBeforeStart_LockedUntilReset` | 900-crystal, 18 mm face visible before Start; inputs and caption locked with acquired data; Reset restores editable inputs / next-acquisition caption |
+| SR-IMG-03, SR-IMG-04, SR-IMG-05 | `Imaging_ChannelAndStrip_MatchRetainedFloodAndFoundPeaks` | Two All peaks, selected isotope peaks on the appropriate source sides; independent grid maxima match found markers / chip; every stripped cell matches raw low minus calibrated high, clipped at zero |
+| SR-OPT-04, SR-FOCUS-01, SR-FOCUS-03 | `Imaging_RefocusAndSweep_MatchProjectionAndHalfMaxInterval` | 1000→500 mm halves grid step, retains counts / flood; interval and plotted band match independent half-max crossings / censor flags; no depth-accuracy claim |
+
+| ID | Validation scenario | Expected and observed outcome | Status |
+|---|---|---|---|
+| VAL-09 | Fixed-seed acquisition, open Spectrum, edit window N | Emission row agrees with the retained histogram's independently counted bins; width scales with N and histogram is unchanged | Performed, pass |
+| VAL-10 | Open Waveform, select event #10, enable rate study | Event membership / both marker sets agree with an independent acquired-time filter; rate-study label is explicit and acquired times persist | Performed, pass |
+| VAL-11 | Open Detector before acquisition, acquire, Reset | Face visible from pending inputs; acquired inputs lock until Reset and caption describes that state | Performed, pass |
+| VAL-12 | Fixed-seed two-isotope scene, All / Co-60 / Cs-137, Compton strip | All shows two peaks, selected peaks change with channel; strip changes Cs peak value and follows independent per-pixel subtraction | Performed, pass |
+| VAL-13 | Retained-data refocus, then focus sweep | Projection grid changes with focus while flood / acquired counts persist; one 81-sample curve produces a descriptive half-max interval with correct plotted endpoints / censor flags | Performed, pass; depth accuracy excluded |
+
+The rewritten acquisition desktop validations also pass: Stop freezes counts, Continue increases them, Reset
+unlocks / discards; the reset/edit/start scenario puts the peak at (21.6, 17.1) mm for source (21.4, 16.0) mm,
+inside its existing 1.5 mm tolerance. This does not establish a general sub-mm guarantee (AN-11).
+
+The survey opened all four workspaces in both themes at 1280×800 and 1440×900 and inspected all 16
+[desktop frames](assets/studio-polish-survey/README.md). Observations P-12 … P-16 include touching Spectrum
+line/window columns, crowded small-window found labels, faint locked inputs, the shaped trace's omitted text
+marker labels, and Detector panel whitespace. No layout fix was made. The dark two-isotope Imaging
+[representative desktop capture](assets/studio-desktop-imaging.png) is referenced in the repository README.
+That README image is a separate approved retake with Co-60 at 200 µCi and Cs-137 at 500 µCi, positions
+(20, 0) / (−20, 0) mm, 1000 mm distance, seed 12345, 60 s, All channel, dark theme. It acquired 6,974 counts.
+Found Cs-137 (−20.6, 0.3) mm and Co-60 (20.2, 0.5) mm have unrounded errors 0.676 / 0.546 mm,
+both below one 8.75 mm resolution element. The read-only product-state truth check passed before the file was
+written; run `20261002-130331-aa0ebe` exited 0 with no sandbox writes. The original 16 survey frames and
+regression measurements retain the 20 µCi Co-60 scene. The retake build had zero warnings / errors and its
+single opt-in capture invocation passed; this is not another full-suite run.
+No keyboard-only or screen-reader validation, other DPI scaling, or numerical depth-accuracy test is claimed.

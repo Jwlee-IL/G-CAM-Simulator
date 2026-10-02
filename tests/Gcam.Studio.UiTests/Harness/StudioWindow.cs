@@ -30,6 +30,39 @@ public sealed class StudioWindow(AutomationElement window)
 
     public void Invoke(string id) => Pattern<InvokePattern>(ById(id), InvokePattern.Pattern).Invoke();
 
+    public void Click(string id)
+    {
+        var r = Bounds(id);
+        Pointer.Click(new Point(r.X + r.Width / 2, r.Y + r.Height / 2));
+    }
+
+    public void Toggle(string id) => Pattern<TogglePattern>(ById(id), TogglePattern.Pattern).Toggle();
+
+    public void Expand(string id) => Pattern<ExpandCollapsePattern>(ById(id), ExpandCollapsePattern.Pattern).Expand();
+
+    public void Choose(string id, string name)
+    {
+        var combo = ById(id);
+        var expand = Pattern<ExpandCollapsePattern>(combo, ExpandCollapsePattern.Pattern);
+        expand.Expand();
+        var item = combo.FindFirst(TreeScope.Descendants, new AndCondition(
+            new PropertyCondition(AutomationElement.ControlTypeProperty, ControlType.ListItem),
+            new PropertyCondition(AutomationElement.NameProperty, name)))
+            ?? throw new InvalidOperationException($"No {name} in {id}");
+        Pattern<SelectionItemPattern>(item, SelectionItemPattern.Pattern).Select();
+        expand.Collapse();
+        Thread.Sleep(150);
+    }
+
+    public System.Text.Json.JsonElement Evidence(string id) =>
+        System.Text.Json.JsonDocument.Parse(ById(id).Current.HelpText).RootElement.Clone();
+
+    public void Workspace(string name, string surface)
+    {
+        Click($"Workspace.{name}");
+        WaitUntil(() => Exists(surface), TimeSpan.FromSeconds(5), $"{name} command activates its surface");
+    }
+
     /// <summary>Selects a radio button / list item and reads the selection back.</summary>
     public void Select(string id)
     {

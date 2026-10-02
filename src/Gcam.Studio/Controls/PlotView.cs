@@ -484,6 +484,7 @@ public sealed class PlotView : FrameworkElement
     protected override AutomationPeer OnCreateAutomationPeer() => new PlotViewAutomationPeer(this);
     private sealed class PlotViewAutomationPeer(PlotView owner) : FrameworkElementAutomationPeer(owner)
     {
+        protected override string GetHelpTextCore() => AutomationEvidence.Read(owner) ?? base.GetHelpTextCore();
         protected override AutomationControlType GetAutomationControlTypeCore() => AutomationControlType.Image;
         protected override string GetClassNameCore() => nameof(PlotView);
         protected override bool IsKeyboardFocusableCore() => true;

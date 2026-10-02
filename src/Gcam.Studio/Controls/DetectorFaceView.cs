@@ -50,6 +50,8 @@ public sealed class DetectorFaceView : FrameworkElement
     protected override AutomationPeer OnCreateAutomationPeer() => new FacePeer(this);
     private sealed class FacePeer(DetectorFaceView owner) : FrameworkElementAutomationPeer(owner)
     {
+        protected override string GetItemStatusCore() => owner.Face is { } face
+            ? $"{face.Crystals.Count} crystals; {face.SizeMm:0.###} mm square" : "No detector face";
         protected override string GetClassNameCore() => nameof(DetectorFaceView);
         protected override AutomationControlType GetAutomationControlTypeCore() => AutomationControlType.Image;
     }

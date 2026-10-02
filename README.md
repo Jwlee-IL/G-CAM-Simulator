@@ -49,6 +49,10 @@ The evidence behind these numbers — conditions, limits, reproduce command and,
 it: [`docs/VV.Gcam.Evidence.md`](docs/VV.Gcam.Evidence.md) (EV-01, EV-11, EV-15, EV-17).
 The full working log of all 54 study themes: [`docs/AGENTS.Findings.md`](docs/AGENTS.Findings.md).
 
+GCAM Studio desktop — Imaging workspace, Cs-137 500 µCi + Co-60 200 µCi, dark theme:
+
+![GCAM Studio Imaging desktop with two isotope sources](docs/assets/studio-desktop-imaging.png)
+
 ## A 10-minute tour for reviewers
 
 1. [`src/Gcam.Decoding/MlemDecoder.cs`](src/Gcam.Decoding/MlemDecoder.cs) — the MLEM update, with its approximations stated up front.

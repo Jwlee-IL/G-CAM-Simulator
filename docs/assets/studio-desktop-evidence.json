@@ -1,0 +1,437 @@
+{
+  "date": "2026-10-02",
+  "profile": "P1 exploratory",
+  "build": "b8fddcd plus uncommitted desktop-pass changes",
+  "normal": {
+    "services": 72,
+    "core": 164,
+    "uiOracles": 13,
+    "engine": 262,
+    "skipped": 22
+  },
+  "desktop": {
+    "oracles": 13,
+    "plotGate": 1,
+    "survey": 1,
+    "scenarios": 12,
+    "passed": 27
+  },
+  "broken": {
+    "selected": 12,
+    "failedAsIntended": 12
+  },
+  "scenarios": [
+    {
+      "scenario": "Imaging_ChannelAndStrip_MatchRetainedFloodAndFoundPeaks",
+      "normalRun": "20261002-122617-77e8d6",
+      "normalResult": "passed",
+      "brokenRun": "20261002-122254-b4437e",
+      "brokenResult": "failed",
+      "brokenError": [
+        "Xunit.Sdk.EqualException: Assert.Equal() Failure: Values are not within 8 decimal places\r",
+        "Expected: 1216.27115878 (rounded from 1216.2711587782692)\r",
+        "Actual:   1215.27115878 (rounded from 1215.2711587782692)\r"
+      ],
+      "normalEnding": "exit 0",
+      "brokenEnding": "exit 0",
+      "normalSandboxWrites": 0,
+      "brokenSandboxWrites": 0,
+      "productVersion": "1.0.0+b8fddcd9b89af5e15fa9c2c11b8f341b3404a4de",
+      "dirtyFiles": 37
+    },
+    {
+      "scenario": "Detector_FaceBeforeStart_LockedUntilReset",
+      "normalRun": "20261002-122608-113c35",
+      "normalResult": "passed",
+      "brokenRun": "20261002-122245-683c4b",
+      "brokenResult": "failed",
+      "brokenError": [
+        "Xunit.Sdk.EqualException: Assert.Equal() Failure: Strings differ\r",
+        "           ↓ (pos 0)\r",
+        "Expected: \"Settings for the next acquisition\"\r",
+        "Actual:   \"Acquired settings · locked until Reset\"\r"
+      ],
+      "normalEnding": "exit 0",
+      "brokenEnding": "exit 0",
+      "normalSandboxWrites": 0,
+      "brokenSandboxWrites": 0,
+      "productVersion": "1.0.0+b8fddcd9b89af5e15fa9c2c11b8f341b3404a4de",
+      "dirtyFiles": 36
+    },
+    {
+      "scenario": "Spectrum_BandCountAndWindowChange_MatchRetainedHistogram",
+      "normalRun": "20261002-122558-01e087",
+      "normalResult": "passed",
+      "brokenRun": "20261002-122235-f4dc27",
+      "brokenResult": "failed",
+      "brokenError": [
+        "Xunit.Sdk.EqualException: Assert.Equal() Failure: Values differ\r",
+        "Expected: 1144\r",
+        "Actual:   1143\r"
+      ],
+      "normalEnding": "exit 0",
+      "brokenEnding": "exit 0",
+      "normalSandboxWrites": 0,
+      "brokenSandboxWrites": 0,
+      "productVersion": "1.0.0+b8fddcd9b89af5e15fa9c2c11b8f341b3404a4de",
+      "dirtyFiles": 36
+    },
+    {
+      "scenario": "Waveform_SelectedEventListAndMarkers_MatchArrivalWindow",
+      "normalRun": "20261002-122548-99fb43",
+      "normalResult": "passed",
+      "brokenRun": "20261002-122226-616b2f",
+      "brokenResult": "failed",
+      "brokenError": [
+        "Xunit.Sdk.EqualException: Assert.Equal() Failure: Collections differ\r",
+        "               ↓ (pos 1)\r",
+        "Expected: [10, -1]\r",
+        "Actual:   [10]\r"
+      ],
+      "normalEnding": "exit 0",
+      "brokenEnding": "exit 0",
+      "normalSandboxWrites": 0,
+      "brokenSandboxWrites": 0,
+      "productVersion": "1.0.0+b8fddcd9b89af5e15fa9c2c11b8f341b3404a4de",
+      "dirtyFiles": 36
+    },
+    {
+      "scenario": "Imaging_RefocusAndSweep_MatchProjectionAndHalfMaxInterval",
+      "normalRun": "20261002-122537-77b2c3",
+      "normalResult": "passed",
+      "brokenRun": "20261002-122216-4f6240",
+      "brokenResult": "failed",
+      "brokenError": [
+        "Xunit.Sdk.EqualException: Assert.Equal() Failure: Values are not within 8 decimal places\r",
+        "Expected: 0.59999999999999998 (rounded from 0.59999999999999998)\r",
+        "Actual:   0.5 (rounded from 0.5)\r"
+      ],
+      "normalEnding": "exit 0",
+      "brokenEnding": "exit 0",
+      "normalSandboxWrites": 0,
+      "brokenSandboxWrites": 0,
+      "productVersion": "1.0.0+b8fddcd9b89af5e15fa9c2c11b8f341b3404a4de",
+      "dirtyFiles": 36
+    },
+    {
+      "scenario": "ThemeToggle_RelabelsAndSwitchesBack",
+      "normalRun": "20261002-122528-d3b2e0",
+      "normalResult": "passed",
+      "brokenRun": "20261002-122405-6f565c",
+      "brokenResult": "failed",
+      "brokenError": [
+        "Xunit.Sdk.EqualException: Assert.Equal() Failure: Strings differ\r",
+        "           ↓ (pos 0)\r",
+        "Expected: \"Dark theme\"\r",
+        "Actual:   \"Light theme\"\r"
+      ],
+      "normalEnding": "exit 0",
+      "brokenEnding": "exit 0",
+      "normalSandboxWrites": 0,
+      "brokenSandboxWrites": 0,
+      "productVersion": "1.0.0+b8fddcd9b89af5e15fa9c2c11b8f341b3404a4de",
+      "dirtyFiles": 36
+    },
+    {
+      "scenario": "MoveSource_ResetEditStart_PutsPeakOnTheSource",
+      "normalRun": "20261002-122512-1669cd",
+      "normalResult": "passed",
+      "brokenRun": "20261002-122348-920427",
+      "brokenResult": "failed",
+      "brokenError": [
+        "Xunit.Sdk.TrueException: peak (21.6, 17.1) is not within 1.5 mm of the source (24.4, 16)\r"
+      ],
+      "normalEnding": "exit 0",
+      "brokenEnding": "exit 0",
+      "normalSandboxWrites": 0,
+      "brokenSandboxWrites": 0,
+      "productVersion": "1.0.0+b8fddcd9b89af5e15fa9c2c11b8f341b3404a4de",
+      "dirtyFiles": 36
+    },
+    {
+      "scenario": "Angle_EscAbandonsDraft_DeleteRemovesSelected",
+      "normalRun": "20261002-122502-d8f3b4",
+      "normalResult": "passed",
+      "brokenRun": "20261002-122339-5f00ec",
+      "brokenResult": "failed",
+      "brokenError": [
+        "Xunit.Sdk.TrueException: angle 70° vs 75.02° ± 2.71\r"
+      ],
+      "normalEnding": "exit 0",
+      "brokenEnding": "exit 0",
+      "normalSandboxWrites": 0,
+      "brokenSandboxWrites": 0,
+      "productVersion": "1.0.0+b8fddcd9b89af5e15fa9c2c11b8f341b3404a4de",
+      "dirtyFiles": 36
+    },
+    {
+      "scenario": "StopContinueReset_KeepsAccumulatesAndDiscards",
+      "normalRun": "20261002-122456-9aa724",
+      "normalResult": "passed",
+      "brokenRun": "20261002-122333-65e1a9",
+      "brokenResult": "failed",
+      "brokenError": [
+        "Xunit.Sdk.EqualException: Assert.Equal() Failure: Values differ\r",
+        "Expected: 77\r",
+        "Actual:   76\r"
+      ],
+      "normalEnding": "exit 0",
+      "brokenEnding": "exit 0",
+      "normalSandboxWrites": 0,
+      "brokenSandboxWrites": 0,
+      "productVersion": "1.0.0+b8fddcd9b89af5e15fa9c2c11b8f341b3404a4de",
+      "dirtyFiles": 36
+    },
+    {
+      "scenario": "Roi_OnFloodMap_CountsWholePixelsByCentre",
+      "normalRun": "20261002-122447-999831",
+      "normalResult": "passed",
+      "brokenRun": "20261002-122324-346a9e",
+      "brokenResult": "failed",
+      "brokenError": [
+        "Xunit.Sdk.EqualException: Assert.Equal() Failure: Values differ\r",
+        "Expected: 43\r",
+        "Actual:   42\r"
+      ],
+      "normalEnding": "exit 0",
+      "brokenEnding": "exit 0",
+      "normalSandboxWrites": 0,
+      "brokenSandboxWrites": 0,
+      "productVersion": "1.0.0+b8fddcd9b89af5e15fa9c2c11b8f341b3404a4de",
+      "dirtyFiles": 36
+    },
+    {
+      "scenario": "Readout_AndOneCellRoi_MatchAbsolutePositionAndValue",
+      "normalRun": "20261002-122437-15e3d7",
+      "normalResult": "passed",
+      "brokenRun": "20261002-122316-9d983b",
+      "brokenResult": "failed",
+      "brokenError": [
+        "Xunit.Sdk.TrueException: cell (4,6) read (-6.3, 5.1) mm, expected (-5.70, 5.10) mm\r"
+      ],
+      "normalEnding": "exit 0",
+      "brokenEnding": "exit 0",
+      "normalSandboxWrites": 0,
+      "brokenSandboxWrites": 0,
+      "productVersion": "1.0.0+b8fddcd9b89af5e15fa9c2c11b8f341b3404a4de",
+      "dirtyFiles": 36
+    },
+    {
+      "scenario": "Pilot_SimulateThenMeasureDistance_AddsRowWithExpectedLength",
+      "normalRun": "20261002-122425-781c8e",
+      "normalResult": "passed",
+      "brokenRun": "20261002-122306-9dc7e4",
+      "brokenResult": "failed",
+      "brokenError": [
+        "Xunit.Sdk.TrueException: length 13.4 mm is not within 0.204 mm of the expected 14.400 mm\r"
+      ],
+      "normalEnding": "exit 0",
+      "brokenEnding": "exit 0",
+      "normalSandboxWrites": 0,
+      "brokenSandboxWrites": 0,
+      "productVersion": "1.0.0+b8fddcd9b89af5e15fa9c2c11b8f341b3404a4de",
+      "dirtyFiles": 36
+    }
+  ],
+  "plot": {
+    "os": "Microsoft Windows NT 10.0.26200.0",
+    "processors": 24,
+    "date": "2026-10-02T12:24:37.2042866+09:00",
+    "samples": 10000000,
+    "dpi": 1,
+    "zoomRedrawMs": [
+      2.4216,
+      5.5822,
+      2.5034,
+      3.6659,
+      4.0129
+    ],
+    "resizeRedrawMs": [
+      2.3234,
+      1.9804,
+      3.9559,
+      2.3487,
+      2.7475
+    ],
+    "eventToRenderMs": [
+      2.6492,
+      238.0788,
+      5.9062,
+      314.4924,
+      3.3091,
+      259.1478,
+      4.8887,
+      326.006,
+      4.2559,
+      595.2849
+    ],
+    "metric": "CPU OnRender: axes, query, frozen geometry and drawing commands; excludes compositor / refresh wait"
+  },
+  "newScenarioInput": {
+    "pairSources": [
+      {
+        "isotope": "Cs-137",
+        "yMm": 0,
+        "activityUCi": 500,
+        "xMm": -20,
+        "distanceMm": 1000
+      },
+      {
+        "isotope": "Co-60",
+        "yMm": 0,
+        "activityUCi": 20,
+        "xMm": 20,
+        "distanceMm": 1000
+      }
+    ],
+    "seed": 12345,
+    "speed": 10,
+    "liveTimeS": 60
+  },
+  "measurements": {
+    "focusFarCensored": true,
+    "spectrumN2": 1373,
+    "spectrumN1": 1143,
+    "focusLoMm": 507.8036015330239,
+    "focusHiMm": 3000,
+    "waveformEventIndices": [
+      10
+    ],
+    "stripCalibrationHigh": 12867,
+    "stripCalibrationLow": 6066,
+    "stripTotal": 1215.2711587782692
+  },
+  "surveyFrames": 16,
+  "screenshot": "studio-desktop-imaging.png",
+  "screenshotsDiagnosticOnly": true,
+  "sandboxesRetained": true,
+  "captures": [
+    {
+      "file": "studio-polish-survey/detector-dark-1280x800.png",
+      "sha256": "7BE9E12FE46E46F32E2A928987D3E24D19010457679160698C52919BC82EE5F0",
+      "runId": "20261002-123249-231a4f"
+    },
+    {
+      "file": "studio-polish-survey/detector-dark-1440x900.png",
+      "sha256": "1436F1738B247EA8216CEFEAE49CCBA95A10E0ACEEDC64CB103F6C852AF81403",
+      "runId": "20261002-123249-231a4f"
+    },
+    {
+      "file": "studio-polish-survey/detector-light-1280x800.png",
+      "sha256": "3E678E9D69E88B8A59AA056EBD1F24B54C5B6C0D000537C6A85CB26A93026A61",
+      "runId": "20261002-123249-231a4f"
+    },
+    {
+      "file": "studio-polish-survey/detector-light-1440x900.png",
+      "sha256": "B473F3BAF4C68E3F01C3D57F0532229AF636F8EE426F954B7016AC4260E719C1",
+      "runId": "20261002-123249-231a4f"
+    },
+    {
+      "file": "studio-polish-survey/imaging-dark-1280x800.png",
+      "sha256": "C1B2A97D8726297388CAF234F084DAB7EA5099C9C97F099050A8BE38DBEEE9AE",
+      "runId": "20261002-123249-231a4f"
+    },
+    {
+      "file": "studio-polish-survey/imaging-dark-1440x900.png",
+      "sha256": "D0EFEC45CB33B463E9E3E05A8541E4794AA9153570A4483142C55680E4A27F70",
+      "runId": "20261002-123249-231a4f"
+    },
+    {
+      "file": "studio-polish-survey/imaging-light-1280x800.png",
+      "sha256": "8E6559635DF70B9823ED0E2D49E6B9E54ADC03D571EE052634388BA6968A3813",
+      "runId": "20261002-123249-231a4f"
+    },
+    {
+      "file": "studio-polish-survey/imaging-light-1440x900.png",
+      "sha256": "2979EB9111825136FACB2BB47C25F6FDB093A71632329DE30681E0E59943BC50",
+      "runId": "20261002-123249-231a4f"
+    },
+    {
+      "file": "studio-polish-survey/spectrum-dark-1280x800.png",
+      "sha256": "7BE1D5000B99096A04526A2A5DC9DED3A3D50F58E3369319B14FE809A54E977B",
+      "runId": "20261002-123249-231a4f"
+    },
+    {
+      "file": "studio-polish-survey/spectrum-dark-1440x900.png",
+      "sha256": "4F6CADB3F645B609A731519A86517F1EAA89211536441642C01F3FBB8A35E89A",
+      "runId": "20261002-123249-231a4f"
+    },
+    {
+      "file": "studio-polish-survey/spectrum-light-1280x800.png",
+      "sha256": "F60771400A688EB55AD8D3A969C3C0F5F2965EC6767A950BB2E98A181C7D7E0F",
+      "runId": "20261002-123249-231a4f"
+    },
+    {
+      "file": "studio-polish-survey/spectrum-light-1440x900.png",
+      "sha256": "405965948C5FA6DD00185477128A0548C632F731088F5D28D5F60149744BF4AB",
+      "runId": "20261002-123249-231a4f"
+    },
+    {
+      "file": "studio-polish-survey/waveform-dark-1280x800.png",
+      "sha256": "82CB550CFD892263326174AB5328D42026EEE7D7DB02F2D572D92DA43A9ACEA1",
+      "runId": "20261002-123249-231a4f"
+    },
+    {
+      "file": "studio-polish-survey/waveform-dark-1440x900.png",
+      "sha256": "A9849EE85F298CE2A650BB17BA9FB5551F0278D1724498F4E7043672C8EB6298",
+      "runId": "20261002-123249-231a4f"
+    },
+    {
+      "file": "studio-polish-survey/waveform-light-1280x800.png",
+      "sha256": "5DA39C14B890F85BAAB8B04AAAD65B2C98A3F8D2B67CD246D350ACA03C34737A",
+      "runId": "20261002-123249-231a4f"
+    },
+    {
+      "file": "studio-polish-survey/waveform-light-1440x900.png",
+      "sha256": "C160131290B8A476163B16C6AD0E88C0D2EDB5AFCE7EDB98C8B40D60B519252A",
+      "runId": "20261002-123249-231a4f"
+    },
+    {
+      "file": "studio-desktop-imaging.png",
+      "sha256": "6EF435A10763242B679FB10FF003F5E62714541AEFA4EEDFC7F2AE357CF525E2",
+      "runId": "20261002-130331-aa0ebe"
+    }
+  ],
+  "readmeCapture": {
+    "seed": 12345,
+    "liveTimeS": 60,
+    "speed": 10,
+    "csActivityUCi": 500,
+    "coActivityUCi": 200,
+    "distanceMm": 1000,
+    "channel": "All",
+    "theme": "dark",
+    "resolutionElementMm": 8.75,
+    "peaks": [
+      {
+        "isotope": "Cs-137",
+        "truthXmm": -20,
+        "truthYmm": 0,
+        "xMm": -20.59085648148148,
+        "yMm": 0.328125,
+        "errorMm": 0.6758530885730091
+      },
+      {
+        "isotope": "Co-60",
+        "truthXmm": 20,
+        "truthYmm": 0,
+        "xMm": 20.244318181818183,
+        "yMm": 0.4879807692307692,
+        "errorMm": 0.5457257599802269
+      }
+    ],
+    "counts": 6974,
+    "runId": "20261002-130331-aa0ebe",
+    "scenario": "README_Imaging_Co200_FixedSeed",
+    "result": "passed",
+    "ownedProcessEnding": "exit 0",
+    "sandboxWrites": [],
+    "productVersion": "1.0.0+b8fddcd9b89af5e15fa9c2c11b8f341b3404a4de",
+    "sha256": "6EF435A10763242B679FB10FF003F5E62714541AEFA4EEDFC7F2AE357CF525E2",
+    "file": "studio-desktop-imaging.png",
+    "width": 1426,
+    "height": 893,
+    "requestedWindowWidth": 1440,
+    "requestedWindowHeight": 900
+  }
+}

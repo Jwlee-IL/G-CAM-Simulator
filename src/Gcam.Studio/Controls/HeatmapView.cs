@@ -339,6 +339,7 @@ public sealed class HeatmapView : FrameworkElement
 
     private sealed class HeatmapViewAutomationPeer(HeatmapView owner) : FrameworkElementAutomationPeer(owner)
     {
+        protected override string GetHelpTextCore() => AutomationEvidence.Read(owner) ?? base.GetHelpTextCore();
         protected override AutomationControlType GetAutomationControlTypeCore() => AutomationControlType.Image;
         protected override string GetClassNameCore() => nameof(HeatmapView);
         protected override bool IsKeyboardFocusableCore() => true;

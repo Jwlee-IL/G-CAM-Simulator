@@ -59,9 +59,9 @@ cannot attribute writes. The owned sandbox can.
 **Ownership** (`Harness/StudioProcess.cs`).
 
 - A `Gcam.Studio` process that the run did not start is a conflict: the run fails and never attaches to or kills it.
-- The run records PID, start time, image path and product version; at the end it closes **that PID only**, killing
-  it after 5 s if needed, and records how it ended.
-- The sandbox carries an owner marker. It is deleted only if it is under `%TEMP%` and the marker is still the run's.
+- The run records PID, start time, image path and product version; at the end it requests graceful window closure
+  of **that PID only** and records how it ended. After 5 s it reports a still-running process; it never force-kills.
+- The sandbox carries an owner marker and is retained under `%TEMP%/gcam-uia-*` for audit. Deletion needs author approval.
 - `GCAM_UIA_RUN=<runId>` is passed to the app so a later restart could be tied to the run.
 
 **Build identity.** The SDK stamps the commit into the binary (`ProductVersion` = `1.0.0+<sha>`). That stamp does
@@ -132,10 +132,10 @@ from the app's own code.
 | Scenario | Traces to | Oracle (independent of the app) | Recovery-run result |
 |---|---|---|---|
 | `Pilot_SimulateThenMeasureDistance_AddsRowWithExpectedLength` | VAL-01, VAL-03 · SR-RUN-09, SR-MEAS-01 | length from screen points through the documented fit rule | 13.4 mm vs 13.400 ± 0.204 |
-| `StopContinueReset_KeepsAccumulatesAndDiscards` (rewritten 2026-10-02 for Start / Stop / Continue / Reset, not run; the row's result is the earlier `Stop_KeepsAcquiredData_LocksThenUnlocksScene`) | VAL-02 · SR-RUN-10, SR-RUN-12, SR-RUN-23, SR-RUN-26 | state machine Acquiring → Stopped; counts frozen after Stop (two refresh periods); Start clears | Start replaced by Stop, scene / live time / speed locked; 35 counts kept and unchanged; editable again; restart began at 0 |
+| `StopContinueReset_KeepsAccumulatesAndDiscards` | VAL-02 · SR-RUN-10, SR-RUN-12, SR-RUN-23, SR-RUN-26 | Stop freezes counts, Continue grows them, Reset discards; inputs lock until Reset | pass 2026-10-02 |
 | `Roi_OnFloodMap_CountsWholePixelsByCentre` | VAL-03 · SR-MEAS-03 | pixel count by centre, with corners on cell **boundaries** so one pixel of error can't change it | 42 px, 3.6 × 4.2 mm |
 | `Angle_EscAbandonsDraft_DeleteRemovesSelected` | VAL-03 · SR-MEAS-02, SR-MEAS-07 | angle from the three screen points (scale- and flip-invariant); Esc is proven by the value — an un-abandoned first click would have produced a different angle | 69.8° vs 70.02 ± 2.29; Delete removed it |
-| `MoveSource_ResetEditStart_PutsPeakOnTheSource` (rewritten 2026-10-02: the drag is withdrawn; Reset, X / Y edit, Start; not run; the row's result is the earlier drag version) | VAL-04, VAL-05 · SR-RUN-12, SR-RUN-26, SR-VIEW-08 | physics: after a re-run the decoded peak must sit on the moved source (≤ 1.5 mm) | list-mode, 60 s: source (21.4, 16.0) → peak (21.7, 17.4), 1.43 mm — inside but near the tolerance; chip shown, then cleared |
+| `MoveSource_ResetEditStart_PutsPeakOnTheSource` | VAL-04, VAL-05 · SR-RUN-12, SR-RUN-26, SR-VIEW-08 | Reset, edit source, Start; unchanged existing 1.5 mm tolerance | pass 2026-10-02: (21.6, 17.1) peak vs (21.4, 16.0) source |
 | `Readout_AndOneCellRoi_MatchAbsolutePositionAndValue` | SR-VIEW-05, SR-VIEW-07, SR-MEAS-03 | absolute mm of two cells (both signs) from the oracle; a one-cell ROI must sum to the readout's value — closes the blind spot below | (-6.3, 5.1) and (6.3, -4.5) mm exact; Σ = cell value |
 | `ThemeToggle_RelabelsAndSwitchesBack` | SR-THEME-01 | the label names the other theme; the app still simulates after two swaps | pass (the visual swap stays manual) |
 
@@ -196,6 +196,57 @@ image was deleted and the capture fixed. Open a failure bundle's image before sh
 - Promote from exploratory to regression use (profile P2) once the suite has a run policy owner and history.
 
 Keep screenshots diagnostic-only; judge on product state.
+
+## Final four-workspace desktop pass (2026-10-02)
+
+Release at b8fddcd plus the changes in this pass. New scenarios are in `WorkspaceScenarioTests`; every acquisition
+fixes seed 12345 through `AcquisitionSeed`. Window size is 1440×900, default detector / chain; acquisitions use
+60 s at ×10. The pair scene has Cs-137 (−20, 0) mm / 500 µCi and Co-60 (20, 0) mm / 20 µCi at 1000 mm.
+Each scenario starts a fresh owned process. The harness now retains its sandbox and never force-stops a process.
+
+`AutomationEvidence` supplies read-only numerical JSON through the image peers' HelpText only when
+`GCAM_UIA_RUN` identifies a harness-owned process. Ordinary accessibility help remains unchanged. Evidence includes
+the histogram bound to the plot, acquired arrival times, bound marker positions, retained floods, bound reconstruction
+and found markers, calibration counts, and focus samples / bound bands. It contains no test expectations and cannot
+mutate the product. `WorkspaceOracle` independently computes the arithmetic; three plain tests exercise it without
+desktop input. Failure images remain diagnostic-only.
+
+| Scenario | Independent oracle and measured result | Requirements |
+|---|---|---|
+| `Spectrum_BandCountAndWindowChange_MatchRetainedHistogram` | Sum histogram bins whose centres lie in the 661.7 keV band; UIA emission row agrees: N=1 → 1,143 counts, N=2 → 1,373. Window width scales with N; acquired histogram is unchanged and matches the bound plot. | SR-SPEC-05, -06; SR-IMG-01 |
+| `Waveform_SelectedEventListAndMarkers_MatchArrivalWindow` | Filter acquired times within [trigger−0.2W, trigger+0.8W); event #10 is the sole event at W=10 µs. List indices and both plots' marker labels / relative positions agree. Rate-study toggle publishes its 50 kcps label without changing acquired times. | SR-WAVE-01, -02, -03 |
+| `Detector_FaceBeforeStart_LockedUntilReset` | Default inputs imply 30²=900 crystals on an 18 mm face, visible before acquisition. After acquisition the caption says acquired / locked until Reset; gap, gain and source fields lock; Reset unlocks and restores the next-acquisition caption. | SR-DET-02, -04; SR-RUN-26 |
+| `Imaging_ChannelAndStrip_MatchRetainedFloodAndFoundPeaks` | All has two peaks; channel peaks are on their source-input sides. Find the reconstruction argmax independently; found / chip coordinates are within half a grid cell plus text rounding, and the bound reconstruction / markers match. Per cell, strip = max(0, raw Cs − (calibration low/high)·raw Co). R=6066/12867; stripped total 1,215.271158778 counts, exactly matching the independent sum. Peak value changes 506 → 502.228491490. | SR-IMG-03, -04, -05 |
+| `Imaging_RefocusAndSweep_MatchProjectionAndHalfMaxInterval` | Focus 1000 → 500 mm halves recon step (2.1875 → 1.09375 mm), keeps flood/counts; independent grid maximum agrees with the chip. Derive contiguous raw half-max crossings from 81 curve samples and verify interval, censor flags and plotted band: 507.803601533–3000 mm, far edge censored. No depth-accuracy assertion. | SR-OPT-04; SR-FOCUS-01, -03 |
+
+Workspace tests click the workspace selector and wait for its surface, never treating a checked button as proof of
+activation. The earlier SelectionItem defect and `Ctrl+1…4` command workaround remain relevant: this pass verifies
+the pointer command path; it does not establish a keyboard-only or screen-reader flow.
+
+Diagnostic survey: all four workspaces × both themes × 1280×800 / 1440×900 = 16 visible-frame PNGs,
+opened and inspected; reproduction and P-12 … P-16 observations in
+[survey README](assets/studio-polish-survey/README.md). No layout fixes. Representative two-isotope dark Imaging
+capture: [studio-desktop-imaging.png](assets/studio-desktop-imaging.png). The README image was separately retaken
+with Co-60 at 200 µCi (Cs-137 remains 500 µCi), all other scene / acquisition settings unchanged. Found peaks:
+Cs-137 (−20.6, 0.3), Co-60 (20.2, 0.5) mm; unrounded errors 0.676 / 0.546 mm versus one 8.75 mm resolution element.
+Run `20261002-130331-aa0ebe` passed the truth-distance check before writing the capture; 6,974 acquired counts,
+exit 0, no sandbox writes. Reproduce only this image with `GCAM_UI_TESTS=1`, `GCAM_README_CAPTURE_ONLY=1` and
+`dotnet test tests/Gcam.Studio.UiTests -c Release --filter FullyQualifiedName~PolishSurveyTests`.
+Ordinary survey execution writes only its 16 survey frames so it cannot overwrite the README's distinct scene.
+
+**Observed presentation defects (left unchanged).** `Views/SpectrumView.xaml` uses adjacent fixed-width, right-aligned
+Line and Window columns: run the pair scene, open Spectrum at either size; the Co-60 values touch (P-12).
+`MeasurementOverlay` found labels crowd at 1280×800 in that pair scene (P-13). `WaveformView.xaml` omits marker labels
+on the shaped plot while retaining marker lines (P-15); this is a display choice to review, not a numerical defect.
+No transport, reconstruction or acquisition defect was found by the new scenarios.
+
+**Execution record:** final desktop recovery 27/27 (13 oracle, 12 scenarios, plot gate, survey); deliberately
+broken run 12/12 scenario failures, all at the corrupted expectations. Ordinary suite: 262 / 164 / 72 / 13
+passes, 22 explicitly opted-out cases. Build: 0 warnings / errors. Plot CPU redraw max: zoom 5.5822 ms,
+resize 3.9559 ms, both below 16 ms. Resize event-to-render samples were 238.0788–595.2849 ms; this is
+not a ≤16 ms end-to-end latency claim. Every owned app exited 0, zero sandbox writes, no app left running;
+owned sandboxes retained. Compact record and capture hashes:
+[desktop evidence](assets/studio-desktop-evidence.json).
 
 **Re-run on list-mode acquisition (2026-10-01).** The scenarios moved from Simulate / Cancel / photon budget to
 Start / Stop / live time (`StudioWindow.Acquire`, status counts parsed from the status line); the cancel scenario
