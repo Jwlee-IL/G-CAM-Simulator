@@ -1,10 +1,11 @@
 # Studio content offscreen evidence
 
-Sixteen deterministic renders of the shipped MainWindow content at 96 DPI, en-US: eight original workspace
-renders and eight mixed-scene Imaging renders for TODO-08 phase B.
+Deterministic renders of the shipped MainWindow content at 96 DPI, en-US, including the original workspaces,
+mixed-scene Imaging and Spectrum, crowded equal-Y labels, Waveform, Detector and focus curves.
 The XAML window is constructed but never shown; its content is detached and measured/arranged under an
-AdornerDecorator. No Studio App, HWND, Run(), MC, focus or desktop input. A fake acquisition service
+AdornerDecorator. No Studio App, HWND, Run(), focus or desktop input. A fake acquisition service
 publishes one immutable completed snapshot; a fake spectrum service supplies analytic drawing data.
+The dedicated Waveform fixtures use a retained Monte Carlo event prefix and a deterministic worker-time reading.
 The flood and spectrum fixtures are schematic, not physics evidence or a count-conservation oracle.
 The two heatmap readouts use HoverAt directly, without mouse events. Source/measurement adorners
 that depend on a real Loaded window are absent from the original fixtures. The mixed-scene fixture explicitly
@@ -17,6 +18,8 @@ Window chrome is outside this capture.
 | Spectrum | [PNG](spectrum-dark-1280x800.png) | [PNG](spectrum-light-1280x800.png) | [PNG](spectrum-dark-1440x900.png) | [PNG](spectrum-light-1440x900.png) |
 | Imaging mixed All | [PNG](imaging-mixed-all-dark-1280x800.png) | [PNG](imaging-mixed-all-light-1280x800.png) | [PNG](imaging-mixed-all-dark-1440x900.png) | [PNG](imaging-mixed-all-light-1440x900.png) |
 | Imaging mixed Cs-137 | [PNG](imaging-mixed-cs-137-dark-1280x800.png) | [PNG](imaging-mixed-cs-137-light-1280x800.png) | [PNG](imaging-mixed-cs-137-dark-1440x900.png) | [PNG](imaging-mixed-cs-137-light-1440x900.png) |
+| Spectrum mixed | [PNG](spectrum-mixed-all-dark-1280x800.png) | [PNG](spectrum-mixed-all-light-1280x800.png) | [PNG](spectrum-mixed-all-dark-1440x900.png) | [PNG](spectrum-mixed-all-light-1440x900.png) |
+| Imaging crowded All | [PNG](imaging-crowded-mixed-all-dark-1280x800.png) | [PNG](imaging-crowded-mixed-all-light-1280x800.png) | [PNG](imaging-crowded-mixed-all-dark-1440x900.png) | [PNG](imaging-crowded-mixed-all-light-1440x900.png) |
 
 Imaging shows B1-1 counts chip, B1-2 counts / (decoded) readouts and B1-3 value-positioned round ticks.
 Both workspaces show B1-4 centred 80 × 28 DIP inputs with suffixes. Spectrum shows B1-5 descriptive
@@ -44,6 +47,18 @@ four-significant-digit readouts, an aligned emission table with a "Ba K X-rays (
 strip above each plot. All renders now share the window's Display text formatting and are byte-reproducible
 (fixed fixture worker time); the imaging fixture reports each channel's argmax as its estimate and the Waveform
 fixture's live time ends at its last event.
+
+UI polish batch 4 (2026-10-02) regenerated 76 whole-content PNGs and the four standalone plots. Mixed Spectrum
+now includes the 1173.2/1332.5-keV rows with four-digit window bounds and grouped counts. The equal-Y Imaging
+fixture uses Cs-137 at (−20,0) and Co-60 at (14,0) mm, with analytic found positions offset by (0.5,0.3) mm;
+it exercises the survey's crowding rather than reproducing its transport. Existing mixed renders cover the
+right-edge found label. The renderer asserts full chip footprints inside the visible image with ≥4-DIP gaps,
+including selected outlines; numeric header/row column edges, complete strings and ≥8-DIP cell gaps; disabled
+seed resources; content-height Detector cards; and labels above the ADC plot only, with shaped marker lines kept.
+All checks pass. Both themes' affected 1280×800 renders were opened: Co-60 values separate, full found labels
+occupy clear lanes, locked inputs stay subdued but readable, and Detector cards end below their captions.
+Production disabled-token contrast on the input surface is 5.164:1 dark and 5.154:1 light; Canvas/Raised also
+meet 4.5:1, verified without WPF by ThemeContrastTests. No desktop capture was replaced or newly validated.
 
 ```powershell
 $env:GCAM_RENDER_SNAPSHOTS = '1'
