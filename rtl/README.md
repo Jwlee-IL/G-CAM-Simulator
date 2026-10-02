@@ -1,5 +1,59 @@
 # RTL peak-detector co-simulation
 
+## CR-RC fractional-state and preset contract
+
+`crrc_shaper.sv`, `trap_ref.crrc_int` and C# `Waveform.CrrcInt` share Q16 coefficients and a separate
+state fraction parameter: **F=0** retains the original whole-code recurrence/goldens, **F=12** retains
+fractional state. Raw output is signed codes × 4096 for F=12; divide by 4096.0 for plotted codes, never
+floor it back to whole codes before measurement. The default fixture still uses order 4, A=53656, K=26214,
+F=0; Studio explicitly selects F=12 and its acquired preset coefficients. CR-RC energy readout remains
+unavailable pending trigger/phase/overlap estimator validation.
+
+All three Studio CR-RC presets keep **order 4**. Their explicit T_sum shaping times are **100/200/500 ns**,
+separate from the DCR effective integration windows. The convention is T_sum = order × nominal Euler RC
+time, K=round(65536×order×8/T_sum): **20972/10486/4194** at 125 MSPS. This is a **simulation convention**,
+not measured rig circuitry, a peaking-time definition, or a derivation of the DCR equivalent noise window.
+A=round(exp(-1/tailSamples)×65536) remains matched to the selected scintillator/CSP tail.
+
+Bounded domain: signed-16 input, 0≤A≤65536, 1≤K≤65536, 1≤ORDER≤16, 0≤F≤12, Q=16.
+Input is sign-extended before shifting. With B=2^(15+F), |imp|≤2B+1. An RC update is the floor
+of a convex combination of integer endpoints, so every stage stays in that same interval from reset;
+|u−acc|≤4B+2. The largest product is at most (4B+2)×65536 = **35,184,372,219,904** for F=12,
+less than 2^46. RTL uses **signed 48-bit states and products**; C# signed long and Python integers produce
+the same bounded results. RTL rejects widths below WIN+F+Q+3 (47 bits for signed-16/Q12/Q16).
+This bound covers arbitrary bounded input sequences and valid gaps, not hardware clock timing.
+
+`crrc_contract.py` computes expected coefficients independently of DUT readback. The cocotb matrix covers
+the legacy operating point plus GAGG/NaI/LYSO/BGO × Fast/Original/Slow, each with F=0 and F=12. It checks
+32/32.1/122/662-keV finite-rise pulses, a near-threshold sweep, signed full-scale/noisy inputs, reset/valid
+holds, accepting-edge output (zero sequence offset), and optional C# vectors against Python and actual RTL.
+The legacy 400→800 proportionality tolerance remains 0.05; preset paths use exact sample equality rather
+than borrowing that legacy tolerance for their whole-code deadbands.
+
+To include C# comparisons, export vectors with the engine test in a fresh temporary directory:
+
+```powershell
+$env:GCAM_CRRC_VECTORS = Join-Path $env:TEMP ('gcam-crrc-vectors-' + [guid]::NewGuid().ToString('N'))
+dotnet test tests/Gcam.Tests -c Release --filter FullyQualifiedName~CsharpContractVectors_UseConfiguredCoefficientsAndOptionalExport
+# Use a python.org Python with cocotb and Icarus on this process's PATH.
+python rtl/run_cocotb.py --csharp-vectors $env:GCAM_CRRC_VECTORS
+```
+
+The runner creates fresh `%TEMP%/gcam-rtl-*` build/results directories, performs no cleanup, and exits
+nonzero on any failure. Without `--csharp-vectors`, the C# comparisons are reported as skipped;
+`--crrc-only` omits the unchanged trapezoid/BLR suites. On Windows the runner sets LIBPYTHON_LOC from
+the executing Python installation. Do not use Store Python. No GUI is requested.
+
+Execution 2026-10-02: **137 passed / 0 failed / 0 skipped** (130 CR-RC cases across 26 configurations,
+six trapezoid cases and one BLR case). The 26 C# vectors compare **452,608 samples** exactly against both
+Python and RTL. A/K/order/F/Q/width are pinned to independent fixture math. No synthesis/Fmax or
+physical hardware result is claimed. Response measurements and reproduction are in
+[VV.Studio.Waveform](../docs/VV.Studio.Waveform.md#cr-rc-arithmetic-and-response-evidence).
+The final CR-RC-only rerun also passed all 130 cases after adding an explicit finite-rise piled-pulse
+stimulus; the seven unchanged trapezoid/BLR cases passed in the full run.
+
+## Peak-detector studies
+
 The ADC front-end of the gamma camera, as real SystemVerilog RTL simulated by
 **Icarus Verilog**. Each gamma interaction makes a pulse on the digitized detector
 signal; this stage extracts its **pulse height (= energy)** and timestamp — the
@@ -133,9 +187,9 @@ Result: **direct 59 MHz vs pipelined 119 MHz (×2.0)** — `rtl/fmax_ecp5.png`; 
 100 MSPS clock on this part, the pipelined one clears it. Yosys `ltp` cell-count could NOT show this
 (multiply/carry dominated); real place-and-route STA does.
 
-## Next (not done)
-- Drive the cocotb testbench from the **C# MC per-event stream** (the runner is in place; feed it
-  real event times/energies instead of the synthetic stimulus).
-- **CR-RC / cusp** shaping variants for comparison; fold the trapezoid's resolution-vs-rate into the
-  material study.
-- Fold the multi-line isotope model into C# `SourceConfig` for coded-aperture multi-source imaging.
+## Completed integrations and remaining follow-ups
+- **Done:** drive the cocotb testbench from the **C# MC per-event stream** (`mc_event_stream_matches_reference` and the BLR bench consume `event_stream.txt`;
+  real event times/energies are rasterized alongside the synthetic fixtures).
+- **CR-RC done:** fractional-state preset contract and C# vectors are documented above. Cusp remains a Python benchmark (`shapers.py`, `shaper_compare.py`); folding the trapezoid's resolution-vs-rate into the
+  material study remains a follow-up.
+- **Done:** C# `SourceConfig.Lines` / `EmissionLine` and mixed-field transport support multi-line, multi-source coded-aperture imaging.

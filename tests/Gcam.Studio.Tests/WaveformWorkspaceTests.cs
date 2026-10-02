@@ -10,6 +10,25 @@ namespace Gcam.Studio.Tests;
 
 public sealed class WaveformWorkspaceTests
 {
+    [Fact]
+    public async Task CsI_IsOfferedAndRequiresResetForANewAcquisition()
+    {
+        var model = new MainViewModel(new Acquisition(), new Theme(), new Spectrum());
+        var csi = Assert.Single(model.Scintillators, s => s.Name == "CsI(Tl)");
+        var gagg = model.Scintillator;
+        Assert.Equal("GAGG(Ce)", gagg.Name);
+        await model.StartCommand.ExecuteAsync(null);
+        model.Scintillator = csi;
+        Assert.Same(gagg, model.Scintillator);
+        Assert.Same(gagg, model.Snapshot!.Chain.Scintillator);
+        await model.ResetCommand.ExecuteAsync(null);
+        model.Scintillator = csi;
+        await model.StartCommand.ExecuteAsync(null);
+        Assert.Same(csi, model.Snapshot!.Chain.Scintillator);
+        model.Scintillator = gagg;
+        Assert.Same(csi, model.Scintillator);
+    }
+
     private static AcquisitionSnapshot Snapshot(double live = 2)
     {
         var flood = new DetectorImage(30, 30);
@@ -82,7 +101,8 @@ public sealed class WaveformWorkspaceTests
         var run = model.StartCommand.ExecuteAsync(null);
         Assert.True(model.IsRunning);
         var chain = model.Chain;
-        model.Preamp = FrontEndParts.Preamps[3]; model.Scintillator = FrontEndMaterials.Scintillators[3];
+        model.Preamp = FrontEndParts.Preamps[3];
+        model.Scintillator = FrontEndMaterials.Scintillators.Single(s => s.Name == "CsI(Tl)");
         model.Sensor = FrontEndParts.Sensors[2];
         Assert.Equal(chain, model.Chain);
         acquisition.Release.TrySetResult(); await run;

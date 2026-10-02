@@ -12,8 +12,25 @@ namespace Gcam.Studio.Services.Tests;
 
 public sealed class WaveformServiceTests(ITestOutputHelper output)
 {
-    private static FrontEndChain Chain(int preamp = 1, int scintillator = 0, int sensor = 0)
-        => new(FrontEndMaterials.Scintillators[scintillator], FrontEndParts.Sensors[sensor], FrontEndParts.Preamps[preamp]);
+    [Theory]
+    [InlineData(0)] [InlineData(1)] [InlineData(2)]
+    public async Task Crrc_PlotsFractionalCodesAndLabelsSimulationTime(int preamp)
+    {
+        var chain = Chain(preamp);
+        var result = await new WaveformService().ProcessAsync(Snapshot([new(1, 2, 32, 1)], chain), new(Ideal: true));
+        Assert.Contains("Q12", result.ChainReadout);
+        Assert.Contains("simulation convention", result.ChainReadout);
+        Assert.Contains($"K={chain.CrrcKQ16}", result.ChainReadout);
+        Assert.Contains("energy unavailable", result.PulseReadout);
+        Assert.True(result.Shaped.Y.Max() > 0);
+        Assert.Contains(result.Shaped.Y, value => value != Math.Truncate(value));
+        // Plot in output-code equivalents; forgetting /4096 would exceed the ADC input peak.
+        Assert.True(result.Shaped.Y.Max() < result.Adc.Y.Max());
+    }
+
+    private static FrontEndChain Chain(int preamp = 1, string scintillator = "GAGG(Ce)", int sensor = 0)
+        => new(FrontEndMaterials.Scintillators.Single(s => s.Name == scintillator),
+            FrontEndParts.Sensors[sensor], FrontEndParts.Preamps[preamp]);
 
     private static AcquisitionSnapshot Snapshot(DetectedEvent[]? events = null, FrontEndChain? chain = null,
         double live = 2, double gainSigma = 0)
@@ -27,30 +44,33 @@ public sealed class WaveformServiceTests(ITestOutputHelper output)
     }
 
     [Theory]
-    [InlineData(0, "GAGG")]
-    [InlineData(1, "NaI")]
-    [InlineData(2, "LYSO")]
-    [InlineData(3, "BGO")]
-    public void Chain_SetsTransportMaterialWithoutChangingEngineDefaults(int index, string material)
+    [InlineData("GAGG(Ce)", "GAGG")]
+    [InlineData("NaI(Tl)", "NaI")]
+    [InlineData("LYSO", "LYSO")]
+    [InlineData("CsI(Tl)", "CsI")]
+    [InlineData("BGO", "BGO")]
+    public void Chain_SetsTransportMaterialWithoutChangingEngineDefaults(string scintillator, string material)
     {
-        var config = SimulationService.BuildConfig([new SceneSource()], new(), new() { Chain = Chain(scintillator: index) });
+        var config = SimulationService.BuildConfig([new SceneSource()], new(), new() { Chain = Chain(scintillator: scintillator) });
         Assert.Equal(material, config.Detector.Material);
+        Assert.Equal(material, CrystalMaterial.ForConfig(config.Detector.Material).Name);
         Assert.Equal("ideal", new SimulationConfig().Detector.Material);
-        Assert.DoesNotContain(FrontEndMaterials.Scintillators, s => s.Name == "CsI(Tl)");
+        Assert.Equal("GAGG(Ce)", FrontEndParts.Default.Scintillator.Name);
     }
 
     [Fact]
     public void Chain_RejectsUnsupportedMaterial()
     {
-        var chain = Chain() with { Scintillator = FrontEndParts.Scintillators.Single(s => s.Name == "CsI(Tl)") };
+        var chain = Chain() with { Scintillator = FrontEndParts.Default.Scintillator with { Name = "unsupported" } };
         Assert.Throws<ArgumentException>(() => SimulationService.BuildConfig([new SceneSource()], new(), new() { Chain = chain }));
     }
 
     [Theory]
-    [InlineData(0)] [InlineData(1)] [InlineData(2)] [InlineData(3)]
-    public async Task Response_AgreesAcrossWaveformSpectrumAndImaging(int preamp)
+    [InlineData(0, "GAGG(Ce)")] [InlineData(1, "GAGG(Ce)")] [InlineData(2, "GAGG(Ce)")] [InlineData(3, "GAGG(Ce)")]
+    [InlineData(0, "CsI(Tl)")] [InlineData(1, "CsI(Tl)")] [InlineData(2, "CsI(Tl)")] [InlineData(3, "CsI(Tl)")]
+    public async Task Response_AgreesAcrossWaveformSpectrumAndImaging(int preamp, string scintillator)
     {
-        var snapshot = Snapshot([new(1, 2, 661.7, 1), new(3, 4, 32.1, 1.000001)], Chain(preamp), gainSigma: .03);
+        var snapshot = Snapshot([new(1, 2, 661.7, 1), new(3, 4, 32.1, 1.000001)], Chain(preamp, scintillator), gainSigma: .03);
         var wave = await new WaveformService().ProcessAsync(snapshot, new(0));
         var measurement = new MeasurementStage(snapshot.Detector, 30, 30);
         Assert.Equal(2, wave.Events.Count);
@@ -151,7 +171,7 @@ public sealed class WaveformServiceTests(ITestOutputHelper output)
     public async Task AcquiredChain_IsUsedAfterPendingSelectionChanges()
     {
         var service = new SpectrumService();
-        var snapshot = Snapshot(chain: Chain(3, 3, 2));
+        var snapshot = Snapshot(chain: Chain(3, "BGO", 2));
         var settings = new SpectrumSettings { Detector = snapshot.Detector, PixelsX = 30, PixelsY = 30 };
         var lines = new[] { new SpectrumLine("Cs-137", 661.7) };
         var id = Guid.NewGuid();
@@ -179,7 +199,7 @@ public sealed class WaveformServiceTests(ITestOutputHelper output)
         Assert.Contains("unavailable", (await service.ProcessAsync(Snapshot(chain: chain, live: 1), new())).PulseReadout);
         Assert.Contains("unavailable", (await service.ProcessAsync(Snapshot([new(1, 2, 100000, 1)], chain), new(Ideal: true))).PulseReadout);
         var cr = await service.ProcessAsync(Snapshot([new(1, 2, 32.1, 1)]), new());
-        Assert.Contains("quantisation", cr.PulseReadout);
+        Assert.Contains("energy unavailable", cr.PulseReadout);
         Assert.DoesNotContain("flat-top", cr.PulseReadout);
     }
 
@@ -233,7 +253,7 @@ public sealed class WaveformServiceTests(ITestOutputHelper output)
     [Trait("Category", "Evidence")]
     public async Task RetainedMonteCarlo_IsolatedPulseReadoutsAcrossParts()
     {
-        foreach (int scintillator in Enumerable.Range(0, 4))
+        foreach (string scintillator in FrontEndMaterials.Scintillators.Select(s => s.Name))
         foreach (int sensor in Enumerable.Range(0, 3))
         {
             var detector = new DetectorSettings { Chain = Chain(3, scintillator, sensor) };
@@ -266,7 +286,7 @@ public sealed class WaveformServiceTests(ITestOutputHelper output)
     {
         var scene = new[] { new SceneSource(), new SceneSource { Isotope = "Co-60", X = 10 } };
         var service = new ImagingService(); var id = Guid.NewGuid();
-        foreach (var chain in new[] { Chain(), Chain(3, 3, 2) })
+        foreach (var chain in new[] { Chain(), Chain(3, "BGO", 2) })
         {
             var cfg = SimulationService.BuildConfig(scene, new(), new() { Chain = chain }); cfg.Seed = 987;
             using var source = new ListModeSource(cfg); var events = new List<DetectedEvent>();

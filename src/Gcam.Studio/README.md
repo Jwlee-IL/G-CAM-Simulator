@@ -6,8 +6,8 @@ No business logic: views bind to ViewModels in `Gcam.Studio.Core`, and code-behi
 
 | Folder | Contents | Docs |
 |---|---|---|
-| `Views/` | `MainWindow` — fixed grid, flexible centre; Imaging and Spectrum centre / panel templates | [DESIGN.ViewLayer](../../docs/DESIGN.ViewLayer.md), [DESIGN.Layout](../../docs/DESIGN.Layout.md) |
-| `Controls/` | `HeatmapView` (zoom / pan / mm readout, automation peer), `ColorBar`, `ImageStackPanel` (square image + legend), `MeasurementAdorner` + `MeasurementOverlay` (measurements and source markers over a heatmap) | [DESIGN.Controls](../../docs/DESIGN.Controls.md#custom-controls) |
+| `Views/` | `MainWindow` — fixed grid, flexible centre; Imaging, Spectrum, Waveform and Detector centre / panel templates | [DESIGN.ViewLayer](../../docs/DESIGN.ViewLayer.md), [DESIGN.Layout](../../docs/DESIGN.Layout.md) |
+| `Controls/` | `HeatmapView` (zoom / pan / mm readout, automation peer), `ColorBar`, `ImageStackPanel` (square image + legend), `MeasurementAdorner` + `MeasurementOverlay` (measurements, display-only source markers and found peaks over a heatmap) | [DESIGN.Controls](../../docs/DESIGN.Controls.md#custom-controls) |
 | `Converters/` | `NullToCollapsedConverter`, `InverseBoolToVisibilityConverter`, `EnumMatchConverter` | [DESIGN.ViewLayer](../../docs/DESIGN.ViewLayer.md#how-a-view-gets-its-data-and-services) |
 | `Rendering/` | colormap lookup tables | |
 | `Services/` | `ThemeService` (token swap + DWM title bar) | [DESIGN.Color](../../docs/DESIGN.Color.md#theme-switching) |

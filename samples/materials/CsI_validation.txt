@@ -1,0 +1,81 @@
+C:\gw\p21\tests\Gcam.Tests\bin\Release\net9.0\Gcam.Tests.dll(.NETCoreApp,Version=v9.0)에 대한 테스트 실행
+VSTest 버전 17.14.1 (x64)
+
+테스트 실행을 시작하는 중입니다. 잠시 기다려 주세요...
+지정된 패턴과 일치한 총 테스트 파일 수는 1개입니다.
+
+통과!  - 실패:     0, 통과:   274, 건너뜀:     0, 전체:   274, 기간: 17 s - Gcam.Tests.dll (net9.0)
+C:\gw\p21\tests\Gcam.Studio.Tests\bin\Release\net9.0\Gcam.Studio.Tests.dll(.NETCoreApp,Version=v9.0)에 대한 테스트 실행
+VSTest 버전 17.14.1 (x64)
+
+테스트 실행을 시작하는 중입니다. 잠시 기다려 주세요...
+지정된 패턴과 일치한 총 테스트 파일 수는 1개입니다.
+
+통과!  - 실패:     0, 통과:   165, 건너뜀:     0, 전체:   165, 기간: 298 ms - Gcam.Studio.Tests.dll (net9.0)
+C:\gw\p21\tests\Gcam.Studio.UiTests\bin\Release\net9.0-windows\Gcam.Studio.UiTests.dll(.NETCoreApp,Version=v9.0)에 대한 테스트 실행
+VSTest 버전 17.14.1 (x64)
+
+테스트 실행을 시작하는 중입니다. 잠시 기다려 주세요...
+지정된 패턴과 일치한 총 테스트 파일 수는 1개입니다.
+[xUnit.net 00:00:00.08]     Gcam.Studio.UiTests.PlotViewTests.TenMillionSamples_ZoomAndResizeRedraw_Within16Milliseconds [SKIP]
+[xUnit.net 00:00:00.08]     Gcam.Studio.UiTests.ScenarioTests.Readout_AndOneCellRoi_MatchAbsolutePositionAndValue [SKIP]
+[xUnit.net 00:00:00.08]     Gcam.Studio.UiTests.ScenarioTests.Roi_OnFloodMap_CountsWholePixelsByCentre [SKIP]
+[xUnit.net 00:00:00.08]     Gcam.Studio.UiTests.ScenarioTests.StopContinueReset_KeepsAccumulatesAndDiscards [SKIP]
+[xUnit.net 00:00:00.08]     Gcam.Studio.UiTests.ScenarioTests.Angle_EscAbandonsDraft_DeleteRemovesSelected [SKIP]
+[xUnit.net 00:00:00.08]     Gcam.Studio.UiTests.ScenarioTests.MoveSource_ResetEditStart_PutsPeakOnTheSource [SKIP]
+[xUnit.net 00:00:00.08]     Gcam.Studio.UiTests.ScenarioTests.ThemeToggle_RelabelsAndSwitchesBack [SKIP]
+[xUnit.net 00:00:00.08]     Gcam.Studio.UiTests.PilotTests.Pilot_SimulateThenMeasureDistance_AddsRowWithExpectedLength [SKIP]
+[xUnit.net 00:00:00.08]     Gcam.Studio.UiTests.PolishSurveyTests.AllWorkspaces_BothThemesAndWindowSizes_CapturesPolishSurvey [SKIP]
+  건너뜀 Gcam.Studio.UiTests.PlotViewTests.TenMillionSamples_ZoomAndResizeRedraw_Within16Milliseconds [1 ms]
+  건너뜀 Gcam.Studio.UiTests.ScenarioTests.Readout_AndOneCellRoi_MatchAbsolutePositionAndValue [1 ms]
+  건너뜀 Gcam.Studio.UiTests.ScenarioTests.Roi_OnFloodMap_CountsWholePixelsByCentre [1 ms]
+  건너뜀 Gcam.Studio.UiTests.ScenarioTests.StopContinueReset_KeepsAccumulatesAndDiscards [1 ms]
+  건너뜀 Gcam.Studio.UiTests.ScenarioTests.Angle_EscAbandonsDraft_DeleteRemovesSelected [1 ms]
+  건너뜀 Gcam.Studio.UiTests.ScenarioTests.MoveSource_ResetEditStart_PutsPeakOnTheSource [1 ms]
+  건너뜀 Gcam.Studio.UiTests.ScenarioTests.ThemeToggle_RelabelsAndSwitchesBack [1 ms]
+  건너뜀 Gcam.Studio.UiTests.PilotTests.Pilot_SimulateThenMeasureDistance_AddsRowWithExpectedLength [1 ms]
+  건너뜀 Gcam.Studio.UiTests.PolishSurveyTests.AllWorkspaces_BothThemesAndWindowSizes_CapturesPolishSurvey [1 ms]
+[xUnit.net 00:00:00.11]     Gcam.Studio.UiTests.WorkspaceScenarioTests.Imaging_RefocusAndSweep_MatchProjectionAndHalfMaxInterval [SKIP]
+[xUnit.net 00:00:00.11]     Gcam.Studio.UiTests.WorkspaceScenarioTests.Waveform_SelectedEventListAndMarkers_MatchArrivalWindow [SKIP]
+[xUnit.net 00:00:00.11]     Gcam.Studio.UiTests.WorkspaceScenarioTests.Spectrum_BandCountAndWindowChange_MatchRetainedHistogram [SKIP]
+[xUnit.net 00:00:00.11]     Gcam.Studio.UiTests.WorkspaceScenarioTests.Detector_FaceBeforeStart_LockedUntilReset [SKIP]
+[xUnit.net 00:00:00.11]     Gcam.Studio.UiTests.WorkspaceScenarioTests.Imaging_ChannelAndStrip_MatchRetainedFloodAndFoundPeaks [SKIP]
+  건너뜀 Gcam.Studio.UiTests.WorkspaceScenarioTests.Imaging_RefocusAndSweep_MatchProjectionAndHalfMaxInterval [1 ms]
+  건너뜀 Gcam.Studio.UiTests.WorkspaceScenarioTests.Waveform_SelectedEventListAndMarkers_MatchArrivalWindow [1 ms]
+  건너뜀 Gcam.Studio.UiTests.WorkspaceScenarioTests.Spectrum_BandCountAndWindowChange_MatchRetainedHistogram [1 ms]
+  건너뜀 Gcam.Studio.UiTests.WorkspaceScenarioTests.Detector_FaceBeforeStart_LockedUntilReset [1 ms]
+  건너뜀 Gcam.Studio.UiTests.WorkspaceScenarioTests.Imaging_ChannelAndStrip_MatchRetainedFloodAndFoundPeaks [1 ms]
+
+통과!  - 실패:     0, 통과:    13, 건너뜀:    14, 전체:    27, 기간: 32 ms - Gcam.Studio.UiTests.dll (net9.0)
+C:\gw\p21\tests\Gcam.Studio.Services.Tests\bin\Release\net9.0\Gcam.Studio.Services.Tests.dll(.NETCoreApp,Version=v9.0)에 대한 테스트 실행
+VSTest 버전 17.14.1 (x64)
+
+테스트 실행을 시작하는 중입니다. 잠시 기다려 주세요...
+지정된 패턴과 일치한 총 테스트 파일 수는 1개입니다.
+[xUnit.net 00:00:00.11]     Gcam.Studio.Services.Tests.DetectorGapEvidenceTests.RateRatio_MatchesGeometricArea_WithinMeasuredSeedSpread [SKIP]
+  건너뜀 Gcam.Studio.Services.Tests.DetectorGapEvidenceTests.RateRatio_MatchesGeometricArea_WithinMeasuredSeedSpread [1 ms]
+[xUnit.net 00:00:00.32]     Gcam.Studio.Services.Tests.WaveformServiceTests.RetainedMonteCarlo_IsolatedPulseReadoutsAcrossParts [SKIP]
+  건너뜀 Gcam.Studio.Services.Tests.WaveformServiceTests.RetainedMonteCarlo_IsolatedPulseReadoutsAcrossParts [1 ms]
+[xUnit.net 00:00:00.36]     Gcam.Studio.Services.Tests.WaveformServiceTests.MaximumWindow_ReportsWorkerCostAndBoundedPlotSamples [SKIP]
+[xUnit.net 00:00:00.36]     Gcam.Studio.Services.Tests.WaveformServiceTests.MixedFieldCalibration_UsesAcquiredChainAndInvalidatesRatios [SKIP]
+  건너뜀 Gcam.Studio.Services.Tests.WaveformServiceTests.MaximumWindow_ReportsWorkerCostAndBoundedPlotSamples [1 ms]
+  건너뜀 Gcam.Studio.Services.Tests.WaveformServiceTests.MixedFieldCalibration_UsesAcquiredChainAndInvalidatesRatios [1 ms]
+[xUnit.net 00:00:07.12]     Gcam.Studio.Services.Tests.ImagingServiceTests.Precision_TwentySeeds_MeasuresMixedIsotopesAndCoOnlyControl [SKIP]
+  건너뜀 Gcam.Studio.Services.Tests.ImagingServiceTests.Precision_TwentySeeds_MeasuresMixedIsotopesAndCoOnlyControl [1 ms]
+[xUnit.net 00:00:16.58]     Gcam.Studio.Services.Tests.OpticsProjectionTests.Sampling_SmallBudgetSeedSpread_ReportsRegressionMargin [SKIP]
+[xUnit.net 00:00:16.58]     Gcam.Studio.Services.Tests.OpticsProjectionTests.Sampling_PositionSweepAtConstantDetectorSize_FinerPixelsReduceLocalizationError [SKIP]
+  건너뜀 Gcam.Studio.Services.Tests.OpticsProjectionTests.Sampling_SmallBudgetSeedSpread_ReportsRegressionMargin [1 ms]
+  건너뜀 Gcam.Studio.Services.Tests.OpticsProjectionTests.Sampling_PositionSweepAtConstantDetectorSize_FinerPixelsReduceLocalizationError [1 ms]
+
+통과!  - 실패:     0, 통과:    78, 건너뜀:     7, 전체:    85, 기간: 16 s - Gcam.Studio.Services.Tests.dll (net9.0)
+C:\gw\p21\tests\Gcam.Studio.RenderTests\bin\Release\net9.0-windows\Gcam.Studio.RenderTests.dll(.NETCoreApp,Version=v9.0)에 대한 테스트 실행
+VSTest 버전 17.14.1 (x64)
+
+테스트 실행을 시작하는 중입니다. 잠시 기다려 주세요...
+지정된 패턴과 일치한 총 테스트 파일 수는 1개입니다.
+[xUnit.net 00:00:00.08]     Gcam.Studio.RenderTests.PlotViewRenderTests.Spectrum_BothThemesFullAndZoom_RenderWithoutWindow [SKIP]
+  건너뜀 Gcam.Studio.RenderTests.PlotViewRenderTests.Spectrum_BothThemesFullAndZoom_RenderWithoutWindow [1 ms]
+
+건너뜀! - 실패:     0, 통과:     0, 건너뜀:     1, 전체:     1, 기간: 1 ms - Gcam.Studio.RenderTests.dll (net9.0)
+
+워크로드 업데이트를 사용할 수 있습니다. 자세한 내용을 보려면 `dotnet workload list`을 실행하세요.

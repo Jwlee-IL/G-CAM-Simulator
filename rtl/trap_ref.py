@@ -64,14 +64,21 @@ CRRC_A_Q16 = round(math.exp(-1.0 / TAU_SAMPLES) * 65536)   # 53656
 CRRC_K_Q16 = round((1.0 / 2.5) * 65536)                     # 26214
 
 
-def crrc_int(samples, a_q16=CRRC_A_Q16, k_q16=CRRC_K_Q16, order=CRRC_ORDER):
+def crrc_int(samples, a_q16=CRRC_A_Q16, k_q16=CRRC_K_Q16, order=CRRC_ORDER, fractional_bits=0):
     """Integer CR-RC^order reference, bit-exact to crrc_shaper.sv: deconvolve the exp tail (imp = x - A·x[-1])
     then `order` single-pole RC low-passes (acc += (u-acc)·K, all Q16), each stage feeding the next this
-    sample. Python `>>` is arithmetic (floor), matching the SV signed `>>>`. Returns the last stage (∝ energy)."""
+    sample. Output is signed codes * 2**fractional_bits (F=0 preserves legacy goldens).
+    Signed-16 input, F<=12 and convex RC updates bound products below 2**46: signed 48-bit RTL is safe."""
+    if not (0 <= a_q16 <= 65536 and 1 <= k_q16 <= 65536 and 1 <= order <= 16
+            and 0 <= fractional_bits <= 12):
+        raise ValueError("invalid bounded CR-RC parameters")
     prev = 0
     acc = [0] * order
     out = []
     for x in samples:
+        if not -32768 <= x <= 32767:
+            raise ValueError("CR-RC input must fit signed 16 bits")
+        x = int(x) << fractional_bits
         imp = x - ((a_q16 * prev) >> 16)
         prev = x
         u = imp

@@ -55,8 +55,10 @@ public sealed class WaveformService : IWaveformService
         double support = Math.Ceiling(pulse.TailSamples * Math.Log(2 * maxAmplitude * Waveform.DefaultAdc.AdcPerKev + 2)) + 4;
         if (!double.IsFinite(support) || support > PlotSeries.MaximumSamples / 2)
             throw new ArgumentException("Pulse support exceeds the scope work budget.");
-        // Include pulse support plus eight tail constants and the filter's FIR/RC history.
-        int warmup = checked((int)support + (int)Math.Ceiling(8 * pulse.TailSamples) + 128);
+        // Include pulse support, tail history and eight times the configured sum of RC times.
+        double filterHistory = chain.Preamp.Crrc
+            ? 8 * chain.Preamp.CrrcOrder * 65536.0 / chain.CrrcKQ16 : 128;
+        int warmup = checked((int)support + (int)Math.Ceiling(8 * pulse.TailSamples + filterHistory));
         var window = ScopeWindow.Create(settings.WindowUs, warmup);
         double triggerTime = times.Length > 0 ? times[settings.TriggerIndex] : snapshot.LiveTimeS;
         double displayOrigin = triggerTime - window.PretriggerUs * 1e-6;
@@ -86,10 +88,10 @@ public sealed class WaveformService : IWaveformService
         int m = (int)Math.Round(256 / (Math.Exp(1 / pulse.TailSamples) - 1));
         // Preserve the established integer recurrences. Cancellation is checked around the bounded shaper call.
         long[] shaped = chain.Preamp.Crrc
-            ? Waveform.CrrcInt(raster, a, Waveform.CrrcKQ16, Waveform.CrrcOrder)
+            ? Waveform.CrrcInt(raster, a, chain.CrrcKQ16, chain.Preamp.CrrcOrder, Waveform.CrrcFractionalBits)
             : Waveform.TrapShape(raster, Waveform.Rise, Waveform.Flat, m);
         token.ThrowIfCancellationRequested();
-        string pulseReadout = "CR-RC integer peak: low-energy quantisation limit; no energy readout.";
+        string pulseReadout = "CR-RC energy unavailable: trigger, phase and overlap estimator not validated.";
         if (!chain.Preamp.Crrc)
         {
             int n0 = checked((int)ScopeWindow.RelativeSample(triggerTime, workOrigin));
@@ -122,21 +124,24 @@ public sealed class WaveformService : IWaveformService
         for (int i = 0; i < ys.Length; i++)
         {
             if ((i & 4095) == 0) token.ThrowIfCancellationRequested();
-            ys[i] = raster[warmup + i]; zs[i] = shaped[warmup + i];
+            ys[i] = raster[warmup + i];
+            zs[i] = shaped[warmup + i] / (chain.Preamp.Crrc ? (double)Waveform.CrrcOutputScale : 1);
         }
         var adcSeries = new PlotSeries("ADC energy sum", ys, Origin: -window.PretriggerUs, Step: 1 / ScopeWindow.SamplesPerUs)
         { PreparedPyramid = new MinMaxPyramid(ys) };
         token.ThrowIfCancellationRequested();
-        var shapedSeries = new PlotSeries("Integer shaped output", zs, Origin: -window.PretriggerUs, Step: 1 / ScopeWindow.SamplesPerUs)
+        var shapedSeries = new PlotSeries(chain.Preamp.Crrc ? "CR-RC shaped codes (Q12 state)" : "Integer shaped output", zs, Origin: -window.PretriggerUs, Step: 1 / ScopeWindow.SamplesPerUs)
         { PreparedPyramid = new MinMaxPyramid(zs) };
         token.ThrowIfCancellationRequested();
         var model = new FrontEndModel(chain.BuildConfig());
-        string filter = chain.Preamp.Crrc ? $"CR-RC order 4 · A={a} · K={Waveform.CrrcKQ16}" : $"Trapezoid ramp 80 ns / flat 64 ns · M={m}";
+        string filter = chain.Preamp.Crrc
+            ? $"CR-RC order {chain.Preamp.CrrcOrder} · Q12 state / Q16 coefficients · A={a} · K={chain.CrrcKQ16}\nShaping T_sum {chain.Preamp.CrrcShapingTimeNs:0} ns (simulation convention; not peaking time or rig evidence) · DCR noise window {chain.Preamp.IntegrationNs:0} ns"
+            : $"Trapezoid ramp 80 ns / flat 64 ns · M={m}";
         string readout = $"{chain}\nN_pe(662) {model.Photoelectrons(662):0} · FWHM {model.FwhmFraction(662):P2} (single channel; excludes pixel gain spread)\nRise / tail constants {pulse.RiseSamples * 8:0} / {pulse.TailSamples * 8:0} ns\n{filter}\nEffective resolving interval {EventStreamStudy.ResolvingSamples(pulse.RiseSamples, pulse.TailSamples) * 8:0} ns";
         string mode = settings.RateStudy ? $"Rate study: arrivals re-spaced at {settings.RateKcps:0.###} kcps — not the measured rate." : "Real acquired arrival times.";
         string note = $"{mode} Summed energy channel; four position channels are not modelled. " +
             (settings.Ideal ? "Ideal shaper stimulus: no response smear, noise or rise. " : "ADC simulation: shaped heights are not the analytic MCA spectrum. ") +
-            "Finite filter warm-up; raw integer baseline. " +
+            "Finite filter warm-up; uncorrected shaped baseline. " +
             (window.Clipped ? "Window clipped to the 10 M-sample work cap. " : "") +
             (!settings.RateStudy && endTime > snapshot.LiveTimeS ? "Partial acquisition window: no future deposits; pulse response and baseline beyond acquired live time are simulated." : "");
         return new(adcSeries, shapedSeries, markers.AsReadOnly(), readout, pulseReadout, note,

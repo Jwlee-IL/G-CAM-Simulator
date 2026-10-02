@@ -16,6 +16,11 @@ namespace Gcam.Detector;
 /// engine emits is above 1.33 MeV.</para>
 /// <para><b>Check.</b> GAGG μ/ρ(662 keV) = 0.0773 cm²/g here (photo + Compton); with coherent added, xraylib gives
 /// 0.0799 against 0.0801 from the NIST elemental tables mixed by weight.</para>
+/// <para>CsI:Tl added 2026-10-02 by the same generator; transport uses the CsI host at 4.51 g/cm³,
+/// omitting the Tl activator as for NaI:Tl. Dopant-specific transport error is not quantified. Full-precision
+/// output and independent checks are in `samples/materials/evidence/crystal_tables.json` and `CsI_checks.txt`.
+/// For CsI, photo + Compton is 8.14 % below NIST total at 300 keV because coherent is omitted. Above 800 keV,
+/// the extension differs from NIST photo + Compton by +0.070 % at 1 MeV and −0.353 % at 1.25 MeV.</para>
 /// </remarks>
 public sealed class CrystalMaterial
 {
@@ -85,6 +90,10 @@ public sealed class CrystalMaterial
             energyKeV: [20, 30, 33.1661, 33.1727, 40, 50, 60, 80, 100, 150, 200, 300, 400, 500, 600, 661.7, 800, 1000, 1250, 1500, 2000, 3000],
             massAttenuation: [20.712, 6.7142, 5.0819, 29.857, 18.347, 10.178, 6.2272, 2.8628, 1.5761, 0.5663, 0.30196, 0.1534, 0.10996, 0.090352, 0.079009, 0.073972, 0.065708, 0.057656, 0.050559, 0.045439, 0.038316, 0.029862],
             photoFraction: [0.9954, 0.9841, 0.9786, 0.9963, 0.9939, 0.9886, 0.9812, 0.9593, 0.9274, 0.8109, 0.6687, 0.4224, 0.2716, 0.1864, 0.1366, 0.1158, 0.08504, 0.05818, 0.03982, 0.0292, 0.01794, 0.009104]),
+        new("CsI", "CsI:Tl", "CsI", densityGPerCm3: 4.51,
+            energyKeV: [20, 30, 33.1661, 33.1727, 35.981, 35.9882, 40, 50, 60, 80, 100, 150, 200, 300, 400, 500, 600, 661.7, 800, 1000, 1250, 1500, 2000, 3000],
+            massAttenuation: [25.523, 8.2839, 6.2659, 20.559, 16.607, 29.677, 22.473, 12.519, 7.6573, 3.5145, 1.9252, 0.67555, 0.34882, 0.16699, 0.1152, 0.092554, 0.079857, 0.074348, 0.065491, 0.057096, 0.049805, 0.044624, 0.037505, 0.029154],
+            photoFraction: [0.9966, 0.9881, 0.9839, 0.9951, 0.9938, 0.9965, 0.9953, 0.9913, 0.9856, 0.9685, 0.9432, 0.8475, 0.7232, 0.486, 0.3253, 0.2286, 0.1699, 0.1449, 0.1074, 0.07401, 0.05097, 0.03752, 0.02314, 0.0118]),
     ];
 
     /// <summary>GAGG:Ce — the product crystal (theme 22) and the default when a config names no known material.</summary>

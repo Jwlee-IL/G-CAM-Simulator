@@ -1,69 +1,73 @@
-"""Build + run the cocotb testbench for trapezoidal_shaper.sv with the Icarus runner.
-Usage (from rtl/):  python run_cocotb.py
-Exits non-zero if any cocotb test fails.
+"""Headless Icarus/cocotb regression matrix, with fresh outputs and no cleanup.
+Usage: python rtl/run_cocotb.py [--csharp-vectors DIR] [--crrc-only]
 """
+import argparse
 import os
+from pathlib import Path
+import subprocess
 import sys
-from cocotb_tools.runner import get_results, get_runner
+import uuid
+import xml.etree.ElementTree as ET
+from cocotb_tools import config
+from cocotb_tools.runner import get_runner
+from find_libpython import find_libpython
+from crrc_contract import fixtures
 
-# Outside pytest the cocotb runner does NOT exit non-zero on a failing test - it only returns the results
-# file. Tally every run here so CI (and a shell) sees a failure.
-_tally = {"tests": 0, "failed": 0}
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--csharp-vectors", type=Path)
+    parser.add_argument("--crrc-only", action="store_true")
+    args = parser.parse_args()
+    here = Path(__file__).resolve().parent
+    root = Path(os.environ.get("TEMP", "/tmp")) / ("gcam-rtl-" + uuid.uuid4().hex)
+    root.mkdir()
+    tally = dict(tests=0, passed=0, failed=0, skipped=0)
+
+    def run(top, source, module, params, name, extra=None):
+        directory = root / name
+        directory.mkdir()
+        runner = get_runner("icarus")
+        runner.build(sources=[here / source], hdl_toplevel=top, parameters=params,
+                     build_dir=directory, always=True, clean=False)
+        results = directory / "results.xml"
+        env = os.environ.copy()
+        env.update({"LIBPYTHON_LOC": str(Path(sys.prefix) / f"python{sys.version_info.major}{sys.version_info.minor}.dll") if os.name == "nt" else find_libpython(),
+                    "PYGPI_PYTHON_BIN": sys.executable, "PYTHONPATH": str(here),
+                    "COCOTB_TOPLEVEL": top, "TOPLEVEL_LANG": "verilog",
+                    "COCOTB_TEST_MODULES": module, "COCOTB_RESULTS_FILE": str(results),
+                    "COCOTB_RANDOM_SEED": "20261002"})
+        env.update(extra or {})
+        # Direct cocotb invocation avoids Runner.test's unconditional results-file unlink.
+        subprocess.run(["vvp", "-M", str(config.libs_dir), "-m", config.lib_name("vpi", "icarus"),
+                        str(directory / "sim.vvp"), "-none"], cwd=here, env=env, check=True)
+        cases = ET.parse(results).findall(".//testcase")
+        if not cases:
+            raise RuntimeError(f"{name}: no tests")
+        failed = sum(c.find("failure") is not None or c.find("error") is not None for c in cases)
+        skipped = sum(c.find("skipped") is not None for c in cases)
+        passed = len(cases) - failed - skipped
+        tally["tests"] += len(cases); tally["passed"] += passed
+        tally["failed"] += failed; tally["skipped"] += skipped
+        print(f"{name}: {passed} passed, {failed} failed, {skipped} skipped; {results}", flush=True)
+        if failed:
+            raise RuntimeError(f"{name}: {failed} test failures")
+
+    if not args.crrc_only:
+        for top in ("trapezoidal_shaper", "trapezoidal_shaper_pl"):
+            run(top, top + ".sv", "test_trap_shaper", {"M_Q8": 1156, "RISE": 10, "FLAT": 8}, top)
+        run("baseline_restorer", "baseline_restorer.sv", "test_blr",
+            {"WACC": 32, "GATE": 4096, "FRAC": 12}, "baseline_restorer")
+    for name, spec in fixtures().items():
+        for fractional in (0, 12):
+            extra = {"GCAM_CRRC_FIXTURE": name, "GCAM_CRRC_F": str(fractional)}
+            if args.csharp_vectors:
+                extra["GCAM_CRRC_VECTORS"] = str(args.csharp_vectors.resolve())
+            run("crrc_shaper", "crrc_shaper.sv", "test_crrc",
+                {"WIN": 16, "ORDER": spec["order"], "A_Q16": spec["a"], "K_Q16": spec["k"],
+                 "Q": 16, "F": fractional, "WACC": 48}, f"{name}-f{fractional}", extra)
+    print(f"cocotb total: {tally}; artifacts: {root}", flush=True)
 
 
-def _check(results_xml):
-    tests, failed = get_results(results_xml)
-    _tally["tests"] += tests
-    _tally["failed"] += failed
-    print(f"results xml: {results_xml}  ({tests - failed}/{tests} passed)")
-
-here = os.path.dirname(os.path.abspath(__file__))
-os.chdir(here)
-
-# Both the direct and the pipelined shaper are verified against the SAME integer reference
-# (the pipeline is bit-exact, just +3 samples of latency — the test's offset search handles it).
-for top, src in [("trapezoidal_shaper", "trapezoidal_shaper.sv"),
-                 ("trapezoidal_shaper_pl", "trapezoidal_shaper_pl.sv")]:
-    print(f"\n===== {top} =====")
-    runner = get_runner("icarus")
-    runner.build(
-        sources=[os.path.join(here, src)],
-        hdl_toplevel=top,
-        build_args=["-g2012"],
-        parameters={"M_Q8": 1156, "RISE": 10, "FLAT": 8},   # match trap_ref defaults (tau=5 samples)
-        always=True,
-    )
-    results = runner.test(
-        hdl_toplevel=top,
-        test_module="test_trap_shaper",
-        test_dir=here,
-    )
-    _check(results)
-
-# Baseline restorer: driven by the SHAPED MC stream, checked bit-exact + that it removes the pole-zero walk.
-print("\n===== baseline_restorer =====")
-blr = get_runner("icarus")
-blr.build(
-    sources=[os.path.join(here, "baseline_restorer.sv")],
-    hdl_toplevel="baseline_restorer",
-    build_args=["-g2012"],
-    parameters={"WACC": 32, "GATE": 4096, "FRAC": 12},
-    always=True,
-)
-_check(blr.test(hdl_toplevel='baseline_restorer', test_module='test_blr', test_dir=here))
-
-# CR-RC^4 semi-Gaussian shaper — the classic companion to the trapezoid, checked bit-exact vs the integer ref.
-print("\n===== crrc_shaper =====")
-crrc = get_runner("icarus")
-crrc.build(
-    sources=[os.path.join(here, "crrc_shaper.sv")],
-    hdl_toplevel="crrc_shaper",
-    build_args=["-g2012"],
-    parameters={"ORDER": 4, "A_Q16": 53656, "K_Q16": 26214},
-    always=True,
-)
-_check(crrc.test(hdl_toplevel='crrc_shaper', test_module='test_crrc', test_dir=here))
-
-print(f"\n===== cocotb total: {_tally['tests'] - _tally['failed']}/{_tally['tests']} passed =====")
-if _tally["failed"] or _tally["tests"] == 0:
-    sys.exit(1)
+if __name__ == "__main__":
+    main()

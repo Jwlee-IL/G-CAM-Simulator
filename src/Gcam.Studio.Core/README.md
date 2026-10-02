@@ -7,7 +7,7 @@ Targets plain `net9.0` on purpose: a ViewModel that reaches for a WPF type does 
 | Folder | Contents |
 |---|---|
 | `ViewModels/` | `MainViewModel` (scene, live time / speed / seed, Start / Continue / Stop / Reset with input locks, snapshot, theme toggle), workspaces, `SourceItemViewModel` (one source, clamped input), measurement session / values |
-| `Services/` | `IAcquisitionService`; `IAcquisitionSession`, `AcquisitionSnapshot`, `ImagingResult`, `IThemeService`; `ISpectrumService` and spectrum settings / view / line / band records |
-| `Imaging/` | `HeatmapViewport` — fit, whole-pixel snapping, zoom about a point, pan limits, screen ↔ image ↔ mm; `MeasurementMath` — distance, angle, ROI stats; `TickFormatter` — colour-scale labels; `IPlaneMarker` — what an overlay can drag |
+| `Services/` | `IAcquisitionService`; `IAcquisitionSession`, `AcquisitionSnapshot`, `ImagingResult`, `IThemeService`; `ISpectrumService` and spectrum settings / view / line / band records; `IImagingService`, `IWaveformService`, `IDetectorFaceService`, `IFocusSweepService` and their immutable request/result records |
+| `Imaging/` | `HeatmapViewport` — fit, whole-pixel snapping, zoom about a point, pan limits, screen ↔ image ↔ mm; `MeasurementMath` — distance, angle, ROI stats; `TickFormatter` — colour-scale labels; `IPlaneMarker` — generic overlay marker contract (Studio source markers are display-only); `OverlayLabelLayout` — deterministic chip placement |
 
 See [DESIGN.Architecture](../../docs/DESIGN.Architecture.md).

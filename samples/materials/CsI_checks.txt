@@ -1,0 +1,96 @@
+PASS: xraylib version is exactly 4.3.0
+Python 3.13.4; numpy 2.5.3
+Generation: Python313/python.exe -I -B -c 'import os,sys,runpy; sys.path.insert(0,os.path.join(os.environ["TEMP"],"gcam-csi-data","packages")); runpy.run_path("gen_crystal_tables.py")' (cwd samples/materials)
+Check: same isolated import setup, runpy.run_path("check_csi_tables.py")
+SHA256 gen_crystal_tables.py: 4d3bba5da86fe0b9f3aca529cebe04d8d17f46c8d3ccc9f6d7793e53821e25ba
+SHA256 evidence/crystal_tables.json: 8d4c8906ef01d95daae18a1b84c6974b874e97b4ebf6fb242a0595c88d93727e
+SHA256 check_csi_tables.py: cf2b23bd36c4e5e38191d228f3e828bb0c5485cd9759aaaa3a1737b9f68af701
+SHA256 nist-xcom/MDATX3.053: 3980b18807d5e177d1dd78e0ddf7a94134af68ca281cad6099f5558bfcf8e574
+SHA256 nist-xcom/MDATX3.055: 5062bd9d77c55535a28213f371c364e08ddb29c819f26c597d18147c9070534b
+SHA256 nist-xcom/XCOM.f: 74138b988692e3319026125a7882ff51b7d180c00438d47d189b54aa55f57c7e
+SHA256 nist-xcom/ATWTS.DAT: dd0a90761029e266ce3c894819b214586c157ab6eaa9eb71aafa01d214498efa
+PyPI wheel metadata for installed version/tag: xraylib-4.3.0-cp313-cp313-win_amd64.whl; SHA256 cd20bfa8689169f2425aa6477a5715c99f4420fdafdbc29619a20515de6219ba
+PyPI wheel metadata for installed version/tag: numpy-2.5.3-cp313-cp313-win_amd64.whl; SHA256 71cad2b2a7451ab79d8f5e71b453485b6775963d5cf794179144a7463fe6e8ec
+PASS: CsI has 24 equal-length grid/attenuation/fraction nodes
+PASS: energy grid is sorted and unique
+PASS: attenuation is finite and positive
+PASS: photo fractions are finite and strictly between zero and one
+PASS: density 4.51 g/cm3 and undoped CsI host formula
+Tl activator omitted, as for NaI:Tl; no concentration or transport error assumed.
+Units: E keV; photo, incoherent, coherent and mu cm2/g; linear attenuation 1/mm.
+Sources: https://physics.nist.gov/PhysRefData/XrayMassCoef/tab2.html ; https://physics.nist.gov/PhysRefData/XrayMassCoef/ComTab/cesium.html
+Model excludes coherent and pair production; above 800 keV uses KN electrons/g and the 600-800 photo slope.
+xraylib composition: {'nElements': 2, 'nAtomsAll': 2.0, 'Elements': (53, 55), 'massFractions': (0.4884535447617581, 0.5115464552382418), 'nAtoms': (1.0, 1.0), 'molarMass': 259.82}
+PASS: Z=53, K edge 33.1694 straddled at 33.1661/33.1727
+PASS: Z=53 upward attenuation and photo-fraction jumps
+Edge Z=53: mu 6.26590464577 -> 20.5586035541, ratio 3.2810271966; pf 0.983902552833 -> 0.995093544911
+PASS: Z=55, K edge 35.9846 straddled at 35.981/35.9882
+PASS: Z=55 upward attenuation and photo-fraction jumps
+Edge Z=55: mu 16.6072293487 -> 29.6767000708, ratio 1.78697478356; pf 0.993813223087 -> 0.996537700205
+NIST node checks: like totals <=800; documented extension and model < NIST total above 800.
+Low-energy tolerance: measured CsI maximum relative like-total residual 0.000105808471, rounded upward to 0.00011, plus each NIST displayed half-unit and C# mu half-unit.
+Above 800 keV, extension error versus NIST retained photo+incoherent is measured, not an acceptance band.
+NIST XCOM 3.1 source: https://physics.nist.gov/PhysRefData/Xcom/XCOM.tar.gz?download=1 ; archive SHA256 b2bdd0608bbece4809a337b7264c85b7997f608a1f8e2181ce5201421efcc0de
+Raw files retained in nist-xcom. Exact nodes only, no interpolation; components in barns/atom. Conversion uses XCOM.f AVOG=0.60221367 and atomic weights from ATWTS.DAT; Cs/I mass fractions 0.511549/0.488451 from NIST Table 2.
+300 keV: model=0.16699485663, NIST total=0.1818, residual=-8.14364322%
+PASS: 300 keV like-total agreement: actual=0.181802811282, expected=0.1818, tolerance=7.4998e-05
+Like-total check: coherent=0.0148079546524, model+coherent=0.181802811282, residual=0.00154635969%
+600 keV: model=0.0798572341992, NIST total=0.08373, residual=-4.62530252%
+PASS: 600 keV like-total agreement: actual=0.0837375143041, expected=0.08373, tolerance=1.47103e-05
+Like-total check: coherent=0.00388028010493, model+coherent=0.0837375143041, residual=0.00897444655%
+800 keV: model=0.0654910793429, NIST total=0.06769, residual=-3.24851626%
+PASS: 800 keV like-total agreement: actual=0.0676971621754, expected=0.06769, tolerance=1.29459e-05
+Like-total check: coherent=0.00220608283248, model+coherent=0.0676971621754, residual=0.0105808471%
+1000 keV: model=0.0570957457031, NIST total=0.05848, residual=-2.36705591%
+NIST XCOM components: coherent=0.00141971448358731; incoherent=0.0526627143578341; photo=0.00439311821124285; nuclear pair=0; electron pair=0; omitted=0.00141971448358731
+PASS: 1000 keV model/NIST=0.976329440887 < 1
+Analytic extension versus NIST retained photo+incoherent: 3.99131339841804e-05 cm2/g (0.0699545203%). Measured approximation error of the documented extension, not a precision guarantee.
+1250 keV: model=0.0498045757928, NIST total=0.0511, residual=-2.53507673%
+NIST XCOM components: coherent=0.000912325911511541; incoherent=0.0471530633013227; photo=0.00282783951079117; nuclear pair=0.000193660644952574; electron pair=0; omitted=0.00110598655646412
+PASS: 1250 keV model/NIST=0.974649232736 < 1
+Analytic extension versus NIST retained photo+incoherent: -0.000176327019320674 cm2/g (-0.352788784%). Measured approximation error of the documented extension, not a precision guarantee.
+PASS: photo compound versus elemental mixture (floating-point allowance): actual=0.0107759144138, expected=0.0107759144138, tolerance=1e-14
+PASS: Compton compound versus elemental mixture (floating-point allowance): actual=0.0635723122531, expected=0.0635723122531, tolerance=1e-14
+661.7 keV: p=0.0107759144137811; c=0.0635723122531149; mu=0.0743482266668961; pf=0.144938418801308; linear mu=0.0335310502267701; MuRel=1 by normalization
+electrons/g=2.50323763405434e+23; photo extrapolation exponent=-2.28330106360705
+PASS: 1000 keV independent analytic extension: actual=0.0570957457031, expected=0.0570957457031, tolerance=1e-14
+1000 keV: photo=0.00422539350484994; Compton=0.0528703521982112; pf=0.0740054001015246
+PASS: 1250 keV independent analytic extension: actual=0.0498045757928, expected=0.0498045757928, tolerance=1e-14
+1250 keV: photo=0.00253858917972288; Compton=0.0472659866130703; pf=0.0509710029513035
+PASS: 1500 keV independent analytic extension: actual=0.0446237918112, expected=0.0446237918112, tolerance=1e-14
+1500 keV: photo=0.00167416323810569; Compton=0.0429496285731412; pf=0.03751727879126
+800 keV Compton transition: direct=0.0584580586346441, KN limit=0.0588160091289935, relative discontinuity=0.612320188% (unmodified)
+PASS: GAGG E length matches generator
+PASS: GAGG mu length matches generator
+PASS: GAGG pf length matches generator
+PASS: GAGG C# arrays agree within literal rounding half-units
+PASS: GAGG_Mg E length matches generator
+PASS: GAGG_Mg mu length matches generator
+PASS: GAGG_Mg pf length matches generator
+PASS: GAGG_Mg C# arrays agree within literal rounding half-units
+PASS: CeBr3 E length matches generator
+PASS: CeBr3 mu length matches generator
+PASS: CeBr3 pf length matches generator
+PASS: CeBr3 C# arrays agree within literal rounding half-units
+PASS: LaBr3 E length matches generator
+PASS: LaBr3 mu length matches generator
+PASS: LaBr3 pf length matches generator
+PASS: LaBr3 C# arrays agree within literal rounding half-units
+PASS: LYSO E length matches generator
+PASS: LYSO mu length matches generator
+PASS: LYSO pf length matches generator
+PASS: LYSO C# arrays agree within literal rounding half-units
+PASS: BGO E length matches generator
+PASS: BGO mu length matches generator
+PASS: BGO pf length matches generator
+PASS: BGO C# arrays agree within literal rounding half-units
+PASS: NaI E length matches generator
+PASS: NaI mu length matches generator
+PASS: NaI pf length matches generator
+PASS: NaI C# arrays agree within literal rounding half-units
+PASS: CsI E length matches generator
+PASS: CsI mu length matches generator
+PASS: CsI pf length matches generator
+PASS: CsI C# arrays agree within literal rounding half-units
+Result: all generation checks passed
+Existing GAGG bound/tests unchanged. High-energy approximation residuals are reported separately from formula checks.

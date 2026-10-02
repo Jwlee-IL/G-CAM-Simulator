@@ -7,6 +7,28 @@ namespace Gcam.Studio.Services.Tests;
 public sealed class AcquisitionServiceTests(ITestOutputHelper output)
 {
     [Fact]
+    public async Task CsISelection_IsCapturedByTheRealAcquisition()
+    {
+        var chain = FrontEndParts.Default with
+        { Scintillator = FrontEndMaterials.Scintillators.Single(s => s.Name == "CsI(Tl)") };
+        var detector = new DetectorSettings { Chain = chain };
+        var scene = new[] { new SceneSource { ActivityUCi = 500 } };
+        Assert.Equal("CsI", SimulationService.BuildConfig(scene, new(), detector).Detector.Material);
+        var clock = new ManualTimeProvider();
+        await using var session = new SimulationService(clock).Start(scene, new(), .25, 1, detector, seed: 12345);
+        await using var reader = session.ReadSnapshotsAsync().GetAsyncEnumerator();
+        Assert.True(await reader.MoveNextAsync());
+        Assert.Equal(chain, reader.Current.Chain);
+        await clock.WaitForTimerAsync();
+        clock.Advance(TimeSpan.FromMilliseconds(250));
+        Assert.True(await reader.MoveNextAsync());
+        Assert.True(reader.Current.IsCompleted);
+        Assert.Equal(chain, reader.Current.Chain);
+        Assert.NotEmpty(reader.Current.Events);
+        Assert.False(await reader.MoveNextAsync());
+    }
+
+    [Fact]
     public async Task ShortAcquisition_LocalizesAfterCountThreshold_SnapshotsAreImmutable()
     {
         var scene = new[] { new SceneSource { X = 15, Y = 8, DistanceMm = 1000, ActivityUCi = 500 } };

@@ -35,6 +35,8 @@ public static class Waveform
 
     // CR-RC^n shaper (Q16). A = e^(-1/tau) deconvolves the exp tail (pole-zero); K = 1/tau_s low-pass gain.
     public const int CrrcOrder = 4;
+    public const int CrrcFractionalBits = 12;
+    public const int CrrcOutputScale = 1 << CrrcFractionalBits;
     public static readonly int CrrcAQ16 = (int)Math.Round(Math.Exp(-1.0 / TauSamples) * 65536);   // 53656
     public static readonly int CrrcKQ16 = (int)Math.Round((1.0 / 2.5) * 65536);                    // 26214
 
@@ -125,15 +127,25 @@ public static class Waveform
 
     /// <summary>Integer CR-RC^order, bit-exact to crrc_shaper.sv: deconvolve the exp tail (imp = x − A·x[-1])
     /// then <paramref name="order"/> single-pole RC low-passes (acc += (u−acc)·K, all Q16), each stage feeding
-    /// the next this sample. Returns the last stage (∝ energy).</summary>
-    public static long[] CrrcInt(int[] samples, int aQ16, int kQ16, int order)
+    /// the next this sample. Returns signed codes × 2^fractionalBits; retain that scale through plotting.
+    /// F=0 preserves the legacy golden path. The bounded contract is signed-16 input, A in [0,65536],
+    /// K in [1,65536], order in [1,16], F in [0,12]. For B=2^(15+F), |imp| ≤ 2B+1;
+    /// floor of a convex update keeps every stage in that interval. Thus |u-acc| ≤ 4B+2 and
+    /// |(u-acc)*K| ≤ (4B+2)*65536 &lt; 2^46. Signed 48-bit RTL products and C# long cannot overflow.</summary>
+    public static long[] CrrcInt(int[] samples, int aQ16, int kQ16, int order, int fractionalBits = 0)
     {
+        ArgumentNullException.ThrowIfNull(samples);
+        if (aQ16 is < 0 or > 65536 || kQ16 is < 1 or > 65536 || order is < 1 or > 16 ||
+            fractionalBits is < 0 or > CrrcFractionalBits)
+            throw new ArgumentOutOfRangeException(nameof(fractionalBits));
         long prev = 0;
         var acc = new long[order];
         var outp = new long[samples.Length];
         for (int idx = 0; idx < samples.Length; idx++)
         {
-            long x = samples[idx];
+            if (samples[idx] is < short.MinValue or > short.MaxValue)
+                throw new ArgumentOutOfRangeException(nameof(samples), "CR-RC input must fit signed 16 bits.");
+            long x = (long)samples[idx] << fractionalBits;
             long imp = x - ((aQ16 * prev) >> 16);
             prev = x;
             long u = imp;

@@ -54,6 +54,6 @@ public class CrystalMaterialTests
         Assert.Null(CrystalMaterial.Find("ideal"));
         Assert.Same(CrystalMaterial.Gagg, CrystalMaterial.ForConfig("ideal"));
         Assert.Same(CrystalMaterial.Gagg, CrystalMaterial.ForConfig(null));
-        Assert.Equal(7, CrystalMaterial.All.Count);
+        Assert.Equal(8, CrystalMaterial.All.Count);
     }
 }

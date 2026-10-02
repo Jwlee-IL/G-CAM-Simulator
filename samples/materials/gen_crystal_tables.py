@@ -1,11 +1,12 @@
 """Generates the interaction tables in src/Gcam.Detector/CrystalMaterial.cs.
 
-Requires xraylib (tested with 4.3.0: `pip install xraylib`). Writes crystal_tables.json; the C# arrays are that
+Requires xraylib (tested with 4.3.0: `pip install xraylib`). Writes evidence/crystal_tables.json; the C# arrays are that
 JSON's E / mu / pf columns. Method (also in the CrystalMaterial remarks): photo + incoherent cross sections from
 xraylib to 800 keV with points straddling every K edge; above 800 keV Klein-Nishina x electrons/g plus a log-log
 extrapolated photoelectric term; coherent scattering and pair production deliberately excluded.
 """
-import xraylib as x, math, json, re
+import xraylib as x, math, json
+from pathlib import Path
 RE=2.8179403262e-13; NA=6.02214076e23; ME=510.99895
 def kn(E):  # Klein-Nishina total cross section per electron, cm2
     k=E/ME; a=1+k
@@ -22,7 +23,7 @@ def compt(formula,E):
     return x.CS_Compt_CP(formula,E) if E<=800 else kn(E)*e_per_g(formula)
 mats=[("GAGG","Gd3Al2Ga3O12",6.63,"GAGG:Ce"),("GAGG_Mg","Gd3Al2Ga3O12",6.63,"GAGG:Ce,Mg"),
       ("CeBr3","CeBr3",5.10,"CeBr3"),("LaBr3","LaBr3",5.08,"LaBr3:Ce"),("LYSO","Lu1.8Y0.2SiO5",7.10,"LYSO:Ce"),
-      ("BGO","Bi4Ge3O12",7.13,"BGO"),("NaI","NaI",3.67,"NaI:Tl")]
+      ("BGO","Bi4Ge3O12",7.13,"BGO"),("NaI","NaI",3.67,"NaI:Tl"),("CsI","CsI",4.51,"CsI:Tl")]
 base=[20,30,40,50,60,80,100,150,200,300,400,500,600,661.7,800,1000,1250,1500,2000,3000]
 out=[]
 for key,f,rho,label in mats:
@@ -32,7 +33,11 @@ for key,f,rho,label in mats:
         if 20<ek<3000: grid.add(round(ek*(1-1e-4),4)); grid.add(round(ek*(1+1e-4),4))
     E=sorted(grid); mu=[photo(f,e)+compt(f,e) for e in E]; pf=[photo(f,e)/(photo(f,e)+compt(f,e)) for e in E]
     out.append(dict(key=key,label=label,formula=f,rho=rho,E=E,mu=mu,pf=pf))
-json.dump(out, open('crystal_tables.json', 'w'), indent=1)
+# Evidence is not a SimulationConfig; keep it outside the scenario test's non-recursive material scan.
+output = Path(__file__).resolve().parent / 'evidence' / 'crystal_tables.json'
+output.parent.mkdir(exist_ok=True)
+with output.open('w', encoding='utf-8') as stream:
+    json.dump(out, stream, indent=1)
 for m in out:
     i = m['E'].index(661.7)
     print(f"{m['key']:8s} mu662 = {m['mu'][i] * m['rho'] / 10:.4f} /mm, photo fraction {m['pf'][i]:.3f}")

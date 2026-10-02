@@ -4,13 +4,14 @@ namespace Gcam.Configuration;
 public static class FrontEndMaterials
 {
     public static IReadOnlyList<ScintPreset> Scintillators { get; } = Array.AsReadOnly(
-        FrontEndParts.Scintillators.Where(s => s.Name != "CsI(Tl)").ToArray());
+        FrontEndParts.Scintillators.ToArray());
 
     public static string Material(ScintPreset scintillator) => scintillator.Name switch
     {
         "GAGG(Ce)" => "GAGG",
         "NaI(Tl)" => "NaI",
         "LYSO" => "LYSO",
+        "CsI(Tl)" => "CsI",
         "BGO" => "BGO",
         _ => throw new ArgumentException("No transport material for this scintillator.", nameof(scintillator))
     };

@@ -57,6 +57,8 @@ public sealed partial class PlotViewRenderTests
                 root.UpdateLayout();
                 var plots = Descendants(root).OfType<PlotView>().ToArray();
                 Assert.Equal(2, plots.Length);
+                Assert.True(plots[0].ShowMarkerLabels);
+                Assert.False(plots[1].ShowMarkerLabels);
                 Assert.All(plots, p => Assert.NotEmpty(p.Series!));
                 Assert.Equal(plots[0].CurrentViewRange, plots[1].CurrentViewRange);
                 // Direct control API, no keyboard/mouse/desktop input, exercises shared navigation binding.
@@ -70,8 +72,8 @@ public sealed partial class PlotViewRenderTests
                 var scintillator = Assert.Single(Descendants(root).OfType<ComboBox>(),
                     c => AutomationProperties.GetAutomationId(c) == "Chain.Scintillator");
                 Assert.Same(model.Scintillator, scintillator.SelectedItem);
-                Assert.Equal(4, scintillator.Items.Count);
-                Assert.DoesNotContain(scintillator.Items.Cast<ScintPreset>(), s => s.Name == "CsI(Tl)");
+                Assert.Equal(5, scintillator.Items.Count);
+                Assert.Contains(scintillator.Items.Cast<ScintPreset>(), s => s.Name == "CsI(Tl)");
                 Assert.False(scintillator.IsEnabled, "chain selectors are locked while data exist");
                 Assert.DoesNotContain(Descendants(root).OfType<TextBlock>(),
                     c => AutomationProperties.GetAutomationId(c) is "Chain.Pending" or "Chain.Acquired");
