@@ -90,7 +90,7 @@ public sealed class MaskFabricationStudy
         double scale = nDet / w;
 
         var decoder = _factory.CreateDecoder(cfg)!;       // IDEAL decoder — assumes the perfect MURA
-        var rng = _factory.CreateRandom(cfg);
+        var rng = RealizationRandom.For(cfg);   // own stream: not the mean map's transport stream
         var work = new DetectorImage(img.Width, img.Height);
         double tx = cfg.Source.Position[0];
         double ty = cfg.Source.Position[1];

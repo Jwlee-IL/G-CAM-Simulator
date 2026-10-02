@@ -51,7 +51,7 @@ analytic drawing fixtures, not MC evidence. Release verification (2026-10-02):
 `dotnet test Gcam.sln -c Release -m:1 --no-build` passed: 259 engine, 102 Core, 40 services
 and 10 UI-oracle cases; nine desktop cases and the opt-in render case skipped.
 The separately logged sampling regression (started before the command block) also passed:
-RMS/max 1.0810/1.9966 mm at 0.6 mm pitch and 0.5837/0.9511 mm at 0.3 mm pitch under
+RMS/max 1.0734/1.9966 mm at 0.6 mm pitch and 0.5847/0.9525 mm at 0.3 mm pitch (re-measured 2026-10-02 with the replaced random generator; previously 1.0810/1.9966 and 0.5837/0.9511) under
 the 1,000,000-history conditions above. This reduced-budget run is distinct from the theme-55
 3,000,000-history evidence quoted in the UI.
 With `GCAM_RENDER_SNAPSHOTS=1`, the render case passed without opening a window, generating
@@ -354,13 +354,17 @@ source/background preservation, fixed gain measurement, throughput and pending U
 `SpectrumServiceTests` acquires fresh real-engine events with transport seed 12345 and processing seed 909.
 The default chain is GAGG(Ce) / Hamamatsu MPPC S13360-3050 / CSP + CR-RC, with 4.5692% FWHM at 662 keV.
 
+Seeded values re-measured 2026-10-02 after the random generator was replaced (old generator: 31,053 deposits;
+Ba ratios 0.480119 / 0.626183; FWHM 30.3436 keV; pile-up 85,108 / 4,735 / 456; union share 37.1900 %); every check
+passes with its unchanged tolerance.
+
 | Check | Measurement | Acceptance / tolerance |
 |---|---|---|
-| Cs-137 photopeak, 100,000 events (31,053 full-energy deposits) | regional maximum bin 222, containing 661.7 keV; bin width 2.9725 keV | exact bin match, maximum above 478 keV through axis end |
-| Ba K absorber response | uncollided ratio 0.480119 vs narrow-beam 0.474422; measured-band ratio 0.626183 vs independent weighted MC 0.623270 | 4σ tolerances 0.014926 and 0.028881; global peak ordering is reported rather than asserted; detailed conditions in [acquisition evidence](VV.Studio.Acquisition.md#detector-realism-and-background) |
-| Cs photopeak FWHM | histogram 30.3436 keV vs `FrontEndModel` 30.2373 keV; error 0.1063 keV | ≤6.5516 keV = two bins + 5·FWHM/√(2(N−1)), N = full-energy deposits |
-| High-rate Cs pile-up (activity 10⁶ µCi, 100,000 events) | 100,000 → 85,108 pulses; above 794.04 keV: 0 → 4,735; overflow 456; resolving time 730 ns | strictly fewer pulses and more counts above 1.2×661.7; pulse count exactly matches `ApplyPileUp` at 1 ps time rounding |
-| Cs + Co, 20,000 events | four bands: 32.1 + 36.4, 661.7, 1173.2, 1332.5 keV; union share 37.1900% | exact labels / band count and union share; default Co windows need not overlap |
+| Cs-137 photopeak, 100,000 events (31,300 full-energy deposits) | regional maximum bin 222, containing 661.7 keV; bin width 2.9725 keV | exact bin match, maximum above 478 keV through axis end |
+| Ba K absorber response | uncollided ratio 0.474932 vs narrow-beam 0.474899; measured-band ratio 0.619148 vs independent weighted MC 0.619379 | 4σ tolerances 0.014987 and 0.028971; global peak ordering is reported rather than asserted; detailed conditions in [acquisition evidence](VV.Studio.Acquisition.md#detector-realism-and-background) |
+| Cs photopeak FWHM | histogram 30.4461 keV vs `FrontEndModel` 30.2373 keV; error 0.2088 keV | ≤6.5492 keV = two bins + 5·FWHM/√(2(N−1)), N = full-energy deposits |
+| High-rate Cs pile-up (activity 10⁶ µCi, 100,000 events) | 100,000 → 85,217 pulses; above 794.04 keV: 0 → 4,885; overflow 423; resolving time 730 ns | strictly fewer pulses and more counts above 1.2×661.7; pulse count exactly matches `ApplyPileUp` at 1 ps time rounding |
+| Cs + Co, 20,000 events | four bands: 32.1 + 36.4, 661.7, 1173.2, 1332.5 keV; union share 36.9300% | exact labels / band count and union share; default Co windows need not overlap |
 | Merge unit fixtures | Ba K merged; single line retained; injected constant 10% FWHM keeps 1173.2 / 1332.5 separate despite overlapping N=1.5 windows | exact band counts; separation 159.3 keV > FWHM(mean) 125.285 keV; fixture is not a physical-chain claim |
 | Determinism, 10,000 events | batch, prefix 503 + remainder, and toggle replay agree with / without pile-up | exact histogram and overflow equality |
 

@@ -31,6 +31,11 @@ area expectation. Every seed's counts, cps, primary-window counts, ratios, s and
 No fixed tolerance, borrowed precision or fallback bound is present. A failure is a measurement result to
 investigate; this test does not establish a Gaussian coverage probability or universal fill-factor law.
 
+Measured 2026-10-02 (opt-in run, Release), old and replaced random generator: at 100 µm the calibration mean is
+0.69428 (s 0.01672, tolerance 0.07094) with the old generator and **0.69846 (s 0.01472, tolerance 0.06247)** with
+xoshiro256**, against 0.69444; at 200 µm 0.45548 (s 0.01521, tolerance 0.06453) → **0.44753 (s 0.01074, tolerance
+0.04557)**, against 0.44444. Both pass; the changes are within about one standard error of an eight-seed mean.
+
 Inherited focus measurements used five seeds and 10/60 s at the same default optics, with near planes also
 sampled on a 10 mm grid. At true z=300/500 mm on axis, sharpest broadband planes were approximately
 360/580–586 mm, with half-max intervals 230–380/350–730 mm. At 30 mrad, sharpest planes were about

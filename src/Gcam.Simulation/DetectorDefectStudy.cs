@@ -86,7 +86,7 @@ public sealed class DetectorDefectStudy
         int w = defects.Width, h = defects.Height;
         double hotAdd = defects.HotFactor * meanLevel;
         var decoder = _factory.CreateDecoder(cfg)!;   // IDEAL geometry
-        var rng = _factory.CreateRandom(cfg);
+        var rng = RealizationRandom.For(cfg);   // own stream: not the mean map's transport stream
         var raw = new DetectorImage(w, h);
         var corr = new DetectorImage(w, h);
         double tx = cfg.Source.Position[0], ty = cfg.Source.Position[1];

@@ -48,7 +48,7 @@ public sealed class MaskAntimaskStudy
         int W = imgA.Width, H = imgA.Height;
 
         var decoder = _factory.CreateDecoder(cfgA)!;
-        var rng = _factory.CreateRandom(cfgA);
+        var rng = RealizationRandom.For(cfgA);   // own stream: not the mean map's transport stream
         double tx = cfgA.Source.Position[0], ty = cfgA.Source.Position[1];
 
         var single = new DetectorImage(W, H);

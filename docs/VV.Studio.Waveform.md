@@ -125,7 +125,7 @@ Entries below are peak output-code equivalents at **32 / 122 / 662 keV**:
 | Slow | 0 / 17 / 114 | 5.719238 / 21.741943 / 117.933350 | **1.567627 / 5.989258 / 32.526855** |
 
 At **32.1 keV**, implemented Q12 maxima are **2.234131 / 2.634521 / 1.569580**. The inherited seed-1
-ENOB-on stimulus still gives F=0 maxima **0/0/1** at 32.1 keV and **47/90/114** at 662 keV; removing
+ENOB-on stimulus still gives F=0 maxima **−1/−1/0** at 32.1 keV (0/0/1 with the old generator's noise) and **47/90/114** at 662 keV; removing
 ENOB noise gives 0/0/0 at 32.1 keV. Q12 output fractions, not an extra plotted gain, retain the signal.
 Configured floating peak times are **104/200/448 ns**. Nominal stage times are **25/50/125 ns**;
 the difference reinforces why T_sum cannot be labelled peaking time.
@@ -141,25 +141,30 @@ Entries are percentages at **32 / 122 / 662 keV**:
 
 | Preset/path | Electronics R_equiv % | Full R_equiv % | Full mean bias % |
 |---|---|---|---|
-| Fast legacy F=0 | 85.230 / 22.759 / 4.624 | 86.213 / 23.815 / 6.659 | −9.515 / −5.797 / −1.398 |
-| Original legacy F=0 | 47.184 / 12.892 / 2.486 | 49.486 / 15.043 / 5.299 | −7.394 / −3.677 / −0.882 |
-| Slow legacy F=0 | 37.547 / 10.264 / 1.887 | 39.787 / 12.978 / 4.934 | −5.104 / −3.224 / −0.660 |
-| Fast shared-K Q12 | 78.925 / 20.710 / 3.817 | 80.235 / 22.145 / 6.013 | +0.387 / +0.099 / +0.015 |
-| Original shared-K Q12 | 42.948 / 11.268 / 2.076 | 45.241 / 13.734 / 5.086 | +0.226 / +0.056 / +0.007 |
-| Slow shared-K Q12 | 34.588 / 9.070 / 1.672 | 37.374 / 11.991 / 4.933 | +0.188 / +0.042 / +0.005 |
-| Fast implemented | **59.071 / 15.497 / 2.855** | **60.781 / 17.381 / 5.456** | +0.288 / +0.073 / +0.010 |
-| Original implemented | **16.176 / 4.242 / 0.782** | **21.317 / 8.848 / 4.693** | +0.034 / +0.005 / −0.002 |
-| Slow implemented | **7.697 / 2.019 / 0.372** | **16.083 / 8.079 / 4.653** | −0.105 / −0.031 / −0.009 |
+| Fast legacy F=0 | 85.344 / 22.558 / 4.570 | 86.271 / 23.848 / 6.456 | −10.069 / −5.942 / −1.401 |
+| Original legacy F=0 | 47.733 / 12.810 / 2.507 | 49.275 / 14.880 / 5.161 | −7.281 / −3.830 / −0.869 |
+| Slow legacy F=0 | 37.974 / 10.367 / 1.919 | 39.776 / 12.904 / 4.794 | −4.959 / −3.210 / −0.655 |
+| Fast shared-K Q12 | 78.290 / 20.536 / 3.786 | 79.531 / 21.905 / 5.874 | −0.265 / −0.055 / −0.001 |
+| Original shared-K Q12 | 42.605 / 11.178 / 2.060 | 44.739 / 13.498 / 4.929 | −0.106 / −0.017 / +0.005 |
+| Slow shared-K Q12 | 34.297 / 8.997 / 1.659 | 36.931 / 11.748 / 4.774 | −0.068 / −0.005 / +0.007 |
+| Fast implemented | **59.141 / 15.512 / 2.859** | **60.714 / 17.261 / 5.312** | −0.060 / −0.003 / +0.008 |
+| Original implemented | **16.507 / 4.330 / 0.798** | **21.448 / 8.724 / 4.551** | +0.228 / +0.070 / +0.022 |
+| Slow implemented | **7.679 / 2.013 / 0.371** | **15.658 / 7.816 / 4.492** | −0.048 / −0.001 / +0.008 |
 
-Expectation: these implemented-path results reproduce the previously evaluated common-order Q12
-convention under the same seeds/definitions. They agree to the stored CSV precision (7 decimal places
-for deterministic amplitude, 4 for width/bias). This is reproducibility evidence, **not** an adopted energy
-accuracy tolerance. The physical analytic chain alone predicts approximately **13.81/7.686/4.569%**;
+Re-measured 2026-10-02 after the random generator was replaced (the trace noise seeds 1…6000 and the amplitude
+stream 901 now come from xoshiro256**; the old generator's consecutive seeds gave shifted copies of one noise
+sequence). Earlier implemented-path values (old generator): electronics 59.071 / 15.497 / 2.855, 16.176 / 4.242 /
+0.782, 7.697 / 2.019 / 0.372; full 60.781 / 17.381 / 5.456, 21.317 / 8.848 / 4.693, 16.083 / 8.079 / 4.653 (Fast /
+Original / Slow, 32 / 122 / 662 keV). The changes (up to −0.16 points at 662 keV full, +0.33 at 32 keV electronics)
+are one realisation against another: a 6000-trace width has a relative standard error of ≈ 0.9 %, and all
+presets share the same noise and amplitude draws, so their changes are correlated. This is reproducibility evidence,
+**not** an adopted energy accuracy tolerance. The physical analytic chain alone predicts approximately **13.81/7.686/4.569%**;
 the additional waveform sample noise explains the larger measured widths. The predicted analytic
 number has not been substituted for measured waveform resolution.
 
-Configured full 32-keV width ranges over three disjoint 2000-trial batches are Fast **60.02–62.15%**,
-Original **21.20–21.38%**, Slow **15.90–16.22%**; at 662 keV **5.418–5.513 / 4.672–4.719 / 4.619–4.694%**.
+Configured full 32-keV width ranges over three disjoint 2000-trial batches are Fast **59.90–61.69%**,
+Original **20.96–21.98%**, Slow **15.26–15.89%**; at 662 keV **5.233–5.368 / 4.413–4.634 / 4.363–4.562%**
+(old generator: 60.02–62.15 / 21.20–21.38 / 15.90–16.22%; 5.418–5.513 / 4.672–4.719 / 4.619–4.694%).
 These are observed seed-batch spreads, not confidence intervals or pass thresholds. Q12 quantisation
 granularity in calibrated output is **0.00350/0.00297/0.00497 keV**; it is not detector energy resolution.
 27…37 keV in 0.01-keV increments yields configured **68/303/674 distinct peak levels**, all nonzero,

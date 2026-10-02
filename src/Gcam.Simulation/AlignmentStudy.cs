@@ -66,7 +66,7 @@ public sealed class AlignmentStudy
         double scale = nDet / w;
 
         var decoder = _factory.CreateDecoder(cfg)!;   // IDEAL geometry — unaware of the pose error
-        var rng = _factory.CreateRandom(cfg);
+        var rng = RealizationRandom.For(cfg);   // own stream: not the mean map's transport stream
         var work = new DetectorImage(img.Width, img.Height);
 
         double sumX = 0.0, sumY = 0.0, sumSq = 0.0;

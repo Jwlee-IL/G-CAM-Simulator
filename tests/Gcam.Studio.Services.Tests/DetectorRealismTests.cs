@@ -176,7 +176,13 @@ public sealed class DetectorRealismTests(ITestOutputHelper output)
         Assert.InRange(Math.Abs(variance - expectedVariance), 0, tolerance);
         const double width = 661.7 * 1.15 / SpectrumService.BinCount;
         var histogram = new double[256];
-        foreach (double energy in gain) histogram[(int)(energy / width)]++;
+        // The 256 bins end at 1.15 × 661.7 keV; a smear in the far tail (> 761 keV, ≈ +4σ) lies outside the plotted
+        // spectrum and cannot affect the photopeak FWHM — skip it instead of indexing past the array.
+        foreach (double energy in gain)
+        {
+            int bin = (int)(energy / width);
+            if (bin < histogram.Length) histogram[bin]++;
+        }
         int peak = Array.IndexOf(histogram, histogram.Max());
         double half = histogram[peak] / 2;
         int left = peak, right = peak;

@@ -3,6 +3,7 @@ using Gcam.Core;
 using Gcam.Masks;
 using Gcam.Simulation;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace Gcam.Tests;
 
@@ -11,7 +12,7 @@ namespace Gcam.Tests;
 /// mis-sized holes, blocked cells, depth drill wander through a thick slab). The errors live on the mask's
 /// Transmit only, so a mis-machined mask is a forward-model mismatch — imaging degrades with the tolerance.
 /// </summary>
-public class MaskFabricationTests
+public class MaskFabricationTests(ITestOutputHelper output)
 {
     // --- MaskFabrication model ---
 
@@ -83,18 +84,36 @@ public class MaskFabricationTests
 
     // --- Study: loosening the tolerance degrades localization (vs the ideal decoder) ---
 
+    // Multi-seed statistical test (TODO-26). The study's RMS at one seed is too noisy to carry the claim: over 64 seeds
+    // RMS(160 µm) − RMS(0) has mean 1.59 mm, sd 0.99 mm (seeds 2001–2064) and 1.99 / 0.99 mm (seeds 5001–5064), and it
+    // is negative in 3 / 64 — the earlier single-seed assertions (factor 1.5, then direction) were lucky-seed pins
+    // (seed 12345 gave RMS 3.51 → 5.89 mm, ratio 1.68). Design: N = 24 independent transport seeds, paired difference
+    // d_i = RMS_i(160) − RMS_i(0) at the study's own settings (30 repeats, 3 fabricated masks), assert
+    // t = mean(d) / (sd(d)/√N) > k = 3. With the conservative measured effect size δ/σ = 1.61 the noncentral-t
+    // false-fail probability P(t < 3 | ν = 23, ncp = 1.61·√24) is 3.9·10⁻⁶ (< 10⁻⁴); with no degradation at all the
+    // test would pass with probability 3.2·10⁻³. Cost ≈ 2.6 core-s per seed; the seeds run in parallel.
     [Fact]
     public void LooserTolerance_DegradesLocalization()
     {
-        var cfg = new SimulationConfig { PhotonCount = 400_000, Seed = 12345 };
-        double[] sigmas = [0.0, 160.0];
-        var rows = new MaskFabricationStudy(new DefaultSimulationFactory())
-            .Run(cfg, sigmas, photonBudget: 400_000.0, repeats: 30, fabSeeds: 3);
+        const int n = 24, firstSeed = 7001;
+        const double k = 3.0;
+        var r0 = new double[n]; var r1 = new double[n]; var e1 = new double[n]; var p0 = new double[n]; var p1 = new double[n];
+        Parallel.For(0, n, i =>
+        {
+            var rows = new MaskFabricationStudy(new DefaultSimulationFactory())
+                .Run(new SimulationConfig { PhotonCount = 400_000, Seed = firstSeed + i }, [0.0, 160.0],
+                     photonBudget: 400_000.0, repeats: 30, fabSeeds: 3);
+            Assert.Equal(2, rows.Length);
+            Assert.Equal(1.0, rows[0].EfficiencyRel, 3);                    // σ=0 is the reference
+            r0[i] = rows[0].RmsMm; r1[i] = rows[1].RmsMm; e1[i] = rows[1].EfficiencyRel;
+            p0[i] = rows[0].Psr; p1[i] = rows[1].Psr;
+        });
 
-        Assert.Equal(2, rows.Length);
-        Assert.Equal(1.0, rows[0].EfficiencyRel, 3);                       // σ=0 is the reference
-        Assert.True(rows[1].RmsMm > rows[0].RmsMm * 1.5, $"σ=160µm should scatter localization: {rows[1].RmsMm} vs {rows[0].RmsMm}");
-        Assert.True(rows[1].EfficiencyRel < 0.97, $"blocked/shrunken holes should cut efficiency: {rows[1].EfficiencyRel}");
-        Assert.True(rows[1].Psr < rows[0].Psr, "coded fidelity (PSR) should fall as the shadow blurs");
+        var d = r1.Zip(r0, (a, b) => a - b).ToArray();
+        double mean = d.Average(), sd = Math.Sqrt(d.Sum(x => (x - mean) * (x - mean)) / (n - 1)), se = sd / Math.Sqrt(n);
+        output.WriteLine($"N={n}: RMS(0) {r0.Average():F3} mm, RMS(160) {r1.Average():F3} mm; d mean {mean:F3} ± {se:F3} (sd {sd:F3}), t = {mean / se:F2} (k = {k}); efficiency {e1.Average():F4}; PSR {p0.Average():F3} → {p1.Average():F3}");
+        Assert.True(mean > k * se, $"σ=160µm should scatter localization: mean ΔRMS {mean:F3} mm, SE {se:F3} mm, t = {mean / se:F2} ≤ {k}");
+        Assert.True(e1.Average() < 0.97, $"blocked/shrunken holes should cut efficiency: {e1.Average()}");
+        Assert.True(p1.Average() < p0.Average(), "coded fidelity (PSR) should fall as the shadow blurs");
     }
 }

@@ -63,7 +63,7 @@ public sealed class DepthStudy
         double w = 0.0; foreach (var v in mean.Raw) w += v;
         double scale = w > 0 ? counts / w : 0.0;
 
-        var rng = _factory.CreateRandom(cfg);
+        var rng = RealizationRandom.For(cfg);   // own stream: not the mean map's transport stream
         var noisy = new DetectorImage(mean.Width, mean.Height);
         double sumD = 0, sumDsq = 0, sumLsq = 0;
         for (int rep = 0; rep < repeats; rep++)
@@ -94,7 +94,7 @@ public sealed class DepthStudy
         double w = 0.0; foreach (var v in mean.Raw) w += v;
         double scale = w > 0 ? counts / w : 0.0;
 
-        var rng = _factory.CreateRandom(cfg);
+        var rng = RealizationRandom.For(cfg);   // own stream: not the mean map's transport stream
         var noisy = new DetectorImage(mean.Width, mean.Height);
         double sumD = 0, sumDsq = 0;
         for (int rep = 0; rep < repeats; rep++)
@@ -122,7 +122,7 @@ public sealed class DepthStudy
         double w = 0.0; foreach (var v in mean.Raw) w += v;
         double scale = w > 0 ? counts / w : 0.0;
 
-        var rng = _factory.CreateRandom(cfg);
+        var rng = RealizationRandom.For(cfg);   // own stream: not the mean map's transport stream
         var noisy = new DetectorImage(mean.Width, mean.Height);
         double sumD = 0, sumDsq = 0, sumLsq = 0;
         for (int rep = 0; rep < repeats; rep++)

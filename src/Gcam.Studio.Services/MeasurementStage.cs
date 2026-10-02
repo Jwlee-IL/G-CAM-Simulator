@@ -39,7 +39,9 @@ public sealed class MeasurementStage
 
     public double Measure(DetectedEvent ev, int index) => MeasureAmplitude(Amplitude(ev), index);
 
-    /// <summary>Index-addressed randomness makes replay independent of snapshot partitioning.</summary>
+    /// <summary>Index-addressed randomness makes replay independent of snapshot partitioning. The stream is keyed by the
+    /// 64-bit (seed, index) pair: reseeding per event with seed + index·k gave consecutive events correlated smears
+    /// under the old affine generator (TODO-26).</summary>
     public double MeasureAmplitude(double energyKeV, int index)
-        => _model.Measure(energyKeV, new DefaultRandom(unchecked(_seed + index * 104729)));
+        => _model.Measure(energyKeV, DefaultRandom.FromKey(DefaultRandom.Key(_seed, unchecked((uint)index))));
 }

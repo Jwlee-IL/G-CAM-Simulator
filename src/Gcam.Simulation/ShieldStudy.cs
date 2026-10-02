@@ -44,7 +44,7 @@ public sealed class ShieldStudy
         int W = img.Width, H = img.Height;
 
         var decoder = _factory.CreateDecoder(baseConfig)!;
-        var rng = _factory.CreateRandom(baseConfig);
+        var rng = RealizationRandom.For(baseConfig);   // own stream: not the mean map's transport stream
         double tx = baseConfig.Source.Position[0], ty = baseConfig.Source.Position[1];
 
         // fixed barrel geometry the walls must enclose (mask plane -> behind the crystal).

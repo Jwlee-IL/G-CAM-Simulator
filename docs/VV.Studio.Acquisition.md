@@ -45,8 +45,8 @@ MC generation, transport and rejection. It excludes reconstruction and UI drawin
 
 | Configuration | Accepted events / wall s | Rejection acceptance (accepted / detected histories) | Accepted / all proposals | Decode mean / max |
 |---|---|---|---|---|
-| `samples/scenario.json`, seed 12345 | 438,731 (100,000 / 0.2279 s) | 99.8841% (100,000 / 100,116) | 21.0110% (475,942 emitted) | 4.585 / 4.917 ms |
-| `samples/scenario_handheld.json` cloned; source–mask distance = 945 mm, detector distance = 1 m, Cs-137, seed 12345 | 330,918 (100,000 / 0.3022 s) | 99.9950% (100,000 / 100,005) | 27.4224% (364,666 emitted) | 8.598 / 12.031 ms |
+| `samples/scenario.json`, seed 12345 | 438,731 (100,000 / 0.2279 s) | 99.8861% (100,000 / 100,114) | 21.1848% (472,036 emitted) | 4.585 / 4.917 ms |
+| `samples/scenario_handheld.json` cloned; source–mask distance = 945 mm, detector distance = 1 m, Cs-137, seed 12345 | 330,918 (100,000 / 0.3022 s) | 99.9950% (100,000 / 100,005) | 27.4590% (364,180 emitted) | 8.598 / 12.031 ms |
 
 The default Studio grid has more detector pixels than these sample rigs. A real service refresh in the short
 acquisition test decoded in 28.907 ms (includes first-use/JIT effects); still below the 250 ms refresh interval.
@@ -118,18 +118,22 @@ backing 2 mm and reflector gap 0.1 mm. Each absorber/backing comparison transpor
 configuration; variations use Clone + mutate. Counts are per proposal budget, not normalized to a fixed accepted
 event count, so attenuation remains visible. The Cs spectrum has 256 bins of width 2.9725 keV.
 
+Re-measured 2026-10-02 after the random generator was replaced (xoshiro256**, per-event smear streams keyed by
+(seed, index)): every row below is the new seeded realisation; all assertions pass with the unchanged tolerances.
+The throughput table above keeps its 2026-10-01 timings; its seeded acceptance / proposal counts are re-measured.
+
 | Test / check | Measurement | Expectation and tolerance |
 |---|---|---|
-| `BaKAbsorber_UncollidedBandMatchesIndependentNarrowBeam_ReportsMeasuredSpectrum`, unchanged Ba line energies | 50,400 → 24,198; ratio 0.480119 | Beer-Lambert prediction 0.474422 ± 0.014926 (4σ), weighted by the bare 32.1 / 36.4 keV line counts; independent log-log interpolation of iron μ anchors at 30 / 40 keV gives transmission 0.450696 / 0.571939; Poisson reference and transmitted-count uncertainty included |
-| Same test, measured grouped Ba band | 58,031 → 36,338; ratio 0.626183 | independent weighted transport + measurement MC, seed 987 / 444, predicts 0.623270 ± 0.028881 (4σ); weighted-reference variance bounded by w² ≤ w_max·w |
-| Same test, Ba K / 662 peak-bin ratio | 3.977877 without absorber, 2.324194 with absorber | descriptive, not a global-peak requirement; Ba K remains the global maximum at 31.2110 keV in both configurations |
-| Same test, 480–620 keV valley (P-11) | 11,367 → 11,515 counts | descriptive; increase 148 counts is only 0.98σ under an independent Poisson comparison; no claim of a large absorber tail |
-| `Backing_AddsBackscatterRegion_FromTransport` | 170–210 keV counts 15,239 without backing → 17,674 with backing; excess 2,435 | excess exceeds 4σ = 725.6776 counts; Compton's 180° return energy E/(1+2E/m_ec²) = 184.3263 keV; finite-angle return broadens toward higher energies; the bare crystal already has continuum in this region |
-| `Gain_WidensPhotopeakInQuadrature_AndReducesTightWindowAcceptance`, 53,119 MC full-energy events | measured variance 558.8994 vs expected 558.9961 keV²; equivalent FWHM 55.6700 vs 55.6748 keV; sampled pattern σ 2.9997% | pixel-amplitude variance + mean FrontEndModel noise variance; 4σ variance tolerance 13.7193 keV² from the mixture's fourth central moment |
-| Same test, histogram FWHM | 55.8680 vs 55.6748 keV | quadrature prediction, tolerance 6.7990 keV = two bins + 5·FWHM/√(2(N−1)) |
-| Same test, ±0.5 chain-FWHM window | fraction 0.760914 at zero gain spread → 0.476082 at 3%; decline 0.284832 | decline exceeds 4σ = 0.011399, conservative independent-binomial bound for paired samples |
-| `BsrOne_DoublesRate_PreservesEverySourceEvent_AndMatchesBackgroundModel` | 80,029 source + 80,235 background events in 1000 s; mature total/source ratio 2.003018 | BSR=1 predicts 2; 4σ tolerance 0.021112, excluding first 100 s of running-rate startup |
-| Same test, spatial / energy distributions | uniform-profile max abs z 3.0688 over 144 pixels; energy max abs z 1.1164 over eight bins | 5σ per pixel vs Background.SideLeakProfile(sideFraction=0); 4σ per energy bin vs 100,000 fresh cosine-flux deposits from BackgroundDepositSpectrum at 200 keV with independent seed 987 |
+| `BaKAbsorber_UncollidedBandMatchesIndependentNarrowBeam_ReportsMeasuredSpectrum`, unchanged Ba line energies | 50,064 → 23,777; ratio 0.474932 | Beer-Lambert prediction 0.474899 ± 0.014987 (4σ), weighted by the bare 32.1 / 36.4 keV line counts; independent log-log interpolation of iron μ anchors at 30 / 40 keV gives transmission 0.450696 / 0.571939; Poisson reference and transmitted-count uncertainty included |
+| Same test, measured grouped Ba band | 57,718 → 35,736; ratio 0.619148 | independent weighted transport + measurement MC, seed 987 / 444, predicts 0.619379 ± 0.028971 (4σ); weighted-reference variance bounded by w² ≤ w_max·w |
+| Same test, Ba K / 662 peak-bin ratio | 3.915454 without absorber, 2.223296 with absorber | descriptive, not a global-peak requirement; Ba K remains the global maximum at 31.2110 keV in both configurations |
+| Same test, 480–620 keV valley (P-11) | 11,157 → 11,559 counts | descriptive; increase 402 counts is 2.7σ under an independent Poisson comparison (was 148 counts, 0.98σ, with the old generator); no claim of a large absorber tail |
+| `Backing_AddsBackscatterRegion_FromTransport` | 170–210 keV counts 15,415 without backing → 17,578 with backing; excess 2,163 | excess exceeds 4σ = 726.5590 counts; Compton's 180° return energy E/(1+2E/m_ec²) = 184.3263 keV; finite-angle return broadens toward higher energies; the bare crystal already has continuum in this region |
+| `Gain_WidensPhotopeakInQuadrature_AndReducesTightWindowAcceptance`, 53,690 MC full-energy events | measured variance 560.0673 vs expected 557.3291 keV²; equivalent FWHM 55.7281 vs 55.5917 keV; sampled pattern σ 2.9932% | pixel-amplitude variance + mean FrontEndModel noise variance; 4σ variance tolerance 13.7996 keV² from the mixture's fourth central moment |
+| Same test, histogram FWHM | 54.3052 vs 55.5917 keV | quadrature prediction, tolerance 6.7932 keV = two bins + 5·FWHM/√(2(N−1)) |
+| Same test, ±0.5 chain-FWHM window | fraction 0.761836 at zero gain spread → 0.477500 at 3%; decline 0.284336 | decline exceeds 4σ = 0.011332, conservative independent-binomial bound for paired samples |
+| `BsrOne_DoublesRate_PreservesEverySourceEvent_AndMatchesBackgroundModel` | 79,943 source + 79,825 background events in 1000 s; mature total/source ratio 1.997237 | BSR=1 predicts 2; 4σ tolerance 0.021062, excluding first 100 s of running-rate startup |
+| Same test, spatial / energy distributions | uniform-profile max abs z 3.0968 over 144 pixels; energy max abs z 1.3247 over eight bins | 5σ per pixel vs Background.SideLeakProfile(sideFraction=0); 4σ per energy bin vs 100,000 fresh cosine-flux deposits from BackgroundDepositSpectrum at 200 keV with independent seed 987 |
 | `ZeroBsr_PreservesSourceStreamBitForBit`, `Background_SeedAndCancellationAreDeterministic` | source-only and explicit zero-BSR records, histories and weights agree; enabled streams replay; cancellation throws promptly | exact seeded equality, no extra RNG draws on the disabled path |
 | `Measurement_UsesFrozenInputs_AndReplaysAcrossSnapshotsAndPileUp` | batch, incremental and toggle replay agree; shared MeasurementStage reproduces every histogram bin | exact; 8,427 fresh events; gain precedes smearing and is not applied twice |
 
@@ -187,9 +191,9 @@ wall time while stopped each time):
 
 | Background | Events in 12 s | Result |
 |---|---|---|
-| BSR 0 | 1,810 | identical to the uninterrupted session and to the direct source stream; arrival times strictly increasing; each continued segment starts at the stopped live time and counts |
-| BSR 0.5 | 2,728 | identical, as above |
-| Co-60 500 µCi at (3, −2) mm, 100 mm, BSR 0 (same stops) | 139,747 (48 decays with both gammas detected) | identical, as above; one event per decay keeps the single look-ahead event sufficient |
+| BSR 0 | 1,907 (1,810 with the old generator) | identical to the uninterrupted session and to the direct source stream; arrival times strictly increasing; each continued segment starts at the stopped live time and counts |
+| BSR 0.5 | 2,769 (old 2,728) | identical, as above |
+| Co-60 500 µCi at (3, −2) mm, 100 mm, BSR 0 (same stops) | 139,933 (62 decays with both gammas detected; old 139,747 / 48) | identical, as above; one event per decay keeps the single look-ahead event sufficient |
 
 A raised preset after Completed (3 s → 6 s) continues identically to an uninterrupted 6 s acquisition; the same
 seed reproduces an acquisition and the next seed gives an independent one. Sensitivity check: with the look-ahead

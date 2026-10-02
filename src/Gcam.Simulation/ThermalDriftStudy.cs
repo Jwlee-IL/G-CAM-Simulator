@@ -124,7 +124,7 @@ public sealed class ThermalDriftStudy
         double scale = nDet / ref0;
 
         var decoder = _factory.CreateDecoder(cfg)!;
-        var rng = _factory.CreateRandom(cfg);
+        var rng = RealizationRandom.For(cfg);   // own stream: not the mean map's transport stream
         var work = new DetectorImage(w, h);
         double tx = cfg.Source.Position[0];
         double ty = cfg.Source.Position[1];

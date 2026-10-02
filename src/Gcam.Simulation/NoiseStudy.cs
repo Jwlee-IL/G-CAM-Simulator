@@ -43,7 +43,7 @@ public sealed class NoiseStudy
         double tx = cfg.Source.Position[0];
         double ty = cfg.Source.Position[1];
         var decoder = _factory.CreateDecoder(cfg)!;
-        var rng = _factory.CreateRandom(cfg);
+        var rng = RealizationRandom.For(cfg);   // own stream: not the mean map's transport stream
         var noisy = new DetectorImage(img.Width, img.Height);
 
         var points = new List<NoisePoint>();

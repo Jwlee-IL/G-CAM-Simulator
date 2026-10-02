@@ -108,7 +108,8 @@ public class BackgroundTests
         // The honest, sim-revealed behaviour: a flat pedestal and a same-level gradient are IDENTICAL while the
         // source peak still wins the argmax (the gradient's low-frequency residual doesn't move it) — then, once
         // the background competes (heavy BSR), the gradient drags the estimate hard toward its strong side while
-        // a flat pedestal only fails randomly. BiasMm is the deterministic mean-map decode, so these are stable.
+        // a flat pedestal only fails randomly. BiasMm is the decode of the MC mean map, so it depends on the seed only
+        // through that map's residual noise (measured below).
         double[] bsr = [1.0, 4.0];
         var flat = new BackgroundStudy().RunSweep(Base(), bsr, detectedBudget: 400.0, repeats: 30, failThrMm: 3.0);
         var grad = new BackgroundStudy().RunSweep(Base(), bsr, detectedBudget: 400.0, repeats: 30, failThrMm: 3.0,
@@ -120,8 +121,11 @@ public class BackgroundTests
         Assert.True(System.Math.Abs(flat[0].BiasMm - grad[0].BiasMm) < 0.01,
             $"gradient should not bias while the source wins: flat {flat[0].BiasMm:F4} vs grad {grad[0].BiasMm:F4} mm");
 
-        // At the knee (BSR 4) the gradient biases far more than the flat pedestal.
-        Assert.True(grad[1].BiasMm > flat[1].BiasMm + 2.0,
+        // At the knee (BSR 4) the gradient biases far more than the flat pedestal. Measured over 64 seeds (TODO-26,
+        // 2001–2064): grad 11.18 mm in all; the flat mean map has two competing maxima, 7.45 mm (49 seeds) or 9.39 mm
+        // (15), so the excess is 3.73 or 1.78–1.79 mm. The old +2 mm bound failed the second mode; +1 mm sits below
+        // both modes and is still 2000× the BSR-1 difference.
+        Assert.True(grad[1].BiasMm > flat[1].BiasMm + 1.0,
             $"gradient should dominate the bias at the knee: flat {flat[1].BiasMm:F2} mm vs grad {grad[1].BiasMm:F2} mm");
     }
 }

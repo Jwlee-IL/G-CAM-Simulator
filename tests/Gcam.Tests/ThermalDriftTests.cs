@@ -104,6 +104,9 @@ public class ThermalDriftTests
         // floor (no positional blow-up, which would push RMS to many mm as in the ghost cases). The counts now
         // also droop with efficiency, so at these low reps (12) Poisson noise dominates the last-slice RMS — the
         // flat trend proper is the CLI/plot's job; here we only guard against a blow-up.
-        Assert.True(off[^1].RmsBiasMm < 2.5, $"localization stays bounded, got {off[^1].RmsBiasMm}");
+        // Bound measured (TODO-26, 64 seeds 2001–2064): the last-slice RMS is 0.36–0.71 mm in 48 seeds and
+        // 1.3–4.3 mm in 16 — one of the 12 reps landing on a wrong peak (≤ ~15 mm → RMS ≤ 15/√12 ≈ 4.3 mm). A blow-up
+        // (half the reps at ghost scale) is ≥ 8 mm. 5 mm separates the two; the old 2.5 mm bound failed 10 / 64 seeds.
+        Assert.True(off[^1].RmsBiasMm < 5.0, $"localization stays bounded, got {off[^1].RmsBiasMm}");
     }
 }
