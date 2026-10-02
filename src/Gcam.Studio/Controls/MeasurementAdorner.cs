@@ -40,6 +40,9 @@ public sealed class MeasurementAdorner : Adorner
     private readonly List<INotifyPropertyChanged> _watched = [];
     private MeasurementsViewModel? _session;
     private INotifyCollectionChanged? _markerCollection;
+    // Requests exist only during OnRender; mm geometry remains the persistent source of truth.
+    private readonly List<ChipRequest> _chips = [];
+    private sealed record ChipRequest(FormattedText Text, ScreenRect Preferred, bool Selected, Point? Marker);
 
     private List<Vec2>? _draft;     // points placed so far, in mm
     private Vec2? _cursorMm;
@@ -146,6 +149,7 @@ public sealed class MeasurementAdorner : Adorner
     protected override void OnRender(DrawingContext dc)
     {
         if (!_view.HasImage) return;
+        _chips.Clear();
 
         if (_session is { } s)
             foreach (var m in s.Items.Where(m => m.Pane == Pane))
@@ -160,6 +164,8 @@ public sealed class MeasurementAdorner : Adorner
             DrawMarker(dc, marker, ReferenceEquals(marker, _dragMarker) || (markers.Length > 1 && ReferenceEquals(marker, selectedMarker)));
         foreach (var peak in (MeasurementOverlay.GetFoundPeaks(_view) ?? Array.Empty<object>()).OfType<ImagingPeak>())
             DrawFoundPeak(dc, peak);
+        DrawChips(dc, markers);
+        _chips.Clear();
     }
 
     private void DrawFoundPeak(DrawingContext dc, ImagingPeak peak)
@@ -171,7 +177,7 @@ public sealed class MeasurementAdorner : Adorner
         Point[] points = [p + new Vector(0, -radius), p + new Vector(radius, 0),
             p + new Vector(0, radius), p + new Vector(-radius, 0)];
         for (int i = 0; i < points.Length; i++) Segment(dc, points[i], points[(i + 1) % points.Length], LinePen);
-        Chip(dc, $"Found {peak.Isotope}", p + new Vector(radius + gap, radius + gap), false);
+        Chip(dc, $"Found {peak.Isotope}", p + new Vector(radius + gap, radius + gap), false, p);
     }
 
     private void DrawMeasurement(DrawingContext dc, MeasurementViewModel m, bool selected)
@@ -242,7 +248,7 @@ public sealed class MeasurementAdorner : Adorner
         Segment(dc, p + new Vector(MarkerRadius - 3, 0), p + new Vector(MarkerRadius + 4, 0), pen);
         Segment(dc, p + new Vector(0, -MarkerRadius - 4), p + new Vector(0, -MarkerRadius + 3), pen);
         Segment(dc, p + new Vector(0, MarkerRadius - 3), p + new Vector(0, MarkerRadius + 4), pen);
-        Chip(dc, marker.MarkerLabel, p + new Vector(MarkerRadius + 8, -MarkerRadius - 14), selected);
+        Chip(dc, marker.MarkerLabel, p + new Vector(MarkerRadius + 8, -MarkerRadius - 14), selected, p);
     }
 
     private static void Segment(DrawingContext dc, Point a, Point b, Pen pen)
@@ -279,14 +285,57 @@ public sealed class MeasurementAdorner : Adorner
     // White on a dark chip, like the heatmap's own labels — readable on any colormap value and in both themes.
     // Selection inverts the chip and thickens the lines rather than adding a colour: the accent would collide
     // with viridis' teal band (DESIGN.Color, "Data colours vs UI colours").
-    private void Chip(DrawingContext dc, string text, Point at, bool selected)
+    private void Chip(DrawingContext dc, string text, Point at, bool selected, Point? marker = null)
     {
         var typeface = new Typeface(TextElement.GetFontFamily(_view), FontStyles.Normal, FontWeights.Normal, FontStretches.Normal);
         var ft = new FormattedText(text, CultureInfo.CurrentUICulture, FlowDirection.LeftToRight, typeface,
-            11, selected ? Brushes.Black : Brushes.White, VisualTreeHelper.GetDpi(this).PixelsPerDip);
-        var box = new Rect(at.X - 5, at.Y - 2, ft.Width + 10, ft.Height + 4);
-        dc.DrawRoundedRectangle(selected ? SelectedChipBrush : ChipBrush, selected ? HaloPen : null, box, 3, 3);
-        dc.DrawText(ft, at);
+            (double)_view.FindResource("FontSize.Caption"), selected ? Brushes.Black : Brushes.White, VisualTreeHelper.GetDpi(this).PixelsPerDip);
+        // Include the selected plate's outline in the packed footprint, not just its fill rectangle.
+        double outline = selected ? HaloPen.Thickness / 2 : 0;
+        _chips.Add(new(ft, new(at.X - 5 - outline, at.Y - 2 - outline,
+            ft.Width + 10 + outline * 2, ft.Height + 4 + outline * 2), selected, marker));
+    }
+
+    private void DrawChips(DrawingContext dc, IReadOnlyList<IPlaneMarker> markers)
+    {
+        var extent = _view.ExtentMm;
+        var visible = new Rect(_view.MmToScreen(extent.Min), _view.MmToScreen(extent.Max));
+        visible.Intersect(new Rect(_view.RenderSize));
+        if (visible.IsEmpty) return;
+        var bounds = new ScreenRect(visible.X, visible.Y, visible.Width, visible.Height);
+        var requests = _chips.Where(c => c.Marker is not { } p || visible.Contains(p)).ToArray();
+        var centres = markers.Select(m => _view.MmToScreen(new Vec2(m.X, m.Y)))
+            .Concat((MeasurementOverlay.GetFoundPeaks(_view) ?? Array.Empty<object>()).OfType<ImagingPeak>()
+                .Select(p => _view.MmToScreen(new Vec2(p.Xmm, p.Ymm))));
+        // The crosshair extends four DIPs beyond the seven-DIP ring/diamond; keep labels clear of it.
+        double radius = MarkerRadius + 4 + HaloPen.Thickness / 2;
+        var obstacles = centres.Select(p => new ScreenRect(p.X - radius, p.Y - radius, radius * 2, radius * 2)).ToArray();
+        double gap = (double)_view.FindResource("Space.Imaging.LabelGap");
+        var positions = OverlayLabelLayout.Arrange(requests.Select(c =>
+            (c.Preferred, new Vec2(c.Marker?.X ?? c.Preferred.X, c.Marker?.Y ?? c.Preferred.Y))).ToArray(), bounds, obstacles, gap);
+        // All leaders precede all plates, so no later leader can cross an earlier chip's text.
+        for (int i = 0; i < requests.Length; i++)
+        {
+            // When the visible image cannot hold a chip, omit it; the coordinate/measurement list remains available.
+            if (positions[i] is not { } placed) continue;
+            var chip = requests[i];
+            var box = new Rect(placed.X, placed.Y, placed.Width, placed.Height);
+            if (chip.Marker is { } anchor && placed != chip.Preferred)
+            {
+                var end = new Point(Math.Clamp(anchor.X, box.Left, box.Right), Math.Clamp(anchor.Y, box.Top, box.Bottom));
+                Segment(dc, anchor, end, chip.Selected ? SelectedPen : LinePen);
+            }
+        }
+        for (int i = 0; i < requests.Length; i++)
+        {
+            if (positions[i] is not { } placed) continue;
+            var chip = requests[i];
+            double outline = chip.Selected ? HaloPen.Thickness / 2 : 0;
+            var box = new Rect(placed.X + outline, placed.Y + outline,
+                placed.Width - outline * 2, placed.Height - outline * 2);
+            dc.DrawRoundedRectangle(chip.Selected ? SelectedChipBrush : ChipBrush, chip.Selected ? HaloPen : null, box, 3, 3);
+            dc.DrawText(chip.Text, new Point(box.Left + 5, box.Top + 2));
+        }
     }
 
     private static Point Mid(Point a, Point b) => new((a.X + b.X) / 2, (a.Y + b.Y) / 2);

@@ -1,7 +1,7 @@
 <UserControl x:Class="Gcam.Studio.Views.DetectorPanel"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    <Border Style="{StaticResource Panel.Surface}">
+    <Border Style="{StaticResource Panel.Surface}" VerticalAlignment="Top">
         <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
             <StackPanel>
                 <DockPanel Style="{StaticResource PanelHeader}"><TextBlock Text="Detector geometry" Style="{StaticResource Text.PanelTitle}" /></DockPanel>

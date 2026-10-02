@@ -55,8 +55,14 @@ are now visible. No layout was changed in this pass.
 | P-12 | Spectrum emission table | The Co-60 line energy and window bounds touch: `1173.2` immediately precedes `1100.4–1246.0`. The same fixed columns touch at both window sizes and in both themes. | spectrum-* |
 | P-13 | Imaging found-source overlays | At 1280×800 the found Cs-137 and Co-60 text labels nearly touch; truth and found markers are close together. At 1440×900 there is more room. | imaging-*-1280x800 |
 | P-14 | Shared locked inputs | Disabled chain selectors, source fields and seed are faint, especially in light theme. They remain readable in these captures; this is a visual observation, not a contrast measurement. | all light frames |
-| P-15 | Waveform | The ADC event #10 label is visible; the shaped trace has its marker line but no #10 text above the plot. Event #10 remains listed on the right. | waveform-* |
+| P-15 | Waveform | Intended: event labels appear only above the ADC plot (batch-3 label policy); the shaped plot keeps the same marker lines and shared time axis. Event #10 remains listed on the right. | waveform-* |
 | P-16 | Detector | The face and gain legend fit in both sizes and themes; the acquired-settings caption clearly says locked until Reset. The right geometry panel has substantial empty space below its explanatory text. | detector-* |
 
 The status bar, four workspace selectors, complete Spectrum table and both Waveform plots fit in all inspected
 frames. The focus-sweep interval is verified numerically by its desktop scenario, not by these captures.
+
+Batch-4 offscreen verification (2026-10-02) addresses P-12, P-13, P-14 and P-16: content-sized emission columns
+with an explicit gap, bounded collision layout for truth/found chips, disabled text contrast above 4.5:1 in both
+themes, and a Detector geometry card ending after its text. P-15 remains intended and unchanged.
+Fresh analytic fixtures are in [studio-render](../studio-render/README.md); both themes' affected 1280×800
+renders were opened and inspected. These survey desktop captures have not been replaced or revalidated.

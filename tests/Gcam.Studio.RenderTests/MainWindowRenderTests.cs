@@ -21,7 +21,7 @@ namespace Gcam.Studio.RenderTests;
 
 public sealed partial class PlotViewRenderTests
 {
-    private void RenderWindows(string theme, bool mixed = false, bool? opticsExpanded = null)
+    private void RenderWindows(string theme, bool mixed = false, bool? opticsExpanded = null, bool crowded = false)
     {
         // Share the existing STA/Application lifetime: WPF permits only one Application per AppDomain.
         var dictionaries = Application.Current.Resources.MergedDictionaries;
@@ -31,15 +31,15 @@ public sealed partial class PlotViewRenderTests
             { Source = new Uri($"/Gcam.Studio;component/Themes/{file}.xaml", UriKind.Relative) });
 
         var acquisition = new FixtureAcquisition();
-        var model = new MainViewModel(acquisition, new FixtureTheme(Enum.Parse<AppTheme>(theme)), new FixtureSpectrum(),
+        var model = new MainViewModel(acquisition, new FixtureTheme(Enum.Parse<AppTheme>(theme)), new FixtureSpectrum(mixed),
             mixed ? new FixtureImaging() : null, detectorFace: new Gcam.Studio.Services.DetectorFaceService())
             { SeedText = "12345" }; // fixed seed: the status line and the PNGs are reproducible (E-8)
         if (mixed)
         {
-            model.Sources[0].X = 15; model.Sources[0].Y = 8;
+            model.Sources[0].X = crowded ? -20 : 15; model.Sources[0].Y = crowded ? 0 : 8;
             model.AddSourceCommand.Execute(null);
             model.Sources[1].Isotope = "Co-60";
-            model.Sources[1].X = -15; model.Sources[1].Y = -8;
+            model.Sources[1].X = crowded ? 14 : -15; model.Sources[1].Y = crowded ? 0 : -8;
             model.Imaging.Strip = true;
         }
         // The fake publishes synchronously: no MC, timers, worker thread or dispatcher wait.
@@ -56,14 +56,15 @@ public sealed partial class PlotViewRenderTests
         }
         foreach (var size in new[] { new Size(1280, 800), new Size(1440, 900) })
         foreach (var workspace in model.Workspaces)
-        foreach (string isotope in mixed ? (workspace == model.Imaging ? new[] { "All", "Cs-137" } : Array.Empty<string>()) : new[] { "All" })
+        foreach (string isotope in mixed ? (workspace == model.Imaging ? (crowded ? ["All"] : new[] { "All", "Cs-137" })
+            : workspace == model.Spectrum && opticsExpanded is null && !crowded ? ["All"] : Array.Empty<string>()) : new[] { "All" })
         {
             model.SelectedWorkspace = workspace;
             model.Imaging.SelectedIsotope = isotope;
             // Construct XAML only. Never Show(), Run(), create an HWND, or send desktop input.
             var (root, content) = DetachMainWindow(model, size);
 
-            if (mixed)
+            if (mixed && workspace == model.Imaging)
             {
                 var selector = Assert.Single(Descendants(root).OfType<ComboBox>(),
                     c => AutomationProperties.GetAutomationId(c) == "Imaging.Channel");
@@ -90,6 +91,15 @@ public sealed partial class PlotViewRenderTests
             // Flush binding work only; no input is queued or synthesized.
             Dispatcher.CurrentDispatcher.Invoke(() => { }, DispatcherPriority.ContextIdle);
             root.UpdateLayout();
+
+            if (workspace == model.Spectrum) VerifyEmissionTable(root, model.Spectrum);
+            var seed = Assert.Single(Descendants(root).OfType<TextBox>(),
+                t => AutomationProperties.GetAutomationId(t) == "AcquisitionSeed");
+            Assert.False(seed.IsEnabled);
+            Assert.Equal(((SolidColorBrush)Application.Current.FindResource("Brush.Text.Disabled")).Color,
+                ((SolidColorBrush)seed.Foreground).Color);
+            Assert.Equal(((SolidColorBrush)Application.Current.FindResource("Brush.Bg.Surface")).Color,
+                ((SolidColorBrush)Descendants(seed).OfType<Border>().First().Background).Color);
 
             if (workspace == model.Imaging)
             {
@@ -139,12 +149,13 @@ public sealed partial class PlotViewRenderTests
             root.UpdateLayout();
             var bitmap = new RenderTargetBitmap((int)size.Width, (int)size.Height, 96, 96, PixelFormats.Pbgra32);
             bitmap.Render(root);
+            if (mixed && workspace == model.Imaging) VerifyOverlayChips(root);
             var encoder = new PngBitmapEncoder();
             encoder.Frames.Add(BitmapFrame.Create(bitmap));
             string directory = Path.Combine(RepositoryRoot(), "docs", "assets", "studio-render");
             Directory.CreateDirectory(directory);
             string path = Path.Combine(directory,
-                $"{workspace.Title.ToLowerInvariant()}{(opticsExpanded.HasValue ? "-optics-" + (opticsExpanded.Value ? "expanded" : "collapsed") + "-focus800" : "")}{(mixed ? "-mixed-" + isotope.ToLowerInvariant() : "")}-{theme.ToLowerInvariant()}-{size.Width:0}x{size.Height:0}.png");
+                $"{workspace.Title.ToLowerInvariant()}{(crowded ? "-crowded" : "")}{(opticsExpanded.HasValue ? "-optics-" + (opticsExpanded.Value ? "expanded" : "collapsed") + "-focus800" : "")}{(mixed ? "-mixed-" + isotope.ToLowerInvariant() : "")}-{theme.ToLowerInvariant()}-{size.Width:0}x{size.Height:0}.png");
             using var stream = File.Create(path);
             encoder.Save(stream);
             output.WriteLine(path);
@@ -153,6 +164,68 @@ public sealed partial class PlotViewRenderTests
             content.DataContext = null;
             root.UpdateLayout();
             Dispatcher.CurrentDispatcher.Invoke(() => { }, DispatcherPriority.ContextIdle);
+        }
+    }
+
+    private static void VerifyEmissionTable(DependencyObject root, SpectrumWorkspaceViewModel model)
+    {
+        var view = Assert.Single(Descendants(root).OfType<Gcam.Studio.Views.SpectrumView>());
+        var grids = Descendants(view).OfType<Grid>().Where(g => g.ColumnDefinitions.Count == 5).ToArray();
+        Assert.Equal(model.Lines.Count + 1, grids.Length);
+        var header = grids.Single(g => g.Children.OfType<TextBlock>().Any(t => t.Text == "Emission"));
+        var rightEdges = header.ColumnDefinitions.Skip(1).Select(c => c.Offset + c.ActualWidth).ToArray();
+        double gap = ((Thickness)Application.Current.FindResource("Gap.Inline")).Right;
+        foreach (var grid in grids)
+        {
+            for (int i = 1; i < 5; i++) Assert.Equal(rightEdges[i - 1], grid.ColumnDefinitions[i].Offset + grid.ColumnDefinitions[i].ActualWidth, 6);
+            var cells = grid.Children.OfType<TextBlock>().OrderBy(Grid.GetColumn).ToArray();
+            for (int i = 1; i < cells.Length; i++)
+            {
+                var left = cells[i - 1].TranslatePoint(new Point(cells[i - 1].ActualWidth, 0), view).X;
+                var right = cells[i].TranslatePoint(new Point(0, 0), view).X;
+                Assert.True(right - left >= gap - 0.01, $"{cells[i - 1].Text} / {cells[i].Text}: gap {right - left:F3}, required {gap}");
+                var text = new FormattedText(cells[i].Text, System.Globalization.CultureInfo.CurrentUICulture,
+                    FlowDirection.LeftToRight, new Typeface(cells[i].FontFamily, cells[i].FontStyle, cells[i].FontWeight, cells[i].FontStretch),
+                    cells[i].FontSize, Brushes.Black, null, TextFormattingMode.Display, 1);
+                Assert.True(cells[i].ActualWidth >= text.Width, $"Truncated table value: {cells[i].Text}");
+            }
+        }
+    }
+
+    private static void VerifyOverlayChips(DependencyObject root)
+    {
+        var adorner = Assert.Single(Descendants(root).OfType<MeasurementAdorner>(),
+            a => a.AdornedElement is HeatmapView { Name: "Recon" });
+        var view = (HeatmapView)adorner.AdornedElement;
+        var extent = view.ExtentMm;
+        var visible = new Rect(view.MmToScreen(extent.Min), view.MmToScreen(extent.Max));
+        visible.Intersect(new Rect(view.RenderSize));
+        var drawing = VisualTreeHelper.GetDrawing(adorner);
+        Assert.NotNull(drawing);
+        var chips = Drawings(drawing).OfType<GeometryDrawing>()
+            .Where(d => d.Geometry is RectangleGeometry { RadiusX: 3, RadiusY: 3 })
+            .Select(d =>
+            {
+                var rect = ((RectangleGeometry)d.Geometry).Rect;
+                if (d.Pen is { } pen) rect.Inflate(pen.Thickness / 2, pen.Thickness / 2);
+                return new ScreenRect(rect.X, rect.Y, rect.Width, rect.Height);
+            }).ToArray();
+        int expected = MeasurementOverlay.GetMarkers(view)!.Cast<IPlaneMarker>().Count()
+            + MeasurementOverlay.GetFoundPeaks(view)!.Cast<ImagingPeak>().Count();
+        Assert.Equal(expected, chips.Length);
+        var bounds = new ScreenRect(visible.X, visible.Y, visible.Width, visible.Height);
+        double gap = (double)Application.Current.FindResource("Space.Imaging.LabelGap");
+        Assert.All(chips, c => Assert.True(bounds.Contains(c), $"Chip outside visible image: {c}"));
+        for (int i = 0; i < chips.Length; i++)
+            for (int j = i + 1; j < chips.Length; j++) Assert.True(chips[i].IsSeparatedFrom(chips[j], gap));
+
+        static IEnumerable<Drawing> Drawings(DrawingGroup group)
+        {
+            foreach (var child in group.Children)
+            {
+                yield return child;
+                if (child is DrawingGroup nested) foreach (var drawing in Drawings(nested)) yield return drawing;
+            }
         }
     }
 
@@ -239,7 +312,7 @@ public sealed partial class PlotViewRenderTests
         public ValueTask DisposeAsync() => ValueTask.CompletedTask;
     }
 
-    private sealed class FixtureSpectrum : ISpectrumService
+    private sealed class FixtureSpectrum(bool mixed = false) : ISpectrumService
     {
         public double Resolution662 => 0.0457;
         public double ResolvingTimeS => 730e-9;
@@ -248,16 +321,20 @@ public sealed partial class PlotViewRenderTests
             int seed = 909, CancellationToken cancellationToken = default)
         {
             // Analytic drawing fixture, not a physics result. Peaks exercise the 10,000 log tick.
-            const int bins = 256;
+            int bins = mixed ? 512 : 256;
             const double width = 3;
             var centres = Enumerable.Range(0, bins).Select(i => (i + 0.5) * width).ToArray();
             var counts = centres.Select(x => Math.Round(11000 * Gaussian(x, 34, 5)
-                + 1600 * Gaussian(x, 661.7, 14) + (x < 478 ? 80 * Math.Exp(-x / 300) : 0))).ToArray();
+                + 1600 * Gaussian(x, 661.7, 14) + (mixed ? 750 * Gaussian(x, 1173.2, 20) + 650 * Gaussian(x, 1332.5, 21) : 0)
+                + (x < 478 ? 80 * Math.Exp(-x / 300) : 0))).ToArray();
             SpectrumBand[] bands =
             [
                 new([new("Cs-137", 32.1, EmissionKind.XRay, "Ba K"), new("Cs-137", 36.4, EmissionKind.XRay, "Ba K")], 25.5, 43.5, 1094, 0.169),
                 new([new("Cs-137", 661.7)], 616.3, 707.1, 1966, 0.304)
             ];
+            if (mixed) bands = [.. bands,
+                new([new("Co-60", 1173.2)], 1100.4, 1246.0, 42, 0.0065),
+                new([new("Co-60", 1332.5)], 1251.2, 1413.8, 38, 0.0059)];
             return Task.FromResult(new Gcam.Studio.Core.Services.SpectrumView(centres, counts, bands,
                 6463, 0, 0.473, Resolution662, ResolvingTimeS, FrontEndParts.Default.ToString(), TimeSpan.Zero)
                 { BinEdgesKeV = Enumerable.Range(0, bins + 1).Select(i => i * width).ToArray() });

@@ -7,7 +7,7 @@
             <DockPanel DockPanel.Dock="Top" Style="{StaticResource PanelHeader}">
                 <TextBlock DockPanel.Dock="Left" Text="Spectrum" Style="{StaticResource Text.PanelTitle}" />
             </DockPanel>
-            <StackPanel DockPanel.Dock="Bottom">
+            <StackPanel DockPanel.Dock="Bottom" Grid.IsSharedSizeScope="True">
                 <TextBlock Text="{Binding Readout, ElementName=SpectrumPlot}" Style="{StaticResource Text.Mono}"
                            Height="{StaticResource Size.ReadoutLine}" Margin="{StaticResource Gap.Field}" />
                 <TextBlock Text="{Binding Summary}" Style="{StaticResource Text.Caption}" Margin="{StaticResource Gap.Field}" />
@@ -15,20 +15,20 @@
                 <DockPanel Style="{StaticResource PanelHeader}">
                     <TextBlock Text="Emission windows" Style="{StaticResource Text.PanelTitle}" />
                 </DockPanel>
-                <!-- Column header: same columns and the same inner padding (Pad.ListItem) as the rows; numbers right-aligned -->
+                <!-- Shared Auto columns measure headers and realized rows together; cell gaps are explicit. -->
                 <Border Padding="{StaticResource Pad.ListItem}" Margin="{StaticResource Gap.Tight}">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="{StaticResource Size.Column.Value}" />
-                        <ColumnDefinition Width="{StaticResource Size.Column.Value}" />
-                        <ColumnDefinition Width="{StaticResource Size.Column.Value}" />
-                        <ColumnDefinition Width="{StaticResource Size.Column.Short}" />
+                        <ColumnDefinition Width="Auto" SharedSizeGroup="EmissionLine" />
+                        <ColumnDefinition Width="Auto" SharedSizeGroup="EmissionWindow" />
+                        <ColumnDefinition Width="Auto" SharedSizeGroup="EmissionCounts" />
+                        <ColumnDefinition Width="Auto" SharedSizeGroup="EmissionShare" />
                     </Grid.ColumnDefinitions>
-                    <TextBlock Text="Emission" Style="{StaticResource Text.ColumnHeader}" />
-                    <TextBlock Grid.Column="1" Text="Line (keV)" Style="{StaticResource Text.ColumnHeader}" HorizontalAlignment="Right" />
-                    <TextBlock Grid.Column="2" Text="Window (keV)" Style="{StaticResource Text.ColumnHeader}" HorizontalAlignment="Right" />
-                    <TextBlock Grid.Column="3" Text="Counts" Style="{StaticResource Text.ColumnHeader}" HorizontalAlignment="Right" />
+                    <TextBlock Text="Emission" Style="{StaticResource Text.ColumnHeader}" Margin="{StaticResource Gap.Inline}" />
+                    <TextBlock Grid.Column="1" Text="Line (keV)" Style="{StaticResource Text.ColumnHeader}" HorizontalAlignment="Right" Margin="{StaticResource Gap.Inline}" />
+                    <TextBlock Grid.Column="2" Text="Window (keV)" Style="{StaticResource Text.ColumnHeader}" HorizontalAlignment="Right" Margin="{StaticResource Gap.Inline}" />
+                    <TextBlock Grid.Column="3" Text="Counts" Style="{StaticResource Text.ColumnHeader}" HorizontalAlignment="Right" Margin="{StaticResource Gap.Inline}" />
                     <TextBlock Grid.Column="4" Text="Share" Style="{StaticResource Text.ColumnHeader}" HorizontalAlignment="Right" />
                 </Grid>
                 </Border>
@@ -44,16 +44,16 @@
                         <DataTemplate>
                             <Grid>
                                 <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*" />
-                                                <ColumnDefinition Width="{StaticResource Size.Column.Value}" />
-                                                <ColumnDefinition Width="{StaticResource Size.Column.Value}" />
-                                                <ColumnDefinition Width="{StaticResource Size.Column.Value}" />
-                                                <ColumnDefinition Width="{StaticResource Size.Column.Short}" />
-                                            </Grid.ColumnDefinitions>
-                                <TextBlock Text="{Binding Name}" Style="{StaticResource Text.Body}" />
-                                <TextBlock Grid.Column="1" Text="{Binding Energies}" Style="{StaticResource Text.Mono}" HorizontalAlignment="Right" />
-                                <TextBlock Grid.Column="2" Text="{Binding Window}" Style="{StaticResource Text.Mono}" HorizontalAlignment="Right" />
-                                <TextBlock Grid.Column="3" Text="{Binding Counts, StringFormat=N0}" Style="{StaticResource Text.Mono}" HorizontalAlignment="Right" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" SharedSizeGroup="EmissionLine" />
+                                    <ColumnDefinition Width="Auto" SharedSizeGroup="EmissionWindow" />
+                                    <ColumnDefinition Width="Auto" SharedSizeGroup="EmissionCounts" />
+                                    <ColumnDefinition Width="Auto" SharedSizeGroup="EmissionShare" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="{Binding Name}" Style="{StaticResource Text.Body}" Margin="{StaticResource Gap.Inline}" />
+                                <TextBlock Grid.Column="1" Text="{Binding Energies}" Style="{StaticResource Text.Mono}" HorizontalAlignment="Right" Margin="{StaticResource Gap.Inline}" />
+                                <TextBlock Grid.Column="2" Text="{Binding Window}" Style="{StaticResource Text.Mono}" HorizontalAlignment="Right" Margin="{StaticResource Gap.Inline}" />
+                                <TextBlock Grid.Column="3" Text="{Binding Counts, StringFormat=N0}" Style="{StaticResource Text.Mono}" HorizontalAlignment="Right" Margin="{StaticResource Gap.Inline}" />
                                 <TextBlock Grid.Column="4" Text="{Binding Share, StringFormat=P1}" Style="{StaticResource Text.Mono}" HorizontalAlignment="Right" />
                             </Grid>
                         </DataTemplate>

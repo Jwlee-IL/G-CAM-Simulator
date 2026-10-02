@@ -79,6 +79,10 @@ public sealed partial class PlotViewRenderTests
                     Assert.True(face.ActualWidth > 0 && face.ActualHeight > 0);
                     var identity = Assert.Single(Descendants(root).OfType<TextBlock>(), t => AutomationProperties.GetAutomationId(t) == "Detector.Identity");
                     Assert.Equal(model.DetectorWorkspace.Identity, identity.Text);
+                    var panel = Assert.Single(Descendants(root).OfType<DetectorPanel>());
+                    var card = Assert.Single(panel.Content as Border is { } border ? new[] { border } : []);
+                    Assert.Equal(VerticalAlignment.Top, card.VerticalAlignment);
+                    Assert.True(card.ActualHeight < panel.ActualHeight);
                 }
                 else
                 {

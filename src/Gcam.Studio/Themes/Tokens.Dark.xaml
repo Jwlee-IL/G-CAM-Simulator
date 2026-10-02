@@ -14,7 +14,7 @@
     <Color x:Key="Color.Line.Control">#5E6E7A</Color>
     <Color x:Key="Color.Text.Primary">#E8EDF1</Color>
     <Color x:Key="Color.Text.Secondary">#A6B1BB</Color>
-    <Color x:Key="Color.Text.Disabled">#6B7883</Color>
+    <Color x:Key="Color.Text.Disabled">#85919C</Color>
     <Color x:Key="Color.Accent">#4FC8E3</Color>
     <Color x:Key="Color.Accent.Hover">#6FD4EA</Color>
     <Color x:Key="Color.Accent.Pressed">#38AFCA</Color>
