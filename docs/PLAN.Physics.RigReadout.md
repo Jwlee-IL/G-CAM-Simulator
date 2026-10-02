@@ -1,4 +1,4 @@
-# PLAN.Physics.RigReadout — the original rig's readout: light sharing, SiPM pitch, four-channel Anger positioning (TODO-19)
+# PLAN.Physics.RigReadout — a conventional Anger readout: light sharing, SiPM pitch, four-channel positioning (TODO-19)
 
 Scope: model how the author's instrument actually turned scintillation light into an event position and energy —
 GAGG pixels on a SiPM array, read through **four 14-bit ADC channels** with Anger-type (relative-signal) positioning,
