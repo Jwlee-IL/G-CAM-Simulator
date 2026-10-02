@@ -6,7 +6,10 @@ Scope: the polish work the author made the focus on 2026-10-01 — what each bat
 the testing rule: [PLAN.Studio.Migration](PLAN.Studio.Migration.md).
 
 Status: batch 1 done 2026-10-01 (renders in `docs/assets/studio-render/`); batch 2 done the same day (detector section, label plates, no
-Window-ancestor bindings; FCFOV now in the renders).
+Window-ancestor bindings; FCFOV now in the renders); batch 3 (workspace layout) **done** 2026-10-02 by the substitute implementer (Codex out of credits): all rows except L-14, L-15
+and the status-bar part of L-10, held for TODO-24 (Start / Stop / Reset removes the stale state); plus the Ba K X-ray
+origin in the engine's line data and the desktop-test readout parser. Planner re-verified: build 0 / 0, tests
+262 / 162 / 67 (+7) / 10 (+9), renders reviewed.
 
 ## Batch 1 — design-system level (new workspaces inherit these)
 
@@ -51,6 +54,46 @@ Fixes:
   selected-source `IsEnabled`, FCFOV). Bind to the view model through the data context that is already there (an
   element name on the root content, or the workspace / panel's own context), so a view works the same inside the
   window and in the offscreen render; the FCFOV value then shows in the renders.
+
+## Batch 3 — workspace layout (reference plan, 2026-10-02)
+
+All four workspaces exist (TODO-11 done). Issues below are seen in the renders of `7d0fd73`
+(`docs/assets/studio-render/`); causes are **not yet checked in the code** — each row is *verify* for the implementer's
+review, which may also add issues it finds in the renders.
+
+| # | Issue (render) | Proposed direction |
+|---|---|---|
+| L-1 | Left panel scrolls at 1280 × 800 (every workspace): sources, detection chain with two long "Next / Acquired" lines, selected source, physical optics, detector | collapsible Detection chain like Physical optics, with a one-line summary; "Next acquisition" shown only when it differs from "Acquired" |
+| L-2 | Imaging right panel: Focus sweep and External range fall below the fold at 1280 × 800; focal-plane facts paragraph is long | group into collapsible sections (Focus / Channel / Focus sweep / External range) or move the sweep and range into one section; keep AutomationIds |
+| L-3 | Reconstruction chip reads "peak (0.0, 0.0) mm" in the two-source scenes while the peaks are found at (15, 8) and (−15, −8) | *verify* where the chip's estimate comes from (All channel's single estimate vs found peaks); show what is true for the selected channel (e.g. "2 found", or the strongest found peak) |
+| L-4 | Inconsistent readout digits: "18.5323 (decoded)", "R = 0.2750", colour-bar 1000/2000 vs readout | one formatting rule per quantity (significant digits from the design system), applied to heatmap readouts, chips and ratios |
+| L-5 | "Outdated" chip touches the panel title ("Waveform · energy sum[Outdated]") | header layout: title and chips as separate columns with the standard gap, as in Imaging |
+| L-6 | Collapsed optics summary cut ("30×30 @ 0.6…") | wrap to two lines or shorten the summary format |
+| L-7 | Empty height under the flood / reconstruction images (P-04), large at 1440 × 900 | let the image panels fill the row (square images sized to the available height), or give the space to the focus-curve panel |
+| L-8 | Spectrum emission-window table: values not aligned to headers; the Ba K row reads "Cs-137 · 32.1 + 36.4" (P-10) | tabular alignment (right-aligned numbers under right-aligned headers); row label "Cs-137 Ba K X-rays" for the merged band |
+| L-9 | Waveform event-marker labels (plated) hide the tops of tall pulses | label rows above the plot area (as band labels), markers as lines only inside the plot |
+| L-10 | Status bar "79 cps" vs Detector panel "50.6 cps" in the same scene | label each: status bar "expected rate" (MC) vs panel "observed (counts / live time)"; or show one |
+
+**Judging:** the same offscreen renders (both themes, both sizes, all scenes) before / after; no desktop tests.
+
+### Batch 3 — decisions after review (2026-10-02)
+
+Review: [PLAN.Studio.Polish.Review](PLAN.Studio.Polish.Review.md) (substitute implementer — Codex out of credits):
+2 rows right, 8 with corrected causes, 8 new (L-11 … L-18). Adopted as written there, in its order (renders after
+each group): **1** L-11, L-16, L-17, L-18 → **2** L-5 + L-14 + L-15, L-6, L-3, L-10 → **3** L-1 → **4** L-2 + L-13, L-7
+→ **5** L-8, L-4 → **6** L-12, L-9. The planner's answers to the review's questions:
+
+| Question | Decision | Reason |
+|---|---|---|
+| L-1: "Chain.Pending" conditional | **yes** — shown only when the pending chain differs from the acquired one; update the two tests and the SRS row | it repeats the three combo boxes above it |
+| L-2: SR-OPT-05 precision note | **yes** — one-line caption with the full text in a tooltip; SRS row reworded, the evidence numbers stay in the VV document | the note is evidence, not an instruction; the fold matters more |
+| L-7: measurements under the images | **yes** — Tools and the measurements table move under the images (fixes L-2's fold too); AutomationIds unchanged | the images are width-limited, so only content can use the empty height |
+| L-8: Ba K label source | **engine data** — an emission-line kind (gamma / X-ray) on the isotope lines, default gamma; Studio names a merged X-ray band "Ba K X-rays" | the line's nature is physics data, one source of truth; Studio must not keep its own isotope table |
+| L-4: acquisition time digits | **keep ns resolution** (9 decimals) in the event list — it is the event's identity at the ADC's 8 ns sampling; group the digits for readability | — |
+| L-10 | status bar shows counts / live time (observed), like the Detector panel; fix the Waveform fixture's +1 s | one rate everywhere, the measured one |
+| L-17 | renders deterministic (fixture-supplied worker time) | renders are review artefacts; noise in diffs hides real changes |
+
+The author may override any row; desktop checks stay in TODO-22.
 
 ## Later batches (after the workspaces exist)
 
