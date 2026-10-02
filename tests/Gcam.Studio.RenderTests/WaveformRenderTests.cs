@@ -84,7 +84,7 @@ public sealed partial class PlotViewRenderTests
                 var bitmap = new RenderTargetBitmap((int)size.Width, (int)size.Height, 96, 96, PixelFormats.Pbgra32);
                 bitmap.Render(root);
                 var encoder = new PngBitmapEncoder(); encoder.Frames.Add(BitmapFrame.Create(bitmap));
-                string directory = Path.Combine(RepositoryRoot(), "docs", "assets", "studio-render");
+                string directory = SnapshotDirectory("studio-render");
                 Directory.CreateDirectory(directory);
                 string path = Path.Combine(directory, $"waveform-{mode}-{theme.ToLowerInvariant()}-{size.Width:0}x{size.Height:0}.png");
                 using (var stream = File.Create(path)) encoder.Save(stream);

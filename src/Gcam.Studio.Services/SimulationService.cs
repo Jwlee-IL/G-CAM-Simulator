@@ -21,8 +21,21 @@ public sealed class SimulationService(TimeProvider? timeProvider = null) : IAcqu
     }
 
     /// <summary>Studio applies its realism inputs to a clone; existing scene-builder callers stay unchanged.</summary>
+    public IAcquisitionSession StartAmbient(IReadOnlyList<SceneSource> scene, OpticsSettings optics,
+        double liveTimeS, double speed, AmbientFieldConfig ambient, DetectorSettings? detector = null,
+        double backgroundToSignalRatio = 0, int? seed = null)
+    {
+        ArgumentNullException.ThrowIfNull(ambient);
+        if (!(liveTimeS > 0) || !double.IsFinite(liveTimeS)) throw new ArgumentOutOfRangeException(nameof(liveTimeS));
+        if (!(speed > 0) || !double.IsFinite(speed)) throw new ArgumentOutOfRangeException(nameof(speed));
+        detector ??= new DetectorSettings();
+        var config = BuildConfig(scene, optics, detector, backgroundToSignalRatio, ambient);
+        if (seed is { } fixedSeed) config.Seed = fixedSeed;
+        return new AcquisitionSession(config, detector, liveTimeS, speed, timeProvider ?? TimeProvider.System);
+    }
+
     public static SimulationConfig BuildConfig(IReadOnlyList<SceneSource> scene, OpticsSettings optics,
-        DetectorSettings detector, double backgroundToSignalRatio = 0)
+        DetectorSettings detector, double backgroundToSignalRatio = 0, AmbientFieldConfig? ambient = null)
     {
         ArgumentNullException.ThrowIfNull(detector);
         string? error = OpticsPolicy.Validate(optics, detector.ReflectorGapMm)
@@ -45,6 +58,12 @@ public sealed class SimulationService(TimeProvider? timeProvider = null) : IAcqu
         config.Detector.UniformitySeed = detector.GainSeed;
         if (backgroundToSignalRatio > 0)
             config.Background = new BackgroundConfig { BackgroundToSignalRatio = backgroundToSignalRatio };
+        if (ambient is not null)
+        {
+            config.Ambient = ambient;
+            if (scene.Count == 0) { config.Source.ActivityBq = 0; config.Sources = []; }
+            config = config.Clone(); // freeze the field and its spectrum along with the detector and scene
+        }
         return config;
     }
 

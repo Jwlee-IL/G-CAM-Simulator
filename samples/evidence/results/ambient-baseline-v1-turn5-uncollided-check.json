@@ -1,0 +1,163 @@
+{
+  "SchemaVersion": 1,
+  "Kind": "uncollided-kernel-check-NOT-VALIDATED",
+  "IsValidatedSpectrum": false,
+  "Note": "Not a terrestrial spectrum, not a collided transport calculation, and not UNSCEAR validation.",
+  "Request": {
+    "SchemaVersion": 1,
+    "Kind": "synthetic-uncollided-kernel-fixture-NOT-VALIDATED",
+    "Note": "Synthetic coefficients for a mathematical transport check; not soil or air material data and not a terrestrial spectrum.",
+    "PhotonYieldPerDecay": 0.3,
+    "SoilDensityGPerCm3": 1.7,
+    "SoilMuPerCm": 0.12,
+    "AirMuPerCm": 0.003,
+    "HeightCm": 100,
+    "Histories": 200000,
+    "ZenithBins": 16,
+    "Seed": 7283
+  },
+  "Mc": {
+    "Histories": 200000,
+    "ZenithCounts": [
+      11,
+      496,
+      1801,
+      3021,
+      4252,
+      5236,
+      5859,
+      6746,
+      6996,
+      7414,
+      7981,
+      8166,
+      8660,
+      8942,
+      9036,
+      9128
+    ],
+    "FluenceNormalizationPerBqKg": 0.002125,
+    "FluencePerBqKg": 0.000996040625,
+    "StandardErrorPerBqKg": 2.371175893886543E-06
+  },
+  "AnalyticFluence": 0.0009968698535052986,
+  "Ratio": 0.9991681677378619,
+  "RatioStandardError": 0.002378621327095774,
+  "Angular": [
+    {
+      "LowCosine": 0,
+      "HighCosine": 0.0625,
+      "Accepted": 11,
+      "McFluence": 1.16875E-07,
+      "AnalyticFluence": 1.667296451885088E-07
+    },
+    {
+      "LowCosine": 0.0625,
+      "HighCosine": 0.125,
+      "Accepted": 496,
+      "McFluence": 5.27E-06,
+      "AnalyticFluence": 5.799560350742365E-06
+    },
+    {
+      "LowCosine": 0.125,
+      "HighCosine": 0.1875,
+      "Accepted": 1801,
+      "McFluence": 1.9135625000000002E-05,
+      "AnalyticFluence": 1.945529116038345E-05
+    },
+    {
+      "LowCosine": 0.1875,
+      "HighCosine": 0.25,
+      "Accepted": 3021,
+      "McFluence": 3.2098125000000005E-05,
+      "AnalyticFluence": 3.360246542923609E-05
+    },
+    {
+      "LowCosine": 0.25,
+      "HighCosine": 0.3125,
+      "Accepted": 4252,
+      "McFluence": 4.5177500000000006E-05,
+      "AnalyticFluence": 4.561441793783538E-05
+    },
+    {
+      "LowCosine": 0.3125,
+      "HighCosine": 0.375,
+      "Accepted": 5236,
+      "McFluence": 5.56325E-05,
+      "AnalyticFluence": 5.541523493475369E-05
+    },
+    {
+      "LowCosine": 0.375,
+      "HighCosine": 0.4375,
+      "Accepted": 5859,
+      "McFluence": 6.225187500000001E-05,
+      "AnalyticFluence": 6.340589879567583E-05
+    },
+    {
+      "LowCosine": 0.4375,
+      "HighCosine": 0.5,
+      "Accepted": 6746,
+      "McFluence": 7.167625E-05,
+      "AnalyticFluence": 6.998583181285616E-05
+    },
+    {
+      "LowCosine": 0.5,
+      "HighCosine": 0.5625,
+      "Accepted": 6996,
+      "McFluence": 7.43325E-05,
+      "AnalyticFluence": 7.54722113941545E-05
+    },
+    {
+      "LowCosine": 0.5625,
+      "HighCosine": 0.625,
+      "Accepted": 7414,
+      "McFluence": 7.877375000000001E-05,
+      "AnalyticFluence": 8.010403121723529E-05
+    },
+    {
+      "LowCosine": 0.625,
+      "HighCosine": 0.6875,
+      "Accepted": 7981,
+      "McFluence": 8.479812500000001E-05,
+      "AnalyticFluence": 8.405982230438042E-05
+    },
+    {
+      "LowCosine": 0.6875,
+      "HighCosine": 0.75,
+      "Accepted": 8166,
+      "McFluence": 8.676375000000001E-05,
+      "AnalyticFluence": 8.747375261001087E-05
+    },
+    {
+      "LowCosine": 0.75,
+      "HighCosine": 0.8125,
+      "Accepted": 8660,
+      "McFluence": 9.20125E-05,
+      "AnalyticFluence": 9.044778922239903E-05
+    },
+    {
+      "LowCosine": 0.8125,
+      "HighCosine": 0.875,
+      "Accepted": 8942,
+      "McFluence": 9.500875000000001E-05,
+      "AnalyticFluence": 9.306042837644469E-05
+    },
+    {
+      "LowCosine": 0.875,
+      "HighCosine": 0.9375,
+      "Accepted": 9036,
+      "McFluence": 9.600750000000001E-05,
+      "AnalyticFluence": 9.537288640777382E-05
+    },
+    {
+      "LowCosine": 0.9375,
+      "HighCosine": 1,
+      "Accepted": 9128,
+      "McFluence": 9.698500000000001E-05,
+      "AnalyticFluence": 9.743350190624038E-05
+    }
+  ],
+  "AcceptanceSigmaMultiplier": 6,
+  "PassesUncollidedKernelCheck": true,
+  "ComputeSeconds": 0.0080256
+}

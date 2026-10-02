@@ -1,0 +1,13 @@
+{
+  "SchemaVersion": 1,
+  "Kind": "synthetic-uncollided-kernel-fixture-NOT-VALIDATED",
+  "Note": "Synthetic coefficients for a mathematical transport check; not soil or air material data and not a terrestrial spectrum.",
+  "PhotonYieldPerDecay": 0.3,
+  "SoilDensityGPerCm3": 1.7,
+  "SoilMuPerCm": 0.12,
+  "AirMuPerCm": 0.003,
+  "HeightCm": 100,
+  "Histories": 200000,
+  "ZenithBins": 16,
+  "Seed": 7283
+}

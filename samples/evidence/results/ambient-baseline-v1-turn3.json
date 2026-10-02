@@ -1,0 +1,60 @@
+{
+  "SchemaVersion": 1,
+  "Task": "TODO-30",
+  "Turn": 3,
+  "Date": "2026-10-03",
+  "Status": "stopped_on_AB-4a_photon_multiplicity_premise",
+  "ImplementationComplete": false,
+  "Specification": "docs/PLAN.Physics.AmbientBackground.md: Correction AB-4a",
+  "PremiseFailure": {
+    "Clause": "photon yield per decay <= the evaluated alpha / beta feeding of excited levels",
+    "Reason": "Feeding bounds the number of initiated de-excitation cascades, not the number of emitted photons. A cascade can emit multiple photons from one feeding event. This clause is not a conservative photon-count bound unless at most one photon per feeding is established for the branch.",
+    "PublishedCounterexample": {
+      "Nuclide": "Pb-214",
+      "Evaluation": "Shaofei Zhu and E. A. McCutchan, Nuclear Data Sheets 175, 1 (2021), adopted levels and gammas, literature cutoff 2021-05-01",
+      "Url": "https://www.nndc.bnl.gov/ensnds/214/Pb/adopted.pdf",
+      "InitialLevelKeV": 1179,
+      "IntermediateLevelKeV": 835,
+      "FinalLevelKeV": 0,
+      "GammaEnergiesKeV": [344, 835],
+      "Explanation": "The evaluated scheme contains both transitions. A radiative traversal emits two photons for one feeding of the initial level. These data demonstrate the invalid general inequality; they are not substituted Po-218 photon intensities. Internal conversion can reduce the photon count but does not establish a universal one-photon maximum."
+    },
+    "ValidPart": "Total photon energy per parent decay is bounded by the sum of absolute excited-level feeding probabilities times excitation energies, for the nuclear de-excitation cascade.",
+    "ProposedCorrectionForPlanner": [
+      "If each omitted branch has a justified maximum photon multiplicity m_i, bound emitted photon yield by sum(f_i * m_i), where f_i is absolute feeding per parent decay.",
+      "Alternatively, for a declared photon cutoff E_min > 0, energy conservation bounds emitted photons above that cutoff by sum(f_i * E_i) / E_min. This bounds only photons above the declared cutoff, not total photon yield.",
+      "Convert emission bounds into incident fluence and air-kerma bounds using a conservative transport response; retain the 1e-3 chain-kerma threshold unchanged.",
+      "A branch-specific one-photon bound can be used only when the evaluated de-excitation scheme justifies it. Feeding remains bound-only input, never a substitute line intensity."
+    ]
+  },
+  "CompletedIndependentWork": {
+    "File": "samples/evidence/results/ambient-baseline-v1-prerequisites.json",
+    "Changes": [
+      "All source snapshot paths are now relative to the TEMP work folder.",
+      "Test assembly names are basenames; machine-specific TRX paths were removed.",
+      "Source URLs, source hashes, historical test counts and turn-2 status were retained."
+    ],
+    "Validation": "JSON reparsed successfully. Serialized report checked for drive-root paths, Users path segments and the machine-name marker; none remain. No implementation or test code changed."
+  },
+  "ABStatus": {
+    "AB-1": "Pending engine integration; no implementation changes.",
+    "AB-2": "Pending both bounding geometries; neither bound measured.",
+    "AB-3": "Accepted deferred-physics limits unchanged.",
+    "AB-4": "Spectrum generator and UNSCEAR comparison pending; stopped on the AB-4a general photon-yield bound.",
+    "AB-4a": "Energy bound accepted; general photon-count inequality fails for cascades. No omission certified and no feeding used as line intensity.",
+    "AB-5": "Studio unchanged; input and readout pending.",
+    "AB-6": "Source-free fixed-time API pending.",
+    "AB-7": "Gate study not run; selection and validation acquisitions N=0 for both bounds.",
+    "AB-8": "No code changes; new ambient-null compatibility proof pending.",
+    "AB-9": "Ambient remeasurements not run; all requested families N=0 for both bounds."
+  },
+  "SpectrumGenerated": false,
+  "CertifiedOmissions": [],
+  "Po218OmissionBoundCertified": false,
+  "SoilTransportHistories": 0,
+  "UnscearComparison": null,
+  "NewTestsRun": 0,
+  "Verification": "No build or test rerun for JSON-only changes. Last observed turn-2 verification: build 0 errors / 2 warnings; engine 298 passed; Studio.Core 179 passed; services 83 passed / 7 skipped; UI project 13 headless passed / 14 desktop skipped; render 1 skipped.",
+  "Remaining": "Resolve the AB-4a multiplicity premise, then continue the ordered turn-2 work list without changing the kerma threshold, gate sample sizes or validation tolerances.",
+  "ApprovalRequests": []
+}

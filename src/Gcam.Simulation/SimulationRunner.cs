@@ -30,6 +30,8 @@ public sealed class SimulationRunner : ISimulation
     public SimulationResult Run(SimulationConfig config, IProgress<double>? progress, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
+        if (config.Ambient is not null)
+            throw new InvalidOperationException("Weighted photon-budget runs cannot mix absolute ambient counts. Use RunFixedTime with an explicit duration.");
 
         var rng = _factory.CreateRandom(config);
         var source = _factory.CreateSource(config);
@@ -73,6 +75,27 @@ public sealed class SimulationRunner : ISimulation
             PhotonsEmitted = emitted,
             PhotonsDetected = detected,
             DetectedWeight = detectedWeight,
+        };
+    }
+
+    /// <summary>Observed Poisson counts at physical source activity and absolute field strength, in explicit live time.
+    /// Separate from Run's weighted photon-budget units; no normalized study silently rescales ambient counts.</summary>
+    public SimulationResult RunFixedTime(SimulationConfig config, double durationS, CancellationToken cancellationToken = default)
+    {
+        if (!(durationS >= 0) || !double.IsFinite(durationS)) throw new ArgumentOutOfRangeException(nameof(durationS));
+        using var source = new ListModeSource(config);
+        var image = new DetectorImage(config.Detector.PixelsX, config.Detector.PixelsY);
+        long count = 0;
+        while (source.ArrivalTimeS < durationS)
+            if (source.AdvanceUntil(durationS, cancellationToken) is { } e)
+            { image.Add(e.PixelX, e.PixelY, 1); count++; }
+        var decoded = count > 0 ? _factory.CreateDecoder(config)?.Decode(image) : null;
+        return new SimulationResult
+        {
+            DetectorImage = image, PhotonsEmitted = source.HistoriesEmitted,
+            PhotonsDetected = count, DetectedWeight = count,
+            Estimate = decoded?.Estimate, Reconstruction = decoded?.Reconstruction,
+            ReconOriginMm = decoded?.ReconOriginMm ?? 0, ReconStepMm = decoded?.ReconStepMm ?? 0
         };
     }
 }

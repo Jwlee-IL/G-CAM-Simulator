@@ -1,0 +1,410 @@
+{
+  "SchemaVersion": 1,
+  "Task": "TODO-30",
+  "Turn": 2,
+  "Date": "2026-10-03",
+  "Status": "blocked_on_AB-4_decay_data",
+  "ImplementationComplete": false,
+  "Head": "6e44d8b01fac923ff7671fd16257e6e62f6d4562",
+  "Specification": "docs/PLAN.Physics.AmbientBackground.md: Decisions after review (2026-10-03)",
+  "Blocker": {
+    "Nuclide": "Po-218",
+    "Item": "AB-4 evaluated photon emission data for the U-238 series",
+    "Observation": "IAEA LiveChart gamma-decay request returns numeric no-data response 0, not a tabulated zero emission probability. The accessible ENSDF alpha-decay evaluation lists an excited daughter level but no evaluated gamma energies or photon emission probabilities. DDEP Po-218 PDF could not be fetched. No gamma line or zero photon yield has been inferred.",
+    "RequiredResolution": "An accessible evaluated photon-emission dataset for Po-218, or an explicit specification decision permitting and quantifying the omission of the unresolved weak branch. Do not silently substitute daughter level energies or alpha feeding for evaluated photon intensities.",
+    "AccessibleEvaluation": {
+      "Url": "https://www.nndc.bnl.gov/ensnds/214/Pb/a_decay_3.097_m.pdf",
+      "Title": "214Pb: 218Po alpha decay (3.097 min)",
+      "Evaluators": "Shaofei Zhu and E. A. McCutchan",
+      "Publication": "Nuclear Data Sheets 175, 1 (2021)",
+      "LiteratureCutoff": "2021-05-01",
+      "Sha256": "fb720c809c7f9a7d65f336a90ff7f66ce6a366ab26b8482437bc50b8759ecf7e",
+      "Snapshot": "218po-alpha-ensdf.pdf"
+    },
+    "FailedRetrievals": [
+      {
+        "Url": "https://www.lnhb.fr/nuclides/Po-218_tables.pdf",
+        "WebTool": "502 Bad Gateway",
+        "DirectGet": "Connection refused"
+      },
+      {
+        "Url": "https://www.nndc.bnl.gov/nudat3/getdecaydataset.jsp?dsid=218po%20a%20decay&nucleus=214PB",
+        "DirectGet": "HTTP 200 HTML: Sorry, decay dataset could not be obtained"
+      }
+    ]
+  },
+  "DataSource": {
+    "Name": "IAEA LiveChart Data Download API, ENSDF decay_rads",
+    "Documentation": "https://www-nds.iaea.org/relnsd/vcharthtml/api_v0_guide.html",
+    "EndpointTemplate": "https://www-nds.iaea.org/relnsd/v1/data?fields=decay_rads&nuclides={nuclide}&rad_types=g",
+    "RetrievalMethod": "PowerShell Invoke-WebRequest HTTP GET, response saved as UTF-8 without BOM; SHA-256 over saved bytes; CSV parsed with ConvertFrom-Csv. Retrievals are source snapshots, not a validated decay-chain dataset.",
+    "NuclidesQueried": 26,
+    "NonemptyResponses": 25,
+    "K40ObservedLine": {
+      "EnergyKeV": 1460.82,
+      "EnergyUncertaintyKeV": 0.005,
+      "ReportedIntensityPercent": 10.66,
+      "ReportedIntensityUncertaintyPercent": 0.13,
+      "Evaluator": "JUN CHEN",
+      "PublicationCutoff": "2015-09-30",
+      "Note": "Raw evaluated source fields only. No additional decay-mode factor, chain normalization, filtering or soil transport applied."
+    },
+    "Retrievals": [
+      {
+        "Nuclide": "40k",
+        "Url": "https://www-nds.iaea.org/relnsd/v1/data?fields=decay_rads&nuclides=40k&rad_types=g",
+        "Status": 200,
+        "Rows": 7,
+        "Sha256": "498090cc025e5dbaffce22d2c778225551f7010ce27e76a2ca463b4f9ae64b6d",
+        "ResponseCode": null,
+        "Snapshot": "40k.csv"
+      },
+      {
+        "Nuclide": "238u",
+        "Url": "https://www-nds.iaea.org/relnsd/v1/data?fields=decay_rads&nuclides=238u&rad_types=g",
+        "Status": 200,
+        "Rows": 20,
+        "Sha256": "c794b0228e020cf70284e1c0f30e8521bd16a19b06883dea62686bb0db0a85b1",
+        "ResponseCode": null,
+        "Snapshot": "238u.csv"
+      },
+      {
+        "Nuclide": "234th",
+        "Url": "https://www-nds.iaea.org/relnsd/v1/data?fields=decay_rads&nuclides=234th&rad_types=g",
+        "Status": 200,
+        "Rows": 25,
+        "Sha256": "2a5480f025ce05af8a9db825e8ead90135a4a2ffea6373d76abbf363669854b1",
+        "ResponseCode": null,
+        "Snapshot": "234th.csv"
+      },
+      {
+        "Nuclide": "234pa",
+        "Url": "https://www-nds.iaea.org/relnsd/v1/data?fields=decay_rads&nuclides=234pa&rad_types=g",
+        "Status": 200,
+        "Rows": 530,
+        "Sha256": "1906b88d3f6c929f8e4a274359581a1593b8fb11a7f9340cdb540903df6d3474",
+        "ResponseCode": null,
+        "Snapshot": "234pa.csv"
+      },
+      {
+        "Nuclide": "234u",
+        "Url": "https://www-nds.iaea.org/relnsd/v1/data?fields=decay_rads&nuclides=234u&rad_types=g",
+        "Status": 200,
+        "Rows": 15,
+        "Sha256": "e77c66435c0e697971837619ef5d86418d0ec97a50e82899c592922a64cf09c3",
+        "ResponseCode": null,
+        "Snapshot": "234u.csv"
+      },
+      {
+        "Nuclide": "230th",
+        "Url": "https://www-nds.iaea.org/relnsd/v1/data?fields=decay_rads&nuclides=230th&rad_types=g",
+        "Status": 200,
+        "Rows": 19,
+        "Sha256": "8d63a003532ef295cb922dcb3fccbf37e0224d0ea5bfa0294c9c51ff470ce320",
+        "ResponseCode": null,
+        "Snapshot": "230th.csv"
+      },
+      {
+        "Nuclide": "226ra",
+        "Url": "https://www-nds.iaea.org/relnsd/v1/data?fields=decay_rads&nuclides=226ra&rad_types=g",
+        "Status": 200,
+        "Rows": 13,
+        "Sha256": "331bb17e5ca0979bb1cf6b70014626c94d6b02d1f2da53ff730aa057d1c4b023",
+        "ResponseCode": null,
+        "Snapshot": "226ra.csv"
+      },
+      {
+        "Nuclide": "222rn",
+        "Url": "https://www-nds.iaea.org/relnsd/v1/data?fields=decay_rads&nuclides=222rn&rad_types=g",
+        "Status": 200,
+        "Rows": 7,
+        "Sha256": "d53f39e3f87a9eb55bdc4e271ac35c0f7937d547847c38dcfb9a25ab8b104e7e",
+        "ResponseCode": null,
+        "Snapshot": "222rn.csv"
+      },
+      {
+        "Nuclide": "218po",
+        "Url": "https://www-nds.iaea.org/relnsd/v1/data?fields=decay_rads&nuclides=218po&rad_types=g",
+        "Status": 200,
+        "Rows": 0,
+        "Sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+        "ResponseCode": "0",
+        "Snapshot": "218po.csv"
+      },
+      {
+        "Nuclide": "214pb",
+        "Url": "https://www-nds.iaea.org/relnsd/v1/data?fields=decay_rads&nuclides=214pb&rad_types=g",
+        "Status": 200,
+        "Rows": 35,
+        "Sha256": "712f00682e631203f345c2041f3287f566bd794972395e44c63b06847d8bbb20",
+        "ResponseCode": null,
+        "Snapshot": "214pb.csv"
+      },
+      {
+        "Nuclide": "214bi",
+        "Url": "https://www-nds.iaea.org/relnsd/v1/data?fields=decay_rads&nuclides=214bi&rad_types=g",
+        "Status": 200,
+        "Rows": 322,
+        "Sha256": "8116f807ec12b5bdd8612af4fda49e9a148520a99c9757adcea3298730036adf",
+        "ResponseCode": null,
+        "Snapshot": "214bi.csv"
+      },
+      {
+        "Nuclide": "214po",
+        "Url": "https://www-nds.iaea.org/relnsd/v1/data?fields=decay_rads&nuclides=214po&rad_types=g",
+        "Status": 200,
+        "Rows": 8,
+        "Sha256": "da74ee450c32e8a2ed423b99a1530beeaee6cd4fcd9ea39a1a35a10e053b682f",
+        "ResponseCode": null,
+        "Snapshot": "214po.csv"
+      },
+      {
+        "Nuclide": "210pb",
+        "Url": "https://www-nds.iaea.org/relnsd/v1/data?fields=decay_rads&nuclides=210pb&rad_types=g",
+        "Status": 200,
+        "Rows": 2,
+        "Sha256": "cff66ad65508b2f40395ee9fe434048d1d02d33c82141d1f3f49a77174cc8a26",
+        "ResponseCode": null,
+        "Snapshot": "210pb.csv"
+      },
+      {
+        "Nuclide": "210bi",
+        "Url": "https://www-nds.iaea.org/relnsd/v1/data?fields=decay_rads&nuclides=210bi&rad_types=g",
+        "Status": 200,
+        "Rows": 21,
+        "Sha256": "3eb95fff219eec7105e51a78bdd34a5b6f1a3763438c5bbe1f1ffc5ac2beb912",
+        "ResponseCode": null,
+        "Snapshot": "210bi.csv"
+      },
+      {
+        "Nuclide": "210po",
+        "Url": "https://www-nds.iaea.org/relnsd/v1/data?fields=decay_rads&nuclides=210po&rad_types=g",
+        "Status": 200,
+        "Rows": 7,
+        "Sha256": "bf9a81e18cb25368f12dca9bd74c42f0704617c8ed55bfa8d7a42b3706b94133",
+        "ResponseCode": null,
+        "Snapshot": "210po.csv"
+      },
+      {
+        "Nuclide": "232th",
+        "Url": "https://www-nds.iaea.org/relnsd/v1/data?fields=decay_rads&nuclides=232th&rad_types=g",
+        "Status": 200,
+        "Rows": 8,
+        "Sha256": "1c504a513093546138ff48b2a164d627cf379cb8daadb26714d831f30dbed5f9",
+        "ResponseCode": null,
+        "Snapshot": "232th.csv"
+      },
+      {
+        "Nuclide": "228ra",
+        "Url": "https://www-nds.iaea.org/relnsd/v1/data?fields=decay_rads&nuclides=228ra&rad_types=g",
+        "Status": 200,
+        "Rows": 10,
+        "Sha256": "1fdf46931079dc0c4a5a210d938fc65a8c6675daed92e093369ba5c78a6de17a",
+        "ResponseCode": null,
+        "Snapshot": "228ra.csv"
+      },
+      {
+        "Nuclide": "228ac",
+        "Url": "https://www-nds.iaea.org/relnsd/v1/data?fields=decay_rads&nuclides=228ac&rad_types=g",
+        "Status": 200,
+        "Rows": 272,
+        "Sha256": "ec59551e765e52941fd2c01f6c32835c6922e9dbb7c857ccc2ab2b22ee31391d",
+        "ResponseCode": null,
+        "Snapshot": "228ac.csv"
+      },
+      {
+        "Nuclide": "228th",
+        "Url": "https://www-nds.iaea.org/relnsd/v1/data?fields=decay_rads&nuclides=228th&rad_types=g",
+        "Status": 200,
+        "Rows": 20,
+        "Sha256": "a4eda423dbbf3e2cbe8dd8315acdc24907765dbd1c94b0a2b2996ca1141fea22",
+        "ResponseCode": null,
+        "Snapshot": "228th.csv"
+      },
+      {
+        "Nuclide": "224ra",
+        "Url": "https://www-nds.iaea.org/relnsd/v1/data?fields=decay_rads&nuclides=224ra&rad_types=g",
+        "Status": 200,
+        "Rows": 11,
+        "Sha256": "a2e03477be7a16be1a6609776faa8a8706ffdf190f134998c2fe2df48f3f90c6",
+        "ResponseCode": null,
+        "Snapshot": "224ra.csv"
+      },
+      {
+        "Nuclide": "220rn",
+        "Url": "https://www-nds.iaea.org/relnsd/v1/data?fields=decay_rads&nuclides=220rn&rad_types=g",
+        "Status": 200,
+        "Rows": 7,
+        "Sha256": "6688372febd0fb5315533fdaf47ef76d53c2819c20df4424090ac8b7aa55a9d7",
+        "ResponseCode": null,
+        "Snapshot": "220rn.csv"
+      },
+      {
+        "Nuclide": "216po",
+        "Url": "https://www-nds.iaea.org/relnsd/v1/data?fields=decay_rads&nuclides=216po&rad_types=g",
+        "Status": 200,
+        "Rows": 7,
+        "Sha256": "b5c5bbdfa237bb27c5311886cb9ca3d69b0d0d4e91d823f460ace3761105d46b",
+        "ResponseCode": null,
+        "Snapshot": "216po.csv"
+      },
+      {
+        "Nuclide": "212pb",
+        "Url": "https://www-nds.iaea.org/relnsd/v1/data?fields=decay_rads&nuclides=212pb&rad_types=g",
+        "Status": 200,
+        "Rows": 18,
+        "Sha256": "92b2b2d42e5c911054e369b15655a6c300f85d7fabb440d8a5d90805805521c9",
+        "ResponseCode": null,
+        "Snapshot": "212pb.csv"
+      },
+      {
+        "Nuclide": "212bi",
+        "Url": "https://www-nds.iaea.org/relnsd/v1/data?fields=decay_rads&nuclides=212bi&rad_types=g",
+        "Status": 200,
+        "Rows": 41,
+        "Sha256": "fb105ce98102fc52b45037d7d1356f430e540925321749235aa305f8afbd2225",
+        "ResponseCode": null,
+        "Snapshot": "212bi.csv"
+      },
+      {
+        "Nuclide": "212po",
+        "Url": "https://www-nds.iaea.org/relnsd/v1/data?fields=decay_rads&nuclides=212po&rad_types=g",
+        "Status": 200,
+        "Rows": 2,
+        "Sha256": "4f75dae613d744c6e110d48178c1420a402e11758bde31eb069b977a7afa7218",
+        "ResponseCode": null,
+        "Snapshot": "212po.csv"
+      },
+      {
+        "Nuclide": "208tl",
+        "Url": "https://www-nds.iaea.org/relnsd/v1/data?fields=decay_rads&nuclides=208tl&rad_types=g",
+        "Status": 200,
+        "Rows": 40,
+        "Sha256": "707667d01f7d4af3fa24e73668daa4ed418254b57846cb0884be7c8589041b3d",
+        "ResponseCode": null,
+        "Snapshot": "208tl.csv"
+      }
+    ],
+    "SnapshotPathConvention": "Snapshot paths are relative to the TEMP work folder gcam-ambient-baseline-prerequisites; no absolute machine paths are retained."
+  },
+  "ABStatus": {
+    "AB-1": "Not implemented; combined validated spectrum prerequisite unresolved.",
+    "AB-2": "Not implemented; no all-face or front-only ambient results.",
+    "AB-3": "Accepted limitations retained; no high-energy transport changes.",
+    "AB-4": "Stopped on Po-218 evaluated photon data. K-40 and other queried source responses acquired; no soil/air transport generator or hashed incident spectrum produced.",
+    "AB-5": "Not implemented; Studio unchanged.",
+    "AB-6": "Not implemented; fixed-time source-free API pending.",
+    "AB-7": "Not measured; selection N=0, validation N=0 for both bounds. No gate claimed.",
+    "AB-8": "Code unchanged and existing tests pass; no new ambient-null regression tests or implementation proof added.",
+    "AB-9": "Not measured; all requested ambient seed families pending, N=0 for both bounds."
+  },
+  "AmbientMeasurements": {
+    "SpectrumGenerated": false,
+    "SoilTransportHistories": 0,
+    "KermaPerBqPerKg": null,
+    "UnscearRatios": null,
+    "MonteCarloUncertainties": null,
+    "Bounds": [
+      "BareCrystalAllFaces",
+      "FrontOnlyThroughMask"
+    ],
+    "DoseLevelsMicroSvPerHour": [
+      0,
+      0.05,
+      0.1,
+      0.2
+    ],
+    "GateNullAcquisitionsPerConfiguration": 0,
+    "Ev07OuterSeeds": 0,
+    "Ev02OuterSeeds": 0,
+    "Ev12OuterSeeds": 0,
+    "Ev15OuterSeeds": 0,
+    "Ev01Ev09OuterSeeds": 0,
+    "Note": "No first-order review diagnostics reused as a validated terrestrial preset or gate result."
+  },
+  "Verification": {
+    "BuildCommand": "dotnet build Gcam.sln -c Release",
+    "BuildExitCode": 0,
+    "Errors": 0,
+    "Warnings": 2,
+    "BuildElapsedSeconds": 10.7,
+    "WarningLocations": [
+      "tests/Gcam.Studio.Services.Tests/WaveformServiceTests.cs:118 xUnit2012",
+      "tests/Gcam.Studio.Services.Tests/ImagingServiceTests.cs:106 xUnit2000"
+    ],
+    "TestCommand": "GCAM_UI_TESTS=0 GCAM_RENDER_SNAPSHOTS=0 GCAM_EVIDENCE_TESTS=0 dotnet test Gcam.sln -c Release --no-build --logger console;verbosity=minimal --logger trx --results-directory %TEMP%/gcam-ambient-baseline-prerequisites/tests",
+    "TestExitCode": 0,
+    "BeforeProvided": {
+      "EnginePassed": 298,
+      "StudioCorePassed": 179,
+      "ServicesPassed": 83,
+      "ServicesSkipped": 7,
+      "UiPassed": 13,
+      "UiSkipped": 14
+    },
+    "AfterObserved": [
+      {
+        "Name": "Gcam.Studio.UiTests.dll",
+        "Passed": 13,
+        "Failed": 0,
+        "Skipped": 14,
+        "Total": 27
+      },
+      {
+        "Name": "Gcam.Studio.RenderTests.dll",
+        "Passed": 0,
+        "Failed": 0,
+        "Skipped": 1,
+        "Total": 1
+      },
+      {
+        "Name": "Gcam.Studio.Tests.dll",
+        "Passed": 179,
+        "Failed": 0,
+        "Skipped": 0,
+        "Total": 179
+      },
+      {
+        "Name": "Gcam.Studio.Services.Tests.dll",
+        "Passed": 83,
+        "Failed": 0,
+        "Skipped": 7,
+        "Total": 90
+      },
+      {
+        "Name": "Gcam.Tests.dll",
+        "Passed": 298,
+        "Failed": 0,
+        "Skipped": 0,
+        "Total": 298
+      }
+    ],
+    "EngineTestDurationSecondsReported": 18,
+    "ServicesTestDurationSecondsReported": 14,
+    "DesktopTestsRun": 0,
+    "RenderSnapshotsRun": 0
+  },
+  "ChangedFiles": [
+    "samples/evidence/results/ambient-baseline-v1-prerequisites.json"
+  ],
+  "UnmodifiedByThisTurn": [
+    "code",
+    "tests",
+    "configuration",
+    "VV.*",
+    "README",
+    "PAPER",
+    "Findings",
+    "PLAN/Todo"
+  ],
+  "RemainingOrderedWork": [
+    "Resolve Po-218 evaluated photon data and finish K/U/Th chain normalization and material data.",
+    "Implement and validate AB-4 soil/air generator; report all three kerma ratios and MC uncertainties without tuning.",
+    "Implement AB-1/2/6 engine paths and AB-8 exact compatibility tests.",
+    "Implement AB-5 Studio controls and headless tests. Planner must handle VV.Studio.SRS/SDS documentation under the explicit no-VV-edit restriction.",
+    "Implement statistical oracles with sample-size-derived tolerances.",
+    "Run AB-7 selection and held-out validation, at least 1000 background-only acquisitions per configuration, and EV-07 first.",
+    "Run EV-02, EV-12, EV-15, EV-01/EV-09 for both bounds with versioned manifests and all stated field/exposure/window/source inputs."
+  ],
+  "ApprovalRequests": []
+}

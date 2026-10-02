@@ -208,6 +208,28 @@ public sealed partial class MainViewModel : ObservableObject
     [ObservableProperty] private double _gainSigmaPercent = 3;
     [ObservableProperty] private int _gainSeed = 1;
     [ObservableProperty] private double _backgroundToSignalRatio;
+    [ObservableProperty] private double _ambientDoseRateMicroSvPerHour;
+    [ObservableProperty] private AmbientGeometry _ambientGeometry;
+    public IReadOnlyList<AmbientGeometry> AmbientGeometries { get; } = Enum.GetValues<AmbientGeometry>();
+    public string AmbientPresetName => "Development mono662 v1 — not validated";
+    public string AmbientEnvironmentLabel => AmbientDoseRateMicroSvPerHour == 0 ? "ideal environment" : "ambient field — not validated";
+    public string AmbientBsrReadout => AmbientDoseRateMicroSvPerHour == 0 ? "off"
+        : Snapshot?.AmbientBackgroundToSignalRatio is { } ratio ? $"{ratio:G4} × signal"
+        : Sources.Count == 0 ? "undefined (source-free)" : "available during acquisition";
+
+    partial void OnAmbientDoseRateMicroSvPerHourChanged(double oldValue, double newValue)
+    {
+        if (Locked(() => AmbientDoseRateMicroSvPerHour = oldValue)) return;
+        if (!double.IsFinite(newValue) || newValue < 0) { AmbientDoseRateMicroSvPerHour = 0; return; }
+        OnPropertyChanged(nameof(AmbientEnvironmentLabel)); OnPropertyChanged(nameof(AmbientBsrReadout));
+        StartCommand.NotifyCanExecuteChanged();
+    }
+
+    partial void OnAmbientGeometryChanged(AmbientGeometry oldValue, AmbientGeometry newValue)
+    {
+        if (Locked(() => AmbientGeometry = oldValue)) return;
+        if (!Enum.IsDefined(newValue)) AmbientGeometry = oldValue;
+    }
     partial void OnGainSigmaPercentChanged(double oldValue, double newValue)
     {
         if (Locked(() => GainSigmaPercent = oldValue)) return;
@@ -248,6 +270,7 @@ public sealed partial class MainViewModel : ObservableObject
     [ObservableProperty] private AcquisitionSnapshot? _snapshot;
     partial void OnSnapshotChanged(AcquisitionSnapshot? oldValue, AcquisitionSnapshot? newValue)
     {
+        OnPropertyChanged(nameof(AmbientBsrReadout));
         Spectrum.Refresh(); Imaging.RefreshChannels(); Waveform.NotifySnapshot(); DetectorWorkspace.Refresh();
         if (oldValue is null != newValue is null) NotifyRunState();
     }
@@ -330,7 +353,7 @@ public sealed partial class MainViewModel : ObservableObject
     }
 
     /// <summary>Start (no data) or Continue (Stopped / Completed with the preset above the acquired live time).</summary>
-    private bool CanStart() => !IsRunning && Sources.Count > 0
+    private bool CanStart() => !IsRunning && (Sources.Count > 0 || AmbientDoseRateMicroSvPerHour > 0)
         && (Snapshot is not { } s || _session is not null && LiveTimeS > s.LiveTimeS);
 
     [RelayCommand(CanExecute = nameof(IsRunning))]
@@ -402,7 +425,11 @@ public sealed partial class MainViewModel : ObservableObject
         AcquisitionSeed = seed;
         try
         {
-            _session = _acquisition.Start(scene, acquisitionOptics, LiveTimeS, Speed, Detector, BackgroundToSignalRatio, seed);
+            _session = AmbientDoseRateMicroSvPerHour > 0
+                ? _acquisition.StartAmbient(scene, acquisitionOptics, LiveTimeS, Speed,
+                    new AmbientFieldConfig { DoseRateMicroSvPerHour = AmbientDoseRateMicroSvPerHour, Geometry = AmbientGeometry },
+                    Detector, BackgroundToSignalRatio, seed)
+                : _acquisition.Start(scene, acquisitionOptics, LiveTimeS, Speed, Detector, BackgroundToSignalRatio, seed);
         }
         catch (Exception ex)
         {
@@ -469,6 +496,7 @@ public sealed partial class MainViewModel : ObservableObject
 
     private void OnSourcesChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
+        OnPropertyChanged(nameof(AmbientBsrReadout));
         foreach (SourceItemViewModel s in e.NewItems ?? Array.Empty<SourceItemViewModel>()) s.IsEditable = CanEditInputs;
         StartCommand.NotifyCanExecuteChanged();
     }

@@ -10,4 +10,10 @@ public interface IAcquisitionService
     IAcquisitionSession Start(IReadOnlyList<SceneSource> scene, OpticsSettings optics,
         double liveTimeS, double speed, DetectorSettings? detector = null, double backgroundToSignalRatio = 0,
         int? seed = null);
+
+    /// <summary>Absolute ambient acquisition, including an empty source scene. The field is frozen at Start.</summary>
+    IAcquisitionSession StartAmbient(IReadOnlyList<SceneSource> scene, OpticsSettings optics,
+        double liveTimeS, double speed, AmbientFieldConfig ambient, DetectorSettings? detector = null,
+        double backgroundToSignalRatio = 0, int? seed = null)
+        => throw new NotSupportedException("This acquisition service does not support absolute ambient fields.");
 }

@@ -36,6 +36,7 @@ public sealed partial class PlotViewRenderTests(ITestOutputHelper output)
                     RenderWindows(theme, mixed: true, opticsExpanded: false);
                     RenderWaveforms(theme);
                     RenderDetectorAndFocus(theme);
+                    RenderAmbientInputs(theme);
                 }
             }
             catch (Exception ex) { failure = ex; }
@@ -108,13 +109,17 @@ public sealed partial class PlotViewRenderTests(ITestOutputHelper output)
         bitmap.Render(root);
         var encoder = new PngBitmapEncoder();
         encoder.Frames.Add(BitmapFrame.Create(bitmap));
-        string directory = Path.Combine(RepositoryRoot(), "docs", "assets", "studio-plot");
+        string directory = SnapshotDirectory("studio-plot");
         Directory.CreateDirectory(directory);
         string path = Path.Combine(directory, $"spectrum-{theme.ToLowerInvariant()}-{view}.png");
         using var stream = File.Create(path);
         encoder.Save(stream);
         output.WriteLine(path);
     }
+
+    private static string SnapshotDirectory(string group)
+        => Environment.GetEnvironmentVariable("GCAM_RENDER_OUTPUT") is { Length: > 0 } destination
+            ? Path.Combine(destination, group) : Path.Combine(RepositoryRoot(), "docs", "assets", group);
 
     private static string RepositoryRoot()
     {

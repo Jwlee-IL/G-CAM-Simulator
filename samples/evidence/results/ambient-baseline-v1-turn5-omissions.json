@@ -1,0 +1,101 @@
+{
+  "SchemaVersion": 1,
+  "Task": "TODO-30",
+  "Turn": 5,
+  "Date": "2026-10-03",
+  "Status": "blocked_on_unresolved_Bi214_beta_photon_component",
+  "IsValidatedSpectrum": false,
+  "Source": {
+    "Snapshot": "214bi.csv",
+    "Sha256": "8116f807ec12b5bdd8612af4fda49e9a148520a99c9757adcea3298730036adf",
+    "Url": "https://nds.iaea.org/relnsd/v1/data?fields=decay_rads&nuclides=214bi&rad_types=g",
+    "Evaluation": "Zhu and McCutchan, Nuclear Data Sheets 175, 1 (2021); cutoff 2021-05-01",
+    "KnownGroundStateBetaRows": 272,
+    "KnownEmittedEnergyKeVPerBi214Decay": 1477.656716084652,
+    "IntensityConvention": "Absolute percent per parent decay; gamma/x-ray rows with evaluated intensities, no unspecified-intensity row assigned zero."
+  },
+  "SourceOmissions": [
+    {
+      "ParentNuclide": "Po-218",
+      "DecayBranch": "alpha",
+      "EnergyUpperBoundKeVPerChainDecay": 0.0092051586,
+      "ChainEvaluatedEnergyLowerBoundKeV": 1477.3611847414352,
+      "EnergyRatioUpperBound": 6.230811188945017e-06,
+      "Threshold": 0.0001,
+      "PassesNominalSourceApproximation": true,
+      "PhotonCountUpperBoundPerChainDecay": 1.0997800000000002e-05,
+      "CountScope": "Nuclear de-excitation only; atomic relaxation multiplicity not bounded by adopted nuclear levels.",
+      "Formula": "0.0011/100 * 0.99980 * 837 keV",
+      "References": [
+        "https://www.nndc.bnl.gov/ensnds/214/Pb/a_decay_3.097_m.pdf"
+      ],
+      "Convention": "Bounds conditional on evaluated nominal parameters; not a statistical confidence bound or transported-kerma bound."
+    },
+    {
+      "ParentNuclide": "Po-218",
+      "DecayBranch": "beta-",
+      "EnergyUpperBoundKeVPerChainDecay": 0.051800000000000006,
+      "ChainEvaluatedEnergyLowerBoundKeV": 1477.3611847414352,
+      "EnergyRatioUpperBound": 3.506251587966685e-05,
+      "Threshold": 0.0001,
+      "PassesNominalSourceApproximation": true,
+      "PhotonCountUpperBoundPerChainDecay": null,
+      "CountScope": "Nuclear de-excitation only; atomic relaxation multiplicity not bounded by adopted nuclear levels.",
+      "Formula": "0.020/100 * 259 keV",
+      "References": [
+        "https://www.nndc.bnl.gov/ensnds/218/Po/adopted.pdf"
+      ],
+      "Convention": "Bounds conditional on evaluated nominal parameters; not a statistical confidence bound or transported-kerma bound."
+    },
+    {
+      "ParentNuclide": "Bi-214",
+      "DecayBranch": "alpha",
+      "EnergyUpperBoundKeVPerChainDecay": 0.011114021751,
+      "ChainEvaluatedEnergyLowerBoundKeV": 1477.3611847414352,
+      "EnergyRatioUpperBound": 7.522887338444021e-06,
+      "Threshold": 0.0001,
+      "PassesNominalSourceApproximation": true,
+      "PhotonCountUpperBoundPerChainDecay": 0.0001457528436,
+      "CountScope": "Nuclear de-excitation only; atomic relaxation multiplicity not bounded by adopted nuclear levels.",
+      "Formula": "0.99980 * 0.00021 * sum(relative feeding/100 * excitation energy)",
+      "References": [
+        "https://www.nndc.bnl.gov/ensnds/210/Tl/a_decay_19.9_m.pdf",
+        "https://www.nndc.bnl.gov/ensnds/210/Tl/adopted.pdf"
+      ],
+      "Convention": "Bounds conditional on evaluated nominal parameters; not a statistical confidence bound or transported-kerma bound."
+    }
+  ],
+  "CertifiedOmissionEnergySumKeV": 0.07211918035100001,
+  "CertifiedOmissionRatioSum": 4.8816214407055886e-05,
+  "StoppedOmissions": [
+    {
+      "ParentNuclide": "Bi-214",
+      "DecayBranch": "unresolved beta photon component",
+      "EnergyUpperBoundKeVPerChainDecay": 3267.659847298,
+      "ChainEvaluatedEnergyLowerBoundKeV": 1477.3611847414352,
+      "EnergyRatioUpperBound": 2.211821916703395,
+      "Threshold": 0.0001,
+      "PassesNominalSourceApproximation": false,
+      "PhotonCountUpperBoundPerChainDecay": null,
+      "CountScope": "Nuclear de-excitation only; atomic relaxation multiplicity not bounded by adopted nuclear levels.",
+      "Formula": "0.99980 * 0.999790 * 3269 keV; entire branch energy reserved as a conservative unknown-component bound",
+      "References": [
+        "https://www.nndc.bnl.gov/ensnds/214/Po/beta_decay.pdf"
+      ],
+      "Convention": "Bounds conditional on evaluated nominal parameters; not a statistical confidence bound or transported-kerma bound.",
+      "InferredUnobservedTransitionsKeV": [
+        36.8,
+        61.0,
+        71.1,
+        104.4
+      ],
+      "Reason": "Evaluated photon intensities are absent; selected feeding values explicitly exclude unknown transitions or are lower limits. No source upper bound below 1e-4 is established. This is not a claim that the actual omitted yield exceeds the threshold."
+    }
+  ],
+  "FullChainAuditComplete": false,
+  "SoilTransportHistories": 0,
+  "UnscearComparison": null,
+  "GateAcquisitionsPerBound": 0,
+  "EvidenceRunsPerBound": 0,
+  "ApprovalRequests": []
+}

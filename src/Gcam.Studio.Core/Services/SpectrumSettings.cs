@@ -6,4 +6,6 @@ public sealed record SpectrumSettings(double WindowFwhm = 1.5, bool PileUp = fal
     public DetectorSettings? Detector { get; init; }
     public int PixelsX { get; init; }
     public int PixelsY { get; init; }
+    /// <summary>Frozen incident-spectrum maximum, including an absolute field when no source lines are present.</summary>
+    public double? IncidentMaximumEnergyKeV { get; init; }
 }

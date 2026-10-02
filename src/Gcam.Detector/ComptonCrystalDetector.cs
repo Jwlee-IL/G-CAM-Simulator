@@ -48,6 +48,7 @@ public sealed class ComptonCrystalDetector : IDetector
     private const double CrosstalkLambdaMm = 0.04;  // reflector optical attenuation length — crosstalk ~ exp(-gap/λ)
 
     public double PlaneZ { get; }
+    private readonly bool _allFaces;
 
     public ComptonCrystalDetector(int pixelsX, int pixelsY, double pixelPitchMm,
         double windowCenterKeV, double windowFraction, ComptonStrategy strategy, IRandom rng,
@@ -57,7 +58,8 @@ public sealed class ComptonCrystalDetector : IDetector
         EntranceAbsorber? entranceAbsorber = null, EntranceAbsorber? backingScatterer = null,
         double reflectorGapMm = 0.0, double opticalCrosstalk = 0.0, CrystalMaterial? material = null,
         Action<int, int, double, double>? pixelEventSink = null,
-        Action<IReadOnlyList<(int X, int Y, double DepositKeV)>, double>? pixelSitesSink = null)
+        Action<IReadOnlyList<(int X, int Y, double DepositKeV)>, double>? pixelSitesSink = null,
+        bool entryThroughAllFaces = false)
     {
         _image = new DetectorImage(pixelsX, pixelsY);
         _pitch = pixelPitchMm;
@@ -86,6 +88,7 @@ public sealed class ComptonCrystalDetector : IDetector
         // trade-off in a single reflector parameter. λ ≈ 40 µm (a decent diffuse/ESR reflector).
         _crosstalk = opticalCrosstalk * Math.Exp(-reflectorGapMm / CrosstalkLambdaMm);
         PlaneZ = planeZ;
+        _allFaces = entryThroughAllFaces;
     }
 
     private bool InWindow(double e)
@@ -118,14 +121,22 @@ public sealed class ComptonCrystalDetector : IDetector
 
     public bool Score(Photon photon)
     {
-        double dz = photon.Direction.Z;
-        if (dz == 0.0) return false;
-        double t0 = (PlaneZ - photon.Position.Z) / dz;
-        if (t0 <= 0.0) return false;
-        var entry = photon.Ray.At(t0);
-        if (entry.X < -_halfWidth || entry.X >= _halfWidth ||
-            entry.Y < -_halfHeight || entry.Y >= _halfHeight) return false;
-        if (_reflectorGap > 0.0 && InReflectorGap(entry.X, entry.Y)) return false;   // hit the dead reflector gap
+        Vector3 entry;
+        if (_allFaces)
+        {
+            if (!BoxEntry(photon.Ray, out entry)) return false;
+        }
+        else
+        {
+            double dz = photon.Direction.Z;
+            if (dz == 0.0) return false;
+            double t0 = (PlaneZ - photon.Position.Z) / dz;
+            if (t0 <= 0.0) return false;
+            entry = photon.Ray.At(t0);
+            if (entry.X < -_halfWidth || entry.X >= _halfWidth ||
+                entry.Y < -_halfHeight || entry.Y >= _halfHeight) return false;
+        }
+        if (_reflectorGap > 0.0 && InReflectorGap(entry.X, entry.Y)) return false;
 
         // Entrance material (source encapsulation + front housing/window): the photon may pass through, be
         // photo-absorbed (removed here), or Compton-scatter to a lower energy + new direction. Forward small-angle
@@ -143,7 +154,7 @@ public sealed class ComptonCrystalDetector : IDetector
 
         // ---- transport the Compton cascade through the crystal slab z in [-depth, 0] ----
         _sites.Clear();
-        var pos = new Vector3(entry.X, entry.Y, PlaneZ);
+        var pos = _allFaces ? entry : new Vector3(entry.X, entry.Y, PlaneZ);
         for (int step = 0; step < 32 && e > 1.0; step++)
         {
             double mu = _muAt662 * _material.MuRel(e);
@@ -236,6 +247,24 @@ public sealed class ComptonCrystalDetector : IDetector
         _pixelSitesSink?.Invoke(_sites, pulseDeposit);
         Deposit(weight);
         return true;
+    }
+
+    private bool BoxEntry(Ray ray, out Vector3 entry)
+    {
+        double near = 0, far = double.PositiveInfinity;
+        bool Slab(double p, double d, double lo, double hi)
+        {
+            if (d == 0) return p >= lo && p <= hi;
+            double a = (lo - p) / d, b = (hi - p) / d;
+            if (a > b) (a, b) = (b, a);
+            near = Math.Max(near, a); far = Math.Min(far, b);
+            return far > near;
+        }
+        bool hit = Slab(ray.Origin.X, ray.Direction.X, -_halfWidth, _halfWidth)
+            && Slab(ray.Origin.Y, ray.Direction.Y, -_halfHeight, _halfHeight)
+            && Slab(ray.Origin.Z, ray.Direction.Z, PlaneZ - _depth, PlaneZ);
+        entry = hit ? ray.At(near) : default;
+        return hit;
     }
 
     private void ApplyOpticalCrosstalk(double c)

@@ -23,9 +23,11 @@ public sealed class ListModeSource : IDisposable
     private readonly List<(int X, int Y, double Deposit)> _merged = new(16);
     private double _photonDeposit;
     private bool _photonScored;
-    private readonly IMask _mask;
-    private readonly IRandom _transport, _rejection, _time;
-    private readonly ComptonCrystalDetector _detector;
+    private readonly IMask _mask = null!;
+    private readonly IRandom _transport = null!, _rejection = null!, _time = null!;
+    private readonly ComptonCrystalDetector _detector = null!;
+    private readonly AmbientAcquisition? _physical;
+    private DetectedEvent? _fixedPending;
     private readonly double _emissionRateCps;
     private readonly double _bsr, _darkRate;
     private readonly ListModeBackground? _background;
@@ -33,25 +35,33 @@ public sealed class ListModeSource : IDisposable
     private DetectedEvent? _pendingSignal;
     private double _signalTime, _nextBackgroundTime = double.NaN, _nextDarkTime = double.NaN;
     private (int X, int Y, double Deposit, double Weight)? _scored;
-    public long HistoriesEmitted { get; private set; }
-    public long HistoriesDetected { get; private set; }
+    private long _historiesEmitted, _historiesDetected, _coincidentHistories, _eventsAccepted;
+    private double _coincidentWeight, _detectedWeight;
+    public long HistoriesEmitted { get => _physical?.HistoriesEmitted ?? _historiesEmitted; private set => _historiesEmitted = value; }
+    public long HistoriesDetected { get => _physical?.HistoriesDetected ?? _historiesDetected; private set => _historiesDetected = value; }
     /// <summary>Detected decays in which two or more photons deposited (true-coincidence summed events).</summary>
-    public long CoincidentHistories { get; private set; }
+    public long CoincidentHistories { get => _physical?.CoincidentHistories ?? _coincidentHistories; private set => _coincidentHistories = value; }
     /// <summary>Σ weight of those decays; <c>CoincidentWeight / DetectedWeight</c> estimates the summed fraction of the
     /// detected events (before the rejection step).</summary>
-    public double CoincidentWeight { get; private set; }
-    public long EventsAccepted { get; private set; }
-    public double DetectedWeight { get; private set; }
+    public double CoincidentWeight { get => _physical?.CoincidentWeight ?? _coincidentWeight; private set => _coincidentWeight = value; }
+    public long EventsAccepted { get => _physical?.EventsAccepted ?? _eventsAccepted; private set => _eventsAccepted = value; }
+    public double DetectedWeight { get => _physical?.DetectedWeight ?? _detectedWeight; private set => _detectedWeight = value; }
     public double ArrivalTimeS { get; private set; }
     public double WeightBound { get; }
-    public double SourceRateCps => HistoriesEmitted == 0 ? 0 : _emissionRateCps * DetectedWeight / HistoriesEmitted;
-    public double RateCps => SourceRateCps * (1 + _bsr) + _darkRate;
+    public double SourceRateCps => _physical?.SourceRateCps ?? (HistoriesEmitted == 0 ? 0 : _emissionRateCps * DetectedWeight / HistoriesEmitted);
+    public double AmbientRateCps => _physical?.AmbientRateCps ?? 0;
+    public double RateCps => _physical?.RateCps ?? (SourceRateCps * (1 + _bsr) + _darkRate);
     public double Acceptance => HistoriesDetected == 0 ? 0 : (double)EventsAccepted / HistoriesDetected;
 
     public ListModeSource(SimulationConfig configuration)
     {
         ArgumentNullException.ThrowIfNull(configuration);
         var config = configuration.Clone();
+        if (config.Ambient is not null)
+        {
+            _physical = new AmbientAcquisition(config);
+            return;
+        }
         _bsr = config.Background?.BackgroundToSignalRatio ?? 0;
         _darkRate = (config.Background?.DarkCountRateKcps ?? 0) * 1000;
         if (!double.IsFinite(_bsr) || _bsr < 0 || !double.IsFinite(_darkRate) || _darkRate < 0 ||
@@ -125,6 +135,7 @@ public sealed class ListModeSource : IDisposable
     public DetectedEvent? Advance(CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
+        if (_physical is not null) throw new InvalidOperationException("Absolute ambient acquisitions require AdvanceUntil with a fixed live-time horizon.");
         // The disabled path consumes precisely the legacy RNG draws and preserves every source record.
         if (_background is null)
         {
@@ -234,7 +245,25 @@ public sealed class ListModeSource : IDisposable
         return new DetectedEvent(bx, by, total, _signalTime);
     }
 
-    public void Dispose() => _photons?.Dispose();
+    /// <summary>One bounded history toward a fixed live-time horizon. Repeat until ArrivalTimeS reaches the horizon.
+    /// Unlike Advance, empty absolute-field intervals progress. A retained source look-ahead survives interval boundaries.</summary>
+    public DetectedEvent? AdvanceUntil(double horizonS, CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        if (_physical is not null)
+        {
+            var next = _physical.AdvanceUntil(horizonS, cancellationToken);
+            ArrivalTimeS = _physical.TimeS;
+            return next;
+        }
+        if (!double.IsFinite(horizonS) || horizonS < ArrivalTimeS) throw new ArgumentOutOfRangeException(nameof(horizonS));
+        if (_fixedPending is null) _fixedPending = Advance(cancellationToken);
+        if (_fixedPending is not { } pending) return null;
+        if (pending.ArrivalTimeS > horizonS) { ArrivalTimeS = horizonS; return null; }
+        _fixedPending = null; ArrivalTimeS = pending.ArrivalTimeS; return pending;
+    }
+
+    public void Dispose() { _photons?.Dispose(); _physical?.Dispose(); }
 
     /// <summary>One history of a scene with a cascade source: one decay of a cascade source (all its photons, one
     /// weight) or one photon of a single-photon line, allocated ∝ activity × intensity as in <see cref="MixedFieldSource"/>.</summary>

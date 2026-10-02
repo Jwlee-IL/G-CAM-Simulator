@@ -34,13 +34,19 @@ public sealed class ImagingService : IImagingService
         ArgumentNullException.ThrowIfNull(settings);
         if (!double.IsFinite(settings.WindowFwhm) || settings.WindowFwhm <= 0)
             throw new ArgumentOutOfRangeException(nameof(settings));
-        if (scene.Count == 0) throw new ArgumentException("Imaging needs a source.", nameof(scene));
+        if (scene.Count == 0 && snapshot.AmbientMaximumEnergyKeV is null) throw new ArgumentException("Imaging needs a source or an absolute field.", nameof(scene));
         // Freeze caller-owned mutable source objects before crossing the worker boundary.
         var physical = snapshot.Optics ?? optics;
-        var config = SimulationService.BuildConfig(scene, physical, snapshot.Detector ?? new DetectorSettings());
+        var config = SimulationService.BuildConfig(scene, physical, snapshot.Detector ?? new DetectorSettings(),
+            ambient: scene.Count == 0 ? new AmbientFieldConfig() : null);
         if (snapshot.Imaging.Flood.Width != config.Detector.PixelsX || snapshot.Imaging.Flood.Height != config.Detector.PixelsY)
             throw new ArgumentException("Snapshot dimensions do not match acquired optics.", nameof(snapshot));
         var projection = ImagingProjection.AtFocus(config, physical, settings.FocalDistanceMm ?? optics.FocalDistanceMm);
+        if (scene.Count == 0)
+        {
+            var channel = ImagingProjection.Project(snapshot.Imaging.Flood, snapshot.Imaging, projection, "All", 0);
+            return new(Array.AsReadOnly(new[] { channel }), Array.Empty<StripRatio>(), TimeSpan.Zero, TimeSpan.Zero, TimeSpan.Zero);
+        }
         await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {

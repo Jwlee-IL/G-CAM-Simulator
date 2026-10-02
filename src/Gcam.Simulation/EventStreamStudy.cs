@@ -28,6 +28,21 @@ public sealed class EventStreamStudy
     public EventStreamStudy(ISimulationFactory? baseFactory = null)
         => _base = baseFactory ?? new DefaultSimulationFactory();
 
+    /// <summary>Physical, fixed-time event stream, including source-free absolute ambient acquisition.
+    /// This is separate from Generate's legacy operating-rate overlay.</summary>
+    public IReadOnlyList<StreamEvent> GenerateFixedTime(SimulationConfig config, double durationS,
+        double adcSampleRateHz, CancellationToken cancellationToken = default)
+    {
+        if (!(durationS >= 0) || !double.IsFinite(durationS) || !(adcSampleRateHz > 0) || !double.IsFinite(adcSampleRateHz))
+            throw new ArgumentOutOfRangeException(nameof(durationS));
+        using var source = new ListModeSource(config);
+        var events = new List<StreamEvent>();
+        while (source.ArrivalTimeS < durationS)
+            if (source.AdvanceUntil(durationS, cancellationToken) is { } e)
+                events.Add(new((long)Math.Round(e.ArrivalTimeS * adcSampleRateHz), e.DepositKeV));
+        return events;
+    }
+
     /// <param name="countRateCps">operating count rate (detected events per second) for the Poisson overlay.</param>
     /// <param name="adcSampleRateHz">ADC sample rate; sets samples-per-second for the arrival times.</param>
     /// <param name="maxEvents">cap on collected events (bounds the cocotb waveform length / sim time).</param>

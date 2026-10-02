@@ -17,4 +17,8 @@ public sealed record AcquisitionSnapshot(double LiveTimeS, long Counts, double R
     public Gcam.Configuration.OpticsSettings? Optics { get; init; }
     /// <summary>Monte Carlo seed of the acquisition these events come from (provenance; reproduces them).</summary>
     public int? Seed { get; init; }
+    public double AmbientRateCps { get; init; }
+    public double SourceRateCps { get; init; }
+    public double? AmbientMaximumEnergyKeV { get; init; }
+    public double? AmbientBackgroundToSignalRatio => SourceRateCps > 0 ? AmbientRateCps / SourceRateCps : null;
 }

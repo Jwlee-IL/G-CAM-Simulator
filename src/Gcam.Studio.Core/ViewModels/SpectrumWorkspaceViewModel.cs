@@ -85,7 +85,7 @@ public sealed partial class SpectrumWorkspaceViewModel : WorkspaceViewModel
 
     private async Task UpdateAsync(int revision, CancellationToken token)
     {
-        if (Shared.Snapshot is not { } snapshot || _lines.Count == 0) return;
+        if (Shared.Snapshot is not { } snapshot || _lines.Count == 0 && snapshot.AmbientMaximumEnergyKeV is null) return;
         try
         {
             var view = await _service.ProcessAsync(_acquisitionId, snapshot.Events, _lines,
@@ -93,7 +93,8 @@ public sealed partial class SpectrumWorkspaceViewModel : WorkspaceViewModel
                 {
                     Detector = snapshot.Detector,
                     PixelsX = snapshot.Detector is null ? 0 : snapshot.Imaging.Flood.Width,
-                    PixelsY = snapshot.Detector is null ? 0 : snapshot.Imaging.Flood.Height
+                    PixelsY = snapshot.Detector is null ? 0 : snapshot.Imaging.Flood.Height,
+                    IncidentMaximumEnergyKeV = snapshot.AmbientMaximumEnergyKeV
                 }, cancellationToken: token);
             if (revision != _revision || token.IsCancellationRequested) return;
             var selected = SelectedLine;

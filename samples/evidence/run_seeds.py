@@ -55,6 +55,19 @@ def set_path(obj, dotted, value):
             obj = obj[key]
 
 
+def require_validated_ambient(config):
+    """Development spectra must never become numerical evidence through this driver."""
+    ambient = next((v for k, v in config.items() if k.lower() == 'ambient'), None)
+    if ambient is None:
+        return
+    spectrum = next((v for k, v in ambient.items() if k.lower() == 'spectrum'), {})
+    validated = next((v for k, v in spectrum.items() if k.lower() == 'isvalidated'), False)
+    spectrum_id = next((v for k, v in spectrum.items() if k.lower() == 'id'), '')
+    if validated is not True or 'NOT-VALIDATED' in spectrum_id:
+        raise SystemExit('ambient evidence refused: incident spectrum is not validated (development placeholder)')
+    set_path(config, 'ambient.RequireValidatedSpectrum', True)
+
+
 def jobs_for(manifest, seeds, families, n_override):
     for fam in manifest['families']:
         if families and fam['id'] not in families:
@@ -78,6 +91,7 @@ def run_one(fam, seed, out, cli, probe, python, force):
         set_path(clone, 'seed', seed)
         for path, value in fam.get('overrides', {}).items():
             set_path(clone, path, value)
+        require_validated_ambient(clone)
         (run / 'config.json').write_text(json.dumps(clone, indent=1), encoding='utf-8')
         cmd = ['dotnet', str(cli)] + ([fam['command']] if fam.get('command') else []) + [str(run / 'config.json')]
         record['config'] = fam['config']
@@ -116,6 +130,7 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__.split('\n')[0])
     ap.add_argument('--out', required=True, help='output root (runs/<family>/<seed>/ is created below it)')
     ap.add_argument('--family', nargs='*', default=[], help='family ids from manifest.json (default: all)')
+    ap.add_argument('--manifest', default=str(HERE / 'manifest.json'), help='versioned manifest; default preserves legacy recipes')
     ap.add_argument('--n', type=int, default=0, help='run only the first N seeds of each family (smoke tests)')
     ap.add_argument('--jobs', type=int, default=max(1, (os.cpu_count() or 2) // 2))
     ap.add_argument('--cli', default=str(DEFAULT_CLI))
@@ -127,7 +142,7 @@ def main():
     if args.n < 0:
         raise SystemExit('--n must be positive')
 
-    manifest = json.loads((HERE / 'manifest.json').read_text(encoding='utf-8'))
+    manifest = json.loads(pathlib.Path(args.manifest).read_text(encoding='utf-8'))
     seeds = json.loads((HERE / 'seeds.json').read_text(encoding='utf-8'))
     unknown = set(args.family) - {f['id'] for f in manifest['families']}
     if unknown:
@@ -148,6 +163,7 @@ def main():
                            capture_output=True, text=True).stdout.strip()
     (out / 'run-info.json').write_text(json.dumps({
         'engine_commit': head, 'engine_tree_dirty': bool(dirty), 'families': sorted({f['id'] for f, _ in jobs}),
+        'manifest': pathlib.Path(args.manifest).name, 'manifest_sha256': sha256(args.manifest),
         'n_override': args.n or None, 'jobs': len(jobs), 'started': time.strftime('%Y-%m-%dT%H:%M:%S')}, indent=1),
         encoding='utf-8')
     failures = 0

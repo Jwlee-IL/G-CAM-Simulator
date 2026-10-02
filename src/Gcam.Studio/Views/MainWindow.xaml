@@ -296,6 +296,24 @@
                                 <TextBox Text="{Binding BackgroundToSignalRatio}" Tag="× signal" AutomationProperties.AutomationId="Acquisition.Background"
                                          AutomationProperties.Name="Background BSR (detected background to signal ratio)" />
                             </DockPanel>
+                            <DockPanel Style="{StaticResource FieldRow}">
+                                <TextBlock Text="Photon H*(10)" Style="{StaticResource FieldLabel}" />
+                                <TextBox Text="{Binding AmbientDoseRateMicroSvPerHour}" Tag="µSv/h"
+                                         AutomationProperties.AutomationId="Acquisition.AmbientDose"
+                                         AutomationProperties.Name="Photon H*(10) ambient dose rate (µSv/h)" />
+                            </DockPanel>
+                            <TextBlock Text="{Binding AmbientPresetName}" Style="{StaticResource Text.MonoCaption}" TextWrapping="Wrap" />
+                            <TextBlock Text="{Binding AmbientEnvironmentLabel}" Style="{StaticResource Text.MonoCaption}" />
+                            <DockPanel Style="{StaticResource FieldRow}">
+                                <TextBlock Text="Ambient bound" Style="{StaticResource FieldLabel}" />
+                                <ComboBox ItemsSource="{Binding AmbientGeometries}" SelectedItem="{Binding AmbientGeometry}"
+                                          AutomationProperties.AutomationId="Acquisition.AmbientBound"
+                                          AutomationProperties.Name="Ambient bound geometry" />
+                            </DockPanel>
+                            <DockPanel Style="{StaticResource FieldRow}">
+                                <TextBlock Text="Ambient BSR" Style="{StaticResource FieldLabel}" />
+                                <TextBlock Text="{Binding AmbientBsrReadout}" Style="{StaticResource Text.MonoCaption}" />
+                            </DockPanel>
                         </StackPanel>
                             </StackPanel>
                         </Expander>

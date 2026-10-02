@@ -41,7 +41,9 @@ public sealed class SpectrumService : ISpectrumService
         ArgumentNullException.ThrowIfNull(settings);
         if (!(settings.WindowFwhm > 0) || !double.IsFinite(settings.WindowFwhm))
             throw new ArgumentOutOfRangeException(nameof(settings));
-        if (lines.Count == 0 || lines.Any(l => !(l.EnergyKeV > 0) || !double.IsFinite(l.EnergyKeV)))
+        if (lines.Count == 0 && !(settings.IncidentMaximumEnergyKeV > 0)
+            || settings.IncidentMaximumEnergyKeV is { } maximum && (!(maximum > 0) || !double.IsFinite(maximum))
+            || lines.Any(l => !(l.EnergyKeV > 0) || !double.IsFinite(l.EnergyKeV)))
             throw new ArgumentException("At least one finite positive emission energy is required.", nameof(lines));
         await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
@@ -56,7 +58,8 @@ public sealed class SpectrumService : ISpectrumService
         SpectrumSettings settings, int seed, CancellationToken token)
     {
         var watch = Stopwatch.StartNew();
-        double maxEnergy = lines.Max(l => l.EnergyKeV) * (settings.PileUp ? 2.15 : 1.15);
+        double maxEnergy = Math.Max(lines.Select(l => l.EnergyKeV).DefaultIfEmpty(0).Max(), settings.IncidentMaximumEnergyKeV ?? 0)
+            * (settings.PileUp ? 2.15 : 1.15);
         if (id != _acquisitionId || settings.PileUp != _pileUp || seed != _seed ||
             events.Count < _consumed || maxEnergy != _maxEnergy ||
             settings.Detector != _measurementSettings?.Detector ||

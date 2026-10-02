@@ -40,6 +40,9 @@ public sealed class SimulationConfig
     /// </summary>
     public BackgroundConfig? Background { get; set; }
 
+    /// <summary>Absolute photon H*(10) field, independent of source activity. Null preserves the legacy path.</summary>
+    public AmbientFieldConfig? Ambient { get; set; }
+
     /// <summary>
     /// Deep copy (via JSON round-trip). Studies clone the base config and vary one or two
     /// fields; using this avoids the field-drop bugs that hand-written clones are prone to.

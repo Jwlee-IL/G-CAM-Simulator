@@ -63,6 +63,17 @@ public sealed partial class PlotViewRenderTests
             model.Imaging.SelectedIsotope = isotope;
             // Construct XAML only. Never Show(), Run(), create an HWND, or send desktop input.
             var (root, content) = DetachMainWindow(model, size);
+            // A collapsed Expander has no input controls in the visual tree. Check the expanded fixtures.
+            if (model.IsDetectorExpanded)
+            {
+                var ambientDose = Assert.Single(Descendants(root).OfType<TextBox>(),
+                    box => AutomationProperties.GetAutomationId(box) == "Acquisition.AmbientDose");
+                var ambientBound = Assert.Single(Descendants(root).OfType<ComboBox>(),
+                    box => AutomationProperties.GetAutomationId(box) == "Acquisition.AmbientBound");
+                Assert.Equal(model.CanEditInputs, ambientDose.IsEnabled);
+                Assert.Equal(model.CanEditInputs, ambientBound.IsEnabled);
+                Assert.Equal(model.AmbientGeometry, ambientBound.SelectedItem);
+            }
 
             if (mixed && workspace == model.Imaging)
             {
@@ -152,7 +163,7 @@ public sealed partial class PlotViewRenderTests
             if (mixed && workspace == model.Imaging) VerifyOverlayChips(root);
             var encoder = new PngBitmapEncoder();
             encoder.Frames.Add(BitmapFrame.Create(bitmap));
-            string directory = Path.Combine(RepositoryRoot(), "docs", "assets", "studio-render");
+            string directory = SnapshotDirectory("studio-render");
             Directory.CreateDirectory(directory);
             string path = Path.Combine(directory,
                 $"{workspace.Title.ToLowerInvariant()}{(crowded ? "-crowded" : "")}{(opticsExpanded.HasValue ? "-optics-" + (opticsExpanded.Value ? "expanded" : "collapsed") + "-focus800" : "")}{(mixed ? "-mixed-" + isotope.ToLowerInvariant() : "")}-{theme.ToLowerInvariant()}-{size.Width:0}x{size.Height:0}.png");

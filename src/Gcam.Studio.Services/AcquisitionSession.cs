@@ -131,7 +131,7 @@ internal sealed class AcquisitionSession : IAcquisitionSession
                         }
                         if (source.ArrivalTimeS >= target) break;
                         // Advance checks the token before any random draw, so a cancelled call consumes nothing.
-                        _pending = source.Advance(stop.Token);
+                        _pending = _config.Ambient is not null ? source.AdvanceUntil(target, stop.Token) : source.Advance(stop.Token);
                     }
                 }
                 catch (OperationCanceledException) when (stop.IsCancellationRequested) { }
@@ -150,7 +150,12 @@ internal sealed class AcquisitionSession : IAcquisitionSession
                 double actual = reportInterval > 0 ? (_live - previousLive) / reportInterval : 0;
                 await channel.Writer.WriteAsync(new AcquisitionSnapshot(_live, _events.Count, source.RateCps,
                     actual, limited, imaging, Array.AsReadOnly(_events.ToArray()), decodeWatch.Elapsed, completed)
-                    { Detector = _detector, Optics = _optics, Seed = _config.Seed });
+                    { Detector = _detector, Optics = _optics, Seed = _config.Seed,
+                        AmbientRateCps = source.AmbientRateCps,
+                        SourceRateCps = _config.Ambient is null ? 0 : source.SourceRateCps,
+                        AmbientMaximumEnergyKeV = _config.Ambient is { } ambient
+                            ? ambient.Spectrum.Lines.Select(l => l.EnergyKeV).Concat(ambient.Spectrum.Continuum.Select(b => b.HighKeV)).Max()
+                            : null });
                 if (completed || stop.IsCancellationRequested) break;
                 previous = tickStart;
                 previousPublished = _clock.GetTimestamp();

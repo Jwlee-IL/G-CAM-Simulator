@@ -127,7 +127,7 @@ public sealed partial class ImagingWorkspaceViewModel(MainViewModel shared, IIma
 
     private async Task UpdateAsync(CancellationToken token)
     {
-        if (service is null || Shared.Snapshot is null || _scene.Count == 0 || FocusError is not null) return;
+        if (service is null || Shared.Snapshot is null || _scene.Count == 0 && Shared.Snapshot.AmbientMaximumEnergyKeV is null || FocusError is not null) return;
         _updating = true;
         IsProcessing = true;
         int revision = _revision;

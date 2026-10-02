@@ -23,6 +23,23 @@ public static class AmbientDose
         double t = Math.Log(energyKeV / _keV[i - 1]) / Math.Log(_keV[i] / _keV[i - 1]);
         return Math.Exp(Math.Log(_pSvCm2[i - 1]) + t * Math.Log(_pSvCm2[i] / _pSvCm2[i - 1]));
     }
+
+    /// <summary>Exact integral of the table's piecewise power laws for a uniform-energy continuum bin.</summary>
+    public static double AveragePerFluence(double lowKeV, double highKeV)
+    {
+        _ = PerFluence(lowKeV); _ = PerFluence(highKeV);
+        if (!(highKeV > lowKeV)) throw new ArgumentOutOfRangeException(nameof(highKeV));
+        double integral = 0, a = lowKeV;
+        foreach (double b in _keV.Where(e => e > lowKeV && e < highKeV).Append(highKeV))
+        {
+            double ha = PerFluence(a), hb = PerFluence(b);
+            double power = Math.Log(hb / ha) / Math.Log(b / a);
+            integral += Math.Abs(power + 1) < 1e-12 ? ha * a * Math.Log(b / a)
+                : ha * a * (Math.Pow(b / a, power + 1) - 1) / (power + 1);
+            a = b;
+        }
+        return integral / (highKeV - lowKeV);
+    }
 }
 
 /// <summary>The head's pulse-height response to one mono-energetic source: counts per energy bin per unit photon
