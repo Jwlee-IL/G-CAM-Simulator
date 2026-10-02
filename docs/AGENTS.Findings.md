@@ -1287,6 +1287,10 @@ offset instead.
 
 ## 44. True (cascade) coincidence summing — `DecayScheme` / `CascadeSummingStudy` / `montecarlo cascade`
 
+> *Correction (2026-10-02, TODO-14 review):* the angular correlation is not a "~10 % close-geometry correction" — at
+> 1 m the correlated ε²-expectation is 11 % above the isotropic one and the effect shrinks only at very close range;
+> also `DecayScheme` samples Co-60 isotropically, despite its summary. See [PLAN.Physics.CascadeEmission](PLAN.Physics.CascadeEmission.md).
+
 > **Revised 2026-10-01 — [theme 52](#52-crystal-attenuation-from-tabulated-cross-sections--crystalmaterial-2026-10-01).** Sum/single values fall (18 mm: sum/decay 1.15e-5 → 3.6e-6); the ∝ε² scaling stands (slope 2.04 → 2.16, noisier).
 First target from the **physics-realism audit** (5 Codex subsystem audits over themes 1–43; this was the source-audit's
 top structural gap): the sim emitted ONE photon per history, so two gammas from the SAME decay were never correlated.
@@ -1846,3 +1850,43 @@ TODO-21 ([PLAN.Physics.CsIData](PLAN.Physics.CsIData.md), Codex). xraylib 4.3.0 
   recorded, not hidden. The plan twice set a wrong check (a bound borrowed from GAGG, then omitting this extrapolation
   error); the implementer stopped both times.
 - Evidence: `samples/materials/evidence/crystal_tables.json`, `CsI_checks.txt`, the NIST XCOM inputs.
+
+## 60. The seeded `DefaultRandom` (legacy `System.Random`) is biased when draw counts vary (2026-10-02)
+
+Found by the TODO-14 review (R-6), **reproduced independently by the planner**. `DefaultRandom(seed)` wraps
+`new Random(seed)`, which in .NET is the legacy subtractive generator (seeded instances keep the .NET-Framework-compatible
+algorithm; unseeded ones use xoshiro256**). Probe: per trial two draws, an isotropic direction scored on an 18 mm square
+at 100 mm, then a partner angle by rejection sampling (variable draw count) on the same stream; 10⁸ trials per seed.
+
+| Generator | Hit fraction vs analytic 2.5576 × 10⁻³ (seeds 1 / 2 / 3) |
+|---|---|
+| seeded `System.Random` | −1.58 % / −2.10 % / −1.66 % (z = −8.0 / −10.7 / −8.4) |
+| xoshiro256** (same probe) | −0.07 % / +0.13 % / −0.04 % (z = −0.4 / +0.7 / −0.2) |
+
+- The bias needs a data-dependent draw count between trials (rejection sampling); the review isolated it there and found
+  a fixed-draw (inverse-CDF) sampler free of it.
+- **Exposure:** `DefaultRandom` is created in 35 places across 21 source files; transport uses rejection loops (e.g.
+  Klein–Nishina in `ComptonModel`). Which published numbers move, and by how much, is **not yet measured** → TODO-26.
+- Reproduce: the probe in the planner's scratch (`rngprobe`: legacy vs xoshiro256**, same loop); TODO-26 brings a
+  repository test.
+
+## 61. Per-decay cascade emission in list mode — correct, and negligible at 1 m (2026-10-02)
+
+TODO-14 ([PLAN.Physics.CascadeEmission](PLAN.Physics.CascadeEmission.md), review and implementation by a substitute
+Claude subagent). Co-60 and Na-22 are now emitted one decay per history in `ListModeSource`: all of a decay's gammas
+are transported and detected ones form **one event** (summed deposit at the largest-deposit pixel, one arrival time);
+directional biasing aims one randomly chosen gamma, weight n·w_k / (n̄·H), source choice ∝ activity × n̄.
+
+- **Co-60 angular correlation** W(θ) = 1 + cos²θ/8 + cos⁴θ/24 (A₂ = 0.1020, A₄ = 0.0091), sampled by inverse CDF.
+  The engine previously drew the partner isotropically despite its own summary; the correlation raises the joint
+  detection at far field by a factor 1.111.
+- **True-coincidence sum fraction** (both gammas deposit / detected decays, Studio default geometry, on axis):
+  **1.998 × 10⁻⁶ ± 1.0 % at 1000 mm, 2.173 × 10⁻⁵ ± 0.8 % at 300 mm** — matching the review's probe (z −0.4 / +0.6).
+  At 500 µCi that is one summed decay per hour at 1 m, about 50× below random pile-up; a sum peak shows only within
+  ~100 mm. Correct physics, honestly small for this camera.
+- Biased vs analog decays agree (detected per decay z = −0.40, coincident z = +0.30); detected rate unchanged (133.7 vs
+  133.6 cps at 1 m); stop / continue stays event-identical with a Co-60 case (139,747 events, 48 summed decays).
+- **Na-22 data corrected** from ENSDF (Basunia, Nucl. Data Sheets 127, 69 (2015)): 511 keV = 2 × 0.8996 = 1.7992,
+  1274.5 keV = 0.9994 (was 1.798 in `Isotopes`, 1.806 in `DecayScheme`); one table now.
+- Not changed: single-photon isotopes keep their draws; Ir-192 stays independent (no scheme). With pile-up off the
+  Spectrum axis ends at 1.15 × the top line, so a 2505 keV sum lands in overflow (counted in the total).

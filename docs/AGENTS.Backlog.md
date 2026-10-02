@@ -175,6 +175,9 @@ TILT (pitch/yaw), mask WARPING.
 
 ## Done (summary — details in AGENTS.Findings by theme)
 
+- **TODO-14 per-decay cascade emission** (2026-10-02): one event per Co-60 / Na-22 decay with angular correlation and
+  unbiased weighting; sum fraction 2.0e-6 at 1 m, 2.2e-5 at 300 mm — [PLAN.Physics.CascadeEmission](PLAN.Physics.CascadeEmission.md),
+  Findings 61; found the RNG bias (TODO-26).
 - **TODO-12 legacy viewer removed** (2026-10-02): `src/Gcam.Wpf` and its solution entry deleted after every kept
   feature moved into GCAM Studio; last present at `85b2ed1` (theme 34's code is there) —
   [PLAN.Studio.WpfRemoval](PLAN.Studio.WpfRemoval.md).
