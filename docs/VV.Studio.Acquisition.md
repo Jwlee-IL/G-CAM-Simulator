@@ -2,15 +2,15 @@
 
 Scope: engine list-mode events and the Studio acquisition contract, state and imaging snapshots. This is the
 acquisition-only verification baseline; Spectrum evidence and current test totals are in
-[VV.Studio](VV.Studio.md#spectrum-physics-and-processing-evidence). No desktop acquisition validation was run here.
+[VV.Studio](VV.Studio.md#current-test-inventory). The original baseline below used no desktop; subsequent acquisition desktop validation is recorded in [VV.Studio](VV.Studio.md#final-desktop-verification-and-validation-2026-10-02).
 
 **At a glance**
 - Fresh histories, importance-weight rejection and independent Poisson timing feed one cumulative event list.
 - Current realism and background evidence is below; original list-mode measurements remain the baseline.
-- Release inventory: 259 engine, 73 Core, 23 service and 10 UI-oracle cases; nine desktop cases skipped.
+- Current normal-run inventory is in [VV.Studio](VV.Studio.md#current-test-inventory); historical run counts remain below.
 - All original 246 engine assertions remain unchanged. The unused batch API, commands and batch-only tests have been removed.
-- Active acquisition requirements are SR-RUN-09 … SR-RUN-19; the affected batch rows are withdrawn.
-- Desktop migration and the remaining scope are listed below.
+- Acquisition requirements extend through SR-RUN-28; SR-RUN-14 and the affected batch rows are withdrawn. Continue / Reset replace stale marking.
+- Desktop migration history is below; the final four-workspace pass verifies current acquisition control.
 
 ## Physics verification
 
@@ -86,6 +86,8 @@ batch path. Acquisition progress comes from sequential snapshots.
 
 ## UI-test migration (applied 2026-10-01)
 
+Historical migration record: the later acquisition-control change withdraws source drag and stale marking. Continue now preserves data; Reset clears them. Final desktop evidence is in [VV.Studio](VV.Studio.md).
+
 The desktop scenarios now drive Start / Stop / live time: `StudioWindow.Acquire` waits for Completed / Stopped /
 Failed and the status-line counts are parsed; the cancel scenario became
 `Stop_KeepsAcquiredData_LocksThenUnlocksScene` (inputs locked while acquiring, counts frozen after Stop, Start
@@ -95,7 +97,7 @@ MC-limited presentation.
 
 ## Scope
 
-Studio uses Start / Stop exclusively. The batch members, ISimulationService and batch enum values have been
+Studio uses Start / Stop / Continue / Reset. The batch members, ISimulationService and batch enum values have been
 removed; SimulationService remains as the acquisition adapter and ImagingResult remains the snapshot image record.
 Before list-mode acquisition the flood used geometric CrystalDetector scoring through DefaultSimulationFactory.
 It now adds one count per ComptonCrystalDetector event at its Argmax pixel, so in-crystal Compton scatter
@@ -155,7 +157,9 @@ null; bins with no variance in either sample require exact agreement. The 4σ en
 transport and rejection, excludes measurement / decode / UI, and changes physical geometry as well as its
 compute cost; it is a local measurement, not a performance requirement.
 
-### Traceability and pending desktop checks
+### Traceability and pending desktop checks (historical implementation record)
+
+Current status: the final desktop pass covers workspace clicks, detector locks, retained Spectrum windows and Imaging/focus projections. SelectionItemPattern and keyboard-only/screen-reader coverage remain separate gaps; see [VV.Studio](VV.Studio.md).
 
 SR-RUN-20 … -22 cover explicit defaults, frozen measurement inputs and background. SR-NAV-01 / -02,
 SR-SPEC-02 / -03 and SR-RUN-12 state the shared inputs, checked-state workspace activation, gained amplitudes

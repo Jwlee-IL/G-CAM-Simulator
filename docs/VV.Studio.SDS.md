@@ -57,7 +57,7 @@ one class, or a small group of types that only make sense together. Unit IDs are
 | SU-02 | SI-1 | `SourceItemViewModel` | `Core/ViewModels/SourceItemViewModel.cs` | one editable source; input clamping; list and marker labels; `IPlaneMarker`; → `SceneSource` |
 | SU-03 | SI-1 | `MeasurementsViewModel`, `MeasureTool` | `Core/ViewModels/MeasurementsViewModel.cs`, `MeasureTool.cs` | measurement session: active tool and hint, numbering, add / delete / clear, selection, refresh on a new result |
 | SU-04 | SI-1 | `MeasurementViewModel`, `MeasurementKind`, `ImagePane`, `MeasurementDraft` | `Core/ViewModels/Measurement*.cs`, `ImagePane.cs` | one measurement: point-count check, value and detail text, description for screen readers |
-| SU-05 | SI-2 | `HeatmapViewport`, `Vec2` | `Core/Imaging/HeatmapViewport.cs` | fit, device-pixel snapping, zoom about a point, pan clamping, screen ↔ image ↔ mm |
+| SU-05 | SI-2 | `HeatmapViewport`, `Vec2`, `OverlayLabelLayout`, `ScreenRect` | `Core/Imaging/HeatmapViewport.cs`, `OverlayLabelLayout.cs`, `ScreenRect.cs` | fit, device-pixel snapping, zoom about a point, pan clamping, screen ↔ image ↔ mm; bounded packing of measured overlay rectangles |
 | SU-06 | SI-2 | `MeasurementMath`, `RoiStats` | `Core/Imaging/MeasurementMath.cs` | distance, angle, ROI statistics by pixel centre |
 | SU-07 | SI-1 | `IAcquisitionService`, `IAcquisitionSession`, `AcquisitionSnapshot`, `ImagingResult`, `IThemeService`, `AppTheme`, `IPlaneMarker` | `Core/Services/*.cs`, `Core/Imaging/IPlaneMarker.cs` | contracts between items (§3) |
 | SU-08 | SI-3 | `SimulationService` | `Services/SimulationService.cs` | validate inputs, build the engine config and start an acquisition session |
@@ -85,8 +85,8 @@ Paths are relative to `src/Gcam.Studio.Core`, `src/Gcam.Studio.Services` and `sr
 
 ### SI-1 ↔ SI-3: `IAcquisitionService`
 
-`IAcquisitionService`: `Start(scene, optics, liveTimeS, speed, detector, backgroundToSignalRatio)` returns an
-`IAcquisitionSession`. It publishes `IAsyncEnumerable<AcquisitionSnapshot>`, exposes `Stop()` and supports
+`IAcquisitionService`: `Start(scene, optics, liveTimeS, speed, detector, backgroundToSignalRatio, seed)` returns an
+`IAcquisitionSession`. It publishes `IAsyncEnumerable<AcquisitionSnapshot>`, exposes `Stop()` and `Continue(liveTimeS, speed)` and supports
 asynchronous disposal. Snapshots contain live time, integer counts, running rate, achieved speed, MC-limited
 flag, imaging, unsmeared events, frozen detector and effective physical optics inputs, decode time and completion. Images are detached read-only copies; the event
 array is detached and wrapped read-only. A bounded channel keeps at most two cumulative snapshots and drops
@@ -127,7 +127,7 @@ not a user-reachable state).
 
 | Direction | Mechanism | Payload |
 |---|---|---|
-| View → ViewModel | commands | `StartCommand` / `StopCommand`, `AddSourceCommand`, `RemoveSourceCommand`, `ToggleThemeCommand`; `Measurements.AddCommand(MeasurementDraft)`, `DeleteCommand`, `ClearCommand` |
+| View → ViewModel | commands | `StartCommand` (Start / Continue), `StopCommand`, `ResetCommand`, `AddSourceCommand`, `RemoveSourceCommand`, `ToggleThemeCommand`; `Measurements.AddCommand(MeasurementDraft)`, `DeleteCommand`, `ClearCommand` |
 | View ↔ ViewModel | two-way bindings | source fields, live time, speed, selected source, selected measurement, `ActiveTool` (radio group through `EnumMatchConverter`) |
 | ViewModel → View | one-way bindings | `Result` (images and mm mapping), `Progress`, `Status`, `State`, `IsIdle`, `CanEditInputs`, `CanEditLiveTime`, `CanEditSpeed`, `StartLabel`, `PeakText`, `ThemeToggleLabel`, `ToolHint`, `Items` |
 | Overlay → ViewModel | attached properties on `HeatmapView` (`MeasurementOverlay.Session`, `Pane`, `Markers`, `SelectedMarker`, `CanMoveMarkers`) | the adorner reads the session's tool and items and sends `MeasurementDraft(Pane, Kind, PointsMm)` through `AddCommand`; Studio sets `CanMoveMarkers = False`, so source markers are display-only |
@@ -335,6 +335,8 @@ Measurements and real-engine checks are recorded in [VV.Studio](VV.Studio.md).
 Spectrum publishes explicit edges from the count-binning width; centres remain for window statistics.
 Table selection requests [lo - width, hi + width]. Snapshot publication matches selection by emission lines,
 suppressing a second range request so live navigation survives.
+SU-22's emission table uses a local shared-size scope and four shared Auto numeric columns. Header and row
+cells use the same Pad.ListItem outer padding and Gap.Inline (8 DIP) inter-cell margin, retaining right alignment.
 
 ### SU-02 `SourceItemViewModel`
 
@@ -381,6 +383,11 @@ from the builder: non-cyclic, recon half-extent `0.95 · rank · pitch / (D/F) /
   are physical inputs, locked while data exist), so the marker rules above are unused in the app.
 - Esc (draft open) and right-click cancel the draft; Delete on the focused heatmap runs `DeleteCommand`.
 - Holds no screen geometry between renders: every render maps the mm points through `HeatmapView.MmToScreen`.
+- Measures truth/found, measurement and draft chips together each render. SI-2 `OverlayLabelLayout` and
+  `ScreenRect` choose bounded rectangles nearest their preferred positions with a 4-DIP gap, avoiding marker
+  crosshair bounds. Resize/zoom/pan rebuild from the mm mapping; the temporary request list is cleared after
+  drawing. Displaced marker labels use neutral leaders drawn before all plates. An unplaceable full chip is
+  omitted; the coordinate/measurement list remains. Marker centres and hit testing are unchanged.
 
 ### SU-12 `ThemeService`
 
@@ -496,6 +503,7 @@ Every SRS requirement maps to at least one unit; every unit carries at least one
 | SR-A11Y-01, SR-A11Y-03 | SU-14, SU-09, SU-04 (row description) |
 | SR-A11Y-02 | SU-09 |
 | SR-A11Y-04 | SU-14 |
+| SR-A11Y-05 | SU-14 theme dictionaries and disabled TextBox/ComboBox templates; ThemeContrastTests reads production XAML tokens without WPF |
 | SR-SEC-01 | all (no I/O anywhere in Studio), SU-08 (engine is called with in-memory config only) |
 | SR-ARCH-01 … SR-ARCH-04 | project files of SI-1 … SI-4 and `tests/Gcam.Studio.Tests` |
 
@@ -517,19 +525,21 @@ as the code.
 
 ## Waveform and acquired-chain design (2026-10-02)
 
-The detection chain is part of immutable `DetectorSettings`, captured by `SimulationService.Start` and published by `AcquisitionSession`; `AcquisitionSnapshot.Chain` exposes the captured setting. `MainViewModel` owns the part selectors and rejects physical edits while running or while data exist. Spectrum/Imaging/Measurement read snapshot settings; physical scintillators map through `FrontEndMaterials` to explicit transport keys. Unsupported CsI is absent from Studio selection. Default transport remains the GAGG behavior of the earlier Compton path.
+The detection chain is part of immutable `DetectorSettings`, captured by `SimulationService.Start` and published by `AcquisitionSession`; `AcquisitionSnapshot.Chain` exposes the captured setting. `MainViewModel` owns the part selectors and rejects physical edits while running or while data exist. Spectrum/Imaging/Measurement read snapshot settings; physical scintillators map through `FrontEndMaterials` to explicit transport keys: GAGG(Ce)→GAGG, NaI(Tl)→NaI, LYSO→LYSO, CsI(Tl)→CsI and BGO→BGO. Unsupported names fail before acquisition. GAGG remains first and default; the other materials are what-if comparisons. CsI transport uses the CsI host at 4.51 g/cm³, omitting the Tl activator as for NaI:Tl; the dopant-specific transport error is not quantified. Changing material requires Reset and a new acquisition; it never reinterprets retained deposits.
+
+`CrystalMaterial` uses xraylib 4.3.0 photoelectric plus incoherent cross sections through 800 keV, with grid pairs around the I 33.1694 keV and Cs 35.9846 keV K edges. Above 800 keV it uses Klein–Nishina electrons/g plus the 600–800 keV photoelectric power-law extension; coherent and pair production remain omitted. CsI's measured extension error against NIST photoelectric plus incoherent is +0.069955 % at 1000 keV and −0.352789 % at 1250 keV. These are measured approximation errors, not precision guarantees. Full-precision data and checks are retained in `samples/materials/evidence/crystal_tables.json` and `samples/materials/CsI_checks.txt`; `CsIMaterialTests` verifies the like-total NIST comparisons, extension formula, reference anchor, both edges, lookup and table behavior. The existing GAGG tests remain unchanged apart from the material inventory count.
 
 `SpectrumService` rebuilds its analytic model, effective resolving interval, measurements and bins when acquired detector identity changes. `ImagingService` invalidates energies, windows and H-only ratios on acquired detector identity as well as acquisition ID. Calibration builds the same acquired measurement chain. Array-wide Spectrum pile-up remains a sum-before-smear grouping model; Imaging still uses ungrouped event positions. Four ADC position signals and Anger mispositioning are outside this design.
 
 `IWaveformService` returns `WaveformView`: two prepared uniform-X PlotSeries, event identity/amplitude records, acquired-chain readouts and limitation labels. `WaveformWorkspaceViewModel` owns local trigger/window/ideal/rate-study settings. It requests work only when active, cancels old requests, rejects late revisions and reuses a held window once its requested interval is covered. A new acquisition or Reset clears retained scope identity; Continue keeps it. In rate study, the retained prefix is re-spaced with a fixed seed in original order; the snapshot is never mutated.
 
-`WaveformService` serializes requests on a semaphore and runs CPU work via Task.Run. It computes each event response once with the same index-addressed `MeasurementStage` as Spectrum/Imaging. Ideal stimulus uses gain-only amplitudes. `WindowRasterizer` is an additive engine utility with explicit sample count, clipped pulse support, optional ADC/analog noise and cancellation checks; it does not perform intrinsic smearing. Existing `Waveform.CrrcInt`/`TrapShape` remain the shapers with tail-matched pole-zero coefficients. Cancellation checks surround these bounded integer calls; they do not interrupt their internal loops.
+`WaveformService` serializes requests on a semaphore and runs CPU work via Task.Run. It computes each event response once with the same index-addressed `MeasurementStage` as Spectrum/Imaging. Ideal stimulus uses gain-only amplitudes. `WindowRasterizer` is an additive engine utility with explicit sample count, clipped pulse support, optional ADC/analog noise and cancellation checks; it does not perform intrinsic smearing. `Waveform.CrrcInt`/`TrapShape` use tail-matched pole-zero coefficients. CR-RC selects the acquired preamp order (4), explicit T_sum (100/200/500 ns) and K=round(65536*order*8/T_sum); this is a simulation convention independent of the DCR effective noise integration window. CrrcInt retains F=0 legacy calls and adds F=12 states with Q16 coefficients; the signed-16 bounded contract matches 48-bit RTL states/products. Cancellation checks surround these bounded integer calls; they do not interrupt their internal loops.
 
-`ScopeWindow` checks origin-relative time arithmetic at 125 MSPS. Twenty percent of the displayed window precedes the trigger. Warm-up includes the maximum amplitude-dependent pulse support, eight tail constants and filter history; work length including warm-up is capped at 10 million samples. Empty windows generate baseline noise. The scope labels simulated baseline beyond acquired live time and finite local filter warm-up. Raw integer baseline is displayed, without adding BLR. This finite-history reset does not reproduce an acquisition-wide trapezoidal baseline walk exactly.
+`ScopeWindow` checks origin-relative time arithmetic at 125 MSPS. Twenty percent of the displayed window precedes the trigger. Warm-up includes the maximum amplitude-dependent pulse support, eight tail constants and eight times the configured sum of nominal RC times; work length including warm-up is capped at 10 million samples. Empty windows generate baseline noise. The scope labels simulated baseline beyond acquired live time and finite local filter warm-up. Uncorrected shaped baseline is displayed without BLR; CR-RC output retains Q12 fractions by dividing raw values by 4096. This finite-history reset does not reproduce an acquisition-wide trapezoidal baseline walk exactly.
 
 The service builds plot doubles and `MinMaxPyramid` instances on the worker. A prepared pyramid is accepted only for its identical immutable sample array; the control validates implicit X endpoints and reuses the worker preparation. Existing unprepared series continue through full validation/preparation. `PlotView.ShareViewRange` publishes navigation into the scope VM's two-way ViewRange binding, so both traces share X while retaining independent Y autoscale. Views contain only InitializeComponent code-behind; the shell's templates select the two waveform controls and shared ChainPanel.
 
-Trapezoid readout uses local FlatTop and a matched noiseless calibration. Ideal zero-rise calibration uses an explicit instantaneous reference rather than the legacy bi-exponential divide-by-zero path. Neighbor overlap, partial acquired future or saturation suppress energy recovery. CR-RC reports its integer low-signal limitation and omits recovered energy. FWHM/readout values are engine-derived in Services, not duplicated physics formulas in Core.
+Trapezoid readout uses local FlatTop and a matched noiseless calibration. Ideal zero-rise calibration uses an explicit instantaneous reference rather than the legacy bi-exponential divide-by-zero path. Neighbor overlap, partial acquired future or saturation suppress energy recovery. CR-RC identifies its Q12 state and T_sum simulation convention and omits recovered energy because trigger/phase/overlap estimation is not validated. FWHM/readout values are engine-derived in Services, not duplicated physics formulas in Core.
 
 Traceability and execution limitations: [VV.Studio.Waveform](VV.Studio.Waveform.md). Final tests and offscreen PNG generation were not run by the implementer after shell process creation was denied; no desktop verification is claimed.
 
@@ -541,6 +551,9 @@ Services implement `IDetectorFaceService` and `IFocusSweepService`; the composit
 Views select DetectorView/DetectorPanel through workspace templates. Their code-behind only initializes XAML.
 `DetectorFaceView` draws exact vector rectangles with theme brushes, row zero at the bottom and an Image
 automation peer. Relative gain uses opaque viridis colours and an accompanying numeric colour bar.
+DetectorPanel's local surface Border has VerticalAlignment Top and keeps its ScrollViewer. Its natural
+height ends after the existing captions and panel padding; the shell's stretched workspace host and face
+allocation are unchanged. Gain extrema remain in DetectorWorkspaceViewModel.GainLegend beneath the face.
 
 The face service supplies `CrystalUniformity.Gain`, exactly the pattern used by MeasurementStage. It does not
 apply an energy window or label sensitivity as efficiency. The pure geometry partitions the full face into

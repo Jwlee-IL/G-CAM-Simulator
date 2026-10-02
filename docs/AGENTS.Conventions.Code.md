@@ -53,7 +53,7 @@ Resource key kinds: `Color`, `Brush`, `Space`, `Pad` (padding), `Gap` (margin), 
   `AutomationProperties.Name` only where the content can't serve — icon glyphs ("+", "−") and custom surfaces;
   custom surfaces also get `HelpText`. Reasons for this and every other rule: [AGENTS.Rationale](AGENTS.Rationale.md).
 - Anything a UI test drives or reads gets `AutomationProperties.AutomationId` — PascalCase, by meaning
-  (`RunSimulation`, `ToolDistance`, `FloodView`), unique in the window. Tests select by ID, never by name.
+  (`StartAcquisition`, `ResetAcquisition`, `ToolDistance`, `FloodView`), unique in the window. Tests select by ID, never by name.
 - Don't set `AutomationProperties.Name` on a text element (`TextBlock`): its text *is* its name, and a fixed name
   hides it from screen readers. List rows get their name from the item (`ItemContainerStyle`), or a reader hears
   the ViewModel's type name.

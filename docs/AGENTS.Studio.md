@@ -1,7 +1,7 @@
 # AGENTS.Studio — working on GCAM Studio (the MVVM viewer)
 
 Scope: entry point for anyone changing `src/Gcam.Studio*` or `tests/Gcam.Studio*`. GCAM Studio is the
-MVVM rewrite of the WPF viewer; `src/Gcam.Wpf` is the original code-behind app and is left as is.
+current MVVM WPF viewer; `src/Gcam.Wpf` is the original code-behind app, retained until TODO-12.
 
 ## Read first
 
@@ -56,7 +56,7 @@ is `GCAM_RENDER_SNAPSHOTS=1`; desktop input uses `GCAM_UI_TESTS=1`. Enabling evi
    `AutomationProperties.Name` only for glyph buttons and custom surfaces) and, if a test drives it, an
    `AutomationId`; custom controls have an automation peer. Never put a fixed `Name` on a text element — it hides
    the text.
-5. Transport and spectrum processing reach the engine only through `IAcquisitionService` and `ISpectrumService`.
+5. Transport and processing reach the engine through Core contracts (`IAcquisitionService`, `ISpectrumService`, `IImagingService`, `IWaveformService`, `IDetectorFaceService`, `IFocusSweepService`) implemented in Services.
 6. Docs that describe a change are updated in the same commit.
 
 ## Verifying a UI change
@@ -79,12 +79,13 @@ name a helper `Select` (the `Select-Object` alias wins).
 | 1 | Layered MVVM shell, async run with progress / cancel | done |
 | 2 | `HeatmapView`: zoom, pan, mm readout, automation peer | done |
 | 2.5 | Theme tokens (dark / light), metrics, typography, shared control styles; fixed-grid layout; colour bars | done |
-| 3 | Measurement tools (distance, angle, ROI) as an adorner, source drag on the reconstruction, measurement panel, results table, stale-result chip | done |
-| 4 | UI automation (6 scenarios traced to V&V; heatmap navigation next), keyboard crosshair for measuring, high-contrast mode, colormap choice | in progress |
-| Migration | One shared run, workspace templates and first-party `PlotView` (TODO-06); feature workspaces follow in TODO-07 … TODO-12 | implemented; plot CPU gate passed; existing desktop regression and polish survey blocked by desktop input / capture errors |
-| Live acquisition | Fresh list-mode MC, weight rejection, shared immutable 4 Hz snapshots, Start / Stop with preset live time and speed (TODO-13) | implemented; physics / headless validation in VV.Studio; desktop validation deferred while the desktop and UI-test project are occupied |
-| Spectrum | Shared live counts, physical default chain, per-energy windows with unresolved-line grouping, optional arrival-time pile-up (TODO-07) | implemented; headless evidence in VV.Studio; desktop validation deferred while the desktop and UI-test project are occupied |
-| Acquisition control | Start / Stop / Continue / Reset (multichannel-analyser model): the session runs in segments and continues event for event; physical inputs locked while data exist (stale state removed); new seed per acquisition, fixable; source drag withdrawn (TODO-24, [PLAN.Studio.AcquisitionControl](PLAN.Studio.AcquisitionControl.md)) | implemented; headless + render evidence in VV.Studio.Acquisition; rewritten desktop scenarios not run (TODO-22) |
+| 3 | Measurement tools (distance, angle, ROI) as an adorner, source drag on the reconstruction, measurement panel, results table, stale-result chip | originally done; source drag and stale-result chip withdrawn by TODO-24 |
+| 4 | UI automation (12 regression scenarios plus plot gate and survey; heatmap navigation remains a follow-up), keyboard crosshair for measuring, high-contrast mode, colormap choice | in progress |
+| Migration | One shared run, workspace templates and first-party `PlotView` (TODO-06); four workspaces implemented in TODO-07 … TODO-11; legacy removal remains TODO-12 | implemented; final desktop suite recorded 27/27 (13 headless oracles, 12 scenarios, plot gate, survey); legacy removal remains TODO-12 |
+| Live acquisition | Fresh list-mode MC, weight rejection, shared immutable 4 Hz snapshots, Start / Stop / Continue / Reset with preset live time and speed (TODO-13, TODO-24) | implemented; physics / headless validation in VV.Studio; desktop validation recorded in the final TODO-22 pass |
+| Spectrum | Shared live counts, physical default chain, per-energy windows with unresolved-line grouping, optional arrival-time pile-up (TODO-07) | implemented; headless evidence in VV.Studio; desktop validation recorded in the final TODO-22 pass |
+| Waveform / Detector / focus | Shared-chain scope, exact detector face/gap and retained-flood focus with separate external range (TODO-10/11); CsI and Q12 CR-RC (TODO-20/21) | implemented; headless coverage and retained render/desktop evidence in VV.Studio |
+| Acquisition control | Start / Stop / Continue / Reset (multichannel-analyser model): the session runs in segments and continues event for event; physical inputs locked while data exist (stale state removed); new seed per acquisition, fixable; source drag withdrawn (TODO-24, [PLAN.Studio.AcquisitionControl](PLAN.Studio.AcquisitionControl.md)) | implemented; headless + render evidence in VV.Studio.Acquisition; rewritten desktop scenarios passed in the recorded TODO-22 pass |
 
 **Acquisition control in code.** `MainViewModel` derives its command table from `IsRunning`, `HasData` and whether a
 continuable session is held (`CanEditInputs`, `CanEditLiveTime`, `CanEditSpeed`, `StartLabel`); every physical setter

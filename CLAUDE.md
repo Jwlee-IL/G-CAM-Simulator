@@ -6,14 +6,14 @@ This file carries the **cross-session context that isn't otherwise in the repo**
 survives moving to another computer. It is git-tracked and **auto-loaded by Claude Code on
 any clone** (the machine-local auto-memory under `~/.claude/…/memory/` does NOT travel).
 Architecture + build/run is in `@AGENTS.md` above; per-theme quantitative results are in
-`docs/AGENTS.Findings.md` (themes 1–50). Keep answers to the author in **Korean**.
+`docs/AGENTS.Findings.md` (themes 1–59). Keep answers to the author in **Korean**.
 
 ## What this is
 **Gcam** — a personal C#/.NET 9 Monte Carlo simulator for **coded-aperture gamma-source
 localization** (Cs-137 + multi-isotope), recreating a real coded-aperture instrument the
 author previously built in hardware: rank-7 tungsten MURA mask (2×2 mosaic, ~10 mm) → 12×12
-crystal flood map → ADC peak detection → cross-correlation decode. 50 themes of work;
-`Gcam.sln`, CLI `montecarlo <sub>` (~39 sub-commands), a WPF viewer, and a SystemVerilog +
+crystal flood map → ADC peak detection → cross-correlation decode. 59 themes of work;
+`Gcam.sln`, CLI `montecarlo <sub>` (41 study sub-commands), GCAM Studio (the current WPF viewer; Gcam.Wpf retained until TODO-12), and a SystemVerilog +
 cocotb RTL front-end path.
 
 ## Key decisions / context (not derivable from the code or git history)

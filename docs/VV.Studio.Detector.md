@@ -7,7 +7,9 @@ Scope: editable reflector gap, the static Detector workspace and experimental fo
 - Detector displays a seeded relative-gain pattern and exact geometric dead gaps, with acquired and next-acquisition inputs separated.
 - Focus projects retained channel floods; it generates no transport histories and has no calibrated depth accuracy.
 - Half-maximum intervals are descriptive and censored at sweep edges; an external surface range is a separate observation.
-- Deterministic tests pass in the final tree. Independent-seed gap evidence and detached render fixtures require authorization to set their opt-in environment variables.
+- Deterministic tests run normally; long numerical evidence, offscreen renders and desktop tests require their separate opt-in variables. Current totals and retained desktop evidence are in [VV.Studio](VV.Studio.md#current-test-inventory).
+
+The final desktop pass checks the face before acquisition, acquired-input locks through Reset, refocus projection and raw half-max endpoints. Earlier execution restrictions below are historical; they do not describe current workspace availability. See [VV.Studio](VV.Studio.md).
 
 ## Conditions and numerical expectations
 

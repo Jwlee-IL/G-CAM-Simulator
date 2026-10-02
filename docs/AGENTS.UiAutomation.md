@@ -4,6 +4,8 @@ Scope: automated UI runs against the real GCAM Studio window (`tests/Gcam.Studio
 ViewModels and geometry are not covered here (see [DESIGN.Architecture](DESIGN.Architecture.md#testing-strategy));
 what the UI runs verify is traced in [VV.Studio](VV.Studio.md).
 
+Current suite: 13 headless oracle cases plus 14 opt-in desktop cases (12 regression scenarios, plot gate and survey), 27 total. The retained final desktop run passed 27/27; it is not re-executed by a normal test run. Start / Stop / Continue / Reset and all four workspaces are covered. Source drag and stale-result marking were withdrawn; the initial charter, pilot and coverage tables below are historical records. Current totals: [VV.Studio](VV.Studio.md#current-test-inventory).
+
 The work goes through stages, and a stage is not skipped because a later one looks easy. Each stage has an exit
 condition and a record below.
 
@@ -188,10 +190,10 @@ image was deleted and the capture fixed. Open a failure bundle's image before sh
 - Re-measure (stage 2) and re-pilot (stage 3) after changing AutomationIds, the window layout, the adorner's input
   handling, or the test machine's display scaling.
 
-## Next
+## Remaining coverage
 
 - Heatmap zoom / pan / readout scenarios (SR-VIEW-03, -04, -07) through keys and `ItemStatus`.
-- The never-operated controls above (Remove source, Clear, Delete button, source list selection).
+- Controls absent from the final scenario assertions (Remove source, Clear, Delete button, source list selection), plus SelectionItemPattern activation and keyboard-only/screen-reader flows.
 - A keyboard crosshair for creating measurements (AN-01), then a keyboard-only scenario.
 - Promote from exploratory to regression use (profile P2) once the suite has a run policy owner and history.
 
@@ -234,11 +236,13 @@ exit 0, no sandbox writes. Reproduce only this image with `GCAM_UI_TESTS=1`, `GC
 `dotnet test tests/Gcam.Studio.UiTests -c Release --filter FullyQualifiedName~PolishSurveyTests`.
 Ordinary survey execution writes only its 16 survey frames so it cannot overwrite the README's distinct scene.
 
-**Observed presentation defects (left unchanged).** `Views/SpectrumView.xaml` uses adjacent fixed-width, right-aligned
+**Observed presentation defects (survey record, before subsequent polish).** `Views/SpectrumView.xaml` uses adjacent fixed-width, right-aligned
 Line and Window columns: run the pair scene, open Spectrum at either size; the Co-60 values touch (P-12).
 `MeasurementOverlay` found labels crowd at 1280×800 in that pair scene (P-13). `WaveformView.xaml` omits marker labels
 on the shaped plot while retaining marker lines (P-15); this is a display choice to review, not a numerical defect.
 No transport, reconstruction or acquisition defect was found by the new scenarios.
+
+Subsequent polish addresses P-12 with shared Auto-sized Spectrum columns and P-13 with deterministic overlay chip placement (OverlayLabelLayout). The shaped waveform plot still omits marker labels by design. These code changes do not imply a new desktop run; the survey observations above remain the dated record.
 
 **Execution record:** final desktop recovery 27/27 (13 oracle, 12 scenarios, plot gate, survey); deliberately
 broken run 12/12 scenario failures, all at the corrupted expectations. Ordinary suite: 262 / 164 / 72 / 13

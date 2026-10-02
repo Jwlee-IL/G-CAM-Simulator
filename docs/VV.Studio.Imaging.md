@@ -8,8 +8,10 @@ verification from measured localization precision; it makes no new precision cla
 - Headless requirements passed; Release measurements below were supplied by the reviewer on 2026-10-02.
 - The Co-60 y bias near −1.4 mm is not an energy effect: it is a position-dependent localisation error from
   undersampling the mask-cell shadow with the default optics at a 1 m focal plane (see "Localisation bias").
-- Offscreen mixed-scene renders pass in both themes and sizes; desktop validation remains unperformed.
-- No desktop UI test or Studio launch is part of this verification.
+- Retained offscreen mixed-scene renders cover both themes and sizes. The final desktop pass verifies channel selection, stripping and bound found peaks; see [VV.Studio](VV.Studio.md).
+- The measurements below are headless; the later desktop pass is separate evidence, not a new localisation-precision measurement.
+
+Current normal-run totals are in [VV.Studio](VV.Studio.md#current-test-inventory). Dated verification records below retain the execution limits at that time; subsequent desktop evidence supersedes their pending status.
 
 ## Scenes and checks
 

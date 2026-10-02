@@ -14,8 +14,8 @@ next — but it is a **design study**: nothing is being built, nothing is measur
 is made.
 
 **In numbers:** 19 user needs (18 active) → 51 product requirements (48 active) → 33 evidence entries; 9 known limitations;
-38 decisions with the author's reasons. The engineering viewer adds 39 software requirements, 44 unit and integration
-tests and 7 automated UI scenarios.
+38 decisions with the author's reasons. The engineering viewer has 102 active software requirement IDs (nine withdrawn), four workspaces, and current unit/integration
+test totals in [VV.Studio](VV.Studio.md#current-test-inventory), plus 12 opt-in desktop regression scenarios, a plot gate and a survey.
 
 ## The problems it starts from
 
@@ -83,7 +83,7 @@ rest on MC, 4 on RTL, 11 on AN; 5 are decisions, 7 hardware targets and 4 still 
 ```mermaid
 flowchart LR
     URS["URS<br/>19 user needs"] --> PRS["PRS<br/>51 product requirements"]
-    PRS --> SRS["Studio SRS<br/>39 software requirements"]
+    PRS --> SRS["Studio SRS<br/>102 active software requirements"]
     SRS --> SDS["Studio SDS<br/>design record"]
     SDS --> VVS["Studio V&V<br/>tests, scenarios, anomalies"]
     EV["Evidence<br/>33 entries"] --> PRS

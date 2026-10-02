@@ -28,7 +28,7 @@ combine a container's padding with a child's margin for the same edge.
 | `Size.NumberInput.Short` | 80 | short live-time / speed values with s / × suffixes; preserves top-bar space |
 | `Size.ColorBar` · `Size.ReadoutLine` | 8 · 16 | colour-bar strip · the reserved readout line under an image |
 | `Size.Logo` · `Size.Icon` · `Size.StatusDot` | 16 · 12 · 8 | top-bar mark · button icon · run-state dot |
-| `Size.Column.Id` / `Size.Column.Short` / `Size.Column.Value` | 36 / 60 / 96 | fixed columns of the results and emission-window tables (header and rows share them and `Pad.ListItem`; the label column takes the rest; numbers right-aligned) |
+| `Size.Column.Id` / `Size.Column.Short` / `Size.Column.Value` | 36 / 60 / 96 | fixed results-table columns; Spectrum uses local shared Auto numeric columns and `Gap.Inline` instead, with the label column taking the rest and numbers right-aligned |
 | `Size.Imaging.Lower` | 240 | height always left under the Imaging image pair for measurements and the focus curve |
 | `Size.FieldLabel` | 84 | label column in forms |
 | `Radius.Control` / `Radius.Panel` / `Radius.Chip` | 3 / 6 / 10 | corners |
@@ -110,18 +110,18 @@ the shell-owned window N (also shown in Spectrum), Compton strip, calibrated R v
 and found-peak coordinates. It reuses Gap.Field, Gap.Tight, Gap.Section and the existing text/control roles.
 Selection changes both image grids and their bars/readouts together; ROI geometry stays in mm and its values
 refresh against the selected grid. All shows the union of isotope-labelled found markers over the acquisition
-reconstruction. A neutral diamond and "Found" label distinguish read-only peaks from draggable true-source rings.
+reconstruction. A neutral diamond and "Found" label distinguish read-only peaks from display-only true-source rings.
 
 The additional render fixtures cover two isotopes with All and Cs-137 selected, both themes and both target
-sizes (1280×800 and 1440×900). Snapshot generation and visual inspection are pending local command execution;
-the panel's fit at those sizes is not claimed verified yet. Marker metrics are documented in
+sizes (1280×800 and 1440×900). Retained snapshots and the final four-workspace desktop survey are documented in [VV.Studio](VV.Studio.md);
+the survey identified label crowding, subsequently addressed by the overlay layout and spacing changes. Marker metrics are documented in
 [DESIGN.Controls](DESIGN.Controls.md).
 
 ## Editable optics and focus
 
 The shared Physical optics and Detector sections use themed `Expander.Section` headers. When collapsed,
 a one-line effective summary remains visible (full text in its tooltip). Errors are outside collapsed content;
-Start expands invalid sections. Physical fields and atomic engineering presets are disabled while acquiring.
+Start expands invalid sections. Physical fields and atomic engineering presets are disabled while acquiring and while data exist, until Reset.
 The decoder focal plane is a separate Imaging view setting, in mm from the detector, enabled during and after
 acquisition. Its readout uses acquired physical geometry after a run, including when pending inputs differ.
 Geometry readings carry no pass/fail glyph; sampling has a conditional precision-evidence note. No depth-reach
@@ -133,7 +133,7 @@ Offscreen render cases cover expanded/collapsed panels and F=800 at 1280×800 an
 
 The top workspace switch now includes Waveform (Ctrl+3). The shared left panel places Detection chain after the source list, before the selected-source editor and Physical optics. Its scintillator / photosensor / preamp selectors are disabled during acquisition and while acquired data exist; collapsed, it shows the selected chain on one wrapped line. Retained data are never repainted with other physics.
 
-Waveform centre stacks two flexible-height PlotViews: ADC energy sum above integer shaped output. Both share the time-from-trigger axis (µs), zoom, pan and reset; Y remains independent. Event markers identify acquired index, pixel and deposit, with an event list in the right panel also giving the original absolute acquisition time. The title and simulation/mode/partial-window note sit above the plots; worker summary and pulse readout are below.
+Waveform centre stacks two flexible-height PlotViews: ADC energy sum above shaped output (fractional code equivalents for Q12 CR-RC; integer codes for trapezoid). Both share the time-from-trigger axis (µs), zoom, pan and reset; Y remains independent. Event markers identify acquired index, pixel and deposit, with an event list in the right panel also giving the original absolute acquisition time. The title and simulation/mode/partial-window note sit above the plots; worker summary and pulse readout are below.
 
 The right ScrollViewer contains latest/next/index, Follow latest, window µs, a separate rate-study toggle and simulated energy-channel kcps, ideal stimulus, acquired-chain/readout facts and the event list. Default is real 10 µs with 20% pretrigger; wider windows may be clipped to the sample work budget. Rate study and ideal status are explicit in the centre note. No controls imply that the position channels or their pile-up behavior have been simulated.
 
@@ -147,6 +147,8 @@ counts/live-time rate is a separate readout. The right scrollable panel lists ma
 active-area fraction and gain σ/seed. Without data the face uses the pending settings, captioned "Settings for the
 next acquisition"; with data it shows the acquired, locked settings, captioned "Acquired settings · locked until
 Reset" — neutral caption text, not the warning colour.
+The geometry card is top-aligned to its content, with the standard panel padding and scrolling when height is
+constrained; the shell's workspace host remains stretched. Gain extrema remain under the face legend.
 The shared gap editor uses µm and retains invalid text; physical pitch edits revalidate it.
 
 Imaging's scrollable options contain K (1–4), Sweep focus/Cancel sweep, sharpest-plane and half-max

@@ -32,10 +32,10 @@ decoding of that image localizes the source. Historically the source position wa
 found by physically moving the isotope around; this project replaces that with
 simulation so the geometry, decoder, and mask design can be swept programmatically.
 
-Started 2026-07-08. It began as a hobby rebuild and grew into a 50-theme experiment
+Started 2026-07-08. It began as a hobby rebuild and grew into a 59-theme experiment
 platform: FCFOV/ghost mapping and configuration optimization, then crystal-Compton
 multi-isotope separation, depth estimation, MLEM reconstruction, a full detector/front-end
-chain (with a SystemVerilog + cocotb RTL path and a WPF viewer app), and a physical-realism
+chain (with a SystemVerilog + cocotb RTL path and the GCAM Studio WPF viewer), and a physical-realism
 modelling pass (thermal, pile-up, fabrication/alignment tolerances, non-proportionality, DOI).
 
 ## Solution layout
@@ -51,10 +51,10 @@ in `Directory.Build.props` (nullable + implicit usings enabled).
 | `src/…Detector` | `CrystalDetector` / `ComptonCrystalDetector` (`IDetector` — ray→pixel scoring, Compton transport), `ComptonModel` (Klein-Nishina), `CrystalMaterial` (μ(E) + photoelectric share per scintillator, from xraylib/NIST — theme 52), `CrystalUniformity` (per-pixel gain/resolution + photopeak window), `FrontEndModel` (photoelectron-budget resolution + DCR), `Waveform` (native C# shaper, bit-exact to RTL), `ThermalDrift` (gain/DCR/PDE vs T), `NonProportionality` (electron-response curves), `DetectorDefects` (dead/hot maps + repair), `MaskSecondary` (W fluorescence/scatter), `EntranceAbsorber` (source capsule/window) |
 | `src/…Decoding` | `CrossCorrelationDecoder` (`IDecoder`, ±1 back-projection + optional sub-cell interp), `MlemDecoder` (`IDecoder`, Poisson-likelihood ML-EM), `PeakInterpolation` (tent/parabolic/gaussian), `CodedApertureGeometry` |
 | `src/…Simulation` | `SimulationRunner`, `ISimulationFactory`/`DefaultSimulationFactory` (+ `ComptonFactory`), sources (`IsotropicSource`, `DetectorBiasedSource`, `MixedFieldSource`), `DecayScheme` (per-decay correlated gammas), `EventStreamStudy` (timed MC stream → pile-up), and one study class per theme (`SourceSweep`, `ParameterScan`, `NoiseStudy`, `ThicknessStudy`, `UniformityStudy`, `ArrayStudy`, `ComptonStudy`, `DepthStudy`/`DepthDesignStudy`, `MaskGeometryStudy`, `BackgroundStudy`, `ShieldStudy`, `MixedFieldStudy`, `MaskAntimaskStudy`, `FieldOfViewStudy`, `DoseStudy` (+ `AmbientDose`, ICRP 74), plus the realism-gap studies: `ThermalDriftStudy`/`ThermalReadoutStudy`, `MaskFabricationStudy`, `AlignmentStudy`, `DetectorDefectStudy`, `MaskSecondaryStudy`/`MaskScatterStudy`, `DeadTime`/`DeadTimeStudy`, `SubCellStudy`, `CascadeSummingStudy`, `NonProportionalityStudy`, `FiniteSourceStudy`, `MlemStudy`, `DoiParallaxStudy`) |
-| `src/…Wpf` | `Gcam.Wpf` (net9.0-windows, ScottPlot 5): interactive scene editor + Waveform/Imaging/Spectrum/Optics/Detector tabs; one acquisition drives all tabs. Can't be headless-tested — verify it *compiles* (theme 34–35) |
-| `src/…Studio*` | MVVM rewrite of the viewer (imaging workflow first), layered so the boundaries are enforced by the compiler: **`Gcam.Studio.Core`** (net9.0, no WPF — models, `IAcquisitionService`, ViewModels on CommunityToolkit.Mvvm) → **`Gcam.Studio.Services`** (net9.0 — `SimulationService`, the only Studio layer that touches the engine; publishes immutable list-mode acquisition snapshots at 4 Hz with Start / Stop) → **`Gcam.Studio`** (net9.0-windows — views, converters, DI composition root). Scene → config via `Configuration.SceneConfigBuilder`. `tests/Gcam.Studio.Tests` (net9.0) covers the ViewModels without a UI stack |
-| `src/…Cli` | Console entrypoint `montecarlo` (`Program.cs` = dispatch + single run; one static class per study group in `Commands/`): single run + **~41** study sub-commands (`sweep`, `fov`, `dose`, `scan`, `noise`, the Compton/depth/mask-geometry/mixed-field/front-end set, and the realism-gap set `thermal`…`doi` — see Build/run for the full list) |
-| `tests/…Tests` | xUnit harness — **256 engine cases** (original 246 + 8 list-mode + 2 front-end preset compatibility; + 7 cocotb in `rtl/`); Studio has 70 Core cases, 17 service cases, 10 UI-oracle cases and 9 opt-in desktop cases. Current inventory and acquisition / spectrum evidence: [VV.Studio](docs/VV.Studio.md), [VV.Studio.Acquisition](docs/VV.Studio.Acquisition.md). Physics tests cover MURA, pipeline / transport invariants, per-theme studies and list-mode histogram / timing laws. |
+| `src/…Wpf` | Legacy `Gcam.Wpf` (net9.0-windows, ScottPlot 5), retained until TODO-12; GCAM Studio is the current viewer: interactive scene editor + Waveform/Imaging/Spectrum/Optics/Detector tabs; one acquisition drives all tabs. Can't be headless-tested — verify it *compiles* (theme 34–35) |
+| `src/…Studio*` | Current MVVM viewer with Imaging, Spectrum, Waveform and Detector workspaces, layered so the boundaries are enforced by the compiler: **`Gcam.Studio.Core`** (net9.0, no WPF — models, `IAcquisitionService`, ViewModels on CommunityToolkit.Mvvm) → **`Gcam.Studio.Services`** (net9.0 — `SimulationService`, the only Studio layer that touches the engine; publishes immutable list-mode acquisition snapshots at 4 Hz with Start / Stop / Continue / Reset) → **`Gcam.Studio`** (net9.0-windows — views, converters, DI composition root). Scene → config via `Configuration.SceneConfigBuilder`. `tests/Gcam.Studio.Tests` (net9.0) covers the ViewModels without a UI stack |
+| `src/…Cli` | Console entrypoint `montecarlo` (`Program.cs` = dispatch + single run; one static class per study group in `Commands/`): single run + **41** study sub-commands (`sweep`, `fov`, `dose`, `scan`, `noise`, the Compton/depth/mask-geometry/mixed-field/front-end set, and the realism-gap set `thermal`…`doi` — run `montecarlo help` for the full list) |
+| `tests/…Tests` | xUnit harness — current engine / Studio / opt-in inventories are in [VV.Studio](docs/VV.Studio.md#current-test-inventory). The retained RTL execution record reports 137 cocotb cases with C# vectors (see `rtl/README.md`). Current inventory and acquisition / spectrum evidence: [VV.Studio](docs/VV.Studio.md), [VV.Studio.Acquisition](docs/VV.Studio.Acquisition.md). Physics tests cover MURA, pipeline / transport invariants, per-theme studies and list-mode histogram / timing laws. |
 
 ### Design principle
 Everything is **data-driven**: one `SimulationConfig` (JSON) fully describes a
@@ -98,9 +98,9 @@ Coordinate frame (optical axis = z):
 
 ```bash
 dotnet build Gcam.sln -c Release
-dotnet test  Gcam.sln   # 256 engine + 70 Studio + 17 service + 10 UI-oracle cases (+9 desktop tests, skipped unless GCAM_UI_TESTS=1): MURA properties + pipeline
+dotnet test  Gcam.sln   # Current inventory: docs/VV.Studio.md#current-test-inventory; opt-in suites skip normally.
                                        # physics invariants + one class per theme (dead time,
-                                       # sub-cell, cascade, non-prop, MLEM, DOI, …). 7 cocotb tests in rtl/.
+                                       # sub-cell, cascade, non-prop, MLEM, DOI, …). RTL evidence: rtl/README.md.
 
 # Long numerical evidence (full sampling sweep / 20-seed precision / fast-budget seed spread), skipped in normal runs and CI:
 # PowerShell: $env:GCAM_EVIDENCE_TESTS = '1'
@@ -255,7 +255,7 @@ position is uniformity-robust** (finding 8). See `rtl/README.md`.
 **Now wired to the C# MC and cocotb** (themes 27, 31, 33): `EventStreamStudy` (`montecarlo
 eventstream`) exports a Poisson-timed MC arrival stream that drives the RTL shaper, and the
 `crrc_shaper.sv` (CR-RC⁴ pole-zero + 4 RC low-passes) and trapezoidal front-ends are
-verified **bit-exact against the native C# `Waveform`** by a **cocotb** harness (7 tests
+verified **bit-exact against the native C# `Waveform`** by a **cocotb** harness (137 cases in the retained 2026-10-02 run with C# vectors
 across `rtl/test_*.py`, python.org 3.13 + Icarus). The cusp shaper stays a Python benchmark
 by choice (a digital cusp is a rare ~19-tap FIR). ModelSim/Vivado not used (Icarus + nextpnr
 ECP5 as the Fmax proxy; `rtl/vivado_trap.tcl` ready for exact Artix-7 whenever installed).

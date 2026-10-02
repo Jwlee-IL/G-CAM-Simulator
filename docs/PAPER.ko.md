@@ -209,7 +209,7 @@ Lattice 전용). 정형 재설계로 **Fmax ×2**(테마 25). Vivado ML Standard
 
 **재현 대상(실기 — 과거 장비).** 거치형(fixture-mounted), 9인치 후면 LCD + 전면 USB 카메라 오버레이(광학 영상
 위에 방사선원 위치를 겹쳐 표시), Hamamatsu MPPC, 픽셀별 LLD/ULD 창. GCAM은 이 장비를 소프트웨어로 재현해,
-손으로 소스를 옮기던 실험을 코드 스윕으로 바꾼 것이다 — WPF 뷰어가 그 UI 프로토타입 역할.
+손으로 소스를 옮기던 실험을 코드 스윕으로 바꾼 것이다 — 현재 GCAM Studio WPF 뷰어가 그 엔지니어링 UI 역할을 한다. Imaging·Spectrum·Waveform·Detector 작업공간과 Start / Stop / Continue / Reset을 제공하며, 기존 Gcam.Wpf는 TODO-12 제거 전까지 남아 있다.
 **권장 제품 폼팩터는 이와 다르다**(테마 22 개념, `samples/hardware_concept.py`): **권총 그립 + 총구쪽
 카메라/ToF + 화면은 폰·태블릿으로 오프로드** — 손에 드는 형태로 재설계.
 

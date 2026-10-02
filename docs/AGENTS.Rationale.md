@@ -70,8 +70,8 @@ Enforcement: **C** compiler / build · **T** automated test · **R** review agai
 | A dictionary that uses another's keys merges it itself. | `StaticResource` can't see sibling merged dictionaries while XAML loads. | `DESIGN.ViewLayer` | load-time failure if broken |
 | Theme switch replaces the token dictionary **in place**. | Later merged dictionaries win; inserting a second one leaves the old in effect. | `DESIGN.Color` | R |
 | The accent (cyan) is used only where it means something: primary action, selection, focus, progress — and progress only while running. | Restraint is the "dark instrument" direction; colour that means nothing teaches users to ignore colour. A full bar at rest and an accent peak chip were cyan with no meaning. | `DESIGN.Color` | R |
-| `Text.Disabled` only for disabled controls. | It is below AA as text (3.7:1 dark, 2.5:1 light). | `DESIGN.Color` | R |
-| Label what a value is: flood pixels are "weighted counts". | With directional biasing a crystal's count is a fractional weight; "counts" next to 0.0016 invites distrust. | `MainWindow.xaml` | R |
+| `Text.Disabled` only for disabled controls. | Retained locked values remain readable: current disabled tokens meet ≥4.5:1 on Surface, Canvas and Raised in both themes; informational text still uses Secondary. | `DESIGN.Color` | R |
+| Label what a value is: Studio flood pixels are acquired counts; engine weighted studies use weighted counts. | Studio rejects importance weights to produce one count per accepted event. A weighted engine study can still contain fractional counts. | `ListModeSource`, `ImagingWorkspaceViewModel`, `MainWindow.xaml` | R |
 | A colour scale shares one ×10ⁿ and one decimal count. | "0.00157 … 0.0161" is ragged and hard to compare. | `DESIGN.Controls`, `TickFormatter` | T |
 | Image overlays never use the accent; a selected overlay is a thicker line + inverted chip. | Cyan collides with viridis' teal band. | `DESIGN.Color`, `MeasurementAdorner` | R |
 | Heatmaps use viridis and always have a colour bar with numeric ticks; ticks never show `-0`. | Perceptually uniform and colour-blind safe; colours must be readable as values. | `DESIGN.Color`, `DESIGN.Controls` | R |
@@ -166,7 +166,7 @@ Enforcement: **C** compiler / build · **T** automated test · **R** review agai
   but today's accessibility fix *removed* the theme button's fixed name so the spoken name contains the visible
   label. The convention, the Studio checklist and the view-layer checklist now state the rule as above.
 - **Rules without a reason in their source:** `x:Name` only when referenced; shared style only for two or more
-  views; the 0.1 mm drag snap; part of the text-role rule. Reasons above are marked *proposed* — confirm or correct
+  views; the generic adorner's 0.1 mm drag snap (Studio source drag is withdrawn); part of the text-role rule. Reasons above are marked *proposed* — confirm or correct
   them in the source documents.
 - **Rule stated but not met** (at collection time): no literal sizes in views — fixed after the audit.
 - **Enforced by review only where a compiler check is possible:** the shell → engine boundary (`PrivateAssets` on

@@ -26,14 +26,54 @@ Plot: <code>samples/plot_sweep.py</code>.</sub>
 뷰어(GCAM Studio)는 계층 경계를 컴파일러가 강제하는 MVVM 구조입니다. 자세한 물리 해설은
 [`docs/PAPER.ko.md`](docs/PAPER.ko.md).
 
+## What is a gamma camera? (for non-specialists)
+
+Radioactive material gives off **gamma rays** — light far too energetic for eyes or ordinary cameras. A gamma camera
+shows *where* they come from, overlaid on a normal photo, so a radiation-safety worker can see a hidden or lost source
+from a distance instead of walking around with a counter. (In hospitals the same name means a scanner that images a
+tracer inside a patient; this project is the portable, find-the-source kind.)
+
+Gamma rays pass through lenses, so they cannot be focused. Instruments use one of two tricks:
+
+- **Coded aperture** — a thick tungsten plate with a pattern of holes sits in front of the detector. Each source casts
+  the pattern's shadow, shifted by its direction; decoding the shadow gives the direction. Simple and sharp, best at
+  low-to-medium energies, but it sees only what is in front of it.
+- **Compton imaging** — a gamma ray scatters once in the detector and is absorbed again; the two positions and energies
+  put the source on a cone. Many cones overlap at the source. It sees in all directions and works best at higher
+  energies, but needs a detector that knows where inside it each interaction happened.
+
+| Instrument (maker) | How it images | Detector | Notes |
+|---|---|---|---|
+| **iPIX** (Mirion) | coded aperture (tungsten mask) | 1 mm CdTe pixel detector on a Timepix chip | hand-held, about 2.5 kg |
+| **Polaris-H** (H3D) | Compton imaging, all directions | 3-D position-sensitive CdZnTe crystal | about 4 kg, better than 1.1 % energy resolution at 662 keV |
+| **GeGI** (PHDS) | both: coded aperture at low energy, Compton above ~250 keV | high-purity germanium (cooled) | finest energy resolution, so isotopes are told apart best |
+
+**This project** is the coded-aperture kind, like iPIX, but with a **scintillator** (GAGG crystals read by light
+sensors) instead of a semiconductor — cheaper and easier to make thick enough to stop high-energy gamma rays,
+at the cost of energy resolution. Sources:
+[iPIX](https://www.mirion.com/products/technologies/health-physics-radiation-safety-instruments/portable-radiation-measurement/gamma-imaging-systems/ipix-ultra-portable-gamma-ray-imaging-system),
+[Polaris-H](https://www.sciencedirect.com/science/article/abs/pii/S0168900215000121),
+[GeGI (OSTI)](https://www.osti.gov/servlets/purl/1764575).
+
+### 감마 카메라란? (일반인용)
+방사성 물질은 눈이나 일반 카메라로는 볼 수 없는 강한 빛, **감마선**을 냅니다. 감마 카메라는 그 감마선이 *어디서*
+오는지를 일반 사진 위에 겹쳐 보여 줍니다. 계측기를 들고 돌아다니지 않아도 멀리서 숨겨지거나 잃어버린 선원을 찾을 수
+있습니다(병원의 '감마 카메라'는 몸속 추적자를 찍는 장비로, 이 프로젝트와는 다른 종류입니다).
+감마선은 렌즈로 모을 수 없어서 두 가지 방법을 씁니다. **부호화 구경**은 구멍 무늬가 뚫린 텅스텐 판의 그림자가
+선원 방향에 따라 밀리는 것을 풀어 방향을 찾고(정면만 보지만 단순하고 선명함), **컴프턴 영상**은 검출기 안에서 한 번
+산란되고 다시 흡수된 위치·에너지로 선원이 놓인 원뿔을 그려 여러 원뿔이 겹치는 곳을 찾습니다(전 방향, 높은 에너지에
+유리). 대표 제품은 **iPIX**(Mirion, 부호화 구경), **Polaris-H**(H3D, 컴프턴), **GeGI**(PHDS, 두 방식 모두·게르마늄)
+입니다. 이 프로젝트는 iPIX와 같은 부호화 구경 방식이되, 반도체 대신 **섬광체**(GAGG)를 써서 더 싸고 고에너지 감마선을 막을 만큼 두껍게 만들기 쉬운 대신
+에너지 분해능을 양보한 구성입니다.
+
 ## What it demonstrates
 
 | | |
 |---|---|
 | **Physics engine** | Photon transport with directional biasing (unbiased vs. 4π, ~100× fewer photons), Klein–Nishina Compton in the crystal, tabulated tungsten / scintillator cross sections, cross-correlation and **MLEM** decoders. One JSON config describes a scenario; ~40 CLI studies sweep it. |
 | **Tests that check physics, not snapshots** | 300+ .NET tests. Each transport stage is held to a closed form — biased-source weight = the detector's solid angle, crystal stopping 1 − exp(−μt/cosθ), mask transmission = open fraction + tungsten leak, Compton energy conservation, decoder peak on an analytic shadow — with k·σ tolerances that follow the sample size; study-level tests assert physics (MLEM is non-negative and out-resolves cross-correlation, ghosts appear outside the fully-coded field) rather than pinning output numbers. A mutation check (Poisson off-by-one, half-pixel flood origin, slant path ignored) fails each one. |
-| **Hardware path** | CR-RC⁴ / trapezoidal shapers and a baseline restorer in SystemVerilog. The RTL (cocotb + Icarus) and the native C# `Waveform` model (xUnit golden values) are each held **bit-exact** to one shared integer reference, both in CI. Pipelining raised Fmax from 59 to 119 MHz (ECP5, nextpnr timing). |
-| **Viewer** | GCAM Studio: live list-mode acquisition (Start / Stop over live time) — every count is one independent Compton-transported event, so in-crystal scatter mispositioning is part of the image. WPF + CommunityToolkit.Mvvm, split into `Studio.Core` (no WPF) → `Studio.Services` (only layer touching the engine) → `Studio` (views), so the boundaries are compiler-enforced; ViewModel tests plus a UI-automation harness with independent oracles. |
+| **Hardware path** | CR-RC⁴ / trapezoidal shapers and a baseline restorer in SystemVerilog. The RTL (cocotb + Icarus) and the native C# `Waveform` model (xUnit golden values) are each held **bit-exact** to one shared fixed-point reference (Q12 CR-RC state in Studio; legacy F=0 goldens retained), both in CI. Pipelining raised Fmax from 59 to 119 MHz (ECP5, nextpnr timing). |
+| **Viewer** | GCAM Studio: live list-mode acquisition (Start / Stop / Continue / Reset over live time, with physical inputs locked until Reset); Imaging, Spectrum, Waveform and Detector workspaces — every count is one independent Compton-transported event, so in-crystal scatter mispositioning is part of the image. WPF + CommunityToolkit.Mvvm, split into `Studio.Core` (no WPF) → `Studio.Services` (only layer touching the engine) → `Studio` (views), so the boundaries are compiler-enforced; ViewModel tests plus a UI-automation harness with independent oracles. |
 | **Self-correction on record** | When the crystal model moved to physical cross sections, earlier multi-isotope results got weaker; they were re-run and revised in place ([theme 52](docs/AGENTS.Findings.md#52-crystal-attenuation-from-tabulated-cross-sections--crystalmaterial-2026-10-01)), not left standing. |
 
 ## Headline results
@@ -58,7 +98,7 @@ GCAM Studio desktop — Imaging workspace, Cs-137 500 µCi + Co-60 200 µCi, dar
 1. [`src/Gcam.Decoding/MlemDecoder.cs`](src/Gcam.Decoding/MlemDecoder.cs) — the MLEM update, with its approximations stated up front.
 2. [`tests/Gcam.Tests/MlemTests.cs`](tests/Gcam.Tests/MlemTests.cs) and [`PipelineTests.cs`](tests/Gcam.Tests/PipelineTests.cs) — what "testing physics" looks like (e.g. `Biasing_IsUnbiasedVersus4Pi`).
 3. [`src/Gcam.Masks/MuraGenerator.cs`](src/Gcam.Masks/MuraGenerator.cs) — MURA construction from quadratic residues.
-4. [`rtl/crrc_shaper.sv`](rtl/crrc_shaper.sv) + [`rtl/test_crrc.py`](rtl/test_crrc.py) — gateware and the cocotb bench that holds it to the shared integer reference.
+4. [`rtl/crrc_shaper.sv`](rtl/crrc_shaper.sv) + [`rtl/test_crrc.py`](rtl/test_crrc.py) — gateware and the cocotb bench that holds it to the shared fixed-point reference (F=0 legacy / F=12 fractional state).
 5. [`src/Gcam.Studio.Core/ViewModels/MainViewModel.cs`](src/Gcam.Studio.Core/ViewModels/MainViewModel.cs) and [`docs/DESIGN.Architecture.md`](docs/DESIGN.Architecture.md) — the viewer's layering.
 6. [`docs/VV.Gcam.Overview.md`](docs/VV.Gcam.Overview.md) — the requirement set below, on one page.
 
@@ -119,7 +159,7 @@ reviewer agent cross-check the important claims — several fixes in the history
 
 | Path | What |
 |---|---|
-| `src/` | Core domain, masks, detector / Compton transport, decoders, simulation studies, CLI (`Gcam.Cli`, one class per study group under `Commands/`), GCAM Studio (`Gcam.Studio*`); `Gcam.Wpf` is the legacy viewer being folded into Studio (TODO-06 … TODO-12) |
+| `src/` | Core domain, masks, detector / Compton transport, decoders, simulation studies, CLI (`Gcam.Cli`, one class per study group under `Commands/`), GCAM Studio (`Gcam.Studio*`); `Gcam.Wpf` is the legacy viewer retained until TODO-12; Studio is the current viewer |
 | `tests/` | xUnit — engine physics and closed-form invariants (shared rigs and k·σ assertions in `Gcam.Tests/Harness`), Studio ViewModels, the service layer against the real engine, UI-automation oracles and opt-in desktop scenarios |
 | `rtl/` | SystemVerilog front-end, Icarus + cocotb benches ([`rtl/README.md`](rtl/README.md)) |
 | `samples/` | Scenario JSON plus the result CSVs / figures each finding cites |

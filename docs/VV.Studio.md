@@ -15,7 +15,7 @@ one of a set:
 The working design guides are [DESIGN.Architecture](DESIGN.Architecture.md) and the other `DESIGN.*` pages.
 
 **At a glance**
-- 74 active software requirements plus seven withdrawn batch rows (§4). Live acquisition verification and
+- 102 active software requirement IDs plus nine withdrawn IDs (§4). Live acquisition verification and
   measurements are recorded in [VV.Studio.Acquisition](VV.Studio.Acquisition.md); desktop acquisition
   validation passed in the final desktop pass on 2026-10-02.
 - Twelve regression scenarios, a plot gate and a 16-frame diagnostic survey are opt-in desktop tests.
@@ -23,6 +23,8 @@ The working design guides are [DESIGN.Architecture](DESIGN.Architecture.md) and 
   cover Spectrum, Waveform, Detector, isotope imaging and retained-flood focus. Screenshots never decide a numerical verdict.
 - The layering that keeps the logic testable is compiler-enforced (SR-ARCH-01, -04).
 - Open problems are in §6 (AN-01 … AN-14); no screen-reader session has been run.
+
+Dated implementation records below retain their execution limits and counts. Subsequent analysis identified the Co-60 bias as undersampling; current verification totals are in [Current test inventory](#current-test-inventory).
 
 TODO-08 phase B verification (Release, 2026-10-02): the reviewer reported 259 engine, 86 Studio Core,
 28 services and 10 UI-oracle tests passing and a build with 0 errors. The measured imaging results,
@@ -77,6 +79,30 @@ final fast test restricts reconstruction to ±12.125 mm on the same 0.25 mm grid
 seed table and the distinction between measured calibration and unverified final runtime are in
 [VV.Studio.Imaging](VV.Studio.Imaging.md).
 
+## Current test inventory
+
+Documentation freshness verification, 2026-10-02, on the main working tree. Commands:
+`dotnet build Gcam.sln -c Release -m:1 /nr:false /p:UseSharedCompilation=false` and
+`dotnet test Gcam.sln -c Release --no-build -m:1 /nr:false` (TRX logger enabled).
+Build: zero errors; two existing xUnit analyzer warnings (`ImagingServiceTests.cs:106`,
+`WaveformServiceTests.cs:118`). Normal test execution:
+
+| Assembly / suite | Passed | Skipped | Inventory |
+|---|---:|---:|---|
+| `Gcam.Tests` | 284 | 0 | engine physics / compatibility |
+| `Gcam.Studio.Tests` | 179 | 0 | Core ViewModels, geometry, policies and token contrast |
+| `Gcam.Studio.Services.Tests` | 81 | 7 | real-engine services; long numerical evidence opt-in |
+| `Gcam.Studio.UiTests` | 13 | 14 | headless oracles pass; 12 desktop scenarios, plot gate and survey opt out |
+| `Gcam.Studio.RenderTests` | 0 | 1 | independent offscreen render opt-in |
+| **Total** | **557** | **22** | **579 cases; zero failures** |
+
+No desktop, render or long-evidence opt-in was enabled for this run. The retained final desktop record
+reports 27/27 total UI cases (13 headless oracles + 12 scenarios + gate + survey); **27 is a suite total,
+not a scenario count**. The retained RTL execution record in `rtl/README.md` reports 137 cocotb cases
+with C# vectors (26 configurations, 452,608 exact sample comparisons). Neither desktop nor cocotb
+was rerun in this documentation pass. Dated inventories and execution restrictions below remain history;
+use this section for current normal-run totals.
+
 ## 1. Scope and intended use
 
 **Intended use.** GCAM Studio is a portfolio demo viewer for Gcam, a Monte Carlo simulator of a coded-aperture
@@ -95,12 +121,12 @@ viewer does not control anything, so the worst plausible outcome is a wrong read
 non-serious injury at most, hence B rather than C. As actually used (a demo on simulated data) it would be Class A.
 
 **Engine boundary.** Physics, decoding and the scene → config builder belong to the engine. Studio relies on them
-through `IAcquisitionService` and `ISpectrumService`. The engine inventory is recorded below;
+through Core acquisition, spectrum, imaging, waveform, detector-face and focus-sweep service contracts. The engine inventory is recorded below;
 `SpectrumServiceTests` additionally verifies the measured spectrum against real-engine deposits.
 
 ## 2. Software items
 
-Items SI-1 … SI-4 and their units SU-01 … SU-22 are defined in [VV.Studio.SDS §2](VV.Studio.SDS.md#2-software-items-and-units-531-541).
+Items SI-1 … SI-4 and their units SU-01 … SU-25 are defined (Waveform and Detector/focus designs extend them in the later sections) in [VV.Studio.SDS §2](VV.Studio.SDS.md#2-software-items-and-units-531-541).
 How each item is verified:
 
 | Item | Project | Verified by |
@@ -139,7 +165,7 @@ Automation. Status: **pass** (evidence on 2026-10-01), **partial**, **open** (no
 | SR-IMG-01 | unit + integration | T | `ImagingWorkspaceTests.SharedWindow_SelectorStripAndRoi_ReuseFrozenAcquisition`; `ImagingServiceTests.WindowChange_ReplaysRetainedEvents_RecalibratesAndMatchesFreshProcessing` | pass (headless); desktop pending |
 | SR-IMG-02 | integration | T, I | `ImagingServiceTests`; shared `SpectrumService.BuildBands` and `MeasurementStage`; [imaging evidence](VV.Studio.Imaging.md) | pass (headless); desktop pending |
 | SR-IMG-03 | unit + offscreen | T | `ImagingWorkspaceTests.SharedWindow_SelectorStripAndRoi_ReuseFrozenAcquisition`; two-isotope All / Cs-137 offscreen renders | pass (headless + offscreen); desktop pending |
-| SR-IMG-04 | integration + offscreen | T | `ImagingServiceTests.Channels_OffAxisCsAndCo_LocalizeAtTheirOwnSource`, `Precision_TwentySeeds_MeasuresMixedIsotopesAndCoOnlyControl`; diamond overlay and coordinate list | pass (headless + offscreen); measured Co-60 bias in [imaging evidence](VV.Studio.Imaging.md); desktop pending |
+| SR-IMG-04 | unit + integration + offscreen | T, I | `ImagingServiceTests.Channels_OffAxisCsAndCo_LocalizeAtTheirOwnSource`, `Precision_TwentySeeds_MeasuresMixedIsotopesAndCoOnlyControl`; `OverlayLabelLayoutTests` (6 cases: gaps, marker/measurement clearance, bounds, recalculation, deterministic packing, omission and invalid geometry); crowded equal-Y and edge-chip renders with diamond overlay and coordinate list | pass (headless + offscreen); measured Co-60 bias in [imaging evidence](VV.Studio.Imaging.md); updated layout desktop pending |
 | SR-IMG-05 | integration | T | `ImagingServiceTests.Strip_CoLocatedCsAndDoubleActivityCo_RecoversSameLiveTimeCsCount`, `WindowChange_ReplaysRetainedEvents_RecalibratesAndMatchesFreshProcessing` | pass (headless); desktop pending |
 | SR-IMG-06 | unit + integration | T, I | `ImagingWorkspaceTests.LateResponse_CannotReplaceNewerWindowResult`; serialized `Task.Run` worker and separate stopwatches | pass (headless); desktop pending |
 | SR-RUN-01 | historical batch | — | batch implementation and batch-only tests removed; historical desktop evidence below | withdrawn → SR-RUN-09, -19 |
@@ -197,10 +223,11 @@ Automation. Status: **pass** (evidence on 2026-10-01), **partial**, **open** (no
 | SR-A11Y-02 | system | I, M | `HeatmapViewAutomationPeer` (I); heatmaps located by name + class `HeatmapView` in the VAL-03 session | pass |
 | SR-A11Y-03 | system | I, M | `IsDefault="True"` on Simulate, `HeatmapView.OnKeyDown`, `_Pan` / `_Distance` / `_Angle` / `_ROI` (I) | partial — keyboard-only walkthrough open; AN-01 |
 | SR-A11Y-04 | system | I | `LiveSetting="Polite"` on the status line; selected row = accent bar + fill; selected overlay = thicker line + inverted chip | pass (I); no screen-reader check |
+| SR-A11Y-05 | unit + offscreen | T, I | `ThemeContrastTests` (8 cases against production tokens); acquired-seed foreground/fill assertions; both themes' 1280×800 renders inspected | pass: Surface 5.164:1 dark / 5.154:1 light; Canvas/Raised ≥4.5:1; desktop follow-up pending |
 | SR-SEC-01 | inspection | I | no `System.IO`, `File`, HTTP or socket use in the three Studio projects; `SimulationService` passes an in-memory config (I, 2026-10-01) | pass (I) |
 | SR-ARCH-01 | build | C | `Gcam.Studio.Core.csproj` targets plain `net9.0` without `UseWPF`: a WPF type does not compile | pass |
 | SR-ARCH-02 | build | C, I | Core has no reference to `Gcam.Simulation` (C); the shell could reach it transitively through Services, so for the shell it is I only | pass — see AN-08 |
-| SR-ARCH-03 | inspection | I | `MainWindow.xaml.cs` is `InitializeComponent()` only; literal sizes found — AN-05 | partial |
+| SR-ARCH-03 | inspection | I | `MainWindow.xaml.cs` is `InitializeComponent()` only; cited literal sizes replaced by theme metrics — AN-05 closed | pass by inspection |
 | SR-ARCH-04 | build | C, I | `Gcam.Studio.Tests.csproj` references only `Gcam.Studio.Core` and targets `net9.0` | pass |
 | SR-NAV-01 | unit + I | T, I | `MainViewModelTests.Workspace_SharedResultAndSelectionSurviveSnapshot_ViewSettingsKeepState`; workspace-type centre / panel templates | pass |
 | SR-NAV-02 | unit + system | T, I | workspace tests, `WorkspaceActivation_SelectsShell_WhenActiveIsSetWithoutCommand` and `Spectrum_SnapshotsGrow_ViewSettingsReuseAcquisition_SelectionSurvives`: checked-state activation, identities, unavailable index and retained selection; segmented switch / Ctrl+1…4 inspected | partial — desktop SelectionItem switching pending |
@@ -216,20 +243,20 @@ Automation. Status: **pass** (evidence on 2026-10-01), **partial**, **open** (no
 | SR-PLOT-09 | unit + inspection | T, I | `BinLookup_UsesHalfOpenEdges_AndReadoutUsesCountsAndUnits`; `PlotView.UpdateHover` and drawing inspected | pass headless; desktop pointer walkthrough deferred |
 | SR-PLOT-10 | unit + offscreen render | T, I | `Labels_ClampBothEdges_AndUseAdditionalRowsWithoutCollisions`; Spectrum, Waveform and focus-curve renders show band / marker labels in the strip above the data, the shaped waveform plot without marker labels | pass headless |
 | SR-PLOT-11 | offscreen render | T | `PlotViewRenderTests.Spectrum_BothThemesFullAndZoom_RenderWithoutWindow`, independent opt-in, four PNGs | pass |
-| SR-SPEC-01 | integration + I | T, I | `SpectrumServiceTests.CsAcquisition_PhotopeakBinAndFwhmMatchChain`; Histogram binding / explicit edges, axis labels and no synthetic noise inspected | pass headless; live desktop appearance pending |
+| SR-SPEC-01 | integration + I | T, I | `SpectrumServiceTests.CsAcquisition_PhotopeakBinAndFwhmMatchChain`; Histogram binding / explicit edges, axis labels and no synthetic noise inspected | pass headless; retained four-workspace desktop survey; no pixel pass/fail oracle |
 | SR-SPEC-02 | integration | T | `CsAcquisition_PhotopeakBinAndFwhmMatchChain`; engine `FrontEndPartsTests` verifies legacy chain and pulse compatibility | pass |
 | SR-SPEC-03 | integration | T | `HighRate_PileUpLosesPulsesAndMovesCountsAbovePhotopeak`; exact pulse-count agreement with engine `ApplyPileUp` | pass |
 | SR-SPEC-04 | integration + unit | T | `MixedCsCo_HasFourBandsAndUnionCountsEachBinOnce`, `Merge_UsesResolutionRatherThanWindowOverlap` (2 cases), `Merge_SingleLineGivesOneBand` | pass |
-| SR-SPEC-05 | integration + unit + I | T, I | `MixedCsCo_HasFourBandsAndUnionCountsEachBinOnce`; `SpectrumBandTests.BandOfXRayLines_IsNamedByEmitter_GammaBandByIsotope`; engine `EmissionKindTests` (3 cases); right-aligned columns and bin-centre selection inspected | pass headless; desktop table pending |
-| SR-SPEC-06 | unit + I | T, I | `AcquisitionViewModelTests.Spectrum_SnapshotsGrow_ViewSettingsReuseAcquisition_SelectionSurvives` (acquisition and its state unchanged) | pass headless; desktop controls pending |
+| SR-SPEC-05 | integration + unit + offscreen | T, I | `MixedCsCo_HasFourBandsAndUnionCountsEachBinOnce`; `SpectrumBandTests.BandOfXRayLines_IsNamedByEmitter_GammaBandByIsotope`; engine `EmissionKindTests` (3 cases); `VerifyEmissionTable` asserts shared header/row column edges, full strings and ≥8-DIP gaps, including both Co-60 windows and grouped counts at both sizes/themes | pass headless/offscreen; updated table desktop pending |
+| SR-SPEC-06 | unit + I | T, I | `AcquisitionViewModelTests.Spectrum_SnapshotsGrow_ViewSettingsReuseAcquisition_SelectionSurvives` (acquisition and its state unchanged) | pass headless and final desktop band/window scenario |
 | SR-SPEC-07 | integration + I | T, I | `SeedAndSnapshotPartition_AreDeterministic_ToggleReplaysExactly` (2 cases), `Processing_MeasuresFullAndIncrementalWorkAt100000Events`; service `Task.Run` inspected | pass |
-| SR-SPEC-08 | inspection + system | I | `SpectrumView.xaml`, `SpectrumPanel.xaml`, inherited `PlotView` peer | partial — desktop accessibility and themes pending |
+| SR-SPEC-08 | inspection + system | I | `SpectrumView.xaml`, `SpectrumPanel.xaml`, inherited `PlotView` peer | partial — both themes surveyed; screen-reader/keyboard-only walkthrough pending |
 | SR-SPEC-09 | unit + integration + inspection | T, I | acquisition VM test checks range request / selection persistence; spectrum service verifies every bin edge / centre; XAML one-way range / units inspected | pass headless; desktop selection walkthrough deferred |
 
 ### Coverage summary
 
 The tables below preserve the pre-acquisition baseline (47 rows); withdrawn RUN rows are historical evidence.
-The current fourteen acquisition rows, nine spectrum rows and six additional plot rows (PLOT-06 … -11) are verified above by tests / inspection and offscreen rendering. Their desktop paths are pending;
+The acquisition, spectrum and additional plot rows are verified above by tests / inspection and retained offscreen rendering. The final four-workspace desktop pass below adds current acquisition and workspace-path evidence; keyboard-only, screen-reader and SelectionItem coverage remain incomplete;
 the prior batch desktop passes must not be treated as acquisition validation.
 
 | Primary method | Requirements |
@@ -245,7 +272,7 @@ the prior batch desktop passes must not be treated as acquisition validation.
 | partial | 9 — NAV-02, PLOT-04, RUN-04, VIEW-07, MEAS-07, THEME-02, ENV-02, A11Y-03, ARCH-03 |
 | open | 0 requirements; system-level scenarios are open in §5 |
 
-### Test inventory (run 2026-10-01, `dotnet test Gcam.sln -c Release`, .NET SDK 9.0.311)
+### Historical test inventory (run 2026-10-01, `dotnet test Gcam.sln -c Release`, .NET SDK 9.0.311)
 
 | Class | Level | Cases | Result |
 |---|---|---|---|
@@ -430,13 +457,13 @@ folder was left behind. UIA Select on the workspace switch does not change the w
 | AN-02 | UI automation is desktop-only and opt-in | the twelve scenarios are not part of CI; keyboard-only flows and other display scaling remain unverified | heatmap navigation scenarios next |
 | AN-03 | No high-contrast mode | Windows high-contrast themes are not honoured | planned with the keyboard crosshair |
 | AN-04 | Closed: legacy batch progress race | unused batch progress implementation removed; acquisition uses sequential snapshots | batch regression removed with the code it guarded; acquisition progress verified by `AcquisitionViewModelTests.Completed_StartDisabledUntilPresetRaised_LowerPresetRejected_ProgressFollowsPreset` |
-| AN-05 | Literal sizes in `MainWindow.xaml` (photon box `Width="120"`, readout `Height="18"`, `Margin="0,4,0,0"`, colour-bar `Margin="0,8,0,0"`) despite the no-literals rule | cosmetic; spacing doesn't follow `Metrics.xaml` | move to named keys |
+| AN-05 | Closed: the cited literal sizes in `MainWindow.xaml` (photon box `Width="120"`, readout `Height="18"`, `Margin="0,4,0,0"`, colour-bar `Margin="0,8,0,0"`) were replaced by theme metrics | original spacing defect retained here as history | current MainWindow uses named metric resources |
 | AN-06 | Closed (2026-10-02): the "outdated" chip was removed with the stale state | physical inputs are locked while data exist, so images always match the inputs shown; the state is announced by the status line (live region) | — |
 | AN-07 | WPF items (`HeatmapView` rendering, `ColorBar` ticks, `ThemeService`) have no unit tests, by design | defects show only when the app runs | covered by AN-02 plan |
 | AN-08 | SDK-style project references are transitive, so the shell *could* call the engine directly | layering rule for the shell is inspection-only | optional: `PrivateAssets` on the Services → engine reference |
 | AN-09 | *Closed* — the photon budget no longer exists (list-mode acquisition) | — | — |
 | AN-10 | Workspace checked-state activation now selects the shell workspace; `WorkspaceActivation_SelectsShell_WhenActiveIsSetWithoutCommand` passes | screen-reader SelectionItem switching still needs desktop verification | ViewModel fix implemented; add a desktop Select regression and verify the displayed workspace, without relying on the checked state alone |
-| AN-11 | The source-drag scenario localised at 1.43 mm against its 1.5 mm tolerance. **Cause found (2026-10-02):** with the default optics at a 1 m focal plane the detector samples the mask-cell shadow at 1.27 pixels per cell (0.761 mm shadow, 0.6 mm pixels), below Nyquist, so the decoded peak shifts with the source position (RMS 0.95 mm, max 1.91 mm over y = −10 … 10 mm; 0.24 / 0.41 mm at 3.8 samples per cell) — see VV.Studio.Imaging | the scenario passes or fails depending on where the source is dropped | optics with ≥ 2 samples per cell at the working focal plane (TODO-09 presets); do not widen the tolerance |
+| AN-11 | The source-drag scenario localised at 1.43 mm against its 1.5 mm tolerance. **Cause found (2026-10-02):** with the default optics at a 1 m focal plane the detector samples the mask-cell shadow at 1.27 pixels per cell (0.761 mm shadow, 0.6 mm pixels), below Nyquist, so the decoded peak shifts with the source position (RMS 0.95 mm, max 1.91 mm over y = −10 … 10 mm; 0.24 / 0.41 mm at 3.8 samples per cell) — see VV.Studio.Imaging | source drag is withdrawn; the current scenario verifies Reset / field edit / new acquisition, while undersampling remains a physical limitation | use optics with ≥ 2 samples per cell at the working focal plane; retain the localisation tolerance |
 | AN-12 | Closed: desktop input and screen capture available in the final pass (2026-10-02) | all scenarios, the plot gate and four-workspace survey executed | evidence below |
 | AN-13 | CPU plot redraw meets the gate, but resize event-to-render delay is materially larger | CPU evidence does not establish end-to-end responsiveness | distinguish timings; investigate dispatcher / desktop latency before making a presentation-latency claim |
 | AN-14 | `TickFormatterTests` (colour-bar tick labels: one shared multiplier, one decimal count, no negative zero) test behaviour that no SRS row states | the behaviour is verified but not required, so a change to it would not be traced | add an `SR-VIEW` row for colour-bar labels |
@@ -485,12 +512,12 @@ The Waveform workspace and physical-chain selection are implemented; execution s
 
 | Requirement | Automated verification | Current execution status |
 |---|---|---|
-| SR-CHAIN-01…03 | WaveformServiceTests chain/response tests; WaveformWorkspaceTests locked/frozen/disabled-edit tests; Evidence mixed-field calibration | Added, not run |
-| SR-WAVE-01…02 | Origin-relative window/prehistory/association tests; next/latest/held-window VM tests; actual MC offscreen scope | Added, not run |
-| SR-WAVE-03…05 | Rate-study immutability/determinism; shared response; zero-noise ideal tests; real/rate/ideal render labels | Added, not run |
-| SR-WAVE-06 | Acquired readout and invalid-energy suppression tests; no CR-RC energy precision assertion | Added, not run |
-| SR-WAVE-07 | ScopeWindow policies; empty window/noise/late timestamp tests; maximum-cap worker measurement (Evidence) | Added, not run |
-| SR-WAVE-08 | Visible-only/reuse/latest-revision/new-acquisition/error VM tests; prepared-plot identity and two-way render navigation | Added, not run |
+| SR-CHAIN-01…03 | WaveformServiceTests chain/response tests; WaveformWorkspaceTests locked/frozen/disabled-edit tests; Evidence mixed-field calibration | Default headless suite passed; Evidence/renders not run for this change |
+| SR-WAVE-01…02 | Origin-relative window/prehistory/association tests; next/latest/held-window VM tests; actual MC offscreen scope | Headless suite passed; renders not run for this change |
+| SR-WAVE-03…05 | Rate-study immutability/determinism; shared response; zero-noise ideal tests; real/rate/ideal render labels | Headless suite passed; renders not run for this change |
+| SR-WAVE-06 | Acquired readout/invalid-energy suppression, Q12 plotted scaling and simulation-time labels; exact C#/Python/RTL arithmetic matrix; no CR-RC energy-estimator precision assertion | Headless suite passed; renders not run for this change |
+| SR-WAVE-07 | ScopeWindow policies; empty window/noise/late timestamp tests; maximum-cap worker measurement (Evidence) | Default headless suite passed; maximum-cap Evidence/renders not run for this change |
+| SR-WAVE-08 | Visible-only/reuse/latest-revision/new-acquisition/error VM tests; prepared-plot identity and two-way render navigation | Headless suite passed; renders not run for this change |
 | Waveform UI, shared selector | Existing offscreen renderer extended to 12 MC-based scope images, two themes × two sizes × three modes | Generation pending; no desktop tests |
 
 The initially launched Studio Release build completed with 0 warnings/errors before later test/document/final edits. Subsequent shell creation failed with access denied; a final build/test count, services-suite runtime and rendered PNG inspection must come from the independent verification run. Existing engine tests were not edited; no RTL/cocotb code was changed.
@@ -523,7 +550,7 @@ seed reproduces / differs). The two rewritten desktop scenarios (`StopContinueRe
 | SR-DET-01 | DetectorWorkspaceTests.Gap_InvalidEditPreventsStart, Gap_RevalidatesAfterPitchChange_AndConvertsUnits; FocusSweepServiceTests.Config_RejectsGapAtServiceBoundary | Passed in Release, 2026-10-02 |
 | SR-DET-02 | Face_FollowsPendingBeforeStart_AcquiredAndLockedAfter_PendingAgainAfterReset; MainViewModelTests.Workspace_SharedResultAndSelectionSurviveSnapshot_ViewSettingsKeepState | Passed in Release, 2026-10-02 |
 | SR-DET-03 | DetectorFaceTests.Geometry_ExactGapCoverageAndArea; Face_GainsMatchMeasurementPattern; DetectorGapEvidenceTests | Deterministic tests passed; opt-in seed-spread evidence awaits environment-change authorization |
-| SR-DET-04 | RenderDetectorAndFocus before/acquired Detector, dark/light, two sizes | Generated and inspected 2026-10-02 (acquisition-control pass) |
+| SR-DET-04 | RenderDetectorAndFocus before/acquired Detector, dark/light, two sizes; local geometry card top alignment and natural height asserted | Generated 2026-10-02; affected 1280×800 dark/light cards inspected after UI polish; desktop follow-up pending |
 | SR-FOCUS-01 | FocusSweepServiceTests.Sweep_UsesRetainedFlood_WithoutEventsOrSceneTruth, Sweep_PreCancelledWorkerCannotPublish, Sweep_EmptyFloodIsUnresolved; Sweep_FreezesIdentity_UserK_AndNeverDelaysAcquisition; Sweep_DoesNotHoldSnapshotConsumption_AndLabelsFrozenPrefix | Passed in Release, 2026-10-02 |
 | SR-FOCUS-02 | Planes_UniformInverseDistance_ExactBounds; Linking_UsesAngle_NotMillimetres_AndIsOneToOne; user-K identity test | Passed in Release, 2026-10-02 |
 | SR-FOCUS-03 | Interval_InterpolatesRawHalfMaximum_WithoutNoiseInterpretation, Interval_CensorsSweepEdges, Interval_FlagsDisjointModes_AndBoundaryMaximum; resolved/censored render fixture | Deterministic tests passed; render requires opt-in authorization |
@@ -599,3 +626,32 @@ written; run `20261002-130331-aa0ebe` exited 0 with no sandbox writes. The origi
 regression measurements retain the 20 µCi Co-60 scene. The retake build had zero warnings / errors and its
 single opt-in capture invocation passed; this is not another full-suite run.
 No keyboard-only or screen-reader validation, other DPI scaling, or numerical depth-accuracy test is claimed.
+
+## UI polish verification — 2026-10-02
+
+The emission table now measures numeric headers and rows together with explicit 8-DIP cell gaps; the mixed
+Spectrum fixture includes both Co-60 windows and grouped counts. Truth/found chips use pure Core rectangle
+packing with 4-DIP gaps and visible-image bounds, including selection outlines and marker halos. Marker
+centres remain at their original mapped coordinates. A chip without a safe full-size placement is omitted,
+with the coordinate/measurement list retained. Detector's geometry card takes its natural text height.
+The shaped waveform's upper-only event-label policy is unchanged; render assertions check both flags.
+
+`ThemeContrastTests` reads production XAML tokens copied into the plain Core test output. Disabled text
+measures Surface/Canvas/Raised **5.164006 / 5.653886 / 4.516509:1** dark and
+**5.154465 / 4.716330 / 4.625225:1** light by sRGB relative luminance. All meet the retained-value target
+of at least 4.5:1; disabled action opacity and antialiased edge pixels are not certified by these numbers.
+
+Release normal solution verification passed: **262 engine / 178 Studio Core / 72 services / 13 UI-oracle**
+cases (525 total); seven numerical evidence, fourteen desktop and one render case skipped as designed.
+This change adds six pure overlay-layout cases and eight token-contrast cases (Core 164 → 178).
+The solution build had zero errors and two existing xUnit analyzer warnings in unchanged service tests:
+ImagingServiceTests.cs:106 (`xUnit2000`) and WaveformServiceTests.cs:98 (`xUnit2012`).
+
+The process-scoped `GCAM_RENDER_SNAPSHOTS=1` Release invocation passed separately (one orchestrating test),
+regenerating **76 whole-content and four standalone plot PNGs**. Affected 1280×800 dark/light mixed Spectrum,
+crowded/edge Imaging, before/acquired Detector and real-arrival Waveform renders were opened and inspected.
+Numeric strings fit with aligned column edges, full found chips separate into lanes and remain inside the
+image, locked inputs are readable with subdued borders, and the geometry card ends below its final caption.
+The renderer also checks actual chip drawing footprints, table cell gaps/full strings, disabled seed resources,
+natural card height and upper-only waveform labels. This is offscreen visual and geometry evidence, not a new
+desktop validation or physics measurement. The prior desktop survey captures remain unchanged.

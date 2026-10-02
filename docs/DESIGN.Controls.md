@@ -20,6 +20,20 @@ The Imaging options panel reuses the existing label, caption, mono-caption, cont
 no new colour token. It shows All / isotope, shared window N, strip, R, worker costs and found coordinates above
 the measurement tools.
 
+Truth, found, measurement and draft chips are measured before drawing and packed together by the UI-free
+Core `OverlayLabelLayout`. Preferred offsets remain when clear; collisions choose the nearest candidate
+beside an occupied rectangle or anchor, with `Space.Imaging.LabelGap` (4 DIP). Chips stay within the visible
+image/control intersection and clear marker crosshair bounds. Stable request order makes layout deterministic;
+resize, zoom and pan remap the original mm geometry and recalculate the layout. Displaced truth/found chips
+use neutral leaders; all leaders precede all plates. Marker centres, diamond/ring distinction, selection inversion
+and hit testing are unchanged. If no full chip fits, omit it rather than clip or overlap its text; the coordinate
+and measurement lists remain the text equivalent.
+
+Spectrum's emission table measures numeric headers and rows together with local shared Auto columns;
+`Gap.Inline` supplies an explicit 8-DIP gap before the next cell. Names take the flexible remainder and numeric
+values retain right alignment and common row/header padding. Detector's right geometry card top-aligns to
+its natural text height; its ScrollViewer still handles a constrained height. It adds no new statistics.
+
 | Style | Key | States / notes |
 |---|---|---|
 | Focus ring | `FocusVisual` | 2 px `Brush.Focus`, 3 px outside the control, on every focusable control |
@@ -73,16 +87,16 @@ and keyboard gestures. Each control follows the same five rules:
 
 ### MeasurementAdorner (via MeasurementOverlay)
 
-Measurements and draggable markers drawn **over** a `HeatmapView`, in the window's adorner layer. The heatmap stays
+Measurements and markers drawn **over** a `HeatmapView` (Studio source markers are display-only; the generic control retains opt-in dragging), in the window's adorner layer. The heatmap stays
 a pure data viewer; everything about measuring lives in the adorner.
 
 | Aspect | Implementation |
 |---|---|
 | Attaching | attached properties on the heatmap, so the view stays XAML-only: `MeasurementOverlay.Session` (the `MeasurementsViewModel`), `Pane` (`Flood` / `Reconstruction`), `Markers` (any `IPlaneMarker` items — the scene's sources), `SelectedMarker` (two-way), `CanMoveMarkers` (bound to `IsIdle`). The adorner is added on `Loaded` and removed on `Unloaded`, so it never outlives the element or holds the ViewModels |
 | State | none on screen: measurements and markers are mm values in the ViewModels, mapped through `HeatmapView.MmToScreen` on every render, so they follow zoom and pan. Only the gesture in progress (draft points, the marker being dragged) lives in the adorner |
-| Input ownership | **Pan** tool: `HitTestCore` returns nothing except over a marker, so drags and the wheel fall through to the heatmap. **Measuring** tools: the adorner takes the pointer and forwards the wheel (`HeatmapView.ZoomStep`) and the hover readout (`HoverAt`) |
+| Input ownership | **Pan** tool: `HitTestCore` returns nothing except over a movable marker (`CanMoveMarkers`); Studio disables marker movement, so drags and the wheel fall through to the heatmap. **Measuring** tools: the adorner takes the pointer and forwards the wheel (`HeatmapView.ZoomStep`) and the hover readout (`HoverAt`) |
 | Capture loss | Alt+Tab, the Windows key or a modal can take the mouse mid-gesture: `OnLostMouseCapture` ends a marker drag and abandons a press-drag draft, and a marker moves only while the adorner holds the capture |
-| Gestures | distance and ROI: press–drag–release (shorter than 4 px is ignored) · angle: three clicks, vertex second · Esc or right-click: abandon the draft · Delete (heatmap focused): remove the selected measurement · drag a marker (Pan tool, idle only): move the source, snapped to 0.1 mm. Points are clamped to the image |
+| Gestures | distance and ROI: press–drag–release (shorter than 4 px is ignored) · angle: three clicks, vertex second · Esc or right-click: abandon the draft · Delete (heatmap focused): remove the selected measurement · generic opt-in marker drag (Pan tool, `CanMoveMarkers`): snap to 0.1 mm; Studio sets `CanMoveMarkers=False`, so sources are edited only in the input panel before acquisition. Points are clamped to the image |
 | Result | a finished gesture becomes a `MeasurementDraft` sent through `MeasurementsViewModel.AddCommand` — the control never constructs a measurement itself |
 | Drawing | white 1.5 px lines on a 4 px black halo, labels as white-on-black chips (as `HeatmapView`'s own) in the inherited mono font. A source marker is highlighted only while dragged or when there are several sources (with one, "selected" says nothing and would compete with the selected measurement). **Selected** = 2.5 px line + inverted chip, not a colour: the accent would collide with viridis' teal ([DESIGN.Color](DESIGN.Color.md#data-colours-vs-ui-colours)). Drafts are dashed with a live value |
 | Accessibility | the adorner itself is not in the automation tree; every measurement is a row in the results table, named by `MeasurementViewModel.Description` ("M2 ROI on Flood: Σ 1,234"). Sources can be moved from the keyboard with the X / Y fields |

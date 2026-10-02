@@ -67,7 +67,7 @@ in a ViewModel is a build error, and the ViewModel tests run on any machine with
 | State and commands a screen binds to | `Core/ViewModels` | `MainViewModel.StartCommand` |
 | A data shape returned by a service | `Core/Services` (next to the contract) | `ImagingResult` |
 | Maths a control needs but that has no UI types | `Core/Imaging` (or a new `Core/<Area>`) | `HeatmapViewport` (fit, zoom about a point, screen ↔ mm), `MeasurementMath` (distance, angle, ROI stats) |
-| A contract a control needs from a ViewModel without knowing its type | `Core/Imaging` interface | `IPlaneMarker` — the overlay drags anything with `X`, `Y`, `MarkerLabel`; `SourceItemViewModel` implements it |
+| A contract a control needs from a ViewModel without knowing its type | `Core/Imaging` interface | `IPlaneMarker` — generic marker coordinates and label; `SourceItemViewModel` implements it, but Studio source markers are display-only (`CanMoveMarkers=False`) |
 | Something that talks to the engine, files, network | a contract in `Core/Services` + implementation in `Gcam.Studio.Services` | `IAcquisitionService` / `SimulationService` |
 | Something that needs WPF to do its job | a contract in `Core/Services` + implementation in `Gcam.Studio/Services` | `IThemeService` / `ThemeService` |
 | A reusable visual element with its own rendering or input | `Gcam.Studio/Controls` | `HeatmapView`, `ColorBar` |
@@ -102,7 +102,7 @@ sequenceDiagram
     participant S as SimulationService
     participant E as ListModeSource (engine)
 
-    U->>V: click Start (or Enter)
+    U->>V: click Start (not the window default button)
     V->>VM: StartCommand (bound)
     VM->>VM: clear data · State = Acquiring · scene locked
     VM->>S: Start(scene, optics, liveTimeS, speed)
@@ -118,7 +118,7 @@ sequenceDiagram
 ```
 
 - **Stop**: `StopCommand` signals the session; it drains its terminal snapshot, retains the acquired event
-  prefix and measurement geometry, and sets `State = Stopped`. Start clears old acquisition data.
+  prefix and measurement geometry, and sets `State = Stopped`. Continue resumes the same session without clearing workspaces; Reset disposes it, clears data and unlocks physical inputs. A fresh Start is available only without data.
 - **Failure**: any other exception becomes `State = Failed` and a status line, never an unhandled crash.
 - **Time**: an injected `TimeProvider` controls the 4 Hz scheduler. Transport has a 200 ms work budget per
   refresh; a look-ahead event proves empty live intervals. When compute cannot reach the target, live time
@@ -175,9 +175,9 @@ its uniform pixel placement follows the engine's detected-pedestal model. No nuc
 
 `MainViewModel` owns pending `FrontEndChain` parts; immutable `DetectorSettings.Chain` carries acquisition identity. `FrontEndMaterials` maps supported physical scintillators explicitly. The existing acquisition interface still accepts DetectorSettings, so no second chain-argument source of truth is introduced. Published snapshots retain that detector setting. Spectrum/Imaging/Measurement consume it, including H-only calibration and model/cache invalidation.
 
-Core adds `IWaveformService`, immutable settings/output/event records, pure `ScopeWindow` allocation/time policies and `WaveformWorkspaceViewModel`. Engine-derived response/readouts stay in Services. DI supplies `WaveformService`, which uses the additive fixed-length cancellable `WindowRasterizer` and the existing integer Waveform shapers. Services prepare samples and min/max pyramids on a worker; PlotView may reuse preparation only when it belongs to the exact immutable Y array. Local ViewRange sharing couples X navigation, not processing or Y scaling.
+Core adds `IWaveformService`, immutable settings/output/event records, pure `ScopeWindow` allocation/time policies and `WaveformWorkspaceViewModel`. Engine-derived response/readouts stay in Services. DI supplies `WaveformService`, which uses the additive fixed-length cancellable `WindowRasterizer` and the Waveform shapers (Q12 fractional-state CR-RC, integer trapezoid). Services prepare samples and min/max pyramids on a worker; PlotView may reuse preparation only when it belongs to the exact immutable Y array. Local ViewRange sharing couples X navigation, not processing or Y scaling.
 
-The WPF shell provides a shared ChainPanel and selects WaveformView/WaveformPanel by workspace type. View code-behind remains InitializeComponent only. Scope requests are visible-only, coalesced by settings/covered acquisition prefix, cancelled when obsolete and revision-checked before publication. Acquisition continues independently; it does not wait for scope rendering. Rate/ideal controls do not mutate acquisition/spectrum/imaging inputs. Four-channel charge division, position centroid changes and CR-RC precision redesign remain separate work.
+The WPF shell provides a shared ChainPanel and selects WaveformView/WaveformPanel by workspace type. View code-behind remains InitializeComponent only. Scope requests are visible-only, coalesced by settings/covered acquisition prefix, cancelled when obsolete and revision-checked before publication. Acquisition continues independently; it does not wait for scope rendering. Rate/ideal controls do not mutate acquisition/spectrum/imaging inputs. CR-RC displays fractional codes from Q12 state with explicit preset shaping times labelled a simulation convention. Four-channel charge division, position centroid changes and CR-RC energy-estimator validation remain separate work.
 
 ## Detector and focus services
 

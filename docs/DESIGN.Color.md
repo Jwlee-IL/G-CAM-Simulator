@@ -24,7 +24,7 @@ Every colour exists as a `Color.*` and a matching `Brush.*`; views use the brush
 | `Brush.Line.Control` | `#5E6E7A` | `#7F8D99` | input / button borders |
 | `Brush.Text.Primary` | `#E8EDF1` | `#1B242D` | main text |
 | `Brush.Text.Secondary` | `#A6B1BB` | `#56636F` | labels, secondary text |
-| `Brush.Text.Disabled` | `#6B7883` | `#9AA5AE` | disabled text |
+| `Brush.Text.Disabled` | `#85919C` | `#626F7A` | disabled text; retained values remain readable |
 | `Brush.Accent` | `#4FC8E3` | `#0D6583` | primary action, selection, progress |
 | `Brush.Accent.Hover` / `.Pressed` | `#6FD4EA` / `#38AFCA` | `#0F7596` / `#0A5269` | primary button states |
 | `Brush.Accent.Subtle` | accent @ 14 % | accent @ 12 % | selected row background |
@@ -45,7 +45,21 @@ Dark, against `Bg.Surface`: Text.Primary 14.1:1 · Text.Secondary 7.6:1 · Accen
 Focus 10.6:1 · Success 8.0 · Warning 8.5 · Error 6.0 — all **AA**. `Line.Control` 3.15:1 meets the 3:1
 non-text minimum for control boundaries. `OnAccent` on `Accent` 9.6:1. Light: `Accent` on white 6.5:1,
 `Line.Control` 3.4:1 on white and 3.1:1 on `Bg.Canvas` (it was `#8A97A2`, 2.99:1 — just under the minimum).
-`Text.Disabled` is for disabled controls only (3.7:1 dark, 2.5:1 light): informational text uses `Text.Secondary`.
+`Text.Disabled` is for disabled controls only: informational text uses `Text.Secondary`.
+The product target for retained-value disabled text is **≥4.5:1** on Surface, Canvas and Raised.
+The TextBox/ComboBox disabled templates use opaque Disabled text on Surface, muted `Line` borders and a
+disabled surface; the view-model locks are unchanged. Unit suffixes retain their Secondary role.
+
+| Disabled text contrast | Dark `#85919C` | Light `#626F7A` |
+|---|---:|---:|
+| Surface (locked-input fill) | 5.164:1 | 5.154:1 |
+| Canvas | 5.654:1 | 4.716:1 |
+| Raised | 4.517:1 | 4.625:1 |
+
+Measured by sRGB linearization and relative luminance, using opaque XAML colors; antialiased edge pixels are
+not the foreground color. `ThemeContrastTests` reads copies of the production token dictionaries without WPF
+and checks the target plus the dimmer-than-Secondary/Primary distinction in both themes. Disabled action
+templates that separately reduce opacity (primary buttons, CheckBoxes) are outside this retained-value target.
 
 Band tint is decorative; its edge conveys the interval boundary (3:1 non-text minimum).
 Measured with sRGB alpha compositing (band alpha 38/255, series fill opacity 0.22):
@@ -75,7 +89,7 @@ it deliberately matches the plot background while the existing band edges convey
 - Heatmaps use **viridis** (perceptually uniform, colour-blind safe), always with a colour bar and numeric ticks
   ([DESIGN.Controls](DESIGN.Controls.md#colorbar)).
 - **Image overlays never use the accent** — cyan would collide with viridis' teal band. Overlays are white on a
-  black chip, which stays legible on any colormap. A *selected* overlay (measurement, source marker) is shown by a
+  black chip, which stays legible on any colormap. A *selected* overlay (measurement; source marker emphasis identifies the selected source without enabling movement) is shown by a
   thicker line and an inverted chip (black on white), so selection needs no colour either and looks the same in
   both themes.
 - **No cyan at rest.** The progress bar is shown only while running, and the decoded-peak chip is a neutral

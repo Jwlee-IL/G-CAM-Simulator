@@ -45,7 +45,7 @@ loaded); it must carry a comment saying why it can't live elsewhere.
 ## How a view gets its data and services
 
 - `App.xaml.cs` resolves `MainWindow` and sets `DataContext` to `MainViewModel` from the DI container.
-- Views bind to ViewModel properties and commands only. Acquisition uses `StartCommand` / `StopCommand`;
+- Views bind to ViewModel properties and commands only. Acquisition uses `StartCommand` (Start / Continue), `StopCommand` and `ResetCommand`;
   its live time, speed, shared snapshots and state live in the shell ViewModel.
 - Shell bindings across item / section contexts use the context already on the containing `ItemsControl`
   (workspace activation) or scene `ScrollViewer` (selected-source enablement and FCFOV), rather than a
