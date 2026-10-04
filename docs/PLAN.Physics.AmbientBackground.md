@@ -6,13 +6,13 @@ depend on the source: removing the source leaves it, and a weaker source is buri
 (dose rate + spectrum → fluence → transport through the head → Poisson events), re-measure the results it changes, and
 fill the "Under ambient background" column of Evidence §1. Procedure: [AGENTS.Planning](AGENTS.Planning.md).
 
-Status: **in progress** — turn 7 done 2026-10-04 (substitute Claude implementer; report
-`samples/evidence/results/ambient-baseline-v1-turn7.md`, commits `caade67`, `0fab236`): validated v1 spectrum issued
-with its AB-10 record, placeholder hash fixed, calibrated correlation gate study (AB-7), EV-07 / EV-09 measured, EV-12
-partly. Planner re-verified: build 0 errors; tests engine 378, Core 184, services 87 (+7 skipped), UI 13 (+14 skipped),
-all pass; hashes match. Author decisions AB-11 … AB-13 below. Next (turn 8): gate re-selection and re-validation
-(AB-11), EV-02, EV-12 mask / antimask, EV-15, EV-01 (AB-13); then the planner writes Evidence / PRS / Findings.
-History: turns 1–5 Codex (`56f0a17`), turn 6 substitute (`b9310f8`, AB-10).
+Status: **in progress** — turn 8 done 2026-10-04 (substitute Claude implementer; report
+`samples/evidence/results/ambient-baseline-v1-turn8.md`, commits `aa9fcc4`, `b6ebb26`): AB-11 gate re-selected on 65,536
+nulls and re-validated on fresh F256[128:256] seeds — **96 / 96 pass**, pooled 0.308 %; EV-12, EV-02 (open window),
+EV-01 measured; EV-15 blocked by its recipe (no live time); decoder-bias baseline for TODO-33. Planner re-verified:
+build 0 errors; tests engine 391, Core 184, services 87 (+7 skipped), UI 13 (+14 skipped), all pass; F256 rule
+regenerated. Next (turn 9, AB-14): EV-15 at absolute activities, EV-02 cs662 window; then the planner writes Evidence /
+PRS / Findings. History: turns 1–5 Codex (`56f0a17`), 6 (`b9310f8`, AB-10), 7 (`caade67`, AB-11…13).
 
 ## What exists (checked in the code, 2026-10-02 — *verify*)
 
@@ -118,6 +118,12 @@ pre-declared universal threshold Z = 4.643 passed 96 / 96. The bare bound also s
   not fixed inside TODO-30.
 - **AB-13 — remaining families:** EV-02, EV-12 mask / antimask, EV-15 and **EV-01 at the legacy EV-01 recipe's activity
   and exposure** with the ambient field added, through the seed driver, both bounds, ideal value kept as best-case.
+
+**Decision AB-14 (author, 2026-10-04, after turn 8).** EV-15's legacy recipe (1 Bq Cs + 8 Bq Co and a photon budget,
+no live time) gives ~6 Cs counts when read literally and is unmeasurable even without background. Re-measure EV-15 at
+absolute activities in the lab geometry, 60 s, both bounds and field levels, ideal beside: **(a) Cs 1 MBq + Co 8 MBq**
+(the legacy 8 : 1 ratio) and **(b) Cs 1 MBq + Co 2 MBq** (the ratio where the spatial lever still holds, theme 52).
+Also run EV-02 in the **cs662 window** (dropped in turn 8 for time).
 
 **Angular distribution (AB-4 addendum).** Representation: a tabulated joint distribution, energy bins × zenith-cosine
 bins at the detector point (azimuth uniform), versioned with the spectrum. Acceptance oracle: the **uncollided** line
