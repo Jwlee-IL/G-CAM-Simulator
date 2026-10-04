@@ -919,8 +919,8 @@ D-39, D-40 in `VV.Gcam.Decisions`).
 
 ## 64. Absolute ambient background — terrestrial field, calibrated gate, and what it changes (2026-10-04)
 
-TODO-30 ([PLAN.Physics.AmbientBackground](PLAN.Physics.AmbientBackground.md), Codex review
-[PLAN.Physics.AmbientBackground.Review](PLAN.Physics.AmbientBackground.Review.md); author decisions AB-1 … AB-14).
+TODO-30 ([PLAN.Physics.AmbientBackground](archive/PLAN.Physics.AmbientBackground.md), Codex review
+[PLAN.Physics.AmbientBackground.Review](archive/PLAN.Physics.AmbientBackground.Review.md); author decisions AB-1 … AB-14).
 Turns 1–5 by Codex, **turns 6–9 by substitute Claude implementers** (Codex allowance), each with a committed report
 `samples/evidence/results/ambient-baseline-v1-turn<N>.md` and its JSON. Every earlier MC number came from an ideal
 environment or a background set relative to the source (BSR, theme 28). The engine can now add a source-independent
@@ -1000,6 +1000,6 @@ EV-01 / 02 / 07 / 09 / 12 / 15.
 - **Caveats.** Bounds, not a housing (realistic head: TODO-32); high-energy transport incomplete (TODO-31); homogeneous
   crystal for source and field, so each family's ideal is re-measured in this pipeline and differs from the legacy
   (EV-02 0.5–1° narrower); Poisson maps from expected maps, not event-by-event; terrestrial soil only (no cosmic,
-  airborne radon, room scatter, intrinsic crystal activity); Studio's ambient input stays off by default (AB-5). Turns
+  airborne radon, room scatter, intrinsic crystal activity); Studio's ambient input was off by default during these measurements — since turns 10–11 (AB-15, AB-16) Studio starts with the validated spectrum at 0.10 µSv/h, front-only bound (startup scene: +0.137 ± 0.008 cps, 0.19 % of the counts, localisation unchanged over 8 seeds), and its spectrum axis is fixed at 0–2000 keV in 2 keV bins with an overflow count, because the old 1.15 × highest-line axis let a negligible Tl-208 3960.9 keV line stretch the view to 4555 keV. Turns
   6–9 were substitute Claude implementers, not Codex; turn 8's runs carry `engine_tree_dirty: true` (committed
   afterwards as `aa9fcc4`), turn 9's EV-02 run used a copy of the turn-8 build. Pilot runs (seed 777) are not evidence.

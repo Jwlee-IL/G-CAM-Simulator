@@ -4,16 +4,15 @@ Scope: every published MC number so far comes from an ideal environment — no a
 whose rate is set **relative to the source** (BSR). A real camera sits in a natural radiation field whose rate does not
 depend on the source: removing the source leaves it, and a weaker source is buried by it. Add that field as physics
 (dose rate + spectrum → fluence → transport through the head → Poisson events), re-measure the results it changes, and
-fill the "Under ambient background" column of Evidence §1. Procedure: [AGENTS.Planning](AGENTS.Planning.md).
+fill the "Under ambient background" column of Evidence §1. Procedure: [AGENTS.Planning](../AGENTS.Planning.md).
 
-Status: **in progress — measurements and V&V docs done**, 2026-10-04. Turns 6–9 by substitute Claude implementers
-(Codex unavailable), each audited and re-verified by the planner (final: build 0 errors; tests engine 393, Core 184,
-services 87 (+7 skipped), UI 13 (+14 skipped), all pass). Results: validated terrestrial spectrum (AB-10), gate 96 / 96
-on fresh seeds (AB-11), EV-01 / 02 / 07 / 09 / 12 / 15 under the field (AB-13, AB-14), decoder-pull baseline → TODO-33
-(AB-12). Docs: Evidence §1 measured column + **EV-34**, PR-SENS-02, LIM-06 / LIM-07, Findings **theme 64**, README /
-Overview / PAPER wording. **Remaining:** AB-5 Studio default (author decision), Studio's "not validated" label and its
-SRS / SDS rows, then close (Todo row → Backlog, plan → archive). Reports: `samples/evidence/results/ambient-baseline-v1-turn{6..9}.md`.
-History: turns 1–5 Codex (`56f0a17`); 6 `b9310f8`; 7 `caade67`; 8 `aa9fcc4`; 9 `c9a1e38`.
+Status: **done** 2026-10-04. Turns 1–5 Codex (`56f0a17`); turns 6–11 substitute Claude implementers, each audited
+and re-verified by the planner: 6 `b9310f8` (spectrum, AB-10), 7 `caade67`, 8 `aa9fcc4` (gate 96 / 96, AB-11), 9
+`c9a1e38` (EV-15 absolute, EV-02 cs662, AB-14), 10–11 `13387fb` (Studio default 0.10 µSv/h front-only, fixed 0–2000 keV
+axis, AB-15 / AB-16). Docs: Evidence EV-34 and the measured ambient column, PR-SENS-02, LIM-06 / 07, Findings 64,
+Studio SRS / SDS / VV (SR-RUN-29, SU-26, AN-15). Final tests: engine 393, Studio.Core 205, services 92 (+7 skipped),
+UI 13 (+14 skipped), all pass. Pending on the author's go: desktop UI scenarios with the field on; AN-15 (opt-in render
+test fails on the current machine, also before TODO-30). Follow-ups: TODO-31, TODO-32, TODO-33.
 
 ## What exists (checked in the code, 2026-10-02 — *verify*)
 
@@ -150,7 +149,7 @@ uncollided) is then checked only through the UNSCEAR kerma comparison.
 1. **Turn 1 — review and measurement (Codex):** verify the "What exists" table and every *verify* row in the code; find
    and cite the data for A-1 / A-2 / A-5 / A-10; measure the current BSR model's limits (e.g. what a 0.1 µSv/h field
    corresponds to in BSR for the Studio and lab scenarios at their default activities); propose the config / API shape
-   and the test oracles; write `docs/PLAN.Physics.AmbientBackground.Review.md`. No code in this turn.
+   and the test oracles; write `docs/archive/PLAN.Physics.AmbientBackground.Review.md`. No code in this turn.
 2. Decisions after review (author: A-7 default and anything that changes a conclusion).
 3. Implement in the same Codex conversation; tests; Studio input; re-measurements (A-8, A-9) through the seed driver.
 4. Planner verification; Evidence §1 column, EV entries, PRS PR-SENS-02, LIM-06, README, PAPER updated with measured

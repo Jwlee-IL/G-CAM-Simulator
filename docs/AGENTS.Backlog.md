@@ -175,6 +175,13 @@ TILT (pitch/yaw), mask WARPING.
 
 ## Done (summary — details in AGENTS.Findings by theme)
 
+- **TODO-30 absolute ambient background** (2026-10-04): a source-independent terrestrial field (K / U / Th from a
+  soil / air transport generator; UNSCEAR 2000 kerma ratios 1.014 / 0.997 / 1.023 accepted as a ±3 % model comparison)
+  bounded by a bare-crystal and a front-only geometry; a calibrated background-aware trust gate (96 / 96 configurations
+  ≤ 1 % false locations on fresh seeds); EV-01 / 02 / 07 / 09 / 12 / 15 re-measured under the field (EV-34); Studio
+  default 0.10 µSv/h front-only with a fixed 0–2000 keV spectrum axis. Turns 1–5 Codex, 6–11 substitute Claude
+  implementers; 16 author decisions AB-1 … AB-16 — [PLAN.Physics.AmbientBackground](archive/PLAN.Physics.AmbientBackground.md),
+  Findings 64. Follow-ups: TODO-31 (high-energy transport), TODO-32 (housing), TODO-33 (background-aware decoding).
 - **TODO-29 clean-room wording** (2026-10-02): text attributing a product description, unsolved defects,
   countermeasures or implementation choices to a former instrument rewritten as known problems / published practice
   of the camera class; design-exercise notice on the VV set; ideal-environment notice on every MC result —

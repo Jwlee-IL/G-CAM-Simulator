@@ -65,11 +65,12 @@ cocotb RTL front-end path.
 ## Where work stands
 Task state lives in **`docs/AGENTS.Todo.md`** (each row links its plan; the plan's `Status:` line is the detail) — do not
 copy it here, it goes stale. Only what the Todo does not hold:
-- **Every MC result so far is ideal-environment** until TODO-30's re-measurements land in the Evidence register.
-- Open side questions: PR-SENS-02's "~50 counts" gate (from TODO-27); README desktop screenshot still shows the old preset
-  label "(original rig)" → retake on the author's go (TODO-29).
-- Hand-off material in the repo: TODO-30 prompts and turn reports `samples/evidence/results/ambient-baseline-v1-*`;
-  TODO-25 probe and raw results incl. the finished 10 s v3 run, **not yet analysed** (`samples/evidence/depthlik/`).
+- **Ambient background (TODO-30, done 2026-10-04):** the evidence register now quotes an absolute terrestrial field next to
+  every ideal value it re-measured (EV-34); results not re-measured are still ideal-environment best cases.
+- Waiting for a free desktop (author's go): the desktop UI scenarios after TODO-30's Studio default and fixed spectrum
+  axis (list in `samples/evidence/results/ambient-baseline-v1-turn10.md`), and the README desktop screenshot that still
+  shows the old preset label "(original rig)" (TODO-29). PR-SENS-02's count gate is settled (measured gate, EV-34).
+- Hand-off material in the repo: TODO-25 probe and raw results incl. the finished 10 s v3 run, **not yet analysed** (`samples/evidence/depthlik/`).
 - Codex conversations, worktrees (`C:\gw\…`) and probe outputs (`%TEMP%\gcam-*`) are machine-local: start new
   implementer turns from the plan Status and the review / turn-report files. While Codex is unavailable, turns run as
   substitute Claude subagents (`docs/AGENTS.Planning.md`).
