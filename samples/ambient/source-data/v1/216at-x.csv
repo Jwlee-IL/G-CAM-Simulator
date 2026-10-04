@@ -1,0 +1,8 @@
+energy,unc_en,intensity,unc_i,type,shell,p_z,p_n,p_symbol,p_energy_shift,p_energy,unc_pe,jp,half_life,operator_hl,unc_hl,unit_hl,half_life_sec,unc_hls,decay,decay_%,unc_d,q,unc_q,d_z,d_n,d_symbol,ensdf_publication_cut-off,ensdf_authors,Extraction_date
+12.904,,0.71763903445,0.06493739879118354,X,L,85,131,At,,0,,1-,0.30,,3,ms,0.0003,0.00003,A,100,,7950,3,83,129,Bi,1-Aug-2020,K. Auranen and E.A. McCutchan,2026-10-04
+74.815,,0.47517579046246167,0.04687197921619314,X,KA2,85,131,At,,0,,1-,0.30,,3,ms,0.0003,0.00003,A,100,,7950,3,83,129,Bi,1-Aug-2020,K. Auranen and E.A. McCutchan,2026-10-04
+77.108,,0.7950071782875383,0.0783500448070891,X,KA1,85,131,At,,0,,1-,0.30,,3,ms,0.0003,0.00003,A,100,,7950,3,83,129,Bi,1-Aug-2020,K. Auranen and E.A. McCutchan,2026-10-04
+87.388,,0.2723210040199081,0.02713513193574344,X,KpB1,85,131,At,,0,,1-,0.30,,3,ms,0.0003,0.00003,A,100,,7950,3,83,129,Bi,1-Aug-2020,K. Auranen and E.A. McCutchan,2026-10-04
+88.458,,0.35565123125,0.03541231509050778,X,KB,85,131,At,,0,,1-,0.30,,3,ms,0.0003,0.00003,A,100,,7950,3,83,129,Bi,1-Aug-2020,K. Auranen and E.A. McCutchan,2026-10-04
+89.784,,0.08333022723009188,0.008414249558728184,X,KpB2,85,131,At,,0,,1-,0.30,,3,ms,0.0003,0.00003,A,100,,7950,3,83,129,Bi,1-Aug-2020,K. Auranen and E.A. McCutchan,2026-10-04
+

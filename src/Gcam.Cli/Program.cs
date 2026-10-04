@@ -39,6 +39,7 @@ var commands = new Dictionary<string, Func<string[], int>>(StringComparer.Ordina
     ["ambient-fixed"]  = AmbientCommands.RunFixedTime,
     ["ambient-placeholder"] = AmbientCommands.WritePlaceholder,
     ["ambient-uncollided"] = AmbientCommands.RunUncollided,
+    ["ambient-terrestrial"] = AmbientCommands.RunTerrestrial,
     ["shield"]         = SceneCommands.RunShield,
     ["finitesrc"]      = SceneCommands.RunFiniteSource,
     ["dose"]           = DoseCommands.RunDose,

@@ -1,0 +1,3 @@
+# Immutable, SHA256-pinned snapshots of public data: store the exact downloaded bytes (no line-ending
+# normalisation), otherwise a checkout on another OS would no longer match the recorded hashes.
+* -text

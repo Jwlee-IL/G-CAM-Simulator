@@ -1,0 +1,66 @@
+{
+ "About": "Immutable snapshots of public photon-interaction data and their provenance; extraction date 2026-10-04 (read-only HTTP GET).",
+ "Files": [
+  {
+   "File": "nist/air.html",
+   "Sha256": "341e5ee8e80fd94095c1a8113f8cfe08e0bf169647a44d8290b13385060711f7"
+  },
+  {
+   "File": "nist/estar-compos-104.html",
+   "Sha256": "8a79e0544b74a08d53b99ca1c59dc121e21d70b7a561a3e9327072d09fe332b1"
+  },
+  {
+   "File": "nist/tab2.html",
+   "Sha256": "7a3293b29425f7ffec4593901a722cf64d96ac91df454fd3c759f26fdffd339c"
+  },
+  {
+   "File": "xcom/ATWTS.DAT",
+   "Sha256": "dd0a90761029e266ce3c894819b214586c157ab6eaa9eb71aafa01d214498efa"
+  },
+  {
+   "File": "xcom/MDATX3.001",
+   "Sha256": "4dcfbb200a41be34d3c29fcffaeb7f23048adc17d37566877072b26ef27db1a2"
+  },
+  {
+   "File": "xcom/MDATX3.006",
+   "Sha256": "65643a08c98c0578e6f862527e0d70e8bd3cdb8dfbf74d0c59c5a5ddef8e9374"
+  },
+  {
+   "File": "xcom/MDATX3.007",
+   "Sha256": "69221057d5493486127ec0ad0f215b732bdae57fae85d166af98cff17bd37e2f"
+  },
+  {
+   "File": "xcom/MDATX3.008",
+   "Sha256": "29fe09cfec3c94cb47ceeb003f4affdfd178198d8601077a2446ae53c2a76128"
+  },
+  {
+   "File": "xcom/MDATX3.013",
+   "Sha256": "3a2cca6b88b4387e3477201c17022e40ede4a14124590c8e2ef293b65bd430bd"
+  },
+  {
+   "File": "xcom/MDATX3.014",
+   "Sha256": "b4bf671fa674d91f91cce1c4ff73aa88a67f7998503bfdbc9be5de0719839bbc"
+  },
+  {
+   "File": "xcom/MDATX3.018",
+   "Sha256": "a6c20843e89ca1cf004d2dc00147d65f2600ea226f0cb079c2e3856fc25fa9ec"
+  },
+  {
+   "File": "xcom/MDATX3.026",
+   "Sha256": "f5ba1eb942da7b36491aef9a47ab29768d5db8d1436e922a8358bf66da0812da"
+  }
+ ],
+ "Archives": [
+  {
+   "Url": "https://physics.nist.gov/PhysRefData/Xcom/XCOM.tar.gz",
+   "Sha256": "b2bdd0608bbece4809a337b7264c85b7997f608a1f8e2181ce5201421efcc0de",
+   "Note": "xcom/ files are XCOM/MDATX3.zzz and XCOM/ATWTS.DAT extracted unchanged from this archive (the archive is not committed)."
+  }
+ ],
+ "Citations": {
+  "Xcom": "M. J. Berger, J. H. Hubbell, S. M. Seltzer, J. Chang, J. S. Coursey, R. Sukumar, D. S. Zucker and K. Olsen, XCOM: Photon Cross Sections Database, NIST Standard Reference Database 8 (XGAM), https://physics.nist.gov/xcom ; element data files from https://physics.nist.gov/PhysRefData/Xcom/XCOM.tar.gz",
+  "AirMuEn": "J. H. Hubbell and S. M. Seltzer, Tables of X-Ray Mass Attenuation Coefficients and Mass Energy-Absorption Coefficients, NISTIR 5632 (1995), dry air: https://physics.nist.gov/PhysRefData/XrayMassCoef/ComTab/air.html",
+  "AirComposition": "NIST ESTAR material 104, Air, dry (near sea level): density 1.20479E-03 g/cm3, mass fractions C 0.000124, N 0.755267, O 0.231781, Ar 0.012827; https://physics.nist.gov/cgi-bin/Star/compos.pl?matno=104 (tab2.html lists the same material rounded: 1.205E-03 g/cm3, N 0.755268).",
+  "Soil": "H. L. Beck, J. DeCampo and C. Gogolak, In Situ Ge(Li) and NaI(Tl) Gamma-Ray Spectrometry, USAEC Health and Safety Laboratory report HASL-258 (1972): Table 2 soil composition by weight Al2O3 13.5 %, Fe2O3 4.5 %, SiO2 67.5 %, CO2 4.5 %, H2O 10 % (HASL-258 p. 44); soil density 1.6 g/cm3 (p. 10). Reprinted as Appendix I of https://lmpublicsearch.lm.doe.gov/sitedocs/sw-a-000582.pdf (compendium PDF pages 70 and 104; PDF SHA256 recorded in the turn-6 results, not committed)."
+ }
+}

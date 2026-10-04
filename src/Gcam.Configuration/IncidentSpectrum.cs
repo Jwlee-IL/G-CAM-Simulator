@@ -18,12 +18,18 @@ public sealed class IncidentSpectrum
     public IncidentContinuumBin[] Continuum { get; set; } = [];
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public IncidentAngularBin[]? EnergyZenith { get; set; }
+    /// <summary>Source-term items deliberately left out (AB-4d), part of the hashed payload when present.</summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public IncidentNotIncluded[]? NotIncluded { get; set; }
 
-    /// <summary>Hash the fixed-order JSON payload, excluding the hash itself. Serialized line/bin order is significant.</summary>
+    /// <summary>Hash the fixed-order JSON payload, excluding the hash itself. Serialized line/bin order is significant.
+    /// Spectra without the optional members keep their earlier payload, so existing hashes stay valid.</summary>
     public string ComputeContentHash() => Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(
-        EnergyZenith is null
-            ? JsonSerializer.Serialize(new { Id, Version, Reference, AngularModel, IsValidated, Lines, Continuum })
-            : JsonSerializer.Serialize(new { Id, Version, Reference, AngularModel, IsValidated, Lines, Continuum, EnergyZenith })))).ToLowerInvariant();
+        NotIncluded is not null
+            ? JsonSerializer.Serialize(new { Id, Version, Reference, AngularModel, IsValidated, Lines, Continuum, EnergyZenith, NotIncluded })
+            : EnergyZenith is null
+                ? JsonSerializer.Serialize(new { Id, Version, Reference, AngularModel, IsValidated, Lines, Continuum })
+                : JsonSerializer.Serialize(new { Id, Version, Reference, AngularModel, IsValidated, Lines, Continuum, EnergyZenith })))).ToLowerInvariant();
 
     /// <summary>Development fixture only. It is not a terrestrial spectrum and cannot support ambient evidence.</summary>
     public static IncidentSpectrum Placeholder()

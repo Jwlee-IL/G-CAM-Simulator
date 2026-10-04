@@ -1,0 +1,954 @@
+[
+ {
+  "File": "206hg-gs.csv",
+  "Url": "https://nds.iaea.org/relnsd/v1/data?fields=ground_states&nuclides=206hg",
+  "Sha256": "68549785311f24fce5516c821d2abc43c3bd877106958c4edc2407c9a9734aa7",
+  "Rows": 1,
+  "ExtractionDates": [
+   "2026-10-04"
+  ],
+  "NoDataResponse": null
+ },
+ {
+  "File": "206hg-x.csv",
+  "Url": "https://nds.iaea.org/relnsd/v1/data?fields=decay_rads&nuclides=206hg&rad_types=x",
+  "Sha256": "23392f5f1e41d46aa031d5f33c396859f1546ad8bd06d05bb392c7ffb5cedbf4",
+  "Rows": 6,
+  "ExtractionDates": [
+   "2026-10-04"
+  ],
+  "NoDataResponse": null
+ },
+ {
+  "File": "206hg.csv",
+  "Url": "https://nds.iaea.org/relnsd/v1/data?fields=decay_rads&nuclides=206hg&rad_types=g",
+  "Sha256": "c7552889b596c1260807f6bc217e40ecce93e0d27e3e47257602f093d2d282ad",
+  "Rows": 11,
+  "ExtractionDates": [
+   "2026-10-04"
+  ],
+  "NoDataResponse": null
+ },
+ {
+  "File": "206tl-gs.csv",
+  "Url": "https://nds.iaea.org/relnsd/v1/data?fields=ground_states&nuclides=206tl",
+  "Sha256": "2dcd55cef06bce36d22930f355fdab059c0e6296f257db18734131881b8a5789",
+  "Rows": 1,
+  "ExtractionDates": [
+   "2026-10-04"
+  ],
+  "NoDataResponse": null
+ },
+ {
+  "File": "206tl-x.csv",
+  "Url": "https://nds.iaea.org/relnsd/v1/data?fields=decay_rads&nuclides=206tl&rad_types=x",
+  "Sha256": "bf9919ce5e45caa3b2f9847b8a3f7c06a997135405e776d5cc8e4b7964adbe2d",
+  "Rows": 12,
+  "ExtractionDates": [
+   "2026-10-04"
+  ],
+  "NoDataResponse": null
+ },
+ {
+  "File": "206tl.csv",
+  "Url": "https://nds.iaea.org/relnsd/v1/data?fields=decay_rads&nuclides=206tl&rad_types=g",
+  "Sha256": "f94bdae7c94ef8130e668364429c915f2c927d2225ddc0525147e1ffc0f935f6",
+  "Rows": 32,
+  "ExtractionDates": [
+   "2026-10-04"
+  ],
+  "NoDataResponse": null
+ },
+ {
+  "File": "208tl-gs.csv",
+  "Url": "https://nds.iaea.org/relnsd/v1/data?fields=ground_states&nuclides=208tl",
+  "Sha256": "238a277c97719466a3063cec9cb9a5f9c30fddf192a87ddcd57968d25bd74378",
+  "Rows": 1,
+  "ExtractionDates": [
+   "2026-10-04"
+  ],
+  "NoDataResponse": null
+ },
+ {
+  "File": "208tl-x.csv",
+  "Url": "https://nds.iaea.org/relnsd/v1/data?fields=decay_rads&nuclides=208tl&rad_types=x",
+  "Sha256": "8a3c2c7347f955d32229663c5196e2947ccc87af25ebdf01261f92bb3372c64f",
+  "Rows": 6,
+  "ExtractionDates": [
+   "2026-10-04"
+  ],
+  "NoDataResponse": null
+ },
+ {
+  "File": "208tl.csv",
+  "Url": "https://nds.iaea.org/relnsd/v1/data?fields=decay_rads&nuclides=208tl&rad_types=g",
+  "Sha256": "1439eb20ed2956e28535cf11913d28dc9d1ef2f48e65eb9c51b634f117d1a2eb",
+  "Rows": 40,
+  "ExtractionDates": [
+   "2026-10-04"
+  ],
+  "NoDataResponse": null
+ },
+ {
+  "File": "210bi-gs.csv",
+  "Url": "https://nds.iaea.org/relnsd/v1/data?fields=ground_states&nuclides=210bi",
+  "Sha256": "238381f6893e732a5415084b0baf899578e43a264e899192b109fc96f1e9400a",
+  "Rows": 1,
+  "ExtractionDates": [
+   "2026-10-04"
+  ],
+  "NoDataResponse": null
+ },
+ {
+  "File": "210bi-x.csv",
+  "Url": "https://nds.iaea.org/relnsd/v1/data?fields=decay_rads&nuclides=210bi&rad_types=x",
+  "Sha256": "cf2bfa0e111efc8eda1f46b63c86522e3acafdb16819bc5bd9a65cab591b5f81",
+  "Rows": 6,
+  "ExtractionDates": [
+   "2026-10-04"
+  ],
+  "NoDataResponse": null
+ },
+ {
+  "File": "210bi.csv",
+  "Url": "https://nds.iaea.org/relnsd/v1/data?fields=decay_rads&nuclides=210bi&rad_types=g",
+  "Sha256": "b5c07cf566ed8833f0fa051cf4cf8ea97d3dedb49d83eee9143a59e8d2ee8e73",
+  "Rows": 21,
+  "ExtractionDates": [
+   "2026-10-04"
+  ],
+  "NoDataResponse": null
+ },
+ {
+  "File": "210pb-gs.csv",
+  "Url": "https://nds.iaea.org/relnsd/v1/data?fields=ground_states&nuclides=210pb",
+  "Sha256": "edec822d9760a7c23482bf95baee893488c7426ac3fe15b9fb0bbb7eed2ba02f",
+  "Rows": 1,
+  "ExtractionDates": [
+   "2026-10-04"
+  ],
+  "NoDataResponse": null
+ },
+ {
+  "File": "210pb-x.csv",
+  "Url": "https://nds.iaea.org/relnsd/v1/data?fields=decay_rads&nuclides=210pb&rad_types=x",
+  "Sha256": "461f17a3bf9dd78ba8b1881f1a0c5ea599e597cf378681c658add702f984edb1",
+  "Rows": 1,
+  "ExtractionDates": [
+   "2026-10-04"
+  ],
+  "NoDataResponse": null
+ },
+ {
+  "File": "210pb.csv",
+  "Url": "https://nds.iaea.org/relnsd/v1/data?fields=decay_rads&nuclides=210pb&rad_types=g",
+  "Sha256": "7533e9fee1750e6461db45af0a1ba939309bc168c405397216733a83e0743709",
+  "Rows": 2,
+  "ExtractionDates": [
+   "2026-10-04"
+  ],
+  "NoDataResponse": null
+ },
+ {
+  "File": "210po-gs.csv",
+  "Url": "https://nds.iaea.org/relnsd/v1/data?fields=ground_states&nuclides=210po",
+  "Sha256": "73a386015ca286c324668d8c87e824e8a0fcda4605e871da6fe3808f10322394",
+  "Rows": 1,
+  "ExtractionDates": [
+   "2026-10-04"
+  ],
+  "NoDataResponse": null
+ },
+ {
+  "File": "210po-x.csv",
+  "Url": "https://nds.iaea.org/relnsd/v1/data?fields=decay_rads&nuclides=210po&rad_types=x",
+  "Sha256": "df48b8980e985e95ddd0efbf0cbe42793593a7e26080509f6136612da072a507",
+  "Rows": 6,
+  "ExtractionDates": [
+   "2026-10-04"
+  ],
+  "NoDataResponse": null
+ },
+ {
+  "File": "210po.csv",
+  "Url": "https://nds.iaea.org/relnsd/v1/data?fields=decay_rads&nuclides=210po&rad_types=g",
+  "Sha256": "09bb365497e4af17fd5f2ede9d5ddb0a4a8bfc0c6642cd92c345329ec8b883eb",
+  "Rows": 7,
+  "ExtractionDates": [
+   "2026-10-04"
+  ],
+  "NoDataResponse": null
+ },
+ {
+  "File": "210tl-gs.csv",
+  "Url": "https://nds.iaea.org/relnsd/v1/data?fields=ground_states&nuclides=210tl",
+  "Sha256": "de299c46fb9d199b3c77f20763779260b03d1d5db71aa9e6ecfc6a380d9ff7cc",
+  "Rows": 1,
+  "ExtractionDates": [
+   "2026-10-04"
+  ],
+  "NoDataResponse": null
+ },
+ {
+  "File": "210tl-x.csv",
+  "Url": "https://nds.iaea.org/relnsd/v1/data?fields=decay_rads&nuclides=210tl&rad_types=x",
+  "Sha256": "5bb1669cc5256ad34071d47d9976f566d4cb3e68c1e3ef57257765b103bc16f5",
+  "Rows": 6,
+  "ExtractionDates": [
+   "2026-10-04"
+  ],
+  "NoDataResponse": null
+ },
+ {
+  "File": "210tl.csv",
+  "Url": "https://nds.iaea.org/relnsd/v1/data?fields=decay_rads&nuclides=210tl&rad_types=g",
+  "Sha256": "5424d12c7651d539ef9859da2678b07ad0ae4ad53d357714c83cafda7352457d",
+  "Rows": 30,
+  "ExtractionDates": [
+   "2026-10-04"
+  ],
+  "NoDataResponse": null
+ },
+ {
+  "File": "212bi-gs.csv",
+  "Url": "https://nds.iaea.org/relnsd/v1/data?fields=ground_states&nuclides=212bi",
+  "Sha256": "60e9008591bf2c9db3e62dceee4be5ff4ce9345b8e94347aaa4ff8402e906fc0",
+  "Rows": 1,
+  "ExtractionDates": [
+   "2026-10-04"
+  ],
+  "NoDataResponse": null
+ },
+ {
+  "File": "212bi-x.csv",
+  "Url": "https://nds.iaea.org/relnsd/v1/data?fields=decay_rads&nuclides=212bi&rad_types=x",
+  "Sha256": "f17d887a4b8b8c3c40f98065c65aa89309e03d45b316e584b769880d5f2b6015",
+  "Rows": 12,
+  "ExtractionDates": [
+   "2026-10-04"
+  ],
+  "NoDataResponse": null
+ },
+ {
+  "File": "212bi.csv",
+  "Url": "https://nds.iaea.org/relnsd/v1/data?fields=decay_rads&nuclides=212bi&rad_types=g",
+  "Sha256": "aeeef539cfa2180cbb94fe23c2c3b0120d5e4d7e5e88dc621ae4fb94586b0708",
+  "Rows": 41,
+  "ExtractionDates": [
+   "2026-10-04"
+  ],
+  "NoDataResponse": null
+ },
+ {
+  "File": "212pb-gs.csv",
+  "Url": "https://nds.iaea.org/relnsd/v1/data?fields=ground_states&nuclides=212pb",
+  "Sha256": "63f05b03b2f87f67c9a77990743fa7f931417a3282f9f93482f7094af48eecca",
+  "Rows": 1,
+  "ExtractionDates": [
+   "2026-10-04"
+  ],
+  "NoDataResponse": null
+ },
+ {
+  "File": "212pb-x.csv",
+  "Url": "https://nds.iaea.org/relnsd/v1/data?fields=decay_rads&nuclides=212pb&rad_types=x",
+  "Sha256": "0d8979a4f87c5ba91839db625bf3c319a056677ab73a5b7da16a84db5161c10c",
+  "Rows": 6,
+  "ExtractionDates": [
+   "2026-10-04"
+  ],
+  "NoDataResponse": null
+ },
+ {
+  "File": "212pb.csv",
+  "Url": "https://nds.iaea.org/relnsd/v1/data?fields=decay_rads&nuclides=212pb&rad_types=g",
+  "Sha256": "b21ebbc621b9cb10207526bd3117cd9e32423a4fa1ab69b3cdcc6000622763cb",
+  "Rows": 18,
+  "ExtractionDates": [
+   "2026-10-04"
+  ],
+  "NoDataResponse": null
+ },
+ {
+  "File": "212po-gs.csv",
+  "Url": "https://nds.iaea.org/relnsd/v1/data?fields=ground_states&nuclides=212po",
+  "Sha256": "8306773af335cc7775be2e369f60ed0bc2247a0a2204e46f191c358425ed12d7",
+  "Rows": 1,
+  "ExtractionDates": [
+   "2026-10-04"
+  ],
+  "NoDataResponse": null
+ },
+ {
+  "File": "212po-x.csv",
+  "Url": "https://nds.iaea.org/relnsd/v1/data?fields=decay_rads&nuclides=212po&rad_types=x",
+  "Sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+  "Rows": 0,
+  "ExtractionDates": [],
+  "NoDataResponse": "0"
+ },
+ {
+  "File": "212po.csv",
+  "Url": "https://nds.iaea.org/relnsd/v1/data?fields=decay_rads&nuclides=212po&rad_types=g",
+  "Sha256": "e600a89af2a9b6aa93c485c88be8332e08f8162d29f3d18ffcbe363e5f14a47e",
+  "Rows": 2,
+  "ExtractionDates": [
+   "2026-10-04"
+  ],
+  "NoDataResponse": null
+ },
+ {
+  "File": "214bi-gs.csv",
+  "Url": "https://nds.iaea.org/relnsd/v1/data?fields=ground_states&nuclides=214bi",
+  "Sha256": "7863dc5cf5772ade58abd6c365b900d671a88453bacc3e9d15fdc97dd69f45bb",
+  "Rows": 1,
+  "ExtractionDates": [
+   "2026-10-04"
+  ],
+  "NoDataResponse": null
+ },
+ {
+  "File": "214bi-x.csv",
+  "Url": "https://nds.iaea.org/relnsd/v1/data?fields=decay_rads&nuclides=214bi&rad_types=x",
+  "Sha256": "aeb5abc505bedbe51511e54bfd9d1ae7a32fa8749f7c77c6c0164f7bf8d291ee",
+  "Rows": 6,
+  "ExtractionDates": [
+   "2026-10-04"
+  ],
+  "NoDataResponse": null
+ },
+ {
+  "File": "214bi.csv",
+  "Url": "https://nds.iaea.org/relnsd/v1/data?fields=decay_rads&nuclides=214bi&rad_types=g",
+  "Sha256": "8116f807ec12b5bdd8612af4fda49e9a148520a99c9757adcea3298730036adf",
+  "Rows": 322,
+  "ExtractionDates": [
+   "2026-10-02"
+  ],
+  "NoDataResponse": null
+ },
+ {
+  "File": "214pb-gs.csv",
+  "Url": "https://nds.iaea.org/relnsd/v1/data?fields=ground_states&nuclides=214pb",
+  "Sha256": "699c8f140ea184494c44f7749c28468b42531e04d956068c178eb92b4950a142",
+  "Rows": 1,
+  "ExtractionDates": [
+   "2026-10-04"
+  ],
+  "NoDataResponse": null
+ },
+ {
+  "File": "214pb-x.csv",
+  "Url": "https://nds.iaea.org/relnsd/v1/data?fields=decay_rads&nuclides=214pb&rad_types=x",
+  "Sha256": "329612fb8efc93f760c72f920c77babde0e71150d9b5c2a3113a402cf443547d",
+  "Rows": 6,
+  "ExtractionDates": [
+   "2026-10-04"
+  ],
+  "NoDataResponse": null
+ },
+ {
+  "File": "214pb.csv",
+  "Url": "https://nds.iaea.org/relnsd/v1/data?fields=decay_rads&nuclides=214pb&rad_types=g",
+  "Sha256": "7dbf787ae4f6f450dea375ba70e0b5541e26346294b4d2d49d377e0cfc498841",
+  "Rows": 35,
+  "ExtractionDates": [
+   "2026-10-04"
+  ],
+  "NoDataResponse": null
+ },
+ {
+  "File": "214po-gs.csv",
+  "Url": "https://nds.iaea.org/relnsd/v1/data?fields=ground_states&nuclides=214po",
+  "Sha256": "20d8a9aa0f25d151948556666dbc66f9866b6a187f3ccd4781b429501ce6ce39",
+  "Rows": 1,
+  "ExtractionDates": [
+   "2026-10-04"
+  ],
+  "NoDataResponse": null
+ },
+ {
+  "File": "214po-x.csv",
+  "Url": "https://nds.iaea.org/relnsd/v1/data?fields=decay_rads&nuclides=214po&rad_types=x",
+  "Sha256": "aa978dd9c9f01aa07c5e37ac4b7008d37baec330e1d798d055a45d8f7b1a521f",
+  "Rows": 6,
+  "ExtractionDates": [
+   "2026-10-04"
+  ],
+  "NoDataResponse": null
+ },
+ {
+  "File": "214po.csv",
+  "Url": "https://nds.iaea.org/relnsd/v1/data?fields=decay_rads&nuclides=214po&rad_types=g",
+  "Sha256": "946ca506bfe71ece0ff9b254e514d2c227c8671eb4d0ca32f350308f98375c69",
+  "Rows": 8,
+  "ExtractionDates": [
+   "2026-10-04"
+  ],
+  "NoDataResponse": null
+ },
+ {
+  "File": "216at-gs.csv",
+  "Url": "https://nds.iaea.org/relnsd/v1/data?fields=ground_states&nuclides=216at",
+  "Sha256": "03bae1cfbb9608f7eb2290e82f4f645f4fb414ad9c70b0073c6653aabd4c083a",
+  "Rows": 1,
+  "ExtractionDates": [
+   "2026-10-04"
+  ],
+  "NoDataResponse": null
+ },
+ {
+  "File": "216at-x.csv",
+  "Url": "https://nds.iaea.org/relnsd/v1/data?fields=decay_rads&nuclides=216at&rad_types=x",
+  "Sha256": "46b0cb19e0453170754a4a1689d4e62cb9fcb52e3f714d252e89557e3d3a36dd",
+  "Rows": 6,
+  "ExtractionDates": [
+   "2026-10-04"
+  ],
+  "NoDataResponse": null
+ },
+ {
+  "File": "216at.csv",
+  "Url": "https://nds.iaea.org/relnsd/v1/data?fields=decay_rads&nuclides=216at&rad_types=g",
+  "Sha256": "9e0f491f7140bdf9fb846f9897a8eb829d4b27cf62b7851182ba8e5683883e21",
+  "Rows": 16,
+  "ExtractionDates": [
+   "2026-10-04"
+  ],
+  "NoDataResponse": null
+ },
+ {
+  "File": "216po-gs.csv",
+  "Url": "https://nds.iaea.org/relnsd/v1/data?fields=ground_states&nuclides=216po",
+  "Sha256": "6dcf262f20678f93473b027a17833e2f7c4a5ca3976ee31c5543d2346b259f5d",
+  "Rows": 1,
+  "ExtractionDates": [
+   "2026-10-04"
+  ],
+  "NoDataResponse": null
+ },
+ {
+  "File": "216po-x.csv",
+  "Url": "https://nds.iaea.org/relnsd/v1/data?fields=decay_rads&nuclides=216po&rad_types=x",
+  "Sha256": "ee5aa0348670c8138aa4bbbe8ee3266e9215362af0ded94f05523be0c70337ee",
+  "Rows": 6,
+  "ExtractionDates": [
+   "2026-10-04"
+  ],
+  "NoDataResponse": null
+ },
+ {
+  "File": "216po.csv",
+  "Url": "https://nds.iaea.org/relnsd/v1/data?fields=decay_rads&nuclides=216po&rad_types=g",
+  "Sha256": "c50bc63f4e62268532ea2830ea85030cab64379fe78506c9dee158c80cc3819f",
+  "Rows": 7,
+  "ExtractionDates": [
+   "2026-10-04"
+  ],
+  "NoDataResponse": null
+ },
+ {
+  "File": "218at-gs.csv",
+  "Url": "https://nds.iaea.org/relnsd/v1/data?fields=ground_states&nuclides=218at",
+  "Sha256": "fd9fca660adf642b664fdd9c495ffeac92d965b5ab9505f51afef4025059894f",
+  "Rows": 1,
+  "ExtractionDates": [
+   "2026-10-04"
+  ],
+  "NoDataResponse": null
+ },
+ {
+  "File": "218at-x.csv",
+  "Url": "https://nds.iaea.org/relnsd/v1/data?fields=decay_rads&nuclides=218at&rad_types=x",
+  "Sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+  "Rows": 0,
+  "ExtractionDates": [],
+  "NoDataResponse": "0"
+ },
+ {
+  "File": "218at.csv",
+  "Url": "https://nds.iaea.org/relnsd/v1/data?fields=decay_rads&nuclides=218at&rad_types=g",
+  "Sha256": "2cd3294f0f586397a414d7022a3b56ffb6bcab8478334ec5cc8c0cedbb29abbb",
+  "Rows": 2,
+  "ExtractionDates": [
+   "2026-10-04"
+  ],
+  "NoDataResponse": null
+ },
+ {
+  "File": "218po-gs.csv",
+  "Url": "https://nds.iaea.org/relnsd/v1/data?fields=ground_states&nuclides=218po",
+  "Sha256": "d1a772f45b2a15e42cc1dcf7f5a0684ac9c4950db0e8979f8a199ff741ad1f6a",
+  "Rows": 1,
+  "ExtractionDates": [
+   "2026-10-04"
+  ],
+  "NoDataResponse": null
+ },
+ {
+  "File": "218po-x.csv",
+  "Url": "https://nds.iaea.org/relnsd/v1/data?fields=decay_rads&nuclides=218po&rad_types=x",
+  "Sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+  "Rows": 0,
+  "ExtractionDates": [],
+  "NoDataResponse": "0"
+ },
+ {
+  "File": "218po.csv",
+  "Url": "https://nds.iaea.org/relnsd/v1/data?fields=decay_rads&nuclides=218po&rad_types=g",
+  "Sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+  "Rows": 0,
+  "ExtractionDates": [],
+  "NoDataResponse": "0"
+ },
+ {
+  "File": "218rn-gs.csv",
+  "Url": "https://nds.iaea.org/relnsd/v1/data?fields=ground_states&nuclides=218rn",
+  "Sha256": "7cd8a8ea4355cdf995b7608c8c9d0c83c8113e641aacf9471a4c6b040b5edde9",
+  "Rows": 1,
+  "ExtractionDates": [
+   "2026-10-04"
+  ],
+  "NoDataResponse": null
+ },
+ {
+  "File": "218rn-x.csv",
+  "Url": "https://nds.iaea.org/relnsd/v1/data?fields=decay_rads&nuclides=218rn&rad_types=x",
+  "Sha256": "b1807dd4ba7372a7f156de642416e07441f11096d51d4ea1328b9ac319f440e6",
+  "Rows": 6,
+  "ExtractionDates": [
+   "2026-10-04"
+  ],
+  "NoDataResponse": null
+ },
+ {
+  "File": "218rn.csv",
+  "Url": "https://nds.iaea.org/relnsd/v1/data?fields=decay_rads&nuclides=218rn&rad_types=g",
+  "Sha256": "bf6fc6616eecad63d006fc6e89703d83e7b7cb07b844a567889310646bc1c566",
+  "Rows": 8,
+  "ExtractionDates": [
+   "2026-10-04"
+  ],
+  "NoDataResponse": null
+ },
+ {
+  "File": "220rn-gs.csv",
+  "Url": "https://nds.iaea.org/relnsd/v1/data?fields=ground_states&nuclides=220rn",
+  "Sha256": "f7fb296b9c2dc616f61b108b36fb811b2a08eb8bfb4dc38d6a1e69b6c7299b73",
+  "Rows": 1,
+  "ExtractionDates": [
+   "2026-10-04"
+  ],
+  "NoDataResponse": null
+ },
+ {
+  "File": "220rn-x.csv",
+  "Url": "https://nds.iaea.org/relnsd/v1/data?fields=decay_rads&nuclides=220rn&rad_types=x",
+  "Sha256": "b3eac3acb24ddd0e4796093177530c235171a4cbe425b12f82d200c5459d4e18",
+  "Rows": 6,
+  "ExtractionDates": [
+   "2026-10-04"
+  ],
+  "NoDataResponse": null
+ },
+ {
+  "File": "220rn.csv",
+  "Url": "https://nds.iaea.org/relnsd/v1/data?fields=decay_rads&nuclides=220rn&rad_types=g",
+  "Sha256": "0821359f178175aca48b32312985c2728b5a7a3636533269d8f6d0015b374bf0",
+  "Rows": 7,
+  "ExtractionDates": [
+   "2026-10-04"
+  ],
+  "NoDataResponse": null
+ },
+ {
+  "File": "222rn-gs.csv",
+  "Url": "https://nds.iaea.org/relnsd/v1/data?fields=ground_states&nuclides=222rn",
+  "Sha256": "0b25ee351de489cac31b871883243b6d4635edec5a336132f4e151f5ddf75527",
+  "Rows": 1,
+  "ExtractionDates": [
+   "2026-10-04"
+  ],
+  "NoDataResponse": null
+ },
+ {
+  "File": "222rn-x.csv",
+  "Url": "https://nds.iaea.org/relnsd/v1/data?fields=decay_rads&nuclides=222rn&rad_types=x",
+  "Sha256": "a51947f679a87f18d71f9d15bf13cfa87709613f49ac8c3f4236b274675a2152",
+  "Rows": 6,
+  "ExtractionDates": [
+   "2026-10-04"
+  ],
+  "NoDataResponse": null
+ },
+ {
+  "File": "222rn.csv",
+  "Url": "https://nds.iaea.org/relnsd/v1/data?fields=decay_rads&nuclides=222rn&rad_types=g",
+  "Sha256": "9eabaa3e2127d6009f15ea786c99f198dfc385e4378c946ee63c536b67cb371c",
+  "Rows": 7,
+  "ExtractionDates": [
+   "2026-10-04"
+  ],
+  "NoDataResponse": null
+ },
+ {
+  "File": "224ra-gs.csv",
+  "Url": "https://nds.iaea.org/relnsd/v1/data?fields=ground_states&nuclides=224ra",
+  "Sha256": "da8ed37f200304d91259d3ee18f7391bf6b417e1c1b0edfc1fc010532d47da8d",
+  "Rows": 1,
+  "ExtractionDates": [
+   "2026-10-04"
+  ],
+  "NoDataResponse": null
+ },
+ {
+  "File": "224ra-x.csv",
+  "Url": "https://nds.iaea.org/relnsd/v1/data?fields=decay_rads&nuclides=224ra&rad_types=x",
+  "Sha256": "087a19a96ab204273bf268ebe155437b0e86f0cdb896aeed118460804be114b3",
+  "Rows": 6,
+  "ExtractionDates": [
+   "2026-10-04"
+  ],
+  "NoDataResponse": null
+ },
+ {
+  "File": "224ra.csv",
+  "Url": "https://nds.iaea.org/relnsd/v1/data?fields=decay_rads&nuclides=224ra&rad_types=g",
+  "Sha256": "521a9d95a85ee56d466b72d5db8a3005743d3a115a9182e0eca8854d3485ebfd",
+  "Rows": 11,
+  "ExtractionDates": [
+   "2026-10-04"
+  ],
+  "NoDataResponse": null
+ },
+ {
+  "File": "226ra-gs.csv",
+  "Url": "https://nds.iaea.org/relnsd/v1/data?fields=ground_states&nuclides=226ra",
+  "Sha256": "cdfab9920df1de22872f33163f09312767cce887a739e202daeb82caef750ba1",
+  "Rows": 1,
+  "ExtractionDates": [
+   "2026-10-04"
+  ],
+  "NoDataResponse": null
+ },
+ {
+  "File": "226ra-x.csv",
+  "Url": "https://nds.iaea.org/relnsd/v1/data?fields=decay_rads&nuclides=226ra&rad_types=x",
+  "Sha256": "ce21819ca9875939b7f39aa55b26bb5c8f1951b8e1436cca8da006af785358e1",
+  "Rows": 6,
+  "ExtractionDates": [
+   "2026-10-04"
+  ],
+  "NoDataResponse": null
+ },
+ {
+  "File": "226ra.csv",
+  "Url": "https://nds.iaea.org/relnsd/v1/data?fields=decay_rads&nuclides=226ra&rad_types=g",
+  "Sha256": "496bac8dc38462b8ee357542c7b5855fa5741e25c63b2a520a44a1701ee61796",
+  "Rows": 13,
+  "ExtractionDates": [
+   "2026-10-04"
+  ],
+  "NoDataResponse": null
+ },
+ {
+  "File": "228ac-gs.csv",
+  "Url": "https://nds.iaea.org/relnsd/v1/data?fields=ground_states&nuclides=228ac",
+  "Sha256": "6a7ab9fc234e940617e11855a6f2e00f825baefaf5515e3ea8e6e0b5916d4d6e",
+  "Rows": 1,
+  "ExtractionDates": [
+   "2026-10-04"
+  ],
+  "NoDataResponse": null
+ },
+ {
+  "File": "228ac-x.csv",
+  "Url": "https://nds.iaea.org/relnsd/v1/data?fields=decay_rads&nuclides=228ac&rad_types=x",
+  "Sha256": "52f35e2d45bf47995e5b237a14a4ae9eb8760d58f4952d750aabb39e63935e19",
+  "Rows": 6,
+  "ExtractionDates": [
+   "2026-10-04"
+  ],
+  "NoDataResponse": null
+ },
+ {
+  "File": "228ac.csv",
+  "Url": "https://nds.iaea.org/relnsd/v1/data?fields=decay_rads&nuclides=228ac&rad_types=g",
+  "Sha256": "fc855980d6c5cf19a5e9d235de18802ef36407080961ec7d687f1fb6ac0445f3",
+  "Rows": 272,
+  "ExtractionDates": [
+   "2026-10-04"
+  ],
+  "NoDataResponse": null
+ },
+ {
+  "File": "228ra-gs.csv",
+  "Url": "https://nds.iaea.org/relnsd/v1/data?fields=ground_states&nuclides=228ra",
+  "Sha256": "c21c313eda3ea08d78c522c86c9c12e1e5d28e9d224eafe74e0b346d6fa301b6",
+  "Rows": 1,
+  "ExtractionDates": [
+   "2026-10-04"
+  ],
+  "NoDataResponse": null
+ },
+ {
+  "File": "228ra-x.csv",
+  "Url": "https://nds.iaea.org/relnsd/v1/data?fields=decay_rads&nuclides=228ra&rad_types=x",
+  "Sha256": "747ac847080c5e5bf0aea978bddc6eefc828e7a24120490f4a65a5e167649ade",
+  "Rows": 1,
+  "ExtractionDates": [
+   "2026-10-04"
+  ],
+  "NoDataResponse": null
+ },
+ {
+  "File": "228ra.csv",
+  "Url": "https://nds.iaea.org/relnsd/v1/data?fields=decay_rads&nuclides=228ra&rad_types=g",
+  "Sha256": "7fc03232c2e302d1bd7f3e438ba1161c1ff0d0fec579e613d1bbb9b06e7a22b5",
+  "Rows": 10,
+  "ExtractionDates": [
+   "2026-10-04"
+  ],
+  "NoDataResponse": null
+ },
+ {
+  "File": "228th-gs.csv",
+  "Url": "https://nds.iaea.org/relnsd/v1/data?fields=ground_states&nuclides=228th",
+  "Sha256": "d7388973d17bed5c27cbf9ccf84385f419400b4bab4eec54addd27e21f734f5e",
+  "Rows": 1,
+  "ExtractionDates": [
+   "2026-10-04"
+  ],
+  "NoDataResponse": null
+ },
+ {
+  "File": "228th-x.csv",
+  "Url": "https://nds.iaea.org/relnsd/v1/data?fields=decay_rads&nuclides=228th&rad_types=x",
+  "Sha256": "2bce42bc0bd41b2f4f7201505df3b24f122adcfa6875c5b278bb1ef9b1ee66f4",
+  "Rows": 6,
+  "ExtractionDates": [
+   "2026-10-04"
+  ],
+  "NoDataResponse": null
+ },
+ {
+  "File": "228th.csv",
+  "Url": "https://nds.iaea.org/relnsd/v1/data?fields=decay_rads&nuclides=228th&rad_types=g",
+  "Sha256": "f6d285c24a51ab88e3d7708ed0bc2c90a106868581edc0f5d7086a7ebd0938db",
+  "Rows": 20,
+  "ExtractionDates": [
+   "2026-10-04"
+  ],
+  "NoDataResponse": null
+ },
+ {
+  "File": "230th-gs.csv",
+  "Url": "https://nds.iaea.org/relnsd/v1/data?fields=ground_states&nuclides=230th",
+  "Sha256": "548d6f2e65f791f782eb7306b78662854b28e037dba1565e04f7a2b20b71bb2f",
+  "Rows": 1,
+  "ExtractionDates": [
+   "2026-10-04"
+  ],
+  "NoDataResponse": null
+ },
+ {
+  "File": "230th-x.csv",
+  "Url": "https://nds.iaea.org/relnsd/v1/data?fields=decay_rads&nuclides=230th&rad_types=x",
+  "Sha256": "63e012f661ce6351dd3963a64e9fd5955da22a942d149197e354fb0765cb7bc0",
+  "Rows": 6,
+  "ExtractionDates": [
+   "2026-10-04"
+  ],
+  "NoDataResponse": null
+ },
+ {
+  "File": "230th.csv",
+  "Url": "https://nds.iaea.org/relnsd/v1/data?fields=decay_rads&nuclides=230th&rad_types=g",
+  "Sha256": "41d90c6e8c43f663360ef99a3c3e81f7266eb6b20336d509ca12c5cd9b8a5d3f",
+  "Rows": 19,
+  "ExtractionDates": [
+   "2026-10-04"
+  ],
+  "NoDataResponse": null
+ },
+ {
+  "File": "232th-gs.csv",
+  "Url": "https://nds.iaea.org/relnsd/v1/data?fields=ground_states&nuclides=232th",
+  "Sha256": "2e8e664c73aaebf6465017a118b28c5178acf3c7ff14a854fb9002614cbcfe92",
+  "Rows": 1,
+  "ExtractionDates": [
+   "2026-10-04"
+  ],
+  "NoDataResponse": null
+ },
+ {
+  "File": "232th-x.csv",
+  "Url": "https://nds.iaea.org/relnsd/v1/data?fields=decay_rads&nuclides=232th&rad_types=x",
+  "Sha256": "f788cbd265570a7213585edfba3bbb888fd107bdebe000727b4e9f74b6099d25",
+  "Rows": 6,
+  "ExtractionDates": [
+   "2026-10-04"
+  ],
+  "NoDataResponse": null
+ },
+ {
+  "File": "232th.csv",
+  "Url": "https://nds.iaea.org/relnsd/v1/data?fields=decay_rads&nuclides=232th&rad_types=g",
+  "Sha256": "5f6724e857f10cc5c39e4a8d8498711364b721e28837e9966186c1940afaf40f",
+  "Rows": 8,
+  "ExtractionDates": [
+   "2026-10-04"
+  ],
+  "NoDataResponse": null
+ },
+ {
+  "File": "234pa-gs.csv",
+  "Url": "https://nds.iaea.org/relnsd/v1/data?fields=ground_states&nuclides=234pa",
+  "Sha256": "543d7ff826f7bbe3bc7d7ba5b7fcaf4d8589fb43ddf35652ae72f225b2e64e13",
+  "Rows": 1,
+  "ExtractionDates": [
+   "2026-10-04"
+  ],
+  "NoDataResponse": null
+ },
+ {
+  "File": "234pa-x.csv",
+  "Url": "https://nds.iaea.org/relnsd/v1/data?fields=decay_rads&nuclides=234pa&rad_types=x",
+  "Sha256": "8f0966c0473c84e8c2415436378e7c4a0f54cde59182b5ccf1845de1fbddd886",
+  "Rows": 13,
+  "ExtractionDates": [
+   "2026-10-04"
+  ],
+  "NoDataResponse": null
+ },
+ {
+  "File": "234pa.csv",
+  "Url": "https://nds.iaea.org/relnsd/v1/data?fields=decay_rads&nuclides=234pa&rad_types=g",
+  "Sha256": "7106765b5c492c0148dcef256f852105d2187dd1c9af6fa657c85cf3ed131e40",
+  "Rows": 530,
+  "ExtractionDates": [
+   "2026-10-04"
+  ],
+  "NoDataResponse": null
+ },
+ {
+  "File": "234th-gs.csv",
+  "Url": "https://nds.iaea.org/relnsd/v1/data?fields=ground_states&nuclides=234th",
+  "Sha256": "2341de5301df98ea329e857d5ebe41900c50a8db10781eb5e65f5728bcf2cb42",
+  "Rows": 1,
+  "ExtractionDates": [
+   "2026-10-04"
+  ],
+  "NoDataResponse": null
+ },
+ {
+  "File": "234th-x.csv",
+  "Url": "https://nds.iaea.org/relnsd/v1/data?fields=decay_rads&nuclides=234th&rad_types=x",
+  "Sha256": "205cd8423a9f4f555e7acb574aa6af6b5ef148f99152e736aecbbd37bd4a5e11",
+  "Rows": 6,
+  "ExtractionDates": [
+   "2026-10-04"
+  ],
+  "NoDataResponse": null
+ },
+ {
+  "File": "234th.csv",
+  "Url": "https://nds.iaea.org/relnsd/v1/data?fields=decay_rads&nuclides=234th&rad_types=g",
+  "Sha256": "2d9781efd3bc46e728ed0d84add9ba47e5400e73a951ed80c52b57e9505c882c",
+  "Rows": 25,
+  "ExtractionDates": [
+   "2026-10-04"
+  ],
+  "NoDataResponse": null
+ },
+ {
+  "File": "234u-gs.csv",
+  "Url": "https://nds.iaea.org/relnsd/v1/data?fields=ground_states&nuclides=234u",
+  "Sha256": "19c1111c79294be60b929a1b73656433ac1e62e250e45a7d1bdedd2cd38c8ec6",
+  "Rows": 1,
+  "ExtractionDates": [
+   "2026-10-04"
+  ],
+  "NoDataResponse": null
+ },
+ {
+  "File": "234u-x.csv",
+  "Url": "https://nds.iaea.org/relnsd/v1/data?fields=decay_rads&nuclides=234u&rad_types=x",
+  "Sha256": "8d57296fdaa999c17a912aabd77b541b9c78a45cf07d15154619c4e10097086c",
+  "Rows": 6,
+  "ExtractionDates": [
+   "2026-10-04"
+  ],
+  "NoDataResponse": null
+ },
+ {
+  "File": "234u.csv",
+  "Url": "https://nds.iaea.org/relnsd/v1/data?fields=decay_rads&nuclides=234u&rad_types=g",
+  "Sha256": "2ae1e61f5c0df334e4c6cd23ea8fd9623a5a2fb5ce4cf517a6092e446f21878a",
+  "Rows": 15,
+  "ExtractionDates": [
+   "2026-10-04"
+  ],
+  "NoDataResponse": null
+ },
+ {
+  "File": "238u-gs.csv",
+  "Url": "https://nds.iaea.org/relnsd/v1/data?fields=ground_states&nuclides=238u",
+  "Sha256": "8e76cf8171b530e911fb3ab3c2f56011b73ac8010d34951520bdd2cb6b83838b",
+  "Rows": 1,
+  "ExtractionDates": [
+   "2026-10-04"
+  ],
+  "NoDataResponse": null
+ },
+ {
+  "File": "238u-x.csv",
+  "Url": "https://nds.iaea.org/relnsd/v1/data?fields=decay_rads&nuclides=238u&rad_types=x",
+  "Sha256": "6cbbb44b4dc91d22d155a874baf45cf7cf82f5840c1d2dadbc0c9daba1750c45",
+  "Rows": 12,
+  "ExtractionDates": [
+   "2026-10-04"
+  ],
+  "NoDataResponse": null
+ },
+ {
+  "File": "238u.csv",
+  "Url": "https://nds.iaea.org/relnsd/v1/data?fields=decay_rads&nuclides=238u&rad_types=g",
+  "Sha256": "8af1d6c071020c598e949c670c94bc49571c63d25c1bde1ea63707ec46951e40",
+  "Rows": 20,
+  "ExtractionDates": [
+   "2026-10-04"
+  ],
+  "NoDataResponse": null
+ },
+ {
+  "File": "40k-gs.csv",
+  "Url": "https://nds.iaea.org/relnsd/v1/data?fields=ground_states&nuclides=40k",
+  "Sha256": "9742f84a65d757274be40233b76223a0b427376800523d5d44e8305d0cb622e1",
+  "Rows": 1,
+  "ExtractionDates": [
+   "2026-10-04"
+  ],
+  "NoDataResponse": null
+ },
+ {
+  "File": "40k-x.csv",
+  "Url": "https://nds.iaea.org/relnsd/v1/data?fields=decay_rads&nuclides=40k&rad_types=x",
+  "Sha256": "6e6f863acd15b90d6d6810a8d68446c5a3ea23a95beee3b7e18780c556598d70",
+  "Rows": 5,
+  "ExtractionDates": [
+   "2026-10-04"
+  ],
+  "NoDataResponse": null
+ },
+ {
+  "File": "40k.csv",
+  "Url": "https://nds.iaea.org/relnsd/v1/data?fields=decay_rads&nuclides=40k&rad_types=g",
+  "Sha256": "73ad1d9125e7f010e03a45176b687f3aac01ea48674413e74f0c452ad2d4ef15",
+  "Rows": 7,
+  "ExtractionDates": [
+   "2026-10-04"
+  ],
+  "NoDataResponse": null
+ }
+]

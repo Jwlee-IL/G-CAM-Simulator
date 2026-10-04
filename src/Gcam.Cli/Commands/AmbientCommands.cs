@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Gcam.Configuration;
+using Gcam.Core;
 using Gcam.Simulation;
 
 namespace Gcam.Cli;
@@ -52,6 +53,205 @@ internal static class AmbientCommands
         if (args.Length == 3) File.WriteAllText(args[2], json);
         Console.WriteLine(json);
         return passes ? 0 : 2;
+    }
+
+    /// <summary>AB-4 collided soil/air generator: every chain × outer seed, the versioned NOT-VALIDATED spectrum file and
+    /// the validation record ((a) uncollided vs the analytic kernel under a six-SE rule; (b) air kerma per Bq/kg against
+    /// UNSCEAR with its MC standard error over the outer seeds — reported, never judged pass/fail here, per AB-4d).</summary>
+    internal static int RunTerrestrial(string[] args)
+    {
+        if (args.Length != 3) { Console.Error.WriteLine("Usage: montecarlo ambient-terrestrial <generator-request.json> <output-folder>"); return 1; }
+        using var input = JsonDocument.Parse(File.ReadAllText(args[1]));
+        var request = input.RootElement;
+        var catalog = TerrestrialCatalog.Load(request.GetProperty("CatalogPath").GetString()!, request.GetProperty("CatalogSha256").GetString());
+        var materials = SoilAirMaterials.Load(request.GetProperty("MaterialsPath").GetString()!, request.GetProperty("MaterialsSha256").GetString());
+        var o = request.GetProperty("Options");
+        var options = new SoilAirTransportOptions
+        {
+            HeightCm = o.GetProperty("HeightCm").GetDouble(), SlabHalfWidthCm = o.GetProperty("SlabHalfWidthCm").GetDouble(),
+            DepthSamplingFactor = o.GetProperty("DepthSamplingFactor").GetDouble(), TransportCutoffKeV = o.GetProperty("TransportCutoffKeV").GetDouble(),
+            ZenithBins = o.GetProperty("ZenithBins").GetInt32(), FluorescenceEnergyPoints = o.GetProperty("FluorescenceEnergyPoints").GetInt32(),
+            ContinuumEdgesKeV = o.GetProperty("ContinuumEdgesKeV").EnumerateArray().Select(e => e.GetDouble()).ToArray()
+        };
+        long histories = request.GetProperty("HistoriesPerSeed").GetInt64();
+        int[] seeds = request.GetProperty("Seeds").EnumerateArray().Select(e => e.GetInt32()).ToArray();
+        var unscear = request.GetProperty("UnscearNGyPerHourPerBqKg");
+        Directory.CreateDirectory(args[2]);
+        var watch = System.Diagnostics.Stopwatch.StartNew();
+        var transports = catalog.Chains.Select(c => new SoilAirTransport(c, materials, options)).ToArray();
+        var jobs = (from c in Enumerable.Range(0, catalog.Chains.Length) from s in seeds select (Chain: c, Seed: s)).ToArray();
+        var tallies = new SoilAirTally[jobs.Length];
+        // Each (chain, seed) is one independent single-stream run, so results do not depend on scheduling.
+        Parallel.For(0, jobs.Length, j => tallies[j] = transports[jobs[j].Chain].Run(histories,
+            DefaultRandom.FromKey(DefaultRandom.Key(jobs[j].Seed, 30001u + (uint)jobs[j].Chain))));
+        double seconds = watch.Elapsed.TotalSeconds;
+        double k = SoilAirTransport.KermaToNGyPerHour;
+        var pooled = new Dictionary<string, SoilAirTally>();
+        var chainResults = new List<object>();
+        var validationPasses = new List<bool>();
+        for (int c = 0; c < catalog.Chains.Length; c++)
+        {
+            var chain = catalog.Chains[c];
+            var runs = Enumerable.Range(0, jobs.Length).Where(j => jobs[j].Chain == c).Select(j => tallies[j]).ToArray();
+            var pool = Pool(runs);
+            pooled[chain.Name] = pool;
+            double[] perSeed = runs.Select(r => r.KermaTotal / r.Histories * k).ToArray();
+            double mean = perSeed.Average(), se = Math.Sqrt(perSeed.Sum(v => (v - mean) * (v - mean)) / (perSeed.Length - 1) / perSeed.Length);
+            double reference = unscear.GetProperty(chain.Name).GetDouble();
+            double Share(Func<SoilAirTally, double> part) => runs.Average(r => part(r) / r.KermaTotal);
+            double PooledMean(double sum) => sum / pool.Histories * k;
+            double PooledSe(double sum, double sumSq)
+            {
+                double m = sum / pool.Histories;
+                return Math.Sqrt(Math.Max(0, sumSq / pool.Histories - m * m) / (pool.Histories - 1)) * k;
+            }
+            // Analytic references for the uncollided part (slab-averaged, like the estimator).
+            double analyticKerma = 0, analyticKermaWithCoherent = 0;
+            foreach (var line in chain.Lines)
+            {
+                double muEn = line.EnergyKeV * materials.AirMuEnCm2PerG(line.EnergyKeV) * k;
+                analyticKerma += muEn * SoilAirTransport.SlabAveragedUncollided(line, materials, options, 0, 1);
+                analyticKermaWithCoherent += muEn * SoilAirTransport.SlabAveragedUncollided(line, materials, options, 0, 1, includeCoherent: true);
+            }
+            var check = UncollidedCheckCore(chain, materials, options, pool);
+            validationPasses.Add(check.Passes);
+            chainResults.Add(new
+            {
+                chain.Name, Lines = chain.Lines.Length, Seeds = seeds.Length, HistoriesPerSeed = histories,
+                KermaNGyPerHourPerBqKgPerSeed = perSeed, KermaNGyPerHourPerBqKg = mean, KermaStandardErrorOverSeeds = se,
+                UnscearNGyPerHourPerBqKg = reference, RatioToUnscear = mean / reference, RatioStandardError = se / reference,
+                KermaShares = new
+                {
+                    Uncollided = Share(r => r.KermaUncollided), AnnihilationUncollided = Share(r => r.KermaAnnihilation),
+                    Scattered = Share(r => r.KermaScattered), Above1332KeV = Share(r => r.KermaAbove1332KeV),
+                    Below10KeV = Share(r => r.KermaBelow10KeV)
+                },
+                PooledKerma = new
+                {
+                    Total = PooledMean(pool.KermaTotal), TotalPerHistorySe = PooledSe(pool.KermaTotal, pool.KermaSumSq),
+                    Uncollided = PooledMean(pool.KermaUncollided), Annihilation = PooledMean(pool.KermaAnnihilation),
+                    Scattered = PooledMean(pool.KermaScattered), Above1332KeV = PooledMean(pool.KermaAbove1332KeV),
+                    Below10KeV = PooledMean(pool.KermaBelow10KeV)
+                },
+                UncollidedKermaAnalytic = analyticKerma,
+                HybridKermaAnalyticUncollidedPlusMcRest = analyticKerma + PooledMean(pool.KermaAnnihilation + pool.KermaScattered),
+                CoherentTreatment = new
+                {
+                    UncollidedKermaWithoutCoherent = analyticKerma, UncollidedKermaWithCoherentInAttenuation = analyticKermaWithCoherent,
+                    Note = "The transport treats coherent scattering as no interaction. The analytic uncollided kerma with coherent in the attenuation is the opposite extreme (every coherent event removes the photon); the truth lies between."
+                },
+                FluorescenceKermaBound = new
+                {
+                    Mean = PooledMean(pool.FluorescenceKermaBound), PerHistorySe = PooledSe(pool.FluorescenceKermaBound, pool.FluorescenceKermaBoundSumSq),
+                    ShareOfKerma = pool.FluorescenceKermaBound / pool.KermaTotal,
+                    ShareFromSoilAbsorptions = pool.FluorescenceKermaBoundFromSoil / pool.FluorescenceKermaBound
+                },
+                FluencePerBqKg = new
+                {
+                    Uncollided = pool.FluenceUncollided / pool.Histories, Annihilation = pool.FluenceAnnihilation / pool.Histories,
+                    Scattered = pool.FluenceScattered / pool.Histories, ScatteredBelowFirstEdge = pool.ScatteredFluenceBelowFirstEdge / pool.Histories,
+                    ScatteredAboveLastEdge = pool.ScatteredFluenceAboveLastEdge / pool.Histories
+                },
+                Counters = new { pool.Interactions, pool.PairEvents, pool.CutoffTerminations },
+                UncollidedValidation = new { check.Passes, check.Detail }
+            });
+        }
+        string id = request.GetProperty("SpectrumId").GetString()!;
+        var spectrum = TerrestrialSpectrumBuilder.Build(catalog, materials, options, pooled, id, request.GetProperty("SpectrumReference").GetString()!);
+        string spectrumPath = Path.Combine(args[2], id + ".json");
+        File.WriteAllText(spectrumPath, TerrestrialSpectrumBuilder.Serialize(spectrum));
+        string fileHash = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(File.ReadAllBytes(spectrumPath))).ToLowerInvariant();
+        File.WriteAllText(spectrumPath + ".sha256", fileHash + "\n");
+        string json = JsonSerializer.Serialize(new
+        {
+            SchemaVersion = 1, Kind = "ambient-terrestrial-generator", IsValidatedSpectrum = false,
+            Note = "AB-4d: the UNSCEAR ratios are reported for the author's decision; no acceptance tolerance is applied here.",
+            Request = request, CatalogSha256 = request.GetProperty("CatalogSha256").GetString(), MaterialsId = materials.Id,
+            MaterialsSha256 = materials.FileSha256, Chains = chainResults,
+            Spectrum = new { File = id + ".json", FileSha256 = fileHash, spectrum.ContentHash, Lines = spectrum.Lines.Length,
+                ContinuumBins = spectrum.Continuum.Length, TableRows = spectrum.EnergyZenith!.Length, NotIncluded = spectrum.NotIncluded!.Length },
+            ComputeSeconds = seconds, Threads = Environment.ProcessorCount
+        }, new JsonSerializerOptions { WriteIndented = true });
+        File.WriteAllText(Path.Combine(args[2], "generator-results.json"), json);
+        Console.WriteLine(json.Length > 4000 ? json[..4000] + " …" : json);
+        return validationPasses.All(v => v) ? 0 : 2;
+    }
+
+    private static SoilAirTally Pool(SoilAirTally[] runs)
+    {
+        static double[] Add(IEnumerable<double[]> arrays) => arrays.Aggregate((a, b) => a.Zip(b, (x, y) => x + y).ToArray());
+        return new SoilAirTally
+        {
+            Chain = runs[0].Chain, Histories = runs.Sum(r => r.Histories), ZenithBins = runs[0].ZenithBins, LineEnergiesKeV = runs[0].LineEnergiesKeV,
+            UncollidedSum = Add(runs.Select(r => r.UncollidedSum)), UncollidedSumSq = Add(runs.Select(r => r.UncollidedSumSq)),
+            UncollidedCount = runs.Select(r => r.UncollidedCount).Aggregate((a, b) => a.Zip(b, (x, y) => x + y).ToArray()),
+            AnnihilationSum = Add(runs.Select(r => r.AnnihilationSum)), ContinuumSum = Add(runs.Select(r => r.ContinuumSum)),
+            ScatteredFluenceBelowFirstEdge = runs.Sum(r => r.ScatteredFluenceBelowFirstEdge), ScatteredFluenceAboveLastEdge = runs.Sum(r => r.ScatteredFluenceAboveLastEdge),
+            FluenceUncollided = runs.Sum(r => r.FluenceUncollided), FluenceAnnihilation = runs.Sum(r => r.FluenceAnnihilation),
+            FluenceScattered = runs.Sum(r => r.FluenceScattered), KermaUncollided = runs.Sum(r => r.KermaUncollided),
+            KermaAnnihilation = runs.Sum(r => r.KermaAnnihilation), KermaScattered = runs.Sum(r => r.KermaScattered),
+            KermaSumSq = runs.Sum(r => r.KermaSumSq), KermaAbove1332KeV = runs.Sum(r => r.KermaAbove1332KeV),
+            KermaBelow10KeV = runs.Sum(r => r.KermaBelow10KeV), KermaBelowFirstEdge = runs.Sum(r => r.KermaBelowFirstEdge),
+            FluorescenceKermaBound = runs.Sum(r => r.FluorescenceKermaBound), FluorescenceKermaBoundSumSq = runs.Sum(r => r.FluorescenceKermaBoundSumSq),
+            FluorescenceKermaBoundFromSoil = runs.Sum(r => r.FluorescenceKermaBoundFromSoil),
+            Interactions = runs.Sum(r => r.Interactions), PairEvents = runs.Sum(r => r.PairEvents), CutoffTerminations = runs.Sum(r => r.CutoffTerminations)
+        };
+    }
+
+    /// <summary>Validation (a), rule declared before running: |MC − analytic| ≤ 6 standard errors for the chain's total
+    /// uncollided fluence, for each upward zenith bin of the total, and for every bin of the five lines with the largest
+    /// uncollided kerma. SE from the pooled per-history second moments (each history scores at most one uncollided
+    /// crossing, so the per-cell squares are per-history moments). The normal approximation behind a k·SE rule needs
+    /// counts: a cell with fewer than 30 scored crossings is reported as "not tested", never as passed (it carries a
+    /// negligible part of the kerma — e.g. the K-40 Ar X-rays and its 2e-5 annihilation line). Downward bins must be
+    /// exactly zero.</summary>
+    private static (bool Passes, object Detail) UncollidedCheckCore(TerrestrialChain chain, SoilAirMaterials materials,
+        SoilAirTransportOptions options, SoilAirTally pool)
+    {
+        int zb = options.ZenithBins, half = zb / 2;
+        long n = pool.Histories;
+        const double sigmas = 6;
+        var cells = new List<object>();
+        bool passes = true;
+        const long minimumCrossings = 30;
+        int untested = 0;
+        (double Mc, double Se, long Count) Cell(IEnumerable<int> lines, IEnumerable<int> bins)
+        {
+            double sum = 0, sq = 0;
+            long count = 0;
+            foreach (int l in lines) foreach (int z in bins)
+            { sum += pool.UncollidedSum[l * zb + z]; sq += pool.UncollidedSumSq[l * zb + z]; count += pool.UncollidedCount[l * zb + z]; }
+            double m = sum / n;
+            return (m, Math.Sqrt(Math.Max(0, sq / n - m * m) / (n - 1)), count);
+        }
+        void Compare(string label, int[] lines, int[] bins)
+        {
+            var (mc, se, count) = Cell(lines, bins);
+            double analytic = lines.Sum(l => bins.Sum(z => SoilAirTransport.SlabAveragedUncollided(chain.Lines[l], materials, options,
+                TerrestrialSpectrumBuilder.Cosine(z, zb), TerrestrialSpectrumBuilder.Cosine(z + 1, zb))));
+            bool tested = count >= minimumCrossings;
+            bool ok = tested && Math.Abs(mc - analytic) <= sigmas * se;
+            if (tested) passes &= ok; else untested++;
+            cells.Add(new { Label = label, Crossings = count, McFluence = mc, StandardError = se, AnalyticSlabAveraged = analytic,
+                Ratio = analytic > 0 ? mc / analytic : double.NaN, Z = se > 0 ? (mc - analytic) / se : 0,
+                Result = tested ? (ok ? "pass" : "FAIL") : "not tested (< 30 crossings)" });
+        }
+        var all = Enumerable.Range(0, chain.Lines.Length).ToArray();
+        var up = Enumerable.Range(half, half).ToArray();
+        Compare("all lines, all upward bins", all, up);
+        foreach (int z in up) Compare($"all lines, bin [{TerrestrialSpectrumBuilder.Cosine(z, zb):0.0},{TerrestrialSpectrumBuilder.Cosine(z + 1, zb):0.0}]", all, [z]);
+        var principal = all.OrderByDescending(l => chain.Lines[l].EnergyKeV * materials.AirMuEnCm2PerG(chain.Lines[l].EnergyKeV)
+            * SoilAirTransport.SlabAveragedUncollided(chain.Lines[l], materials, options, 0, 1)).Take(5).ToArray();
+        foreach (int l in principal)
+        {
+            string name = $"{chain.Lines[l].Nuclide} {chain.Lines[l].EnergyKeV} keV";
+            Compare(name + ", all upward bins", [l], up);
+            foreach (int z in up) Compare($"{name}, bin [{TerrestrialSpectrumBuilder.Cosine(z, zb):0.0},{TerrestrialSpectrumBuilder.Cosine(z + 1, zb):0.0}]", [l], [z]);
+        }
+        double downward = Enumerable.Range(0, half).Sum(z => all.Sum(l => pool.UncollidedSum[l * zb + z]));
+        passes &= downward == 0;
+        return (passes, new { Rule = "|MC - analytic| <= 6 SE (pooled per-history SE) for cells with >= 30 crossings; fewer = not tested; downward uncollided bins exactly zero",
+            Histories = n, DownwardUncollidedSum = downward, UntestedCells = untested, Cells = cells });
     }
 
     internal static int WritePlaceholder(string[] args)
