@@ -1,0 +1,42 @@
+{
+ "Seed": 0,
+ "RepoRoot": ".",
+ "Spectrum": {
+  "File": "samples/ambient/terrestrial-unscear2000-v1.json",
+  "Sha256": "4d48bc4272ce4c25ff6ae9b13ed7583e3c8f467afffdb0225956a70cc435b3f4"
+ },
+ "AmbientHistories": 500000,
+ "CalibrationHistories": 500000,
+ "FieldsMicroSvPerHour": [
+  0.05,
+  0.1,
+  0.2
+ ],
+ "Bounds": [
+  "BareCrystalAllFaces",
+  "FrontOnlyThroughMask"
+ ],
+ "_about": "TODO-30 turn 8 (AB-13), EV-12 under the absolute ambient field, one outer seed per run (montecarlo ambient-evidence). Legacy recipe (montecarlo antimask): lab geometry (scenario.json), centred source, 400 detected source counts, 200 repeats, single mask / calibrated subtraction / two-exposure mask-antimask at equal total time, failure > 3 mm. Here: 400 expected net counts in the window on the mask in the full live time t (10 s, 60 s), activity = 400 / (t x the seed's mask rate); antimask = t/2 mask + t/2 inverted mask at that activity; background = field x t x transported ambient map per bound (inverted-mask map in the front-only bound); calibrated subtraction uses an independent ambient MC map (the instrument's background model) x field x t. Windows: open = every deposit; cs662 = 661.7 keV +-10 %.",
+ "Family": "antimask",
+ "SourcePhotons": 1000000,
+ "Windows": [
+  {
+   "Name": "open"
+  },
+  {
+   "Name": "cs662",
+   "LowKeV": 595.53,
+   "HighKeV": 727.87
+  }
+ ],
+ "ExposuresS": [
+  10,
+  60
+ ],
+ "Repeats": 200,
+ "FailThresholdMm": 3.0,
+ "Antimask": {
+  "Scenario": "samples/scenario.json",
+  "SourceCounts": 400
+ }
+}

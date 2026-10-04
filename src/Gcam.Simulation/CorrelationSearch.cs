@@ -1,3 +1,5 @@
+using System.Numerics;
+using System.Runtime.InteropServices;
 using Gcam.Configuration;
 using Gcam.Core;
 using Gcam.Decoding;
@@ -51,21 +53,69 @@ public sealed class CorrelationSearch
             var r = decoder.Decode(unit);
             unit[x, y] = 0;
             if (i == 0) { GridSize = r.Reconstruction.Width; OriginMm = r.ReconOriginMm; StepMm = r.ReconStepMm; }
-            _columns[i] = r.Reconstruction.Raw.ToArray().Select(v => checked((int)v)).ToArray();
+            // The weights are ±1 / 0 by construction; refuse anything else instead of truncating it silently.
+            _columns[i] = r.Reconstruction.Raw.ToArray().Select(v => v == Math.Round(v) ? checked((int)v)
+                : throw new InvalidOperationException("Decoder weights are not integral; the matrix form does not apply.")).ToArray();
         }
+        // The same weights as bytes, padded to whole SIMD blocks with zeros: a quarter of the memory traffic for the
+        // narrow path of Reconstruct (the wide field-of-view grid is ~20 MB of int weights, which bounds its speed).
+        _paddedPoints = (GridPoints + Vector<sbyte>.Count - 1) / Vector<sbyte>.Count * Vector<sbyte>.Count;
+        _narrow = _columns.Select(col =>
+        {
+            var b = new sbyte[_paddedPoints];
+            for (int k = 0; k < col.Length; k++) b[k] = col[k] is >= -1 and <= 1 ? (sbyte)col[k]
+                : throw new InvalidOperationException("Decoder weights outside ±1; the narrow path does not apply.");
+            return b;
+        }).ToArray();
     }
 
-    /// <summary>recon = G n, accumulated pixel by pixel in the decoder's order (exact integers).</summary>
+    private readonly sbyte[][] _narrow;
+    private readonly int _paddedPoints;
+
+    /// <summary>recon = G n, accumulated pixel by pixel (exact integers, so the SIMD multiply-add gives the same result as a
+    /// scalar loop and as the decoder; counts may be negative, e.g. a mask − antimask difference). Images with at most
+    /// 32767 counts in absolute sum go through 8-bit weights and 16-bit sums (exact by the bound), larger ones through
+    /// 32-bit.</summary>
     public void Reconstruct(ReadOnlySpan<int> counts, Span<double> recon)
     {
+        // |recon(θ)| ≤ Σ|nᵢ| because every weight is ±1 or 0: within ±32767 the 16-bit accumulation is exact too.
+        long magnitude = 0;
+        for (int i = 0; i < Pixels; i++) magnitude += Math.Abs((long)counts[i]);
+        if (magnitude <= short.MaxValue) { ReconstructNarrow(counts, recon); return; }
         Span<int> acc = GridPoints <= 8192 ? stackalloc int[GridPoints] : new int[GridPoints];
         acc.Clear();
+        var accV = MemoryMarshal.Cast<int, Vector<int>>(acc);
+        int tail = accV.Length * Vector<int>.Count;
         for (int i = 0; i < Pixels; i++)
         {
             int n = counts[i];
             if (n == 0) continue;
             var col = _columns[i];
-            for (int k = 0; k < col.Length; k++) acc[k] += n * col[k];
+            var colV = MemoryMarshal.Cast<int, Vector<int>>(col.AsSpan());
+            var nV = new Vector<int>(n);
+            for (int k = 0; k < accV.Length; k++) accV[k] += nV * colV[k];
+            for (int k = tail; k < col.Length; k++) acc[k] += n * col[k];
+        }
+        for (int k = 0; k < GridPoints; k++) recon[k] = acc[k];
+    }
+
+    private void ReconstructNarrow(ReadOnlySpan<int> counts, Span<double> recon)
+    {
+        Span<short> acc = _paddedPoints <= 32768 ? stackalloc short[_paddedPoints] : new short[_paddedPoints];
+        acc.Clear();
+        var accV = MemoryMarshal.Cast<short, Vector<short>>(acc);    // two short blocks per sbyte block
+        for (int i = 0; i < Pixels; i++)
+        {
+            int n = counts[i];
+            if (n == 0) continue;
+            var colV = MemoryMarshal.Cast<sbyte, Vector<sbyte>>(_narrow[i].AsSpan());
+            var nV = new Vector<short>((short)n);
+            for (int k = 0; k < colV.Length; k++)
+            {
+                Vector.Widen(colV[k], out Vector<short> low, out Vector<short> high);
+                accV[2 * k] += low * nV;
+                accV[2 * k + 1] += high * nV;
+            }
         }
         for (int k = 0; k < GridPoints; k++) recon[k] = acc[k];
     }

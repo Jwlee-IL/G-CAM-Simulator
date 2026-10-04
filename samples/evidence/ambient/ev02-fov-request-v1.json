@@ -1,0 +1,93 @@
+{
+ "Seed": 0,
+ "RepoRoot": ".",
+ "Spectrum": {
+  "File": "samples/ambient/terrestrial-unscear2000-v1.json",
+  "Sha256": "4d48bc4272ce4c25ff6ae9b13ed7583e3c8f467afffdb0225956a70cc435b3f4"
+ },
+ "AmbientHistories": 500000,
+ "CalibrationHistories": 0,
+ "FieldsMicroSvPerHour": [
+  0.05,
+  0.1,
+  0.2
+ ],
+ "Bounds": [
+  "BareCrystalAllFaces",
+  "FrontOnlyThroughMask"
+ ],
+ "_about": "TODO-30 turn 8 (AB-13), EV-02 under the absolute ambient field (montecarlo ambient-evidence). Legacy recipe (probe mode fov, FieldOfViewStudy): hand-held head, S = 1 m / 5 m, directions 0 / 45 deg, angles 0-20 deg step 0.5, N0 = 500 / 5000 on-axis counts, 100 Poisson repeats per angle, 10^6 photons per mean map, wide non-cyclic decode +-20 deg / 0.3 deg and cyclic one-period decode, success = within one resolution element atan(cell/D), centroid side cue and outside flag (95th percentile of in-field centroid offsets). Here: BSR pedestal replaced by field x t x transported ambient map per bound, t = 10 s / 60 s (activity x t = N0 / on-axis rate in the window), the flag threshold set on 100 separate draws per in-field angle of each series. Window: open only (every deposit — the legacy study counts all detected photons, and it is the worst case: the measured cs662 ambient rate is 1.3 % of the open one at the hand-held head, bare bound). The cs662 window was dropped after the timed pilot (29 min per seed with both windows under a 10-job load; 64 seeds would take ~3 h); see the turn-8 report.",
+ "Family": "fov",
+ "SourcePhotons": 1000000,
+ "Windows": [
+  {
+   "Name": "open"
+  }
+ ],
+ "ExposuresS": [
+  10,
+  60
+ ],
+ "Repeats": 100,
+ "FieldOfView": {
+  "Scenario": "samples/scenario_handheld.json",
+  "SourceMaskDistancesMm": [
+   1000,
+   5000
+  ],
+  "DirectionsDeg": [
+   0,
+   45
+  ],
+  "AnglesDeg": [
+   0.0,
+   0.5,
+   1.0,
+   1.5,
+   2.0,
+   2.5,
+   3.0,
+   3.5,
+   4.0,
+   4.5,
+   5.0,
+   5.5,
+   6.0,
+   6.5,
+   7.0,
+   7.5,
+   8.0,
+   8.5,
+   9.0,
+   9.5,
+   10.0,
+   10.5,
+   11.0,
+   11.5,
+   12.0,
+   12.5,
+   13.0,
+   13.5,
+   14.0,
+   14.5,
+   15.0,
+   15.5,
+   16.0,
+   16.5,
+   17.0,
+   17.5,
+   18.0,
+   18.5,
+   19.0,
+   19.5,
+   20.0
+  ],
+  "OnAxisCounts": [
+   500,
+   5000
+  ],
+  "GridHalfAngleDeg": 20,
+  "GridStepDeg": 0.3,
+  "CalibrationRepeats": 100
+ }
+}

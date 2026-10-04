@@ -1,0 +1,102 @@
+{
+ "_about": "TODO-30 turn 8 (AB-11, AB-13): versioned ambient manifest for run_seeds.py --manifest. Same schema as manifest.json / manifest-ambient-v1.json. AB-11 protocol: gate_selection_v2 (F128[1:65] — turn 7's selection seeds, whose first 64 null repeats per configuration reproduce turn 7's selection — with 1024 null repeats per seed = 65 536 per configuration) -> select_thresholds.py --rule inclusive writes gate-thresholds-v2.json -> its SHA-256 is pinned in gate_validation_v2's overrides BEFORE any validation run -> gate_validation_v2 (F256[128:256], 128 seeds used for nothing before; 64 null repeats = 8192 per configuration, 300 source repeats per condition) -> aggregate_gate.py. Turn 7's validation seeds O128[0:128] are not used by the gate families of this manifest. AB-13 families ev12_antimask, ev02_fov, ev15_separation, ev01_sweep: montecarlo ambient-evidence on a clone of their request (Seed, RepoRoot replaced), each with the N of its legacy family; aggregate with ambient/aggregate_ev.py.",
+ "measured": "2026-10-04",
+ "field": {
+  "spectrum": "ambient/terrestrial-unscear2000-v1.json",
+  "spectrum_sha256": "4d48bc4272ce4c25ff6ae9b13ed7583e3c8f467afffdb0225956a70cc435b3f4",
+  "photon_hstar10_microsv_per_h": [
+   0.05,
+   0.1,
+   0.2
+  ],
+  "bounds": [
+   "BareCrystalAllFaces",
+   "FrontOnlyThroughMask"
+  ]
+ },
+ "config_sha256": {
+  "evidence/ambient/gate-request-v1.json": "551fb0096025f5826f48e5227fc2ba00e9d575b9afd1262df2e8b16dc812225a",
+  "scenario.json": "eb5b96835c0b68a88c5c26965540f85f1a313acf1cc0b49955cf7921463edddc",
+  "scenario_handheld.json": "f988784c8ee266e6dd28eb898cdbbfac0e2452cb01fd3929874fd866edc98795",
+  "evidence/ambient/ev12-antimask-request-v1.json": "dec6dc992a629e3e4d1121dd90961596cb512394cb5ee0e1b0501f5a54b3a523",
+  "evidence/ambient/ev02-fov-request-v1.json": "796c1bdb48d90ad79b35a1d844adb8ea7c7e83ad599adf234120507e88ccbb6c",
+  "evidence/ambient/ev15-separation-request-v1.json": "acdffa6dc1660ee1e12ed9bfc382e380584ba47719f0db18d7eded23c5e14e87",
+  "evidence/ambient/ev01-sweep-request-v1.json": "c79e37d693b0d19febc903d2f60b1dca8d216ed8ad4575a7f8c8dd423faf74e6"
+ },
+ "families": [
+  {
+   "id": "gate_selection_v2",
+   "kind": "cli",
+   "command": "ambient-gate",
+   "config": "evidence/ambient/gate-request-v1.json",
+   "seeds": "F128",
+   "seed_offset": 1,
+   "n": 64,
+   "repo_root": true,
+   "overrides": {
+    "Phase": "selection",
+    "NullRepeats": 1024
+   },
+   "evidence": "AB-11 threshold re-selection: 64 seeds x 1024 background-only acquisitions per configuration (65 536); the first 64 per seed are turn 7's"
+  },
+  {
+   "id": "gate_validation_v2",
+   "kind": "cli",
+   "command": "ambient-gate",
+   "config": "evidence/ambient/gate-request-v1.json",
+   "seeds": "F256",
+   "seed_offset": 128,
+   "n": 128,
+   "repo_root": true,
+   "overrides": {
+    "Phase": "validation",
+    "NullRepeats": 64,
+    "Thresholds": {
+     "File": "samples/evidence/ambient/gate-thresholds-v2.json",
+     "Sha256": "6352b2f692894fde1d83c6ef2c3ac2c04ee1b332c511e150d66342a516b6cdd0"
+    }
+   },
+   "evidence": "AB-11 re-validation (128 x 64 = 8192 background-only acquisitions per configuration) and the EV-07 / EV-09 count gates with the re-selected thresholds (300 repeats per condition)"
+  },
+  {
+   "id": "ev12_antimask",
+   "kind": "cli",
+   "command": "ambient-evidence",
+   "config": "evidence/ambient/ev12-antimask-request-v1.json",
+   "seeds": "O128",
+   "n": 128,
+   "repo_root": true,
+   "evidence": "EV-12 under the absolute field (legacy family antimask, N = 128): single / calibrated / mask-antimask at equal time, 400 net source counts, t = 10 / 60 s, 200 repeats"
+  },
+  {
+   "id": "ev02_fov",
+   "kind": "cli",
+   "command": "ambient-evidence",
+   "config": "evidence/ambient/ev02-fov-request-v1.json",
+   "seeds": "F128",
+   "n": 64,
+   "repo_root": true,
+   "evidence": "EV-02 under the absolute field (legacy family fov, F128, N = 64): 1 m / 5 m, x / diagonal, 0-20 deg, N0 500 / 5000, t = 10 / 60 s, open window, flag re-calibrated on separate draws"
+  },
+  {
+   "id": "ev15_separation",
+   "kind": "cli",
+   "command": "ambient-evidence",
+   "config": "evidence/ambient/ev15-separation-request-v1.json",
+   "seeds": "O128",
+   "n": 128,
+   "repo_root": true,
+   "evidence": "EV-15 under the absolute field (legacy families mixedstrip N = 64, spatial N = 128): Cs 1 Bq + Co 8 Bq at the literal live time of the legacy photon budget, stripping and spatial location"
+  },
+  {
+   "id": "ev01_sweep",
+   "kind": "cli",
+   "command": "ambient-evidence",
+   "config": "evidence/ambient/ev01-sweep-request-v1.json",
+   "seeds": "O128",
+   "n": 64,
+   "repo_root": true,
+   "evidence": "EV-01 under the absolute field (legacy families sweep / sweep_head N = 64, precise N = 32) at the scenarios' 1 MBq and 1 s, plus the AB-12 decoder-pull baseline (cross-correlation and MLEM)"
+  }
+ ]
+}

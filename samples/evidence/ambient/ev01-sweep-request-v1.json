@@ -1,0 +1,78 @@
+{
+ "Seed": 0,
+ "RepoRoot": ".",
+ "Spectrum": {
+  "File": "samples/ambient/terrestrial-unscear2000-v1.json",
+  "Sha256": "4d48bc4272ce4c25ff6ae9b13ed7583e3c8f467afffdb0225956a70cc435b3f4"
+ },
+ "AmbientHistories": 500000,
+ "CalibrationHistories": 0,
+ "FieldsMicroSvPerHour": [
+  0.05,
+  0.1,
+  0.2
+ ],
+ "Bounds": [
+  "BareCrystalAllFaces",
+  "FrontOnlyThroughMask"
+ ],
+ "_about": "TODO-30 turn 8 (AB-13 / AB-12), EV-01 under the absolute ambient field (montecarlo ambient-evidence). Legacy recipe (montecarlo sweep): +-18 mm grid step 1.5 mm (625 positions), 300 000 photons per position, cyclic and non-cyclic decoding on the same +-18 mm / 0.75 mm grid, localized = error < 3 mm; single runs at the centre, (6,0) and (12,0) (lab) and the hand-held centre with the scenario's own decoder. Here: each position acquired 32 times at the recipe scenario's Source.ActivityBq and Source.AcquisitionTimeSeconds (1 MBq, 1 s for both scenarios) as exact Poisson floods with and without the field; fixed points 300 repeats (cross-correlation) and 30 repeats MLEM (80 iterations, EV-11) for the AB-12 pull. Windows: open, cs662.",
+ "Family": "sweep",
+ "SourcePhotons": 300000,
+ "Windows": [
+  {
+   "Name": "open"
+  },
+  {
+   "Name": "cs662",
+   "LowKeV": 595.53,
+   "HighKeV": 727.87
+  }
+ ],
+ "ExposuresS": [],
+ "Repeats": 32,
+ "FailThresholdMm": 3.0,
+ "Sweep": {
+  "Scenarios": [
+   {
+    "Name": "lab",
+    "Scenario": "samples/scenario.json",
+    "PointsMm": [
+     [
+      0,
+      0
+     ],
+     [
+      6,
+      0
+     ],
+     [
+      12,
+      0
+     ]
+    ]
+   },
+   {
+    "Name": "head",
+    "Scenario": "samples/scenario_handheld.json",
+    "PointsMm": [
+     [
+      0,
+      0
+     ],
+     [
+      8,
+      0
+     ]
+    ]
+   }
+  ],
+  "HalfExtentMm": 18.0,
+  "StepMm": 1.5,
+  "ReconStepMm": 0.75,
+  "LocalizedWithinMm": 3.0,
+  "PointRepeats": 300,
+  "MlemIterations": 80,
+  "MlemRepeats": 30
+ }
+}

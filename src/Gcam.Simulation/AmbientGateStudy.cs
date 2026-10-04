@@ -127,7 +127,7 @@ public static class AmbientGateStudy
                                 int total = Draw(rng, lambda, counts);
                                 search.Reconstruct(counts, recon);
                                 var hit = search.Search(models[b, w], total, recon);
-                                z[r] = double.IsFinite(hit.Z) ? Math.Round(hit.Z, 4) : null;
+                                z[r] = double.IsFinite(hit.Z) ? Math.Round(hit.Z, Thresholds.RecordedDecimals) : null;
                             }
                             nulls[key] = z;
                             nullSummary[key] = new { ExpectedBackgroundCounts = lambda.Sum() };
@@ -176,12 +176,12 @@ public static class AmbientGateStudy
                                     var (ex, ey) = search.DecoderEstimate(recon);
                                     double errMm = Math.Sqrt((ex - pos.XMm) * (ex - pos.XMm) + (ey - pos.YMm) * (ey - pos.YMm));
                                     double errDeg = search.AngleBetweenDeg(ex, ey, pos.XMm, pos.YMm);
-                                    agg.AddDecoder(total, errMm, errDeg, errMm > q.FailThresholdMm, errDeg <= resolutionDeg);
+                                    agg.AddDecoder(total, ex - pos.XMm, ey - pos.YMm, errDeg, errMm > q.FailThresholdMm, errDeg <= resolutionDeg);
                                     if (env.Bound >= 0)
                                     {
                                         var hit = search.Search(models[env.Bound, w], total, recon);
                                         bool correct = hit.Index >= 0 && search.AngleBetweenDeg(hit.X, hit.Y, pos.XMm, pos.YMm) <= resolutionDeg;
-                                        agg.AddGate(hit.Z > threshold!.Value, hit.Z > universal!.Value, correct);
+                                        agg.AddGate(thresholds!.Trusts(hit.Z, threshold!.Value), thresholds.Trusts(hit.Z, universal!.Value), correct);
                                     }
                                 }
                                 sources[$"{spec.Name}|{pos.Name}|{windows[w].Name}|t={t}|{label}|{env.Name}"] =
@@ -213,21 +213,38 @@ public static class AmbientGateStudy
         return total;
     }
 
-    /// <summary>Thresholds selected on the selection seeds: one per null configuration, and one universal value.</summary>
+    /// <summary>Thresholds selected on the selection seeds: one per null configuration, and one universal value, with the
+    /// comparison they were selected for. <c>GreaterThan</c> (turn 7, the default when the file names none): trusted when
+    /// Z &gt; T. <c>RoundedAtLeast</c> (AB-11): trusted when Z rounded to <see cref="RecordedDecimals"/> decimals — the
+    /// precision the null values are recorded and selected at — is ≥ T, so an acquisition tied with the threshold counts
+    /// as trusted (conservative for the false-trusted rate).</summary>
     public sealed class Thresholds
     {
+        public const int RecordedDecimals = 4;
         public Dictionary<string, double> PerConfiguration { get; set; } = [];
         public double Universal { get; set; }
+        public string Comparison { get; set; } = "GreaterThan";
+
+        public bool Trusts(double z, double threshold) => double.IsFinite(z) && Comparison switch
+        {
+            "GreaterThan" => z > threshold,
+            "RoundedAtLeast" => Math.Round(z, RecordedDecimals) >= threshold,
+            _ => throw new InvalidDataException($"Unknown threshold comparison '{Comparison}'.")
+        };
     }
 
     private sealed class SourceAggregate
     {
         private int _n, _fail, _decoderWithin, _detected, _correct, _detectedUniversal, _correctUniversal;
-        private double _sumErr2, _sumErr, _sumDeg2, _sumCounts;
+        private double _sumErr2, _sumErr, _sumDeg2, _sumCounts, _sumDx, _sumDy;
 
-        public void AddDecoder(int total, double errMm, double errDeg, bool fail, bool within)
+        /// <summary>One decoder answer; (dx, dy) is the signed error at the source plane (estimate − truth, mm), kept so
+        /// a systematic pull of the raw decoder (AB-12) is measured as a mean vector, not only inside the RMS.</summary>
+        public void AddDecoder(int total, double dxMm, double dyMm, double errDeg, bool fail, bool within)
         {
+            double errMm = Math.Sqrt(dxMm * dxMm + dyMm * dyMm);
             _n++; _sumCounts += total; _sumErr2 += errMm * errMm; _sumErr += errMm; _sumDeg2 += errDeg * errDeg;
+            _sumDx += dxMm; _sumDy += dyMm;
             if (fail) _fail++;
             if (within) _decoderWithin++;
         }
@@ -243,6 +260,7 @@ public static class AmbientGateStudy
             ActivityBq = activity, ExpectedSourceCounts = sourceCounts, ExpectedBackgroundCounts = backgroundCounts,
             Repeats = _n, MeanCounts = _sumCounts / _n, ResolutionDeg = resolutionDeg,
             RmsErrorMm = Math.Sqrt(_sumErr2 / _n), MeanErrorMm = _sumErr / _n, RmsErrorDeg = Math.Sqrt(_sumDeg2 / _n),
+            MeanDxMm = _sumDx / _n, MeanDyMm = _sumDy / _n,
             Failures = _fail, DecoderWithinResolution = _decoderWithin,
             Trusted = gated ? _detected : (int?)null, TrustedCorrect = gated ? _correct : (int?)null,
             TrustedUniversal = gated ? _detectedUniversal : (int?)null, TrustedCorrectUniversal = gated ? _correctUniversal : (int?)null

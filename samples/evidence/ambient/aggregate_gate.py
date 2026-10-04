@@ -1,9 +1,12 @@
 """Aggregate the AB-7 gate validation and the EV-07 / EV-09 count gates under ambient background (TODO-30 turn 7).
 
     python samples/evidence/ambient/aggregate_gate.py --runs <driver-out> --out <results.json> [--csv <sources.csv>]
+    turn 8 (AB-11): add --manifest samples/evidence/manifest-ambient-v2.json --family gate_validation_v2
 
-Validation (seeds O128[0:128], disjoint from the selection seeds): per background-only configuration, the number of
-false trusted locations (Z > T*, any trusted location is false without a source) out of 128 x 16 acquisitions, its
+Validation (turn 7: seeds O128[0:128]; turn 8: F256[128:256]; always disjoint from the selection seeds): per
+background-only configuration, the number of false trusted locations (trusted per the threshold file's comparison:
+Z > T* in turn 7, recorded Z >= T* in turn 8; any trusted location is false without a source), the threshold file
+checked against its pinned SHA-256, its
 one-sided 95 % Clopper-Pearson upper limit, and PASS when that limit is <= 1 % (AB-7). Over-dispersion across seeds
 (acquisitions sharing one seed's MC maps are clustered) is reported as the dispersion index of the per-seed counts.
 
@@ -15,6 +18,7 @@ criterion holds (pooled fraction >= 0.95; sub-mm in >= 95 % of seeds) — read o
 """
 import argparse
 import csv
+import hashlib
 import json
 import pathlib
 import statistics
@@ -41,17 +45,31 @@ def main():
     ap.add_argument('--out', required=True)
     ap.add_argument('--csv')
     ap.add_argument('--manifest', default=str(HERE.parent / 'manifest-ambient-v1.json'))
+    ap.add_argument('--family', default='gate_validation')
     args = ap.parse_args()
-    seeds, fam = family_seeds(args.manifest, HERE.parent / 'seeds.json', 'gate_validation')
-    runs = load_runs(args.runs, 'gate_validation', seeds)
+    seeds, fam = family_seeds(args.manifest, HERE.parent / 'seeds.json', args.family)
+    runs = load_runs(args.runs, args.family, seeds)
     thresholds_ref = fam['overrides']['Thresholds']
-    thresholds = json.loads((HERE.parents[2] / thresholds_ref['File']).read_text(encoding='utf-8'))
+    raw = (HERE.parents[2] / thresholds_ref['File']).read_bytes()
+    if hashlib.sha256(raw).hexdigest() != thresholds_ref['Sha256']:
+        raise SystemExit('threshold file does not match the SHA-256 pinned in the manifest')
+    thresholds = json.loads(raw.decode('utf-8'))
+    # Turn 7's file names no comparison (Z > T*); AB-11's is RoundedAtLeast: recorded Z (4 decimals) >= T*.
+    comparison = thresholds.get('Comparison', 'GreaterThan')
+    if comparison == 'GreaterThan':
+        def trusts(z, t):
+            return z is not None and z > t
+    elif comparison == 'RoundedAtLeast':
+        def trusts(z, t):
+            return z is not None and round(z, 4) >= t
+    else:
+        raise SystemExit(f'unknown comparison {comparison}')
     first = runs[seeds[0]]
 
     nulls = {}
     for key in sorted(first['Nulls']):
-        per_seed = [sum(1 for z in runs[s]['Nulls'][key] if z is not None and z > thresholds['PerConfiguration'][key]) for s in seeds]
-        per_seed_u = [sum(1 for z in runs[s]['Nulls'][key] if z is not None and z > thresholds['Universal']) for s in seeds]
+        per_seed = [sum(1 for z in runs[s]['Nulls'][key] if trusts(z, thresholds['PerConfiguration'][key])) for s in seeds]
+        per_seed_u = [sum(1 for z in runs[s]['Nulls'][key] if trusts(z, thresholds['Universal'])) for s in seeds]
         n = sum(len(runs[s]['Nulls'][key]) for s in seeds)
         k, ku = sum(per_seed), sum(per_seed_u)
         mean = k / len(seeds)
@@ -77,6 +95,11 @@ def main():
                'SubMmSeeds': sum(1 for v in rms if v < 1.0),
                'FailureRate': sum(r['Failures'] for r in rows) / reps,
                'DecoderWithinResolution': sum(r['DecoderWithinResolution'] for r in rows) / reps}
+        if 'MeanDxMm' in rows[0]:          # turn 8: signed decoder error (AB-12 bias), mean over seeds and its seed SD
+            for axis in ('Dx', 'Dy'):
+                per_seed_bias = [r[f'Mean{axis}Mm'] for r in rows]
+                out[f'Mean{axis}Mm'] = statistics.mean(per_seed_bias)
+                out[f'Mean{axis}MmSd'] = statistics.stdev(per_seed_bias)
         if gated:
             trusted = sum(r['Trusted'] for r in rows)
             correct = sum(r['TrustedCorrect'] for r in rows)
@@ -131,7 +154,15 @@ def main():
                                         'AmbientToSourceAtDefaultActivity': b_unit * f / s_rate,
                                         'BackgroundPerN0': {f'N0={n0}|t={t}': b_unit * f * t / n0 for n0 in (500, 5000) for t in (10, 60)}}
 
-    result = {'_about': __doc__.strip().splitlines()[0], 'Family': 'gate_validation', 'SeedList': fam['seeds'],
+    pooled_k = sum(v['FalseTrusted'] for v in nulls.values())
+    pooled_n = sum(v['Acquisitions'] for v in nulls.values())
+    pooled = {'FalseTrusted': pooled_k, 'Acquisitions': pooled_n, 'Rate': pooled_k / pooled_n,
+              'Lower95': cp_lower(pooled_k, pooled_n), 'Upper95': cp_upper(pooled_k, pooled_n),
+              'ConfigurationsPassing': sum(1 for v in nulls.values() if v['Pass']), 'Configurations': len(nulls),
+              'UniversalFalseTrusted': sum(v['UniversalFalseTrusted'] for v in nulls.values()),
+              'UniversalConfigurationsPassing': sum(1 for v in nulls.values() if v['UniversalPass'])}
+    result = {'_about': __doc__.strip().splitlines()[0], 'Family': args.family, 'SeedList': fam['seeds'],
+              'SeedOffset': fam.get('seed_offset', 0), 'Comparison': comparison, 'PooledNulls': pooled,
               'Seeds': len(seeds), 'Thresholds': thresholds_ref, 'Alpha': thresholds['Alpha'], 'Universal': thresholds['Universal'],
               'TargetFalseUpper95': TARGET_FALSE, 'TargetCoverage': TARGET_COVERAGE,
               'AmbientRates': rate_summary(runs, seeds, 'AmbientRates', 'CpsPerMicroSvH'),

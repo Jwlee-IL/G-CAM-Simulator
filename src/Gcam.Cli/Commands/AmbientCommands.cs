@@ -269,6 +269,28 @@ internal static class AmbientCommands
         return 0;
     }
 
+    /// <summary>AB-13 evidence families under the absolute ambient field (TODO-30 turn 8), one outer seed per run: EV-12
+    /// mask / antimask, EV-02 field of view, EV-15 separation, EV-01 sweep with the AB-12 bias baseline.</summary>
+    internal static int RunEvidence(string[] args)
+    {
+        if (args.Length is < 2 or > 3) { Console.Error.WriteLine("Usage: montecarlo ambient-evidence <evidence-request.json> [output.json]"); return 1; }
+        var request = JsonSerializer.Deserialize<AmbientEvidenceRequest>(File.ReadAllText(args[1]),
+            new JsonSerializerOptions { PropertyNameCaseInsensitive = true, Converters = { new System.Text.Json.Serialization.JsonStringEnumConverter() } })
+            ?? throw new InvalidDataException("Empty evidence request.");
+        var result = request.Family switch
+        {
+            "antimask" => AmbientAntimaskStudy.Run(request),
+            "fov" => AmbientFieldOfViewStudy.Run(request),
+            "separation" => AmbientSeparationStudy.Run(request),
+            "sweep" => AmbientSweepStudy.Run(request),
+            _ => throw new ArgumentException($"Unknown evidence family '{request.Family}'.")
+        };
+        string output = args.Length == 3 ? args[2] : "ambient-evidence.json";
+        File.WriteAllText(output, JsonSerializer.Serialize(result));
+        Console.WriteLine($"ambient-evidence {request.Family} seed {request.Seed}: {result["ComputeSeconds"]:0.0} s -> {Path.GetFileName(output)}");
+        return 0;
+    }
+
     internal static int WritePlaceholder(string[] args)
     {
         if (args.Length != 2) { Console.Error.WriteLine("Usage: montecarlo ambient-placeholder <spectrum.json>"); return 1; }

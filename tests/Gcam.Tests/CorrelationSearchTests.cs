@@ -39,6 +39,71 @@ public sealed class CorrelationSearchTests
         }
     }
 
+    [Theory]
+    [InlineData(32767)]     // the largest absolute count sum of the 8/16-bit path
+    [InlineData(32768)]     // the smallest of the 32-bit path
+    [InlineData(250000)]
+    public void MatrixDecode_IsExactOnBothAccumulatorWidths(int total)
+    {
+        // Signed counts whose absolute sum is exactly `total`, spread unevenly over the pixels; both paths are exact
+        // integer arithmetic, so the reconstruction equals the decoder's to the last bit on either side of the switch.
+        var config = Rigs.Lab(seed: 3108);
+        var search = new CorrelationSearch(config);
+        var decoder = new DefaultSimulationFactory().CreateDecoder(config)!;
+        var counts = new int[search.Pixels];
+        var rng = new DefaultRandom(3109);
+        for (int left = total; left > 0;)
+        {
+            int i = (int)(rng.NextDouble() * counts.Length), step = Math.Min(left, 1 + (int)(rng.NextDouble() * 50));
+            counts[i] += i % 5 == 0 ? -step : step;
+            left -= step;
+        }
+        // Pixel 1 only ever receives positive steps (1 % 5 ≠ 0), so adding the deficit left by cancelling steps on the
+        // other pixels raises the absolute sum to exactly `total`.
+        counts[1] += total - counts.Sum(Math.Abs);
+        Assert.Equal(total, counts.Sum(Math.Abs));
+        var image = new DetectorImage(config.Detector.PixelsX, config.Detector.PixelsY);
+        for (int i = 0; i < counts.Length; i++) image[i % image.Width, i / image.Width] = counts[i];
+        var recon = new double[search.GridPoints];
+        search.Reconstruct(counts, recon);
+        Assert.Equal(decoder.Decode(image).Reconstruction.Raw.ToArray(), recon);
+    }
+
+    [Fact]
+    public void MatrixDecode_IsExactOnAWideGridAndSignedCounts()
+    {
+        // EV-02's wide non-cyclic grid (±20°, 0.3° at 1 m: > 8192 points, so the heap accumulator; the lab grid of the test
+        // above, 49 × 49, exercises the scalar tail after the SIMD blocks) and a mask − antimask difference image (negative
+        // counts): still exact integers.
+        var config = Rigs.Handheld(seed: 3106);
+        config.Geometry.SourceMaskDistanceMm = 1000;
+        double planeZ = config.Geometry.MaskDetectorDistanceMm + 1000;
+        config.Decoder.Cyclic = false;
+        config.Decoder.ReconHalfExtentMm = planeZ * Math.Tan(20 * Math.PI / 180);
+        config.Decoder.ReconStepMm = planeZ * Math.Tan(0.3 * Math.PI / 180);
+        var search = new CorrelationSearch(config);
+        Assert.True(search.GridPoints > 8192);
+        var decoder = new DefaultSimulationFactory().CreateDecoder(config)!;
+        var rng = new DefaultRandom(3107);
+        var counts = new int[search.Pixels];
+        var recon = new double[search.GridPoints];
+        for (int trial = 0; trial < 3; trial++)
+        {
+            var image = new DetectorImage(config.Detector.PixelsX, config.Detector.PixelsY);
+            for (int i = 0; i < counts.Length; i++)
+            {
+                counts[i] = Sampling.PoissonExact(rng, 2.0 + trial) - Sampling.PoissonExact(rng, 2.0 + trial);
+                image[i % image.Width, i / image.Width] = counts[i];
+            }
+            var reference = decoder.Decode(image);
+            search.Reconstruct(counts, recon);
+            Assert.Equal(reference.Reconstruction.Raw.ToArray(), recon);
+            var (x, y) = search.DecoderEstimate(recon);
+            Assert.Equal(reference.Estimate.Position.X, x);
+            Assert.Equal(reference.Estimate.Position.Y, y);
+        }
+    }
+
     [Fact]
     public void StudentisedCorrelation_HasZeroMeanAndUnitVarianceUnderItsBackground()
     {
