@@ -3,7 +3,7 @@
 Scope: `DefaultRandom(seed)` wraps the legacy seeded `System.Random` (subtractive generator), which is biased by
 1.6–2.1 % when a stream's draw count varies between trials (Findings 60, reproduced by the planner). Find which code
 paths and which published numbers are exposed, measure how much each moves with a sound generator, then replace the
-algorithm and re-pin the evidence. Procedure: [AGENTS.Planning](AGENTS.Planning.md).
+algorithm and re-pin the evidence. Procedure: [AGENTS.Planning](../AGENTS.Planning.md).
 
 Status: **done** 2026-10-02 (substitute Claude subagent, worktree `C:\gw\w26`); Findings 60. Planner re-verified: build 0 errors,
 tests 298 / 179 / 83 (+7) / 13 (+14); the single-seed mask-fabrication re-pin was sent back and replaced by a 24-seed
@@ -29,7 +29,7 @@ paired t-test.
 
 ## Steps
 
-1. Survey + measurement in a worktree (S-1 … S-5); write `docs/PLAN.Physics.RngBias.Review.md`.
+1. Survey + measurement in a worktree (S-1 … S-5); write `docs/archive/PLAN.Physics.RngBias.Review.md`.
 2. Decisions after review (author: whether to replace, and how to present moved numbers).
 3. Replace, re-measure, re-pin; Findings / Evidence model-history rows for every moved number.
 

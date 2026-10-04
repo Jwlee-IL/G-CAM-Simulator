@@ -4,7 +4,7 @@ Scope: Findings 57 showed the focus sweep's "sharpest plane" is a heuristic on a
 likelihood with a **known** bearing reduced the bias to a few mm. This research task asks whether a likelihood that also
 estimates the bearing from the data gives an unbiased, honestly-intervalled depth at Studio's geometry, before any Studio
 change. Procedure: [AGENTS.Planning](AGENTS.Planning.md); prior review:
-[PLAN.Physics.DepthBias.Review](PLAN.Physics.DepthBias.Review.md).
+[PLAN.Physics.DepthBias.Review](archive/PLAN.Physics.DepthBias.Review.md).
 
 Status: **reference plan** 2026-10-02 — implementer: a substitute Claude subagent (Codex out of credits).
 

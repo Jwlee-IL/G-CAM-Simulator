@@ -2,7 +2,7 @@
 
 Scope: the CR-RC⁴ integer shaper used by the Waveform workspace (and bit-exact to `rtl/crrc_shaper.sv`) loses
 low-energy pulses because every accumulator update floors to whole output codes; the three CR-RC presets also share one
-inherited benchmark coefficient K. Procedure: [AGENTS.Planning](AGENTS.Planning.md).
+inherited benchmark coefficient K. Procedure: [AGENTS.Planning](../AGENTS.Planning.md).
 
 Status: **done** 2026-10-02 (Codex, worktree `C:\gw\p20`). Findings 58. Planner re-verified: build 0 / 0, tests 272 / 164 / 75 (+7) / 13 (+14),
 cocotb 137 / 137 with the C# vectors. Review (served as the reference plan):

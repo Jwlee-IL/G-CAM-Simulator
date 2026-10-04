@@ -2,7 +2,7 @@
 
 Scope: replacing GCAM Studio's acquisition control (Start always starts afresh, Stop ends the session, edits mark
 results "Outdated") with the multichannel-analyser model the author chose: **Start / Stop / Reset**. Procedure:
-[AGENTS.Planning](AGENTS.Planning.md); live acquisition design: [PLAN.Studio.LiveAcquisition](PLAN.Studio.LiveAcquisition.md).
+[AGENTS.Planning](../AGENTS.Planning.md); live acquisition design: [PLAN.Studio.LiveAcquisition](PLAN.Studio.LiveAcquisition.md).
 
 Status: **done** 2026-10-02 (E-1 … E-10) by the substitute implementer (Codex out of credits). Stop / continue
 equivalence re-measured on the real session (1,810 and 2,728 events identical to the uninterrupted run with stops at
@@ -60,7 +60,7 @@ stop. Speed only paces events; decoder focus does not change them.
 
 1. **Review (no code):** check F-1 … F-6 in the code; measure that continuing reproduces the same event stream as an
    uninterrupted run with the same seed (or explain why not); list every place the stale concept is used. Write
-   `docs/PLAN.Studio.AcquisitionControl.Review.md`.
+   `docs/archive/PLAN.Studio.AcquisitionControl.Review.md`.
 2. Planner writes "Decisions after review"; open questions go to the author.
 3. Implement (Core state machine, session pause / resume, view bindings, removal of the stale path), tests, renders.
 4. Docs: SRS / SDS / VV rows for acquisition control, DESIGN.Layout top bar, AGENTS.Studio.

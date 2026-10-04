@@ -3,11 +3,11 @@
 Scope: moving the last `Gcam.Wpf`-only features into GCAM Studio — the Detector tab (reflector gap, optical crosstalk,
 SiPM pitch, detector-face view) and the Imaging depth controls ("Estimate depth (3D)", rangefinder range, focus
 fusion). Order of work: [PLAN.Studio.Migration](PLAN.Studio.Migration.md); procedure:
-[AGENTS.Planning](AGENTS.Planning.md).
+[AGENTS.Planning](../AGENTS.Planning.md).
 
 Status: **done** 2026-10-02 (D-1 … D-8 implemented; renders `docs/assets/studio-render/{detector-*,focus-*}`).
 Implemented by Codex (core, services, views, tests, docs; build and normal suites green) until its credits ran out;
-the **substitute implementer** (a Claude subagent, [AGENTS.Planning](AGENTS.Planning.md)) ran the evidence test
+the **substitute implementer** (a Claude subagent, [AGENTS.Planning](../AGENTS.Planning.md)) ran the evidence test
 (gap ratio 0.6943 / 0.4555 vs 0.6944 / 0.4444, tolerance 4·s·√(1+1/8) from the measured spread, pass) and the renders,
 and fixed what the renders showed: overlapping plot marker labels (now laid out like band labels), the chain combo
 boxes' record text (ComboBox template ignored `DisplayMemberPath`), clipped empty-state text, the gap summary in µm,
@@ -101,7 +101,7 @@ same planes; 5 seeds; `all` = every event, `win` = 662 window):
 ## Steps
 
 1. **Review (no code):** check each *verify* row in the code and by measuring headlessly (a throwaway program outside
-   the tree); propose improvements. Write `docs/PLAN.Studio.Detector.Review.md`.
+   the tree); propose improvements. Write `docs/archive/PLAN.Studio.Detector.Review.md`.
 2. Planner writes "Decisions after review"; the author decides T-3; disagreements are discussed in the same conversation.
 3. Implement: Core (settings, face model, depth result records — pure, tested), services (depth sweep on the worker,
    cancellable), views (Detector workspace, Imaging depth / rangefinder section), tests, offscreen renders (both themes,

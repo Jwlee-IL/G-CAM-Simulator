@@ -4,7 +4,7 @@ Scope: TODO-25 review and measurement turn, 2026-10-02, by a substitute implemen
 credits). Designs the joint (x, y, z) likelihood of [PLAN.Physics.DepthLikelihood](PLAN.Physics.DepthLikelihood.md)
 L-1, measures L-2 / L-3 at Studio's default optics, the cost (L-4) and recommends the gate (L-5). No repository code or
 test changes; the harness and all outputs are under `%TEMP%\gcam-depthlik-20261002`. Prior work:
-[PLAN.Physics.DepthBias.Review](PLAN.Physics.DepthBias.Review.md).
+[PLAN.Physics.DepthBias.Review](archive/PLAN.Physics.DepthBias.Review.md).
 
 ## Result and recommendation
 

@@ -3,7 +3,7 @@
 Scope: GCAM Studio's list-mode source emits each line photon as an independent event. A Co-60 decay emits 1173 and
 1332 keV together (Na-22: two back-to-back 511 keV plus 1275 keV); with one decay → one arrival time, true coincidence
 summing would come out of the existing pile-up / measurement stage instead of being absent. Procedure:
-[AGENTS.Planning](AGENTS.Planning.md).
+[AGENTS.Planning](../AGENTS.Planning.md).
 
 Status: **done** 2026-10-02 (substitute Claude subagent, worktree `C:\gw\w14`); Findings 61. Planner re-verified: build 0 / 0,
 tests 291 / 179 / 82 (+7) / 13 (+14). The cascade slope test's budget was raised (5e6 → 2e7 decays) instead of its range —
@@ -31,7 +31,7 @@ its old seed sat 1.7σ from the bound.
 ## Steps
 
 1. Review + measurement (no repository code): E-1 … E-5, the bias derivation, cost, the magnitude at 300 / 1000 mm;
-   write `docs/PLAN.Physics.CascadeEmission.Review.md`.
+   write `docs/archive/PLAN.Physics.CascadeEmission.Review.md`.
 2. Decisions after review. 3. Implement (engine + Studio), tests, Findings entry.
 
 ## Decisions after review (2026-10-02)

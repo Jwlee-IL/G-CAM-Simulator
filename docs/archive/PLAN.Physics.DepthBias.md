@@ -2,7 +2,7 @@
 
 Scope: an investigation, not a feature — find why GCAM Studio's focus sweep puts the sharpest plane tens of mm away
 from the true source distance, reproducibly and depending on the source's lateral position (Findings 56), and whether
-an unbiased depth estimator exists at this geometry. Procedure: [AGENTS.Planning](AGENTS.Planning.md).
+an unbiased depth estimator exists at this geometry. Procedure: [AGENTS.Planning](../AGENTS.Planning.md).
 
 Status: **closed** 2026-10-02 — cause established by the review ([PLAN.Physics.DepthBias.Review](PLAN.Physics.DepthBias.Review.md),
 Findings 57); no production change (author accepted). H-1 … H-3 are partial contributors, H-4 a modifier, H-5 confirmed;
@@ -41,7 +41,7 @@ sweep 150–950 mm in 10 mm steps: sharpest plane **360** (all events) / 310 (66
    separating tests above on noise-free mean floods first (bias without noise), then on the list-mode path at 60 s;
    sources at 300 / 500 / 700 mm, on axis and at 15 / 30 mrad, plus a lateral sweep at one distance to see whether the
    bias is periodic with position (H-1 / H-3 signature). Report each hypothesis confirmed / rejected with numbers.
-   Write `docs/PLAN.Physics.DepthBias.Review.md`.
+   Write `docs/archive/PLAN.Physics.DepthBias.Review.md`.
 2. Planner writes "Decisions after review": the cause; whether Studio's sweep should change metric (an unbiased one,
    measured), and the precision it then has — **the offset is never subtracted as a calibration constant**.
 3. If a metric changes: implement in the engine / Studio with tests whose tolerances come from measured spreads;

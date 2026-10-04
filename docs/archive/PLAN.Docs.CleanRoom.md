@@ -3,7 +3,7 @@
 Scope: the repository is a clean-room personal reimplementation (README). A planner sweep on 2026-10-02 found text that
 reads as a former employer's product description, its unsolved defects, its internal countermeasures or its
 implementation choices, and a requirement set that can read as a company product plan. Rewrite that text as generic,
-published practice; keep the physics, numbers and conclusions. Procedure: [AGENTS.Planning](AGENTS.Planning.md).
+published practice; keep the physics, numbers and conclusions. Procedure: [AGENTS.Planning](../AGENTS.Planning.md).
 
 Status: **done** 2026-10-02 by the planner (doc work). Applied C-1 … C-6 across docs, plans, samples, RTL scripts and
 code comments; preset renamed "CSP + CR-RC (200 ns)" (headless renders regenerated: only the label changed). Also added,

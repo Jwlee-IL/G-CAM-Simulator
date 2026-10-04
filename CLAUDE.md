@@ -62,7 +62,7 @@ cocotb RTL front-end path.
   (Findings 57–61). Open (see `docs/AGENTS.Todo.md`, each with its PLAN and review in `docs/`):
   - **TODO-27** evidence refresh — **done 2026-10-02** (Findings 63; 12 author decisions ER-1…12 in the plan; MC quotes now
     carry seed spreads; driver and aggregates in `samples/evidence/`). Open question: PR-SENS-02's "~50 counts" gate.
-  - **TODO-29** clean-room wording pass — **done 2026-10-02** (`PLAN.Docs.CleanRoom.md`); README desktop screenshot still
+  - **TODO-29** clean-room wording pass — **done 2026-10-02** (`docs/archive/PLAN.Docs.CleanRoom.md`); README desktop screenshot still
     shows the old preset label "(original rig)" → retake on the author's go.
   - **TODO-30** absolute ambient background — **resumed 2026-10-04** with a substitute Claude subagent (Codex unavailable):
     engine / Studio / tests committed as WIP (`56f0a17`); author decided **AB-4d** (evaluated lines only, intensity-less

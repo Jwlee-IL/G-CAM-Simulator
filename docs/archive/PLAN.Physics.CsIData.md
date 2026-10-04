@@ -2,7 +2,7 @@
 
 Scope: add CsI(Tl) to the engine's crystal material table by the same method as theme 52, so the existing CsI(Tl)
 front-end preset can be offered in GCAM Studio. GAGG (the reference crystal) stays the default; CsI is a what-if.
-Procedure: [AGENTS.Planning](AGENTS.Planning.md).
+Procedure: [AGENTS.Planning](../AGENTS.Planning.md).
 
 Status: **done** 2026-10-02 (Codex, worktree `C:\gw\p21`; two plan corrections below). Findings 59. Planner re-verified: build 0 / 0,
 tests 274 / 165 / 78 (+7) / 13 (+14).

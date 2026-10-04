@@ -15,5 +15,5 @@ done list (and Findings, if it produced a result) in the same commit; its plan s
 | TODO-32 | **Realistic head housing for ambient background:** ray transport through the camera head's shield walls (front plate with mask, four sides, rear) instead of the `ShieldStudy` exp(−μt) surrogate and the top-face-only crystal entry; replaces the TODO-30 baseline's bare-crystal / front-only bounds with a single housing estimate (TODO-30 review §1, §5) | TODO-30 review, author 2026-10-03 | Codex | deferred (after the TODO-30 baseline) |
 
 Next free ID: TODO-33. The `Gcam.Wpf` → Studio migration (TODO-06 … TODO-24) is complete — `Gcam.Wpf` was deleted in
-TODO-12; record: [PLAN.Studio.Migration](PLAN.Studio.Migration.md). Open work is physics (TODO-19, 25), test reports (28) and the absolute
+TODO-12; record: [PLAN.Studio.Migration](archive/PLAN.Studio.Migration.md). Open work is physics (TODO-19, 25), test reports (28) and the absolute
 ambient background (30).

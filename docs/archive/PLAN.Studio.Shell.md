@@ -11,7 +11,7 @@ acquisition: 19 / 19 UI tests pass, broken verdicts fail all 7 scenarios; survey
 Implementation checkpoint (2026-10-01): workspace shell and first-party plot are implemented; CPU redraw gate
 passed (10M, max zoom 12.118 ms / resize 2.642 ms). TODO-06 remains open: the opt-in regression / survey run
 failed at `SetCursorPos` / UIA `SetFocus`; screen capture also failed (invalid handle). See
-[VV.Studio](VV.Studio.md#plot-performance-gate) and [survey record](assets/studio-polish-survey/README.md).
+[VV.Studio](../VV.Studio.md#plot-performance-gate) and [survey record](../assets/studio-polish-survey/README.md).
 Re-run on an accessible interactive desktop; do not replace the existing assertions or mark the survey performed.
 
 1. **Workspaces in the ViewModel.** `MainViewModel` keeps the scene, optics, run state and the shared result;

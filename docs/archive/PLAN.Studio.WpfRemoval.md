@@ -1,7 +1,7 @@
 # PLAN.Studio.WpfRemoval — delete the legacy Gcam.Wpf viewer (TODO-12)
 
 Scope: remove `src/Gcam.Wpf` now that GCAM Studio has every feature the author kept. Procedure:
-[AGENTS.Planning](AGENTS.Planning.md); migration: [PLAN.Studio.Migration](PLAN.Studio.Migration.md).
+[AGENTS.Planning](../AGENTS.Planning.md); migration: [PLAN.Studio.Migration](PLAN.Studio.Migration.md).
 
 Status: **done** 2026-10-02 by a substitute Claude subagent (Codex out of credits): only the solution entry and a CI comment
 depended on it; `src/Gcam.Wpf` deleted (last present at `85b2ed1`); current-state docs updated, history kept. Planner

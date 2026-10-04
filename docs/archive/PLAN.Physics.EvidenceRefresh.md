@@ -3,7 +3,7 @@
 Scope: the evidence register quotes Monte Carlo results that are single realisations at seed 12345. The TODO-26 survey
 (43 reproduce commands × 5 seeds, both generators) found several quotes that differ from today's seed-12345 output
 independently of the generator, and others sitting at the edge of their own spread. Re-measure them over seeds and
-publish **value ± spread (N seeds)** instead of one realisation. Procedure: [AGENTS.Planning](AGENTS.Planning.md);
+publish **value ± spread (N seeds)** instead of one realisation. Procedure: [AGENTS.Planning](../AGENTS.Planning.md);
 survey: [PLAN.Physics.RngBias.Review](PLAN.Physics.RngBias.Review.md).
 
 Status: **done** 2026-10-02 — implemented by a Claude subagent standing in for Codex (out of credits), from the review
@@ -75,5 +75,5 @@ as proposed in the review.
 
 ## Steps
 1. Review + measurement: verify the table, extend it to every MC-quoted EV entry (and the README headline), run the
-   multi-seed measurements, propose the quote changes; write `docs/PLAN.Physics.EvidenceRefresh.Review.md`.
+   multi-seed measurements, propose the quote changes; write `docs/archive/PLAN.Physics.EvidenceRefresh.Review.md`.
 2. Decisions after review (author for any changed conclusion). 3. Apply the doc changes and the seed-capable runs.

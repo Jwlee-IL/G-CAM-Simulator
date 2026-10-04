@@ -10,7 +10,7 @@ Guidance for AI agents and contributors working on this repository.
 | `AGENTS.Backlog.md` | done + deferred work |
 | `AGENTS.Todo.md` | concrete tasks handed between sessions (ready to pick up) |
 | `AGENTS.Planning.md` | how a `PLAN.*` is written, reviewed by the implementer (Codex) and implemented in one conversation; roles, call rules, cautions |
-| `PLAN.*.md` | implementation plans with the author's decisions — one per task or task group, linked from `AGENTS.Todo.md` (`PLAN.Studio.Migration` and its steps; an implementer's review of a plan is `PLAN.<Name>.Review.md`) |
+| `PLAN.*.md` | implementation plans with the author's decisions — one per task or task group, linked from `AGENTS.Todo.md` (an implementer's review of a plan is `PLAN.<Name>.Review.md`); finished plans move to `docs/archive/` |
 | `AGENTS.Conventions.Code.md` / `AGENTS.Conventions.Docs.md` | C# / XAML / test / commit style; doc naming, placement and sync rules |
 | `AGENTS.Studio.md` | entry point for GCAM Studio (the MVVM viewer) — read before touching `src/Gcam.Studio*` |
 | `AGENTS.Rationale.md` | every normative rule in the docs and code, with its reason, source and enforcement |

@@ -1345,7 +1345,7 @@ offset instead.
 
 > *Correction (2026-10-02, TODO-14 review):* the angular correlation is not a "~10 % close-geometry correction" — at
 > 1 m the correlated ε²-expectation is 11 % above the isotropic one and the effect shrinks only at very close range;
-> also `DecayScheme` samples Co-60 isotropically, despite its summary. See [PLAN.Physics.CascadeEmission](PLAN.Physics.CascadeEmission.md).
+> also `DecayScheme` samples Co-60 isotropically, despite its summary. See [PLAN.Physics.CascadeEmission](archive/PLAN.Physics.CascadeEmission.md).
 
 > **Revised 2026-10-01 — [theme 52](#52-crystal-attenuation-from-tabulated-cross-sections--crystalmaterial-2026-10-01).** Sum/single values fall (18 mm: sum/decay 1.15e-5 → 3.6e-6); the ∝ε² scaling stands (slope 2.04 → 2.16, noisier).
 First target from the **physics-realism audit** (5 Codex subsystem audits over themes 1–43; this was the source-audit's
@@ -1837,7 +1837,7 @@ judged at the working focal plane. Reproduce: a throwaway program on `SceneConfi
 
 ## 56. Detector gap, crosstalk and depth from focus on Studio's list-mode path (2026-10-02)
 
-Measured for TODO-11 ([PLAN.Studio.Detector](PLAN.Studio.Detector.md), "Measurements by the planner") on Studio's own
+Measured for TODO-11 ([PLAN.Studio.Detector](archive/PLAN.Studio.Detector.md), "Measurements by the planner") on Studio's own
 path — `SimulationService.BuildConfig` → `ListModeSource` → `MeasurementStage` — at the default optics (rank 13, 0.7 mm,
 D 80 mm, 30 × 0.6 mm), GAGG chain (FWHM 30.2 keV at 662), Cs-137 500 µCi, window 662 ± 1.5 FWHM.
 
@@ -1863,7 +1863,7 @@ D 80 mm, 30 × 0.6 mm), GAGG chain (FWHM 30.2 keV at 662), Cs-137 500 µCi, wind
 
 ## 57. Why the focus sweep's depth is biased — a heuristic score on a mismatched forward model (2026-10-02)
 
-TODO-23 ([PLAN.Physics.DepthBias](PLAN.Physics.DepthBias.md), review by Codex). Studio defaults, Cs-137, sources at
+TODO-23 ([PLAN.Physics.DepthBias](archive/PLAN.Physics.DepthBias.md), review by Codex). Studio defaults, Cs-137, sources at
 300 / 500 / 700 mm, 0 / 15 / 30 mrad; noise-free mean floods and the list-mode path (60 s, 5 seeds).
 
 - **The bias needs no noise and no physics:** a single-line ideal geometric detector already gives the +60 / +80 mm
@@ -1879,11 +1879,11 @@ TODO-23 ([PLAN.Physics.DepthBias](PLAN.Physics.DepthBias.md), review by Codex). 
   does not reach ~1 % at this geometry (−82 mm at 700 mm, 15 mrad).
 - Consequence: Studio keeps the descriptive "sharpest plane" with its interval; a joint x/y/z forward-likelihood depth
   estimator is a research task (TODO-25). Reproduce: the probe programs and commands in
-  [PLAN.Physics.DepthBias.Review](PLAN.Physics.DepthBias.Review.md).
+  [PLAN.Physics.DepthBias.Review](archive/PLAN.Physics.DepthBias.Review.md).
 
 ## 58. CR-RC shaper: whole-code state lost low-energy pulses; Q12 fractional state and explicit shaping times (2026-10-02)
 
-TODO-20 ([PLAN.Physics.CrrcPresets](PLAN.Physics.CrrcPresets.md), review and implementation by Codex). GAGG, S13360-3050,
+TODO-20 ([PLAN.Physics.CrrcPresets](archive/PLAN.Physics.CrrcPresets.md), review and implementation by Codex). GAGG, S13360-3050,
 AD9648 14-bit / 125 MSPS, isolated pulses.
 
 - **Cause:** the integer CR-RC⁴ recurrence (C#, Python reference and `crrc_shaper.sv`, bit-exact to each other) kept
@@ -1904,7 +1904,7 @@ AD9648 14-bit / 125 MSPS, isolated pulses.
 
 ## 59. CsI(Tl) added to the crystal table — what-if material, same method as theme 52 (2026-10-02)
 
-TODO-21 ([PLAN.Physics.CsIData](PLAN.Physics.CsIData.md), Codex). xraylib 4.3.0 through the repository generator; CsI,
+TODO-21 ([PLAN.Physics.CsIData](archive/PLAN.Physics.CsIData.md), Codex). xraylib 4.3.0 through the repository generator; CsI,
 4.51 g/cm³, Tl omitted as an activator (as NaI:Tl); K-edge grid pairs at I 33.17 and Cs 35.98 keV.
 
 - 661.7 keV: μ/ρ = 0.07435 cm²/g, photoelectric share 0.145, μ = 0.0335 /mm (GAGG 0.0773 cm²/g at 6.63 g/cm³, so CsI
@@ -1950,7 +1950,7 @@ at 100 mm, then a partner angle by rejection sampling (variable draw count) on t
 
 ## 61. Per-decay cascade emission in list mode — correct, and negligible at 1 m (2026-10-02)
 
-TODO-14 ([PLAN.Physics.CascadeEmission](PLAN.Physics.CascadeEmission.md), review and implementation by a substitute
+TODO-14 ([PLAN.Physics.CascadeEmission](archive/PLAN.Physics.CascadeEmission.md), review and implementation by a substitute
 Claude subagent). Co-60 and Na-22 are now emitted one decay per history in `ListModeSource`: all of a decay's gammas
 are transported and detected ones form **one event** (summed deposit at the largest-deposit pixel, one arrival time);
 directional biasing aims one randomly chosen gamma, weight n·w_k / (n̄·H), source choice ∝ activity × n̄.
@@ -1989,8 +1989,8 @@ window; intensity and flat background profiled; parameters bearing + v = 1/(z �
 
 ## 63. Evidence quoted over seed ensembles — `samples/evidence` (2026-10-02)
 
-TODO-27 ([PLAN.Physics.EvidenceRefresh](PLAN.Physics.EvidenceRefresh.md), measured review
-[PLAN.Physics.EvidenceRefresh.Review](PLAN.Physics.EvidenceRefresh.Review.md), implementation by a substitute Claude
+TODO-27 ([PLAN.Physics.EvidenceRefresh](archive/PLAN.Physics.EvidenceRefresh.md), measured review
+[PLAN.Physics.EvidenceRefresh.Review](archive/PLAN.Physics.EvidenceRefresh.Review.md), implementation by a substitute Claude
 subagent). Every Monte Carlo number in the evidence register was a single realisation at seed 12345. All 33
 quotation families were re-measured over 32–128 outer seeds on one engine build (`55af615`; nothing under `src/`,
 `samples/` or `rtl/` changed since) and are now quoted as mean ± SD or median [quartiles] with N, picks and gates as

@@ -178,52 +178,52 @@ TILT (pitch/yaw), mask WARPING.
 - **TODO-29 clean-room wording** (2026-10-02): text attributing a product description, unsolved defects,
   countermeasures or implementation choices to a former instrument rewritten as known problems / published practice
   of the camera class; design-exercise notice on the VV set; ideal-environment notice on every MC result —
-  [PLAN.Docs.CleanRoom](PLAN.Docs.CleanRoom.md).
+  [PLAN.Docs.CleanRoom](archive/PLAN.Docs.CleanRoom.md).
 - **TODO-27 evidence refresh** (2026-10-02): every Monte Carlo quote in the evidence register re-measured over seed
   ensembles (32–128 seeds) and quoted with its spread; 12 author decisions (antimask ~20–30 % better but rotation still
   rejected, tungsten ~10 mm, 40 µm gate, sub-mm from ~250 counts, …); reproducible driver and aggregates in
-  `samples/evidence/` — [PLAN.Physics.EvidenceRefresh](PLAN.Physics.EvidenceRefresh.md), Findings 63.
+  `samples/evidence/` — [PLAN.Physics.EvidenceRefresh](archive/PLAN.Physics.EvidenceRefresh.md), Findings 63.
 - **TODO-26 RNG replacement** (2026-10-02): legacy seeded `System.Random` (affine in its seed; correlated per-event
   smears in Studio) replaced by xoshiro256**; no published number moved beyond spread except the unquoted shield knee —
-  [PLAN.Physics.RngBias](PLAN.Physics.RngBias.md), Findings 60.
+  [PLAN.Physics.RngBias](archive/PLAN.Physics.RngBias.md), Findings 60.
 - **TODO-14 per-decay cascade emission** (2026-10-02): one event per Co-60 / Na-22 decay with angular correlation and
-  unbiased weighting; sum fraction 2.0e-6 at 1 m, 2.2e-5 at 300 mm — [PLAN.Physics.CascadeEmission](PLAN.Physics.CascadeEmission.md),
+  unbiased weighting; sum fraction 2.0e-6 at 1 m, 2.2e-5 at 300 mm — [PLAN.Physics.CascadeEmission](archive/PLAN.Physics.CascadeEmission.md),
   Findings 61; found the RNG bias (TODO-26).
 - **TODO-12 legacy viewer removed** (2026-10-02): `src/Gcam.Wpf` and its solution entry deleted after every kept
   feature moved into GCAM Studio; last present at `85b2ed1` (theme 34's code is there) —
-  [PLAN.Studio.WpfRemoval](PLAN.Studio.WpfRemoval.md).
+  [PLAN.Studio.WpfRemoval](archive/PLAN.Studio.WpfRemoval.md).
 - **TODO-07 Spectrum, TODO-13 live list-mode acquisition, TODO-15 spectrum graph** (2026-10-01/02): implemented,
   headless-verified and rendered offscreen; their desktop checks passed in TODO-22 —
-  [PLAN.Studio.Spectrum](PLAN.Studio.Spectrum.md), [PLAN.Studio.LiveAcquisition](PLAN.Studio.LiveAcquisition.md),
-  [PLAN.Studio.SpectrumPlot](PLAN.Studio.SpectrumPlot.md).
+  [PLAN.Studio.Spectrum](archive/PLAN.Studio.Spectrum.md), [PLAN.Studio.LiveAcquisition](archive/PLAN.Studio.LiveAcquisition.md),
+  [PLAN.Studio.SpectrumPlot](archive/PLAN.Studio.SpectrumPlot.md).
 - **TODO-20 CR-RC presets** (2026-10-02): whole-code state lost low-energy pulses → Q12 fractional state in C# / Python /
   RTL (48-bit, bit-exact on 452,608 samples), explicit per-preset shaping time (simulation convention) —
-  [PLAN.Physics.CrrcPresets](PLAN.Physics.CrrcPresets.md), Findings 58.
+  [PLAN.Physics.CrrcPresets](archive/PLAN.Physics.CrrcPresets.md), Findings 58.
 - **TODO-21 CsI(Tl) data** (2026-10-02): theme-52 method, NIST like-with-like within 0.011 %, offered in Studio as a what-if —
-  [PLAN.Physics.CsIData](PLAN.Physics.CsIData.md), Findings 59.
-- **TODO-16 layout batch 4** (2026-10-02): desktop-survey items P-12 … P-16 — [PLAN.Studio.Polish](PLAN.Studio.Polish.md).
+  [PLAN.Physics.CsIData](archive/PLAN.Physics.CsIData.md), Findings 59.
+- **TODO-16 layout batch 4** (2026-10-02): desktop-survey items P-12 … P-16 — [PLAN.Studio.Polish](archive/PLAN.Studio.Polish.md).
 - **TODO-22 final desktop pass** (2026-10-02): desktop suite 27/27 (Start / Stop / Continue / Reset, every workspace,
   independent oracles), all 12 scenarios fail under broken verdicts, 16 ms gate (zoom 5.6 ms, resize 4.0 ms), polish
   survey over four workspaces (P-12 … P-16), README capture — Codex in a separate worktree while the desktop was free.
 - **TODO-23 depth-from-focus bias** (2026-10-02): reference plan → Codex's measured review: the heuristic score on a
-  forward-mismatched decode, no single cause; known-bearing likelihood a few mm — [PLAN.Physics.DepthBias](PLAN.Physics.DepthBias.md),
+  forward-mismatched decode, no single cause; known-bearing likelihood a few mm — [PLAN.Physics.DepthBias](archive/PLAN.Physics.DepthBias.md),
   Findings 57; research follow-up TODO-25.
 - **TODO-24 acquisition control Start / Stop / Reset** (2026-10-02): the author's MCA model (continue after Stop,
   Reset discards, physical inputs locked while data exist — no stale state; source drag withdrawn; a new seed per
   acquisition) → review and implementation by a substitute Claude subagent (Codex out of credits); continuation
-  measured event-identical to an uninterrupted run — [PLAN.Studio.AcquisitionControl](PLAN.Studio.AcquisitionControl.md).
+  measured event-identical to an uninterrupted run — [PLAN.Studio.AcquisitionControl](archive/PLAN.Studio.AcquisitionControl.md).
 - **TODO-16 layout batch 3** (2026-10-02): workspace layout from the renders, review-corrected causes, Ba K X-ray origin
-  in the line data — [PLAN.Studio.Polish](PLAN.Studio.Polish.md).
+  in the line data — [PLAN.Studio.Polish](archive/PLAN.Studio.Polish.md).
 - **TODO-11 Detector workspace, focus sweep, external range** (2026-10-02): reference plan → Codex review (code only;
   sandbox refused processes) → planner's measurements (gap = dead area; crosstalk a no-op on the list-mode path; depth
   from focus near-field and biased — Findings 56) → SiPM pitch and crosstalk moved to TODO-19 (author) → implementation
-  by Codex, finished by a substitute Claude subagent when Codex's credits ran out — [PLAN.Studio.Detector](PLAN.Studio.Detector.md);
+  by Codex, finished by a substitute Claude subagent when Codex's credits ran out — [PLAN.Studio.Detector](archive/PLAN.Studio.Detector.md);
   follow-up TODO-23 completed (Findings 57); research continuation is TODO-25.
 - **TODO-10 Waveform workspace and shared chain** (2026-10-02): reference plan → Codex review (time base 72.8 cps,
   RTL bit-exact for the selected chains, double smearing, CsI fallback) → a conventional four-ADC Anger readout →
-  implementation — [PLAN.Studio.Waveform](PLAN.Studio.Waveform.md); follow-up TODO-19 remains; TODO-20/21 completed below with Q12 CR-RC and CsI transport.
+  implementation — [PLAN.Studio.Waveform](archive/PLAN.Studio.Waveform.md); follow-up TODO-19 remains; TODO-20/21 completed below with Q12 CR-RC and CsI transport.
 - **TODO-09 editable optics, presets, decoder-focus refocus** (2026-10-02): reference plan → Codex's measured review
-  (coverage rule false, All not refocused) → revised plan → implementation — [PLAN.Studio.Optics](PLAN.Studio.Optics.md).
+  (coverage rule false, All not refocused) → revised plan → implementation — [PLAN.Studio.Optics](archive/PLAN.Studio.Optics.md).
 - **TODO-18 configuration-scan headline** (2026-10-02): the rank-23 "±64 mm, 96 %, ~7×" result predated the 10 mm
   slab mask and does not reproduce (0.149; collimation at D = 20). Re-scanned: widest ≥ 90 %-usable field is rank 11 /
   1 mm / D 30 → ±21.5 mm (~2.5×). Findings theme 3, EV-03 (and its model-history row), new `samples/plot_scan.py`.
@@ -233,10 +233,10 @@ TILT (pitch/yaw), mask WARPING.
   defaults restored, gain in one measurement stage, BSR background events, channels per isotope through the shared
   window N, a selector with truth / found markers, Compton strip with an H-only calibration (co-located Cs + Co ×2,
   600 s: stripped Cs 13 409 vs Cs-only 13 297, 4σ = 1 017; R = 0.48). Found peaks refined sub-cell: Cs RMS 0.17 mm;
-  Co-60 keeps a systematic −1.4 mm y bias at (−15, −8) → TODO-17 (cause found: undersampling; see its completed entry above) — [PLAN.Studio.ImagingOptions](PLAN.Studio.ImagingOptions.md).
+  Co-60 keeps a systematic −1.4 mm y bias at (−15, −8) → TODO-17 (cause found: undersampling; see its completed entry above) — [PLAN.Studio.ImagingOptions](archive/PLAN.Studio.ImagingOptions.md).
 - **TODO-06 Studio workspace shell + `PlotView`** (2026-10-01, `bb3f00e`; desktop-verified the same day): workspaces,
   first-party plot (10 M samples, CPU redraw ≤ 12 ms), polish survey with issues P-01 … P-11 for the author —
-  [PLAN.Studio.Shell](PLAN.Studio.Shell.md), `docs/assets/studio-polish-survey/README.md`.
+  [PLAN.Studio.Shell](archive/PLAN.Studio.Shell.md), `docs/assets/studio-polish-survey/README.md`.
 - **1–11**: geometry & localization, FOV÷resolution=rank, cyclic-ghost, directional biasing, noise
   threshold, tungsten leakage, optimal thickness, crystal uniformity, detector array (Nyquist),
   crystal materials, RTL peak-detector, SiPM+ADC front-end.

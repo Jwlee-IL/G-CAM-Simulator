@@ -9,7 +9,7 @@ with TODO-08.
 Implementation checkpoint (2026-10-01): fresh event producer, rejection, 4 Hz immutable snapshots, Start / Stop,
 preset completion and headless physics / service / virtual-clock ViewModel tests implemented. Desktop validation
 is deferred by the author's restriction; the UI-test project is untouched and required migrations are listed in
-[VV.Studio.Acquisition](VV.Studio.Acquisition.md). TODO-07 remains unimplemented.
+[VV.Studio.Acquisition](../VV.Studio.Acquisition.md). TODO-07 remains unimplemented.
 
 **Why (author, 2026-10-01, on S-1 / S-4).** A gamma camera records **independent photon events, one at a time,
 over live time**; a whole image appearing at once is the less physical picture and the less convincing demo.
@@ -78,7 +78,7 @@ author commits.
 
 Headless verification re-run by the reviewer: build clean; 254 engine (the original 246 unchanged), 76 Studio,
 14 service and 10 UI-oracle tests pass; 9 desktop tests skipped. Physics checks and measurements are recorded in
-[VV.Studio.Acquisition](VV.Studio.Acquisition.md). MC throughput is 0.33–0.44 M accepted events/s against detected
+[VV.Studio.Acquisition](../VV.Studio.Acquisition.md). MC throughput is 0.33–0.44 M accepted events/s against detected
 rates of ~10²–10³ cps at the default scenes, so "MC-limited" should be rare; decode runs on the worker
 (~5–29 ms per 250 ms refresh), never on the UI thread.
 

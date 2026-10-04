@@ -1,7 +1,7 @@
 # PLAN.Studio.Migration — moving every `Gcam.Wpf` feature into GCAM Studio
 
 Scope: the umbrella for TODO-06 … TODO-13 — why, the decisions that hold for every step, the screen structure and the
-order. Each step has its own plan; the task list is [AGENTS.Todo](AGENTS.Todo.md).
+order. Each step has its own plan; the task list is [AGENTS.Todo](../AGENTS.Todo.md).
 
 Status: **done** 2026-10-02 — every kept `Gcam.Wpf` feature lives in Studio and `Gcam.Wpf` is deleted (TODO-12, last
 present at `85b2ed1`). The conventional Anger readout model (TODO-19) continues as a physics task.
@@ -21,7 +21,7 @@ present at `85b2ed1`). The conventional Anger readout model (TODO-19) continues 
 | 7 | TODO-11 Detector workspace, depth (3D) / rangefinder | [PLAN.Studio.Detector](PLAN.Studio.Detector.md) | **done** 2026-10-02 |
 | 7b | TODO-24 acquisition control Start / Stop / Reset (author 2026-10-02) | [PLAN.Studio.AcquisitionControl](PLAN.Studio.AcquisitionControl.md) | **done** 2026-10-02 |
 | 7c | TODO-22 final desktop pass (UI tests, survey, 16 ms gate, README screenshot) | — | **done** 2026-10-02 |
-| 7d | TODO-19 conventional Anger readout (SiPM pitch, crosstalk) — moved before the deletion, author 2026-10-02 | [PLAN.Physics.RigReadout](PLAN.Physics.RigReadout.md) | draft; waiting for the author's rig details |
+| 7d | TODO-19 conventional Anger readout (SiPM pitch, crosstalk) — moved before the deletion, author 2026-10-02 | [PLAN.Physics.RigReadout](../PLAN.Physics.RigReadout.md) | draft; waiting for the author's rig details |
 | 8 | TODO-12 delete `Gcam.Wpf` (README screenshot done in TODO-22) | [PLAN.Studio.WpfRemoval](PLAN.Studio.WpfRemoval.md) | **done** 2026-10-02 (before TODO-19, author) |
 
 **Order of polish and testing (author, 2026-10-01).** UI polish is the focus; **desktop UI tests run last**, once
@@ -49,11 +49,11 @@ git history).
 - **Calculations leave the code-behind**: `ApplyResolution`, `BlockifyFlood`, strip assembly and the waveform
   stream move to `Gcam.Studio.Services` or the engine, with tests — never copied into views.
 - **Each step updates** VV.Studio.SRS (new rows; §7 exclusions it lifts), VV.Studio.SDS, the VV.Studio matrix,
-  tests, and is checked through UI automation ([AGENTS.Studio](AGENTS.Studio.md), "Verifying a UI change").
+  tests, and is checked through UI automation ([AGENTS.Studio](../AGENTS.Studio.md), "Verifying a UI change").
 
 ## Screen structure
 
-The grid of [DESIGN.Layout](DESIGN.Layout.md#screen-grid-mainwindow) stays; the top bar gains a workspace switch,
+The grid of [DESIGN.Layout](../DESIGN.Layout.md#screen-grid-mainwindow) stays; the top bar gains a workspace switch,
 the left panel stays shared, the centre and right panel belong to the selected workspace.
 
 ```

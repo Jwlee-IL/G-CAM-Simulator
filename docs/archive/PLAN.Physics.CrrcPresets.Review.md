@@ -23,7 +23,7 @@ Recommended decisions: retain order 4 for all three presets unless the author su
 | `45eece8` | Moves the component presets into Configuration without adding order/time metadata. |
 | `1c3ae61`, Waveform plan D-9 / D-11 | Deliberately preserves the existing integer filter during TODO-10 and exposes the shared order/K; defers this issue to TODO-20. This is scope preservation, not new hardware evidence. |
 
-Read [AGENTS.Planning](AGENTS.Planning.md), root AGENTS / CLAUDE, TODO-20, [PLAN.Studio.Waveform](PLAN.Studio.Waveform.md), its [review](PLAN.Studio.Waveform.Review.md), documentation conventions, Findings 30–33, RTL README / CR-RC implementation / all `test_*.py`, references and runner. Targeted history searches covered the preset introduction, migration, integer shaper and documentation records; no explicit decision requiring shared K across these presets was found. This is an absence in the inspected records, not proof that no external hardware decision exists.
+Read [AGENTS.Planning](../AGENTS.Planning.md), root AGENTS / CLAUDE, TODO-20, [PLAN.Studio.Waveform](PLAN.Studio.Waveform.md), its [review](PLAN.Studio.Waveform.Review.md), documentation conventions, Findings 30–33, RTL README / CR-RC implementation / all `test_*.py`, references and runner. Targeted history searches covered the preset introduction, migration, integer shaper and documentation records; no explicit decision requiring shared K across these presets was found. This is an absence in the inspected records, not proof that no external hardware decision exists.
 
 Current wiring:
 

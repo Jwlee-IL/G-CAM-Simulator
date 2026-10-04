@@ -3,7 +3,7 @@
 Scope: moving `Gcam.Wpf`'s Waveform tab into GCAM Studio — the ADC trace and the shaped trace of acquired events,
 and the selectable detection chain (scintillator, photosensor, preamp / shaper) that also sets the spectrum's
 resolution and pile-up. Order of work: [PLAN.Studio.Migration](PLAN.Studio.Migration.md); procedure:
-[AGENTS.Planning](AGENTS.Planning.md).
+[AGENTS.Planning](../AGENTS.Planning.md).
 
 Status: **done** 2026-10-02 (decisions D-1 … D-11 implemented; renders `docs/assets/studio-render/waveform-*`).
 
@@ -73,7 +73,7 @@ share one filter constant and leave a 32 keV pulse at 0–1 shaped codes.
 1. **Review (no code):** check each *verify* row; measure (headless) the pulse counts per window at realistic rates
    for the default and a hot scene, the pile-up fraction at those rates for each preamp, and the cost of rasterising
    and shaping a window; check that the shapers used are the RTL-bit-exact ones; propose improvements. Write
-   `docs/PLAN.Studio.Waveform.Review.md`.
+   `docs/archive/PLAN.Studio.Waveform.Review.md`.
 2. Planner revises this plan ("Decisions after review"); discuss disagreements in the same implementer conversation.
 3. Implement: Core (chain setting, window selection, readout maths — pure, tested), services (waveform service on the
    worker), view (Waveform workspace: two `PlotView`s sharing X, chain selectors, readout), shared chain wiring for
