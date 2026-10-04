@@ -1,0 +1,86 @@
+{
+ "Seed": 0,
+ "RepoRoot": ".",
+ "Spectrum": {
+  "File": "samples/ambient/terrestrial-unscear2000-v1.json",
+  "Sha256": "4d48bc4272ce4c25ff6ae9b13ed7583e3c8f467afffdb0225956a70cc435b3f4"
+ },
+ "AmbientHistories": 500000,
+ "CalibrationHistories": 500000,
+ "FieldsMicroSvPerHour": [
+  0.05,
+  0.1,
+  0.2
+ ],
+ "Bounds": [
+  "BareCrystalAllFaces",
+  "FrontOnlyThroughMask"
+ ],
+ "_about": "TODO-30 turn 9 (AB-14), EV-15 under the absolute ambient field at absolute activities: (b) Cs-137 1 MBq + Co-60 2 MBq, the ratio where the spatial lever still holds (theme 52), lab geometry (scenario.json), live time 60 s, separated (Cs (4,0), Co (-5,3) mm) and co-located (0,0) scenes, the legacy mixedstrip / spatial decoding (non-cyclic, half extent 0.95 x rank x cell / (D/(D+S)) / 2, step 0.4 mm, two peaks >= 3 mm apart). Windows on the event's TOTAL deposit placed at its largest-deposit pixel (this pipeline's event model): cs662 = 661.7 keV +-10 %, co1332 = 1332.5 keV +-10 %; the legacy R = 3.99 used ComptonStrategy.PerPixelWindow (each pixel's own deposit in the window) and is not comparable. R = cs662 / co1332 counts of a separate noiseless Co-only map at the axis (laboratory calibration, as mixedstrip). 200 Poisson acquisitions per condition.",
+ "Family": "separation",
+ "SourcePhotons": 1000000,
+ "Windows": [
+  {
+   "Name": "cs662",
+   "LowKeV": 595.53,
+   "HighKeV": 727.87
+  },
+  {
+   "Name": "co1332",
+   "LowKeV": 1199.25,
+   "HighKeV": 1465.75
+  }
+ ],
+ "ExposuresS": [],
+ "Repeats": 200,
+ "Separation": {
+  "Scenario": "samples/scenario.json",
+  "CsActivityBq": 1000000.0,
+  "CoActivityBq": 2000000.0,
+  "ExposureS": 60.0,
+  "CsLines": [
+   {
+    "EnergyKeV": 661.7,
+    "Intensity": 0.851
+   }
+  ],
+  "CoLines": [
+   {
+    "EnergyKeV": 1173.2,
+    "Intensity": 0.999
+   },
+   {
+    "EnergyKeV": 1332.5,
+    "Intensity": 0.999
+   }
+  ],
+  "Scenes": [
+   {
+    "Name": "separated",
+    "CsMm": [
+     4.0,
+     0.0
+    ],
+    "CoMm": [
+     -5.0,
+     3.0
+    ]
+   },
+   {
+    "Name": "co-located",
+    "CsMm": [
+     0.0,
+     0.0
+    ],
+    "CoMm": [
+     0.0,
+     0.0
+    ]
+   }
+  ],
+  "CsWindow": "cs662",
+  "CoWindow": "co1332",
+  "ReconHalfExtentMm": 8.866666666666665,
+  "ReconStepMm": 0.4
+ }
+}

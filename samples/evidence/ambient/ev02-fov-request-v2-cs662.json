@@ -1,0 +1,95 @@
+{
+ "Seed": 0,
+ "RepoRoot": ".",
+ "Spectrum": {
+  "File": "samples/ambient/terrestrial-unscear2000-v1.json",
+  "Sha256": "4d48bc4272ce4c25ff6ae9b13ed7583e3c8f467afffdb0225956a70cc435b3f4"
+ },
+ "AmbientHistories": 500000,
+ "CalibrationHistories": 0,
+ "FieldsMicroSvPerHour": [
+  0.05,
+  0.1,
+  0.2
+ ],
+ "Bounds": [
+  "BareCrystalAllFaces",
+  "FrontOnlyThroughMask"
+ ],
+ "_about": "TODO-30 turn 9 (AB-14), EV-02 under the absolute ambient field in the cs662 window (661.7 keV +-10 %, pulse height smeared by the scenario's EnergyResolutionFwhm scaled as sqrt(E)). Identical to ev02-fov-request-v1.json (turn 8, open window) in every other field, run on the same seeds (F128[0:64]): the response maps come from the same transport histories per seed (a window only filters the tallied deposits), so the two windows compare row for row. N0 counts are counts in this window.",
+ "Family": "fov",
+ "SourcePhotons": 1000000,
+ "Windows": [
+  {
+   "Name": "cs662",
+   "LowKeV": 595.53,
+   "HighKeV": 727.87
+  }
+ ],
+ "ExposuresS": [
+  10,
+  60
+ ],
+ "Repeats": 100,
+ "FieldOfView": {
+  "Scenario": "samples/scenario_handheld.json",
+  "SourceMaskDistancesMm": [
+   1000,
+   5000
+  ],
+  "DirectionsDeg": [
+   0,
+   45
+  ],
+  "AnglesDeg": [
+   0.0,
+   0.5,
+   1.0,
+   1.5,
+   2.0,
+   2.5,
+   3.0,
+   3.5,
+   4.0,
+   4.5,
+   5.0,
+   5.5,
+   6.0,
+   6.5,
+   7.0,
+   7.5,
+   8.0,
+   8.5,
+   9.0,
+   9.5,
+   10.0,
+   10.5,
+   11.0,
+   11.5,
+   12.0,
+   12.5,
+   13.0,
+   13.5,
+   14.0,
+   14.5,
+   15.0,
+   15.5,
+   16.0,
+   16.5,
+   17.0,
+   17.5,
+   18.0,
+   18.5,
+   19.0,
+   19.5,
+   20.0
+  ],
+  "OnAxisCounts": [
+   500,
+   5000
+  ],
+  "GridHalfAngleDeg": 20,
+  "GridStepDeg": 0.3,
+  "CalibrationRepeats": 100
+ }
+}

@@ -119,6 +119,14 @@ public sealed class AmbientEvidenceTests
             Assert.True(ideal.GetProperty("ExpectedWindowCounts").GetDouble() > ideal.GetProperty("TrueCsCounts").GetDouble());
         }
         Assert.Equal(JsonValueKind.Null, conditions.GetProperty("co-located|ideal").GetProperty("CsLocatedWithin1Mm").ValueKind);
+        // Turn 9: without a field the background model's reconstruction is zero, so the subtracted spatial count is the raw
+        // one; the spatial lever is not defined for co-located sources; every rate is a probability.
+        var sep = conditions.GetProperty("separated|ideal");
+        Assert.True(sep.GetProperty("PeakPerCount").GetDouble() > 0);
+        Assert.Equal(sep.GetProperty("Spatial").GetProperty("Mean").GetDouble(), sep.GetProperty("SpatialSubtracted").GetProperty("Mean").GetDouble());
+        Assert.Equal(JsonValueKind.Null, conditions.GetProperty("co-located|ideal").GetProperty("Spatial").ValueKind);
+        foreach (var name in new[] { "CsStrippedWithin1Mm", "CoWithin1Mm" })
+            Assert.InRange(sep.GetProperty(name).GetDouble(), 0, 1);
     }
 
     [Fact]

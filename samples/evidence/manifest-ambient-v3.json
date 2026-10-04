@@ -1,0 +1,56 @@
+{
+ "_about": "TODO-30 turn 9 (AB-14): versioned ambient manifest for run_seeds.py --manifest (schema as manifest-ambient-v2.json). ev02_fov_cs662 = EV-02 in the cs662 window on the turn-8 open-window seeds (F128[0:64]); ev15_abs_a / ev15_abs_b = EV-15 at Cs 1 MBq + Co 8 MBq / 2 MBq, 60 s, on O128[0:128] (N as turn 8). Aggregate with ambient/aggregate_ev.py --manifest samples/evidence/manifest-ambient-v3.json.",
+ "measured": "2026-10-04",
+ "field": {
+  "spectrum": "ambient/terrestrial-unscear2000-v1.json",
+  "spectrum_sha256": "4d48bc4272ce4c25ff6ae9b13ed7583e3c8f467afffdb0225956a70cc435b3f4",
+  "photon_hstar10_microsv_per_h": [
+   0.05,
+   0.1,
+   0.2
+  ],
+  "bounds": [
+   "BareCrystalAllFaces",
+   "FrontOnlyThroughMask"
+  ]
+ },
+ "config_sha256": {
+  "scenario.json": "eb5b96835c0b68a88c5c26965540f85f1a313acf1cc0b49955cf7921463edddc",
+  "scenario_handheld.json": "f988784c8ee266e6dd28eb898cdbbfac0e2452cb01fd3929874fd866edc98795",
+  "evidence/ambient/ev02-fov-request-v2-cs662.json": "023cb73b73f62ca354019014c164f9d0fdf173883a4f2737e7c7c86b5df3d324",
+  "evidence/ambient/ev15-separation-request-v2a.json": "bde47850976c85239236a34d9c7e322eae1f36be9d2bb7c2b6313af578dcee0a",
+  "evidence/ambient/ev15-separation-request-v2b.json": "cb7e78adce6709de5584ee4b5824d993e416f7927af6adf2749b871aa59645d3"
+ },
+ "families": [
+  {
+   "id": "ev02_fov_cs662",
+   "kind": "cli",
+   "command": "ambient-evidence",
+   "config": "evidence/ambient/ev02-fov-request-v2-cs662.json",
+   "seeds": "F128",
+   "n": 64,
+   "repo_root": true,
+   "evidence": "EV-02 under the absolute field, cs662 window (turn-8 open-window family ev02_fov: same seeds, same maps per seed)"
+  },
+  {
+   "id": "ev15_abs_a",
+   "kind": "cli",
+   "command": "ambient-evidence",
+   "config": "evidence/ambient/ev15-separation-request-v2a.json",
+   "seeds": "O128",
+   "n": 128,
+   "repo_root": true,
+   "evidence": "EV-15 (a) Cs 1 MBq + Co 8 MBq, 60 s, AB-14"
+  },
+  {
+   "id": "ev15_abs_b",
+   "kind": "cli",
+   "command": "ambient-evidence",
+   "config": "evidence/ambient/ev15-separation-request-v2b.json",
+   "seeds": "O128",
+   "n": 128,
+   "repo_root": true,
+   "evidence": "EV-15 (b) Cs 1 MBq + Co 2 MBq, 60 s, AB-14"
+  }
+ ]
+}

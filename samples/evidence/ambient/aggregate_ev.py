@@ -9,8 +9,11 @@ runs (no silent subset). Families:
 - ev12_antimask: per window x environment x method (single / calibrated / antimask) the RMS error (mean +- SD over
   seeds, median), the pooled failure rate (> 3 mm) and the seeds with any failure, the signed mean error; the paired
   per-seed difference antimask - calibrated (mean +- SD, seeds where the antimask is lower).
-- ev15_separation: per scene x environment the per-seed median relative Cs-count error of each estimate, summarised as
-  median [first, third quartile] over seeds; the pooled share of acquisitions with Cs located within 1 mm; R.
+- ev15_separation (turn 8) / ev15_abs_a, ev15_abs_b (turn 9): per scene x environment the per-seed median relative
+  Cs-count error of each estimate (stripping floored / unfloored / background-subtracted; turn 9 also the spatial-lever
+  count read at the matched Cs peak, raw and background-subtracted), summarised as median [first, third quartile] over
+  seeds, with the per-seed SD; the share of acquisitions with Cs located within 1 mm (raw two-peak match; turn 9 also
+  from the stripped reconstruction) and Co located within 1 mm (Co window), with per-seed median errors; R.
 - ev02_fov: per series (distance, direction, window, N0, environment) the legacy field-of-view metrics per seed
   (usable half-field >= 90 % within one resolution element, contiguous from 0; centroid side >= 95 %; outside flag
   >= 90 % past the fully coded field; unflagged wrong spot in angle bands), then over seeds: the most frequent value
@@ -104,6 +107,15 @@ def separation(runs, seeds):
         if rows[0]['CsLocatedWithin1Mm'] is not None:
             entry['CsLocatedWithin1Mm'] = spread([r['CsLocatedWithin1Mm'] for r in rows])
             entry['CsErrorMedianMm'] = spread([r['CsErrorMedianMm'] for r in rows])
+        if 'PeakPerCount' in rows[0]:          # turn 9 (AB-14): spatial-lever count, stripped Cs location, Co location
+            entry['PeakPerCount'] = spread([r['PeakPerCount'] for r in rows])
+            for est in ('Spatial', 'SpatialSubtracted'):
+                if rows[0][est] is not None:
+                    entry[est] = {'PerSeedMedian': spread([r[est]['Median'] for r in rows]),
+                                  'PerSeedMedianAbs': spread([r[est]['MedianAbs'] for r in rows]),
+                                  'PerSeedSd': spread([r[est]['Sd'] for r in rows])}
+            for k in ('CsStrippedWithin1Mm', 'CsStrippedErrorMedianMm', 'CoWithin1Mm', 'CoErrorMedianMm'):
+                entry[k] = spread([r[k] for r in rows])
         out['Conditions'][key] = entry
     return out
 

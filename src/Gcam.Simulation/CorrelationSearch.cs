@@ -99,6 +99,21 @@ public sealed class CorrelationSearch
         for (int k = 0; k < GridPoints; k++) recon[k] = acc[k];
     }
 
+    /// <summary>recon = G m for a real-valued image (an expected map, a model background): the same weights, summed in
+    /// double pixel by pixel in the decoder's order.</summary>
+    public void ReconstructExpected(ReadOnlySpan<double> map, Span<double> recon)
+    {
+        if (map.Length != Pixels || recon.Length < GridPoints) throw new ArgumentException("Map or reconstruction size mismatch.");
+        recon[..GridPoints].Clear();
+        for (int i = 0; i < Pixels; i++)
+        {
+            double m = map[i];
+            if (m == 0) continue;
+            var col = _columns[i];
+            for (int k = 0; k < col.Length; k++) recon[k] += m * col[k];
+        }
+    }
+
     private void ReconstructNarrow(ReadOnlySpan<int> counts, Span<double> recon)
     {
         Span<short> acc = _paddedPoints <= 32768 ? stackalloc short[_paddedPoints] : new short[_paddedPoints];

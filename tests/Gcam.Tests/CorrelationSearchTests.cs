@@ -144,6 +144,26 @@ public sealed class CorrelationSearchTests
         }
     }
 
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void ExpectedMapDecode_ReproducesTheDecoderOnARealImage(bool cyclic)
+    {
+        // A real-valued map (an expected source map, a model background): the per-grid-point sums run over the pixels in
+        // the decoder's order and a weight of 0 adds +0, so the result equals the decoder's to the last bit.
+        var config = Rigs.Lab(seed: 3110);
+        config.Decoder.Cyclic = cyclic;
+        var search = new CorrelationSearch(config);
+        var decoder = new DefaultSimulationFactory().CreateDecoder(config)!;
+        var rng = new DefaultRandom(3111);
+        var map = new double[search.Pixels];
+        var image = new DetectorImage(config.Detector.PixelsX, config.Detector.PixelsY);
+        for (int i = 0; i < map.Length; i++) image[i % image.Width, i / image.Width] = map[i] = i % 9 == 0 ? 0 : rng.NextDouble() * 3.7;
+        var recon = new double[search.GridPoints];
+        search.ReconstructExpected(map, recon);
+        Assert.Equal(decoder.Decode(image).Reconstruction.Raw.ToArray(), recon);
+    }
+
     [Fact]
     public void Search_GivesNoCandidateWithoutCounts()
     {
