@@ -64,9 +64,11 @@ cocotb RTL front-end path.
     carry seed spreads; driver and aggregates in `samples/evidence/`). Open question: PR-SENS-02's "~50 counts" gate.
   - **TODO-29** clean-room wording pass — **done 2026-10-02** (`PLAN.Docs.CleanRoom.md`); README desktop screenshot still
     shows the old preset label "(original rig)" → retake on the author's go.
-  - **TODO-30** absolute ambient background — **paused 2026-10-03** (Codex allowance): baseline decided (AB-1…9, 4a–4c);
-    engine / Studio / tests implemented but **uncommitted** in the working tree; spectrum stopped at Bi-214 β data —
-    proposed AB-4d (evaluated lines only + UNSCEAR ratio) awaits the author. **Every MC result so far is
+  - **TODO-30** absolute ambient background — **resumed 2026-10-04** with a substitute Claude subagent (Codex unavailable):
+    engine / Studio / tests committed as WIP (`56f0a17`); author decided **AB-4d** (evaluated lines only, intensity-less
+    transitions listed "not included", UNSCEAR kerma ratio, tolerance set by the author after seeing the ratio). Turn 6
+    (substitute): terrestrial spectrum from a soil / air transport generator, UNSCEAR ratios K / U / Th 1.014 / 0.997 /
+    1.023 accepted (AB-10, ±3 % model comparison). Next: gate study AB-7 + EV re-measurements AB-9 (turn 7). **Every MC result so far is
     ideal-environment.** Deferred: TODO-31 high-energy transport, TODO-32 realistic head housing. Status in the plan.
   - **TODO-19** Anger-type SiPM readout — review done (`PLAN.Physics.RigReadout.Review.md`); next: decisions after review.
   - **TODO-25** joint depth likelihood — reviewed (Findings 62): beats the sharpest plane at 60 s; gate "not yet"

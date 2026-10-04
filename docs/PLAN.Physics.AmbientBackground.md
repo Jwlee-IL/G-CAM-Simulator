@@ -6,17 +6,15 @@ depend on the source: removing the source leaves it, and a weaker source is buri
 (dose rate + spectrum → fluence → transport through the head → Poisson events), re-measure the results it changes, and
 fill the "Under ambient background" column of Evidence §1. Procedure: [AGENTS.Planning](AGENTS.Planning.md).
 
-Status: **in progress, paused** 2026-10-03 01:50 (Codex allowance). Codex conversation `01a0fcdc-162b-7cb1-a3ad-a3fb9fc40914`
-(local only), turns 1–5; reports in `samples/evidence/results/ambient-baseline-v1-*`. **Done (uncommitted):** ambient
-config and engine (source-independent field, bare / front-only bounds, deposit-site pixels, Poisson timing),
-background-only fixed-time acquisition, Studio input (default off), legacy bit-compatibility tests, energy × zenith
-sampler, uncollided half-space kernel (MC / analytic 0.9992 ± 0.0024), Po-218 and Bi-214 α omissions under AB-4c; tests
-engine 298 → 330, Core 179 → 184, services 83 → 87 (+7 skipped), UI 13 (+14 skipped); build 0 errors / 2 warnings (Codex's
-numbers — **re-verify before commit**). **Stopped:** Bi-214 β — ENSDF has low-energy transitions (36.8 / 61.0 / 71.1 /
-104.4 keV) without photon intensities and lower-limit feedings, so no strict bound passes AB-4c's 10⁻⁴. **Pending
-author decision — proposed AB-4d:** use evaluated photon lines only, list transitions without intensities as "not
-included", validate by the kerma / UNSCEAR ratio, tolerance decided after seeing the ratio. Not started: collided
-spectrum generation, UNSCEAR comparison, gate study (AB-7), EV re-measurements (AB-9), docs.
+Status: **in progress** — turn 6 done 2026-10-04 by a **substitute implementer** (Claude subagent; Codex unavailable):
+evaluated source catalog (AB-4d), cited soil / air materials, collided soil / air generator, terrestrial spectrum
+`samples/ambient/terrestrial-unscear2000-v1-NOT-VALIDATED.json`; UNSCEAR ratios accepted by the author (**AB-10**).
+Report `samples/evidence/results/ambient-baseline-v1-turn6.md`. Planner re-verified: build 0 errors; tests engine
+330 → 355, Core 184, services 87 (+7 skipped), UI 13 (+14 skipped), all pass; spectrum SHA256 matches. History: turns 1–5
+by Codex (conversation `01a0fcdc-162b-7cb1-a3ad-a3fb9fc40914`, local only), committed `56f0a17`. Next (turn 7): gate study
+(AB-7) and EV re-measurements (AB-9) with the accepted spectrum; then Studio default (AB-5) and docs.
+Known: the committed development placeholder's `.sha256` (`3600e22b…`) does not match the committed LF bytes
+(`10dccd59…`) — line-ending normalisation; the file is a NOT-VALIDATED development fixture, to be re-hashed in turn 7.
 
 ## What exists (checked in the code, 2026-10-02 — *verify*)
 
@@ -92,6 +90,23 @@ kept for the record); β branch without feeding data = branch fraction × Q_β (
 strict bound needing no level data). This is a declared **modelling approximation** of the source term, not a certified
 transported-kerma bound; the spectrum file lists every omitted branch with its bound, and the UNSCEAR comparison states
 it. Exceeding 10⁻⁴ → stop and report.
+
+**Decision AB-4d (author, 2026-10-04) — supersedes the 10⁻⁴ omission certification for transitions without
+evaluated photon intensities.** The source term uses **evaluated photon lines with intensities only**. A transition
+the evaluation lists without a photon intensity (e.g. Bi-214 β: 36.8 / 61.0 / 71.1 / 104.4 keV) is **listed in the
+spectrum file as "not included"** — never assigned a substitute intensity and never certified as negligible. The AB-4c
+omission bounds already computed stay on record. Validation is the computed air kerma per Bq/kg against UNSCEAR
+(K / U / Th: 0.0417 / 0.462 / 0.604 nGy/h) with the MC's own standard error; the **acceptance tolerance is decided by
+the author after seeing the ratios**, and a discrepancy is reported, never tuned away.
+
+**Decision AB-10 (author, 2026-10-04) — UNSCEAR comparison accepted.** Turn 6 (16 outer seeds × 10⁷ histories per
+chain) gave air kerma at 1 m per Bq/kg, MC / UNSCEAR: K-40 **1.0139 ± 0.0003**, U series **0.9974 ± 0.0003**, Th series
+**1.0227 ± 0.0003**; uncollided agreement with the analytic kernel within 6 SE in every tested cell. The gaps are many SE
+wide — a model-to-model difference (UNSCEAR's coefficients come from another calculation; decay-data versions; soil
+composition), and the model's own omissions would raise, not lower, the kerma. Accepted with an **agreement band of ±3 %**,
+chosen after seeing the ratios: this is a **model comparison, not a statistical test**, and is quoted as such. The
+spectrum keeps its NOT-VALIDATED file name until it is re-issued as v1 validated in turn 7 (content unchanged).
+Also accepted: `samples/ambient/source-data/.gitattributes` (`* -text`) so the hashed snapshots are stored byte-exact.
 
 **Angular distribution (AB-4 addendum).** Representation: a tabulated joint distribution, energy bins × zenith-cosine
 bins at the detector point (azimuth uniform), versioned with the spectrum. Acceptance oracle: the **uncollided** line
