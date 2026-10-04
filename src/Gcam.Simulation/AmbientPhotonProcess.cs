@@ -31,14 +31,16 @@ public sealed class AmbientPhotonProcess
         _field = config.Ambient ?? throw new ArgumentException("An ambient field is required.");
         if (!double.IsFinite(_field.DoseRateMicroSvPerHour) || _field.DoseRateMicroSvPerHour < 0
             || !Enum.IsDefined(_field.Geometry)) throw new ArgumentOutOfRangeException(nameof(configuration));
+        if (_field.SpectrumFile is not null)
+            throw new InvalidOperationException("The ambient spectrum file reference is unresolved; load the scenario through ConfigLoader.Load or call ConfigLoader.ResolveAmbientSpectrum.");
         var spectrum = _field.Spectrum ?? throw new ArgumentException("An incident spectrum is required.");
         if (spectrum.Lines is null || spectrum.Continuum is null || string.IsNullOrWhiteSpace(spectrum.Id) || spectrum.Version < 1)
             throw new ArgumentException("Spectrum requires an identifier, positive version, and line/bin arrays.");
         if (spectrum.AngularModel != "Isotropic" && spectrum.AngularModel != "EnergyZenithTable") throw new NotSupportedException("Unknown incident angular model.");
         if (spectrum.AngularModel == "Isotropic" && spectrum.EnergyZenith is not null) throw new ArgumentException("An isotropic spectrum cannot carry an unused angular table.");
         if (_field.RequireValidatedSpectrum && (!spectrum.IsValidated || spectrum.Id.Contains("NOT-VALIDATED", StringComparison.Ordinal)
-            || spectrum.ContentHash != spectrum.ComputeContentHash()))
-            throw new InvalidOperationException("Ambient evidence requires a validated, hashed spectrum; the development placeholder is not validated.");
+            || spectrum.ContentHash != spectrum.ComputeContentHash() || !CarriesItsAcceptance(spectrum)))
+            throw new InvalidOperationException("Ambient evidence requires a validated, hashed spectrum with its acceptance record; the development placeholder is not validated.");
         double dose = 0;
         foreach (var line in spectrum.Lines)
         {
@@ -83,6 +85,12 @@ public sealed class AmbientPhotonProcess
             pixelEventSink: (x, y, e, _) => _deposit = (x, y, Math.Min(e, _incidentEnergy)));
         _next = Gap();
     }
+
+    /// <summary>A validated spectrum names its decision and every compared ratio lies inside the accepted band — the
+    /// record is self-consistent. (Whether the band was the right choice is the author's decision, not checked here.)</summary>
+    private static bool CarriesItsAcceptance(IncidentSpectrum spectrum)
+        => spectrum.Validation is { } v && !string.IsNullOrWhiteSpace(v.Decision) && v.Ratios.Length > 0
+           && v.AgreementBandFraction > 0 && v.Ratios.All(r => double.IsFinite(r.Ratio) && Math.Abs(r.Ratio - 1) <= v.AgreementBandFraction);
 
     private static void CheckWeight(double weight)
     {

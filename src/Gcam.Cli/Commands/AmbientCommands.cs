@@ -254,14 +254,89 @@ internal static class AmbientCommands
             Histories = n, DownwardUncollidedSum = downward, UntestedCells = untested, Cells = cells });
     }
 
+    /// <summary>One outer seed of the AB-7 gate study / AB-9 count-gate re-measurement (<see cref="AmbientGateStudy"/>).
+    /// The request is the seed driver's config: it replaces Seed and RepoRoot in a clone of the committed request.</summary>
+    internal static int RunGate(string[] args)
+    {
+        if (args.Length is < 2 or > 3) { Console.Error.WriteLine("Usage: montecarlo ambient-gate <gate-request.json> [output.json]"); return 1; }
+        var request = JsonSerializer.Deserialize<AmbientGateRequest>(File.ReadAllText(args[1]),
+            new JsonSerializerOptions { PropertyNameCaseInsensitive = true, Converters = { new System.Text.Json.Serialization.JsonStringEnumConverter() } })
+            ?? throw new InvalidDataException("Empty gate request.");
+        var result = AmbientGateStudy.Run(request);
+        string output = args.Length == 3 ? args[2] : "ambient-gate.json";
+        File.WriteAllText(output, JsonSerializer.Serialize(result));
+        Console.WriteLine($"ambient-gate {request.Phase} seed {request.Seed}: {result["ComputeSeconds"]:0.0} s -> {Path.GetFileName(output)}");
+        return 0;
+    }
+
     internal static int WritePlaceholder(string[] args)
     {
         if (args.Length != 2) { Console.Error.WriteLine("Usage: montecarlo ambient-placeholder <spectrum.json>"); return 1; }
-        string json = JsonSerializer.Serialize(IncidentSpectrum.Placeholder(), new JsonSerializerOptions { WriteIndented = true });
-        File.WriteAllText(args[1], json);
-        string fileHash = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(File.ReadAllBytes(args[1]))).ToLowerInvariant();
-        File.WriteAllText(args[1] + ".sha256", fileHash + "\n");
+        // LF line ends on every OS: the pinned hash is the hash of the bytes git stores (*.json text eol=lf).
+        string hash = IncidentSpectrumFile.WriteWithSidecar(args[1], IncidentSpectrumFile.SerializeIndented(IncidentSpectrum.Placeholder()));
+        Console.WriteLine($"SHA-256 {hash}");
         Console.WriteLine("NOT VALIDATED: synthetic isotropic development fixture, not an AB-4 terrestrial spectrum.");
+        return 0;
+    }
+
+    /// <summary>AB-10: re-issue an accepted spectrum as a validated version. Weights, table and NotIncluded are copied
+    /// unchanged; only the identifier, the validation flag, the status sentence of the reference and the acceptance record
+    /// change. The ratios are read from the generator's results file (hash-pinned), never typed in. The not-validated file
+    /// stays as it is.</summary>
+    internal static int IssueValidated(string[] args)
+    {
+        if (args.Length != 3) { Console.Error.WriteLine("Usage: montecarlo ambient-issue <issue-request.json> <output-folder>"); return 1; }
+        string requestDir = Path.GetDirectoryName(Path.GetFullPath(args[1]))!;
+        using var input = JsonDocument.Parse(File.ReadAllText(args[1]));
+        var r = input.RootElement;
+        string Rel(string name) => Path.Combine(requestDir, r.GetProperty(name).GetString()!);
+        var source = IncidentSpectrumFile.Load(Rel("Source"), r.GetProperty("SourceSha256").GetString()!);
+        string sourceFileHash = r.GetProperty("SourceSha256").GetString()!;
+        if (source.IsValidated) { Console.Error.WriteLine("The source spectrum is already validated."); return 1; }
+        byte[] resultsBytes = File.ReadAllBytes(Rel("RatiosFrom"));
+        if (IncidentSpectrumFile.Sha256Hex(resultsBytes) != r.GetProperty("RatiosFromSha256").GetString())
+        { Console.Error.WriteLine("The ratios file does not match its pinned SHA-256."); return 1; }
+        using var results = JsonDocument.Parse(resultsBytes);
+        string unscear = r.GetProperty("ReferenceName").GetString()!;
+        var ratios = results.RootElement.GetProperty("Chains").EnumerateArray().Select(c => new IncidentValidationRatio
+        {
+            Chain = c.GetProperty("Chain").GetString()!, Quantity = "air kerma at 1 m per Bq/kg, nGy/h",
+            ModelValue = c.GetProperty("KermaNGyPerHourPerBqKg").GetDouble(),
+            ModelStandardError = c.GetProperty("StandardErrorOverSeeds").GetDouble(),
+            ReferenceValue = c.GetProperty("Unscear").GetDouble(), Reference = unscear,
+            Ratio = c.GetProperty("Ratio").GetDouble(), RatioStandardError = c.GetProperty("RatioStandardError").GetDouble()
+        }).ToArray();
+        var v = r.GetProperty("Validation");
+        var validation = new IncidentValidation
+        {
+            Decision = v.GetProperty("Decision").GetString()!, Date = v.GetProperty("Date").GetString()!,
+            Kind = v.GetProperty("Kind").GetString()!, AgreementBandFraction = v.GetProperty("AgreementBandFraction").GetDouble(),
+            Note = v.GetProperty("Note").GetString()!, Ratios = ratios,
+            SupersedesId = source.Id, SupersedesContentHash = source.ContentHash, SupersedesFileSha256 = sourceFileHash
+        };
+        var outside = ratios.Where(x => Math.Abs(x.Ratio - 1) > validation.AgreementBandFraction).ToArray();
+        if (outside.Length > 0)
+        { Console.Error.WriteLine($"Ratios outside the accepted band: {string.Join(", ", outside.Select(x => x.Chain))} — not issued."); return 2; }
+        string oldStatus = r.GetProperty("ReferenceStatusOld").GetString()!, newStatus = r.GetProperty("ReferenceStatusNew").GetString()!;
+        int at = source.Reference.IndexOf(oldStatus, StringComparison.Ordinal);
+        if (at < 0 || source.Reference.IndexOf(oldStatus, at + 1, StringComparison.Ordinal) >= 0)
+        { Console.Error.WriteLine("The status sentence must occur exactly once in the reference."); return 1; }
+        var issued = new IncidentSpectrum
+        {
+            Id = r.GetProperty("Id").GetString()!, Version = source.Version,
+            Reference = source.Reference.Replace(oldStatus, newStatus, StringComparison.Ordinal),
+            AngularModel = source.AngularModel, IsValidated = true,
+            Lines = source.Lines, Continuum = source.Continuum, EnergyZenith = source.EnergyZenith, NotIncluded = source.NotIncluded,
+            Validation = validation
+        };
+        if (issued.Id.Contains("NOT-VALIDATED", StringComparison.Ordinal)) { Console.Error.WriteLine("A validated identifier cannot say NOT-VALIDATED."); return 1; }
+        issued.ContentHash = issued.ComputeContentHash();
+        Directory.CreateDirectory(args[2]);
+        string path = Path.Combine(args[2], issued.Id + ".json");
+        string fileHash = IncidentSpectrumFile.WriteWithSidecar(path, IncidentSpectrumFile.SerializeCompact(issued));
+        Console.WriteLine(JsonSerializer.Serialize(new { File = issued.Id + ".json", FileSha256 = fileHash, issued.ContentHash,
+            Supersedes = source.Id, validation.AgreementBandFraction, Ratios = ratios.Select(x => new { x.Chain, x.Ratio, x.RatioStandardError }) },
+            new JsonSerializerOptions { WriteIndented = true }));
         return 0;
     }
 

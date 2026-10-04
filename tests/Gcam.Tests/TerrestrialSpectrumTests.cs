@@ -49,6 +49,63 @@ public sealed class TerrestrialSpectrumTests
         Assert.Throws<InvalidOperationException>(() => new AmbientPhotonProcess(config));
     }
 
+    private const string ValidatedName = "ambient/terrestrial-unscear2000-v1.json";
+
+    [Fact]
+    public void ValidatedSpectrum_IsTheAcceptedFileWithOnlyItsStatusChanged()
+    {
+        // AB-10: the re-issue keeps every weight, the angular table and the NotIncluded record; only the identifier, the
+        // flag, the reference's status sentence and the acceptance record change.
+        var (accepted, acceptedBytes) = Committed();
+        byte[] bytes = File.ReadAllBytes(RepoPaths.Sample(ValidatedName));
+        var issued = JsonSerializer.Deserialize<IncidentSpectrum>(bytes)!;
+        Assert.Equal(File.ReadAllText(RepoPaths.Sample(ValidatedName + ".sha256")).Trim(), IncidentSpectrumFile.Sha256Hex(bytes));
+        Assert.Equal(issued.ComputeContentHash(), issued.ContentHash);
+        Assert.Equal("terrestrial-unscear2000-v1", issued.Id);
+        Assert.True(issued.IsValidated);
+        Assert.Equal(accepted.Version, issued.Version);
+        Assert.Equal(accepted.AngularModel, issued.AngularModel);
+        Assert.Equal(JsonSerializer.Serialize(accepted.Lines), JsonSerializer.Serialize(issued.Lines));
+        Assert.Equal(JsonSerializer.Serialize(accepted.Continuum), JsonSerializer.Serialize(issued.Continuum));
+        Assert.Equal(JsonSerializer.Serialize(accepted.EnergyZenith), JsonSerializer.Serialize(issued.EnergyZenith));
+        Assert.Equal(JsonSerializer.Serialize(accepted.NotIncluded), JsonSerializer.Serialize(issued.NotIncluded));
+        Assert.DoesNotContain("NOT VALIDATED", issued.Reference, StringComparison.Ordinal);
+        var v = issued.Validation!;
+        Assert.Equal("AB-10", v.Decision);
+        Assert.Equal(0.03, v.AgreementBandFraction);
+        Assert.Equal(accepted.Id, v.SupersedesId);
+        Assert.Equal(accepted.ContentHash, v.SupersedesContentHash);
+        Assert.Equal(IncidentSpectrumFile.Sha256Hex(acceptedBytes), v.SupersedesFileSha256);
+        // The ratios are the turn-6 generator's, copied, not retyped.
+        using var turn6 = JsonDocument.Parse(File.ReadAllBytes(RepoPaths.Sample("evidence/results/ambient-baseline-v1-turn6.json")));
+        var chains = turn6.RootElement.GetProperty("Chains").EnumerateArray().ToArray();
+        Assert.Equal(chains.Length, v.Ratios.Length);
+        for (int i = 0; i < chains.Length; i++)
+        {
+            Assert.Equal(chains[i].GetProperty("Chain").GetString(), v.Ratios[i].Chain);
+            Assert.Equal(chains[i].GetProperty("Ratio").GetDouble(), v.Ratios[i].Ratio);
+            Assert.Equal(chains[i].GetProperty("RatioStandardError").GetDouble(), v.Ratios[i].RatioStandardError);
+        }
+    }
+
+    [Fact]
+    public void ValidatedSpectrum_IsEvidenceGrade_TheNotValidatedOneAndATamperedRecordAreNot()
+    {
+        var issued = JsonSerializer.Deserialize<IncidentSpectrum>(File.ReadAllBytes(RepoPaths.Sample(ValidatedName)))!;
+        var config = Rigs.Lab(seed: 5202);
+        config.Ambient = new() { DoseRateMicroSvPerHour = .1, Spectrum = issued, RequireValidatedSpectrum = true };
+        Assert.True(new AmbientPhotonProcess(config).IncidentRateCps > 0);
+        config.Ambient.Spectrum = Committed().Spectrum;
+        Assert.Throws<InvalidOperationException>(() => new AmbientPhotonProcess(config));
+        // A record whose ratio lies outside its own band is inconsistent, even with a recomputed hash.
+        var tampered = JsonSerializer.Deserialize<IncidentSpectrum>(File.ReadAllBytes(RepoPaths.Sample(ValidatedName)))!;
+        tampered.Validation!.Ratios[0].Ratio = 1.05; tampered.ContentHash = tampered.ComputeContentHash();
+        config.Ambient.Spectrum = tampered;
+        Assert.Throws<InvalidOperationException>(() => new AmbientPhotonProcess(config));
+        tampered.Validation = null; tampered.ContentHash = tampered.ComputeContentHash();
+        Assert.Throws<InvalidOperationException>(() => new AmbientPhotonProcess(config));
+    }
+
     [Fact]
     public void CommittedSpectrum_TableReproducesEveryMarginalAndUncollidedLinesPointUpward()
     {

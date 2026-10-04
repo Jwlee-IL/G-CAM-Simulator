@@ -1,0 +1,192 @@
+{
+ "_about": "TODO-30 turn 7: AB-7 gate study and AB-9 count-gate re-measurement, one outer seed per run (montecarlo ambient-gate). The seed driver replaces Seed and RepoRoot; families in samples/evidence/manifest-ambient-v1.json set Phase / NullRepeats / Thresholds. Activities: level / (exposure x PilotRatePerBq); PilotRatePerBq from the pilot run recorded under Pilot (seed 777, in neither O128 nor F128). Windows: open = every deposit; cs662 = 661.7 keV +-10 %, pulse height smeared by the scenario's EnergyResolutionFwhm scaled as sqrt(E). Resolution element = atan(cell pitch / D).",
+ "Seed": 0,
+ "RepoRoot": ".",
+ "Phase": "selection",
+ "Spectrum": {
+  "File": "samples/ambient/terrestrial-unscear2000-v1.json",
+  "Sha256": "4d48bc4272ce4c25ff6ae9b13ed7583e3c8f467afffdb0225956a70cc435b3f4"
+ },
+ "Thresholds": null,
+ "AmbientHistories": 500000,
+ "CalibrationHistories": 500000,
+ "SourcePhotons": 1000000,
+ "FieldsMicroSvPerHour": [
+  0.05,
+  0.1,
+  0.2
+ ],
+ "Bounds": [
+  "BareCrystalAllFaces",
+  "FrontOnlyThroughMask"
+ ],
+ "Windows": [
+  {
+   "Name": "open"
+  },
+  {
+   "Name": "cs662",
+   "LowKeV": 595.53,
+   "HighKeV": 727.87
+  }
+ ],
+ "NullRepeats": 64,
+ "SourceRepeats": 300,
+ "FailThresholdMm": 3.0,
+ "SourceLevels": [
+  25,
+  50,
+  100,
+  250,
+  500,
+  1000
+ ],
+ "DefaultActivityBq": 1000000,
+ "Cases": [
+  {
+   "Name": "lab",
+   "Scenario": "samples/scenario.json",
+   "SourceDetectorMm": 160,
+   "ExposuresS": [
+    10,
+    60
+   ],
+   "Positions": [
+    {
+     "Name": "centre",
+     "XMm": 0,
+     "YMm": 0
+    },
+    {
+     "Name": "edge",
+     "XMm": 8,
+     "YMm": 0
+    }
+   ]
+  },
+  {
+   "Name": "head",
+   "Scenario": "samples/scenario_handheld.json",
+   "SourceDetectorMm": 155,
+   "ExposuresS": [
+    10,
+    60
+   ],
+   "Positions": [
+    {
+     "Name": "centre",
+     "XMm": 0,
+     "YMm": 0
+    },
+    {
+     "Name": "edge",
+     "XMm": 8,
+     "YMm": 0
+    }
+   ]
+  },
+  {
+   "Name": "head1m",
+   "Scenario": "samples/scenario_handheld.json",
+   "SourceDetectorMm": 1000,
+   "ExposuresS": [
+    10,
+    60
+   ],
+   "Positions": [
+    {
+     "Name": "centre",
+     "XMm": 0,
+     "YMm": 0
+    },
+    {
+     "Name": "edge3deg",
+     "XMm": 52.408,
+     "YMm": 0
+    }
+   ]
+  },
+  {
+   "Name": "head5m",
+   "Scenario": "samples/scenario_handheld.json",
+   "SourceDetectorMm": 5000,
+   "ExposuresS": [
+    10,
+    60
+   ],
+   "Positions": [
+    {
+     "Name": "centre",
+     "XMm": 0,
+     "YMm": 0
+    },
+    {
+     "Name": "edge3deg",
+     "XMm": 262.04,
+     "YMm": 0
+    }
+   ]
+  }
+ ],
+ "PilotRatePerBq": {
+  "lab|centre|open": 8.022776530423382e-05,
+  "lab|centre|cs662": 2.593146455969609e-05,
+  "lab|edge|open": 7.707675168426954e-05,
+  "lab|edge|cs662": 2.525863467210596e-05,
+  "head|centre|open": 0.0001954101472463973,
+  "head|centre|cs662": 7.52005000035575e-05,
+  "head|edge|open": 0.00017324220377842224,
+  "head|edge|cs662": 6.806286549719672e-05,
+  "head1m|centre|open": 4.756661892083295e-06,
+  "head1m|centre|cs662": 1.8754919702822455e-06,
+  "head1m|edge3deg|open": 4.036923162566556e-06,
+  "head1m|edge3deg|cs662": 1.5860123021844754e-06,
+  "head5m|centre|open": 1.8132045453314553e-07,
+  "head5m|centre|cs662": 7.217775604112516e-08,
+  "head5m|edge3deg|open": 1.5748511650608925e-07,
+  "head5m|edge3deg|cs662": 6.223326874487147e-08
+ },
+ "Pilot": {
+  "Seed": 777,
+  "AmbientHistories": 500000,
+  "SourcePhotons": 4000000,
+  "RateRelativeStandardError": {
+   "lab|centre|open": 0.0009671817626358151,
+   "lab|centre|cs662": 0.001848759291950856,
+   "lab|edge|open": 0.0009901072794861003,
+   "lab|edge|cs662": 0.001872050738747454,
+   "head|centre|open": 0.0008190984128546254,
+   "head|centre|cs662": 0.0014634362934634792,
+   "head|edge|open": 0.0008860596529359547,
+   "head|edge|cs662": 0.001543797415961101,
+   "head1m|centre|open": 0.0008130890158714475,
+   "head1m|centre|cs662": 0.0014349140576275586,
+   "head1m|edge3deg|open": 0.0009049901402509038,
+   "head1m|edge3deg|cs662": 0.0015712781976516552,
+   "head5m|centre|open": 0.0008403089304554715,
+   "head5m|centre|cs662": 0.0014662956394337063,
+   "head5m|edge3deg|open": 0.0009199321102098925,
+   "head5m|edge3deg|cs662": 0.0015880905074618695
+  },
+  "AmbientCpsPerMicroSvH": {
+   "samples/scenario.json|BareCrystalAllFaces|open": 162.89510168529878,
+   "samples/scenario.json|BareCrystalAllFaces|cs662": 1.6880245385933283,
+   "samples/scenario.json|FrontOnlyThroughMask|open": 0.5758498162468013,
+   "samples/scenario.json|FrontOnlyThroughMask|cs662": 0.0447404410648685,
+   "samples/scenario_handheld.json|BareCrystalAllFaces|open": 335.4900421428635,
+   "samples/scenario_handheld.json|BareCrystalAllFaces|cs662": 4.266165354939816,
+   "samples/scenario_handheld.json|FrontOnlyThroughMask|open": 1.2858190876529982,
+   "samples/scenario_handheld.json|FrontOnlyThroughMask|cs662": 0.10297770699894752
+  },
+  "AmbientStandardError": {
+   "samples/scenario.json|BareCrystalAllFaces|open": 0.16312280088759143,
+   "samples/scenario.json|BareCrystalAllFaces|cs662": 0.02863536768298821,
+   "samples/scenario.json|FrontOnlyThroughMask|open": 0.007220215970692047,
+   "samples/scenario.json|FrontOnlyThroughMask|cs662": 0.002024318039436566,
+   "samples/scenario_handheld.json|BareCrystalAllFaces|open": 0.29904250921212416,
+   "samples/scenario_handheld.json|BareCrystalAllFaces|cs662": 0.056026336225921784,
+   "samples/scenario_handheld.json|FrontOnlyThroughMask|open": 0.014362030971908685,
+   "samples/scenario_handheld.json|FrontOnlyThroughMask|cs662": 0.00367241830545328
+  }
+ }
+}

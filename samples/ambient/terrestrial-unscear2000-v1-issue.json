@@ -1,0 +1,18 @@
+{
+  "_about": "AB-10 re-issue request for montecarlo ambient-issue: the accepted NOT-VALIDATED spectrum re-issued as validated v1 with unchanged weights. Paths are relative to this file.",
+  "Source": "terrestrial-unscear2000-v1-NOT-VALIDATED.json",
+  "SourceSha256": "a4f735010fa7f97685d32974d0dddd425fa9d5717be539b26b5fddbb5ccfb41c",
+  "RatiosFrom": "../evidence/results/ambient-baseline-v1-turn6.json",
+  "RatiosFromSha256": "c1de8caff2427323e4437caab9df6885968929a5646434dd40e6582c5875b6a4",
+  "ReferenceName": "UNSCEAR 2000 Report Vol. I Annex B Table 6 (dose coefficients from ICRU Report 53 and Saito & Jacob, Radiat. Prot. Dosim. 58 (1995) 29-45)",
+  "Id": "terrestrial-unscear2000-v1",
+  "ReferenceStatusOld": "NOT VALIDATED: awaiting the author decision on the UNSCEAR ratios (AB-4d).",
+  "ReferenceStatusNew": "VALIDATED by author decision AB-10 (2026-10-04): air kerma at 1 m per Bq/kg agrees with UNSCEAR 2000 within the accepted +-3 % model-comparison band (a model comparison, not a statistical test); weights, table and NotIncluded unchanged from terrestrial-unscear2000-v1-NOT-VALIDATED (see Validation).",
+  "Validation": {
+    "Decision": "AB-10",
+    "Date": "2026-10-04",
+    "Kind": "model comparison, not a statistical test",
+    "AgreementBandFraction": 0.03,
+    "Note": "Band chosen by the author after seeing the ratios. The gaps from 1 are many MC standard errors wide: a model-to-model difference (UNSCEAR's coefficients come from another calculation; decay-data versions; soil composition); the model's own omissions (transitions without evaluated intensities, bremsstrahlung, K fluorescence) would raise, not lower, the kerma. Uncollided line fluence agreed with the analytic half-space kernel within 6 SE in every tested cell (turn 6). High-energy limits (AB-3 / TODO-31) unchanged."
+  }
+}

@@ -36,4 +36,24 @@ public static class Sampling
         int v = (int)Math.Round(lambda + Math.Sqrt(lambda) * Gaussian(rng));
         return v < 0 ? 0 : v;
     }
+
+    /// <summary>Exact Poisson sample for any mean: Knuth's product method on parts of mean ≤ <see cref="ExactPartMean"/>,
+    /// summed (a sum of independent Poisson variables is Poisson with the summed mean). Unlike <see cref="Poisson"/> it has
+    /// no Gaussian branch, so tails — false-alarm rates — are exact. Cost grows linearly with the mean.</summary>
+    public static int PoissonExact(IRandom rng, double lambda)
+    {
+        if (!(lambda > 0.0)) return 0;
+        int parts = (int)Math.Ceiling(lambda / ExactPartMean);
+        double part = lambda / parts, target = Math.Exp(-part);
+        int total = 0;
+        for (int i = 0; i < parts; i++)
+        {
+            double p = rng.NextDouble();
+            while (p > target) { total++; p *= rng.NextDouble(); }
+        }
+        return total;
+    }
+
+    /// <summary>Largest mean handled by one Knuth product (e^(−25) ≈ 1.4e-11, far above double underflow).</summary>
+    public const double ExactPartMean = 25.0;
 }

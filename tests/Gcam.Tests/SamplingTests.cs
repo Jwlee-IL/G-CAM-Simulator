@@ -81,4 +81,29 @@ public class SamplingTests
         Stat.Within(sz2 / N, 1.0 / 3.0, Math.Sqrt((1.0 / 5.0 - 1.0 / 9.0) / N), what: "E[z²]");
         Stat.Within(up / N, 0.25, Stat.BinomialSigma(0.25, N), what: "P(z > 0.5)");
     }
+
+    [Theory]
+    [InlineData(0.3)]
+    [InlineData(7.0)]
+    [InlineData(60.0)]
+    [InlineData(400.0)]
+    public void PoissonExact_MatchesPoissonMomentsAndTheZeroProbability(double lambda)
+    {
+        // Mean SE √(λ/N); the sample variance of a Poisson variable has Var ≈ (μ4 − σ⁴)/N = (λ + 2λ²)/N. P(0) = e^(−λ)
+        // with its binomial SE; the zero class is the low tail a Gaussian branch would get wrong.
+        var rng = new DefaultRandom(4711);
+        const int n = 40_000;
+        double s = 0, s2 = 0; int zeros = 0;
+        for (int i = 0; i < n; i++)
+        {
+            int k = Sampling.PoissonExact(rng, lambda);
+            s += k; s2 += (double)k * k; if (k == 0) zeros++;
+        }
+        double mean = s / n, variance = (s2 - n * mean * mean) / (n - 1);
+        Stat.Within(mean, lambda, Math.Sqrt(lambda / n), what: "mean");
+        Stat.Within(variance, lambda, Math.Sqrt((lambda + 2 * lambda * lambda) / n), what: "variance");
+        double p0 = Math.Exp(-lambda);
+        if (p0 * n > 30) Stat.Within((double)zeros / n, p0, Stat.BinomialSigma(p0, n), what: "P(0)");
+        Assert.Equal(0, Sampling.PoissonExact(rng, 0));
+    }
 }

@@ -55,8 +55,23 @@ def set_path(obj, dotted, value):
             obj = obj[key]
 
 
+def require_validated_spectrum_file(reference):
+    """A spectrum named by file (repository-relative path + SHA-256 of its bytes) must match its pin and be validated."""
+    file = next((v for k, v in reference.items() if k.lower() == 'file'), None)
+    pin = next((v for k, v in reference.items() if k.lower() == 'sha256'), None)
+    path = REPO / file
+    if not file or not pin or sha256(path) != pin:
+        raise SystemExit(f'ambient evidence refused: spectrum file {file} does not match its pinned SHA-256')
+    spectrum = json.loads(path.read_text(encoding='utf-8'))
+    if spectrum.get('IsValidated') is not True or 'NOT-VALIDATED' in spectrum.get('Id', ''):
+        raise SystemExit(f'ambient evidence refused: {file} is not a validated spectrum')
+
+
 def require_validated_ambient(config):
     """Development spectra must never become numerical evidence through this driver."""
+    reference = next((v for k, v in config.items() if k.lower() == 'spectrum'), None)
+    if isinstance(reference, dict) and any(k.lower() == 'file' for k in reference):
+        require_validated_spectrum_file(reference)       # a gate-study request names its spectrum by file
     ambient = next((v for k, v in config.items() if k.lower() == 'ambient'), None)
     if ambient is None:
         return
@@ -73,7 +88,8 @@ def jobs_for(manifest, seeds, families, n_override):
         if families and fam['id'] not in families:
             continue
         n = n_override if n_override else fam['n']
-        for seed in seeds[fam['seeds']][:n]:
+        first = fam.get('seed_offset', 0)                 # e.g. F128 without its shared first entry 12345
+        for seed in seeds[fam['seeds']][first:first + n]:
             yield fam, seed
 
 
@@ -91,6 +107,8 @@ def run_one(fam, seed, out, cli, probe, python, force):
         set_path(clone, 'seed', seed)
         for path, value in fam.get('overrides', {}).items():
             set_path(clone, path, value)
+        if fam.get('repo_root'):                          # requests that read repository files by relative path
+            set_path(clone, 'RepoRoot', str(REPO))
         require_validated_ambient(clone)
         (run / 'config.json').write_text(json.dumps(clone, indent=1), encoding='utf-8')
         cmd = ['dotnet', str(cli)] + ([fam['command']] if fam.get('command') else []) + [str(run / 'config.json')]

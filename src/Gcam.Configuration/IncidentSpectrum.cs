@@ -21,11 +21,16 @@ public sealed class IncidentSpectrum
     /// <summary>Source-term items deliberately left out (AB-4d), part of the hashed payload when present.</summary>
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public IncidentNotIncluded[]? NotIncluded { get; set; }
+    /// <summary>Acceptance record of a validated spectrum (AB-10), part of the hashed payload when present.</summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public IncidentValidation? Validation { get; set; }
 
     /// <summary>Hash the fixed-order JSON payload, excluding the hash itself. Serialized line/bin order is significant.
     /// Spectra without the optional members keep their earlier payload, so existing hashes stay valid.</summary>
     public string ComputeContentHash() => Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(
-        NotIncluded is not null
+        Validation is not null
+            ? JsonSerializer.Serialize(new { Id, Version, Reference, AngularModel, IsValidated, Lines, Continuum, EnergyZenith, NotIncluded, Validation })
+        : NotIncluded is not null
             ? JsonSerializer.Serialize(new { Id, Version, Reference, AngularModel, IsValidated, Lines, Continuum, EnergyZenith, NotIncluded })
             : EnergyZenith is null
                 ? JsonSerializer.Serialize(new { Id, Version, Reference, AngularModel, IsValidated, Lines, Continuum })

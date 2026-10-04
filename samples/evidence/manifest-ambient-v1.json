@@ -1,0 +1,57 @@
+{
+ "_about": "TODO-30 turn 7 (AB-7 / AB-9): versioned ambient manifest for run_seeds.py --manifest. Same schema as manifest.json; kind cli runs montecarlo ambient-gate on a complete clone of the request with Seed replaced, RepoRoot set by the driver (repo_root), and the family's overrides. Protocol: gate_selection (F128[1:65], null acquisitions only) -> select_thresholds.py writes gate-thresholds-v1.json -> its SHA-256 is pinned in gate_validation's overrides -> gate_validation (O128[0:128], null + source acquisitions) -> aggregate_gate.py. Selection and validation seed sets are disjoint (F128[0] = 12345 = O128[0] is skipped by seed_offset 1). The validation family is the EV-07 / EV-09 ambient re-measurement (N = 128, as family noise).",
+ "measured": "2026-10-04",
+ "field": {
+  "spectrum": "ambient/terrestrial-unscear2000-v1.json",
+  "spectrum_sha256": "4d48bc4272ce4c25ff6ae9b13ed7583e3c8f467afffdb0225956a70cc435b3f4",
+  "photon_hstar10_microsv_per_h": [
+   0.05,
+   0.1,
+   0.2
+  ],
+  "bounds": [
+   "BareCrystalAllFaces",
+   "FrontOnlyThroughMask"
+  ]
+ },
+ "config_sha256": {
+  "evidence/ambient/gate-request-v1.json": "551fb0096025f5826f48e5227fc2ba00e9d575b9afd1262df2e8b16dc812225a",
+  "scenario.json": "eb5b96835c0b68a88c5c26965540f85f1a313acf1cc0b49955cf7921463edddc",
+  "scenario_handheld.json": "f988784c8ee266e6dd28eb898cdbbfac0e2452cb01fd3929874fd866edc98795"
+ },
+ "families": [
+  {
+   "id": "gate_selection",
+   "kind": "cli",
+   "command": "ambient-gate",
+   "config": "evidence/ambient/gate-request-v1.json",
+   "seeds": "F128",
+   "seed_offset": 1,
+   "n": 64,
+   "repo_root": true,
+   "overrides": {
+    "Phase": "selection",
+    "NullRepeats": 64
+   },
+   "evidence": "AB-7 threshold selection: 64 seeds x 64 background-only acquisitions per configuration (4096)"
+  },
+  {
+   "id": "gate_validation",
+   "kind": "cli",
+   "command": "ambient-gate",
+   "config": "evidence/ambient/gate-request-v1.json",
+   "seeds": "O128",
+   "n": 128,
+   "repo_root": true,
+   "overrides": {
+    "Phase": "validation",
+    "NullRepeats": 16,
+    "Thresholds": {
+     "File": "samples/evidence/ambient/gate-thresholds-v1.json",
+     "Sha256": "83b931ac8fc720fecd2133350ecf0106c0c2af00ef1f1806bb870fd9ee678105"
+    }
+   },
+   "evidence": "AB-7 validation (128 x 16 = 2048 background-only acquisitions per configuration) and the EV-07 / EV-09 count gates under ambient background (300 repeats per condition)"
+  }
+ ]
+}
