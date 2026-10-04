@@ -1,0 +1,237 @@
+{
+ "SchemaVersion": 1,
+ "Task": "TODO-30",
+ "Turn": 8,
+ "Date": "2026-10-04",
+ "Implementer": "substitute Claude implementer (not Codex)",
+ "EngineBase": "9caa3af + uncommitted turn-8 changes",
+ "Spectrum": {
+  "File": "samples/ambient/terrestrial-unscear2000-v1.json",
+  "FileSha256": "4d48bc4272ce4c25ff6ae9b13ed7583e3c8f467afffdb0225956a70cc435b3f4"
+ },
+ "Manifest": {
+  "File": "samples/evidence/manifest-ambient-v2.json",
+  "Sha256": "5d546bb4c0ec51a50f1cbad6b719ff50cead20b64666625ba101d3773c542db2",
+  "Sha256AtValidationStart": "7abce3437f50b7aeb6e1f0ed64835d73842e9605f316e7897bbe7b3cde638a11"
+ },
+ "Seeds": {
+  "File": "samples/evidence/seeds.json",
+  "Sha256": "efe45efc63261cb9cc3c1882d875d6e91203c5b9b0df673cf450336801b77f37",
+  "NewList": "F256 = F128 rule continued (i = 127..254); F256[0:128] == F128"
+ },
+ "AB11": {
+  "Selection": {
+   "Family": "gate_selection_v2",
+   "Seeds": "F128[1:65]",
+   "NullsPerSeed": 1024,
+   "NullsPerConfiguration": 65536,
+   "FirstNullsReproduceTurn7": true,
+   "Rule": "inclusive (RoundedAtLeast): recorded Z >= T*, T* smallest v with #(Z >= v) <= floor(0.003 n)",
+   "Alpha": 0.003,
+   "AllowedExceedances": 196,
+   "MaxSelectionRate": 0.00299072265625,
+   "ThresholdRange": [
+    1.163,
+    4.6245
+   ],
+   "Universal": 4.6245
+  },
+  "Thresholds": {
+   "File": "samples/evidence/ambient/gate-thresholds-v2.json",
+   "Sha256": "6352b2f692894fde1d83c6ef2c3ac2c04ee1b332c511e150d66342a516b6cdd0",
+   "Written": "16:18:56",
+   "ValidationStarted": "16:19:27"
+  },
+  "Validation": {
+   "Family": "gate_validation_v2",
+   "Seeds": "F256[128:256]",
+   "N": 128,
+   "NullsPerConfiguration": 8192,
+   "Pooled": {
+    "FalseTrusted": 2424,
+    "Acquisitions": 786432,
+    "Rate": 0.003082275390625,
+    "Lower95": 0.0029801787835069074,
+    "Upper95": 0.0031870937244203846,
+    "ConfigurationsPassing": 96,
+    "Configurations": 96,
+    "UniversalFalseTrusted": 339,
+    "UniversalConfigurationsPassing": 96
+   },
+   "Worst": {
+    "Configuration": "lab|t=10|F=0.1|FrontOnlyThroughMask|cs662",
+    "FalseTrusted": 40,
+    "Acquisitions": 8192,
+    "Upper95": 0.006351438774263632
+   },
+   "Turn7Failures": {
+    "head1m|t=60|F=0.05|FrontOnlyThroughMask|cs662": {
+     "FalseTrusted": 17,
+     "Upper95": 0.0031110840523951794
+    },
+    "head5m|t=10|F=0.05|FrontOnlyThroughMask|open": {
+     "FalseTrusted": 28,
+     "Upper95": 0.0046831726600793724
+    },
+    "head5m|t=10|F=0.1|FrontOnlyThroughMask|cs662": {
+     "FalseTrusted": 23,
+     "Upper95": 0.003975380309578248
+    }
+   }
+  },
+  "CountGatesVsTurn7": {
+   "Entries": 448,
+   "Identical": 438,
+   "OneGridLevel": 10
+  },
+  "MeanComputeSeconds": 125.1878539359375
+ },
+ "Families": {
+  "EV-12": {
+   "Family": "ev12_antimask",
+   "Seeds": "O128[0:128]",
+   "N": 128,
+   "Results": "ambient-baseline-v1-turn8-ev12.json",
+   "Open": {
+    "open|ideal": {
+     "Single": 0.3783873502234728,
+     "Calibrated": 0.3783873502234728,
+     "Antimask": 0.29829211129040517,
+     "BackgroundPerPixel": 0
+    },
+    "open|t=10|F=0.05|BareCrystalAllFaces": {
+     "Single": 0.457324568493794,
+     "Calibrated": 0.3918307838207363,
+     "Antimask": 0.30969353489167356,
+     "BackgroundPerPixel": 0.565239384961207
+    },
+    "open|t=10|F=0.1|BareCrystalAllFaces": {
+     "Single": 0.6800010252407848,
+     "Calibrated": 0.40253524295726184,
+     "Antimask": 0.31973592625611746,
+     "BackgroundPerPixel": 1.130478769922414
+    },
+    "open|t=10|F=0.2|BareCrystalAllFaces": {
+     "Single": 3.639703442717273,
+     "Calibrated": 0.4458704273023815,
+     "Antimask": 0.35104307464092177,
+     "BackgroundPerPixel": 2.260957539844828
+    },
+    "open|t=60|F=0.05|BareCrystalAllFaces": {
+     "Single": 7.279600930127128,
+     "Calibrated": 0.49164805586008054,
+     "Antimask": 0.3896332589411264,
+     "BackgroundPerPixel": 3.3914363097672418
+    },
+    "open|t=60|F=0.1|BareCrystalAllFaces": {
+     "Single": 9.09501888113781,
+     "Calibrated": 0.9186990860643619,
+     "Antimask": 0.6103103704311665,
+     "BackgroundPerPixel": 6.7828726195344835
+    },
+    "open|t=60|F=0.2|BareCrystalAllFaces": {
+     "Single": 9.03249957780971,
+     "Calibrated": 2.2392750374565784,
+     "Antimask": 1.6942956671357616,
+     "BackgroundPerPixel": 13.565745239068967
+    }
+   }
+  },
+  "EV-02": {
+   "Family": "ev02_fov",
+   "Seeds": "F128[0:64]",
+   "N": 64,
+   "Window": "open only (cs662 pending)",
+   "Results": "ambient-baseline-v1-turn8-ev02.json"
+  },
+  "EV-15": {
+   "Family": "ev15_separation",
+   "Seeds": "O128[0:128]",
+   "N": 128,
+   "Results": "ambient-baseline-v1-turn8-ev15.json",
+   "Status": "measured at the literal live time of the legacy photon budget (237 600 s, Cs 1 Bq, Co 8 Bq); premise to confirm",
+   "R": 1.1337978940720923
+  },
+  "EV-01": {
+   "Family": "ev01_sweep",
+   "Seeds": "O128[0:64]",
+   "N": 64,
+   "Results": "ambient-baseline-v1-turn8-ev01.json",
+   "ActivityBq": 1000000.0,
+   "ExposureS": 1.0,
+   "ExpectedLocalized": {
+    "lab|open|ideal|cyclic": 94.4033203125,
+    "lab|open|ideal|noncyclic": 180.3583984375,
+    "lab|open|F=0.05|BareCrystalAllFaces|cyclic": 85.9443359375,
+    "lab|open|F=0.05|BareCrystalAllFaces|noncyclic": 162.31982421875,
+    "lab|open|F=0.05|FrontOnlyThroughMask|cyclic": 94.3076171875,
+    "lab|open|F=0.05|FrontOnlyThroughMask|noncyclic": 180.3408203125,
+    "lab|open|F=0.1|BareCrystalAllFaces|cyclic": 77.69287109375,
+    "lab|open|F=0.1|BareCrystalAllFaces|noncyclic": 145.4482421875,
+    "lab|open|F=0.1|FrontOnlyThroughMask|cyclic": 94.224609375,
+    "lab|open|F=0.1|FrontOnlyThroughMask|noncyclic": 180.36474609375,
+    "lab|open|F=0.2|BareCrystalAllFaces|cyclic": 63.212890625,
+    "lab|open|F=0.2|BareCrystalAllFaces|noncyclic": 115.255859375,
+    "lab|open|F=0.2|FrontOnlyThroughMask|cyclic": 94.14453125,
+    "lab|open|F=0.2|FrontOnlyThroughMask|noncyclic": 179.99755859375,
+    "lab|cs662|ideal|cyclic": 47.93359375,
+    "lab|cs662|ideal|noncyclic": 84.6767578125,
+    "lab|cs662|F=0.05|BareCrystalAllFaces|cyclic": 47.9921875,
+    "lab|cs662|F=0.05|BareCrystalAllFaces|noncyclic": 84.55126953125,
+    "lab|cs662|F=0.05|FrontOnlyThroughMask|cyclic": 47.9423828125,
+    "lab|cs662|F=0.05|FrontOnlyThroughMask|noncyclic": 84.60498046875,
+    "lab|cs662|F=0.1|BareCrystalAllFaces|cyclic": 47.78662109375,
+    "lab|cs662|F=0.1|BareCrystalAllFaces|noncyclic": 84.3115234375,
+    "lab|cs662|F=0.1|FrontOnlyThroughMask|cyclic": 48.42724609375,
+    "lab|cs662|F=0.1|FrontOnlyThroughMask|noncyclic": 84.9150390625,
+    "lab|cs662|F=0.2|BareCrystalAllFaces|cyclic": 47.8212890625,
+    "lab|cs662|F=0.2|BareCrystalAllFaces|noncyclic": 83.59130859375,
+    "lab|cs662|F=0.2|FrontOnlyThroughMask|cyclic": 47.84765625,
+    "lab|cs662|F=0.2|FrontOnlyThroughMask|noncyclic": 84.74853515625,
+    "head|open|ideal|cyclic": 112.17333984375,
+    "head|open|ideal|noncyclic": 229.8857421875,
+    "head|open|F=0.05|BareCrystalAllFaces|cyclic": 103.4296875,
+    "head|open|F=0.05|BareCrystalAllFaces|noncyclic": 204.03662109375,
+    "head|open|F=0.05|FrontOnlyThroughMask|cyclic": 111.90087890625,
+    "head|open|F=0.05|FrontOnlyThroughMask|noncyclic": 229.8173828125,
+    "head|open|F=0.1|BareCrystalAllFaces|cyclic": 94.59619140625,
+    "head|open|F=0.1|BareCrystalAllFaces|noncyclic": 181.33056640625,
+    "head|open|F=0.1|FrontOnlyThroughMask|cyclic": 112.20068359375,
+    "head|open|F=0.1|FrontOnlyThroughMask|noncyclic": 229.6298828125,
+    "head|open|F=0.2|BareCrystalAllFaces|cyclic": 78.50048828125,
+    "head|open|F=0.2|BareCrystalAllFaces|noncyclic": 144.72314453125,
+    "head|open|F=0.2|FrontOnlyThroughMask|cyclic": 112.1162109375,
+    "head|open|F=0.2|FrontOnlyThroughMask|noncyclic": 229.40771484375,
+    "head|cs662|ideal|cyclic": 74.5009765625,
+    "head|cs662|ideal|noncyclic": 151.0576171875,
+    "head|cs662|F=0.05|BareCrystalAllFaces|cyclic": 74.7978515625,
+    "head|cs662|F=0.05|BareCrystalAllFaces|noncyclic": 150.56787109375,
+    "head|cs662|F=0.05|FrontOnlyThroughMask|cyclic": 74.4697265625,
+    "head|cs662|F=0.05|FrontOnlyThroughMask|noncyclic": 151.02685546875,
+    "head|cs662|F=0.1|BareCrystalAllFaces|cyclic": 74.56884765625,
+    "head|cs662|F=0.1|BareCrystalAllFaces|noncyclic": 150.005859375,
+    "head|cs662|F=0.1|FrontOnlyThroughMask|cyclic": 74.53857421875,
+    "head|cs662|F=0.1|FrontOnlyThroughMask|noncyclic": 150.83935546875,
+    "head|cs662|F=0.2|BareCrystalAllFaces|cyclic": 74.03857421875,
+    "head|cs662|F=0.2|BareCrystalAllFaces|noncyclic": 148.65869140625,
+    "head|cs662|F=0.2|FrontOnlyThroughMask|cyclic": 74.75390625,
+    "head|cs662|F=0.2|FrontOnlyThroughMask|noncyclic": 150.8408203125
+   }
+  }
+ },
+ "AB12": {
+  "Results": "ambient-baseline-v1-turn8-bias.json"
+ },
+ "Compute": {
+  "SelectionWallMinutes": 10,
+  "ValidationWallMinutes": 27,
+  "EV12AndEV15WallMinutes": 27,
+  "EV02WallMinutes": 92,
+  "EV01WallMinutes": 53,
+  "Jobs": 10
+ },
+ "Pending": {
+  "EV-02 cs662 window": "~55 min of runs, no code",
+  "EV-15 absolute recipe": "author / planner decision, then ~8 min of runs"
+ }
+}
