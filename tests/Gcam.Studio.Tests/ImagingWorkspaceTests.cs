@@ -69,7 +69,7 @@ public sealed class ImagingWorkspaceTests
     public async Task FocusSweep_ChannelChangeCancelsAndRejectsLateResult()
     {
         var focus = new DeferredFocus();
-        var vm = new MainViewModel(new Acquisition(), new Theme(), new FakeSpectrumService(), new Imaging(), focusSweep: focus);
+        var vm = new MainViewModel(new Acquisition(), new Theme(), new FakeSpectrumService(), new Imaging(), focusSweep: focus) { AmbientDoseRateMicroSvPerHour = 0 };
         await vm.StartCommand.ExecuteAsync(null);
         vm.Imaging.SelectedIsotope = "Cs-137";
         var task = vm.Imaging.SweepCommand.ExecuteAsync(null);
@@ -85,7 +85,7 @@ public sealed class ImagingWorkspaceTests
     public async Task SharedWindow_SelectorStripAndRoi_ReuseFrozenAcquisition()
     {
         var acquisition = new Acquisition(); var imaging = new Imaging(); var spectrum = new FakeSpectrumService();
-        var vm = new MainViewModel(acquisition, new Theme(), spectrum, imaging);
+        var vm = new MainViewModel(acquisition, new Theme(), spectrum, imaging) { AmbientDoseRateMicroSvPerHour = 0 };
         vm.AddSourceCommand.Execute(null); vm.Sources[1].Isotope = "Co-60";
         await vm.StartCommand.ExecuteAsync(null);
         Assert.Equal(new[] { "All", "Cs-137", "Co-60" }, vm.Imaging.Isotopes);
@@ -118,7 +118,7 @@ public sealed class ImagingWorkspaceTests
     [Fact]
     public async Task PeakChip_CountsSeveralFoundPeaks_AndNamesASingleOne()
     {
-        var vm = new MainViewModel(new Acquisition(), new Theme(), new FakeSpectrumService(), new Imaging());
+        var vm = new MainViewModel(new Acquisition(), new Theme(), new FakeSpectrumService(), new Imaging()) { AmbientDoseRateMicroSvPerHour = 0 };
         vm.AddSourceCommand.Execute(null); vm.Sources[1].Isotope = "Co-60";
         await vm.StartCommand.ExecuteAsync(null);
         await vm.Imaging.WhenUpdated;
@@ -132,7 +132,7 @@ public sealed class ImagingWorkspaceTests
     public async Task LateResponse_CannotReplaceNewerWindowResult()
     {
         var imaging = new Imaging();
-        var vm = new MainViewModel(new Acquisition(), new Theme(), new FakeSpectrumService(), imaging);
+        var vm = new MainViewModel(new Acquisition(), new Theme(), new FakeSpectrumService(), imaging) { AmbientDoseRateMicroSvPerHour = 0 };
         await vm.StartCommand.ExecuteAsync(null);
         imaging.Pending = new(TaskCreationOptions.RunContinuationsAsynchronously);
         vm.WindowFwhm = 2;

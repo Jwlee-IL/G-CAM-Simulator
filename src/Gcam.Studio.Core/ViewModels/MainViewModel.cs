@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Globalization;
+using System.Text.RegularExpressions;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Gcam.Configuration;
@@ -208,11 +209,16 @@ public sealed partial class MainViewModel : ObservableObject
     [ObservableProperty] private double _gainSigmaPercent = 3;
     [ObservableProperty] private int _gainSeed = 1;
     [ObservableProperty] private double _backgroundToSignalRatio;
-    [ObservableProperty] private double _ambientDoseRateMicroSvPerHour;
-    [ObservableProperty] private AmbientGeometry _ambientGeometry;
+    /// <summary>Photon H*(10) of the absolute ambient field; default 0.10 µSv/h (AB-15). 0 is the ideal environment.</summary>
+    [ObservableProperty] private double _ambientDoseRateMicroSvPerHour = DefaultAmbientDoseRateMicroSvPerHour;
+    [ObservableProperty] private AmbientGeometry _ambientGeometry = AmbientGeometry.FrontOnlyThroughMask;
+    public const double DefaultAmbientDoseRateMicroSvPerHour = 0.10;
     public IReadOnlyList<AmbientGeometry> AmbientGeometries { get; } = Enum.GetValues<AmbientGeometry>();
-    public string AmbientPresetName => "Development mono662 v1 — not validated";
-    public string AmbientEnvironmentLabel => AmbientDoseRateMicroSvPerHour == 0 ? "ideal environment" : "ambient field — not validated";
+    /// <summary>The validated spectrum every non-zero field uses (the only user-facing preset, AB-15).</summary>
+    public AmbientPreset AmbientPreset => AmbientPreset.TerrestrialUnscear2000V1;
+    public string AmbientPresetName => AmbientPreset.Name;
+    public string AmbientEnvironmentLabel => AmbientDoseRateMicroSvPerHour == 0 ? "ideal environment"
+        : $"{AmbientPreset.Id} · {(AmbientGeometry == AmbientGeometry.FrontOnlyThroughMask ? "front-only bound" : "bare-crystal bound")}";
     public string AmbientBsrReadout => AmbientDoseRateMicroSvPerHour == 0 ? "off"
         : Snapshot?.AmbientBackgroundToSignalRatio is { } ratio ? $"{ratio:G4} × signal"
         : Sources.Count == 0 ? "undefined (source-free)" : "available during acquisition";
@@ -220,15 +226,55 @@ public sealed partial class MainViewModel : ObservableObject
     partial void OnAmbientDoseRateMicroSvPerHourChanged(double oldValue, double newValue)
     {
         if (Locked(() => AmbientDoseRateMicroSvPerHour = oldValue)) return;
-        if (!double.IsFinite(newValue) || newValue < 0) { AmbientDoseRateMicroSvPerHour = 0; return; }
+        if (!double.IsFinite(newValue) || newValue < 0)
+        {
+            // Refused (AB-16): the previous value stays; there is no silent fall back to the ideal environment.
+            _reverting = true;
+            try { AmbientDoseRateMicroSvPerHour = oldValue; }
+            finally { _reverting = false; }
+            return;
+        }
+        AmbientDoseError = null;
+        string text = FormatAmbientDose(newValue);
+        if (!AmbientDosePattern().IsMatch(AmbientDoseText) || ParseAmbientDose(AmbientDoseText) != newValue) SetAmbientDoseText(text);
         OnPropertyChanged(nameof(AmbientEnvironmentLabel)); OnPropertyChanged(nameof(AmbientBsrReadout));
         StartCommand.NotifyCanExecuteChanged();
+    }
+
+    /// <summary>The dose-rate field as typed. It must match <see cref="AmbientDosePatternText"/> (digits with at most one
+    /// decimal point: no sign, exponent, NaN or infinity); a matching entry sets the dose rate, any other entry is refused
+    /// with <see cref="AmbientDoseError"/>, keeps the previous dose rate and blocks Start until corrected.</summary>
+    [ObservableProperty] private string _ambientDoseText = FormatAmbientDose(DefaultAmbientDoseRateMicroSvPerHour);
+    [ObservableProperty] private string? _ambientDoseError;
+    public const string AmbientDosePatternText = @"^\s*(\d+(\.\d*)?|\.\d+)\s*$";
+    private const string AmbientDoseMessage = "The ambient dose rate must be a number ≥ 0 in µSv/h (digits and one decimal point, e.g. 0.1).";
+    [GeneratedRegex(AmbientDosePatternText, RegexOptions.CultureInvariant)]
+    private static partial Regex AmbientDosePattern();
+    private static double ParseAmbientDose(string text) => double.Parse(text, NumberStyles.AllowDecimalPoint | NumberStyles.AllowLeadingWhite
+        | NumberStyles.AllowTrailingWhite, CultureInfo.InvariantCulture);
+    private static string FormatAmbientDose(double value) => value.ToString("R", CultureInfo.InvariantCulture);
+    private bool _syncingDoseText;
+    private void SetAmbientDoseText(string text)
+    {
+        _syncingDoseText = true;
+        try { AmbientDoseText = text; }
+        finally { _syncingDoseText = false; }
+    }
+    partial void OnAmbientDoseTextChanged(string? oldValue, string newValue)
+    {
+        if (_syncingDoseText) return;
+        if (Locked(() => AmbientDoseText = oldValue ?? "")) return;
+        double value = AmbientDosePattern().IsMatch(newValue ?? "") ? ParseAmbientDose(newValue!) : double.NaN;
+        if (!double.IsFinite(value)) { AmbientDoseError = AmbientDoseMessage; return; } // previous dose rate stays
+        AmbientDoseError = null;
+        AmbientDoseRateMicroSvPerHour = value;
     }
 
     partial void OnAmbientGeometryChanged(AmbientGeometry oldValue, AmbientGeometry newValue)
     {
         if (Locked(() => AmbientGeometry = oldValue)) return;
-        if (!Enum.IsDefined(newValue)) AmbientGeometry = oldValue;
+        if (!Enum.IsDefined(newValue)) { AmbientGeometry = oldValue; return; }
+        OnPropertyChanged(nameof(AmbientEnvironmentLabel));
     }
     partial void OnGainSigmaPercentChanged(double oldValue, double newValue)
     {
@@ -412,7 +458,7 @@ public sealed partial class MainViewModel : ObservableObject
             IsDetectorExpanded = true;
             return false;
         }
-        if (SeedError is not null) return false;
+        if (SeedError is not null || AmbientDoseError is not null) return false;
         int seed = string.IsNullOrWhiteSpace(SeedText)
             ? Random.Shared.Next(1, int.MaxValue)
             : int.Parse(SeedText, NumberStyles.Integer, CultureInfo.CurrentCulture);
@@ -427,7 +473,7 @@ public sealed partial class MainViewModel : ObservableObject
         {
             _session = AmbientDoseRateMicroSvPerHour > 0
                 ? _acquisition.StartAmbient(scene, acquisitionOptics, LiveTimeS, Speed,
-                    new AmbientFieldConfig { DoseRateMicroSvPerHour = AmbientDoseRateMicroSvPerHour, Geometry = AmbientGeometry },
+                    AmbientPreset.Field(AmbientDoseRateMicroSvPerHour, AmbientGeometry),
                     Detector, BackgroundToSignalRatio, seed)
                 : _acquisition.Start(scene, acquisitionOptics, LiveTimeS, Speed, Detector, BackgroundToSignalRatio, seed);
         }

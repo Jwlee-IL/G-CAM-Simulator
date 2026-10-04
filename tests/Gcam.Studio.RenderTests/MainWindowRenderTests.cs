@@ -33,7 +33,7 @@ public sealed partial class PlotViewRenderTests
         var acquisition = new FixtureAcquisition();
         var model = new MainViewModel(acquisition, new FixtureTheme(Enum.Parse<AppTheme>(theme)), new FixtureSpectrum(mixed),
             mixed ? new FixtureImaging() : null, detectorFace: new Gcam.Studio.Services.DetectorFaceService())
-            { SeedText = "12345" }; // fixed seed: the status line and the PNGs are reproducible (E-8)
+            { SeedText = "12345", AmbientDoseRateMicroSvPerHour = 0 }; // fixed seed: the status line and the PNGs are reproducible (E-8)
         if (mixed)
         {
             model.Sources[0].X = crowded ? -20 : 15; model.Sources[0].Y = crowded ? 0 : 8;

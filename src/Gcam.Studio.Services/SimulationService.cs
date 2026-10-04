@@ -63,8 +63,15 @@ public sealed class SimulationService(TimeProvider? timeProvider = null) : IAcqu
             config.Ambient = ambient;
             if (scene.Count == 0) { config.Source.ActivityBq = 0; config.Sources = []; }
             config = config.Clone(); // freeze the field and its spectrum along with the detector and scene
+            // A preset reference (file name + pinned SHA-256) is resolved by the engine loader on the frozen copy.
+            ConfigLoader.ResolveAmbientSpectrum(config, AmbientSpectrumDirectory);
         }
         return config;
     }
+
+    /// <summary>Where Studio's hash-pinned ambient spectra are deployed: copied from <c>samples/ambient</c> into the
+    /// <c>ambient</c> folder beside the assemblies at build time (Gcam.Studio.Services.csproj), so no machine path
+    /// is involved and the loader re-checks the bytes against the pin on every Start.</summary>
+    public static string AmbientSpectrumDirectory => Path.Combine(AppContext.BaseDirectory, "ambient");
 
 }

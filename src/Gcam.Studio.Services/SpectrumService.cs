@@ -10,14 +10,20 @@ namespace Gcam.Studio.Services;
 /// <summary>Single-worker incremental MCA. The last paralyzable pile-up group stays open across snapshots.</summary>
 public sealed class SpectrumService : ISpectrumService
 {
-    public const int BinCount = 256;
+    /// <summary>Fixed axis (AB-16): 0–2000 keV for every scene, field and pile-up setting; a measured pulse at or above
+    /// the end is not discarded but counted in <see cref="SpectrumView.OverflowCounts"/>.</summary>
+    public const double AxisMaximumKeV = 2000;
+    /// <summary>2 keV bins: finer than the 2.97 keV the old Cs-only axis gave at 662 keV (FWHM ≈ 15 bins for the default
+    /// chain), and at least two bins per FWHM at the narrowest offered peak (Ba K 32 keV, 4.4 keV FWHM with GAGG / CsI).</summary>
+    public const double BinWidthKeV = 2;
+    public const int BinCount = (int)(AxisMaximumKeV / BinWidthKeV);
     private readonly SemaphoreSlim _gate = new(1);
     private FrontEndModel _model = new(new DetectorSettings().Chain.BuildConfig());
     private double _resolvingTimeS;
     private Guid _acquisitionId;
     private bool _pileUp;
     private int _seed, _consumed, _groupStart;
-    private double _lastArrival, _groupEnergy, _maxEnergy;
+    private double _lastArrival, _groupEnergy;
     private long _total, _overflow;
     private double[] _counts = new double[BinCount];
     private SpectrumSettings? _measurementSettings;
@@ -58,10 +64,8 @@ public sealed class SpectrumService : ISpectrumService
         SpectrumSettings settings, int seed, CancellationToken token)
     {
         var watch = Stopwatch.StartNew();
-        double maxEnergy = Math.Max(lines.Select(l => l.EnergyKeV).DefaultIfEmpty(0).Max(), settings.IncidentMaximumEnergyKeV ?? 0)
-            * (settings.PileUp ? 2.15 : 1.15);
         if (id != _acquisitionId || settings.PileUp != _pileUp || seed != _seed ||
-            events.Count < _consumed || maxEnergy != _maxEnergy ||
+            events.Count < _consumed ||
             settings.Detector != _measurementSettings?.Detector ||
             settings.PixelsX != _measurementSettings?.PixelsX || settings.PixelsY != _measurementSettings?.PixelsY)
         {
@@ -77,7 +81,6 @@ public sealed class SpectrumService : ISpectrumService
             _seed = seed;
             _consumed = 0;
             _groupEnergy = 0;
-            _maxEnergy = maxEnergy;
             _counts = new double[BinCount];
             _total = _overflow = 0;
         }
@@ -112,7 +115,7 @@ public sealed class SpectrumService : ISpectrumService
         var counts = (double[])_counts.Clone();
         long total = _total, overflow = _overflow;
         if (_pileUp && _groupEnergy > 0) AddMeasured(counts, _groupEnergy, _groupStart, ref total, ref overflow);
-        double width = maxEnergy / BinCount;
+        const double width = AxisMaximumKeV / BinCount;
         var centres = Enumerable.Range(0, BinCount).Select(i => (i + 0.5) * width).ToArray();
         var bands = BuildBands(lines, settings.WindowFwhm, _model);
         var rows = bands.Select(b =>
@@ -132,7 +135,7 @@ public sealed class SpectrumService : ISpectrumService
         // Index-addressed randomness keeps a pulse stable when an open pile-up group is redrawn,
         // regardless of snapshot partitioning, window changes or a later full reprocess.
         double measured = _measurement.MeasureAmplitude(energy, index);
-        int bin = (int)(measured / _maxEnergy * BinCount);
+        int bin = (int)(measured / AxisMaximumKeV * BinCount);
         total++;
         if (bin >= 0 && bin < BinCount) counts[bin]++;
         else overflow++;

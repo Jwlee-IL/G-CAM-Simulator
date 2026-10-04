@@ -26,7 +26,7 @@ public sealed partial class PlotViewRenderTests
         foreach (string file in new[] { $"Tokens.{theme}", "Metrics", "Typography", "Controls" })
             dictionaries.Add(new ResourceDictionary { Source = new Uri($"/Gcam.Studio;component/Themes/{file}.xaml", UriKind.Relative) });
         var model = new MainViewModel(new WaveformAcquisition(), new FixtureTheme(Enum.Parse<AppTheme>(theme)),
-            new FixtureSpectrum(), detectorFace: new DetectorFaceService()) { SeedText = "12345" };
+            new FixtureSpectrum(), detectorFace: new DetectorFaceService()) { SeedText = "12345", AmbientDoseRateMicroSvPerHour = 0 };
         model.IsOpticsExpanded = model.IsDetectorExpanded = false;
         model.SelectedWorkspace = model.DetectorWorkspace;
         Capture("detector-before");
@@ -44,7 +44,7 @@ public sealed partial class PlotViewRenderTests
             // results and not evidence about depth accuracy; FocusSweepMath.Describe still builds the interval.
             double sourceMm = far ? 1000 : 300;
             model = new MainViewModel(new FixtureAcquisition(), new FixtureTheme(Enum.Parse<AppTheme>(theme)),
-                new FixtureSpectrum(), new FixtureImaging(), detectorFace: new DetectorFaceService()) { SeedText = "12345" };
+                new FixtureSpectrum(), new FixtureImaging(), detectorFace: new DetectorFaceService()) { SeedText = "12345", AmbientDoseRateMicroSvPerHour = 0 };
             model.IsOpticsExpanded = model.IsDetectorExpanded = false;
             model.Sources[0].DistanceMm = sourceMm;
             model.StartCommand.ExecuteAsync(null).GetAwaiter().GetResult();

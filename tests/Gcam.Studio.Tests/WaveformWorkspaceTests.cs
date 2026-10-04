@@ -13,7 +13,7 @@ public sealed class WaveformWorkspaceTests
     [Fact]
     public async Task CsI_IsOfferedAndRequiresResetForANewAcquisition()
     {
-        var model = new MainViewModel(new Acquisition(), new Theme(), new Spectrum());
+        var model = new MainViewModel(new Acquisition(), new Theme(), new Spectrum()) { AmbientDoseRateMicroSvPerHour = 0 };
         var csi = Assert.Single(model.Scintillators, s => s.Name == "CsI(Tl)");
         var gagg = model.Scintillator;
         Assert.Equal("GAGG(Ce)", gagg.Name);
@@ -76,7 +76,7 @@ public sealed class WaveformWorkspaceTests
     public async Task Chain_LockedWithData_ScopeUsesAcquiredChain()
     {
         var acquisition = new Acquisition(); var waveform = new Scope();
-        var model = new MainViewModel(acquisition, new Theme(), new Spectrum(), waveform: waveform);
+        var model = new MainViewModel(acquisition, new Theme(), new Spectrum(), waveform: waveform) { AmbientDoseRateMicroSvPerHour = 0 };
         await model.StartCommand.ExecuteAsync(null);
         var acquired = model.Snapshot!.Chain;
         model.Preamp = FrontEndParts.Preamps[3]; // locked while data exist (A-2): refused
@@ -97,7 +97,7 @@ public sealed class WaveformWorkspaceTests
     public async Task ActiveAcquisition_DisablesPhysicalChainChanges()
     {
         var acquisition = new Acquisition { Hold = true };
-        var model = new MainViewModel(acquisition, new Theme(), new Spectrum());
+        var model = new MainViewModel(acquisition, new Theme(), new Spectrum()) { AmbientDoseRateMicroSvPerHour = 0 };
         var run = model.StartCommand.ExecuteAsync(null);
         Assert.True(model.IsRunning);
         var chain = model.Chain;
@@ -113,7 +113,7 @@ public sealed class WaveformWorkspaceTests
     public async Task HiddenScope_DoesNotGenerateAndHeldTriggerReusesWindow()
     {
         var acquisition = new Acquisition(); var waveform = new Scope();
-        var model = new MainViewModel(acquisition, new Theme(), new Spectrum(), waveform: waveform);
+        var model = new MainViewModel(acquisition, new Theme(), new Spectrum(), waveform: waveform) { AmbientDoseRateMicroSvPerHour = 0 };
         await model.StartCommand.ExecuteAsync(null);
         Assert.Empty(waveform.Calls);
         model.SelectedWorkspace = model.Waveform; await model.Waveform.WhenUpdated;
@@ -134,7 +134,7 @@ public sealed class WaveformWorkspaceTests
     public async Task LatestSelectionWinsAndNewAcquisitionCancelsOldScope()
     {
         var acquisition = new Acquisition(); var scope = new Scope { Delay = true };
-        var model = new MainViewModel(acquisition, new Theme(), new Spectrum(), waveform: scope);
+        var model = new MainViewModel(acquisition, new Theme(), new Spectrum(), waveform: scope) { AmbientDoseRateMicroSvPerHour = 0 };
         await model.StartCommand.ExecuteAsync(null);
         model.SelectedWorkspace = model.Waveform;
         var oldTask = model.Waveform.WhenUpdated;
@@ -159,7 +159,7 @@ public sealed class WaveformWorkspaceTests
     public async Task ScopeFailure_IsVisibleAndLocalControlsKeepTheAcquisition()
     {
         var acquisition = new Acquisition(); var waveform = new Scope { Fail = true };
-        var model = new MainViewModel(acquisition, new Theme(), new Spectrum(), waveform: waveform);
+        var model = new MainViewModel(acquisition, new Theme(), new Spectrum(), waveform: waveform) { AmbientDoseRateMicroSvPerHour = 0 };
         await model.StartCommand.ExecuteAsync(null);
         model.SelectedWorkspace = model.Waveform; await model.Waveform.WhenUpdated;
         Assert.Contains("test failure", model.Waveform.Error);

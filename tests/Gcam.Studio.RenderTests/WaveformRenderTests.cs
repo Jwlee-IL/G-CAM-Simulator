@@ -28,7 +28,7 @@ public sealed partial class PlotViewRenderTests
             resources.Add(new ResourceDictionary { Source = new Uri($"/Gcam.Studio;component/Themes/{file}.xaml", UriKind.Relative) });
         var acquisition = new WaveformAcquisition();
         var model = new MainViewModel(acquisition, new FixtureTheme(Enum.Parse<AppTheme>(theme)), new FixtureSpectrum(),
-            waveform: new FixedTimeWaveformService()) { SeedText = "12345" };
+            waveform: new FixedTimeWaveformService()) { SeedText = "12345", AmbientDoseRateMicroSvPerHour = 0 };
         model.StartCommand.ExecuteAsync(null).GetAwaiter().GetResult();
         model.IsOpticsExpanded = model.IsDetectorExpanded = false;
         model.SelectedWorkspace = model.Waveform;

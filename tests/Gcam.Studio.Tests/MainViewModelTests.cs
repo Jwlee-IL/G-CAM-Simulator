@@ -123,7 +123,7 @@ public class MainViewModelTests
     [Fact]
     public void RemoveAll_DisablesRemoveAndStart()
     {
-        var vm = new MainViewModel(new FakeAcquisition(), new FakeTheme(), new FakeSpectrumService());
+        var vm = new MainViewModel(new FakeAcquisition(), new FakeTheme(), new FakeSpectrumService()) { AmbientDoseRateMicroSvPerHour = 0 };
         vm.RemoveSourceCommand.Execute(null);
         Assert.Empty(vm.Sources);
         Assert.Null(vm.SelectedSource);
@@ -169,5 +169,13 @@ public class MainViewModelTests
         Assert.Equal("Ir-192", source.ToModel().Isotope);
         source.Isotope = "no such isotope";
         Assert.Equal("Cs-137", source.Isotope);   // unknown → first entry
+    }
+
+    [Fact]
+    public void SpectrumSummary_NamesTheOverflowAndTheFixedAxisEnd()
+    {
+        var vm = new MainViewModel(new FakeAcquisition(), new FakeTheme(), new FakeSpectrumService());
+        vm.Spectrum.View = new SpectrumView([1], [5], [], 9, 4, .5, .06, 730e-9, "chain", TimeSpan.Zero) { BinEdgesKeV = [0, 2000] };
+        Assert.Equal("9 measured pulses · 50.0% in windows · 4 overflow ≥ 2000 keV", vm.Spectrum.Summary);
     }
 }

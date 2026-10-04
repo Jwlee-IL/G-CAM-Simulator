@@ -298,12 +298,14 @@
                             </DockPanel>
                             <DockPanel Style="{StaticResource FieldRow}">
                                 <TextBlock Text="Photon H*(10)" Style="{StaticResource FieldLabel}" />
-                                <TextBox Text="{Binding AmbientDoseRateMicroSvPerHour}" Tag="µSv/h"
+                                <TextBox Text="{Binding AmbientDoseText, UpdateSourceTrigger=PropertyChanged}" Tag="µSv/h"
                                          AutomationProperties.AutomationId="Acquisition.AmbientDose"
                                          AutomationProperties.Name="Photon H*(10) ambient dose rate (µSv/h)" />
                             </DockPanel>
+                            <TextBlock Text="{Binding AmbientDoseError}" Style="{StaticResource Text.CaptionWarning}" TextWrapping="Wrap"
+                                       AutomationProperties.AutomationId="Acquisition.AmbientDoseError" />
                             <TextBlock Text="{Binding AmbientPresetName}" Style="{StaticResource Text.MonoCaption}" TextWrapping="Wrap" />
-                            <TextBlock Text="{Binding AmbientEnvironmentLabel}" Style="{StaticResource Text.MonoCaption}" />
+                            <TextBlock Text="{Binding AmbientEnvironmentLabel}" Style="{StaticResource Text.MonoCaption}" TextWrapping="Wrap" />
                             <DockPanel Style="{StaticResource FieldRow}">
                                 <TextBlock Text="Ambient bound" Style="{StaticResource FieldLabel}" />
                                 <ComboBox ItemsSource="{Binding AmbientGeometries}" SelectedItem="{Binding AmbientGeometry}"

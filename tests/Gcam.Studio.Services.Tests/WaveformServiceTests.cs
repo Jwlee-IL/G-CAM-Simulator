@@ -79,7 +79,7 @@ public sealed class WaveformServiceTests(ITestOutputHelper output)
         var spectrum = await new SpectrumService().ProcessAsync(Guid.NewGuid(), snapshot.Events, lines,
             new() { Detector = snapshot.Detector, PixelsX = 30, PixelsY = 30 });
         var expected = new double[SpectrumService.BinCount];
-        double max = lines.Max(l => l.EnergyKeV) * 1.15;
+        double max = SpectrumService.AxisMaximumKeV; // fixed axis (AB-16)
         foreach (var e in wave.Events) expected[(int)(e.AmplitudeKeV / max * expected.Length)]++;
         Assert.Equal(expected, spectrum.Counts);
         Assert.Equal(snapshot.Chain.ToString(), spectrum.Chain);

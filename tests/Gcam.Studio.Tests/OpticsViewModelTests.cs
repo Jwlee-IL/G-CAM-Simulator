@@ -67,7 +67,7 @@ public sealed class OpticsViewModelTests
     public async Task Focus_AcquiringStoppedCompleted_KeepsEventsAndSpectrum_OpticsLockedWithData()
     {
         var acquisition = new Acquisition(); var imaging = new Imaging(); var spectrum = new FakeSpectrumService();
-        var vm = new MainViewModel(acquisition, new Theme(), spectrum, imaging);
+        var vm = new MainViewModel(acquisition, new Theme(), spectrum, imaging) { AmbientDoseRateMicroSvPerHour = 0 };
         var run = vm.StartCommand.ExecuteAsync(null);
         Assert.False(vm.OpticsEditor.IsEditable);
         acquisition.Session.Publish(1, false);
@@ -108,7 +108,7 @@ public sealed class OpticsViewModelTests
     public async Task LatestFocus_CoalescesChangesAndRejectsLateSnapshotProjection()
     {
         var acquisition = new Acquisition(); var imaging = new Imaging();
-        var vm = new MainViewModel(acquisition, new Theme(), new FakeSpectrumService(), imaging);
+        var vm = new MainViewModel(acquisition, new Theme(), new FakeSpectrumService(), imaging) { AmbientDoseRateMicroSvPerHour = 0 };
         var run = vm.StartCommand.ExecuteAsync(null);
         acquisition.Session.Publish(1, false); await Until(() => vm.Imaging.View is not null);
         imaging.Pending = new(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -132,7 +132,7 @@ public sealed class OpticsViewModelTests
     public async Task OldAcquisitionWorker_CannotPublishIntoNewAcquisition()
     {
         var acquisition = new Acquisition(); var imaging = new Imaging();
-        var vm = new MainViewModel(acquisition, new Theme(), new FakeSpectrumService(), imaging);
+        var vm = new MainViewModel(acquisition, new Theme(), new FakeSpectrumService(), imaging) { AmbientDoseRateMicroSvPerHour = 0 };
         var run = vm.StartCommand.ExecuteAsync(null);
         acquisition.Session.Publish(1, true); await run;
         imaging.Pending = new(TaskCreationOptions.RunContinuationsAsynchronously);

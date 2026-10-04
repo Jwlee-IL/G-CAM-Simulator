@@ -10,7 +10,7 @@ namespace Gcam.Studio.Tests;
 public sealed class DetectorWorkspaceTests
 {
     internal static MainViewModel Model(IFocusSweepService? focus = null, IAcquisitionService? acquisition = null) => new(acquisition ?? new Acquisition(), new Theme(),
-        new FakeSpectrumService(), detectorFace: new Face(), focusSweep: focus);
+        new FakeSpectrumService(), detectorFace: new Face(), focusSweep: focus) { AmbientDoseRateMicroSvPerHour = 0 };
 
     [Theory]
     [InlineData("NaN")]

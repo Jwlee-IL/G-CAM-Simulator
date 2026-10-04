@@ -15,13 +15,18 @@ public sealed partial class PlotViewRenderTests
     {
         var model = new MainViewModel(new FixtureAcquisition(), new FixtureTheme(Enum.Parse<AppTheme>(theme)), new FixtureSpectrum(false))
         {
-            IsChainExpanded = false, IsOpticsExpanded = false, IsDetectorExpanded = true,
-            AmbientDoseRateMicroSvPerHour = .1, AmbientGeometry = AmbientGeometry.FrontOnlyThroughMask
+            IsChainExpanded = false, IsOpticsExpanded = false, IsDetectorExpanded = true
         };
+        // AB-15 default: validated terrestrial preset at 0.10 µSv/h, front-only bound — rendered as Studio starts.
+        Assert.Equal(.1, model.AmbientDoseRateMicroSvPerHour);
+        Assert.Equal(AmbientGeometry.FrontOnlyThroughMask, model.AmbientGeometry);
         model.RemoveSourceCommand.Execute(null);
         Assert.True(model.StartCommand.CanExecute(null));
+        foreach (string state in new[] { "", "-invalid" })
         foreach (var size in new[] { new Size(1280, 800), new Size(1440, 900) })
         {
+            // AB-16: an entry outside the pattern is refused; the previous value stays and the warning shows.
+            if (state.Length > 0) { model.AmbientDoseText = "-0.1"; Assert.Equal(.1, model.AmbientDoseRateMicroSvPerHour); Assert.NotNull(model.AmbientDoseError); }
             var (root, _) = DetachMainWindow(model, size);
             var dose = Assert.Single(Descendants(root).OfType<TextBox>(),
                 box => AutomationProperties.GetAutomationId(box) == "Acquisition.AmbientDose");
@@ -37,7 +42,7 @@ public sealed partial class PlotViewRenderTests
             bitmap.Render(root);
             var encoder = new PngBitmapEncoder(); encoder.Frames.Add(BitmapFrame.Create(bitmap));
             string directory = SnapshotDirectory("studio-render"); Directory.CreateDirectory(directory);
-            string path = Path.Combine(directory, $"ambient-inputs-{theme.ToLowerInvariant()}-{size.Width:0}x{size.Height:0}.png");
+            string path = Path.Combine(directory, $"ambient-inputs{state}-{theme.ToLowerInvariant()}-{size.Width:0}x{size.Height:0}.png");
             using var stream = File.Create(path); encoder.Save(stream); output.WriteLine(path);
         }
     }

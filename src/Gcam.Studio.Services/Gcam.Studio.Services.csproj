@@ -11,4 +11,11 @@
     <ProjectReference Include="..\Gcam.Simulation\Gcam.Simulation.csproj" />
   </ItemGroup>
 
+  <!-- Studio's ambient preset (AB-15): the validated, hash-pinned terrestrial spectrum, deployed byte-for-byte beside
+       the assemblies; SimulationService resolves it there and the engine loader checks it against the pinned SHA-256. -->
+  <ItemGroup>
+    <None Include="..\..\samples\ambient\terrestrial-unscear2000-v1.json" Link="ambient\terrestrial-unscear2000-v1.json"
+          CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>

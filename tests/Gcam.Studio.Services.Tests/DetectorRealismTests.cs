@@ -174,10 +174,10 @@ public sealed class DetectorRealismTests(ITestOutputHelper output)
         double tolerance = 4 * Math.Sqrt((fourth - variance * variance) / gain.Length);
         output.WriteLine($"Gain N={gain.Length}: Gaussian-equivalent FWHM={2.3548 * Math.Sqrt(variance):F4}, quadrature={2.3548 * Math.Sqrt(expectedVariance):F4} keV; variance={variance:F4}, expected={expectedVariance:F4}, 4σ={tolerance:F4} keV²; pattern σ={Math.Sqrt(patternVariance) / 661.7:P4}");
         Assert.InRange(Math.Abs(variance - expectedVariance), 0, tolerance);
-        const double width = 661.7 * 1.15 / SpectrumService.BinCount;
-        var histogram = new double[256];
-        // The 256 bins end at 1.15 × 661.7 keV; a smear in the far tail (> 761 keV, ≈ +4σ) lies outside the plotted
-        // spectrum and cannot affect the photopeak FWHM — skip it instead of indexing past the array.
+        const double width = SpectrumService.BinWidthKeV;
+        var histogram = new double[SpectrumService.BinCount];
+        // Studio's fixed 0–2000 keV axis (AB-16); a smear beyond it would be overflow and cannot affect the photopeak
+        // FWHM — skip it instead of indexing past the array.
         foreach (double energy in gain)
         {
             int bin = (int)(energy / width);

@@ -30,7 +30,8 @@ public sealed class SpectrumServiceTests(ITestOutputHelper output)
         Assert.Equal(view.Counts.Length + 1, view.BinEdgesKeV.Length);
         Assert.Equal(0, view.BinEdgesKeV[0]);
         double width = view.CentresKeV[1] - view.CentresKeV[0];
-        Assert.Equal(CsLines.Max(l => l.EnergyKeV) * 1.15, view.BinEdgesKeV[^1], 8);
+        Assert.Equal(SpectrumService.AxisMaximumKeV, view.BinEdgesKeV[^1], 8); // fixed axis (AB-16), not the line list
+        Assert.Equal(SpectrumService.BinWidthKeV, width, 8);
         for (int i = 0; i < view.Counts.Length; i++)
             Assert.Equal(view.CentresKeV[i], (view.BinEdgesKeV[i] + view.BinEdgesKeV[i + 1]) / 2, 8);
         int peak = Enumerable.Range(0, view.Counts.Length)
@@ -157,5 +158,37 @@ public sealed class SpectrumServiceTests(ITestOutputHelper output)
             toggled.Add((await service.ProcessAsync(id, events, CsLines, new(PileUp: true))).ProcessingTime.TotalMilliseconds);
         }
         output.WriteLine($"Worker processing ms (5 warmed runs): smear+bin 100000 [{string.Join(", ", full.Select(t => t.ToString("F3")))}]; increment 1000 [{string.Join(", ", incremental.Select(t => t.ToString("F3")))}]; pile-up toggle 100000 [{string.Join(", ", toggled.Select(t => t.ToString("F3")))}]. All run in service Task.Run.");
+    }
+
+    [Fact]
+    public async Task Axis_IsFixedAt2000keV_ForAnyLinesFieldOrPileUp_AndOverflowKeepsEveryPulse()
+    {
+        // AB-16: deposits on and far above the axis end (a Co-60 2505 keV cascade sum, a 3 MeV pulse) are overflow,
+        // never dropped; the axis and the 662 band do not follow the line list or the field's highest energy.
+        var events = new DetectedEvent[] { new(0, 0, 661.7, 0), new(0, 0, 1173.2, 1), new(0, 0, 1332.5, 2),
+            new(0, 0, 2505.7, 3), new(0, 0, 3000, 4), new(0, 0, 661.7, 5) };
+        var co = Isotopes.Get("Co-60").Lines.Select(l => new SpectrumLine("Co-60", l.EnergyKeV)).ToArray();
+        var views = new List<SpectrumView>();
+        foreach (var lines in new[] { CsLines, co, CsLines.Concat(co).ToArray() })
+        foreach (double? incident in new double?[] { null, 3960.9 })
+        foreach (bool pileUp in new[] { false, true })
+            views.Add(await new SpectrumService().ProcessAsync(Guid.NewGuid(), events, lines,
+                new(PileUp: pileUp) { IncidentMaximumEnergyKeV = incident }));
+        foreach (var view in views)
+        {
+            Assert.Equal(SpectrumService.BinCount, view.Counts.Length);
+            Assert.Equal(1000, SpectrumService.BinCount);
+            Assert.Equal(0, view.BinEdgesKeV[0]); Assert.Equal(2000, view.BinEdgesKeV[^1], 8);
+            Assert.Equal(2, view.BinEdgesKeV[1] - view.BinEdgesKeV[0], 8);
+            Assert.Equal(6, view.TotalCounts); // the arrivals are 1 s apart: no pile-up merges here
+            Assert.Equal(2, view.OverflowCounts);
+            Assert.Equal(view.TotalCounts, (long)view.Counts.Sum() + view.OverflowCounts);
+        }
+        // Same lines, with and without the field's highest energy: identical histogram and 662 band.
+        var cs = await new SpectrumService().ProcessAsync(Guid.NewGuid(), events, CsLines, new());
+        var csField = await new SpectrumService().ProcessAsync(Guid.NewGuid(), events, CsLines, new() { IncidentMaximumEnergyKeV = 3960.9 });
+        Assert.Equal(cs.Counts, csField.Counts);
+        Assert.Equal(cs.Bands.Select(b => b.Counts), csField.Bands.Select(b => b.Counts));
+        Assert.Equal(2, cs.Bands.Single(b => b.Lines.Any(l => l.EnergyKeV == 661.657 || Math.Abs(l.EnergyKeV - 661.7) < 0.1)).Counts);
     }
 }
