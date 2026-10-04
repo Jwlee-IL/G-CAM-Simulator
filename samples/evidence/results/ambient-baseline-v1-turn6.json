@@ -1,0 +1,171 @@
+{
+ "SchemaVersion": 1,
+ "Task": "TODO-30",
+ "Turn": 6,
+ "Date": "2026-10-04",
+ "Implementer": "substitute Claude implementer (not Codex)",
+ "Status": "AB-4 generator delivered under AB-4d; spectrum NOT VALIDATED pending the author decision on the UNSCEAR ratios",
+ "AcceptanceDecision": "none (AB-4d: the author sets the tolerance after seeing the ratios)",
+ "Seeds": [
+  12345,
+  1000003,
+  1007922,
+  1015841,
+  1023760,
+  1031679,
+  1039598,
+  1047517,
+  1055436,
+  1063355,
+  1071274,
+  1079193,
+  1087112,
+  1095031,
+  1102950,
+  1110869
+ ],
+ "SeedList": "samples/evidence/seeds.json O128[0:16]",
+ "Chains": [
+  {
+   "Chain": "K-40",
+   "CatalogLines": 4,
+   "PhotonsPerDecay": 0.11543188135647803,
+   "PhotonEnergyKeVPerDecay": 155.7596916322092,
+   "NotIncludedEntries": 3,
+   "KermaNGyPerHourPerBqKg": 0.04227871843413063,
+   "StandardErrorOverSeeds": 1.3332610534745485e-05,
+   "Seeds": 16,
+   "HistoriesPerSeed": 10000000,
+   "Unscear": 0.0417,
+   "Ratio": 1.0138781399072092,
+   "RatioStandardError": 0.0003197268713368222,
+   "KermaShares": {
+    "Uncollided": 0.4973285640284948,
+    "AnnihilationUncollided": 0.0005278675914981329,
+    "Scattered": 0.5021435683800071,
+    "Above1332KeV": 0.5412477034245693,
+    "Below10KeV": 0
+   },
+   "HybridKerma": 0.0422903120488803,
+   "CoherentUncollidedKermaDifferenceShare": 0.0005047615808596454,
+   "FluorescenceBoundShare": 0.0011600078062578068,
+   "UncollidedValidation": {
+    "Passes": true,
+    "Rule": "|MC - analytic| <= 6 SE (pooled per-history SE) for cells with >= 30 crossings; fewer = not tested; downward uncollided bins exactly zero",
+    "TestedCells": 31,
+    "UntestedCells": 24,
+    "MaxAbsZ": 2.0880572979746397,
+    "TotalRatio": 0.9994484991913284,
+    "TotalZ": -1.5211356368705082
+   }
+  },
+  {
+   "Chain": "U-238 series",
+   "CatalogLines": 939,
+   "PhotonsPerDecay": 3.0620803982489804,
+   "PhotonEnergyKeVPerDecay": 1762.655266781389,
+   "NotIncludedEntries": 115,
+   "KermaNGyPerHourPerBqKg": 0.46080042860487136,
+   "StandardErrorOverSeeds": 0.00014769764580223907,
+   "Seeds": 16,
+   "HistoriesPerSeed": 10000000,
+   "Unscear": 0.462,
+   "Ratio": 0.9974035251187692,
+   "RatioStandardError": 0.00031969187403082047,
+   "KermaShares": {
+    "Uncollided": 0.45806022496759896,
+    "AnnihilationUncollided": 0.0007628747884948322,
+    "Scattered": 0.5411769002439062,
+    "Above1332KeV": 0.28921504044900587,
+    "Below10KeV": 0
+   },
+   "HybridKerma": 0.4608073196482371,
+   "CoherentUncollidedKermaDifferenceShare": 0.0012203075031390158,
+   "FluorescenceBoundShare": 0.0024667516677773812,
+   "UncollidedValidation": {
+    "Passes": true,
+    "Rule": "|MC - analytic| <= 6 SE (pooled per-history SE) for cells with >= 30 crossings; fewer = not tested; downward uncollided bins exactly zero",
+    "TestedCells": 66,
+    "UntestedCells": 0,
+    "MaxAbsZ": 3.8191308910761443,
+    "TotalRatio": 1.0000149047627545,
+    "TotalZ": 0.0288743060216719
+   }
+  },
+  {
+   "Chain": "Th-232 series",
+   "CatalogLines": 406,
+   "PhotonsPerDecay": 3.832562919417058,
+   "PhotonEnergyKeVPerDecay": 2360.5269959327875,
+   "NotIncludedEntries": 23,
+   "KermaNGyPerHourPerBqKg": 0.617698887605969,
+   "StandardErrorOverSeeds": 0.0001571175691614308,
+   "Seeds": 16,
+   "HistoriesPerSeed": 10000000,
+   "Unscear": 0.604,
+   "Ratio": 1.0226802774933261,
+   "RatioStandardError": 0.00026012842576395826,
+   "KermaShares": {
+    "Uncollided": 0.476788685982012,
+    "AnnihilationUncollided": 0.0018791892204706201,
+    "Scattered": 0.5213321247975173,
+    "Above1332KeV": 0.36140681135642677,
+    "Below10KeV": 0
+   },
+   "HybridKerma": 0.6176705581801221,
+   "CoherentUncollidedKermaDifferenceShare": 0.0011757445134933742,
+   "FluorescenceBoundShare": 0.0025514670817702893,
+   "UncollidedValidation": {
+    "Passes": true,
+    "Rule": "|MC - analytic| <= 6 SE (pooled per-history SE) for cells with >= 30 crossings; fewer = not tested; downward uncollided bins exactly zero",
+    "TestedCells": 66,
+    "UntestedCells": 0,
+    "MaxAbsZ": 2.4181858151398443,
+    "TotalRatio": 0.9994983704278328,
+    "TotalZ": -0.8883511736948536
+   }
+  }
+ ],
+ "Spectrum": {
+  "File": "terrestrial-unscear2000-v1-NOT-VALIDATED.json",
+  "FileSha256": "a4f735010fa7f97685d32974d0dddd425fa9d5717be539b26b5fddbb5ccfb41c",
+  "ContentHash": "1b2b3f479f2669d7ab9ff07af2fb13a54ac06b027ebca6ca432ddf3c9d21fd2e",
+  "Lines": 1346,
+  "ContinuumBins": 204,
+  "TableRows": 16292,
+  "NotIncluded": 149,
+  "Path": "samples/ambient/terrestrial-unscear2000-v1-NOT-VALIDATED.json"
+ },
+ "Inputs": {
+  "Catalog": "samples/ambient/terrestrial-source-catalog-v1.json",
+  "CatalogSha256": "fe7327702eb19a023097747819d2a351f476dca239f6b21674a2e49f6bd94193",
+  "Materials": "samples/ambient/materials-v1.json",
+  "MaterialsSha256": "5f68574a239b7e151b36d6f79bbf0a3fc45ca7d5be61f1eefe09ff480c320439",
+  "Request": "samples/ambient/terrestrial-generator-v1.json"
+ },
+ "ReferenceDocumentsNotCommitted": {
+  "Hasl258Compendium": {
+   "Url": "https://lmpublicsearch.lm.doe.gov/sitedocs/sw-a-000582.pdf",
+   "Sha256": "015411a78291c429b0571482880010a9de690a1ce0fde3a654ef5422365e5d1b"
+  },
+  "UnscearAnnexB": {
+   "Url": "https://www.unscear.org/unscear/uploads/documents/publications/UNSCEAR_2000_Annex-B.pdf",
+   "Sha256": "ddfb2366a6e79fb278d737568200903b271b8df9bef0add0134eefa25dc3e8d9"
+  },
+  "EnsdfPa234Adopted": {
+   "Url": "https://www.nndc.bnl.gov/ensnds/234/Pa/adopted.pdf",
+   "Sha256": "da2abaa44c31eb2008537524dc4e499899ca65ca227797ee0f96029150879b6f"
+  },
+  "EnsdfTh234BetaDecay": {
+   "Url": "https://www.nndc.bnl.gov/ensnds/234/Pa/beta_decay.pdf",
+   "Sha256": "692d4e442987d8d9b37bcbe23d32592e388106201a4879b301ab589197867191"
+  },
+  "EnsdfPa234mBetaDecay": {
+   "Url": "https://www.nndc.bnl.gov/ensnds/234/U/beta_decay_1.159_m.pdf",
+   "Sha256": "7176eb03057f2122e262fcadc659c349b8631f1ce561e0e06e20781b2a575c5e"
+  }
+ },
+ "ComputeSeconds": 163.6046066,
+ "Threads": 12,
+ "ApprovalRequests": []
+}
