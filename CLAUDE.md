@@ -87,6 +87,10 @@ desktop UI tests last. Procedure, call rules and cautions: `docs/AGENTS.Planning
 **Commit messages (author, 2026-10-02):** end with the `Co-Authored-By: Claude …` line only — **never add a
 `Claude-Session:` link** (or any other claude.ai session/conversation URL) to a commit, PR or file: the repo is public and
 the sessions hold private context. Earlier commits keep theirs (history is not rewritten); those sessions are never shared.
+**Commit identity (author, 2026-10-05):** commits in this repo are authored as
+`Jwlee-IL <74895590+Jwlee-IL@users.noreply.github.com>` — never a machine's global git identity. On a new computer set it
+per repository (`git config user.name` / `user.email`, local, not `--global`) and check `git log -1 --format='%an <%ae>'`
+before the first commit.
 **Verify inherited "it's done" claims against the actual code before propagating them** (a docs
 pass once trusted a summary's "CLI complete" and was wrong — 39 commands, not 23).
 
