@@ -131,6 +131,15 @@ becomes the validated terrestrial spectrum (`terrestrial-unscear2000-v1`), **on 
 H*(10) with the **front-only** bound; 0 restores the ideal environment (labelled as such). The development mono662
 placeholder leaves the user-facing preset list.
 
+**Decision AB-16 (author, 2026-10-04, after turn 10).** Turn 10 found the Studio spectrum axis ends at 1.15 × the
+highest line in the spectrum: with the 1346-line terrestrial spectrum that is a Tl-208 3960.9 keV line of negligible
+intensity (lines above 2.7 MeV carry 0.033 % of the line fluence; Tl-208 2614 keV carries 11.6 %), so the startup view
+stretched to 4555 keV. Decided: the Studio spectrum axis is **fixed at 0–2000 keV** regardless of the field or the
+source lines ("2 MeV 이상은 크게 의미가 없을 것 같아"); counts above 2000 keV are not discarded but shown as an
+**overflow count** (this also moves the Co-60 2505 keV cascade sum and pile-up sums into the overflow). The ambient dose
+input is validated by a pattern and an invalid entry is refused (the previous value stays) instead of falling back to 0.
+The bound drop-down keeps the engine names (engineering viewer, D-34).
+
 **Angular distribution (AB-4 addendum).** Representation: a tabulated joint distribution, energy bins × zenith-cosine
 bins at the detector point (azimuth uniform), versioned with the spectrum. Acceptance oracle: the **uncollided** line
 fluence per Bq/kg and its zenith distribution from the MC against the analytic uniform-half-space result (soil μ, air μ,
