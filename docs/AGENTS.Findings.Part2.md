@@ -916,3 +916,90 @@ D-39, D-40 in `VV.Gcam.Decisions`).
   re-run over seeds, so no global optimum or all-device tolerance is claimed; no RTL vectors were regenerated.
 - Plots: `shield.png`, `masktaper.png`, `handheld_validation.png` read their annotations from `results/` (curves stay
   one labelled run); `cyclic_vs_noncyclic.png` regenerated at seed 12345 with the current engine (362 / 173).
+
+## 64. Absolute ambient background — terrestrial field, calibrated gate, and what it changes (2026-10-04)
+
+TODO-30 ([PLAN.Physics.AmbientBackground](PLAN.Physics.AmbientBackground.md), Codex review
+[PLAN.Physics.AmbientBackground.Review](PLAN.Physics.AmbientBackground.Review.md); author decisions AB-1 … AB-14).
+Turns 1–5 by Codex, **turns 6–9 by substitute Claude implementers** (Codex allowance), each with a committed report
+`samples/evidence/results/ambient-baseline-v1-turn<N>.md` and its JSON. Every earlier MC number came from an ideal
+environment or a background set relative to the source (BSR, theme 28). The engine can now add a source-independent
+terrestrial field (photon H*(10) → fluence by ICRP 74 → transport → Poisson), bounded by two geometries instead of a
+housing model (AB-2): **bare crystal** on all faces (upper) and **front only** through the mask (lower). With the
+field off, every legacy and BSR path stays bit-for-bit identical (AB-8). Evidence: EV-34 plus an ambient item in
+EV-01 / 02 / 07 / 09 / 12 / 15.
+
+- **Spectrum built by the engine (turn 6, AB-4 / 4d / 10).** K-40, U-238 and Th-232 series at the UNSCEAR 2000 soil
+  activities 420 / 33 / 45 Bq/kg in a uniform soil half-space (HASL-258 soil, NIST XCOM, dry air), collided MC
+  (`SoilAirTransport`, `montecarlo ambient-terrestrial`), scored at 1 m. Evaluated lines with absolute intensities
+  only (IAEA LiveChart / ENSDF, 96 hash-pinned snapshots); 149 "not included" entries listed, never substituted.
+  Uncollided fluence vs the analytic half-space kernel: 0.99945 / 1.00001 / 0.99950, every tested cell within 6 SE.
+  **Air kerma per Bq/kg, MC / UNSCEAR: 1.01388 ± 0.00032 / 0.99740 ± 0.00032 / 1.02268 ± 0.00026** (N = 16 seeds ×
+  10⁷ histories per chain) — many SE from 1, a model-to-model difference; accepted by the author with a **±3 % band
+  chosen after seeing the ratios (AB-10), a model comparison, not a statistical test**. 60.76 nGy/h at the UNSCEAR
+  activities (UNSCEAR 59.94). Photons above 1332 keV carry 54.1 / 28.9 / 36.1 % of the kerma — the AB-3 exposure
+  (tungsten μ clamped above 1332 keV, no pair production in the crystal, dose cut at 2000 keV; TODO-31).
+- **Validated file (turn 7).** `samples/ambient/terrestrial-unscear2000-v1.json` issued by `montecarlo ambient-issue`
+  (content unchanged, `IsValidated` + an acceptance record read from the hash-pinned turn-6 results); evidence runs
+  refuse an unvalidated or mis-pinned spectrum. A CRLF-hashed placeholder sidecar was found and fixed (hash the bytes
+  git stores; test `PinnedAmbientFiles_HashTheBytesGitStores`).
+- **Detected ambient rate per µSv/h** (turn 7, mean over 128 seeds): lab bare 162.8 cps all deposits / 1.66 cps in the
+  662 keV window, front-only 0.572 / 0.0447; hand-held bare 335.2 / 4.28, front-only 1.283 / 0.104. Ambient ÷ a 1 MBq
+  Cs-137 source at 0.10 µSv/h: lab 0.203 (bare, open), 1 m **7.04** (bare, open), 0.228 (bare, 662 keV), 0.027
+  (front, open). The review's order-of-magnitude estimate (BSR ~2.5–3 at 1 MBq, ~1 m) is exceeded by the bare bound
+  and far above the front-only one.
+- **Search statistic and gate (turns 7–8, AB-7 / 11).** Z(θ) = the decoder's output studentised against the
+  instrument's background-shape model with the acquisition total as the only nuisance (mean 0, variance 1 per grid
+  point under a multinomial background — tested); max over the grid, calibrated empirically. 96 configurations
+  (4 cases × 2 exposures × 3 fields × 2 bounds × 2 windows). Turn 7 (4,096 selection nulls, α = 0.003): 93 / 96 —
+  three front-only configurations with < 1 expected count missed by 0.007 points (13 / 2,048, upper 1.007 %) because Z
+  is coarse there. AB-11: re-selected on **65,536 nulls per configuration** (F128[1:65] × 1024) with ties counted
+  (thresholds 1.163 … 4.6245, `gate-thresholds-v2.json` pinned before validation), validated on **new seeds
+  F256[128:256]** (8,192 nulls per configuration): **96 / 96 pass**, pooled **2,424 / 786,432 = 0.308 %** (one-sided
+  95 % 0.298–0.319 %), worst lab 10 s 0.10 front-only 662 keV 40 / 8,192 (upper 0.64 %). The first 64 repeats per
+  seed reproduce turn 7's thresholds exactly.
+- **Count gates under the field (turn 8, N = 128).** Smallest net S for ≥ 95 % trusted and within one resolution
+  element, lab centre: ideal 100, front-only 100, bare open 250 / 250 / 500 (10 s) and 500 / 500 / 1000 (60 s) at
+  0.05 / 0.10 / 0.20 µSv/h, bare 662 keV 100 (10 s) and 100 / 250 / 250 (60 s); hand-held centre: 250 ideal, bare open
+  500 (10 s) and 1000 / 1000 / > 1000 (60 s). **A significance gate, not a count gate:** in the bare open window S grows
+  roughly as √B (lab 250 → 500 → 1000 for B ≈ 160 → 490–980 → 1950). Of 448 gate entries 438 equal turn 7's; the 1 m
+  3° source is marginal (edge of the optics, seed-clustered).
+- **What it changes (turns 8–9).** EV-01 at the scenarios' 1 MBq × 1 s (N = 64): the count budget dominates (lab
+  non-cyclic 180.4 ± 1.5 of 625 ideal vs 278 noiseless), the field costs −10 / −19 / −36 % bare open, ≤ 1.6 % in the
+  662 keV window. EV-02 (N = 64): open window at N0 500 the non-cyclic field falls from 5.5° to 3.5–5.5° (10 s) and
+  0–4° (60 s) and the flag fails from B/N0 ≈ 0.7; the 662 keV window keeps it within one 0.5° step, unflagged wrong
+  spot ≤ 0.28. EV-12 (N = 128): subtraction / antimask reproduce the relative ranking (2.3 / px 0.45 / 0.35 mm; 6.8 / px
+  0.92 / 0.61 mm; 13.6 / px 2.24 / 1.69 mm); raw single-mask decode collapses to ~9 mm in the bare bound. EV-15
+  (N = 128): the legacy recipe has no live time (1 Bq + 8 Bq and a photon budget → 6.14 Cs counts in a literal 66 h; run
+  and reported in turn 8, unmeasurable); AB-14 re-measured it at Cs 1 MBq + Co 8 / 2 MBq, 60 s: **no measurable field
+  effect**; stripping −4.5 % [−8.7, −1.0] / −1.1 % [−4.9, +2.8] at 8 : 1 (separated / co-located), −1.2 % / −0.3 % at
+  2 : 1; R = 1.1338 ± 0.0092 on total-deposit windows, **not comparable** with the legacy per-pixel R = 3.99. Front-only
+  bound and the 662 keV window change nothing measurable anywhere tested.
+- **Finding → TODO-33 (AB-12): the raw decoder is pulled; the search statistic is not.** In the bare bound, open window,
+  the cross-correlation pull is a switch: ideal floor below B/S ≈ 0.5, jumps between ≈ 0.6 and 1.3, saturation above
+  ≈ 2 at ~8 mm lab (2.9°), ~9 mm hand-held (3.4°), ~19 mm at 1 m (1.1°), ~40–50 mm at 5 m (0.5°) — the decoder's answer
+  for the non-flat bare background (edge / centre 2.7 lab, 3.3 hand-held; noiseless answer (0.8 ± 1.4, −8.8 ± 0.2) mm lab,
+  saturated acquisitions at (0.9, −8.2)). Excess ≤ 0.73 mm in the 662 keV window and front-only. MLEM without a
+  background term is pulled more slowly (hand-held edge within-3-mm 0.960 → 0.805 vs 0.772 → 0.184) but is worse at
+  80 counts even ideal. Baseline in `ambient-baseline-v1-turn8-bias.json`; fix (background-shape-aware decoding,
+  MLEM's b_i term the natural candidate) is TODO-33, not done here.
+- **Reproduce.** `montecarlo ambient-terrestrial samples/ambient/terrestrial-generator-v1.json <dir>`;
+  `montecarlo ambient-issue samples/ambient/terrestrial-unscear2000-v1-issue.json <dir>`; per seed `ambient-gate` /
+  `ambient-evidence <request>`; ensembles `python samples/evidence/run_seeds.py --manifest
+  samples/evidence/manifest-ambient-v2.json --family gate_selection_v2 | gate_validation_v2 | ev12_antimask
+  ev15_separation ev02_fov ev01_sweep` and `manifest-ambient-v3.json` `ev15_abs_a ev15_abs_b ev02_fov_cs662`, then
+  `samples/evidence/ambient/{select_thresholds,aggregate_gate,aggregate_ev,bias_baseline}.py` (commands in each turn
+  report's "Reproduce").
+- **Artefacts.** `samples/ambient/` (catalog, materials, generator request, NOT-VALIDATED and validated spectra with
+  `.sha256`, `source-data/v1/` snapshots, `.gitattributes` `* -text`); `samples/evidence/ambient/` (requests, pinned
+  thresholds v1 / v2, scripts); `samples/evidence/manifest-ambient-v{1,2,3}.json`; `seeds.json` gained F256;
+  `samples/evidence/results/ambient-baseline-v1-*` (reports, summaries, gate / EV / bias JSON). Tests: the engine
+  suite grew 330 → 393 over turns 6–9 (`KleinNishinaTests`, `ExponentialIntegralTests`, `SoilAirMaterialsTests`, `TerrestrialCatalogTests`,
+  `SoilAirTransportTests`, `TerrestrialSpectrumTests`, `IncidentSpectrumFileTests`, `AmbientAngularSamplerTests`,
+  `AmbientFieldTests`, `GateResponseTests`, `CorrelationSearchTests`, `AmbientGateStudyTests`, `AmbientEvidenceTests`).
+- **Caveats.** Bounds, not a housing (realistic head: TODO-32); high-energy transport incomplete (TODO-31); homogeneous
+  crystal for source and field, so each family's ideal is re-measured in this pipeline and differs from the legacy
+  (EV-02 0.5–1° narrower); Poisson maps from expected maps, not event-by-event; terrestrial soil only (no cosmic,
+  airborne radon, room scatter, intrinsic crystal activity); Studio's ambient input stays off by default (AB-5). Turns
+  6–9 were substitute Claude implementers, not Codex; turn 8's runs carry `engine_tree_dirty: true` (committed
+  afterwards as `aa9fcc4`), turn 9's EV-02 run used a copy of the turn-8 build. Pilot runs (seed 777) are not evidence.

@@ -17,10 +17,11 @@ use conditions come from published standards, published data of same-class produ
 
 **Ideal conditions.** Unless an evidence entry says otherwise, its numbers come from an **ideal environment**: only
 the simulated source(s), **no ambient (natural) background radiation**, an ideal detector response and known geometry.
-They are best-case bounds. A real field adds a source-independent Poisson background that raises every count
-threshold and widens every error; which results change, and how, is listed in
-[Evidence §1](VV.Gcam.Evidence.md#ideal-conditions-and-background) and is being measured with an absolute ambient
-background model.
+They are best-case bounds. A real field adds a source-independent Poisson background. Measured with an absolute terrestrial
+ambient field (0.05–0.20 µSv/h, bare-crystal and front-only bounds), it raises the counts a trusted location needs
+when every deposit is used and the crystal is exposed, while the 662 keV window or a well-shielded head leaves most
+results at their ideal values; which results change, and how, is listed in
+[Evidence §1](VV.Gcam.Evidence.md#ideal-conditions-and-background) (EV-34).
 
 **In numbers:** 19 user needs (18 active) → 51 product requirements (48 active) → 33 evidence entries; 9 known limitations;
 40 decisions with the author's reasons. The engineering viewer has 102 active software requirement IDs (nine withdrawn), four workspaces, and current unit/integration

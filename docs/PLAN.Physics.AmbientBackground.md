@@ -6,13 +6,14 @@ depend on the source: removing the source leaves it, and a weaker source is buri
 (dose rate + spectrum → fluence → transport through the head → Poisson events), re-measure the results it changes, and
 fill the "Under ambient background" column of Evidence §1. Procedure: [AGENTS.Planning](AGENTS.Planning.md).
 
-Status: **in progress** — turn 8 done 2026-10-04 (substitute Claude implementer; report
-`samples/evidence/results/ambient-baseline-v1-turn8.md`, commits `aa9fcc4`, `b6ebb26`): AB-11 gate re-selected on 65,536
-nulls and re-validated on fresh F256[128:256] seeds — **96 / 96 pass**, pooled 0.308 %; EV-12, EV-02 (open window),
-EV-01 measured; EV-15 blocked by its recipe (no live time); decoder-bias baseline for TODO-33. Planner re-verified:
-build 0 errors; tests engine 391, Core 184, services 87 (+7 skipped), UI 13 (+14 skipped), all pass; F256 rule
-regenerated. Next (turn 9, AB-14): EV-15 at absolute activities, EV-02 cs662 window; then the planner writes Evidence /
-PRS / Findings. History: turns 1–5 Codex (`56f0a17`), 6 (`b9310f8`, AB-10), 7 (`caade67`, AB-11…13).
+Status: **in progress — measurements and V&V docs done**, 2026-10-04. Turns 6–9 by substitute Claude implementers
+(Codex unavailable), each audited and re-verified by the planner (final: build 0 errors; tests engine 393, Core 184,
+services 87 (+7 skipped), UI 13 (+14 skipped), all pass). Results: validated terrestrial spectrum (AB-10), gate 96 / 96
+on fresh seeds (AB-11), EV-01 / 02 / 07 / 09 / 12 / 15 under the field (AB-13, AB-14), decoder-pull baseline → TODO-33
+(AB-12). Docs: Evidence §1 measured column + **EV-34**, PR-SENS-02, LIM-06 / LIM-07, Findings **theme 64**, README /
+Overview / PAPER wording. **Remaining:** AB-5 Studio default (author decision), Studio's "not validated" label and its
+SRS / SDS rows, then close (Todo row → Backlog, plan → archive). Reports: `samples/evidence/results/ambient-baseline-v1-turn{6..9}.md`.
+History: turns 1–5 Codex (`56f0a17`); 6 `b9310f8`; 7 `caade67`; 8 `aa9fcc4`; 9 `c9a1e38`.
 
 ## What exists (checked in the code, 2026-10-02 — *verify*)
 

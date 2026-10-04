@@ -70,7 +70,10 @@ B + E buys a ~25–45° field in hardware and pays in mass, power and cost; C tr
 on cost, the software-only path:
 
 1. *Usable field from non-cyclic decoding:* **±6–7.5° along the axes** without background (7.0° at 1 m and 7.5° at 5 m with 5000 on-axis counts; 6.0° / 7.0° with 500), the same at 1 m and 5 m; ±5–6.5° with background equal to the signal; on the diagonal at low counts with background it is worse
-   than cyclic decoding *(MC, EV-02)*. A usable-field claim needs a count level and a direction.
+   than cyclic decoding *(MC, EV-02)*. A usable-field claim needs a count level and a direction. Under a natural
+   terrestrial field (0.05–0.20 µSv/h, EV-02 / EV-34) the 662 keV window keeps it within one 0.5° step of its ideal;
+   counting every deposit with an unshielded crystal, a source giving 500 counts on axis loses most of it (non-cyclic
+   0–4° at 60 s along x).
 2. *Option G — out-of-field cue:* the flood centroid tells the user which way to turn and flags the wrong in-field
    answers past ~7° *(MC, EV-02)*.
 3. *Option A — hand sweep with IMU / VIO stitching* (no pan-tilt head): ~10–14 pointings for a 45° × 45° view, spaced
@@ -94,14 +97,16 @@ ghosts are reliably suppressed, a "source outside the field — turn left" cue (
 
 | Option | Cost |
 |---|---|
-| **Chosen (2026-10-01):** non-cyclic (finite-mask) decoding — the default (PR-IMG-01) | it **moves** the ghost boundary from 3.6° to ~7°, it does not remove it: at 7.5–11° off axis 50–90 % of acquisitions return a wrong spot inside the field (EV-02). The flood centroid flags most of those (≤ 7 % of acquisitions unflagged without background), but with background equal to the signal up to 29–49 % go unflagged |
+| **Chosen (2026-10-01):** non-cyclic (finite-mask) decoding — the default (PR-IMG-01) | it **moves** the ghost boundary from 3.6° to ~7°, it does not remove it: at 7.5–11° off axis 50–90 % of acquisitions return a wrong spot inside the field (EV-02). The flood centroid flags most of those (≤ 7 % of acquisitions unflagged without background), but with background equal to the signal up to 29–49 % go unflagged. Under an absolute terrestrial field (EV-02, EV-34) the 662 keV window keeps the flag working (unflagged wrong spot ≤ 0.28 at 1 m, N0 500, up to 0.20 µSv/h); counting every deposit in the bare-crystal bound the flag stops working from background ≈ 0.7 × the on-axis source counts — 0.10 µSv/h × 10 s for a source giving 500 counts on axis. Outside the fully coded field the cyclic ghost persists under the field; it is not turned into correct answers |
 | *Rejected (cost, mechanical stability):* mask / antimask (rotating the mask, as iPIX does) | a rotation mechanism — its cost and mechanical stability outweigh the gain (D-19). The gain is real: at equal total time the antimask has ~20–30 % lower RMS than a calibrated background subtraction at every background level, both sub-mm through 4 background counts per pixel (EV-12); neither helps against a directional coded interferer |
 | MLEM with a full forward model including the partially-coded field (EV-11) | computation; the model must be right at the edges |
 | Cross-check with the energy histogram (author, UN-11) | needs a photopeak; does not tell *where* |
 
 **Status.** Non-cyclic decoding chosen, mask rotation rejected (author, 2026-10-01; basis restated 2026-10-02 after the seed-ensemble measurement, D-19). Remaining risk: the centroid
-flag that makes non-cyclic answers past ~7° safe to reject needs a background estimate, and several sources at once
-are not studied. PR-IMG-08 stays dependent on PR-IMG-01; LIM-01 option G inherits this condition.
+flag that makes non-cyclic answers past ~7° safe to reject needs a background estimate and, under a natural field, an
+energy window (measured between a bare and a fully shielded head, EV-34 — the real housing lies between), and
+several sources at once are not studied. Under the absolute field the mask / antimask ranking at equal time is
+unchanged (EV-12). PR-IMG-08 stays dependent on PR-IMG-01; LIM-01 option G inherits this condition.
 
 ## LIM-08 — Spatial isotope separation is limited
 
@@ -110,7 +115,9 @@ image once Co-60 is about **4× stronger** (holds at 2× in 126 / 128 seeds); in
 makes up ~55 % of the 662 keV window in 1 mm GAGG pixels *(MC, EV-15)*.
 
 **What still works.** Per-pixel Compton stripping recovers the co-located Cs-137 count (0–1 % error with an oracle ratio, EV-15) —
-the spectral lever; it needs a calibrated downscatter / photopeak ratio and known lines.
+the spectral lever; it needs a calibrated downscatter / photopeak ratio and known lines. Re-measured at absolute
+activities (Cs-137 1 MBq with Co-60 8 or 2 MBq, 60 s, lab distance) with a natural terrestrial field added, the
+picture is the same and the field has no measurable effect (EV-15, EV-34).
 
 | Option | Cost |
 |---|---|
@@ -199,12 +206,25 @@ far beyond the 2.5 kg budget.
   at field stand-off only the field of view (Cs-137, 1 m and 5 m, EV-02) and the dose response (1 m, EV-23) are.
 - The field-of-view and dose studies model the shield's front plate only, no side or rear walls; oblique readings
   are upper bounds.
-- **Ideal environment.** Results without a stated background have **no ambient (natural) background** — only the
-  simulated sources, an ideal detector and known geometry; they are best-case bounds. Where background is studied it
-  is a flat or linearly graded pedestal, or an event stream, whose level is set **relative to the source** (BSR), not
-  an absolute, source-independent ambient field; real plant backgrounds, room scatter and shielded sources are not
-  simulated. What is expected to change under ambient background:
-  [VV.Gcam.Evidence §1](VV.Gcam.Evidence.md#ideal-conditions-and-background).
+- **Ideal environment, and an ambient field measured only between bounds.** Results without a stated background have
+  **no ambient (natural) background** — only the simulated sources, an ideal detector and known geometry; they are
+  best-case bounds. A source-independent **terrestrial** field (K / U / Th from the soil, 0.05–0.20 µSv/h) has been
+  measured for localisation, field of view, the trust gate, mask / antimask and isotope separation *(MC, EV-34;
+  EV-01, EV-02, EV-07, EV-12, EV-15)*; the other results state only the expected direction
+  ([VV.Gcam.Evidence §1](VV.Gcam.Evidence.md#ideal-conditions-and-background)). What those measurements leave open:
+  - *No head housing:* each result is a range between a bare crystal exposed on all faces and a perfectly shielded
+    head that admits the field through the mask only. The two ends differ widely — the bare bound pulls the decoder
+    and erases the out-of-field cue at counts where the front-only bound changes nothing — so a field claim needs a
+    model of the real shield walls and entrance.
+  - *High energies:* the tungsten attenuation is clamped above 1332 keV and the crystal has no pair production, while
+    29–54 % of the field's air kerma is carried by photons above 1332 keV (K-40 1461, Tl-208 2614 keV); the
+    shielding of those lines is therefore not transport-grade.
+  - *Decoder pull:* in the bare bound, counting every deposit, the plain decoder's answer jumps toward the
+    background's own pattern once background exceeds about half the source counts (saturating at ~8–9 mm at the lab
+    distance, ~19 mm at 1 m). The calibrated search statistic and background subtraction do not show it; removing it
+    from the reported position needs a decoder that models the background's shape, which does not exist yet.
+  - Real plant backgrounds, room scatter, cosmic and airborne-radon components, intrinsic crystal activity and
+    shielded sources are not simulated; the older relative (BSR) studies remain stress tests.
 - Nothing is compared with recordings of any real instrument, and nothing is measured on hardware.
 - Monte Carlo numbers are spreads over seed ensembles of the simulation, not tolerances; results that use the
   studies' fixed manufactured patterns (mask machining errors, defect maps, gain maps) hold for those patterns, not

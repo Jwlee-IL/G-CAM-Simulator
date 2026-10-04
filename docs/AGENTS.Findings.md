@@ -23,6 +23,7 @@ theme below changes, update its EV entries in the same commit (`AGENTS.Conventio
 | 9 | EV-07 | 51 | EV-20 | 53 | EV-02 |
 | 10 | EV-21 | 52 | EV-09, EV-14, EV-15, EV-19, EV-20; model history | 54 | EV-23 |
 | 14 | EV-16 | 15 | EV-14, EV-15 | 63 | every MC entry; model history |
+| 64 | EV-34; ambient items of EV-01, -02, -07, -09, -12, -15; Evidence §1; model history | | | | |
 
 ## Index
 
@@ -94,3 +95,4 @@ The themes are split over two files; this table is the entry point (one row per 
 | 61 | [Per-decay cascade emission in list mode — correct, and negligible at 1 m (2026-10-02)](AGENTS.Findings.Part2.md#61-per-decay-cascade-emission-in-list-mode--correct-and-negligible-at-1-m-2026-10-02) |
 | 62 | [Joint forward-likelihood depth beats the sharpest plane — but is not yet a Studio replacement (2026-10-02)](AGENTS.Findings.Part2.md#62-joint-forward-likelihood-depth-beats-the-sharpest-plane--but-is-not-yet-a-studio-replacement-2026-10-02) |
 | 63 | [Evidence quoted over seed ensembles — `samples/evidence` (2026-10-02)](AGENTS.Findings.Part2.md#63-evidence-quoted-over-seed-ensembles--samplesevidence-2026-10-02) |
+| 64 | [Absolute ambient background — terrestrial field, calibrated gate, and what it changes (2026-10-04)](AGENTS.Findings.Part2.md#64-absolute-ambient-background--terrestrial-field-calibrated-gate-and-what-it-changes-2026-10-04) |

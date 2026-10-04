@@ -7,8 +7,8 @@ does not need any other document to check a number. Not covered: GCAM Studio's s
 ([VV.Studio](VV.Studio.md)).
 
 **At a glance**
-- 33 entries, `EV-01` … `EV-33`, grouped as imaging, energy and isotopes, rate and dose, head design,
-  manufacturing, and range.
+- 34 entries, `EV-01` … `EV-34`, grouped as imaging (with the absolute ambient field, EV-34), energy and isotopes,
+  rate and dose, head design, manufacturing, and range.
 - Each entry gives the grade of its evidence ([PRS §1](VV.Gcam.PRS.md#1-evidence-grades)): **MC** Monte Carlo,
   **RTL** front-end model, **AN** analytical design model.
 - Nothing here is measured on hardware, and nothing has been compared with recordings of any real instrument.
@@ -41,22 +41,37 @@ bit-equality, synthesis timing) carry no SD.
 
 Unless an entry says otherwise, its MC numbers come from an **ideal environment**: only the simulated source(s), **no
 ambient (natural) background radiation**, an ideal detector response, known geometry and calibration. They are
-**best-case bounds**, not field performance. Where a study adds background, it is either a uniform pedestal or a
-Poisson event stream whose rate is set **relative to the source** (background ÷ signal, BSR) — a controlled stress
-test, not the absolute, source-independent ambient field a real camera sees (terrestrial K / U / Th lines, cosmic
-and scattered radiation at a given dose rate). An absolute ambient-background model is being added; until it is
-measured, the column "Under ambient background" states the expected direction and the evidence for it.
+**best-case bounds**, not field performance. The older background studies (EV-02, EV-12, EV-25) set the background
+**relative to the source** (background ÷ signal, BSR) — a controlled stress test, kept as such.
 
-| Entries | Background in the quoted result | Under ambient background (expected; to be measured) |
+**The absolute ambient field (since 2026-10-04; [EV-34](#ev-34--absolute-ambient-field-and-the-background-aware-search-statistic)).**
+The engine can add a source-independent terrestrial field, given as a photon H*(10) rate. Its spectrum and angular
+distribution come from a soil / air transport generator: K-40, the U series and the Th series at the UNSCEAR 2000
+population-weighted soil activities in a uniform soil half-space, evaluated decay lines only, scored 1 m above the
+ground. Its air kerma per Bq/kg is **1.014 / 0.997 / 1.023 × UNSCEAR's** coefficients (K / U / Th), accepted within a
+±3 % band chosen after seeing the ratios — a model comparison, not a statistical test. No housing is modelled; every
+ambient result is a range between two bounds: **bare crystal** exposed on all faces (upper) and **front only**, the
+field entering through the mask with sides and rear perfectly shielded (lower). High-energy limits: the tungsten μ
+is clamped above 1332 keV, the crystal has no pair production, and the dose path cuts deposits at 2000 keV — while
+29–54 % of the field's air kerma is carried by photons above 1332 keV. Acquisitions are exact Poisson draws per pixel
+from expected source and ambient maps on a homogeneous crystal model (no gaps, entrance window or backing), so each
+family's ideal is re-measured in this pipeline (same seeds and maps, no field) and quoted beside the ambient values;
+the legacy ideal value stays the best-case bound. Field levels 0.05 / 0.10 / 0.20 µSv/h; "662 keV window" is
+661.7 keV ± 10 %, "open window" counts every deposit.
+
+| Entries | Background in the quoted result | Under the absolute ambient field (measured) |
 |---|---|---|
-| EV-01, EV-03, EV-05, EV-06, EV-08, EV-09, EV-13, EV-31, EV-32 (imaging precision, field, sampling, tolerances) | none | the Poisson part of each error and the counts needed for a given precision grow (statistical term roughly × √(1 + B/S)); a fixed geometric / grid floor need not move, but wrong-peak probability and the time to reach the floor do; a weak source's coded signal competes with background Poisson noise (direction shown in EV-12: at 400 source counts RMS 0.76 mm at BSR 1, ~2.9 mm at BSR 2) |
-| EV-07 count gates (collapse below ~25, sub-mm from ~250 counts) and PR-SENS-02 | none — every count is a source count | the gates are ideal references: with background the same net source counts give lower precision (background adds variance), so a gate needs a calibrated significance (false-alarm rate on background-only acquisitions) plus a separate localisation-quality criterion |
-| EV-10, EV-11, EV-14, EV-15 (multi-source, MLEM, Compton strategies, isotope separation) | none (other isotopes only) | ambient lines and continuum add to every window; stripping must also remove the background's own downscatter |
-| EV-02 field of view | BSR 0 and 1 (relative) | wrong-spot and outside-field-cue rates at an absolute ambient rate depend on source strength and distance |
-| EV-12 background and mask / antimask | BSR 0–4 (relative, uniform pedestal) | the absolute level sets which BSR a given source and distance falls at |
-| EV-25 shield | relative background spectra (scattered, 662 keV, Co-60) | the needed shield follows the actual ambient spectrum and dose rate |
-| EV-17, EV-21, EV-22 (front end, rate, dead time) | none / source-only event streams | background adds counts to pile-up and dead time; small at natural levels |
-| EV-23 dose | source fields only | natural background adds ~0.05–0.2 µSv/h to every reading, a floor for low readings |
+| EV-01 localisation, ghosts, cyclic against non-cyclic | none | **measured** (N = 64), at the scenarios' own 1 MBq × 1 s (~80 counts on axis at the lab geometry, ~195 at the hand-held head): expected localised positions of 625, lab, non-cyclic, open window, **180.4 ± 1.5** ideal in this pipeline (legacy noiseless 278) → **162.3 / 145.4 / 115.3** bare at 0.05 / 0.10 / 0.20 µSv/h, 180.0–180.4 front-only; in the 662 keV window the bare bound costs at most 1.1 positions (lab) and 2.4 (hand-held). The count budget, not the field, makes most of the gap to 278 |
+| EV-02 field of view | BSR 0 and 1 (relative) | **measured** (N = 64; 1 m and 5 m, 10 s and 60 s): front-only — no change; bare, 662 keV window — the usable non-cyclic half-field moves at most one 0.5° step from that window's ideal, the out-of-field flag works at every level, the unflagged wrong spot at 7.5–12° stays ≤ 0.28; bare, open window — at N0 500 the non-cyclic field along x falls from 5.5° (this pipeline's ideal) to 3.5–5.5° at 10 s and 0–4° at 60 s, and the flag stops working from background ÷ N0 ≈ 0.7; at N0 5000 the field costs ≤ 1.5° along x |
+| EV-07 count gates and PR-SENS-02 | none — every count is a source count | **measured** (N = 128 fresh seeds): the gate is a calibrated significance; per-configuration thresholds keep false-trusted locations on background-only acquisitions ≤ 1 % in **96 / 96** configurations (pooled 0.308 %). Smallest net count for ≥ 95 % trusted and within one resolution element, lab centre: ideal 100; front-only 100; bare, open window 250 / 250 / 500 (10 s) and 500 / 500 / 1000 (60 s); bare, 662 keV window 100 / 100 / 100 (10 s) and 100 / 250 / 250 (60 s). The needed counts grow with the background, roughly as √B |
+| EV-09 hand-held head | none | **measured** (hand-held centre, N = 128): net-count gate 250 ideal; front-only 100–250; bare, open window 500 / 500 / 500 (10 s) and 1000 / 1000 / > 1000 (60 s); bare, 662 keV window 250 (10 s) and 250 / 250 / 500 (60 s). Efficiency is unchanged (the field does not depend on the source) |
+| EV-12 background and mask / antimask | BSR 0–4 (relative, uniform pedestal) | **measured** (N = 128, lab, 400 source counts): calibrated subtraction and mask / antimask keep the relative study's ranking and magnitudes at matching pixel loads (2.3 counts / pixel: 0.45 / 0.35 mm; 6.8 / pixel: 0.92 / 0.61 mm) and both exceed 1 mm at 13.6 / pixel (2.24 / 1.69 mm; bare, 60 s, 0.20 µSv/h); the raw single-mask decode collapses in the bare bound (3.64 mm at 2.3 / pixel, ~9 mm from 6.8 / pixel); front-only and 662 keV window: no change |
+| EV-15 isotope separation | none (other isotopes only) | **measured** (N = 128, lab, 60 s, Cs-137 1 MBq with Co-60 8 or 2 MBq): no measurable effect — ≤ 20 background counts in the 662 keV window against 3 374–8 927 window counts; every estimate and location moves by less than its seed quartile range |
+| EV-03, EV-05, EV-06, EV-08, EV-13, EV-31, EV-32 (field, sampling, tolerances) | none | expected; not measured: the Poisson part of each error and the counts needed for a given precision grow (statistical term roughly × √(1 + B/S)); a fixed geometric / grid floor need not move. In the bare bound, open window, EV-34 shows the raw decoder pulled toward the background's own correlation peak once B/S exceeds ≈ 0.5 |
+| EV-10, EV-11, EV-14 (multi-source, MLEM, Compton strategies) | none (other isotopes only) | expected; not measured: ambient lines and continuum add to every window; stripping must also remove the background's own downscatter. MLEM at EV-01's fixed points under the field: EV-34 |
+| EV-25 shield | relative background spectra (scattered, 662 keV, Co-60) | expected; not measured: the needed shield follows the actual ambient spectrum and dose rate; EV-34's bare and front-only bounds bracket an unknown housing |
+| EV-17, EV-21, EV-22 (front end, rate, dead time) | none / source-only event streams | expected; not measured: background adds counts to pile-up and dead time; the field's detected rate is at most 335 cps per µSv/h (hand-held head, bare bound, every deposit) |
+| EV-23 dose | source fields only | expected; not measured: natural background adds ~0.05–0.2 µSv/h to every reading, a floor for low readings |
 
 Geometries used below:
 
@@ -70,21 +85,21 @@ Geometries used below:
 
 | ID | Evidence | Grade | Used by |
 |---|---|---|---|
-| EV-01 | Localisation in the fully coded field; ghosts outside it; non-cyclic decoding | MC | PR-IMG-01, -07; LIM-07; UN-01, UN-11 |
+| EV-01 | Localisation in the fully coded field; ghosts outside it; non-cyclic decoding | MC | PR-IMG-01, -07; LIM-06, LIM-07; UN-01, UN-11 |
 | EV-02 | Field of view at field distance and the out-of-field cue | MC | PR-IMG-01, -07, -08, -10; LIM-01, LIM-06, LIM-07 |
 | EV-03 | Field of view ÷ resolution = rank | MC | PR-IMG-09, -10; LIM-01 |
 | EV-04 | Mask thickness: leak against collimation | MC | PRS §2; LIM-01 |
 | EV-05 | Tapered (bevelled) channels | MC | PR-IMG-10; LIM-01 |
 | EV-06 | Detector sampling of the mask shadow | MC | PR-IMG-06; LIM-01, LIM-08 |
-| EV-07 | Count threshold and directional biasing | MC | PR-SENS-02 |
+| EV-07 | Count threshold and directional biasing | MC | PR-SENS-02; LIM-06 |
 | EV-08 | Sub-cell peak interpolation | MC | PR-IMG-02 |
 | EV-09 | Hand-held head: sensitivity and precision | MC | PR-IMG-02, PR-SENS-01, -07; URS §5 |
 | EV-10 | Several isotopes in one field | MC | PR-IMG-03, PR-NRG-06; LIM-04 |
 | EV-11 | MLEM reconstruction | MC | PR-IMG-04; LIM-01, LIM-07 |
-| EV-12 | Ambient background and mask / antimask | MC | LIM-07 |
+| EV-12 | Ambient background and mask / antimask | MC | LIM-06, LIM-07 |
 | EV-13 | Depth-of-interaction parallax | MC | LIM-08 |
 | EV-14 | Event positioning: total-energy window + largest deposit | MC | PR-NRG-03; LIM-08 |
-| EV-15 | Isotope separation: the spatial limit and Compton stripping | MC | PR-NRG-04; LIM-04, LIM-05, LIM-08; UN-03 |
+| EV-15 | Isotope separation: the spatial limit and Compton stripping | MC | PR-NRG-04; LIM-04, LIM-05, LIM-06, LIM-08; UN-03 |
 | EV-16 | One gain for 122–1332 keV | RTL | PR-NRG-01, -06; LIM-04 |
 | EV-17 | Energy-resolution budget and pulse shapers | RTL, MC | PR-NRG-02, PRS §2; LIM-02, LIM-04, LIM-08 |
 | EV-18 | Per-channel gain calibration | RTL, MC | PR-NRG-05 |
@@ -103,6 +118,7 @@ Geometries used below:
 | EV-31 | Mask–detector alignment | MC | PR-MFG-02, PR-DUR-03 |
 | EV-32 | Dead and hot pixels | MC | PR-MFG-03 |
 | EV-33 | Source distance (depth) | MC | PR-RNG-01; LIM-01; UN-10 |
+| EV-34 | Absolute ambient field and the background-aware search statistic | MC | PR-SENS-02; LIM-01, LIM-06, LIM-07, LIM-08 |
 
 ## 3. Imaging
 
@@ -118,6 +134,26 @@ Geometries used below:
   the field; the finite-mask (non-cyclic) decoder roughly doubles the area: **reference lab geometry 278 vs 146** of 625 positions
   (medians; quartiles 276–280 and 145–147, N = 64), **hand-held head 361 vs 174** (360–362 and 172–175, N = 64;
   period 19.7 mm). At D = 55 mm the cyclic ghost margin is only 1.35 (1.352 ± 0.003, N = 32).
+- **Under the absolute ambient field** (EV-34; N = 64). The quotes above are noiseless mean maps; the scenarios carry
+  1 MBq × 1 s, which gives ~80 counts on axis at the lab geometry (26 in the 662 keV window) and ~195 at the hand-held
+  head (75). Re-measured at that budget with 32 Poisson acquisitions per position; expected localised positions of
+  625 (Σ over positions of the fraction within 3 mm, mean ± SD over seeds), open window:
+
+  | | legacy noiseless | ideal, 1 MBq × 1 s | bare 0.05 / 0.10 / 0.20 µSv/h | front-only (all) |
+  |---|---:|---|---|---|
+  | lab, non-cyclic | 278 | 180.4 ± 1.5 | 162.3 ± 1.2 / 145.4 ± 1.5 / 115.3 ± 1.3 | 180.0–180.4 |
+  | lab, cyclic | 146 | 94.4 ± 1.2 | 85.9 ± 1.3 / 77.7 ± 1.1 / 63.2 ± 1.0 | 94.1–94.3 |
+  | hand-held, non-cyclic | 361 | 229.9 ± 1.5 | 204.0 ± 1.1 / 181.3 ± 1.3 / 144.7 ± 1.3 | 229.4–229.8 |
+  | hand-held, cyclic | 174 | 112.2 ± 1.1 | 103.4 ± 1.2 / 94.6 ± 1.1 / 78.5 ± 1.2 | 111.9–112.2 |
+
+  The count budget, not the field, dominates: without a field the lab's non-cyclic area is 65 % of the noiseless 278.
+  The field's own cost in the bare bound, open window, is −10 / −19 / −36 % of that area at 0.05 / 0.10 / 0.20 µSv/h
+  (lab, non-cyclic; hand-held −11 / −21 / −37 %); non-cyclic still gives 1.8–2.1× the cyclic area in every condition.
+  Front-only: within 0.4 positions of ideal. 662 keV window, bare bound: at most −1.1 (lab) / −2.4 (hand-held)
+  positions (≤ 1.6 %). Fixed points (300 acquisitions): lab centre RMS 1.70 ± 0.27 mm ideal → 2.48 / 3.29 /
+  4.76 ± 0.20 mm bare; outside the field, (12, 0) mm, the ghost persists (within 3 mm of it in 0.839 of acquisitions
+  ideal, 0.733 / 0.613 / 0.396 bare) and is never within 3 mm of the truth — the field turns some ghost answers into
+  other wrong spots, not into correct ones.
 - **Reproduce.** `montecarlo samples/scenario.json` (and `scenario_offaxis.json`, `scenario_ghost.json`);
   `montecarlo sweep samples/scenario_handheld.json` → `samples/sweep_{cyclic,noncyclic}.csv`, then
   `python samples/plot_sweep.py samples/scenario_handheld.json` → `samples/cyclic_vs_noncyclic.png` (one realisation,
@@ -156,6 +192,36 @@ Geometries used below:
 - **Limits.** One isotope (662 keV); the front plate is an infinite 10 mm W slab around the mask, no side walls;
   flat background; the centroid threshold is calibrated on the same series, so in-field false alarms are ≈ 5 % by
   construction.
+- **Under the absolute ambient field** (EV-34; N = 64, the same seeds). The BSR pedestal is replaced by field × time
+  × the transported ambient map, t = 10 s and 60 s; the centroid flag's threshold is re-calibrated under each field
+  condition on 100 separate draws per in-field angle; N0 is counted in the window (a 662 keV-window N0 of 500 is
+  ~2.5× the activity of an open-window one). Background per acquisition, bare bound: open window 168 / 335 / 670
+  (10 s) and 1005 / 2011 / 4022 (60 s) at 0.05 / 0.10 / 0.20 µSv/h; 662 keV window 2.1 / 4.3 / 8.6 and
+  12.9 / 25.7 / 51.4; front-only 0.6–15 (open) and 0.1–1.3 (662 keV). Most frequent value over 64 seeds (frequency
+  when not 64 / 64):
+
+  | Series (non-cyclic usable half-field, °) | window | ideal | bare 10 s: 0.05 / 0.10 / 0.20 | bare 60 s: 0.05 / 0.10 / 0.20 |
+  |---|---|---|---|---|
+  | 1 m, x, N0 500 | open | 5.5 (57/64) | 4.5 (34/64) / 4.5 (55/64) / 3.5 (60/64) | 0 (41/64) / 0 (63/64) / 0 |
+  | 1 m, x, N0 500 | 662 keV | 5 (51/64) | 5 (53/64) / 5 (51/64) / 5 (45/64) | 5 (49/64) / 5 (42/64) / 4.5 (41/64) |
+  | 1 m, x, N0 5000 | open | 6.5 | 6.5 / 6.5 / 6.5 | 6.5 (51/64) / 5.5 / 5 (63/64) |
+  | 1 m, x, N0 5000 | 662 keV | 6.5 | 6.5 / 6.5 / 6.5 | 6.5 / 6.5 / 6.5 |
+  | 1 m, diagonal, N0 500 | open | 2.5 | 1.5 (61/64) / 1.5 (56/64) / 0 | 0 / 0 / 0 |
+  | 1 m, diagonal, N0 500 | 662 keV | 2.5 (58/64) | 2.5 (56/64) / 2.5 (54/64) / 2.5 (51/64) | 2.5 (46/64) / 1.5 (35/64) / 1.5 (56/64) |
+  | 5 m, x, N0 500 | open | 5.5 (39/64) | 5.5 (62/64) / 5 (53/64) / 4.5 (61/64) | 4 (56/64) / 0 (62/64) / 0 |
+  | 5 m, x, N0 500 | 662 keV | 5.5 (59/64) | 5.5 (59/64) / 5.5 (56/64) / 5.5 (56/64) | 5.5 (61/64) / 5.5 (60/64) / 5.5 (63/64) |
+
+  Out-of-field cue along x, 1 m, N0 500: the "outside" flag (≥ 90 %) holds from 5 (31/64) to 11.5° (51/64) ideal in
+  the 662 keV window and from 5–5.5° to 11–11.5° at every field level (modes in 33–57 / 64 seeds); in the open window
+  it is never reached from 0.10 µSv/h at 10 s (56 / 64 and 64 / 64 seeds) and at every level at 60 s (64 / 64). The unflagged wrong spot at
+  7.5–12° (largest fraction, median over seeds) rises from 0.13 ideal to 0.13 / 0.13 / 0.15 (10 s) and
+  0.16 / 0.20 / 0.28 (60 s) in the 662 keV window, against 0.09 → 0.37 / 0.46 / 0.51 and 0.58 / 0.66 / 0.74 in the
+  open window (5 m: 662 keV 0.07 → at most 0.18, open 0.06 → up to 0.96); at N0 5000 it stays 0.00 in the 662 keV
+  window (open: up to 0.36 at 1 m and 0.86 at 5 m). Front-only: no change from ideal in any series. This pipeline's
+  open-window ideal is 0.5–1° narrower than the legacy values above (5.5° / 6.5° against 6.0–7.0° / 7.0–7.5° along
+  x) — a detector-model difference — and the two windows' ideals differ slightly in their own right (e.g. 5 m
+  diagonal N0 5000 cyclic: 1.5° in the 662 keV window, 4° open). So the open-window loss is a background-count
+  effect that the 662 keV window removes at these field levels.
 - **Reproduce.** `montecarlo fov samples/scenario_handheld.json` (≈ 3 min) → `samples/fov.csv`;
   `python samples/plot_fov.py` → `samples/fov.png`. Ensemble: `samples/evidence` family `fov` (64 seeds from the
   list `F128`, 10⁶ photons per mean map, 100 Poisson repeats per angle).
@@ -241,6 +307,15 @@ Geometries used below:
 - **Limits — ideal environment.** Every count is a source count: no ambient background, an ideal detector. The two
   gates are best-case values for **net source counts**; under ambient background the same precision needs more
   counts ([§1](#ideal-conditions-and-background)).
+- **Under the absolute ambient field** (EV-34; N = 128 seeds not used to set the gate). In EV-34's pipeline
+  (homogeneous crystal) the ideal lab-centre curve matches the gates above: RMS 5.74 ± 0.21 / 3.39 ± 0.28 /
+  1.10 ± 0.22 / 0.42 ± 0.01 mm at 25 / 50 / 100 / 250 counts, failures 44.6 % at 25, sub-mm in 128 / 128 seeds from
+  250. With background, net counts no longer make a gate: the gate is a calibrated search significance with
+  per-configuration thresholds, which keep false-trusted locations on background-only acquisitions ≤ 1 % in 96 / 96
+  configurations (pooled 0.308 %), plus ≥ 95 % within one resolution element. Smallest net count meeting both, lab
+  centre: ideal 100; front-only 100; bare bound, open window 250 / 250 / 500 (10 s) and 500 / 500 / 1000 (60 s) at
+  0.05 / 0.10 / 0.20 µSv/h; bare, 662 keV window 100 / 100 / 100 (10 s) and 100 / 250 / 250 (60 s). The hand-held
+  head, 1 m and 5 m gates are in EV-34.
 - **Reproduce.** `montecarlo noise samples/scenario.json samples/noise.csv` → `samples/noise_study.png` (count gates;
   `samples/evidence` family `noise`, N = 128). The 4π comparison is not part of `noise`: `samples/evidence` family
   `bias` runs the same scenario twice, the second time on a clone with `Source.DirectionalBiasing = false` and
@@ -268,6 +343,14 @@ Geometries used below:
   GAGG reference geometry's floor is 0.35 mm (0.354 ± 0.001). At 1 MBq on axis at the lab distance, 250 counts take ~1.2 s.
   The URS §5 analytic count-rate estimate (geometry × open fraction × 662 keV stopping) gives 2.44 × 10⁻⁴ — within
   2 % of this MC value.
+- **Under the absolute ambient field** (EV-34; hand-held centre, N = 128). Ideal in EV-34's pipeline: RMS
+  1.00 ± 0.28 mm at 250 counts (sub-mm in 60 / 128 seeds), 0.24 ± 0.10 mm at 500 (128 / 128). Smallest net count
+  with ≥ 95 % trusted and within one resolution element: ideal 250; front-only 100–250; bare, open window
+  500 / 500 / 500 (10 s) and 1000 / 1000 / > 1000 (60 s) at 0.05 / 0.10 / 0.20 µSv/h; bare, 662 keV window 250 (10 s)
+  and 250 / 250 / 500 (60 s). At 1 MBq the centre stays at its ideal floor (0.20–0.22 mm) in every ambient
+  condition; the 8 mm edge in the bare bound, open window, is pulled (raw decoder RMS 1.28 / 3.37 / 9.47 mm at
+  0.05 / 0.10 / 0.20 µSv/h in 10 s, ideal 0.70–0.85 mm — EV-34). Efficiency is unchanged: the field does not depend on
+  the source.
 - **Reproduce.** `montecarlo samples/scenario_handheld.json` and `montecarlo samples/scenario_orig_gagg.json` print the
   efficiencies; `montecarlo noise samples/scenario_handheld.json samples/noise_handheld.csv` (and the same for
   `scenario_orig_gagg.json` → `noise_orig_gagg.csv`) gives the precision against counts. Ensembles:
@@ -313,6 +396,29 @@ Geometries used below:
   across the face is harmless while the source wins, then drags the estimate toward its strong side at the knee.
   The subtraction assumes a static, measurable background; a background that changes during the acquisition favours
   concurrent two-exposure subtraction (with a static mask / antimask pair, not a moving part).
+- **Under the absolute ambient field** (EV-34; N = 128). Lab geometry, centred source, 400 expected net source counts
+  in the full live time t (5.0 × 10⁵ Bq at 10 s, 8.3 × 10⁴ Bq at 60 s), 200 repeats; (a) one exposure decoded raw,
+  (b) calibrated subtraction of the instrument's background model, (c) t/2 mask + t/2 inverted mask at the same
+  activity — equal total time. RMS error, mean ± SD over seeds, open window:
+
+  | Condition | background / pixel | single, raw | calibrated | mask / antimask |
+  |---|---:|---|---|---|
+  | ideal | 0 | 0.38 ± 0.01 | 0.38 ± 0.01 | 0.30 ± 0.01 |
+  | 10 s, 0.05 µSv/h, bare | 0.57 | 0.46 ± 0.02 | 0.39 ± 0.01 | 0.31 ± 0.01 |
+  | 10 s, 0.10, bare | 1.13 | 0.68 ± 0.17 | 0.40 ± 0.01 | 0.32 ± 0.01 |
+  | 10 s, 0.20, bare | 2.26 | 3.64 ± 0.32 | 0.45 ± 0.02 | 0.35 ± 0.01 |
+  | 60 s, 0.05, bare | 3.39 | 7.28 ± 0.22 | 0.49 ± 0.06 | 0.39 ± 0.05 |
+  | 60 s, 0.10, bare | 6.78 | 9.10 ± 0.09 | 0.92 ± 0.25 | 0.61 ± 0.18 |
+  | 60 s, 0.20, bare | 13.57 | 9.03 ± 0.09 | 2.24 ± 0.32 | 1.69 ± 0.32 |
+  | front-only, all six | 0.002–0.048 | 0.38 | 0.37–0.38 | 0.30 |
+
+  With subtraction the absolute field reproduces the relative study's ranking and magnitudes at matching pixel loads;
+  the antimask is lower in 107–128 of 128 seeds at every level. Both stay sub-mm up to 6.8 counts / pixel; at
+  13.6 / pixel both exceed 1 mm with failures (> 3 mm) in every seed (6.25 % calibrated, 3.98 % antimask). The raw
+  single-mask decode collapses in the bare bound from 2.3 counts / pixel (3.64 mm) to ~9 mm — the decoder pull of
+  EV-34, which subtraction removes. In the 662 keV window the field is ≤ 0.14 counts / pixel and nothing moves from
+  ideal (0.40–0.42 / 0.40–0.41 / 0.31–0.32 mm). The antimask half sees the inverted mask's own source rate (2.5 %
+  higher; the relative study normalised each half). D-19 is untouched: the comparison is a trade at equal time.
 - **Reproduce.** `montecarlo background samples/scenario.json`; `montecarlo antimask samples/scenario.json
   samples/antimask.csv`; `montecarlo antimask-scene samples/scenario.json`. Ensembles: `samples/evidence` families
   `background` (N = 64) and `antimask` (N = 128).
@@ -326,6 +432,130 @@ Geometries used below:
   maps) — below the grid step, but a floor under sub-cell precision at the field edge.
 - **Reproduce.** `montecarlo doi samples/scenario.json samples/doi.csv`.
 - **Tests.** `DoiParallaxTests`.
+
+### EV-34 — Absolute ambient field and the background-aware search statistic
+
+- **The field.** A terrestrial photon field built by the engine, not borrowed: K-40, the U-238 series and the Th-232
+  series at the UNSCEAR 2000 (Annex B) population-weighted soil activities 420 / 33 / 45 Bq/kg in a uniform, laterally
+  infinite soil half-space under dry air, transported (Compton with free-electron Klein–Nishina angles, photoelectric
+  absorption, pair production with 511 keV annihilation photons) and scored 1 m above the ground. Decay data: the
+  evaluated photon lines with absolute intensities only (IAEA LiveChart / ENSDF snapshots, hash-pinned); a transition
+  the evaluation lists without a photon intensity is listed as "not included" in the spectrum file, never given a
+  substitute intensity. Cross sections NIST XCOM, air μ_en/ρ NIST, soil composition HASL-258. The output is a
+  versioned, hash-pinned spectrum: discrete lines, scattered continuum and an energy × zenith-angle table.
+- **Validation.** (a) Uncollided line fluence and its zenith distribution against the analytic half-space kernel:
+  chain totals 0.99945 / 1.00001 / 0.99950 (K / U / Th); every tested cell within 6 SE (cells with < 30 crossings
+  reported as not tested). (b) Air kerma at 1 m per Bq/kg against UNSCEAR's coefficients (0.0417 / 0.462 /
+  0.604 nGy/h): **1.01388 ± 0.00032 / 0.99740 ± 0.00032 / 1.02268 ± 0.00026** (MC / UNSCEAR ± SE, N = 16 seeds ×
+  10⁷ histories per chain). The gaps are many SE wide — a difference between two model calculations (UNSCEAR's
+  coefficients come from another transport calculation, older decay data, another soil), and this model's omissions
+  (bremsstrahlung, transitions without intensities, fluorescence) would raise its kerma, not lower it. Accepted
+  within **±3 %**, a band chosen after seeing the ratios: a model comparison, not a statistical test. At the UNSCEAR
+  activities the field is 60.76 nGy/h (UNSCEAR's own products: 59.94). Photons above 1332 keV carry 54.1 / 28.9 /
+  36.1 % of each chain's kerma.
+- **The instrument model.** Input: photon H*(10) rate (ICRP 74 conversion); fields 0.05 / 0.10 / 0.20 µSv/h. No
+  housing; two bounds: **bare crystal** on all faces (upper) and **front only** through the mask, sides and rear
+  perfectly shielded (lower). The pixel comes from where the photon actually deposits (no random placement). Detected ambient
+  rate per µSv/h (mean over 128 seeds): lab geometry bare 162.8 cps (every deposit) / 1.66 cps (662 keV window),
+  front-only 0.572 / 0.0447 cps; hand-held head bare 335.2 / 4.28 cps, front-only 1.283 / 0.104 cps. A 1 MBq Cs-137
+  source gives 80.2 / 26.0 cps at the lab distance and 4.76 / 1.88 cps at 1 m on the hand-held head, so at
+  0.10 µSv/h ambient ÷ source is 0.203 (lab, bare, every deposit) and **7.04 at 1 m** (bare, every deposit), 0.228
+  at 1 m in the 662 keV window and 0.027 at 1 m front-only. The bare background is not flat in the open window
+  (edge-to-centre pixel rate 2.7 at the lab geometry, 3.3 at the hand-held head; 0.99–1.01 in the 662 keV window,
+  0.72–0.76 front-only).
+- **The search statistic.** The scenario's decoder as a linear map G. With the instrument's background-shape model p
+  (an independent MC estimate) and the acquisition total N as the only nuisance, a background-only acquisition is
+  multinomial, so Z(θ) = (recon(θ) − N Σ G p) / √(N (Σ G² p − (Σ G p)²)) has mean 0 and variance 1 at every grid
+  point; the statistic is the largest Z over the decoder grid and its location is that grid point. It is **not** a
+  Gaussian significance: its threshold is calibrated on simulated background-only acquisitions.
+- **The gate (PR-SENS-02).** 96 configurations: lab geometry and hand-held head at their scenario distance, and the
+  hand-held head at 1 m and 5 m; 10 s and 60 s; three field levels; two bounds; open and 662 keV windows. Per
+  configuration, the threshold is the smallest recorded Z with at most 0.3 % of the selection nulls at or above it
+  (ties counted as exceedances), from **65,536 background-only acquisitions per configuration** (64 seeds × 1024);
+  thresholds 1.163 … 4.6245, pinned before validation. Validation on **seeds never used for selection** (N = 128,
+  64 nulls each = 8,192 per configuration): **96 / 96 configurations pass** (one-sided 95 % Clopper–Pearson upper
+  limit of the false-trusted rate ≤ 1 %); pooled **2,424 / 786,432 = 0.308 %** (one-sided 95 % limits
+  0.298–0.319 %); worst configuration lab, 10 s, 0.10 µSv/h, front-only, 662 keV window (0.04 expected background
+  counts): 40 / 8,192 = 0.49 %, upper limit 0.64 %; the 27 configurations with < 1 expected background count
+  0.325 %. A first selection on 4,096 nulls per configuration passed 93 / 96: where the expected background is
+  < 1 count Z takes few distinct values and the selected quantile moves in steps, so three configurations missed by
+  0.007 points (13 / 2,048, upper 1.007 %); the selection was repeated with 16× the nulls and validated on new seeds,
+  nothing else changed.
+- **Count gates under the field.** Source acquisitions: 300 per condition per seed, N = 128; trusted = Z at or above
+  the threshold; correct = trusted and within one angular resolution element (lab 0.955°, hand-held head 1.042°).
+  Smallest net source count S on the grid 25 / 50 / 100 / 250 / 500 / 1000 with ≥ 95 % trusted and correct (ideal
+  column: the decoder ≥ 95 % within one resolution element):
+
+  | Case / window | ideal | front-only, any field | bare 0.05 / 0.10 / 0.20, 10 s | bare 0.05 / 0.10 / 0.20, 60 s |
+  |---|---|---|---|---|
+  | lab centre, open | 100 | 100 | 250 / 250 / 500 | 500 / 500 / 1000 |
+  | lab centre, 662 keV | 100 | 100 | 100 / 100 / 100 | 100 / 250 / 250 |
+  | lab 8 mm edge, open | 100 | 100–250 | 500 / 500 / 1000 | 1000 / 1000 / > 1000 |
+  | lab 8 mm edge, 662 keV | 100 | 250 | 250 / 250 / 250 | 250 / 250 / 250 |
+  | hand-held centre, open | 250 | 100–250 | 500 / 500 / 500 | 1000 / 1000 / > 1000 |
+  | hand-held centre, 662 keV | 250 | 250 | 250 / 250 / 250 | 250 / 250 / 500 |
+  | hand-held 8 mm edge, open | 500 | 250 | 250 / 250 / 500 | 500 / 500 / 1000 |
+  | hand-held 8 mm edge, 662 keV | 500 | 250 | 100 / 250 / 250 | 250 / 250 / 250 |
+  | hand-held 1 m centre, open | 250 | 250 | 250 / 500 / 500 | 500 / 1000 / 1000 |
+  | hand-held 1 m centre, 662 keV | 250 | 250 | 250 / 250 / 250 | 250 / 250 / 500 |
+  | hand-held 1 m 3°, open | 1000 | 500 | > 1000 (all) | > 1000 (all) |
+  | hand-held 1 m 3°, 662 keV | > 1000 | 1000 | 1000 / 1000 / 1000 | 1000 / 1000 / 1000 |
+  | hand-held 5 m centre, open | 100 | 100 | 250 / 250 / 250 | 500 / 500 / 1000 |
+  | hand-held 5 m centre, 662 keV | 100 | 100 | 100 / 100 / 100 | 250 / 250 / 250 |
+  | hand-held 5 m 3°, open | 250 | 250 | 500 / 1000 / 1000 | 1000 / > 1000 / > 1000 |
+  | hand-held 5 m 3°, 662 keV | 250 | 500 | 250 / 250 / 500 | 500 / 500 / 500 |
+
+  Ideal in this pipeline, lab centre, RMS at S = 25 / 50 / 100 / 250 / 500 / 1000: 5.74 ± 0.21 / 3.39 ± 0.28 /
+  1.10 ± 0.22 / 0.42 ± 0.01 / 0.37 ± 0.00 / 0.36 ± 0.00 mm (sub-mm in 0 / 0 / 48 / 128 / 128 / 128 of 128 seeds);
+  hand-held centre 6.90 ± 0.20 / 5.49 ± 0.24 / 3.47 ± 0.25 / 1.00 ± 0.28 / 0.24 ± 0.10 / 0.20 ± 0.00 mm. **Under
+  background the gate is a significance gate, not a count gate:** in the bare bound, open window, the S needed grows
+  roughly as √B (lab: 250 → 500 → 1000 for B ≈ 160 → 490–980 → 1950 background counts); in the 662 keV window it
+  moves at most one grid level from ideal; front-only it stays at or below the ideal value at the lab and hand-held
+  centres.
+  Detection alone does not assure quality: at very low background almost every acquisition with counts is trusted,
+  and the within-one-element criterion sets the gate. The hand-held 1 m, 3° source sits at the edge of the optics
+  (it misses 95 % even ideal in the 662 keV window); its 1000 / > 1000 entries are marginal.
+- **The raw decoder is pulled; the search statistic is not.** Pull = length of the seed-mean error vector at the
+  source plane (cross-correlation decoder, bare bound, open window; N = 128). It is a switch, not a gradual shift:
+  below background ÷ source counts B/S ≈ 0.5 it stays at the ideal floor; between ≈ 0.6 and 1.3 a growing share of
+  acquisitions jumps to the correlation peak of the background's own shape; above B/S ≈ 2 the mean saturates at
+  **~8 mm at the lab geometry (2.9°), ~9 mm at the hand-held head (3.4°), ~19 mm at 1 m (1.1°) and ~40–50 mm at 5 m
+  (0.5°)**. Examples: lab centre, 60 s, S = 1000: 0.36 mm ideal, 0.43 / 1.47 / 8.13 mm at 0.05 / 0.10 / 0.20 µSv/h;
+  lab centre at 1 MBq: 0.37 / 0.38 / 0.42 mm (B/S ≤ 0.41); hand-held 1 m centre at 1 MBq, 60 s: 1.77 mm ideal,
+  15.28 / 17.98 / 18.98 mm (B/S 3.5 / 7.1 / 14). In the 662 keV window and in the front-only bound (lab and
+  hand-held head at the scenario distance) the excess over the ideal pull is at most 0.73 mm, and ≤ 0.1 mm wherever
+  B/S < 0.1. In the same acquisitions the search statistic locates the source correctly (at 1 MBq, the hand-held
+  8 mm edge in the bare bound, open window: 100 % trusted and correct while the decoder's RMS reaches 9.47 mm at
+  0.20 µSv/h, 10 s). MLEM without a background term (EV-11's decoder, EV-01's fixed points, 1 MBq × 1 s) is pulled
+  more slowly — hand-held 8 mm edge, within-3-mm share 0.960 → 0.805 at 0.20 µSv/h against 0.772 → 0.184 for
+  cross-correlation — but has its own background answer elsewhere; at the lab (80 counts) it is worse than
+  cross-correlation even ideal (4.27 against 1.70 mm), so no ranking is claimed. Either decoder needs a model of the
+  background's shape once B/S exceeds ≈ 0.5 in the bare bound; that decoder does not exist yet.
+- **Limits.** Bounds, not a housing: a real head lies somewhere between them. High-energy transport is incomplete (tungsten μ clamped above 1332 keV, no pair
+  production in the crystal, dose path cut at 2000 keV) while 29–54 % of the kerma is above 1332 keV. Sources only in
+  the soil (no cosmic component, no airborne radon, no room scatter, no intrinsic crystal activity); one soil and one
+  population-weighted activity set. Source and field both use a homogeneous crystal (no gaps, entrance window or
+  backing), so the ideal values of this pipeline differ from the legacy entries' (e.g. EV-02's ideal field is 0.5–1°
+  narrower). Acquisitions are Poisson draws from expected maps, not event-by-event transport (map MC noise ≤ ~1 % of
+  the acquisition's Poisson variance at the largest backgrounds). The search location is a grid point (no sub-cell
+  interpolation). Activities at 5 m reach 10⁸ Bq for S = 1000 (a declared count-level design, not a field claim).
+- **Reproduce.** Spectrum: `python samples/ambient/build_catalog.py`, `python samples/ambient/build_materials.py`,
+  then `montecarlo ambient-terrestrial samples/ambient/terrestrial-generator-v1.json <folder>` (generator and
+  validation) and `montecarlo ambient-issue samples/ambient/terrestrial-unscear2000-v1-issue.json <folder>` (the
+  validated file `samples/ambient/terrestrial-unscear2000-v1.json` and its `.sha256`). One seed of the gate or of an
+  EV family: `montecarlo ambient-gate <gate-request.json>` and `montecarlo ambient-evidence <evidence-request.json>`
+  (requests in `samples/evidence/ambient/`). Ensembles through the seed driver:
+  `python samples/evidence/run_seeds.py --manifest samples/evidence/manifest-ambient-v2.json --out <dir> --family
+  gate_selection_v2` (then `samples/evidence/ambient/select_thresholds.py --rule inclusive`, which reproduces
+  `samples/evidence/ambient/gate-thresholds-v2.json`), `--family gate_validation_v2` (then
+  `samples/evidence/ambient/aggregate_gate.py`), `--family ev12_antimask ev15_separation ev02_fov ev01_sweep` (then
+  `samples/evidence/ambient/aggregate_ev.py` and `bias_baseline.py`); `manifest-ambient-v3.json` families
+  `ev15_abs_a ev15_abs_b ev02_fov_cs662`. Committed results: `samples/evidence/results/ambient-baseline-v1-turn6*.json`
+  (spectrum and validation), `-turn7*` (ambient rates), `-turn8*` (gate, EV-01 / 02 / 12, decoder pull), `-turn9*`
+  (EV-15, EV-02 in the 662 keV window), each with its `.md` report.
+- **Tests.** `KleinNishinaTests`, `ExponentialIntegralTests`, `SoilAirMaterialsTests`, `TerrestrialCatalogTests`,
+  `SoilAirTransportTests`, `TerrestrialSpectrumTests`, `IncidentSpectrumFileTests`, `AmbientAngularSamplerTests`,
+  `AmbientFieldTests`, `GateResponseTests`, `CorrelationSearchTests`, `AmbientGateStudyTests`, `AmbientEvidenceTests`.
 
 ## 4. Energy and isotopes
 
@@ -359,6 +589,33 @@ Geometries used below:
 - **Limits.** Not blind separation: it needs the lines known in advance and a calibrated ratio per geometry. R is a
   single global scalar applied per pixel; the aggregate count can look right while local residuals remain, and those
   are not checked.
+- **Under the absolute ambient field** (EV-34; N = 128). The recipe above has no live time (activities 1 Bq Cs-137 and
+  8 Bq Co-60 with a photon budget); read literally it gives ~6 Cs-137 counts, unmeasurable even without background. It
+  was re-measured at absolute activities: lab geometry, **60 s**, Cs-137 1 MBq with Co-60 **8 MBq** (a, the 8 : 1
+  ratio) or **2 MBq** (b), scenes separated (Cs (4, 0), Co (−5, 3) mm) and co-located (both (0, 0)), 200 exact-Poisson
+  acquisitions per condition per seed. Windows on the event's total deposit (662 keV: 595.53–727.87 keV; 1332 keV:
+  1199.25–1465.75 keV), the event at its largest-deposit pixel; R from a noiseless Co-only map on the axis:
+  **R = 1.1338 ± 0.0092**. It is **not comparable** with R = 3.99 above, which is defined with the per-pixel window (a
+  Compton-scattered Co-60 photon can add counts to several pixels). Relative error of the Cs-137 count (true S = 1550
+  separated, 1558 co-located): per-seed median, then median [quartiles] over seeds; ideal shown:
+
+  | | (a) separated | (a) co-located | (b) separated | (b) co-located |
+  |---|---|---|---|---|
+  | stripping, unfloored | −4.5 % [−8.7, −1.0] | −1.1 % [−4.9, +2.8] | −1.2 % [−2.4, −0.2] | −0.3 % [−1.2, +0.9] |
+  | per-acquisition SD | 8.4 % | 8.4 % | 4.8 % | 4.8 % |
+  | per-pixel stripping floored at zero | +16.8 % | +17.3 % | +2.4 % | +1.9 % |
+  | count read at the matched Cs peak (spatial) | +141.4 % [+138.5, +144.2] | — | +20.7 % [+19.7, +21.4] | — |
+  | Cs within 1 mm: raw two-peak / stripped reconstruction | 0.000 / 0.497 | — / 0.799 | 0.997 / 0.999 | — / 1.000 |
+
+  **The field has no measurable effect at 60 s**: in the bare bound at 0.20 µSv/h the background is ≤ 19.9 counts in
+  the 662 keV window against 3 374–8 927 window counts (≤ 0.5 front-only), and every estimate and location moves by
+  less than its seed quartile range (e.g. (a) separated, unfloored −4.0 … −4.6 % under the field against −4.5 %
+  ideal; subtracting the background model makes it 0.1–0.5 points more negative at bare 0.20 µSv/h — the model map's
+  own MC error). At 8 : 1 the spatial lever fails as above (the "Cs" peak reads +141 % — it is not the Cs peak) and
+  stripping recovers the count; at 2 : 1 the spatial lever holds (0.997 within 1 mm) but the count read at the Cs peak
+  is ~21 % high. Co-60 location: co-located 0.42–0.43 mm median; separated 1.07 mm in every condition, ideal included
+  — an offset of this decode at that position, not a background effect (not investigated). The larger separated-scene
+  stripping bias is consistent with R calibrated on axis while Co-60 sits off axis (not investigated).
 - **Reproduce.** `montecarlo compton`, `compton-strip`, `mixediso`, `mixedstrip`, each with `samples/scenario.json`
   → `samples/compton_contamination.png`, `compton_strip_combined.png`, `mixediso.png`, `mixedstrip.png`. The
   activity-ratio scene (× 1 / 2 / 4 / 8, 4 × 10⁶ photons, 0.4 mm grid) is `samples/evidence` family `spatial`
@@ -631,6 +888,7 @@ Numbers above are from the current engine. Changes that moved earlier results:
 
 | Date | Change | Effect on the evidence |
 |---|---|---|
+| 2026-10-04 | Absolute ambient field added: a terrestrial K / U / Th spectrum from a soil / air transport generator (UNSCEAR 2000 kerma ratios 1.014 / 0.997 / 1.023, accepted within ±3 % as a model comparison), given as photon H*(10), bounded by a bare-crystal and a front-only geometry; a calibrated, background-aware search statistic for the trust gate (EV-34). The relative (BSR) background studies and every path with the field off are unchanged | No ideal value moved: the quoted ideal values stay as best-case bounds. New: EV-34; an "Under the absolute ambient field" item in EV-01, EV-02, EV-07, EV-09, EV-12 and EV-15 and the measured column of §1, each with this pipeline's own ideal beside it (its homogeneous crystal gives ideals that differ from the legacy ones, e.g. EV-02 0.5–1° narrower). EV-15 was re-measured at absolute activities because its recipe has no live time; its new R = 1.134 (total-deposit windows) is not comparable with R = 3.99 (per-pixel window). PR-SENS-02's gate became a measured significance gate |
 | 2026-10-02 | Every MC quote re-measured over a seed ensemble (32–128 outer seeds per family, same engine) instead of one realisation at seed 12345; the author decided each changed interpretation with its measured basis (D-19, D-39, D-40) | All MC entries now quote mean ± SD, median [quartiles] or k / N (§1). Moved values and withdrawn statements are listed in the table below, with the reason. The row below this one ("no entry moved beyond its seed spread") compared two generators at five to twenty seeds; the larger ensembles show that several single-seed quotes sat at the edge of their spread or outside it. |
 | 2026-10-02 | Random-number generator replaced: xoshiro256** seeded by SplitMix64 instead of the seeded legacy `System.Random`, whose streams were affine in the seed (nearby seeds gave shifted copies of one stream); Studio's per-event energy smear keyed by (seed, index); the studies' Poisson realisations drawn from their own stream instead of restarting the mean-map transport stream | **No entry moved beyond its seed spread**: every MC reproduce command above was run with both generators at five seeds (twenty where a difference was flagged); the transport itself is unchanged at 0.01–0.1 %. The figures quoted above are single-seed realisations (seed 12345); the commands now print different digits within those spreads (e.g. EV-14 per-pixel RMS 5.65 → 5.42 mm, EV-01 reference-geometry sweep 282 / 148 → 273 / 144, EV-15 mixed-field R 3.97 → 4.08). Only an unquoted curve moved: the shield study's RMS at its background knee (Co-60, 8 mm W) rose from a median 0.79 to 0.96 mm over 20 seeds — `samples/shield.png` is regenerated; EV-25's thicknesses keep their seed distributions. |
 | 2026-10-02 | Depth from focus measured on the viewer's list-mode path at its default optics (1 m standoff) | EV-33 extended: near-field estimate reproducible but biased by tens of mm, far field a lower bound only; earlier near-field figures unchanged |

@@ -132,8 +132,9 @@ python rtl/run_cocotb.py
 
 - **Ideal environment.** Unless stated otherwise, the numbers above come from an ideal environment: the simulated
   source(s) only, **no ambient (natural) background radiation**, an ideal detector and known geometry — best-case
-  bounds, not field performance. Where background is studied it is set relative to the source; an absolute,
-  source-independent ambient background is being added, and what changes under it is listed in
+  bounds, not field performance. An absolute, source-independent terrestrial ambient field (0.05–0.20 µSv/h,
+  bounded by a bare-crystal and a front-only geometry) has since been measured for localisation, field of view, the
+  trust gate, mask / antimask and isotope separation; what changes under it is listed in
   [Evidence §1](docs/VV.Gcam.Evidence.md#ideal-conditions-and-background).
 - **Not validated against measured data.** Correctness rests on physics invariants, tabulated cross sections
   (NIST / xraylib) and independent cross-review — not on a comparison with measured detector recordings.
