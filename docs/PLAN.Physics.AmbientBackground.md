@@ -126,6 +126,11 @@ absolute activities in the lab geometry, 60 s, both bounds and field levels, ide
 (the legacy 8 : 1 ratio) and **(b) Cs 1 MBq + Co 2 MBq** (the ratio where the spatial lever still holds, theme 52).
 Also run EV-02 in the **cs662 window** (dropped in turn 8 for time).
 
+**Decision AB-15 (author, 2026-10-04) — Studio default, replaces AB-5's "later decision row".** Studio's ambient preset
+becomes the validated terrestrial spectrum (`terrestrial-unscear2000-v1`), **on by default at 0.10 µSv/h** photon
+H*(10) with the **front-only** bound; 0 restores the ideal environment (labelled as such). The development mono662
+placeholder leaves the user-facing preset list.
+
 **Angular distribution (AB-4 addendum).** Representation: a tabulated joint distribution, energy bins × zenith-cosine
 bins at the detector point (azimuth uniform), versioned with the spectrum. Acceptance oracle: the **uncollided** line
 fluence per Bq/kg and its zenith distribution from the MC against the analytic uniform-half-space result (soil μ, air μ,
