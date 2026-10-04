@@ -6,15 +6,13 @@ depend on the source: removing the source leaves it, and a weaker source is buri
 (dose rate + spectrum → fluence → transport through the head → Poisson events), re-measure the results it changes, and
 fill the "Under ambient background" column of Evidence §1. Procedure: [AGENTS.Planning](AGENTS.Planning.md).
 
-Status: **in progress** — turn 6 done 2026-10-04 by a **substitute implementer** (Claude subagent; Codex unavailable):
-evaluated source catalog (AB-4d), cited soil / air materials, collided soil / air generator, terrestrial spectrum
-`samples/ambient/terrestrial-unscear2000-v1-NOT-VALIDATED.json`; UNSCEAR ratios accepted by the author (**AB-10**).
-Report `samples/evidence/results/ambient-baseline-v1-turn6.md`. Planner re-verified: build 0 errors; tests engine
-330 → 355, Core 184, services 87 (+7 skipped), UI 13 (+14 skipped), all pass; spectrum SHA256 matches. History: turns 1–5
-by Codex (conversation `01a0fcdc-162b-7cb1-a3ad-a3fb9fc40914`, local only), committed `56f0a17`. Next (turn 7): gate study
-(AB-7) and EV re-measurements (AB-9) with the accepted spectrum; then Studio default (AB-5) and docs.
-Known: the committed development placeholder's `.sha256` (`3600e22b…`) does not match the committed LF bytes
-(`10dccd59…`) — line-ending normalisation; the file is a NOT-VALIDATED development fixture, to be re-hashed in turn 7.
+Status: **in progress** — turn 7 done 2026-10-04 (substitute Claude implementer; report
+`samples/evidence/results/ambient-baseline-v1-turn7.md`, commits `caade67`, `0fab236`): validated v1 spectrum issued
+with its AB-10 record, placeholder hash fixed, calibrated correlation gate study (AB-7), EV-07 / EV-09 measured, EV-12
+partly. Planner re-verified: build 0 errors; tests engine 378, Core 184, services 87 (+7 skipped), UI 13 (+14 skipped),
+all pass; hashes match. Author decisions AB-11 … AB-13 below. Next (turn 8): gate re-selection and re-validation
+(AB-11), EV-02, EV-12 mask / antimask, EV-15, EV-01 (AB-13); then the planner writes Evidence / PRS / Findings.
+History: turns 1–5 Codex (`56f0a17`), turn 6 substitute (`b9310f8`, AB-10).
 
 ## What exists (checked in the code, 2026-10-02 — *verify*)
 
@@ -107,6 +105,19 @@ composition), and the model's own omissions would raise, not lower, the kerma. A
 chosen after seeing the ratios: this is a **model comparison, not a statistical test**, and is quoted as such. The
 spectrum keeps its NOT-VALIDATED file name until it is re-issued as v1 validated in turn 7 (content unchanged).
 Also accepted: `samples/ambient/source-data/.gitattributes` (`* -text`) so the hashed snapshots are stored byte-exact.
+
+**Decisions AB-11 … AB-13 (author, 2026-10-04, after turn 7).** Turn 7: per-configuration thresholds (α = 0.003 on
+4096 selection nulls) passed the ≤ 1 % false-trusted target in 93 / 96 configurations — three front-only configurations
+with < 1 expected background count missed by 0.007 points (13 / 2048, upper 1.007 %) because Z is coarse there; the
+pre-declared universal threshold Z = 4.643 passed 96 / 96. The bare bound also showed a **decoder bias of ~9 mm**
+(non-flat transported background) while the gate statistic located 100 % correctly.
+- **AB-11 — gate rule:** keep **per-configuration thresholds**; re-select on **more selection nulls** with ties handled
+  conservatively (exceedances counted with ties at the threshold), and re-validate on **seeds not used in turn 7**
+  (neither F128[1:65] nor O128[0:128]). The turn-7 validation is not re-used to choose. Failure is reported, not tuned.
+- **AB-12 — decoder bias:** recorded as a finding and a separate task **TODO-33** (background-shape-aware decoding);
+  not fixed inside TODO-30.
+- **AB-13 — remaining families:** EV-02, EV-12 mask / antimask, EV-15 and **EV-01 at the legacy EV-01 recipe's activity
+  and exposure** with the ambient field added, through the seed driver, both bounds, ideal value kept as best-case.
 
 **Angular distribution (AB-4 addendum).** Representation: a tabulated joint distribution, energy bins × zenith-cosine
 bins at the detector point (azimuth uniform), versioned with the spectrum. Acceptance oracle: the **uncollided** line
