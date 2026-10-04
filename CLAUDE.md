@@ -12,8 +12,8 @@ Architecture + build/run is in `@AGENTS.md` above; per-theme quantitative result
 **Gcam** — a personal C#/.NET 9 Monte Carlo simulator for **coded-aperture gamma-source
 localization** (Cs-137 + multi-isotope), modelling a fixed, lab-mounted coded-aperture camera
 of the class the author has hands-on experience with: rank-7 tungsten MURA mask (2×2 mosaic, ~10 mm) → 12×12
-crystal flood map → ADC peak detection → cross-correlation decode. 59 themes of work;
-`Gcam.sln`, CLI `montecarlo <sub>` (41 study sub-commands), GCAM Studio (the WPF viewer; the legacy Gcam.Wpf was removed in TODO-12 (2026-10-02); last present at `85b2ed1`), and a SystemVerilog +
+crystal flood map → ADC peak detection → cross-correlation decode. 63 themes of work;
+`Gcam.sln`, CLI `montecarlo <sub>` (study sub-commands; `montecarlo help` lists them), GCAM Studio (the WPF viewer; the legacy Gcam.Wpf was removed in TODO-12 (2026-10-02); last present at `85b2ed1`), and a SystemVerilog +
 cocotb RTL front-end path.
 
 ## Key decisions / context (not derivable from the code or git history)
@@ -56,36 +56,25 @@ cocotb RTL front-end path.
   hand-add a tail/line/number); every physics claim is MC-verified; Codex (and an adversarial
   Claude agent) cross-verify at important junctures. Many effects turned out honestly **small**
   for this camera — reported as such, not inflated.
-
-## Handoff — where work stood (2026-10-02 evening, moving to another computer)
-- Done: the Gcam.Wpf → GCAM Studio migration (Gcam.Wpf deleted, TODO-12) and physics TODO-14/17/18/20/21/23/26
-  (Findings 57–61). Open (see `docs/AGENTS.Todo.md`, each with its PLAN and review in `docs/`):
-  - **TODO-27** evidence refresh — **done 2026-10-02** (Findings 63; 12 author decisions ER-1…12 in the plan; MC quotes now
-    carry seed spreads; driver and aggregates in `samples/evidence/`). Open question: PR-SENS-02's "~50 counts" gate.
-  - **TODO-29** clean-room wording pass — **done 2026-10-02** (`docs/archive/PLAN.Docs.CleanRoom.md`); README desktop screenshot still
-    shows the old preset label "(original rig)" → retake on the author's go.
-  - **TODO-30** absolute ambient background — **resumed 2026-10-04** with a substitute Claude subagent (Codex unavailable):
-    engine / Studio / tests committed as WIP (`56f0a17`); author decided **AB-4d** (evaluated lines only, intensity-less
-    transitions listed "not included", UNSCEAR kerma ratio, tolerance set by the author after seeing the ratio). Turn 6
-    (substitute): terrestrial spectrum from a soil / air transport generator, UNSCEAR ratios K / U / Th 1.014 / 0.997 /
-    1.023 accepted (AB-10, ±3 % model comparison). Next: gate study AB-7 + EV re-measurements AB-9 (turn 7). **Every MC result so far is
-    ideal-environment.** Deferred: TODO-31 high-energy transport, TODO-32 realistic head housing. Status in the plan.
-  - **TODO-19** Anger-type SiPM readout — review done (`PLAN.Physics.RigReadout.Review.md`); next: decisions after review.
-  - **TODO-25** joint depth likelihood — reviewed (Findings 62): beats the sharpest plane at 60 s; gate "not yet"
-    (10 s wrong-maximum rate, count-scaled model budget, model mismatch still open).
-  - **TODO-28** test documentation + automatically generated Test Result report — follow the procedure from the
-    author's other project (ask the author where it is; adopt the process only, copy no content).
-- **Moved into the repo for the hand-off (2026-10-03):** TODO-30 prompts and turn reports
-  (`samples/evidence/results/ambient-baseline-v1-*`, start a new Codex conversation from them + the plan Status); TODO-25
-  probe and raw results incl. the finished 10 s v3 run, not yet analysed (`samples/evidence/depthlik/`).
-- Codex conversations, worktrees (`C:\gw\…`) and probe outputs (`%TEMP%\gcam-*`) were local and do not travel: start
-  new implementer turns from the review files. Procedure, guard block and the substitute-subagent rule:
-  `docs/AGENTS.Planning.md`.
 - **Confidentiality (author, 2026-10-02):** this is a clean-room public repo. Never write specifics of the author's
   former-employer instrument (readout network, thresholds, LUT method, digitisation, pitch, reflector thickness, …)
   into any file, commit, plan, review or implementer prompt; model readout choices from published practice with
   defaults chosen by physics / measurement. Already-public generic statements (four-channel Anger-type readout, GAGG)
   stay as they are.
+
+## Where work stands
+Task state lives in **`docs/AGENTS.Todo.md`** (each row links its plan; the plan's `Status:` line is the detail) — do not
+copy it here, it goes stale. Only what the Todo does not hold:
+- **Every MC result so far is ideal-environment** until TODO-30's re-measurements land in the Evidence register.
+- Open side questions: PR-SENS-02's "~50 counts" gate (from TODO-27); README desktop screenshot still shows the old preset
+  label "(original rig)" → retake on the author's go (TODO-29).
+- Hand-off material in the repo: TODO-30 prompts and turn reports `samples/evidence/results/ambient-baseline-v1-*`;
+  TODO-25 probe and raw results incl. the finished 10 s v3 run, **not yet analysed** (`samples/evidence/depthlik/`).
+- Codex conversations, worktrees (`C:\gw\…`) and probe outputs (`%TEMP%\gcam-*`) are machine-local: start new
+  implementer turns from the plan Status and the review / turn-report files. While Codex is unavailable, turns run as
+  substitute Claude subagents (`docs/AGENTS.Planning.md`).
+- TODO-28 (test documentation + generated Test Result report): ask the author where the other project's procedure is;
+  adopt the process only, copy no content.
 
 ## Working style
 Design-first discussion before coding; give options with a recommendation, then build one clean

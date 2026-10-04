@@ -53,7 +53,7 @@ in `Directory.Build.props` (nullable + implicit usings enabled).
 | `src/…Simulation` | `SimulationRunner`, `ISimulationFactory`/`DefaultSimulationFactory` (+ `ComptonFactory`), sources (`IsotropicSource`, `DetectorBiasedSource`, `MixedFieldSource`), `DecayScheme` (per-decay correlated gammas), `EventStreamStudy` (timed MC stream → pile-up), and one study class per theme (`SourceSweep`, `ParameterScan`, `NoiseStudy`, `ThicknessStudy`, `UniformityStudy`, `ArrayStudy`, `ComptonStudy`, `DepthStudy`/`DepthDesignStudy`, `MaskGeometryStudy`, `BackgroundStudy`, `ShieldStudy`, `MixedFieldStudy`, `MaskAntimaskStudy`, `FieldOfViewStudy`, `DoseStudy` (+ `AmbientDose`, ICRP 74), plus the realism-gap studies: `ThermalDriftStudy`/`ThermalReadoutStudy`, `MaskFabricationStudy`, `AlignmentStudy`, `DetectorDefectStudy`, `MaskSecondaryStudy`/`MaskScatterStudy`, `DeadTime`/`DeadTimeStudy`, `SubCellStudy`, `CascadeSummingStudy`, `NonProportionalityStudy`, `FiniteSourceStudy`, `MlemStudy`, `DoiParallaxStudy`) |
 | *(removed)* `src/Gcam.Wpf` | Legacy code-behind viewer (net9.0-windows, ScottPlot 5, theme 34–35) — removed in TODO-12 (2026-10-02); last present at `85b2ed1` (`git show 85b2ed1:src/Gcam.Wpf/…`); every kept feature lives in GCAM Studio |
 | `src/…Studio*` | Current MVVM viewer with Imaging, Spectrum, Waveform and Detector workspaces, layered so the boundaries are enforced by the compiler: **`Gcam.Studio.Core`** (net9.0, no WPF — models, `IAcquisitionService`, ViewModels on CommunityToolkit.Mvvm) → **`Gcam.Studio.Services`** (net9.0 — `SimulationService`, the only Studio layer that touches the engine; publishes immutable list-mode acquisition snapshots at 4 Hz with Start / Stop / Continue / Reset) → **`Gcam.Studio`** (net9.0-windows — views, converters, DI composition root). Scene → config via `Configuration.SceneConfigBuilder`. `tests/Gcam.Studio.Tests` (net9.0) covers the ViewModels without a UI stack |
-| `src/…Cli` | Console entrypoint `montecarlo` (`Program.cs` = dispatch + single run; one static class per study group in `Commands/`): single run + **41** study sub-commands (`sweep`, `fov`, `dose`, `scan`, `noise`, the Compton/depth/mask-geometry/mixed-field/front-end set, and the realism-gap set `thermal`…`doi` — run `montecarlo help` for the full list) |
+| `src/…Cli` | Console entrypoint `montecarlo` (`Program.cs` = dispatch + single run; one static class per study group in `Commands/`): single run + study sub-commands (`sweep`, `fov`, `dose`, `scan`, `noise`, the Compton / depth / mask-geometry / mixed-field / front-end set, the realism-gap set `thermal`…`doi`, and `ambient-*` — `montecarlo help` is the authoritative list and count) |
 | `tests/…Tests` | xUnit harness — current engine / Studio / opt-in inventories are in [VV.Studio](docs/VV.Studio.md#current-test-inventory). The retained RTL execution record reports 137 cocotb cases with C# vectors (see `rtl/README.md`). Current inventory and acquisition / spectrum evidence: [VV.Studio](docs/VV.Studio.md), [VV.Studio.Acquisition](docs/VV.Studio.Acquisition.md). Physics tests cover MURA, pipeline / transport invariants, per-theme studies and list-mode histogram / timing laws. |
 
 ### Design principle
@@ -106,96 +106,47 @@ dotnet test  Gcam.sln   # Current inventory: docs/VV.Studio.md#current-test-inve
 # PowerShell: $env:GCAM_EVIDENCE_TESTS = '1'
 GCAM_EVIDENCE_TESTS=1 dotnet test tests/Gcam.Studio.Services.Tests -c Release --filter Category=Evidence --logger 'console;verbosity=detailed'
 
-# single scenario → prints flood map + reconstruction + estimate
+# single scenario → prints flood map + reconstruction + estimate (material presets: samples/materials/*.json)
 dotnet run --project src/Gcam.Cli -c Release -- samples/scenario.json
 
-# source-position sweep → FCFOV map, cyclic vs non-cyclic, writes sweep_*.csv
-dotnet run --project src/Gcam.Cli -c Release -- sweep samples/scenario.json
-
-# field of view at field distance (1 m, 5 m): non-cyclic usable field + out-of-field cue → fov.csv (theme 53)
-dotnet run --project src/Gcam.Cli -c Release -- fov samples/scenario_handheld.json samples/fov.csv
-
-# dose rate from the spectrum: G(E) vs ICRP 74 truth, angle of incidence, over-range → dose_*.csv (theme 54)
-dotnet run --project src/Gcam.Cli -c Release -- dose samples/scenario_handheld.json samples/dose
-
-# configuration scan (rank × cell pitch × mask-detector distance) → scan.csv
-dotnet run --project src/Gcam.Cli -c Release -- scan samples/scenario.json samples/scan.csv
-
-# noise study: localization accuracy vs detected counts (Poisson) → noise.csv
+# any study: <command> <scenario.json> [output.csv | output-prefix]; `help` lists every command by group
 dotnet run --project src/Gcam.Cli -c Release -- noise samples/scenario.json samples/noise.csv
-
-# tungsten thickness optimization (use a wide-FOV config to see collimation) → thickness.csv
-dotnet run --project src/Gcam.Cli -c Release -- thickness samples/scenario.json samples/thickness.csv
-
-# crystal non-uniformity + flood correction → uniformity.csv
-dotnet run --project src/Gcam.Cli -c Release -- uniformity samples/scenario.json samples/uniformity.csv
-
-# detector array (pixel pitch/count) sampling sweep → array.csv
-dotnet run --project src/Gcam.Cli -c Release -- array samples/scenario.json samples/array.csv
-
-# crystal material presets (GAGG, CeBr3, LaBr3, LYSO, BGO, NaI, GAGG:Mg) in samples/materials/
-dotnet run --project src/Gcam.Cli -c Release -- samples/materials/CeBr3.json
-
-# single-mask vs mask/antimask vs additive background → antimask.csv
-dotnet run --project src/Gcam.Cli -c Release -- antimask samples/scenario.json samples/antimask.csv
-
-# --- physical-realism gap studies (themes 36–50; see docs/AGENTS.Findings.md) ---
-# thermal drift during acquisition (ambient + self-heating) → window walk / flood residual → thermal_{off,on}.csv
-dotnet run --project src/Gcam.Cli -c Release -- thermal  samples/scenario.json samples/thermal
-# random-coincidence pile-up SUM continuum in the spectrum → pileup.csv
-dotnet run --project src/Gcam.Cli -c Release -- pileup   samples/scenario.json samples/pileup.csv
-# mask fabrication tolerances vs an ideal decoder (usability threshold) → maskfab.csv
-dotnet run --project src/Gcam.Cli -c Release -- maskfab  samples/scenario.json samples/maskfab.csv
-# mask–detector alignment / pose error (systematic bias) → align.csv
-dotnet run --project src/Gcam.Cli -c Release -- align    samples/scenario.json samples/align.csv
-# bad (dead/hot) detector pixels + bad-pixel-map repair → defects.csv
-dotnet run --project src/Gcam.Cli -c Release -- defects  samples/scenario.json samples/defects.csv
-# mask tungsten secondaries (Compton scatter + W K-fluorescence) → masksec.csv
-dotnet run --project src/Gcam.Cli -c Release -- masksec  samples/scenario.json samples/masksec.csv
-# counting-system dead time (non-paralyzable / paralyzable) + live fraction → deadtime.csv
-dotnet run --project src/Gcam.Cli -c Release -- deadtime samples/scenario.json samples/deadtime.csv
-# sub-cell peak interpolation (tent/parabolic/gaussian vs argmax floor) vs recon step → subcell.csv (+_trace.csv)
-dotnet run --project src/Gcam.Cli -c Release -- subcell  samples/scenario.json samples/subcell.csv
-# true (cascade) coincidence summing (Co-60 1173+1332→2505, ∝ε²); isotope from config → cascade.csv (+_spectrum.csv)
-dotnet run --project src/Gcam.Cli -c Release -- cascade  samples/scenario_co60.json samples/cascade.csv
-# mask forward-scatter folded into the coded image (contamination vs gap, window recovery) → maskscatter.csv (+_spectrum.csv)
-dotnet run --project src/Gcam.Cli -c Release -- maskscatter samples/scenario.json samples/maskscatter.csv
-# scintillator non-proportionality → intrinsic resolution from the cascade + nP(E) → nonprop.csv (+_spectrum662.csv)
-dotnet run --project src/Gcam.Cli -c Release -- nonprop  samples/scenario.json samples/nonprop.csv
-# finite source size (recon blur/washout) + capsule self-attenuation (662 vs low-E) → finitesrc.csv (+_capsule.csv)
-dotnet run --project src/Gcam.Cli -c Release -- finitesrc samples/scenario.json samples/finitesrc.csv
-# MLEM (Poisson-likelihood) vs cross-correlation: two-source resolving power, non-negativity → mlem.csv (+_profile.csv)
-dotnet run --project src/Gcam.Cli -c Release -- mlem     samples/scenario.json samples/mlem.csv
-# thermal DCR/PDE readout effects (dark rate, low-E vs photopeak resolution) vs temperature → thermalro.csv
-dotnet run --project src/Gcam.Cli -c Release -- thermalro samples/scenario.json samples/thermalro.csv
-# depth-of-interaction (DOI) parallax: off-axis localization shift vs thickness -> doi.csv
-dotnet run --project src/Gcam.Cli -c Release -- doi      samples/scenario.json samples/doi.csv
-
-# --- multi-isotope / Compton / depth / mask-geometry / front-end studies (themes 15–34) ---
-# crystal-Compton multi-isotope separation (spatial + spectral energy-window) — theme 15–17
-dotnet run --project src/Gcam.Cli -c Release -- compton       samples/scenario.json
-dotnet run --project src/Gcam.Cli -c Release -- compton-strip samples/scenario.json
-# mixed multi-isotope field: image + localize all sources, energy-window/stripping separation — theme 26
-dotnet run --project src/Gcam.Cli -c Release -- mixedfield    samples/scenario.json
-dotnet run --project src/Gcam.Cli -c Release -- mixediso      samples/scenario.json
-dotnet run --project src/Gcam.Cli -c Release -- mixedstrip    samples/scenario.json
-# depth (z) estimation: refocusing, joint x/y/z, 3D, and the depth-from-focus design study — themes 18–24, 34
-dotnet run --project src/Gcam.Cli -c Release -- depth         samples/scenario.json
-dotnet run --project src/Gcam.Cli -c Release -- depth-joint   samples/scenario.json
-dotnet run --project src/Gcam.Cli -c Release -- depth3d       samples/scenario.json
-dotnet run --project src/Gcam.Cli -c Release -- depthdesign   samples/scenario.json
-# mask channel geometry / optimal size / tapered channels — themes 20–23
-dotnet run --project src/Gcam.Cli -c Release -- maskgeo       samples/scenario.json
-dotnet run --project src/Gcam.Cli -c Release -- masksize      samples/scenario.json
-dotnet run --project src/Gcam.Cli -c Release -- masktaper     samples/scenario.json
-# ambient background + directional shield leak — theme 28; antimask over a full scene
-dotnet run --project src/Gcam.Cli -c Release -- background     samples/scenario.json
-dotnet run --project src/Gcam.Cli -c Release -- shield         samples/scenario.json
-dotnet run --project src/Gcam.Cli -c Release -- antimask-scene samples/scenario.json
-# timed MC → RTL event stream (drives the cocotb shaper) — theme 27; physical front-end folded into C# — theme 32
-dotnet run --project src/Gcam.Cli -c Release -- eventstream   samples/scenario.json
-dotnet run --project src/Gcam.Cli -c Release -- frontend      samples/scenario.json
+dotnet run --project src/Gcam.Cli -c Release -- help
 ```
+
+Study commands (scenario `samples/scenario.json` unless noted; outputs land where the last argument says, default
+`samples/`). Theme numbers point into [AGENTS.Findings](docs/AGENTS.Findings.md).
+
+| Command | Measures → output | Theme |
+|---|---|---|
+| `sweep` | source-position sweep: FCFOV map, cyclic vs non-cyclic → `sweep_*.csv` | 1–2 |
+| `fov` | field of view at 1 m / 5 m: non-cyclic usable field + out-of-field cue (`scenario_handheld.json`) → `fov.csv` | 53 |
+| `dose` | dose rate from the spectrum: G(E) vs ICRP 74 truth, incidence angle, over-range (`scenario_handheld.json`) → `dose_*.csv` | 54 |
+| `scan` | rank × cell pitch × mask–detector distance → `scan.csv` | 3 |
+| `noise` | localisation accuracy vs detected counts (Poisson) → `noise.csv` | 9 |
+| `thickness` | tungsten thickness (use a wide-FOV config to see collimation) → `thickness.csv` | 4 |
+| `uniformity` | crystal non-uniformity + flood correction → `uniformity.csv` | 8 |
+| `array` | detector pixel pitch / count sampling → `array.csv` | 7 |
+| `antimask`, `antimask-scene` | single mask vs mask/antimask vs additive background (`-scene`: over a full scene) → `antimask.csv` | 5 |
+| `background`, `shield` | relative (BSR) background + directional shield leak | 28 |
+| `thermal`, `thermalro` | thermal drift during acquisition (window walk / flood residual); DCR / PDE readout vs temperature → `thermal_{off,on}.csv`, `thermalro.csv` | 36, 49 |
+| `pileup` | random-coincidence pile-up sum continuum → `pileup.csv` | 37 |
+| `maskfab`, `align` | mask fabrication tolerance vs an ideal decoder; mask–detector pose error → `maskfab.csv`, `align.csv` | 38–39 |
+| `defects` | dead / hot pixels + bad-pixel-map repair → `defects.csv` | 40 |
+| `masksec`, `maskscatter` | tungsten Compton scatter + W K-fluorescence; forward scatter folded into the coded image → `masksec.csv`, `maskscatter.csv` | 41, 45 |
+| `deadtime` | non-paralyzable / paralyzable dead time + live fraction → `deadtime.csv` | 42 |
+| `subcell` | sub-cell peak interpolation vs the argmax floor → `subcell.csv` (+`_trace`) | 43 |
+| `cascade` | true coincidence summing, isotope from the config (`scenario_co60.json`) → `cascade.csv` (+`_spectrum`) | 44 |
+| `nonprop` | scintillator non-proportionality → intrinsic resolution → `nonprop.csv` (+`_spectrum662`) | 46 |
+| `finitesrc` | finite source size + capsule self-attenuation → `finitesrc.csv` (+`_capsule`) | 47 |
+| `mlem` | MLEM vs cross-correlation: two-source resolving power → `mlem.csv` (+`_profile`) | 48 |
+| `doi` | depth-of-interaction parallax vs thickness → `doi.csv` | 50 |
+| `compton`, `compton-strip` | crystal-Compton multi-isotope separation, spatial + spectral | 15–17 |
+| `mixedfield`, `mixediso`, `mixedstrip` | mixed multi-isotope field: image and localise all sources, window / stripping | 26 |
+| `depth`, `depth-joint`, `depth3d`, `depthdesign` | depth (z) by refocusing, joint x/y/z, 3D, depth-from-focus design | 18–24, 34 |
+| `maskgeo`, `masksize`, `masktaper` | mask channel geometry, optimal cell size, tapered channels | 20–23 |
+| `eventstream`, `frontend` | timed MC → RTL event stream (drives the cocotb shaper); physical front-end in C# | 27, 32 |
+| `ambient-*` | absolute ambient background tools (TODO-30, in progress — see its plan) | — |
 
 Sample scenarios in `samples/`: `scenario.json` (centered), `scenario_offaxis.json`
 (inside FCFOV), `scenario_ghost.json` (outside FCFOV → ghost). CSV/PNG outputs also
@@ -254,27 +205,12 @@ The full, theme-organized results log with reproduce commands and artifacts is i
 
 ## RTL front-end (`rtl/`)
 
-A separate sub-project (not part of the .NET build): the ADC peak detector as real
-**SystemVerilog**, simulated by **Icarus Verilog** (`scoop install iverilog`; run via
-`rtl/run.sh`). Python generates a synthetic detector waveform (Poisson-timed Cs-137
-pulses) → `adc.txt` → `peak_detector.sv` (baseline + threshold/peak-hold) → `peaks.txt`
-→ Python scoring. It reconstructs the 662 keV photopeak at ~7% FWHM at low rate; at high
-rate pile-up merges pulses and efficiency collapses (~44%). `material_rate_study.py`
-sweeps count rate per scintillator (decay time from the C# presets + GAGG afterglow):
-fast crystals (CeBr3) resist pile-up, and **GAGG's afterglow collapses it at ~1 Mcps**
-while GAGG:Ce,Mg recovers — the rate-domain confirmation of the material recommendation.
-`pixel_uniformity_study.py` runs the RTL per crystal (each with its own gain + decay):
-per-crystal gain scatter smears the aggregate photopeak (7.4%→18% at 15% gain σ) and
-per-channel gain calibration restores it — so **energy needs calibration even though
-position is uniformity-robust** (finding 8). See `rtl/README.md`.
-
-**Now wired to the C# MC and cocotb** (themes 27, 31, 33): `EventStreamStudy` (`montecarlo
-eventstream`) exports a Poisson-timed MC arrival stream that drives the RTL shaper, and the
-`crrc_shaper.sv` (CR-RC⁴ pole-zero + 4 RC low-passes) and trapezoidal front-ends are
-verified **bit-exact against the native C# `Waveform`** by a **cocotb** harness (137 cases in the retained 2026-10-02 run with C# vectors
-across `rtl/test_*.py`, python.org 3.13 + Icarus). The cusp shaper stays a Python benchmark
-by choice (a digital cusp is a rare ~19-tap FIR). ModelSim/Vivado not used (Icarus + nextpnr
-ECP5 as the Fmax proxy; `rtl/vivado_trap.tcl` ready for exact Artix-7 whenever installed).
+A separate sub-project (not part of the .NET build), simulated with **Icarus Verilog** + **cocotb**: SystemVerilog
+peak detector, trapezoidal and CR-RC⁴ shapers, driven by Python-generated or MC (`montecarlo eventstream`) pulse streams.
+The C# `Waveform` and the RTL shapers are **bit-exact** (137 cocotb cases with C# vectors, retained 2026-10-02 run);
+the cusp shaper stays a Python benchmark by choice; Fmax via nextpnr ECP5 as a proxy (`rtl/vivado_trap.tcl` ready for
+Artix-7). Rate and material results (GAGG afterglow collapses at ~1 Mcps; per-crystal gain needs calibration) are in
+Findings themes 10–14, 25, 27, 29–33. Details, scripts and how to run: [`rtl/README.md`](rtl/README.md).
 
 ## Notes & gotchas
 
