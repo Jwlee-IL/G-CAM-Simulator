@@ -2,7 +2,7 @@
 
 Scope: engine list-mode events and the Studio acquisition contract, state and imaging snapshots. This is the
 acquisition-only verification baseline; Spectrum evidence and current test totals are in
-[VV.Studio](VV.Studio.md#current-test-inventory). The original baseline below used no desktop; subsequent acquisition desktop validation is recorded in [VV.Studio](VV.Studio.md#final-desktop-verification-and-validation-2026-10-02).
+[VV.Studio](VV.Studio.md#current-test-inventory). The original baseline below used no desktop; subsequent acquisition desktop validation is recorded in [VV.Studio](VV.Studio.History.md#final-desktop-verification-and-validation-2026-10-02).
 
 **At a glance**
 - Fresh histories, importance-weight rejection and independent Poisson timing feed one cumulative event list.

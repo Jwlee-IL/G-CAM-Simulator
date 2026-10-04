@@ -17,7 +17,7 @@ Guidance for AI agents and contributors working on this repository.
 | `AGENTS.UiAutomation.md` | UI automation of the running Studio window: safety, selectors, pilot, evidence |
 | `DESIGN.Architecture.md`, `DESIGN.ViewLayer.md`, `DESIGN.Controls.md`, `DESIGN.Color.md`, `DESIGN.Layout.md`, `DESIGN.Typography.md` | GCAM Studio design |
 | `VV.Gcam.Overview.md`, `VV.Gcam.URS.md`, `VV.Gcam.PRS.md`, `VV.Gcam.Evidence.md`, `VV.Gcam.Limitations.md`, `VV.Gcam.Decisions.md` | one-page overview, user needs, product requirements, the evidence register (EV-01 … EV-33 — the VV-facing copy of the Findings results), known limitations (with fixes and their costs) and the author's decision log with reasons, for the hand-held locator concept (theme 22) — design-only; **self-contained, never links to `AGENTS.*`** |
-| `VV.Studio.md`, `VV.Studio.SRS.md`, `VV.Studio.SDS.md` | GCAM Studio verification & validation (traceability, validation, anomalies), requirements (SRS) and design record (SDS), IEC 62304-style |
+| `VV.Studio.md`, `VV.Studio.SRS.md`, `VV.Studio.SDS.md`, `VV.Studio.History.md` | GCAM Studio verification & validation (traceability, validation, anomalies), requirements (SRS), design record (SDS) and dated verification records (History), IEC 62304-style |
 | `PAPER.ko.md` | two-tier (expert / plain) physics write-up, Korean |
 
 Folder maps: `rtl/README.md` (SystemVerilog front-end), `src/Gcam.Studio*/README.md`.
