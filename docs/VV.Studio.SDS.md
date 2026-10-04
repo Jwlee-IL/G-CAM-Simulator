@@ -11,7 +11,7 @@ Structured after IEC 62304 §5.3 (architectural design) and §5.4 (detailed desi
 **At a glance**
 - Four software items in three projects — presentation logic and view maths (`Gcam.Studio.Core`, no WPF), the
   simulation adapter (`Gcam.Studio.Services`, the only layer that reaches the engine) and the WPF shell — split into
-  25 units (§2); the compiler enforces the layering.
+  26 units (§2); the compiler enforces the layering.
 - Interfaces between items (§3), SOUP with what Studio relies on (§4), the run state machine and the measurement
   gesture (§5), and the detailed design of each unit (§6).
 - Every SRS requirement is allocated to the unit that meets it (§7).
@@ -53,14 +53,14 @@ one class, or a small group of types that only make sense together. Unit IDs are
 
 | Unit | Item | Type(s) | File(s) | Responsibility |
 |---|---|---|---|---|
-| SU-01 | SI-1 | `MainViewModel`, `RunState` | `Core/ViewModels/MainViewModel.cs` | scene list and selection, live time / speed / seed, snapshots, workspace selection, Start / Continue / Stop / Reset / failure state machine with its command table and input locks, progress, theme toggle |
+| SU-01 | SI-1 | `MainViewModel`, `RunState` | `Core/ViewModels/MainViewModel.cs` | scene list and selection, live time / speed / seed, snapshots, workspace selection, Start / Continue / Stop / Reset / failure state machine with its command table and input locks, progress, theme toggle, the ambient field input (dose rate, the dose text with its pattern validation and warning, bound, preset and environment labels) |
 | SU-02 | SI-1 | `SourceItemViewModel` | `Core/ViewModels/SourceItemViewModel.cs` | one editable source; input clamping; list and marker labels; `IPlaneMarker`; → `SceneSource` |
 | SU-03 | SI-1 | `MeasurementsViewModel`, `MeasureTool` | `Core/ViewModels/MeasurementsViewModel.cs`, `MeasureTool.cs` | measurement session: active tool and hint, numbering, add / delete / clear, selection, refresh on a new result |
 | SU-04 | SI-1 | `MeasurementViewModel`, `MeasurementKind`, `ImagePane`, `MeasurementDraft` | `Core/ViewModels/Measurement*.cs`, `ImagePane.cs` | one measurement: point-count check, value and detail text, description for screen readers |
 | SU-05 | SI-2 | `HeatmapViewport`, `Vec2`, `OverlayLabelLayout`, `ScreenRect` | `Core/Imaging/HeatmapViewport.cs`, `OverlayLabelLayout.cs`, `ScreenRect.cs` | fit, device-pixel snapping, zoom about a point, pan clamping, screen ↔ image ↔ mm; bounded packing of measured overlay rectangles |
 | SU-06 | SI-2 | `MeasurementMath`, `RoiStats` | `Core/Imaging/MeasurementMath.cs` | distance, angle, ROI statistics by pixel centre |
 | SU-07 | SI-1 | `IAcquisitionService`, `IAcquisitionSession`, `AcquisitionSnapshot`, `ImagingResult`, `IThemeService`, `AppTheme`, `IPlaneMarker` | `Core/Services/*.cs`, `Core/Imaging/IPlaneMarker.cs` | contracts between items (§3) |
-| SU-08 | SI-3 | `SimulationService` | `Services/SimulationService.cs` | validate inputs, build the engine config and start an acquisition session |
+| SU-08 | SI-3 | `SimulationService` | `Services/SimulationService.cs` | validate inputs, build the engine config (resolving the ambient preset reference from the deployed `ambient` folder through the engine loader) and start an acquisition session |
 | SU-09 | SI-4 | `HeatmapView` (+ `HeatmapViewAutomationPeer`) | `Studio/Controls/HeatmapView.cs` | draw a grid with the colormap, zoom / pan input, hover readout, automation peer, exposes data range and mm mapping |
 | SU-10 | SI-4 | `MeasurementAdorner`, `MeasurementOverlay` | `Studio/Controls/Measurement*.cs` | draw measurements and (display-only) source markers over a heatmap; turn gestures into `MeasurementDraft`s |
 | SU-11 | SI-4 | `ColorBar`, `Colormap` | `Studio/Controls/ColorBar.cs`, `Studio/Rendering/Colormap.cs` | viridis lookup table; colour scale with ticks |
@@ -78,6 +78,7 @@ one class, or a small group of types that only make sense together. Unit IDs are
 | SU-23 | SI-3 | `ImagingService` | `Services/ImagingService.cs` | incremental measured windows, calibration, stripping and worker projection |
 | SU-24 | SI-1 | `OpticsEditorViewModel`, `OpticsPolicy`, `OpticsGeometry`, `OpticsPreset` | `Core/ViewModels/OpticsEditorViewModel.cs`, `Core/Optics/*.cs` | validated effective physical inputs, atomic presets, pure geometry and allocation policy |
 | SU-25 | SI-3 | `ImagingProjection` | `Services/ImagingProjection.cs` | clone acquired config for decoder focus, one projection path for retained All/window/stripped floods |
+| SU-26 | SI-1 | `AmbientPreset` | `Core/Services/AmbientPreset.cs` | the offered ambient spectra as hash-pinned references (file name + SHA-256); builds the field config; no I/O |
 
 Paths are relative to `src/Gcam.Studio.Core`, `src/Gcam.Studio.Services` and `src/Gcam.Studio` respectively.
 
@@ -86,7 +87,8 @@ Paths are relative to `src/Gcam.Studio.Core`, `src/Gcam.Studio.Services` and `sr
 ### SI-1 ↔ SI-3: `IAcquisitionService`
 
 `IAcquisitionService`: `Start(scene, optics, liveTimeS, speed, detector, backgroundToSignalRatio, seed)` returns an
-`IAcquisitionSession`. It publishes `IAsyncEnumerable<AcquisitionSnapshot>`, exposes `Stop()` and `Continue(liveTimeS, speed)` and supports
+`IAcquisitionSession`; `StartAmbient(scene, optics, liveTimeS, speed, ambient, detector, backgroundToSignalRatio, seed)` starts
+an acquisition with an absolute ambient field, including an empty scene (SR-RUN-29). The session publishes `IAsyncEnumerable<AcquisitionSnapshot>`, exposes `Stop()` and `Continue(liveTimeS, speed)` and supports
 asynchronous disposal. Snapshots contain live time, integer counts, running rate, achieved speed, MC-limited
 flag, imaging, unsmeared events, frozen detector and effective physical optics inputs, decode time and completion. Images are detached read-only copies; the event
 array is detached and wrapped read-only. A bounded channel keeps at most two cumulative snapshots and drops
@@ -108,7 +110,7 @@ verifies transport/localization, immutable snapshots, count conservation, input 
 ### SI-1 ↔ SI-3: `ISpectrumService`
 
 `ProcessAsync(acquisitionId, events, lines, settings, seed, cancellationToken)` returns `SpectrumView`:
-257 explicit bin edges, 256 centres and acquired counts, grouped bands and their counts / shares, total measured pulses, overflow,
+1001 explicit bin edges (0–2000 keV), 1000 centres and acquired counts, grouped bands and their counts / shares, total measured pulses, overflow,
 union share, resolution at 662 keV, resolving time, chain name and worker processing elapsed time.
 `SpectrumSettings` contains a positive finite N and pile-up, plus the snapshot's frozen DetectorSettings and
 pixel dimensions; log Y is a plot property. Gain σ and seed belong to acquisition inputs, not to the editable
@@ -172,7 +174,7 @@ and are verified by their own suite.
 ```mermaid
 stateDiagram-v2
     [*] --> Empty
-    Empty --> Acquiring: Start (≥ 1 source, new seed)
+    Empty --> Acquiring: Start (≥ 1 source or ambient field, new seed)
     Acquiring --> Stopped: Stop
     Acquiring --> Completed: preset reached
     Stopped --> Acquiring: Continue (preset > live)
@@ -186,7 +188,7 @@ stateDiagram-v2
 
 The command table is computed from three facts: `IsRunning`, `HasData` (`Snapshot ≠ null`) and whether a
 continuable session is held. `CanEditInputs = !IsRunning && !HasData` gates every physical input (sources,
-optics, gap, gain, BSR, chain, seed); `CanEditLiveTime = !IsRunning && (!HasData || session held)`;
+optics, gap, gain, BSR, ambient dose rate and bound, chain, seed); `CanEditLiveTime = !IsRunning && (!HasData || session held)`;
 `CanEditSpeed = !IsRunning`. Start reads "Continue" with data and is enabled only when the preset exceeds the
 acquired live time; Reset only with data and not while running. The guards are repeated inside the commands and
 in every physical setter (a refused change is reverted), so the locks hold for any writer, not only for the
@@ -246,6 +248,7 @@ Only the rules a reviewer needs to check a requirement; the rest is in the code 
 | Input locks | physical setters revert any change while `HasData` or `IsRunning`; a preset below the acquired live time is reverted with `LiveTimeError`; speed reverts only while running. |
 | Seed | blank `SeedText` draws `Random.Shared.Next(1, int.MaxValue)` per new acquisition; a nonnegative integer is used as given; `AcquisitionSeed` holds the acquisition's seed until Reset. |
 | Inputs | default 60 s and ×10; invalid non-positive / non-finite UI values return to defaults; service rejects them. |
+| Ambient dose | default 0.10 µSv/h, front-only bound; `AmbientDoseText` must match `AmbientDosePatternText` (digits with at most one decimal point); any other text is refused: the dose rate keeps its previous value, `AmbientDoseError` shows under the field and Start does nothing until it is corrected; a non-finite or negative value set in code is reverted to the previous value. 0 calls the ideal `Start`, any other value `StartAmbient` with `AmbientPreset.Field(dose, bound)`. |
 | Add source | new source at `X = 15 mm · count`, `Y = 0`, selected. |
 | Remove source | select the item now at the removed index, or the new last item; `null` when empty. |
 | Status text | `"t = {live:F1} s of {preset:G} s · {counts:N0} counts · {counts / live:F0} cps · seed {seed}"` (observed rate); MC-limited appends achieved speed; terminal text prefixes Stopped / Completed; Reset shows "Ready". |
@@ -264,8 +267,14 @@ accepted event. Events past the preset are look-ahead only. Background uses a se
 BSR × source rate, whose fresh deposits use the existing cosine-flux unmasked crystal response. A uniform
 pixel assignment follows the engine's detected-pedestal model, not a transported shield profile. BSR is a
 detected-count ratio, not an incident-flux prediction; entrance, backing and reflector effects apply to source
-transport, while the ambient response matches `BackgroundDepositSpectrum`. Disabled background consumes no
+transport, while the BSR background response matches `BackgroundDepositSpectrum`. Disabled background consumes no
 additional source RNG draws. Nuclear emissions remain independent singles.
+
+An absolute ambient field (SR-RUN-29) is a separate, source-independent process: dose rate and bound plus the preset
+reference are frozen at Start; SU-08 resolves the reference from `<application>/ambient/` with the engine's
+`ConfigLoader.ResolveAmbientSpectrum`, which checks the bytes against the SHA-256 pinned in SU-26, and the engine
+refuses a spectrum that is not validated. The session then advances by fixed live-time targets, so empty intervals
+progress and a source-free acquisition is possible. A field of 0 takes the ideal path and consumes no RNG draws.
 
 The session runs in segments: Start runs the first, each `Continue(preset, speed)` one more, on a fresh worker,
 channel and stop token. Everything a continuation needs lives in fields — the `ListModeSource` with all its RNG
@@ -321,7 +330,10 @@ it supplies the same deterministic response to spectrum and future energy-window
 histogram; pile-up sums gained amplitudes while each arrival gap is below 730 ns, re-extending the interval as the
 engine's `ApplyPileUp` does. The final open group is measured on a copied histogram for publication and
 stays open in the cache. A pile-up toggle resets and replays; snapshot boundaries do not change counts.
-Axis range is 1.15 × highest emission energy (2.15 × with pile-up); pulses above it are counted as overflow.
+The axis is fixed at 0–2000 keV in 2 keV bins, independent of the emission lines, the ambient field and pile-up.
+2 keV is finer than the 2.97 keV the old line-based axis gave at 662 keV and keeps at least 2 bins per FWHM at the
+narrowest offered peak (Ba K, 4.4 keV). Pulses at or above 2000 keV are counted as overflow (Co-60 cascade sum,
+pile-up sums). `IncidentMaximumEnergyKeV` only admits a source-free spectrum.
 
 Sorted adjacent emissions merge when their separation is less than FWHM at their mean energy. Band limits
 are the union span of E ± N·FWHM(E); labels retain every energy and isotope. Counts use bin centres, and
@@ -358,7 +370,9 @@ Any property change raises `Label`; an isotope change also raises `MarkerLabel`.
 
 `Start` validates live time, speed and the nonempty scene, builds the config on the caller's thread with
 `SceneConfigBuilder.Build(scene, optics, 1)`, clones it, applies explicit `DetectorSettings`, BSR and the acquisition seed (the builder default 12345 when none is given), and returns
-SU-19 with frozen settings and the injected `TimeProvider`. The placeholder
+SU-19 with frozen settings and the injected `TimeProvider`. `StartAmbient` also accepts an empty scene; with a field,
+`BuildConfig` clones the config and resolves the preset reference on the frozen copy through
+`ConfigLoader.ResolveAmbientSpectrum(config, AmbientSpectrumDirectory)`; a missing file or a wrong pin fails Start. The placeholder
 photon budget is required by the config builder; acquisition ends by live time or Stop. Decoder settings come
 from the builder: non-cyclic, recon half-extent `0.95 · rank · pitch / (D/F) / 2`, step
 `max(0.2, pitch / (D/F) / 4)` mm, rank snapped to the nearest prime.
@@ -473,6 +487,7 @@ Every SRS requirement maps to at least one unit; every unit carries at least one
 | SR-RUN-03, SR-RUN-09 … SR-RUN-13, SR-RUN-19 | SU-01, SU-07, SU-08, SU-19 |
 | SR-RUN-14 | withdrawn; stale marking removed |
 | SR-RUN-23 … SR-RUN-28 | SU-01 (state machine, locks, seed, status), SU-19 (segments), SU-08 (seed), SU-16 (workspace reset), SU-14 (top-bar controls) |
+| SR-RUN-29 | SU-01, SU-26, SU-08, SU-19, engine `AmbientPhotonProcess` |
 | SR-RUN-15 | SU-08 (argument checks and engine `SceneConfigBuilder`) |
 | SR-RUN-16 … SR-RUN-18 | SU-19, SU-07, SU-01, SU-16 |
 | SR-RUN-20 … SR-RUN-22 | SU-08, SU-19, SU-20 (`MeasurementStage`), SU-01, engine list-mode background producer |
@@ -506,7 +521,7 @@ Every SRS requirement maps to at least one unit; every unit carries at least one
 | SR-A11Y-02 | SU-09 |
 | SR-A11Y-04 | SU-14 |
 | SR-A11Y-05 | SU-14 theme dictionaries and disabled TextBox/ComboBox templates; ThemeContrastTests reads production XAML tokens without WPF |
-| SR-SEC-01 | all (no I/O anywhere in Studio), SU-08 (engine is called with in-memory config only) |
+| SR-SEC-01 | all (no user-file I/O in Studio), SU-08 (engine is called with in-memory config; the only file read is the shipped, hash-pinned ambient spectrum, through the engine loader) |
 | SR-ARCH-01 … SR-ARCH-04 | project files of SI-1 … SI-4 and `tests/Gcam.Studio.Tests` |
 
 SU-11 (colour bar, colormap) and SU-13 (converters) serve SR-VIEW-01 / SR-A11Y-04 and SR-MEAS-06

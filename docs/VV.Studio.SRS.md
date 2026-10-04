@@ -21,7 +21,7 @@ Structured after IEC 62304 §5.2 (software requirements analysis). As in [VV.Stu
 |---|---|
 | Purpose | A desktop viewer for Gcam, a Monte Carlo simulator of a coded-aperture gamma camera: place sources, run the simulation, inspect the detector flood map and the decoded reconstruction, measure on both in mm. Intended use and safety class: [VV.Studio §1](VV.Studio.md#1-scope-and-intended-use). |
 | Users | Engineers and reviewers. They know what a flood map and a reconstruction are; they are not assumed to know the code. |
-| Inputs | A scene of point sources (isotope, lateral X / Y, distance, activity), preset live time, acquisition speed and an optional fixed Monte Carlo seed. Optics have editable physical defaults (`OpticsSettings`), frozen during acquisition and while data exist until Reset; decoder focus is an Imaging view setting. |
+| Inputs | A scene of point sources (isotope, lateral X / Y, distance, activity), an absolute ambient field (dose rate and bound), preset live time, acquisition speed and an optional fixed Monte Carlo seed. Optics have editable physical defaults (`OpticsSettings`), frozen during acquisition and while data exist until Reset; decoder focus is an Imaging view setting. |
 | Outputs | Imaging flood/reconstruction with colour bars, found coordinates and measurements (distance, angle, ROI); Spectrum histogram/bands; Waveform traces/events; Detector face/gain geometry; retained-flood focus curves with a separate optional external range; acquisition status. Nothing is written to disk. |
 | Upward trace | Studio is subsystem SS-4 of the product concept: it implements [PR-SW-02](VV.Gcam.PRS.md#software-and-engineering-use-pr-sw) and serves user need UN-09 (engineering inspection; [VV.Gcam.URS](VV.Gcam.URS.md)). |
 | Neighbouring systems | The Gcam engine, reached through Core acquisition, spectrum, imaging, waveform, detector-face and focus-sweep service contracts ([VV.Studio.SDS §3](VV.Studio.SDS.md#3-interfaces-between-items-532-543)); Windows (WPF, DWM title bar, UI Automation). |
@@ -66,7 +66,7 @@ Structured after IEC 62304 §5.2 (software requirements analysis). As in [VV.Stu
 
 | ID | Requirement |
 |---|---|
-| SR-SPEC-01 | Spectrum displays a live 256-bin stepped, filled histogram of the shared acquisition's measured event deposits, with measured energy in keV and acquired counts; it adds no synthetic noise floor or independent event pool. |
+| SR-SPEC-01 | Spectrum displays a live stepped, filled histogram of the shared acquisition's measured event deposits, with measured energy in keV and acquired counts, on a fixed 0–2000 keV axis in 1000 bins of 2 keV for every scene, ambient field and pile-up setting. A pulse measured at or above 2000 keV is not drawn: it is counted as overflow, shown in the spectrum summary ("N overflow ≥ 2000 keV") and included in the total — Co-60 2505 keV cascade sums and pile-up sums above 2000 keV fall there. It adds no synthetic noise floor or independent event pool. |
 | SR-SPEC-02 | Measured energy applies the acquisition's fixed pixel gain to its true deposit, then smears once through the default GAGG(Ce), S13360-3050 and CSP + CR-RC chain's `FrontEndModel`. The read-only chain resolution at 662 keV excludes pixel gain spread; no resolution override is offered. |
 | SR-SPEC-03 | Optional pile-up sums gained amplitudes whose actual arrival gaps are below the chain-derived resolving time, extending the interval after each pulse, then smears the summed pulse once; toggling it reprocesses retained events. |
 | SR-SPEC-04 | Each emission window spans E ± N·FWHM(E); adjacent lines separated by less than FWHM at their mean merge into one labelled band spanning their windows. Resolved lines keep separate bands even if their windows overlap. |
@@ -91,8 +91,8 @@ Structured after IEC 62304 §5.2 (software requirements analysis). As in [VV.Stu
 | SR-RUN-09 | Start without acquired data executes fresh list-mode MC transport and decoding off the UI thread through `IAcquisitionService`, with the acquisition's Monte Carlo seed (SR-RUN-25); the state is Acquiring until Stopped, Completed or Failed. |
 | SR-RUN-10 | Stop cooperatively ends the current acquisition segment, retains all acquired data, measurements and the session, and sets Stopped; physical inputs stay locked (SR-RUN-12). |
 | SR-RUN-11 | Progress equals acquired live time / current preset live time, never decreases within a segment and reaches 1 at Completed; raising the preset (SR-RUN-24) lowers it accordingly. |
-| SR-RUN-12 | Physical run inputs — sources (add / remove, isotope, X, Y, distance, activity), optics, reflector gap, gain σ / seed, background ratio, detection chain and the Monte Carlo seed — are editable only in Empty or after a failure without data. Any other change is refused by the view model, not only disabled in the view. While Acquiring, live time and speed are locked too. |
-| SR-RUN-13 | Without acquired data, Start is enabled when at least one source exists. With data the button reads Continue and is enabled only in Stopped or Completed when the preset exceeds the acquired live time. The command re-checks its condition when invoked; it is not the window's default button. |
+| SR-RUN-12 | Physical run inputs — sources (add / remove, isotope, X, Y, distance, activity), optics, reflector gap, gain σ / seed, background ratio, ambient dose rate and bound, detection chain and the Monte Carlo seed — are editable only in Empty or after a failure without data. Any other change is refused by the view model, not only disabled in the view. While Acquiring, live time and speed are locked too. |
+| SR-RUN-13 | Without acquired data, Start is enabled when at least one source exists or the ambient field is non-zero (a source-free, background-only acquisition). With data the button reads Continue and is enabled only in Stopped or Completed when the preset exceeds the acquired live time. The command re-checks its condition when invoked; it is not the window's default button. |
 | SR-RUN-14 | *Withdrawn* — outdated / stale result marking; replaced by SR-RUN-12, SR-RUN-23, SR-RUN-26. |
 | SR-RUN-15 | The scene config uses nearest-prime rank, non-cyclic decoding and a reconstruction grid inside the FCFOV; non-finite or non-positive preset live time and speed are rejected by the service. |
 | SR-RUN-16 | Immutable cumulative snapshots carry live time, integer counts, flood, reconstruction, estimate and the same fresh event list (pixel, true deposit in keV, Poisson arrival time in s); each event is used once. The flood adds one count at each ComptonCrystalDetector event’s Argmax pixel, so in-crystal Compton scatter mispositioning is part of the image. A decay of an isotope with correlated gammas (Co-60 with its 1173 / 1332 keV angular correlation, Na-22 with its back-to-back annihilation pair) is one event: the deposits of all its detected gammas summed, at the largest-deposit pixel over their merged interaction sites, with one arrival time (true-coincidence summing). |
@@ -108,6 +108,7 @@ Structured after IEC 62304 §5.2 (software requirements analysis). As in [VV.Stu
 | SR-RUN-26 | Reset — enabled only in Stopped, Completed or Failed with data, never while acquiring — discards the acquisition without a confirmation: session, snapshot, images, spectrum, scope, focus sweep and the scene frozen at Start. The state returns to Empty ("Ready") and the physical inputs unlock; measurement shapes are kept. |
 | SR-RUN-27 | A failure after data keeps the last published data visible and locked and offers only Reset; a failure before any data leaves the inputs editable and Start enabled. Both show "Failed: <message>". |
 | SR-RUN-28 | The status line's rate is the observed count rate, counts / live time — the definition the Detector workspace uses. |
+| SR-RUN-29 | An absolute ambient field — photon H*(10) in µSv/h, entered as digits with at most one decimal point (`^\s*(\d+(\.\d*)?\|\.\d+)\s*$`), default 0.10, with a bound, front-only through the mask (default) or bare crystal on all faces — adds the engine's source-independent ambient photon process using the validated terrestrial spectrum `terrestrial-unscear2000-v1`, the only offered preset. Any other dose entry is refused with a warning under the field; the previous dose rate stays and Start does nothing until it is corrected. The spectrum ships with Studio and is used only if its bytes match the SHA-256 pinned in Studio and the engine accepts it as validated with its acceptance record; otherwise Start fails (SR-RUN-27). The panel names the preset and the bound; 0 is labelled "ideal environment" and runs the unchanged ideal acquisition, bit for bit. A derived ambient BSR (ambient ÷ source detected rate) is shown read-only. |
 
 ### Scene (`SR-SCENE`)
 
@@ -229,6 +230,8 @@ Seven withdrawn rows are retained with stable IDs; Detector, focus and Waveform 
 | Focus sweep K | integer | 1–4, default 1; 81 planes uniform in inverse detector-referenced distance from D+30 to 3000 mm | SR-FOCUS-01, -02 |
 | External surface range | mm from detector | optional, finite positive measurement; Use as focus requires valid decoder focus | SR-FOCUS-05 |
 | Background BSR | detected background / source | finite ≥ 0, default 0; invalid UI input → 0; invalid service input rejected | SR-RUN-22 |
+| Ambient photon H*(10) | µSv/h | digits with at most one decimal point (no sign, exponent, NaN, ∞); default 0.10; 0 = ideal environment; an invalid entry is refused with a warning, the previous value stays and Start is blocked | SR-RUN-29 |
+| Ambient bound | — | front-only through the mask (default) or bare crystal on all faces; locked while data exist | SR-RUN-29 |
 | Physical optics | mm / integer | ranks 5, 7, 11, 13, 17, 19, 23; N integer 4–64; finite D ≥1, pitches ≥0.05; pixel pitch > reflector gap; source z > D+5 (10 mm slab); invalid edits block Start | SR-OPT-01, -03 |
 | Decoder focus | mm from detector | finite, > acquired D; projected grid ≤128 cells per side; invalid edits retain the last valid view | SR-OPT-03, -04 |
 | Spectrum window N | × FWHM(E) | positive finite; default 1.5; invalid numeric value → 1.5 | SR-SPEC-04, -06 |
@@ -242,7 +245,7 @@ Seven withdrawn rows are retained with stable IDs; Detector, focus and Waveform 
 | Flood map, reconstruction | heatmap (viridis, linear min–max) + colour bar; row 0 at the bottom | SR-VIEW-01…06 |
 | Hovered pixel | "x 1.2 mm, y −3.4 mm · 56.7" | SR-VIEW-07 |
 | Decoded peak | "peak (x, y) mm", 0.1 mm | SR-VIEW-08 |
-| Spectrum | 256-bin stepped histogram, measured energy (keV) / acquired counts; line bands and emission-window table | SR-SPEC-01, -04, -05 |
+| Spectrum | stepped histogram on a fixed 0–2000 keV axis (2 keV bins) with an overflow count, measured energy (keV) / acquired counts; line bands and emission-window table | SR-SPEC-01, -04, -05 |
 | Front-end chain | read-only chain name, resolution FWHM % at 662 keV and resolving time in ns | SR-SPEC-02, -03 |
 | Distance / angle / ROI | "12.3 mm" · "67.0°" · "Σ 1,234" with px count, mean, max | SR-MEAS-01…04 |
 
@@ -257,6 +260,7 @@ Seven withdrawn rows are retained with stable IDs; Detector, focus and Waveform 
 | Failed | "Failed: <message>"; with data only Reset | SR-RUN-03, SR-RUN-27 |
 | Preset below the acquired live time | "The preset cannot be below the acquired live time (<t> s)." in the status bar; previous value restored | SR-RUN-24 |
 | Invalid seed | "The seed must be blank (new each acquisition) or a nonnegative integer." in the status bar | SR-RUN-25 |
+| Invalid ambient dose rate | "The ambient dose rate must be a number ≥ 0 in µSv/h (digits and one decimal point, e.g. 0.1)." under the field; the previous value stays | SR-RUN-29 |
 | Spectrum processing failure | "Spectrum failed: <message>"; acquired data retained | SR-SPEC-01, -07 |
 | ROI before any run / outside the pixels | "—" · "no image yet" / "no pixel centres inside" | SR-MEAS-04 |
 

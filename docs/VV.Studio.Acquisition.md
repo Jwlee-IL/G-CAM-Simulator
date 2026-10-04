@@ -9,7 +9,7 @@ acquisition-only verification baseline; Spectrum evidence and current test total
 - Current realism and background evidence is below; original list-mode measurements remain the baseline.
 - Current normal-run inventory is in [VV.Studio](VV.Studio.md#current-test-inventory); historical run counts remain below.
 - All original 246 engine assertions remain unchanged. The unused batch API, commands and batch-only tests have been removed.
-- Acquisition requirements extend through SR-RUN-28; SR-RUN-14 and the affected batch rows are withdrawn. Continue / Reset replace stale marking.
+- Acquisition requirements extend through SR-RUN-29 (the absolute ambient field); SR-RUN-14 and the affected batch rows are withdrawn. Continue / Reset replace stale marking.
 - Desktop migration history is below; the final four-workspace pass verifies current acquisition control.
 
 ## Physics verification
@@ -72,7 +72,8 @@ Core's 69 cases include concurrent additions to the existing plot tests and four
 SR-RUN-03 (failure handling) remains active. SR-RUN-09 … -19 cover background acquisition, Stop retention,
 live-time progress, input locking, Start availability, input validation, immutable shared events,
 4 Hz decode / measurement refresh, MC limitation and preset completion; SR-RUN-14 (stale marking) is withdrawn and
-SR-RUN-23 … -28 add Continue, the raised preset, the seed, Reset, failure handling and the observed status rate. The matrix is in [VV.Studio](VV.Studio.md); SU-19 is added in
+SR-RUN-23 … -28 add Continue, the raised preset, the seed, Reset, failure handling and the observed status rate;
+SR-RUN-29 adds the absolute ambient field. The matrix is in [VV.Studio](VV.Studio.md); SU-19 is added in
 [VV.Studio.SDS](VV.Studio.SDS.md).
 
 Virtual-clock tests verify snapshots grow, preset completion, Stop retention, Continue, Reset, measurement geometry
@@ -116,7 +117,9 @@ Measured 2026-10-01, Release. Source tests use default Studio optics (30×30 pix
 1 m), transport seed 12345, measurement seed 909, gain σ 3% and gain seed 1. Entrance is 0.15 mm steel-equivalent,
 backing 2 mm and reflector gap 0.1 mm. Each absorber/backing comparison transports 2,000,000 proposals per
 configuration; variations use Clone + mutate. Counts are per proposal budget, not normalized to a fixed accepted
-event count, so attenuation remains visible. The Cs spectrum has 256 bins of width 2.9725 keV.
+event count, so attenuation remains visible. The spectrum has a fixed 0–2000 keV axis of 1000 bins, 2 keV wide. The
+peak-bin ratio and the histogram FWHM below are re-measured on these bins (2026-10-04); the grouped Ba band and the
+480–620 keV valley counts are the record on the earlier 2.9725 keV bins, and their tests pass unchanged on the new ones.
 
 Re-measured 2026-10-02 after the random generator was replaced (xoshiro256**, per-event smear streams keyed by
 (seed, index)): every row below is the new seeded realisation; all assertions pass with the unchanged tolerances.
@@ -126,11 +129,11 @@ The throughput table above keeps its 2026-10-01 timings; its seeded acceptance /
 |---|---|---|
 | `BaKAbsorber_UncollidedBandMatchesIndependentNarrowBeam_ReportsMeasuredSpectrum`, unchanged Ba line energies | 50,064 → 23,777; ratio 0.474932 | Beer-Lambert prediction 0.474899 ± 0.014987 (4σ), weighted by the bare 32.1 / 36.4 keV line counts; independent log-log interpolation of iron μ anchors at 30 / 40 keV gives transmission 0.450696 / 0.571939; Poisson reference and transmitted-count uncertainty included |
 | Same test, measured grouped Ba band | 57,718 → 35,736; ratio 0.619148 | independent weighted transport + measurement MC, seed 987 / 444, predicts 0.619379 ± 0.028971 (4σ); weighted-reference variance bounded by w² ≤ w_max·w |
-| Same test, Ba K / 662 peak-bin ratio | 3.915454 without absorber, 2.223296 with absorber | descriptive, not a global-peak requirement; Ba K remains the global maximum at 31.2110 keV in both configurations |
+| Same test, Ba K / 662 peak-bin ratio | 4.187313 without absorber, 2.320998 with absorber | descriptive, not a global-peak requirement; Ba K remains the global maximum at 33.0 keV |
 | Same test, 480–620 keV valley (P-11) | 11,157 → 11,559 counts | descriptive; increase 402 counts is 2.7σ under an independent Poisson comparison (was 148 counts, 0.98σ, with the old generator); no claim of a large absorber tail |
 | `Backing_AddsBackscatterRegion_FromTransport` | 170–210 keV counts 15,415 without backing → 17,578 with backing; excess 2,163 | excess exceeds 4σ = 726.5590 counts; Compton's 180° return energy E/(1+2E/m_ec²) = 184.3263 keV; finite-angle return broadens toward higher energies; the bare crystal already has continuum in this region |
 | `Gain_WidensPhotopeakInQuadrature_AndReducesTightWindowAcceptance`, 53,690 MC full-energy events | measured variance 560.0673 vs expected 557.3291 keV²; equivalent FWHM 55.7281 vs 55.5917 keV; sampled pattern σ 2.9932% | pixel-amplitude variance + mean FrontEndModel noise variance; 4σ variance tolerance 13.7996 keV² from the mixture's fourth central moment |
-| Same test, histogram FWHM | 54.3052 vs 55.5917 keV | quadrature prediction, tolerance 6.7932 keV = two bins + 5·FWHM/√(2(N−1)) |
+| Same test, histogram FWHM | 54.5845 vs 55.5917 keV | quadrature prediction, tolerance 4.8482 keV = two bins + 5·FWHM/√(2(N−1)) |
 | Same test, ±0.5 chain-FWHM window | fraction 0.761836 at zero gain spread → 0.477500 at 3%; decline 0.284336 | decline exceeds 4σ = 0.011332, conservative independent-binomial bound for paired samples |
 | `BsrOne_DoublesRate_PreservesEverySourceEvent_AndMatchesBackgroundModel` | 79,943 source + 79,825 background events in 1000 s; mature total/source ratio 1.997237 | BSR=1 predicts 2; 4σ tolerance 0.021062, excluding first 100 s of running-rate startup |
 | Same test, spatial / energy distributions | uniform-profile max abs z 3.0968 over 144 pixels; energy max abs z 1.3247 over eight bins | 5σ per pixel vs Background.SideLeakProfile(sideFraction=0); 4σ per energy bin vs 100,000 fresh cosine-flux deposits from BackgroundDepositSpectrum at 200 keV with independent seed 987 |
@@ -142,12 +145,20 @@ scattering can leave a photon inside that broad band. Both checks are therefore 
 absorber suppresses Ba counts, but in this geometry does not make the Ba peak smaller than the 662 keV peak.
 No tail, line or noise floor is added by hand. The valley increase is small and statistically unresolved here.
 
-The ambient energy response matches the existing unmasked cosine-flux crystal model; pixel placement matches
+The BSR background's energy response matches the existing unmasked cosine-flux crystal model; pixel placement matches
 the uniform detected pedestal. BSR is defined after detection, so this is not a prediction of incident flux,
 entrance loss or shield leakage. Each background deposit is freshly transported and used once; no event pool
 is repeated. Source records remain exactly intact when background is merged. Source and background arrival
 streams use separate RNGs and the running source-rate estimator. Spatial structure beyond the uniform pedestal
 is outside this implementation.
+
+**Absolute ambient field (default).** Studio starts with 0.10 µSv/h photon H*(10), validated terrestrial spectrum,
+front-only bound (SR-RUN-29). In the startup scene (Cs-137 500 µCi at 1 m, default optics and detector, 60 s) the
+field adds 0.137 ± 0.008 cps (4 × 600 s source-free) against 73 cps from the source — 0.19 % of the counts, 0.03 % of
+the 662 keV window; localisation is unchanged within the seed scatter (8 seeds). The bare-crystal bound gives
+30.4 ± 0.1 cps (29 %). On the fixed 0–2000 keV axis the 662 keV band count is the same with or without the field's
+line list (1349 ideal, 1354 default, 8 seeds); the default field adds ≈ 0.25 overflow counts per minute. These are
+headless measurements through the Studio services; the desktop scenarios have not been run with the field on.
 
 The first background test used a reference-only variance estimate, then incorrectly treated an empty finite
 reference bin as zero probability. The two-sample estimate now pools both counts under the equal-distribution

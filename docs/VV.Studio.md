@@ -15,14 +15,14 @@ one of a set:
 The working design guides are [DESIGN.Architecture](DESIGN.Architecture.md) and the other `DESIGN.*` pages.
 
 **At a glance**
-- 102 active software requirement IDs plus nine withdrawn IDs (§4). Live acquisition verification and
+- 108 active software requirement IDs plus nine withdrawn IDs (§4). Live acquisition verification and
   measurements are recorded in [VV.Studio.Acquisition](VV.Studio.Acquisition.md); desktop acquisition
   validation passed in the final desktop pass on 2026-10-02.
 - Twelve regression scenarios, a plot gate and a 16-frame diagnostic survey are opt-in desktop tests.
   Scenarios judge product state using independent oracles; every corrupted verdict fails. VAL-09 … VAL-13 below
   cover Spectrum, Waveform, Detector, isotope imaging and retained-flood focus. Screenshots never decide a numerical verdict.
 - The layering that keeps the logic testable is compiler-enforced (SR-ARCH-01, -04).
-- Open problems are in §6 (AN-01 … AN-14); no screen-reader session has been run.
+- Open problems are in §6 (AN-01 … AN-15); no screen-reader session has been run.
 
 Dated implementation records below retain their execution limits and counts. Subsequent analysis identified the Co-60 bias as undersampling; current verification totals are in [Current test inventory](#current-test-inventory).
 
@@ -81,26 +81,28 @@ seed table and the distinction between measured calibration and unverified final
 
 ## Current test inventory
 
-Documentation freshness verification, 2026-10-02, on the main working tree. Commands:
-`dotnet build Gcam.sln -c Release -m:1 /nr:false /p:UseSharedCompilation=false` and
-`dotnet test Gcam.sln -c Release --no-build -m:1 /nr:false` (TRX logger enabled).
-Build: zero errors; two existing xUnit analyzer warnings (`ImagingServiceTests.cs:106`,
-`WaveformServiceTests.cs:118`). Normal test execution:
+Verification of the ambient default and the fixed spectrum axis, 2026-10-04, on the tree committed as `13387fb`.
+Commands: `dotnet build Gcam.sln -c Release` and `dotnet test Gcam.sln -c Release --no-build`.
+Build: zero errors, zero warnings; the two existing xUnit analyzer warnings (`ImagingServiceTests.cs:106`,
+`WaveformServiceTests.cs:118`) reappear only when `Gcam.Studio.Services.Tests` is fully recompiled. Normal test
+execution:
 
 | Assembly / suite | Passed | Skipped | Inventory |
 |---|---:|---:|---|
-| `Gcam.Tests` | 284 | 0 | engine physics / compatibility |
-| `Gcam.Studio.Tests` | 179 | 0 | Core ViewModels, geometry, policies and token contrast |
-| `Gcam.Studio.Services.Tests` | 81 | 7 | real-engine services; long numerical evidence opt-in |
+| `Gcam.Tests` | 393 | 0 | engine physics / compatibility |
+| `Gcam.Studio.Tests` | 205 | 0 | Core ViewModels, geometry, policies and token contrast |
+| `Gcam.Studio.Services.Tests` | 92 | 7 | real-engine services; long numerical evidence opt-in |
 | `Gcam.Studio.UiTests` | 13 | 14 | headless oracles pass; 12 desktop scenarios, plot gate and survey opt out |
 | `Gcam.Studio.RenderTests` | 0 | 1 | independent offscreen render opt-in |
-| **Total** | **557** | **22** | **579 cases; zero failures** |
+| **Total** | **703** | **22** | **725 cases; zero failures** |
 
 No desktop, render or long-evidence opt-in was enabled for this run. The retained final desktop record
 reports 27/27 total UI cases (13 headless oracles + 12 scenarios + gate + survey); **27 is a suite total,
 not a scenario count**. The retained RTL execution record in `rtl/README.md` reports 137 cocotb cases
 with C# vectors (26 configurations, 452,608 exact sample comparisons). Neither desktop nor cocotb
-was rerun in this documentation pass. Dated inventories and execution restrictions below remain history;
+was rerun for this record. **Desktop pending:** the desktop scenarios have not been run since Studio starts with
+the ambient field on (SR-RUN-29) and draws the fixed 0–2000 keV spectrum axis (SR-SPEC-01); no desktop scenario
+covers the ambient panel or the dose warning yet. Dated inventories and execution restrictions below remain history;
 use this section for current normal-run totals.
 
 ## 1. Scope and intended use
@@ -126,7 +128,7 @@ through Core acquisition, spectrum, imaging, waveform, detector-face and focus-s
 
 ## 2. Software items
 
-Items SI-1 … SI-4 and their units SU-01 … SU-25 are defined (Waveform and Detector/focus designs extend them in the later sections) in [VV.Studio.SDS §2](VV.Studio.SDS.md#2-software-items-and-units-531-541).
+Items SI-1 … SI-4 and their units SU-01 … SU-26 are defined (Waveform and Detector/focus designs extend them in the later sections) in [VV.Studio.SDS §2](VV.Studio.SDS.md#2-software-items-and-units-531-541).
 How each item is verified:
 
 | Item | Project | Verified by |
@@ -142,7 +144,7 @@ stack. SI-3 is tested through the real engine.
 
 ## 3. Software requirements
 
-The requirements are specified in [VV.Studio.SRS](VV.Studio.SRS.md) — **74 active** in fourteen groups, including
+The requirements are specified in [VV.Studio.SRS](VV.Studio.SRS.md) — **108 active** in eighteen groups, including
 navigation, plotting and acquisition. Seven withdrawn batch rows retain their IDs. The matrix cites IDs only;
 the SRS is the single source of their wording.
 
@@ -179,8 +181,8 @@ Automation. Status: **pass** (evidence on 2026-10-01), **partial**, **open** (no
 | SR-RUN-09 | unit + integration | T, I | `AcquisitionViewModelTests.Reset_DiscardsData_UnlocksInputs_NextStartIsANewAcquisitionWithANewSeed`; `AcquisitionServiceTests.ShortAcquisition_LocalizesAfterCountThreshold_SnapshotsAreImmutable`; worker inspected | pass (headless); desktop pending |
 | SR-RUN-10 | unit + integration | T | `AcquisitionViewModelTests.Start_SnapshotsGrow_StopKeepsDataAndLocks_ContinueAccumulates`; `AcquisitionServiceTests.Stop_KeepsConsumedPrefix_AtExtremeMcLimitedSpeed` | pass (headless); desktop pending |
 | SR-RUN-11 | unit + integration | T | `AcquisitionViewModelTests.Completed_StartDisabledUntilPresetRaised_LowerPresetRejected_ProgressFollowsPreset`; `AcquisitionServiceTests.InjectedClock_AdvancesLiveTimeAndPresetWithoutWallDelay` | pass |
-| SR-RUN-12 | unit + offscreen + inspection | T, I | `AcquisitionViewModelTests.Start_CapturesDetectorInputs_AndLocksThemWhileDataExist` (every physical writer refused with data), `LiveTimeAndSpeed_LockedWhileAcquiring_InvalidValuesFallBack`; render assertions: source editor and chain selectors disabled with data; `CanEditInputs` bindings inspected | pass (T/I); desktop pending |
-| SR-RUN-13 | unit + inspection | T, I | `AcquisitionViewModelTests.Start_SnapshotsGrow_StopKeepsDataAndLocks_ContinueAccumulates` (Start / Continue label and availability), `Completed_StartDisabledUntilPresetRaised_LowerPresetRejected_ProgressFollowsPreset` (guard inside the command); `IsDefault` removed (I) | pass (T/I) |
+| SR-RUN-12 | unit + offscreen + inspection | T, I | `AcquisitionViewModelTests.Start_CapturesDetectorInputs_AndLocksThemWhileDataExist` (every physical writer refused with data), `LiveTimeAndSpeed_LockedWhileAcquiring_InvalidValuesFallBack`; `AmbientViewModelTests.AmbientPhysicalInputsLockAndDerivedBsrHasNoSetter`; render assertions: source editor and chain selectors disabled with data; `CanEditInputs` bindings inspected | pass (T/I); desktop pending |
+| SR-RUN-13 | unit + inspection | T, I | `AcquisitionViewModelTests.Start_SnapshotsGrow_StopKeepsDataAndLocks_ContinueAccumulates` (Start / Continue label and availability), `Completed_StartDisabledUntilPresetRaised_LowerPresetRejected_ProgressFollowsPreset` (guard inside the command); `AmbientViewModelTests.DefaultIsValidatedFrontOnlyField_ZeroIsIdeal_SourceFreeStartRequiresAbsoluteField` (source-free Start with a field, disabled at 0); `IsDefault` removed (I) | pass (T/I) |
 | SR-RUN-14 | removed | — | stale flag, chips and their tests removed | withdrawn → SR-RUN-12, SR-RUN-23, SR-RUN-26 |
 | SR-RUN-15 | integration | T | existing nearest-prime / finite-grid builder tests; `AcquisitionServiceTests.InvalidInputs_FailBeforeStarting` (4 cases) | pass |
 | SR-RUN-16 | engine + integration | T, I | `ListModeSourceTests` (weighted flood, spectrum, rate, exponential gaps, seed, no duplicates); `CascadeEmissionTests` (biased Co-60 decays vs analog 4π decays: detected and coincident probability per decay and the rate within 4σ; one summed event per decay with one arrival time; a single-line config keeps its line); `CascadeSummingTests` (Co-60 branching, W(θ) moments and histogram, inverse CDF, Na-22 table values); service immutable / count conservation test | pass |
@@ -196,6 +198,7 @@ Automation. Status: **pass** (evidence on 2026-10-01), **partial**, **open** (no
 | SR-RUN-26 | unit + offscreen | T, I | `AcquisitionViewModelTests.Reset_DiscardsData_UnlocksInputs_NextStartIsANewAcquisitionWithANewSeed`; `DetectorWorkspaceTests.Face_FollowsPendingBeforeStart_AcquiredAndLockedAfter_PendingAgainAfterReset`; `FocusSweepViewModelTests.Sweep_RejectsLateResult_WhenIdentityChanges` ("reset"); Reset button placement in the renders (I) | pass headless; desktop pending |
 | SR-RUN-27 | unit | T | `AcquisitionViewModelTests.Failure_WithData_KeepsItLocked_ResetOnly`, `Failure_WithoutData_BehavesAsEmpty` | pass |
 | SR-RUN-28 | unit + offscreen | T, I | `AcquisitionViewModelTests.Start_SnapshotsGrow_StopKeepsDataAndLocks_ContinueAccumulates` (status rate = counts / live time); status bar and Detector panel agree in the renders (84 vs 83.6 cps) | pass |
+| SR-RUN-29 | integration + unit + offscreen | T, I | `AmbientViewModelTests.DefaultIsValidatedFrontOnlyField_ZeroIsIdeal_SourceFreeStartRequiresAbsoluteField`, `PresetListOffersOnlyTheValidatedSpectrum_ByPinnedReference`, `Start_DefaultPassesValidatedPresetReference_ZeroTakesTheLegacyPath`, `AmbientPhysicalInputsLockAndDerivedBsrHasNoSetter`, `InvalidAmbientDoseIsRefused_PreviousValueStays`, `DoseTextOutsideThePattern_IsRefused_PreviousValueStays_StartBlocked` (11 entries), `DoseTextMatchingThePattern_SetsTheDoseRate` (6 entries), `DoseText_FollowsProgrammaticValue_AndLocksWithData`; `AmbientPresetTests.Pin_EqualsRepositorySidecar_AndDeployedBytesAreTheRepositoryFile`, `BuildConfig_ResolvesTheValidatedSpectrum_OnTheFrozenCopyOnly`, `WrongPinOrMissingFile_IsRefusedAtStart`, `DefaultField_AcquiresWithTheValidatedSpectrum`; `AmbientAcquisitionTests.BackgroundOnly_StopContinueRetainsExactlyTheFixedTimeStream`, `EmptyZeroField_CompletesAndBuildConfigFreezesInputs`, `BackgroundOnly_WorkspacesShowCountsWithoutInventingIsotopeLines`; offscreen panel in the default and refused states (`ambient-inputs-*`, `ambient-inputs-invalid-*`) from `PlotViewRenderTests.Spectrum_BothThemesFullAndZoom_RenderWithoutWindow` (opt-in) inspected | pass headless; offscreen PNGs inspected from a run past AN-15; desktop pending |
 | SR-SCENE-01 | unit | T | `MainViewModelTests.SourceItem_ClampsValues_LabelFollowsEdits`, `MainViewModelTests.IsotopePicker_OffersIr192_AndKeepsCs137AsTheDefault` | pass |
 | SR-SCENE-02 | unit | T | `MainViewModelTests.Startup_HasOneSelectedSource`, `MainViewModelTests.AddRemove_SelectsNewSourceThenNeighbour` | pass |
 | SR-VIEW-01 | unit | T | `HeatmapViewportTests.Fit_PreservesAspectAndCentres` | pass |
@@ -243,7 +246,7 @@ Automation. Status: **pass** (evidence on 2026-10-01), **partial**, **open** (no
 | SR-PLOT-09 | unit + inspection | T, I | `BinLookup_UsesHalfOpenEdges_AndReadoutUsesCountsAndUnits`; `PlotView.UpdateHover` and drawing inspected | pass headless; desktop pointer walkthrough deferred |
 | SR-PLOT-10 | unit + offscreen render | T, I | `Labels_ClampBothEdges_AndUseAdditionalRowsWithoutCollisions`; Spectrum, Waveform and focus-curve renders show band / marker labels in the strip above the data, the shaped waveform plot without marker labels | pass headless |
 | SR-PLOT-11 | offscreen render | T | `PlotViewRenderTests.Spectrum_BothThemesFullAndZoom_RenderWithoutWindow`, independent opt-in, four PNGs | pass |
-| SR-SPEC-01 | integration + I | T, I | `SpectrumServiceTests.CsAcquisition_PhotopeakBinAndFwhmMatchChain`; Histogram binding / explicit edges, axis labels and no synthetic noise inspected | pass headless; retained four-workspace desktop survey; no pixel pass/fail oracle |
+| SR-SPEC-01 | integration + I | T, I | `SpectrumServiceTests.CsAcquisition_PhotopeakBinAndFwhmMatchChain`, `Axis_IsFixedAt2000keV_ForAnyLinesFieldOrPileUp_AndOverflowKeepsEveryPulse`; `MainViewModelTests.SpectrumSummary_NamesTheOverflowAndTheFixedAxisEnd`; Histogram binding / explicit edges, axis labels and no synthetic noise inspected | pass headless; retained four-workspace desktop survey; no pixel pass/fail oracle |
 | SR-SPEC-02 | integration | T | `CsAcquisition_PhotopeakBinAndFwhmMatchChain`; engine `FrontEndPartsTests` verifies legacy chain and pulse compatibility | pass |
 | SR-SPEC-03 | integration | T | `HighRate_PileUpLosesPulsesAndMovesCountsAbovePhotopeak`; exact pulse-count agreement with engine `ApplyPileUp` | pass |
 | SR-SPEC-04 | integration + unit | T | `MixedCsCo_HasFourBandsAndUnionCountsEachBinOnce`, `Merge_UsesResolutionRatherThanWindowOverlap` (2 cases), `Merge_SingleLineGivesOneBand` | pass |
@@ -279,17 +282,19 @@ The default chain is GAGG(Ce) / Hamamatsu MPPC S13360-3050 / CSP + CR-RC, with 4
 
 Seeded values re-measured 2026-10-02 after the random generator was replaced (old generator: 31,053 deposits;
 Ba ratios 0.480119 / 0.626183; FWHM 30.3436 keV; pile-up 85,108 / 4,735 / 456; union share 37.1900 %); every check
-passes with its unchanged tolerance.
+passes with its unchanged tolerance. The bin-dependent values (photopeak bin, FWHM, pile-up counts, union share) are
+re-measured on the fixed 0–2000 keV axis of 2 keV bins (2026-10-04); the physics checks are unchanged.
 
 | Check | Measurement | Acceptance / tolerance |
 |---|---|---|
-| Cs-137 photopeak, 100,000 events (31,300 full-energy deposits) | regional maximum bin 222, containing 661.7 keV; bin width 2.9725 keV | exact bin match, maximum above 478 keV through axis end |
+| Cs-137 photopeak, 100,000 events (31,300 full-energy deposits) | regional maximum bin 330, containing 661.7 keV; bin width 2.0000 keV | exact bin match, maximum above 478 keV through axis end |
 | Ba K absorber response | uncollided ratio 0.474932 vs narrow-beam 0.474899; measured-band ratio 0.619148 vs independent weighted MC 0.619379 | 4σ tolerances 0.014987 and 0.028971; global peak ordering is reported rather than asserted; detailed conditions in [acquisition evidence](VV.Studio.Acquisition.md#detector-realism-and-background) |
-| Cs photopeak FWHM | histogram 30.4461 keV vs `FrontEndModel` 30.2373 keV; error 0.2088 keV | ≤6.5492 keV = two bins + 5·FWHM/√(2(N−1)), N = full-energy deposits |
-| High-rate Cs pile-up (activity 10⁶ µCi, 100,000 events) | 100,000 → 85,217 pulses; above 794.04 keV: 0 → 4,885; overflow 423; resolving time 730 ns | strictly fewer pulses and more counts above 1.2×661.7; pulse count exactly matches `ApplyPileUp` at 1 ps time rounding |
-| Cs + Co, 20,000 events | four bands: 32.1 + 36.4, 661.7, 1173.2, 1332.5 keV; union share 36.9300% | exact labels / band count and union share; default Co windows need not overlap |
+| Cs photopeak FWHM | histogram 30.2798 keV vs `FrontEndModel` 30.2373 keV; error 0.0425 keV | ≤4.6043 keV = two bins + 5·FWHM/√(2(N−1)), N = full-energy deposits |
+| High-rate Cs pile-up (activity 10⁶ µCi, 100,000 events) | 100,000 → 85,217 pulses; above 794.04 keV: 0 → 5,265; overflow 50; resolving time 730 ns | strictly fewer pulses and more counts above 1.2×661.7; pulse count exactly matches `ApplyPileUp` at 1 ps time rounding |
+| Cs + Co, 20,000 events | four bands: 32.1 + 36.4, 661.7, 1173.2, 1332.5 keV; union share 37.0650% | exact labels / band count and union share; default Co windows need not overlap |
 | Merge unit fixtures | Ba K merged; single line retained; injected constant 10% FWHM keeps 1173.2 / 1332.5 separate despite overlapping N=1.5 windows | exact band counts; separation 159.3 keV > FWHM(mean) 125.285 keV; fixture is not a physical-chain claim |
 | Determinism, 10,000 events | batch, prefix 503 + remainder, and toggle replay agree with / without pile-up | exact histogram and overflow equality |
+| `Axis_IsFixedAt2000keV_ForAnyLinesFieldOrPileUp_AndOverflowKeepsEveryPulse` | 1000 bins of 2 keV over 0–2000 keV for 3 line lists (Cs, Co, both) × 2 field maxima (none, 3960.9 keV) × pile-up off / on; 2505.7 and 3000 keV pulses in the overflow; total = drawn + overflow; histogram and 662 band identical with and without the field maximum | exact |
 
 Worker elapsed time measured by `Stopwatch` inside `Task.Run` (five warmed Release runs; excludes queue / gate
 waiting, includes worker preemption). No hard timing tolerance is imposed on this measurement.
@@ -394,6 +399,7 @@ folder was left behind. UIA Select on the workspace switch does not change the w
 | AN-12 | Closed: desktop input and screen capture available in the final pass (2026-10-02) | all scenarios, the plot gate and four-workspace survey executed | evidence below |
 | AN-13 | CPU plot redraw meets the gate, but resize event-to-render delay is materially larger | CPU evidence does not establish end-to-end responsiveness | distinguish timings; investigate dispatcher / desktop latency before making a presentation-latency claim |
 | AN-14 | `TickFormatterTests` (colour-bar tick labels: one shared multiplier, one decimal count, no negative zero) test behaviour that no SRS row states | the behaviour is verified but not required, so a change to it would not be traced | add an `SR-VIEW` row for colour-bar labels |
+| AN-15 | The opt-in offscreen render test (`PlotViewRenderTests.Spectrum_BothThemesFullAndZoom_RenderWithoutWindow`) fails on one machine (2026-10-04) in its emission-table check ("Truncated table value: Window (keV)") before it reaches the later renders; it fails the same way at a commit before the ambient default and fixed axis, so it predates them (likely a font or display difference on that machine — not established) | on that machine the repository test does not complete SR-SPEC-05's table check or produce the renders after it; the ambient-panel PNGs (SR-RUN-29) came from a scratch copy that logged that assertion instead | find why the window column truncates there, then re-run the opt-in render test unchanged |
 
 No screen-reader (Narrator / NVDA) session has been run. Not verified.
 
