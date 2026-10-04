@@ -1,0 +1,103 @@
+{
+ "SchemaVersion": 1,
+ "Task": "TODO-30",
+ "Turn": 7,
+ "Date": "2026-10-04",
+ "Implementer": "substitute Claude implementer (not Codex)",
+ "Spectrum": {
+  "File": "samples/ambient/terrestrial-unscear2000-v1.json",
+  "FileSha256": "4d48bc4272ce4c25ff6ae9b13ed7583e3c8f467afffdb0225956a70cc435b3f4",
+  "ContentHash": "7575df5c79f478c1d5eaa9b6fad5f484fb07a508eb36a80b83246dcacb9c0bee",
+  "Supersedes": "terrestrial-unscear2000-v1-NOT-VALIDATED (kept unchanged)",
+  "AgreementBand": 0.03,
+  "Decision": "AB-10"
+ },
+ "PlaceholderSidecar": {
+  "Old": "3600e22bf8ce4594adf3c362bddfa938c531a35c7318956c7817b4b5926710bd (hash of CRLF bytes)",
+  "New": "10dccd592958db9b911e026c1e43c02d95872285d23d53d6715d318e68d8222b (hash of the LF bytes git stores)"
+ },
+ "Manifest": {
+  "File": "samples/evidence/manifest-ambient-v1.json",
+  "Sha256": "655fefed68a903ed2292cb70d3d111759680aab89433d87c6557e948689f8ce8"
+ },
+ "Request": {
+  "File": "samples/evidence/ambient/gate-request-v1.json",
+  "Sha256": "551fb0096025f5826f48e5227fc2ba00e9d575b9afd1262df2e8b16dc812225a"
+ },
+ "Thresholds": {
+  "File": "samples/evidence/ambient/gate-thresholds-v1.json",
+  "Sha256": "83b931ac8fc720fecd2133350ecf0106c0c2af00ef1f1806bb870fd9ee678105",
+  "Alpha": 0.003,
+  "Universal": 4.6432,
+  "SelectionSeeds": "F128[1:65] (64 seeds x 64 nulls = 4096 per configuration)"
+ },
+ "Validation": {
+  "Seeds": "O128[0:128]",
+  "NullsPerConfiguration": 2048,
+  "Configurations": 96,
+  "PerConfigurationPass": 93,
+  "PerConfigurationFail": [
+   "head1m|t=60|F=0.05|FrontOnlyThroughMask|cs662",
+   "head5m|t=10|F=0.05|FrontOnlyThroughMask|open",
+   "head5m|t=10|F=0.1|FrontOnlyThroughMask|cs662"
+  ],
+  "PooledFalseTrusted": 603,
+  "PooledNulls": 196608,
+  "UniversalPass": 96,
+  "UniversalMaxFalse": 8,
+  "MaxUpper95": 0.010073176429977874,
+  "MaxUniversalUpper95": 0.007037098313838078
+ },
+ "Results": {
+  "Gate": "samples/evidence/results/ambient-baseline-v1-turn7-gate.json",
+  "Sources": "samples/evidence/results/ambient-baseline-v1-turn7-sources.csv"
+ },
+ "Compute": {
+  "SelectionWallMinutes": 7.5,
+  "ValidationWallMinutes": 54,
+  "Jobs": 10,
+  "MeanSecondsPerValidationSeed": 247.39039061796876
+ },
+ "AmbientRatesCpsPerMicroSvH": {
+  "samples/scenario.json|BareCrystalAllFaces|open": {
+   "Mean": 162.81184458902598,
+   "Sd": 0.13693416017015558,
+   "Seeds": 128
+  },
+  "samples/scenario.json|BareCrystalAllFaces|cs662": {
+   "Mean": 1.6603040182664381,
+   "Sd": 0.030992563509886502,
+   "Seeds": 128
+  },
+  "samples/scenario.json|FrontOnlyThroughMask|open": {
+   "Mean": 0.5720042183331664,
+   "Sd": 0.007585060974532515,
+   "Seeds": 128
+  },
+  "samples/scenario.json|FrontOnlyThroughMask|cs662": {
+   "Mean": 0.04467884273732659,
+   "Sd": 0.002042230456682378,
+   "Seeds": 128
+  },
+  "samples/scenario_handheld.json|BareCrystalAllFaces|open": {
+   "Mean": 335.1699621155881,
+   "Sd": 0.32626485113674664,
+   "Seeds": 128
+  },
+  "samples/scenario_handheld.json|BareCrystalAllFaces|cs662": {
+   "Mean": 4.276979978978715,
+   "Sd": 0.05689387159539154,
+   "Seeds": 128
+  },
+  "samples/scenario_handheld.json|FrontOnlyThroughMask|open": {
+   "Mean": 1.2827375795878508,
+   "Sd": 0.015041556490898417,
+   "Seeds": 128
+  },
+  "samples/scenario_handheld.json|FrontOnlyThroughMask|cs662": {
+   "Mean": 0.10419828644819816,
+   "Sd": 0.0037745212830862284,
+   "Seeds": 128
+  }
+ }
+}
