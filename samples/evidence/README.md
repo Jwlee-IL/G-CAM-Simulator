@@ -2,7 +2,7 @@
 
 Every Monte Carlo number in [VV.Gcam.Evidence](../../docs/VV.Gcam.Evidence.md) is quoted over N outer seeds
 (§1 there, "How MC numbers are quoted"). This folder holds what is needed to repeat those ensembles and the summaries
-the quotes were taken from. Background and decisions: [AGENTS.Findings theme 63](../../docs/AGENTS.Findings.md#63-evidence-quoted-over-seed-ensembles--samplesevidence-2026-10-02).
+the quotes were taken from. Background and decisions: [AGENTS.Findings theme 63](../../docs/AGENTS.Findings.Part2.md#63-evidence-quoted-over-seed-ensembles--samplesevidence-2026-10-02).
 
 | File | What |
 |---|---|

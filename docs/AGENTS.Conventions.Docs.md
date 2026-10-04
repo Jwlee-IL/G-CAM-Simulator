@@ -53,7 +53,7 @@ Rules:
 ## Keeping docs in sync
 
 - A change that alters behaviour, structure or a name **updates the affected doc in the same commit**.
-- Results go to `AGENTS.Findings.md` (by theme), deferred work to `AGENTS.Backlog.md`, ready-to-start handover tasks to `AGENTS.Todo.md`.
+- Results go to `AGENTS.Findings` (by theme: index in `AGENTS.Findings.md`, a new theme appended to `AGENTS.Findings.Part2.md` with its index row), deferred work to `AGENTS.Backlog.md`, ready-to-start handover tasks to `AGENTS.Todo.md`.
 - **`AGENTS.Todo.md` stays a short list; a task's plan lives in a `PLAN.*` document** (one per task or task group)
   that the task's row links. A plan opens with a `Status:` line below its scope line; when the task is done the plan
   stays as the design record (status set to *done*, with the commit) and **moves with its review to `docs/archive/`
