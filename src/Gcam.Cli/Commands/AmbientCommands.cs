@@ -270,7 +270,8 @@ internal static class AmbientCommands
     }
 
     /// <summary>AB-13 evidence families under the absolute ambient field (TODO-30 turn 8), one outer seed per run: EV-12
-    /// mask / antimask, EV-02 field of view, EV-15 separation, EV-01 sweep with the AB-12 bias baseline.</summary>
+    /// mask / antimask, EV-02 field of view, EV-15 separation, EV-01 sweep with the AB-12 bias baseline; TODO-35 Cs-137 under
+    /// Co-60 (<c>csco</c>).</summary>
     internal static int RunEvidence(string[] args)
     {
         if (args.Length is < 2 or > 3) { Console.Error.WriteLine("Usage: montecarlo ambient-evidence <evidence-request.json> [output.json]"); return 1; }
@@ -283,6 +284,7 @@ internal static class AmbientCommands
             "fov" => AmbientFieldOfViewStudy.Run(request),
             "separation" => AmbientSeparationStudy.Run(request),
             "sweep" => AmbientSweepStudy.Run(request),
+            "csco" => CsUnderCoStudy.Run(request),
             _ => throw new ArgumentException($"Unknown evidence family '{request.Family}'.")
         };
         string output = args.Length == 3 ? args[2] : "ambient-evidence.json";

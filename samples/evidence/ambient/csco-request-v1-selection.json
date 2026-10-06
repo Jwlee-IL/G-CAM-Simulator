@@ -1,0 +1,188 @@
+{
+ "_about": "TODO-35 (PLAN.Physics.CsUnderCo60, DA-1 ... DA-12), selection phase: Cs-137 under Co-60 at the hand-held head, 1 m source-detector (S = 1000 - D, the gate's convention). Scenes in angular elements (atan(cell / D) = 1.042 deg): co-located, two elements apart (Cs -1, Co +1) and five (Cs -2.5, Co +2.5). Co-60 activities 0, 0.1, 1, 3, 10, 100 MBq plus the activity giving 10 uSv/h H*(10) at the head (ICRP 74, computed). Windows on the event's total deposit (7 % FWHM at 662 keV, sqrt(E)): cs662, the product reference 'side' 727.87-860.21 keV (DA-7), co1332 and coBoth 1055.88-1465.75 keV as comparisons; every window also through gain errors -2, -1, +1, +2 %. Selection records the stripped statistic Z_s (per-pixel R_i from an on-axis calibration map of 4e6 photons per line) on 1024 Cs-free null acquisitions per configuration (scene, live time 10 / 60 / 300 s, environment ideal or 0.10 uSv/h bare / front-only (front-only only at Co <= 0.1 MBq), Co activity), on the gate's own decoder grid.",
+ "Seed": 0,
+ "RepoRoot": ".",
+ "Family": "csco",
+ "Spectrum": {
+  "File": "samples/ambient/terrestrial-unscear2000-v1.json",
+  "Sha256": "4d48bc4272ce4c25ff6ae9b13ed7583e3c8f467afffdb0225956a70cc435b3f4"
+ },
+ "AmbientHistories": 500000,
+ "CalibrationHistories": 500000,
+ "SourcePhotons": 2000000,
+ "FieldsMicroSvPerHour": [
+  0.1
+ ],
+ "Bounds": [
+  "BareCrystalAllFaces",
+  "FrontOnlyThroughMask"
+ ],
+ "Windows": [
+  {
+   "Name": "cs662",
+   "LowKeV": 595.53,
+   "HighKeV": 727.87
+  },
+  {
+   "Name": "side",
+   "LowKeV": 727.87,
+   "HighKeV": 860.21
+  },
+  {
+   "Name": "co1332",
+   "LowKeV": 1199.25,
+   "HighKeV": 1465.75
+  },
+  {
+   "Name": "coBoth",
+   "LowKeV": 1055.88,
+   "HighKeV": 1465.75
+  }
+ ],
+ "ExposuresS": [
+  10,
+  60,
+  300
+ ],
+ "Repeats": 0,
+ "CsUnderCo": {
+  "Phase": "selection",
+  "Thresholds": null,
+  "RawGateThresholds": {
+   "File": "samples/evidence/ambient/gate-thresholds-v2.json",
+   "Sha256": "6352b2f692894fde1d83c6ef2c3ac2c04ee1b332c511e150d66342a516b6cdd0"
+  },
+  "RawGateCase": "head1m",
+  "Scenario": "samples/scenario_handheld.json",
+  "SourceDetectorMm": 1000,
+  "CsLines": [
+   {
+    "EnergyKeV": 661.7,
+    "Intensity": 0.851
+   }
+  ],
+  "CoLines": [
+   {
+    "EnergyKeV": 1173.2,
+    "Intensity": 0.999
+   },
+   {
+    "EnergyKeV": 1332.5,
+    "Intensity": 0.999
+   }
+  ],
+  "CsWindow": "cs662",
+  "ReferenceWindows": [
+   "side",
+   "co1332",
+   "coBoth"
+  ],
+  "GainShifts": [
+   -0.02,
+   -0.01,
+   0.01,
+   0.02
+  ],
+  "Scenes": [
+   {
+    "Name": "coloc",
+    "CsElements": [
+     0,
+     0
+    ],
+    "CoElements": [
+     0,
+     0
+    ]
+   },
+   {
+    "Name": "sep2",
+    "CsElements": [
+     -1,
+     0
+    ],
+    "CoElements": [
+     1,
+     0
+    ]
+   },
+   {
+    "Name": "sep5",
+    "CsElements": [
+     -2.5,
+     0
+    ],
+    "CoElements": [
+     2.5,
+     0
+    ]
+   }
+  ],
+  "DirectionsElements": [
+   [
+    1,
+    0
+   ],
+   [
+    2.5,
+    0
+   ],
+   [
+    1.7678,
+    1.7678
+   ],
+   [
+    3.4,
+    0
+   ],
+   [
+    2.4042,
+    2.4042
+   ]
+  ],
+  "CoActivitiesBq": [
+   0,
+   100000.0,
+   1000000.0,
+   3000000.0,
+   10000000.0,
+   100000000.0
+  ],
+  "CoDoseRatesMicroSvPerHour": [
+   10
+  ],
+  "FrontOnlyMaxCoBq": 100000.0,
+  "CountMultiples": [
+   0.5,
+   0.75,
+   1,
+   1.25,
+   1.5,
+   2
+  ],
+  "CountRepeats": 1000,
+  "ImagingCounts": [
+   100,
+   250,
+   500,
+   1000,
+   2000,
+   4000
+  ],
+  "ImagingRepeats": 200,
+  "NullRepeats": 1024,
+  "DeltaR": [
+   -0.1,
+   -0.05,
+   -0.02,
+   -0.01,
+   0,
+   0.01,
+   0.02,
+   0.05,
+   0.1
+  ],
+  "ResidualRepeats": 200,
+  "CalibrationPhotons": 4000000
+ }
+}

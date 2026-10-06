@@ -12,7 +12,8 @@ public sealed class AmbientEvidenceRequest
     public int Seed { get; set; }
     /// <summary>Absolute repository root (the driver sets it); every path below is relative to it.</summary>
     public string RepoRoot { get; set; } = ".";
-    /// <summary><c>antimask</c> (EV-12), <c>fov</c> (EV-02), <c>separation</c> (EV-15) or <c>sweep</c> (EV-01, AB-12).</summary>
+    /// <summary><c>antimask</c> (EV-12), <c>fov</c> (EV-02), <c>separation</c> (EV-15), <c>sweep</c> (EV-01, AB-12) or
+    /// <c>csco</c> (TODO-35: Cs-137 under Co-60, <see cref="CsUnderCo"/>).</summary>
     public string Family { get; set; } = "";
     public AmbientGateRequest.FileReference Spectrum { get; set; } = new();
     /// <summary>Incident photons per ambient "truth" map (the field the acquisitions are drawn from).</summary>
@@ -32,6 +33,7 @@ public sealed class AmbientEvidenceRequest
     public FieldOfViewSpec? FieldOfView { get; set; }
     public SeparationSpec? Separation { get; set; }
     public SweepSpec? Sweep { get; set; }
+    public CsUnderCoSpec? CsUnderCo { get; set; }
 
     /// <summary>EV-12: single mask, calibrated subtraction and a two-exposure mask / antimask at equal total time.</summary>
     public sealed class AntimaskSpec
@@ -107,5 +109,57 @@ public sealed class AmbientEvidenceRequest
         public string Scenario { get; set; } = "";
         /// <summary>Fixed points (mm) decoded with the scenario's own decoder (EV-01's single-run quotes) and MLEM.</summary>
         public double[][] PointsMm { get; set; } = [];
+    }
+    /// <summary>TODO-35 (D-42): Cs-137 under Co-60's Compton continuum at use distance — Currie limits of the stripped
+    /// count per reference window, the stripped trust statistic with per-pixel ratios and its calibrated thresholds, and
+    /// the systematics of the stripping ratio (gain, direction, pixel). Positions and criteria are in angular resolution
+    /// elements, atan(cell pitch / D) (DA-2).</summary>
+    public sealed class CsUnderCoSpec
+    {
+        /// <summary><c>selection</c>: Cs-free null acquisitions only, Z_s recorded per configuration (thresholds are
+        /// selected from these by the AB-11 rule); <c>validation</c>: everything, with the pinned thresholds.</summary>
+        public string Phase { get; set; } = "";
+        public AmbientGateRequest.FileReference? Thresholds { get; set; }
+        /// <summary>The PR-SENS-02 gate thresholds for the raw-window counter-case (DA-6), and the gate's case name.</summary>
+        public AmbientGateRequest.FileReference? RawGateThresholds { get; set; }
+        public string RawGateCase { get; set; } = "";
+        public string Scenario { get; set; } = "";
+        /// <summary>Source–detector distance (the gate's convention): S = SourceDetectorMm − D.</summary>
+        public double SourceDetectorMm { get; set; }
+        public SourceLine[] CsLines { get; set; } = [];
+        public SourceLine[] CoLines { get; set; } = [];
+        public string CsWindow { get; set; } = "";
+        /// <summary>Reference windows the stripping is computed with (counts and R); the first is the product reference
+        /// (DA-7), the only one imaged.</summary>
+        public string[] ReferenceWindows { get; set; } = [];
+        /// <summary>Gain errors g (fractions): every declared window is also tallied as [L/(1+g), H/(1+g)].</summary>
+        public double[] GainShifts { get; set; } = [];
+        public CsCoScene[] Scenes { get; set; } = [];
+        /// <summary>Extra Co-60 directions (elements, x and y) at which only R and Rᵢ are measured.</summary>
+        public double[][] DirectionsElements { get; set; } = [];
+        public double[] CoActivitiesBq { get; set; } = [];
+        /// <summary>Co-60 photon H*(10) rates at the head (µSv/h) whose activity is added to the grid (ICRP 74).</summary>
+        public double[] CoDoseRatesMicroSvPerHour { get; set; } = [];
+        /// <summary>The front-only bound is run only at Co-60 activities up to this (DA-9).</summary>
+        public double FrontOnlyMaxCoBq { get; set; }
+        /// <summary>Cs-137 counts (window 1) as multiples of each condition's exact L_D (count mode).</summary>
+        public double[] CountMultiples { get; set; } = [];
+        public int CountRepeats { get; set; }
+        /// <summary>Cs-137 counts in window 1 for the imaging acquisitions.</summary>
+        public double[] ImagingCounts { get; set; } = [];
+        public int ImagingRepeats { get; set; }
+        public int NullRepeats { get; set; }
+        /// <summary>Relative errors δR injected on Cs-free acquisitions (Rᵢ × (1 + δR)).</summary>
+        public double[] DeltaR { get; set; } = [];
+        public int ResidualRepeats { get; set; }
+        /// <summary>Photons per line of the calibration maps (the declared precision of R, DA-4 b).</summary>
+        public long CalibrationPhotons { get; set; }
+    }
+
+    public sealed class CsCoScene
+    {
+        public string Name { get; set; } = "";
+        public double[] CsElements { get; set; } = [];
+        public double[] CoElements { get; set; } = [];
     }
 }

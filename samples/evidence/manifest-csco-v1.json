@@ -1,0 +1,33 @@
+{
+ "_about": "TODO-35 (Cs-137 under Co-60, D-42): versioned manifest for run_seeds.py --manifest. csco_selection = F256[1:65] (Cs-free nulls, Z_s thresholds by the AB-11 rule via ambient/select_csco_thresholds.py); csco_validation = F256[128:256] (disjoint from the selection seeds), everything with the pinned thresholds. Aggregate with ambient/aggregate_csco.py.",
+ "measured": "2026-10-06",
+ "config_sha256": {
+  "scenario_handheld.json": "f988784c8ee266e6dd28eb898cdbbfac0e2452cb01fd3929874fd866edc98795",
+  "evidence/ambient/csco-request-v1-selection.json": "bcb55d4671d9e533298f169d22f83be97198bed4a234b523ce18b5b30667b330",
+  "evidence/ambient/csco-request-v1-validation.json": "d6e210c72ed1b8b08c546facae3f6899a071cd3e5be956484e61e28ea3f24d4b"
+ },
+ "families": [
+  {
+   "id": "csco_selection",
+   "kind": "cli",
+   "command": "ambient-evidence",
+   "config": "evidence/ambient/csco-request-v1-selection.json",
+   "seeds": "F256",
+   "seed_offset": 1,
+   "n": 64,
+   "repo_root": true,
+   "evidence": "TODO-35 Z_s threshold selection (nulls only)"
+  },
+  {
+   "id": "csco_validation",
+   "kind": "cli",
+   "command": "ambient-evidence",
+   "config": "evidence/ambient/csco-request-v1-validation.json",
+   "seeds": "F256",
+   "seed_offset": 128,
+   "n": 128,
+   "repo_root": true,
+   "evidence": "TODO-35 Q1-Q3 with the pinned Z_s thresholds"
+  }
+ ]
+}
