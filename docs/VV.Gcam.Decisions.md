@@ -7,13 +7,15 @@ where it was said in Korean), what was rejected, and where it landed. Physics re
 evidence, in [VV.Gcam.Evidence](VV.Gcam.Evidence.md).
 
 **At a glance**
-- 40 decisions (D-01 … D-40), taken with the author on 2026-10-01 and 2026-10-02, each with the author's own words
-  or a note that none was given.
+- 42 decisions (D-01 … D-42), taken with the author on 2026-10-01, 2026-10-02 and 2026-10-06, each with the
+  author's own words or a note that none was given.
 - The ones that shape the product most: non-cyclic decoding instead of mask rotation (D-17, D-19), no built-in
   radioactive source (D-18), dose rate required at NSS-1 range (D-21), the software path for the narrow field of
   view (D-16), a separate small dose counter (D-37), comparison only with same-class imagers (D-32), Korean law
   only (D-33).
-- Still open: the current text of the laws cited.
+- **Performance-critical, not yet measured (2026-10-06):** spatial resolution as an angle at field distance against
+  the cell / D baseline (D-41), and the Cs-137 detection limit under Co-60's Compton continuum (D-42).
+- Still open: the current text of the laws cited; the two measurements above.
 
 Rules: IDs are stable (`D-nn`); a reversed decision keeps its row, marked *superseded by D-nn*. A row with no
 stated reason says so instead of inventing one.
@@ -101,8 +103,23 @@ author with its measured numbers and a recommendation (the numbers are in
 | D-39 | PR-MFG-01's 40 µm machining tolerance gets a **defined gate**: seed-mean localisation RMS ≤ 1.25 × the seed-mean RMS of the ideal mask (40 µm: 1.13×, passes; 80 µm: 1.43×, fails). The old "within ~2× the ideal floor" criterion is withdrawn; the result holds for the study's six fixed manufactured patterns, not for an arbitrary mask | accepted as proposed; no further reason stated. The proposal's reason: the ideal RMS spreads too much between seeds for a per-seed 2× test to separate 40 from 80 µm (108 / 128 against 100 / 128 seeds pass) | keeping 40 µm only as an author-chosen conservative target with no gate | PR-MFG-01, EV-30 |
 | D-40 | **Every MC number is quoted over a seed ensemble** (mean ± SD or median [quartiles] with N; picks and gates as k / N), and the measured reinterpretations are accepted: thickness ~10 mm from a defined wide-field recipe; two count gates (collapse below ~25, sub-mm from ~250); the rank-11 field as an observed 31 / 32 pass; 16 × 16 "about a third" better; shield picks with frequencies, "not carriable" judged against PR-PHY-01; one pooled cascade fit; depth range < 0.15 m and censored widths; the front-end width not called electronic noise; the Co × 2 spatial limit as 126 / 128; the old crystal-gap series kept as unverified, replaced by a labelled new experiment | for the thickness: "수치는 분명히 하는 게 좋겠지"; for the rest, after reading them: "나머지 9건도 읽어보니 합리적이야. 수용." | single-seed quotes; rewriting conclusions without the author | every EV entry with an MC number; PR-IMG-06, PR-IMG-10, PR-NRG-02 … -05, PR-SENS-03, PR-MFG-03, PR-RNG-01 |
 
+## 2026-10-06
+
+### Performance-critical claims: resolution benchmark and Cs-137 under Co-60
+
+Two headline performance claims were questioned by the author and are marked **performance-critical**: they are not
+quoted as product performance until the measurement each decision names exists. Author: "이 둘은 Performance
+critical한 부분이니, 명확하게 기록해두는 게 좋겠어."
+
+| ID | Decision | Reason (author) | Rejected | Lands in |
+|---|---|---|---|---|
+| D-41 | **Spatial resolution is stated as an angle at the use distance, against a declared baseline.** The baseline is the same head's geometric angular resolution, cell / D (lab 1 mm / 60 mm ≈ 0.955°; hand-held 1 mm / 55 mm ≈ 1.04°), with cross-correlation decoding; a reconstruction's gain is reported as two-source angular separation at field distance (e.g. 1 m and 5 m, the EV-02 distances) relative to that baseline, under a stated resolved-pair criterion (valley depth, seed pass rate) and stated counts. Until measured, EV-11's "2–3 mm" stays a **lab near-field result** (source 100 mm from the mask) and is not quoted as field performance: seen from the mask its spacings are 0.86–1.7°, but at 100 mm the projected element is c·(S + D) / D ≈ 2.7 mm, so neither the mm nor the angle transfers to field distance | "이 장비는 원거리에서 방사선을 재도록 만들어져 있는데, '100mm에서 위치 분해능이 높다'라는 얘기가 과연 설득력이 있을까? 애시당초 어느정도 기준점이 되어야지 위치 분해능이 높은지 근본적으로 그 기준부터 세우는 게 맞아보여." — accepted the proposal ("둘 다 수용할게") | quoting mm at 100 mm; converting the near-field result to an angle and quoting that | PR-IMG-04, EV-11 |
+| D-42 | **Cs-137 under Co-60 is a background-subtraction problem with a statistical cost, quantified before it is claimed.** Physics: Co-60's Compton continuum (edges ≈ 963 and 1118 keV) lies under the 662 keV window, so window counting cannot tell the two apart; Cs-137's photopeak still stands on that continuum, so spectral subtraction (stripping, side windows) recovers the net Cs count, and the price is the continuum's Poisson noise — the Cs detection limit worsens as Co : Cs grows. The claim is stated as recovered count **plus** its cost: a detection limit (critical level / MDA) or localisation success versus Co : Cs and counts, for window counting and for stripping; a literature review of published practice comes first | the author had taken it as unavoidable: "세슘의 Photon peak가 코발트의 컴프톤 피크에 덮어 씌워지는 걸로 알고 있는데 이건 어쩔 수가 없는 걸로 알아. 관련 문헌을 확인해보지 못했거든." — accepted the proposal ("둘 다 수용할게") | "cannot be separated" as a stated limit; quoting the recovered count without its noise cost | PR-NRG-04, EV-15 |
+
 ## Still open (not yet decided)
 
 | Item | Where |
 |---|---|
 | Current text of 원자력안전법 and the meter-calibration rules (2016 consolidated text used) | PRS §6, PR-REG-02 |
+| Field-distance angular separation against the cell / D baseline, and the resolved-pair criterion (D-41) | PR-IMG-04, EV-11 |
+| Cs-137 detection limit versus Co : Cs for window counting and stripping, and the literature it is checked against (D-42) | PR-NRG-04, EV-15 |

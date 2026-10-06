@@ -375,7 +375,10 @@ Geometries used below:
   2 and 3 mm MLEM resolves the pair and cross-correlation does not (64 / 64 seeds each; 1.5 × 10⁶ photons,
   80 iterations, resolved = valley depth > 0.25); cross-correlation needs ~3.5 mm (64 / 64). Below 2 mm the test is
   centred on the true positions and therefore optimistic.
-- **Limits.** Ideal high-count study on the reference lab geometry; results depend on the iteration count. The system matrix
+- **Limits.** Ideal high-count study on the reference lab geometry, in the **near field** (source 100 mm from the mask,
+  D = 60 mm): the projected cell there is c·(S + D) / D ≈ 2.7 mm, and the result does not transfer to field distance
+  in mm or as an angle; the field-distance angular separation against the cell / D baseline is open (D-41). Results
+  depend on the iteration count. The system matrix
   samples pixel centres (no pixel-area integration).
 - **Reproduce.** `montecarlo mlem samples/scenario.json samples/mlem.csv`.
 - **Tests.** `MlemTests`.
@@ -588,7 +591,9 @@ Geometries used below:
   co-located and 18 % [13, 23] separated, against ~1160 % unstripped (N = 64; `mixedstrip`).
 - **Limits.** Not blind separation: it needs the lines known in advance and a calibrated ratio per geometry. R is a
   single global scalar applied per pixel; the aggregate count can look right while local residuals remain, and those
-  are not checked.
+  are not checked. Stripping removes the Co-60 continuum's mean, not its Poisson fluctuation, so the Cs-137 detection
+  limit grows with Co : Cs; that cost is **not yet quantified** (no critical-level / MDA study versus Co : Cs) and is
+  marked performance-critical (D-42).
 - **Under the absolute ambient field** (EV-34; N = 128). The recipe above has no live time (activities 1 Bq Cs-137 and
   8 Bq Co-60 with a photon budget); read literally it gives ~6 Cs-137 counts, unmeasurable even without background. It
   was re-measured at absolute activities: lab geometry, **60 s**, Cs-137 1 MBq with Co-60 **8 MBq** (a, the 8 : 1
