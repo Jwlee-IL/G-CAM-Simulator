@@ -175,6 +175,11 @@ TILT (pitch/yaw), mask WARPING.
 
 ## Done (summary — details in AGENTS.Findings by theme)
 
+- **TODO-35 Cs-137 under Co-60** (2026-10-06, performance-critical, D-42): literature review, then the cost of Compton
+  stripping at use distance — exact Currie detection limit validated 864 / 864 (10 µSv/h of Co-60 at 1 m: 181 Cs counts
+  = 1.6 MBq in 60 s), a stripped trust statistic with 144 calibrated thresholds (144 / 144 ≤ 1 % false), the gain as the
+  dominant ratio systematic → side-window reference; author decisions D-43 … D-45. Review, implementation and runs by a
+  substitute Claude implementer — [PLAN.Physics.CsUnderCo60](archive/PLAN.Physics.CsUnderCo60.md), Findings 65.
 - **TODO-30 absolute ambient background** (2026-10-04): a source-independent terrestrial field (K / U / Th from a
   soil / air transport generator; UNSCEAR 2000 kerma ratios 1.014 / 0.997 / 1.023 accepted as a ±3 % model comparison)
   bounded by a bare-crystal and a front-only geometry; a calibrated background-aware trust gate (96 / 96 configurations

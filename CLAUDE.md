@@ -6,13 +6,13 @@ This file carries the **cross-session context that isn't otherwise in the repo**
 survives moving to another computer. It is git-tracked and **auto-loaded by Claude Code on
 any clone** (the machine-local auto-memory under `~/.claude/…/memory/` does NOT travel).
 Architecture + build/run is in `@AGENTS.md` above; per-theme quantitative results are in
-`docs/AGENTS.Findings.md` (themes 1–59). Keep answers to the author in **Korean**.
+`docs/AGENTS.Findings.md` (themes 1–65). Keep answers to the author in **Korean**.
 
 ## What this is
 **Gcam** — a personal C#/.NET 9 Monte Carlo simulator for **coded-aperture gamma-source
 localization** (Cs-137 + multi-isotope), modelling a fixed, lab-mounted coded-aperture camera
 of the class the author has hands-on experience with: rank-7 tungsten MURA mask (2×2 mosaic, ~10 mm) → 12×12
-crystal flood map → ADC peak detection → cross-correlation decode. 63 themes of work;
+crystal flood map → ADC peak detection → cross-correlation decode. 65 themes of work;
 `Gcam.sln`, CLI `montecarlo <sub>` (study sub-commands; `montecarlo help` lists them), GCAM Studio (the WPF viewer; the legacy Gcam.Wpf was removed in TODO-12 (2026-10-02); last present at `85b2ed1`), and a SystemVerilog +
 cocotb RTL front-end path.
 
@@ -28,13 +28,15 @@ cocotb RTL front-end path.
 - **The classic problem of this camera class** is 662-keV window contamination — Co-60 downscatter
   reading as Cs. Gcam's crystal-Compton **spectral** lever (per-pixel stripping, themes 16–17, 26) recovers
   the Cs count; the **spatial** lever holds only up to Co:Cs ≈ 2:1 once the crystal uses physical GAGG cross
-  sections (theme 52 — the earlier, stronger result rested on an over-absorbing crystal model).
+  sections (theme 52 — the earlier, stronger result rested on an over-absorbing crystal model). Its cost is measured
+  (TODO-35, theme 65, D-42…D-45): a √(Co counts) detection limit, a side-window stripping reference (gain-robust), a
+  separately calibrated trust statistic for stripped images, claims up to 10 µSv/h of Co-60 at the head.
 - **Productization** (theme 22, design-only — not being built): GAGG:Ce,Mg, 16×16 @1 mm, D=55,
   15 mm crystal, rank-7, non-cyclic; weight is the SHIELD not the crystal; SiPM thermal drift is
   an **energy-window** issue, not a position issue.
 - **Requirement set (2026-10-01, design-only)** — `docs/VV.Gcam.{Overview,URS,PRS,Evidence,Limitations,Decisions}.md`
   (+ `VV.Studio.{SRS,SDS}` for the viewer). Author decisions with reasons are logged in
-  `VV.Gcam.Decisions.md` (D-01…D-40); headlines:
+  `VV.Gcam.Decisions.md` (D-01…D-45); headlines:
   - The product is a **scintillator coded-aperture camera**: compare only with same-class imagers (iPIX),
     never with Compton / HPGe cameras (Polaris-H, GeGI). Use conditions **relaxed to iPIX level**
     (−10…+45 °C, 93 % RH, IP65, 60 cm drop, ≤ 2.5 kg).

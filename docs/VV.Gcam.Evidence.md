@@ -591,9 +591,9 @@ Geometries used below:
   co-located and 18 % [13, 23] separated, against ~1160 % unstripped (N = 64; `mixedstrip`).
 - **Limits.** Not blind separation: it needs the lines known in advance and a calibrated ratio per geometry. R is a
   single global scalar applied per pixel; the aggregate count can look right while local residuals remain, and those
-  are not checked. Stripping removes the Co-60 continuum's mean, not its Poisson fluctuation, so the Cs-137 detection
-  limit grows with Co : Cs; that cost is **not yet quantified** (no critical-level / MDA study versus Co : Cs) and is
-  marked performance-critical (D-42).
+  are not checked (the per-pixel ratio below answers this). Stripping removes the Co-60 continuum's mean, not its
+  Poisson fluctuation, so the Cs-137 detection limit grows with the Co-60 counts — quantified below ("The cost of
+  stripping at use distance", D-42).
 - **Under the absolute ambient field** (EV-34; N = 128). The recipe above has no live time (activities 1 Bq Cs-137 and
   8 Bq Co-60 with a photon budget); read literally it gives ~6 Cs-137 counts, unmeasurable even without background. It
   was re-measured at absolute activities: lab geometry, **60 s**, Cs-137 1 MBq with Co-60 **8 MBq** (a, the 8 : 1
@@ -620,14 +620,68 @@ Geometries used below:
   stripping recovers the count; at 2 : 1 the spatial lever holds (0.997 within 1 mm) but the count read at the Cs peak
   is ~21 % high. Co-60 location: co-located 0.42–0.43 mm median; separated 1.07 mm in every condition, ideal included
   — an offset of this decode at that position, not a background effect (not investigated). The larger separated-scene
-  stripping bias is consistent with R calibrated on axis while Co-60 sits off axis (not investigated).
+  stripping bias is **explained by R's direction**: the separated scene's own R (from the same runs' expected counts) is
+  1.0 % below the on-axis calibrated R, which predicts −4.71 % against −4.48 % measured (8 : 1 separated), and the
+  other three conditions within 0.25 points (−0.86 / −1.18 / −0.21 % against −1.11 / −1.18 / −0.35 %); the quartile
+  spread is R's map MC noise (SD 0.8 % over seeds). With the photopeak reference window this direction dependence is
+  real; with the side-window reference below it vanishes.
+- **Shows — the cost of stripping at use distance** (D-42; N = 128 validation seeds, disjoint from 64 threshold-
+  selection seeds). Hand-held head, Cs-137 and Co-60 at **1 m**, windows on the event's total deposit: cs662
+  595.53–727.87 keV; the stripping reference is a **side window above the Cs-137 peak, 727.87–860.21 keV** (the product
+  choice, D-43), with the Co-60 photopeak windows 1199.25–1465.75 keV (co1332) and 1055.88–1465.75 keV (both lines)
+  measured beside it. Co-60 0–100 MBq; **28.72 MBq gives 10 µSv/h** photon H*(10) at the head (ICRP 74, unattenuated;
+  0.348 µSv/h per MBq), the claim ceiling (D-45). Live times 10 / 60 / 300 s; ideal, and 0.10 µSv/h ambient.
+  - *Detection limit.* Stripped count Y = n662 − R·n_ref, σ₀² = μ662|H₀ + R²·μ_ref, Currie limits computed exactly
+    (two-window Poisson) at α = β = 5 %. Validated by acquisitions: **864 / 864** false-positive and detection rates
+    within 4 binomial SE of their exact expectation (1000 × 128 acquisitions each; z mean +0.03, SD 1.01). Co-located,
+    side window, ideal (median over seeds, quartiles within ±0.5 %):
+
+    | Co-60 at 1 m (µSv/h at the head) | L_D at 10 s | 60 s | 300 s |
+    |---|---|---|---|
+    | none | 3.0 counts | 3.0 | 3.0 |
+    | 1 MBq (0.35) | 16.2 counts = 0.86 MBq Cs | 35.9 = 0.32 MBq | 77.1 = 0.14 MBq |
+    | 10 MBq (3.5) | 45.6 = 2.43 MBq | 108 = 0.96 MBq | 238 = 0.42 MBq |
+    | **28.7 MBq (10, claim ceiling)** | **75.5 = 4.0 MBq (Co : Cs 7.1)** | **181 = 1.61 MBq (17.9)** | **402 = 0.71 MBq (40.3)** |
+    | 100 MBq (35, beyond the claim) | 139 = 7.4 MBq | 336 = 3.0 MBq | 747 = 1.33 MBq |
+
+    At fixed Co-60 the limit falls as √(A_Co / t) (60 s ÷ 300 s at 28.7 MBq: 2.25 against √5 = 2.24); at a fixed
+    Co : Cs ratio it does not depend on t. The side window costs +4.1–4.6 % in L_D against co1332 and +17 % against
+    both lines. Ambient 0.10 µSv/h (bare bound) matters only at weak Co-60 (60 s: no Co 3.0 → 22.8 counts; 1 MBq
+    +16 %; ≥ 10 MBq ≤ 2 %). **Window counting** (no stripping) reads 1 Bq of Co-60 as **0.489 Bq of Cs-137** (on axis;
+    0.51–0.55 off axis) — at 10 µSv/h, 60 s, 1 582 Cs-equivalent counts, 8.7 × L_D: a bias, not a detection limit.
+    An instrument's plug-in decision (σ₀ from the counts, calibrated R) matches the exact rule from ~30 counts on
+    (false positives 4.5–5.3 %); the R calibration's precision (0.27 %) adds at most 0.6 points within the claim.
+  - *Imaging.* A stripped trust statistic Z_s (per-pixel R_i; decoded stripped image studentised by its Poisson
+    variance) with thresholds selected per configuration on 65 536 Cs-free Co-60 + ambient nulls by the PR-SENS-02
+    rule: **144 / 144** configurations ≤ 1 % false trusted on 8 192 fresh nulls each (pooled 0.284 %, worst upper limit
+    0.61 %); trusted at Co-60's position ≤ 0.06 %. **≥ 95 % trusted and within one angular element (1.04°)** of a
+    Cs-137 source two elements from Co-60 needs **500 / 1000 / 2000** Cs-137 counts at 10 µSv/h and 10 / 60 / 300 s
+    (Co : Cs ≈ 1.0 / 3.1 / 7.6) — 5–7 × the count limit; 250–500 counts without Co-60 (grid steps of ~2, so upper
+    bounds within a step). The raw 662 keV window through the PR-SENS-02 gate, by contrast, trusts a **false Cs-137 at
+    Co-60's position in 92–100 %** of Cs-free acquisitions at 10 µSv/h (10–60 s, 0.10 µSv/h ambient; 46–99 % at
+    3.5 µSv/h). Co-located sources are reported as detection, not location.
+  - *Systematics of R.* Per 1 % gain error R moves **+0.8 %** (side), **−13 %** (co1332), −3.6 % (both lines). The side
+    window's R is flat over the array (0.851 edge → 0.862 centre; co1332 0.92 → 0.55) and moves ≤ 0.1 % with direction
+    out to 3.5° (co1332 −1.6 % at 2.4°). At 10 µSv/h a +1 % gain error lifts the count false-positive rate to 8 %
+    (60 s) / 14 % (300 s) with the side window; with co1332 −1 % lifts it to 93 % (60 s) and +1 % drops detection at
+    L_D to 0.4 %. Keeping false positives ≤ 10 % at 10 µSv/h needs **|gain error| ≲ 1.6 % at 60 s and ≲ 0.7 % at
+    300 s** (side window; co1332 would need ≲ 0.12 %). A wrong R leaves a trusted false "Cs" at Co-60's position in
+    2.2 % of Cs-free acquisitions only at δR = −10 % (10 µSv/h, 300 s; 28 % at 35 µSv/h), ≤ 0.2 % for |δR| ≤ 5 % — the
+    count decision flags such an error first.
+  - *Limits.* No mask, housing or room scatter of Co-60 into the windows (the side window's advantage is "before
+    scatter"); no cascade summing (negligible at 1 m); the Gaussian resolution model leaves 3.8 × 10⁻⁴ of the cs662
+    Cs-137 counts in the side window, carried exactly; results are before a four-channel readout model; MC only.
 - **Reproduce.** `montecarlo compton`, `compton-strip`, `mixediso`, `mixedstrip`, each with `samples/scenario.json`
   → `samples/compton_contamination.png`, `compton_strip_combined.png`, `mixediso.png`, `mixedstrip.png`. The
   activity-ratio scene (× 1 / 2 / 4 / 8, 4 × 10⁶ photons, 0.4 mm grid) is `samples/evidence` family `spatial`
-  (`samples/evidence/probe`, mode `spatial`, N = 128).
+  (`samples/evidence/probe`, mode `spatial`, N = 128). The cost at use distance: `montecarlo ambient-evidence`, family
+  `csco`, through `samples/evidence/manifest-csco-v1.json` (`csco_selection` → `ambient/select_csco_thresholds.py` →
+  pinned `ambient/csco-thresholds-v1.json`; `csco_validation` → `ambient/aggregate_csco.py` →
+  `samples/evidence/results/csco-v1-validation.json`).
 - **Tests.** `ComptonTests.Contamination_IsImagedAtTheContaminantSource_NotTheTarget`,
   `.Stripping_RecoversCsCount_EvenCoLocated`; `MixedFieldTests.MixedField_ThroughEnergyWindow_SeparatesIsotopesSpatially`
-  (at Co × 2), `.ComptonStripping_RecoversCoLocatedCsCount`.
+  (at Co × 2), `.ComptonStripping_RecoversCoLocatedCsCount`; the cost at use distance: `CsUnderCoTests` (exact
+  Currie against enumeration, net-count variance, gain-shifted windows, per-pixel ratios, Z_s linearity).
 
 ### EV-16 — One gain for 122–1332 keV
 

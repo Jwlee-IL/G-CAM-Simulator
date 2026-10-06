@@ -24,7 +24,7 @@ results at their ideal values; which results change, and how, is listed in
 [Evidence §1](VV.Gcam.Evidence.md#ideal-conditions-and-background) (EV-34).
 
 **In numbers:** 19 user needs (18 active) → 51 product requirements (48 active) → 33 evidence entries; 9 known limitations;
-42 decisions with the author's reasons. The engineering viewer has 102 active software requirement IDs (nine withdrawn), four workspaces, and current unit/integration
+45 decisions with the author's reasons. The engineering viewer has 102 active software requirement IDs (nine withdrawn), four workspaces, and current unit/integration
 test totals in [VV.Studio](VV.Studio.md#current-test-inventory), plus 12 opt-in desktop regression scenarios, a plot gate and a survey.
 
 ## The problems it starts from
@@ -32,7 +32,7 @@ test totals in [VV.Studio](VV.Studio.md#current-test-inventory), plus 12 opt-in 
 | Known problem of the camera class | What the concept does about it |
 |---|---|
 | Characterising a camera means moving the radioactive source by hand | the simulator sweeps geometry, decoder, crystal and electronics in software (UN-08) |
-| Co-60 downscatter lands in the Cs-137 energy window and reads as Cs-137 | per-pixel Compton stripping recovers the Cs-137 count; spatial separation alone holds only to Co : Cs ≈ 2 : 1 (EV-15, LIM-08) |
+| Co-60 downscatter lands in the Cs-137 energy window and reads as Cs-137 | per-pixel Compton stripping recovers the Cs-137 count, at a cost: at 10 µSv/h of Co-60 the smallest detectable Cs-137 source at 1 m is 1.6 MBq in 60 s; spatial separation alone holds only to Co : Cs ≈ 2 : 1 (EV-15, LIM-08) |
 | SiPM gain drifts with temperature, so the energy window walks | temperature-compensated SiPM bias, peak tracking and window widening — no built-in source (EV-28, D-18, D-20) |
 | Cyclic decoding shows sources outside the field as ghosts on the opposite side | finite-mask (non-cyclic) decoding plus a flood-centroid "outside the field" cue (EV-01, EV-02) |
 
@@ -56,7 +56,7 @@ test totals in [VV.Studio](VV.Studio.md#current-test-inventory), plus 12 opt-in 
 | Locate a source (PR-IMG-02) | sub-mm with ≥ 250 counts | 0.25 mm floor on axis, 0.53 mm at the field edge (EV-09) | MC |
 | Usable field of view (PR-IMG-10) | wider than the ±3.6° fully coded field | **±6–7.5°** along the axes at 1 m and 5 m without background (±7–7.5° at high counts); ±5–6.5° with background equal to the signal (EV-02) | MC → DEC |
 | Say which way to turn (PR-IMG-08) | side of a source outside the field | correct side from ~1° to ~14.5°; needs a background estimate (EV-02) | MC |
-| Separate Co-60 from Cs-137 (PR-NRG-04) | weaker Cs-137 count and position | co-located count recovered within 0–1 % (oracle ratio); position only to Co : Cs ≈ 2 : 1, held in 126 / 128 seeds (EV-15) | MC |
+| Separate Co-60 from Cs-137 (PR-NRG-04) | weaker Cs-137 count and position | co-located count recovered within 0–1 % (oracle ratio); position only to Co : Cs ≈ 2 : 1, held in 126 / 128 seeds; with stripping, at Co-60 10 µSv/h, 1 m: detection limit 75.5 / 181 / 402 counts and location from 500 / 1000 / 2000 counts at 10 / 60 / 300 s (EV-15) | MC |
 | Sensitivity (PR-SENS-01, -07) | iPIX parity: 2 µSv/h Cs-137 located in < 30 s | 2.48× the GAGG reference lab geometry (EV-09); ~2 s estimated ([URS §5](VV.Gcam.URS.md#reference-measurement-conditions-adopted)) | MC, AN |
 | Dose rate (PR-SAFE-01, -02) | ±50 % to 10 mSv/h, 60 keV – 1.33 MeV | the imaging head reads ±13 % frontally but only 0.11–0.66 of the dose 10° off axis (EV-23) — so a separate counter is the dose channel; its type test is the evidence | STD, DEC |
 | No under-reading in high fields (PR-SENS-05) | over-range indication to 1 Sv/h | method shown on the imaging front end: live-time correction to ~150 mSv/h, then the live fraction signals over-range (EV-23); to be set for the counter | AN |

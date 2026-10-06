@@ -119,9 +119,17 @@ the spectral lever; it needs a calibrated downscatter / photopeak ratio and know
 activities (Cs-137 1 MBq with Co-60 8 or 2 MBq, 60 s, lab distance) with a natural terrestrial field added, the
 picture is the same and the field has no measurable effect (EV-15, EV-34).
 
+**What stripping costs (MC, EV-15, hand-held head at 1 m).** The Co-60 continuum is subtracted in the mean, not in its
+noise: at 10 µSv/h of Co-60 at the head the smallest detectable Cs-137 source is 4.0 / 1.6 / 0.7 MBq at 10 / 60 / 300 s,
+and locating it needs 5–7 × the counts of detecting it. The stripping reference is a side window above the Cs-137
+peak (D-43), because a Co-60 photopeak reference makes the ratio swing ~13 % per 1 % gain error; even so the gain must
+stay within ≈ ±1.6 % (60 s) / ±0.7 % (300 s) at 10 µSv/h, or false Cs-137 detections rise above 10 % (LIM-03). Without
+stripping, the 662 keV image reports Co-60 itself as a trusted Cs-137 source in 92–100 % of acquisitions at 10 µSv/h.
+
 | Option | Cost |
 |---|---|
-| Rely on stripping before decoding (PR-NRG-04) | calibration of the downscatter ratio per geometry; not blind |
+| Rely on stripping before decoding (PR-NRG-04) — **chosen, side-window reference (D-43)** | calibration of the ratio per geometry (flat over the array and direction with the side window); not blind; a detection limit that grows with the Co-60 counts; a gain tolerance of ≈ ±1 % |
+| Joint spectral-spatial reconstruction (MLEM with each isotope's full crystal response) | not built; the principled successor of stripping, worth it only if the ratio's systematics come to dominate |
 | Larger pixels or thicker crystal (more full-energy single-pixel events) | coarser sampling (EV-06) or more mass and depth-of-interaction parallax (EV-13) |
 | Better energy resolution (CeBr3 / LaBr3, EV-19, EV-17) | price, hygroscopic crystal |
 | Multi-pixel event reconstruction (summing Compton-split events) | already the positioning strategy (PR-NRG-03: ~2× the counts of per-pixel windowing, EV-14); it recovers counts, not the 662 keV window's purity |
@@ -182,7 +190,7 @@ reference catches it.
 
 | Option | Cost |
 |---|---|
-| **Chosen (2026-10-01), with window widening:** track a known photopeak in the measured spectrum (the scene's own Cs-137 / Co-60 / Ir-192 line) | works only when such a line is present and identified; nothing to track in a background-only search |
+| **Chosen (2026-10-01), with window widening:** track a known photopeak in the measured spectrum (the scene's own Cs-137 / Co-60 / Ir-192 line) | works only when such a line is present and identified; nothing to track in a background-only search; Compton stripping under Co-60 needs the gain within ≈ ±1.6 % (60 s) / ±0.7 % (300 s) at 10 µSv/h — tighter than the ±10 % window (EV-15, PR-NRG-04) |
 | Periodic check with the user's own (licensed) check source | a user step; the site must hold a source |
 | **Chosen (2026-10-01), with peak tracking:** temperature-scheduled window widening at the extremes | lower energy selectivity (more downscatter in the window, UN-03) |
 | Thermal control of the crystal block | power and mass |

@@ -1003,3 +1003,41 @@ EV-01 / 02 / 07 / 09 / 12 / 15.
   airborne radon, room scatter, intrinsic crystal activity); Studio's ambient input was off by default during these measurements — since turns 10–11 (AB-15, AB-16) Studio starts with the validated spectrum at 0.10 µSv/h, front-only bound (startup scene: +0.137 ± 0.008 cps, 0.19 % of the counts, localisation unchanged over 8 seeds), and its spectrum axis is fixed at 0–2000 keV in 2 keV bins with an overflow count, because the old 1.15 × highest-line axis let a negligible Tl-208 3960.9 keV line stretch the view to 4555 keV. Turns
   6–9 were substitute Claude implementers, not Codex; turn 8's runs carry `engine_tree_dirty: true` (committed
   afterwards as `aa9fcc4`), turn 9's EV-02 run used a copy of the turn-8 build. Pilot runs (seed 777) are not evidence.
+
+## 65. Cs-137 under Co-60's Compton continuum — the detection limit, the side window and the cost of stripping (2026-10-06)
+
+TODO-35 / D-42 (performance-critical) — [PLAN.Physics.CsUnderCo60](archive/PLAN.Physics.CsUnderCo60.md), literature
+step [PLAN.Physics.CsUnderCo60.Literature](archive/PLAN.Physics.CsUnderCo60.Literature.md), review
+[PLAN.Physics.CsUnderCo60.Review](archive/PLAN.Physics.CsUnderCo60.Review.md), turn report
+[PLAN.Physics.CsUnderCo60.Turn2](archive/PLAN.Physics.CsUnderCo60.Turn2.md). Review and implementation by a substitute
+Claude implementer (Codex unavailable); author decisions D-43 … D-45. Evidence: EV-15 ("The cost of stripping at use
+distance").
+
+- **Literature first.** No source calls Cs-137 under a Co-60 continuum unresolvable; all treat it as a background to
+  subtract, paid in counting statistics (Currie). The one documented Cs / Co image subtraction (photopeak gate minus a
+  same-width gate above it) is a pinhole camera; no published Co : Cs limit for a scintillator imager was found.
+- **The review corrected five premises** of the reference plan: the separation study could not run 1 m (no distance
+  field, mm criteria); no existing trust threshold is valid under Co-60 (the raw 662 keV gate trusts Co-60 as Cs-137);
+  the dominant R systematic is **gain**, not direction (co1332's lower edge sits 1 σ above the 1173 keV line); R is
+  strongly pixel-dependent for a photopeak reference; and the axis is Co-60 activity, not Co : Cs (at fixed k the
+  count limit does not depend on t). It also explained EV-15's open separated-scene bias from committed data (R's
+  direction, −4.71 % predicted vs −4.48 % measured).
+- **Detection limit (exact Currie, validated 864 / 864 within 4 SE, N = 128 seeds × 1000).** Hand-held head, 1 m,
+  side-window reference, co-located: at 10 µSv/h of Co-60 at the head (28.72 MBq) L_D = 75.5 / 181 / 402 counts =
+  4.0 / 1.61 / 0.71 MBq Cs-137 at 10 / 60 / 300 s (Co : Cs 7.1 / 17.9 / 40.3); √(A_Co / t) scaling confirmed (2.25 vs
+  √5). Window counting reads 1 Bq of Co-60 as 0.489 Bq of Cs-137 — 8.7 × L_D at 10 µSv/h, 60 s. Ambient 0.10 µSv/h
+  matters only at weak Co-60.
+- **Imaging.** New stripped statistic Z_s (per-pixel R_i) with 144 thresholds selected on 65 536 Cs-free nulls each:
+  144 / 144 ≤ 1 % false trusted on fresh seeds (pooled 0.284 %). Location (trusted, within 1.04°, two elements from
+  Co-60) needs 500 / 1000 / 2000 counts at 10 µSv/h — 5–7 × the count limit. The raw window through the PR-SENS-02
+  gate trusts a false Cs-137 at Co-60's position in 92–100 % of Cs-free acquisitions at 10 µSv/h.
+- **R systematics.** Per 1 % gain: side +0.8 %, co1332 −13 %, both photopeaks −3.6 %; side R flat over the array and
+  direction (≤ 0.1 % to 3.5°). Gain tolerance for ≤ 10 % false positives at 10 µSv/h: ≈ ±1.6 % (60 s) / ±0.7 % (300 s)
+  with the side window, ±0.12 % with co1332 — so the side window became the product reference (D-43). A wrong R makes
+  a trusted false Cs-137 at Co-60 only at δR ≈ −10 % (2.2 % at 10 µSv/h, 300 s); the count decision flags it first.
+- **Caveats.** No mask / housing / room scatter of Co-60 (the side window's advantage is "before scatter"); Gaussian
+  resolution tail in the side window 3.8 × 10⁻⁴ of the Cs counts (carried); before a four-channel readout (TODO-19).
+  Engine tests 393 → 413 (`CsUnderCoTests`, tolerances derived in comments). Reproduce:
+  `samples/evidence/manifest-csco-v1.json` (`csco_selection`, `csco_validation`), `ambient/select_csco_thresholds.py`,
+  `ambient/aggregate_csco.py` → `samples/evidence/results/csco-v1-validation.json`; one validation seed re-run by the
+  planner reproduced its output exactly (timing fields aside).

@@ -193,6 +193,8 @@ The full, theme-organized results log with reproduce commands and artifacts is i
 - **Compton multi-isotope separation (15–17, 26)**: per-pixel spectral stripping removes a high-energy
   isotope's downscatter from a lower line's window and recovers the Cs count (the classic Co-60-reads-as-Cs
   problem); spatial separation alone holds only up to Co:Cs ≈ 2:1 with physical GAGG cross sections (theme 52).
+  The cost (theme 65): the Co continuum is removed in the mean, not its noise — at 10 µSv/h of Co-60, 1 m, the Cs
+  detection limit is 181 counts (1.6 MBq) in 60 s; a side-window reference keeps the ratio gain-robust.
 - **Depth (18–24, 34)**: z is recoverable via near-field magnification + depth-from-focus, but
   weak far (∝z²); 3D range extends by rank, not cell pitch. At Studio's 1 m geometry the focus sweep is near-field only
   and biased by tens of mm (theme 56); Studio shows the focus curve beside an external range, without a fusion verdict.
