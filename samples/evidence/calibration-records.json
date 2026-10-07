@@ -1,0 +1,97 @@
+{
+ "_about": "Pins and recipes for the calibration records in docs/VV.Gcam.Calibration.md, read by samples/evidence/calibration_record.py. Every file the generator reads is listed under Files with the SHA-256 of the bytes git stores (LF); a changed file fails the generator until its pin is updated here on purpose (and the record's Status reviewed). Records name their adapter (Kind), manifest, selection / validation files and families; CodeLandedIn is the commit in which the runs' code was committed (the runs' own engine commit was not recorded).",
+ "Document": "docs/VV.Gcam.Calibration.md",
+ "Files": {
+  "samples/evidence/seeds.json": "efe45efc63261cb9cc3c1882d875d6e91203c5b9b0df673cf450336801b77f37",
+  "samples/evidence/manifest-ambient-v1.json": "655fefed68a903ed2292cb70d3d111759680aab89433d87c6557e948689f8ce8",
+  "samples/evidence/manifest-ambient-v2.json": "5d546bb4c0ec51a50f1cbad6b719ff50cead20b64666625ba101d3773c542db2",
+  "samples/evidence/manifest-csco-v1.json": "5c5fcaf6eb97b1971efc01941d571be22c633b9a76ce486a5162fdc5abfc00ac",
+  "samples/evidence/manifest-angres-v2.json": "849128670a602194dc18ebd5b9225325611437034075bcc40bbc05c16b72edd8",
+  "samples/evidence/ambient/gate-thresholds-v1.json": "83b931ac8fc720fecd2133350ecf0106c0c2af00ef1f1806bb870fd9ee678105",
+  "samples/evidence/ambient/gate-thresholds-v2.json": "6352b2f692894fde1d83c6ef2c3ac2c04ee1b332c511e150d66342a516b6cdd0",
+  "samples/evidence/ambient/csco-thresholds-v1.json": "fac811b2d2c148c5ff366f88e24781fd1975d9ad345aa99009495636dbb1cd22",
+  "samples/evidence/results/ambient-baseline-v1-turn7-gate.json": "2854259ed2e3a45c90162308c03e8f1441037cf625afaf02afd2ada47a553b19",
+  "samples/evidence/results/ambient-baseline-v1-turn8-gate.json": "d2d55d5ec8c1bede10d601ac4fe3f9052c29691314612ffea54e91dda6ffcf51",
+  "samples/evidence/results/csco-v1-validation.json": "79cc4d006c49167833c3a928bcb81c9045c028096eccfe082bd8c37eaced452b",
+  "samples/evidence/results/angres-v2-floor.json": "50eee9df3225b7a8a7dac40cf07faba1b6d06598d70ad7788aa4a4ae3b6438b2",
+  "samples/evidence/ambient/gate-request-v1.json": "551fb0096025f5826f48e5227fc2ba00e9d575b9afd1262df2e8b16dc812225a",
+  "samples/evidence/ambient/csco-request-v1-selection.json": "bcb55d4671d9e533298f169d22f83be97198bed4a234b523ce18b5b30667b330",
+  "samples/evidence/ambient/csco-request-v1-validation.json": "d6e210c72ed1b8b08c546facae3f6899a071cd3e5be956484e61e28ea3f24d4b",
+  "samples/evidence/angres/angres-request-v2-floor-1m.json": "c78b9b1ccd44ca86be3f1fba1f08d01f35f5aeaeb11c6f4755ddd4177af466db",
+  "samples/evidence/angres/angres-request-v2-floor-5m.json": "1c82c25f75935f17f275b82e67a6abd4a56526243ca3adfd213b3a8d450bc8a9",
+  "samples/scenario.json": "eb5b96835c0b68a88c5c26965540f85f1a313acf1cc0b49955cf7921463edddc",
+  "samples/scenario_handheld.json": "f988784c8ee266e6dd28eb898cdbbfac0e2452cb01fd3929874fd866edc98795",
+  "samples/ambient/terrestrial-unscear2000-v1.json": "4d48bc4272ce4c25ff6ae9b13ed7583e3c8f467afffdb0225956a70cc435b3f4"
+ },
+ "Records": [
+  {
+   "Id": "CAL-01",
+   "Title": "PR-SENS-02 trust thresholds, first selection (gate v1)",
+   "Kind": "gate",
+   "Manifest": "samples/evidence/manifest-ambient-v1.json",
+   "Selection": {"File": "samples/evidence/ambient/gate-thresholds-v1.json", "Family": "gate_selection"},
+   "Validation": {"File": "samples/evidence/results/ambient-baseline-v1-turn7-gate.json", "Family": "gate_validation"},
+   "Comparison": "strict",
+   "TargetUpper95": 0.01,
+   "CodeLandedIn": "75e7ce3",
+   "Reproduce": [
+    "dotnet build Gcam.sln -c Release",
+    "python samples/evidence/run_seeds.py --manifest samples/evidence/manifest-ambient-v1.json --out <dir> --family gate_selection",
+    "python samples/evidence/ambient/select_thresholds.py --runs <dir> --manifest samples/evidence/manifest-ambient-v1.json --family gate_selection --rule strict --out <thresholds.json>   # = gate-thresholds-v1.json",
+    "python samples/evidence/run_seeds.py --manifest samples/evidence/manifest-ambient-v1.json --out <dir> --family gate_validation",
+    "python samples/evidence/ambient/aggregate_gate.py --runs <dir> --manifest samples/evidence/manifest-ambient-v1.json --family gate_validation --out <gate.json>   # = ambient-baseline-v1-turn7-gate.json"
+   ]
+  },
+  {
+   "Id": "CAL-02",
+   "Title": "PR-SENS-02 trust thresholds (gate v2)",
+   "Kind": "gate",
+   "Manifest": "samples/evidence/manifest-ambient-v2.json",
+   "Selection": {"File": "samples/evidence/ambient/gate-thresholds-v2.json", "Family": "gate_selection_v2"},
+   "Validation": {"File": "samples/evidence/results/ambient-baseline-v1-turn8-gate.json", "Family": "gate_validation_v2"},
+   "Comparison": "RoundedAtLeast",
+   "TargetUpper95": 0.01,
+   "CodeLandedIn": "aed4b54",
+   "Reproduce": [
+    "dotnet build Gcam.sln -c Release",
+    "python samples/evidence/run_seeds.py --manifest samples/evidence/manifest-ambient-v2.json --out <dir> --family gate_selection_v2",
+    "python samples/evidence/ambient/select_thresholds.py --runs <dir> --manifest samples/evidence/manifest-ambient-v2.json --family gate_selection_v2 --rule inclusive --out <thresholds.json>   # = gate-thresholds-v2.json",
+    "python samples/evidence/run_seeds.py --manifest samples/evidence/manifest-ambient-v2.json --out <dir> --family gate_validation_v2",
+    "python samples/evidence/ambient/aggregate_gate.py --runs <dir> --manifest samples/evidence/manifest-ambient-v2.json --family gate_validation_v2 --out <gate.json>   # = ambient-baseline-v1-turn8-gate.json"
+   ]
+  },
+  {
+   "Id": "CAL-03",
+   "Title": "Stripped-image trust thresholds under Co-60 (csco v1)",
+   "Kind": "csco",
+   "Manifest": "samples/evidence/manifest-csco-v1.json",
+   "Selection": {"File": "samples/evidence/ambient/csco-thresholds-v1.json", "Family": "csco_selection"},
+   "Validation": {"File": "samples/evidence/results/csco-v1-validation.json", "Family": "csco_validation"},
+   "Comparison": "RoundedAtLeast",
+   "TargetUpper95": 0.01,
+   "CodeLandedIn": "afbb0ae",
+   "Reproduce": [
+    "dotnet build Gcam.sln -c Release",
+    "python samples/evidence/run_seeds.py --manifest samples/evidence/manifest-csco-v1.json --out <dir> --family csco_selection",
+    "python samples/evidence/ambient/select_csco_thresholds.py --runs <dir> --manifest samples/evidence/manifest-csco-v1.json --family csco_selection --out <thresholds.json>   # = csco-thresholds-v1.json",
+    "python samples/evidence/run_seeds.py --manifest samples/evidence/manifest-csco-v1.json --out <dir> --family csco_validation",
+    "python samples/evidence/ambient/aggregate_csco.py --runs <dir> --manifest samples/evidence/manifest-csco-v1.json --family csco_validation --out <validation.json>   # = csco-v1-validation.json"
+   ]
+  },
+  {
+   "Id": "CAL-04",
+   "Title": "Pair-test significance floors (angres v2)",
+   "Kind": "angres_floor",
+   "Manifest": "samples/evidence/manifest-angres-v2.json",
+   "Selection": {"File": "samples/evidence/results/angres-v2-floor.json", "Families": ["angres_floor_select_1m", "angres_floor_select_5m"]},
+   "Validation": {"File": "samples/evidence/results/angres-v2-floor.json", "Families": ["angres_floor_1m", "angres_floor_5m"]},
+   "TargetUpper95": 0.05,
+   "CodeLandedIn": "98bc133",
+   "Reproduce": [
+    "dotnet build Gcam.sln -c Release",
+    "python samples/evidence/run_seeds.py --manifest samples/evidence/manifest-angres-v2.json --out <dir> --family angres_floor_select_1m angres_floor_1m angres_floor_select_5m angres_floor_5m",
+    "python samples/evidence/angres/aggregate_angres.py --runs <dir> --manifest samples/evidence/manifest-angres-v2.json --floor angres_floor_select_1m angres_floor_1m angres_floor_select_5m angres_floor_5m --out <floor.json>   # = angres-v2-floor.json"
+   ]
+  }
+ ]
+}

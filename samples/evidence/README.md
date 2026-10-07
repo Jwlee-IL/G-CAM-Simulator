@@ -12,6 +12,7 @@ the quotes were taken from. Background and decisions: [AGENTS.Findings theme 63]
 | `aggregate.py` | parses the runs into per-metric summaries; refuses missing, failed or schema-mismatched runs |
 | `cascade_fit.py` | the pooled Poisson fit of the Co-60 cascade sum-peak yield and the slope the geometry implies |
 | `rtl_seeds.py` | the Python / RTL studies (`rtl/`, `samples/open_fraction_study.py`) with their own generators and fixed fixtures, seed injected, no plots |
+| `calibration-records.json`, `calibration_record.py` | the calibration records of `docs/VV.Gcam.Calibration.md`: the spec pins every evidence file a record reads (SHA-256 of the git bytes); the generator rewrites the records' generated blocks, cross-checks seeds, pins and stored verdicts, and with `--check` / `--release` fails on any difference or unsigned draft (CI runs `--release`) |
 | `probe/` | `Gcam.EvidenceProbe`, the headless recipes no CLI command runs (biasing vs 4π, selected scan rows, field of view, crystal gap, activity ratios, sharp-optics depth, material efficiencies, the viewer's list-mode focus) — not part of `Gcam.sln` |
 | `results/aggregate.csv` | N, seed-12345 value, mean, SD, median, quartiles, min, max, first / second-half SD per metric key |
 | `results/aggregate_discrete.csv` | value frequencies for keys with ≤ 8 distinct values (picks, gates) |

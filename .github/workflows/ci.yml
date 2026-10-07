@@ -57,6 +57,19 @@ jobs:
       - name: Run cocotb (RTL vs the integer reference shared with the C# Waveform)
         run: python rtl/run_cocotb.py
 
+  calibration-records:
+    name: Calibration records (--check)
+    # Regenerates docs/VV.Gcam.Calibration.md in memory from the pinned evidence files and fails on any pin,
+    # cross-check or text difference. Standard library only; no build needed.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Check the calibration records
+        run: python samples/evidence/calibration_record.py --release
+
   badges:
     name: Publish badges
     # Writes a shields.io endpoint JSON to the 'badges' branch; only for pushes to MainRoot.
