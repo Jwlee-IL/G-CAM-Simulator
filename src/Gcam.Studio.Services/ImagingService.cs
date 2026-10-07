@@ -4,6 +4,7 @@ using Gcam.Core;
 using Gcam.Detector;
 using Gcam.Decoding;
 using Gcam.Simulation;
+using Gcam.Studio.Core.Imaging;
 using Gcam.Studio.Core.Services;
 
 namespace Gcam.Studio.Services;
@@ -23,6 +24,11 @@ public sealed class ImagingService : IImagingService
     private DetectorImage[] _floods = [];
     private StripRatio[] _ratios = [];
     private int _consumed;
+    // Pixel-area MLEM matrices survive refreshes, acquisitions and Reset (keyed by geometry and line, not by acquisition).
+    private readonly MlemDecoderCache _mlem = new();
+
+    /// <summary>MLEM matrices built so far (diagnostics and tests).</summary>
+    public int MlemMatrixBuilds => _mlem.Builds;
 
     public async Task<ImagingView> ProcessAsync(Guid acquisitionId, AcquisitionSnapshot snapshot,
         IReadOnlyList<SceneSource> scene, OpticsSettings optics, ImagingSettings settings,
@@ -42,9 +48,12 @@ public sealed class ImagingService : IImagingService
         if (snapshot.Imaging.Flood.Width != config.Detector.PixelsX || snapshot.Imaging.Flood.Height != config.Detector.PixelsY)
             throw new ArgumentException("Snapshot dimensions do not match acquired optics.", nameof(snapshot));
         var projection = ImagingProjection.AtFocus(config, physical, settings.FocalDistanceMm ?? optics.FocalDistanceMm);
+        if (settings.Method == DecoderMethod.Mlem) projection.Decoder.MlemIterations = StudioMlem.Iterations;
         if (scene.Count == 0)
         {
-            var channel = ImagingProjection.Project(snapshot.Imaging.Flood, snapshot.Imaging, projection, "All", 0);
+            // Source-free: the field's highest energy sets the (largest, conservative) closed-cell transmission.
+            var channel = ImagingProjection.Project(snapshot.Imaging.Flood, snapshot.Imaging, projection, "All", 0, double.NaN, double.NaN,
+                Mlem(settings, snapshot.AmbientMaximumEnergyKeV ?? 661.7));
             return new(Array.AsReadOnly(new[] { channel }), Array.Empty<StripRatio>(), TimeSpan.Zero, TimeSpan.Zero, TimeSpan.Zero);
         }
         await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
@@ -73,10 +82,11 @@ public sealed class ImagingService : IImagingService
             var sources = config.Sources!;
             if (snapshot.Events.Count == 0)
             {
-                var empty = new List<ImagingChannel> { ImagingProjection.Project(snapshot.Imaging.Flood, snapshot.Imaging, projection, "All", 0) };
+                var empty = new List<ImagingChannel> { ImagingProjection.Project(snapshot.Imaging.Flood, snapshot.Imaging, projection, "All", 0,
+                    double.NaN, double.NaN, Mlem(settings, AllLineKeV(sources))) };
                 foreach (var group in sources.GroupBy(s => s.Isotope))
                     empty.Add(ImagingProjection.Project(new DetectorImage(config.Detector.PixelsX, config.Detector.PixelsY).ReadOnlyCopy(),
-                        snapshot.Imaging, projection, group.Key, 0));
+                        snapshot.Imaging, projection, group.Key, 0, double.NaN, double.NaN, Mlem(settings, PrimaryKeV(group.Key))));
                 return new(empty.AsReadOnly(), Array.Empty<StripRatio>(), TimeSpan.Zero, TimeSpan.Zero, TimeSpan.Zero);
             }
             var groups = sources.GroupBy(s => s.Isotope!).ToArray();
@@ -114,30 +124,42 @@ public sealed class ImagingService : IImagingService
                         _floods[j].Add(ev.PixelX, ev.PixelY, 1);
             }
             var corrected = _floods.Select(f => f.ReadOnlyCopy()).ToArray();
+            var mlem = groups.Select(g => Mlem(settings, PrimaryKeV(g.Key))).ToArray();
             if (settings.Strip)
             {
                 for (int j = 0; j < groups.Length; j++)
                 {
                     var flood = new DetectorImage(config.Detector.PixelsX, config.Detector.PixelsY);
+                    var background = new double[flood.Width * flood.Height];
                     var ratios = _ratios.Where(r => r.LowIsotope == groups[j].Key).ToArray();
                     for (int y = 0; y < flood.Height; y++)
                     for (int x = 0; x < flood.Width; x++)
-                        flood[x, y] = Math.Max(0, _floods[j][x, y] - ratios.Sum(r =>
-                            r.R * _floods[Array.FindIndex(groups, g => g.Key == r.HighIsotope)][x, y]));
+                    {
+                        double higher = ratios.Sum(r => r.R * _floods[Array.FindIndex(groups, g => g.Key == r.HighIsotope)][x, y]);
+                        background[y * flood.Width + x] = higher;
+                        flood[x, y] = Math.Max(0, _floods[j][x, y] - higher);
+                    }
                     corrected[j] = flood.ReadOnlyCopy();
+                    // MLEM keeps the raw window counts (Poisson) and models the higher lines' downscatter as the known
+                    // background b_i = Σ R·high_i (MD-6); the displayed flood stays the clipped strip view. Its effective
+                    // count is the unclipped difference Σ low − Σ b, an unbiased estimate of the channel's own counts.
+                    if (mlem[j] is { } m && ratios.Length > 0)
+                        mlem[j] = m with { Flood = _floods[j].ReadOnlyCopy(), Background = background,
+                            EffectiveCounts = _floods[j].Raw.ToArray().Sum() - background.Sum() };
                 }
             }
             channels.Stop();
             var decode = Stopwatch.StartNew();
             var results = new List<ImagingChannel>
             {
-                ImagingProjection.Project(snapshot.Imaging.Flood, snapshot.Imaging, projection, "All", 0)
+                ImagingProjection.Project(snapshot.Imaging.Flood, snapshot.Imaging, projection, "All", 0, double.NaN, double.NaN,
+                    Mlem(settings, AllLineKeV(sources)))
             };
             for (int j = 0; j < groups.Length; j++)
             {
                 token.ThrowIfCancellationRequested();
                 results.Add(ImagingProjection.Project(corrected[j], snapshot.Imaging, projection, groups[j].Key,
-                    groups[j].Count(), windows[j].Lo, windows[j].Hi));
+                    groups[j].Count(), windows[j].Lo, windows[j].Hi, mlem[j]));
             }
             results[0] = results[0] with { Peaks = Array.AsReadOnly(results.Skip(1).SelectMany(c => c.Peaks).ToArray()) };
             decode.Stop();
@@ -154,6 +176,15 @@ public sealed class ImagingService : IImagingService
             throw;
         }
     }
+
+    private MlemProjection? Mlem(ImagingSettings settings, double lineEnergyKeV)
+        => settings.Method == DecoderMethod.Mlem ? new MlemProjection(_mlem, lineEnergyKeV) : null;
+
+    private static double PrimaryKeV(string isotope) => Isotopes.Get(isotope).Lines[0].EnergyKeV;
+
+    /// <summary>All mixes every line; the highest primary line gives the largest closed-cell transmission, the
+    /// conservative side (an over-estimated leak smooths, an under-estimated one adds false peaks — TODO-36 review).</summary>
+    private static double AllLineKeV(IEnumerable<SourceConfig> sources) => sources.Select(s => PrimaryKeV(s.Isotope)).DefaultIfEmpty(661.7).Max();
 
     private StripRatio[] Calibrate(SimulationConfig config, IGrouping<string, SourceConfig>[] groups,
         (double Lo, double Hi)[] windows, CancellationToken token)

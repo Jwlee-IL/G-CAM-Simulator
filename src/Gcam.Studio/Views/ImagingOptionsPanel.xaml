@@ -31,6 +31,15 @@
             <StackPanel>
                 <ComboBox ItemsSource="{Binding Isotopes}" SelectedItem="{Binding SelectedIsotope, Mode=TwoWay}" Margin="{StaticResource Gap.Field}"
                           AutomationProperties.AutomationId="Imaging.Channel" AutomationProperties.Name="Imaging channel" />
+                <TextBlock Text="Reconstruction" Style="{StaticResource Text.Label}" Margin="{StaticResource Gap.Tight}" />
+                <ComboBox ItemsSource="{Binding Reconstructions}" DisplayMemberPath="Label" SelectedValuePath="Method"
+                          SelectedValue="{Binding Reconstruction, Mode=TwoWay}" Margin="{StaticResource Gap.Field}"
+                          ToolTip="Re-decodes the retained floods. The focus sweep always uses cross-correlation: its peak prominence is a correlation z-score, and MLEM is not depth-calibrated."
+                          AutomationProperties.AutomationId="Imaging.Reconstruction" AutomationProperties.Name="Reconstruction"
+                          AutomationProperties.HelpText="Re-decodes the retained floods. The focus sweep always uses cross-correlation: its peak prominence is a correlation z-score, and MLEM is not depth-calibrated." />
+                <TextBlock Text="{Binding ReconstructionNote}" TextWrapping="Wrap" Style="{StaticResource Text.Caption}" Margin="{StaticResource Gap.Tight}"
+                           Visibility="{Binding ReconstructionNote, Converter={x:Static conv:NullToCollapsedConverter.Instance}}"
+                           AutomationProperties.AutomationId="Imaging.ReconstructionNote" />
                 <TextBlock Text="Window N × FWHM at each line" Style="{StaticResource Text.Label}" Margin="{StaticResource Gap.Tight}" />
                 <TextBox Text="{Binding Shared.WindowFwhm}" Tag="× FWHM" Margin="{StaticResource Gap.Field}"
                          AutomationProperties.AutomationId="Imaging.Window" AutomationProperties.Name="Window N times FWHM at each line" />

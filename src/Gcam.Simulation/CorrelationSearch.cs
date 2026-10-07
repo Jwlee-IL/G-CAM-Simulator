@@ -39,6 +39,8 @@ public sealed class CorrelationSearch
 
     public CorrelationSearch(SimulationConfig config)
     {
+        if (config.Decoder.Method != DecoderMethod.CrossCorrelation)
+            throw new ArgumentException($"CorrelationSearch is the cross-correlation decoder as a ±1 matrix; Decoder.Method = {config.Decoder.Method} has no such form.", nameof(config));
         var decoder = new DefaultSimulationFactory().CreateDecoder(config) ?? throw new ArgumentException("No decoder configured.");
         var d = config.Detector;
         Pixels = d.PixelsX * d.PixelsY;

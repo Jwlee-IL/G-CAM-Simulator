@@ -168,4 +168,62 @@ public sealed class ImagingServiceTests(ITestOutputHelper output)
         Assert.Equal(TimeSpan.Zero, incremental.CalibrationTime);
         Report(incremental);
     }
+
+    [Fact]
+    public async Task Mlem_ChannelsLocalizeAtTheirOwnSource_NonNegative()
+    {
+        // TODO-36: the same association check as cross-correlation (found peak below one grid diagonal of its source),
+        // with MLEM's sub-cell-refined peaks; λ is non-negative by construction.
+        const double live = 600;
+        SceneSource[] scene = [new() { X = 15, Y = 8 }, new() { Isotope = "Co-60", X = -15, Y = -8, ActivityUCi = 1000 }];
+        var snapshot = Acquire(scene, live, 19283);
+        var view = await new ImagingService().ProcessAsync(Guid.NewGuid(), snapshot, scene, Optics, new(Method: DecoderMethod.Mlem));
+        Report(view);
+        foreach (var s in scene)
+        {
+            var channel = view.Channels.Single(c => c.Isotope == s.Isotope);
+            var peak = Assert.Single(channel.Peaks);
+            double error = Math.Sqrt((peak.Xmm - s.X) * (peak.Xmm - s.X) + (peak.Ymm - s.Y) * (peak.Ymm - s.Y));
+            double diagonal = channel.Image.ReconStepMm * Math.Sqrt(2);
+            output.WriteLine($"MLEM {s.Isotope} {live} s: found ({peak.Xmm:F4},{peak.Ymm:F4}), truth ({s.X},{s.Y}); error={error:F4} mm, bound={diagonal:F4} mm");
+            Assert.True(error < diagonal);
+        }
+        Assert.All(view.Channels, c => Assert.All(c.Image.Reconstruction!.Raw.ToArray(), v => Assert.True(v >= 0)));
+    }
+
+    [Fact]
+    public async Task Mlem_BuildsOneMatrixPerGeometryAndLine_AndReusesItAcrossRefreshes()
+    {
+        SceneSource[] scene = [new(), new() { Isotope = "Co-60", ActivityUCi = 1000 }];
+        var snapshot = Acquire(scene, 5, 24680);
+        var service = new ImagingService();
+        var id = Guid.NewGuid();
+        var mlem = new ImagingSettings(Method: DecoderMethod.Mlem);
+        await service.ProcessAsync(id, snapshot, scene, Optics, mlem);
+        // Lines: Cs 661.7 keV and Co 1173.2 keV; All takes the highest primary line (Co's) — two matrices.
+        Assert.Equal(2, service.MlemMatrixBuilds);
+        await service.ProcessAsync(id, snapshot, scene, Optics, mlem);
+        await service.ProcessAsync(id, snapshot, scene, Optics, mlem with { Strip = true });
+        Assert.Equal(2, service.MlemMatrixBuilds);
+        await service.ProcessAsync(id, snapshot, scene, Optics, mlem with { FocalDistanceMm = 1500 });
+        Assert.Equal(4, service.MlemMatrixBuilds);
+        await service.ProcessAsync(id, snapshot, scene, Optics, new());   // cross-correlation builds no matrix
+        Assert.Equal(4, service.MlemMatrixBuilds);
+    }
+
+    [Fact]
+    public async Task CrossCorrelation_IsUnchangedByTheMethodField()
+    {
+        // The default ImagingSettings and an explicit CrossCorrelation give identical channels (the pre-TODO-36 path).
+        SceneSource[] scene = [new() { X = 10 }, new() { Isotope = "Co-60", ActivityUCi = 1000 }];
+        var snapshot = Acquire(scene, 30, 11235);
+        var a = await new ImagingService().ProcessAsync(Guid.NewGuid(), snapshot, scene, Optics, new(Strip: true));
+        var b = await new ImagingService().ProcessAsync(Guid.NewGuid(), snapshot, scene, Optics, new(Strip: true, Method: DecoderMethod.CrossCorrelation));
+        for (int i = 0; i < a.Channels.Count; i++)
+        {
+            Assert.Equal(a.Channels[i].Image.Reconstruction!.Raw.ToArray(), b.Channels[i].Image.Reconstruction!.Raw.ToArray());
+            Assert.Equal(a.Channels[i].Image.EffectiveCounts, b.Channels[i].Image.EffectiveCounts);
+            Assert.Equal(a.Channels[i].Peaks, b.Channels[i].Peaks);
+        }
+    }
 }

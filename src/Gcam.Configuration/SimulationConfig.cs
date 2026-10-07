@@ -75,6 +75,17 @@ public sealed class DecoderConfig
     /// core. <see cref="SubCellMethod.None"/> restores the raw argmax.
     /// </summary>
     public SubCellMethod SubCellInterpolation { get; set; } = SubCellMethod.Tent;
+
+    /// <summary>Reconstruction method. <see cref="DecoderMethod.CrossCorrelation"/> (default) leaves every existing
+    /// scenario unchanged; <see cref="DecoderMethod.Mlem"/> selects the pixel-area MLEM (forward model integrating each
+    /// pixel's area, closed cells transmitting exp(−μt) at the line energy, the physical — possibly inverted — mosaic).
+    /// Only the CLI single run and GCAM Studio honour it; study commands refuse a scenario that sets it.</summary>
+    public DecoderMethod Method { get; set; } = DecoderMethod.CrossCorrelation;
+
+    /// <summary>MLEM iterations when <see cref="Method"/> is <see cref="DecoderMethod.Mlem"/>. Default 120: the count of
+    /// the claimed decoder, chosen by the DR-5 rule for the hand-held head at 1 m (EV-11). Every MLEM splits single
+    /// sources when run long, so the count is a per-geometry choice — GCAM Studio uses its own, measured at its optics.</summary>
+    public int MlemIterations { get; set; } = 120;
 }
 
 /// <summary>The radioactive source.</summary>

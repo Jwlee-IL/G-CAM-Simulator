@@ -19,7 +19,7 @@ public sealed partial class ImagingWorkspaceViewModel
     public IReadOnlyList<int> PeakCounts { get; } = Array.AsReadOnly(new[] { 1, 2, 3, 4 });
     public double? ExternalRangeMm { get; private set; }
     public bool HasSweepResult => SweepResult is not null;
-    public string SweepNote => "Experimental focus analysis: reproducible near-field bias depends on lateral position. At default optics, intervals reach the far sweep edge from about 700 mm. Half-max width is not uncertainty; stripped floods are fractional, clipped values, not independent Poisson counts. External range measures a surface, not necessarily the gamma source.";
+    public string SweepNote => "Experimental focus analysis: reproducible near-field bias depends on lateral position. At default optics, intervals reach the far sweep edge from about 700 mm. Half-max width is not uncertainty; stripped floods are fractional, clipped values, not independent Poisson counts. External range measures a surface, not necessarily the gamma source. The sweep always cross-correlates, whatever the reconstruction selector shows.";
     public string SweepSummary => IsSweeping ? "Sweeping retained flood…" : SweepResult is { } r
         // U+00A0 keeps each value with its unit when the side panel wraps the line.
         ? $"{r.Identity.Channel} · retained at {r.Identity.LiveTimeS:0.0} s · {r.Identity.Counts:N0} acquired counts · worker {r.ProcessingTime.TotalMilliseconds:0} ms"

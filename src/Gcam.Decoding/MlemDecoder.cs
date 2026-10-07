@@ -36,6 +36,7 @@ public sealed class MlemDecoder : IDecoder
     private readonly int _iterations;
     private readonly MlemSystemModel? _model;  // null = the engine's binary pixel-centre matrix (the default)
     private readonly IReadOnlyList<double[]>? _columns;   // supplied system matrix (one column per grid point), or null
+    private readonly SubCellMethod _subCell;   // opt-in peak refinement of the estimate (None = the original argmax)
 
     // Cached system matrix A[j*nDet + i] and sensitivity s[j], built once for the image dimensions. The default model keeps
     // its float matrix and scalar loop exactly as before (bit-identical results); the opt-in models keep a double matrix (for the
@@ -62,6 +63,16 @@ public sealed class MlemDecoder : IDecoder
         if (model is not null && !(model.ClosedCellTransmission is >= 0 and <= 1))
             throw new ArgumentOutOfRangeException(nameof(model), "The closed-cell transmission is a fraction.");
         _model = model;
+    }
+
+    /// <summary>As <see cref="MlemDecoder(MaskPattern, CodedApertureGeometry, int, MlemSystemModel?)"/>, with the estimate
+    /// refined below one grid step by <paramref name="subCell"/> (TODO-36: on the pixel-area λ the tent or gaussian
+    /// estimate is 2–4× more precise than the argmax above ~1000 counts). <see cref="SubCellMethod.None"/> gives exactly
+    /// the four-argument decoder; λ itself never depends on it.</summary>
+    public MlemDecoder(MaskPattern aperture, CodedApertureGeometry geometry, int iterations, MlemSystemModel? model, SubCellMethod subCell)
+        : this(aperture, geometry, iterations, model)
+    {
+        _subCell = subCell;
     }
 
     private MlemDecoder(CodedApertureGeometry geometry, int iterations, IReadOnlyList<double[]> columns, int imgW, int imgH)
@@ -119,8 +130,9 @@ public sealed class MlemDecoder : IDecoder
                 if (Math.Abs(gx - bx) > excl || Math.Abs(gy - by) > excl)
                     if (recon[gx, gy] > second) second = recon[gx, gy];
 
-        double estX = _origin + bx * _geo.ReconStepMm;
-        double estY = _origin + by * _geo.ReconStepMm;
+        var (dx, dy) = _subCell == SubCellMethod.None ? (0.0, 0.0) : PeakInterpolation.Estimate(recon, bx, by, _subCell);
+        double estX = _origin + (bx + dx) * _geo.ReconStepMm;
+        double estY = _origin + (by + dy) * _geo.ReconStepMm;
         double confidence = peak / Math.Max(second, 1e-9);
         var estimate = new SourceEstimate(new Vector3(estX, estY, _geo.SourcePlaneZ), confidence);
         return new DecodeResult(estimate, recon, _origin, _geo.ReconStepMm);

@@ -481,7 +481,7 @@ public static class AngularResolutionStudy
 
     /// <summary>exp(−μ·t) of the mask slab at the source line (the slab's 662 keV μ scaled by tungsten's μ(E) / μ(662)).</summary>
     public static double ClosedCellTransmission(SimulationConfig config)
-        => Math.Exp(-config.Mask.LinearAttenuationPerMm * CodedApertureMask.TungstenMuRel(config.Source.EnergyKeV) * config.Mask.ThicknessMm);
+        => MlemReconstruction.ClosedCellTransmission(config, config.Source.EnergyKeV);
 
     private static MaskPattern MosaicOf(SimulationConfig config) => MuraGenerator.Mosaic(config.Mask.Rank, config.Mask.MosaicX, config.Mask.MosaicY);
 

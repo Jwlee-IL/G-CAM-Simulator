@@ -62,7 +62,15 @@ if (args.Length < 1 || args[0] is "help" or "--help" or "-h" or "/?")
 }
 
 if (commands.TryGetValue(args[0], out var handler))
+{
+    if (StudyDecoderGuard.FirstNonCorrelationScenario(args.Skip(1)) is { } mlemScenario)
+    {
+        Console.Error.WriteLine($"'{args[0]}' decodes with cross-correlation, but {mlemScenario} sets Decoder.Method to another method.");
+        Console.Error.WriteLine("Only the single run (montecarlo <scenario.json>) honours Decoder.Method; remove it to run this study.");
+        return 1;
+    }
     return handler(args);
+}
 
 // Not a known command — the only remaining valid form is a scenario file path.
 // Guard against a mistyped sub-command falling through to a cryptic file-load error.
@@ -80,6 +88,10 @@ Console.WriteLine($"Source   : (x={config.Source.Position[0]}, y={config.Source.
 Console.WriteLine($"Mask     : {config.Mask.Type} rank {config.Mask.Rank}, {config.Mask.MosaicX}x{config.Mask.MosaicY} mosaic @ z={config.Geometry.MaskDetectorDistanceMm} mm");
 Console.WriteLine($"Detector : {config.Detector.PixelsX}x{config.Detector.PixelsY} crystals @ z=0");
 Console.WriteLine($"Photons  : {config.PhotonCount:N0}");
+Console.WriteLine(config.Decoder.Method == DecoderMethod.Mlem
+    ? $"Decoder  : pixel-area MLEM, {config.Decoder.MlemIterations} iterations, closed-cell transmission " +
+      $"{MlemReconstruction.ClosedCellTransmission(config, config.Source.EnergyKeV):F3} at {config.Source.EnergyKeV} keV"
+    : "Decoder  : cross-correlation");
 Console.WriteLine();
 
 var runner = new SimulationRunner(new DefaultSimulationFactory());
@@ -102,9 +114,14 @@ if (result.Estimate is { } est && result.Reconstruction is { } recon)
     Console.WriteLine();
     Console.WriteLine($"True     : (x={trueX:F1}, y={trueY:F1}) mm");
     Console.WriteLine($"Estimate : (x={est.Position.X:F1}, y={est.Position.Y:F1}) mm   error={err:F1} mm");
-    Console.WriteLine($"Ghost margin (primary/secondary peak): {est.Confidence:F2}   (>~1.5 clean, ~1 ambiguous)");
+    // The primary/secondary ratio is a cross-correlation notion: MLEM drives λ away from the source to ~0, so its ratio
+    // carries no ghost information.
+    if (config.Decoder.Method != DecoderMethod.Mlem)
+        Console.WriteLine($"Ghost margin (primary/secondary peak): {est.Confidence:F2}   (>~1.5 clean, ~1 ambiguous)");
     Console.WriteLine();
-    Console.WriteLine("Reconstruction (source plane, +y up)   T=truth  o=estimate:");
+    Console.WriteLine(config.Decoder.Method == DecoderMethod.Mlem
+        ? "Reconstruction, MLEM lambda >= 0 (source plane, +y up)   T=truth  o=estimate:"
+        : "Reconstruction (source plane, +y up)   T=truth  o=estimate:");
     RenderReconstruction(recon, result.ReconOriginMm, result.ReconStepMm, trueX, trueY, est.Position.X, est.Position.Y);
 }
 return 0;

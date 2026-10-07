@@ -376,7 +376,7 @@
                                             </Border>
                                         </DockPanel>
                                         <c:ImageStackPanel>
-                                            <c:HeatmapView x:Name="Recon" ValueUnit="(decoded)" Style="{StaticResource ImageHeatmap}" Image="{Binding Result.Reconstruction}"
+                                            <c:HeatmapView x:Name="Recon" ValueUnit="{Binding ReconstructionUnit}" Style="{StaticResource ImageHeatmap}" Image="{Binding Result.Reconstruction}"
                                                            OriginMm="{Binding Result.ReconOriginMm}" StepMm="{Binding Result.ReconStepMm}"
                                                            c:MeasurementOverlay.FoundPeaks="{Binding Peaks}"
                                                            EmptyText="Start an acquisition to see the reconstruction"

@@ -146,4 +146,79 @@ public sealed class ImagingWorkspaceTests
         Assert.Equal(3, imaging.Requests[^1].Settings.WindowFwhm);
         Assert.False(vm.Imaging.IsProcessing);
     }
+
+    [Fact]
+    public async Task Reconstruction_IsAReprojectionSetting_KeepsMeasurementsAndSweep()
+    {
+        // TODO-36 (MD-3, MD-7): cross-correlation by default; MLEM is sent to the worker in ImagingSettings with every other
+        // setting unchanged, one request per change, without new transport, measurement clearing or sweep invalidation.
+        var acquisition = new Acquisition(); var imaging = new Imaging(); var focus = new DeferredFocus();
+        var vm = new MainViewModel(acquisition, new Theme(), new FakeSpectrumService(), imaging, focusSweep: focus) { AmbientDoseRateMicroSvPerHour = 0 };
+        Assert.Equal(DecoderMethod.CrossCorrelation, vm.Imaging.Reconstruction);
+        Assert.Equal(new[] { DecoderMethod.CrossCorrelation, DecoderMethod.Mlem }, vm.Imaging.Reconstructions.Select(r => r.Method));
+        Assert.Equal("(decoded)", vm.Imaging.ReconstructionUnit);
+        Assert.Null(vm.Imaging.ReconstructionNote);
+        await vm.StartCommand.ExecuteAsync(null);
+        await vm.Imaging.WhenUpdated;
+        Assert.Equal(DecoderMethod.CrossCorrelation, imaging.Requests[^1].Settings.Method);
+        vm.Imaging.Measurements.AddCommand.Execute(new MeasurementDraft(ImagePane.Reconstruction, MeasurementKind.Roi, [new(-2, -2), new(2, 2)]));
+        vm.Imaging.SelectedIsotope = "Cs-137";
+        var sweep = vm.Imaging.SweepCommand.ExecuteAsync(null);
+        focus.Pending.SetResult(new(focus.Request!.Identity, [], TimeSpan.Zero));
+        await sweep;
+        Assert.NotNull(vm.Imaging.SweepResult);
+        var before = imaging.Requests[^1];
+        int calls = imaging.Requests.Count;
+
+        vm.Imaging.Reconstruction = DecoderMethod.Mlem;
+        await vm.Imaging.WhenUpdated;
+        Assert.Equal(calls + 1, imaging.Requests.Count);
+        var after = imaging.Requests[^1];
+        Assert.Equal(before.Settings with { Method = DecoderMethod.Mlem }, after.Settings);
+        Assert.Equal(before.Id, after.Id);
+        Assert.Same(before.Snapshot, after.Snapshot);
+        Assert.Equal(1, acquisition.Starts);
+        Assert.Single(vm.Imaging.Measurements.Items);           // same grid, same mm: kept
+        Assert.NotNull(vm.Imaging.SweepResult);                  // the sweep cross-correlates whatever the method
+        Assert.Equal("(MLEM λ)", vm.Imaging.ReconstructionUnit);
+        Assert.Contains($"{StudioMlem.Iterations} iterations", vm.Imaging.ReconstructionNote);
+        Assert.DoesNotContain("not measured", vm.Imaging.ReconstructionNote);
+        Assert.EndsWith("· MLEM", vm.Imaging.ChannelSummary);
+    }
+
+    [Fact]
+    public async Task ReconstructionNote_FlagsUnmeasuredOptics_AndTheAcquisitionImageIsNotShownAsMlem()
+    {
+        var vm = new MainViewModel(new Acquisition(), new Theme(), new FakeSpectrumService(), new Imaging()) { AmbientDoseRateMicroSvPerHour = 0 };
+        vm.Imaging.Reconstruction = DecoderMethod.Mlem;
+        vm.Imaging.FocalPlane = "1500";   // another decoder plane than the one the count was selected at
+        Assert.Contains("not measured", vm.Imaging.ReconstructionNote);
+        vm.Imaging.FocalPlane = "1000";
+        Assert.DoesNotContain("not measured", vm.Imaging.ReconstructionNote);
+        vm.Optics = new() { CellPitchMm = 1 };
+        Assert.Contains("not measured", vm.Imaging.ReconstructionNote);
+        // Before a worker view exists, All falls back to the acquisition's own image — a cross-correlation decode, so not under MLEM.
+        await vm.StartCommand.ExecuteAsync(null);
+        vm.Imaging.View = null;
+        Assert.Null(vm.Imaging.Result);
+        vm.Imaging.Reconstruction = DecoderMethod.CrossCorrelation;
+        vm.Imaging.View = null;
+        Assert.Same(vm.Result, vm.Imaging.Result);
+    }
+
+    [Fact]
+    public async Task StripCount_IsLabelledClippedForCrossCorrelation_AndNetForMlem()
+    {
+        // MD-11: the two methods report different strip counts for a contaminated channel; the summary names which.
+        var vm = new MainViewModel(new Acquisition(), new Theme(), new FakeSpectrumService(), new Imaging()) { AmbientDoseRateMicroSvPerHour = 0 };
+        await vm.StartCommand.ExecuteAsync(null);
+        vm.Imaging.SelectedIsotope = "Cs-137";
+        Assert.Contains(" counts · ", vm.Imaging.Summary);
+        vm.Imaging.Strip = true; await vm.Imaging.WhenUpdated;
+        Assert.Contains("counts (clipped strip sum)", vm.Imaging.Summary);
+        vm.Imaging.Reconstruction = DecoderMethod.Mlem; await vm.Imaging.WhenUpdated;
+        Assert.Contains("net counts (Σ low − R·Σ high)", vm.Imaging.Summary);
+        vm.Imaging.SelectedIsotope = "All";   // All is never stripped
+        Assert.DoesNotContain("net", vm.Imaging.Summary);
+    }
 }

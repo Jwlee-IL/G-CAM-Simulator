@@ -34,6 +34,7 @@ public sealed partial class PlotViewRenderTests(ITestOutputHelper output)
                     RenderWindows(theme, mixed: true, crowded: true);
                     RenderWindows(theme, mixed: true, opticsExpanded: true);
                     RenderWindows(theme, mixed: true, opticsExpanded: false);
+                    RenderWindows(theme, mixed: true, mlem: true);
                     RenderWaveforms(theme);
                     RenderDetectorAndFocus(theme);
                     RenderAmbientInputs(theme);

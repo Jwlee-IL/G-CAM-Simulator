@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using Gcam.Configuration;
+using Gcam.Studio.Core.Imaging;
 using Gcam.Studio.Core.Services;
 using Gcam.Studio.Core.Optics;
 
@@ -30,7 +31,33 @@ public sealed partial class ImagingWorkspaceViewModel(MainViewModel shared, IIma
     [ObservableProperty] private bool _isChannelExpanded = true;
     [ObservableProperty] private bool _isSweepExpanded;
     public string FocalSummary => Geometry is { } g ? $"{FocalDistanceMm:0.#} mm · element {g.ResolutionElementMm:0.##} mm" : $"{FocalPlane} mm";
-    public string ChannelSummary => $"{SelectedIsotope} · window {Shared.WindowFwhm:0.##} × FWHM{(Strip ? " · strip" : "")}";
+    public string ChannelSummary => $"{SelectedIsotope} · window {Shared.WindowFwhm:0.##} × FWHM{(Strip ? " · strip" : "")}"
+        + (Reconstruction == DecoderMethod.Mlem ? " · MLEM" : "");
+
+    /// <summary>Reconstruction methods offered (TODO-36). Cross-correlation is the default (MD-3).</summary>
+    public IReadOnlyList<ReconstructionOption> Reconstructions { get; } = Array.AsReadOnly(new[]
+    {
+        new ReconstructionOption(DecoderMethod.CrossCorrelation, "Cross-correlation"),
+        new ReconstructionOption(DecoderMethod.Mlem, $"MLEM (pixel-area, {StudioMlem.Iterations} iterations)")
+    });
+    /// <summary>A re-projection setting like the focal plane: it re-decodes the retained floods, keeps measurements (same
+    /// grid, same mm) and leaves the focus sweep alone (the sweep always cross-correlates).</summary>
+    [ObservableProperty] private DecoderMethod _reconstruction = DecoderMethod.CrossCorrelation;
+    /// <summary>Value suffix of the reconstruction readout: correlation sums, or MLEM's non-negative intensity λ.</summary>
+    public string ReconstructionUnit => Reconstruction == DecoderMethod.Mlem ? "(MLEM λ)" : "(decoded)";
+    /// <summary>The MLEM caveats, shown while MLEM is selected: the low-count side effect of the selected iteration count,
+    /// whether the count was measured for the current optics, and the missing background term.</summary>
+    public string? ReconstructionNote => Reconstruction != DecoderMethod.Mlem ? null
+        : $"{StudioMlem.Iterations} iterations, chosen for pair resolution at the default optics. Below ~1000 counts a " +
+          $"single source often shows a false second peak (≈{StudioMlem.LowCountSecondPeakShare:P0} of 250-count frames at quarter height)." +
+          (StudioMlem.IsMeasured(ProjectionOptics, FocalDistanceMm) ? "" : " Iteration count not measured for these optics.") +
+          " No background term: an ambient field pulls the image." + (Strip ? " Strip: the higher lines enter as a known background." : "");
+    partial void OnReconstructionChanged(DecoderMethod value)
+    {
+        foreach (string name in new[] { nameof(ReconstructionUnit), nameof(ReconstructionNote), nameof(ChannelSummary) }) OnPropertyChanged(name);
+        NotifyResult();
+        RefreshChannels();
+    }
     private OpticsSettings ProjectionOptics => _scene.Count > 0 ? _optics : Shared.Optics;
     partial void OnFocalPlaneChanged(string value)
     {
@@ -51,6 +78,7 @@ public sealed partial class ImagingWorkspaceViewModel(MainViewModel shared, IIma
         OnPropertyChanged(nameof(Geometry));
         OnPropertyChanged(nameof(GeometryText));
         OnPropertyChanged(nameof(FocalSummary));
+        OnPropertyChanged(nameof(ReconstructionNote));
         Shared.NotifyFocalGeometryChanged();
         UseAsFocusCommand.NotifyCanExecuteChanged();
     }
@@ -65,7 +93,9 @@ public sealed partial class ImagingWorkspaceViewModel(MainViewModel shared, IIma
     public IReadOnlyList<string> Isotopes => View?.Channels.Select(c => c.Isotope).ToArray()
         ?? new[] { "All" }.Concat(_scene.Select(s => s.Isotope).Distinct()).ToArray();
     public ImagingChannel? SelectedChannel => View?.Channels.FirstOrDefault(c => c.Isotope == SelectedIsotope);
-    public ImagingResult? Result => SelectedChannel?.Image ?? (SelectedIsotope == "All" ? Shared.Result : null);
+    // The acquisition's own image is a cross-correlation decode: it may stand in for All only while that is the method.
+    public ImagingResult? Result => SelectedChannel?.Image
+        ?? (SelectedIsotope == "All" && Reconstruction == DecoderMethod.CrossCorrelation ? Shared.Result : null);
     public IReadOnlyList<ImagingPeak> Peaks => SelectedChannel?.Peaks ?? [];
     public IReadOnlyList<StripRatio> Ratios => View?.Ratios ?? [];
     /// <summary>The decoder's single argmax names one position; with several found peaks it would silently name only the
@@ -73,7 +103,12 @@ public sealed partial class ImagingWorkspaceViewModel(MainViewModel shared, IIma
     public string? PeakText => Peaks.Count >= 2 ? $"{Peaks.Count} peaks found"
         : Result?.Estimate is { } e ? $"peak ({e.Position.X:F1}, {e.Position.Y:F1}) mm" : null;
     public string Summary => IsProcessing ? "Building channels / calibrating…" : Result is { } r
-        ? $"{SelectedIsotope} · {r.EffectiveCounts:N0} counts · {Peaks.Count} found" : "No acquired counts";
+        ? $"{SelectedIsotope} · {r.EffectiveCounts:N0} {CountLabel} · {Peaks.Count} found" : "No acquired counts";
+    /// <summary>MD-11: with Compton strip on a channel that has a contaminant, the two methods report different counts —
+    /// cross-correlation the sum of the clipped strip flood (max(0, low − R·high) per pixel), MLEM the net Σ low − R·Σ high —
+    /// so the label names which one is shown.</summary>
+    private string CountLabel => !Strip || !Ratios.Any(r => r.LowIsotope == SelectedIsotope) ? "counts"
+        : Reconstruction == DecoderMethod.Mlem ? "net counts (Σ low − R·Σ high)" : "counts (clipped strip sum)";
     public string WorkerCosts => View is { } v
         ? $"Worker: channels {v.ChannelTime.TotalMilliseconds:F1} ms · calibration {v.CalibrationTime.TotalMilliseconds:F1} ms · decode {v.DecodeTime.TotalMilliseconds:F1} ms" : "";
     partial void OnSelectedIsotopeChanged(string value)
@@ -82,7 +117,7 @@ public sealed partial class ImagingWorkspaceViewModel(MainViewModel shared, IIma
         InvalidateSweep();
         NotifyResult();
     }
-    partial void OnStripChanged(bool value) { InvalidateSweep(); RefreshChannels(); }
+    partial void OnStripChanged(bool value) { InvalidateSweep(); OnPropertyChanged(nameof(ReconstructionNote)); RefreshChannels(); }
     partial void OnIsProcessingChanged(bool value) { OnPropertyChanged(nameof(Summary)); SweepCommand.NotifyCanExecuteChanged(); }
 
     internal void Begin(IReadOnlyList<SceneSource> scene, OpticsSettings optics)
@@ -138,7 +173,7 @@ public sealed partial class ImagingWorkspaceViewModel(MainViewModel shared, IIma
                 revision = _revision;
                 var snapshot = Shared.Snapshot!;
                 var view = await service.ProcessAsync(_id, snapshot, _scene, _optics,
-                    new(Shared.WindowFwhm, Strip, FocalDistanceMm), token);
+                    new(Shared.WindowFwhm, Strip, FocalDistanceMm, Reconstruction), token);
                 if (token.IsCancellationRequested) return;
                 if (revision != _revision) continue;
                 View = view;

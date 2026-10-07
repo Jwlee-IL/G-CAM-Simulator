@@ -6,7 +6,8 @@ using Gcam.Masks;
 
 namespace Gcam.Simulation;
 
-/// <summary>Wires the standard MURA / crystal / cross-correlation pipeline from config.</summary>
+/// <summary>Wires the standard MURA / crystal / decoder pipeline from config (cross-correlation unless
+/// <c>Decoder.Method</c> selects the pixel-area MLEM).</summary>
 public sealed class DefaultSimulationFactory : ISimulationFactory
 {
     public IRandom CreateRandom(SimulationConfig config)
@@ -99,7 +100,25 @@ public sealed class DefaultSimulationFactory : ISimulationFactory
                                    CrystalMaterial.ForConfig(d.Material));
     }
 
+    /// <summary>The configured decoder: cross-correlation, or with <c>Decoder.Method = Mlem</c> the pixel-area MLEM for the
+    /// primary source line (<see cref="CreateMlemDecoder"/>). Both share <see cref="ReconstructionGeometry"/>.</summary>
     public IDecoder? CreateDecoder(SimulationConfig config)
+    {
+        var geo = ReconstructionGeometry(config);
+        if (config.Decoder.Method == DecoderMethod.Mlem)
+            return MlemReconstruction.Create(config, geo, config.Source.EnergyKeV, config.Decoder.MlemIterations, config.Decoder.SubCellInterpolation);
+        return new CrossCorrelationDecoder(MuraGenerator.DecodingArray(config.Mask.Rank), geo,
+                                           config.Decoder.SubCellInterpolation);
+    }
+
+    /// <summary>The pixel-area MLEM on the configured grid for the line at <paramref name="lineEnergyKeV"/> (its
+    /// closed-cell transmission), whatever <c>Decoder.Method</c> says — e.g. one decoder per isotope channel.</summary>
+    public MlemDecoder CreateMlemDecoder(SimulationConfig config, double lineEnergyKeV)
+        => MlemReconstruction.Create(config, ReconstructionGeometry(config), lineEnergyKeV, config.Decoder.MlemIterations,
+                                     config.Decoder.SubCellInterpolation);
+
+    /// <summary>The reconstruction grid and back-projection geometry every decoder of this config uses.</summary>
+    public static CodedApertureGeometry ReconstructionGeometry(SimulationConfig config)
     {
         var m = config.Mask;
         double maskZ = config.Geometry.MaskDetectorDistanceMm;
@@ -115,7 +134,7 @@ public sealed class DefaultSimulationFactory : ISimulationFactory
         double half = config.Decoder.ReconHalfExtentMm ?? fcfovPeriod / 2.0;
         double step = config.Decoder.ReconStepMm ?? fcfovPeriod / 48.0;
 
-        var geo = new CodedApertureGeometry(
+        return new CodedApertureGeometry(
             Rank: m.Rank,
             MaskPlaneZ: maskZ,
             MaskCellPitchMm: m.CellPitchMm,
@@ -127,7 +146,5 @@ public sealed class DefaultSimulationFactory : ISimulationFactory
             ReconHalfExtentMm: half,
             ReconStepMm: step,
             Cyclic: config.Decoder.Cyclic);
-        return new CrossCorrelationDecoder(MuraGenerator.DecodingArray(m.Rank), geo,
-                                           config.Decoder.SubCellInterpolation);
     }
 }

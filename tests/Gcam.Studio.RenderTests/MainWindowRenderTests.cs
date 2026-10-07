@@ -21,7 +21,7 @@ namespace Gcam.Studio.RenderTests;
 
 public sealed partial class PlotViewRenderTests
 {
-    private void RenderWindows(string theme, bool mixed = false, bool? opticsExpanded = null, bool crowded = false)
+    private void RenderWindows(string theme, bool mixed = false, bool? opticsExpanded = null, bool crowded = false, bool mlem = false)
     {
         // Share the existing STA/Application lifetime: WPF permits only one Application per AppDomain.
         var dictionaries = Application.Current.Resources.MergedDictionaries;
@@ -41,6 +41,8 @@ public sealed partial class PlotViewRenderTests
             model.Sources[1].Isotope = "Co-60";
             model.Sources[1].X = crowded ? 14 : -15; model.Sources[1].Y = crowded ? 0 : -8;
             model.Imaging.Strip = true;
+            // TODO-36: the reconstruction selector on MLEM shows its caveat note and the λ readout unit.
+            if (mlem) model.Imaging.Reconstruction = DecoderMethod.Mlem;
         }
         // The fake publishes synchronously: no MC, timers, worker thread or dispatcher wait.
         model.StartCommand.ExecuteAsync(null).GetAwaiter().GetResult();
@@ -56,7 +58,8 @@ public sealed partial class PlotViewRenderTests
         }
         foreach (var size in new[] { new Size(1280, 800), new Size(1440, 900) })
         foreach (var workspace in model.Workspaces)
-        foreach (string isotope in mixed ? (workspace == model.Imaging ? (crowded ? ["All"] : new[] { "All", "Cs-137" })
+        foreach (string isotope in mlem ? (workspace == model.Imaging ? ["Cs-137"] : Array.Empty<string>())
+            : mixed ? (workspace == model.Imaging ? (crowded ? ["All"] : new[] { "All", "Cs-137" })
             : workspace == model.Spectrum && opticsExpanded is null && !crowded ? ["All"] : Array.Empty<string>()) : new[] { "All" })
         {
             model.SelectedWorkspace = workspace;
@@ -166,7 +169,7 @@ public sealed partial class PlotViewRenderTests
             string directory = SnapshotDirectory("studio-render");
             Directory.CreateDirectory(directory);
             string path = Path.Combine(directory,
-                $"{workspace.Title.ToLowerInvariant()}{(crowded ? "-crowded" : "")}{(opticsExpanded.HasValue ? "-optics-" + (opticsExpanded.Value ? "expanded" : "collapsed") + "-focus800" : "")}{(mixed ? "-mixed-" + isotope.ToLowerInvariant() : "")}-{theme.ToLowerInvariant()}-{size.Width:0}x{size.Height:0}.png");
+                $"{workspace.Title.ToLowerInvariant()}{(crowded ? "-crowded" : "")}{(opticsExpanded.HasValue ? "-optics-" + (opticsExpanded.Value ? "expanded" : "collapsed") + "-focus800" : "")}{(mixed ? "-mixed-" + isotope.ToLowerInvariant() : "")}{(mlem ? "-mlem" : "")}-{theme.ToLowerInvariant()}-{size.Width:0}x{size.Height:0}.png");
             using var stream = File.Create(path);
             encoder.Save(stream);
             output.WriteLine(path);

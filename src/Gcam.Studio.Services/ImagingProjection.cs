@@ -7,7 +7,7 @@ using Gcam.Studio.Core.Services;
 
 namespace Gcam.Studio.Services;
 
-/// <summary>One projection path for broadband, primary-window and stripped floods.</summary>
+/// <summary>One projection path for broadband, primary-window and stripped floods, by cross-correlation or MLEM.</summary>
 public static class ImagingProjection
 {
     public static SimulationConfig AtFocus(SimulationConfig acquired, OpticsSettings optics, double focalDistanceMm)
@@ -24,9 +24,23 @@ public static class ImagingProjection
 
     public static ImagingChannel Project(DetectorImage flood, ImagingResult original, SimulationConfig config,
         string isotope, int peakCount, double loKeV = double.NaN, double hiKeV = double.NaN)
+        => Project(flood, original, config, isotope, peakCount, loKeV, hiKeV, null);
+
+    /// <summary>As the cross-correlation projection, or with <paramref name="mlem"/> the pixel-area MLEM (TODO-36):
+    /// <see cref="MlemProjection.Flood"/> is decoded with the known <see cref="MlemProjection.Background"/> (the strip
+    /// path's higher-line contribution) while <paramref name="flood"/> stays the displayed flood.</summary>
+    public static ImagingChannel Project(DetectorImage flood, ImagingResult original, SimulationConfig config,
+        string isotope, int peakCount, double loKeV, double hiKeV, MlemProjection? mlem)
     {
         double count = flood.Raw.ToArray().Sum();
-        var decoded = count > 0 ? new DefaultSimulationFactory().CreateDecoder(config)!.Decode(flood) : null;
+        DecodeResult? decoded;
+        if (mlem is null) decoded = count > 0 ? new DefaultSimulationFactory().CreateDecoder(config)!.Decode(flood) : null;
+        else
+        {
+            var data = mlem.Flood ?? flood;
+            decoded = data.Raw.ToArray().Sum() > 0 ? mlem.Cache.For(config, mlem.LineEnergyKeV).Decode(data, mlem.Background) : null;
+            if (mlem.EffectiveCounts is { } effective) count = effective;
+        }
         double separation = config.Mask.CellPitchMm *
             (config.Geometry.MaskDetectorDistanceMm + config.Geometry.SourceMaskDistanceMm) /
             config.Geometry.MaskDetectorDistanceMm;
@@ -45,3 +59,9 @@ public static class ImagingProjection
         return new(isotope, loKeV, hiKeV, image, Array.AsReadOnly(peaks));
     }
 }
+
+/// <summary>How one channel is decoded by MLEM: the cached decoder source, the imaged line (its closed-cell
+/// transmission), and for the strip path the raw window flood with the higher lines' known background b_i and the
+/// effective count shown for the channel.</summary>
+public sealed record MlemProjection(MlemDecoderCache Cache, double LineEnergyKeV, DetectorImage? Flood = null,
+    IReadOnlyList<double>? Background = null, double? EffectiveCounts = null);
