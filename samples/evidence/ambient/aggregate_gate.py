@@ -22,6 +22,11 @@ import hashlib
 import json
 import pathlib
 import statistics
+import sys
+import io
+
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
+import provenance as pv
 
 from gate_stats import cp_lower, cp_upper, family_seeds, load_runs
 
@@ -48,6 +53,7 @@ def main():
     ap.add_argument('--family', default='gate_validation')
     args = ap.parse_args()
     seeds, fam = family_seeds(args.manifest, HERE.parent / 'seeds.json', args.family)
+    prov = pv.summary_provenance([pv.collect(args.runs, args.family, seeds)], __file__, args)
     runs = load_runs(args.runs, args.family, seeds)
     thresholds_ref = fam['overrides']['Thresholds']
     raw = (HERE.parents[2] / thresholds_ref['File']).read_bytes()
@@ -169,14 +175,17 @@ def main():
               'SourceRates': rate_summary(runs, seeds, 'SourceRates', 'CpsPerBq'),
               'Nulls': nulls, 'Sources': sources, 'CountGates': gates, 'DerivedRatios': derived,
               'MeanComputeSeconds': statistics.mean(runs[s]['ComputeSeconds'] for s in seeds)}
-    pathlib.Path(args.out).write_text(json.dumps(result, indent=1) + '\n', encoding='utf-8', newline='\n')
+    result['Provenance'] = prov
+    outputs = {pathlib.Path(args.out): pv.json_bytes(result)}
     if args.csv:
-        with open(args.csv, 'w', newline='\n', encoding='utf-8') as f:
-            cols = sorted({c for v in sources.values() for c in v})
-            w = csv.writer(f, lineterminator='\n')
-            w.writerow(['condition'] + cols)
-            for key, v in sources.items():
-                w.writerow([key] + [v.get(c) for c in cols])
+        f = io.StringIO(newline='')
+        cols = sorted({c for v in sources.values() for c in v})
+        w = csv.writer(f, lineterminator='\n')
+        w.writerow(['condition'] + cols)
+        for key, v in sources.items():
+            w.writerow([key] + [v.get(c) for c in cols])
+        outputs[pathlib.Path(args.csv)] = f.getvalue().encode('utf-8')
+    pv.publish(outputs, prov)
     failed = [k for k, v in nulls.items() if not v['Pass']]
     print(f'{len(nulls)} null configurations, {len(failed)} fail the <= 1 % upper limit; {len(sources)} source conditions')
     for k in failed:

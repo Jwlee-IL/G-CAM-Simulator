@@ -69,6 +69,10 @@ jobs:
           python-version: "3.13"
       - name: Check the calibration records
         run: python samples/evidence/calibration_record.py --release
+      - name: Test evidence provenance (standard library only)
+        env:
+          GCAM_PROVENANCE_GIT_TESTS: '1'
+        run: python -B -m unittest discover -s samples/evidence/tests -p "test_provenance*.py"
 
   badges:
     name: Publish badges

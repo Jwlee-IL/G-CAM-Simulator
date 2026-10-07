@@ -28,6 +28,10 @@ import json
 import math
 import pathlib
 import statistics
+import sys
+
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
+import provenance as pv
 
 HERE = pathlib.Path(__file__).resolve().parent
 
@@ -228,13 +232,15 @@ def main():
     ap.add_argument('--manifest', default=str(HERE.parent / 'manifest-ambient-v2.json'))
     args = ap.parse_args()
     seeds, fam = family_seeds(args.manifest, args.family)
+    prov = pv.summary_provenance([pv.collect(args.runs, args.family, seeds)], __file__, args)
     runs = load(args.runs, args.family, seeds)
     kind = runs[seeds[0]]['Family']
     summary = {'antimask': antimask, 'separation': separation, 'fov': fov, 'sweep': sweep}[kind](runs, seeds)
     result = {'_about': __doc__.strip().splitlines()[0], 'Family': args.family, 'Kind': kind, 'SeedList': fam['seeds'],
               'SeedOffset': fam.get('seed_offset', 0), 'Seeds': len(seeds), 'Config': fam['config'],
               'MeanComputeSeconds': statistics.mean(runs[s]['ComputeSeconds'] for s in seeds), 'Summary': summary}
-    pathlib.Path(args.out).write_text(json.dumps(result, indent=1) + '\n', encoding='utf-8', newline='\n')
+    result['Provenance'] = prov
+    pv.publish({pathlib.Path(args.out): pv.json_bytes(result)}, prov)
     print(f'{args.family}: {len(seeds)} seeds -> {args.out}')
 
 

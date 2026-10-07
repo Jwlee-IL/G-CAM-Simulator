@@ -29,3 +29,57 @@ python samples/evidence/cascade_fit.py --runs <dir> --out <dir>/cascade_fit.json
 
 The `rtl` families need iverilog / vvp on PATH; `rtl_frontend` also runs the Release CLI. Run times per seed range
 from about a second (`rtl_material`, `depth`) to over ten minutes (`fov`).
+
+## Run provenance (schema version 1)
+
+New runs bind each seed to the source snapshot, actual executable closure, recipe and output bytes. A source record
+contains the full commit, scoped tracked binary-diff SHA-256 and untracked-file content hashes. Dirty trees are
+allowed and displayed as dirty; these source observations do not prove that an assembly was built from that tree.
+Execution identity hashes the output directory actually launched, the driver/helper code and applicable Python/RTL
+scripts. The driver records Python, effective pinned .NET runtime, SDK observation, and NumPy/Icarus/vvp versions
+where applicable. CLI and probe identities are separate; RTL modes have separate typed closures.
+
+Before launching workers, the driver captures the managed output directories and a conservative repository-local
+script/data closure. Each seed executes in a fresh `attempts/<id>/` directory, using its own `snapshot/` copy:
+managed assemblies, local Python modules, RTL sources/testbenches and sample inputs. No child reads these inputs
+from the live repository. Installed interpreters, runtime libraries and simulators remain external toolchain
+dependencies whose versions are recorded; repository edits and rebuilds cannot change the staged inputs of a run.
+Attempt folders are retained for inspection. The driver pins the .NET runtime explicitly with `--fx-version`.
+
+`done.json.Provenance` holds versioned source records plus the seed/family, common recipe digest and output hashes.
+The root `run-info.json` indexes source records and records invocation details; a later invocation preserves source
+records used by completed seeds. Reuse validates the root binding, output bytes, execution identity and recipe.
+Legacy seeds without provenance, corrupt outputs or a changed executable/recipe are refused before the invocation
+index is rewritten. Use a fresh output root, or explicitly `--force` to execute again; never label old numbers with
+today's build. If a prior attempt left extra unbound numerical files at the stable output paths, use a fresh root.
+
+Every downstream aggregator/selector validates the consumed per-seed provenance before writing. Execution conflicts
+within one executor type, recipe conflicts within one family, missing metadata and conflicting duplicate seeds
+across roots fail closed. There is no `--allow-mixed`. Invocation time, worker count and output location do not
+enter identity. Summaries record analysis-time script/helper hashes, applicable tool versions and semantic options.
+The bias-baseline writer validates and inherits both input summaries, rather than consulting current root metadata.
+
+JSON summaries embed a `Provenance` object. Future `aggregate.py --json` output is `{Provenance, Metrics}`;
+future `results/values.json` is `{Provenance, Values}`. Metric payloads and CSV columns retain their existing meaning.
+Each output receives `<filename>.provenance.json`, containing schema version, provenance and SHA-256 bindings for
+every member of its output set. `BaseParents` locates a shared logical base for sets spanning output directories;
+member paths are relative, with no machine paths. CSV provenance lives in this sidecar. All members are serialized
+and validated before writing, and sidecars are written last. An interrupted write produces an invalid set, not a
+valid partial ensemble; consumers must verify the binding. Pinned calibration JSONs already have byte hashes and
+can read embedded provenance directly.
+
+Existing evidence and four calibration records remain unchanged. The calibration generator prints new selection
+and validation provenance separately; legacy files retain their exact "not recorded" line. Malformed new provenance
+fails. New threshold/summary bytes require deliberate updates to their downstream pins when adopted as evidence.
+Direct generators and curated reports are outside this pipeline; there is no backfill/provenance-only mode.
+
+Standard-library checks:
+
+```bash
+python -B -m unittest discover -s samples/evidence/tests -p "test_provenance*.py"
+python -B samples/evidence/calibration_record.py --release
+```
+
+The isolated temporary-Git test is enabled in CI with `GCAM_PROVENANCE_GIT_TESTS=1`. It initializes and commits a
+disposable fixture; under the implementer's no-Git-mutation guard it needs explicit local approval. Other tests use
+retained scratch fixtures under the temporary `gcam-todo37` directory and require no build or scientific packages.

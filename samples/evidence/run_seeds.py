@@ -31,6 +31,9 @@ import pathlib
 import subprocess
 import sys
 import time
+import uuid
+
+import provenance as pv
 
 HERE = pathlib.Path(__file__).resolve().parent
 REPO = HERE.parents[1]
@@ -55,11 +58,11 @@ def set_path(obj, dotted, value):
             obj = obj[key]
 
 
-def require_validated_spectrum_file(reference):
+def require_validated_spectrum_file(reference, repo=REPO):
     """A spectrum named by file (repository-relative path + SHA-256 of its bytes) must match its pin and be validated."""
     file = next((v for k, v in reference.items() if k.lower() == 'file'), None)
     pin = next((v for k, v in reference.items() if k.lower() == 'sha256'), None)
-    path = REPO / file
+    path = repo / file
     if not file or not pin or sha256(path) != pin:
         raise SystemExit(f'ambient evidence refused: spectrum file {file} does not match its pinned SHA-256')
     spectrum = json.loads(path.read_text(encoding='utf-8'))
@@ -67,11 +70,11 @@ def require_validated_spectrum_file(reference):
         raise SystemExit(f'ambient evidence refused: {file} is not a validated spectrum')
 
 
-def require_validated_ambient(config):
+def require_validated_ambient(config, repo=REPO):
     """Development spectra must never become numerical evidence through this driver."""
     reference = next((v for k, v in config.items() if k.lower() == 'spectrum'), None)
     if isinstance(reference, dict) and any(k.lower() == 'file' for k in reference):
-        require_validated_spectrum_file(reference)       # a gate-study request names its spectrum by file
+        require_validated_spectrum_file(reference, repo) # a gate-study request names its spectrum by file
     ambient = next((v for k, v in config.items() if k.lower() == 'ambient'), None)
     if ambient is None:
         return
@@ -93,41 +96,51 @@ def jobs_for(manifest, seeds, families, n_override):
             yield fam, seed
 
 
-def run_one(fam, seed, out, cli, probe, python, force):
+def run_one(fam, seed, out, prepared, python, force):
     run = pathlib.Path(out) / 'runs' / fam['id'] / str(seed)
     done = run / 'done.json'
     if done.exists() and not force and json.loads(done.read_text(encoding='utf-8'))['exit'] == 0:
+        pv.check_reuse(run, prepared, fam['id'], seed)
         return f'skip {fam["id"]} {seed}'
-    (run / 'samples').mkdir(parents=True, exist_ok=True)
+    # Fresh attempt directories prevent cached RTL compilations or old numerical files entering a rerun.
+    work = run / 'attempts' / uuid.uuid4().hex
+    (work / 'samples').mkdir(parents=True, exist_ok=True)
+    snapshot = pv.stage(work, prepared)
+    tools = prepared['Source']['Executor']['Tools']
+    runtime = tools.get('DotnetRuntime')
+    cli = snapshot / 'managed/cli/Gcam.Cli.dll'
+    probe = snapshot / 'managed/probe/Gcam.EvidenceProbe.dll'
     record = {'family': fam['id'], 'seed': seed, 'kind': fam['kind']}
     if fam['kind'] == 'cli':
-        base = REPO / 'samples' / fam['config']
+        base = snapshot / 'samples' / fam['config']
         config = json.loads(base.read_text(encoding='utf-8'))
         clone = copy.deepcopy(config)
         set_path(clone, 'seed', seed)
         for path, value in fam.get('overrides', {}).items():
             set_path(clone, path, value)
         if fam.get('repo_root'):                          # requests that read repository files by relative path
-            set_path(clone, 'RepoRoot', str(REPO))
-        require_validated_ambient(clone)
-        (run / 'config.json').write_text(json.dumps(clone, indent=1), encoding='utf-8')
-        cmd = ['dotnet', str(cli)] + ([fam['command']] if fam.get('command') else []) + [str(run / 'config.json')]
+            set_path(clone, 'RepoRoot', str(snapshot))
+        require_validated_ambient(clone, snapshot)
+        pv.write_json(work / 'config.json', clone)
+        cmd = ['dotnet', '--fx-version', runtime, str(cli)] + ([fam['command']] if fam.get('command') else []) + [str(work / 'config.json')]
         record['config'] = fam['config']
         record['config_sha256'] = sha256(base)
     elif fam['kind'] == 'probe':
-        cmd = ['dotnet', str(probe), fam['mode'], str(seed), str(REPO / 'samples')]
+        cmd = ['dotnet', '--fx-version', runtime, str(probe), fam['mode'], str(seed), str(snapshot / 'samples')]
     elif fam['kind'] == 'rtl':
-        cmd = [python, str(HERE / 'rtl_seeds.py'), fam['mode'], str(seed), '--cli', str(cli)]
+        cmd = [python, '-B', str(snapshot / 'samples/evidence/rtl_seeds.py'), fam['mode'], str(seed), '--cli', str(cli)]
+        if runtime:
+            cmd += ['--runtime', runtime]
     else:
         raise SystemExit(f'unknown kind {fam["kind"]}')
     def shown(arg):           # repository paths are recorded relative to the repository, others as given
-        inside = os.path.isabs(arg) and pathlib.Path(arg).resolve().is_relative_to(REPO)
-        return os.path.relpath(arg, REPO).replace('\\', '/') if inside else arg
+        inside = os.path.isabs(arg) and pathlib.Path(arg).resolve().is_relative_to(work)
+        return os.path.relpath(arg, work).replace('\\', '/') if inside else pathlib.Path(arg).name if os.path.isabs(arg) else arg
 
     record['command'] = [shown(c) for c in cmd]
-    env = dict(os.environ, PYTHONUTF8='1', PYTHONIOENCODING='utf-8')
+    env = dict(os.environ, PYTHONUTF8='1', PYTHONIOENCODING='utf-8', PYTHONDONTWRITEBYTECODE='1')
     start = time.perf_counter()
-    proc = subprocess.run(cmd, cwd=run, capture_output=True, env=env)
+    proc = subprocess.run(cmd, cwd=work, capture_output=True, env=env)
     code = proc.returncode
     # A redirected .NET console writes in the console code page, not UTF-8; store UTF-8 either way.
     for name, data in [('stdout.txt', proc.stdout), ('stderr.txt', proc.stderr)]:
@@ -136,11 +149,18 @@ def run_one(fam, seed, out, cli, probe, python, force):
         except UnicodeDecodeError:
             encoding = 'oem' if sys.platform == 'win32' else locale.getpreferredencoding(False)
             decoded = data.decode(encoding, errors='replace')
-        (run / name).write_text(decoded, encoding='utf-8')
+        (work / name).write_bytes(decoded.replace('\r\n', '\n').encode('utf-8'))
         record[name.replace('.txt', '_encoding')] = encoding
     record['exit'] = code
     record['seconds'] = time.perf_counter() - start
-    done.write_text(json.dumps(record), encoding='utf-8')
+    # Publish only this attempt's outputs at the stable paths understood by existing numerical parsers.
+    outputs = pv.output_hashes(work)
+    for name in outputs:
+        target = run / name
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes((work / name).read_bytes())
+    record['Provenance'] = pv.seed_provenance(prepared, fam['id'], seed, outputs)
+    pv.write_json(done, record)
     return f'{"ok  " if code == 0 else "FAIL"} {fam["id"]} {seed} exit={code} {record["seconds"]:.1f}s'
 
 
@@ -157,8 +177,8 @@ def main():
     ap.add_argument('--force', action='store_true', help='repeat runs that already succeeded')
     ap.add_argument('--allow-changed-config', action='store_true')
     args = ap.parse_args()
-    if args.n < 0:
-        raise SystemExit('--n must be positive')
+    if args.n < 0 or args.jobs < 1:
+        raise SystemExit('--n must be nonnegative and --jobs must be positive')
 
     manifest = json.loads(pathlib.Path(args.manifest).read_text(encoding='utf-8'))
     seeds = json.loads((HERE / 'seeds.json').read_text(encoding='utf-8'))
@@ -175,18 +195,29 @@ def main():
             raise SystemExit(f'{exe} not found — build it first (see the module docstring)')
 
     out = pathlib.Path(args.out).resolve()
+    unique = {f['id']: f for f, _ in jobs}
+    prepared = pv.prepare(list(unique.values()), args.cli, args.probe, args.python)
+    if not args.allow_changed_config:
+        for fam in unique.values():
+            if fam['kind'] == 'cli' and pv.sha(prepared[fam['id']]['Files']['samples/' + fam['config']]) != manifest['config_sha256'][fam['config']]:
+                pv.refuse(f'{fam["config"]}: captured request no longer matches the manifest')
+    # Validate all reusable seeds before changing the invocation index or starting any workers.
+    for fam, seed in jobs:
+        run = out / 'runs' / fam['id'] / str(seed)
+        if not args.force and (run / 'done.json').exists() and pv.read_json(run / 'done.json').get('exit') == 0:
+            pv.check_reuse(run, prepared[fam['id']], fam['id'], seed)
+    prior = pv.read_json(out / 'run-info.json') if (out / 'run-info.json').exists() else {}
+    sources = dict(prior.get('Sources', {})) if prior.get('SchemaVersion') == pv.VERSION else {}
+    sources.update({pv.digest(p['Source']): p['Source'] for p in prepared.values()})
     out.mkdir(parents=True, exist_ok=True)
-    head = subprocess.run(['git', 'rev-parse', 'HEAD'], cwd=REPO, capture_output=True, text=True).stdout.strip()
-    dirty = subprocess.run(['git', 'status', '--porcelain', '--', 'src', 'samples', 'rtl'], cwd=REPO,
-                           capture_output=True, text=True).stdout.strip()
-    (out / 'run-info.json').write_text(json.dumps({
-        'engine_commit': head, 'engine_tree_dirty': bool(dirty), 'families': sorted({f['id'] for f, _ in jobs}),
+    pv.write_json(out / 'run-info.json', {
+        'SchemaVersion': pv.VERSION, 'Sources': sources, 'families': sorted(unique),
         'manifest': pathlib.Path(args.manifest).name, 'manifest_sha256': sha256(args.manifest),
-        'n_override': args.n or None, 'jobs': len(jobs), 'started': time.strftime('%Y-%m-%dT%H:%M:%S')}, indent=1),
-        encoding='utf-8')
+        'n_override': args.n or None, 'jobs': len(jobs), 'workers': args.jobs,
+        'started': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())})
     failures = 0
     with cf.ThreadPoolExecutor(max_workers=args.jobs) as pool:
-        futures = [pool.submit(run_one, f, s, out, args.cli, args.probe, args.python, args.force) for f, s in jobs]
+        futures = [pool.submit(run_one, f, s, out, prepared[f['id']], args.python, args.force) for f, s in jobs]
         for fut in cf.as_completed(futures):
             line = fut.result()
             failures += line.startswith('FAIL')

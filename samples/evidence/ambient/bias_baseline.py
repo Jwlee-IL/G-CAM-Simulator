@@ -14,6 +14,10 @@ import argparse
 import json
 import math
 import pathlib
+import sys
+
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
+import provenance as pv
 
 PLANE_MM = {'lab': 160.0, 'head': 155.0, 'head1m': 1000.0, 'head5m': 5000.0}
 
@@ -25,6 +29,14 @@ def main():
     ap.add_argument('--out', required=True)
     args = ap.parse_args()
     gate = json.loads(pathlib.Path(args.gate).read_text(encoding='utf-8'))
+    parents = [pv.validate_sidecar(args.gate)]
+    pv.pinned_summary(gate)
+    inputs = {'Gate': pv.file_sha(args.gate)}
+    if args.sweep:
+        parents.append(pv.validate_sidecar(args.sweep))
+        inputs['Sweep'] = pv.file_sha(args.sweep)
+        pv.pinned_summary(pv.read_json(args.sweep))
+    prov = pv.summary_provenance(parents, __file__, args, inputs)
     sources = gate['Sources']
     rows = {}
     for key, v in sources.items():
@@ -55,7 +67,8 @@ def main():
                                                    'ExpectedBackgroundCounts': p['ExpectedBackgroundCounts']['Mean']}
                                    for name, sc in sweep['Summary'].items() for k, p in sc['Points'].items()},
                         'BackgroundPull': {f'{name}|{k}': p for name, sc in sweep['Summary'].items() for k, p in sc['BackgroundPull'].items()}}
-    pathlib.Path(args.out).write_text(json.dumps(out, indent=1) + '\n', encoding='utf-8', newline='\n')
+    out['Provenance'] = prov
+    pv.publish({pathlib.Path(args.out): pv.json_bytes(out)}, prov)
     print(f'{len(rows)} conditions -> {args.out}')
 
 

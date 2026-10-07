@@ -30,6 +30,10 @@ import math
 import pathlib
 import random
 import statistics
+import sys
+
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
+import provenance as pv
 
 import numpy as np
 
@@ -392,6 +396,9 @@ def main():
     if a.selftest:
         _selftest()
         return
+    families = a.floor or a.select or a.family
+    prov = pv.summary_provenance([pv.collect(a.runs, f, family_seeds(a.manifest, f)[0])
+                                  for f in families], __file__, a)
     if a.floor:
         result = {'Families': {}}
         for i in range(0, len(a.floor), 2):
@@ -408,7 +415,8 @@ def main():
                     for st in s['Steps'].values():
                         st.pop('Rows', None)
             result['Families'][f] = s
-    pathlib.Path(a.out).write_text(json.dumps(result, indent=1) + '\n', encoding='utf-8', newline='\n')
+    result['Provenance'] = prov
+    pv.publish({pathlib.Path(a.out): pv.json_bytes(result)}, prov)
     print(f'wrote {a.out}')
 
 

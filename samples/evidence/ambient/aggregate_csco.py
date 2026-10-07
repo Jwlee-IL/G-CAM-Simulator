@@ -26,6 +26,10 @@ import json
 import math
 import pathlib
 import statistics
+import sys
+
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
+import provenance as pv
 
 from gate_stats import cp_lower, cp_upper, family_seeds
 
@@ -229,6 +233,7 @@ def main():
     ap.add_argument('--family', default='csco_validation')
     args = ap.parse_args()
     seeds, fam = family_seeds(args.manifest, HERE.parent / 'seeds.json', args.family)
+    prov = pv.summary_provenance([pv.collect(args.runs, args.family, seeds)], __file__, args)
     runs = load(args.runs, args.family, seeds)
     first = next(iter(runs.values()))
     img, smallest = imaging(runs)
@@ -252,8 +257,9 @@ def main():
             return [rounded(v) for v in x]
         return x
     summary = {k: (v if k == 'CoLevelsBq' else rounded(v)) for k, v in summary.items()}   # the levels name the keys
+    summary['Provenance'] = prov
     text = '{\n' + ',\n'.join(f'{json.dumps(k)}: {json.dumps(v, separators=(",", ":"))}' for k, v in summary.items()) + '\n}\n'
-    pathlib.Path(args.out).write_text(text, encoding='utf-8', newline='\n')
+    pv.publish({pathlib.Path(args.out): text.encode('utf-8')}, prov)
     nv = summary['NullValidation']
     print(f"{len(seeds)} seeds; Z_s null configurations passing the 1 % limit: {sum(v['PassesOnePercent'] for v in nv.values())} / {len(nv)}")
     checks = [m for c in summary['Counts'].values() for m in c['Multiples'] if 'ExactWithin4Se' in m]

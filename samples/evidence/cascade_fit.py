@@ -25,6 +25,8 @@ import pathlib
 import random
 import sys
 
+import provenance as pv
+
 import numpy as np
 
 HERE = pathlib.Path(__file__).resolve().parent
@@ -44,7 +46,10 @@ def load_rows(roots, seeds):
             if not done.exists() or not run.name.isdigit():
                 continue
             seed = int(run.name)
-            if seed in found or json.loads(done.read_text(encoding='utf-8-sig'))['exit'] != 0:
+            if seed in found:
+                pv.duplicate(found[seed][1], run)
+                continue
+            if json.loads(done.read_text(encoding='utf-8-sig'))['exit'] != 0:
                 continue
             rows = []
             for r in csv.DictReader((run / 'samples' / 'cascade.csv').open(encoding='utf-8-sig')):
@@ -54,11 +59,12 @@ def load_rows(roots, seeds):
                 rows.append((float(r['distance_mm']), float(r['single_photopeak_per_decay']), int(round(count))))
             if [d for d, _, _ in rows] != DISTANCES:
                 raise SystemExit(f'seed {seed}: unexpected distance rows {[d for d, _, _ in rows]}')
-            found[seed] = rows
+            pv.validate_run(run, 'cascade', seed)
+            found[seed] = (rows, run)
     missing = [s for s in seeds if s not in found]
     if missing:
         raise SystemExit(f'{len(missing)} declared seeds have no successful cascade run, e.g. {missing[:5]}')
-    return {s: found[s] for s in seeds}
+    return {s: found[s][0] for s in seeds}, pv.merge([pv.validate_run(found[s][1]) for s in seeds])
 
 
 def poisson_fit(x, y, offset):
@@ -157,7 +163,8 @@ def main():
     ap.add_argument('--out', default=None)
     args = ap.parse_args()
     seeds = json.loads((HERE / 'seeds.json').read_text())[args.seeds]
-    data = load_rows(args.runs, seeds)
+    data, source_prov = load_rows(args.runs, seeds)
+    prov = pv.summary_provenance([source_prov], __file__, args)
 
     def arrays(sample):
         x, y = [], []
@@ -201,9 +208,10 @@ def main():
         'geometric_expectation': geo,
     }
     result['z_vs_geometric'] = (b - geo['slope_lnP2_vs_lnP1']) / result['slope_se_wald']
+    result['Provenance'] = prov
     text = json.dumps(result, indent=1)
     if args.out:
-        pathlib.Path(args.out).write_text(text + '\n', encoding='utf-8')
+        pv.publish({pathlib.Path(args.out): (text + '\n').encode('utf-8')}, prov)
     print(json.dumps({k: result[k] for k in ['N_seeds', 'rows', 'zero_rows', 'slope', 'slope_se_wald',
                                              'dispersion_pearson', 'z_vs_geometric']}, indent=1))
     print('pooled-by-distance slope', pb, '+-', math.sqrt(pcov[1, 1]))

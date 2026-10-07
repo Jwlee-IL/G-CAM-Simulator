@@ -137,7 +137,7 @@ def multi(seed):
     return rows
 
 
-def frontend(seed, cli):
+def frontend(seed, cli, runtime=None):
     sys.path.insert(0, str(RTL))
     import event_stream
     import trap_ref
@@ -145,7 +145,7 @@ def frontend(seed, cli):
     key = next((k for k in config if k.lower() == 'seed'), 'seed')
     config[key] = seed
     pathlib.Path('config.json').write_text(json.dumps(config, indent=1), encoding='utf-8')
-    res = subprocess.run(['dotnet', cli, 'eventstream', str(pathlib.Path('config.json').resolve())],
+    res = subprocess.run(['dotnet'] + (['--fx-version', runtime] if runtime else []) + [cli, 'eventstream', str(pathlib.Path('config.json').resolve())],
                          capture_output=True, text=True, check=True)
     pathlib.Path('cli-stdout.txt').write_text(res.stdout, encoding='utf-8')
 
@@ -217,9 +217,10 @@ def main():
     ap.add_argument('mode', choices=['material', 'peak', 'pixel', 'multi', 'frontend', 'openfraction'])
     ap.add_argument('seed', type=int)
     ap.add_argument('--cli', default=str(REPO / 'src/Gcam.Cli/bin/Release/net9.0/Gcam.Cli.dll'))
+    ap.add_argument('--runtime', default=None, help='driver-pinned runtime for the staged CLI')
     args = ap.parse_args()
     os.environ.setdefault('PYTHONUTF8', '1')
-    rows = frontend(args.seed, args.cli) if args.mode == 'frontend' else globals()[args.mode](args.seed)
+    rows = frontend(args.seed, args.cli, args.runtime) if args.mode == 'frontend' else globals()[args.mode](args.seed)
     result = {'seed': args.seed, 'mode': args.mode, 'rows': rows}
     pathlib.Path('result.json').write_text(json.dumps(result), encoding='utf-8')
     print(json.dumps(rows))

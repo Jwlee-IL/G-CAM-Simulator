@@ -14,6 +14,10 @@ import hashlib
 import json
 import math
 import pathlib
+import sys
+
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
+import provenance as pv
 
 from gate_stats import cp_upper, family_seeds
 from select_thresholds import ALPHA, RULE_INCLUSIVE, inclusive_threshold
@@ -42,6 +46,7 @@ def main():
     ap.add_argument('--family', default='csco_selection')
     args = ap.parse_args()
     seeds, fam = family_seeds(args.manifest, HERE.parent / 'seeds.json', args.family)
+    prov = pv.summary_provenance([pv.collect(args.runs, args.family, seeds)], __file__, args)
     files = load(args.runs, args.family, seeds)
     pooled, digest = {}, hashlib.sha256()
     for seed in seeds:
@@ -75,7 +80,8 @@ def main():
            'Seeds': seeds, 'RunsDigest': digest.hexdigest(), 'PerConfiguration': per, 'Universal': max(per.values()),
            'Comparison': 'RoundedAtLeast', 'NullsPerConfiguration': report[next(iter(report))]['Acquisitions'],
            'Selection': report}
-    pathlib.Path(args.out).write_text(json.dumps(out, indent=1) + '\n', encoding='utf-8', newline='\n')
+    out['Provenance'] = prov
+    pv.publish({pathlib.Path(args.out): pv.json_bytes(out)}, prov)
     print(f'{len(per)} configurations; universal (max) {out["Universal"]:.4f}')
     for key in sorted(per):
         r = report[key]

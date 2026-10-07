@@ -17,6 +17,10 @@ import json
 import math
 import pathlib
 from collections import Counter
+import sys
+
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
+import provenance as pv
 
 from gate_stats import cp_upper, family_seeds, load_runs
 
@@ -77,6 +81,7 @@ def main():
                     help='use only the first N null repeats of every seed (reproduces a smaller selection from a larger run)')
     args = ap.parse_args()
     seeds, fam = family_seeds(args.manifest, HERE.parent / 'seeds.json', args.family)
+    prov = pv.summary_provenance([pv.collect(args.runs, args.family, seeds)], __file__, args)
     runs = load_runs(args.runs, args.family, seeds)
     keys = sorted(next(iter(runs.values()))['Nulls'])
     per, report = {}, {}
@@ -123,7 +128,8 @@ def main():
         out['Comparison'] = 'RoundedAtLeast'
         out['NullsPerConfiguration'] = report[keys[0]]['Acquisitions']
         out['FirstNulls'] = args.first_nulls or None
-    pathlib.Path(args.out).write_text(json.dumps(out, indent=1) + '\n', encoding='utf-8', newline='\n')
+    out['Provenance'] = prov
+    pv.publish({pathlib.Path(args.out): pv.json_bytes(out)}, prov)
     print(f'{len(per)} configurations, universal threshold {universal:.4f}')
     for key in keys:
         r = report[key]

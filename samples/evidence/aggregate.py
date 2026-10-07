@@ -25,6 +25,9 @@ import pathlib
 import re
 import statistics
 import sys
+import io
+
+import provenance as pv
 
 HERE = pathlib.Path(__file__).resolve().parent
 
@@ -99,8 +102,12 @@ def find_runs(roots, family):
         base = pathlib.Path(root) / 'runs' / family
         if base.is_dir():
             for run in base.iterdir():
-                if run.name.isdigit() and int(run.name) not in found:
-                    found[int(run.name)] = run
+                if run.name.isdigit():
+                    seed = int(run.name)
+                    if seed in found:
+                        pv.duplicate(found[seed], run)
+                    else:
+                        found[seed] = run
     return found
 
 
@@ -110,7 +117,8 @@ def check_complete(manifest, seeds, roots, families, n_override=0):
     for fam in manifest['families']:
         if families and fam['id'] not in families:
             continue
-        declared = seeds[fam['seeds']][:n_override or fam['n']]
+        first = fam.get('seed_offset', 0)
+        declared = seeds[fam['seeds']][first:first + (n_override or fam['n'])]
         runs = find_runs(roots, fam['id'])
         chosen = []
         for seed in declared:
@@ -471,6 +479,7 @@ def main():
     if args.n and args.write_results:
         raise SystemExit('--n is for smoke tests; results/ is only written from complete ensembles')
     selected = check_complete(manifest, seeds, args.runs, set(args.family), args.n)
+    prov = pv.summary_provenance([pv.from_selected(selected)], __file__, args)
 
     E = Ensemble()
     family_of_prefix = {}
@@ -496,33 +505,37 @@ def main():
     rows = summarise(E, order_of)
     n_declared = {fid: len(chosen) for fid, (_, chosen) in selected.items()}
     print(f'{len(rows)} metric keys from {sum(n_declared.values())} runs in {len(n_declared)} families')
+    outputs = {}
     if args.json:
-        pathlib.Path(args.json).write_text(json.dumps([dict(r, values=v) for r, v in rows]), encoding='utf-8')
+        outputs[pathlib.Path(args.json)] = pv.json_bytes({'Provenance': prov, 'Metrics': [dict(r, values=v) for r, v in rows]})
     if args.write_results:
         res = HERE / 'results'
-        res.mkdir(exist_ok=True)
         cols = ['key', 'N', 'seed12345', 'mean', 'sd', 'median', 'q25', 'q75', 'min', 'max', 'sd_first', 'sd_second']
 
         def fmt(v):
             return '' if v is None else (format(v, '.6g') if isinstance(v, float) else v)
 
-        with (res / 'aggregate.csv').open('w', newline='', encoding='utf-8') as f:
-            w = csv.writer(f, lineterminator='\n')
-            w.writerow(cols)
-            for r, _ in rows:
-                w.writerow([fmt(r[c]) for c in cols])
-        with (res / 'aggregate_discrete.csv').open('w', newline='', encoding='utf-8') as f:
-            w = csv.writer(f, lineterminator='\n')
-            w.writerow(['key', 'N', 'value', 'count'])
-            for r, _ in rows:
-                for value, count in r.get('frequencies', {}).items():
-                    w.writerow([r['key'], r['N'], value, count])
+        f = io.StringIO(newline='')
+        w = csv.writer(f, lineterminator='\n')
+        w.writerow(cols)
+        for r, _ in rows:
+            w.writerow([fmt(r[c]) for c in cols])
+        outputs[res / 'aggregate.csv'] = f.getvalue().encode('utf-8')
+        f = io.StringIO(newline='')
+        w = csv.writer(f, lineterminator='\n')
+        w.writerow(['key', 'N', 'value', 'count'])
+        for r, _ in rows:
+            for value, count in r.get('frequencies', {}).items():
+                w.writerow([r['key'], r['N'], value, count])
+        outputs[res / 'aggregate_discrete.csv'] = f.getvalue().encode('utf-8')
         quoted = {r['key']: {str(s): v for s, v in vals.items()} for r, vals in rows if r['key'] in QUOTED}
         missing = [k for k in QUOTED if k not in quoted]
         if missing and not args.family:
             raise SystemExit(f'quoted keys absent from the ensemble: {missing}')
-        (res / 'values.json').write_text(json.dumps(quoted, indent=0) + '\n', encoding='utf-8')
+        outputs[res / 'values.json'] = pv.json_bytes({'Provenance': prov, 'Values': quoted})
         print(f'wrote {res}')
+    if outputs:
+        pv.publish(outputs, prov)
     return 0
 
 
