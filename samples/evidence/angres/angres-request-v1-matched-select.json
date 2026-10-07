@@ -1,0 +1,75 @@
+{
+ "Seed": 0,
+ "RepoRoot": ".",
+ "Family": "angres",
+ "Spectrum": {
+  "File": "samples/ambient/terrestrial-unscear2000-v1.json",
+  "Sha256": "4d48bc4272ce4c25ff6ae9b13ed7583e3c8f467afffdb0225956a70cc435b3f4"
+ },
+ "AmbientHistories": 0,
+ "CalibrationHistories": 0,
+ "SourcePhotons": 0,
+ "FieldsMicroSvPerHour": [],
+ "Bounds": [],
+ "Windows": [
+  {
+   "Name": "cs662",
+   "LowKeV": 595.53,
+   "HighKeV": 727.87
+  }
+ ],
+ "ExposuresS": [],
+ "Repeats": 0,
+ "_about": "TODO-34 (DR-5, DR-6): iteration selection for the transported-map ('matched') MLEM upper bound, on seeds disjoint from every validation family. As angres-request-v1-select.json, but the system matrix's 2401 columns are transported single-source maps (4e5 photons each, the seed's own streams).",
+ "AngularResolution": {
+  "Scenario": "samples/scenario_handheld.json",
+  "SourceDetectorMm": 1000,
+  "Window": "cs662",
+  "GridHalfDeg": 0,
+  "JitterElements": 0.5,
+  "SeparationsElements": [
+   0.75,
+   1,
+   1.25,
+   1.5,
+   1.75,
+   2,
+   2.5,
+   3
+  ],
+  "CountsPerSource": [
+   1000
+  ],
+  "Ratios": [
+   1
+  ],
+  "Placements": [
+   "axis"
+  ],
+  "Valleys": [
+   0.25,
+   0.5
+  ],
+  "Repeats": 50,
+  "MapPhotons": 1000000,
+  "PointPhotons": 0,
+  "Mlem": [
+   {
+    "Name": "matched",
+    "Kind": "matched",
+    "ColumnPhotons": 400000,
+    "Iterations": [
+     20,
+     40,
+     80,
+     120,
+     160,
+     240,
+     320,
+     480,
+     640
+    ]
+   }
+  ]
+ }
+}

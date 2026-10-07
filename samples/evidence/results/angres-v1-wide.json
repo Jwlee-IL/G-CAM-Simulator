@@ -1,0 +1,1023 @@
+{
+ "Families": {
+  "angres_wide": {
+   "Family": "angres_wide",
+   "Seeds": 128,
+   "Evidence": "usable non-cyclic field +-7 deg (reported, not claimed)",
+   "ElementDeg": 1.041626676009974,
+   "SourceDetectorMm": 1000,
+   "Grid": {
+    "GridSize": 94,
+    "StepMm": 2.6515151515151514,
+    "OriginMm": -122.7845609029046,
+    "HalfDeg": 7,
+    "StepDeg": 0.15192027147066967
+   },
+   "ShadowCellPerPixel": 1.0582010582010581,
+   "ClosedCellTransmission": 0.16849502353206208,
+   "Valleys": [
+    0.25,
+    0.5
+   ],
+   "Axes": {
+    "x": 58,
+    "y": 70
+   },
+   "ComputeSeconds": {
+    "N": 128,
+    "Median": 644.2182,
+    "Q1": 629.2958,
+    "Q3": 652.6492,
+    "Min": 515.2733,
+    "Max": 676.9223,
+    "Mean": 630.866
+   },
+   "Point": null,
+   "Resolved": [
+    {
+     "Placement": "axis",
+     "CountsPerSource": 1000,
+     "Ratio": 1,
+     "Environment": "ideal",
+     "Decoder": "area@120",
+     "Valley": 0.25,
+     "ResolvedElements": 1.25,
+     "BestPass": 0.9978,
+     "BestPassAtElements": 3,
+     "MaxNull": 0.0027,
+     "PassBySeparation": {
+      "0.75": 0.0447,
+      "1": 0.5766,
+      "1.25": 0.9777,
+      "1.5": 0.9917,
+      "1.75": 0.9908,
+      "2": 0.9942,
+      "2.5": 0.9953,
+      "3": 0.9978
+     },
+     "NullBySeparation": {
+      "0.75": 0.0017,
+      "1": 0.0009,
+      "1.25": 0.0006,
+      "1.5": 0.0027,
+      "1.75": 0.0017,
+      "2": 0.0023,
+      "2.5": 0.0,
+      "3": 0.0
+     }
+    },
+    {
+     "Placement": "axis",
+     "CountsPerSource": 1000,
+     "Ratio": 1,
+     "Environment": "ideal",
+     "Decoder": "area@120",
+     "Valley": 0.5,
+     "ResolvedElements": 1.5,
+     "BestPass": 0.9984,
+     "BestPassAtElements": 2,
+     "MaxNull": 0.0006,
+     "PassBySeparation": {
+      "0.75": 0.0002,
+      "1": 0.1419,
+      "1.25": 0.9036,
+      "1.5": 0.9936,
+      "1.75": 0.997,
+      "2": 0.9984,
+      "2.5": 0.9961,
+      "3": 0.9978
+     },
+     "NullBySeparation": {
+      "0.75": 0.0,
+      "1": 0.0,
+      "1.25": 0.0,
+      "1.5": 0.0,
+      "1.75": 0.0,
+      "2": 0.0006,
+      "2.5": 0.0,
+      "3": 0.0
+     }
+    },
+    {
+     "Placement": "axis",
+     "CountsPerSource": 1000,
+     "Ratio": 1,
+     "Environment": "ideal",
+     "Decoder": "binary@8",
+     "Valley": 0.25,
+     "ResolvedElements": null,
+     "BestPass": 0.4514,
+     "BestPassAtElements": 2.5,
+     "MaxNull": 0.0,
+     "PassBySeparation": {
+      "1": 0.0112,
+      "1.25": 0.2314,
+      "1.5": 0.3811,
+      "1.75": 0.3937,
+      "2": 0.4281,
+      "2.5": 0.4514,
+      "3": 0.4225
+     },
+     "NullBySeparation": {
+      "1": 0.0,
+      "1.25": 0.0,
+      "1.5": 0.0,
+      "1.75": 0.0,
+      "2": 0.0,
+      "2.5": 0.0,
+      "3": 0.0
+     }
+    },
+    {
+     "Placement": "axis",
+     "CountsPerSource": 1000,
+     "Ratio": 1,
+     "Environment": "ideal",
+     "Decoder": "binary@8",
+     "Valley": 0.5,
+     "ResolvedElements": null,
+     "BestPass": 0.4503,
+     "BestPassAtElements": 2.5,
+     "MaxNull": 0.0,
+     "PassBySeparation": {
+      "1": 0.0,
+      "1.25": 0.0064,
+      "1.5": 0.1334,
+      "1.75": 0.305,
+      "2": 0.4036,
+      "2.5": 0.4503,
+      "3": 0.4203
+     },
+     "NullBySeparation": {
+      "1": 0.0,
+      "1.25": 0.0,
+      "1.5": 0.0,
+      "1.75": 0.0,
+      "2": 0.0,
+      "2.5": 0.0,
+      "3": 0.0
+     }
+    },
+    {
+     "Placement": "axis",
+     "CountsPerSource": 1000,
+     "Ratio": 1,
+     "Environment": "ideal",
+     "Decoder": "cc",
+     "Valley": 0.25,
+     "ResolvedElements": null,
+     "BestPass": 0.7309,
+     "BestPassAtElements": 1.5,
+     "MaxNull": 0.0009,
+     "PassBySeparation": {
+      "0.75": 0.0017,
+      "1": 0.0483,
+      "1.25": 0.5498,
+      "1.5": 0.7309,
+      "1.75": 0.6769,
+      "2": 0.627,
+      "2.5": 0.582,
+      "3": 0.4267
+     },
+     "NullBySeparation": {
+      "0.75": 0.0,
+      "1": 0.0,
+      "1.25": 0.0,
+      "1.5": 0.0,
+      "1.75": 0.0002,
+      "2": 0.0009,
+      "2.5": 0.0003,
+      "3": 0.0
+     }
+    },
+    {
+     "Placement": "axis",
+     "CountsPerSource": 1000,
+     "Ratio": 1,
+     "Environment": "ideal",
+     "Decoder": "cc",
+     "Valley": 0.5,
+     "ResolvedElements": null,
+     "BestPass": 0.6527,
+     "BestPassAtElements": 2,
+     "MaxNull": 0.0003,
+     "PassBySeparation": {
+      "0.75": 0.0,
+      "1": 0.0,
+      "1.25": 0.0147,
+      "1.5": 0.2994,
+      "1.75": 0.6059,
+      "2": 0.6527,
+      "2.5": 0.6005,
+      "3": 0.4484
+     },
+     "NullBySeparation": {
+      "0.75": 0.0,
+      "1": 0.0,
+      "1.25": 0.0,
+      "1.5": 0.0,
+      "1.75": 0.0,
+      "2": 0.0003,
+      "2.5": 0.0,
+      "3": 0.0
+     }
+    }
+   ],
+   "Conditions": {
+    "axis|D=0.75|C=1000|R=1|ideal": {
+     "Placement": "axis",
+     "SeparationElements": 0.75,
+     "CountsPerSource": 1000,
+     "Ratio": 1,
+     "Environment": "ideal",
+     "BackgroundCounts": 0.0,
+     "Decoders": {
+      "cc": {
+       "N": 6400,
+       "Pass": [
+        0.0017,
+        0.0
+       ],
+       "Null": [
+        0.0,
+        0.0
+       ],
+       "PassCi": [
+        [
+         0.0005,
+         0.0034
+        ],
+        [
+         0.0,
+         0.0
+        ]
+       ],
+       "NullCi": [
+        [
+         0.0,
+         0.0
+        ],
+        [
+         0.0,
+         0.0
+        ]
+       ]
+      },
+      "area@120": {
+       "N": 6400,
+       "Pass": [
+        0.0447,
+        0.0002
+       ],
+       "Null": [
+        0.0017,
+        0.0
+       ],
+       "PassCi": [
+        [
+         0.0369,
+         0.053
+        ],
+        [
+         0.0,
+         0.0005
+        ]
+       ],
+       "NullCi": [
+        [
+         0.0005,
+         0.0031
+        ],
+        [
+         0.0,
+         0.0
+        ]
+       ]
+      }
+     }
+    },
+    "axis|D=1|C=1000|R=1|ideal": {
+     "Placement": "axis",
+     "SeparationElements": 1,
+     "CountsPerSource": 1000,
+     "Ratio": 1,
+     "Environment": "ideal",
+     "BackgroundCounts": 0.0,
+     "Decoders": {
+      "cc": {
+       "N": 6400,
+       "Pass": [
+        0.0483,
+        0.0
+       ],
+       "Null": [
+        0.0,
+        0.0
+       ],
+       "PassCi": [
+        [
+         0.0375,
+         0.0605
+        ],
+        [
+         0.0,
+         0.0
+        ]
+       ],
+       "NullCi": [
+        [
+         0.0,
+         0.0
+        ],
+        [
+         0.0,
+         0.0
+        ]
+       ]
+      },
+      "binary@8": {
+       "N": 6400,
+       "Pass": [
+        0.0112,
+        0.0
+       ],
+       "Null": [
+        0.0,
+        0.0
+       ],
+       "PassCi": [
+        [
+         0.0084,
+         0.0144
+        ],
+        [
+         0.0,
+         0.0
+        ]
+       ],
+       "NullCi": [
+        [
+         0.0,
+         0.0
+        ],
+        [
+         0.0,
+         0.0
+        ]
+       ]
+      },
+      "area@120": {
+       "N": 6400,
+       "Pass": [
+        0.5766,
+        0.1419
+       ],
+       "Null": [
+        0.0009,
+        0.0
+       ],
+       "PassCi": [
+        [
+         0.5559,
+         0.5988
+        ],
+        [
+         0.1283,
+         0.1561
+        ]
+       ],
+       "NullCi": [
+        [
+         0.0003,
+         0.0017
+        ],
+        [
+         0.0,
+         0.0
+        ]
+       ]
+      }
+     }
+    },
+    "axis|D=1.25|C=1000|R=1|ideal": {
+     "Placement": "axis",
+     "SeparationElements": 1.25,
+     "CountsPerSource": 1000,
+     "Ratio": 1,
+     "Environment": "ideal",
+     "BackgroundCounts": 0.0,
+     "Decoders": {
+      "cc": {
+       "N": 6400,
+       "Pass": [
+        0.5498,
+        0.0147
+       ],
+       "Null": [
+        0.0,
+        0.0
+       ],
+       "PassCi": [
+        [
+         0.5236,
+         0.5783
+        ],
+        [
+         0.0098,
+         0.0203
+        ]
+       ],
+       "NullCi": [
+        [
+         0.0,
+         0.0
+        ],
+        [
+         0.0,
+         0.0
+        ]
+       ]
+      },
+      "binary@8": {
+       "N": 6400,
+       "Pass": [
+        0.2314,
+        0.0064
+       ],
+       "Null": [
+        0.0,
+        0.0
+       ],
+       "PassCi": [
+        [
+         0.2062,
+         0.2572
+        ],
+        [
+         0.0044,
+         0.0086
+        ]
+       ],
+       "NullCi": [
+        [
+         0.0,
+         0.0
+        ],
+        [
+         0.0,
+         0.0
+        ]
+       ]
+      },
+      "area@120": {
+       "N": 6400,
+       "Pass": [
+        0.9777,
+        0.9036
+       ],
+       "Null": [
+        0.0006,
+        0.0
+       ],
+       "PassCi": [
+        [
+         0.9733,
+         0.9819
+        ],
+        [
+         0.8905,
+         0.9167
+        ]
+       ],
+       "NullCi": [
+        [
+         0.0002,
+         0.0013
+        ],
+        [
+         0.0,
+         0.0
+        ]
+       ]
+      }
+     }
+    },
+    "axis|D=1.5|C=1000|R=1|ideal": {
+     "Placement": "axis",
+     "SeparationElements": 1.5,
+     "CountsPerSource": 1000,
+     "Ratio": 1,
+     "Environment": "ideal",
+     "BackgroundCounts": 0.0,
+     "Decoders": {
+      "cc": {
+       "N": 6400,
+       "Pass": [
+        0.7309,
+        0.2994
+       ],
+       "Null": [
+        0.0,
+        0.0
+       ],
+       "PassCi": [
+        [
+         0.6908,
+         0.7712
+        ],
+        [
+         0.2664,
+         0.3331
+        ]
+       ],
+       "NullCi": [
+        [
+         0.0,
+         0.0
+        ],
+        [
+         0.0,
+         0.0
+        ]
+       ]
+      },
+      "binary@8": {
+       "N": 6400,
+       "Pass": [
+        0.3811,
+        0.1334
+       ],
+       "Null": [
+        0.0,
+        0.0
+       ],
+       "PassCi": [
+        [
+         0.3422,
+         0.4227
+        ],
+        [
+         0.1159,
+         0.1514
+        ]
+       ],
+       "NullCi": [
+        [
+         0.0,
+         0.0
+        ],
+        [
+         0.0,
+         0.0
+        ]
+       ]
+      },
+      "area@120": {
+       "N": 6400,
+       "Pass": [
+        0.9917,
+        0.9936
+       ],
+       "Null": [
+        0.0027,
+        0.0
+       ],
+       "PassCi": [
+        [
+         0.9889,
+         0.9944
+        ],
+        [
+         0.9912,
+         0.9958
+        ]
+       ],
+       "NullCi": [
+        [
+         0.0011,
+         0.0044
+        ],
+        [
+         0.0,
+         0.0
+        ]
+       ]
+      }
+     }
+    },
+    "axis|D=1.75|C=1000|R=1|ideal": {
+     "Placement": "axis",
+     "SeparationElements": 1.75,
+     "CountsPerSource": 1000,
+     "Ratio": 1,
+     "Environment": "ideal",
+     "BackgroundCounts": 0.0,
+     "Decoders": {
+      "cc": {
+       "N": 6400,
+       "Pass": [
+        0.6769,
+        0.6059
+       ],
+       "Null": [
+        0.0002,
+        0.0
+       ],
+       "PassCi": [
+        [
+         0.6236,
+         0.73
+        ],
+        [
+         0.5625,
+         0.65
+        ]
+       ],
+       "NullCi": [
+        [
+         0.0,
+         0.0005
+        ],
+        [
+         0.0,
+         0.0
+        ]
+       ]
+      },
+      "binary@8": {
+       "N": 6400,
+       "Pass": [
+        0.3937,
+        0.305
+       ],
+       "Null": [
+        0.0,
+        0.0
+       ],
+       "PassCi": [
+        [
+         0.3522,
+         0.4352
+        ],
+        [
+         0.2778,
+         0.3341
+        ]
+       ],
+       "NullCi": [
+        [
+         0.0,
+         0.0
+        ],
+        [
+         0.0,
+         0.0
+        ]
+       ]
+      },
+      "area@120": {
+       "N": 6400,
+       "Pass": [
+        0.9908,
+        0.997
+       ],
+       "Null": [
+        0.0017,
+        0.0
+       ],
+       "PassCi": [
+        [
+         0.9873,
+         0.9938
+        ],
+        [
+         0.9955,
+         0.9983
+        ]
+       ],
+       "NullCi": [
+        [
+         0.0006,
+         0.003
+        ],
+        [
+         0.0,
+         0.0
+        ]
+       ]
+      }
+     }
+    },
+    "axis|D=2|C=1000|R=1|ideal": {
+     "Placement": "axis",
+     "SeparationElements": 2,
+     "CountsPerSource": 1000,
+     "Ratio": 1,
+     "Environment": "ideal",
+     "BackgroundCounts": 0.0,
+     "Decoders": {
+      "cc": {
+       "N": 6400,
+       "Pass": [
+        0.627,
+        0.6527
+       ],
+       "Null": [
+        0.0009,
+        0.0003
+       ],
+       "PassCi": [
+        [
+         0.5672,
+         0.688
+        ],
+        [
+         0.5964,
+         0.7073
+        ]
+       ],
+       "NullCi": [
+        [
+         0.0003,
+         0.0017
+        ],
+        [
+         0.0,
+         0.0008
+        ]
+       ]
+      },
+      "binary@8": {
+       "N": 6400,
+       "Pass": [
+        0.4281,
+        0.4036
+       ],
+       "Null": [
+        0.0,
+        0.0
+       ],
+       "PassCi": [
+        [
+         0.3836,
+         0.4734
+        ],
+        [
+         0.3644,
+         0.4441
+        ]
+       ],
+       "NullCi": [
+        [
+         0.0,
+         0.0
+        ],
+        [
+         0.0,
+         0.0
+        ]
+       ]
+      },
+      "area@120": {
+       "N": 6400,
+       "Pass": [
+        0.9942,
+        0.9984
+       ],
+       "Null": [
+        0.0023,
+        0.0006
+       ],
+       "PassCi": [
+        [
+         0.9914,
+         0.9966
+        ],
+        [
+         0.9975,
+         0.9994
+        ]
+       ],
+       "NullCi": [
+        [
+         0.0009,
+         0.0041
+        ],
+        [
+         0.0002,
+         0.0013
+        ]
+       ]
+      }
+     }
+    },
+    "axis|D=2.5|C=1000|R=1|ideal": {
+     "Placement": "axis",
+     "SeparationElements": 2.5,
+     "CountsPerSource": 1000,
+     "Ratio": 1,
+     "Environment": "ideal",
+     "BackgroundCounts": 0.0,
+     "Decoders": {
+      "cc": {
+       "N": 6400,
+       "Pass": [
+        0.582,
+        0.6005
+       ],
+       "Null": [
+        0.0003,
+        0.0
+       ],
+       "PassCi": [
+        [
+         0.5122,
+         0.6502
+        ],
+        [
+         0.5309,
+         0.6667
+        ]
+       ],
+       "NullCi": [
+        [
+         0.0,
+         0.0009
+        ],
+        [
+         0.0,
+         0.0
+        ]
+       ]
+      },
+      "binary@8": {
+       "N": 6400,
+       "Pass": [
+        0.4514,
+        0.4503
+       ],
+       "Null": [
+        0.0,
+        0.0
+       ],
+       "PassCi": [
+        [
+         0.4037,
+         0.4988
+        ],
+        [
+         0.4031,
+         0.4973
+        ]
+       ],
+       "NullCi": [
+        [
+         0.0,
+         0.0
+        ],
+        [
+         0.0,
+         0.0
+        ]
+       ]
+      },
+      "area@120": {
+       "N": 6400,
+       "Pass": [
+        0.9953,
+        0.9961
+       ],
+       "Null": [
+        0.0,
+        0.0
+       ],
+       "PassCi": [
+        [
+         0.9936,
+         0.9969
+        ],
+        [
+         0.9944,
+         0.9975
+        ]
+       ],
+       "NullCi": [
+        [
+         0.0,
+         0.0
+        ],
+        [
+         0.0,
+         0.0
+        ]
+       ]
+      }
+     }
+    },
+    "axis|D=3|C=1000|R=1|ideal": {
+     "Placement": "axis",
+     "SeparationElements": 3,
+     "CountsPerSource": 1000,
+     "Ratio": 1,
+     "Environment": "ideal",
+     "BackgroundCounts": 0.0,
+     "Decoders": {
+      "cc": {
+       "N": 6400,
+       "Pass": [
+        0.4267,
+        0.4484
+       ],
+       "Null": [
+        0.0,
+        0.0
+       ],
+       "PassCi": [
+        [
+         0.3575,
+         0.4994
+        ],
+        [
+         0.3781,
+         0.5192
+        ]
+       ],
+       "NullCi": [
+        [
+         0.0,
+         0.0
+        ],
+        [
+         0.0,
+         0.0
+        ]
+       ]
+      },
+      "binary@8": {
+       "N": 6400,
+       "Pass": [
+        0.4225,
+        0.4203
+       ],
+       "Null": [
+        0.0,
+        0.0
+       ],
+       "PassCi": [
+        [
+         0.3761,
+         0.4706
+        ],
+        [
+         0.3745,
+         0.4678
+        ]
+       ],
+       "NullCi": [
+        [
+         0.0,
+         0.0
+        ],
+        [
+         0.0,
+         0.0
+        ]
+       ]
+      },
+      "area@120": {
+       "N": 6400,
+       "Pass": [
+        0.9978,
+        0.9978
+       ],
+       "Null": [
+        0.0,
+        0.0
+       ],
+       "PassCi": [
+        [
+         0.9966,
+         0.9989
+        ],
+        [
+         0.9966,
+         0.9989
+        ]
+       ],
+       "NullCi": [
+        [
+         0.0,
+         0.0
+        ],
+        [
+         0.0,
+         0.0
+        ]
+       ]
+      }
+     }
+    }
+   }
+  }
+ }
+}

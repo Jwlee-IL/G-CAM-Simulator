@@ -1,0 +1,74 @@
+{
+ "Seed": 0,
+ "RepoRoot": ".",
+ "Family": "angres",
+ "Spectrum": {
+  "File": "samples/ambient/terrestrial-unscear2000-v1.json",
+  "Sha256": "4d48bc4272ce4c25ff6ae9b13ed7583e3c8f467afffdb0225956a70cc435b3f4"
+ },
+ "AmbientHistories": 0,
+ "CalibrationHistories": 0,
+ "SourcePhotons": 0,
+ "FieldsMicroSvPerHour": [],
+ "Bounds": [],
+ "Windows": [
+  {
+   "Name": "cs662",
+   "LowKeV": 595.53,
+   "HighKeV": 727.87
+  }
+ ],
+ "ExposuresS": [],
+ "Repeats": 0,
+ "_about": "TODO-34 DR-9 by-product: the single source at the hand-held scenario's own distance (S = 100 mm, PR-IMG-02's setting), 662 keV window, one-period grid; noiseless CC argmax / tent errors and FWHM, 200 Poisson acquisitions at 250, 500 and 1000 counts. No pairs. Frozen MLEM iterations from the selection seeds (angres-v1-iterations.json, DR-5): binary 8, pixel-area 120.",
+ "AngularResolution": {
+  "Scenario": "samples/scenario_handheld.json",
+  "SourceDetectorMm": 0,
+  "Window": "cs662",
+  "GridHalfDeg": 0,
+  "JitterElements": 0.5,
+  "SeparationsElements": [],
+  "CountsPerSource": [
+   1000
+  ],
+  "Ratios": [
+   1
+  ],
+  "Placements": [
+   "axis"
+  ],
+  "EdgeOuterElements": 2.5,
+  "Valleys": [
+   0.25,
+   0.5
+  ],
+  "Repeats": 50,
+  "MapPhotons": 1000000,
+  "PointPhotons": 4000000,
+  "PointCounts": [
+   250,
+   500,
+   1000
+  ],
+  "PointRepeats": 200,
+  "ExposureS": 0,
+  "Mlem": [
+   {
+    "Name": "binary",
+    "Kind": "binary",
+    "Iterations": [
+     8
+    ],
+    "MinSeparationElements": 1.0
+   },
+   {
+    "Name": "area",
+    "Kind": "area",
+    "PixelSubSamples": 8,
+    "Iterations": [
+     120
+    ]
+   }
+  ]
+ }
+}

@@ -1,0 +1,87 @@
+{
+ "Seed": 0,
+ "RepoRoot": ".",
+ "Family": "angres",
+ "Spectrum": {
+  "File": "samples/ambient/terrestrial-unscear2000-v1.json",
+  "Sha256": "4d48bc4272ce4c25ff6ae9b13ed7583e3c8f467afffdb0225956a70cc435b3f4"
+ },
+ "AmbientHistories": 0,
+ "CalibrationHistories": 0,
+ "SourcePhotons": 0,
+ "FieldsMicroSvPerHour": [],
+ "Bounds": [],
+ "Windows": [
+  {
+   "Name": "cs662",
+   "LowKeV": 595.53,
+   "HighKeV": 727.87
+  }
+ ],
+ "ExposuresS": [],
+ "Repeats": 0,
+ "_about": "TODO-34 Q1 / Q2 / DR-9 at 1 m source-detector, one-period grid (the fully coded field, +-3.64 deg, DR-4). Hand-held head, Cs-137 662 keV window, transported maps (GateResponse: mask slab, crystal Compton, 7 % FWHM), non-cyclic decoding, pair position jittered +-0.5 element per seed (axis x for even seeds, y for odd), 50 pair + 50 single-source null acquisitions per condition, valleys 0.25 (claimed) and 0.5, resolved = >= 95 % pass, null <= 5 %, every larger separation passing (DR-2). Separations 0.75-3 elements (binary MLEM from 1), weaker-source counts 250 / 1000 / 4000 / 16000, ratios 1 : 1 and 1 : 4, placements on axis and near the edge (outer, stronger source at 2.5 elements + jitter, inner one Delta closer). Single source at the seed's point: 4e6-photon map, noiseless CC FWHM / half-max diameter / argmax and tent errors, MLEM noiseless FWHM; 200 Poisson acquisitions at 250 and 1000 counts. Frozen MLEM iterations from the selection seeds (angres-v1-iterations.json, DR-5): binary 8, pixel-area 120.",
+ "AngularResolution": {
+  "Scenario": "samples/scenario_handheld.json",
+  "SourceDetectorMm": 1000,
+  "Window": "cs662",
+  "GridHalfDeg": 0,
+  "JitterElements": 0.5,
+  "SeparationsElements": [
+   0.75,
+   1,
+   1.25,
+   1.5,
+   1.75,
+   2,
+   2.5,
+   3
+  ],
+  "CountsPerSource": [
+   250,
+   1000,
+   4000,
+   16000
+  ],
+  "Ratios": [
+   1,
+   0.25
+  ],
+  "Placements": [
+   "axis",
+   "edge"
+  ],
+  "EdgeOuterElements": 2.5,
+  "Valleys": [
+   0.25,
+   0.5
+  ],
+  "Repeats": 50,
+  "MapPhotons": 1000000,
+  "PointPhotons": 4000000,
+  "PointCounts": [
+   250,
+   1000
+  ],
+  "PointRepeats": 200,
+  "ExposureS": 0,
+  "Mlem": [
+   {
+    "Name": "binary",
+    "Kind": "binary",
+    "Iterations": [
+     8
+    ],
+    "MinSeparationElements": 1.0
+   },
+   {
+    "Name": "area",
+    "Kind": "area",
+    "PixelSubSamples": 8,
+    "Iterations": [
+     120
+    ]
+   }
+  ]
+ }
+}

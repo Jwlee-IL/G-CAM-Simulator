@@ -1,0 +1,55 @@
+{
+ "_about": "TODO-34 turn 3 (significance floor on the resolved-pair test): versioned manifest for run_seeds.py --manifest. Floors are selected on F256[193:225] (never used by any angres family before) and applied to F256[33:161]. Aggregate with angres/aggregate_angres.py --floor.",
+ "measured": "2026-10-06",
+ "config_sha256": {
+  "scenario_handheld.json": "f988784c8ee266e6dd28eb898cdbbfac0e2452cb01fd3929874fd866edc98795",
+  "evidence/angres/angres-request-v2-floor-1m.json": "c78b9b1ccd44ca86be3f1fba1f08d01f35f5aeaeb11c6f4755ddd4177af466db",
+  "evidence/angres/angres-request-v2-floor-5m.json": "1c82c25f75935f17f275b82e67a6abd4a56526243ca3adfd213b3a8d450bc8a9"
+ },
+ "families": [
+  {
+   "id": "angres_floor_select_1m",
+   "kind": "cli",
+   "command": "ambient-evidence",
+   "config": "evidence/angres/angres-request-v2-floor-1m.json",
+   "seeds": "F256",
+   "seed_offset": 193,
+   "n": 32,
+   "repo_root": true,
+   "evidence": "turn 3: floor selection seeds, 1 m (disjoint from every validation family)"
+  },
+  {
+   "id": "angres_floor_1m",
+   "kind": "cli",
+   "command": "ambient-evidence",
+   "config": "evidence/angres/angres-request-v2-floor-1m.json",
+   "seeds": "F256",
+   "seed_offset": 33,
+   "n": 128,
+   "repo_root": true,
+   "evidence": "turn 3: validation, 1 m (the turn-2 angres_1m seeds; shape-only counts must reproduce v1 exactly)"
+  },
+  {
+   "id": "angres_floor_select_5m",
+   "kind": "cli",
+   "command": "ambient-evidence",
+   "config": "evidence/angres/angres-request-v2-floor-5m.json",
+   "seeds": "F256",
+   "seed_offset": 193,
+   "n": 32,
+   "repo_root": true,
+   "evidence": "turn 3: floor selection seeds, 5 m"
+  },
+  {
+   "id": "angres_floor_5m",
+   "kind": "cli",
+   "command": "ambient-evidence",
+   "config": "evidence/angres/angres-request-v2-floor-5m.json",
+   "seeds": "F256",
+   "seed_offset": 33,
+   "n": 128,
+   "repo_root": true,
+   "evidence": "turn 3: validation, 5 m (the turn-2 angres_5m seeds)"
+  }
+ ]
+}

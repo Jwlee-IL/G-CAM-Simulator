@@ -1,0 +1,118 @@
+{
+ "_about": "TODO-34 (angular resolution, D-41; PLAN.Physics.AngularResolution DR-1 ... DR-11): versioned manifest for run_seeds.py --manifest. Selection families use F256[1:33] (binary / pixel-area MLEM) and F256[1:17] (matched), disjoint from every validation family (F256[33:161], F256[33:97], F256[161:193]). Aggregate with angres/aggregate_angres.py; iteration choice with angres/aggregate_angres.py --select.",
+ "measured": "2026-10-06",
+ "config_sha256": {
+  "scenario_handheld.json": "f988784c8ee266e6dd28eb898cdbbfac0e2452cb01fd3929874fd866edc98795",
+  "scenario.json": "eb5b96835c0b68a88c5c26965540f85f1a313acf1cc0b49955cf7921463edddc",
+  "evidence/angres/angres-request-v1-select.json": "d90503a30f37fb56cd0a765b39ab3c2a82bfa111acdbb2cbdf9a312af736f63a",
+  "evidence/angres/angres-request-v1-matched-select.json": "323572ef6ff7c0eb1bc360fa383ade0badcc04e936c5e6a995e974f75efe1862",
+  "evidence/angres/angres-request-v1-1m.json": "6069ca1944bbe323c8dd839078a9fa650b22f46271282c447f100ed9e770e39d",
+  "evidence/angres/angres-request-v1-5m.json": "ae20760226d77746f987b0278fc72e9c93b1426e3d620f174d890e2605324c25",
+  "evidence/angres/angres-request-v1-wide.json": "06a65e9c7e0a9298264b209811fb19d552c952f57ca8f190f433a251bb3ee4ff",
+  "evidence/angres/angres-request-v1-ambient.json": "ddcb06d759e7b44c5836f9892763d0f01872019e3c5783887c3798af7c57518a",
+  "evidence/angres/angres-request-v1-near.json": "1b728008ca08b5d900afa13814e3770ebce13261f948c0acd1664e46e90b6a4a",
+  "evidence/angres/angres-request-v1-matched.json": "66850349ed85f9e31194c886607c03766150a5af1471d84e750f4ed176544e0b",
+  "evidence/angres/angres-request-v1-ladder.json": "1a6151cdd4ec933598a6388228d1d96793b1831668d0ef10d70395592ac57df0"
+ },
+ "families": [
+  {
+   "id": "angres_select",
+   "kind": "cli",
+   "command": "ambient-evidence",
+   "config": "evidence/angres/angres-request-v1-select.json",
+   "seeds": "F256",
+   "seed_offset": 1,
+   "n": 32,
+   "repo_root": true,
+   "evidence": "DR-5 iteration selection, binary and pixel-area MLEM (selection seeds)"
+  },
+  {
+   "id": "angres_matched_select",
+   "kind": "cli",
+   "command": "ambient-evidence",
+   "config": "evidence/angres/angres-request-v1-matched-select.json",
+   "seeds": "F256",
+   "seed_offset": 1,
+   "n": 16,
+   "repo_root": true,
+   "evidence": "DR-5 iteration selection, matched MLEM (selection seeds)"
+  },
+  {
+   "id": "angres_1m",
+   "kind": "cli",
+   "command": "ambient-evidence",
+   "config": "evidence/angres/angres-request-v1-1m.json",
+   "seeds": "F256",
+   "seed_offset": 33,
+   "n": 128,
+   "repo_root": true,
+   "evidence": "Q1 / Q2 / DR-9 at 1 m, fully coded field"
+  },
+  {
+   "id": "angres_5m",
+   "kind": "cli",
+   "command": "ambient-evidence",
+   "config": "evidence/angres/angres-request-v1-5m.json",
+   "seeds": "F256",
+   "seed_offset": 33,
+   "n": 128,
+   "repo_root": true,
+   "evidence": "5 m slice"
+  },
+  {
+   "id": "angres_wide",
+   "kind": "cli",
+   "command": "ambient-evidence",
+   "config": "evidence/angres/angres-request-v1-wide.json",
+   "seeds": "F256",
+   "seed_offset": 33,
+   "n": 128,
+   "repo_root": true,
+   "evidence": "usable non-cyclic field +-7 deg (reported, not claimed)"
+  },
+  {
+   "id": "angres_ambient",
+   "kind": "cli",
+   "command": "ambient-evidence",
+   "config": "evidence/angres/angres-request-v1-ambient.json",
+   "seeds": "F256",
+   "seed_offset": 33,
+   "n": 64,
+   "repo_root": true,
+   "evidence": "0.10 uSv/h, bare and front-only, MLEM with and without b_i"
+  },
+  {
+   "id": "angres_near",
+   "kind": "cli",
+   "command": "ambient-evidence",
+   "config": "evidence/angres/angres-request-v1-near.json",
+   "seeds": "F256",
+   "seed_offset": 33,
+   "n": 128,
+   "repo_root": true,
+   "evidence": "DR-9: single source at the hand-held scenario's own S = 100 mm"
+  },
+  {
+   "id": "angres_matched",
+   "kind": "cli",
+   "command": "ambient-evidence",
+   "config": "evidence/angres/angres-request-v1-matched.json",
+   "seeds": "F256",
+   "seed_offset": 161,
+   "n": 32,
+   "repo_root": true,
+   "evidence": "matched-MLEM upper bound (validation seeds)"
+  },
+  {
+   "id": "angres_ladder",
+   "kind": "cli",
+   "command": "ambient-evidence",
+   "config": "evidence/angres/angres-request-v1-ladder.json",
+   "seeds": "F256",
+   "seed_offset": 33,
+   "n": 64,
+   "repo_root": true,
+   "evidence": "Q3 attribution ladder (DR-8)"
+  }
+ ]
+}

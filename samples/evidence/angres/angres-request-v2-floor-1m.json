@@ -1,0 +1,84 @@
+{
+ "Seed": 0,
+ "RepoRoot": ".",
+ "Family": "angres",
+ "Spectrum": {
+  "File": "samples/ambient/terrestrial-unscear2000-v1.json",
+  "Sha256": "4d48bc4272ce4c25ff6ae9b13ed7583e3c8f467afffdb0225956a70cc435b3f4"
+ },
+ "AmbientHistories": 0,
+ "CalibrationHistories": 0,
+ "SourcePhotons": 0,
+ "FieldsMicroSvPerHour": [],
+ "Bounds": [],
+ "Windows": [
+  {
+   "Name": "cs662",
+   "LowKeV": 595.53,
+   "HighKeV": 727.87
+  }
+ ],
+ "ExposuresS": [],
+ "Repeats": 0,
+ "_about": "TODO-34 turn 3 (significance floor): angres-request-v1-1m.json with the point section off, valley 0.25 only (the claimed one), and per-acquisition statistics recorded (second peak's absolute prominence, signed by the shape verdict) for pairs and single-source nulls, so the floor is selected on the selection seeds (angres_floor_select_1m) and applied to the validation seeds (angres_floor_1m) in aggregation (aggregate_angres.py --floor). Draws are identical to v1's for the same seed.",
+ "AngularResolution": {
+  "Scenario": "samples/scenario_handheld.json",
+  "SourceDetectorMm": 1000,
+  "Window": "cs662",
+  "GridHalfDeg": 0,
+  "JitterElements": 0.5,
+  "SeparationsElements": [
+   0.75,
+   1,
+   1.25,
+   1.5,
+   1.75,
+   2,
+   2.5,
+   3
+  ],
+  "CountsPerSource": [
+   250,
+   1000,
+   4000,
+   16000
+  ],
+  "Ratios": [
+   1,
+   0.25
+  ],
+  "Placements": [
+   "axis",
+   "edge"
+  ],
+  "EdgeOuterElements": 2.5,
+  "Valleys": [
+   0.25
+  ],
+  "Repeats": 50,
+  "MapPhotons": 1000000,
+  "PointPhotons": 0,
+  "PointCounts": [],
+  "PointRepeats": 0,
+  "ExposureS": 0,
+  "Mlem": [
+   {
+    "Name": "binary",
+    "Kind": "binary",
+    "Iterations": [
+     8
+    ],
+    "MinSeparationElements": 1.0
+   },
+   {
+    "Name": "area",
+    "Kind": "area",
+    "PixelSubSamples": 8,
+    "Iterations": [
+     120
+    ]
+   }
+  ],
+  "RecordStatistics": true
+ }
+}

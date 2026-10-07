@@ -13,7 +13,8 @@ public sealed class AmbientEvidenceRequest
     /// <summary>Absolute repository root (the driver sets it); every path below is relative to it.</summary>
     public string RepoRoot { get; set; } = ".";
     /// <summary><c>antimask</c> (EV-12), <c>fov</c> (EV-02), <c>separation</c> (EV-15), <c>sweep</c> (EV-01, AB-12) or
-    /// <c>csco</c> (TODO-35: Cs-137 under Co-60, <see cref="CsUnderCo"/>).</summary>
+    /// <c>csco</c> (TODO-35: Cs-137 under Co-60, <see cref="CsUnderCo"/>) or <c>angres</c> (TODO-34: angular resolution,
+    /// <see cref="AngularResolution"/>).</summary>
     public string Family { get; set; } = "";
     public AmbientGateRequest.FileReference Spectrum { get; set; } = new();
     /// <summary>Incident photons per ambient "truth" map (the field the acquisitions are drawn from).</summary>
@@ -34,6 +35,7 @@ public sealed class AmbientEvidenceRequest
     public SeparationSpec? Separation { get; set; }
     public SweepSpec? Sweep { get; set; }
     public CsUnderCoSpec? CsUnderCo { get; set; }
+    public AngularResolutionSpec? AngularResolution { get; set; }
 
     /// <summary>EV-12: single mask, calibrated subtraction and a two-exposure mask / antimask at equal total time.</summary>
     public sealed class AntimaskSpec
@@ -161,5 +163,87 @@ public sealed class AmbientEvidenceRequest
         public string Name { get; set; } = "";
         public double[] CsElements { get; set; } = [];
         public double[] CoElements { get; set; } = [];
+    }
+
+    /// <summary>TODO-34 (D-41): angular point response and two-source separation (<c>angres</c>). Positions and criteria in
+    /// angular elements atan(cell / D); one outer seed draws one sub-element pair position and orientation (DR-3).</summary>
+    public sealed class AngularResolutionSpec
+    {
+        public string Scenario { get; set; } = "";
+        /// <summary>Source–detector distance (the gate's convention, S = SourceDetectorMm − D); 0 = the scenario's own S.</summary>
+        public double SourceDetectorMm { get; set; }
+        /// <summary>A declared window name; empty = every deposit (open window).</summary>
+        public string Window { get; set; } = "";
+        /// <summary>Half-width (degrees) of the non-cyclic search grid; 0 = one period, the fully coded field (DR-4).</summary>
+        public double GridHalfDeg { get; set; }
+        /// <summary>Pair-position jitter: uniform in ±JitterElements along x and y, once per seed.</summary>
+        public double JitterElements { get; set; } = 0.5;
+        public double[] SeparationsElements { get; set; } = [];
+        /// <summary>Expected window counts of the weaker source.</summary>
+        public double[] CountsPerSource { get; set; } = [];
+        /// <summary>Weaker : stronger intensity (1 and 0.25).</summary>
+        public double[] Ratios { get; set; } = [];
+        /// <summary><c>axis</c>: the pair centred on the jittered axis point; <c>edge</c>: the outer (stronger) source at
+        /// EdgeOuterElements (+ jitter) along the pair axis, the inner one Δ closer to the axis.</summary>
+        public string[] Placements { get; set; } = [];
+        public double EdgeOuterElements { get; set; } = 2.5;
+        /// <summary>Valley thresholds v of the resolved-pair test; the first is the claimed one (DR-2).</summary>
+        public double[] Valleys { get; set; } = [];
+        public int Repeats { get; set; }
+        /// <summary>Photons per pair / null source map.</summary>
+        public long MapPhotons { get; set; }
+        /// <summary>Photons of the single-source (Q1, DR-9) map at the seed's jittered position; 0 = no point section.</summary>
+        public long PointPhotons { get; set; }
+        /// <summary>Window counts of single-source Poisson acquisitions for the localisation by-product (DR-9).</summary>
+        public double[] PointCounts { get; set; } = [];
+        public int PointRepeats { get; set; }
+        /// <summary>Live time (s) that turns the field (µSv/h) into counts when FieldsMicroSvPerHour is set.</summary>
+        public double ExposureS { get; set; }
+        public AngularMlemVariant[] Mlem { get; set; } = [];
+        public AngularLadderSpec? Ladder { get; set; }
+        /// <summary>Turn 3: record, per acquisition, decoder and v, the second peak's absolute prominence (negative when the
+        /// shape test failed), so a significance floor can be selected and applied in aggregation.</summary>
+        public bool RecordStatistics { get; set; }
+    }
+
+    /// <summary>One MLEM forward model (DR-6) and the conditions it runs on (empty subset = all).</summary>
+    public sealed class AngularMlemVariant
+    {
+        public string Name { get; set; } = "";
+        /// <summary><c>binary</c> (the engine's pixel-centre matrix), <c>area</c> (analytic pixel-area matrix with the
+        /// slab's closed-cell transmission exp(−μt) at the line energy) or <c>matched</c> (columns = transported maps).</summary>
+        public string Kind { get; set; } = "";
+        public int PixelSubSamples { get; set; } = 8;
+        /// <summary>Iteration counts recorded (snapshots of one run).</summary>
+        public int[] Iterations { get; set; } = [];
+        /// <summary>Photons per transported column (matched only).</summary>
+        public long ColumnPhotons { get; set; }
+        public double[] Counts { get; set; } = [];
+        public double[] Ratios { get; set; } = [];
+        public string[] Placements { get; set; } = [];
+        public double MinSeparationElements { get; set; }
+        /// <summary>Under a field, also decode with the instrument's background model as b_i (DR-7).</summary>
+        public bool BackgroundTerm { get; set; }
+    }
+
+    /// <summary>Q3 attribution ladder (DR-8): EV-11's recipe, then one change per step.</summary>
+    public sealed class AngularLadderSpec
+    {
+        public string LabScenario { get; set; } = "";
+        public string HeadScenario { get; set; } = "";
+        public double HeadSourceDetectorMm { get; set; } = 1000;
+        public double[] Ev11SeparationsMm { get; set; } = [];
+        public long Ev11Photons { get; set; }
+        public int Ev11Iterations { get; set; }
+        public double[] SeparationsElements { get; set; } = [];
+        /// <summary>Counts per source of the later steps; 0 stands for EV-11's own level (half its landed photons).</summary>
+        public double[] CountsPerSource { get; set; } = [];
+        public long MapPhotons { get; set; }
+        public int Repeats { get; set; }
+        public double[] Valleys { get; set; } = [];
+        public double JitterElements { get; set; } = 0.5;
+        public int BinaryIterations { get; set; }
+        public int AreaIterations { get; set; }
+        public int AreaPixelSubSamples { get; set; } = 8;
     }
 }

@@ -1,0 +1,92 @@
+{
+ "Seed": 0,
+ "RepoRoot": ".",
+ "Family": "angres",
+ "Spectrum": {
+  "File": "samples/ambient/terrestrial-unscear2000-v1.json",
+  "Sha256": "4d48bc4272ce4c25ff6ae9b13ed7583e3c8f467afffdb0225956a70cc435b3f4"
+ },
+ "AmbientHistories": 0,
+ "CalibrationHistories": 0,
+ "SourcePhotons": 0,
+ "FieldsMicroSvPerHour": [],
+ "Bounds": [],
+ "Windows": [
+  {
+   "Name": "cs662",
+   "LowKeV": 595.53,
+   "HighKeV": 727.87
+  }
+ ],
+ "ExposuresS": [],
+ "Repeats": 0,
+ "_about": "TODO-34 (PLAN.Physics.AngularResolution, DR-5): MLEM iteration selection on seeds disjoint from every validation family. Hand-held head, Cs-137 662 keV window, 1 m source-detector (S = 1000 - D), non-cyclic, one-period grid (the fully coded field, +-3.64 deg). Pair on axis (+-0.5 element jitter per seed, axis x for even seeds, y for odd), 1 : 1, 1000 window counts per source, separations 0.75-3 elements, 50 pair + 50 single-source null acquisitions each, valleys 0.25 (claimed) and 0.5. Binary (engine pixel-centre matrix) and analytic pixel-area MLEM (8 x 8 samples per pixel, closed cells exp(-mu t)) recorded at many iteration counts; the frozen count minimises the resolved separation (>= 95 % pass, null <= 5 %, every larger separation also passing; ties to fewer iterations), angres/select_iterations.py.",
+ "AngularResolution": {
+  "Scenario": "samples/scenario_handheld.json",
+  "SourceDetectorMm": 1000,
+  "Window": "cs662",
+  "GridHalfDeg": 0,
+  "JitterElements": 0.5,
+  "SeparationsElements": [
+   0.75,
+   1,
+   1.25,
+   1.5,
+   1.75,
+   2,
+   2.5,
+   3
+  ],
+  "CountsPerSource": [
+   1000
+  ],
+  "Ratios": [
+   1
+  ],
+  "Placements": [
+   "axis"
+  ],
+  "Valleys": [
+   0.25,
+   0.5
+  ],
+  "Repeats": 50,
+  "MapPhotons": 1000000,
+  "PointPhotons": 0,
+  "Mlem": [
+   {
+    "Name": "binary",
+    "Kind": "binary",
+    "Iterations": [
+     3,
+     5,
+     8,
+     10,
+     15,
+     20,
+     30,
+     40,
+     60,
+     80
+    ]
+   },
+   {
+    "Name": "area",
+    "Kind": "area",
+    "PixelSubSamples": 8,
+    "Iterations": [
+     10,
+     20,
+     40,
+     60,
+     80,
+     120,
+     160,
+     240,
+     320,
+     480
+    ]
+   }
+  ]
+ }
+}

@@ -1,0 +1,68 @@
+{
+ "Seed": 0,
+ "RepoRoot": ".",
+ "Family": "angres",
+ "Spectrum": {
+  "File": "samples/ambient/terrestrial-unscear2000-v1.json",
+  "Sha256": "4d48bc4272ce4c25ff6ae9b13ed7583e3c8f467afffdb0225956a70cc435b3f4"
+ },
+ "AmbientHistories": 0,
+ "CalibrationHistories": 0,
+ "SourcePhotons": 0,
+ "FieldsMicroSvPerHour": [],
+ "Bounds": [],
+ "Windows": [
+  {
+   "Name": "cs662",
+   "LowKeV": 595.53,
+   "HighKeV": 727.87
+  }
+ ],
+ "ExposuresS": [],
+ "Repeats": 0,
+ "_about": "TODO-34 Q3 attribution ladder (DR-8). L0: EV-11's recipe unchanged (MlemStudy: lab geometry, self-consistent floods of 1.5e6 photons, cyclic, 80 iterations, truth-centred valley > 0.25). Then one change per step, each with the blind prominence test + single-source null over the seed's jittered pair (axis x / y by seed parity), 50 + 50 acquisitions: L1 the blind test on self-consistent floods (cyclic); L2 transported floods, every deposit; L3 non-cyclic; L4 the hand-held head at its own S = 100 mm; L5 the hand-held head at 1 m. Counts per source: EV-11's own level (0 = half the landed photons of 1.5e6 aimed) and 1000. Binary MLEM at EV-11's 80 iterations; pixel-area MLEM at the frozen 120.",
+ "AngularResolution": {
+  "Ladder": {
+   "LabScenario": "samples/scenario.json",
+   "HeadScenario": "samples/scenario_handheld.json",
+   "HeadSourceDetectorMm": 1000,
+   "Ev11SeparationsMm": [
+    1,
+    1.5,
+    2,
+    2.5,
+    3,
+    3.5,
+    4,
+    5,
+    6
+   ],
+   "Ev11Photons": 1500000,
+   "Ev11Iterations": 80,
+   "SeparationsElements": [
+    0.5,
+    0.75,
+    1,
+    1.25,
+    1.5,
+    1.75,
+    2,
+    2.5
+   ],
+   "CountsPerSource": [
+    0,
+    1000
+   ],
+   "MapPhotons": 1000000,
+   "Repeats": 50,
+   "Valleys": [
+    0.25,
+    0.5
+   ],
+   "JitterElements": 0.5,
+   "BinaryIterations": 80,
+   "AreaIterations": 120,
+   "AreaPixelSubSamples": 8
+  }
+ }
+}

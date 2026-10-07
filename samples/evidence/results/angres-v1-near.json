@@ -1,0 +1,249 @@
+{
+ "Families": {
+  "angres_near": {
+   "Family": "angres_near",
+   "Seeds": 128,
+   "Evidence": "DR-9: single source at the hand-held scenario's own S = 100 mm",
+   "ElementDeg": 1.041626676009974,
+   "SourceDetectorMm": 155,
+   "Grid": {
+    "GridSize": 49,
+    "StepMm": 0.41098484848484845,
+    "OriginMm": -9.863636363636363,
+    "HalfDeg": 3.6411852579013417,
+    "StepDeg": 0.15192027147066967
+   },
+   "ShadowCellPerPixel": 1.55,
+   "ClosedCellTransmission": 0.16849502353206208,
+   "Valleys": [
+    0.25,
+    0.5
+   ],
+   "Axes": {
+    "x": 58,
+    "y": 70
+   },
+   "ComputeSeconds": {
+    "N": 128,
+    "Median": 4.2496,
+    "Q1": 4.0295,
+    "Q3": 4.4372,
+    "Min": 3.5522,
+    "Max": 4.85,
+    "Mean": 4.2221
+   },
+   "Point": {
+    "CcFwhmXDeg": {
+     "N": 128,
+     "Median": 1.1526,
+     "Q1": 1.1,
+     "Q3": 1.3162,
+     "Min": 0.9336,
+     "Max": 1.4568,
+     "Mean": 1.176
+    },
+    "CcFwhmYDeg": {
+     "N": 128,
+     "Median": 1.0615,
+     "Q1": 0.9224,
+     "Q3": 1.1297,
+     "Min": 0.6056,
+     "Max": 1.1977,
+     "Mean": 1.0036
+    },
+    "CcHalfMaxDiameterDeg": {
+     "N": 128,
+     "Median": 1.0841,
+     "Q1": 1.014,
+     "Q3": 1.1751,
+     "Min": 0.8738,
+     "Max": 1.3493,
+     "Mean": 1.0932
+    },
+    "CcPeakPerCount": {
+     "N": 128,
+     "Median": 0.4262,
+     "Q1": 0.4121,
+     "Q3": 0.4444,
+     "Min": 0.3721,
+     "Max": 0.4748,
+     "Mean": 0.4269
+    },
+    "CcArgmaxErrorDeg": {
+     "N": 128,
+     "Median": 0.1841,
+     "Q1": 0.1386,
+     "Q3": 0.27,
+     "Min": 0.0147,
+     "Max": 0.4324,
+     "Mean": 0.197
+    },
+    "CcTentErrorDeg": {
+     "N": 128,
+     "Median": 0.1765,
+     "Q1": 0.1214,
+     "Q3": 0.2361,
+     "Min": 0.0047,
+     "Max": 0.3442,
+     "Mean": 0.1775
+    },
+    "CcArgmaxDxDeg": {
+     "N": 128,
+     "Median": -0.0157,
+     "Q1": -0.141,
+     "Q3": 0.1004,
+     "Min": -0.2997,
+     "Max": 0.3907,
+     "Mean": -0.0177
+    },
+    "CcArgmaxDyDeg": {
+     "N": 128,
+     "Median": 0.0303,
+     "Q1": -0.0941,
+     "Q3": 0.1117,
+     "Min": -0.3334,
+     "Max": 0.2978,
+     "Mean": 0.004
+    },
+    "CcTentDxDeg": {
+     "N": 128,
+     "Median": -0.021,
+     "Q1": -0.1129,
+     "Q3": 0.0888,
+     "Min": -0.2721,
+     "Max": 0.3265,
+     "Mean": -0.0161
+    },
+    "CcTentDyDeg": {
+     "N": 128,
+     "Median": 0.0299,
+     "Q1": -0.1092,
+     "Q3": 0.1096,
+     "Min": -0.286,
+     "Max": 0.2501,
+     "Mean": 0.0034
+    },
+    "CcFwhmXYDeg": {
+     "N": 256,
+     "Median": 1.1163,
+     "Q1": 1.0214,
+     "Q3": 1.1686,
+     "Min": 0.6056,
+     "Max": 1.4568,
+     "Mean": 1.0898
+    },
+    "FwhmNaN": 0,
+    "MlemNoiseless": {
+     "binary@8": {
+      "FwhmXDeg": {
+       "N": 128,
+       "Median": 0.7451,
+       "Q1": 0.6653,
+       "Q3": 0.9306,
+       "Min": 0.5258,
+       "Max": 1.0966,
+       "Mean": 0.7869
+      },
+      "FwhmYDeg": {
+       "N": 128,
+       "Median": 0.8946,
+       "Q1": 0.7504,
+       "Q3": 0.9583,
+       "Min": 0.6138,
+       "Max": 1.027,
+       "Mean": 0.8555
+      },
+      "HalfMaxDiameterDeg": {
+       "N": 128,
+       "Median": 0.7855,
+       "Q1": 0.7472,
+       "Q3": 0.8613,
+       "Min": 0.5938,
+       "Max": 1.0975,
+       "Mean": 0.8094
+      }
+     },
+     "area@120": {
+      "FwhmXDeg": {
+       "N": 128,
+       "Median": 0.4292,
+       "Q1": 0.3928,
+       "Q3": 0.4796,
+       "Min": 0.333,
+       "Max": 0.5596,
+       "Mean": 0.4364
+      },
+      "FwhmYDeg": {
+       "N": 128,
+       "Median": 0.4515,
+       "Q1": 0.3919,
+       "Q3": 0.4895,
+       "Min": 0.3478,
+       "Max": 0.5627,
+       "Mean": 0.4444
+      },
+      "HalfMaxDiameterDeg": {
+       "N": 128,
+       "Median": 0.4199,
+       "Q1": 0.3833,
+       "Q3": 0.4535,
+       "Min": 0.2969,
+       "Max": 0.5938,
+       "Mean": 0.4309
+      }
+     }
+    },
+    "Poisson": [
+     {
+      "Counts": 250,
+      "N": 25600,
+      "RmsErrorDeg": 0.5097,
+      "PerSeedRmsDeg": {
+       "N": 128,
+       "Median": 0.4576,
+       "Q1": 0.337,
+       "Q3": 0.5994,
+       "Min": 0.1663,
+       "Max": 0.9356,
+       "Mean": 0.4779
+      },
+      "MeanAbsBiasDeg": 0.1121,
+      "WithinOneElement": 0.9812
+     },
+     {
+      "Counts": 500,
+      "N": 25600,
+      "RmsErrorDeg": 0.2432,
+      "PerSeedRmsDeg": {
+       "N": 128,
+       "Median": 0.2378,
+       "Q1": 0.1837,
+       "Q3": 0.2816,
+       "Min": 0.0621,
+       "Max": 0.4734,
+       "Mean": 0.2309
+      },
+      "MeanAbsBiasDeg": 0.1138,
+      "WithinOneElement": 0.9993
+     },
+     {
+      "Counts": 1000,
+      "N": 25600,
+      "RmsErrorDeg": 0.2107,
+      "PerSeedRmsDeg": {
+       "N": 128,
+       "Median": 0.2065,
+       "Q1": 0.1554,
+       "Q3": 0.2501,
+       "Min": 0.0388,
+       "Max": 0.3288,
+       "Mean": 0.1985
+      },
+      "MeanAbsBiasDeg": 0.1291,
+      "WithinOneElement": 1.0
+     }
+    ]
+   }
+  }
+ }
+}

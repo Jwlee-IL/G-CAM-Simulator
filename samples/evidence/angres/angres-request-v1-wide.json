@@ -1,0 +1,79 @@
+{
+ "Seed": 0,
+ "RepoRoot": ".",
+ "Family": "angres",
+ "Spectrum": {
+  "File": "samples/ambient/terrestrial-unscear2000-v1.json",
+  "Sha256": "4d48bc4272ce4c25ff6ae9b13ed7583e3c8f467afffdb0225956a70cc435b3f4"
+ },
+ "AmbientHistories": 0,
+ "CalibrationHistories": 0,
+ "SourcePhotons": 0,
+ "FieldsMicroSvPerHour": [],
+ "Bounds": [],
+ "Windows": [
+  {
+   "Name": "cs662",
+   "LowKeV": 595.53,
+   "HighKeV": 727.87
+  }
+ ],
+ "ExposuresS": [],
+ "Repeats": 0,
+ "_about": "TODO-34 the usable non-cyclic field (DR-4, measured and reported, not claimed): search grid +-7 deg at 1 m. Hand-held head, Cs-137 662 keV window, transported maps (GateResponse: mask slab, crystal Compton, 7 % FWHM), non-cyclic decoding, pair position jittered +-0.5 element per seed (axis x for even seeds, y for odd), 50 pair + 50 single-source null acquisitions per condition, valleys 0.25 (claimed) and 0.5, resolved = >= 95 % pass, null <= 5 %, every larger separation passing (DR-2). On axis, 1 : 1, 1000 counts. Frozen MLEM iterations from the selection seeds (angres-v1-iterations.json, DR-5): binary 8, pixel-area 120.",
+ "AngularResolution": {
+  "Scenario": "samples/scenario_handheld.json",
+  "SourceDetectorMm": 1000,
+  "Window": "cs662",
+  "GridHalfDeg": 7,
+  "JitterElements": 0.5,
+  "SeparationsElements": [
+   0.75,
+   1,
+   1.25,
+   1.5,
+   1.75,
+   2,
+   2.5,
+   3
+  ],
+  "CountsPerSource": [
+   1000
+  ],
+  "Ratios": [
+   1
+  ],
+  "Placements": [
+   "axis"
+  ],
+  "EdgeOuterElements": 2.5,
+  "Valleys": [
+   0.25,
+   0.5
+  ],
+  "Repeats": 50,
+  "MapPhotons": 1000000,
+  "PointPhotons": 0,
+  "PointCounts": [],
+  "PointRepeats": 0,
+  "ExposureS": 0,
+  "Mlem": [
+   {
+    "Name": "binary",
+    "Kind": "binary",
+    "Iterations": [
+     8
+    ],
+    "MinSeparationElements": 1.0
+   },
+   {
+    "Name": "area",
+    "Kind": "area",
+    "PixelSubSamples": 8,
+    "Iterations": [
+     120
+    ]
+   }
+  ]
+ }
+}
