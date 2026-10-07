@@ -53,11 +53,11 @@ Rules:
 ## Keeping docs in sync
 
 - A change that alters behaviour, structure or a name **updates the affected doc in the same commit**.
-- Results go to `AGENTS.Findings` (by theme: index in `AGENTS.Findings.md`, a new theme appended to `AGENTS.Findings.Part2.md` with its index row), deferred work to `AGENTS.Backlog.md`, ready-to-start handover tasks to `AGENTS.Todo.md`.
+- Results go to `AGENTS.Findings` (by theme: index in `AGENTS.Findings.md`, a new theme appended to `AGENTS.Findings.Part2.md` with its index row), deferred or undecided work to `AGENTS.Backlog.md`, ready-to-start or running tasks to `AGENTS.Todo.md`, closed tasks to the index in `docs/archive/README.md`.
 - **`AGENTS.Todo.md` stays a short list; a task's plan lives in a `PLAN.*` document** (one per task or task group)
   that the task's row links. A plan opens with a `Status:` line below its scope line; when the task is done the plan
   stays as the design record (status set to *done*, with the commit) and **moves with its review to `docs/archive/`
-  in the closing commit** (links updated), so `docs/` lists only open plans; the Backlog's done entry links it.
+  in the closing commit** (links updated), so `docs/` lists only open plans; the closed-task index in `docs/archive/README.md` links it.
   Plans may link `AGENTS.*`; `VV.*` documents do not link plans (they are self-contained). The implementer's review of a
   plan is `PLAN.<Area>.<Name>.Review.md`; the procedure (reference plan → measured review → decisions → implementation)
   is [AGENTS.Planning](AGENTS.Planning.md).

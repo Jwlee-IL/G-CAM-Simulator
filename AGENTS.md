@@ -7,7 +7,7 @@ Guidance for AI agents and contributors working on this repository.
 | Document | Covers |
 |---|---|
 | `AGENTS.Findings.md` (+ `.Part1` themes 1–35, `.Part2` themes 36–) | theme-organized results log — index here; put new results at the end of Part 2 |
-| `AGENTS.Backlog.md` | done + deferred work |
+| `AGENTS.Backlog.md` | deferred and undecided work (not ready to start); closed tasks are indexed in `archive/README.md` |
 | `AGENTS.Todo.md` | concrete tasks handed between sessions (ready to pick up) |
 | `AGENTS.Planning.md` | how a `PLAN.*` is written, reviewed by the implementer (Codex) and implemented in one conversation; roles, call rules, cautions |
 | `PLAN.*.md` | implementation plans with the author's decisions — one per task or task group, linked from `AGENTS.Todo.md` (an implementer's review of a plan is `PLAN.<Name>.Review.md`); finished plans move to `docs/archive/` |

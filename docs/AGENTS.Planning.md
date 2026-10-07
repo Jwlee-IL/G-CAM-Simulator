@@ -36,7 +36,7 @@ when a plan is wrong, caught every one. Each role checks the other.
    diff, re-checks physics numbers and evidence text. The implementer's "it passes" is not evidence until re-run.
 7. **Record and commit.** Results to `AGENTS.Findings` / `VV.*`; plan `Status:` updated; commit on the author's word,
    split by concern (implementation, plan docs, findings), never sweeping in files another session is editing.
-8. **Close.** Remove the `AGENTS.Todo` row, add a Backlog done entry linking the plan, set the plan's status to done
+8. **Close.** Remove the `AGENTS.Todo` row, add an entry to the closed-task index in `docs/archive/README.md` linking the plan, set the plan's status to done
    with the commit and move the plan and its review to `docs/archive/` (links updated). Desktop UI tests, the desktop survey and README screenshots run last, once the screens are final.
 
 ## Calling the implementer
