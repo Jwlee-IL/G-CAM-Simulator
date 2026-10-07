@@ -175,6 +175,15 @@ TILT (pitch/yaw), mask WARPING.
 
 ## Done (summary — details in AGENTS.Findings by theme)
 
+- **TODO-36 MLEM as a regular reconstruction path + TODO-38 desktop fix** (2026-10-07): `Decoder.Method` (single run
+  and Studio only; studies refuse it), one shared pixel-area MLEM construction, Studio's Reconstruction selector
+  (SR-IMG-07; 400 iterations chosen by the pair-resolution rule at the default optics and confirmed on a third seed set;
+  MLEM + strip with the downscatter as background; labelled strip counts). TODO-38: the failing channel scenario was
+  under-powered (Co-60 20 µCi, 27 % wrong side), not the ambient default; fixed with Co-60 400 µCi by a derived bound.
+  Six MLEM desktop scenarios; two product defects found by them and fixed (unit label followed the selector, not the
+  displayed image; refreshes cleared the hovered readout). Desktop 34 / 34, broken-verdict 7 / 7 — substitute Claude
+  implementer; [PLAN.Studio.MlemReconstruction](archive/PLAN.Studio.MlemReconstruction.md),
+  [PLAN.Studio.DesktopChecks](archive/PLAN.Studio.DesktopChecks.md). Follow-up: TODO-39 (clipped strip count).
 - **TODO-28 step 1 — calibration records** (2026-10-07): a fixed form (`VV.Gcam.Calibration.Template`) and four
   generated records — CAL-01 gate v1 (superseded, 3 FAIL), CAL-02 gate v2 (96 / 96), CAL-03 stripped Z_s (135 / 135,
   9 not applicable), CAL-04 pair-test floors (410 / 414, 4 FAIL in cells that resolve nothing) — from pinned evidence

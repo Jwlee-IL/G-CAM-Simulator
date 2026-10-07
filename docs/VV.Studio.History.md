@@ -232,3 +232,23 @@ image, locked inputs are readable with subdued borders, and the geometry card en
 The renderer also checks actual chip drawing footprints, table cell gaps/full strings, disabled seed resources,
 natural card height and upper-only waveform labels. This is offscreen visual and geometry evidence, not a new
 desktop validation or physics measurement. The prior desktop survey captures remain unchanged.
+
+## Desktop verification — 2026-10-07
+
+Run by the planner on the author's go, in an isolated git worktree (`C:\gw\wui`) so that a concurrent implementation in
+the main working tree could not change the build under test. `GCAM_UI_TESTS=1 dotnet test tests/Gcam.Studio.UiTests
+-c Release`, Windows 11 (ko-KR), per-monitor DPI aware; manifests under the test output's `ui-runs/`.
+
+| Run | Build | Result |
+|---|---|---|
+| Full suite | `01dbca6` (before TODO-36) | 26 / 27 pass; `Imaging_ChannelAndStrip_MatchRetainedFloodAndFoundPeaks` failed deterministically (run `20261007-121043-87fbdc`, repeated) — TODO-38 |
+| Full suite | `f48b6af` + TODO-38 fix + six MLEM scenarios | 33 / 34; `Mlem_SelectedDuringAcquisition_…` timed out; the Stop / Continue / Reset scenario intermittent — waits keyed on an idle worker that MLEM never leaves during acquisition, plus two product defects (unit label followed the selector instead of the displayed image; every refresh cleared the hovered readout) |
+| Full suite | the above + the fixes | **34 / 34 pass** (19 desktop scenarios, runs `20261007-134131` … `134502`) |
+| Broken verdict (`GCAM_UI_BREAK_VERDICT=1`), MLEM + channel scenarios | same | **7 / 7 fail, each at its corrupted assertion** (runs `134515` … `134616`) |
+| Recovery, same 7 | same | **7 / 7 pass** (runs `134628` … `134741`) |
+
+TODO-38's cause: not the ambient default (it puts 0 counts in either window; the scene fails with the field off too) but
+an under-powered scene — Co-60 20 µCi gives ~41 counts in its channel at 1 m in 60 s, and the peak lands on the wrong
+side in 27 % of such acquisitions. The scene now uses Co-60 400 µCi, chosen by a bound (wrong-side probability
+≤ 10⁻³ per channel from exact Poisson moments of Studio's decoding weights: 1.3 × 10⁻⁴ for Co-60, 1.3 × 10⁻⁵ for
+Cs-137). Not covered by automation: keyboard-only reachability and a both-themes survey of the Reconstruction selector.

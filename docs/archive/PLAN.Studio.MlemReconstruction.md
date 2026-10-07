@@ -6,11 +6,7 @@ the scenario configuration can select only cross-correlation: `DefaultSimulation
 inside study classes. The author found this odd (decision review, 2026-10-06). This plan makes MLEM a selectable
 reconstruction in the config, the factory and Studio's Imaging workspace, without moving any existing number.
 
-Status: **implemented and verified headless** 2026-10-07 — review, turn 2 and turn 3 (400 iterations confirmed on a third
-seed set, MD-10; strip counts labelled, MD-11) by a substitute Claude subagent ([review](PLAN.Studio.MlemReconstruction.Review.md),
-[turn report](PLAN.Studio.MlemReconstruction.Turn2.md)); planner checks: build 0 / 0, full tests green (engine 465,
-Studio 208, Services 95), CLI single run with MLEM, study refusal, calibration `--release`. Docs: SR-IMG-07, SDS
-allocation, VV.Studio.Imaging, EV-11 reproduce, AGENTS. **Open: the desktop checks** in the turn report (author's go).
+Status: **done** 2026-10-07 — implemented and verified (headless, then on the desktop 2026-10-07: six MLEM scenarios pass, see PLAN.Studio.DesktopChecks); [review](PLAN.Studio.MlemReconstruction.Review.md), [turn report](PLAN.Studio.MlemReconstruction.Turn2.md).
 
 ## What exists (checked in the code, 2026-10-07)
 
