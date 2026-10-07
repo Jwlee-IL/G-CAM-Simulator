@@ -7,7 +7,7 @@ does not need any other document to check a number. Not covered: GCAM Studio's s
 ([VV.Studio](VV.Studio.md)).
 
 **At a glance**
-- 34 entries, `EV-01` … `EV-34`, grouped as imaging (with the absolute ambient field, EV-34), energy and isotopes,
+- 35 entries, `EV-01` … `EV-35`, grouped as imaging (with the absolute ambient field, EV-34, and decoding with its shape, EV-35), energy and isotopes,
   rate and dose, head design, manufacturing, and range.
 - Each entry gives the grade of its evidence ([PRS §1](VV.Gcam.PRS.md#1-evidence-grades)): **MC** Monte Carlo,
   **RTL** front-end model, **AN** analytical design model.
@@ -608,6 +608,50 @@ Geometries used below:
 - **Tests.** `KleinNishinaTests`, `ExponentialIntegralTests`, `SoilAirMaterialsTests`, `TerrestrialCatalogTests`,
   `SoilAirTransportTests`, `TerrestrialSpectrumTests`, `IncidentSpectrumFileTests`, `AmbientAngularSamplerTests`,
   `AmbientFieldTests`, `GateResponseTests`, `CorrelationSearchTests`, `AmbientGateStudyTests`, `AmbientEvidenceTests`.
+- **The raw pull, corrected (EV-35).** The raw-decoder numbers above stay as measured; decoding with the
+  background's shape (opt-in) removes the pull at the near-field heads within a stated count / field scope.
+
+### EV-35 — Decoding with the background's shape
+
+- **What.** Under the bare-crystal ambient bound the raw cross-correlation decoder is pulled toward the background's
+  own correlation peak (EV-34). Opt-in correction (default off, every existing path unchanged): **E4**, a pixel-area
+  MLEM with one extra non-negative background component — the normalised shape of an independent, source-free
+  calibration — whose amplitude the reconstruction fits from the image; **E5** (the same MLEM with a known background
+  B·p) and **E6** (signed cross-correlation of the image minus a known B·p, no clipping) as explicit known-scale
+  modes. The scale comes from the image (D-53); a separate dose counter measures source plus ambient and is not a
+  subtraction scale; the fitted amplitude is not a dose (lab, 1000 counts, 60 s, 0.10 µSv/h: 746 fitted against 977
+  calibration counts).
+- **Conditions (stage 1, D-55).** Open window, bare bound, a source at the specified edge of each head: lab (160 mm),
+  hand-held (155 mm), hand-held at 1 m and 5 m; cyclic and non-cyclic decoding; 25, 50, 100, 250, 500, 1000 source
+  counts and the 1 MBq default; 10 and 60 s; 0, 0.05, 0.10, 0.20 µSv/h. 448 cells, **32 validation seeds × 100
+  acquisitions per cell** (3,200), disjoint from the 16 selection seeds that fixed E4 at **400 iterations** and from
+  the 3 development seeds. Truth and calibration maps are independent Monte Carlo estimates per seed.
+- **Pass rule (D-54), pinned before validation.** In each of the 75 regimes that passed association and trust on
+  the selection seeds: association (one angular element) and trusted association ≥ 3,061 of 3,200 (one-sided
+  conditional 95 % lower bound ≥ 0.95), and a simultaneous seed-cluster bootstrap bound (10,000 whole-seed resamples)
+  on the **paired signed-vector excess** of E4 over its own ideal response below √2 × the grid step (lab 0.550,
+  hand-held 0.581, 1 m 3.750, 5 m 18.749 mm) — an engineering convention, not detector accuracy.
+- **Result.** **75 / 75 regimes pass** (lowest trusted association 3,121; tightest bound 0.415 mm against 0.550 mm,
+  lab non-cyclic, 60 s, 500 counts, 0.10 µSv/h). No regime passes at 1 m cyclic. RMS, non-cyclic, 1000 counts, 60 s,
+  0.10 µSv/h, raw → E4 (mean over 32 seeds): lab 8.53 → 0.50 mm, hand-held 11.2 → 0.71 mm, 1 m 8.19 → 9.04 mm,
+  5 m 38.1 → 40.4 mm — non-cyclic decoding at 1 m and 5 m is barely pulled, and E4 costs a little there; the large
+  far pulls are cyclic (1 m 39.5 → 13.6, 5 m 44.8 → 30.1 mm). Empty field, 1000 counts, non-cyclic: lab 0.65 → 1.29,
+  hand-held 0.97 → 0.61, 1 m 6.28 → 7.55, 5 m 34.3 → 38.6 mm. 250 counts at 0.20 µSv/h, 60 s: E4 association 2025 /
+  1252 / 1571 / 1823 of 3200 — low counts in a high field remain unsolved.
+- **Sensitivities (descriptive, 24 base cells).** Source-free calibration of 600 s / 3600 s: E4 RMS × 0.78–1.15 /
+  1.00–1.05; known scale off by −10 %: hand-held E6 association 1341 / 3200 (no universal scale tolerance); front-only
+  shape on bare truth: E4 association 40 / 3200 (refused by the calibration metadata).
+- **Not covered.** The 662 keV window, the front-only bound and centre sources (stage 2, not run); several sources;
+  pair resolution with E4; a housing; the gate's trust is unchanged and does not certify E4's answer.
+- **Reproduce.** `python samples/evidence/run_seeds.py --manifest samples/evidence/manifest-background-shape-v2.json
+  --family background_shape_validation_v2 --jobs 16 --out <dir>` (and `background_shape_sensitivity_v2`), then
+  `python samples/evidence/background-shape/aggregate_background.py --version 2 --phase validation|sensitivity --runs
+  <dir> --out <file>`; selection: `manifest-background-shape-v1.json` family `background_shape_selection_v1`, pinned
+  regimes `samples/evidence/background-shape/pinned-v1.json`. Committed results:
+  `samples/evidence/results/background-shape-{selection-v1,pilot-v1,validation-v2,sensitivity-v2}.json` with
+  provenance sidecars.
+- **Tests.** `BackgroundDecodingTests` (default path unchanged, normalisation invariance, E5 / E6 identities, the
+  β = 0 boundary, EM count conservation and non-decreasing likelihood); `samples/evidence/tests/test_background_shape.py`.
 
 ## 4. Energy and isotopes
 

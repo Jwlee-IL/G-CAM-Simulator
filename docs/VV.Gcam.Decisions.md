@@ -7,7 +7,7 @@ where it was said in Korean), what was rejected, and where it landed. Physics re
 evidence, in [VV.Gcam.Evidence](VV.Gcam.Evidence.md).
 
 **At a glance**
-- 51 decisions (D-01 … D-51), taken with the author on 2026-10-01, 2026-10-02 and 2026-10-06, each with the
+- 55 decisions (D-01 … D-55), taken with the author on 2026-10-01, 2026-10-02, 2026-10-06 and 2026-10-07, each with the
   author's own words or a note that none was given.
 - The ones that shape the product most: non-cyclic decoding instead of mask rotation (D-17, D-19), no built-in
   radioactive source (D-18), dose rate required at NSS-1 range (D-21), the software path for the narrow field of
@@ -126,6 +126,10 @@ critical한 부분이니, 명확하게 기록해두는 게 좋겠어."
 | D-50 | **Calibrations are recorded in a fixed form** (VV.Gcam.Calibration.Template), tables generated from the pinned evidence files and checked in CI; every false-alarm limit — including D-48's false split — is judged by the **upper confidence limit**, not the point rate | "테스트 양식을 만들어두고 그 양식에 맞춰 기록하는 게 좋겠어"; for the limit: "상한으로 판정" (CAL-04: 4 of 414 rows fail, no resolved separation changes) | a free-form description per study; judging D-48 by the pooled rate | VV.Gcam.Calibration, CAL-01 … CAL-04 |
 | D-51 | **Between calibrated grid points the more conservative neighbouring value applies** (the higher threshold or floor); outside the grid there is no valid calibration | "보수적 이웃값 규칙" — chosen over stating "grid points only" | interpolation; leaving the rule to a later product calibration | CAL-02 … CAL-04 §3 |
 | D-49 | **PR-IMG-02 is restated in angle at 1 m, averaged over source position** (0.38° RMS at 250 counts, 0.21° at 1000), from TODO-34's measurement; the 0.25 mm near-field floor stays in the evidence only as one on-axis sampling phase | chosen as recommended; no further reason stated. The proposal's reason: the same head at the same near-field distance, averaged over position, gives 1.38 mm at 250 counts (EV-34 1.00 mm), so the old floor was not the head's precision | a separate re-measurement task first | PR-IMG-02, EV-09 |
+| D-52 | **Background correction is an opt-in, fitted-amplitude MLEM** (a non-negative background component of known shape beside the source grid, 400 iterations), with known-scale MLEM and signed known-scale cross-correlation as explicit alternatives; the default decoding is unchanged; no pair-resolution claim for it | chosen from the review's options (recommended); no further reason stated | subtracting the total count's share of the shape (costs ideal performance, fails at the far edge); a profile fit | EV-35, LIM-10 |
+| D-53 | **The background scale comes from the image**; a source-free calibration rate of the same head is reported beside it as a check; the separate dose counter (D-37) is not a subtraction scale, and the fitted amplitude is not reported as a dose | chosen (recommended); the review showed the counter measures source + ambient | a fixed calibrated rate; a dose-counter-derived scale | EV-35, LIM-10 |
+| D-54 | **Background-correction claims are scoped:** a pass only in count / field regimes that meet association and trust, against √2 × the grid step for the paired signed-vector excess with a simultaneous seed-cluster bound, all fixed before validation; every other condition is reported, not claimed | chosen (recommended) | recording only, no pass rule | EV-35 |
+| D-55 | **Stage-1 evidence only:** open window, bare bound, edge sources, cyclic and non-cyclic, 32 seeds × 100 acquisitions with 16 parallel workers; the 662 keV window, front-only bound and centre sources wait in the Backlog | chosen (recommended); then, after the serial estimate (90.7 h) exceeded the 12 h limit: 100 repeats instead of 300, in parallel; the planner runs long jobs so no implementer turn stays open | the full matrix now; 300 repeats | EV-35, Backlog |
 
 ## Still open (not yet decided)
 

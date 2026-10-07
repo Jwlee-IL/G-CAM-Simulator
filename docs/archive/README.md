@@ -11,6 +11,13 @@ set the plan's status to done and move the plan and its review / reports into th
 
 ## Closed tasks
 
+- **TODO-33 background-shape decoding** (2026-10-07): opt-in `Decoder.BackgroundCorrection` — a pixel-area MLEM with a
+  fitted non-negative background amplitude of calibrated shape (400 iterations, chosen on selection seeds), plus
+  known-scale MLEM and signed known-scale cross-correlation; default paths unchanged. Stage 1 (open window, bare bound,
+  edge sources, 32 seeds × 100): all 75 pre-pinned regimes pass; near field raw → corrected 8.5 → 0.50 mm (lab),
+  11.2 → 0.71 mm (hand-held); non-cyclic 1 m / 5 m gain nothing; low counts in a high field stay unsolved (theme 67,
+  EV-35, LIM-10, D-52 … D-55). Review and implementation by Codex —
+  [PLAN.Physics.BackgroundShapeDecoding](PLAN.Physics.BackgroundShapeDecoding.md).
 - **TODO-39 Studio strip count** (2026-10-07): with Compton strip on, both reconstruction methods report the signed net
   Σ low − R·Σ high as `N ± σ net counts` (counting + calibration, single-contaminant window overlap; "uncertainty
   unavailable" otherwise) instead of cross-correlation's clipped sum (+50 … +250 counts high); cross-correlation decodes

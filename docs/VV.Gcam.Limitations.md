@@ -6,7 +6,7 @@ says what the user experiences, why it happens, the ways to fix it and the price
 GCAM Studio as software ([VV.Studio §6](VV.Studio.md#6-known-anomalies-gaps-and-risks)).
 
 **At a glance**
-- 9 limitations; 3 rated **high**: the narrow field of view (LIM-01), ghosts before out-of-field cues (LIM-07) and
+- 10 limitations; 3 rated **high**: the narrow field of view (LIM-01), ghosts before out-of-field cues (LIM-07) and
   limited spatial isotope separation (LIM-08).
 - Three fixes are chosen (non-cyclic decoding, the software path for the field of view, a separate dose counter for
   LIM-09); LIM-02 is accepted.
@@ -31,6 +31,7 @@ ranges and sensitivities — and are not used as pass criteria ([URS §5](VV.Gca
 | LIM-04 | Nuclide labelling only against known lines | UN-02 | medium |
 | LIM-05 | Co-60-class background cannot be shielded within the mass budget | UN-03 | low (handled in software) |
 | LIM-06 | Limits of the evidence itself | all performance rows | medium |
+| LIM-10 | Background correction removes the background's pull, not its counting noise | UN-01, UN-12 | medium |
 
 ---
 
@@ -159,6 +160,29 @@ with side walls reads lower still.
 over a data I/O link (PR-SAFE-02). Remaining risk: the counter is not yet chosen, so its energy and angular
 response, dead time and over-range behaviour (PR-SENS-05) are unverified; they come from its data sheet and a type
 test, not from Gcam.
+
+## LIM-10 — Background correction removes the background's pull, not its counting noise
+
+**What the user sees.** In a strong, non-uniform background the uncorrected image points several millimetres to
+the background's own correlation peak at the near-field heads (lab 8.5 mm, hand-held 11 mm RMS at 1000 counts, 60 s,
+0.10 µSv/h, bare bound). With the opt-in correction (D-52) the same acquisitions give 0.50 / 0.71 mm. With few source
+counts in a high field the answer still wanders: at 250 counts, 0.20 µSv/h, 60 s, only 1252–2025 of 3200
+acquisitions land within one element *(MC, EV-35)*. At 1 m and 5 m with non-cyclic decoding the correction gains
+nothing and costs a little (1 m 8.2 → 9.0 mm RMS; empty field 6.3 → 7.6 mm).
+
+**Why.** Subtracting or modelling a mean background removes its systematic pull; its Poisson noise stays in the
+image. The correction also needs the background's shape: a shape calibrated for the wrong exposure (front-only
+against a bare head) defeats it (40 / 3200), and a known scale 10 % off can too (E6, 1341 / 3200).
+
+| Option | Cost |
+|---|---|
+| A. Fitted-amplitude MLEM with a source-free shape calibration of the same head and window (chosen, D-52 / D-53) | a calibration acquisition per head / window / exposure; slower reconstruction (400 iterations); a small cost in empty fields |
+| B. Longer acquisitions | time; the error falls only as √(counts) |
+| C. A housing that shields the sides and rear | mass; reduces the non-uniform background itself (not modelled — the bounds stay bounds) |
+
+**Status.** Option A chosen and validated in a stated scope (75 regimes, open window, bare bound, edge sources,
+D-54 / D-55); the 662 keV window, the front-only bound and centre sources are not yet run. The fitted amplitude is not
+a dose, the gate's trust does not certify the corrected answer, and no pair-resolution claim is made for it.
 
 ## LIM-02 — Imaging stops in high fields
 

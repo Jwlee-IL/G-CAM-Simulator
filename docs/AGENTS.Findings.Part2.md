@@ -1084,3 +1084,52 @@ Evidence: EV-11 ("at use distance, in angle"), EV-09 ("at use distance, averaged
   timing and two new empty fields.
 - **Caveats.** Ideal pixel identification, homogeneous crystal, no dead regions (TODO-19); a still head; iteration
   counts fixed by a stated rule on separate seeds; the floor bounds false splits at the tested pair geometry.
+
+## 67. Decoding with the background's shape — a fitted background amplitude, where it helps and where it does not (2026-10-07)
+
+TODO-33 (from AB-12) — [PLAN.Physics.BackgroundShapeDecoding](archive/PLAN.Physics.BackgroundShapeDecoding.md), review
+[PLAN.Physics.BackgroundShapeDecoding.Review](archive/PLAN.Physics.BackgroundShapeDecoding.Review.md), turn reports
+[Turn2](archive/PLAN.Physics.BackgroundShapeDecoding.Turn2.md) … [Turn5](archive/PLAN.Physics.BackgroundShapeDecoding.Turn5.md).
+Review and implementation by Codex; author decisions D-52 … D-55. Evidence: EV-35.
+
+- **Why.** Theme 64 found the raw cross-correlation decoder pulled toward the bare-crystal background's own
+  correlation peak once B/S exceeds ≈ 0.5–1; the calibrated search statistic was not.
+- **The review corrected the plan**: `AngularResolutionStudy` already ran a fixed-background MLEM (662 keV window
+  only); the AB-12 MLEM was pixel-centre at 80 iterations, not D-46's model; the engine default is 120 iterations and
+  Studio's 400 is a rule for Studio's optics; the old "excess" (difference of two bias lengths) can hide a rotating
+  bias — signed vectors instead. Development comparison (3 seeds × 16) of seven estimators: subtracting the total
+  count's share of the shape (E1, E2) costs ideal performance and fails at the far edge; a two-parameter profile fit
+  (E3, E7) is less robust than fitting the whole Poisson model.
+- **Chosen (D-52 / D-53):** E4, a pixel-area MLEM with one extra non-negative background component p whose amplitude
+  the EM fits from the image (no external scale); E5 (fixed b = B·p) and E6 (signed known-scale cross-correlation
+  subtraction) as explicit known-scale modes. The fitted amplitude is a nuisance count, not ambient dose: at the lab
+  head, 1000 counts, 60 s, 0.10 µSv/h it is 746 against 977 calibration counts (it absorbs source-model mismatch).
+- **Iterations.** Selected on 16 seeds × 4 from {60, 120, 240, 400, 800} by the worst paired signed-vector excess:
+  **400** (3.31 mm worst, 5 m), frozen with 75 association- and trust-valid regimes before validation.
+- **Validation (stage 1, D-55: open window, bare bound, edge source, 4 heads, cyclic and non-cyclic, 25 … 1000
+  counts + 1 MBq, 10 / 60 s, 0 … 0.20 µSv/h; 32 locked seeds × 100 = 3,200 acquisitions per condition).** All 75
+  pinned regimes pass (D-54): association and trusted association ≥ 3,061 / 3,200 (lowest 3,121), and the
+  simultaneous seed-cluster bound on the paired signed-vector excess under √2 × grid step (tightest 0.415 mm against
+  0.550, lab). 1 m cyclic has no passing regime; the other 373 cells are reported, not claimed.
+- **Where it helps — the near field.** Non-cyclic, 1000 counts, 60 s, 0.10 µSv/h, RMS raw → E4: lab 8.53 → 0.50 mm,
+  hand-held 11.2 → 0.71 mm (association 1157 → 3199 and 0 → 3199 of 3200).
+- **Where it does not.** Non-cyclic at 1 m and 5 m the raw decoder is hardly pulled (association 3185 / 3199), and E4
+  is slightly worse: 8.19 → 9.04 mm (1 m), 38.1 → 40.4 mm (5 m). The large far-field pulls of AB-12 belong mostly to
+  **cyclic** decoding (1 m cyclic 39.5 → 13.6 mm, 5 m 44.8 → 30.1). E4 also costs in an empty field at the lab
+  (0.65 → 1.29 mm), 1 m (6.28 → 7.55) and 5 m (34.3 → 38.6); hand-held improves (0.97 → 0.61). Low counts in a high
+  field stay unsolved: 250 counts, 0.20 µSv/h, 60 s, non-cyclic E4 association 2025 / 1252 / 1571 / 1823 of 3200
+  (lab / hand-held / 1 m / 5 m).
+- **Sensitivities (descriptive).** A measured source-free calibration of 600 s / 3600 s changes E4's RMS by a factor
+  0.78–1.15 / 1.00–1.05 over 24 base cells; a known scale 10 % low drops E6's hand-held association to 1341 / 3200, so
+  no universal scale tolerance exists; a front-only shape on a bare-crystal truth breaks E4 (40 / 3200) — wrong-bound
+  calibration is refused by metadata. The unchanged gate's trust is reported beside E4; it does not certify E4's
+  answer (up to 66 trusted-but-misplaced of 3200 inside the pinned regimes).
+- **Engine.** `Decoder.BackgroundCorrection` (default null: every existing path unchanged, tested on retained
+  fixtures); `JointBackgroundMlem`, `BackgroundAwareDecoder`, `BackgroundCalibration` (+ metadata) in `Gcam.Decoding`;
+  an explicit-calibration factory entry; study commands refuse a scenario that sets it. Engine tests 465 → 481
+  (`BackgroundDecodingTests`), Python evidence tests + 5. Runs: selection 16 seeds, validation 32 seeds (~1.8 h each
+  with 16 workers, ~6.8 h wall with the sensitivities); the planner re-ran one seed of each family: identical apart from
+  timing (10 of 32,146 fields).
+- **Caveats.** Bounds, not a housing; one source; open window and bare bound only (the 662 keV window, front-only and
+  centre sources are stage 2, Backlog); the √2 × grid-step target is an engineering convention relative to E4's own
+  ideal response, not detector accuracy; no pair-resolution claim for E4; CLI single run and Studio not wired.
