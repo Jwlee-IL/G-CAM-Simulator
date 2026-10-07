@@ -1,0 +1,44 @@
+{
+ "SchemaVersion": 1,
+ "SelectionRepeats": 4,
+ "PilotRepeats": 16,
+ "ValidationRepeats": 300,
+ "AmbientHistories": 500000,
+ "SourcePhotons": 1000000,
+ "KnownScaleLevels": [
+  100,
+  250,
+  1000,
+  "default"
+ ],
+ "Cases": [
+  {
+   "Name": "lab",
+   "Scenario": "scenario.json",
+   "ZMm": 160,
+   "XMm": 8,
+   "PilotRatePerBq": 7.707675168426954e-05
+  },
+  {
+   "Name": "head",
+   "Scenario": "scenario_handheld.json",
+   "ZMm": 155,
+   "XMm": 8,
+   "PilotRatePerBq": 0.00017324220377842224
+  },
+  {
+   "Name": "head1m",
+   "Scenario": "scenario_handheld.json",
+   "ZMm": 1000,
+   "XMm": 52.408,
+   "PilotRatePerBq": 4.036923162566556e-06
+  },
+  {
+   "Name": "head5m",
+   "Scenario": "scenario_handheld.json",
+   "ZMm": 5000,
+   "XMm": 262.04,
+   "PilotRatePerBq": 1.5748511650608925e-07
+  }
+ ]
+}

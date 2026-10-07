@@ -104,12 +104,45 @@ public sealed class DefaultSimulationFactory : ISimulationFactory
     /// primary source line (<see cref="CreateMlemDecoder"/>). Both share <see cref="ReconstructionGeometry"/>.</summary>
     public IDecoder? CreateDecoder(SimulationConfig config)
     {
+        if (config.Decoder.BackgroundCorrection is not null)
+            throw new InvalidOperationException("Background correction requires an explicit calibration and acquisition live time.");
         var geo = ReconstructionGeometry(config);
         if (config.Decoder.Method == DecoderMethod.Mlem)
             return MlemReconstruction.Create(config, geo, config.Source.EnergyKeV, config.Decoder.MlemIterations, config.Decoder.SubCellInterpolation);
         return new CrossCorrelationDecoder(MuraGenerator.DecodingArray(config.Mask.Rank), geo,
                                            config.Decoder.SubCellInterpolation);
     }
+
+    /// <summary>Explicit calibration entry point; ordinary single-run and Studio paths never infer calibration.</summary>
+    public BackgroundAwareDecoder CreateDecoder(SimulationConfig config, BackgroundCalibration calibration,
+        BackgroundCalibrationMetadata acquisitionMetadata, double liveTimeS, double? knownBackgroundCounts = null)
+    {
+        var mode = config.Decoder.BackgroundCorrection?.Mode
+            ?? throw new ArgumentException("An explicit background correction mode is required.");
+        if (acquisitionMetadata.PixelsX != config.Detector.PixelsX || acquisitionMetadata.PixelsY != config.Detector.PixelsY
+            || acquisitionMetadata.PixelPitchMm != config.Detector.PixelPitchMm
+            || acquisitionMetadata.HeadResponseId != BackgroundHeadResponseId(config))
+            throw new ArgumentException("Acquisition metadata differs from the configured detector geometry.");
+        var geo = ReconstructionGeometry(config);
+        return new(CreateMlemDecoder(config, config.Source.EnergyKeV),
+            new CrossCorrelationDecoder(MuraGenerator.DecodingArray(config.Mask.Rank), geo, config.Decoder.SubCellInterpolation),
+            geo, calibration, acquisitionMetadata, mode switch
+            {
+                BackgroundCorrectionMode.JointMlem => BackgroundEstimator.JointMlem,
+                BackgroundCorrectionMode.KnownScaleMlem => BackgroundEstimator.KnownScaleMlem,
+                BackgroundCorrectionMode.KnownScaleCorrelation => BackgroundEstimator.KnownScaleCorrelation,
+                _ => throw new ArgumentOutOfRangeException(nameof(config))
+            }, config.Decoder.MlemIterations, config.Decoder.SubCellInterpolation, liveTimeS, knownBackgroundCounts);
+    }
+
+    /// <summary>Head response identity includes mask, detector and mask spacing; source-plane refocusing and cyclic
+    /// reconstruction are not calibration changes. Window, field distribution and bound are declared separately.</summary>
+    public static string BackgroundHeadResponseId(SimulationConfig config)
+        => Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(
+            System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(new
+            {
+                config.Mask, config.Detector, config.Geometry.MaskDetectorDistanceMm
+            }))).ToLowerInvariant();
 
     /// <summary>The pixel-area MLEM on the configured grid for the line at <paramref name="lineEnergyKeV"/> (its
     /// closed-cell transmission), whatever <c>Decoder.Method</c> says — e.g. one decoder per isotope channel.</summary>

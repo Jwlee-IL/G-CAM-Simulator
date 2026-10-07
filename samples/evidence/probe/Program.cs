@@ -50,6 +50,27 @@ var runner = new SimulationRunner(factory);
 
 switch (mode)
 {
+    case "background-validation-v2":
+        Gcam.EvidenceProbe.BackgroundShapeRecipe.Run("validation", seed, samplesDir, version: 2);
+        break;
+    case "background-sensitivity-v2":
+        Gcam.EvidenceProbe.BackgroundSensitivityRecipe.Run(seed, samplesDir, version: 2);
+        break;
+    case "background-pilot-main-v2":
+        Gcam.EvidenceProbe.BackgroundShapeRecipe.Run("pilot", seed, samplesDir, version: 2);
+        break;
+    case "background-pilot-sensitivity-v2":
+        Gcam.EvidenceProbe.BackgroundSensitivityRecipe.Run(seed, samplesDir, pilot: true, version: 2);
+        break;
+    case "background-sensitivity":
+        Gcam.EvidenceProbe.BackgroundSensitivityRecipe.Run(seed, samplesDir);
+        break;
+    case "background-selection":
+    case "background-pilot":
+    case "background-validation":
+        Gcam.EvidenceProbe.BackgroundShapeRecipe.Run(mode["background-".Length..], seed, samplesDir);
+        if (mode == "background-pilot") Gcam.EvidenceProbe.BackgroundSensitivityRecipe.Run(seed, samplesDir, pilot: true);
+        break;
     case "precise":
     {
         var output = new List<object>();

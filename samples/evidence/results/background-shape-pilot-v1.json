@@ -1,0 +1,138 @@
+{
+ "SchemaVersion": 1,
+ "Phase": "pilot",
+ "Seeds": [
+  530001
+ ],
+ "Provenance": {
+  "SchemaVersion": 1,
+  "Sources": {
+   "857ff915c0ec9dbf6a1bdbdf0f471c736fd050140e0bc87e181e3bcaf4fbdd63": {
+    "Source": {
+     "Commit": "f4722bfbbc41358e3f3a26f862a7c167cf3f95e1",
+     "Dirty": true,
+     "Scope": [
+      "src",
+      "samples",
+      "rtl",
+      ".gitattributes",
+      "Directory.Build.props",
+      "Directory.Build.targets",
+      "global.json",
+      "NuGet.Config",
+      "nuget.config"
+     ],
+     "DiffSha256": "d7a039248bb227d67d15e49f0af4d10a8ab8d1fdb79976f9abeaeb315d71e719",
+     "Untracked": {
+      "samples/evidence/background-shape/aggregate_background.py": "01f5db11a1e980de54309dadbcd6a6b8213e71cd6498abeca412614f79645d56",
+      "samples/evidence/background-shape/pinned-v1.json": "3c44d28d8c3484a2ae89d7a272cec492377120d8a9da9af7c8de28556aa94c24",
+      "samples/evidence/background-shape/request-v1.json": "847b6e8b97e0ec87ea0a26d3ed3ce30038ca223b04ac1a91b8d6b1c37afd849b",
+      "samples/evidence/manifest-background-shape-v1.json": "e0081eef7ec6b6594665cf85e7a31f3ab20c49240c54994d98b742fb457509df",
+      "samples/evidence/probe/BackgroundSensitivityRecipe.cs": "141206d6c40a708b04de7e4062b18f06e09b1c4b816a6eab94ab6c8268b6797f",
+      "samples/evidence/probe/BackgroundShapeRecipe.cs": "875daeecf46ad1c1192ba0d8d252fb749d560d6561302e234eb3d9f4a391b72a",
+      "samples/evidence/results/background-shape-selection-v1.json": "be715a0df8144dfac4685065d22dc0a30ddd4fcf920494a5eb138c9fdd66a7c9",
+      "samples/evidence/results/background-shape-selection-v1.json.provenance.json": "baa9235ffd5ac85ad4d6469f022f103094d6d7846f1c7b6624ee5a9a763f9fad",
+      "samples/evidence/tests/test_background_shape.py": "0d05eca9d3c2bd858c788337f978d0fa51a827524cf3ce3dc723ed721c608b9e",
+      "src/Gcam.Configuration/BackgroundCorrectionConfig.cs": "6163806d91eca581a8fe205177ec8c1b4c8c69575ed8257ff043265344b53327",
+      "src/Gcam.Configuration/BackgroundCorrectionMode.cs": "cd59a232cd4a8ba1c81df656a00bb74fbd8f424bc4a90a91807a1893206f1f9f",
+      "src/Gcam.Decoding/BackgroundAwareDecoder.cs": "a60c8dc7d5325e6731a1c20dc0419faa07bc1228dc4629e128247c0b53c737f5",
+      "src/Gcam.Decoding/BackgroundCalibration.cs": "22778b0f7384535e4d523ea5031fd19a350320cb9b9c6a0f4d8e0120bdf29f8c",
+      "src/Gcam.Decoding/BackgroundCalibrationMetadata.cs": "97be508e5f13808b6c7e0ff6738ffc60239500aa559ccbc4b3a96f4b343c1a1e",
+      "src/Gcam.Decoding/BackgroundDecodeResult.cs": "b1375dcdb300608c1e276f3fc72a5ce9b76d7dbee43e278e6d5b224287599b9c",
+      "src/Gcam.Decoding/BackgroundEstimator.cs": "1757aa92fe44ddebea01f73fc1d7d912ffb2ae9cbf284b3b89c678d808c2f23c",
+      "src/Gcam.Decoding/JointBackgroundMlem.cs": "29fa19c0a76d9499cf28ab654ba5eccf9aef4fa4df307c0d15e57b8bd6e1d18b",
+      "src/Gcam.Decoding/JointMlemSnapshot.cs": "1e8a888a76ff7eb59f48649f43f50db38ef30f8e0bc732fd630be9079d851c8b"
+     },
+     "SnapshotSha256": "a4694caae24d7817ce5eca04a2159cd5a1cb024830686d948838161547e844bd"
+    },
+    "Executor": {
+     "Kind": "probe",
+     "Files": {
+      "samples/evidence/run_seeds.py": "61c40a75664bcfcabc6efecc3006f5f4070e43e1cbfe9b1d219d4051d3916721",
+      "samples/evidence/provenance.py": "f22d4389707c67563d20a7cc809bdab436003e56374018096e19c6a51b429a2c",
+      "managed/probe/ambient/terrestrial-unscear2000-v1.json": "4d48bc4272ce4c25ff6ae9b13ed7583e3c8f467afffdb0225956a70cc435b3f4",
+      "managed/probe/CommunityToolkit.Mvvm.dll": "7d7eb5c066cfe883b439b1200bf5dcb387b1e5319dd2edbdaa9e23adfe416452",
+      "managed/probe/Gcam.Configuration.dll": "0e5b3ae46d21591acd8d9e167ea6269db5598542c72d2c30665df60fdfa3adeb",
+      "managed/probe/Gcam.Configuration.pdb": "58f4f3081c3c35ed4702a5568d0efe3ec686585a88cfe805c41fcf090a2e6f49",
+      "managed/probe/Gcam.Core.dll": "20ee3bf7791d58f539678e1aa20a2cd4206b014b6fe1efcdeeb44ec5f5ee5f6b",
+      "managed/probe/Gcam.Core.pdb": "a5c2b1b5cdc04015ae136500af1e8bc15b690698c60a5f36a9447f3ac2de644f",
+      "managed/probe/Gcam.Decoding.dll": "48456e08786494a8de9a20ebd66492bae98b70e2a379c93575d5a20f7764060c",
+      "managed/probe/Gcam.Decoding.pdb": "f6ef0cc607f43eccf3b911ef225b462f7743d171f898a9caf43b416ac9792348",
+      "managed/probe/Gcam.Detector.dll": "8545a2e187d22aad832ce57e8ec2f1e73607bdc242ac0d1e89d0db514c64bf39",
+      "managed/probe/Gcam.Detector.pdb": "a28619539cfa44084ae1a4d07705210866e2d4e97ba1a943d2a08c8d1eadc427",
+      "managed/probe/Gcam.EvidenceProbe.deps.json": "2283b4564a736cb5ececf767004aa6348fde5cfe5c588369931e42b83e5bdae0",
+      "managed/probe/Gcam.EvidenceProbe.dll": "c6952fb72e8c87d04fcef2b1e7c41f69907f5b4ba2c6bb9cb40acfdc01a5801a",
+      "managed/probe/Gcam.EvidenceProbe.exe": "ee48af397d24dca9551e832d6e6652bdb573bcbf5eca3a61a04cf5949a06a1d2",
+      "managed/probe/Gcam.EvidenceProbe.pdb": "969e1ce95de64768280e0f87e2007676be051e4e053cbd62f9aa7ae45c273167",
+      "managed/probe/Gcam.EvidenceProbe.runtimeconfig.json": "7e4fcf67197ad5baa5f6cbf30ef3754fb26db9b6b7f83fa36656029885dbe390",
+      "managed/probe/Gcam.Masks.dll": "505b163fd4deda9b6333d05d5eac4314f7215e8ddf53f300435149fbe4c78e42",
+      "managed/probe/Gcam.Masks.pdb": "a6577f876976a50de51f5a87a562b03ad6ee41f9c9538287ce9aba84a7c05318",
+      "managed/probe/Gcam.Simulation.dll": "9773265bb105ba9e2a54c4a040ce772d938c2aed70aa057c8e337663061aa3fa",
+      "managed/probe/Gcam.Simulation.pdb": "c4189582fa68f64dadeceb57f42a125257d5320bea236735409cddcdc460e4b8",
+      "managed/probe/Gcam.Studio.Core.dll": "4921bb4ee8087c6bf2abba514df405f6c21af503d530674554f4a75cf7970b45",
+      "managed/probe/Gcam.Studio.Core.pdb": "7f65b5fe514ef7f29ccd08d93b1b69b7401f067e659cac538e98db036e5891af",
+      "managed/probe/Gcam.Studio.Services.dll": "aa1efdb89054133115a689879ec48428ab6066c3ecee9d318f88d7b8ec143212",
+      "managed/probe/Gcam.Studio.Services.pdb": "4704f9ff3760c07defd97079e46326cc00983b528e7719068f1180f1ea06adf9"
+     },
+     "Tools": {
+      "OS": "Windows",
+      "Architecture": "AMD64",
+      "DriverPython": "3.11.9",
+      "DotnetRuntime": "9.0.13"
+     }
+    },
+    "ExecutionId": "51c25ffb3ddd3f2363578f881682f84093cda29b75670eff04b14bbb3b20439f",
+    "BuildObservation": {
+     "Git": "git version 2.45.0.windows.1",
+     "DotnetSdk": "9.0.311"
+    }
+   }
+  },
+  "Inputs": [
+   {
+    "Family": "background_shape_pilot_v1",
+    "Seed": 530001,
+    "SourceId": "857ff915c0ec9dbf6a1bdbdf0f471c736fd050140e0bc87e181e3bcaf4fbdd63",
+    "RecipeSha256": "d951ae2280bc56675d2d49baca15d99cd5b8015b41b697e6a0d62b70db8cfaf4",
+    "Outputs": {
+     "background-shape-sensitivity.json": "7d64e1ef81598e7d19b04d8107a2a639581dbbf51f0cca70cac5add4f809c514",
+     "background-shape.json": "f81a517095a366376fb8720c6fed8a0a7bb43811680ecc8e1a2868ac751914a6",
+     "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "stdout.txt": "586c54efbbbac34543a9677a55f927086d387b87ea666fe202957da0c5a037d2"
+    }
+   }
+  ],
+  "Analysis": {
+   "Files": {
+    "samples/evidence/background-shape/aggregate_background.py": "01f5db11a1e980de54309dadbcd6a6b8213e71cd6498abeca412614f79645d56",
+    "samples/evidence/provenance.py": "f22d4389707c67563d20a7cc809bdab436003e56374018096e19c6a51b429a2c"
+   },
+   "Tools": {
+    "Python": "3.11.9",
+    "numpy": "1.26.4",
+    "scipy": "1.17.1"
+   },
+   "Arguments": {
+    "phase": "pilot"
+   },
+   "InputFiles": {}
+  }
+ },
+ "RequestSha256": "847b6e8b97e0ec87ea0a26d3ed3ce30038ca223b04ac1a91b8d6b1c37afd849b",
+ "RunSeconds": [
+  557.3064439
+ ],
+ "PilotRepeats": 16,
+ "Iterations": [
+  400
+ ],
+ "PinnedSha256": "3c44d28d8c3484a2ae89d7a272cec492377120d8a9da9af7c8de28556aa94c24",
+ "ExtrapolatedSerialSeconds": 326593.03554479993,
+ "ExtrapolatedSerialHours": 90.72028765133331,
+ "SensitivityPilotSeconds": 368.6422443,
+ "SensitivityExtrapolatedSerialHours": 61.44037405,
+ "CombinedExtrapolatedSerialHours": 152.16066170133334,
+ "TimingLimitHours": 12,
+ "StopRequired": true,
+ "Derivation": "32 * (ambient-map seconds + remaining pilot seconds * 300 / pilot repeats); setup conservatively scaled"
+}

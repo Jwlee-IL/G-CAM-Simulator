@@ -1,0 +1,44 @@
+{
+ "_about": "TODO-33 author budget revision: 100 repeats, 32 validation seeds, 16 workers; immutable v1 physics request and pin; pilot selection seeds only.",
+ "config_sha256": {
+  "scenario.json": "eb5b96835c0b68a88c5c26965540f85f1a313acf1cc0b49955cf7921463edddc",
+  "scenario_handheld.json": "f988784c8ee266e6dd28eb898cdbbfac0e2452cb01fd3929874fd866edc98795",
+  "evidence/background-shape/request-v1.json": "847b6e8b97e0ec87ea0a26d3ed3ce30038ca223b04ac1a91b8d6b1c37afd849b",
+  "evidence/background-shape/request-v2.json": "24cf9a75157f527008a7ee1ad8a9290d40693013120e6ce78b8d8e1ad1cd69b8",
+  "evidence/background-shape/pinned-v1.json": "3c44d28d8c3484a2ae89d7a272cec492377120d8a9da9af7c8de28556aa94c24"
+ },
+ "families": [
+  {
+   "id": "background_shape_validation_v2",
+   "kind": "probe",
+   "mode": "background-validation-v2",
+   "seeds": "BG_VALIDATION32",
+   "n": 32,
+   "evidence": "TODO-33; immutable pinned-v1 physics; request-v2 sampling budget; validation"
+  },
+  {
+   "id": "background_shape_sensitivity_v2",
+   "kind": "probe",
+   "mode": "background-sensitivity-v2",
+   "seeds": "BG_VALIDATION32",
+   "n": 32,
+   "evidence": "TODO-33; immutable pinned-v1 physics; request-v2 sampling budget; sensitivity"
+  },
+  {
+   "id": "background_shape_pilot_v2",
+   "kind": "probe",
+   "mode": "background-pilot-main-v2",
+   "seeds": "BG_SELECTION16",
+   "n": 16,
+   "evidence": "TODO-33; immutable pinned-v1 physics; request-v2 sampling budget; pilot"
+  },
+  {
+   "id": "background_shape_sensitivity_pilot_v2",
+   "kind": "probe",
+   "mode": "background-pilot-sensitivity-v2",
+   "seeds": "BG_SELECTION16",
+   "n": 16,
+   "evidence": "TODO-33; immutable pinned-v1 physics; request-v2 sampling budget; sensitivity_pilot"
+  }
+ ]
+}

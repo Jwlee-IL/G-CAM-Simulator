@@ -30,10 +30,15 @@ internal static class StudyDecoderGuard
                     if (!section.NameEquals("decoder") && !string.Equals(section.Name, "decoder", StringComparison.OrdinalIgnoreCase)) continue;
                     if (section.Value.ValueKind != JsonValueKind.Object) continue;
                     foreach (var field in section.Value.EnumerateObject())
+                    {
+                        if (string.Equals(field.Name, "BackgroundCorrection", StringComparison.OrdinalIgnoreCase)
+                            && field.Value.ValueKind != JsonValueKind.Null)
+                            return path;
                         if (string.Equals(field.Name, "method", StringComparison.OrdinalIgnoreCase)
                             && !(field.Value.ValueKind == JsonValueKind.String
                                  && string.Equals(field.Value.GetString(), "CrossCorrelation", StringComparison.OrdinalIgnoreCase)))
                             return path;
+                    }
                 }
             }
         }

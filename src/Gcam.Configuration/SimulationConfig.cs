@@ -55,6 +55,11 @@ public sealed class SimulationConfig
 /// <summary>The reconstruction / decoding stage.</summary>
 public sealed class DecoderConfig
 {
+    /// <summary>Null preserves every legacy decoding path. Non-null needs explicitly supplied calibration knowledge;
+    /// neither the ambient truth nor an external dose counter is used as an implicit background scale.</summary>
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public BackgroundCorrectionConfig? BackgroundCorrection { get; set; }
+
     /// <summary>
     /// True = classical periodic (cyclic) decoding — aliases off-axis sources into
     /// a ghost. False = finite-mask decoding that ignores rays missing the physical

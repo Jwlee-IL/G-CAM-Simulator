@@ -1,0 +1,50 @@
+{
+ "SchemaVersion": 1,
+ "SelectionRepeats": 4,
+ "PilotRepeats": 4,
+ "ValidationRepeats": 100,
+ "AmbientHistories": 500000,
+ "SourcePhotons": 1000000,
+ "KnownScaleLevels": [
+  100,
+  250,
+  1000,
+  "default"
+ ],
+ "Cases": [
+  {
+   "Name": "lab",
+   "Scenario": "scenario.json",
+   "ZMm": 160,
+   "XMm": 8,
+   "PilotRatePerBq": 7.707675168426954e-05
+  },
+  {
+   "Name": "head",
+   "Scenario": "scenario_handheld.json",
+   "ZMm": 155,
+   "XMm": 8,
+   "PilotRatePerBq": 0.00017324220377842224
+  },
+  {
+   "Name": "head1m",
+   "Scenario": "scenario_handheld.json",
+   "ZMm": 1000,
+   "XMm": 52.408,
+   "PilotRatePerBq": 4.036923162566556e-06
+  },
+  {
+   "Name": "head5m",
+   "Scenario": "scenario_handheld.json",
+   "ZMm": 5000,
+   "XMm": 262.04,
+   "PilotRatePerBq": 1.5748511650608925e-07
+  }
+ ],
+ "BudgetRevision": {
+  "BaseRequestSha256": "847b6e8b97e0ec87ea0a26d3ed3ce30038ca223b04ac1a91b8d6b1c37afd849b",
+  "PinnedSha256": "3c44d28d8c3484a2ae89d7a272cec492377120d8a9da9af7c8de28556aa94c24",
+  "Workers": 16,
+  "Authority": "Author decision 2026-10-07, turn 4; validation and sensitivity repeats only; pilot is timing only on selection seeds."
+ }
+}

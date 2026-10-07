@@ -1,0 +1,472 @@
+{
+ "SchemaVersion": 1,
+ "Provenance": {
+  "SchemaVersion": 1,
+  "Sources": {
+   "09a59e082e705bf4e32cdb17aa36f1a39e55ec1f5ea48dc108dfd2ba13a39eeb": {
+    "Source": {
+     "Commit": "f4722bfbbc41358e3f3a26f862a7c167cf3f95e1",
+     "Dirty": true,
+     "Scope": [
+      "src",
+      "samples",
+      "rtl",
+      ".gitattributes",
+      "Directory.Build.props",
+      "Directory.Build.targets",
+      "global.json",
+      "NuGet.Config",
+      "nuget.config"
+     ],
+     "DiffSha256": "cfa56f6b667b011fd090dd0cc73a0cf7efb712d7f2067e51bb03592c2c215760",
+     "Untracked": {
+      "samples/evidence/background-shape/aggregate_background.py": "abf3607161e37ecc94cff05b4af428ba4cd9a4964f5a0e36640a6043da1f8424",
+      "samples/evidence/background-shape/parallel_timing.py": "6488aa69e8636c3a7e70a42e3632f461975067197513eeefbd8afe6f988a6131",
+      "samples/evidence/background-shape/pinned-v1.json": "3c44d28d8c3484a2ae89d7a272cec492377120d8a9da9af7c8de28556aa94c24",
+      "samples/evidence/background-shape/request-v1.json": "847b6e8b97e0ec87ea0a26d3ed3ce30038ca223b04ac1a91b8d6b1c37afd849b",
+      "samples/evidence/background-shape/request-v2.json": "24cf9a75157f527008a7ee1ad8a9290d40693013120e6ce78b8d8e1ad1cd69b8",
+      "samples/evidence/manifest-background-shape-v1.json": "e0081eef7ec6b6594665cf85e7a31f3ab20c49240c54994d98b742fb457509df",
+      "samples/evidence/manifest-background-shape-v2.json": "83c2c90669a9ce5fde22071cf82f21cd59c22ee1598266bb8fbf3650df34da0a",
+      "samples/evidence/probe/BackgroundRequest.cs": "675657f2a0951827aee4ec6fc6df581a230c6985b8f0ddc93e550620b358f120",
+      "samples/evidence/probe/BackgroundSensitivityRecipe.cs": "3025468ac093971624e269b00664cc26161726dd77f7f0929b75e4e4d82b2367",
+      "samples/evidence/probe/BackgroundShapeRecipe.cs": "bb14dd20b040545ecb8284a2afb887f80dcf78a5b505dfe71b7afcb143fde4a5",
+      "samples/evidence/results/background-shape-pilot-v1.json": "2b17efeb20e56662bee0ca07b774e0d27ad2405bcdec2604be7b06a4a4a10060",
+      "samples/evidence/results/background-shape-pilot-v1.json.provenance.json": "3879b37d75c38b1b8d04f6cbd7c3c3b1f79d6df0ca437c439cfa11996bb30f0f",
+      "samples/evidence/results/background-shape-selection-v1.json": "be715a0df8144dfac4685065d22dc0a30ddd4fcf920494a5eb138c9fdd66a7c9",
+      "samples/evidence/results/background-shape-selection-v1.json.provenance.json": "baa9235ffd5ac85ad4d6469f022f103094d6d7846f1c7b6624ee5a9a763f9fad",
+      "samples/evidence/tests/test_background_shape.py": "d0e52cf74f6d2df5f158afeccaac3429e35dbee4ee065a83a81d96fd9b7b474d",
+      "src/Gcam.Configuration/BackgroundCorrectionConfig.cs": "6163806d91eca581a8fe205177ec8c1b4c8c69575ed8257ff043265344b53327",
+      "src/Gcam.Configuration/BackgroundCorrectionMode.cs": "cd59a232cd4a8ba1c81df656a00bb74fbd8f424bc4a90a91807a1893206f1f9f",
+      "src/Gcam.Decoding/BackgroundAwareDecoder.cs": "a60c8dc7d5325e6731a1c20dc0419faa07bc1228dc4629e128247c0b53c737f5",
+      "src/Gcam.Decoding/BackgroundCalibration.cs": "22778b0f7384535e4d523ea5031fd19a350320cb9b9c6a0f4d8e0120bdf29f8c",
+      "src/Gcam.Decoding/BackgroundCalibrationMetadata.cs": "97be508e5f13808b6c7e0ff6738ffc60239500aa559ccbc4b3a96f4b343c1a1e",
+      "src/Gcam.Decoding/BackgroundDecodeResult.cs": "b1375dcdb300608c1e276f3fc72a5ce9b76d7dbee43e278e6d5b224287599b9c",
+      "src/Gcam.Decoding/BackgroundEstimator.cs": "1757aa92fe44ddebea01f73fc1d7d912ffb2ae9cbf284b3b89c678d808c2f23c",
+      "src/Gcam.Decoding/JointBackgroundMlem.cs": "29fa19c0a76d9499cf28ab654ba5eccf9aef4fa4df307c0d15e57b8bd6e1d18b",
+      "src/Gcam.Decoding/JointMlemSnapshot.cs": "1e8a888a76ff7eb59f48649f43f50db38ef30f8e0bc732fd630be9079d851c8b"
+     },
+     "SnapshotSha256": "938051f79beed5898d372cf26177aa6b5211b4470b5165d26b98c0021623df7c"
+    },
+    "Executor": {
+     "Kind": "probe",
+     "Files": {
+      "samples/evidence/run_seeds.py": "61c40a75664bcfcabc6efecc3006f5f4070e43e1cbfe9b1d219d4051d3916721",
+      "samples/evidence/provenance.py": "f22d4389707c67563d20a7cc809bdab436003e56374018096e19c6a51b429a2c",
+      "managed/probe/ambient/terrestrial-unscear2000-v1.json": "4d48bc4272ce4c25ff6ae9b13ed7583e3c8f467afffdb0225956a70cc435b3f4",
+      "managed/probe/CommunityToolkit.Mvvm.dll": "7d7eb5c066cfe883b439b1200bf5dcb387b1e5319dd2edbdaa9e23adfe416452",
+      "managed/probe/Gcam.Configuration.dll": "0e5b3ae46d21591acd8d9e167ea6269db5598542c72d2c30665df60fdfa3adeb",
+      "managed/probe/Gcam.Configuration.pdb": "58f4f3081c3c35ed4702a5568d0efe3ec686585a88cfe805c41fcf090a2e6f49",
+      "managed/probe/Gcam.Core.dll": "20ee3bf7791d58f539678e1aa20a2cd4206b014b6fe1efcdeeb44ec5f5ee5f6b",
+      "managed/probe/Gcam.Core.pdb": "a5c2b1b5cdc04015ae136500af1e8bc15b690698c60a5f36a9447f3ac2de644f",
+      "managed/probe/Gcam.Decoding.dll": "48456e08786494a8de9a20ebd66492bae98b70e2a379c93575d5a20f7764060c",
+      "managed/probe/Gcam.Decoding.pdb": "f6ef0cc607f43eccf3b911ef225b462f7743d171f898a9caf43b416ac9792348",
+      "managed/probe/Gcam.Detector.dll": "8545a2e187d22aad832ce57e8ec2f1e73607bdc242ac0d1e89d0db514c64bf39",
+      "managed/probe/Gcam.Detector.pdb": "a28619539cfa44084ae1a4d07705210866e2d4e97ba1a943d2a08c8d1eadc427",
+      "managed/probe/Gcam.EvidenceProbe.deps.json": "2283b4564a736cb5ececf767004aa6348fde5cfe5c588369931e42b83e5bdae0",
+      "managed/probe/Gcam.EvidenceProbe.dll": "32c3aa6d3ba8d9c9a8a88289a4a5c3ac010902921f1a63144134452930710531",
+      "managed/probe/Gcam.EvidenceProbe.exe": "ee48af397d24dca9551e832d6e6652bdb573bcbf5eca3a61a04cf5949a06a1d2",
+      "managed/probe/Gcam.EvidenceProbe.pdb": "a1d5aeb50cee8b09a4ad2df0c7b90780cdff3e9197d3a316c82f2ca8f967a79f",
+      "managed/probe/Gcam.EvidenceProbe.runtimeconfig.json": "7e4fcf67197ad5baa5f6cbf30ef3754fb26db9b6b7f83fa36656029885dbe390",
+      "managed/probe/Gcam.Masks.dll": "505b163fd4deda9b6333d05d5eac4314f7215e8ddf53f300435149fbe4c78e42",
+      "managed/probe/Gcam.Masks.pdb": "a6577f876976a50de51f5a87a562b03ad6ee41f9c9538287ce9aba84a7c05318",
+      "managed/probe/Gcam.Simulation.dll": "9773265bb105ba9e2a54c4a040ce772d938c2aed70aa057c8e337663061aa3fa",
+      "managed/probe/Gcam.Simulation.pdb": "c4189582fa68f64dadeceb57f42a125257d5320bea236735409cddcdc460e4b8",
+      "managed/probe/Gcam.Studio.Core.dll": "4921bb4ee8087c6bf2abba514df405f6c21af503d530674554f4a75cf7970b45",
+      "managed/probe/Gcam.Studio.Core.pdb": "7f65b5fe514ef7f29ccd08d93b1b69b7401f067e659cac538e98db036e5891af",
+      "managed/probe/Gcam.Studio.Services.dll": "aa1efdb89054133115a689879ec48428ab6066c3ecee9d318f88d7b8ec143212",
+      "managed/probe/Gcam.Studio.Services.pdb": "4704f9ff3760c07defd97079e46326cc00983b528e7719068f1180f1ea06adf9"
+     },
+     "Tools": {
+      "OS": "Windows",
+      "Architecture": "AMD64",
+      "DriverPython": "3.11.9",
+      "DotnetRuntime": "9.0.13"
+     }
+    },
+    "ExecutionId": "fe404f7ceab2db2697b45a045677e8c5f27e285abb2850b05f6c3f8f52d6c183",
+    "BuildObservation": {
+     "Git": "git version 2.45.0.windows.1",
+     "DotnetSdk": "9.0.311"
+    }
+   }
+  },
+  "Inputs": [
+   {
+    "Family": "background_shape_sensitivity_v2",
+    "Seed": 730001,
+    "SourceId": "09a59e082e705bf4e32cdb17aa36f1a39e55ec1f5ea48dc108dfd2ba13a39eeb",
+    "RecipeSha256": "07b0924833e55c2b4aaa7d77456736343ed2bfe9a32c1136bd89529fc961f0e9",
+    "Outputs": {
+     "background-shape-sensitivity.json": "216d3e793c4444ecddf8001353b3cf3b0e0b5726d828b781747d59b07acf1269",
+     "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "stdout.txt": "c550d3d3a453b3274fee9b90af9908ab9330f26e33338af8fb6494b44627663d"
+    }
+   },
+   {
+    "Family": "background_shape_sensitivity_v2",
+    "Seed": 860364,
+    "SourceId": "09a59e082e705bf4e32cdb17aa36f1a39e55ec1f5ea48dc108dfd2ba13a39eeb",
+    "RecipeSha256": "07b0924833e55c2b4aaa7d77456736343ed2bfe9a32c1136bd89529fc961f0e9",
+    "Outputs": {
+     "background-shape-sensitivity.json": "cbaeebc1e5b4fdf93de7427c8bc898eee6afb85e14b673af4137a40190cfba14",
+     "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "stdout.txt": "00b63fc709978cd63a9e86b4043b65ff0584fe30f26d880cb81bc46807388bd7"
+    }
+   },
+   {
+    "Family": "background_shape_sensitivity_v2",
+    "Seed": 990727,
+    "SourceId": "09a59e082e705bf4e32cdb17aa36f1a39e55ec1f5ea48dc108dfd2ba13a39eeb",
+    "RecipeSha256": "07b0924833e55c2b4aaa7d77456736343ed2bfe9a32c1136bd89529fc961f0e9",
+    "Outputs": {
+     "background-shape-sensitivity.json": "c3c76fc2bdb7b850e106119c0d8fa94ece6f3bca04aeda0f22f4ec2a3176f84c",
+     "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "stdout.txt": "9828e0eea3e71aaa6b71b1e3e3c31d65b200fdd16e923c94844626a0f5867ef4"
+    }
+   },
+   {
+    "Family": "background_shape_sensitivity_v2",
+    "Seed": 1121090,
+    "SourceId": "09a59e082e705bf4e32cdb17aa36f1a39e55ec1f5ea48dc108dfd2ba13a39eeb",
+    "RecipeSha256": "07b0924833e55c2b4aaa7d77456736343ed2bfe9a32c1136bd89529fc961f0e9",
+    "Outputs": {
+     "background-shape-sensitivity.json": "c3749edc5dacf95bf0e39fbbf112676884c946800d69c340179cae4fc133af84",
+     "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "stdout.txt": "6ad01390cb0a93a7896106ad0d98c5b14cbebd50bf736945f8bfdc8565465d6d"
+    }
+   },
+   {
+    "Family": "background_shape_sensitivity_v2",
+    "Seed": 1251453,
+    "SourceId": "09a59e082e705bf4e32cdb17aa36f1a39e55ec1f5ea48dc108dfd2ba13a39eeb",
+    "RecipeSha256": "07b0924833e55c2b4aaa7d77456736343ed2bfe9a32c1136bd89529fc961f0e9",
+    "Outputs": {
+     "background-shape-sensitivity.json": "84ebfa78f8c0ea12332d13af3851abb25a977cb687b1a6569b3d49e24928aa72",
+     "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "stdout.txt": "2b94223eb658dfca74e30378eae12207a6b069a2974dbced6010f657101d3801"
+    }
+   },
+   {
+    "Family": "background_shape_sensitivity_v2",
+    "Seed": 1381816,
+    "SourceId": "09a59e082e705bf4e32cdb17aa36f1a39e55ec1f5ea48dc108dfd2ba13a39eeb",
+    "RecipeSha256": "07b0924833e55c2b4aaa7d77456736343ed2bfe9a32c1136bd89529fc961f0e9",
+    "Outputs": {
+     "background-shape-sensitivity.json": "d7be4e75ebee2b49b15441ac3b8b9ddada7c9618040c3a1eb83634bd618ffbf4",
+     "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "stdout.txt": "8a2b18fb3191a957f4d1f41ba8d391651b711173f4cc67697e3c6821c0a92985"
+    }
+   },
+   {
+    "Family": "background_shape_sensitivity_v2",
+    "Seed": 1512179,
+    "SourceId": "09a59e082e705bf4e32cdb17aa36f1a39e55ec1f5ea48dc108dfd2ba13a39eeb",
+    "RecipeSha256": "07b0924833e55c2b4aaa7d77456736343ed2bfe9a32c1136bd89529fc961f0e9",
+    "Outputs": {
+     "background-shape-sensitivity.json": "1d296702c686c1f5c7d539fb7805d0b60946c3f4e3a9868f526dcc74d0c00d2c",
+     "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "stdout.txt": "43893d345d6699428c1097594df7f977de0e3ed20427969d61d5b9ec0692f8fc"
+    }
+   },
+   {
+    "Family": "background_shape_sensitivity_v2",
+    "Seed": 1642542,
+    "SourceId": "09a59e082e705bf4e32cdb17aa36f1a39e55ec1f5ea48dc108dfd2ba13a39eeb",
+    "RecipeSha256": "07b0924833e55c2b4aaa7d77456736343ed2bfe9a32c1136bd89529fc961f0e9",
+    "Outputs": {
+     "background-shape-sensitivity.json": "95a6a0e9ea543e74bce3b86f574fd8306e735d0352d1d35d5affd66b4cdfe71d",
+     "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "stdout.txt": "4515705358cca8315839ee362a9376df6b69520f0c4fcc02888b53e833fbe892"
+    }
+   },
+   {
+    "Family": "background_shape_sensitivity_v2",
+    "Seed": 1772905,
+    "SourceId": "09a59e082e705bf4e32cdb17aa36f1a39e55ec1f5ea48dc108dfd2ba13a39eeb",
+    "RecipeSha256": "07b0924833e55c2b4aaa7d77456736343ed2bfe9a32c1136bd89529fc961f0e9",
+    "Outputs": {
+     "background-shape-sensitivity.json": "0b9bb4e6226f605abda08f32d9ae47af599d709bc4cdb46e417713c76b4aff4a",
+     "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "stdout.txt": "4d50375eee57e0d5582ffe8cb3c940b710db7172f95ce65e721a8b98e20f5f0d"
+    }
+   },
+   {
+    "Family": "background_shape_sensitivity_v2",
+    "Seed": 1903268,
+    "SourceId": "09a59e082e705bf4e32cdb17aa36f1a39e55ec1f5ea48dc108dfd2ba13a39eeb",
+    "RecipeSha256": "07b0924833e55c2b4aaa7d77456736343ed2bfe9a32c1136bd89529fc961f0e9",
+    "Outputs": {
+     "background-shape-sensitivity.json": "84129dc1d7d59ba37cc915a0b2abb29163698e3653d87b67034e16517ce6ae61",
+     "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "stdout.txt": "cef5b227c21b8a8518dfab0a7ac002c3afa1a67772e5f6882480566f8c0bfe0c"
+    }
+   },
+   {
+    "Family": "background_shape_sensitivity_v2",
+    "Seed": 2033631,
+    "SourceId": "09a59e082e705bf4e32cdb17aa36f1a39e55ec1f5ea48dc108dfd2ba13a39eeb",
+    "RecipeSha256": "07b0924833e55c2b4aaa7d77456736343ed2bfe9a32c1136bd89529fc961f0e9",
+    "Outputs": {
+     "background-shape-sensitivity.json": "87ad68a87a4ea013bb4a0402904dff69068b821516ed0c51eff2c4d1661e75a3",
+     "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "stdout.txt": "04ddbadedc598e5e0cbb721c9e130f895a36deb96d472f4ae213a9be9f742699"
+    }
+   },
+   {
+    "Family": "background_shape_sensitivity_v2",
+    "Seed": 2163994,
+    "SourceId": "09a59e082e705bf4e32cdb17aa36f1a39e55ec1f5ea48dc108dfd2ba13a39eeb",
+    "RecipeSha256": "07b0924833e55c2b4aaa7d77456736343ed2bfe9a32c1136bd89529fc961f0e9",
+    "Outputs": {
+     "background-shape-sensitivity.json": "b09e2a89f9c6c93f2fbdffd99c41a488d0607d45f84b7dcbcfecdc995bef1b7e",
+     "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "stdout.txt": "e1a8e93cc8a9aaeffd2bf1a518d33dc4c2d9f13d46f764a14a190c9356a45a28"
+    }
+   },
+   {
+    "Family": "background_shape_sensitivity_v2",
+    "Seed": 2294357,
+    "SourceId": "09a59e082e705bf4e32cdb17aa36f1a39e55ec1f5ea48dc108dfd2ba13a39eeb",
+    "RecipeSha256": "07b0924833e55c2b4aaa7d77456736343ed2bfe9a32c1136bd89529fc961f0e9",
+    "Outputs": {
+     "background-shape-sensitivity.json": "5f791e6a224a79c21bedfdd43c85f885c0dbb4f8c409ed1a07653be500e239be",
+     "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "stdout.txt": "d6270dccff097f899781141d9326427bc0eec31f152fee547342441a0586db98"
+    }
+   },
+   {
+    "Family": "background_shape_sensitivity_v2",
+    "Seed": 2424720,
+    "SourceId": "09a59e082e705bf4e32cdb17aa36f1a39e55ec1f5ea48dc108dfd2ba13a39eeb",
+    "RecipeSha256": "07b0924833e55c2b4aaa7d77456736343ed2bfe9a32c1136bd89529fc961f0e9",
+    "Outputs": {
+     "background-shape-sensitivity.json": "ef01c329e31cf30d7559d7f3bd8b70fafd867dc0bd5e37ffdf9f2b362edf7d4c",
+     "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "stdout.txt": "0afe171316eac669e3dad73699cc6902ce211f0013d0ab18f2f3f951eaa6edf7"
+    }
+   },
+   {
+    "Family": "background_shape_sensitivity_v2",
+    "Seed": 2555083,
+    "SourceId": "09a59e082e705bf4e32cdb17aa36f1a39e55ec1f5ea48dc108dfd2ba13a39eeb",
+    "RecipeSha256": "07b0924833e55c2b4aaa7d77456736343ed2bfe9a32c1136bd89529fc961f0e9",
+    "Outputs": {
+     "background-shape-sensitivity.json": "1a4022738946775ce99b760903d3a6131893b3d3f7cda09811eaa05e9c8f72bb",
+     "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "stdout.txt": "f3b77edb62dfcbb706c1524eb49438a6fe0f0d3ebf632222b823748a3c873686"
+    }
+   },
+   {
+    "Family": "background_shape_sensitivity_v2",
+    "Seed": 2685446,
+    "SourceId": "09a59e082e705bf4e32cdb17aa36f1a39e55ec1f5ea48dc108dfd2ba13a39eeb",
+    "RecipeSha256": "07b0924833e55c2b4aaa7d77456736343ed2bfe9a32c1136bd89529fc961f0e9",
+    "Outputs": {
+     "background-shape-sensitivity.json": "9407449e33aa422ac73ae2a8d30785c5f06669e82768a6699d810d2a54f78a9f",
+     "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "stdout.txt": "6315a68491315ba9f5a4fcc2f15b2d3b5b32b7adb7633ba053fd4f63cd02c2fe"
+    }
+   },
+   {
+    "Family": "background_shape_sensitivity_v2",
+    "Seed": 2815809,
+    "SourceId": "09a59e082e705bf4e32cdb17aa36f1a39e55ec1f5ea48dc108dfd2ba13a39eeb",
+    "RecipeSha256": "07b0924833e55c2b4aaa7d77456736343ed2bfe9a32c1136bd89529fc961f0e9",
+    "Outputs": {
+     "background-shape-sensitivity.json": "4f3e0a807f005dc70cb23c1cea13dd9400dafdcdb70e03753187a2639808c6af",
+     "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "stdout.txt": "588cab99db80af5d950a1a2e6683c7b42c3b9814026b4d994654ea9b2892b751"
+    }
+   },
+   {
+    "Family": "background_shape_sensitivity_v2",
+    "Seed": 2946172,
+    "SourceId": "09a59e082e705bf4e32cdb17aa36f1a39e55ec1f5ea48dc108dfd2ba13a39eeb",
+    "RecipeSha256": "07b0924833e55c2b4aaa7d77456736343ed2bfe9a32c1136bd89529fc961f0e9",
+    "Outputs": {
+     "background-shape-sensitivity.json": "f4aab6411268eee4c7d1ad85ae9acdb592ce4da644b506ccb84ef842f075b2ec",
+     "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "stdout.txt": "469eb3e853df2e3545fa4a3b4775994ce6e3c20781c280fe240a2463e7aa52d8"
+    }
+   },
+   {
+    "Family": "background_shape_sensitivity_v2",
+    "Seed": 3076535,
+    "SourceId": "09a59e082e705bf4e32cdb17aa36f1a39e55ec1f5ea48dc108dfd2ba13a39eeb",
+    "RecipeSha256": "07b0924833e55c2b4aaa7d77456736343ed2bfe9a32c1136bd89529fc961f0e9",
+    "Outputs": {
+     "background-shape-sensitivity.json": "78dbea6de2698a080a1380ea822d3958e9f0a1971778c3abff211a24a3e26bb8",
+     "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "stdout.txt": "62fd2ef4c52fa166c41e9c4624638121f9bad99ca3622954a8fb6a6d7c20d1e3"
+    }
+   },
+   {
+    "Family": "background_shape_sensitivity_v2",
+    "Seed": 3206898,
+    "SourceId": "09a59e082e705bf4e32cdb17aa36f1a39e55ec1f5ea48dc108dfd2ba13a39eeb",
+    "RecipeSha256": "07b0924833e55c2b4aaa7d77456736343ed2bfe9a32c1136bd89529fc961f0e9",
+    "Outputs": {
+     "background-shape-sensitivity.json": "589b856c37bcc16983d6e4ce932ef220288bf8554b71756e415bd4b54e29bf92",
+     "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "stdout.txt": "ac93dcda35b930941bbd4a0152eebb21048250fdc36357d49a52a87dae193215"
+    }
+   },
+   {
+    "Family": "background_shape_sensitivity_v2",
+    "Seed": 3337261,
+    "SourceId": "09a59e082e705bf4e32cdb17aa36f1a39e55ec1f5ea48dc108dfd2ba13a39eeb",
+    "RecipeSha256": "07b0924833e55c2b4aaa7d77456736343ed2bfe9a32c1136bd89529fc961f0e9",
+    "Outputs": {
+     "background-shape-sensitivity.json": "db488de7b6d42792e367222922044119ece099bcab87d1553e4af43a3dc14501",
+     "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "stdout.txt": "d9e5b06ab3d498390d8da59120e2b987f605de7db51d5fc587c31649ab4a62f7"
+    }
+   },
+   {
+    "Family": "background_shape_sensitivity_v2",
+    "Seed": 3467624,
+    "SourceId": "09a59e082e705bf4e32cdb17aa36f1a39e55ec1f5ea48dc108dfd2ba13a39eeb",
+    "RecipeSha256": "07b0924833e55c2b4aaa7d77456736343ed2bfe9a32c1136bd89529fc961f0e9",
+    "Outputs": {
+     "background-shape-sensitivity.json": "f04a4e090391a193bf9615342bfe615c4f551f83fec4d19dfb7c70b2261961f3",
+     "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "stdout.txt": "1c48016b247d3124928303192be197f48a912f344b659e3b76401f7abd5e4c68"
+    }
+   },
+   {
+    "Family": "background_shape_sensitivity_v2",
+    "Seed": 3597987,
+    "SourceId": "09a59e082e705bf4e32cdb17aa36f1a39e55ec1f5ea48dc108dfd2ba13a39eeb",
+    "RecipeSha256": "07b0924833e55c2b4aaa7d77456736343ed2bfe9a32c1136bd89529fc961f0e9",
+    "Outputs": {
+     "background-shape-sensitivity.json": "55dac65f44a77f8b5e0027abbfbd6de945467962164389927a858613fec67014",
+     "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "stdout.txt": "c27b3b79eaf300c0497b47e61e8bc29147482360670db69f928cbdbaeadb27fa"
+    }
+   },
+   {
+    "Family": "background_shape_sensitivity_v2",
+    "Seed": 3728350,
+    "SourceId": "09a59e082e705bf4e32cdb17aa36f1a39e55ec1f5ea48dc108dfd2ba13a39eeb",
+    "RecipeSha256": "07b0924833e55c2b4aaa7d77456736343ed2bfe9a32c1136bd89529fc961f0e9",
+    "Outputs": {
+     "background-shape-sensitivity.json": "e317927333eeb7edac22226b10db56b936cee9bdc7994a4dfa464d43bcd5caa5",
+     "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "stdout.txt": "8b437d38f9abd455476fb2d91bcfecbcf98eb021919dd43c75ef3f1a8fe311d1"
+    }
+   },
+   {
+    "Family": "background_shape_sensitivity_v2",
+    "Seed": 3858713,
+    "SourceId": "09a59e082e705bf4e32cdb17aa36f1a39e55ec1f5ea48dc108dfd2ba13a39eeb",
+    "RecipeSha256": "07b0924833e55c2b4aaa7d77456736343ed2bfe9a32c1136bd89529fc961f0e9",
+    "Outputs": {
+     "background-shape-sensitivity.json": "35fe807953fd10ecb4a64a79c7b9ec71aa0f6181ca99296bdb9f8be065d52f25",
+     "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "stdout.txt": "7ed9495cacdb7a3c784b7b9d99d461929f2d8e5877ee9e8dadb9caff33f58790"
+    }
+   },
+   {
+    "Family": "background_shape_sensitivity_v2",
+    "Seed": 3989076,
+    "SourceId": "09a59e082e705bf4e32cdb17aa36f1a39e55ec1f5ea48dc108dfd2ba13a39eeb",
+    "RecipeSha256": "07b0924833e55c2b4aaa7d77456736343ed2bfe9a32c1136bd89529fc961f0e9",
+    "Outputs": {
+     "background-shape-sensitivity.json": "5bfee6023b3e8467b26bfb15cacdb64e811c05af50f974d0435e53148e2e3466",
+     "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "stdout.txt": "ea4070d79cabcc6314dc4a928e58e8f0d170ed3c112904e0753651b283423b56"
+    }
+   },
+   {
+    "Family": "background_shape_sensitivity_v2",
+    "Seed": 4119439,
+    "SourceId": "09a59e082e705bf4e32cdb17aa36f1a39e55ec1f5ea48dc108dfd2ba13a39eeb",
+    "RecipeSha256": "07b0924833e55c2b4aaa7d77456736343ed2bfe9a32c1136bd89529fc961f0e9",
+    "Outputs": {
+     "background-shape-sensitivity.json": "0b632db80b49752bc895c606066d0bf586e05fd029cb1bdf9d63622d0169b425",
+     "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "stdout.txt": "56f79cb149c8ceddc9f7938a7be1e9a18e2c82bf4170094d72fc7211ebfe7060"
+    }
+   },
+   {
+    "Family": "background_shape_sensitivity_v2",
+    "Seed": 4249802,
+    "SourceId": "09a59e082e705bf4e32cdb17aa36f1a39e55ec1f5ea48dc108dfd2ba13a39eeb",
+    "RecipeSha256": "07b0924833e55c2b4aaa7d77456736343ed2bfe9a32c1136bd89529fc961f0e9",
+    "Outputs": {
+     "background-shape-sensitivity.json": "bd4a3ded99af64e39c5846bbb5ca4fbfe6db20940c9bf075513f36158eca774b",
+     "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "stdout.txt": "c177d95ea81d0b64c3cfa66c7b0c5f5359c1d44ecf04024c237a42e365a0be5e"
+    }
+   },
+   {
+    "Family": "background_shape_sensitivity_v2",
+    "Seed": 4380165,
+    "SourceId": "09a59e082e705bf4e32cdb17aa36f1a39e55ec1f5ea48dc108dfd2ba13a39eeb",
+    "RecipeSha256": "07b0924833e55c2b4aaa7d77456736343ed2bfe9a32c1136bd89529fc961f0e9",
+    "Outputs": {
+     "background-shape-sensitivity.json": "01d3765ef73875d082cd67a24a7674216ac0729e13127daf5a8d293df3ee29a9",
+     "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "stdout.txt": "a6b8cabb970152e569f457b8e3987799e764ff65e55c0353e73272341a7b8bb8"
+    }
+   },
+   {
+    "Family": "background_shape_sensitivity_v2",
+    "Seed": 4510528,
+    "SourceId": "09a59e082e705bf4e32cdb17aa36f1a39e55ec1f5ea48dc108dfd2ba13a39eeb",
+    "RecipeSha256": "07b0924833e55c2b4aaa7d77456736343ed2bfe9a32c1136bd89529fc961f0e9",
+    "Outputs": {
+     "background-shape-sensitivity.json": "c57ccaba6fe41f15a1c46b7458de7a83c3ee11aefdb15a7cf1c60ea1f49e2ae9",
+     "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "stdout.txt": "e23adefe92da085431cccace4d8f5d0c18de08529e06e6f5bdeb708e663e470a"
+    }
+   },
+   {
+    "Family": "background_shape_sensitivity_v2",
+    "Seed": 4640891,
+    "SourceId": "09a59e082e705bf4e32cdb17aa36f1a39e55ec1f5ea48dc108dfd2ba13a39eeb",
+    "RecipeSha256": "07b0924833e55c2b4aaa7d77456736343ed2bfe9a32c1136bd89529fc961f0e9",
+    "Outputs": {
+     "background-shape-sensitivity.json": "99eb40d923561a3777336236ac3d5c4e0f58c3360ae32c8b115a5a677428a519",
+     "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "stdout.txt": "6631ce426fff3712d4879cec24560e109c66c98bb7f9f5d694600de749aae6ba"
+    }
+   },
+   {
+    "Family": "background_shape_sensitivity_v2",
+    "Seed": 4771254,
+    "SourceId": "09a59e082e705bf4e32cdb17aa36f1a39e55ec1f5ea48dc108dfd2ba13a39eeb",
+    "RecipeSha256": "07b0924833e55c2b4aaa7d77456736343ed2bfe9a32c1136bd89529fc961f0e9",
+    "Outputs": {
+     "background-shape-sensitivity.json": "7a88769fbb56704ce252628ff3f4754682422609ed3deba038c49b49d096ec9d",
+     "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "stdout.txt": "0c4c7dec8444a29baa9315415dfee1491684b942ac9c9aa3dad1e4311aa3134d"
+    }
+   }
+  ],
+  "Analysis": {
+   "Files": {
+    "samples/evidence/background-shape/aggregate_background.py": "abf3607161e37ecc94cff05b4af428ba4cd9a4964f5a0e36640a6043da1f8424",
+    "samples/evidence/provenance.py": "f22d4389707c67563d20a7cc809bdab436003e56374018096e19c6a51b429a2c"
+   },
+   "Tools": {
+    "Python": "3.11.9",
+    "numpy": "1.26.4",
+    "scipy": "1.17.1"
+   },
+   "Arguments": {
+    "phase": "sensitivity",
+    "version": 2
+   },
+   "InputFiles": {
+    "samples/evidence/background-shape/request-v2.json": "24cf9a75157f527008a7ee1ad8a9290d40693013120e6ce78b8d8e1ad1cd69b8",
+    "samples/evidence/background-shape/pinned-v1.json": "3c44d28d8c3484a2ae89d7a272cec492377120d8a9da9af7c8de28556aa94c24",
+    "samples/evidence/seeds.json": "1de7a0c695314acd968e0a3910c2f41b44ad8d7ffd91b5907ac965942fbd1c82"
+   }
+  }
+ },
+ "BaseParents": 0,
+ "Members": {
+  "background-shape-sensitivity-v2.json": "99737074a45b2968ead55a4c684b03aa95accb2d8e1ad93d348f7034c0004940"
+ }
+}

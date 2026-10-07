@@ -1,0 +1,42 @@
+{
+ "_about": "TODO-33 stage 1; selection first, pinned-v1.json required for pilot and validation. Serial timing limit 12 hours. Probe phases consume explicit independent calibration.",
+ "config_sha256": {
+  "scenario.json": "eb5b96835c0b68a88c5c26965540f85f1a313acf1cc0b49955cf7921463edddc",
+  "scenario_handheld.json": "f988784c8ee266e6dd28eb898cdbbfac0e2452cb01fd3929874fd866edc98795",
+  "evidence/background-shape/request-v1.json": "847b6e8b97e0ec87ea0a26d3ed3ce30038ca223b04ac1a91b8d6b1c37afd849b"
+ },
+ "families": [
+  {
+   "id": "background_shape_sensitivity_v1",
+   "kind": "probe",
+   "mode": "background-sensitivity",
+   "seeds": "BG_VALIDATION32",
+   "n": 32,
+   "evidence": "TODO-33 BD-7: 60 s, .2 microSv/h, S=250/1000/default; 600/3600 s measured shape and rate; signed scale offsets; wrong-bound diagnostic only"
+  },
+  {
+   "id": "background_shape_selection_v1",
+   "kind": "probe",
+   "mode": "background-selection",
+   "seeds": "BG_SELECTION16",
+   "n": 16,
+   "evidence": "TODO-33 BD-1..11 single source; selection"
+  },
+  {
+   "id": "background_shape_pilot_v1",
+   "kind": "probe",
+   "mode": "background-pilot",
+   "seeds": "BG_SELECTION16",
+   "n": 1,
+   "evidence": "TODO-33 BD-1..11 single source; pilot"
+  },
+  {
+   "id": "background_shape_validation_v1",
+   "kind": "probe",
+   "mode": "background-validation",
+   "seeds": "BG_VALIDATION32",
+   "n": 32,
+   "evidence": "TODO-33 BD-1..11 single source; validation"
+  }
+ ]
+}

@@ -2,7 +2,7 @@
  "_about": "Pins and recipes for the calibration records in docs/VV.Gcam.Calibration.md, read by samples/evidence/calibration_record.py. Every file the generator reads is listed under Files with the SHA-256 of the bytes git stores (LF); a changed file fails the generator until its pin is updated here on purpose (and the record's Status reviewed). Records name their adapter (Kind), manifest, selection / validation files and families; CodeLandedIn is the commit in which the runs' code was committed (the runs' own engine commit was not recorded).",
  "Document": "docs/VV.Gcam.Calibration.md",
  "Files": {
-  "samples/evidence/seeds.json": "efe45efc63261cb9cc3c1882d875d6e91203c5b9b0df673cf450336801b77f37",
+  "samples/evidence/seeds.json": "1de7a0c695314acd968e0a3910c2f41b44ad8d7ffd91b5907ac965942fbd1c82",
   "samples/evidence/manifest-ambient-v1.json": "655fefed68a903ed2292cb70d3d111759680aab89433d87c6557e948689f8ce8",
   "samples/evidence/manifest-ambient-v2.json": "5d546bb4c0ec51a50f1cbad6b719ff50cead20b64666625ba101d3773c542db2",
   "samples/evidence/manifest-csco-v1.json": "5c5fcaf6eb97b1971efc01941d571be22c633b9a76ce486a5162fdc5abfc00ac",
