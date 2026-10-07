@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using Gcam.Configuration;
 using Gcam.Studio.UiTests.Harness;
 using Xunit.Abstractions;
 
@@ -174,9 +175,47 @@ public sealed class WorkspaceScenarioTests(ITestOutputHelper output)
             Assert.Equal(Broken ? expected.Sum() + 1 : expected.Sum(), actual.Sum(), 8);
             for (int i = 0; i < expected.Length; i++) Assert.Equal(expected[i], actual[i], 10);
             Assert.True(actual.Sum() < rawLow.Sum(), "strip removes high-isotope contamination");
+            double net = rawLow.Sum()-r*rawHigh.Sum();
+            Assert.Equal(net, stripped.GetProperty("EffectiveCounts").GetDouble());
+            double lc = ratio.GetProperty("LowCounts").GetDouble(), hc = ratio.GetProperty("HighCounts").GetDouble();
+            Assert.Equal(0, ratio.GetProperty("OverlapCounts").GetInt64());
+            double variance = rawLow.Sum()+r*r*rawHigh.Sum()+Math.Pow(rawHigh.Sum(),2)*r*r*(1/lc+1/hc);
+            // Fewer than 32 binary64 operations in equivalent positive-term variance expansions.
+            Assert.InRange(Math.Abs(variance-stripped.GetProperty("StripCount").GetProperty("Variance").GetDouble()),0,
+                32*2.220446049250313e-16*variance);
+            Assert.Equal((Math.Round(net),(double?)Math.Round(Math.Sqrt(variance))), Verdict.ParseNetCount(stripped.GetProperty("Summary").GetString()!));
+            Assert.Contains("signed difference", ui.Text("Imaging.StripNote"));
+            Assert.Equal("(clipped strip values)", stripped.GetProperty("FloodUnit").GetString());
+            record.Set("stripRoi", AssertClippedRoi(ui,stripped));
             AssertPeakAtMaximum(ui, stripped);
             Assert.NotEqual(low.GetProperty("Peaks")[0].GetProperty("Value").GetDouble(), stripped.GetProperty("Peaks")[0].GetProperty("Value").GetDouble());
         });
+
+    internal static string AssertClippedRoi(StudioWindow ui, JsonElement evidence, bool draw = true)
+    {
+        var optics = new OpticsSettings();
+        double[] values = Numbers(evidence,"Flood");
+        int cells = optics.DetectorPixels;
+        // Pick an interior pixel by its displayed value. y is up in the array, down in screen rows.
+        int index = Enumerable.Range(0,values.Length).Where(i => i%cells > 0 && i%cells < cells-1 && i/cells > 0 && i/cells < cells-1)
+            .OrderByDescending(i => values[i]).First();
+        if (draw)
+        {
+            ui.Select("ToolRoi");
+            var geometry = new FloodOracle(ui.Bounds("FloodView"),cells,optics.PixelPitchMm);
+            int col=index%cells, row=cells-1-index/cells;
+            Pointer.Drag(geometry.CellCorner(col,row),geometry.CellCorner(col+1,row+1));
+            StudioWindow.WaitUntil(() => ui.Rows("MeasurementList").Count == 1,TimeSpan.FromSeconds(3),"one clipped flood ROI");
+        }
+        var rowValue = MeasurementRow.Parse(ui.Rows("MeasurementList")[0].Current.Name);
+        Assert.Equal(("ROI","Flood"),(rowValue.Kind,rowValue.Pane));
+        Assert.EndsWith(" clipped strip values",rowValue.Value);
+        Assert.Equal(1,Verdict.ParseRoiDetail(ui.Text("MeasurementDetail")).Pixels);
+        // Exact formatting oracle, not a physics tolerance: large values are integral, smaller ones have 3 sig figs.
+        string number = values[index].ToString(Math.Abs(values[index]) >= 100 ? "N0" : "G3");
+        Assert.Equal($"Σ {number} clipped strip values",rowValue.Value);
+        return rowValue.Value;
+    }
 
     [DesktopFact]
     public void Imaging_RefocusAndSweep_MatchProjectionAndHalfMaxInterval() =>

@@ -44,15 +44,19 @@
                 <TextBox Text="{Binding Shared.WindowFwhm}" Tag="× FWHM" Margin="{StaticResource Gap.Field}"
                          AutomationProperties.AutomationId="Imaging.Window" AutomationProperties.Name="Window N times FWHM at each line" />
                 <CheckBox Content="Compton strip" IsChecked="{Binding Strip}" Margin="{StaticResource Gap.Field}"
-                          ToolTip="One-pass scalar model: exact for a clean pair; approximate for 3+ overlapping contaminants."
+                          ToolTip="One-pass scalar estimate: assumes the calibrated ratio applies to this scene; approximate for 3+ overlapping contaminants. Ambient counts are not subtracted."
                           AutomationProperties.AutomationId="Imaging.Strip"
-                          AutomationProperties.HelpText="One-pass scalar model: exact for a clean pair; approximate for 3+ overlapping contaminants." />
+                          AutomationProperties.HelpText="One-pass scalar estimate: assumes the calibrated ratio applies to this scene; approximate for 3+ overlapping contaminants. Ambient counts are not subtracted." />
                 <ItemsControl ItemsSource="{Binding Ratios}">
                     <ItemsControl.ItemTemplate><DataTemplate>
                         <TextBlock Text="{Binding Description}" TextWrapping="Wrap" Style="{StaticResource Text.MonoCaption}" />
                     </DataTemplate></ItemsControl.ItemTemplate>
                 </ItemsControl>
-                <TextBlock Text="{Binding Summary}" TextWrapping="Wrap" Style="{StaticResource Text.Caption}" Margin="{StaticResource Gap.Tight}" />
+                <TextBlock Text="{Binding Summary}" TextWrapping="Wrap" Style="{StaticResource Text.Caption}" Margin="{StaticResource Gap.Tight}"
+                           ToolTip="1σ includes counting and calibration uncertainty, not scalar-model error or detection confidence." />
+                <TextBlock Text="{Binding StripNote}" TextWrapping="Wrap" Style="{StaticResource Text.Caption}" Margin="{StaticResource Gap.Tight}"
+                           Visibility="{Binding StripNote, Converter={x:Static conv:NullToCollapsedConverter.Instance}}"
+                           AutomationProperties.AutomationId="Imaging.StripNote" />
                 <TextBlock Text="{Binding WorkerCosts}" TextWrapping="Wrap" Style="{StaticResource Text.Caption}" Margin="{StaticResource Gap.Tight}"
                            Visibility="{Binding WorkerCosts, Converter={x:Static conv:NullToCollapsedConverter.Instance}}" />
                 <TextBlock Text="{Binding Error}" TextWrapping="Wrap" Style="{StaticResource Text.CaptionWarning}" />

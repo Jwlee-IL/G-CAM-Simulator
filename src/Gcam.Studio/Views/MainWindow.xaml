@@ -346,12 +346,13 @@
                                         <DockPanel DockPanel.Dock="Top" Style="{StaticResource PanelHeader}">
                                             <TextBlock DockPanel.Dock="Left" Text="Detector flood map" Style="{StaticResource Text.PanelTitle}" />
                                             <Border DockPanel.Dock="Right" Style="{StaticResource Chip}"
-                                                    ToolTip="Detected events per crystal; each list-mode event contributes one count">
-                                                <TextBlock Text="counts" Style="{StaticResource Text.Caption}" />
+                                                    ToolTip="{Binding FloodHelp}">
+                                                <TextBlock Text="{Binding FloodCaption}" Style="{StaticResource Text.Caption}"
+                                                           AutomationProperties.AutomationId="FloodValueUnit" />
                                             </Border>
                                         </DockPanel>
                                         <c:ImageStackPanel>
-                                            <c:HeatmapView x:Name="Flood" ValueUnit="counts" Style="{StaticResource ImageHeatmap}" Image="{Binding Result.Flood}"
+                                            <c:HeatmapView x:Name="Flood" ValueUnit="{Binding FloodUnit}" Style="{StaticResource ImageHeatmap}" Image="{Binding Result.Flood}"
                                                            OriginMm="{Binding Result.FloodOriginMm}" StepMm="{Binding Result.FloodStepMm}"
                                                            EmptyText="Start an acquisition to see the flood map"
                                                            c:MeasurementOverlay.Session="{Binding Measurements}" c:MeasurementOverlay.Pane="Flood"

@@ -37,8 +37,8 @@ internal static class AutomationEvidence
                 PlotBands = (owner as PlotView)?.Bands,
                 // TODO-38 / DC-3: the reconstruction method and what the panel states about it.
                 Method = i.Reconstruction.ToString(), DisplayedMethod = i.DisplayedMethod.ToString(),
-                i.ReconstructionUnit, i.ReconstructionNote, i.Summary,
-                i.Result.EffectiveCounts
+                i.ReconstructionUnit, i.ReconstructionNote, i.Summary, i.FloodUnit, i.StripNote,
+                i.Result.EffectiveCounts, i.Result.StripCount
             },
             _ => null
         };

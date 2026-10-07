@@ -1,5 +1,4 @@
 using System.Text.Json;
-using System.Text.RegularExpressions;
 using System.Windows;
 using Gcam.Studio.UiTests.Harness;
 using Xunit.Abstractions;
@@ -133,9 +132,18 @@ public sealed class MlemScenarioTests(ITestOutputHelper output)
             double[] rawLow = Numbers(low, "Flood"), rawHigh = Numbers(high, "Flood");
             double clipped = rawLow.Select((v, i) => Math.Max(0, v - r * rawHigh[i])).Sum();
             double net = rawLow.Sum() - r * rawHigh.Sum();
-            // Cross-correlation keeps its clipped strip count (TODO-39), labelled as such (MD-11).
-            Assert.Equal(clipped, ccStrip.GetProperty("EffectiveCounts").GetDouble(), 6);
-            Assert.Contains("counts (clipped strip sum)", ccStrip.GetProperty("Summary").GetString());
+            // TODO-39: both decoders report the signed net, with independent calibration uncertainty.
+            Assert.Equal(net, ccStrip.GetProperty("EffectiveCounts").GetDouble(), 6);
+            double lc = ratio.GetProperty("LowCounts").GetDouble(), hc = ratio.GetProperty("HighCounts").GetDouble();
+            Assert.Equal(0, ratio.GetProperty("OverlapCounts").GetInt64()); // These default primary windows are disjoint.
+            double variance = rawLow.Sum()+r*r*rawHigh.Sum()+Math.Pow(rawHigh.Sum(),2)*r*r*(1/lc+1/hc);
+            // Fewer than 32 binary64 operations in equivalent positive-term variance expansions.
+            double varianceRoundoff = 32*2.220446049250313e-16*variance;
+            Assert.InRange(Math.Abs(variance-ccStrip.GetProperty("StripCount").GetProperty("Variance").GetDouble()),0,varianceRoundoff);
+            Assert.Equal((Math.Round(net),(double?)Math.Round(Math.Sqrt(variance))), Verdict.ParseNetCount(ccStrip.GetProperty("Summary").GetString()!));
+            Assert.Equal("(clipped strip values)", ccStrip.GetProperty("FloodUnit").GetString());
+            Assert.Contains("signed difference", ui.Text("Imaging.StripNote"));
+            string ccRoi = AssertClippedRoi(ui,ccStrip);
 
             ui.Choose("Imaging.Reconstruction", MlemItem);
             var ml = Decoded(ui, "Mlem", e => e.GetProperty("Strip").GetBoolean());
@@ -145,9 +153,10 @@ public sealed class MlemScenarioTests(ITestOutputHelper output)
             Assert.Equal(Numbers(ccStrip, "Flood"), Numbers(ml, "Flood"));
             Assert.Equal(Broken ? net + 1 : net, ml.GetProperty("EffectiveCounts").GetDouble(), 6);
             string summary = ml.GetProperty("Summary").GetString()!;
-            Assert.Contains("net counts (Σ low − R·Σ high)", summary);
-            long shown = long.Parse(Regex.Match(summary, @"Cs-137 · (-?[\d,]+) net counts").Groups[1].Value.Replace(",", ""));
-            Assert.Equal(Math.Round(net), shown);
+            Assert.Equal((Math.Round(net),(double?)Math.Round(Math.Sqrt(variance))), Verdict.ParseNetCount(summary));
+            Assert.InRange(Math.Abs(variance-ml.GetProperty("StripCount").GetProperty("Variance").GetDouble()),0,varianceRoundoff);
+            Assert.Contains("MLEM: raw low", ui.Text("Imaging.StripNote"));
+            Assert.Equal(ccRoi,AssertClippedRoi(ui,ml,draw: false));
             Assert.True(net < rawLow.Sum(), "the Co-60 downscatter is removed from the Cs-137 count");
             AssertPeakAtMaximum(ui, ml);
             // Cs-137 at x = −20 mm. Measured, not derived (TODO-36 MD-6): MLEM with the background term put the Cs peak

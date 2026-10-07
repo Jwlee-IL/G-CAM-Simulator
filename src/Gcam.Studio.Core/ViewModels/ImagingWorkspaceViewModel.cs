@@ -50,6 +50,18 @@ public sealed partial class ImagingWorkspaceViewModel(MainViewModel shared, IIma
     /// <summary>Value suffix of the reconstruction readout — of the displayed image: correlation sums, or MLEM's
     /// non-negative intensity λ.</summary>
     public string ReconstructionUnit => DisplayedMethod == DecoderMethod.Mlem ? "(MLEM λ)" : "(decoded)";
+    public string FloodUnit => Result?.StripCount is not null ? "(clipped strip values)" : "counts";
+    public string FloodCaption => Result?.StripCount is not null ? "clipped values" : "counts";
+    public string FloodHelp => Result?.StripCount is not null
+        ? "Displayed clipped strip values per crystal; the net count is reported separately."
+        : "Detected events per crystal; each list-mode event contributes one count.";
+    /// <summary>Roles of the published images, independent of a pending strip/method selection.</summary>
+    public string? StripNote => Result?.StripCount is null ? null
+        : (DisplayedMethod == DecoderMethod.Mlem
+            ? "Display: clipped strip flood. MLEM: raw low with the higher-line background. "
+            : "Display: clipped strip flood. Cross-correlation: signed difference. ") +
+          "Net count: scalar model; no ambient subtraction. Calibration uncertainty is shared across frames. " +
+          "Focus sweep: clipped flood.";
     /// <summary>The MLEM caveats, shown while MLEM is selected: the low-count side effect of the selected iteration count,
     /// whether the count was measured for the current optics, and the missing background term.</summary>
     public string? ReconstructionNote => Reconstruction != DecoderMethod.Mlem ? null
@@ -108,12 +120,12 @@ public sealed partial class ImagingWorkspaceViewModel(MainViewModel shared, IIma
     public string? PeakText => Peaks.Count >= 2 ? $"{Peaks.Count} peaks found"
         : Result?.Estimate is { } e ? $"peak ({e.Position.X:F1}, {e.Position.Y:F1}) mm" : null;
     public string Summary => IsProcessing ? "Building channels / calibrating…" : Result is { } r
-        ? $"{SelectedIsotope} · {r.EffectiveCounts:N0} {CountLabel} · {Peaks.Count} found" : "No acquired counts";
-    /// <summary>MD-11: with Compton strip on a channel that has a contaminant, the two methods report different counts —
-    /// cross-correlation the sum of the clipped strip flood (max(0, low − R·high) per pixel), MLEM the net Σ low − R·Σ high —
-    /// so the label names which one is shown.</summary>
-    private string CountLabel => !Strip || !Ratios.Any(r => r.LowIsotope == SelectedIsotope) ? "counts"
-        : DisplayedMethod == DecoderMethod.Mlem ? "net counts (Σ low − R·Σ high)" : "counts (clipped strip sum)";
+        ? $"{SelectedIsotope} · {CountSummary(r)} · {Peaks.Count} found" : "No acquired counts";
+    private static string CountSummary(ImagingResult result) => result.StripCount is { } count
+        ? count.Sigma is { } sigma
+            ? $"{count.NetCounts:N0} ± {sigma:N0} net counts (1σ, counting + calibration)"
+            : $"{count.NetCounts:N0} net counts (uncertainty unavailable)"
+        : $"{result.EffectiveCounts:N0} counts";
     public string WorkerCosts => View is { } v
         ? $"Worker: channels {v.ChannelTime.TotalMilliseconds:F1} ms · calibration {v.CalibrationTime.TotalMilliseconds:F1} ms · decode {v.DecodeTime.TotalMilliseconds:F1} ms" : "";
     partial void OnSelectedIsotopeChanged(string value)
@@ -200,9 +212,9 @@ public sealed partial class ImagingWorkspaceViewModel(MainViewModel shared, IIma
     private void NotifyResult()
     {
         SweepCommand.NotifyCanExecuteChanged();
-        Measurements.Refresh(Result);
+        Measurements.Refresh(Result, ReconstructionUnit);
         foreach (string name in new[] { nameof(SelectedChannel), nameof(Result), nameof(Peaks), nameof(PeakText), nameof(Summary), nameof(ChannelSummary),
-                     nameof(DisplayedMethod), nameof(ReconstructionUnit) })
+                     nameof(DisplayedMethod), nameof(ReconstructionUnit), nameof(FloodUnit), nameof(FloodCaption), nameof(FloodHelp), nameof(StripNote) })
             OnPropertyChanged(name);
     }
 }

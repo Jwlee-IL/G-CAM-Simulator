@@ -65,8 +65,89 @@ public sealed class ImagingServiceTests(ITestOutputHelper output)
         output.WriteLine($"Co-located {live} s: raw Cs={low:F4}, high={high:F4}, stripped Cs={observed:F4}, Cs-only={expected:F4}; error={observed - expected:F4}, 4σ={tolerance:F4}, Var(R)={varianceR:G8}");
         Assert.True(low - expected > 4 * Math.Sqrt(low + expected), "Unstripped Co downscatter must bias the Cs count high.");
         Assert.InRange(Math.Abs(observed - expected), 0, tolerance);
+        Assert.Equal(low - r.R * high, observed);
+        var counts = stripped.Channels.Single(c => c.Isotope == "Cs-137").Image.StripCount!;
+        double predictedVariance = low + r.R * r.R * high + high * high * varianceR;
+        // Two equivalent positive-term expansions use fewer than 32 floating operations; eps is binary64's spacing.
+        Assert.InRange(Math.Abs(predictedVariance-counts.Variance!.Value),0,32*2.220446049250313e-16*predictedVariance);
+        Assert.Equal(0, r.OverlapCounts);
         Assert.All(stripped.Channels.SelectMany(c => c.Image.Flood.Raw.ToArray()), x => Assert.True(x >= 0));
         Assert.Same(snapshot.Imaging.Flood, raw.Channels[0].Image.Flood);
+    }
+
+    [Fact]
+    public async Task Strip_UsesSignedCcInput_AndMatchesMlemCountAndUncertainty()
+    {
+        SceneSource[] scene = [new() { X = 15 }, new() { Isotope = "Co-60", X = -15, ActivityUCi = 1000 }];
+        var snapshot = Acquire(scene, 60, 39039);
+        var service = new ImagingService(); var id = Guid.NewGuid();
+        var raw = await service.ProcessAsync(id, snapshot, scene, Optics, new());
+        var cc = await service.ProcessAsync(id, snapshot, scene, Optics, new(Strip: true));
+        var ml = await service.ProcessAsync(id, snapshot, scene, Optics, new(Strip: true, Method: DecoderMethod.Mlem));
+        var low = raw.Channels.Single(c => c.Isotope == "Cs-137").Image.Flood;
+        var high = raw.Channels.Single(c => c.Isotope == "Co-60").Image.Flood;
+        double r = raw.Ratios.Single().R;
+        var signed = new DetectorImage(low.Width, low.Height);
+        for (int y = 0; y < low.Height; y++) for (int x = 0; x < low.Width; x++) signed[x,y] = low[x,y]-r*high[x,y];
+        var config = SimulationService.BuildConfig(scene, Optics, Detector);
+        var expected = new DefaultSimulationFactory().CreateDecoder(config)!.Decode(signed);
+        var actual = cc.Channels.Single(c => c.Isotope == "Cs-137").Image;
+        Assert.Equal(expected.Reconstruction.Raw.ToArray(), actual.Reconstruction!.Raw.ToArray());
+        Assert.Contains(signed.Raw.ToArray(), value => value < 0);
+        Assert.All(actual.Flood.Raw.ToArray(), value => Assert.True(value >= 0));
+        var mlem = ml.Channels.Single(c => c.Isotope == "Cs-137").Image;
+        Assert.Equal(actual.EffectiveCounts, mlem.EffectiveCounts);
+        Assert.Equal(actual.StripCount, mlem.StripCount);
+        Assert.Equal(actual.Flood.Raw.ToArray(), mlem.Flood.Raw.ToArray());
+        Assert.Equal(0, ml.NewlyMeasuredEvents);
+        Assert.Equal(TimeSpan.Zero, ml.CalibrationTime);
+    }
+
+    [Fact]
+    public async Task Strip_OverlapCovariance_ReplaysWithWindowChangesAndIncrementalPrefixes()
+    {
+        SceneSource[] scene = [new(), new() { Isotope = "Co-60", ActivityUCi = 1000 }];
+        var snapshot = Acquire(scene, 10, 39040);
+        var service = new ImagingService(); var id = Guid.NewGuid();
+        var prefix = snapshot with { Events = snapshot.Events.Take(snapshot.Events.Count / 2).ToArray() };
+        await service.ProcessAsync(id, prefix, scene, Optics, new(10, true));
+        var view = await service.ProcessAsync(id, snapshot, scene, Optics, new(10, true));
+        var fresh = await new ImagingService().ProcessAsync(Guid.NewGuid(), snapshot, scene, Optics, new(10, true));
+        var low = view.Channels.Single(c => c.Isotope == "Cs-137");
+        var high = view.Channels.Single(c => c.Isotope == "Co-60");
+        var ratio = Assert.Single(view.Ratios);
+        Assert.True(ratio.OverlapCounts > 0);
+        var measurement = new MeasurementStage(Detector, Optics.DetectorPixels, Optics.DetectorPixels);
+        var energies = snapshot.Events.Select((ev,i) => measurement.Measure(ev,i)).ToArray();
+        double l = energies.Count(e => e >= low.LoKeV && e <= low.HiKeV);
+        double h = energies.Count(e => e >= high.LoKeV && e <= high.HiKeV);
+        double c = energies.Count(e => e >= low.LoKeV && e <= low.HiKeV && e >= high.LoKeV && e <= high.HiKeV);
+        Assert.True(c > 0);
+        double r = ratio.R, lc = ratio.LowCounts, hc = ratio.HighCounts, cc = ratio.OverlapCounts!.Value;
+        // Independently expand the delta gradient and overlapping Poisson covariance.
+        double vr = lc/(hc*hc) + lc*lc/(hc*hc*hc) - 2*lc*cc/(hc*hc*hc);
+        double variance = l+r*r*h-2*r*c+h*h*vr;
+        Assert.Equal(l-r*h, low.Image.EffectiveCounts);
+        double scale = l+r*r*h+2*r*c+h*h*(lc/(hc*hc)+lc*lc/(hc*hc*hc)+2*lc*cc/(hc*hc*hc));
+        // Sum absolute terms to bound cancellation in the independent expanded covariance expression.
+        Assert.InRange(Math.Abs(variance-low.Image.StripCount!.Variance!.Value),0,32*2.220446049250313e-16*scale);
+        Assert.Equal(fresh.Channels[1].Image.StripCount, low.Image.StripCount);
+        await service.ProcessAsync(id, snapshot, scene, Optics, new(1.5, true));
+        var replay = await service.ProcessAsync(id, snapshot, scene, Optics, new(10, true));
+        Assert.Equal(low.Image.StripCount, replay.Channels[1].Image.StripCount);
+    }
+
+    [Fact]
+    public async Task Strip_MultipleContaminants_ReportNetWithUnavailableUncertainty()
+    {
+        SceneSource[] scene = [new() { Isotope = "Co-57" }, new(), new() { Isotope = "Co-60" }];
+        var snapshot = Acquire(scene, 1, 39041);
+        var view = await new ImagingService().ProcessAsync(Guid.NewGuid(), snapshot, scene, Optics, new(Strip: true));
+        Assert.Equal(2, view.Ratios.Count(r => r.LowIsotope == "Co-57"));
+        var count = view.Channels.Single(c => c.Isotope == "Co-57").Image.StripCount;
+        Assert.NotNull(count);
+        Assert.Null(count.Variance);
+        Assert.True(double.IsFinite(count.NetCounts));
     }
 
     [Fact]

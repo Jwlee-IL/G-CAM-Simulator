@@ -167,7 +167,22 @@ public static class Verdict
     public static double ParseSum(string value)
     {
         if (!value.StartsWith("Σ ", StringComparison.Ordinal)) throw new FormatException($"not a sum: '{value}'");
-        return double.Parse(value[2..], NumberStyles.Float, CultureInfo.CurrentCulture);
+        string number = value[2..];
+        foreach (string unit in new[] { " clipped strip values", " (decoded)", " (MLEM λ)" })
+            if (number.EndsWith(unit, StringComparison.Ordinal)) { number = number[..^unit.Length]; break; }
+        return double.Parse(number, NumberStyles.Float | NumberStyles.AllowThousands, CultureInfo.CurrentCulture);
+    }
+
+    private static readonly Regex NetCount = new(@"^[^·]+ · (?<n>-?[\d,]+)(?: ± (?<s>[\d,]+))? net counts \((?<kind>1σ, counting \+ calibration|uncertainty unavailable)\) · \d+ found$");
+
+    /// <summary>Rounded net and optional sigma from the channel summary; both methods use the same format.</summary>
+    public static (double Net, double? Sigma) ParseNetCount(string summary)
+    {
+        var match = NetCount.Match(summary);
+        if (!match.Success || match.Groups["s"].Success != (match.Groups["kind"].Value != "uncertainty unavailable"))
+            throw new FormatException($"unexpected net count summary '{summary}'");
+        double Number(string group) => double.Parse(match.Groups[group].Value, NumberStyles.Float | NumberStyles.AllowThousands, CultureInfo.InvariantCulture);
+        return (Number("n"), match.Groups["s"].Success ? Number("s") : null);
     }
 
     private static readonly Regex RoiDetail = new(@"^(?<w>[\d.,]+) × (?<h>[\d.,]+) mm · (?<n>\d+) px · ");

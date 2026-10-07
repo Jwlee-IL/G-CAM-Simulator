@@ -90,6 +90,10 @@ public class FloodOracleTests
         Assert.Equal((1.5, -2.1, -0.275), Verdict.ParseReadout("x 1.5 mm, y -2.1 mm · -0.275"));
         Assert.Throws<FormatException>(() => Verdict.ParseReadout("x 1.5 mm, y -2.1 mm · counts"));
         Assert.Equal(0.0107, Verdict.ParseSum($"Σ {0.0107:G3}"), 9);
+        Assert.Equal(1250, Verdict.ParseSum($"Σ {1250:N0} clipped strip values"));
+        Assert.Equal(-3, Verdict.ParseSum("Σ -3 (decoded)"));
+        Assert.Equal(2, Verdict.ParseSum("Σ 2 (MLEM λ)"));
+        Assert.Throws<FormatException>(() => Verdict.ParseSum("Σ 3 net counts"));
         Assert.Throws<FormatException>(() => Verdict.ParseReadout(""));
         Assert.Throws<FormatException>(() => Verdict.ParseSum("—"));
     }
@@ -102,7 +106,17 @@ public class FloodOracleTests
         Assert.Equal((0.0, 0.0, 9.266), Verdict.ParseReadout("x 0.0 mm, y 0.0 mm · 9.266 (MLEM λ)"));
         Assert.Equal("(decoded)", Verdict.ParseReadoutUnit("x -6.3 mm, y 5.1 mm · 3,077 (decoded)"));
         Assert.Equal("counts", Verdict.ParseReadoutUnit("x 0.3 mm, y 0.3 mm · 10 counts"));
+        Assert.Equal("(clipped strip values)", Verdict.ParseReadoutUnit("x 0.3 mm, y 0.3 mm · 10 (clipped strip values)"));
         Assert.Throws<FormatException>(() => Verdict.ParseReadoutUnit("x -6.3 mm, y 5.1 mm · 0.01067"));
+    }
+
+    [Fact]
+    public void NetCountParser_ReadsSignedUncertainty_AndRejectsMissingOrWrongUnits()
+    {
+        Assert.Equal((-7, (double?)12), Verdict.ParseNetCount("Cs-137 · -7 ± 12 net counts (1σ, counting + calibration) · 1 found"));
+        Assert.Equal((1250, (double?)null), Verdict.ParseNetCount("Cs-137 · 1,250 net counts (uncertainty unavailable) · 1 found"));
+        Assert.Throws<FormatException>(() => Verdict.ParseNetCount("Cs-137 · 7 counts · 1 found"));
+        Assert.Throws<FormatException>(() => Verdict.ParseNetCount("Cs-137 · 7 net counts (1σ, counting + calibration) · 1 found"));
     }
 
     [Fact]

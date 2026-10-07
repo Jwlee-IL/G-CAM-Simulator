@@ -41,6 +41,7 @@ public sealed class OpticsProjectionTests(ITestOutputHelper output)
         var flood = snapshot.Imaging.Flood.Raw.ToArray();
         var service = new ImagingService();
         var id = Guid.NewGuid();
+        var raw = await service.ProcessAsync(id, snapshot, scene, optics, new());
         var before = await service.ProcessAsync(id, snapshot, scene, optics, new(Strip: strip));
         var after = await service.ProcessAsync(id, snapshot, scene, optics with { PixelPitchMm = 0.3 }, new(1.5, strip, 800));
         Assert.Equal(0, after.NewlyMeasuredEvents);
@@ -55,13 +56,23 @@ public sealed class OpticsProjectionTests(ITestOutputHelper output)
         {
             var channel = after.Channels[i];
             Assert.Equal(before.Channels[i].Image.Flood.Raw.ToArray(), channel.Image.Flood.Raw.ToArray());
-            var independentlyDecoded = decoder.Decode(channel.Image.Flood);
+            Assert.Equal(before.Channels[i].Image.StripCount, channel.Image.StripCount);
+            var input = channel.Image.Flood;
+            var ratios = strip ? before.Ratios.Where(r => r.LowIsotope == channel.Isotope).ToArray() : [];
+            if (ratios.Length > 0)
+            {
+                var low = raw.Channels.Single(c => c.Isotope == channel.Isotope).Image.Flood;
+                input = new DetectorImage(low.Width,low.Height);
+                for (int y=0;y<low.Height;y++) for (int x=0;x<low.Width;x++)
+                    input[x,y] = low[x,y]-ratios.Sum(r => r.R*raw.Channels.Single(c => c.Isotope == r.HighIsotope).Image.Flood[x,y]);
+            }
+            var independentlyDecoded = decoder.Decode(input);
             Assert.Equal(independentlyDecoded.Reconstruction.Raw.ToArray(), channel.Image.Reconstruction!.Raw.ToArray());
             Assert.Equal(independentlyDecoded.Estimate, channel.Image.Estimate);
             Assert.NotEqual(before.Channels[i].Image.ReconOriginMm, channel.Image.ReconOriginMm);
             if (i > 0)
             {
-                var independent = ImagingProjection.Project(channel.Image.Flood, snapshot.Imaging, config, channel.Isotope, 1);
+                var independent = ImagingProjection.Project(input, snapshot.Imaging, config, channel.Isotope, 1);
                 Assert.Equal(independent.Peaks, channel.Peaks);
             }
         }

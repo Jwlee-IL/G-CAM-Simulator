@@ -47,6 +47,7 @@ public sealed class ImagingWorkspaceTests
             {
                 var flood = new DetectorImage(4, 4); flood[1, 1] = settings.Strip ? 3 : 5;
                 channels.Add(new(isotope, 600, 720, snapshot.Imaging with { Flood = flood, EffectiveCounts = flood[1, 1],
+                    StripCount = settings.Strip && isotope == "Cs-137" ? new(3, 4, true) : null,
                     Estimate = new SourceEstimate(new Vector3(2, 3, 1000), 1) }, [new(isotope, 2, 3, 10)]));
             }
             // As the service: All carries the union of the isotope channels' found peaks.
@@ -208,19 +209,27 @@ public sealed class ImagingWorkspaceTests
     }
 
     [Fact]
-    public async Task StripCount_IsLabelledClippedForCrossCorrelation_AndNetForMlem()
+    public async Task StripCount_IsLabelledNetWithUncertainty_ForBothMethods()
     {
-        // MD-11: the two methods report different strip counts for a contaminated channel; the summary names which.
+        // TODO-39: the same signed estimator for either decoder, distinct from the displayed clipped flood.
         var vm = new MainViewModel(new Acquisition(), new Theme(), new FakeSpectrumService(), new Imaging()) { AmbientDoseRateMicroSvPerHour = 0 };
         await vm.StartCommand.ExecuteAsync(null);
         vm.Imaging.SelectedIsotope = "Cs-137";
         Assert.Contains(" counts · ", vm.Imaging.Summary);
         vm.Imaging.Strip = true; await vm.Imaging.WhenUpdated;
-        Assert.Contains("counts (clipped strip sum)", vm.Imaging.Summary);
+        Assert.Contains("3 ± 2 net counts (1σ, counting + calibration)", vm.Imaging.Summary);
+        Assert.Equal("(clipped strip values)", vm.Imaging.FloodUnit);
+        Assert.Equal("clipped values", vm.Imaging.FloodCaption);
+        Assert.Contains("net count is reported separately", vm.Imaging.FloodHelp);
+        Assert.Contains("Cross-correlation: signed difference", vm.Imaging.StripNote);
         vm.Imaging.Reconstruction = DecoderMethod.Mlem; await vm.Imaging.WhenUpdated;
-        Assert.Contains("net counts (Σ low − R·Σ high)", vm.Imaging.Summary);
+        Assert.Contains("3 ± 2 net counts (1σ, counting + calibration)", vm.Imaging.Summary);
+        Assert.Contains("MLEM: raw low", vm.Imaging.StripNote);
         vm.Imaging.SelectedIsotope = "All";   // All is never stripped
         Assert.DoesNotContain("net", vm.Imaging.Summary);
+        Assert.Equal("counts", vm.Imaging.FloodUnit);
+        Assert.Equal("counts", vm.Imaging.FloodCaption);
+        Assert.Null(vm.Imaging.StripNote);
     }
 
     [Fact]
@@ -246,6 +255,53 @@ public sealed class ImagingWorkspaceTests
         await vm.Imaging.WhenUpdated;
         Assert.Equal(DecoderMethod.Mlem, vm.Imaging.DisplayedMethod);
         Assert.Equal("(MLEM λ)", vm.Imaging.ReconstructionUnit);
-        Assert.Contains("net counts (Σ low − R·Σ high)", vm.Imaging.Summary);
+        Assert.Contains("net counts (1σ, counting + calibration)", vm.Imaging.Summary);
+    }
+
+    [Fact]
+    public async Task StripMetadata_AndRoiUnits_FollowPublishedViewWhileStripIsPending()
+    {
+        var imaging = new Imaging();
+        var vm = new MainViewModel(new Acquisition(), new Theme(), new FakeSpectrumService(), imaging) { AmbientDoseRateMicroSvPerHour = 0 };
+        await vm.StartCommand.ExecuteAsync(null);
+        vm.Imaging.SelectedIsotope = "Cs-137";
+        vm.Imaging.Measurements.AddCommand.Execute(new MeasurementDraft(ImagePane.Flood, MeasurementKind.Roi, [new(-2,-2),new(2,2)]));
+        imaging.Pending = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        vm.Imaging.Strip = true;
+        Assert.Equal("counts", vm.Imaging.FloodUnit);
+        Assert.Null(vm.Imaging.StripNote);
+        Assert.DoesNotContain("clipped", vm.Imaging.Measurements.Items[0].Value);
+        imaging.Pending.SetResult(imaging.Latest!);
+        await vm.Imaging.WhenUpdated;
+        Assert.Equal("Σ 3 clipped strip values", vm.Imaging.Measurements.Items[0].Value);
+        Assert.Contains("mean 0.188 clipped strip values", vm.Imaging.Measurements.Items[0].Detail);
+        imaging.Pending = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        vm.Imaging.Strip = false;
+        Assert.Equal("(clipped strip values)", vm.Imaging.FloodUnit);
+        Assert.Contains("signed difference", vm.Imaging.StripNote);
+        Assert.Contains("clipped", vm.Imaging.Measurements.Items[0].Description);
+        imaging.Pending.SetResult(imaging.Latest!);
+        await vm.Imaging.WhenUpdated;
+        Assert.DoesNotContain("clipped", vm.Imaging.Measurements.Items[0].Value);
+    }
+
+    [Fact]
+    public async Task NegativeNetAndUnavailableUncertainty_KeepSweepEnabledAndDisplayedRoiValues()
+    {
+        var imaging = new Imaging(); var focus = new DeferredFocus();
+        var vm = new MainViewModel(new Acquisition(), new Theme(), new FakeSpectrumService(), imaging, focusSweep: focus) { AmbientDoseRateMicroSvPerHour = 0 };
+        await vm.StartCommand.ExecuteAsync(null);
+        vm.Imaging.SelectedIsotope = "Cs-137";
+        imaging.Pending = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        vm.Imaging.Strip = true;
+        var view = imaging.Latest!;
+        var cs = view.Channels.Single(c => c.Isotope == "Cs-137");
+        var negative = cs with { Image = cs.Image with { EffectiveCounts = -7, StripCount = new(-7, null, true) } };
+        imaging.Pending.SetResult(view with { Channels = view.Channels.Select(c => c.Isotope == "Cs-137" ? negative : c).ToArray() });
+        await vm.Imaging.WhenUpdated;
+        Assert.Contains("-7 net counts (uncertainty unavailable)", vm.Imaging.Summary);
+        Assert.True(vm.Imaging.SweepCommand.CanExecute(null));
+        vm.Imaging.Measurements.AddCommand.Execute(new MeasurementDraft(ImagePane.Flood, MeasurementKind.Roi, [new(-2,-2),new(2,2)]));
+        Assert.Equal("Σ 3 clipped strip values", vm.Imaging.Measurements.Items[0].Value);
     }
 }

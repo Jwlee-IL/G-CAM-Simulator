@@ -30,17 +30,24 @@ public static class ImagingProjection
     /// <see cref="MlemProjection.Flood"/> is decoded with the known <see cref="MlemProjection.Background"/> (the strip
     /// path's higher-line contribution) while <paramref name="flood"/> stays the displayed flood.</summary>
     public static ImagingChannel Project(DetectorImage flood, ImagingResult original, SimulationConfig config,
-        string isotope, int peakCount, double loKeV, double hiKeV, MlemProjection? mlem)
+        string isotope, int peakCount, double loKeV, double hiKeV, MlemProjection? mlem, StripProjection? strip = null)
     {
         double count = flood.Raw.ToArray().Sum();
         DecodeResult? decoded;
-        if (mlem is null) decoded = count > 0 ? new DefaultSimulationFactory().CreateDecoder(config)!.Decode(flood) : null;
+        if (mlem is null)
+        {
+            var data = strip?.Difference ?? flood;
+            bool hasData = strip?.Counts.HasRawCounts ?? count > 0;
+            decoded = hasData ? new DefaultSimulationFactory().CreateDecoder(config)!.Decode(data) : null;
+        }
         else
         {
             var data = mlem.Flood ?? flood;
-            decoded = data.Raw.ToArray().Sum() > 0 ? mlem.Cache.For(config, mlem.LineEnergyKeV).Decode(data, mlem.Background) : null;
+            bool hasData = strip?.Counts.HasRawCounts ?? data.Raw.ToArray().Sum() > 0;
+            decoded = hasData ? mlem.Cache.For(config, mlem.LineEnergyKeV).Decode(data, mlem.Background) : null;
             if (mlem.EffectiveCounts is { } effective) count = effective;
         }
+        if (strip is not null) count = strip.Counts.NetCounts;
         double separation = config.Mask.CellPitchMm *
             (config.Geometry.MaskDetectorDistanceMm + config.Geometry.SourceMaskDistanceMm) /
             config.Geometry.MaskDetectorDistanceMm;
@@ -55,7 +62,7 @@ public static class ImagingProjection
             }).ToArray();
         var image = original with { Flood = flood, Reconstruction = decoded?.Reconstruction.ReadOnlyCopy(),
             ReconOriginMm = decoded?.ReconOriginMm ?? 0, ReconStepMm = decoded?.ReconStepMm ?? 0,
-            Estimate = decoded?.Estimate, EffectiveCounts = count };
+            Estimate = decoded?.Estimate, EffectiveCounts = count, StripCount = strip?.Counts };
         return new(isotope, loKeV, hiKeV, image, Array.AsReadOnly(peaks));
     }
 }

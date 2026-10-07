@@ -23,6 +23,7 @@ public sealed class ImagingService : IImagingService
     private readonly List<double> _energies = [];
     private DetectorImage[] _floods = [];
     private StripRatio[] _ratios = [];
+    private long[,] _overlaps = new long[0, 0];
     private int _consumed;
     // Pixel-area MLEM matrices survive refreshes, acquisitions and Reset (keyed by geometry and line, not by acquisition).
     private readonly MlemDecoderCache _mlem = new();
@@ -106,6 +107,7 @@ public sealed class ImagingService : IImagingService
             {
                 _ratios = Calibrate(config, groups, windows, token);
                 _floods = groups.Select(_ => new DetectorImage(config.Detector.PixelsX, config.Detector.PixelsY)).ToArray();
+                _overlaps = new long[groups.Length, groups.Length];
                 _consumed = 0;
                 _n = settings.WindowFwhm;
             }
@@ -123,10 +125,16 @@ public sealed class ImagingService : IImagingService
                 var ev = snapshot.Events[_consumed];
                 for (int j = 0; j < groups.Length; j++)
                     if (_energies[_consumed] >= windows[j].Lo && _energies[_consumed] <= windows[j].Hi)
+                    {
                         _floods[j].Add(ev.PixelX, ev.PixelY, 1);
+                        for (int h = 0; h < groups.Length; h++)
+                            if (_energies[_consumed] >= windows[h].Lo && _energies[_consumed] <= windows[h].Hi)
+                                _overlaps[j, h]++;
+                    }
             }
             var corrected = _floods.Select(f => f.ReadOnlyCopy()).ToArray();
             var mlem = groups.Select(g => Mlem(settings, PrimaryKeV(g.Key))).ToArray();
+            var strip = new StripProjection?[groups.Length];
             if (settings.Strip)
             {
                 for (int j = 0; j < groups.Length; j++)
@@ -134,20 +142,30 @@ public sealed class ImagingService : IImagingService
                     var flood = new DetectorImage(config.Detector.PixelsX, config.Detector.PixelsY);
                     var background = new double[flood.Width * flood.Height];
                     var ratios = _ratios.Where(r => r.LowIsotope == groups[j].Key).ToArray();
+                    if (ratios.Length == 0) continue;
+                    var difference = new DetectorImage(flood.Width, flood.Height);
                     for (int y = 0; y < flood.Height; y++)
                     for (int x = 0; x < flood.Width; x++)
                     {
                         double higher = ratios.Sum(r => r.R * _floods[Array.FindIndex(groups, g => g.Key == r.HighIsotope)][x, y]);
                         background[y * flood.Width + x] = higher;
-                        flood[x, y] = Math.Max(0, _floods[j][x, y] - higher);
+                        difference[x, y] = _floods[j][x, y] - higher;
+                        flood[x, y] = Math.Max(0, difference[x, y]);
                     }
                     corrected[j] = flood.ReadOnlyCopy();
-                    // MLEM keeps the raw window counts (Poisson) and models the higher lines' downscatter as the known
-                    // background b_i = Σ R·high_i (MD-6); the displayed flood stays the clipped strip view. Its effective
-                    // count is the unclipped difference Σ low − Σ b, an unbiased estimate of the channel's own counts.
-                    if (mlem[j] is { } m && ratios.Length > 0)
-                        mlem[j] = m with { Flood = _floods[j].ReadOnlyCopy(), Background = background,
-                            EffectiveCounts = _floods[j].Raw.ToArray().Sum() - background.Sum() };
+                    double low = _floods[j].Raw.ToArray().Sum();
+                    var highs = ratios.Select(r => Array.FindIndex(groups, g => g.Key == r.HighIsotope)).ToArray();
+                    var totals = highs.Select(h => _floods[h].Raw.ToArray().Sum()).ToArray();
+                    // The one-pass scalar model remains approximate for multiple contaminants; don't invent their
+                    // calibration covariances. The signed net is still available, but its uncertainty is not.
+                    var counts = ratios.Length == 1
+                        ? StripCountEstimator.ForPair(low, totals[0], _overlaps[j, highs[0]], ratios[0])
+                        : new StripCountEstimate(low - ratios.Select((r, i) => r.R * totals[i]).Sum(), null,
+                            low > 0 || totals.Any(h => h > 0));
+                    strip[j] = new(difference.ReadOnlyCopy(), counts);
+                    // MLEM keeps raw Poisson data and uses the higher lines as its background; CC uses signed data.
+                    if (mlem[j] is { } m)
+                        mlem[j] = m with { Flood = _floods[j].ReadOnlyCopy(), Background = background };
                 }
             }
             channels.Stop();
@@ -161,7 +179,7 @@ public sealed class ImagingService : IImagingService
             {
                 token.ThrowIfCancellationRequested();
                 results.Add(ImagingProjection.Project(corrected[j], snapshot.Imaging, projection, groups[j].Key,
-                    groups[j].Count(), windows[j].Lo, windows[j].Hi, mlem[j]));
+                    groups[j].Count(), windows[j].Lo, windows[j].Hi, mlem[j], strip[j]));
             }
             results[0] = results[0] with { Peaks = Array.AsReadOnly(results.Skip(1).SelectMany(c => c.Peaks).ToArray()) };
             decode.Stop();
@@ -210,17 +228,22 @@ public sealed class ImagingService : IImagingService
             };
             var measurement = new MeasurementStage(detector, config.Detector.PixelsX, config.Detector.PixelsY);
             var counts = new long[groups.Length];
+            var overlaps = new long[groups.Length];
             int accepted = 0;
             while (accepted < CalibrationEvents)
             {
                 if (source.Advance(token) is not { } ev) continue;
                 double energy = measurement.Measure(ev, accepted++);
                 foreach (int j in lows.Append(h))
-                    if (energy >= windows[j].Lo && energy <= windows[j].Hi) counts[j]++;
+                    if (energy >= windows[j].Lo && energy <= windows[j].Hi)
+                    {
+                        counts[j]++;
+                        if (energy >= windows[h].Lo && energy <= windows[h].Hi) overlaps[j]++;
+                    }
             }
             if (counts[h] == 0) throw new InvalidOperationException($"No {groups[h].Key} calibration counts in its primary window.");
             foreach (int l in lows)
-                ratios.Add(new(groups[l].Key, groups[h].Key, accepted, counts[l], counts[h]));
+                ratios.Add(new(groups[l].Key, groups[h].Key, accepted, counts[l], counts[h]) { OverlapCounts = overlaps[l] });
         }
         return ratios.ToArray();
     }

@@ -13,5 +13,11 @@ public sealed record ImagingResult(
     double ReconStepMm,
     SourceEstimate? Estimate,
     double EffectiveCounts,
-    TimeSpan Elapsed);
+    TimeSpan Elapsed)
+{
+    /// <summary>Published strip/count metadata; null for All, unstripped and uncontaminated channels.</summary>
+    public StripCountEstimate? StripCount { get; init; }
 
+    /// <summary>Acquisition support, independent of the sign of a stripped net estimate.</summary>
+    public bool HasData => StripCount?.HasRawCounts ?? EffectiveCounts > 0;
+}

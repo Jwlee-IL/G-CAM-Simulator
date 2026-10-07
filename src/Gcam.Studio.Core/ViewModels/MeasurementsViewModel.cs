@@ -12,6 +12,7 @@ namespace Gcam.Studio.Core.ViewModels;
 public sealed partial class MeasurementsViewModel : ObservableObject
 {
     private ImagingResult? _result;
+    private string? _reconstructionUnit;
     private int _nextNumber = 1;
 
     public MeasurementsViewModel()
@@ -75,9 +76,10 @@ public sealed partial class MeasurementsViewModel : ObservableObject
     }
 
     /// <summary>Re-evaluates every measurement against a new result (ROI sums change; lengths and angles don't).</summary>
-    public void Refresh(ImagingResult? result)
+    public void Refresh(ImagingResult? result, string? reconstructionUnit = null)
     {
         _result = result;
+        _reconstructionUnit = reconstructionUnit;
         foreach (var m in Items) Refresh(m);
     }
 
@@ -94,7 +96,8 @@ public sealed partial class MeasurementsViewModel : ObservableObject
     private void Refresh(MeasurementViewModel m)
     {
         var r = _result;
-        if (m.Pane == ImagePane.Flood) m.Refresh(r?.Flood, r?.FloodOriginMm ?? 0, r?.FloodStepMm ?? 0);
-        else m.Refresh(r?.Reconstruction, r?.ReconOriginMm ?? 0, r?.ReconStepMm ?? 0);
+        if (m.Pane == ImagePane.Flood) m.Refresh(r?.Flood, r?.FloodOriginMm ?? 0, r?.FloodStepMm ?? 0,
+            r?.StripCount is not null ? "clipped strip values" : null);
+        else m.Refresh(r?.Reconstruction, r?.ReconOriginMm ?? 0, r?.ReconStepMm ?? 0, _reconstructionUnit);
     }
 }

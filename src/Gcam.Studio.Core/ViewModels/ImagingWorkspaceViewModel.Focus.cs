@@ -69,7 +69,7 @@ public sealed partial class ImagingWorkspaceViewModel
         SweepResult = null; SweepError = null; IsSweeping = false;
         SweepCommand.NotifyCanExecuteChanged(); UseAsFocusCommand.NotifyCanExecuteChanged();
     }
-    private bool CanSweep() => focusService is not null && !IsSweeping && !IsProcessing && Shared.Snapshot is not null && Result is { EffectiveCounts: > 0 };
+    private bool CanSweep() => focusService is not null && !IsSweeping && !IsProcessing && Shared.Snapshot is not null && Result is { HasData: true };
     [RelayCommand(CanExecute = nameof(IsSweeping))]
     private void CancelSweep() => InvalidateSweep();
     [RelayCommand(CanExecute = nameof(CanSweep))]

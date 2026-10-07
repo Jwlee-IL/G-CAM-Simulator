@@ -94,6 +94,19 @@ public sealed partial class PlotViewRenderTests
                 var recon = Assert.Single(Descendants(root).OfType<HeatmapView>(),
                     h => h.Name == "Recon");
                 Assert.Same(model.Imaging.Result!.Reconstruction, recon.Image);
+                if (isotope == "Cs-137")
+                {
+                    var flood = Assert.Single(Descendants(root).OfType<HeatmapView>(), h => h.Name == "Flood");
+                    Assert.Equal("(clipped strip values)", flood.ValueUnit);
+                    var unit = Assert.Single(Descendants(root).OfType<TextBlock>(),
+                        t => AutomationProperties.GetAutomationId(t) == "FloodValueUnit");
+                    Assert.Equal("clipped values", unit.Text);
+                    var stripNote = Assert.Single(Descendants(root).OfType<TextBlock>(),
+                        t => AutomationProperties.GetAutomationId(t) == "Imaging.StripNote");
+                    Assert.Equal(model.Imaging.StripNote, stripNote.Text);
+                    Assert.Contains(mlem ? "MLEM: raw low" : "signed difference", stripNote.Text);
+                    Assert.Contains("net counts (1σ, counting + calibration)", model.Imaging.Summary);
+                }
                 Assert.Equal(isotope == "All" ? 2 : 1,
                     MeasurementOverlay.GetFoundPeaks(recon)!.Cast<ImagingPeak>().Count());
                 // Detached render trees do not get a window Loaded event; attach production adorners explicitly.
@@ -382,8 +395,13 @@ public sealed partial class PlotViewRenderTests
             }
             channels.Add(new("All", double.NaN, double.NaN, Image(scene), peaks));
             foreach (var s in scene)
+            {
+                var image = Image([s]);
+                if (settings.Strip && s.Isotope == "Cs-137" && scene.Any(source => source.Isotope == "Co-60"))
+                    image = image with { StripCount = new(image.EffectiveCounts - 250, 144, true), EffectiveCounts = image.EffectiveCounts - 250 };
                 channels.Add(new(s.Isotope, s.Isotope == "Cs-137" ? 616 : 1110,
-                    s.Isotope == "Cs-137" ? 707 : 1236, Image([s]), peaks.Where(p => p.Isotope == s.Isotope).ToArray()));
+                    s.Isotope == "Cs-137" ? 707 : 1236, image, peaks.Where(p => p.Isotope == s.Isotope).ToArray()));
+            }
             // The strip ratio exists only when stripping is on and a Co-60 source contaminates Cs-137.
             bool coPair = settings.Strip && scene.Any(s => s.Isotope == "Co-60") && scene.Any(s => s.Isotope == "Cs-137");
             return Task.FromResult(new ImagingView(channels,

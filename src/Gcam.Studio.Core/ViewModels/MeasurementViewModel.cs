@@ -46,7 +46,7 @@ public sealed partial class MeasurementViewModel : ObservableObject
     public string Description => $"{Name} {KindLabel} on {PaneLabel}: {Value}";
 
     /// <summary>Recompute the value against the image this measurement sits on (null = not simulated yet).</summary>
-    public void Refresh(DetectorImage? image, double originMm, double stepMm)
+    public void Refresh(DetectorImage? image, double originMm, double stepMm, string? valueUnit = null)
     {
         var p = PointsMm;
         switch (Kind)
@@ -69,10 +69,11 @@ public sealed partial class MeasurementViewModel : ObservableObject
                 }
                 var s = MeasurementMath.Roi(image, p[0], p[1], originMm, stepMm);
                 // No pixel centre inside (e.g. a new result moved the grid away): no value, not a plausible "Σ 0".
-                Value = s.Pixels == 0 ? "—" : $"Σ {Amount(s.Sum)}";
+                string unit = valueUnit is null ? "" : $" {valueUnit}";
+                Value = s.Pixels == 0 ? "—" : $"Σ {Amount(s.Sum)}{unit}";
                 Detail = s.Pixels == 0
                     ? $"{size} · no pixel centres inside"
-                    : $"{size} · {s.Pixels} px · mean {Amount(s.Mean)} · max {Amount(s.Max)}";
+                    : $"{size} · {s.Pixels} px · mean {Amount(s.Mean)}{unit} · max {Amount(s.Max)}{unit}";
                 break;
         }
     }
