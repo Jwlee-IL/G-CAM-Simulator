@@ -170,7 +170,7 @@ python samples/evidence/cascade_fit.py --runs <dir>                         # po
 The full, theme-organized results log with reproduce commands and artifacts is in
 **`docs/AGENTS.Findings.md`** — keep new results there, not in this file. Headlines:
 
-- **Localization + ghost**: sub-mm inside the FCFOV; off-axis beyond it aliases to an
+- **Localization + ghost**: at 1 m 0.38° / 0.21° RMS at 250 / 1000 counts inside the FCFOV (theme 66); off-axis beyond it aliases to an
   opposite-side ghost. Non-cyclic decoding ≈ doubles the usable area; at field distance it localizes
   to ±7° (fully coded ±3.6°) and a flood-centroid cue flags sources out to ~14° (theme 53). MC numbers are
   quoted over seed ensembles — seed lists, recipes and summaries in `samples/evidence/` (theme 63).
@@ -188,7 +188,7 @@ The full, theme-organized results log with reproduce commands and artifacts is i
   calibrated background subtraction by ~20–30 % RMS at every background level (both sub-mm) — mask
   rotation is still rejected on mechanism cost and stability (D-19), not on equivalence; it does **not**
   remove a directional coded interferer (themes 5, 28, 63).
-- **Count thresholds**: localisation collapses below ~25 detected counts; sub-mm needs ~250. Directional
+- **Count thresholds**: localisation collapses below ~25 detected counts; within a fraction of an element from ~250. Directional
   biasing matches 4π (0.999 ± 0.006) with 100× fewer photons.
 - **Compton multi-isotope separation (15–17, 26)**: per-pixel spectral stripping removes a high-energy
   isotope's downscatter from a lower line's window and recovers the Cs count (the classic Co-60-reads-as-Cs
@@ -198,8 +198,9 @@ The full, theme-organized results log with reproduce commands and artifacts is i
 - **Depth (18–24, 34)**: z is recoverable via near-field magnification + depth-from-focus, but
   weak far (∝z²); 3D range extends by rank, not cell pitch. At Studio's 1 m geometry the focus sweep is near-field only
   and biased by tens of mm (theme 56); Studio shows the focus curve beside an external range, without a fusion verdict.
-- **MLEM (48)**: Poisson-likelihood reconstruction is non-negative and resolves 2–3 mm source
-  pairs that cross-correlation's ±1 sidelobes merge — the main reconstruction upgrade over peak-pick.
+- **MLEM (48, 66)**: Poisson-likelihood reconstruction is non-negative; with a pixel-area forward model it resolves
+  two sources 1.25 elements = 1.30° apart at 1 m (blind test, calibrated significance floor), where cross-correlation
+  does not resolve pairs reliably within 3 elements. The old near-field "2–3 mm" did not survive a blind criterion.
 - **Physical-realism gaps (36–50)**: thermal drift is an energy-window (not position) issue;
   pile-up + cascade summing add spectral continua/sum-peaks; mask fabrication needs σ≲40 µm;
   alignment/pose is the dominant systematic tolerance; sub-cell interpolation beats the argmax

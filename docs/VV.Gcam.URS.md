@@ -176,8 +176,8 @@ within 2 % (2.44 × 10⁻⁴ vs 2.48 × 10⁻⁴, EV-09) but uses 662 keV stoppi
 | 10 µSv/h | 1.0 kcps | 0.33 kcps | 0.56 kcps | 0.33 kcps |
 
 What this says: against realistic sources the camera is **not count-starved**. At the top of the dose-rate range
-it reaches the ~1 Mcps rate limit of the front end (EV-21), and the 250–500 counts needed for a sub-mm
-location (EV-09) arrive in well under a second even at 10 µSv/h. Time to a location is set by rate handling,
+it reaches the ~1 Mcps rate limit of the front end (EV-21), and the 250–1000 counts that place a source within a
+fraction of a resolution element at 1 m (0.38° / 0.21° RMS, EV-09) arrive in well under a second even at 10 µSv/h. Time to a location is set by rate handling,
 hand motion and background, not by sensitivity.
 
 ³ IAEA Safety Standards Series RS-G-1.9, *Categorization of Radioactive Sources* (2005), Table 2

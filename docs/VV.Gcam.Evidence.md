@@ -343,6 +343,12 @@ Geometries used below:
   GAGG reference geometry's floor is 0.35 mm (0.354 ± 0.001). At 1 MBq on axis at the lab distance, 250 counts take ~1.2 s.
   The URS §5 analytic count-rate estimate (geometry × open fraction × 662 keV stopping) gives 2.44 × 10⁻⁴ — within
   2 % of this MC value.
+- **At use distance, averaged over position** (D-49; transported maps, 662 keV window, cross-correlation with sub-cell
+  interpolation; source position randomised within one angular element, 128 seeds × 200 acquisitions). At **1 m**: RMS
+  **0.38° at 250 counts** (6.6 mm), **0.21° at 1000** (3.7 mm); within one element (1.042°) in 98.9 % / 100 %;
+  noiseless error median 0.15°, up to 0.34° by position (signed y −0.11°). At 5 m: 0.81° / 0.53°, 92.1 % / 98.5 %. The
+  same head at its own S = 100 mm gives 1.38 mm at 250 counts and 0.57 mm at 1000, so the 0.25 mm floor above is one
+  favourable on-axis sampling phase at the near field, not the head's precision.
 - **Under the absolute ambient field** (EV-34; hand-held centre, N = 128). Ideal in EV-34's pipeline: RMS
   1.00 ± 0.28 mm at 250 counts (sub-mm in 60 / 128 seeds), 0.24 ± 0.10 mm at 500 (128 / 128). Smallest net count
   with ≥ 95 % trusted and within one resolution element: ideal 250; front-only 100–250; bare, open window
@@ -368,20 +374,56 @@ Geometries used below:
 
 ### EV-11 — MLEM reconstruction
 
-- **Shows.** A Poisson maximum-likelihood reconstruction with the finite mask as its forward model separates source
+- **Shows — at use distance, in angle** (D-41; hand-held head, Cs-137 662 keV window, transported floods, non-cyclic,
+  exact Poisson; one angular element = atan(1 / 55) = 1.042°; pair position randomised over one element; 128 seeds ×
+  50 pair + 50 single-source acquisitions per cell). **Resolved** = two peaks found blind by topographic prominence,
+  each within min(Δ / 2, 1 element) of a different source, valley ≥ 25 % of the lower peak, the second peak above a
+  significance floor calibrated on single-source acquisitions (≤ 3 % false split at selection, disjoint seeds), in
+  ≥ 95 % of acquisitions at Δ and at every larger Δ on the grid, with single-source false splits ≤ 5 % (D-48).
+  - *Point response.* Cross-correlation's half-maximum width at 1 m, over source positions within one element: x
+    1.46° [1.19, 1.70], y 1.22° [1.12, 1.34] (median [quartiles]) against the geometric 1.042°; at 5 m median 1.10° but
+    the upper quartile reaches 2.0–2.1° (the decoder's columns repeat in ~0.5-element blocks there).
+  - *Two equal sources at 1 m, inside the fully coded field (±3.6°):* the **pixel-area MLEM** (an analytic forward
+    model integrating each pixel's area, 120 iterations; D-46) resolves **1.25 elements = 1.30°** from 1000 counts per
+    source (98.4 % [98.0, 98.8] pass at 1000 counts; false split 0.05 %), 1.5 elements near the field edge, 1.75
+    elements at 5 m. The engine's pixel-centre MLEM resolves 1.5 elements only at ≤ ~15 iterations (8 chosen); at
+    80 iterations it splits about half of all single sources on this head. Cross-correlation reaches ≥ 95 % nowhere
+    up to 3 elements (best 95.3 % at 2.0 elements, 16 000 counts, then 86 % / 65 % at 2.5 / 3.0 — a lumpy,
+    shift-variant response). At 250 counts per source no decoder resolves any pair up to 3 elements.
+  - *1 : 4 intensity:* pixel-area MLEM 1.5 elements on axis (1000–16 000 counts in the weaker source; false split
+    ≤ 2.9 %), 1.75 / 1.5 / 1.5 near the edge; without the significance floor a strong single source's side maximum
+    qualifies in up to 11 % and 1 : 4 is not resolved. Cross-correlation and the engine MLEM do not resolve 1 : 4.
+  - *Matched upper bound* (a system matrix built from transported single-source maps, 32 seeds): 1.25 elements — the
+    analytic pixel-area model already reaches it. Usable non-cyclic field (±7°, not claimed, D-47): pixel-area
+    unchanged, engine MLEM ≤ 45 % and cross-correlation ≤ 73 % pass. Ambient 0.10 µSv/h, 60 s: no resolved separation
+    changes (pass within 1.4 points, with or without a background term in MLEM).
+  - *Iterations matter:* every MLEM splits single sources when run long (pixel-centre 49 % at 80 iterations,
+    pixel-area 9.5 % at 480, matched 18 % at 640); counts are chosen on separate seeds by the smallest resolved
+    separation including the false-split limit.
+- **Shows — the earlier lab near-field demonstration (history).** A Poisson maximum-likelihood reconstruction with the finite mask as its forward model separates source
   pairs **2–3 mm apart** that cross-correlation merges (at 3 mm, valley depth 0.822 ± 0.004 against 0.170 ± 0.001;
   N = 64). On a single source it is non-negative (cross-correlation dips to −103.5 ± 0.4) and sharper (FWHM
   1.93 ± 0.05 vs 2.50 mm), with a localisation bias of 0.87 mm against 0.55 mm (the same in 64 / 64 seeds). At 1.5,
   2 and 3 mm MLEM resolves the pair and cross-correlation does not (64 / 64 seeds each; 1.5 × 10⁶ photons,
   80 iterations, resolved = valley depth > 0.25); cross-correlation needs ~3.5 mm (64 / 64). Below 2 mm the test is
   centred on the true positions and therefore optimistic.
-- **Limits.** Ideal high-count study on the reference lab geometry, in the **near field** (source 100 mm from the mask,
-  D = 60 mm): the projected cell there is c·(S + D) / D ≈ 2.7 mm, and the result does not transfer to field distance
-  in mm or as an angle; the field-distance angular separation against the cell / D baseline is open (D-41). Results
-  depend on the iteration count. The system matrix
-  samples pixel centres (no pixel-area integration).
-- **Reproduce.** `montecarlo mlem samples/scenario.json samples/mlem.csv`.
-- **Tests.** `MlemTests`.
+  Step by step (64 seeds, lab geometry): with a blind test and single-source false splits counted, its MLEM figure
+  becomes 1.25 lab elements (from 0.56) and cross-correlation 1.5 (from 1.31); with transported floods both MLEMs fall
+  to 2.5 elements through false splits; non-cyclic decoding changes nothing; the hand-held head at 155 mm and at 1 m
+  gives the pixel-area MLEM 1.25 elements. **The near-field "2–3 mm" does not survive a blind criterion** and is not
+  a performance figure.
+- **Limits.** MC only; ideal pixel identification, homogeneous crystal, no inter-pixel dead regions (before a
+  four-channel readout model); a still head (no hand motion); the significance floor bounds false splits at the tested
+  pair geometry — a floor that caps a second peak anywhere costs resolution in some cells (pixel-area 1 : 4 1.5 → 1.75
+  elements at 1000 counts; pixel-area 1 : 1 unchanged); results depend on the iteration count, fixed by a stated rule.
+- **Reproduce.** At use distance: `montecarlo ambient-evidence`, family `angres`, through
+  `samples/evidence/manifest-angres-v1.json` (point response, resolved pairs, iterations, ladder, matched, ambient,
+  ±7°, 5 m; `samples/evidence/angres/aggregate_angres.py` → `samples/evidence/results/angres-v1-*.json`) and
+  `manifest-angres-v2.json` (significance floor → `angres-v2-floor.json`). Lab demonstration:
+  `montecarlo mlem samples/scenario.json samples/mlem.csv`.
+- **Tests.** `MlemTests`; `MlemOptionTests` (the default decoder bit-identical to the original algorithm; pixel-area,
+  supplied-matrix and background options), `ResolvedPairTests` (blind two-peak test, prominence, floor selection),
+  `AngularResolutionStudyTests`.
 
 ### EV-12 — Ambient background and mask / antimask
 

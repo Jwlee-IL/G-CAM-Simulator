@@ -1041,3 +1041,45 @@ distance").
   `samples/evidence/manifest-csco-v1.json` (`csco_selection`, `csco_validation`), `ambient/select_csco_thresholds.py`,
   `ambient/aggregate_csco.py` → `samples/evidence/results/csco-v1-validation.json`; one validation seed re-run by the
   planner reproduced its output exactly (timing fields aside).
+
+## 66. Angular resolution at use distance — the cell / D baseline, a blind pair test, and a pixel-area MLEM (2026-10-06)
+
+TODO-34 / D-41 (performance-critical) — [PLAN.Physics.AngularResolution](archive/PLAN.Physics.AngularResolution.md),
+review [PLAN.Physics.AngularResolution.Review](archive/PLAN.Physics.AngularResolution.Review.md), turn reports
+[Turn2](archive/PLAN.Physics.AngularResolution.Turn2.md) and [Turn3](archive/PLAN.Physics.AngularResolution.Turn3.md).
+Review and implementation by a substitute Claude implementer (Codex unavailable); author decisions D-46 … D-49.
+Evidence: EV-11 ("at use distance, in angle"), EV-09 ("at use distance, averaged over position").
+
+- **Why.** EV-11's "MLEM resolves 2–3 mm" was measured with the source 100 mm from the mask, on floods from the model
+  MLEM inverts, cyclic, with a truth-centred valley. The product is used at metres; D-41 asked for an angle at use
+  distance against the head's geometric element cell / D = 1.042°.
+- **The review corrected six premises**: the shape-only "two largest maxima" test catches a single source's ripples
+  (prominence test instead); the engine's pixel-centre MLEM splits single sources after ~20 iterations; the head has
+  about one pixel per projected cell, so results depend on where a pair sits within an element (positions randomised);
+  the delivered point response is wider than 1.042°; cross-correlation never settles at 95 % within 3 elements; and
+  `AmbientSweepStudy` runs at the scenario's own S = 100 mm, not at 1 m.
+- **Point response (1 m, 128 positions).** Cross-correlation FWHM x 1.46° [1.19, 1.70], y 1.22° [1.12, 1.34] against
+  1.042°; at 5 m median 1.10°, upper quartile 2.0–2.1° (columns repeat in ~0.5-element blocks).
+- **Pairs (1 m, fully coded field, 128 seeds × 50 + 50).** Pixel-area MLEM (analytic, opt-in; 120 iterations) resolves
+  equal sources at **1.25 elements = 1.30°** from 1000 counts per source (98.4 % pass, 0.05 % false split), 1.5 near the
+  edge, 1.75 at 5 m; the engine MLEM 1.5 only at ~8 iterations; cross-correlation not within 3 elements; nothing at 250
+  counts. A matched matrix from transported maps gives the same 1.25. Ambient 0.10 µSv/h changes nothing.
+- **Significance floor (turn 3, D-48).** The shape-only test failed every 1 : 4 pair on false splits (a strong source's
+  side maximum, up to 11 %). A floor on the second peak's absolute prominence, selected per decoder × total counts ×
+  field region on disjoint single-source seeds (≤ 3 %), fixes it: pixel-area 1 : 4 resolves at 1.5 elements on axis
+  (false split ≤ 2.9 %); 1 : 1 results identical under both criteria; turn 3 reproduced turn 2's shape-only counts
+  exactly (52 992 cells). A hypothesis-free floor (any second peak) is stricter and costs some cells (pixel-area 1 : 4
+  1.5 → 1.75; 1 : 1 unchanged) — reported, not adopted.
+- **Attribution of the old figure (lab, 64 seeds).** Blind test: MLEM 0.56 → 1.25 lab elements, cross-correlation
+  1.31 → 1.5; transported floods: both MLEMs 2.5 (false splits); non-cyclic: no change; the hand-held head at 155 mm and
+  1 m: pixel-area 1.25. The near-field "2–3 mm" is withdrawn as a performance figure.
+- **By-product — PR-IMG-02 (D-49).** At 1 m, position-averaged, cross-correlation + tent: RMS 0.38° at 250 counts,
+  0.21° at 1000 (98.9 % / 100 % within one element); at the near field the same head gives 1.38 mm at 250 counts, so
+  the old 0.25 mm floor was one favourable on-axis phase. PR-IMG-02 restated in angle.
+- **Engine.** `MlemDecoder` gains opt-in `MlemSystemModel` (pixel area, closed-cell transmission), supplied columns and
+  a background term; the default decode is bit-identical to the original (tested on 6 geometries). New
+  `ResolvedPair` (blind test, prominence, floor selection) and `AngularResolutionStudy` (family `angres`). Engine tests
+  413 → 448. 720 + 320 runs (~5.5 h + 1.4 h wall). The planner re-ran one seed of each version: identical apart from
+  timing and two new empty fields.
+- **Caveats.** Ideal pixel identification, homogeneous crystal, no dead regions (TODO-19); a still head; iteration
+  counts fixed by a stated rule on separate seeds; the floor bounds false splits at the tested pair geometry.

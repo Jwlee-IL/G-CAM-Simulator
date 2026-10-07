@@ -24,7 +24,7 @@ results at their ideal values; which results change, and how, is listed in
 [Evidence §1](VV.Gcam.Evidence.md#ideal-conditions-and-background) (EV-34).
 
 **In numbers:** 19 user needs (18 active) → 51 product requirements (48 active) → 33 evidence entries; 9 known limitations;
-45 decisions with the author's reasons. The engineering viewer has 102 active software requirement IDs (nine withdrawn), four workspaces, and current unit/integration
+49 decisions with the author's reasons. The engineering viewer has 102 active software requirement IDs (nine withdrawn), four workspaces, and current unit/integration
 test totals in [VV.Studio](VV.Studio.md#current-test-inventory), plus 12 opt-in desktop regression scenarios, a plot gate and a survey.
 
 ## The problems it starts from
@@ -43,7 +43,7 @@ test totals in [VV.Studio](VV.Studio.md#current-test-inventory), plus 12 opt-in 
 | | |
 |---|---|
 | Imaging | rank-7 tungsten MURA mask (1 mm cells, 10 mm thick) 55 mm in front of a 16 × 16 array of 1 mm GAGG:Ce,Mg crystals read by SiPMs |
-| Reconstruction | non-cyclic cross-correlation (MLEM optional); energy windows with Compton stripping |
+| Reconstruction | non-cyclic cross-correlation (MLEM with a pixel-area forward model optional: two sources resolved 1.30° apart at 1 m); energy windows with Compton stripping |
 | Electronics | 14-bit / 125 MSPS ADC, FPGA pulse shaping (the shapers exist in SystemVerilog) |
 | Form | pistol grip under the centre of mass; ~8 mm tungsten shield, which is most of the mass; Windows tablet that docks on the instrument and undocks for remote use |
 | Dose rate | a separate small counter outside the shield, read over a data I/O link (D-37) |
@@ -53,7 +53,7 @@ test totals in [VV.Studio](VV.Studio.md#current-test-inventory), plus 12 opt-in 
 
 | Requirement | Target | Evidence | Grade |
 |---|---|---|---|
-| Locate a source (PR-IMG-02) | sub-mm with ≥ 250 counts | 0.25 mm floor on axis, 0.53 mm at the field edge (EV-09) | MC |
+| Locate a source (PR-IMG-02) | precise to a fraction of the resolution element at 1 m | 0.38° RMS at 250 counts, 0.21° at 1000, averaged over position (EV-09) | MC |
 | Usable field of view (PR-IMG-10) | wider than the ±3.6° fully coded field | **±6–7.5°** along the axes at 1 m and 5 m without background (±7–7.5° at high counts); ±5–6.5° with background equal to the signal (EV-02) | MC → DEC |
 | Say which way to turn (PR-IMG-08) | side of a source outside the field | correct side from ~1° to ~14.5°; needs a background estimate (EV-02) | MC |
 | Separate Co-60 from Cs-137 (PR-NRG-04) | weaker Cs-137 count and position | co-located count recovered within 0–1 % (oracle ratio); position only to Co : Cs ≈ 2 : 1, held in 126 / 128 seeds; with stripping, at Co-60 10 µSv/h, 1 m: detection limit 75.5 / 181 / 402 counts and location from 500 / 1000 / 2000 counts at 10 / 60 / 300 s (EV-15) | MC |

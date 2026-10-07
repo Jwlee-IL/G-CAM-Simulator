@@ -26,7 +26,7 @@ Plot: <code>samples/plot_sweep.py</code>.</sub>
 | Result | Condition |
 |---|---|
 | Non-cyclic decoding roughly **doubles the correctly localized area** (361 vs 174 of 625 positions within 3 mm, medians over 64 seeds) | hand-held head, ±18 mm search grid, figure above (278 vs 146 on the 12×12 reference geometry) |
-| **MLEM separates two sources 2 mm apart** (≈1.1° seen from the mask); cross-correlation still merges them at 3 mm | ideal, high-count (1.5 M photons, 80 iterations), source plane 100 mm from the mask; the same in 64 / 64 seeds |
+| **MLEM with a pixel-area forward model separates two sources 1.30° apart at 1 m** (1.25 × the geometric resolution element); cross-correlation does not resolve pairs reliably within 3 elements | blind two-peak test with a calibrated significance floor, ≥ 95 % of acquisitions and ≤ 5 % false splits, 1000 counts per source, 128 seeds; an earlier near-field "2 mm" figure did not survive a blind criterion |
 | A classic problem of scintillator coded-aperture cameras — **Co-60 downscatter counted as Cs-137** — is reproduced; per-pixel spectral stripping removes it from the 662 keV window — at a measured cost: under 10 µSv/h of Co-60 at 1 m the smallest detectable Cs-137 source is 1.6 MBq in 60 s — while spatial separation alone holds only up to Co:Cs ≈ 2:1 (in 126 / 128 seeds) | GAGG crystal, physical cross sections |
 | C# ↔ RTL **bit-exact** on all three shaper paths (CR-RC with Q12 fractional state: 452,608 samples, 0 mismatches); pipelined shaper **59 → 119 MHz** | cocotb + Icarus; ECP5 nextpnr as the Fmax proxy |
 
