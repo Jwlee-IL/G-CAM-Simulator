@@ -51,7 +51,8 @@ public sealed class ImagingWorkspaceTests
             }
             // As the service: All carries the union of the isotope channels' found peaks.
             channels.Insert(0, new("All", double.NaN, double.NaN, snapshot.Imaging, channels.SelectMany(c => c.Peaks).ToArray()));
-            Latest = new(channels, [new("Cs-137", "Co-60", 20000, 1000, 5000)], TimeSpan.Zero, TimeSpan.Zero, TimeSpan.Zero);
+            // As the service: the view records the method it was decoded with.
+            Latest = new(channels, [new("Cs-137", "Co-60", 20000, 1000, 5000)], TimeSpan.Zero, TimeSpan.Zero, TimeSpan.Zero) { Method = settings.Method };
             return Pending?.Task ?? Task.FromResult(Latest!);
         }
     }
@@ -220,5 +221,31 @@ public sealed class ImagingWorkspaceTests
         Assert.Contains("net counts (Σ low − R·Σ high)", vm.Imaging.Summary);
         vm.Imaging.SelectedIsotope = "All";   // All is never stripped
         Assert.DoesNotContain("net", vm.Imaging.Summary);
+    }
+
+    [Fact]
+    public async Task ReconstructionUnit_DescribesTheDisplayedImage_UntilTheReDecodedViewArrives()
+    {
+        // TODO-38: an MLEM refresh takes longer than a tick, so after a switch the pane still shows the previous
+        // (cross-correlation) image for a while. Its unit and count label must describe that image, not the selector.
+        var imaging = new Imaging();
+        var vm = new MainViewModel(new Acquisition(), new Theme(), new FakeSpectrumService(), imaging) { AmbientDoseRateMicroSvPerHour = 0 };
+        await vm.StartCommand.ExecuteAsync(null);
+        await vm.Imaging.WhenUpdated;
+        vm.Imaging.SelectedIsotope = "Cs-137";
+        vm.Imaging.Strip = true; await vm.Imaging.WhenUpdated;
+        var ccView = vm.Imaging.View;
+        imaging.Pending = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        vm.Imaging.Reconstruction = DecoderMethod.Mlem;            // request in flight
+        Assert.Same(ccView, vm.Imaging.View);
+        Assert.Equal(DecoderMethod.CrossCorrelation, vm.Imaging.DisplayedMethod);
+        Assert.Equal("(decoded)", vm.Imaging.ReconstructionUnit);
+        // (The summary line reads "Building channels…" while a request is in flight; its count label is checked after.)
+        Assert.NotNull(vm.Imaging.ReconstructionNote);               // the setting's caveats show at once
+        imaging.Pending.SetResult(imaging.Latest!);
+        await vm.Imaging.WhenUpdated;
+        Assert.Equal(DecoderMethod.Mlem, vm.Imaging.DisplayedMethod);
+        Assert.Equal("(MLEM λ)", vm.Imaging.ReconstructionUnit);
+        Assert.Contains("net counts (Σ low − R·Σ high)", vm.Imaging.Summary);
     }
 }

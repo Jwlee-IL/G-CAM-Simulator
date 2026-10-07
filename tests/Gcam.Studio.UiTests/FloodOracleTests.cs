@@ -95,6 +95,17 @@ public class FloodOracleTests
     }
 
     [Fact]
+    public void ReadoutUnit_NamesTheImageKind_IncludingMlem()
+    {
+        // TODO-38 / DC-3: the MLEM reconstruction's readout suffix (TODO-36, SR-IMG-07); the value still parses.
+        Assert.Equal("(MLEM λ)", Verdict.ParseReadoutUnit("x 0.0 mm, y 0.0 mm · 9.266 (MLEM λ)"));
+        Assert.Equal((0.0, 0.0, 9.266), Verdict.ParseReadout("x 0.0 mm, y 0.0 mm · 9.266 (MLEM λ)"));
+        Assert.Equal("(decoded)", Verdict.ParseReadoutUnit("x -6.3 mm, y 5.1 mm · 3,077 (decoded)"));
+        Assert.Equal("counts", Verdict.ParseReadoutUnit("x 0.3 mm, y 0.3 mm · 10 counts"));
+        Assert.Throws<FormatException>(() => Verdict.ParseReadoutUnit("x -6.3 mm, y 5.1 mm · 0.01067"));
+    }
+
+    [Fact]
     public void MeasurementRow_ParsesTheAutomationName()
     {
         var row = MeasurementRow.Parse($"M1 Distance on Flood: {12.3:F1} mm");

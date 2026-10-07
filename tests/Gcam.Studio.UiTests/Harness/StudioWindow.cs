@@ -54,6 +54,13 @@ public sealed class StudioWindow(AutomationElement window)
         Thread.Sleep(150);
     }
 
+    /// <summary>The selected item's name of a selector (combo box) — read back, not set.</summary>
+    public string SelectedItem(string id)
+    {
+        var selection = Pattern<SelectionPattern>(ById(id), SelectionPattern.Pattern).Current.GetSelection();
+        return selection.Length == 1 ? selection[0].Current.Name : throw new InvalidOperationException($"{id}: {selection.Length} selected");
+    }
+
     public System.Text.Json.JsonElement Evidence(string id) =>
         System.Text.Json.JsonDocument.Parse(ById(id).Current.HelpText).RootElement.Clone();
 

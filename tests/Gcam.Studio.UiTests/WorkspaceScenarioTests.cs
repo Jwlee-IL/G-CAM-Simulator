@@ -8,20 +8,31 @@ namespace Gcam.Studio.UiTests;
 public sealed class WorkspaceScenarioTests(ITestOutputHelper output)
 {
     private static bool Broken => Environment.GetEnvironmentVariable(PilotTests.BreakVerdictVariable) == "1";
-    private static double[] Numbers(JsonElement e, string key) => e.GetProperty(key).EnumerateArray().Select(v => v.GetDouble()).ToArray();
+    internal static double[] Numbers(JsonElement e, string key) => e.GetProperty(key).EnumerateArray().Select(v => v.GetDouble()).ToArray();
     private static void AcquireFixed(StudioWindow ui)
     {
         ui.SetText("AcquisitionSeed", "12345", "SourceY");
         Assert.Equal("Completed", ui.Acquire(PilotTests.RunTimeout));
     }
 
-    internal static void TwoIsotopes(StudioWindow ui)
+    /// <summary>TODO-38: the Co-60 activity at which the pair scene's channel-side assertions are guaranteed. At 20 µCi the
+    /// Co-60 window holds ~40 counts (1.98 per µCi in 60 s at the default optics and chain) and its peak falls on the
+    /// wrong side in 27 % of acquisitions — the scenario passed only by its realisation, and TODO-30's ambient stream
+    /// changed the realisation. Criterion: with Poisson moments of D(θ) = recon(true node) − recon(θ) from the measured
+    /// window shapes, Σ over every grid point θ on the wrong side of P(D(θ) ≤ 0) (Gaussian tails, Bonferroni) ≤ α = 10⁻³
+    /// per channel. 400 µCi gives 1.3 × 10⁻⁴ for the Co-60 channel (~792 counts) and 1.3 × 10⁻⁵ for the unstripped
+    /// Cs-137 channel with Co downscatter (PLAN.Studio.DesktopChecks.Turn1).</summary>
+    internal const string SeparatedCoActivityUCi = "400";
+
+    /// <summary>The pair scene: Cs-137 500 µCi at (−20, 0) mm and Co-60 at (20, 0) mm, 1 m, seed 12345. The default 20 µCi
+    /// keeps the survey's documented scene; channel-side assertions need <see cref="SeparatedCoActivityUCi"/>.</summary>
+    internal static void TwoIsotopes(StudioWindow ui, string coActivityUCi = "20")
     {
         ui.SetText("SourceX", "-20", "SourceY");
         ui.Invoke("AddSource");
         ui.Choose("SourceIsotope", "Co-60");
         ui.SetText("SourceX", "20", "SourceY");
-        ui.SetText("SourceActivity", "20", "SourceY");
+        ui.SetText("SourceActivity", coActivityUCi, "SourceY");
         ui.SetText("AcquisitionSeed", "12345", "SourceY");
     }
 
@@ -108,14 +119,14 @@ public sealed class WorkspaceScenarioTests(ITestOutputHelper output)
             Assert.Equal("Settings for the next acquisition", ui.Text("Detector.Identity"));
         });
 
-    private static JsonElement ReadyImage(StudioWindow ui)
+    internal static JsonElement ReadyImage(StudioWindow ui)
     {
         StudioWindow.WaitUntil(() => ui.Evidence("ReconView").TryGetProperty("IsProcessing", out var p) && !p.GetBoolean()
             && ui.Evidence("ReconView").GetProperty("Peaks").GetArrayLength() > 0, TimeSpan.FromSeconds(30), "channels decoded");
         return ui.Evidence("ReconView");
     }
 
-    private static void AssertPeakAtMaximum(StudioWindow ui, JsonElement data)
+    internal static void AssertPeakAtMaximum(StudioWindow ui, JsonElement data)
     {
         double[] grid = Numbers(data, "Reconstruction");
         Assert.Equal(grid, Numbers(data, "DisplayedImage"));
@@ -136,7 +147,7 @@ public sealed class WorkspaceScenarioTests(ITestOutputHelper output)
     public void Imaging_ChannelAndStrip_MatchRetainedFloodAndFoundPeaks() =>
         Scenario.Run(nameof(Imaging_ChannelAndStrip_MatchRetainedFloodAndFoundPeaks), output, (ui, record) =>
         {
-            TwoIsotopes(ui);
+            TwoIsotopes(ui, SeparatedCoActivityUCi);
             Assert.Equal("Completed", ui.Acquire(PilotTests.RunTimeout));
             var all = ReadyImage(ui);
             Assert.Equal(2, all.GetProperty("Peaks").GetArrayLength());
@@ -147,7 +158,8 @@ public sealed class WorkspaceScenarioTests(ITestOutputHelper output)
             ui.Choose("Imaging.Channel", "Cs-137");
             var low = ReadyImage(ui);
             AssertPeakAtMaximum(ui, low);
-            // Source inputs independently put Cs on the negative side and Co on the positive side.
+            // Source inputs independently put Cs on the negative side and Co on the positive side; at
+            // SeparatedCoActivityUCi each side holds with failure probability ≤ 10⁻³ (bound above).
             // No depth or sub-mm accuracy claim at the undersampled default optics.
             Assert.True(high.GetProperty("Peaks")[0].GetProperty("Xmm").GetDouble() > 0);
             Assert.True(low.GetProperty("Peaks")[0].GetProperty("Xmm").GetDouble() < 0);

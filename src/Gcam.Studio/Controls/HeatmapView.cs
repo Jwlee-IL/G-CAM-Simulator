@@ -50,13 +50,15 @@ public sealed class HeatmapView : FrameworkElement
     public DetectorImage? Image { get => (DetectorImage?)GetValue(ImageProperty); set => SetValue(ImageProperty, value); }
 
     public static readonly DependencyProperty OriginMmProperty = DependencyProperty.Register(
-        nameof(OriginMm), typeof(double), typeof(HeatmapView), new FrameworkPropertyMetadata(0.0, FrameworkPropertyMetadataOptions.AffectsRender));
+        nameof(OriginMm), typeof(double), typeof(HeatmapView), new FrameworkPropertyMetadata(0.0, FrameworkPropertyMetadataOptions.AffectsRender,
+            (d, _) => ((HeatmapView)d).RefreshReadout()));   // a kept hover re-reads its position on the new grid
 
     /// <summary>Centre of pixel 0 in mm (both axes).</summary>
     public double OriginMm { get => (double)GetValue(OriginMmProperty); set => SetValue(OriginMmProperty, value); }
 
     public static readonly DependencyProperty StepMmProperty = DependencyProperty.Register(
-        nameof(StepMm), typeof(double), typeof(HeatmapView), new FrameworkPropertyMetadata(1.0, FrameworkPropertyMetadataOptions.AffectsRender));
+        nameof(StepMm), typeof(double), typeof(HeatmapView), new FrameworkPropertyMetadata(1.0, FrameworkPropertyMetadataOptions.AffectsRender,
+            (d, _) => ((HeatmapView)d).RefreshReadout()));   // a kept hover re-reads its position on the new grid
 
     /// <summary>Pixel spacing in mm.</summary>
     public double StepMm { get => (double)GetValue(StepMmProperty); set => SetValue(StepMmProperty, value); }
@@ -185,9 +187,13 @@ public sealed class HeatmapView : FrameworkElement
 
     private void OnImageChanged()
     {
-        _hover = null;
-        SetValue(ReadoutPropertyKey, string.Empty);
         var img = Image;
+        // A refreshed image of the same size keeps the viewport, so the hovered pixel is still under the pointer: keep it
+        // and re-read its value (a live acquisition replaces the image four times a second — TODO-38). A new size refits
+        // the viewport, so the hover is dropped until the pointer moves.
+        bool sameSize = img is not null && _bitmap is not null && _bitmap.PixelWidth == img.Width && _bitmap.PixelHeight == img.Height;
+        if (!sameSize || _hover is not { } h || h.X >= img!.Width || h.Y >= img.Height) _hover = null;
+        SetValue(ReadoutPropertyKey, string.Empty);
         if (img is null) { _bitmap = null; OnViewChanged(); return; }
 
         _min = double.MaxValue; _max = double.MinValue;
@@ -209,6 +215,7 @@ public sealed class HeatmapView : FrameworkElement
         }
         _bitmap.WritePixels(new Int32Rect(0, 0, img.Width, img.Height), pixels, img.Width * 4, 0);
         ConfigureViewport();
+        if (_hover is not null) RefreshReadout();
     }
 
     // ---- rendering ---------------------------------------------------------------------------------

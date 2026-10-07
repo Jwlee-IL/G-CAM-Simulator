@@ -388,7 +388,7 @@ public sealed partial class PlotViewRenderTests
             bool coPair = settings.Strip && scene.Any(s => s.Isotope == "Co-60") && scene.Any(s => s.Isotope == "Cs-137");
             return Task.FromResult(new ImagingView(channels,
                 coPair ? [new StripRatio("Cs-137", "Co-60", 100000, 11000, 40000)] : [],
-                TimeSpan.FromMilliseconds(12), TimeSpan.FromMilliseconds(250), TimeSpan.FromMilliseconds(35)));
+                TimeSpan.FromMilliseconds(12), TimeSpan.FromMilliseconds(250), TimeSpan.FromMilliseconds(35)) { Method = settings.Method });
         }
     }
 }

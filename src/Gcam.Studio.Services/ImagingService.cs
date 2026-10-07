@@ -54,7 +54,8 @@ public sealed class ImagingService : IImagingService
             // Source-free: the field's highest energy sets the (largest, conservative) closed-cell transmission.
             var channel = ImagingProjection.Project(snapshot.Imaging.Flood, snapshot.Imaging, projection, "All", 0, double.NaN, double.NaN,
                 Mlem(settings, snapshot.AmbientMaximumEnergyKeV ?? 661.7));
-            return new(Array.AsReadOnly(new[] { channel }), Array.Empty<StripRatio>(), TimeSpan.Zero, TimeSpan.Zero, TimeSpan.Zero);
+            return new(Array.AsReadOnly(new[] { channel }), Array.Empty<StripRatio>(), TimeSpan.Zero, TimeSpan.Zero, TimeSpan.Zero)
+                { Method = settings.Method };
         }
         await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
@@ -87,7 +88,8 @@ public sealed class ImagingService : IImagingService
                 foreach (var group in sources.GroupBy(s => s.Isotope))
                     empty.Add(ImagingProjection.Project(new DetectorImage(config.Detector.PixelsX, config.Detector.PixelsY).ReadOnlyCopy(),
                         snapshot.Imaging, projection, group.Key, 0, double.NaN, double.NaN, Mlem(settings, PrimaryKeV(group.Key))));
-                return new(empty.AsReadOnly(), Array.Empty<StripRatio>(), TimeSpan.Zero, TimeSpan.Zero, TimeSpan.Zero);
+                return new(empty.AsReadOnly(), Array.Empty<StripRatio>(), TimeSpan.Zero, TimeSpan.Zero, TimeSpan.Zero)
+                    { Method = settings.Method };
             }
             var groups = sources.GroupBy(s => s.Isotope!).ToArray();
             var lines = groups.SelectMany(g => Isotopes.Get(g.Key).Lines.Select(l => new SpectrumLine(g.Key, l.EnergyKeV, l.Kind, l.XRayOrigin))).ToArray();
@@ -165,7 +167,7 @@ public sealed class ImagingService : IImagingService
             decode.Stop();
             return new(Array.AsReadOnly(results.ToArray()), Array.AsReadOnly(_ratios), channels.Elapsed,
                 changed ? calibration.Elapsed : TimeSpan.Zero, decode.Elapsed)
-                { NewlyMeasuredEvents = _energies.Count - previousMeasured };
+                { NewlyMeasuredEvents = _energies.Count - previousMeasured, Method = settings.Method };
         }
         catch
         {

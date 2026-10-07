@@ -26,6 +26,7 @@ public sealed partial class PlotViewRenderTests(ITestOutputHelper output)
             var application = new Application { ShutdownMode = ShutdownMode.OnExplicitShutdown };
             try
             {
+                CheckHeatmapReadoutAcrossRefresh();
                 foreach (string theme in new[] { "Dark", "Light" })
                 {
                     Render(theme);

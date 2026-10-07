@@ -152,6 +152,17 @@ public static class Verdict
                 double.Parse(m.Groups["v"].Value, NumberStyles.Float | NumberStyles.AllowThousands, CultureInfo.InvariantCulture));
     }
 
+    private static readonly Regex ReadoutUnitPattern = new(@"^x -?[\d.]+ mm, y -?[\d.]+ mm · -?[\d,]+(?:\.\d+)? (?<u>.+)$");
+
+    /// <summary>The unit suffix of a heatmap readout: "counts" (flood), "(decoded)" (cross-correlation) or "(MLEM λ)"
+    /// (TODO-36 MLEM reconstruction); throws when the readout has none.</summary>
+    public static string ParseReadoutUnit(string text)
+    {
+        var m = ReadoutUnitPattern.Match(text);
+        if (!m.Success) throw new FormatException($"readout without a unit: '{text}'");
+        return m.Groups["u"].Value;
+    }
+
     /// <summary>"Σ 0.0107" (the app's culture) → 0.0107.</summary>
     public static double ParseSum(string value)
     {

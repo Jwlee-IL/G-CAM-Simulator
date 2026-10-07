@@ -43,8 +43,13 @@ public sealed partial class ImagingWorkspaceViewModel(MainViewModel shared, IIma
     /// <summary>A re-projection setting like the focal plane: it re-decodes the retained floods, keeps measurements (same
     /// grid, same mm) and leaves the focus sweep alone (the sweep always cross-correlates).</summary>
     [ObservableProperty] private DecoderMethod _reconstruction = DecoderMethod.CrossCorrelation;
-    /// <summary>Value suffix of the reconstruction readout: correlation sums, or MLEM's non-negative intensity λ.</summary>
-    public string ReconstructionUnit => Reconstruction == DecoderMethod.Mlem ? "(MLEM λ)" : "(decoded)";
+    /// <summary>The method that decoded the displayed reconstruction (TODO-38): the published view's, else the acquisition's
+    /// own cross-correlation image. After a switch the selector names the new method at once, but the pane keeps the
+    /// previous image until the worker publishes the re-decoded one (an MLEM refresh takes longer than a tick).</summary>
+    public DecoderMethod DisplayedMethod => View?.Method ?? DecoderMethod.CrossCorrelation;
+    /// <summary>Value suffix of the reconstruction readout — of the displayed image: correlation sums, or MLEM's
+    /// non-negative intensity λ.</summary>
+    public string ReconstructionUnit => DisplayedMethod == DecoderMethod.Mlem ? "(MLEM λ)" : "(decoded)";
     /// <summary>The MLEM caveats, shown while MLEM is selected: the low-count side effect of the selected iteration count,
     /// whether the count was measured for the current optics, and the missing background term.</summary>
     public string? ReconstructionNote => Reconstruction != DecoderMethod.Mlem ? null
@@ -108,7 +113,7 @@ public sealed partial class ImagingWorkspaceViewModel(MainViewModel shared, IIma
     /// cross-correlation the sum of the clipped strip flood (max(0, low − R·high) per pixel), MLEM the net Σ low − R·Σ high —
     /// so the label names which one is shown.</summary>
     private string CountLabel => !Strip || !Ratios.Any(r => r.LowIsotope == SelectedIsotope) ? "counts"
-        : Reconstruction == DecoderMethod.Mlem ? "net counts (Σ low − R·Σ high)" : "counts (clipped strip sum)";
+        : DisplayedMethod == DecoderMethod.Mlem ? "net counts (Σ low − R·Σ high)" : "counts (clipped strip sum)";
     public string WorkerCosts => View is { } v
         ? $"Worker: channels {v.ChannelTime.TotalMilliseconds:F1} ms · calibration {v.CalibrationTime.TotalMilliseconds:F1} ms · decode {v.DecodeTime.TotalMilliseconds:F1} ms" : "";
     partial void OnSelectedIsotopeChanged(string value)
@@ -196,7 +201,8 @@ public sealed partial class ImagingWorkspaceViewModel(MainViewModel shared, IIma
     {
         SweepCommand.NotifyCanExecuteChanged();
         Measurements.Refresh(Result);
-        foreach (string name in new[] { nameof(SelectedChannel), nameof(Result), nameof(Peaks), nameof(PeakText), nameof(Summary), nameof(ChannelSummary) })
+        foreach (string name in new[] { nameof(SelectedChannel), nameof(Result), nameof(Peaks), nameof(PeakText), nameof(Summary), nameof(ChannelSummary),
+                     nameof(DisplayedMethod), nameof(ReconstructionUnit) })
             OnPropertyChanged(name);
     }
 }

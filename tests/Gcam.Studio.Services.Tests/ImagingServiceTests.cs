@@ -207,8 +207,11 @@ public sealed class ImagingServiceTests(ITestOutputHelper output)
         Assert.Equal(2, service.MlemMatrixBuilds);
         await service.ProcessAsync(id, snapshot, scene, Optics, mlem with { FocalDistanceMm = 1500 });
         Assert.Equal(4, service.MlemMatrixBuilds);
-        await service.ProcessAsync(id, snapshot, scene, Optics, new());   // cross-correlation builds no matrix
+        var cc = await service.ProcessAsync(id, snapshot, scene, Optics, new());   // cross-correlation builds no matrix
         Assert.Equal(4, service.MlemMatrixBuilds);
+        // TODO-38: each view records the method that decoded it (the UI labels the displayed image by it).
+        Assert.Equal(DecoderMethod.CrossCorrelation, cc.Method);
+        Assert.Equal(DecoderMethod.Mlem, (await service.ProcessAsync(id, snapshot, scene, Optics, mlem)).Method);
     }
 
     [Fact]

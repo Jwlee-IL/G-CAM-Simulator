@@ -34,7 +34,11 @@ internal static class AutomationEvidence
                 DisplayedImage = (owner as HeatmapView)?.Image?.Raw.ToArray(),
                 FoundMarkers = MeasurementOverlay.GetFoundPeaks(owner)?.Cast<object>().ToArray(),
                 i.SweepResult,
-                PlotBands = (owner as PlotView)?.Bands
+                PlotBands = (owner as PlotView)?.Bands,
+                // TODO-38 / DC-3: the reconstruction method and what the panel states about it.
+                Method = i.Reconstruction.ToString(), DisplayedMethod = i.DisplayedMethod.ToString(),
+                i.ReconstructionUnit, i.ReconstructionNote, i.Summary,
+                i.Result.EffectiveCounts
             },
             _ => null
         };
