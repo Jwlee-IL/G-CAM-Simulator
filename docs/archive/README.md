@@ -11,6 +11,12 @@ set the plan's status to done and move the plan and its review / reports into th
 
 ## Closed tasks
 
+- **TODO-39 Studio strip count** (2026-10-07): with Compton strip on, both reconstruction methods report the signed net
+  Σ low − R·Σ high as `N ± σ net counts` (counting + calibration, single-contaminant window overlap; "uncertainty
+  unavailable" otherwise) instead of cross-correlation's clipped sum (+50 … +250 counts high); cross-correlation decodes
+  the signed difference while the display stays clipped; ROI values carry their pane's unit (SR-IMG-05, SR-IMG-07,
+  SR-MEAS-03). Desktop 35 / 35, broken verdict 7 / 7, recovery 7 / 7. Review and implementation by Codex —
+  [PLAN.Studio.StripCount](PLAN.Studio.StripCount.md).
 - **TODO-37 evidence-run provenance** (2026-10-07): per-seed provenance (schema v1: source commit, tracked-diff and
   untracked hashes; hashes of the executable closure actually run per executor kind; recipe; output hashes), runs
   executed from staged immutable copies of the managed artifacts and of the Python / RTL closure, every downstream

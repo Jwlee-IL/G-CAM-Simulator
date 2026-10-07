@@ -252,3 +252,11 @@ an under-powered scene — Co-60 20 µCi gives ~41 counts in its channel at 1 m 
 side in 27 % of such acquisitions. The scene now uses Co-60 400 µCi, chosen by a bound (wrong-side probability
 ≤ 10⁻³ per channel from exact Poisson moments of Studio's decoding weights: 1.3 × 10⁻⁴ for Co-60, 1.3 × 10⁻⁵ for
 Cs-137). Not covered by automation: keyboard-only reachability and a both-themes survey of the Reconstruction selector.
+
+## Desktop verification — strip count, 2026-10-07
+
+TODO-39 (signed net strip count, signed cross-correlation decoding, ROI units). Planner's run in the worktree
+`C:\gw\wui` at `fde8c35` plus the TODO-39 change (24 files), Release build: full suite **35 / 35 pass**; broken
+verdict on the six MLEM scenarios and the channel / strip scenario **7 / 7 fail, each at its corrupted assertion (no
+timeout)**; recovery **7 / 7 pass** (runs `20261007-151850` … `152124`). Another session tried to use the desktop near
+the end of the recovery run; every result was judged by its exact oracle and none shows interference.

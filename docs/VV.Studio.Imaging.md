@@ -165,10 +165,20 @@ other optics or focal planes; the UI says so.
   position RMS / count bias (RMSE), cross-correlation + clipped strip against MLEM with the downscatter as background:
   1000 Cs counts, Co : Cs 1 : 1 — 0.071° / +88 (95) against 0.043° / +1 (39); 4 : 1 — 0.132° / +249 (253) against
   0.120° / 0 (54); 4000 counts, 1 : 1 — 0.055° / +45 (89) against 0.025° / −3 (80); 4 : 1 — 0.064° / +222 (241)
-  against 0.030° / −1 (104). The clipped strip sum reads 4.5–25 % high (TODO-39).
+  against 0.030° / −1 (104). The clipped strip sum read 4.5–25 % high; since TODO-39 both methods report the signed net.
 - **Display rate** (real session, 5 channels, 60 s at speed 10): cross-correlation 3.4–3.6 Hz (worker decode 80–90 ms
   median); MLEM at 360 iterations 1.1–1.3 Hz (600–740 ms); about 1.0–1.2 Hz at 400 (scaled, not re-measured). The
   producer held 9.9–10× speed; transport never stalled.
+
+## Strip count and signed decoding (TODO-39, 2026-10-07)
+
+Conditional evidence for SR-IMG-05 at the default optics (16 fresh seeds × 50 per Cs-under-Co scene). The signed net
+Σ low − R·Σ high is unbiased within −3.4 … +1.6 counts, where the old clipped sum read +50 … +250 high; empirical SD /
+reported σ 0.94–1.04 (two seed-bootstrap intervals exclude 1, so exact agreement is not claimed). Decoding the signed
+difference instead of the clipped flood: cross-correlation RMS 0.039–0.073° against 0.039–0.083°, one peak per frame,
+no selected peak outside one element or nearer Co-60. An independent statistical test (4096 draws, bounds fixed from
+the distribution's moments before sampling): mean −1002.61 against −1002.51 (± 8.17), reported σ 130.7 against an
+empirical 129.3 counts. Limits: scalar strip model, one contaminant for the reported σ, no ambient background removal.
 
 ## Verification status
 

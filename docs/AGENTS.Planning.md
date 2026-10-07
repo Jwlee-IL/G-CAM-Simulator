@@ -33,7 +33,9 @@ when a plan is wrong, caught every one. Each role checks the other.
 5. **Turn 2+ — implement**, in the same conversation: "state material disagreements first and stop; otherwise
    implement". Plan corrections found later go back into the plan as a dated **Correction** paragraph.
 6. **Verify independently.** The planner rebuilds, runs `dotnet test`, runs the headless render snapshots, reads the
-   diff, re-checks physics numbers and evidence text. The implementer's "it passes" is not evidence until re-run.
+   diff, re-checks physics numbers and evidence text, and **re-runs one seed of each new or changed evidence family** and
+   compares its output with the implementer's (identical apart from timing fields). The implementer's "it passes" is
+   not evidence until re-run.
 7. **Record and commit.** Results to `AGENTS.Findings` / `VV.*`; plan `Status:` updated; commit on the author's word,
    split by concern (implementation, plan docs, findings), never sweeping in files another session is editing.
 8. **Close.** Remove the `AGENTS.Todo` row, add an entry to the closed-task index in `docs/archive/README.md` linking the plan, set the plan's status to done
@@ -45,10 +47,15 @@ when a plan is wrong, caught every one. Each role checks the other.
 |---|---|---|
 | Model | `codex exec -m gpt-6.1-sol` | the author's choice |
 | Sandbox | `-s danger-full-access` **with the guard block below** in every prompt (author, 2026-10-02); `-s workspace-write` while another session drives UI automation; desktop UI tests / app launch only after the author says the desktop is free | the Windows sandbox runs each command through `CreateProcessAsUserW` with a restricted token and has repeatedly lost process creation mid-task (error 5, access denied), ending the conversation's usefulness; one level up removes that, and the guard plus the planner's audit replace the sandbox's limits. The command-line flag decides, not the app setting (the log's `sandbox:` line shows what applied) |
-| Prompt | from a file on stdin (`- < prompt.md`), report with `-o report.md`, run in the background | long tasks; the report is the turn's result |
+| Prompt | from a file on stdin (`- < prompt.md`), report with `-o report.md`, run in the background; **write the prompt file with the file-write tool or a quoted heredoc (`<<'EOF'`), never an unquoted heredoc** — the shell runs every backtick span in it as a command and substitutes the output | long tasks; the report is the turn's result. 2026-10-07: an unquoted heredoc ran the prompt's `` `dotnet build` `` / `` `dotnet test` `` spans while writing the file and dropped them from the prompt |
 | One conversation per task | start once, read `session id:` from the log, continue with `codex exec -s workspace-write --skip-git-repo-check -C <repo> -o <report> resume <session-id> - < prompt.md` | the implementer keeps its findings across review, discussion and implementation |
 | Check the log head | `model:`, `sandbox:`, `session id:` match what was intended | a silent fallback (new session, other sandbox) is otherwise invisible |
 | Watch for completion | launch `codex exec` through the shell tool's own background mode (or a monitor), **never a detached `&` / `start`**, so the planner is notified when the turn ends; on notification read the report and audit at once | 2026-10-02: a detached turn finished at 23:15 and the planner did not notice until the author asked |
+| Background shells | the implementer (and the planner) runs each long job as **one** background command that exits when the job ends; **no separate watcher loops** (`until …; do sleep; done`, `tail -f`), and never a second watcher on a job that already notifies; at most one wait per condition | 2026-10-06: a substitute implementer armed eight duplicate watchers on one run; the author noticed the open shells and six were stopped with approval |
+| Scratch paths | the prompt names one scratch folder, `%TEMP%\gcam-<task>\` (in Git Bash `/tmp/gcam-<task>/`), and the implementer writes nothing outside it and the working tree | 2026-10-07: an implementer wrote `%TEMP%\sk.py`, outside the guard's `%TEMP%\gcam-*` |
+| Continuing a substitute | a substitute Claude implementer keeps its context like a Codex conversation: later turns go to the **same** subagent (SendMessage to it), not a fresh one | the review's findings carry into implementation without re-reading |
+| Small tasks | for a small, well-understood task the planner may merge review and implementation into one turn: "state material disagreements first and stop; otherwise implement"; anything that measures, changes physics or a requirement keeps the separate review turn | TODO-38 (a test fix) ran as one turn; TODO-34 / 35 needed their review turns |
+| VV and planning documents | the implementer **proposes** edits to `VV.*`, `AGENTS.*`, `PLAN.*` and README in its report (exact wording); the planner applies them, signs off drafted prose and keeps the record consistent | one writer per record; implementer-written VV text has carried placeholders and change history before (cautions below) |
 
 ### Guard block (every `danger-full-access` prompt)
 
@@ -149,6 +156,8 @@ one-line fresh `codex exec`; (3) continue in a fresh conversation handed the wri
 | Implementer-written views | check for ancestor lookups (`RelativeSource AncestorType=…`) and other context tricks; the offscreen renders expose them |
 | Physics claims | a precision that has no guarantee is **measured and recorded**, not asserted; assert what is guaranteed (association, conservation, a derived k·σ); a bias found is a finding with a TODO, never tuned away |
 | Inherited evidence | re-measure before building on it — the implementer could not reproduce EV-03's rank-23 headline (TODO-18) |
+| A value chosen after seeing the check seeds | it is no longer validated by them: confirm it on a third, disjoint seed set before it becomes a default, and stop if it fails there (TODO-36: the rule chose 360 iterations, 360 missed on the check seeds, 400 was confirmed on a third set) |
+| Desktop UI tests while an implementation is running | the planner runs them in a separate detached `git worktree` (copy the change under test into it), so a concurrent build in the main tree cannot change the binary under test; three runs — full suite, `GCAM_UI_BREAK_VERDICT=1` on the new / changed scenarios (each must fail at its corrupted assertion, not by a timeout), recovery; read the manifests of every failure before re-running, never retry blindly (2026-10-07) |
 
 ## The six plan errors of the first week (examples)
 
