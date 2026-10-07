@@ -2,6 +2,8 @@
 Usage: python rtl/run_cocotb.py [--csharp-vectors DIR] [--crrc-only]
 """
 import argparse
+import hashlib
+import json
 import os
 from pathlib import Path
 import subprocess
@@ -18,18 +20,29 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--csharp-vectors", type=Path)
     parser.add_argument("--crrc-only", action="store_true")
+    parser.add_argument("--output-root", type=Path,
+                        help="Fresh results directory; must not already exist. No cleanup is performed.")
     args = parser.parse_args()
     here = Path(__file__).resolve().parent
-    root = Path(os.environ.get("TEMP", "/tmp")) / ("gcam-rtl-" + uuid.uuid4().hex)
+    root = args.output_root if args.output_root else Path(os.environ.get("TEMP", "/tmp")) / ("gcam-rtl-" + uuid.uuid4().hex)
     root.mkdir()
     tally = dict(tests=0, passed=0, failed=0, skipped=0)
 
     def run(top, source, module, params, name, extra=None):
         directory = root / name
         directory.mkdir()
+        specification = {"schemaVersion": 1, "name": name, "module": module, "top": top,
+                         "source": source, "parameters": params, "seed": 20261002}
+        def save_specification():
+            (directory / "configuration.json").write_text(
+                json.dumps(specification, sort_keys=True) + "\n", encoding="utf-8", newline="\n")
+        save_specification()
         runner = get_runner("icarus")
         runner.build(sources=[here / source], hdl_toplevel=top, parameters=params,
                      build_dir=directory, always=True, clean=False)
+        simulation = directory / "sim.vvp"
+        specification["simulationBeforeSha256"] = hashlib.sha256(simulation.read_bytes()).hexdigest()
+        save_specification()
         results = directory / "results.xml"
         env = os.environ.copy()
         env.update({"LIBPYTHON_LOC": str(Path(sys.prefix) / f"python{sys.version_info.major}{sys.version_info.minor}.dll") if os.name == "nt" else find_libpython(),
@@ -39,8 +52,14 @@ def main():
                     "COCOTB_RANDOM_SEED": "20261002"})
         env.update(extra or {})
         # Direct cocotb invocation avoids Runner.test's unconditional results-file unlink.
-        subprocess.run(["vvp", "-M", str(config.libs_dir), "-m", config.lib_name("vpi", "icarus"),
-                        str(directory / "sim.vvp"), "-none"], cwd=here, env=env, check=True)
+        try:
+            subprocess.run(["vvp", "-M", str(config.libs_dir), "-m", config.lib_name("vpi", "icarus"),
+                            str(simulation), "-none"], cwd=here, env=env, check=True)
+        finally:
+            specification["simulationAfterSha256"] = hashlib.sha256(simulation.read_bytes()).hexdigest()
+            save_specification()
+            if specification["simulationBeforeSha256"] != specification["simulationAfterSha256"]:
+                raise RuntimeError(f"{name}: simulation subject changed during execution")
         cases = ET.parse(results).findall(".//testcase")
         if not cases:
             raise RuntimeError(f"{name}: no tests")

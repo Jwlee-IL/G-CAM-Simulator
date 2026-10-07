@@ -18,28 +18,52 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 9.0.x
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
       - name: Build
         # A warnings-only file log feeds the "build warnings" badge; warnings never fail the build.
-        run: dotnet build Gcam.sln -c Release "-flp:warningsonly;logfile=build-warnings.log"
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path "${{ runner.temp }}/gcam-todo28" | Out-Null
+          dotnet build Gcam.sln -c Release "-flp:warningsonly;logfile=${{ runner.temp }}/gcam-todo28/build-warnings.log"
       - name: Count build warnings
         id: warnings
         shell: pwsh
         run: |
-          $lines = if (Test-Path build-warnings.log) { Get-Content build-warnings.log | Where-Object { $_ -match ': warning ' } } else { @() }
+          $warningLog = "${{ runner.temp }}/gcam-todo28/build-warnings.log"
+          $lines = if (Test-Path $warningLog) { Get-Content $warningLog | Where-Object { $_ -match ': warning ' } } else { @() }
           $count = @($lines | Sort-Object -Unique).Count
           "count=$count" >> $env:GITHUB_OUTPUT
           "Build warnings (unique): $count" >> $env:GITHUB_STEP_SUMMARY
           $lines | Sort-Object -Unique | ForEach-Object { "- ``$_``" } >> $env:GITHUB_STEP_SUMMARY
       - name: Test
-        # Engine physics invariants, Studio ViewModels and UI oracles. The desktop UI scenarios
-        # skip themselves unless GCAM_UI_TESTS=1 (they need an interactive session).
-        run: dotnet test Gcam.sln -c Release --no-build --logger "console;verbosity=normal"
-      - name: Note the skipped desktop UI scenarios
+        if: always()
+        env:
+          GCAM_UI_TESTS: '0'
+          GCAM_RENDER_SNAPSHOTS: '0'
+          GCAM_EVIDENCE_TESTS: '0'
+          DOTNET_CLI_UI_LANGUAGE: en
+        # Collection retains per-project TRX and the original nonzero test exit status.
+        run: python -B samples/testing/test_records.py collect --family dotnet --no-build --out "${{ runner.temp }}/gcam-todo28/dotnet"
+      - name: Check expanded catalog discovery
+        if: always()
+        run: python -B samples/testing/test_records.py check-catalog --discover
+      - name: Generate .NET test report and skipped-suite summary
         if: always()
         shell: pwsh
         run: |
-          "The 14 desktop UI tests (tests/Gcam.Studio.UiTests: 12 scenarios, the plot gate, the survey) need an interactive session and are SKIPPED here," >> $env:GITHUB_STEP_SUMMARY
-          "not passed. Run them locally with GCAM_UI_TESTS=1 (docs/AGENTS.UiAutomation.md)." >> $env:GITHUB_STEP_SUMMARY
+          python -B samples/testing/test_records.py generate --bundle "${{ runner.temp }}/gcam-todo28/dotnet"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Get-Content "${{ runner.temp }}/gcam-todo28/dotnet/inventory.md" >> $env:GITHUB_STEP_SUMMARY
+          "Skipped cases remain not executed; desktop cases require GCAM_UI_TESTS=1 in an authorised interactive session." >> $env:GITHUB_STEP_SUMMARY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-records-dotnet
+          path: ${{ runner.temp }}/gcam-todo28/dotnet
+          retention-days: 90
+          if-no-files-found: error
 
   rtl:
     name: RTL cocotb (Icarus)
@@ -55,7 +79,18 @@ jobs:
           sudo apt-get install -y iverilog
           pip install cocotb==2.0.1
       - name: Run cocotb (RTL vs the integer reference shared with the C# Waveform)
-        run: python rtl/run_cocotb.py
+        if: always()
+        run: python -B samples/testing/test_records.py collect --family cocotb --out "${{ runner.temp }}/gcam-todo28/rtl"
+      - name: Generate RTL report
+        if: always()
+        run: python -B samples/testing/test_records.py generate --bundle "${{ runner.temp }}/gcam-todo28/rtl"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-records-rtl
+          path: ${{ runner.temp }}/gcam-todo28/rtl
+          retention-days: 90
+          if-no-files-found: error
 
   calibration-records:
     name: Calibration records (--check)
@@ -68,11 +103,59 @@ jobs:
         with:
           python-version: "3.13"
       - name: Check the calibration records
-        run: python samples/evidence/calibration_record.py --release
+        run: python -B samples/testing/test_records.py collect --family checker --checker calibration --out "${{ runner.temp }}/gcam-todo28/python"
       - name: Test evidence provenance (standard library only)
         env:
           GCAM_PROVENANCE_GIT_TESTS: '1'
-        run: python -B -m unittest discover -s samples/evidence/tests -p "test_provenance*.py"
+        if: always()
+        run: python -B samples/testing/test_records.py collect --family unittest --out "${{ runner.temp }}/gcam-todo28/python"
+      - name: Catalog freshness
+        if: always()
+        run: python -B samples/testing/test_records.py collect --family checker --checker test-catalog --out "${{ runner.temp }}/gcam-todo28/python"
+      - name: Archived record replay
+        if: always()
+        run: python -B samples/testing/test_records.py collect --family checker --checker archived-replay --out "${{ runner.temp }}/gcam-todo28/python"
+      - name: Test-record defect self-test
+        if: always()
+        run: python -B samples/testing/test_records.py collect --family checker --checker test-record-self-test --out "${{ runner.temp }}/gcam-todo28/python"
+      - name: Generate Python/checker report
+        if: always()
+        run: python -B samples/testing/test_records.py generate --bundle "${{ runner.temp }}/gcam-todo28/python"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-records-python
+          path: ${{ runner.temp }}/gcam-todo28/python
+          retention-days: 90
+          if-no-files-found: error
+
+  test-report:
+    name: Aggregate test records
+    needs: [dotnet, rtl, calibration-records]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: test-records-*
+          path: ${{ runner.temp }}/gcam-todo28/aggregate
+      - name: Bind source snapshots and generate aggregate report
+        shell: bash
+        run: |
+          python -B samples/testing/test_records.py generate --bundle "$RUNNER_TEMP/gcam-todo28/aggregate" --inputs "$RUNNER_TEMP"/gcam-todo28/aggregate/test-records-*
+          python -B samples/testing/test_records.py check --bundle "$RUNNER_TEMP/gcam-todo28/aggregate"
+          cat "$RUNNER_TEMP/gcam-todo28/aggregate/inventory.md" >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-records-aggregate
+          path: ${{ runner.temp }}/gcam-todo28/aggregate
+          retention-days: 90
+          if-no-files-found: error
 
   badges:
     name: Publish badges
