@@ -6,7 +6,7 @@ with which oracle and tolerance; and produce the **test-result report** from the
 a command or CI, never written by hand. The model is the author's existing procedure from another project; only its
 process is adopted (structure, generation steps, what the report contains), none of its content.
 
-Status: **reference plan, 2026-10-07** — waiting for the implementer's review (turn 1).
+Status: **implemented, M1 pending**, 2026-10-08 — review and implementation by Codex (session `01a1185d-c2a7-7cd1-be53-922321df54e0`; [review](PLAN.Docs.TestRecords.Review.md), turns [2](PLAN.Docs.TestRecords.Turn2.md), [3](PLAN.Docs.TestRecords.Turn3.md), [4](PLAN.Docs.TestRecords.Turn4.md), [5](PLAN.Docs.TestRecords.Turn5.md)); planner checks: build 0 / 0, full tests 815 passed / 28 skipped, Python suites pass, self-test 26 refusals, catalog 153 / 153; turn 4 reworked an unreadable first catalog (2.7 MB of copied source → 281 KB) and compressed the milestone (6.8 → 0.96 MB); next: commit, then milestone M1 collected by the planner on the clean tree (TD-10).
 
 ## The model process (what is adopted)
 
@@ -60,6 +60,30 @@ which a run record links by hash).
 | TR-6 | **Replacing hand-written numbers:** `VV.Studio.md` "Current test inventory" and the traceability statuses become generated blocks (markers, as the calibration records); the dated History records stay hand-written history |
 | TR-7 | **Checker + self-test:** the generator refuses missing / mismatched hashes, merges across subjects, typed counts; a `--self-test` seeds one defect at a time into copies and requires each to fail; runs in CI |
 | TR-8 | **Docs:** `AGENTS.Conventions.Docs` (new VV document, generated blocks), `AGENTS.md` / README build-and-test section, `AGENTS.Rationale` rows — proposed by the implementer, applied by the planner |
+
+## Decisions after review (2026-10-08)
+
+The review ([PLAN.Docs.TestRecords.Review](PLAN.Docs.TestRecords.Review.md); subject `266b740`, normal Release run
+118 classes / 843 cases: 815 passed, 28 skipped) corrected the plan: TRX does not reliably separate assertion failures
+from exceptions and its `notExecuted` counter reads 0 despite 28 skipped results; the desktop run manifests are
+exploratory (saved before the final cleanup assertions), so they are not the test verdict; only three switches gate
+xUnit tests (`GCAM_EVIDENCE_TESTS`, `GCAM_RENDER_SNAPSHOTS`, `GCAM_UI_TESTS`) — the others change behaviour; CI's "14
+desktop tests" is stale (20); commit + dirty alone does not identify the subject (hash the source content and the built
+binaries before and after the run); the traceability matrix mixes exact names with abbreviations, ellipses and
+descriptions, and mixes T / I / C / M evidence. The author answered four questions.
+
+| ID | Decision | Source |
+|---|---|---|
+| TD-1 | **Where:** every CI run uploads its records, TRX, logs and report as artifacts (90-day retention); a **milestone** commits `docs/VV.Tests.Results.md` and `samples/testing/records/<milestone>/` (normalised JSON run records, generation record, selection manifest) | **author** (Q1, recommended) |
+| TD-2 | **Raw evidence:** the milestone also commits the **TRX files**, sanitised (machine name, user, absolute paths replaced by tokens; the sanitisation is deterministic and recorded), so `--check` can re-normalise from TRX and verify the JSON; built DLLs are identified by hash only (not committed); measure the committed size per milestone | **author** (Q2) |
+| TD-3 | **Runners: all collected now** — xUnit (TRX), Python unittest (a stdlib result adapter), cocotb (an output-root argument and a results adapter, partial / error states kept), and the standalone checkers as recorded invocations; a CI aggregate job binds the family records to one source snapshot and publishes the report; the background-shape numerical tests (NumPy / SciPy) and the C# vector export in the Linux RTL job are listed as gaps, not silently counted | **author** (Q3) |
+| TD-4 | **Traceability:** a generated **automated-results block** beside the matrix (exact assembly-qualified selectors from the catalog); manually judged I / C / M evidence, desktop records and historical statuses stay as written | **author** (Q4, recommended) |
+| TD-5 | **Catalog:** `docs/VV.Tests.md`, one entry per discovered test class (and per unittest class, cocotb module + configuration, checker): purpose, level, inputs / seeds, oracle and its limits, tolerance with its derivation ("exact", "structural" or "measurement only" where so), method groups where gates or tolerances differ, SR / EV / VAL selectors, gates, reproduce command; prose plus a fenced JSON metadata block per entry; a generated discovery block; the checker requires exactly one entry per class, no extras, resolving selectors, and flags entries whose source hash changed for review. No new tolerance is chosen; every statement comes from the test's own code | review; planner |
+| TD-6 | **Run records (schema v1):** identity, source content manifest (incl. tests and untracked relevant files, read-only hashing), subject binaries hashed before and after (mismatch refuses), tool versions, environment (allow-listed `GCAM_*` switches, unset ≠ 0), per case raw outcome → `passed` / `failed` (`failureKind` assertion / error / **unknown** — no guessing from messages) / `not_executed` with skip codes (`opt_in_off`, `optional_vectors_off`, `missing_fixture`, `desktop_unavailable` only when established, `platform_unsupported`, `runner_skip_unknown`); run diagnostics and missing expected cases visible | review; planner |
+| TD-7 | **Selection and status:** an explicit selection manifest per milestone (no silent "latest wins"; repeats and earlier failures visible; break-verdict and fault-injection runs never substitute product results); formal / draft is provenance only, separate from coverage and from pass / fail; no human-approval fields filled by tools | review; planner |
+| TD-8 | **Generated blocks in VV.Studio:** `TEST INVENTORY` replaces the current-inventory table; `AUTOMATED TRACE RESULTS` beside the matrix; dated History records, measured values and the historical coverage baseline untouched; CI summary text derived from discovery | review; planner |
+| TD-9 | **Tool:** `samples/testing/test_records.py` (stdlib; `collect`, `generate`, `check`, `check-catalog`, `self-test`) + adapters; the self-test seeds one defect at a time into scratch copies and requires the precise refusal; CI runs check-catalog, archived replay of committed milestones and the self-test | review; planner |
+| TD-10 | **First milestone after the commit:** turn 2 builds the tooling and the catalog and proves it on a scratch (draft) collection; the planner commits, then collects milestone **M1** on the clean tree (normal profile; evidence / render opt-ins if they finish; desktop attached later only on the author's go) and commits it as a separate record | planner |
 
 ## Steps
 

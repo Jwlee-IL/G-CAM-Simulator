@@ -81,20 +81,32 @@ seed table and the distinction between measured calibration and unverified final
 
 ## Current test inventory
 
-Verification of the ambient default and the fixed spectrum axis, 2026-10-04, on the tree committed as `13387fb`.
+The generated block below is the current inventory: it names its subject (commit and source snapshot), whether its
+record is formal or draft, and the selected runner results; it is written by `samples/testing/test_records.py` from
+retained run records (catalog: [VV.Tests](VV.Tests.md); milestone reports: [VV.Tests.Results](VV.Tests.Results.md)).
+The dated inventory that follows the block is history, not current totals. Desktop evidence is in
+[VV.Studio.History](VV.Studio.History.md); desktop cases not run for the selected subject are reported as not executed.
+
+**History (2026-10-04).** Verification of the ambient default and the fixed spectrum axis, 2026-10-04, on the tree committed as `13387fb`.
 Commands: `dotnet build Gcam.sln -c Release` and `dotnet test Gcam.sln -c Release --no-build`.
 Build: zero errors, zero warnings; the two existing xUnit analyzer warnings (`ImagingServiceTests.cs:106`,
 `WaveformServiceTests.cs:118`) reappear only when `Gcam.Studio.Services.Tests` is fully recompiled. Normal test
 execution:
 
-| Assembly / suite | Passed | Skipped | Inventory |
-|---|---:|---:|---|
-| `Gcam.Tests` | 393 | 0 | engine physics / compatibility |
-| `Gcam.Studio.Tests` | 205 | 0 | Core ViewModels, geometry, policies and token contrast |
-| `Gcam.Studio.Services.Tests` | 92 | 7 | real-engine services; long numerical evidence opt-in |
-| `Gcam.Studio.UiTests` | 13 | 14 | headless oracles pass; 12 desktop scenarios, plot gate and survey opt out |
-| `Gcam.Studio.RenderTests` | 0 | 1 | independent offscreen render opt-in |
-| **Total** | **703** | **22** | **725 cases; zero failures** |
+<!-- BEGIN GENERATED: TEST INVENTORY -->
+Subject `266b74072f30883b84c42bd949cd0ed61ecd767b`; draft; source snapshot `935eb57e12707cb0582e902718e5bd7e8fc2408052400770226c2dc53c1af7f7`.
+
+| Assembly / family | Passed | Failed | Not executed | Missing cases |
+| --- | --- | --- | --- | --- |
+| Gcam.Studio.RenderTests | 0 | 0 | 1 | 0 |
+| Gcam.Studio.Services.Tests | 108 | 0 | 7 | 0 |
+| Gcam.Studio.Tests | 211 | 0 | 0 | 0 |
+| Gcam.Studio.UiTests | 15 | 0 | 20 | 0 |
+| Gcam.Tests | 481 | 0 | 0 | 0 |
+| checker | 4 | 0 | 0 | 0 |
+| cocotb | 111 | 0 | 26 | 0 |
+| unittest | 38 | 0 | 1 | 0 |
+<!-- END GENERATED: TEST INVENTORY -->
 
 No desktop, render or long-evidence opt-in was enabled for this run. The retained final desktop record
 reports 27/27 total UI cases (13 headless oracles + 12 scenarios + gate + survey); **27 is a suite total,
@@ -257,6 +269,118 @@ Automation. Status: **pass** (evidence on 2026-10-01), **partial**, **open** (no
 | SR-SPEC-08 | inspection + system | I | `SpectrumView.xaml`, `SpectrumPanel.xaml`, inherited `PlotView` peer | partial — both themes surveyed; screen-reader/keyboard-only walkthrough pending |
 | SR-SPEC-09 | unit + integration + inspection | T, I | acquisition VM test checks range request / selection persistence; spectrum service verifies every bin edge / centre; XAML one-way range / units inspected | pass headless; desktop selection walkthrough deferred |
 
+The generated table below reports the selected automated test executions only. The matrix's inspection, compiler and
+manual judgments and its desktop statuses stay separately reviewed evidence; passing automated cases alone do not sign
+off a requirement.
+
+<!-- BEGIN GENERATED: AUTOMATED TRACE RESULTS -->
+Automated execution only; inspection/compiler/manual verdicts in the matrix remain separate.
+
+| SR / EV / VAL | Passed | Failed | Not executed | Missing methods |
+| --- | --- | --- | --- | --- |
+| EV-01 | 10 | 0 | 0 | 0 |
+| EV-02 | 4 | 0 | 0 | 0 |
+| EV-03 | 7 | 0 | 0 | 0 |
+| EV-04 | 5 | 0 | 0 | 0 |
+| EV-05 | 1 | 0 | 0 | 0 |
+| EV-07 | 18 | 0 | 0 | 0 |
+| EV-08 | 10 | 0 | 0 | 0 |
+| EV-10 | 2 | 0 | 0 | 0 |
+| EV-11 | 37 | 0 | 0 | 0 |
+| EV-12 | 7 | 0 | 0 | 0 |
+| EV-13 | 1 | 0 | 0 | 0 |
+| EV-14 | 4 | 0 | 0 | 0 |
+| EV-15 | 24 | 0 | 0 | 0 |
+| EV-17 | 15 | 0 | 0 | 0 |
+| EV-19 | 12 | 0 | 0 | 0 |
+| EV-20 | 20 | 0 | 0 | 0 |
+| EV-22 | 5 | 0 | 0 | 0 |
+| EV-23 | 6 | 0 | 0 | 0 |
+| EV-25 | 6 | 0 | 0 | 0 |
+| EV-29 | 6 | 0 | 0 | 0 |
+| EV-30 | 5 | 0 | 0 | 0 |
+| EV-31 | 4 | 0 | 0 | 0 |
+| EV-32 | 4 | 0 | 0 | 0 |
+| EV-33 | 10 | 0 | 0 | 0 |
+| EV-34 | 87 | 0 | 0 | 0 |
+| EV-35 | 16 | 0 | 0 | 0 |
+| SR-IMG-01 | 2 | 0 | 0 | 0 |
+| SR-IMG-02 | 10 | 0 | 2 | 0 |
+| SR-IMG-03 | 1 | 0 | 0 | 0 |
+| SR-IMG-04 | 7 | 0 | 1 | 0 |
+| SR-IMG-05 | 15 | 0 | 0 | 0 |
+| SR-IMG-06 | 1 | 0 | 0 | 0 |
+| SR-IMG-07 | 24 | 0 | 0 | 0 |
+| SR-MEAS-01 | 2 | 0 | 1 | 0 |
+| SR-MEAS-02 | 2 | 0 | 1 | 0 |
+| SR-MEAS-03 | 2 | 0 | 2 | 0 |
+| SR-MEAS-04 | 4 | 0 | 0 | 0 |
+| SR-MEAS-05 | 3 | 0 | 0 | 0 |
+| SR-MEAS-06 | 1 | 0 | 0 | 0 |
+| SR-MEAS-07 | 0 | 0 | 1 | 0 |
+| SR-NAV-01 | 1 | 0 | 0 | 0 |
+| SR-NAV-02 | 2 | 0 | 0 | 0 |
+| SR-NAV-03 | 2 | 0 | 0 | 0 |
+| SR-OPT-01 | 2 | 0 | 0 | 0 |
+| SR-OPT-02 | 2 | 0 | 0 | 0 |
+| SR-OPT-03 | 13 | 0 | 0 | 0 |
+| SR-OPT-04 | 7 | 0 | 0 | 0 |
+| SR-OPT-05 | 3 | 0 | 0 | 0 |
+| SR-OPT-06 | 0 | 0 | 1 | 0 |
+| SR-PLOT-01 | 1 | 0 | 0 | 0 |
+| SR-PLOT-02 | 5 | 0 | 0 | 0 |
+| SR-PLOT-03 | 10 | 0 | 0 | 0 |
+| SR-PLOT-04 | 1 | 0 | 1 | 0 |
+| SR-PLOT-05 | 0 | 0 | 1 | 0 |
+| SR-PLOT-06 | 2 | 0 | 1 | 0 |
+| SR-PLOT-07 | 1 | 0 | 0 | 0 |
+| SR-PLOT-08 | 1 | 0 | 0 | 0 |
+| SR-PLOT-09 | 1 | 0 | 0 | 0 |
+| SR-PLOT-10 | 1 | 0 | 0 | 0 |
+| SR-PLOT-11 | 0 | 0 | 1 | 0 |
+| SR-RUN-03 | 2 | 0 | 0 | 0 |
+| SR-RUN-09 | 2 | 0 | 1 | 0 |
+| SR-RUN-10 | 2 | 0 | 1 | 0 |
+| SR-RUN-11 | 2 | 0 | 0 | 0 |
+| SR-RUN-12 | 3 | 0 | 2 | 0 |
+| SR-RUN-13 | 3 | 0 | 1 | 0 |
+| SR-RUN-15 | 4 | 0 | 0 | 0 |
+| SR-RUN-16 | 20 | 0 | 0 | 0 |
+| SR-RUN-20 | 2 | 0 | 0 | 0 |
+| SR-RUN-21 | 3 | 0 | 0 | 0 |
+| SR-RUN-22 | 3 | 0 | 0 | 0 |
+| SR-RUN-23 | 6 | 0 | 1 | 0 |
+| SR-RUN-24 | 2 | 0 | 0 | 0 |
+| SR-RUN-25 | 2 | 0 | 0 | 0 |
+| SR-RUN-26 | 8 | 0 | 2 | 0 |
+| SR-RUN-27 | 2 | 0 | 0 | 0 |
+| SR-RUN-28 | 1 | 0 | 0 | 0 |
+| SR-RUN-29 | 32 | 0 | 1 | 0 |
+| SR-SCENE-01 | 2 | 0 | 0 | 0 |
+| SR-SCENE-02 | 2 | 0 | 0 | 0 |
+| SR-SPEC-01 | 3 | 0 | 0 | 0 |
+| SR-SPEC-02 | 3 | 0 | 0 | 0 |
+| SR-SPEC-03 | 1 | 0 | 0 | 0 |
+| SR-SPEC-04 | 4 | 0 | 0 | 0 |
+| SR-SPEC-05 | 5 | 0 | 0 | 0 |
+| SR-SPEC-06 | 1 | 0 | 0 | 0 |
+| SR-SPEC-07 | 3 | 0 | 0 | 0 |
+| SR-THEME-01 | 1 | 0 | 1 | 0 |
+| SR-VIEW-01 | 1 | 0 | 0 | 0 |
+| SR-VIEW-02 | 3 | 0 | 0 | 0 |
+| SR-VIEW-03 | 2 | 0 | 0 | 0 |
+| SR-VIEW-04 | 1 | 0 | 0 | 0 |
+| SR-VIEW-05 | 4 | 0 | 1 | 0 |
+| SR-VIEW-06 | 1 | 0 | 0 | 0 |
+| SR-VIEW-07 | 7 | 0 | 1 | 0 |
+| SR-VIEW-08 | 2 | 0 | 1 | 0 |
+| VAL-01 | 0 | 0 | 1 | 0 |
+| VAL-02 | 0 | 0 | 1 | 0 |
+| VAL-03 | 6 | 0 | 3 | 0 |
+| VAL-04 | 0 | 0 | 1 | 0 |
+| VAL-05 | 0 | 0 | 1 | 0 |
+<!-- END GENERATED: AUTOMATED TRACE RESULTS -->
+
 ### Coverage summary
 
 The tables below preserve the pre-acquisition baseline (47 rows); withdrawn RUN rows are historical evidence.
@@ -331,7 +455,7 @@ app's code (an oracle that re-derives the image layout and the screen → mm map
 
 ### Plot performance gate
 
-2026-10-01, DESKTOP-4D9CRJT, Windows 11 build 26200, .NET SDK 9.0.311 / runtime 9.0.13, Release,
+2026-10-01, local verification host, Windows 11 build 26200, .NET SDK 9.0.311 / runtime 9.0.13, Release,
 100% DPI, 10,000,000 samples, visible 1280×800 host resized to 1440 width. The tool shell reports 24 processors;
 `DOTNET_PROCESSOR_COUNT=4` constrained build / test runtime concurrency. Three warm-up zoom redraws preceded
 five measured zoom / resize pairs. Data preparation is outside the interactive redraw measurement.

@@ -120,6 +120,12 @@ Enforcement: **C** compiler / build · **T** automated test · **R** review agai
 | Verdicts must not all be invariant to translation / flip — at least one pins absolute positions. | Lengths, angles and counts would all pass with a shifted origin or a mirrored axis. | `AGENTS.UiAutomation` | T (readout scenario) |
 | Capture only the window's visible frame (DWM extended frame bounds), and open an image before sharing it. | The UIA rectangle includes invisible borders and captured another app's text. | `AGENTS.UiAutomation`, `RunRecord` | H |
 | A failing diagnostics bundle must not hide the original failure. | The first error is the one worth reading. | `RunRecord` | H |
+| Count case outcomes, not the adapter's summary counters. | The measured TRX adapter reports `notExecuted = 0` beside 28 skipped cases. | `test_records.py` | T (self-test) |
+| A failure's subtype is `unknown` unless the runner proves it. | TRX does not reliably separate an assertion failure from an exception; guessing from message text would invent a fact. | `VV.Tests.Results` schema | T (self-test) |
+| The final runner outcome is the verdict, never a desktop run manifest. | The manifest is saved before the scenario's final cleanup assertions and can say "passed" for a failing test. | `test_records.py` | R |
+| Provenance (formal / draft) is separate from coverage and from pass / fail. | A clean failing run is a truthful formal record; a dirty passing run is still a draft. | `AGENTS.Conventions.Docs` | T (self-test) |
+| Milestone runs are chosen by an explicit selection manifest; subjects are pinned by source and binary hashes taken before and after the run. | Repeats or other binaries must not silently replace evidence; a hash taken only afterwards cannot prove what ran. | `test_records.py` | T (self-test) |
+| Committed runner output is sanitised deterministically (host, user, absolute paths). | The repository is public; the evidence does not need local identifiers. | `test_records.py` | T (privacy check) |
 
 ## Documents and process
 

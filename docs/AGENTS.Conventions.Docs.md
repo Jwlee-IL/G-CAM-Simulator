@@ -70,6 +70,13 @@ Rules:
   entry in `VV.Gcam.Evidence.md` (result, conditions, limits, reproduce command, tests) in the same commit as the
   Findings theme; a changed result updates the entry and every row in its "Used by" column. The theme ↔ EV map
   is at the top of `AGENTS.Findings.md`.
+- **Test records.** `VV.Tests.md` is the human-reviewed test catalog (one entry per test class, cocotb configuration
+  and checker, each with a fenced JSON metadata block); `VV.Tests.Results.md` is generated from one explicitly selected
+  subject's retained run records (`samples/testing/records/<milestone>/`). The interiors of the `TEST DISCOVERY`,
+  `TEST INVENTORY` and `AUTOMATED TRACE RESULTS` marker pairs belong to `samples/testing/test_records.py`: edit their
+  inputs, never their numbers. Historical records and inspection / manual / compiler judgments stay outside the
+  generated blocks. A milestone is replayed from its committed, sanitised runner output (TRX, XML) and catalog; its
+  binaries are identified by hash, never rebuilt as a stand-in for the measured subject.
 - Every `VV.*` document opens with an **At a glance** list (≤ 6 bullets) below its scope line, and keeps change
   history out of its requirement rows (that belongs in the evidence register's model history or in the decision
   log).

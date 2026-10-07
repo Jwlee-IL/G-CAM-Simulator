@@ -115,6 +115,10 @@ dotnet test  Gcam.sln -c Release          # engine + Studio regressions; desktop
 # Long numerical evidence only (PowerShell: $env:GCAM_EVIDENCE_TESTS = '1'):
 GCAM_EVIDENCE_TESTS=1 dotnet test tests/Gcam.Studio.Services.Tests -c Release --filter Category=Evidence --logger 'console;verbosity=detailed'
 
+# Test catalog and generated test-result report (docs/VV.Tests.md, docs/VV.Tests.Results.md):
+python -B samples/testing/test_records.py check-catalog --discover
+python -B samples/testing/test_records.py check --archives
+
 # single scenario -> flood map + reconstruction + source estimate (ASCII)
 dotnet run --project src/Gcam.Cli -c Release -- samples/scenario.json
 
