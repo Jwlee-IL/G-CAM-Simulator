@@ -96,6 +96,10 @@ Stop — dropping it loses a real count (the continuation tests catch it).
 
 ## Detector and retained-flood focus
 
+The Imaging Reconstruction selector (cross-correlation / pixel-area MLEM, SR-IMG-07) is a re-projection setting in
+`ImagingSettings`, like the focal plane; MLEM matrices are cached in `MlemDecoderCache`; the focus sweep always
+cross-correlates; `AcquisitionSession` stays cross-correlation.
+
 Registered workspaces are Imaging, Spectrum, Waveform and Detector (Ctrl+1…4). Reflector gap is a shared
 run input edited in µm, validated against pending pixel pitch and captured in mm with acquired settings.
 Detector face/readouts use pending inputs before acquisition and acquired detector/optics afterwards.

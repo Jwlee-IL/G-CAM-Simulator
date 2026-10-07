@@ -149,6 +149,27 @@ The options panel now inherits the workspace directly. Only its sibling measurem
 has status Active and DataItem equal to the workspace instance. The render test checks these identities,
 the All / Cs-137 / Co-60 items, selection, image identity and found-peak count.
 
+## MLEM reconstruction at the default optics (TODO-36, 2026-10-07)
+
+Conditional evidence for SR-IMG-07 at Studio's default optics (rank 13, 0.7 mm cells, D = 80 mm, 30 × 30 pixels at
+0.6 mm, focal plane 1000 mm; transported maps, 662 keV window, exact Poisson, the blind pair test). Not claimed for
+other optics or focal planes; the UI says so.
+
+- **Iteration count.** The pair-resolution rule (smallest resolved separation with single-source false splits ≤ 5 %;
+  ties to fewer iterations) picked 360 on selection seeds (15 × 50); on check seeds (16 × 50) 360 passed 1.0 element
+  at 0.949 [0.927, 0.968], so 400 was taken and confirmed on a third, disjoint set (16 × 50): **1.0 element 0.960
+  [0.940, 0.979]** (point estimate against 95 %), false split ≤ 0.13 % [0, 0.37] at 2000 counts; cross-correlation
+  resolves 2.0 elements. Cost at low counts: a 250-count single source shows a second peak ≥ ¼ of the main height in
+  50.4 % [46.3, 54.2] of frames (≥ ½: 11.6 %); cross-correlation 100 % / 77.5 %.
+- **MLEM + strip on Cs-137 under Co-60** (16 seeds × 50, Studio's windows; 360 iterations, ideal strip ratio). Cs
+  position RMS / count bias (RMSE), cross-correlation + clipped strip against MLEM with the downscatter as background:
+  1000 Cs counts, Co : Cs 1 : 1 — 0.071° / +88 (95) against 0.043° / +1 (39); 4 : 1 — 0.132° / +249 (253) against
+  0.120° / 0 (54); 4000 counts, 1 : 1 — 0.055° / +45 (89) against 0.025° / −3 (80); 4 : 1 — 0.064° / +222 (241)
+  against 0.030° / −1 (104). The clipped strip sum reads 4.5–25 % high (TODO-39).
+- **Display rate** (real session, 5 channels, 60 s at speed 10): cross-correlation 3.4–3.6 Hz (worker decode 80–90 ms
+  median); MLEM at 360 iterations 1.1–1.3 Hz (600–740 ms); about 1.0–1.2 Hz at 400 (scaled, not re-measured). The
+  producer held 9.9–10× speed; transport never stalled.
+
 ## Verification status
 
 Reviewer verification (Release, 2026-10-02): build 0 errors; engine 259, Studio Core 86, services 28 and

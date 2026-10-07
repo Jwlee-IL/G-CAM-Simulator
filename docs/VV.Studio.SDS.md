@@ -483,6 +483,7 @@ Every SRS requirement maps to at least one unit; every unit carries at least one
 |---|---|
 | SR-OPT-01 … SR-OPT-06 | SU-01, SU-16, SU-24, SU-25, SU-23, SU-03, SU-10, SU-14 |
 | SR-IMG-01 … SR-IMG-06 | SU-01 (shared N), SU-16 (ImagingWorkspaceViewModel), SU-23 (worker), SU-10 (found overlays), SU-14 (selector / options panel); SU-20 (shared window and measurement response) |
+| SR-IMG-07 | SU-16 (`Reconstruction`, `ReconstructionUnit`, `ReconstructionNote`, strip count label), SU-23 (`ImagingSettings.Method`, MLEM projection with b = Σ R·high, net count), SU-25 (`Project` overload; `MlemDecoderCache`: matrices keyed by geometry and line energy, built under a lock, read concurrently), `StudioMlem` (iteration count and caveat numbers) |
 | SR-RUN-01, -02, -04 … -08 | withdrawn; batch implementation removed |
 | SR-RUN-03, SR-RUN-09 … SR-RUN-13, SR-RUN-19 | SU-01, SU-07, SU-08, SU-19 |
 | SR-RUN-14 | withdrawn; stale marking removed |

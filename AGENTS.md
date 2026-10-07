@@ -228,6 +228,8 @@ Findings themes 10–14, 25, 27, 29–33. Details, scripts and how to run: [`rtl
   default 0.178 ≈ 10 mm W at 662 keV, ~17% leak); at oblique angles open cells become
   channels that clip into neighbours → collimation. Set thickness=small for leak-limited,
   large for collimation-limited behaviour.
+- **Decoder.Method**: `Mlem` (pixel-area MLEM, `MlemIterations`) is honoured only by the single run and GCAM Studio's
+  Imaging selector; study commands refuse a scenario that sets it (`StudyDecoderGuard`). Default `CrossCorrelation`.
 - **Cloning configs**: studies vary parameters by `baseConfig.Clone()` (a JSON deep copy)
   then mutating one or two fields. Do NOT hand-write `new SimulationConfig { ... }` clones —
   a Codex review found several that silently dropped fields (mask attenuation, crystal

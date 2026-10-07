@@ -24,7 +24,7 @@ results at their ideal values; which results change, and how, is listed in
 [Evidence §1](VV.Gcam.Evidence.md#ideal-conditions-and-background) (EV-34).
 
 **In numbers:** 19 user needs (18 active) → 51 product requirements (48 active) → 33 evidence entries; 9 known limitations;
-51 decisions with the author's reasons. The engineering viewer has 102 active software requirement IDs (nine withdrawn), four workspaces, and current unit/integration
+51 decisions with the author's reasons. The engineering viewer has 109 active software requirement IDs (nine withdrawn), four workspaces, and current unit/integration
 test totals in [VV.Studio](VV.Studio.md#current-test-inventory), plus 12 opt-in desktop regression scenarios, a plot gate and a survey.
 
 ## The problems it starts from
@@ -93,7 +93,7 @@ rest on MC, 4 on RTL, 11 on AN; 5 are decisions, 7 hardware targets and 4 still 
 ```mermaid
 flowchart LR
     URS["URS<br/>19 user needs"] --> PRS["PRS<br/>51 product requirements"]
-    PRS --> SRS["Studio SRS<br/>102 active software requirements"]
+    PRS --> SRS["Studio SRS<br/>109 active software requirements"]
     SRS --> SDS["Studio SDS<br/>design record"]
     SDS --> VVS["Studio V&V<br/>tests, scenarios, anomalies"]
     EV["Evidence<br/>33 entries"] --> PRS

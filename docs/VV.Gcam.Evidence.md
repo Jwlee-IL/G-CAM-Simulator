@@ -424,7 +424,9 @@ Geometries used below:
 - **Reproduce.** At use distance: `montecarlo ambient-evidence`, family `angres`, through
   `samples/evidence/manifest-angres-v1.json` (point response, resolved pairs, iterations, ladder, matched, ambient,
   ±7°, 5 m; `samples/evidence/angres/aggregate_angres.py` → `samples/evidence/results/angres-v1-*.json`) and
-  `manifest-angres-v2.json` (significance floor → `angres-v2-floor.json`). Lab demonstration:
+  `manifest-angres-v2.json` (significance floor → `angres-v2-floor.json`). The same pixel-area MLEM in a single run:
+  `montecarlo <scenario>` with `"decoder": { "method": "Mlem", "cyclic": false }` (120 iterations unless
+  `mlemIterations` is set; identical to the study's construction). Lab demonstration:
   `montecarlo mlem samples/scenario.json samples/mlem.csv`.
 - **Tests.** `MlemTests`; `MlemOptionTests` (the default decoder bit-identical to the original algorithm; pixel-area,
   supplied-matrix and background options), `ResolvedPairTests` (blind two-peak test, prominence, floor selection),

@@ -15,7 +15,7 @@ one of a set:
 The working design guides are [DESIGN.Architecture](DESIGN.Architecture.md) and the other `DESIGN.*` pages.
 
 **At a glance**
-- 108 active software requirement IDs plus nine withdrawn IDs (§4). Live acquisition verification and
+- 109 active software requirement IDs plus nine withdrawn IDs (§4). Live acquisition verification and
   measurements are recorded in [VV.Studio.Acquisition](VV.Studio.Acquisition.md); desktop acquisition
   validation passed in the final desktop pass on 2026-10-02.
 - Twelve regression scenarios, a plot gate and a 16-frame diagnostic survey are opt-in desktop tests.
@@ -170,6 +170,7 @@ Automation. Status: **pass** (evidence on 2026-10-01), **partial**, **open** (no
 | SR-IMG-04 | unit + integration + offscreen | T, I | `ImagingServiceTests.Channels_OffAxisCsAndCo_LocalizeAtTheirOwnSource`, `Precision_TwentySeeds_MeasuresMixedIsotopesAndCoOnlyControl`; `OverlayLabelLayoutTests` (6 cases: gaps, marker/measurement clearance, bounds, recalculation, deterministic packing, omission and invalid geometry); crowded equal-Y and edge-chip renders with diamond overlay and coordinate list | pass (headless + offscreen); measured Co-60 bias in [imaging evidence](VV.Studio.Imaging.md); updated layout desktop pending |
 | SR-IMG-05 | integration | T | `ImagingServiceTests.Strip_CoLocatedCsAndDoubleActivityCo_RecoversSameLiveTimeCsCount`, `WindowChange_ReplaysRetainedEvents_RecalibratesAndMatchesFreshProcessing` | pass (headless); desktop pending |
 | SR-IMG-06 | unit + integration | T, I | `ImagingWorkspaceTests.LateResponse_CannotReplaceNewerWindowResult`; serialized `Task.Run` worker and separate stopwatches | pass (headless); desktop pending |
+| SR-IMG-07 | unit + integration + offscreen | T, I | `ImagingWorkspaceTests.Reconstruction_IsAReprojectionSetting_KeepsMeasurementsAndSweep`, `ReconstructionNote_FlagsUnmeasuredOptics_AndTheAcquisitionImageIsNotShownAsMlem`, `StripCount_IsLabelledClippedForCrossCorrelation_AndNetForMlem`; `ImagingServiceTests.Mlem_ChannelsLocalizeAtTheirOwnSource_NonNegative`, `Mlem_BuildsOneMatrixPerGeometryAndLine_AndReusesItAcrossRefreshes`, `CrossCorrelation_IsUnchangedByTheMethodField`; `MlemReconstructionTests` (factory MLEM bit-identical to the evidence construction); MLEM offscreen renders; [imaging evidence](VV.Studio.Imaging.md) | pass (headless + offscreen); desktop pending |
 | SR-RUN-01 | historical batch | — | batch implementation and batch-only tests removed; historical desktop evidence below | withdrawn → SR-RUN-09, -19 |
 | SR-RUN-02 | historical batch | — | batch implementation and batch-only tests removed; historical desktop evidence below | withdrawn → SR-RUN-10 |
 | SR-RUN-03 | unit | T | `AcquisitionViewModelTests.Failure_WithData_KeepsItLocked_ResetOnly`, `Failure_WithoutData_BehavesAsEmpty` | pass |
