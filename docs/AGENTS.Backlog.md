@@ -175,6 +175,12 @@ TILT (pitch/yaw), mask WARPING.
 
 ## Done (summary — details in AGENTS.Findings by theme)
 
+- **TODO-28 step 1 — calibration records** (2026-10-07): a fixed form (`VV.Gcam.Calibration.Template`) and four
+  generated records — CAL-01 gate v1 (superseded, 3 FAIL), CAL-02 gate v2 (96 / 96), CAL-03 stripped Z_s (135 / 135,
+  9 not applicable), CAL-04 pair-test floors (410 / 414, 4 FAIL in cells that resolve nothing) — from pinned evidence
+  files with seed-disjointness and stored-verdict cross-checks; CI runs `calibration_record.py --release`. Author
+  decisions D-50 (form; false alarms judged by the upper limit), D-51 (conservative neighbour between grid points) —
+  [PLAN.Docs.CalibrationRecords](archive/PLAN.Docs.CalibrationRecords.md).
 - **TODO-34 angular resolution at use distance** (2026-10-06, performance-critical, D-41): blind two-peak test with a
   calibrated significance floor; at 1 m a pixel-area MLEM (new opt-in forward model) resolves two sources 1.30° apart
   (1.25 × cell / D), cross-correlation not within 3 elements; EV-11's near-field "2–3 mm" withdrawn; PR-IMG-02 restated
@@ -182,7 +188,7 @@ TILT (pitch/yaw), mask WARPING.
   substitute Claude implementer — [PLAN.Physics.AngularResolution](archive/PLAN.Physics.AngularResolution.md), Findings 66.
 - **TODO-35 Cs-137 under Co-60** (2026-10-06, performance-critical, D-42): literature review, then the cost of Compton
   stripping at use distance — exact Currie detection limit validated 864 / 864 (10 µSv/h of Co-60 at 1 m: 181 Cs counts
-  = 1.6 MBq in 60 s), a stripped trust statistic with 144 calibrated thresholds (144 / 144 ≤ 1 % false), the gain as the
+  = 1.6 MBq in 60 s), a stripped trust statistic with 144 calibrated thresholds (135 / 135 informative configurations ≤ 1 % false), the gain as the
   dominant ratio systematic → side-window reference; author decisions D-43 … D-45. Review, implementation and runs by a
   substitute Claude implementer — [PLAN.Physics.CsUnderCo60](archive/PLAN.Physics.CsUnderCo60.md), Findings 65.
 - **TODO-30 absolute ambient background** (2026-10-04): a source-independent terrestrial field (K / U / Th from a

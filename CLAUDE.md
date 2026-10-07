@@ -36,7 +36,7 @@ cocotb RTL front-end path.
   an **energy-window** issue, not a position issue.
 - **Requirement set (2026-10-01, design-only)** — `docs/VV.Gcam.{Overview,URS,PRS,Evidence,Limitations,Decisions}.md`
   (+ `VV.Studio.{SRS,SDS}` for the viewer). Author decisions with reasons are logged in
-  `VV.Gcam.Decisions.md` (D-01…D-49); headlines:
+  `VV.Gcam.Decisions.md` (D-01…D-51); headlines:
   - The product is a **scintillator coded-aperture camera**: compare only with same-class imagers (iPIX),
     never with Compton / HPGe cameras (Polaris-H, GeGI). Use conditions **relaxed to iPIX level**
     (−10…+45 °C, 93 % RH, IP65, 60 cm drop, ≤ 2.5 kg).

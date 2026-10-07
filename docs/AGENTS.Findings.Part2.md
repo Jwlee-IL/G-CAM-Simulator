@@ -1028,7 +1028,8 @@ distance").
   √5). Window counting reads 1 Bq of Co-60 as 0.489 Bq of Cs-137 — 8.7 × L_D at 10 µSv/h, 60 s. Ambient 0.10 µSv/h
   matters only at weak Co-60.
 - **Imaging.** New stripped statistic Z_s (per-pixel R_i) with 144 thresholds selected on 65 536 Cs-free nulls each:
-  144 / 144 ≤ 1 % false trusted on fresh seeds (pooled 0.284 %). Location (trusted, within 1.04°, two elements from
+  135 / 135 informative configurations ≤ 1 % false trusted on fresh seeds (pooled 0.303 %; 9 ideal Co = 0 configurations
+  have no counts and are not counted — corrected 2026-10-06, first quoted as 144 / 144, 0.284 %). Location (trusted, within 1.04°, two elements from
   Co-60) needs 500 / 1000 / 2000 counts at 10 µSv/h — 5–7 × the count limit. The raw window through the PR-SENS-02
   gate trusts a false Cs-137 at Co-60's position in 92–100 % of Cs-free acquisitions at 10 µSv/h.
 - **R systematics.** Per 1 % gain: side +0.8 %, co1332 −13 %, both photopeaks −3.6 %; side R flat over the array and

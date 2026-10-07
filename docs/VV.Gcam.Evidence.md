@@ -378,7 +378,7 @@ Geometries used below:
   exact Poisson; one angular element = atan(1 / 55) = 1.042°; pair position randomised over one element; 128 seeds ×
   50 pair + 50 single-source acquisitions per cell). **Resolved** = two peaks found blind by topographic prominence,
   each within min(Δ / 2, 1 element) of a different source, valley ≥ 25 % of the lower peak, the second peak above a
-  significance floor calibrated on single-source acquisitions (≤ 3 % false split at selection, disjoint seeds), in
+  significance floor calibrated on single-source acquisitions (≤ 3 % false split at selection, disjoint seeds; CAL-04), in
   ≥ 95 % of acquisitions at Δ and at every larger Δ on the grid, with single-source false splits ≤ 5 % (D-48).
   - *Point response.* Cross-correlation's half-maximum width at 1 m, over source positions within one element: x
     1.46° [1.19, 1.70], y 1.22° [1.12, 1.34] (median [quartiles]) against the geometric 1.042°; at 5 m median 1.10° but
@@ -397,6 +397,11 @@ Geometries used below:
     analytic pixel-area model already reaches it. Usable non-cyclic field (±7°, not claimed, D-47): pixel-area
     unchanged, engine MLEM ≤ 45 % and cross-correlation ≤ 73 % pass. Ambient 0.10 µSv/h, 60 s: no resolved separation
     changes (pass within 1.4 points, with or without a background term in MLEM).
+  - *Floor validation:* judged by the upper bootstrap limit (the upper end of the two-sided 95 % interval, D-48), 4 of
+    414 validation rows exceed 5 % false split, all in cells that resolve no separation (cross-correlation 1 : 1 at
+    4000 counts; pixel-centre MLEM 1 : 4 at 16 000); no resolved separation changes. At and beyond each claimed
+    separation the pixel-area MLEM's upper limit is ≤ 1.6 % (1 : 1, axis), ≤ 3.7 % (1 : 4, axis), ≤ 4.1 % (edge),
+    ≤ 3.5 % (5 m).
   - *Iterations matter:* every MLEM splits single sources when run long (pixel-centre 49 % at 80 iterations,
     pixel-area 9.5 % at 480, matched 18 % at 640); counts are chosen on separate seeds by the smallest resolved
     separation including the false-split limit.
@@ -517,12 +522,12 @@ Geometries used below:
   hand-held head at 1 m and 5 m; 10 s and 60 s; three field levels; two bounds; open and 662 keV windows. Per
   configuration, the threshold is the smallest recorded Z with at most 0.3 % of the selection nulls at or above it
   (ties counted as exceedances), from **65,536 background-only acquisitions per configuration** (64 seeds × 1024);
-  thresholds 1.163 … 4.6245, pinned before validation. Validation on **seeds never used for selection** (N = 128,
+  thresholds 1.163 … 4.6245, pinned before validation (calibration record CAL-02). Validation on **seeds never used for selection** (N = 128,
   64 nulls each = 8,192 per configuration): **96 / 96 configurations pass** (one-sided 95 % Clopper–Pearson upper
   limit of the false-trusted rate ≤ 1 %); pooled **2,424 / 786,432 = 0.308 %** (one-sided 95 % limits
   0.298–0.319 %); worst configuration lab, 10 s, 0.10 µSv/h, front-only, 662 keV window (0.04 expected background
   counts): 40 / 8,192 = 0.49 %, upper limit 0.64 %; the 27 configurations with < 1 expected background count
-  0.325 %. A first selection on 4,096 nulls per configuration passed 93 / 96: where the expected background is
+  0.325 %. A first selection on 4,096 nulls per configuration (CAL-01, superseded) passed 93 / 96: where the expected background is
   < 1 count Z takes few distinct values and the selected quantile moves in steps, so three configurations missed by
   0.007 points (13 / 2,048, upper 1.007 %); the selection was repeated with 16× the nulls and validated on new seeds,
   nothing else changed.
@@ -695,8 +700,8 @@ Geometries used below:
     (false positives 4.5–5.3 %); the R calibration's precision (0.27 %) adds at most 0.6 points within the claim.
   - *Imaging.* A stripped trust statistic Z_s (per-pixel R_i; decoded stripped image studentised by its Poisson
     variance) with thresholds selected per configuration on 65 536 Cs-free Co-60 + ambient nulls by the PR-SENS-02
-    rule: **144 / 144** configurations ≤ 1 % false trusted on 8 192 fresh nulls each (pooled 0.284 %, worst upper limit
-    0.61 %); trusted at Co-60's position ≤ 0.06 %. **≥ 95 % trusted and within one angular element (1.04°)** of a
+    rule (CAL-03): **135 / 135** informative configurations ≤ 1 % false trusted on 8 192 fresh nulls each (pooled 0.303 %, worst
+    upper limit 0.61 %; 9 further configurations — ideal, no Co-60 — have no counts at all and are not a test); trusted at Co-60's position ≤ 0.06 %. **≥ 95 % trusted and within one angular element (1.04°)** of a
     Cs-137 source two elements from Co-60 needs **500 / 1000 / 2000** Cs-137 counts at 10 µSv/h and 10 / 60 / 300 s
     (Co : Cs ≈ 1.0 / 3.1 / 7.6) — 5–7 × the count limit; 250–500 counts without Co-60 (grid steps of ~2, so upper
     bounds within a step). The raw 662 keV window through the PR-SENS-02 gate, by contrast, trusts a **false Cs-137 at
