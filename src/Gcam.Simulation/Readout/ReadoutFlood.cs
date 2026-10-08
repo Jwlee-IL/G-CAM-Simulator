@@ -13,8 +13,22 @@ public static class ReadoutFlood
 {
     public static List<InteractionSite[]> Transport(SimulationConfig config, double energyKeV, int histories, int seed, CancellationToken cancellationToken = default)
     {
+        var outp = new List<InteractionSite[]>(Math.Max(0, histories));
+        outp.AddRange(Stream(config, energyKeV, histories, seed, cancellationToken));
+        return outp;
+    }
+
+    /// <summary>The same histories as <see cref="Transport"/>, in the same order, produced one at a time (a large
+    /// calibration flood need not be held in memory). A shorter flood of the same seed is a prefix of a longer one.</summary>
+    public static IEnumerable<InteractionSite[]> Stream(SimulationConfig config, double energyKeV, int histories, int seed, CancellationToken cancellationToken = default)
+    {
         ArgumentNullException.ThrowIfNull(config);
         if (!(energyKeV > 0) || histories < 0) throw new ArgumentOutOfRangeException(nameof(energyKeV));
+        return Histories(config, energyKeV, histories, seed, cancellationToken);
+    }
+
+    private static IEnumerable<InteractionSite[]> Histories(SimulationConfig config, double energyKeV, int histories, int seed, CancellationToken cancellationToken)
+    {
         var d = config.Detector;
         var transport = DefaultRandom.FromKey(DefaultRandom.Key(seed, 1));
         var entry = DefaultRandom.FromKey(DefaultRandom.Key(seed, 2));
@@ -27,17 +41,16 @@ public static class ReadoutFlood
             interactionSink: (sites, _) => last = sites.ToArray());
         double halfW = d.PixelsX * d.PixelPitchMm / 2, halfH = d.PixelsY * d.PixelPitchMm / 2;
         var down = new Vector3(0, 0, -1);
-        var outp = new List<InteractionSite[]>(histories);
+        int produced = 0;
         long tries = 0, maxTries = 1000L * Math.Max(1, histories);
-        while (outp.Count < histories)
+        while (produced < histories)
         {
             if ((tries & 4095) == 0) cancellationToken.ThrowIfCancellationRequested();
             if (++tries > maxTries) throw new InvalidOperationException("Flood transport scores almost nothing (check the crystal).");
             double x = (entry.NextDouble() * 2 - 1) * halfW, y = (entry.NextDouble() * 2 - 1) * halfH;
             last = null;
             detector.Score(new Photon { Ray = new Ray(new Vector3(x, y, 10), down), EnergyKeV = energyKeV, Weight = 1 });
-            if (last is { Length: > 0 }) outp.Add(last);
+            if (last is { Length: > 0 }) { produced++; yield return last; }
         }
-        return outp;
     }
 }

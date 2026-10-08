@@ -120,9 +120,12 @@ public sealed class FloodLut
             || config.MinPeakFraction is < 0 or >= 1 || !(config.MinSeparationFraction >= 0))
             throw new ArgumentException("Invalid flood calibration parameters.");
         int bx = countX * config.BinsPerCrystal, by = countY * config.BinsPerCrystal, n = countX * countY;
-        var density = Smooth(Histogram(points, bx, by), bx, by, config.SmoothingSigmaBins);
+        // LatticeGrowth fixes its own detection scale: one eighth of the nominal spot spacing (constant raw width).
+        double sigma = config.Method == FloodCalibrationMethod.LatticeGrowth
+            ? config.BinsPerCrystal * FloodTopology.SigmaFraction : config.SmoothingSigmaBins;
+        var density = Smooth(Histogram(points, bx, by), bx, by, sigma);
         double max = density.Max();
-        FloodLut Fail(int found, string why) => new(countX, countY, bx, by, config.SmoothingSigmaBins, density, found, why, [], []);
+        FloodLut Fail(int found, string why) => new(countX, countY, bx, by, sigma, density, found, why, [], []);
         if (!(max > 0)) return Fail(0, "empty calibration flood");
 
         // Local maxima: strictly greater than the neighbours after it in scan order, ≥ those before (plateau → first bin).
@@ -149,6 +152,12 @@ public sealed class FloodLut
         if (config.Method == FloodCalibrationMethod.TopologyAware)
         {
             topologyGrid = FloodTopology.Match(density, candidates, countX, countY, bx, by, out string? failure);
+            if (topologyGrid is null) return Fail(candidates.Count, failure!);
+        }
+        else if (config.Method == FloodCalibrationMethod.LatticeGrowth)
+        {
+            topologyGrid = FloodTopology.Grow(density, candidates, countX, countY, bx, by, config.BinsPerCrystal, sigma,
+                out string? failure);
             if (topologyGrid is null) return Fail(candidates.Count, failure!);
         }
         else if (config.Method != FloodCalibrationMethod.Legacy)
@@ -210,7 +219,7 @@ public sealed class FloodLut
                     labels[y * bx + x] = best;
                 }
             var voronoiPeaks = grid.Select(g => (ToRaw(g % bx, bx), ToRaw(g / bx, by))).ToArray();
-            return new FloodLut(countX, countY, bx, by, config.SmoothingSigmaBins, density, kept.Count, null, voronoiPeaks, labels);
+            return new FloodLut(countX, countY, bx, by, sigma, density, kept.Count, null, voronoiPeaks, labels);
         }
 
         // Marker-controlled watershed by priority flooding.
@@ -236,7 +245,7 @@ public sealed class FloodLut
             }
         }
         var peaks = grid.Select(g => (ToRaw(g % bx, bx), ToRaw(g / bx, by))).ToArray();
-        return new FloodLut(countX, countY, bx, by, config.SmoothingSigmaBins, density, kept.Count, null, peaks, labels);
+        return new FloodLut(countX, countY, bx, by, sigma, density, kept.Count, null, peaks, labels);
     }
 
     private static string? Irregular(int[] grid, int nx, int ny, int bx)

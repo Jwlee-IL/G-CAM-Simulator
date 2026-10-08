@@ -24,7 +24,7 @@ public sealed class FloodCalibrationConfig
     /// <summary>Histogram bins per crystal along each axis of the raw position plane.</summary>
     public int BinsPerCrystal { get; set; } = 32;
 
-    /// <summary>Gaussian smoothing σ in histogram bins.</summary>
+    /// <summary>Gaussian smoothing σ in histogram bins (LatticeGrowth uses its own fixed σ = BinsPerCrystal / 8).</summary>
     public double SmoothingSigmaBins { get; set; } = 1.0;
 
     /// <summary>A local maximum below this fraction of the highest smoothed bin is not a marker candidate.</summary>
