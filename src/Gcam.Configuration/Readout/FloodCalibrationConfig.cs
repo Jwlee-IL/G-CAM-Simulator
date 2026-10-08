@@ -7,6 +7,10 @@ namespace Gcam.Configuration;
 /// explicitly; it is never forced into a grid.</summary>
 public sealed class FloodCalibrationConfig
 {
+    /// <summary>Opt-in lattice selection from measured maxima before global suppression.</summary>
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault)]
+    public FloodCalibrationMethod Method { get; set; }
+
     /// <summary>Calibration line (keV).</summary>
     public double EnergyKeV { get; set; } = 661.7;
 

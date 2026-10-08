@@ -1,0 +1,269 @@
+{
+ "_about": "TODO-41 stage 1. Planner-run families only. Phase transitions require a new frozen manifest; failures retained. No Studio qualification is published from development.",
+ "Recipe": {
+  "File": "samples/evidence/studio-readout/recipe-v1.json",
+  "Sha256": "c45ea3a81563019210dff8069b186c6db2ab1c269d0b9fd2f3423776234d4aa6"
+ },
+ "config_sha256": {
+  "scenario.json": "eb5b96835c0b68a88c5c26965540f85f1a313acf1cc0b49955cf7921463edddc",
+  "evidence/studio-readout/recipe-v1.json": "c45ea3a81563019210dff8069b186c6db2ab1c269d0b9fd2f3423776234d4aa6"
+ },
+ "families": [
+  {
+   "id": "t41-dev-Baseline-v1",
+   "kind": "probe",
+   "mode": "studio-readout",
+   "recipe_driver": "samples/evidence/studio_readout_driver.py",
+   "executable": "Gcam.EvidenceProbe.dll",
+   "seeds": "T41_DEV4",
+   "n": 4,
+   "Phase": "dev",
+   "Geometry": "Baseline",
+   "Recipe": {
+    "File": "samples/evidence/studio-readout/recipe-v1.json",
+    "Sha256": "c45ea3a81563019210dff8069b186c6db2ab1c269d0b9fd2f3423776234d4aa6"
+   },
+   "Freeze": null
+  },
+  {
+   "id": "t41-dev-Sharp-v1",
+   "kind": "probe",
+   "mode": "studio-readout",
+   "recipe_driver": "samples/evidence/studio_readout_driver.py",
+   "executable": "Gcam.EvidenceProbe.dll",
+   "seeds": "T41_DEV4",
+   "n": 4,
+   "Phase": "dev",
+   "Geometry": "Sharp",
+   "Recipe": {
+    "File": "samples/evidence/studio-readout/recipe-v1.json",
+    "Sha256": "c45ea3a81563019210dff8069b186c6db2ab1c269d0b9fd2f3423776234d4aa6"
+   },
+   "Freeze": null
+  },
+  {
+   "id": "t41-dev-Wide-v1",
+   "kind": "probe",
+   "mode": "studio-readout",
+   "recipe_driver": "samples/evidence/studio_readout_driver.py",
+   "executable": "Gcam.EvidenceProbe.dll",
+   "seeds": "T41_DEV4",
+   "n": 4,
+   "Phase": "dev",
+   "Geometry": "Wide",
+   "Recipe": {
+    "File": "samples/evidence/studio-readout/recipe-v1.json",
+    "Sha256": "c45ea3a81563019210dff8069b186c6db2ab1c269d0b9fd2f3423776234d4aa6"
+   },
+   "Freeze": null
+  },
+  {
+   "id": "t41-dev-High-v1",
+   "kind": "probe",
+   "mode": "studio-readout",
+   "recipe_driver": "samples/evidence/studio_readout_driver.py",
+   "executable": "Gcam.EvidenceProbe.dll",
+   "seeds": "T41_DEV4",
+   "n": 4,
+   "Phase": "dev",
+   "Geometry": "High",
+   "Recipe": {
+    "File": "samples/evidence/studio-readout/recipe-v1.json",
+    "Sha256": "c45ea3a81563019210dff8069b186c6db2ab1c269d0b9fd2f3423776234d4aa6"
+   },
+   "Freeze": null
+  },
+  {
+   "id": "t41-selection-Baseline-v1",
+   "kind": "probe",
+   "mode": "studio-readout",
+   "recipe_driver": "samples/evidence/studio_readout_driver.py",
+   "executable": "Gcam.EvidenceProbe.dll",
+   "seeds": "T41_SELECTION16",
+   "n": 16,
+   "Phase": "selection",
+   "Geometry": "Baseline",
+   "Recipe": {
+    "File": "samples/evidence/studio-readout/recipe-v1.json",
+    "Sha256": "c45ea3a81563019210dff8069b186c6db2ab1c269d0b9fd2f3423776234d4aa6"
+   },
+   "Freeze": null
+  },
+  {
+   "id": "t41-selection-Sharp-v1",
+   "kind": "probe",
+   "mode": "studio-readout",
+   "recipe_driver": "samples/evidence/studio_readout_driver.py",
+   "executable": "Gcam.EvidenceProbe.dll",
+   "seeds": "T41_SELECTION16",
+   "n": 16,
+   "Phase": "selection",
+   "Geometry": "Sharp",
+   "Recipe": {
+    "File": "samples/evidence/studio-readout/recipe-v1.json",
+    "Sha256": "c45ea3a81563019210dff8069b186c6db2ab1c269d0b9fd2f3423776234d4aa6"
+   },
+   "Freeze": null
+  },
+  {
+   "id": "t41-selection-Wide-v1",
+   "kind": "probe",
+   "mode": "studio-readout",
+   "recipe_driver": "samples/evidence/studio_readout_driver.py",
+   "executable": "Gcam.EvidenceProbe.dll",
+   "seeds": "T41_SELECTION16",
+   "n": 16,
+   "Phase": "selection",
+   "Geometry": "Wide",
+   "Recipe": {
+    "File": "samples/evidence/studio-readout/recipe-v1.json",
+    "Sha256": "c45ea3a81563019210dff8069b186c6db2ab1c269d0b9fd2f3423776234d4aa6"
+   },
+   "Freeze": null
+  },
+  {
+   "id": "t41-selection-High-v1",
+   "kind": "probe",
+   "mode": "studio-readout",
+   "recipe_driver": "samples/evidence/studio_readout_driver.py",
+   "executable": "Gcam.EvidenceProbe.dll",
+   "seeds": "T41_SELECTION16",
+   "n": 16,
+   "Phase": "selection",
+   "Geometry": "High",
+   "Recipe": {
+    "File": "samples/evidence/studio-readout/recipe-v1.json",
+    "Sha256": "c45ea3a81563019210dff8069b186c6db2ab1c269d0b9fd2f3423776234d4aa6"
+   },
+   "Freeze": null
+  },
+  {
+   "id": "t41-confirm-Baseline-v1",
+   "kind": "probe",
+   "mode": "studio-readout",
+   "recipe_driver": "samples/evidence/studio_readout_driver.py",
+   "executable": "Gcam.EvidenceProbe.dll",
+   "seeds": "T41_CONFIRM32",
+   "n": 32,
+   "Phase": "confirm",
+   "Geometry": "Baseline",
+   "Recipe": {
+    "File": "samples/evidence/studio-readout/recipe-v1.json",
+    "Sha256": "c45ea3a81563019210dff8069b186c6db2ab1c269d0b9fd2f3423776234d4aa6"
+   },
+   "Freeze": null
+  },
+  {
+   "id": "t41-confirm-Sharp-v1",
+   "kind": "probe",
+   "mode": "studio-readout",
+   "recipe_driver": "samples/evidence/studio_readout_driver.py",
+   "executable": "Gcam.EvidenceProbe.dll",
+   "seeds": "T41_CONFIRM32",
+   "n": 32,
+   "Phase": "confirm",
+   "Geometry": "Sharp",
+   "Recipe": {
+    "File": "samples/evidence/studio-readout/recipe-v1.json",
+    "Sha256": "c45ea3a81563019210dff8069b186c6db2ab1c269d0b9fd2f3423776234d4aa6"
+   },
+   "Freeze": null
+  },
+  {
+   "id": "t41-confirm-Wide-v1",
+   "kind": "probe",
+   "mode": "studio-readout",
+   "recipe_driver": "samples/evidence/studio_readout_driver.py",
+   "executable": "Gcam.EvidenceProbe.dll",
+   "seeds": "T41_CONFIRM32",
+   "n": 32,
+   "Phase": "confirm",
+   "Geometry": "Wide",
+   "Recipe": {
+    "File": "samples/evidence/studio-readout/recipe-v1.json",
+    "Sha256": "c45ea3a81563019210dff8069b186c6db2ab1c269d0b9fd2f3423776234d4aa6"
+   },
+   "Freeze": null
+  },
+  {
+   "id": "t41-confirm-High-v1",
+   "kind": "probe",
+   "mode": "studio-readout",
+   "recipe_driver": "samples/evidence/studio_readout_driver.py",
+   "executable": "Gcam.EvidenceProbe.dll",
+   "seeds": "T41_CONFIRM32",
+   "n": 32,
+   "Phase": "confirm",
+   "Geometry": "High",
+   "Recipe": {
+    "File": "samples/evidence/studio-readout/recipe-v1.json",
+    "Sha256": "c45ea3a81563019210dff8069b186c6db2ab1c269d0b9fd2f3423776234d4aa6"
+   },
+   "Freeze": null
+  },
+  {
+   "id": "t41-repair-Baseline-v1",
+   "kind": "probe",
+   "mode": "studio-readout",
+   "recipe_driver": "samples/evidence/studio_readout_driver.py",
+   "executable": "Gcam.EvidenceProbe.dll",
+   "seeds": "T41_REPAIR32",
+   "n": 32,
+   "Phase": "repair",
+   "Geometry": "Baseline",
+   "Recipe": {
+    "File": "samples/evidence/studio-readout/recipe-v1.json",
+    "Sha256": "c45ea3a81563019210dff8069b186c6db2ab1c269d0b9fd2f3423776234d4aa6"
+   },
+   "Freeze": null
+  },
+  {
+   "id": "t41-repair-Sharp-v1",
+   "kind": "probe",
+   "mode": "studio-readout",
+   "recipe_driver": "samples/evidence/studio_readout_driver.py",
+   "executable": "Gcam.EvidenceProbe.dll",
+   "seeds": "T41_REPAIR32",
+   "n": 32,
+   "Phase": "repair",
+   "Geometry": "Sharp",
+   "Recipe": {
+    "File": "samples/evidence/studio-readout/recipe-v1.json",
+    "Sha256": "c45ea3a81563019210dff8069b186c6db2ab1c269d0b9fd2f3423776234d4aa6"
+   },
+   "Freeze": null
+  },
+  {
+   "id": "t41-repair-Wide-v1",
+   "kind": "probe",
+   "mode": "studio-readout",
+   "recipe_driver": "samples/evidence/studio_readout_driver.py",
+   "executable": "Gcam.EvidenceProbe.dll",
+   "seeds": "T41_REPAIR32",
+   "n": 32,
+   "Phase": "repair",
+   "Geometry": "Wide",
+   "Recipe": {
+    "File": "samples/evidence/studio-readout/recipe-v1.json",
+    "Sha256": "c45ea3a81563019210dff8069b186c6db2ab1c269d0b9fd2f3423776234d4aa6"
+   },
+   "Freeze": null
+  },
+  {
+   "id": "t41-repair-High-v1",
+   "kind": "probe",
+   "mode": "studio-readout",
+   "recipe_driver": "samples/evidence/studio_readout_driver.py",
+   "executable": "Gcam.EvidenceProbe.dll",
+   "seeds": "T41_REPAIR32",
+   "n": 32,
+   "Phase": "repair",
+   "Geometry": "High",
+   "Recipe": {
+    "File": "samples/evidence/studio-readout/recipe-v1.json",
+    "Sha256": "c45ea3a81563019210dff8069b186c6db2ab1c269d0b9fd2f3423776234d4aa6"
+   },
+   "Freeze": null
+  }
+ ]
+}

@@ -145,14 +145,22 @@ public sealed class FloodLut
                     }
                 if (peak) candidates.Add(y * bx + x);
             }
+        int[]? topologyGrid = null;
+        if (config.Method == FloodCalibrationMethod.TopologyAware)
+        {
+            topologyGrid = FloodTopology.Match(density, candidates, countX, countY, bx, by, out string? failure);
+            if (topologyGrid is null) return Fail(candidates.Count, failure!);
+        }
+        else if (config.Method != FloodCalibrationMethod.Legacy)
+            throw new ArgumentOutOfRangeException(nameof(config.Method));
         candidates.Sort((p, q) => density[q] != density[p] ? density[q].CompareTo(density[p]) : p.CompareTo(q));
         double radius = config.MinSeparationFraction * config.BinsPerCrystal;
         var kept = new List<int>();
-        foreach (int c in candidates)
+        foreach (int c in topologyGrid is null ? candidates : topologyGrid.ToList())
         {
             int cx = c % bx, cy = c / bx;
             bool near = false;
-            foreach (int m in kept)
+            foreach (int m in topologyGrid is null ? kept : [])
             {
                 double ddx = m % bx - cx, ddy = m / bx - cy;
                 if (ddx * ddx + ddy * ddy < radius * radius) { near = true; break; }
@@ -170,6 +178,7 @@ public sealed class FloodLut
             var row = markers.Skip(r * countX).Take(countX).OrderBy(m => m % bx).ThenBy(m => m / bx).ToArray();
             for (int c = 0; c < countX; c++) grid[r * countX + c] = row[c];
         }
+        if (topologyGrid is not null) grid = topologyGrid;
         for (int r = 0; r + 1 < countY; r++)
             for (int c = 0; c < countX; c++)
                 if (grid[(r + 1) * countX + c] / bx <= grid[r * countX + c] / bx)

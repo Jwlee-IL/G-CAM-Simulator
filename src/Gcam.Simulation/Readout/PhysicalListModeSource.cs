@@ -38,7 +38,7 @@ public sealed class PhysicalListModeSource : IDisposable
         transport.Detector.Readout = null;
         _source = new ListModeSource(transport, recordInteractions: true);
         // Each session owns response scratch buffers; cached optics/calibration can safely be shared.
-        _device = new ReadoutDevice(device.Optics, readout); _calibration = calibration;
+        _device = new ReadoutDevice(device, readout); _calibration = calibration;
         _response = DefaultRandom.FromKey(DefaultRandom.Key(seed, 40001));
         _stream = new ReadoutPulseProcessor(_device, readout.Pulse, readout.Trigger)
             .CreateStream(DefaultRandom.FromKey(DefaultRandom.Key(seed, 40002)));

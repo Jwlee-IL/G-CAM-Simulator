@@ -8,6 +8,9 @@ namespace Gcam.Configuration;
 /// alternative, not a hidden correction. Every value is a parameter; none is a tuned optimum.</summary>
 public sealed class ChargeNetworkConfig
 {
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault)]
+    public ChargeNetworkSolveMethod SolveMethod { get; set; }
+
     public NetworkTopology Topology { get; set; } = NetworkTopology.Dpc;
 
     /// <summary>DPC: resistor between neighbouring nodes of a row chain, and at each chain end (Ω).</summary>

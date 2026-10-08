@@ -52,6 +52,9 @@ var runner = new SimulationRunner(factory);
 
 switch (mode)
 {
+    case "studio-readout":
+        Gcam.EvidenceProbe.StudioReadoutRecipe.Run(seed, samplesDir, args[3], args[4], args[5], args[6]);
+        break;
     case "readout-pilot":
     case "readout-selection":
     case "readout-validation":

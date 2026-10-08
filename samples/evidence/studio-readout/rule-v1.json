@@ -1,0 +1,13 @@
+{
+ "Version": 1,
+ "AcceptanceRatio": 0.8,
+ "NumericalAllocationFraction": 0.1,
+ "Allocation": "pitch / mask-detector distance / sqrt(12), per axis, radians",
+ "Gate": "all confirmation calibrations succeed; upper one-sided 95% seed-cluster added angular RMS per axis <= allocation; pooled weakest assigned/scored acceptance >= AcceptanceRatio * pooled median",
+ "AddedError": "atan((assigned crystal index - dominant deposited-energy crystal index) * pitch / D); all deposited-energy histories, not only single-crystal photopeaks; measured global calibration window; one assigned acceptance per original scored hit; all conversions separately counted",
+ "Bound": "Student upper interval on equal-seed MSE, square root; outer-cluster normal approximation; calibration failures or empty assigned seeds refuse, never drop",
+ "Development": "one method candidate; 100k -> 400k photons at 8 DOI bins; 8 -> 16 bins at 400k photons; 2000 -> 8000 calibration histories plus 32 -> 64 histogram bins with constant raw smoothing width. Sum of upper seed-cluster maximum angular differences for optics, DOI, worst-line calibration <= 10% allocation. This is a pinned refinement criterion, not proof that the reference has zero residual error. Freeze refused until residual numerical error is bounded as well.",
+ "Freeze": "development alone can never qualify a cell. Fresh confirmation mandatory. Single frozen candidate can bypass selection; repair uses fresh REPAIR32 and new pins.",
+ "Method": "TopologyAware v1: marginal local maxima, highest Nx/Ny, disjoint half-local-spacing slots, highest measured 2D maximum per slot with index tie break, strict valley below both neighbours, monotonicity and legacy local regularity, watershed. No truth marker insertion.",
+ "ResidualErrorEstablished": false
+}

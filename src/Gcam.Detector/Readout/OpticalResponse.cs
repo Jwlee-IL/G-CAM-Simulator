@@ -64,7 +64,8 @@ public sealed class OpticalResponse
             throw new ArgumentException("Invalid optics: indices ≥ 1, thicknesses ≥ 0, 0 ≤ R, T and R + T ≤ 1, positive bins and budgets.");
         Crystals = crystals;
         Sensors = sensors;
-        _optics = optics;
+        _optics = System.Text.Json.JsonSerializer.Deserialize<ReadoutOpticsConfig>(System.Text.Json.JsonSerializer.Serialize(optics))!;
+        optics = _optics;
         _rTop = optics.TopReflectance ?? optics.WallReflectance;
         DepthBins = optics.DepthBins;
         PhotonsPerBin = optics.PhotonsPerBin;
@@ -136,7 +137,8 @@ public sealed class OpticalResponse
         TracedClasses = classTables.Count;
         MeanCollection = _collection.Average();
         long traced = fates.Sum();
-        FateFractions = Enum.GetValues<OpticalFate>().ToDictionary(f => f, f => (double)fates[(int)f] / traced);
+        FateFractions = new System.Collections.ObjectModel.ReadOnlyDictionary<OpticalFate, double>(
+            Enum.GetValues<OpticalFate>().ToDictionary(f => f, f => (double)fates[(int)f] / traced));
     }
 
     /// <summary>Sensor probabilities for a photon emitted in <paramref name="crystal"/> (index iy·Nx + ix), depth bin

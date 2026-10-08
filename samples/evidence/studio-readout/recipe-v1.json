@@ -1,0 +1,60 @@
+{
+ "Version": 1,
+ "Rule": {
+  "File": "samples/evidence/studio-readout/rule-v1.json",
+  "Sha256": "9ead36304d1b9fdd7c0424d8ba4bb03c2e83a958ecda17c5841e5fe5970e283a"
+ },
+ "Design": "A: matched virtual sensors, unlimited microcells; DPC 10/1000 ohm; legacy solve/LUT for Baseline, adjoint/TopologyAware for others",
+ "Geometries": [
+  {
+   "Id": "Baseline",
+   "Count": 12,
+   "PitchMm": 1.0,
+   "DistanceMm": 60.0,
+   "Rank": 7,
+   "CellMm": 1.0
+  },
+  {
+   "Id": "Sharp",
+   "Count": 30,
+   "PitchMm": 0.6,
+   "DistanceMm": 80.0,
+   "Rank": 13,
+   "CellMm": 0.7
+  },
+  {
+   "Id": "Wide",
+   "Count": 34,
+   "PitchMm": 0.75,
+   "DistanceMm": 50.0,
+   "Rank": 17,
+   "CellMm": 1.0
+  },
+  {
+   "Id": "High",
+   "Count": 44,
+   "PitchMm": 0.4,
+   "DistanceMm": 100.0,
+   "Rank": 13,
+   "CellMm": 0.5
+  }
+ ],
+ "EnergiesKeV": [
+  122.06,
+  661.7,
+  1332.5
+ ],
+ "RatesCps": [
+  1000.0,
+  10000.0,
+  100000.0,
+  300000.0,
+  1000000.0
+ ],
+ "OpticalPhotons": 100000,
+ "DepthBins": 8,
+ "CalibrationHistoriesPerCrystal": 2000,
+ "HistogramBinsPerCrystal": 32,
+ "ValidationHistoriesPerCrystal": 3000,
+ "RateHits": 10000
+}

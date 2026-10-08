@@ -57,15 +57,16 @@ public sealed class ChargeDivisionNetwork
     }
 
     /// <summary>The four-output network of <paramref name="config"/> for an Sx × Sy sensor grid.</summary>
-    public static ChargeDivisionNetwork Build(ChargeNetworkConfig config, int sx, int sy)
+    public static ChargeDivisionNetwork Build(ChargeNetworkConfig config, int sx, int sy, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(config);
+        cancellationToken.ThrowIfCancellationRequested();
         if (sx < 1 || sy < 1) throw new ArgumentOutOfRangeException(nameof(sx));
         return config.Topology switch
         {
             NetworkTopology.IdealBilinear => Bilinear(sx, sy),
-            NetworkTopology.Dpc => Dpc(sx, sy, config.RowResistanceOhm, config.ColumnResistanceOhm, config.InputImpedanceOhm),
-            NetworkTopology.CornerGrid => CornerGrid(sx, sy, config.GridResistanceOhm, config.DrainResistanceOhm, config.InputImpedanceOhm),
+            NetworkTopology.Dpc => Dpc(sx, sy, config.RowResistanceOhm, config.ColumnResistanceOhm, config.InputImpedanceOhm, config.SolveMethod, cancellationToken),
+            NetworkTopology.CornerGrid => CornerGrid(sx, sy, config.GridResistanceOhm, config.DrainResistanceOhm, config.InputImpedanceOhm, config.SolveMethod, cancellationToken),
             _ => throw new ArgumentOutOfRangeException(nameof(config)),
         };
     }
@@ -86,7 +87,8 @@ public sealed class ChargeDivisionNetwork
 
     /// <summary>Discretised positioning circuit: row chain L_r — R — n(0,r) — R — … — n(Sx−1,r) — R — R_r for every row r;
     /// left column out0 — Rc — L_0 — Rc — … — L_(Sy−1) — Rc — out2, right column out1 — Rc — R_0 — … — R_(Sy−1) — Rc — out3.</summary>
-    public static ChargeDivisionNetwork Dpc(int sx, int sy, double rowOhm, double columnOhm, double inputOhm = 0)
+    public static ChargeDivisionNetwork Dpc(int sx, int sy, double rowOhm, double columnOhm, double inputOhm = 0,
+        ChargeNetworkSolveMethod method = ChargeNetworkSolveMethod.Legacy, CancellationToken cancellationToken = default)
     {
         if (!(rowOhm > 0) || !(columnOhm > 0)) throw new ArgumentOutOfRangeException(nameof(rowOhm));
         int sensors = sx * sy;
@@ -114,11 +116,12 @@ public sealed class ChargeDivisionNetwork
         for (int r = 0; r < sy; r++) { names[Left(r)] = $"L{r}"; names[Right(r)] = $"R{r}"; }
         for (int c = 0; c < 4; c++) names[outBase + c] = "OUT_" + "ABCD"[c];
         return Solve(outBase + 4, res, Enumerable.Range(0, sensors).ToArray(),
-            [outBase, outBase + 1, outBase + 2, outBase + 3], inputOhm, names);
+            [outBase, outBase + 1, outBase + 2, outBase + 3], inputOhm, names, method, cancellationToken);
     }
 
     /// <summary>Uniform grid: every sensor node joined to its 4 neighbours by R; corner nodes drained to the four outputs.</summary>
-    public static ChargeDivisionNetwork CornerGrid(int sx, int sy, double gridOhm, double drainOhm, double inputOhm = 0)
+    public static ChargeDivisionNetwork CornerGrid(int sx, int sy, double gridOhm, double drainOhm, double inputOhm = 0,
+        ChargeNetworkSolveMethod method = ChargeNetworkSolveMethod.Legacy, CancellationToken cancellationToken = default)
     {
         if (!(gridOhm > 0) || !(drainOhm > 0)) throw new ArgumentOutOfRangeException(nameof(gridOhm));
         int sensors = sx * sy, outBase = sensors;
@@ -138,7 +141,7 @@ public sealed class ChargeDivisionNetwork
         for (int k = 0; k < sensors; k++) names[k] = $"S{k % sx}_{k / sx}";
         for (int c = 0; c < 4; c++) names[outBase + c] = "OUT_" + "ABCD"[c];
         return Solve(outBase + 4, res, Enumerable.Range(0, sensors).ToArray(),
-            [outBase, outBase + 1, outBase + 2, outBase + 3], inputOhm, names);
+            [outBase, outBase + 1, outBase + 2, outBase + 3], inputOhm, names, method, cancellationToken);
     }
 
     /// <summary>Nodal analysis of an arbitrary resistor graph. A resistor endpoint −1 is ground. Each output node is a
@@ -146,9 +149,12 @@ public sealed class ChargeDivisionNetwork
     /// is injected at each input node in turn; the output currents are that input's weights. A node with no conducting
     /// path to an output makes the Laplacian singular and is refused.</summary>
     public static ChargeDivisionNetwork Solve(int nodes, IReadOnlyList<(int A, int B, double Ohm)> resistors,
-        int[] inputNodes, int[] outputNodes, double inputOhm = 0, string[]? nodeNames = null)
+        int[] inputNodes, int[] outputNodes, double inputOhm = 0, string[]? nodeNames = null,
+        ChargeNetworkSolveMethod method = ChargeNetworkSolveMethod.Legacy, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(resistors);
+        cancellationToken.ThrowIfCancellationRequested();
+        if (!Enum.IsDefined(method)) throw new ArgumentOutOfRangeException(nameof(method));
         if (!(inputOhm >= 0) || !double.IsFinite(inputOhm)) throw new ArgumentOutOfRangeException(nameof(inputOhm));
         bool grounded = inputOhm == 0;
         var isOutput = new bool[nodes];
@@ -166,19 +172,49 @@ public sealed class ChargeDivisionNetwork
         }
         foreach (var (a, b, ohm) in resistors)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             if (!(ohm > 0) || !double.IsFinite(ohm)) throw new ArgumentOutOfRangeException(nameof(resistors));
             Stamp(a, b, 1 / ohm);
         }
         if (!grounded) foreach (int o in outputNodes) Stamp(o, -1, 1 / inputOhm);
-        var chol = Cholesky(g, m);
+        var chol = Cholesky(g, m, cancellationToken);
         var w = new double[inputNodes.Length * outputNodes.Length];
         double residual = 0;
         var v = new double[m];
-        for (int k = 0; k < inputNodes.Length; k++)
+        if (method == ChargeNetworkSolveMethod.Adjoint)
         {
+            // G is symmetric. W[k,c] = b_c^T G^-1 e_k = (G^-1 b_c)[k]. Grounded b_c contains
+            // the branch conductances into output c; a finite-impedance output has b_c = e_c / R_input.
+            var rhs = new double[m];
+            for (int c = 0; c < outputNodes.Length; c++)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                Array.Clear(rhs);
+                int o = outputNodes[c];
+                if (grounded)
+                    foreach (var (a, b, ohm) in resistors)
+                    {
+                        int neighbour = a == o ? b : b == o ? a : -1;
+                        if (neighbour >= 0 && index[neighbour] >= 0) rhs[index[neighbour]] += 1 / ohm;
+                    }
+                else rhs[index[o]] = 1 / inputOhm;
+                rhs.CopyTo(v, 0);
+                SolveInPlace(chol, m, v, cancellationToken);
+                for (int i = 0; i < m; i++)
+                {
+                    double gi = 0;
+                    for (int j = 0; j < m; j++) gi += g[i, j] * v[j];
+                    residual = Math.Max(residual, Math.Abs(gi - rhs[i]));
+                }
+                for (int k = 0; k < inputNodes.Length; k++) w[k * outputNodes.Length + c] = v[index[inputNodes[k]]];
+            }
+        }
+        else for (int k = 0; k < inputNodes.Length; k++)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
             Array.Clear(v);
             v[index[inputNodes[k]]] = 1;
-            SolveInPlace(chol, m, v);
+            SolveInPlace(chol, m, v, cancellationToken);
             for (int i = 0; i < m; i++)
             {
                 double gi = 0;
@@ -207,10 +243,12 @@ public sealed class ChargeDivisionNetwork
         };
     }
 
-    private static double[,] Cholesky(double[,] a, int n)
+    private static double[,] Cholesky(double[,] a, int n, CancellationToken cancellationToken)
     {
         var l = new double[n, n];
         for (int i = 0; i < n; i++)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
             for (int j = 0; j <= i; j++)
             {
                 double s = a[i, j];
@@ -223,19 +261,22 @@ public sealed class ChargeDivisionNetwork
                 }
                 else l[i, j] = s / l[j, j];
             }
+        }
         return l;
     }
 
-    private static void SolveInPlace(double[,] l, int n, double[] b)
+    private static void SolveInPlace(double[,] l, int n, double[] b, CancellationToken cancellationToken)
     {
         for (int i = 0; i < n; i++)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             double s = b[i];
             for (int k = 0; k < i; k++) s -= l[i, k] * b[k];
             b[i] = s / l[i, i];
         }
         for (int i = n - 1; i >= 0; i--)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             double s = b[i];
             for (int k = i + 1; k < n; k++) s -= l[k, i] * b[k];
             b[i] = s / l[i, i];

@@ -6,7 +6,7 @@ verifies, where its expected value comes from and how its tolerance is justified
 [VV.Tests.Results](VV.Tests.Results.md); requirement status in [VV.Studio](VV.Studio.md).
 
 **At a glance**
-- 161 units: 125 xUnit classes, 3 unittest classes, 29 cocotb configurations, 4 checkers.
+- 170 units: 133 xUnit classes, 4 unittest classes, 29 cocotb configurations, 4 checkers.
 - Every entry states purpose, oracle, tolerance (its derivation, or "exact", "structural", "measurement only"), gates
   and requirement / evidence selectors in a fenced JSON block.
 - 70 units carry a margin the code states without a derivation — recorded as a finding, not filled in.
@@ -84,6 +84,7 @@ Run `python samples/testing/test_records.py check-catalog --discover` after a Re
 | `Gcam.Tests::Gcam.Tests.BackgroundTests` | 6 | 6 |
 | `Gcam.Tests::Gcam.Tests.CascadeEmissionTests` | 3 | 3 |
 | `Gcam.Tests::Gcam.Tests.CascadeSummingTests` | 9 | 9 |
+| `Gcam.Tests::Gcam.Tests.ChargeAdjointTests` | 2 | 5 |
 | `Gcam.Tests::Gcam.Tests.ChargeDivisionNetworkTests` | 7 | 13 |
 | `Gcam.Tests::Gcam.Tests.ComptonTests` | 5 | 5 |
 | `Gcam.Tests::Gcam.Tests.ConfigLoaderTests` | 4 | 19 |
@@ -107,6 +108,7 @@ Run `python samples/testing/test_records.py check-catalog --discover` after a Re
 | `Gcam.Tests::Gcam.Tests.FieldOfViewTests` | 4 | 4 |
 | `Gcam.Tests::Gcam.Tests.FiniteSourceTests` | 2 | 2 |
 | `Gcam.Tests::Gcam.Tests.FloodLutTests` | 6 | 7 |
+| `Gcam.Tests::Gcam.Tests.FloodTopologyTests` | 2 | 5 |
 | `Gcam.Tests::Gcam.Tests.FocusFusionTests` | 2 | 2 |
 | `Gcam.Tests::Gcam.Tests.FrontEndPartsTests` | 2 | 2 |
 | `Gcam.Tests::Gcam.Tests.FrontEndTests` | 6 | 6 |
@@ -133,6 +135,7 @@ Run `python samples/testing/test_records.py check-catalog --discover` after a Re
 | `Gcam.Tests::Gcam.Tests.PipelineTests` | 7 | 7 |
 | `Gcam.Tests::Gcam.Tests.RandomQualityTests` | 5 | 7 |
 | `Gcam.Tests::Gcam.Tests.RangeLocalizationTests` | 1 | 3 |
+| `Gcam.Tests::Gcam.Tests.ReadoutArtifactTests` | 2 | 2 |
 | `Gcam.Tests::Gcam.Tests.ReadoutDefaultPathTests` | 7 | 7 |
 | `Gcam.Tests::Gcam.Tests.ReadoutDeviceTests` | 5 | 8 |
 | `Gcam.Tests::Gcam.Tests.ReadoutPulseProcessorTests` | 7 | 7 |
@@ -189,6 +192,7 @@ Run `python samples/testing/test_records.py check-catalog --discover` after a Re
 | `unittest::test_background_shape.BackgroundShapeTests` | 10 | 10 |
 | `unittest::test_provenance.ProvenanceTests` | 29 | 29 |
 | `unittest::test_readout_netlist.ReadoutNetlistTests` | 4 | 4 |
+| `unittest::test_studio_readout.StudioReadoutSelectorTests` | 8 | 8 |
 <!-- END GENERATED: TEST DISCOVERY -->
 
 ## PlotViewRenderTests — Gcam.Studio.RenderTests
@@ -3507,4 +3511,64 @@ Gates: none.
 
 ```json
 {"runner":"dotnet","sources":{"tests/Gcam.Tests/ReadoutStreamTests.cs":"d9dfd1c263957e59b061f495e41830b07a47e15f1644aa06188504fe712d04fe","tests/Gcam.Tests/Harness/Rigs.cs":"9b89ce04cdcb302fcefc6636d45a0d1640a48c288d1e0a3638b005c44028c3b2","tests/Gcam.Tests/Harness/Stat.cs":"4502dddc6276f9d1de0c41b2ed7246ed7f00c9266daa12a34d6174ae1cb19029"},"methods":["PartitionedObservedStream_MatchesBatchExactly","HoldWaitsForObservedFuture_AndCancellationConsumesNoNoise"],"id":"Gcam.Tests::Gcam.Tests.ReadoutStreamTests","trace":[]}
+```
+
+
+## FloodTopologyTests — Gcam.Tests
+
+Purpose: Measured maxima on curved grids, compressed edges and unequal spot heights, plus distracting continuum peaks; missing and merged spots refuse.
+
+Oracle: Deterministic Gaussian raster and known fixture crystal indices; every marker is checked against the actual smoothed density.
+
+Tolerance: Exact assignment and refusal. No sampled accuracy margin; no synthetic truth marker enters calibration.
+
+Gates: none.
+
+```json
+{"id":"Gcam.Tests::Gcam.Tests.FloodTopologyTests","runner":"dotnet","methods":["CurvedCompressedUnequalGrid_UsesOnlyMeasuredMaxima","UnsupportedOrMergedSpots_RefuseWithoutInsertingMarkers"],"sources":{"tests/Gcam.Tests/FloodTopologyTests.cs":"041a5aba7e0e29a58a5757d611fd84e540caec6e4810a680fa8d964ad7e1e8a3","tests/Gcam.Tests/Harness/Rigs.cs":"9b89ce04cdcb302fcefc6636d45a0d1640a48c288d1e0a3638b005c44028c3b2","tests/Gcam.Tests/Harness/Stat.cs":"4502dddc6276f9d1de0c41b2ed7246ed7f00c9266daa12a34d6174ae1cb19029"},"trace":[]}
+```
+
+
+## ReadoutArtifactTests — Gcam.Tests
+
+Purpose: Content-keyed optical/network reuse, prepared-network session reuse, mutation isolation and cancellation.
+
+Oracle: Reference identity for identical keys; changed seed or optics changes the artifact; circuit getter mutation cannot change the netlist.
+
+Tolerance: Exact/structural. Cancellation is checked before returning cached artifacts.
+
+Gates: none.
+
+```json
+{"id":"Gcam.Tests::Gcam.Tests.ReadoutArtifactTests","runner":"dotnet","methods":["ContentReuse_KeysSeedAndMutableConfig_SessionHasPrivateBuffers","CancelledBuild_RefusesEvenOnACacheHit"],"sources":{"tests/Gcam.Tests/ReadoutArtifactTests.cs":"c54721734d11b98e600bc463ac2934c1a80cb3b565ac4b72959bebc70aa5fe65","tests/Gcam.Tests/Harness/Rigs.cs":"9b89ce04cdcb302fcefc6636d45a0d1640a48c288d1e0a3638b005c44028c3b2","tests/Gcam.Tests/Harness/Stat.cs":"4502dddc6276f9d1de0c41b2ed7246ed7f00c9266daa12a34d6174ae1cb19029"},"trace":[]}
+```
+
+
+## ChargeAdjointTests — Gcam.Tests
+
+Purpose: Four adjoint solves versus the legacy per-input solve and independent pivoted inverse, for DPC and corner grids with ideal and finite-impedance inputs; cancellation during factorization.
+
+Oracle: Reciprocity of the symmetric conductance matrix; independent Gauss-Jordan inverse with partial pivoting.
+
+Tolerance: Higham normwise forward bound with k = 2 gamma(3n) kappa_inf(G), plus adjoint RHS and output current accumulation terms; no observed deviation sets the bound. Charge conservation uses four output bounds. Cancellation delay is an operational trigger, not a physics margin.
+
+Gates: none.
+
+```json
+{"id":"Gcam.Tests::Gcam.Tests.ChargeAdjointTests","runner":"dotnet","methods":["Reciprocity_AgreesWithLegacyAndIndependentPivotedSolve_WithinConditioningBound","NetworkSolve_CancellationDuringFactorization_IsObserved"],"sources":{"tests/Gcam.Tests/ChargeAdjointTests.cs":"05ef1e22759fd5e208788acbcc02e484e4ffa3e33b3d11a999b3ba6c85f8f403","tests/Gcam.Tests/Harness/Rigs.cs":"9b89ce04cdcb302fcefc6636d45a0d1640a48c288d1e0a3638b005c44028c3b2","tests/Gcam.Tests/Harness/Stat.cs":"4502dddc6276f9d1de0c41b2ed7246ed7f00c9266daa12a34d6174ae1cb19029"},"trace":[]}
+```
+
+
+## StudioReadoutSelectorTests — unittest
+
+Purpose: TODO-41 per-axis qualification, denominator consistency, weakest-crystal acceptance, calibration-failure retention and seed-cluster bounds.
+
+Oracle: Constructed exact displacement/count arrays; missing clusters and invalid sufficient statistics must refuse.
+
+Tolerance: Exact/structural. Floating angular-statistic consistency uses the derived gamma(N+4K) accumulation bound.
+
+Gates: none.
+
+```json
+{"id":"unittest::test_studio_readout.StudioReadoutSelectorTests","runner":"unittest","methods":["test_exact_assignment_qualifies_both_axes","test_calibration_failure_is_retained_and_refuses","test_empty_assignment_does_not_drop_a_cluster","test_weakest_crystal_uses_scored_denominator","test_angular_axis_bound_refuses_large_displacement","test_invalid_denominators_and_sufficient_statistics_refuse","test_cluster_count_and_nonfinite_values_refuse","test_positive_between_seed_variance_increases_the_upper_bound"],"sources":{"samples/evidence/tests/test_studio_readout.py":"3be2b550fb024376a17c50ff8ae2fe5159426e00245f40f77ab6e26798c1392f"},"trace":[]}
 ```

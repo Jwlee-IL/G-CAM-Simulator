@@ -22,6 +22,7 @@ public sealed class ReadoutDevice
     private readonly double[] _mu, _q;
     private readonly double[] _xi, _eta;           // sensor centre / half span (IndependentSipm centroid)
     private readonly AdcPreset _adc;
+    private readonly string _networkKey;
 
     public ReadoutMode Mode { get; }
     public CrystalArrayGeometry Crystals { get; }
@@ -64,13 +65,21 @@ public sealed class ReadoutDevice
     }
 
     public ReadoutDevice(CrystalArrayGeometry crystals, ReadoutConfig readout, int opticsSeed, CancellationToken cancellationToken = default)
-        : this(BuildOptics(crystals, readout, opticsSeed, cancellationToken), readout)
+        : this(BuildOptics(crystals, readout, opticsSeed, cancellationToken), readout, null, cancellationToken)
     {
     }
 
     /// <summary>A readout on an already traced optical table (several readouts of one geometry can share it; the sensor
     /// layout of <paramref name="readout"/> must be the table's).</summary>
     public ReadoutDevice(OpticalResponse optics, ReadoutConfig readout)
+        : this(optics, readout, null, default) { }
+
+    /// <summary>Session-owned response buffers on exactly the prepared immutable optics and network. Calibration
+    /// belongs to that network: a changed network policy is refused rather than silently re-solved at Start.</summary>
+    public ReadoutDevice(ReadoutDevice prepared, ReadoutConfig readout)
+        : this(prepared.Optics, readout, prepared, default) { }
+
+    private ReadoutDevice(OpticalResponse optics, ReadoutConfig readout, ReadoutDevice? prepared, CancellationToken token)
     {
         ArgumentNullException.ThrowIfNull(optics);
         ArgumentNullException.ThrowIfNull(readout);
@@ -82,9 +91,10 @@ public sealed class ReadoutDevice
         Crystals = optics.Crystals;
         Sensors = optics.Sensors;
         Optics = optics;
-        Network = Mode == ReadoutMode.FourOutputAnger
-            ? ChargeDivisionNetwork.Build(readout.Network, Sensors.CountX, Sensors.CountY)
-            : ChargeDivisionNetwork.Identity(Sensors.Count);
+        _networkKey = ReadoutArtifacts.NetworkKey(readout, Sensors);
+        if (prepared is not null && prepared._networkKey != _networkKey)
+            throw new ArgumentException("The prepared network differs from the acquisition policy.");
+        Network = prepared?.Network ?? ReadoutArtifacts.Network(readout, Sensors, token);
 
         var gagg = FrontEndParts.Scintillators[0];
         var mppc = FrontEndParts.Sensors[0];
@@ -131,7 +141,7 @@ public sealed class ReadoutDevice
         ArgumentNullException.ThrowIfNull(readout);
         if (readout.Mode == ReadoutMode.DirectCrystal)
             throw new ArgumentException("DirectCrystal has no physical readout chain; use the direct event path.");
-        return new OpticalResponse(crystals, SensorLayout.From(readout.Sensors, crystals), readout.Optics, opticsSeed, cancellationToken);
+        return ReadoutArtifacts.Optical(crystals, readout, opticsSeed, cancellationToken);
     }
 
     /// <summary>Expected signal photoelectrons per sensor (μ_k, no intrinsic factor, no dark counts).</summary>
