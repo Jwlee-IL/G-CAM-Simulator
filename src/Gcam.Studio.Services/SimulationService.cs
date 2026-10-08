@@ -4,8 +4,9 @@ using Gcam.Studio.Core.Optics;
 
 namespace Gcam.Studio.Services;
 
-public sealed class SimulationService(TimeProvider? timeProvider = null) : IAcquisitionService
+public sealed class SimulationService(TimeProvider? timeProvider = null, IReadoutPreparationService? readoutPreparation = null) : IAcquisitionService
 {
+    private readonly ReadoutPreparationService _readoutPreparation = readoutPreparation as ReadoutPreparationService ?? new();
     public IAcquisitionSession Start(IReadOnlyList<SceneSource> scene, OpticsSettings optics,
         double liveTimeS, double speed, DetectorSettings? detector = null, double backgroundToSignalRatio = 0,
         int? seed = null)
@@ -16,8 +17,9 @@ public sealed class SimulationService(TimeProvider? timeProvider = null) : IAcqu
         detector ??= new DetectorSettings();
         var config = BuildConfig(scene, optics, detector, backgroundToSignalRatio);
         if (seed is { } fixedSeed) config.Seed = fixedSeed;
+        var prepared = detector.ReadoutMode == ReadoutMode.DirectCrystal ? ((ReadoutPreparation View, Gcam.Detector.ReadoutDevice Device, Gcam.Simulation.ReadoutCalibration Calibration)?)null : _readoutPreparation.Get(detector.PreparedReadoutId);
         return new AcquisitionSession(config, detector, liveTimeS, speed,
-            timeProvider ?? TimeProvider.System);
+            timeProvider ?? TimeProvider.System, prepared);
     }
 
     /// <summary>Studio applies its realism inputs to a clone; existing scene-builder callers stay unchanged.</summary>
@@ -29,6 +31,7 @@ public sealed class SimulationService(TimeProvider? timeProvider = null) : IAcqu
         if (!(liveTimeS > 0) || !double.IsFinite(liveTimeS)) throw new ArgumentOutOfRangeException(nameof(liveTimeS));
         if (!(speed > 0) || !double.IsFinite(speed)) throw new ArgumentOutOfRangeException(nameof(speed));
         detector ??= new DetectorSettings();
+        if (detector.ReadoutMode != ReadoutMode.DirectCrystal) throw new NotSupportedException("Physical readout requires ambient and BSR at zero: ambient interaction records are unavailable.");
         var config = BuildConfig(scene, optics, detector, backgroundToSignalRatio, ambient);
         if (seed is { } fixedSeed) config.Seed = fixedSeed;
         return new AcquisitionSession(config, detector, liveTimeS, speed, timeProvider ?? TimeProvider.System);
@@ -38,6 +41,12 @@ public sealed class SimulationService(TimeProvider? timeProvider = null) : IAcqu
         DetectorSettings detector, double backgroundToSignalRatio = 0, AmbientFieldConfig? ambient = null)
     {
         ArgumentNullException.ThrowIfNull(detector);
+        if (detector.ReadoutMode != ReadoutMode.DirectCrystal)
+        {
+            if (ReadoutPreparationService.GeometryError(optics) is { } readoutError) throw new ArgumentException(readoutError);
+            if (ambient is not null || backgroundToSignalRatio != 0) throw new NotSupportedException("Physical readout requires ambient and BSR at zero: background interaction records are unavailable.");
+            if (detector.ReadoutMode != ReadoutMode.FourOutputAnger) throw new NotSupportedException("Studio supports the experimental four-output preset only.");
+        }
         string? error = OpticsPolicy.Validate(optics, detector.ReflectorGapMm)
             ?? OpticsPolicy.ValidateScene(optics, scene) ?? OpticsPolicy.ValidateFocus(optics, optics.FocalDistanceMm);
         if (error is not null) throw new ArgumentException(error, nameof(optics));
@@ -56,6 +65,11 @@ public sealed class SimulationService(TimeProvider? timeProvider = null) : IAcqu
         config.Detector.ReflectorGapMm = detector.ReflectorGapMm;
         config.Detector.GainSigma = detector.GainSigma;
         config.Detector.UniformitySeed = detector.GainSeed;
+        if (detector.ReadoutMode != ReadoutMode.DirectCrystal)
+        {
+            config.Detector.Material = "GAGG";
+            config.Detector.Readout = ReadoutPreparationService.Preset();
+        }
         if (backgroundToSignalRatio > 0)
             config.Background = new BackgroundConfig { BackgroundToSignalRatio = backgroundToSignalRatio };
         if (ambient is not null)

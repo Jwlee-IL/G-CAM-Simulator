@@ -222,7 +222,7 @@
                                   IsExpanded="{Binding IsOpticsExpanded}" AutomationProperties.AutomationId="Optics.Section">
                             <StackPanel DataContext="{Binding OpticsEditor}" IsEnabled="{Binding IsEditable}">
                                 <TextBlock Text="Engineering geometry" Style="{StaticResource Text.Caption}" />
-                                <ComboBox ItemsSource="{Binding Presets}" DisplayMemberPath="Name" SelectedItem="{Binding SelectedPreset}"
+                                <ComboBox ItemsSource="{Binding Presets}" DisplayMemberPath="Name" SelectedIndex="{Binding SelectedPresetIndex}"
                                           Margin="{StaticResource Gap.Field}" AutomationProperties.AutomationId="Optics.Preset"
                                           AutomationProperties.Name="Engineering geometry" />
                                 <DockPanel Style="{StaticResource FieldRow}">
@@ -264,6 +264,7 @@
                         <Expander Header="Detector" Style="{StaticResource Expander.Section}" IsExpanded="{Binding IsDetectorExpanded}"
                                   AutomationProperties.AutomationId="Detector.Section">
                             <StackPanel>
+                        <views:ReadoutPanel Margin="{StaticResource Gap.Section}" />
                         <StackPanel DataContext="{Binding Detector}">
                             <DockPanel Style="{StaticResource FactRow}">
                                 <TextBlock Text="Entrance" Style="{StaticResource Text.Label}" />
@@ -283,12 +284,12 @@
                             <TextBlock Text="{Binding GapError}" Style="{StaticResource Text.CaptionWarning}" TextWrapping="Wrap" />
                             <DockPanel Style="{StaticResource FieldRow}">
                                 <TextBlock Text="Gain σ" Style="{StaticResource FieldLabel}" />
-                                <TextBox Text="{Binding GainSigmaPercent}" Tag="%" AutomationProperties.AutomationId="Detector.GainSigma"
+                                <TextBox Text="{Binding GainSigmaPercent}" IsEnabled="{Binding CanEditLegacy}" Tag="%" AutomationProperties.AutomationId="Detector.GainSigma"
                                          AutomationProperties.Name="Gain σ (%)" />
                             </DockPanel>
                             <DockPanel Style="{StaticResource FieldRow}">
                                 <TextBlock Text="Gain seed" Style="{StaticResource FieldLabel}" />
-                                <TextBox Text="{Binding GainSeed}" AutomationProperties.AutomationId="Detector.GainSeed"
+                                <TextBox Text="{Binding GainSeed}" IsEnabled="{Binding CanEditLegacy}" AutomationProperties.AutomationId="Detector.GainSeed"
                                          AutomationProperties.Name="Gain seed" />
                             </DockPanel>
                             <DockPanel Style="{StaticResource FieldRow}">

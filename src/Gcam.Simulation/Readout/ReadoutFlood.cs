@@ -11,7 +11,7 @@ namespace Gcam.Simulation;
 /// (the physical readout's optics replace it).</summary>
 public static class ReadoutFlood
 {
-    public static List<InteractionSite[]> Transport(SimulationConfig config, double energyKeV, int histories, int seed)
+    public static List<InteractionSite[]> Transport(SimulationConfig config, double energyKeV, int histories, int seed, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(config);
         if (!(energyKeV > 0) || histories < 0) throw new ArgumentOutOfRangeException(nameof(energyKeV));
@@ -31,6 +31,7 @@ public static class ReadoutFlood
         long tries = 0, maxTries = 1000L * Math.Max(1, histories);
         while (outp.Count < histories)
         {
+            if ((tries & 4095) == 0) cancellationToken.ThrowIfCancellationRequested();
             if (++tries > maxTries) throw new InvalidOperationException("Flood transport scores almost nothing (check the crystal).");
             double x = (entry.NextDouble() * 2 - 1) * halfW, y = (entry.NextDouble() * 2 - 1) * halfH;
             last = null;

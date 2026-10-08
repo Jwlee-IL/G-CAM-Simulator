@@ -41,9 +41,9 @@
                            Visibility="{Binding ReconstructionNote, Converter={x:Static conv:NullToCollapsedConverter.Instance}}"
                            AutomationProperties.AutomationId="Imaging.ReconstructionNote" />
                 <TextBlock Text="Window N × FWHM at each line" Style="{StaticResource Text.Label}" Margin="{StaticResource Gap.Tight}" />
-                <TextBox Text="{Binding Shared.WindowFwhm}" Tag="× FWHM" Margin="{StaticResource Gap.Field}"
+                <TextBox Text="{Binding Shared.WindowFwhm}" IsEnabled="{Binding Shared.CanUseLegacy}" Tag="× FWHM" Margin="{StaticResource Gap.Field}"
                          AutomationProperties.AutomationId="Imaging.Window" AutomationProperties.Name="Window N times FWHM at each line" />
-                <CheckBox Content="Compton strip" IsChecked="{Binding Strip}" Margin="{StaticResource Gap.Field}"
+                <CheckBox Content="Compton strip" IsChecked="{Binding Strip}" IsEnabled="{Binding Shared.CanUseLegacy}" Margin="{StaticResource Gap.Field}"
                           ToolTip="One-pass scalar estimate: assumes the calibrated ratio applies to this scene; approximate for 3+ overlapping contaminants. Ambient counts are not subtracted."
                           AutomationProperties.AutomationId="Imaging.Strip"
                           AutomationProperties.HelpText="One-pass scalar estimate: assumes the calibrated ratio applies to this scene; approximate for 3+ overlapping contaminants. Ambient counts are not subtracted." />

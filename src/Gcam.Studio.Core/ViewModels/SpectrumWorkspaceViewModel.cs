@@ -40,16 +40,16 @@ public sealed partial class SpectrumWorkspaceViewModel : WorkspaceViewModel
     public IReadOnlyList<SpectrumBand> Lines => View?.Bands ?? [];
     public string Summary => View is { } v
         ? $"{v.TotalCounts:N0} measured pulses · {v.InWindowShare:P1} in windows · {v.OverflowCounts:N0} overflow{(v.BinEdgesKeV is [.., var end] ? $" ≥ {end:0} keV" : "")}" : "No acquired counts";
-    public string Chain => Shared.Snapshot?.Chain.ToString() ?? "No acquired chain";
-    public string Resolution => $"{(View?.Resolution662 ?? _service.Resolution662):P2} FWHM at 662 keV (single channel)";
-    public string ResolvingTime => $"Effective resolving interval {(View?.ResolvingTimeS ?? _service.ResolvingTimeS) * 1e9:F0} ns";
+    public string Chain => Shared.IsPhysicalReadout ? View?.Chain ?? Shared.ReadoutAssumptions : Shared.Snapshot?.Chain.ToString() ?? "No acquired chain";
+    public string Resolution => Shared.IsPhysicalReadout ? "Explicit keV window; physical resolution is not inferred from the legacy chain." : $"{(View?.Resolution662 ?? _service.Resolution662):P2} FWHM at 662 keV (single channel)";
+    public string ResolvingTime => Shared.IsPhysicalReadout ? "Physical trigger / common hold / re-arm already applied." : $"Effective resolving interval {(View?.ResolvingTimeS ?? _service.ResolvingTimeS) * 1e9:F0} ns";
 
     internal void NotifyWindowChanged()
     {
         OnPropertyChanged(nameof(WindowFwhm));
         Refresh();
     }
-    partial void OnPileUpChanged(bool value) => Refresh();
+    partial void OnPileUpChanged(bool value) { if (value && Shared.IsPhysicalReadout) { PileUp = false; return; } Refresh(); }
 
     internal void Begin(IReadOnlyList<SceneSource> scene)
     {
@@ -92,6 +92,7 @@ public sealed partial class SpectrumWorkspaceViewModel : WorkspaceViewModel
                 new SpectrumSettings(WindowFwhm, PileUp)
                 {
                     Detector = snapshot.Detector,
+                    Readout = snapshot.Readout, WindowLowKeV = Shared.WindowLowKeV, WindowHighKeV = Shared.WindowHighKeV,
                     PixelsX = snapshot.Detector is null ? 0 : snapshot.Imaging.Flood.Width,
                     PixelsY = snapshot.Detector is null ? 0 : snapshot.Imaging.Flood.Height,
                     IncidentMaximumEnergyKeV = snapshot.AmbientMaximumEnergyKeV

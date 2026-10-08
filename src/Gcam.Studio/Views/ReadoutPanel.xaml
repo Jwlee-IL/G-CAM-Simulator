@@ -1,0 +1,22 @@
+<UserControl x:Class="Gcam.Studio.Views.ReadoutPanel"
+ xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+ xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+ <UserControl.Resources><BooleanToVisibilityConverter x:Key="PhysicalVisibility" /></UserControl.Resources>
+ <StackPanel>
+  <TextBlock Text="Readout" Style="{StaticResource Text.SectionTitle}" />
+  <ComboBox ItemsSource="{Binding ReadoutModes}" SelectedItem="{Binding ReadoutMode}" IsEnabled="{Binding CanEditInputs}"
+   Margin="{StaticResource Gap.Field}" AutomationProperties.AutomationId="Readout.Mode" AutomationProperties.Name="Readout mode" />
+  <TextBlock Text="{Binding ReadoutAssumptions}" Style="{StaticResource Text.Caption}" TextWrapping="Wrap" Margin="{StaticResource Gap.Field}" />
+  <StackPanel Visibility="{Binding IsPhysicalReadout, Converter={StaticResource PhysicalVisibility}}">
+   <StackPanel Orientation="Horizontal">
+    <Button Content="Prepare" Command="{Binding PrepareReadoutCommand}" Margin="{StaticResource Gap.Inline}" AutomationProperties.AutomationId="Readout.Prepare" />
+    <Button Content="Cancel prepare" Command="{Binding PrepareReadoutCancelCommand}" AutomationProperties.AutomationId="Readout.Cancel" />
+   </StackPanel>
+   <TextBlock Text="{Binding ReadoutState}" Style="{StaticResource Text.MonoCaption}" TextWrapping="Wrap" Margin="{StaticResource Gap.Field}" AutomationProperties.AutomationId="Readout.State" />
+   <TextBlock Text="Measured energy window · inclusive keV" Style="{StaticResource Text.Label}" />
+   <TextBox Text="{Binding WindowLowKeV}" Tag="keV low" Margin="{StaticResource Gap.Field}" AutomationProperties.AutomationId="Readout.WindowLow" />
+   <TextBox Text="{Binding WindowHighKeV}" Tag="keV high" Margin="{StaticResource Gap.Field}" AutomationProperties.AutomationId="Readout.WindowHigh" />
+  </StackPanel>
+  <TextBlock Text="{Binding ReadoutMessage}" Style="{StaticResource Text.CaptionWarning}" TextWrapping="Wrap" AutomationProperties.AutomationId="Readout.Reason" />
+ </StackPanel>
+</UserControl>

@@ -9,11 +9,11 @@
                           AutomationProperties.AutomationId="Spectrum.LogY" />
                 <DockPanel Style="{StaticResource PanelHeader}"><TextBlock Text="Window" Style="{StaticResource Text.PanelTitle}" /></DockPanel>
                 <TextBlock Text="N × FWHM at each line" Style="{StaticResource Text.Label}" Margin="{StaticResource Gap.Tight}" />
-                <TextBox Text="{Binding WindowFwhm}" Tag="× FWHM" Margin="{StaticResource Gap.Section}"
+                <TextBox Text="{Binding WindowFwhm}" IsEnabled="{Binding Shared.CanUseLegacy}" Tag="× FWHM" Margin="{StaticResource Gap.Section}"
                          AutomationProperties.AutomationId="Spectrum.Window" AutomationProperties.Name="Window N times FWHM" />
                 <DockPanel Style="{StaticResource PanelHeader}"><TextBlock Text="Pile-up" Style="{StaticResource Text.PanelTitle}" /></DockPanel>
                 <CheckBox
-                    IsChecked="{Binding PileUp}" Margin="{StaticResource Gap.Field}"
+                    IsChecked="{Binding PileUp}" IsEnabled="{Binding Shared.CanUseLegacy}" Margin="{StaticResource Gap.Field}"
                     AutomationProperties.AutomationId="Spectrum.PileUp">
                     <TextBlock Text="Merge pulses within the resolving time" TextWrapping="Wrap" Style="{StaticResource Text.Body}" />
                 </CheckBox>

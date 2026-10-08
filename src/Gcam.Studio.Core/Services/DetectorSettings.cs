@@ -3,6 +3,8 @@ namespace Gcam.Studio.Core.Services;
 /// <summary>Acquisition detector inputs, explicitly supplied by Studio without changing engine defaults.</summary>
 public sealed record DetectorSettings
 {
+    public Gcam.Configuration.ReadoutMode ReadoutMode { get; init; }
+    public Guid PreparedReadoutId { get; init; }
     public Gcam.Configuration.FrontEndChain Chain { get; init; } = Gcam.Configuration.FrontEndParts.Default;
     public double EntranceAbsorberMm { get; init; } = 0.15;
     public double BackingScatterMm { get; init; } = 2;

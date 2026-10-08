@@ -20,18 +20,49 @@ public sealed partial class OpticsEditorViewModel : ObservableObject
     [ObservableProperty] private string _pixels = "30";
     [ObservableProperty] private string _pixelPitch = "0.6";
     [ObservableProperty] private string? _error;
-    [ObservableProperty] private OpticsPreset _selectedPreset = OpticsPreset.All[1];
+    private OpticsPreset _selectedPreset = OpticsPreset.All[1];
+    internal Func<OpticsSettings, bool>? CanSelectPreset { get; set; }
+    public OpticsPreset SelectedPreset
+    {
+        get => _selectedPreset;
+        set
+        {
+            if (!_loading && (!IsEditable || value.Settings is { } candidate && CanSelectPreset?.Invoke(candidate) == false))
+            {
+                RefreshPresetSelection();
+                return;
+            }
+            if (SetProperty(ref _selectedPreset, value) && !_loading && value.Settings is { } settings)
+                Load(settings with { FocalDistanceMm = Effective.FocalDistanceMm });
+            RefreshPresetSelection();
+        }
+    }
+    public int SelectedPresetIndex
+    {
+        get => Array.IndexOf(OpticsPreset.All.ToArray(), SelectedPreset);
+        set
+        {
+            if (value >= 0 && value < Presets.Count) SelectedPreset = Presets[value];
+            else RefreshPresetSelection();
+        }
+    }
     public string Summary => $"rank {Effective.MuraRank} · {Effective.CellPitchMm:0.##} mm · D {Effective.MaskDetectorDistanceMm:0.#} mm · {Effective.DetectorPixels}×{Effective.DetectorPixels} @ {Effective.PixelPitchMm:0.##} mm";
     partial void OnRankChanged(int value) => Validate();
     partial void OnCellPitchChanged(string value) => Validate();
     partial void OnDistanceChanged(string value) => Validate();
     partial void OnPixelsChanged(string value) => Validate();
     partial void OnPixelPitchChanged(string value) => Validate();
-    partial void OnSelectedPresetChanged(OpticsPreset value)
+    internal void RefreshPresetSelection()
     {
-        if (_loading) return;
-        if (!IsEditable) { Load(Effective); return; } // locked: the selector snaps back to the effective geometry
-        if (value.Settings is { } settings) Load(settings with { FocalDistanceMm = Effective.FocalDistanceMm });
+        void Refresh()
+        {
+            OnPropertyChanged(nameof(SelectedPreset));
+            OnPropertyChanged(nameof(SelectedPresetIndex));
+        }
+        if (SynchronizationContext.Current is { } context)
+            context.Post(_ => Refresh(), null);
+        else
+            Refresh();
     }
 
     public void Load(OpticsSettings value)

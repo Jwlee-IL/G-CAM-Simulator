@@ -51,7 +51,7 @@ public sealed class OpticalResponse
     /// <summary>Fraction of all traced photons ending in each <see cref="OpticalFate"/> (sums to 1).</summary>
     public IReadOnlyDictionary<OpticalFate, double> FateFractions { get; }
 
-    public OpticalResponse(CrystalArrayGeometry crystals, SensorLayout sensors, ReadoutOpticsConfig optics, int seed)
+    public OpticalResponse(CrystalArrayGeometry crystals, SensorLayout sensors, ReadoutOpticsConfig optics, int seed, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(crystals);
         ArgumentNullException.ThrowIfNull(sensors);
@@ -99,6 +99,7 @@ public sealed class OpticalResponse
                         double a = crystals.ActiveWidthMm, binH = crystals.DepthMm / bins;
                         for (int p = 0; p < PhotonsPerBin; p++)
                         {
+                            if ((p & 4095) == 0) cancellationToken.ThrowIfCancellationRequested();
                             double lx = (rng.NextDouble() - 0.5) * a, ly = (rng.NextDouble() - 0.5) * a;
                             double h = (b + rng.NextDouble()) * binH;
                             var (fate, sensor) = Trace(cx, cy, lx, ly, h, rng);

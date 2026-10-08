@@ -1,0 +1,39 @@
+<UserControl x:Class="Gcam.Studio.Views.ReadoutDetectorView"
+ xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+ xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+ xmlns:c="clr-namespace:Gcam.Studio.Controls" xmlns:conv="clr-namespace:Gcam.Studio.Converters">
+ <DockPanel>
+  <StackPanel DockPanel.Dock="Top">
+   <DockPanel Style="{StaticResource PanelHeader}"><TextBlock Text="Experimental four-output head" Style="{StaticResource Text.PanelTitle}" /></DockPanel>
+   <Border Style="{StaticResource Segment.Track}" Margin="{StaticResource Gap.Field}">
+    <UniformGrid Rows="1">
+     <RadioButton Content="SiPM" GroupName="ReadoutTab" Style="{StaticResource RadioButton.Segment}" IsChecked="{Binding ReadoutTab, Converter={x:Static conv:EnumMatchConverter.Instance}, ConverterParameter=Sipm}" AutomationProperties.AutomationId="Readout.SipmTab" />
+     <RadioButton Content="Anger" GroupName="ReadoutTab" Style="{StaticResource RadioButton.Segment}" IsChecked="{Binding ReadoutTab, Converter={x:Static conv:EnumMatchConverter.Instance}, ConverterParameter=Anger}" AutomationProperties.AutomationId="Readout.AngerTab" />
+     <RadioButton Content="Calibration" GroupName="ReadoutTab" Style="{StaticResource RadioButton.Segment}" IsChecked="{Binding ReadoutTab, Converter={x:Static conv:EnumMatchConverter.Instance}, ConverterParameter=Calibration}" AutomationProperties.AutomationId="Readout.CalibrationTab" />
+     <RadioButton Content="Diagnostics" GroupName="ReadoutTab" Style="{StaticResource RadioButton.Segment}" IsChecked="{Binding ReadoutTab, Converter={x:Static conv:EnumMatchConverter.Instance}, ConverterParameter=Diagnostics}" AutomationProperties.AutomationId="Readout.DiagnosticsTab" />
+    </UniformGrid>
+   </Border>
+   <TextBlock Text="{Binding PhysicalCounts}" Style="{StaticResource Text.MonoCaption}" TextWrapping="Wrap" AutomationProperties.AutomationId="Readout.Counts" />
+  </StackPanel>
+  <Grid>
+   <Grid>
+    <Grid.Style><Style TargetType="Grid"><Style.Triggers><DataTrigger Binding="{Binding ReadoutTab}" Value="Calibration"><Setter Property="Visibility" Value="Collapsed" /></DataTrigger><DataTrigger Binding="{Binding ReadoutTab}" Value="Diagnostics"><Setter Property="Visibility" Value="Collapsed" /></DataTrigger></Style.Triggers></Style></Grid.Style>
+    <DockPanel>
+     <StackPanel DockPanel.Dock="Bottom">
+      <CheckBox x:Name="Live" Content="Live raw density (clear: calibration density)" Margin="{StaticResource Gap.Field}" AutomationProperties.AutomationId="Readout.LiveDensity" />
+      <TextBlock Text="SiPM: resolved DPC resistor edges, row 1000 Ω / column 10 Ω, virtual-ground A–D. Anger: raw X/Y −1…1, density viridis; LUT boundaries and peak crosses. Unknown conversions are retained. Illustrative circuit." TextWrapping="Wrap" Style="{StaticResource Text.Caption}" />
+     </StackPanel>
+     <c:ReadoutMapView Preparation="{Binding Preparation}" Snapshot="{Binding PhysicalSnapshot}" Tab="{Binding ReadoutTab}" ShowLive="{Binding IsChecked, ElementName=Live}" Margin="{StaticResource Gap.Field}" AutomationProperties.AutomationId="Readout.Map" AutomationProperties.Name="Resolved SiPM circuit or Anger flood and LUT" />
+    </DockPanel>
+   </Grid>
+   <ScrollViewer VerticalScrollBarVisibility="Auto">
+    <ScrollViewer.Style><Style TargetType="ScrollViewer"><Setter Property="Visibility" Value="Collapsed" /><Style.Triggers><DataTrigger Binding="{Binding ReadoutTab}" Value="Calibration"><Setter Property="Visibility" Value="Visible" /></DataTrigger></Style.Triggers></Style></ScrollViewer.Style>
+    <TextBlock Text="{Binding CalibrationState}" Style="{StaticResource Text.Mono}" TextWrapping="Wrap" AutomationProperties.AutomationId="Readout.CalibrationFacts" />
+   </ScrollViewer>
+   <ListBox ItemsSource="{Binding Diagnostics}" AutomationProperties.AutomationId="Readout.Diagnostics">
+    <ListBox.Style><Style TargetType="ListBox" BasedOn="{StaticResource {x:Type ListBox}}"><Setter Property="Visibility" Value="Collapsed" /><Style.Triggers><DataTrigger Binding="{Binding ReadoutTab}" Value="Diagnostics"><Setter Property="Visibility" Value="Visible" /></DataTrigger></Style.Triggers></Style></ListBox.Style>
+    <ListBox.ItemTemplate><DataTemplate><TextBlock Text="{Binding}" Style="{StaticResource Text.MonoCaption}" TextWrapping="Wrap" /></DataTemplate></ListBox.ItemTemplate>
+   </ListBox>
+  </Grid>
+ </DockPanel>
+</UserControl>

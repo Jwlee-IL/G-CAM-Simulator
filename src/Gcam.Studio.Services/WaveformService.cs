@@ -18,6 +18,8 @@ public sealed class WaveformService : IWaveformService
     {
         ArgumentNullException.ThrowIfNull(snapshot);
         ArgumentNullException.ThrowIfNull(settings);
+        if (snapshot.Readout is not null)
+            return await Task.Run(() => PhysicalReadoutWaveform.Process(snapshot, settings, cancellationToken), cancellationToken).ConfigureAwait(false);
         await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try { return await Task.Run(() => Process(snapshot, settings, cancellationToken), cancellationToken).ConfigureAwait(false); }
         finally { _gate.Release(); }

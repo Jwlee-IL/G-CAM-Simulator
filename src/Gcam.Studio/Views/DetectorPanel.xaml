@@ -9,7 +9,7 @@
                            AutomationProperties.AutomationId="Detector.Readout" />
                 <TextBlock Text="Geometric active-area fraction describes the face, not detection efficiency. Acquired rate needs transport, energy response and a stated channel."
                            Style="{StaticResource Text.Caption}" TextWrapping="Wrap" Margin="{StaticResource Gap.Section}" />
-                <TextBlock Text="Direct crystal assignment is the current readout. SiPM light sharing and four-channel position readout require a separate model."
+                <TextBlock Text="{Binding Shared.ReadoutAssumptions}"
                            Style="{StaticResource Text.Caption}" TextWrapping="Wrap" />
             </StackPanel>
         </ScrollViewer>

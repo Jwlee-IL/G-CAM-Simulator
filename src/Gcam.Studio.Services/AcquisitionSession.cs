@@ -4,6 +4,7 @@ using System.Threading.Channels;
 using Gcam.Configuration;
 using Gcam.Core;
 using Gcam.Simulation;
+using Gcam.Detector;
 using Gcam.Studio.Core.Services;
 
 namespace Gcam.Studio.Services;
@@ -23,6 +24,13 @@ internal sealed class AcquisitionSession : IAcquisitionSession
     private readonly DetectorImage _flood;
     private readonly List<DetectedEvent> _events = [];
     private ListModeSource? _source;
+    private PhysicalListModeSource? _physicalSource;
+    private readonly (ReadoutPreparation View, ReadoutDevice Device, ReadoutCalibration Calibration)? _prepared;
+    private readonly ImmutableRecordStore<MeasuredReadoutRecord> _measured = new();
+    private readonly ImmutableRecordStore<RealisedReadoutHit> _realised = new();
+    private readonly ImmutableRecordStore<ReadoutTruthSample> _truth = new();
+    private int _assigned, _unknown;
+    private readonly DetectorImage _rawDensity = new(256, 256);
     private IDecoder? _decoder;
     private bool _decoderBuilt;
     // Look-ahead: drawn, but later than the acquired live time. Dropping it at Stop would lose a real count.
@@ -33,9 +41,14 @@ internal sealed class AcquisitionSession : IAcquisitionSession
     private Channel<AcquisitionSnapshot> _snapshots = NewChannel();
     private Task _worker;
 
-    public AcquisitionSession(SimulationConfig config, DetectorSettings detector, double preset, double speed, TimeProvider clock)
+    public AcquisitionSession(SimulationConfig config, DetectorSettings detector, double preset, double speed, TimeProvider clock,
+        (ReadoutPreparation View, ReadoutDevice Device, ReadoutCalibration Calibration)? prepared = null)
     {
         _config = config;
+        _prepared = prepared;
+        if (prepared is { } artifact && artifact.View.Key != ReadoutPreparationService.Key(
+            new OpticsSettings { DetectorPixels = config.Detector.PixelsX, PixelPitchMm = config.Detector.PixelPitchMm }, detector))
+            throw new InvalidOperationException("Prepared readout does not match the acquired detector inputs.");
         _detector = detector;
         _clock = clock;
         _flood = new DetectorImage(config.Detector.PixelsX, config.Detector.PixelsY);
@@ -97,7 +110,8 @@ internal sealed class AcquisitionSession : IAcquisitionSession
     {
         try
         {
-            _source ??= new ListModeSource(_config);
+            if (_prepared is { } artifact) _physicalSource ??= new PhysicalListModeSource(_config, artifact.Device, artifact.Calibration, _config.Seed ?? 0);
+            else _source ??= new ListModeSource(_config);
             if (!_decoderBuilt)
             {
                 _decoder = new DefaultSimulationFactory().CreateDecoder(_config);
@@ -122,6 +136,33 @@ internal sealed class AcquisitionSession : IAcquisitionSession
                 {
                     while (!stop.IsCancellationRequested && compute.Elapsed < TransportBudget)
                     {
+                        if (_physicalSource is { } physical)
+                        {
+                            if (physical.ObservedTimeS >= target) break;
+                            foreach (var measured in physical.AdvanceUntil(target, stop.Token))
+                            {
+                                if (double.IsFinite(measured.RawX) && double.IsFinite(measured.RawY) && measured.RawX >= -1 && measured.RawX < 1 && measured.RawY >= -1 && measured.RawY < 1)
+                                    _rawDensity.Add((int)((measured.RawX + 1) * 128), (int)((measured.RawY + 1) * 128), 1);
+                                var e = measured.Conversion;
+                                static ReadoutCharges Charges(IReadOnlyList<double> c) => new(c[0], c[1], c[2], c[3]);
+                                _measured.Add(new(_measured.Count, e.HoldTimeNs * 1e-9, e.TriggerTimeNs * 1e-9,
+                                    Charges(e.Codes), Charges(e.AnalogAtHold), measured.RawX, measured.RawY, measured.Crystal,
+                                    measured.EnergyKeV, e.DominantHit, e.ContributingHits, e.DominantShare));
+                                if (measured.Crystal < 0) _unknown++;
+                                else { _assigned++; _flood.Add(measured.Crystal % 12, measured.Crystal / 12, 1); }
+                            }
+                            foreach (var h in physical.LastHits)
+                            {
+                                var c = h.Channels;
+                                _realised.Add(new(h.TimeNs * 1e-9, new(c[0], c[1], c[2], c[3])));
+                            }
+                            while (_truth.Count < physical.TruthSamples.Count)
+                            {
+                                var sample = physical.TruthSamples[_truth.Count];
+                                _truth.Add(new(sample.HitIndex, sample.Sites));
+                            }
+                            continue;
+                        }
                         if (_pending is { } next)
                         {
                             if (next.ArrivalTimeS > target) break;
@@ -129,30 +170,34 @@ internal sealed class AcquisitionSession : IAcquisitionSession
                             _flood.Add(next.PixelX, next.PixelY, 1);
                             _pending = null;
                         }
-                        if (source.ArrivalTimeS >= target) break;
+                        if (source!.ArrivalTimeS >= target) break;
                         // Advance checks the token before any random draw, so a cancelled call consumes nothing.
                         _pending = _config.Ambient is not null ? source.AdvanceUntil(target, stop.Token) : source.Advance(stop.Token);
                     }
                 }
                 catch (OperationCanceledException) when (stop.IsCancellationRequested) { }
                 // A look-ahead event proves that no counts were skipped in the intervening empty live time.
-                bool limited = source.ArrivalTimeS < target || _pending is { } waiting && waiting.ArrivalTimeS <= target;
+                bool limited = _physicalSource is { } physicalPrefix ? physicalPrefix.ObservedTimeS < target
+                    : source!.ArrivalTimeS < target || _pending is { } waiting && waiting.ArrivalTimeS <= target;
                 // Only the consumed prefix belongs to the acquisition. A pending event is look-ahead, not a count.
-                _live = limited ? Math.Max(_live, _events.Count == 0 ? 0 : _events[^1].ArrivalTimeS) : target;
+                _live = _physicalSource is { } prefix ? prefix.ObservedTimeS
+                    : limited ? Math.Max(_live, _events.Count == 0 ? 0 : _events[^1].ArrivalTimeS) : target;
                 bool completed = _live >= preset;
                 var decodeWatch = Stopwatch.StartNew();
-                var decoded = _events.Count > 0 ? _decoder?.Decode(_flood) : null;
+                int counts = _prepared is null ? _events.Count : _assigned;
+                var decoded = counts > 0 ? _decoder?.Decode(_flood) : null;
                 decodeWatch.Stop();
                 var imaging = new ImagingResult(_flood.ReadOnlyCopy(), -(_flood.Width - 1) * _config.Detector.PixelPitchMm / 2,
                     _config.Detector.PixelPitchMm, decoded?.Reconstruction.ReadOnlyCopy(), decoded?.ReconOriginMm ?? 0,
-                    decoded?.ReconStepMm ?? 0, decoded?.Estimate, _events.Count, TimeSpan.FromSeconds(wall));
+                    decoded?.ReconStepMm ?? 0, decoded?.Estimate, counts, TimeSpan.FromSeconds(wall));
                 double reportInterval = _clock.GetElapsedTime(previousPublished).TotalSeconds;
                 double actual = reportInterval > 0 ? (_live - previousLive) / reportInterval : 0;
-                await channel.Writer.WriteAsync(new AcquisitionSnapshot(_live, _events.Count, source.RateCps,
+                await channel.Writer.WriteAsync(new AcquisitionSnapshot(_live, counts, _physicalSource?.InputRateCps ?? source!.RateCps,
                     actual, limited, imaging, Array.AsReadOnly(_events.ToArray()), decodeWatch.Elapsed, completed)
                     { Detector = _detector, Optics = _optics, Seed = _config.Seed,
-                        AmbientRateCps = source.AmbientRateCps,
-                        SourceRateCps = _config.Ambient is null ? 0 : source.SourceRateCps,
+                        Readout = _prepared is { } prepared ? new(prepared.View, _measured.Publish(), _realised.Publish(), _unknown, _physicalSource!.HasPendingHold) { LiveDensity = _rawDensity.ReadOnlyCopy(), TruthSamples = _truth.Publish() } : null,
+                        AmbientRateCps = source?.AmbientRateCps ?? 0,
+                        SourceRateCps = _config.Ambient is null ? 0 : source!.SourceRateCps,
                         AmbientMaximumEnergyKeV = _config.Ambient is { } ambient
                             ? ambient.Spectrum.Lines.Select(l => l.EnergyKeV).Concat(ambient.Spectrum.Continuum.Select(b => b.HighKeV)).Max()
                             : null });
@@ -185,5 +230,6 @@ internal sealed class AcquisitionSession : IAcquisitionSession
         await _worker;
         _stop.Dispose();
         _source?.Dispose();
+        _physicalSource?.Dispose();
     }
 }

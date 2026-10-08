@@ -1,0 +1,12 @@
+<UserControl x:Class="Gcam.Studio.Views.ReadoutWaveformView"
+ xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+ xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:c="clr-namespace:Gcam.Studio.Controls">
+ <Grid>
+  <Grid.RowDefinitions><RowDefinition /><RowDefinition /><RowDefinition /><RowDefinition /><RowDefinition /></Grid.RowDefinitions>
+  <c:PlotView AxisLeftGutter="80" Series="{Binding LaneA}" Markers="{Binding PhysicalMarkers}" ShareViewRange="True" ViewRange="{Binding ViewRange, Mode=TwoWay}" XUnit="µs" YUnit="codes" XLabel="time from hold (µs)" YLabel="A · analogue codes" EmptyText="No observed conversion" AutomationProperties.AutomationId="Waveform.A" />
+  <c:PlotView AxisLeftGutter="80" Grid.Row="1" Series="{Binding LaneB}" Markers="{Binding PhysicalMarkers}" ShowMarkerLabels="False" ShareViewRange="True" ViewRange="{Binding ViewRange, Mode=TwoWay}" XUnit="µs" YUnit="codes" XLabel="time from hold (µs)" YLabel="B · analogue codes" EmptyText="No observed conversion" AutomationProperties.AutomationId="Waveform.B" />
+  <c:PlotView AxisLeftGutter="80" Grid.Row="2" Series="{Binding LaneC}" Markers="{Binding PhysicalMarkers}" ShowMarkerLabels="False" ShareViewRange="True" ViewRange="{Binding ViewRange, Mode=TwoWay}" XUnit="µs" YUnit="codes" XLabel="time from hold (µs)" YLabel="C · analogue codes" EmptyText="No observed conversion" AutomationProperties.AutomationId="Waveform.C" />
+  <c:PlotView AxisLeftGutter="80" Grid.Row="3" Series="{Binding LaneD}" Markers="{Binding PhysicalMarkers}" ShowMarkerLabels="False" ShareViewRange="True" ViewRange="{Binding ViewRange, Mode=TwoWay}" XUnit="µs" YUnit="codes" XLabel="time from hold (µs)" YLabel="D · analogue codes" EmptyText="No observed conversion" AutomationProperties.AutomationId="Waveform.D" />
+  <c:PlotView AxisLeftGutter="80" Grid.Row="4" Series="{Binding LaneSum}" Markers="{Binding PhysicalMarkers}" ShowMarkerLabels="False" ShareViewRange="True" ViewRange="{Binding ViewRange, Mode=TwoWay}" XUnit="µs" YUnit="codes" XLabel="time from hold (µs)" YLabel="Σ · sum threshold" EmptyText="No observed conversion" AutomationProperties.AutomationId="Waveform.Sum" />
+ </Grid>
+</UserControl>

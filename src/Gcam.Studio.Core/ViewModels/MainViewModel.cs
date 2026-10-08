@@ -33,8 +33,9 @@ public sealed partial class MainViewModel : ObservableObject
     private bool _reverting;
 
     public MainViewModel(IAcquisitionService acquisition, IThemeService theme, ISpectrumService spectrum, IImagingService? imaging = null,
-        IWaveformService? waveform = null, IDetectorFaceService? detectorFace = null, IFocusSweepService? focusSweep = null)
+        IWaveformService? waveform = null, IDetectorFaceService? detectorFace = null, IFocusSweepService? focusSweep = null, IReadoutPreparationService? readoutPreparation = null)
     {
+        _readoutPreparation = readoutPreparation;
         _acquisition = acquisition;
         _theme = theme;
         Imaging = new ImagingWorkspaceViewModel(this, imaging, focusSweep);
@@ -54,6 +55,15 @@ public sealed partial class MainViewModel : ObservableObject
         };
         DetectorWorkspace.Refresh();
         AddSource();
+        OpticsEditor.CanSelectPreset = candidate =>
+        {
+            if (IsPhysicalReadout && ReadoutPolicy.GeometryError(candidate) is { } error)
+            {
+                ReadoutMessage = error;
+                return false;
+            }
+            return true;
+        };
     }
 
     public ImagingWorkspaceViewModel Imaging { get; }
@@ -94,7 +104,7 @@ public sealed partial class MainViewModel : ObservableObject
     /// <summary>Acquired data exist (Stopped, Completed, or Failed after a snapshot).</summary>
     public bool HasData => Snapshot is not null;
     /// <summary>Physical inputs are editable only without data and while not acquiring (A-2).</summary>
-    public bool CanEditInputs => !IsRunning && !HasData;
+    public bool CanEditInputs => !IsPreparingReadout && !IsRunning && !HasData;
     /// <summary>The preset may be raised after Stop / Completed, never while acquiring or after a failure with data.</summary>
     public bool CanEditLiveTime => !IsRunning && (!HasData || _session is not null);
     /// <summary>Speed only paces events; it may change in every state but Acquiring.</summary>
@@ -105,7 +115,7 @@ public sealed partial class MainViewModel : ObservableObject
     /// <summary>Re-evaluates everything that follows (running, data, session, preset).</summary>
     private void NotifyRunState()
     {
-        foreach (string name in new[] { nameof(HasData), nameof(CanEditInputs), nameof(CanEditLiveTime), nameof(CanEditSpeed), nameof(IsIdle), nameof(StartLabel) })
+        foreach (string name in new[] { nameof(HasData), nameof(CanEditInputs), nameof(CanEditLiveTime), nameof(CanEditSpeed), nameof(IsIdle), nameof(StartLabel), nameof(CanEditLegacy) })
             OnPropertyChanged(name);
         OpticsEditor.IsEditable = CanEditInputs;
         foreach (var source in Sources) source.IsEditable = CanEditInputs;
@@ -114,6 +124,7 @@ public sealed partial class MainViewModel : ObservableObject
         ResetCommand.NotifyCanExecuteChanged();
         AddSourceCommand.NotifyCanExecuteChanged();
         RemoveSourceCommand.NotifyCanExecuteChanged();
+        PrepareReadoutCommand.NotifyCanExecuteChanged();
         DetectorWorkspace.Refresh();
     }
 
@@ -123,6 +134,16 @@ public sealed partial class MainViewModel : ObservableObject
     {
         if (_reverting) return true; // the nested change is the revert itself
         if (allowed || CanEditInputs) return false;
+        _reverting = true;
+        try { revert(); }
+        finally { _reverting = false; }
+        return true;
+    }
+
+    private bool LockedLegacy(Action revert)
+    {
+        if (_reverting) return true;
+        if (CanEditLegacy) return false;
         _reverting = true;
         try { revert(); }
         finally { _reverting = false; }
@@ -154,13 +175,21 @@ public sealed partial class MainViewModel : ObservableObject
     partial void OnOpticsChanged(OpticsSettings? oldValue, OpticsSettings newValue)
     {
         if (Locked(() => { Optics = oldValue!; OpticsEditor.Load(oldValue!); })) return;
+        if (IsPhysicalReadout && ReadoutPolicy.GeometryError(newValue) is { } error)
+        {
+            ReadoutMessage = error;
+            Optics = oldValue!;
+            OpticsEditor.RefreshPresetSelection();
+            return;
+        }
         if (OpticsEditor.Effective != newValue) OpticsEditor.Load(newValue);
         Imaging.NotifyGeometryChanged();
         ValidateGap();
         DetectorWorkspace.Refresh();
         Imaging.InvalidateSweep();
+        OnPropertyChanged(nameof(ReadoutState));
     }
-    public DetectorSettings Detector => new() { GainSigma = GainSigmaPercent / 100, GainSeed = GainSeed, Chain = Chain, ReflectorGapMm = PendingGapMm };
+    public DetectorSettings Detector => new() { ReadoutMode = ReadoutMode, PreparedReadoutId = PreparedReadout?.Id ?? Guid.Empty, GainSigma = GainSigmaPercent / 100, GainSeed = GainSeed, Chain = Chain, ReflectorGapMm = PendingGapMm };
     public IReadOnlyList<ScintPreset> Scintillators => FrontEndMaterials.Scintillators;
     public IReadOnlyList<SensorPreset> Sensors => FrontEndParts.Sensors;
     public IReadOnlyList<PreampPreset> Preamps => FrontEndParts.Preamps;
@@ -170,17 +199,17 @@ public sealed partial class MainViewModel : ObservableObject
     public ScintPreset Scintillator
     {
         get => _scintillator;
-        set { if (CanEditInputs && Scintillators.Contains(value) && SetProperty(ref _scintillator, value)) NotifyChainChanged(); else OnPropertyChanged(); }
+        set { if (CanEditLegacy && Scintillators.Contains(value) && SetProperty(ref _scintillator, value)) NotifyChainChanged(); else OnPropertyChanged(); }
     }
     public SensorPreset Sensor
     {
         get => _sensor;
-        set { if (CanEditInputs && Sensors.Contains(value) && SetProperty(ref _sensor, value)) NotifyChainChanged(); else OnPropertyChanged(); }
+        set { if (CanEditLegacy && Sensors.Contains(value) && SetProperty(ref _sensor, value)) NotifyChainChanged(); else OnPropertyChanged(); }
     }
     public PreampPreset Preamp
     {
         get => _preamp;
-        set { if (CanEditInputs && Preamps.Contains(value) && SetProperty(ref _preamp, value)) NotifyChainChanged(); else OnPropertyChanged(); }
+        set { if (CanEditLegacy && Preamps.Contains(value) && SetProperty(ref _preamp, value)) NotifyChainChanged(); else OnPropertyChanged(); }
     }
     public FrontEndChain Chain => new(Scintillator, Sensor, Preamp);
     public string ChainSummary => Chain.ToString();
@@ -197,6 +226,7 @@ public sealed partial class MainViewModel : ObservableObject
         if (Locked(() => ReflectorGapUm = oldValue!)) return;
         ValidateGap();
         OnPropertyChanged(nameof(Detector)); OnPropertyChanged(nameof(DetectorSummary));
+        OnPropertyChanged(nameof(ReadoutState));
         DetectorWorkspace.Refresh();
     }
     private void ValidateGap()
@@ -278,7 +308,7 @@ public sealed partial class MainViewModel : ObservableObject
     }
     partial void OnGainSigmaPercentChanged(double oldValue, double newValue)
     {
-        if (Locked(() => GainSigmaPercent = oldValue)) return;
+        if (LockedLegacy(() => GainSigmaPercent = oldValue)) return;
         if (!double.IsFinite(newValue) || newValue < 0) { GainSigmaPercent = 3; return; }
         OnPropertyChanged(nameof(Detector));
         OnPropertyChanged(nameof(DetectorSummary));
@@ -286,7 +316,7 @@ public sealed partial class MainViewModel : ObservableObject
     }
     partial void OnGainSeedChanged(int oldValue, int newValue)
     {
-        if (Locked(() => GainSeed = oldValue)) return;
+        if (LockedLegacy(() => GainSeed = oldValue)) return;
         OnPropertyChanged(nameof(Detector)); DetectorWorkspace.Refresh();
     }
     partial void OnBackgroundToSignalRatioChanged(double oldValue, double newValue)
@@ -318,6 +348,7 @@ public sealed partial class MainViewModel : ObservableObject
     {
         OnPropertyChanged(nameof(AmbientBsrReadout));
         Spectrum.Refresh(); Imaging.RefreshChannels(); Waveform.NotifySnapshot(); DetectorWorkspace.Refresh();
+        OnPropertyChanged(nameof(ScopeEventCount));
         if (oldValue is null != newValue is null) NotifyRunState();
     }
     [ObservableProperty] private double _windowFwhm = 1.5;
@@ -399,7 +430,7 @@ public sealed partial class MainViewModel : ObservableObject
     }
 
     /// <summary>Start (no data) or Continue (Stopped / Completed with the preset above the acquired live time).</summary>
-    private bool CanStart() => !IsRunning && (Sources.Count > 0 || AmbientDoseRateMicroSvPerHour > 0)
+    private bool CanStart() => !IsPreparingReadout && !IsRunning && (Sources.Count > 0 || AmbientDoseRateMicroSvPerHour > 0)
         && (Snapshot is not { } s || _session is not null && LiveTimeS > s.LiveTimeS);
 
     [RelayCommand(CanExecute = nameof(IsRunning))]
@@ -459,6 +490,13 @@ public sealed partial class MainViewModel : ObservableObject
             return false;
         }
         if (SeedError is not null || AmbientDoseError is not null) return false;
+        if (IsPhysicalReadout)
+        {
+            ReadoutMessage = ReadoutPolicy.GeometryError(Optics) ?? (AmbientDoseRateMicroSvPerHour != 0 || BackgroundToSignalRatio != 0
+                ? "Physical readout requires ambient and BSR at zero: their interaction records are unavailable."
+                : MatchingPreparation?.Succeeded != true ? "Prepare the matching experimental readout before Start." : null);
+            if (ReadoutMessage is not null) { IsDetectorExpanded = true; return false; }
+        }
         int seed = string.IsNullOrWhiteSpace(SeedText)
             ? Random.Shared.Next(1, int.MaxValue)
             : int.Parse(SeedText, NumberStyles.Integer, CultureInfo.CurrentCulture);
@@ -468,6 +506,7 @@ public sealed partial class MainViewModel : ObservableObject
         Spectrum.Begin(scene);
         Imaging.Begin(scene, acquisitionOptics);
         Waveform.Begin();
+        if (IsPhysicalReadout) { Imaging.Strip = false; Spectrum.PileUp = false; Waveform.Ideal = false; Waveform.RateStudy = false; }
         AcquisitionSeed = seed;
         try
         {

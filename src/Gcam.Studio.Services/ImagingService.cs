@@ -49,6 +49,12 @@ public sealed class ImagingService : IImagingService
         if (snapshot.Imaging.Flood.Width != config.Detector.PixelsX || snapshot.Imaging.Flood.Height != config.Detector.PixelsY)
             throw new ArgumentException("Snapshot dimensions do not match acquired optics.", nameof(snapshot));
         var projection = ImagingProjection.AtFocus(config, physical, settings.FocalDistanceMm ?? optics.FocalDistanceMm);
+        if (snapshot.Readout is not null)
+        {
+            await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+            try { return await Task.Run(() => PhysicalReadoutProjection.Imaging(snapshot, projection, settings, cancellationToken, _mlem), cancellationToken).ConfigureAwait(false); }
+            finally { _gate.Release(); }
+        }
         if (settings.Method == DecoderMethod.Mlem) projection.Decoder.MlemIterations = StudioMlem.Iterations;
         if (scene.Count == 0)
         {

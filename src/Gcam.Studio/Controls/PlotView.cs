@@ -55,7 +55,7 @@ public sealed class PlotView : FrameworkElement
             xHeight = Math.Max(xHeight, text.Height);
             xHalfWidth = Math.Max(xHalfWidth, text.Width / 2);
         }
-        double left = OuterPadding + Math.Max(yWidth + LabelGap, xHalfWidth);
+        double left = double.IsNaN(AxisLeftGutter) ? OuterPadding + Math.Max(yWidth + LabelGap, xHalfWidth) : AxisLeftGutter;
         double titleRow = string.IsNullOrEmpty(YLabel) ? 0 : Text(YLabel).Height + LabelGap;
         double top = OuterPadding + titleRow + labelStrip + yHeight / 2;
         double right = OuterPadding + xHalfWidth;
@@ -89,6 +89,9 @@ public sealed class PlotView : FrameworkElement
     public string XLabel { get => (string)GetValue(XLabelProperty); set => SetValue(XLabelProperty, value); }
     public static readonly DependencyProperty YLabelProperty = Register(nameof(YLabel), "");
     public string YLabel { get => (string)GetValue(YLabelProperty); set => SetValue(YLabelProperty, value); }
+    /// <summary>Fixed left plot edge in DIPs for stacked traces; NaN measures the lane's own tick labels.</summary>
+    public static readonly DependencyProperty AxisLeftGutterProperty = Register(nameof(AxisLeftGutter), double.NaN);
+    public double AxisLeftGutter { get => (double)GetValue(AxisLeftGutterProperty); set => SetValue(AxisLeftGutterProperty, value); }
     public static readonly DependencyProperty ViewRangeProperty = Register<PlotViewRange?>(nameof(ViewRange), null,
         (d, _) => ((PlotView)d).ApplyViewRange());
     public PlotViewRange? ViewRange { get => (PlotViewRange?)GetValue(ViewRangeProperty); set => SetValue(ViewRangeProperty, value); }
@@ -136,6 +139,9 @@ public sealed class PlotView : FrameworkElement
     public double Zoom => _viewport.Zoom;
     public PlotViewRange CurrentViewRange => new(_viewport.XMin, _viewport.XMax);
     public double CurrentYMax => _viewport.YMax;
+    public Rect PlotAreaBounds => _plotRect;
+    /// <summary>The rendered X mapping, also used for ticks, markers and pointer navigation.</summary>
+    public double XToScreen(double x) => ScreenX(x);
 
     /// <summary>CPU redraw duration, including ticks, query, geometry and drawing commands; excludes composition.</summary>
     public double LastRedrawMilliseconds { get; private set; }

@@ -16,6 +16,7 @@ public partial class App : Application
         base.OnStartup(e);
 
         _services = new ServiceCollection()
+            .AddSingleton<IReadoutPreparationService, ReadoutPreparationService>()
             .AddSingleton<IAcquisitionService, SimulationService>()
             .AddSingleton<ISpectrumService, SpectrumService>()
             .AddSingleton<IImagingService, ImagingService>()

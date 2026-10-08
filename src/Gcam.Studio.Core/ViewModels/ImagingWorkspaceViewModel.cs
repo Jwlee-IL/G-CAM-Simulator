@@ -24,14 +24,14 @@ public sealed partial class ImagingWorkspaceViewModel(MainViewModel shared, IIma
         ? OpticsGeometry.Calculate(ProjectionOptics, FocalDistanceMm) : null;
     public string GeometryText => Geometry?.Description ?? "Choose a valid decoder focal plane.";
     /// <summary>One line in the panel; <see cref="SamplingEvidence"/> is its tooltip (SR-OPT-05).</summary>
-    public string SamplingCaption => "Precision is position-dependent (conditional evidence; hover for numbers).";
+    public string SamplingCaption => Shared.IsPhysicalReadout ? "Experimental LUT image: decoder response omits trigger efficiency and crystal migration." : "Precision is position-dependent (conditional evidence; hover for numbers).";
     public string SamplingEvidence => "Position-dependent precision: a 1 m Sharp scan measured RMS 0.95 mm at 1.27 samples/cell and 0.24 mm at 3.8, at the same detector size. This is conditional evidence, not a pass threshold.";
     // Right-panel sections: focal plane and channel are used on every acquisition, the sweep only on demand.
     [ObservableProperty] private bool _isFocalExpanded = true;
     [ObservableProperty] private bool _isChannelExpanded = true;
     [ObservableProperty] private bool _isSweepExpanded;
     public string FocalSummary => Geometry is { } g ? $"{FocalDistanceMm:0.#} mm · element {g.ResolutionElementMm:0.##} mm" : $"{FocalPlane} mm";
-    public string ChannelSummary => $"{SelectedIsotope} · window {Shared.WindowFwhm:0.##} × FWHM{(Strip ? " · strip" : "")}"
+    public string ChannelSummary => Shared.IsPhysicalReadout ? $"{SelectedIsotope} · {Shared.WindowLowKeV:0.##}–{Shared.WindowHighKeV:0.##} keV" : $"{SelectedIsotope} · window {Shared.WindowFwhm:0.##} × FWHM{(Strip ? " · strip" : "")}"
         + (Reconstruction == DecoderMethod.Mlem ? " · MLEM" : "");
 
     /// <summary>Reconstruction methods offered (TODO-36). Cross-correlation is the default (MD-3).</summary>
@@ -134,7 +134,7 @@ public sealed partial class ImagingWorkspaceViewModel(MainViewModel shared, IIma
         InvalidateSweep();
         NotifyResult();
     }
-    partial void OnStripChanged(bool value) { InvalidateSweep(); OnPropertyChanged(nameof(ReconstructionNote)); RefreshChannels(); }
+    partial void OnStripChanged(bool value) { if (value && Shared.IsPhysicalReadout) { Strip = false; return; } InvalidateSweep(); OnPropertyChanged(nameof(ReconstructionNote)); RefreshChannels(); }
     partial void OnIsProcessingChanged(bool value) { OnPropertyChanged(nameof(Summary)); SweepCommand.NotifyCanExecuteChanged(); }
 
     internal void Begin(IReadOnlyList<SceneSource> scene, OpticsSettings optics)
@@ -190,7 +190,8 @@ public sealed partial class ImagingWorkspaceViewModel(MainViewModel shared, IIma
                 revision = _revision;
                 var snapshot = Shared.Snapshot!;
                 var view = await service.ProcessAsync(_id, snapshot, _scene, _optics,
-                    new(Shared.WindowFwhm, Strip, FocalDistanceMm, Reconstruction), token);
+                    new(Shared.WindowFwhm, Strip, FocalDistanceMm, Reconstruction)
+                    { WindowLowKeV = Shared.WindowLowKeV, WindowHighKeV = Shared.WindowHighKeV }, token);
                 if (token.IsCancellationRequested) return;
                 if (revision != _revision) continue;
                 View = view;

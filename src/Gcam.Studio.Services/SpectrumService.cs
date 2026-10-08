@@ -45,6 +45,8 @@ public sealed class SpectrumService : ISpectrumService
         ArgumentNullException.ThrowIfNull(events);
         ArgumentNullException.ThrowIfNull(lines);
         ArgumentNullException.ThrowIfNull(settings);
+        if (settings.Readout is { } measured)
+            return await Task.Run(() => PhysicalReadoutProjection.Spectrum(measured, settings, cancellationToken), cancellationToken).ConfigureAwait(false);
         if (!(settings.WindowFwhm > 0) || !double.IsFinite(settings.WindowFwhm))
             throw new ArgumentOutOfRangeException(nameof(settings));
         if (lines.Count == 0 && !(settings.IncidentMaximumEnergyKeV > 0)

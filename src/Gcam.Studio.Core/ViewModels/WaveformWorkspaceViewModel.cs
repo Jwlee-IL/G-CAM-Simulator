@@ -29,18 +29,26 @@ public sealed partial class WaveformWorkspaceViewModel(MainViewModel shared, IWa
     /// <summary>Short "#index" labels: nine markers fit one label row above the plot; pixel and deposit are in the event list.</summary>
     public IReadOnlyList<PlotMarker> Markers => View?.Events.Select(e => new PlotMarker(e.RelativeTimeUs, $"#{e.Index}")).ToArray() ?? [];
     public IReadOnlyList<WaveformEvent> Events => View?.Events ?? [];
+    public IReadOnlyList<PlotSeries> LaneA => Lane(0);
+    public IReadOnlyList<PlotSeries> LaneB => Lane(1);
+    public IReadOnlyList<PlotSeries> LaneC => Lane(2);
+    public IReadOnlyList<PlotSeries> LaneD => Lane(3);
+    public IReadOnlyList<PlotSeries> LaneSum => View?.PhysicalLanes.Count == 5
+        ? View.PhysicalThreshold is { } threshold ? new[] { View.PhysicalLanes[4], threshold } : new[] { View.PhysicalLanes[4] } : [];
+    private IReadOnlyList<PlotSeries> Lane(int index) => View?.PhysicalLanes.Count == 5 ? new[] { View.PhysicalLanes[index] } : [];
+    public IReadOnlyList<PlotMarker> PhysicalMarkers => View?.PhysicalMarkers ?? [];
     public string Summary => View is { } v ? $"{v.Events.Count} {(v.Events.Count == 1 ? "event" : "events")} · {v.WindowUs:0.###} µs · worker {v.ProcessingTime.TotalMilliseconds:0.##} ms" : "Select an acquired event";
     partial void OnTriggerIndexChanged(int value) { if (!_updating) { FollowLatest = false; Refresh(); } }
     partial void OnFollowLatestChanged(bool value) => NotifySnapshot();
     partial void OnWindowUsChanged(double value) { ViewRange = null; Refresh(); }
-    partial void OnRateStudyChanged(bool value) => Refresh();
+    partial void OnRateStudyChanged(bool value) { if (value && Shared.IsPhysicalReadout) { RateStudy = false; return; } Refresh(); }
     partial void OnRateKcpsChanged(double value) => Refresh();
-    partial void OnIdealChanged(bool value) => Refresh();
+    partial void OnIdealChanged(bool value) { if (value && Shared.IsPhysicalReadout) { Ideal = false; return; } Refresh(); }
     partial void OnViewChanged(WaveformView? value)
     {
         if (value is not null && ViewRange is null && value.Adc.Y.Length > 0)
-            ViewRange = new(value.Adc.Origin, value.Adc.XAt(value.Adc.Y.Length - 1));
-        foreach (string name in new[] { nameof(AdcSeries), nameof(ShapedSeries), nameof(Markers), nameof(Events), nameof(Summary) })
+            ViewRange = new(value.Adc.Origin, value.Adc.Y.Length == 1 ? value.Adc.Origin + value.Adc.Step : value.Adc.XAt(value.Adc.Y.Length - 1));
+        foreach (string name in new[] { nameof(AdcSeries), nameof(ShapedSeries), nameof(Markers), nameof(Events), nameof(Summary), nameof(LaneA), nameof(LaneB), nameof(LaneC), nameof(LaneD), nameof(LaneSum), nameof(PhysicalMarkers) })
             OnPropertyChanged(name);
     }
 
@@ -50,7 +58,7 @@ public sealed partial class WaveformWorkspaceViewModel(MainViewModel shared, IWa
     private void Next()
     {
         FollowLatest = false;
-        if (Shared.Snapshot is { } s && TriggerIndex + 1 < s.Events.Count) TriggerIndex++;
+        if (Shared.Snapshot is { } s && TriggerIndex + 1 < Shared.ScopeEventCount) TriggerIndex++;
     }
     internal void Begin()
     {
@@ -59,9 +67,9 @@ public sealed partial class WaveformWorkspaceViewModel(MainViewModel shared, IWa
     }
     internal void NotifySnapshot()
     {
-        if (FollowLatest && Shared.Snapshot is { Events.Count: > 0 } s)
+        if (FollowLatest && Shared.ScopeEventCount > 0)
         {
-            _updating = true; TriggerIndex = s.Events.Count - 1; _updating = false;
+            _updating = true; TriggerIndex = Shared.ScopeEventCount - 1; _updating = false;
         }
         Refresh();
     }
@@ -70,7 +78,8 @@ public sealed partial class WaveformWorkspaceViewModel(MainViewModel shared, IWa
         if (!IsActive) { _refresh?.Cancel(); _revision++; _last = null; return; }
         if (service is null || Shared.Snapshot is not { } snapshot) return;
         var settings = new WaveformSettings(TriggerIndex, WindowUs, RateStudy, RateKcps, Ideal);
-        double trigger = snapshot.Events.Count > 0 && TriggerIndex >= 0 && TriggerIndex < snapshot.Events.Count
+        double trigger = snapshot.Readout is { Records.Count: > 0 } physical && TriggerIndex >= 0 && TriggerIndex < physical.Records.Count
+            ? physical.Records[TriggerIndex].HoldTimeS : snapshot.Events.Count > 0 && TriggerIndex >= 0 && TriggerIndex < snapshot.Events.Count
             ? snapshot.Events[TriggerIndex].ArrivalTimeS : snapshot.LiveTimeS;
         double covered = RateStudy ? snapshot.Events.Count : Math.Min(snapshot.LiveTimeS, trigger + WindowUs * 0.8e-6);
         var key = (settings, covered, snapshot.Detector);

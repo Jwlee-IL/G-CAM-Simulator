@@ -5,7 +5,7 @@
     <StackPanel>
         <Expander Header="Detection chain" Style="{StaticResource Expander.Section}" IsExpanded="{Binding IsChainExpanded}"
                   AutomationProperties.AutomationId="Chain.Section">
-            <StackPanel IsEnabled="{Binding CanEditInputs}">
+            <StackPanel IsEnabled="{Binding CanEditLegacy}">
                 <TextBlock Text="Scintillator" Style="{StaticResource Text.Label}" />
                 <ComboBox ItemsSource="{Binding Scintillators}" DisplayMemberPath="Name" SelectedItem="{Binding Scintillator}"
                           Margin="{StaticResource Gap.Field}" AutomationProperties.AutomationId="Chain.Scintillator"

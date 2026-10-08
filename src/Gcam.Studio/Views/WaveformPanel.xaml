@@ -20,12 +20,12 @@
                 <TextBox Text="{Binding WindowUs}" Tag="µs" Margin="{StaticResource Gap.Section}"
                          AutomationProperties.AutomationId="Waveform.Window" AutomationProperties.Name="Window length (microseconds)" />
                 <DockPanel Style="{StaticResource PanelHeader}"><TextBlock Text="Rate study" Style="{StaticResource Text.PanelTitle}" /></DockPanel>
-                <CheckBox Content="Re-space arrivals (rate study)" IsChecked="{Binding RateStudy}" Margin="{StaticResource Gap.Field}"
+                <CheckBox Content="Re-space arrivals (rate study)" IsChecked="{Binding RateStudy}" IsEnabled="{Binding Shared.CanUseLegacy}" Margin="{StaticResource Gap.Field}"
                           AutomationProperties.AutomationId="Waveform.RateStudy" />
                 <TextBlock Text="Simulated rate · energy channel" Style="{StaticResource Text.Label}" />
                 <TextBox Text="{Binding RateKcps}" Tag="kcps" IsEnabled="{Binding RateStudy}" Margin="{StaticResource Gap.Section}"
                          AutomationProperties.AutomationId="Waveform.Rate" AutomationProperties.Name="Simulated rate in kilocounts per second" />
-                <CheckBox Content="Ideal shaper stimulus" IsChecked="{Binding Ideal}" Margin="{StaticResource Gap.Section}"
+                <CheckBox Content="Ideal shaper stimulus" IsChecked="{Binding Ideal}" IsEnabled="{Binding Shared.CanUseLegacy}" Margin="{StaticResource Gap.Section}"
                           AutomationProperties.AutomationId="Waveform.Ideal" />
                 <DockPanel Style="{StaticResource PanelHeader}"><TextBlock Text="Acquired chain" Style="{StaticResource Text.PanelTitle}" /></DockPanel>
                 <TextBlock Text="{Binding View.ChainReadout}" TextWrapping="Wrap" Style="{StaticResource Text.MonoCaption}" Margin="{StaticResource Gap.Section}"

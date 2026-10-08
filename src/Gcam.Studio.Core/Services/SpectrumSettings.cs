@@ -3,6 +3,9 @@ namespace Gcam.Studio.Core.Services;
 /// <summary>View settings; changing them does not acquire photons.</summary>
 public sealed record SpectrumSettings(double WindowFwhm = 1.5, bool PileUp = false)
 {
+    public ReadoutSnapshot? Readout { get; init; }
+    public double WindowLowKeV { get; init; } = 600;
+    public double WindowHighKeV { get; init; } = 720;
     public DetectorSettings? Detector { get; init; }
     public int PixelsX { get; init; }
     public int PixelsY { get; init; }

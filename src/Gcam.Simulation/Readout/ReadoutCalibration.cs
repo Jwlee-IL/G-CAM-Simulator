@@ -44,7 +44,7 @@ public sealed class ReadoutCalibration
     /// <param name="response">Stream of the light / sensor fluctuations.</param>
     /// <param name="noise">Stream of the electronic noise.</param>
     public static ReadoutCalibration Build(ReadoutDevice device, ReadoutPulseProcessor processor,
-        IReadOnlyList<InteractionSite[]> flood, FloodCalibrationConfig config, IRandom response, IRandom noise)
+        IReadOnlyList<InteractionSite[]> flood, FloodCalibrationConfig config, IRandom response, IRandom noise, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(response);
         ArgumentNullException.ThrowIfNull(noise);
@@ -58,6 +58,7 @@ public sealed class ReadoutCalibration
         var events = new List<(double X, double Y, double Sum)>(flood.Count);
         foreach (var sites in flood)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             double sum = device.Respond(sites, response, channels);
             var ev = processor.ProcessIsolated(new ReadoutHit(0, channels, sum), noise);
             if (ev is null) continue;
@@ -69,8 +70,10 @@ public sealed class ReadoutCalibration
         for (int it = 0; it < 3 && peak > 0; it++)
             peak = MeanWithin(events.Select(v => v.Sum), peak, w) ?? peak;
         var windowed = events.Where(v => Math.Abs(v.Sum - peak) <= w * peak).ToList();
+        cancellationToken.ThrowIfCancellationRequested();
         var lut = FloodLut.Calibrate(windowed.Select(v => (v.X, v.Y)).ToList(), device.Crystals.CountX,
             device.Crystals.CountY, config);
+        cancellationToken.ThrowIfCancellationRequested();
         var gains = Enumerable.Repeat(peak > 0 ? e / peak : double.NaN, device.Crystals.Count).ToArray();
         int fallback = device.Crystals.Count;
         if (lut.Succeeded && peak > 0)

@@ -58,13 +58,13 @@ public sealed class ReadoutDevice
     /// <summary>Channels below this many noise σ are zeroed before position / energy (0 = off).</summary>
     public double ZeroSuppressionCodes { get; }
 
-    public ReadoutDevice(DetectorConfig detector, ReadoutConfig readout, int opticsSeed)
-        : this(CrystalArrayGeometry.From(detector), readout, opticsSeed)
+    public ReadoutDevice(DetectorConfig detector, ReadoutConfig readout, int opticsSeed, CancellationToken cancellationToken = default)
+        : this(CrystalArrayGeometry.From(detector), readout, opticsSeed, cancellationToken)
     {
     }
 
-    public ReadoutDevice(CrystalArrayGeometry crystals, ReadoutConfig readout, int opticsSeed)
-        : this(BuildOptics(crystals, readout, opticsSeed), readout)
+    public ReadoutDevice(CrystalArrayGeometry crystals, ReadoutConfig readout, int opticsSeed, CancellationToken cancellationToken = default)
+        : this(BuildOptics(crystals, readout, opticsSeed, cancellationToken), readout)
     {
     }
 
@@ -125,13 +125,13 @@ public sealed class ReadoutDevice
     }
 
     /// <summary>Trace the optical table of a geometry for <paramref name="readout"/>'s sensors and optics.</summary>
-    public static OpticalResponse BuildOptics(CrystalArrayGeometry crystals, ReadoutConfig readout, int opticsSeed)
+    public static OpticalResponse BuildOptics(CrystalArrayGeometry crystals, ReadoutConfig readout, int opticsSeed, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(crystals);
         ArgumentNullException.ThrowIfNull(readout);
         if (readout.Mode == ReadoutMode.DirectCrystal)
             throw new ArgumentException("DirectCrystal has no physical readout chain; use the direct event path.");
-        return new OpticalResponse(crystals, SensorLayout.From(readout.Sensors, crystals), readout.Optics, opticsSeed);
+        return new OpticalResponse(crystals, SensorLayout.From(readout.Sensors, crystals), readout.Optics, opticsSeed, cancellationToken);
     }
 
     /// <summary>Expected signal photoelectrons per sensor (μ_k, no intrinsic factor, no dark counts).</summary>

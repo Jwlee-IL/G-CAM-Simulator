@@ -109,6 +109,105 @@ public sealed class ReadoutPulseProcessor
 
     private enum State { Armed, Busy, WaitRearm }
 
+    /// <summary>Single-consumer observed-horizon processor. Batch processing remains the study oracle.</summary>
+    public Stream CreateStream(IRandom noise) => new(this, noise);
+
+    /// <summary>Holds remain pending until the complete search window has been observed. No terminal flush is implied.</summary>
+    public sealed class Stream
+    {
+        private readonly ReadoutPulseProcessor _processor;
+        private readonly IRandom _noise;
+        private readonly List<ReadoutHit> _hits = [];
+        private readonly List<int> _active = [];
+        private readonly double[] _channels;
+        private int _next, _firstHitIndex;
+        private double _origin, _busyUntil = double.NegativeInfinity;
+        private long _step;
+        private State _state;
+        private bool _holding;
+        public double ObservedHorizonNs { get; private set; }
+        public bool HasPendingHold => _holding;
+        public int RetainedHitCount => _hits.Count;
+
+        internal Stream(ReadoutPulseProcessor processor, IRandom noise)
+        {
+            ArgumentNullException.ThrowIfNull(noise);
+            _processor = processor; _noise = noise; _channels = new double[processor._channels];
+        }
+
+        /// <summary>Own the realised charge, independently of the producer's reusable response buffer.</summary>
+        public void Append(ReadoutHit hit)
+        {
+            ArgumentNullException.ThrowIfNull(hit);
+            if (!double.IsFinite(hit.TimeNs) || hit.TimeNs < ObservedHorizonNs ||
+                _hits.Count > 0 && hit.TimeNs < _hits[^1].TimeNs || hit.Channels.Length != _channels.Length ||
+                !double.IsFinite(hit.Sum) || hit.Channels.Any(c => !double.IsFinite(c)))
+                throw new ArgumentException("A realised hit needs finite ordered time and matching channels.");
+            _hits.Add(hit with { Channels = (double[])hit.Channels.Clone() });
+        }
+
+        /// <summary>Advance only to an observed horizon. Cancellation preserves state and noise progression.</summary>
+        public IReadOnlyList<ObservedReadoutEvent> AdvanceTo(double horizonNs, CancellationToken token = default)
+        {
+            if (!double.IsFinite(horizonNs) || horizonNs < ObservedHorizonNs)
+                throw new ArgumentOutOfRangeException(nameof(horizonNs));
+            var output = new List<ObservedReadoutEvent>();
+            var p = _processor;
+            while (true)
+            {
+                // Never discard conversions after consuming their noise draws.
+                if (output.Count > 0 && token.IsCancellationRequested) break;
+                token.ThrowIfCancellationRequested();
+                double t = _origin + _step * p.StepNs;
+                if (_holding)
+                {
+                    long end = _step + (long)Math.Floor(p.HoldWindowNs / p.StepNs + 1e-9);
+                    if (_origin + end * p.StepNs > horizonNs) break;
+                    double trigger = t;
+                    var events = new List<ReadoutEvent>(1);
+                    double[] analog = [];
+                    _step = p.Hold(_hits, _active, ref _next, _origin, _step, _noise, events,
+                        (_, held) => analog = (double[])held.Clone());
+                    var ev = events[0];
+                    output.Add(new ObservedReadoutEvent(ev.HoldTimeNs, trigger,
+                        Array.AsReadOnly(ev.Codes), Array.AsReadOnly(analog), ev.DominantHit < 0 ? -1 : ev.DominantHit + _firstHitIndex,
+                        ev.ContributingHits, ev.DominantShare));
+                    _busyUntil = _origin + _step * p.StepNs + p.DeadTimeNs;
+                    _state = State.Busy; _holding = false; _step++;
+                    continue;
+                }
+                if (t > horizonNs) break;
+                _active.RemoveAll(h => p.Since(_hits[h], _origin, _step) > p.SupportNs);
+                if (_active.Count == 0)
+                {
+                    if (_next >= _hits.Count || _hits[_next].TimeNs > horizonNs) break;
+                    if (_hits[_next].TimeNs > t) { _origin = _hits[_next].TimeNs; _step = 0; t = _origin; }
+                }
+                while (_next < _hits.Count && _hits[_next].TimeNs <= t) _active.Add(_next++);
+                if (_state == State.Busy && t >= _busyUntil) _state = State.WaitRearm;
+                if (_state != State.Busy)
+                {
+                    bool condition = p.Condition(_hits, _active, _origin, _step, _channels);
+                    if (_state == State.WaitRearm) { if (!condition) _state = State.Armed; }
+                    else if (condition) { _holding = true; continue; }
+                }
+                _step++;
+            }
+            // Keep only pulse support and queued hits; published associations remain global input IDs.
+            // Use the actual processed grid time, not the observation watermark (a cancellation may stop early).
+            int expired = 0;
+            while (expired < _next && p.Since(_hits[expired], _origin, _step) > p.SupportNs) expired++;
+            if (expired > 0)
+            {
+                _active.RemoveAll(h => h < expired);
+                for (int i = 0; i < _active.Count; i++) _active[i] -= expired;
+                _hits.RemoveRange(0, expired); _next -= expired; _firstHitIndex += expired;
+            }
+            ObservedHorizonNs = horizonNs;
+            return output.AsReadOnly();
+        }
+    }
+
     /// <summary>Process a time-ordered hit stream; returns the recorded events (DominantHit indexes the input list).</summary>
     public List<ReadoutEvent> Process(IReadOnlyList<ReadoutHit> hits, IRandom noise)
     {
@@ -185,7 +284,7 @@ public sealed class ReadoutPulseProcessor
 
     // Search the hold window from the trigger step; returns the window's last grid step.
     private long Hold(IReadOnlyList<ReadoutHit> hits, List<int> active, ref int next, double origin, long triggerStep,
-        IRandom noise, List<ReadoutEvent> events)
+        IRandom noise, List<ReadoutEvent> events, Action<double, double[]>? observeHold = null)
     {
         long steps = (long)Math.Floor(HoldWindowNs / StepNs + 1e-9);
         double best = double.NegativeInfinity;
@@ -219,6 +318,7 @@ public sealed class ReadoutPulseProcessor
         foreach (int h in active)
             if (hits[h].Sum * Unit(Since(hits[h], origin, starStep)) >= _contribution * total) contributing++;
         var codes = new double[_channels];
+        observeHold?.Invoke(tStar, held);
         for (int c = 0; c < _channels; c++) codes[c] = _device.Digitize(held[c], noise);
         events.Add(new ReadoutEvent(tStar, codes, dominant, contributing, total > 0 ? top / total : 0));
         return triggerStep + steps;

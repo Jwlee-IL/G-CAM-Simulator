@@ -1,9 +1,12 @@
 <UserControl x:Class="Gcam.Studio.Views.DetectorView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:c="clr-namespace:Gcam.Studio.Controls">
+             xmlns:c="clr-namespace:Gcam.Studio.Controls" xmlns:views="clr-namespace:Gcam.Studio.Views">
     <Border Style="{StaticResource Panel.Surface}">
+        <Grid>
+        <views:ReadoutDetectorView><views:ReadoutDetectorView.Style><Style TargetType="views:ReadoutDetectorView"><Setter Property="Visibility" Value="Collapsed" /><Style.Triggers><DataTrigger Binding="{Binding Shared.IsPhysicalReadout}" Value="True"><Setter Property="Visibility" Value="Visible" /></DataTrigger></Style.Triggers></Style></views:ReadoutDetectorView.Style></views:ReadoutDetectorView>
         <DockPanel>
+            <DockPanel.Style><Style TargetType="DockPanel"><Style.Triggers><DataTrigger Binding="{Binding Shared.IsPhysicalReadout}" Value="True"><Setter Property="Visibility" Value="Collapsed" /></DataTrigger></Style.Triggers></Style></DockPanel.Style>
             <StackPanel DockPanel.Dock="Top">
                 <DockPanel Style="{StaticResource PanelHeader}"><TextBlock Text="Detector face · gain pattern" Style="{StaticResource Text.PanelTitle}" /></DockPanel>
                 <TextBlock Text="{Binding Identity}" Style="{StaticResource Text.Caption}" Margin="{StaticResource Gap.Field}"
@@ -24,5 +27,6 @@
                 <TextBlock Text="{Binding Counts}" Style="{StaticResource Text.MonoCaption}" TextWrapping="Wrap" />
             </c:ImageStackPanel>
         </DockPanel>
+        </Grid>
     </Border>
 </UserControl>
