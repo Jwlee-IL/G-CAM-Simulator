@@ -1,0 +1,44 @@
+test_bootstrap_resamples_clusters_and_is_deterministic (test_background_shape.BackgroundShapeTests.test_bootstrap_resamples_clusters_and_is_deterministic) ... ok
+test_budget_revision_preserves_selected_physics_and_immutable_references (test_background_shape.BackgroundShapeTests.test_budget_revision_preserves_selected_physics_and_immutable_references) ... ok
+test_conditional_screen_budget_3200_has_exact_integer_cutoff (test_background_shape.BackgroundShapeTests.test_conditional_screen_budget_3200_has_exact_integer_cutoff) ... ok
+test_iteration_tie_selects_smaller_count_on_common_regimes (test_background_shape.BackgroundShapeTests.test_iteration_tie_selects_smaller_count_on_common_regimes) ... ok
+test_no_association_valid_regime_refuses_iteration_selection (test_background_shape.BackgroundShapeTests.test_no_association_valid_regime_refuses_iteration_selection) ... ok
+test_phase_seed_lists_are_pinned_and_disjoint (test_background_shape.BackgroundShapeTests.test_phase_seed_lists_are_pinned_and_disjoint) ... ok
+test_selection_acquisition_budget_is_derived_from_zero_failure_limit (test_background_shape.BackgroundShapeTests.test_selection_acquisition_budget_is_derived_from_zero_failure_limit) ... ok
+test_target_scaling_preserves_the_simultaneous_bootstrap (test_background_shape.BackgroundShapeTests.test_target_scaling_preserves_the_simultaneous_bootstrap) ... ok
+test_vector_bound_does_not_confuse_equal_norms_with_equal_vectors (test_background_shape.BackgroundShapeTests.test_vector_bound_does_not_confuse_equal_norms_with_equal_vectors) ... ok
+test_version_two_families_separate_timing_seeds_from_validation (test_background_shape.BackgroundShapeTests.test_version_two_families_separate_timing_seeds_from_validation) ... ok
+test_calibration_legacy_and_roles (test_provenance.ProvenanceTests.test_calibration_legacy_and_roles) ... ok
+test_canonical_order (test_provenance.ProvenanceTests.test_canonical_order) ... ok
+test_conflicting_duplicates (test_provenance.ProvenanceTests.test_conflicting_duplicates) ... ok
+test_dirty_diff_on_temporary_repository (test_provenance.ProvenanceTests.test_dirty_diff_on_temporary_repository) ... skipped 'isolated Git mutations require explicit local approval; enabled in CI'
+test_dirty_is_accepted (test_provenance.ProvenanceTests.test_dirty_is_accepted) ... ok
+test_envelope_and_sidecar_must_agree (test_provenance.ProvenanceTests.test_envelope_and_sidecar_must_agree) ... ok
+test_failed_git_query_is_not_clean (test_provenance.ProvenanceTests.test_failed_git_query_is_not_clean) ... ok
+test_identical_duplicates (test_provenance.ProvenanceTests.test_identical_duplicates) ... ok
+test_malformed_source_binding (test_provenance.ProvenanceTests.test_malformed_source_binding) ... ok
+test_missing_root (test_provenance.ProvenanceTests.test_missing_root) ... ok
+test_missing_seed_provenance (test_provenance.ProvenanceTests.test_missing_seed_provenance) ... ok
+test_mixed_execution (test_provenance.ProvenanceTests.test_mixed_execution) ... ok
+test_output_tampering (test_provenance.ProvenanceTests.test_output_tampering) ... ok
+test_preflight_writes_nothing_on_mixed_inputs (test_provenance.ProvenanceTests.test_preflight_writes_nothing_on_mixed_inputs) ... ok
+test_real_ambient_aggregator_and_refusal_before_write (test_provenance.ProvenanceTests.test_real_ambient_aggregator_and_refusal_before_write) ... ok
+test_recipe_conflict (test_provenance.ProvenanceTests.test_recipe_conflict) ... ok
+test_reuse_changed_executor (test_provenance.ProvenanceTests.test_reuse_changed_executor) ... ok
+test_reuse_preserves_original_source (test_provenance.ProvenanceTests.test_reuse_preserves_original_source) ... ok
+test_seed_binding (test_provenance.ProvenanceTests.test_seed_binding) ... ok
+test_seed_offset (test_provenance.ProvenanceTests.test_seed_offset) ... ok
+test_shared_calibration_file_keeps_role_families_separate (test_provenance.ProvenanceTests.test_shared_calibration_file_keeps_role_families_separate) ... ok
+test_sidecar_binding_across_output_directories (test_provenance.ProvenanceTests.test_sidecar_binding_across_output_directories) ... ok
+test_sidecar_binds_every_member (test_provenance.ProvenanceTests.test_sidecar_binds_every_member) ... ok
+test_source_hash_uses_untracked_contents (test_provenance.ProvenanceTests.test_source_hash_uses_untracked_contents) ... ok
+test_staged_managed_bytes_survive_original_rebuild (test_provenance.ProvenanceTests.test_staged_managed_bytes_survive_original_rebuild) ... ok
+test_staged_python_import_and_rtl_survive_original_edits (test_provenance.ProvenanceTests.test_staged_python_import_and_rtl_survive_original_edits) ... ok
+test_typed_executors (test_provenance.ProvenanceTests.test_typed_executors) ... ok
+test_unbound_numerical_file_is_refused (test_provenance.ProvenanceTests.test_unbound_numerical_file_is_refused) ... ok
+test_unsupported_schema (test_provenance.ProvenanceTests.test_unsupported_schema) ... ok
+
+----------------------------------------------------------------------
+Ran 39 tests in 0.493s
+
+OK (skipped=1)

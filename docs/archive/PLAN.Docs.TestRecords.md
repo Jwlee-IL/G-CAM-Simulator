@@ -1,12 +1,12 @@
 # PLAN.Docs.TestRecords — test documentation and a generated test-result report
 
 Scope: TODO-28 steps 2 and 3 (step 1, the calibration records, is done:
-[PLAN.Docs.CalibrationRecords](archive/PLAN.Docs.CalibrationRecords.md)). Document what each test suite verifies, how,
+[PLAN.Docs.CalibrationRecords](PLAN.Docs.CalibrationRecords.md)). Document what each test suite verifies, how,
 with which oracle and tolerance; and produce the **test-result report** from the test runs themselves — reproduced by
 a command or CI, never written by hand. The model is the author's existing procedure from another project; only its
 process is adopted (structure, generation steps, what the report contains), none of its content.
 
-Status: **implemented, M1 pending**, 2026-10-08 — review and implementation by Codex (session `01a1185d-c2a7-7cd1-be53-922321df54e0`; [review](PLAN.Docs.TestRecords.Review.md), turns [2](PLAN.Docs.TestRecords.Turn2.md), [3](PLAN.Docs.TestRecords.Turn3.md), [4](PLAN.Docs.TestRecords.Turn4.md), [5](PLAN.Docs.TestRecords.Turn5.md)); planner checks: build 0 / 0, full tests 815 passed / 28 skipped, Python suites pass, self-test 26 refusals, catalog 153 / 153; turn 4 reworked an unreadable first catalog (2.7 MB of copied source → 281 KB) and compressed the milestone (6.8 → 0.96 MB); next: commit, then milestone M1 collected by the planner on the clean tree (TD-10).
+Status: **done** 2026-10-08 — review and implementation by Codex (session `01a1185d-c2a7-7cd1-be53-922321df54e0`; [review](PLAN.Docs.TestRecords.Review.md), turns [2](PLAN.Docs.TestRecords.Turn2.md), [3](PLAN.Docs.TestRecords.Turn3.md), [4](PLAN.Docs.TestRecords.Turn4.md), [5](PLAN.Docs.TestRecords.Turn5.md)); implementation `0a490b3` + `9778a5c`; planner checks: build 0 / 0, full tests 815 passed / 28 skipped, Python suites pass, self-test 26 refusals, catalog 153 / 153; turn 4 reworked an unreadable first catalog (2.7 MB of copied source → 281 KB) and compressed the milestone (6.8 → 0.96 MB). Milestone **M1** collected by the planner on the clean tree `9778a5c`: formal, 968 passed / 55 not executed / 0 failed / 0 missing (xUnit 815 / 28, unittest 38 / 1, cocotb 111 / 26 via Python 3.13, checkers 4 / 0); 104 committed files scanned for local identifiers: none.
 
 ## The model process (what is adopted)
 

@@ -1,0 +1,6 @@
+<testsuites name="&lt;run-name>">
+  <testsuite name="all" package="all">
+    <property name="random_seed" value="20261002"></property>
+    <testcase classname="test_blr" file="&lt;repo>\rtl\test_blr.py" lineno="48" name="blr_matches_reference_and_removes_walk" ratio_time="196923.335591719" sim_time_ns="1998001.0" time="10.146085500717163"></testcase>
+  </testsuite>
+</testsuites>

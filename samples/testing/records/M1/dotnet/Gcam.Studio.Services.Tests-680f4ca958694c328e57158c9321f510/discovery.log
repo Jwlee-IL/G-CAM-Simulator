@@ -1,0 +1,121 @@
+Test run for <repo>\tests\Gcam.Studio.Services.Tests\bin\Release\net9.0\Gcam.Studio.Services.Tests.dll (.NETCoreApp,Version=v9.0)
+VSTest version 17.14.1 (x64)
+
+The following Tests are available:
+    Gcam.Studio.Services.Tests.AcquisitionContinuationTests.StopAndContinue_ReproducesTheUninterruptedEventStream(sceneName: "mixed", bsr: 0)
+    Gcam.Studio.Services.Tests.AcquisitionContinuationTests.StopAndContinue_ReproducesTheUninterruptedEventStream(sceneName: "mixed", bsr: 0.5)
+    Gcam.Studio.Services.Tests.AcquisitionContinuationTests.StopAndContinue_ReproducesTheUninterruptedEventStream(sceneName: "co60-near", bsr: 0)
+    Gcam.Studio.Services.Tests.AcquisitionContinuationTests.Completed_RaisedPreset_ContinuesExactly
+    Gcam.Studio.Services.Tests.AcquisitionContinuationTests.Continue_IsRejectedWhileRunning
+    Gcam.Studio.Services.Tests.AcquisitionContinuationTests.Seed_FixedReproduces_OtherSeedIsAnIndependentAcquisition
+    Gcam.Studio.Services.Tests.AcquisitionServiceTests.CsISelection_IsCapturedByTheRealAcquisition
+    Gcam.Studio.Services.Tests.AcquisitionServiceTests.ShortAcquisition_LocalizesAfterCountThreshold_SnapshotsAreImmutable
+    Gcam.Studio.Services.Tests.AcquisitionServiceTests.FloodAxis_MatchesTheDecodersPixelCentres
+    Gcam.Studio.Services.Tests.AcquisitionServiceTests.Stop_KeepsConsumedPrefix_AtExtremeMcLimitedSpeed
+    Gcam.Studio.Services.Tests.AcquisitionServiceTests.InvalidInputs_FailBeforeStarting(liveTime: 0, speed: 10)
+    Gcam.Studio.Services.Tests.AcquisitionServiceTests.InvalidInputs_FailBeforeStarting(liveTime: 60, speed: 0)
+    Gcam.Studio.Services.Tests.AcquisitionServiceTests.InvalidInputs_FailBeforeStarting(liveTime: NaN, speed: 10)
+    Gcam.Studio.Services.Tests.AcquisitionServiceTests.InvalidInputs_FailBeforeStarting(liveTime: 60, speed: ∞)
+    Gcam.Studio.Services.Tests.AcquisitionServiceTests.InjectedClock_AdvancesLiveTimeAndPresetWithoutWallDelay
+    Gcam.Studio.Services.Tests.AmbientAcquisitionTests.BackgroundOnly_StopContinueRetainsExactlyTheFixedTimeStream(geometry: BareCrystalAllFaces)
+    Gcam.Studio.Services.Tests.AmbientAcquisitionTests.BackgroundOnly_StopContinueRetainsExactlyTheFixedTimeStream(geometry: FrontOnlyThroughMask)
+    Gcam.Studio.Services.Tests.AmbientAcquisitionTests.EmptyZeroField_CompletesAndBuildConfigFreezesInputs
+    Gcam.Studio.Services.Tests.AmbientAcquisitionTests.BackgroundOnly_WorkspacesShowCountsWithoutInventingIsotopeLines
+    Gcam.Studio.Services.Tests.AmbientPresetTests.Pin_EqualsRepositorySidecar_AndDeployedBytesAreTheRepositoryFile
+    Gcam.Studio.Services.Tests.AmbientPresetTests.BuildConfig_ResolvesTheValidatedSpectrum_OnTheFrozenCopyOnly
+    Gcam.Studio.Services.Tests.AmbientPresetTests.WrongPinOrMissingFile_IsRefusedAtStart
+    Gcam.Studio.Services.Tests.AmbientPresetTests.DefaultField_AcquiresWithTheValidatedSpectrum
+    Gcam.Studio.Services.Tests.DetectorGapEvidenceTests.RateRatio_MatchesGeometricArea_WithinMeasuredSeedSpread
+    Gcam.Studio.Services.Tests.DetectorRealismTests.StudioDefaults_AreExplicit_AndSceneBuilderRemainsBare
+    Gcam.Studio.Services.Tests.DetectorRealismTests.BaKAbsorber_UncollidedBandMatchesIndependentNarrowBeam_ReportsMeasuredSpectrum
+    Gcam.Studio.Services.Tests.DetectorRealismTests.Backing_AddsBackscatterRegion_FromTransport
+    Gcam.Studio.Services.Tests.DetectorRealismTests.Gain_WidensPhotopeakInQuadrature_AndReducesTightWindowAcceptance
+    Gcam.Studio.Services.Tests.DetectorRealismTests.Throughput_RecordsBareAndRealisticAcquisition
+    Gcam.Studio.Services.Tests.DetectorRealismTests.Measurement_UsesFrozenInputs_AndReplaysAcrossSnapshotsAndPileUp
+    Gcam.Studio.Services.Tests.FocusSweepServiceTests.Sweep_UsesRetainedFlood_WithoutEventsOrSceneTruth
+    Gcam.Studio.Services.Tests.FocusSweepServiceTests.Sweep_PreCancelledWorkerCannotPublish
+    Gcam.Studio.Services.Tests.FocusSweepServiceTests.Sweep_EmptyFloodIsUnresolved
+    Gcam.Studio.Services.Tests.FocusSweepServiceTests.Face_GainsMatchMeasurementPattern
+    Gcam.Studio.Services.Tests.FocusSweepServiceTests.Config_RejectsGapAtServiceBoundary(gap: -0.10000000000000001)
+    Gcam.Studio.Services.Tests.FocusSweepServiceTests.Config_RejectsGapAtServiceBoundary(gap: 0.59999999999999998)
+    Gcam.Studio.Services.Tests.FocusSweepServiceTests.Config_RejectsGapAtServiceBoundary(gap: NaN)
+    Gcam.Studio.Services.Tests.ImagingServiceTests.Strip_CoLocatedCsAndDoubleActivityCo_RecoversSameLiveTimeCsCount
+    Gcam.Studio.Services.Tests.ImagingServiceTests.Strip_UsesSignedCcInput_AndMatchesMlemCountAndUncertainty
+    Gcam.Studio.Services.Tests.ImagingServiceTests.Strip_OverlapCovariance_ReplaysWithWindowChangesAndIncrementalPrefixes
+    Gcam.Studio.Services.Tests.ImagingServiceTests.Strip_MultipleContaminants_ReportNetWithUnavailableUncertainty
+    Gcam.Studio.Services.Tests.ImagingServiceTests.Channels_OffAxisCsAndCo_LocalizeAtTheirOwnSource
+    Gcam.Studio.Services.Tests.ImagingServiceTests.WindowChange_ReplaysRetainedEvents_RecalibratesAndMatchesFreshProcessing
+    Gcam.Studio.Services.Tests.ImagingServiceTests.Precision_TwentySeeds_MeasuresMixedIsotopesAndCoOnlyControl
+    Gcam.Studio.Services.Tests.ImagingServiceTests.IncrementalChannels_MatchWholePrefixAndSharedMeasuredEnergyWindows
+    Gcam.Studio.Services.Tests.ImagingServiceTests.Mlem_ChannelsLocalizeAtTheirOwnSource_NonNegative
+    Gcam.Studio.Services.Tests.ImagingServiceTests.Mlem_BuildsOneMatrixPerGeometryAndLine_AndReusesItAcrossRefreshes
+    Gcam.Studio.Services.Tests.ImagingServiceTests.CrossCorrelation_IsUnchangedByTheMethodField
+    Gcam.Studio.Services.Tests.MeasurementRandomnessTests.Smears_AreUncorrelated_AndWindowCountsAreBinomial
+    Gcam.Studio.Services.Tests.OpticsProjectionTests.Refocus_ReprojectsAllChannels_WithoutMeasurementCalibrationOrNewEvents(strip: False)
+    Gcam.Studio.Services.Tests.OpticsProjectionTests.Refocus_ReprojectsAllChannels_WithoutMeasurementCalibrationOrNewEvents(strip: True)
+    Gcam.Studio.Services.Tests.OpticsProjectionTests.EmptySnapshot_RefocusKeepsEmptyImagesAndDoesNotCalibrate
+    Gcam.Studio.Services.Tests.OpticsProjectionTests.Presets_NormalizedMixedScene_LocalizeWindowedChannelsWithinOneElement(name: "Sharp", focal: 160)
+    Gcam.Studio.Services.Tests.OpticsProjectionTests.Presets_NormalizedMixedScene_LocalizeWindowedChannelsWithinOneElement(name: "Sharp", focal: 1000)
+    Gcam.Studio.Services.Tests.OpticsProjectionTests.Presets_NormalizedMixedScene_LocalizeWindowedChannelsWithinOneElement(name: "Baseline", focal: 160)
+    Gcam.Studio.Services.Tests.OpticsProjectionTests.Presets_NormalizedMixedScene_LocalizeWindowedChannelsWithinOneElement(name: "Baseline", focal: 1000)
+    Gcam.Studio.Services.Tests.OpticsProjectionTests.Presets_NormalizedMixedScene_LocalizeWindowedChannelsWithinOneElement(name: "Wide FOV", focal: 160)
+    Gcam.Studio.Services.Tests.OpticsProjectionTests.Presets_NormalizedMixedScene_LocalizeWindowedChannelsWithinOneElement(name: "Wide FOV", focal: 1000)
+    Gcam.Studio.Services.Tests.OpticsProjectionTests.Presets_NormalizedMixedScene_LocalizeWindowedChannelsWithinOneElement(name: "High-res", focal: 160)
+    Gcam.Studio.Services.Tests.OpticsProjectionTests.Presets_NormalizedMixedScene_LocalizeWindowedChannelsWithinOneElement(name: "High-res", focal: 1000)
+    Gcam.Studio.Services.Tests.OpticsProjectionTests.Sampling_PositionSweepAtConstantDetectorSize_FinerPixelsReduceLocalizationError
+    Gcam.Studio.Services.Tests.OpticsProjectionTests.Sampling_SmallOffAxisSample_FinerPixelsReduceLocalizationError
+    Gcam.Studio.Services.Tests.OpticsProjectionTests.Sampling_SmallBudgetSeedSpread_ReportsRegressionMargin
+    Gcam.Studio.Services.Tests.SpectrumServiceTests.CsAcquisition_PhotopeakBinAndFwhmMatchChain
+    Gcam.Studio.Services.Tests.SpectrumServiceTests.HighRate_PileUpLosesPulsesAndMovesCountsAbovePhotopeak
+    Gcam.Studio.Services.Tests.SpectrumServiceTests.MixedCsCo_HasFourBandsAndUnionCountsEachBinOnce
+    Gcam.Studio.Services.Tests.SpectrumServiceTests.Merge_UsesResolutionRatherThanWindowOverlap(first: 32.100000000000001, second: 36.399999999999999, bands: 1)
+    Gcam.Studio.Services.Tests.SpectrumServiceTests.Merge_UsesResolutionRatherThanWindowOverlap(first: 1173.2, second: 1332.5, bands: 2)
+    Gcam.Studio.Services.Tests.SpectrumServiceTests.Merge_SingleLineGivesOneBand
+    Gcam.Studio.Services.Tests.SpectrumServiceTests.SeedAndSnapshotPartition_AreDeterministic_ToggleReplaysExactly(pileUp: False)
+    Gcam.Studio.Services.Tests.SpectrumServiceTests.SeedAndSnapshotPartition_AreDeterministic_ToggleReplaysExactly(pileUp: True)
+    Gcam.Studio.Services.Tests.SpectrumServiceTests.Processing_MeasuresFullAndIncrementalWorkAt100000Events
+    Gcam.Studio.Services.Tests.SpectrumServiceTests.Axis_IsFixedAt2000keV_ForAnyLinesFieldOrPileUp_AndOverflowKeepsEveryPulse
+    Gcam.Studio.Services.Tests.StripCountEstimatorTests.Overlap_IdenticalWindows_HaveExactlyZeroNetAndVariance
+    Gcam.Studio.Services.Tests.StripCountEstimatorTests.ZeroCalibrationLow_OrMissingCovariance_ReportsUnavailableUncertainty
+    Gcam.Studio.Services.Tests.StripCountEstimatorTests.NetSign_IsIndependentOfAcquisitionSupport(low: 0, high: 0, net: 0, hasData: False)
+    Gcam.Studio.Services.Tests.StripCountEstimatorTests.NetSign_IsIndependentOfAcquisitionSupport(low: 5, high: 10, net: 0, hasData: True)
+    Gcam.Studio.Services.Tests.StripCountEstimatorTests.NetSign_IsIndependentOfAcquisitionSupport(low: 3, high: 10, net: -2, hasData: True)
+    Gcam.Studio.Services.Tests.StripCountEstimatorTests.IndependentFixedTotalCalibration_ReportedVarianceMatchesDerivedSamplingBounds
+    Gcam.Studio.Services.Tests.StripProjectionTests.SignedZeroOrNegativeNet_DecodesWithRawSupport(net: -5)
+    Gcam.Studio.Services.Tests.StripProjectionTests.SignedZeroOrNegativeNet_DecodesWithRawSupport(net: 0)
+    Gcam.Studio.Services.Tests.StripProjectionTests.EmptyRawWindows_DoNotCreateAReconstruction
+    Gcam.Studio.Services.Tests.StripProjectionTests.Mlem_HighOnlyRawSupport_KeepsNegativeNetWithoutADetectionGate
+    Gcam.Studio.Services.Tests.WaveformServiceTests.Crrc_PlotsFractionalCodesAndLabelsSimulationTime(preamp: 0)
+    Gcam.Studio.Services.Tests.WaveformServiceTests.Crrc_PlotsFractionalCodesAndLabelsSimulationTime(preamp: 1)
+    Gcam.Studio.Services.Tests.WaveformServiceTests.Crrc_PlotsFractionalCodesAndLabelsSimulationTime(preamp: 2)
+    Gcam.Studio.Services.Tests.WaveformServiceTests.Chain_SetsTransportMaterialWithoutChangingEngineDefaults(scintillator: "GAGG(Ce)", material: "GAGG")
+    Gcam.Studio.Services.Tests.WaveformServiceTests.Chain_SetsTransportMaterialWithoutChangingEngineDefaults(scintillator: "NaI(Tl)", material: "NaI")
+    Gcam.Studio.Services.Tests.WaveformServiceTests.Chain_SetsTransportMaterialWithoutChangingEngineDefaults(scintillator: "LYSO", material: "LYSO")
+    Gcam.Studio.Services.Tests.WaveformServiceTests.Chain_SetsTransportMaterialWithoutChangingEngineDefaults(scintillator: "CsI(Tl)", material: "CsI")
+    Gcam.Studio.Services.Tests.WaveformServiceTests.Chain_SetsTransportMaterialWithoutChangingEngineDefaults(scintillator: "BGO", material: "BGO")
+    Gcam.Studio.Services.Tests.WaveformServiceTests.Chain_RejectsUnsupportedMaterial
+    Gcam.Studio.Services.Tests.WaveformServiceTests.Response_AgreesAcrossWaveformSpectrumAndImaging(preamp: 0, scintillator: "GAGG(Ce)")
+    Gcam.Studio.Services.Tests.WaveformServiceTests.Response_AgreesAcrossWaveformSpectrumAndImaging(preamp: 1, scintillator: "GAGG(Ce)")
+    Gcam.Studio.Services.Tests.WaveformServiceTests.Response_AgreesAcrossWaveformSpectrumAndImaging(preamp: 2, scintillator: "GAGG(Ce)")
+    Gcam.Studio.Services.Tests.WaveformServiceTests.Response_AgreesAcrossWaveformSpectrumAndImaging(preamp: 3, scintillator: "GAGG(Ce)")
+    Gcam.Studio.Services.Tests.WaveformServiceTests.Response_AgreesAcrossWaveformSpectrumAndImaging(preamp: 0, scintillator: "CsI(Tl)")
+    Gcam.Studio.Services.Tests.WaveformServiceTests.Response_AgreesAcrossWaveformSpectrumAndImaging(preamp: 1, scintillator: "CsI(Tl)")
+    Gcam.Studio.Services.Tests.WaveformServiceTests.Response_AgreesAcrossWaveformSpectrumAndImaging(preamp: 2, scintillator: "CsI(Tl)")
+    Gcam.Studio.Services.Tests.WaveformServiceTests.Response_AgreesAcrossWaveformSpectrumAndImaging(preamp: 3, scintillator: "CsI(Tl)")
+    Gcam.Studio.Services.Tests.WaveformServiceTests.Rasterizer_MatchesLegacyWithoutSecondIntrinsicSmear(preamp: 0)
+    Gcam.Studio.Services.Tests.WaveformServiceTests.Rasterizer_MatchesLegacyWithoutSecondIntrinsicSmear(preamp: 1)
+    Gcam.Studio.Services.Tests.WaveformServiceTests.Rasterizer_MatchesLegacyWithoutSecondIntrinsicSmear(preamp: 2)
+    Gcam.Studio.Services.Tests.WaveformServiceTests.Rasterizer_MatchesLegacyWithoutSecondIntrinsicSmear(preamp: 3)
+    Gcam.Studio.Services.Tests.WaveformServiceTests.Window_PreservesRequestedLengthAndPrecedingPulseAcrossPixels
+    Gcam.Studio.Services.Tests.WaveformServiceTests.Ideal_HasNoNoiseOrSmearAndKeepsTail
+    Gcam.Studio.Services.Tests.WaveformServiceTests.TimeBase_IsOriginRelativeAtLateAcquisitionTime
+    Gcam.Studio.Services.Tests.WaveformServiceTests.RateStudy_IsDeterministicAndLeavesAcquisitionUntouched
+    Gcam.Studio.Services.Tests.WaveformServiceTests.AcquiredChain_IsUsedAfterPendingSelectionChanges
+    Gcam.Studio.Services.Tests.WaveformServiceTests.Readout_SuppressesPartialOverlapAndSaturation
+    Gcam.Studio.Services.Tests.WaveformServiceTests.InvalidRequestsAndCancellation_FailWithoutPublishing
+    Gcam.Studio.Services.Tests.WaveformServiceTests.RetainedMonteCarloEvents_PreserveAssociationAndTime
+    Gcam.Studio.Services.Tests.WaveformServiceTests.MaximumWindow_ReportsWorkerCostAndBoundedPlotSamples
+    Gcam.Studio.Services.Tests.WaveformServiceTests.RetainedMonteCarlo_IsolatedPulseReadoutsAcrossParts
+    Gcam.Studio.Services.Tests.WaveformServiceTests.MixedFieldCalibration_UsesAcquiredChainAndInvalidatesRatios
+
+Workload updates are available. Run `dotnet workload list` for more information.

@@ -94,7 +94,7 @@ Build: zero errors, zero warnings; the two existing xUnit analyzer warnings (`Im
 execution:
 
 <!-- BEGIN GENERATED: TEST INVENTORY -->
-Subject `266b74072f30883b84c42bd949cd0ed61ecd767b`; draft; source snapshot `935eb57e12707cb0582e902718e5bd7e8fc2408052400770226c2dc53c1af7f7`.
+Subject `9778a5c857ef7e8fba47bb870834909ad29ec8e0`; formal; source snapshot `935eb57e12707cb0582e902718e5bd7e8fc2408052400770226c2dc53c1af7f7`.
 
 | Assembly / family | Passed | Failed | Not executed | Missing cases |
 | --- | --- | --- | --- | --- |

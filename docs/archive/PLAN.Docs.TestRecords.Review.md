@@ -10,7 +10,7 @@ The three-layer process is suitable, but several premises are wrong. TRX does no
 
 Review subject: HEAD `266b74072f30883b84c42bd949cd0ed61ecd767b`. At entry, `docs/AGENTS.Todo.md` and `docs/PLAN.Docs.TestRecords.md` were already modified; neither was edited by this turn. Measurements describe that working tree, not a clean committed release. No external project was investigated or used. No tolerance was selected, copied or changed.
 
-Read first: repository `AGENTS.md`, [planning procedure](AGENTS.Planning.md), [documentation conventions](AGENTS.Conventions.Docs.md), and [reference plan](PLAN.Docs.TestRecords.md). Also checked [Studio V&V](VV.Studio.md), [engine evidence](VV.Gcam.Evidence.md), [calibration generator](../samples/evidence/calibration_record.py), [CI](../.github/workflows/ci.yml), test sources/project files, RTL runners/benches, and Python suites.
+Read first: repository `AGENTS.md`, [planning procedure](../AGENTS.Planning.md), [documentation conventions](../AGENTS.Conventions.Docs.md), and [reference plan](PLAN.Docs.TestRecords.md). Also checked [Studio V&V](../VV.Studio.md), [engine evidence](../VV.Gcam.Evidence.md), [calibration generator](../../samples/evidence/calibration_record.py), [CI](../../.github/workflows/ci.yml), test sources/project files, RTL runners/benches, and Python suites.
 
 ## Corrections to every “What exists” row
 

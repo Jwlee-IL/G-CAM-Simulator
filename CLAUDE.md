@@ -76,8 +76,9 @@ copy it here, it goes stale. Only what the Todo does not hold:
 - Codex conversations, worktrees (`C:\gw\…`) and probe outputs (`%TEMP%\gcam-*`) are machine-local: start new
   implementer turns from the plan Status and the review / turn-report files. While Codex is unavailable, turns run as
   substitute Claude subagents (`docs/AGENTS.Planning.md`).
-- TODO-28 (test documentation + generated Test Result report): ask the author where the other project's procedure is;
-  adopt the process only, copy no content.
+- Test records (TODO-28, done 2026-10-08): catalog `docs/VV.Tests.md`, generated `docs/VV.Tests.Results.md`, milestones in
+  `samples/testing/records/<Mn>/`. A new milestone is collected by the planner on a clean tree (commands in the archived
+  plan's turn 4 report; cocotb needs `--python py -3.13` on the original machine).
 
 ## Working style
 Design-first discussion before coding; give options with a recommendation, then build one clean

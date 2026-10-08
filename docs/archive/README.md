@@ -11,6 +11,13 @@ set the plan's status to done and move the plan and its review / reports into th
 
 ## Closed tasks
 
+- **TODO-28 test records** (2026-10-08; step 1, the calibration records, 2026-10-07): test catalog
+  [VV.Tests](../VV.Tests.md) (153 units — xUnit classes, unittest classes, cocotb configurations, checkers — with purpose,
+  oracle, tolerance and its derivation; 70 margins stated without one, recorded), run records schema v1 and a generated
+  report [VV.Tests.Results](../VV.Tests.Results.md) from `samples/testing/test_records.py`; CI keeps records as artifacts
+  and checks catalog freshness, archived replay and a self-test. Milestone M1 at `9778a5c`: formal, 968 passed / 55 not
+  executed / 0 failed. Review and implementation by Codex — [PLAN.Docs.TestRecords](PLAN.Docs.TestRecords.md),
+  [PLAN.Docs.CalibrationRecords](PLAN.Docs.CalibrationRecords.md).
 - **TODO-33 background-shape decoding** (2026-10-07): opt-in `Decoder.BackgroundCorrection` — a pixel-area MLEM with a
   fitted non-negative background amplitude of calibrated shape (400 iterations, chosen on selection seeds), plus
   known-scale MLEM and signed known-scale cross-correlation; default paths unchanged. Stage 1 (open window, bare bound,

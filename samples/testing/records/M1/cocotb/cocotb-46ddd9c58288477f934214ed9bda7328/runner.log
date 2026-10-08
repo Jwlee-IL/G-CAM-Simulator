@@ -1,0 +1,834 @@
+<repo>\rtl\trapezoidal_shaper.sv:51: warning: A for statement must use the index (i) in the condition expression to be synthesized in an always_ff process.
+     -.--ns INFO     gpi                                ..mbed\gpi_embed.cpp:94   in _embed_init_python              Using Python 3.13.0rc1 interpreter at <path><identity>\AppData\Local\Programs\Python\Python313\python.exe
+     -.--ns INFO     gpi                                ..\gpi\GpiCommon.cpp:79   in gpi_print_registered_impl       VPI registered
+     0.00ns INFO     cocotb                             Running on Icarus Verilog version 12.0 (devel)
+     0.00ns INFO     cocotb                             Seeding Python random module with supplied seed 20261002
+     0.00ns INFO     cocotb                             Initialized cocotb v2.0.1 from <path><identity>\AppData\Local\Programs\Python\Python313\Lib\site-packages\cocotb
+     0.00ns INFO     cocotb.regression                  pytest not found, install it to enable better AssertionError messages
+     0.00ns INFO     cocotb                             Running tests
+     0.00ns INFO     cocotb.regression                  running test_trap_shaper.single_pulse_matches_reference (1/3)
+     0.00ns WARNING  py.warnings                        <repo>\rtl\test_trap_shaper.py:14: DeprecationWarning: The 'units' argument has been renamed to 'unit'.
+                                                          cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
+    40.00ns WARNING  py.warnings                        <repo>\rtl\test_trap_shaper.py:28: DeprecationWarning: The 'units' argument has been renamed to 'unit'.
+                                                          await Timer(1, units="ns")           # let the NBA update settle before reading
+  1231.00ns INFO     cocotb.regression                  test_trap_shaper.single_pulse_matches_reference passed
+  1231.00ns INFO     cocotb.regression                  running test_trap_shaper.piled_pulses_match_reference (2/3)
+  2872.00ns INFO     cocotb.regression                  test_trap_shaper.piled_pulses_match_reference passed
+  2872.00ns INFO     cocotb.regression                  running test_trap_shaper.mc_event_stream_matches_reference (3/3)
+                                                            Drive the RTL shaper from the C# Monte Carlo event stream (rtl/event_stream.txt): the real
+301863.00ns INFO     cocotb.regression                  test_trap_shaper.mc_event_stream_matches_reference passed
+301863.00ns INFO     cocotb.regression                  ************************************************************************************************************
+                                                        ** TEST                                                STATUS  SIM TIME (ns)  REAL TIME (s)  RATIO (ns/s) **
+                                                        ************************************************************************************************************
+                                                        ** test_trap_shaper.single_pulse_matches_reference      PASS        1231.00           0.01     155517.72  **
+                                                        ** test_trap_shaper.piled_pulses_match_reference        PASS        1641.00           0.01     173826.97  **
+                                                        ** test_trap_shaper.mc_event_stream_matches_reference   PASS      298991.00           1.84     162586.91  **
+                                                        ************************************************************************************************************
+                                                        ** TESTS=3 PASS=3 FAIL=0 SKIP=0                                   301863.00           1.86     162535.04  **
+                                                        ************************************************************************************************************
+trapezoidal_shaper: 3 passed, 0 failed, 0 skipped; <path><identity>\AppData\Local\Temp\gcam-todo28\M1\bundle\cocotb\cocotb-46ddd9c58288477f934214ed9bda7328\rtl\trapezoidal_shaper\results.xml
+<repo>\rtl\trapezoidal_shaper_pl.sv:42: warning: A for statement must use the index (i) in the condition expression to be synthesized in an always_ff process.
+     -.--ns INFO     gpi                                ..mbed\gpi_embed.cpp:94   in _embed_init_python              Using Python 3.13.0rc1 interpreter at <path><identity>\AppData\Local\Programs\Python\Python313\python.exe
+     -.--ns INFO     gpi                                ..\gpi\GpiCommon.cpp:79   in gpi_print_registered_impl       VPI registered
+     0.00ns INFO     cocotb                             Running on Icarus Verilog version 12.0 (devel)
+     0.00ns INFO     cocotb                             Seeding Python random module with supplied seed 20261002
+     0.00ns INFO     cocotb                             Initialized cocotb v2.0.1 from <path><identity>\AppData\Local\Programs\Python\Python313\Lib\site-packages\cocotb
+     0.00ns INFO     cocotb.regression                  pytest not found, install it to enable better AssertionError messages
+     0.00ns INFO     cocotb                             Running tests
+     0.00ns INFO     cocotb.regression                  running test_trap_shaper.single_pulse_matches_reference (1/3)
+     0.00ns WARNING  py.warnings                        <repo>\rtl\test_trap_shaper.py:14: DeprecationWarning: The 'units' argument has been renamed to 'unit'.
+                                                          cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
+    40.00ns WARNING  py.warnings                        <repo>\rtl\test_trap_shaper.py:28: DeprecationWarning: The 'units' argument has been renamed to 'unit'.
+                                                          await Timer(1, units="ns")           # let the NBA update settle before reading
+  1231.00ns INFO     cocotb.regression                  test_trap_shaper.single_pulse_matches_reference passed
+  1231.00ns INFO     cocotb.regression                  running test_trap_shaper.piled_pulses_match_reference (2/3)
+  2872.00ns INFO     cocotb.regression                  test_trap_shaper.piled_pulses_match_reference passed
+  2872.00ns INFO     cocotb.regression                  running test_trap_shaper.mc_event_stream_matches_reference (3/3)
+                                                            Drive the RTL shaper from the C# Monte Carlo event stream (rtl/event_stream.txt): the real
+301863.00ns INFO     cocotb.regression                  test_trap_shaper.mc_event_stream_matches_reference passed
+301863.00ns INFO     cocotb.regression                  ************************************************************************************************************
+                                                        ** TEST                                                STATUS  SIM TIME (ns)  REAL TIME (s)  RATIO (ns/s) **
+                                                        ************************************************************************************************************
+                                                        ** test_trap_shaper.single_pulse_matches_reference      PASS        1231.00           0.01     159053.30  **
+                                                        ** test_trap_shaper.piled_pulses_match_reference        PASS        1641.00           0.01     175717.46  **
+                                                        ** test_trap_shaper.mc_event_stream_matches_reference   PASS      298991.00           1.73     172958.07  **
+                                                        ************************************************************************************************************
+                                                        ** TESTS=3 PASS=3 FAIL=0 SKIP=0                                   301863.00           1.75     172804.45  **
+                                                        ************************************************************************************************************
+trapezoidal_shaper_pl: 3 passed, 0 failed, 0 skipped; <path><identity>\AppData\Local\Temp\gcam-todo28\M1\bundle\cocotb\cocotb-46ddd9c58288477f934214ed9bda7328\rtl\trapezoidal_shaper_pl\results.xml
+     -.--ns INFO     gpi                                ..mbed\gpi_embed.cpp:94   in _embed_init_python              Using Python 3.13.0rc1 interpreter at <path><identity>\AppData\Local\Programs\Python\Python313\python.exe
+     -.--ns INFO     gpi                                ..\gpi\GpiCommon.cpp:79   in gpi_print_registered_impl       VPI registered
+     0.00ns INFO     cocotb                             Running on Icarus Verilog version 12.0 (devel)
+     0.00ns INFO     cocotb                             Seeding Python random module with supplied seed 20261002
+     0.00ns INFO     cocotb                             Initialized cocotb v2.0.1 from <path><identity>\AppData\Local\Programs\Python\Python313\Lib\site-packages\cocotb
+     0.00ns INFO     cocotb.regression                  pytest not found, install it to enable better AssertionError messages
+     0.00ns INFO     cocotb                             Running tests
+     0.00ns INFO     cocotb.regression                  running test_blr.blr_matches_reference_and_removes_walk (1/1)
+     0.00ns WARNING  py.warnings                        <repo>\rtl\test_blr.py:19: DeprecationWarning: The 'units' argument has been renamed to 'unit'.
+                                                          cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
+    40.00ns WARNING  py.warnings                        <repo>\rtl\test_blr.py:33: DeprecationWarning: The 'units' argument has been renamed to 'unit'.
+                                                          await Timer(1, units="ns")           # let the NBA update settle before reading
+1998001.00ns INFO     cocotb.regression                  test_blr.blr_matches_reference_and_removes_walk passed
+1998001.00ns INFO     cocotb.regression                  *********************************************************************************************************
+                                                         ** TEST                                             STATUS  SIM TIME (ns)  REAL TIME (s)  RATIO (ns/s) **
+                                                         *********************************************************************************************************
+                                                         ** test_blr.blr_matches_reference_and_removes_walk   PASS     1998001.00          10.15     196923.34  **
+                                                         *********************************************************************************************************
+                                                         ** TESTS=1 PASS=1 FAIL=0 SKIP=0                               1998001.00          10.15     196914.00  **
+                                                         *********************************************************************************************************
+baseline_restorer: 1 passed, 0 failed, 0 skipped; <path><identity>\AppData\Local\Temp\gcam-todo28\M1\bundle\cocotb\cocotb-46ddd9c58288477f934214ed9bda7328\rtl\baseline_restorer\results.xml
+<repo>\rtl\crrc_shaper.sv:45: sorry: constant selects in always_* processes are not currently supported (all bits will be included).
+     -.--ns INFO     gpi                                ..mbed\gpi_embed.cpp:94   in _embed_init_python              Using Python 3.13.0rc1 interpreter at <path><identity>\AppData\Local\Programs\Python\Python313\python.exe
+     -.--ns INFO     gpi                                ..\gpi\GpiCommon.cpp:79   in gpi_print_registered_impl       VPI registered
+     0.00ns INFO     cocotb                             Running on Icarus Verilog version 12.0 (devel)
+     0.00ns INFO     cocotb                             Seeding Python random module with supplied seed 20261002
+     0.00ns INFO     cocotb                             Initialized cocotb v2.0.1 from <path><identity>\AppData\Local\Programs\Python\Python313\Lib\site-packages\cocotb
+     0.00ns INFO     cocotb.regression                  pytest not found, install it to enable better AssertionError messages
+     0.00ns INFO     cocotb                             Running tests
+     0.00ns INFO     cocotb.regression                  running test_crrc.finite_rise_energies_match_reference (1/5)
+ 40980.00ns INFO     cocotb.regression                  test_crrc.finite_rise_energies_match_reference passed
+ 40980.00ns INFO     cocotb.regression                  running test_crrc.near_threshold_sweep_matches_reference (2/5)
+376872.00ns INFO     cocotb.regression                  test_crrc.near_threshold_sweep_matches_reference passed
+376872.00ns INFO     cocotb.regression                  running test_crrc.signed_full_scale_noise_and_valid_gaps_match_reference (3/5)
+402644.00ns INFO     cocotb.regression                  test_crrc.signed_full_scale_noise_and_valid_gaps_match_reference passed
+402644.00ns INFO     cocotb.regression                  running test_crrc.legacy_golden_and_proportionality_are_preserved (4/5)
+419728.00ns INFO     cocotb.regression                  test_crrc.legacy_golden_and_proportionality_are_preserved passed
+419728.00ns INFO     cocotb.regression                  skipping test_crrc.csharp_vectors_match_python_and_rtl (5/5)
+419728.00ns INFO     cocotb.regression                  **************************************************************************************************************************
+                                                        ** TEST                                                              STATUS  SIM TIME (ns)  REAL TIME (s)  RATIO (ns/s) **
+                                                        **************************************************************************************************************************
+                                                        ** test_crrc.finite_rise_energies_match_reference                     PASS       40980.00           0.27     149255.84  **
+                                                        ** test_crrc.near_threshold_sweep_matches_reference                   PASS      335892.00           2.20     152950.12  **
+                                                        ** test_crrc.signed_full_scale_noise_and_valid_gaps_match_reference   PASS       25772.00           0.19     138906.98  **
+                                                        ** test_crrc.legacy_golden_and_proportionality_are_preserved          PASS       17084.00           0.11     161848.09  **
+                                                        ** test_crrc.csharp_vectors_match_python_and_rtl                      SKIP           0.00           0.00          -.--  **
+                                                        **************************************************************************************************************************
+                                                        ** TESTS=5 PASS=4 FAIL=0 SKIP=1                                                 419728.00           2.76     151880.55  **
+                                                        **************************************************************************************************************************
+legacy-f0: 4 passed, 0 failed, 1 skipped; <path><identity>\AppData\Local\Temp\gcam-todo28\M1\bundle\cocotb\cocotb-46ddd9c58288477f934214ed9bda7328\rtl\legacy-f0\results.xml
+<repo>\rtl\crrc_shaper.sv:45: sorry: constant selects in always_* processes are not currently supported (all bits will be included).
+     -.--ns INFO     gpi                                ..mbed\gpi_embed.cpp:94   in _embed_init_python              Using Python 3.13.0rc1 interpreter at <path><identity>\AppData\Local\Programs\Python\Python313\python.exe
+     -.--ns INFO     gpi                                ..\gpi\GpiCommon.cpp:79   in gpi_print_registered_impl       VPI registered
+     0.00ns INFO     cocotb                             Running on Icarus Verilog version 12.0 (devel)
+     0.00ns INFO     cocotb                             Seeding Python random module with supplied seed 20261002
+     0.00ns INFO     cocotb                             Initialized cocotb v2.0.1 from <path><identity>\AppData\Local\Programs\Python\Python313\Lib\site-packages\cocotb
+     0.00ns INFO     cocotb.regression                  pytest not found, install it to enable better AssertionError messages
+     0.00ns INFO     cocotb                             Running tests
+     0.00ns INFO     cocotb.regression                  running test_crrc.finite_rise_energies_match_reference (1/5)
+ 40980.00ns INFO     cocotb.regression                  test_crrc.finite_rise_energies_match_reference passed
+ 40980.00ns INFO     cocotb.regression                  running test_crrc.near_threshold_sweep_matches_reference (2/5)
+376872.00ns INFO     cocotb.regression                  test_crrc.near_threshold_sweep_matches_reference passed
+376872.00ns INFO     cocotb.regression                  running test_crrc.signed_full_scale_noise_and_valid_gaps_match_reference (3/5)
+402644.00ns INFO     cocotb.regression                  test_crrc.signed_full_scale_noise_and_valid_gaps_match_reference passed
+402644.00ns INFO     cocotb.regression                  running test_crrc.legacy_golden_and_proportionality_are_preserved (4/5)
+419068.00ns INFO     cocotb.regression                  test_crrc.legacy_golden_and_proportionality_are_preserved passed
+419068.00ns INFO     cocotb.regression                  skipping test_crrc.csharp_vectors_match_python_and_rtl (5/5)
+419068.00ns INFO     cocotb.regression                  **************************************************************************************************************************
+                                                        ** TEST                                                              STATUS  SIM TIME (ns)  REAL TIME (s)  RATIO (ns/s) **
+                                                        **************************************************************************************************************************
+                                                        ** test_crrc.finite_rise_energies_match_reference                     PASS       40980.00           0.26     157417.49  **
+                                                        ** test_crrc.near_threshold_sweep_matches_reference                   PASS      335892.00           2.15     156070.82  **
+                                                        ** test_crrc.signed_full_scale_noise_and_valid_gaps_match_reference   PASS       25772.00           0.18     142202.43  **
+                                                        ** test_crrc.legacy_golden_and_proportionality_are_preserved          PASS       16424.00           0.11     155893.01  **
+                                                        ** test_crrc.csharp_vectors_match_python_and_rtl                      SKIP           0.00           0.00          -.--  **
+                                                        **************************************************************************************************************************
+                                                        ** TESTS=5 PASS=4 FAIL=0 SKIP=1                                                 419068.00           2.70     155156.83  **
+                                                        **************************************************************************************************************************
+legacy-f12: 4 passed, 0 failed, 1 skipped; <path><identity>\AppData\Local\Temp\gcam-todo28\M1\bundle\cocotb\cocotb-46ddd9c58288477f934214ed9bda7328\rtl\legacy-f12\results.xml
+<repo>\rtl\crrc_shaper.sv:45: sorry: constant selects in always_* processes are not currently supported (all bits will be included).
+     -.--ns INFO     gpi                                ..mbed\gpi_embed.cpp:94   in _embed_init_python              Using Python 3.13.0rc1 interpreter at <path><identity>\AppData\Local\Programs\Python\Python313\python.exe
+     -.--ns INFO     gpi                                ..\gpi\GpiCommon.cpp:79   in gpi_print_registered_impl       VPI registered
+     0.00ns INFO     cocotb                             Running on Icarus Verilog version 12.0 (devel)
+     0.00ns INFO     cocotb                             Seeding Python random module with supplied seed 20261002
+     0.00ns INFO     cocotb                             Initialized cocotb v2.0.1 from <path><identity>\AppData\Local\Programs\Python\Python313\Lib\site-packages\cocotb
+     0.00ns INFO     cocotb.regression                  pytest not found, install it to enable better AssertionError messages
+     0.00ns INFO     cocotb                             Running tests
+     0.00ns INFO     cocotb.regression                  running test_crrc.finite_rise_energies_match_reference (1/5)
+ 40980.00ns INFO     cocotb.regression                  test_crrc.finite_rise_energies_match_reference passed
+ 40980.00ns INFO     cocotb.regression                  running test_crrc.near_threshold_sweep_matches_reference (2/5)
+376872.00ns INFO     cocotb.regression                  test_crrc.near_threshold_sweep_matches_reference passed
+376872.00ns INFO     cocotb.regression                  running test_crrc.signed_full_scale_noise_and_valid_gaps_match_reference (3/5)
+402644.00ns INFO     cocotb.regression                  test_crrc.signed_full_scale_noise_and_valid_gaps_match_reference passed
+402644.00ns INFO     cocotb.regression                  running test_crrc.legacy_golden_and_proportionality_are_preserved (4/5)
+419068.00ns INFO     cocotb.regression                  test_crrc.legacy_golden_and_proportionality_are_preserved passed
+419068.00ns INFO     cocotb.regression                  skipping test_crrc.csharp_vectors_match_python_and_rtl (5/5)
+419068.00ns INFO     cocotb.regression                  **************************************************************************************************************************
+                                                        ** TEST                                                              STATUS  SIM TIME (ns)  REAL TIME (s)  RATIO (ns/s) **
+                                                        **************************************************************************************************************************
+                                                        ** test_crrc.finite_rise_energies_match_reference                     PASS       40980.00           0.26     155454.04  **
+                                                        ** test_crrc.near_threshold_sweep_matches_reference                   PASS      335892.00           2.15     156051.16  **
+                                                        ** test_crrc.signed_full_scale_noise_and_valid_gaps_match_reference   PASS       25772.00           0.20     125724.58  **
+                                                        ** test_crrc.legacy_golden_and_proportionality_are_preserved          PASS       16424.00           0.11     147560.73  **
+                                                        ** test_crrc.csharp_vectors_match_python_and_rtl                      SKIP           0.00           0.00          -.--  **
+                                                        **************************************************************************************************************************
+                                                        ** TESTS=5 PASS=4 FAIL=0 SKIP=1                                                 419068.00           2.73     153261.41  **
+                                                        **************************************************************************************************************************
+fast-gagg-f0: 4 passed, 0 failed, 1 skipped; <path><identity>\AppData\Local\Temp\gcam-todo28\M1\bundle\cocotb\cocotb-46ddd9c58288477f934214ed9bda7328\rtl\fast-gagg-f0\results.xml
+<repo>\rtl\crrc_shaper.sv:45: sorry: constant selects in always_* processes are not currently supported (all bits will be included).
+     -.--ns INFO     gpi                                ..mbed\gpi_embed.cpp:94   in _embed_init_python              Using Python 3.13.0rc1 interpreter at <path><identity>\AppData\Local\Programs\Python\Python313\python.exe
+     -.--ns INFO     gpi                                ..\gpi\GpiCommon.cpp:79   in gpi_print_registered_impl       VPI registered
+     0.00ns INFO     cocotb                             Running on Icarus Verilog version 12.0 (devel)
+     0.00ns INFO     cocotb                             Seeding Python random module with supplied seed 20261002
+     0.00ns INFO     cocotb                             Initialized cocotb v2.0.1 from <path><identity>\AppData\Local\Programs\Python\Python313\Lib\site-packages\cocotb
+     0.00ns INFO     cocotb.regression                  pytest not found, install it to enable better AssertionError messages
+     0.00ns INFO     cocotb                             Running tests
+     0.00ns INFO     cocotb.regression                  running test_crrc.finite_rise_energies_match_reference (1/5)
+ 40980.00ns INFO     cocotb.regression                  test_crrc.finite_rise_energies_match_reference passed
+ 40980.00ns INFO     cocotb.regression                  running test_crrc.near_threshold_sweep_matches_reference (2/5)
+376872.00ns INFO     cocotb.regression                  test_crrc.near_threshold_sweep_matches_reference passed
+376872.00ns INFO     cocotb.regression                  running test_crrc.signed_full_scale_noise_and_valid_gaps_match_reference (3/5)
+402644.00ns INFO     cocotb.regression                  test_crrc.signed_full_scale_noise_and_valid_gaps_match_reference passed
+402644.00ns INFO     cocotb.regression                  running test_crrc.legacy_golden_and_proportionality_are_preserved (4/5)
+419068.00ns INFO     cocotb.regression                  test_crrc.legacy_golden_and_proportionality_are_preserved passed
+419068.00ns INFO     cocotb.regression                  skipping test_crrc.csharp_vectors_match_python_and_rtl (5/5)
+419068.00ns INFO     cocotb.regression                  **************************************************************************************************************************
+                                                        ** TEST                                                              STATUS  SIM TIME (ns)  REAL TIME (s)  RATIO (ns/s) **
+                                                        **************************************************************************************************************************
+                                                        ** test_crrc.finite_rise_energies_match_reference                     PASS       40980.00           0.27     150158.02  **
+                                                        ** test_crrc.near_threshold_sweep_matches_reference                   PASS      335892.00           2.27     147999.47  **
+                                                        ** test_crrc.signed_full_scale_noise_and_valid_gaps_match_reference   PASS       25772.00           0.20     132019.52  **
+                                                        ** test_crrc.legacy_golden_and_proportionality_are_preserved          PASS       16424.00           0.11     154008.19  **
+                                                        ** test_crrc.csharp_vectors_match_python_and_rtl                      SKIP           0.00           0.00          -.--  **
+                                                        **************************************************************************************************************************
+                                                        ** TESTS=5 PASS=4 FAIL=0 SKIP=1                                                 419068.00           2.85     147235.55  **
+                                                        **************************************************************************************************************************
+fast-gagg-f12: 4 passed, 0 failed, 1 skipped; <path><identity>\AppData\Local\Temp\gcam-todo28\M1\bundle\cocotb\cocotb-46ddd9c58288477f934214ed9bda7328\rtl\fast-gagg-f12\results.xml
+<repo>\rtl\crrc_shaper.sv:45: sorry: constant selects in always_* processes are not currently supported (all bits will be included).
+     -.--ns INFO     gpi                                ..mbed\gpi_embed.cpp:94   in _embed_init_python              Using Python 3.13.0rc1 interpreter at <path><identity>\AppData\Local\Programs\Python\Python313\python.exe
+     -.--ns INFO     gpi                                ..\gpi\GpiCommon.cpp:79   in gpi_print_registered_impl       VPI registered
+     0.00ns INFO     cocotb                             Running on Icarus Verilog version 12.0 (devel)
+     0.00ns INFO     cocotb                             Seeding Python random module with supplied seed 20261002
+     0.00ns INFO     cocotb                             Initialized cocotb v2.0.1 from <path><identity>\AppData\Local\Programs\Python\Python313\Lib\site-packages\cocotb
+     0.00ns INFO     cocotb.regression                  pytest not found, install it to enable better AssertionError messages
+     0.00ns INFO     cocotb                             Running tests
+     0.00ns INFO     cocotb.regression                  running test_crrc.finite_rise_energies_match_reference (1/5)
+ 40980.00ns INFO     cocotb.regression                  test_crrc.finite_rise_energies_match_reference passed
+ 40980.00ns INFO     cocotb.regression                  running test_crrc.near_threshold_sweep_matches_reference (2/5)
+376872.00ns INFO     cocotb.regression                  test_crrc.near_threshold_sweep_matches_reference passed
+376872.00ns INFO     cocotb.regression                  running test_crrc.signed_full_scale_noise_and_valid_gaps_match_reference (3/5)
+402644.00ns INFO     cocotb.regression                  test_crrc.signed_full_scale_noise_and_valid_gaps_match_reference passed
+402644.00ns INFO     cocotb.regression                  running test_crrc.legacy_golden_and_proportionality_are_preserved (4/5)
+419068.00ns INFO     cocotb.regression                  test_crrc.legacy_golden_and_proportionality_are_preserved passed
+419068.00ns INFO     cocotb.regression                  skipping test_crrc.csharp_vectors_match_python_and_rtl (5/5)
+419068.00ns INFO     cocotb.regression                  **************************************************************************************************************************
+                                                        ** TEST                                                              STATUS  SIM TIME (ns)  REAL TIME (s)  RATIO (ns/s) **
+                                                        **************************************************************************************************************************
+                                                        ** test_crrc.finite_rise_energies_match_reference                     PASS       40980.00           0.27     151567.66  **
+                                                        ** test_crrc.near_threshold_sweep_matches_reference                   PASS      335892.00           2.14     156996.56  **
+                                                        ** test_crrc.signed_full_scale_noise_and_valid_gaps_match_reference   PASS       25772.00           0.19     134518.37  **
+                                                        ** test_crrc.legacy_golden_and_proportionality_are_preserved          PASS       16424.00           0.11     147529.76  **
+                                                        ** test_crrc.csharp_vectors_match_python_and_rtl                      SKIP           0.00           0.00          -.--  **
+                                                        **************************************************************************************************************************
+                                                        ** TESTS=5 PASS=4 FAIL=0 SKIP=1                                                 419068.00           2.71     154376.27  **
+                                                        **************************************************************************************************************************
+original-gagg-f0: 4 passed, 0 failed, 1 skipped; <path><identity>\AppData\Local\Temp\gcam-todo28\M1\bundle\cocotb\cocotb-46ddd9c58288477f934214ed9bda7328\rtl\original-gagg-f0\results.xml
+<repo>\rtl\crrc_shaper.sv:45: sorry: constant selects in always_* processes are not currently supported (all bits will be included).
+     -.--ns INFO     gpi                                ..mbed\gpi_embed.cpp:94   in _embed_init_python              Using Python 3.13.0rc1 interpreter at <path><identity>\AppData\Local\Programs\Python\Python313\python.exe
+     -.--ns INFO     gpi                                ..\gpi\GpiCommon.cpp:79   in gpi_print_registered_impl       VPI registered
+     0.00ns INFO     cocotb                             Running on Icarus Verilog version 12.0 (devel)
+     0.00ns INFO     cocotb                             Seeding Python random module with supplied seed 20261002
+     0.00ns INFO     cocotb                             Initialized cocotb v2.0.1 from <path><identity>\AppData\Local\Programs\Python\Python313\Lib\site-packages\cocotb
+     0.00ns INFO     cocotb.regression                  pytest not found, install it to enable better AssertionError messages
+     0.00ns INFO     cocotb                             Running tests
+     0.00ns INFO     cocotb.regression                  running test_crrc.finite_rise_energies_match_reference (1/5)
+ 40980.00ns INFO     cocotb.regression                  test_crrc.finite_rise_energies_match_reference passed
+ 40980.00ns INFO     cocotb.regression                  running test_crrc.near_threshold_sweep_matches_reference (2/5)
+376872.00ns INFO     cocotb.regression                  test_crrc.near_threshold_sweep_matches_reference passed
+376872.00ns INFO     cocotb.regression                  running test_crrc.signed_full_scale_noise_and_valid_gaps_match_reference (3/5)
+402644.00ns INFO     cocotb.regression                  test_crrc.signed_full_scale_noise_and_valid_gaps_match_reference passed
+402644.00ns INFO     cocotb.regression                  running test_crrc.legacy_golden_and_proportionality_are_preserved (4/5)
+419068.00ns INFO     cocotb.regression                  test_crrc.legacy_golden_and_proportionality_are_preserved passed
+419068.00ns INFO     cocotb.regression                  skipping test_crrc.csharp_vectors_match_python_and_rtl (5/5)
+419068.00ns INFO     cocotb.regression                  **************************************************************************************************************************
+                                                        ** TEST                                                              STATUS  SIM TIME (ns)  REAL TIME (s)  RATIO (ns/s) **
+                                                        **************************************************************************************************************************
+                                                        ** test_crrc.finite_rise_energies_match_reference                     PASS       40980.00           0.29     141769.12  **
+                                                        ** test_crrc.near_threshold_sweep_matches_reference                   PASS      335892.00           2.27     147683.89  **
+                                                        ** test_crrc.signed_full_scale_noise_and_valid_gaps_match_reference   PASS       25772.00           0.19     138340.77  **
+                                                        ** test_crrc.legacy_golden_and_proportionality_are_preserved          PASS       16424.00           0.11     148487.58  **
+                                                        ** test_crrc.csharp_vectors_match_python_and_rtl                      SKIP           0.00           0.00          -.--  **
+                                                        **************************************************************************************************************************
+                                                        ** TESTS=5 PASS=4 FAIL=0 SKIP=1                                                 419068.00           2.86     146408.23  **
+                                                        **************************************************************************************************************************
+original-gagg-f12: 4 passed, 0 failed, 1 skipped; <path><identity>\AppData\Local\Temp\gcam-todo28\M1\bundle\cocotb\cocotb-46ddd9c58288477f934214ed9bda7328\rtl\original-gagg-f12\results.xml
+<repo>\rtl\crrc_shaper.sv:45: sorry: constant selects in always_* processes are not currently supported (all bits will be included).
+     -.--ns INFO     gpi                                ..mbed\gpi_embed.cpp:94   in _embed_init_python              Using Python 3.13.0rc1 interpreter at <path><identity>\AppData\Local\Programs\Python\Python313\python.exe
+     -.--ns INFO     gpi                                ..\gpi\GpiCommon.cpp:79   in gpi_print_registered_impl       VPI registered
+     0.00ns INFO     cocotb                             Running on Icarus Verilog version 12.0 (devel)
+     0.00ns INFO     cocotb                             Seeding Python random module with supplied seed 20261002
+     0.00ns INFO     cocotb                             Initialized cocotb v2.0.1 from <path><identity>\AppData\Local\Programs\Python\Python313\Lib\site-packages\cocotb
+     0.00ns INFO     cocotb.regression                  pytest not found, install it to enable better AssertionError messages
+     0.00ns INFO     cocotb                             Running tests
+     0.00ns INFO     cocotb.regression                  running test_crrc.finite_rise_energies_match_reference (1/5)
+ 40980.00ns INFO     cocotb.regression                  test_crrc.finite_rise_energies_match_reference passed
+ 40980.00ns INFO     cocotb.regression                  running test_crrc.near_threshold_sweep_matches_reference (2/5)
+376872.00ns INFO     cocotb.regression                  test_crrc.near_threshold_sweep_matches_reference passed
+376872.00ns INFO     cocotb.regression                  running test_crrc.signed_full_scale_noise_and_valid_gaps_match_reference (3/5)
+402644.00ns INFO     cocotb.regression                  test_crrc.signed_full_scale_noise_and_valid_gaps_match_reference passed
+402644.00ns INFO     cocotb.regression                  running test_crrc.legacy_golden_and_proportionality_are_preserved (4/5)
+419068.00ns INFO     cocotb.regression                  test_crrc.legacy_golden_and_proportionality_are_preserved passed
+419068.00ns INFO     cocotb.regression                  skipping test_crrc.csharp_vectors_match_python_and_rtl (5/5)
+419068.00ns INFO     cocotb.regression                  **************************************************************************************************************************
+                                                        ** TEST                                                              STATUS  SIM TIME (ns)  REAL TIME (s)  RATIO (ns/s) **
+                                                        **************************************************************************************************************************
+                                                        ** test_crrc.finite_rise_energies_match_reference                     PASS       40980.00           0.29     142919.63  **
+                                                        ** test_crrc.near_threshold_sweep_matches_reference                   PASS      335892.00           2.18     153829.75  **
+                                                        ** test_crrc.signed_full_scale_noise_and_valid_gaps_match_reference   PASS       25772.00           0.19     138859.51  **
+                                                        ** test_crrc.legacy_golden_and_proportionality_are_preserved          PASS       16424.00           0.12     140697.92  **
+                                                        ** test_crrc.csharp_vectors_match_python_and_rtl                      SKIP           0.00           0.00          -.--  **
+                                                        **************************************************************************************************************************
+                                                        ** TESTS=5 PASS=4 FAIL=0 SKIP=1                                                 419068.00           2.77     151044.69  **
+                                                        **************************************************************************************************************************
+slow-gagg-f0: 4 passed, 0 failed, 1 skipped; <path><identity>\AppData\Local\Temp\gcam-todo28\M1\bundle\cocotb\cocotb-46ddd9c58288477f934214ed9bda7328\rtl\slow-gagg-f0\results.xml
+<repo>\rtl\crrc_shaper.sv:45: sorry: constant selects in always_* processes are not currently supported (all bits will be included).
+     -.--ns INFO     gpi                                ..mbed\gpi_embed.cpp:94   in _embed_init_python              Using Python 3.13.0rc1 interpreter at <path><identity>\AppData\Local\Programs\Python\Python313\python.exe
+     -.--ns INFO     gpi                                ..\gpi\GpiCommon.cpp:79   in gpi_print_registered_impl       VPI registered
+     0.00ns INFO     cocotb                             Running on Icarus Verilog version 12.0 (devel)
+     0.00ns INFO     cocotb                             Seeding Python random module with supplied seed 20261002
+     0.00ns INFO     cocotb                             Initialized cocotb v2.0.1 from <path><identity>\AppData\Local\Programs\Python\Python313\Lib\site-packages\cocotb
+     0.00ns INFO     cocotb.regression                  pytest not found, install it to enable better AssertionError messages
+     0.00ns INFO     cocotb                             Running tests
+     0.00ns INFO     cocotb.regression                  running test_crrc.finite_rise_energies_match_reference (1/5)
+ 40980.00ns INFO     cocotb.regression                  test_crrc.finite_rise_energies_match_reference passed
+ 40980.00ns INFO     cocotb.regression                  running test_crrc.near_threshold_sweep_matches_reference (2/5)
+376872.00ns INFO     cocotb.regression                  test_crrc.near_threshold_sweep_matches_reference passed
+376872.00ns INFO     cocotb.regression                  running test_crrc.signed_full_scale_noise_and_valid_gaps_match_reference (3/5)
+402644.00ns INFO     cocotb.regression                  test_crrc.signed_full_scale_noise_and_valid_gaps_match_reference passed
+402644.00ns INFO     cocotb.regression                  running test_crrc.legacy_golden_and_proportionality_are_preserved (4/5)
+419068.00ns INFO     cocotb.regression                  test_crrc.legacy_golden_and_proportionality_are_preserved passed
+419068.00ns INFO     cocotb.regression                  skipping test_crrc.csharp_vectors_match_python_and_rtl (5/5)
+419068.00ns INFO     cocotb.regression                  **************************************************************************************************************************
+                                                        ** TEST                                                              STATUS  SIM TIME (ns)  REAL TIME (s)  RATIO (ns/s) **
+                                                        **************************************************************************************************************************
+                                                        ** test_crrc.finite_rise_energies_match_reference                     PASS       40980.00           0.31     133204.00  **
+                                                        ** test_crrc.near_threshold_sweep_matches_reference                   PASS      335892.00           2.34     143680.12  **
+                                                        ** test_crrc.signed_full_scale_noise_and_valid_gaps_match_reference   PASS       25772.00           0.20     132002.91  **
+                                                        ** test_crrc.legacy_golden_and_proportionality_are_preserved          PASS       16424.00           0.12     135095.02  **
+                                                        ** test_crrc.csharp_vectors_match_python_and_rtl                      SKIP           0.00           0.00          -.--  **
+                                                        **************************************************************************************************************************
+                                                        ** TESTS=5 PASS=4 FAIL=0 SKIP=1                                                 419068.00           2.96     141381.09  **
+                                                        **************************************************************************************************************************
+slow-gagg-f12: 4 passed, 0 failed, 1 skipped; <path><identity>\AppData\Local\Temp\gcam-todo28\M1\bundle\cocotb\cocotb-46ddd9c58288477f934214ed9bda7328\rtl\slow-gagg-f12\results.xml
+<repo>\rtl\crrc_shaper.sv:45: sorry: constant selects in always_* processes are not currently supported (all bits will be included).
+     -.--ns INFO     gpi                                ..mbed\gpi_embed.cpp:94   in _embed_init_python              Using Python 3.13.0rc1 interpreter at <path><identity>\AppData\Local\Programs\Python\Python313\python.exe
+     -.--ns INFO     gpi                                ..\gpi\GpiCommon.cpp:79   in gpi_print_registered_impl       VPI registered
+     0.00ns INFO     cocotb                             Running on Icarus Verilog version 12.0 (devel)
+     0.00ns INFO     cocotb                             Seeding Python random module with supplied seed 20261002
+     0.00ns INFO     cocotb                             Initialized cocotb v2.0.1 from <path><identity>\AppData\Local\Programs\Python\Python313\Lib\site-packages\cocotb
+     0.00ns INFO     cocotb.regression                  pytest not found, install it to enable better AssertionError messages
+     0.00ns INFO     cocotb                             Running tests
+     0.00ns INFO     cocotb.regression                  running test_crrc.finite_rise_energies_match_reference (1/5)
+ 40980.00ns INFO     cocotb.regression                  test_crrc.finite_rise_energies_match_reference passed
+ 40980.00ns INFO     cocotb.regression                  running test_crrc.near_threshold_sweep_matches_reference (2/5)
+376872.00ns INFO     cocotb.regression                  test_crrc.near_threshold_sweep_matches_reference passed
+376872.00ns INFO     cocotb.regression                  running test_crrc.signed_full_scale_noise_and_valid_gaps_match_reference (3/5)
+402644.00ns INFO     cocotb.regression                  test_crrc.signed_full_scale_noise_and_valid_gaps_match_reference passed
+402644.00ns INFO     cocotb.regression                  running test_crrc.legacy_golden_and_proportionality_are_preserved (4/5)
+419068.00ns INFO     cocotb.regression                  test_crrc.legacy_golden_and_proportionality_are_preserved passed
+419068.00ns INFO     cocotb.regression                  skipping test_crrc.csharp_vectors_match_python_and_rtl (5/5)
+419068.00ns INFO     cocotb.regression                  **************************************************************************************************************************
+                                                        ** TEST                                                              STATUS  SIM TIME (ns)  REAL TIME (s)  RATIO (ns/s) **
+                                                        **************************************************************************************************************************
+                                                        ** test_crrc.finite_rise_energies_match_reference                     PASS       40980.00           0.27     151307.75  **
+                                                        ** test_crrc.near_threshold_sweep_matches_reference                   PASS      335892.00           2.14     156866.05  **
+                                                        ** test_crrc.signed_full_scale_noise_and_valid_gaps_match_reference   PASS       25772.00           0.19     138837.75  **
+                                                        ** test_crrc.legacy_golden_and_proportionality_are_preserved          PASS       16424.00           0.11     156032.13  **
+                                                        ** test_crrc.csharp_vectors_match_python_and_rtl                      SKIP           0.00           0.00          -.--  **
+                                                        **************************************************************************************************************************
+                                                        ** TESTS=5 PASS=4 FAIL=0 SKIP=1                                                 419068.00           2.70     154924.71  **
+                                                        **************************************************************************************************************************
+fast-nai-f0: 4 passed, 0 failed, 1 skipped; <path><identity>\AppData\Local\Temp\gcam-todo28\M1\bundle\cocotb\cocotb-46ddd9c58288477f934214ed9bda7328\rtl\fast-nai-f0\results.xml
+<repo>\rtl\crrc_shaper.sv:45: sorry: constant selects in always_* processes are not currently supported (all bits will be included).
+     -.--ns INFO     gpi                                ..mbed\gpi_embed.cpp:94   in _embed_init_python              Using Python 3.13.0rc1 interpreter at <path><identity>\AppData\Local\Programs\Python\Python313\python.exe
+     -.--ns INFO     gpi                                ..\gpi\GpiCommon.cpp:79   in gpi_print_registered_impl       VPI registered
+     0.00ns INFO     cocotb                             Running on Icarus Verilog version 12.0 (devel)
+     0.00ns INFO     cocotb                             Seeding Python random module with supplied seed 20261002
+     0.00ns INFO     cocotb                             Initialized cocotb v2.0.1 from <path><identity>\AppData\Local\Programs\Python\Python313\Lib\site-packages\cocotb
+     0.00ns INFO     cocotb.regression                  pytest not found, install it to enable better AssertionError messages
+     0.00ns INFO     cocotb                             Running tests
+     0.00ns INFO     cocotb.regression                  running test_crrc.finite_rise_energies_match_reference (1/5)
+ 40980.00ns INFO     cocotb.regression                  test_crrc.finite_rise_energies_match_reference passed
+ 40980.00ns INFO     cocotb.regression                  running test_crrc.near_threshold_sweep_matches_reference (2/5)
+376872.00ns INFO     cocotb.regression                  test_crrc.near_threshold_sweep_matches_reference passed
+376872.00ns INFO     cocotb.regression                  running test_crrc.signed_full_scale_noise_and_valid_gaps_match_reference (3/5)
+402644.00ns INFO     cocotb.regression                  test_crrc.signed_full_scale_noise_and_valid_gaps_match_reference passed
+402644.00ns INFO     cocotb.regression                  running test_crrc.legacy_golden_and_proportionality_are_preserved (4/5)
+419068.00ns INFO     cocotb.regression                  test_crrc.legacy_golden_and_proportionality_are_preserved passed
+419068.00ns INFO     cocotb.regression                  skipping test_crrc.csharp_vectors_match_python_and_rtl (5/5)
+419068.00ns INFO     cocotb.regression                  **************************************************************************************************************************
+                                                        ** TEST                                                              STATUS  SIM TIME (ns)  REAL TIME (s)  RATIO (ns/s) **
+                                                        **************************************************************************************************************************
+                                                        ** test_crrc.finite_rise_energies_match_reference                     PASS       40980.00           0.27     150318.23  **
+                                                        ** test_crrc.near_threshold_sweep_matches_reference                   PASS      335892.00           2.20     152467.89  **
+                                                        ** test_crrc.signed_full_scale_noise_and_valid_gaps_match_reference   PASS       25772.00           0.19     137897.98  **
+                                                        ** test_crrc.legacy_golden_and_proportionality_are_preserved          PASS       16424.00           0.11     153999.24  **
+                                                        ** test_crrc.csharp_vectors_match_python_and_rtl                      SKIP           0.00           0.00          -.--  **
+                                                        **************************************************************************************************************************
+                                                        ** TESTS=5 PASS=4 FAIL=0 SKIP=1                                                 419068.00           2.77     151234.86  **
+                                                        **************************************************************************************************************************
+fast-nai-f12: 4 passed, 0 failed, 1 skipped; <path><identity>\AppData\Local\Temp\gcam-todo28\M1\bundle\cocotb\cocotb-46ddd9c58288477f934214ed9bda7328\rtl\fast-nai-f12\results.xml
+<repo>\rtl\crrc_shaper.sv:45: sorry: constant selects in always_* processes are not currently supported (all bits will be included).
+     -.--ns INFO     gpi                                ..mbed\gpi_embed.cpp:94   in _embed_init_python              Using Python 3.13.0rc1 interpreter at <path><identity>\AppData\Local\Programs\Python\Python313\python.exe
+     -.--ns INFO     gpi                                ..\gpi\GpiCommon.cpp:79   in gpi_print_registered_impl       VPI registered
+     0.00ns INFO     cocotb                             Running on Icarus Verilog version 12.0 (devel)
+     0.00ns INFO     cocotb                             Seeding Python random module with supplied seed 20261002
+     0.00ns INFO     cocotb                             Initialized cocotb v2.0.1 from <path><identity>\AppData\Local\Programs\Python\Python313\Lib\site-packages\cocotb
+     0.00ns INFO     cocotb.regression                  pytest not found, install it to enable better AssertionError messages
+     0.00ns INFO     cocotb                             Running tests
+     0.00ns INFO     cocotb.regression                  running test_crrc.finite_rise_energies_match_reference (1/5)
+ 40980.00ns INFO     cocotb.regression                  test_crrc.finite_rise_energies_match_reference passed
+ 40980.00ns INFO     cocotb.regression                  running test_crrc.near_threshold_sweep_matches_reference (2/5)
+376872.00ns INFO     cocotb.regression                  test_crrc.near_threshold_sweep_matches_reference passed
+376872.00ns INFO     cocotb.regression                  running test_crrc.signed_full_scale_noise_and_valid_gaps_match_reference (3/5)
+402644.00ns INFO     cocotb.regression                  test_crrc.signed_full_scale_noise_and_valid_gaps_match_reference passed
+402644.00ns INFO     cocotb.regression                  running test_crrc.legacy_golden_and_proportionality_are_preserved (4/5)
+419068.00ns INFO     cocotb.regression                  test_crrc.legacy_golden_and_proportionality_are_preserved passed
+419068.00ns INFO     cocotb.regression                  skipping test_crrc.csharp_vectors_match_python_and_rtl (5/5)
+419068.00ns INFO     cocotb.regression                  **************************************************************************************************************************
+                                                        ** TEST                                                              STATUS  SIM TIME (ns)  REAL TIME (s)  RATIO (ns/s) **
+                                                        **************************************************************************************************************************
+                                                        ** test_crrc.finite_rise_energies_match_reference                     PASS       40980.00           0.27     150473.38  **
+                                                        ** test_crrc.near_threshold_sweep_matches_reference                   PASS      335892.00           2.19     153179.01  **
+                                                        ** test_crrc.signed_full_scale_noise_and_valid_gaps_match_reference   PASS       25772.00           0.19     134241.90  **
+                                                        ** test_crrc.legacy_golden_and_proportionality_are_preserved          PASS       16424.00           0.11     146009.12  **
+                                                        ** test_crrc.csharp_vectors_match_python_and_rtl                      SKIP           0.00           0.00          -.--  **
+                                                        **************************************************************************************************************************
+                                                        ** TESTS=5 PASS=4 FAIL=0 SKIP=1                                                 419068.00           2.77     151208.52  **
+                                                        **************************************************************************************************************************
+original-nai-f0: 4 passed, 0 failed, 1 skipped; <path><identity>\AppData\Local\Temp\gcam-todo28\M1\bundle\cocotb\cocotb-46ddd9c58288477f934214ed9bda7328\rtl\original-nai-f0\results.xml
+<repo>\rtl\crrc_shaper.sv:45: sorry: constant selects in always_* processes are not currently supported (all bits will be included).
+     -.--ns INFO     gpi                                ..mbed\gpi_embed.cpp:94   in _embed_init_python              Using Python 3.13.0rc1 interpreter at <path><identity>\AppData\Local\Programs\Python\Python313\python.exe
+     -.--ns INFO     gpi                                ..\gpi\GpiCommon.cpp:79   in gpi_print_registered_impl       VPI registered
+     0.00ns INFO     cocotb                             Running on Icarus Verilog version 12.0 (devel)
+     0.00ns INFO     cocotb                             Seeding Python random module with supplied seed 20261002
+     0.00ns INFO     cocotb                             Initialized cocotb v2.0.1 from <path><identity>\AppData\Local\Programs\Python\Python313\Lib\site-packages\cocotb
+     0.00ns INFO     cocotb.regression                  pytest not found, install it to enable better AssertionError messages
+     0.00ns INFO     cocotb                             Running tests
+     0.00ns INFO     cocotb.regression                  running test_crrc.finite_rise_energies_match_reference (1/5)
+ 40980.00ns INFO     cocotb.regression                  test_crrc.finite_rise_energies_match_reference passed
+ 40980.00ns INFO     cocotb.regression                  running test_crrc.near_threshold_sweep_matches_reference (2/5)
+376872.00ns INFO     cocotb.regression                  test_crrc.near_threshold_sweep_matches_reference passed
+376872.00ns INFO     cocotb.regression                  running test_crrc.signed_full_scale_noise_and_valid_gaps_match_reference (3/5)
+402644.00ns INFO     cocotb.regression                  test_crrc.signed_full_scale_noise_and_valid_gaps_match_reference passed
+402644.00ns INFO     cocotb.regression                  running test_crrc.legacy_golden_and_proportionality_are_preserved (4/5)
+419068.00ns INFO     cocotb.regression                  test_crrc.legacy_golden_and_proportionality_are_preserved passed
+419068.00ns INFO     cocotb.regression                  skipping test_crrc.csharp_vectors_match_python_and_rtl (5/5)
+419068.00ns INFO     cocotb.regression                  **************************************************************************************************************************
+                                                        ** TEST                                                              STATUS  SIM TIME (ns)  REAL TIME (s)  RATIO (ns/s) **
+                                                        **************************************************************************************************************************
+                                                        ** test_crrc.finite_rise_energies_match_reference                     PASS       40980.00           0.29     142862.73  **
+                                                        ** test_crrc.near_threshold_sweep_matches_reference                   PASS      335892.00           2.27     147745.98  **
+                                                        ** test_crrc.signed_full_scale_noise_and_valid_gaps_match_reference   PASS       25772.00           0.19     134956.88  **
+                                                        ** test_crrc.legacy_golden_and_proportionality_are_preserved          PASS       16424.00           0.12     133389.71  **
+                                                        ** test_crrc.csharp_vectors_match_python_and_rtl                      SKIP           0.00           0.00          -.--  **
+                                                        **************************************************************************************************************************
+                                                        ** TESTS=5 PASS=4 FAIL=0 SKIP=1                                                 419068.00           2.88     145698.54  **
+                                                        **************************************************************************************************************************
+original-nai-f12: 4 passed, 0 failed, 1 skipped; <path><identity>\AppData\Local\Temp\gcam-todo28\M1\bundle\cocotb\cocotb-46ddd9c58288477f934214ed9bda7328\rtl\original-nai-f12\results.xml
+<repo>\rtl\crrc_shaper.sv:45: sorry: constant selects in always_* processes are not currently supported (all bits will be included).
+     -.--ns INFO     gpi                                ..mbed\gpi_embed.cpp:94   in _embed_init_python              Using Python 3.13.0rc1 interpreter at <path><identity>\AppData\Local\Programs\Python\Python313\python.exe
+     -.--ns INFO     gpi                                ..\gpi\GpiCommon.cpp:79   in gpi_print_registered_impl       VPI registered
+     0.00ns INFO     cocotb                             Running on Icarus Verilog version 12.0 (devel)
+     0.00ns INFO     cocotb                             Seeding Python random module with supplied seed 20261002
+     0.00ns INFO     cocotb                             Initialized cocotb v2.0.1 from <path><identity>\AppData\Local\Programs\Python\Python313\Lib\site-packages\cocotb
+     0.00ns INFO     cocotb.regression                  pytest not found, install it to enable better AssertionError messages
+     0.00ns INFO     cocotb                             Running tests
+     0.00ns INFO     cocotb.regression                  running test_crrc.finite_rise_energies_match_reference (1/5)
+ 40980.00ns INFO     cocotb.regression                  test_crrc.finite_rise_energies_match_reference passed
+ 40980.00ns INFO     cocotb.regression                  running test_crrc.near_threshold_sweep_matches_reference (2/5)
+376872.00ns INFO     cocotb.regression                  test_crrc.near_threshold_sweep_matches_reference passed
+376872.00ns INFO     cocotb.regression                  running test_crrc.signed_full_scale_noise_and_valid_gaps_match_reference (3/5)
+402644.00ns INFO     cocotb.regression                  test_crrc.signed_full_scale_noise_and_valid_gaps_match_reference passed
+402644.00ns INFO     cocotb.regression                  running test_crrc.legacy_golden_and_proportionality_are_preserved (4/5)
+419068.00ns INFO     cocotb.regression                  test_crrc.legacy_golden_and_proportionality_are_preserved passed
+419068.00ns INFO     cocotb.regression                  skipping test_crrc.csharp_vectors_match_python_and_rtl (5/5)
+419068.00ns INFO     cocotb.regression                  **************************************************************************************************************************
+                                                        ** TEST                                                              STATUS  SIM TIME (ns)  REAL TIME (s)  RATIO (ns/s) **
+                                                        **************************************************************************************************************************
+                                                        ** test_crrc.finite_rise_energies_match_reference                     PASS       40980.00           0.29     142377.66  **
+                                                        ** test_crrc.near_threshold_sweep_matches_reference                   PASS      335892.00           2.23     150931.75  **
+                                                        ** test_crrc.signed_full_scale_noise_and_valid_gaps_match_reference   PASS       25772.00           0.20     129331.59  **
+                                                        ** test_crrc.legacy_golden_and_proportionality_are_preserved          PASS       16424.00           0.11     145222.68  **
+                                                        ** test_crrc.csharp_vectors_match_python_and_rtl                      SKIP           0.00           0.00          -.--  **
+                                                        **************************************************************************************************************************
+                                                        ** TESTS=5 PASS=4 FAIL=0 SKIP=1                                                 419068.00           2.83     148214.70  **
+                                                        **************************************************************************************************************************
+slow-nai-f0: 4 passed, 0 failed, 1 skipped; <path><identity>\AppData\Local\Temp\gcam-todo28\M1\bundle\cocotb\cocotb-46ddd9c58288477f934214ed9bda7328\rtl\slow-nai-f0\results.xml
+<repo>\rtl\crrc_shaper.sv:45: sorry: constant selects in always_* processes are not currently supported (all bits will be included).
+     -.--ns INFO     gpi                                ..mbed\gpi_embed.cpp:94   in _embed_init_python              Using Python 3.13.0rc1 interpreter at <path><identity>\AppData\Local\Programs\Python\Python313\python.exe
+     -.--ns INFO     gpi                                ..\gpi\GpiCommon.cpp:79   in gpi_print_registered_impl       VPI registered
+     0.00ns INFO     cocotb                             Running on Icarus Verilog version 12.0 (devel)
+     0.00ns INFO     cocotb                             Seeding Python random module with supplied seed 20261002
+     0.00ns INFO     cocotb                             Initialized cocotb v2.0.1 from <path><identity>\AppData\Local\Programs\Python\Python313\Lib\site-packages\cocotb
+     0.00ns INFO     cocotb.regression                  pytest not found, install it to enable better AssertionError messages
+     0.00ns INFO     cocotb                             Running tests
+     0.00ns INFO     cocotb.regression                  running test_crrc.finite_rise_energies_match_reference (1/5)
+ 40980.00ns INFO     cocotb.regression                  test_crrc.finite_rise_energies_match_reference passed
+ 40980.00ns INFO     cocotb.regression                  running test_crrc.near_threshold_sweep_matches_reference (2/5)
+376872.00ns INFO     cocotb.regression                  test_crrc.near_threshold_sweep_matches_reference passed
+376872.00ns INFO     cocotb.regression                  running test_crrc.signed_full_scale_noise_and_valid_gaps_match_reference (3/5)
+402644.00ns INFO     cocotb.regression                  test_crrc.signed_full_scale_noise_and_valid_gaps_match_reference passed
+402644.00ns INFO     cocotb.regression                  running test_crrc.legacy_golden_and_proportionality_are_preserved (4/5)
+419068.00ns INFO     cocotb.regression                  test_crrc.legacy_golden_and_proportionality_are_preserved passed
+419068.00ns INFO     cocotb.regression                  skipping test_crrc.csharp_vectors_match_python_and_rtl (5/5)
+419068.00ns INFO     cocotb.regression                  **************************************************************************************************************************
+                                                        ** TEST                                                              STATUS  SIM TIME (ns)  REAL TIME (s)  RATIO (ns/s) **
+                                                        **************************************************************************************************************************
+                                                        ** test_crrc.finite_rise_energies_match_reference                     PASS       40980.00           0.32     129650.00  **
+                                                        ** test_crrc.near_threshold_sweep_matches_reference                   PASS      335892.00           2.36     142174.36  **
+                                                        ** test_crrc.signed_full_scale_noise_and_valid_gaps_match_reference   PASS       25772.00           0.19     135862.67  **
+                                                        ** test_crrc.legacy_golden_and_proportionality_are_preserved          PASS       16424.00           0.13     126921.68  **
+                                                        ** test_crrc.csharp_vectors_match_python_and_rtl                      SKIP           0.00           0.00          -.--  **
+                                                        **************************************************************************************************************************
+                                                        ** TESTS=5 PASS=4 FAIL=0 SKIP=1                                                 419068.00           3.00     139702.45  **
+                                                        **************************************************************************************************************************
+slow-nai-f12: 4 passed, 0 failed, 1 skipped; <path><identity>\AppData\Local\Temp\gcam-todo28\M1\bundle\cocotb\cocotb-46ddd9c58288477f934214ed9bda7328\rtl\slow-nai-f12\results.xml
+<repo>\rtl\crrc_shaper.sv:45: sorry: constant selects in always_* processes are not currently supported (all bits will be included).
+     -.--ns INFO     gpi                                ..mbed\gpi_embed.cpp:94   in _embed_init_python              Using Python 3.13.0rc1 interpreter at <path><identity>\AppData\Local\Programs\Python\Python313\python.exe
+     -.--ns INFO     gpi                                ..\gpi\GpiCommon.cpp:79   in gpi_print_registered_impl       VPI registered
+     0.00ns INFO     cocotb                             Running on Icarus Verilog version 12.0 (devel)
+     0.00ns INFO     cocotb                             Seeding Python random module with supplied seed 20261002
+     0.00ns INFO     cocotb                             Initialized cocotb v2.0.1 from <path><identity>\AppData\Local\Programs\Python\Python313\Lib\site-packages\cocotb
+     0.00ns INFO     cocotb.regression                  pytest not found, install it to enable better AssertionError messages
+     0.00ns INFO     cocotb                             Running tests
+     0.00ns INFO     cocotb.regression                  running test_crrc.finite_rise_energies_match_reference (1/5)
+ 40980.00ns INFO     cocotb.regression                  test_crrc.finite_rise_energies_match_reference passed
+ 40980.00ns INFO     cocotb.regression                  running test_crrc.near_threshold_sweep_matches_reference (2/5)
+376872.00ns INFO     cocotb.regression                  test_crrc.near_threshold_sweep_matches_reference passed
+376872.00ns INFO     cocotb.regression                  running test_crrc.signed_full_scale_noise_and_valid_gaps_match_reference (3/5)
+402644.00ns INFO     cocotb.regression                  test_crrc.signed_full_scale_noise_and_valid_gaps_match_reference passed
+402644.00ns INFO     cocotb.regression                  running test_crrc.legacy_golden_and_proportionality_are_preserved (4/5)
+419068.00ns INFO     cocotb.regression                  test_crrc.legacy_golden_and_proportionality_are_preserved passed
+419068.00ns INFO     cocotb.regression                  skipping test_crrc.csharp_vectors_match_python_and_rtl (5/5)
+419068.00ns INFO     cocotb.regression                  **************************************************************************************************************************
+                                                        ** TEST                                                              STATUS  SIM TIME (ns)  REAL TIME (s)  RATIO (ns/s) **
+                                                        **************************************************************************************************************************
+                                                        ** test_crrc.finite_rise_energies_match_reference                     PASS       40980.00           0.28     147033.60  **
+                                                        ** test_crrc.near_threshold_sweep_matches_reference                   PASS      335892.00           2.11     159349.32  **
+                                                        ** test_crrc.signed_full_scale_noise_and_valid_gaps_match_reference   PASS       25772.00           0.18     140680.79  **
+                                                        ** test_crrc.legacy_golden_and_proportionality_are_preserved          PASS       16424.00           0.11     144411.96  **
+                                                        ** test_crrc.csharp_vectors_match_python_and_rtl                      SKIP           0.00           0.00          -.--  **
+                                                        **************************************************************************************************************************
+                                                        ** TESTS=5 PASS=4 FAIL=0 SKIP=1                                                 419068.00           2.69     156058.39  **
+                                                        **************************************************************************************************************************
+fast-lyso-f0: 4 passed, 0 failed, 1 skipped; <path><identity>\AppData\Local\Temp\gcam-todo28\M1\bundle\cocotb\cocotb-46ddd9c58288477f934214ed9bda7328\rtl\fast-lyso-f0\results.xml
+<repo>\rtl\crrc_shaper.sv:45: sorry: constant selects in always_* processes are not currently supported (all bits will be included).
+     -.--ns INFO     gpi                                ..mbed\gpi_embed.cpp:94   in _embed_init_python              Using Python 3.13.0rc1 interpreter at <path><identity>\AppData\Local\Programs\Python\Python313\python.exe
+     -.--ns INFO     gpi                                ..\gpi\GpiCommon.cpp:79   in gpi_print_registered_impl       VPI registered
+     0.00ns INFO     cocotb                             Running on Icarus Verilog version 12.0 (devel)
+     0.00ns INFO     cocotb                             Seeding Python random module with supplied seed 20261002
+     0.00ns INFO     cocotb                             Initialized cocotb v2.0.1 from <path><identity>\AppData\Local\Programs\Python\Python313\Lib\site-packages\cocotb
+     0.00ns INFO     cocotb.regression                  pytest not found, install it to enable better AssertionError messages
+     0.00ns INFO     cocotb                             Running tests
+     0.00ns INFO     cocotb.regression                  running test_crrc.finite_rise_energies_match_reference (1/5)
+ 40980.00ns INFO     cocotb.regression                  test_crrc.finite_rise_energies_match_reference passed
+ 40980.00ns INFO     cocotb.regression                  running test_crrc.near_threshold_sweep_matches_reference (2/5)
+376872.00ns INFO     cocotb.regression                  test_crrc.near_threshold_sweep_matches_reference passed
+376872.00ns INFO     cocotb.regression                  running test_crrc.signed_full_scale_noise_and_valid_gaps_match_reference (3/5)
+402644.00ns INFO     cocotb.regression                  test_crrc.signed_full_scale_noise_and_valid_gaps_match_reference passed
+402644.00ns INFO     cocotb.regression                  running test_crrc.legacy_golden_and_proportionality_are_preserved (4/5)
+419068.00ns INFO     cocotb.regression                  test_crrc.legacy_golden_and_proportionality_are_preserved passed
+419068.00ns INFO     cocotb.regression                  skipping test_crrc.csharp_vectors_match_python_and_rtl (5/5)
+419068.00ns INFO     cocotb.regression                  **************************************************************************************************************************
+                                                        ** TEST                                                              STATUS  SIM TIME (ns)  REAL TIME (s)  RATIO (ns/s) **
+                                                        **************************************************************************************************************************
+                                                        ** test_crrc.finite_rise_energies_match_reference                     PASS       40980.00           0.28     147459.20  **
+                                                        ** test_crrc.near_threshold_sweep_matches_reference                   PASS      335892.00           2.24     149903.06  **
+                                                        ** test_crrc.signed_full_scale_noise_and_valid_gaps_match_reference   PASS       25772.00           0.20     129381.75  **
+                                                        ** test_crrc.legacy_golden_and_proportionality_are_preserved          PASS       16424.00           0.11     153329.47  **
+                                                        ** test_crrc.csharp_vectors_match_python_and_rtl                      SKIP           0.00           0.00          -.--  **
+                                                        **************************************************************************************************************************
+                                                        ** TESTS=5 PASS=4 FAIL=0 SKIP=1                                                 419068.00           2.83     148249.14  **
+                                                        **************************************************************************************************************************
+fast-lyso-f12: 4 passed, 0 failed, 1 skipped; <path><identity>\AppData\Local\Temp\gcam-todo28\M1\bundle\cocotb\cocotb-46ddd9c58288477f934214ed9bda7328\rtl\fast-lyso-f12\results.xml
+<repo>\rtl\crrc_shaper.sv:45: sorry: constant selects in always_* processes are not currently supported (all bits will be included).
+     -.--ns INFO     gpi                                ..mbed\gpi_embed.cpp:94   in _embed_init_python              Using Python 3.13.0rc1 interpreter at <path><identity>\AppData\Local\Programs\Python\Python313\python.exe
+     -.--ns INFO     gpi                                ..\gpi\GpiCommon.cpp:79   in gpi_print_registered_impl       VPI registered
+     0.00ns INFO     cocotb                             Running on Icarus Verilog version 12.0 (devel)
+     0.00ns INFO     cocotb                             Seeding Python random module with supplied seed 20261002
+     0.00ns INFO     cocotb                             Initialized cocotb v2.0.1 from <path><identity>\AppData\Local\Programs\Python\Python313\Lib\site-packages\cocotb
+     0.00ns INFO     cocotb.regression                  pytest not found, install it to enable better AssertionError messages
+     0.00ns INFO     cocotb                             Running tests
+     0.00ns INFO     cocotb.regression                  running test_crrc.finite_rise_energies_match_reference (1/5)
+ 40980.00ns INFO     cocotb.regression                  test_crrc.finite_rise_energies_match_reference passed
+ 40980.00ns INFO     cocotb.regression                  running test_crrc.near_threshold_sweep_matches_reference (2/5)
+376872.00ns INFO     cocotb.regression                  test_crrc.near_threshold_sweep_matches_reference passed
+376872.00ns INFO     cocotb.regression                  running test_crrc.signed_full_scale_noise_and_valid_gaps_match_reference (3/5)
+402644.00ns INFO     cocotb.regression                  test_crrc.signed_full_scale_noise_and_valid_gaps_match_reference passed
+402644.00ns INFO     cocotb.regression                  running test_crrc.legacy_golden_and_proportionality_are_preserved (4/5)
+419068.00ns INFO     cocotb.regression                  test_crrc.legacy_golden_and_proportionality_are_preserved passed
+419068.00ns INFO     cocotb.regression                  skipping test_crrc.csharp_vectors_match_python_and_rtl (5/5)
+419068.00ns INFO     cocotb.regression                  **************************************************************************************************************************
+                                                        ** TEST                                                              STATUS  SIM TIME (ns)  REAL TIME (s)  RATIO (ns/s) **
+                                                        **************************************************************************************************************************
+                                                        ** test_crrc.finite_rise_energies_match_reference                     PASS       40980.00           0.30     137727.09  **
+                                                        ** test_crrc.near_threshold_sweep_matches_reference                   PASS      335892.00           2.16     155788.30  **
+                                                        ** test_crrc.signed_full_scale_noise_and_valid_gaps_match_reference   PASS       25772.00           0.20     132059.68  **
+                                                        ** test_crrc.legacy_golden_and_proportionality_are_preserved          PASS       16424.00           0.11     154088.46  **
+                                                        ** test_crrc.csharp_vectors_match_python_and_rtl                      SKIP           0.00           0.00          -.--  **
+                                                        **************************************************************************************************************************
+                                                        ** TESTS=5 PASS=4 FAIL=0 SKIP=1                                                 419068.00           2.76     151980.56  **
+                                                        **************************************************************************************************************************
+original-lyso-f0: 4 passed, 0 failed, 1 skipped; <path><identity>\AppData\Local\Temp\gcam-todo28\M1\bundle\cocotb\cocotb-46ddd9c58288477f934214ed9bda7328\rtl\original-lyso-f0\results.xml
+<repo>\rtl\crrc_shaper.sv:45: sorry: constant selects in always_* processes are not currently supported (all bits will be included).
+     -.--ns INFO     gpi                                ..mbed\gpi_embed.cpp:94   in _embed_init_python              Using Python 3.13.0rc1 interpreter at <path><identity>\AppData\Local\Programs\Python\Python313\python.exe
+     -.--ns INFO     gpi                                ..\gpi\GpiCommon.cpp:79   in gpi_print_registered_impl       VPI registered
+     0.00ns INFO     cocotb                             Running on Icarus Verilog version 12.0 (devel)
+     0.00ns INFO     cocotb                             Seeding Python random module with supplied seed 20261002
+     0.00ns INFO     cocotb                             Initialized cocotb v2.0.1 from <path><identity>\AppData\Local\Programs\Python\Python313\Lib\site-packages\cocotb
+     0.00ns INFO     cocotb.regression                  pytest not found, install it to enable better AssertionError messages
+     0.00ns INFO     cocotb                             Running tests
+     0.00ns INFO     cocotb.regression                  running test_crrc.finite_rise_energies_match_reference (1/5)
+ 40980.00ns INFO     cocotb.regression                  test_crrc.finite_rise_energies_match_reference passed
+ 40980.00ns INFO     cocotb.regression                  running test_crrc.near_threshold_sweep_matches_reference (2/5)
+376872.00ns INFO     cocotb.regression                  test_crrc.near_threshold_sweep_matches_reference passed
+376872.00ns INFO     cocotb.regression                  running test_crrc.signed_full_scale_noise_and_valid_gaps_match_reference (3/5)
+402644.00ns INFO     cocotb.regression                  test_crrc.signed_full_scale_noise_and_valid_gaps_match_reference passed
+402644.00ns INFO     cocotb.regression                  running test_crrc.legacy_golden_and_proportionality_are_preserved (4/5)
+419068.00ns INFO     cocotb.regression                  test_crrc.legacy_golden_and_proportionality_are_preserved passed
+419068.00ns INFO     cocotb.regression                  skipping test_crrc.csharp_vectors_match_python_and_rtl (5/5)
+419068.00ns INFO     cocotb.regression                  **************************************************************************************************************************
+                                                        ** TEST                                                              STATUS  SIM TIME (ns)  REAL TIME (s)  RATIO (ns/s) **
+                                                        **************************************************************************************************************************
+                                                        ** test_crrc.finite_rise_energies_match_reference                     PASS       40980.00           0.30     138740.07  **
+                                                        ** test_crrc.near_threshold_sweep_matches_reference                   PASS      335892.00           2.35     143049.88  **
+                                                        ** test_crrc.signed_full_scale_noise_and_valid_gaps_match_reference   PASS       25772.00           0.19     132592.13  **
+                                                        ** test_crrc.legacy_golden_and_proportionality_are_preserved          PASS       16424.00           0.11     143456.23  **
+                                                        ** test_crrc.csharp_vectors_match_python_and_rtl                      SKIP           0.00           0.00          -.--  **
+                                                        **************************************************************************************************************************
+                                                        ** TESTS=5 PASS=4 FAIL=0 SKIP=1                                                 419068.00           2.95     141855.97  **
+                                                        **************************************************************************************************************************
+original-lyso-f12: 4 passed, 0 failed, 1 skipped; <path><identity>\AppData\Local\Temp\gcam-todo28\M1\bundle\cocotb\cocotb-46ddd9c58288477f934214ed9bda7328\rtl\original-lyso-f12\results.xml
+<repo>\rtl\crrc_shaper.sv:45: sorry: constant selects in always_* processes are not currently supported (all bits will be included).
+     -.--ns INFO     gpi                                ..mbed\gpi_embed.cpp:94   in _embed_init_python              Using Python 3.13.0rc1 interpreter at <path><identity>\AppData\Local\Programs\Python\Python313\python.exe
+     -.--ns INFO     gpi                                ..\gpi\GpiCommon.cpp:79   in gpi_print_registered_impl       VPI registered
+     0.00ns INFO     cocotb                             Running on Icarus Verilog version 12.0 (devel)
+     0.00ns INFO     cocotb                             Seeding Python random module with supplied seed 20261002
+     0.00ns INFO     cocotb                             Initialized cocotb v2.0.1 from <path><identity>\AppData\Local\Programs\Python\Python313\Lib\site-packages\cocotb
+     0.00ns INFO     cocotb.regression                  pytest not found, install it to enable better AssertionError messages
+     0.00ns INFO     cocotb                             Running tests
+     0.00ns INFO     cocotb.regression                  running test_crrc.finite_rise_energies_match_reference (1/5)
+ 40980.00ns INFO     cocotb.regression                  test_crrc.finite_rise_energies_match_reference passed
+ 40980.00ns INFO     cocotb.regression                  running test_crrc.near_threshold_sweep_matches_reference (2/5)
+376872.00ns INFO     cocotb.regression                  test_crrc.near_threshold_sweep_matches_reference passed
+376872.00ns INFO     cocotb.regression                  running test_crrc.signed_full_scale_noise_and_valid_gaps_match_reference (3/5)
+402644.00ns INFO     cocotb.regression                  test_crrc.signed_full_scale_noise_and_valid_gaps_match_reference passed
+402644.00ns INFO     cocotb.regression                  running test_crrc.legacy_golden_and_proportionality_are_preserved (4/5)
+419068.00ns INFO     cocotb.regression                  test_crrc.legacy_golden_and_proportionality_are_preserved passed
+419068.00ns INFO     cocotb.regression                  skipping test_crrc.csharp_vectors_match_python_and_rtl (5/5)
+419068.00ns INFO     cocotb.regression                  **************************************************************************************************************************
+                                                        ** TEST                                                              STATUS  SIM TIME (ns)  REAL TIME (s)  RATIO (ns/s) **
+                                                        **************************************************************************************************************************
+                                                        ** test_crrc.finite_rise_energies_match_reference                     PASS       40980.00           0.30     134979.99  **
+                                                        ** test_crrc.near_threshold_sweep_matches_reference                   PASS      335892.00           2.26     148664.60  **
+                                                        ** test_crrc.signed_full_scale_noise_and_valid_gaps_match_reference   PASS       25772.00           0.20     131842.56  **
+                                                        ** test_crrc.legacy_golden_and_proportionality_are_preserved          PASS       16424.00           0.12     137267.43  **
+                                                        ** test_crrc.csharp_vectors_match_python_and_rtl                      SKIP           0.00           0.00          -.--  **
+                                                        **************************************************************************************************************************
+                                                        ** TESTS=5 PASS=4 FAIL=0 SKIP=1                                                 419068.00           2.88     145500.17  **
+                                                        **************************************************************************************************************************
+slow-lyso-f0: 4 passed, 0 failed, 1 skipped; <path><identity>\AppData\Local\Temp\gcam-todo28\M1\bundle\cocotb\cocotb-46ddd9c58288477f934214ed9bda7328\rtl\slow-lyso-f0\results.xml
+<repo>\rtl\crrc_shaper.sv:45: sorry: constant selects in always_* processes are not currently supported (all bits will be included).
+     -.--ns INFO     gpi                                ..mbed\gpi_embed.cpp:94   in _embed_init_python              Using Python 3.13.0rc1 interpreter at <path><identity>\AppData\Local\Programs\Python\Python313\python.exe
+     -.--ns INFO     gpi                                ..\gpi\GpiCommon.cpp:79   in gpi_print_registered_impl       VPI registered
+     0.00ns INFO     cocotb                             Running on Icarus Verilog version 12.0 (devel)
+     0.00ns INFO     cocotb                             Seeding Python random module with supplied seed 20261002
+     0.00ns INFO     cocotb                             Initialized cocotb v2.0.1 from <path><identity>\AppData\Local\Programs\Python\Python313\Lib\site-packages\cocotb
+     0.00ns INFO     cocotb.regression                  pytest not found, install it to enable better AssertionError messages
+     0.00ns INFO     cocotb                             Running tests
+     0.00ns INFO     cocotb.regression                  running test_crrc.finite_rise_energies_match_reference (1/5)
+ 40980.00ns INFO     cocotb.regression                  test_crrc.finite_rise_energies_match_reference passed
+ 40980.00ns INFO     cocotb.regression                  running test_crrc.near_threshold_sweep_matches_reference (2/5)
+376872.00ns INFO     cocotb.regression                  test_crrc.near_threshold_sweep_matches_reference passed
+376872.00ns INFO     cocotb.regression                  running test_crrc.signed_full_scale_noise_and_valid_gaps_match_reference (3/5)
+402644.00ns INFO     cocotb.regression                  test_crrc.signed_full_scale_noise_and_valid_gaps_match_reference passed
+402644.00ns INFO     cocotb.regression                  running test_crrc.legacy_golden_and_proportionality_are_preserved (4/5)
+419068.00ns INFO     cocotb.regression                  test_crrc.legacy_golden_and_proportionality_are_preserved passed
+419068.00ns INFO     cocotb.regression                  skipping test_crrc.csharp_vectors_match_python_and_rtl (5/5)
+419068.00ns INFO     cocotb.regression                  **************************************************************************************************************************
+                                                        ** TEST                                                              STATUS  SIM TIME (ns)  REAL TIME (s)  RATIO (ns/s) **
+                                                        **************************************************************************************************************************
+                                                        ** test_crrc.finite_rise_energies_match_reference                     PASS       40980.00           0.32     129516.74  **
+                                                        ** test_crrc.near_threshold_sweep_matches_reference                   PASS      335892.00           2.42     138672.24  **
+                                                        ** test_crrc.signed_full_scale_noise_and_valid_gaps_match_reference   PASS       25772.00           0.21     120939.63  **
+                                                        ** test_crrc.legacy_golden_and_proportionality_are_preserved          PASS       16424.00           0.14     115527.58  **
+                                                        ** test_crrc.csharp_vectors_match_python_and_rtl                      SKIP           0.00           0.00          -.--  **
+                                                        **************************************************************************************************************************
+                                                        ** TESTS=5 PASS=4 FAIL=0 SKIP=1                                                 419068.00           3.10     135371.68  **
+                                                        **************************************************************************************************************************
+slow-lyso-f12: 4 passed, 0 failed, 1 skipped; <path><identity>\AppData\Local\Temp\gcam-todo28\M1\bundle\cocotb\cocotb-46ddd9c58288477f934214ed9bda7328\rtl\slow-lyso-f12\results.xml
+<repo>\rtl\crrc_shaper.sv:45: sorry: constant selects in always_* processes are not currently supported (all bits will be included).
+     -.--ns INFO     gpi                                ..mbed\gpi_embed.cpp:94   in _embed_init_python              Using Python 3.13.0rc1 interpreter at <path><identity>\AppData\Local\Programs\Python\Python313\python.exe
+     -.--ns INFO     gpi                                ..\gpi\GpiCommon.cpp:79   in gpi_print_registered_impl       VPI registered
+     0.00ns INFO     cocotb                             Running on Icarus Verilog version 12.0 (devel)
+     0.00ns INFO     cocotb                             Seeding Python random module with supplied seed 20261002
+     0.00ns INFO     cocotb                             Initialized cocotb v2.0.1 from <path><identity>\AppData\Local\Programs\Python\Python313\Lib\site-packages\cocotb
+     0.00ns INFO     cocotb.regression                  pytest not found, install it to enable better AssertionError messages
+     0.00ns INFO     cocotb                             Running tests
+     0.00ns INFO     cocotb.regression                  running test_crrc.finite_rise_energies_match_reference (1/5)
+ 40980.00ns INFO     cocotb.regression                  test_crrc.finite_rise_energies_match_reference passed
+ 40980.00ns INFO     cocotb.regression                  running test_crrc.near_threshold_sweep_matches_reference (2/5)
+376872.00ns INFO     cocotb.regression                  test_crrc.near_threshold_sweep_matches_reference passed
+376872.00ns INFO     cocotb.regression                  running test_crrc.signed_full_scale_noise_and_valid_gaps_match_reference (3/5)
+402644.00ns INFO     cocotb.regression                  test_crrc.signed_full_scale_noise_and_valid_gaps_match_reference passed
+402644.00ns INFO     cocotb.regression                  running test_crrc.legacy_golden_and_proportionality_are_preserved (4/5)
+419068.00ns INFO     cocotb.regression                  test_crrc.legacy_golden_and_proportionality_are_preserved passed
+419068.00ns INFO     cocotb.regression                  skipping test_crrc.csharp_vectors_match_python_and_rtl (5/5)
+419068.00ns INFO     cocotb.regression                  **************************************************************************************************************************
+                                                        ** TEST                                                              STATUS  SIM TIME (ns)  REAL TIME (s)  RATIO (ns/s) **
+                                                        **************************************************************************************************************************
+                                                        ** test_crrc.finite_rise_energies_match_reference                     PASS       40980.00           0.27     151680.15  **
+                                                        ** test_crrc.near_threshold_sweep_matches_reference                   PASS      335892.00           2.17     154813.00  **
+                                                        ** test_crrc.signed_full_scale_noise_and_valid_gaps_match_reference   PASS       25772.00           0.19     139223.46  **
+                                                        ** test_crrc.legacy_golden_and_proportionality_are_preserved          PASS       16424.00           0.11     154103.28  **
+                                                        ** test_crrc.csharp_vectors_match_python_and_rtl                      SKIP           0.00           0.00          -.--  **
+                                                        **************************************************************************************************************************
+                                                        ** TESTS=5 PASS=4 FAIL=0 SKIP=1                                                 419068.00           2.73     153320.30  **
+                                                        **************************************************************************************************************************
+fast-bgo-f0: 4 passed, 0 failed, 1 skipped; <path><identity>\AppData\Local\Temp\gcam-todo28\M1\bundle\cocotb\cocotb-46ddd9c58288477f934214ed9bda7328\rtl\fast-bgo-f0\results.xml
+<repo>\rtl\crrc_shaper.sv:45: sorry: constant selects in always_* processes are not currently supported (all bits will be included).
+     -.--ns INFO     gpi                                ..mbed\gpi_embed.cpp:94   in _embed_init_python              Using Python 3.13.0rc1 interpreter at <path><identity>\AppData\Local\Programs\Python\Python313\python.exe
+     -.--ns INFO     gpi                                ..\gpi\GpiCommon.cpp:79   in gpi_print_registered_impl       VPI registered
+     0.00ns INFO     cocotb                             Running on Icarus Verilog version 12.0 (devel)
+     0.00ns INFO     cocotb                             Seeding Python random module with supplied seed 20261002
+     0.00ns INFO     cocotb                             Initialized cocotb v2.0.1 from <path><identity>\AppData\Local\Programs\Python\Python313\Lib\site-packages\cocotb
+     0.00ns INFO     cocotb.regression                  pytest not found, install it to enable better AssertionError messages
+     0.00ns INFO     cocotb                             Running tests
+     0.00ns INFO     cocotb.regression                  running test_crrc.finite_rise_energies_match_reference (1/5)
+ 40980.00ns INFO     cocotb.regression                  test_crrc.finite_rise_energies_match_reference passed
+ 40980.00ns INFO     cocotb.regression                  running test_crrc.near_threshold_sweep_matches_reference (2/5)
+376872.00ns INFO     cocotb.regression                  test_crrc.near_threshold_sweep_matches_reference passed
+376872.00ns INFO     cocotb.regression                  running test_crrc.signed_full_scale_noise_and_valid_gaps_match_reference (3/5)
+402644.00ns INFO     cocotb.regression                  test_crrc.signed_full_scale_noise_and_valid_gaps_match_reference passed
+402644.00ns INFO     cocotb.regression                  running test_crrc.legacy_golden_and_proportionality_are_preserved (4/5)
+419068.00ns INFO     cocotb.regression                  test_crrc.legacy_golden_and_proportionality_are_preserved passed
+419068.00ns INFO     cocotb.regression                  skipping test_crrc.csharp_vectors_match_python_and_rtl (5/5)
+419068.00ns INFO     cocotb.regression                  **************************************************************************************************************************
+                                                        ** TEST                                                              STATUS  SIM TIME (ns)  REAL TIME (s)  RATIO (ns/s) **
+                                                        **************************************************************************************************************************
+                                                        ** test_crrc.finite_rise_energies_match_reference                     PASS       40980.00           0.28     143837.20  **
+                                                        ** test_crrc.near_threshold_sweep_matches_reference                   PASS      335892.00           2.28     147460.25  **
+                                                        ** test_crrc.signed_full_scale_noise_and_valid_gaps_match_reference   PASS       25772.00           0.20     131347.53  **
+                                                        ** test_crrc.legacy_golden_and_proportionality_are_preserved          PASS       16424.00           0.11     146591.70  **
+                                                        ** test_crrc.csharp_vectors_match_python_and_rtl                      SKIP           0.00           0.00          -.--  **
+                                                        **************************************************************************************************************************
+                                                        ** TESTS=5 PASS=4 FAIL=0 SKIP=1                                                 419068.00           2.87     145873.73  **
+                                                        **************************************************************************************************************************
+fast-bgo-f12: 4 passed, 0 failed, 1 skipped; <path><identity>\AppData\Local\Temp\gcam-todo28\M1\bundle\cocotb\cocotb-46ddd9c58288477f934214ed9bda7328\rtl\fast-bgo-f12\results.xml
+<repo>\rtl\crrc_shaper.sv:45: sorry: constant selects in always_* processes are not currently supported (all bits will be included).
+     -.--ns INFO     gpi                                ..mbed\gpi_embed.cpp:94   in _embed_init_python              Using Python 3.13.0rc1 interpreter at <path><identity>\AppData\Local\Programs\Python\Python313\python.exe
+     -.--ns INFO     gpi                                ..\gpi\GpiCommon.cpp:79   in gpi_print_registered_impl       VPI registered
+     0.00ns INFO     cocotb                             Running on Icarus Verilog version 12.0 (devel)
+     0.00ns INFO     cocotb                             Seeding Python random module with supplied seed 20261002
+     0.00ns INFO     cocotb                             Initialized cocotb v2.0.1 from <path><identity>\AppData\Local\Programs\Python\Python313\Lib\site-packages\cocotb
+     0.00ns INFO     cocotb.regression                  pytest not found, install it to enable better AssertionError messages
+     0.00ns INFO     cocotb                             Running tests
+     0.00ns INFO     cocotb.regression                  running test_crrc.finite_rise_energies_match_reference (1/5)
+ 40980.00ns INFO     cocotb.regression                  test_crrc.finite_rise_energies_match_reference passed
+ 40980.00ns INFO     cocotb.regression                  running test_crrc.near_threshold_sweep_matches_reference (2/5)
+376872.00ns INFO     cocotb.regression                  test_crrc.near_threshold_sweep_matches_reference passed
+376872.00ns INFO     cocotb.regression                  running test_crrc.signed_full_scale_noise_and_valid_gaps_match_reference (3/5)
+402644.00ns INFO     cocotb.regression                  test_crrc.signed_full_scale_noise_and_valid_gaps_match_reference passed
+402644.00ns INFO     cocotb.regression                  running test_crrc.legacy_golden_and_proportionality_are_preserved (4/5)
+419068.00ns INFO     cocotb.regression                  test_crrc.legacy_golden_and_proportionality_are_preserved passed
+419068.00ns INFO     cocotb.regression                  skipping test_crrc.csharp_vectors_match_python_and_rtl (5/5)
+419068.00ns INFO     cocotb.regression                  **************************************************************************************************************************
+                                                        ** TEST                                                              STATUS  SIM TIME (ns)  REAL TIME (s)  RATIO (ns/s) **
+                                                        **************************************************************************************************************************
+                                                        ** test_crrc.finite_rise_energies_match_reference                     PASS       40980.00           0.27     154137.08  **
+                                                        ** test_crrc.near_threshold_sweep_matches_reference                   PASS      335892.00           2.18     154265.07  **
+                                                        ** test_crrc.signed_full_scale_noise_and_valid_gaps_match_reference   PASS       25772.00           0.18     140294.62  **
+                                                        ** test_crrc.legacy_golden_and_proportionality_are_preserved          PASS       16424.00           0.11     155975.60  **
+                                                        ** test_crrc.csharp_vectors_match_python_and_rtl                      SKIP           0.00           0.00          -.--  **
+                                                        **************************************************************************************************************************
+                                                        ** TESTS=5 PASS=4 FAIL=0 SKIP=1                                                 419068.00           2.73     153244.60  **
+                                                        **************************************************************************************************************************
+original-bgo-f0: 4 passed, 0 failed, 1 skipped; <path><identity>\AppData\Local\Temp\gcam-todo28\M1\bundle\cocotb\cocotb-46ddd9c58288477f934214ed9bda7328\rtl\original-bgo-f0\results.xml
+<repo>\rtl\crrc_shaper.sv:45: sorry: constant selects in always_* processes are not currently supported (all bits will be included).
+     -.--ns INFO     gpi                                ..mbed\gpi_embed.cpp:94   in _embed_init_python              Using Python 3.13.0rc1 interpreter at <path><identity>\AppData\Local\Programs\Python\Python313\python.exe
+     -.--ns INFO     gpi                                ..\gpi\GpiCommon.cpp:79   in gpi_print_registered_impl       VPI registered
+     0.00ns INFO     cocotb                             Running on Icarus Verilog version 12.0 (devel)
+     0.00ns INFO     cocotb                             Seeding Python random module with supplied seed 20261002
+     0.00ns INFO     cocotb                             Initialized cocotb v2.0.1 from <path><identity>\AppData\Local\Programs\Python\Python313\Lib\site-packages\cocotb
+     0.00ns INFO     cocotb.regression                  pytest not found, install it to enable better AssertionError messages
+     0.00ns INFO     cocotb                             Running tests
+     0.00ns INFO     cocotb.regression                  running test_crrc.finite_rise_energies_match_reference (1/5)
+ 40980.00ns INFO     cocotb.regression                  test_crrc.finite_rise_energies_match_reference passed
+ 40980.00ns INFO     cocotb.regression                  running test_crrc.near_threshold_sweep_matches_reference (2/5)
+376872.00ns INFO     cocotb.regression                  test_crrc.near_threshold_sweep_matches_reference passed
+376872.00ns INFO     cocotb.regression                  running test_crrc.signed_full_scale_noise_and_valid_gaps_match_reference (3/5)
+402644.00ns INFO     cocotb.regression                  test_crrc.signed_full_scale_noise_and_valid_gaps_match_reference passed
+402644.00ns INFO     cocotb.regression                  running test_crrc.legacy_golden_and_proportionality_are_preserved (4/5)
+419068.00ns INFO     cocotb.regression                  test_crrc.legacy_golden_and_proportionality_are_preserved passed
+419068.00ns INFO     cocotb.regression                  skipping test_crrc.csharp_vectors_match_python_and_rtl (5/5)
+419068.00ns INFO     cocotb.regression                  **************************************************************************************************************************
+                                                        ** TEST                                                              STATUS  SIM TIME (ns)  REAL TIME (s)  RATIO (ns/s) **
+                                                        **************************************************************************************************************************
+                                                        ** test_crrc.finite_rise_energies_match_reference                     PASS       40980.00           0.29     140760.33  **
+                                                        ** test_crrc.near_threshold_sweep_matches_reference                   PASS      335892.00           2.28     147082.38  **
+                                                        ** test_crrc.signed_full_scale_noise_and_valid_gaps_match_reference   PASS       25772.00           0.19     135848.84  **
+                                                        ** test_crrc.legacy_golden_and_proportionality_are_preserved          PASS       16424.00           0.12     132209.79  **
+                                                        ** test_crrc.csharp_vectors_match_python_and_rtl                      SKIP           0.00           0.00          -.--  **
+                                                        **************************************************************************************************************************
+                                                        ** TESTS=5 PASS=4 FAIL=0 SKIP=1                                                 419068.00           2.89     144974.89  **
+                                                        **************************************************************************************************************************
+original-bgo-f12: 4 passed, 0 failed, 1 skipped; <path><identity>\AppData\Local\Temp\gcam-todo28\M1\bundle\cocotb\cocotb-46ddd9c58288477f934214ed9bda7328\rtl\original-bgo-f12\results.xml
+<repo>\rtl\crrc_shaper.sv:45: sorry: constant selects in always_* processes are not currently supported (all bits will be included).
+     -.--ns INFO     gpi                                ..mbed\gpi_embed.cpp:94   in _embed_init_python              Using Python 3.13.0rc1 interpreter at <path><identity>\AppData\Local\Programs\Python\Python313\python.exe
+     -.--ns INFO     gpi                                ..\gpi\GpiCommon.cpp:79   in gpi_print_registered_impl       VPI registered
+     0.00ns INFO     cocotb                             Running on Icarus Verilog version 12.0 (devel)
+     0.00ns INFO     cocotb                             Seeding Python random module with supplied seed 20261002
+     0.00ns INFO     cocotb                             Initialized cocotb v2.0.1 from <path><identity>\AppData\Local\Programs\Python\Python313\Lib\site-packages\cocotb
+     0.00ns INFO     cocotb.regression                  pytest not found, install it to enable better AssertionError messages
+     0.00ns INFO     cocotb                             Running tests
+     0.00ns INFO     cocotb.regression                  running test_crrc.finite_rise_energies_match_reference (1/5)
+ 40980.00ns INFO     cocotb.regression                  test_crrc.finite_rise_energies_match_reference passed
+ 40980.00ns INFO     cocotb.regression                  running test_crrc.near_threshold_sweep_matches_reference (2/5)
+376872.00ns INFO     cocotb.regression                  test_crrc.near_threshold_sweep_matches_reference passed
+376872.00ns INFO     cocotb.regression                  running test_crrc.signed_full_scale_noise_and_valid_gaps_match_reference (3/5)
+402644.00ns INFO     cocotb.regression                  test_crrc.signed_full_scale_noise_and_valid_gaps_match_reference passed
+402644.00ns INFO     cocotb.regression                  running test_crrc.legacy_golden_and_proportionality_are_preserved (4/5)
+419068.00ns INFO     cocotb.regression                  test_crrc.legacy_golden_and_proportionality_are_preserved passed
+419068.00ns INFO     cocotb.regression                  skipping test_crrc.csharp_vectors_match_python_and_rtl (5/5)
+419068.00ns INFO     cocotb.regression                  **************************************************************************************************************************
+                                                        ** TEST                                                              STATUS  SIM TIME (ns)  REAL TIME (s)  RATIO (ns/s) **
+                                                        **************************************************************************************************************************
+                                                        ** test_crrc.finite_rise_energies_match_reference                     PASS       40980.00           0.28     143850.08  **
+                                                        ** test_crrc.near_threshold_sweep_matches_reference                   PASS      335892.00           2.18     154320.31  **
+                                                        ** test_crrc.signed_full_scale_noise_and_valid_gaps_match_reference   PASS       25772.00           0.19     138075.18  **
+                                                        ** test_crrc.legacy_golden_and_proportionality_are_preserved          PASS       16424.00           0.12     141132.90  **
+                                                        ** test_crrc.csharp_vectors_match_python_and_rtl                      SKIP           0.00           0.00          -.--  **
+                                                        **************************************************************************************************************************
+                                                        ** TESTS=5 PASS=4 FAIL=0 SKIP=1                                                 419068.00           2.77     151492.70  **
+                                                        **************************************************************************************************************************
+slow-bgo-f0: 4 passed, 0 failed, 1 skipped; <path><identity>\AppData\Local\Temp\gcam-todo28\M1\bundle\cocotb\cocotb-46ddd9c58288477f934214ed9bda7328\rtl\slow-bgo-f0\results.xml
+<repo>\rtl\crrc_shaper.sv:45: sorry: constant selects in always_* processes are not currently supported (all bits will be included).
+     -.--ns INFO     gpi                                ..mbed\gpi_embed.cpp:94   in _embed_init_python              Using Python 3.13.0rc1 interpreter at <path><identity>\AppData\Local\Programs\Python\Python313\python.exe
+     -.--ns INFO     gpi                                ..\gpi\GpiCommon.cpp:79   in gpi_print_registered_impl       VPI registered
+     0.00ns INFO     cocotb                             Running on Icarus Verilog version 12.0 (devel)
+     0.00ns INFO     cocotb                             Seeding Python random module with supplied seed 20261002
+     0.00ns INFO     cocotb                             Initialized cocotb v2.0.1 from <path><identity>\AppData\Local\Programs\Python\Python313\Lib\site-packages\cocotb
+     0.00ns INFO     cocotb.regression                  pytest not found, install it to enable better AssertionError messages
+     0.00ns INFO     cocotb                             Running tests
+     0.00ns INFO     cocotb.regression                  running test_crrc.finite_rise_energies_match_reference (1/5)
+ 40980.00ns INFO     cocotb.regression                  test_crrc.finite_rise_energies_match_reference passed
+ 40980.00ns INFO     cocotb.regression                  running test_crrc.near_threshold_sweep_matches_reference (2/5)
+376872.00ns INFO     cocotb.regression                  test_crrc.near_threshold_sweep_matches_reference passed
+376872.00ns INFO     cocotb.regression                  running test_crrc.signed_full_scale_noise_and_valid_gaps_match_reference (3/5)
+402644.00ns INFO     cocotb.regression                  test_crrc.signed_full_scale_noise_and_valid_gaps_match_reference passed
+402644.00ns INFO     cocotb.regression                  running test_crrc.legacy_golden_and_proportionality_are_preserved (4/5)
+419068.00ns INFO     cocotb.regression                  test_crrc.legacy_golden_and_proportionality_are_preserved passed
+419068.00ns INFO     cocotb.regression                  skipping test_crrc.csharp_vectors_match_python_and_rtl (5/5)
+419068.00ns INFO     cocotb.regression                  **************************************************************************************************************************
+                                                        ** TEST                                                              STATUS  SIM TIME (ns)  REAL TIME (s)  RATIO (ns/s) **
+                                                        **************************************************************************************************************************
+                                                        ** test_crrc.finite_rise_energies_match_reference                     PASS       40980.00           0.31     132194.89  **
+                                                        ** test_crrc.near_threshold_sweep_matches_reference                   PASS      335892.00           2.35     142756.23  **
+                                                        ** test_crrc.signed_full_scale_noise_and_valid_gaps_match_reference   PASS       25772.00           0.19     133730.88  **
+                                                        ** test_crrc.legacy_golden_and_proportionality_are_preserved          PASS       16424.00           0.12     131900.19  **
+                                                        ** test_crrc.csharp_vectors_match_python_and_rtl                      SKIP           0.00           0.00          -.--  **
+                                                        **************************************************************************************************************************
+                                                        ** TESTS=5 PASS=4 FAIL=0 SKIP=1                                                 419068.00           2.98     140517.71  **
+                                                        **************************************************************************************************************************
+slow-bgo-f12: 4 passed, 0 failed, 1 skipped; <path><identity>\AppData\Local\Temp\gcam-todo28\M1\bundle\cocotb\cocotb-46ddd9c58288477f934214ed9bda7328\rtl\slow-bgo-f12\results.xml
+cocotb total: {'tests': 137, 'passed': 111, 'failed': 0, 'skipped': 26}; artifacts: <path><identity>\AppData\Local\Temp\gcam-todo28\M1\bundle\cocotb\cocotb-46ddd9c58288477f934214ed9bda7328\rtl

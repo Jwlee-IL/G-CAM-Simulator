@@ -1,0 +1,7 @@
+Test run for <repo>\tests\Gcam.Studio.RenderTests\bin\Release\net9.0-windows\Gcam.Studio.RenderTests.dll (.NETCoreApp,Version=v9.0)
+VSTest version 17.14.1 (x64)
+
+The following Tests are available:
+    Gcam.Studio.RenderTests.PlotViewRenderTests.Spectrum_BothThemesFullAndZoom_RenderWithoutWindow
+
+Workload updates are available. Run `dotnet workload list` for more information.

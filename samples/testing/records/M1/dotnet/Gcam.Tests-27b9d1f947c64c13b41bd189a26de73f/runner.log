@@ -1,0 +1,10 @@
+Test run for <repo>\tests\Gcam.Tests\bin\Release\net9.0\Gcam.Tests.dll (.NETCoreApp,Version=v9.0)
+VSTest version 17.14.1 (x64)
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+Results File: <path><identity>\AppData\Local\Temp\gcam-todo28\M1\bundle\dotnet\Gcam.Tests-27b9d1f947c64c13b41bd189a26de73f\results.trx
+
+Passed!  - Failed:     0, Passed:   481, Skipped:     0, Total:   481, Duration: 23 s - Gcam.Tests.dll (net9.0)
+
+Workload updates are available. Run `dotnet workload list` for more information.

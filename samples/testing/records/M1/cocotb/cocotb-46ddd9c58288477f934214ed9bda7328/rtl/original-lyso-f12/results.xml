@@ -1,0 +1,12 @@
+<testsuites name="&lt;run-name>">
+  <testsuite name="all" package="all">
+    <property name="random_seed" value="20261002"></property>
+    <testcase classname="test_crrc" file="&lt;repo>\rtl\test_crrc.py" lineno="62" name="finite_rise_energies_match_reference" ratio_time="138740.07203268755" sim_time_ns="40980.0" time="0.29537248611450195"></testcase>
+    <testcase classname="test_crrc" file="&lt;repo>\rtl\test_crrc.py" lineno="73" name="near_threshold_sweep_matches_reference" ratio_time="143049.8778416507" sim_time_ns="335892.0" time="2.348076105117798"></testcase>
+    <testcase classname="test_crrc" file="&lt;repo>\rtl\test_crrc.py" lineno="80" name="signed_full_scale_noise_and_valid_gaps_match_reference" ratio_time="132592.13159169775" sim_time_ns="25772.0" time="0.19437050819396973"></testcase>
+    <testcase classname="test_crrc" file="&lt;repo>\rtl\test_crrc.py" lineno="89" name="legacy_golden_and_proportionality_are_preserved" ratio_time="143456.22504097276" sim_time_ns="16424.0" time="0.11448788642883301"></testcase>
+    <testcase classname="test_crrc" file="&lt;repo>\rtl\test_crrc.py" lineno="105" name="csharp_vectors_match_python_and_rtl" ratio_time="0" sim_time_ns="0" time="0">
+      <skipped></skipped>
+    </testcase>
+  </testsuite>
+</testsuites>

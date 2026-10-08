@@ -1,0 +1,487 @@
+Test run for <repo>\tests\Gcam.Tests\bin\Release\net9.0\Gcam.Tests.dll (.NETCoreApp,Version=v9.0)
+VSTest version 17.14.1 (x64)
+
+The following Tests are available:
+    Gcam.Tests.AlignmentTests.InPlaneOffset_EquivalentToShiftingTheRay
+    Gcam.Tests.AlignmentTests.Roll_EquivalentToRotatingTheRay
+    Gcam.Tests.AlignmentTests.PerfectAlignment_IsUnchangedFromNoPose
+    Gcam.Tests.AlignmentTests.InPlaneOffset_BiasesLocalization_AmplifiedByMagnification
+    Gcam.Tests.AmbientAngularSamplerTests.IsotropicTable_CurrentMatchesAnalyticSurfaceArea(geometry: BareCrystalAllFaces, expectedArea: 42)
+    Gcam.Tests.AmbientAngularSamplerTests.IsotropicTable_CurrentMatchesAnalyticSurfaceArea(geometry: FrontOnlyThroughMask, expectedArea: 6)
+    Gcam.Tests.AmbientAngularSamplerTests.JointDistribution_PreservesEnergyAngleCorrelationAndProjectedCurrent(geometry: BareCrystalAllFaces)
+    Gcam.Tests.AmbientAngularSamplerTests.JointDistribution_PreservesEnergyAngleCorrelationAndProjectedCurrent(geometry: FrontOnlyThroughMask)
+    Gcam.Tests.AmbientAngularSamplerTests.InvalidTable_RejectsOverlappingBinsMarginalMismatchAndStaleHash
+    Gcam.Tests.AmbientAngularSamplerTests.AngularField_StopContinuePartitionKeepsEveryRecord(geometry: BareCrystalAllFaces)
+    Gcam.Tests.AmbientAngularSamplerTests.AngularField_StopContinuePartitionKeepsEveryRecord(geometry: FrontOnlyThroughMask)
+    Gcam.Tests.AmbientEvidenceTests.SourceLines_IsTheSumOfItsLinesEachOnItsOwnStream
+    Gcam.Tests.AmbientEvidenceTests.SourceLines_IsLinearInTheLineIntensity
+    Gcam.Tests.AmbientEvidenceTests.Antimask_IdealCalibratedIsSingle_AndTheBudgetsAreTheDeclaredOnes
+    Gcam.Tests.AmbientEvidenceTests.FieldOfView_OnAxisSourceGivesN0_AndFractionsAreProbabilities
+    Gcam.Tests.AmbientEvidenceTests.Separation_IdealHasNothingToSubtract_AndCoAddsToThe662Window
+    Gcam.Tests.AmbientEvidenceTests.Sweep_CountsArePositionTalliesAndThePullIsReportedPerBoundAndWindow
+    Gcam.Tests.AmbientFieldTests.AmbientNull_MatchesCapturedPreimplementationRecordsAndRng(bsr: 0, expected: "6C9B4AD52DA2F4F2C232EB5095603BD4C9AC315101C8D612BA"···)
+    Gcam.Tests.AmbientFieldTests.AmbientNull_MatchesCapturedPreimplementationRecordsAndRng(bsr: 1, expected: "D70F1457599566E172E7B38412D75B23C5640AF9F4867EE50B"···)
+    Gcam.Tests.AmbientFieldTests.EmptyIntervalsAndSegmentBoundaries_PreserveEvents(geometry: BareCrystalAllFaces)
+    Gcam.Tests.AmbientFieldTests.EmptyIntervalsAndSegmentBoundaries_PreserveEvents(geometry: FrontOnlyThroughMask)
+    Gcam.Tests.AmbientFieldTests.SourceFreeZeroField_ProgressesAndRejectsCancellationBeforeRandomDraws
+    Gcam.Tests.AmbientFieldTests.AbsoluteField_IsExactlyIndependentOfConfiguredSourceActivity
+    Gcam.Tests.AmbientFieldTests.IncidentPoissonBins_MeanAndVarianceUseSampleSizeDerivedTolerances
+    Gcam.Tests.AmbientFieldTests.DoseClosure_IntegratesContinuumAgainstTheSameIcrpTable
+    Gcam.Tests.AmbientFieldTests.EveryCrystalFace_ScoresAtItsActualDepositPixel(face: 0)
+    Gcam.Tests.AmbientFieldTests.EveryCrystalFace_ScoresAtItsActualDepositPixel(face: 1)
+    Gcam.Tests.AmbientFieldTests.EveryCrystalFace_ScoresAtItsActualDepositPixel(face: 2)
+    Gcam.Tests.AmbientFieldTests.EveryCrystalFace_ScoresAtItsActualDepositPixel(face: 3)
+    Gcam.Tests.AmbientFieldTests.EveryCrystalFace_ScoresAtItsActualDepositPixel(face: 4)
+    Gcam.Tests.AmbientFieldTests.EveryCrystalFace_ScoresAtItsActualDepositPixel(face: 5)
+    Gcam.Tests.AmbientFieldTests.DevelopmentPlaceholder_CannotBeUsedAsValidatedEvidence
+    Gcam.Tests.AmbientFieldTests.FixedTimeFloodAndEventStream_AgreeWithoutResampling
+    Gcam.Tests.AmbientFieldTests.ZeroAbsoluteField_WithSourceAndLegacyBsr_ReplaysTheLegacyStreamExactly
+    Gcam.Tests.AmbientFieldTests.SourceFreeRelativeBsrAddsZero_AndElectronicDarkCountsRemainIndependent
+    Gcam.Tests.AmbientFieldTests.ParallelBeam_InteractionEfficiencyHasBinomialSampleSizeTolerance
+    Gcam.Tests.AmbientFieldTests.DetectedCountsPerPixel_ArePoissonOverFixedTimeBins
+    Gcam.Tests.AmbientFieldTests.EvidenceHashAndInvalidSpectrumAreRejectedWithoutTransport
+    Gcam.Tests.AmbientGateStudyTests.Thresholds_GreaterThan_IsTheTurn7RuleAndTheDefault
+    Gcam.Tests.AmbientGateStudyTests.Thresholds_RoundedAtLeast_CountsATieAsTrusted
+    Gcam.Tests.AmbientGateStudyTests.Thresholds_UnknownComparison_IsRefused
+    Gcam.Tests.AngularResolutionStudyTests.Main_RunsAndKeepsItsGeometry
+    Gcam.Tests.AngularResolutionStudyTests.Main_RefusesASourceOutsideTheSearchGrid
+    Gcam.Tests.AngularResolutionStudyTests.Ladder_RunsEveryStep
+    Gcam.Tests.AngularResolutionStudyTests.SelfConsistentFlood_LandsTheOpenShareOfAimedPhotons
+    Gcam.Tests.AutoFocusTests.BestFocal_FindsTheSourcePlane(srcZ: 160)
+    Gcam.Tests.AutoFocusTests.BestFocal_FindsTheSourcePlane(srcZ: 280)
+    Gcam.Tests.BackgroundDecodingTests.JointStep_MatchesIndependentDoubleReference
+    Gcam.Tests.BackgroundDecodingTests.JointEm_ConservesCountsAndDoesNotDecreaseLikelihoodWithinRoundoff
+    Gcam.Tests.BackgroundDecodingTests.JointBetaZero_IsAnExactBoundary
+    Gcam.Tests.BackgroundDecodingTests.EmptyImage_DoesNotCreateCounts
+    Gcam.Tests.BackgroundDecodingTests.Normalization_IsInvariantUnderExactPowerOfTwoScaling
+    Gcam.Tests.BackgroundDecodingTests.InvalidShapeAndCounts_AreRejected(bad: -1)
+    Gcam.Tests.BackgroundDecodingTests.InvalidShapeAndCounts_AreRejected(bad: NaN)
+    Gcam.Tests.BackgroundDecodingTests.InvalidShapeAndCounts_AreRejected(bad: ∞)
+    Gcam.Tests.BackgroundDecodingTests.Calibration_IsDetachedAndRefusesWrongBoundWindowGeometryAndHead
+    Gcam.Tests.BackgroundDecodingTests.NullFactoryPath_IsExactlyTheRetainedDecoder(handheld: False, mlem: False)
+    Gcam.Tests.BackgroundDecodingTests.NullFactoryPath_IsExactlyTheRetainedDecoder(handheld: False, mlem: True)
+    Gcam.Tests.BackgroundDecodingTests.NullFactoryPath_IsExactlyTheRetainedDecoder(handheld: True, mlem: False)
+    Gcam.Tests.BackgroundDecodingTests.NullFactoryPath_IsExactlyTheRetainedDecoder(handheld: True, mlem: True)
+    Gcam.Tests.BackgroundDecodingTests.KnownScaleModes_AreExactlyDirectFixedOrSignedDecoding(mode: KnownScaleMlem)
+    Gcam.Tests.BackgroundDecodingTests.KnownScaleModes_AreExactlyDirectFixedOrSignedDecoding(mode: KnownScaleCorrelation)
+    Gcam.Tests.BackgroundDecodingTests.ConfigCloneAndExplicitOptIn_RequireCalibration
+    Gcam.Tests.BackgroundTests.Sweep_DegradesMonotonically_AndCollapsesAtHighBackground
+    Gcam.Tests.BackgroundTests.ZeroBackground_MatchesCleanRun
+    Gcam.Tests.BackgroundTests.PedestalPerPixel_IsBsrTimesCountsOverPixels
+    Gcam.Tests.BackgroundTests.SideLeakProfile_IsMeanOneAndEdgeWeighted
+    Gcam.Tests.BackgroundTests.GradientProfile_IsMeanOneAndRampsAlongDirection
+    Gcam.Tests.BackgroundTests.GradedBackground_IsHarmlessWhileSourceWins_ThenBiasesAtTheKnee
+    Gcam.Tests.CascadeEmissionTests.BiasedDecays_ReproduceAnalogDecays_DetectedAndCoincident
+    Gcam.Tests.CascadeEmissionTests.OneEventPerDecay_SumsTheGammas_WithOneArrivalTime
+    Gcam.Tests.CascadeEmissionTests.CascadePath_OnlyForTheSchemesOwnLines
+    Gcam.Tests.CascadeSummingTests.Cs137_IsASingleUncorrelatedLine
+    Gcam.Tests.CascadeSummingTests.Co60_EmitsThe1173And1332Cascade
+    Gcam.Tests.CascadeSummingTests.Na22_511sAreEmittedBackToBack
+    Gcam.Tests.CascadeSummingTests.Co60_PhotonCountsPerDecay_FollowTheTableBranching
+    Gcam.Tests.CascadeSummingTests.Co60_AngularCorrelation_MatchesW
+    Gcam.Tests.CascadeSummingTests.Co60Cosine_IsTheInverseCdfOfW
+    Gcam.Tests.CascadeSummingTests.Na22_DecaySchemeUsesTheIsotopeTable_AndPartnersFollowTheKnownPhoton
+    Gcam.Tests.CascadeSummingTests.Co60_SumPeakScalesAsEpsilonSquared
+    Gcam.Tests.CascadeSummingTests.Cs137_ShowsNoCascadeSumming
+    Gcam.Tests.ComptonTests.Scatter_ConservesEnergy_AndStaysWithinKinematicBounds
+    Gcam.Tests.ComptonTests.PhotoFraction_DecreasesWithEnergy
+    Gcam.Tests.ComptonTests.Argmax_RecoversMoreCountsThanPerPixelWindow
+    Gcam.Tests.ComptonTests.Contamination_IsImagedAtTheContaminantSource_NotTheTarget
+    Gcam.Tests.ComptonTests.Stripping_RecoversCsCount_EvenCoLocated
+    Gcam.Tests.ConfigLoaderTests.EveryShippedScenario_LoadsIntoAUsableConfig(file: "scenario.json")
+    Gcam.Tests.ConfigLoaderTests.EveryShippedScenario_LoadsIntoAUsableConfig(file: "scenario_co60.json")
+    Gcam.Tests.ConfigLoaderTests.EveryShippedScenario_LoadsIntoAUsableConfig(file: "scenario_field.json")
+    Gcam.Tests.ConfigLoaderTests.EveryShippedScenario_LoadsIntoAUsableConfig(file: "scenario_ghost.json")
+    Gcam.Tests.ConfigLoaderTests.EveryShippedScenario_LoadsIntoAUsableConfig(file: "scenario_handheld.json")
+    Gcam.Tests.ConfigLoaderTests.EveryShippedScenario_LoadsIntoAUsableConfig(file: "scenario_handheld_ir192.json")
+    Gcam.Tests.ConfigLoaderTests.EveryShippedScenario_LoadsIntoAUsableConfig(file: "scenario_ir192.json")
+    Gcam.Tests.ConfigLoaderTests.EveryShippedScenario_LoadsIntoAUsableConfig(file: "scenario_offaxis.json")
+    Gcam.Tests.ConfigLoaderTests.EveryShippedScenario_LoadsIntoAUsableConfig(file: "scenario_orig_gagg.json")
+    Gcam.Tests.ConfigLoaderTests.EveryShippedScenario_LoadsIntoAUsableConfig(file: "materials\\BGO.json")
+    Gcam.Tests.ConfigLoaderTests.EveryShippedScenario_LoadsIntoAUsableConfig(file: "materials\\CeBr3.json")
+    Gcam.Tests.ConfigLoaderTests.EveryShippedScenario_LoadsIntoAUsableConfig(file: "materials\\GAGG.json")
+    Gcam.Tests.ConfigLoaderTests.EveryShippedScenario_LoadsIntoAUsableConfig(file: "materials\\GAGG_Mg.json")
+    Gcam.Tests.ConfigLoaderTests.EveryShippedScenario_LoadsIntoAUsableConfig(file: "materials\\LaBr3.json")
+    Gcam.Tests.ConfigLoaderTests.EveryShippedScenario_LoadsIntoAUsableConfig(file: "materials\\LYSO.json")
+    Gcam.Tests.ConfigLoaderTests.EveryShippedScenario_LoadsIntoAUsableConfig(file: "materials\\NaI.json")
+    Gcam.Tests.ConfigLoaderTests.SaveThenLoad_KeepsEverySection
+    Gcam.Tests.ConfigLoaderTests.Clone_IsADeepEqualCopy
+    Gcam.Tests.ConfigLoaderTests.Loader_AcceptsCommentsTrailingCommasAndAnyCase
+    Gcam.Tests.CorrelationSearchTests.MatrixDecode_ReproducesTheDecoderExactly(cyclic: True)
+    Gcam.Tests.CorrelationSearchTests.MatrixDecode_ReproducesTheDecoderExactly(cyclic: False)
+    Gcam.Tests.CorrelationSearchTests.MatrixDecode_IsExactOnBothAccumulatorWidths(total: 32767)
+    Gcam.Tests.CorrelationSearchTests.MatrixDecode_IsExactOnBothAccumulatorWidths(total: 32768)
+    Gcam.Tests.CorrelationSearchTests.MatrixDecode_IsExactOnBothAccumulatorWidths(total: 250000)
+    Gcam.Tests.CorrelationSearchTests.MatrixDecode_IsExactOnAWideGridAndSignedCounts
+    Gcam.Tests.CorrelationSearchTests.StudentisedCorrelation_HasZeroMeanAndUnitVarianceUnderItsBackground
+    Gcam.Tests.CorrelationSearchTests.ExpectedMapDecode_ReproducesTheDecoderOnARealImage(cyclic: True)
+    Gcam.Tests.CorrelationSearchTests.ExpectedMapDecode_ReproducesTheDecoderOnARealImage(cyclic: False)
+    Gcam.Tests.CorrelationSearchTests.Search_GivesNoCandidateWithoutCounts
+    Gcam.Tests.CrrcContractTests.Preset_ShapingTimeIsSeparateFromNoiseWindow(index: 0, expectedK: 20972)
+    Gcam.Tests.CrrcContractTests.Preset_ShapingTimeIsSeparateFromNoiseWindow(index: 1, expectedK: 10486)
+    Gcam.Tests.CrrcContractTests.Preset_ShapingTimeIsSeparateFromNoiseWindow(index: 2, expectedK: 4194)
+    Gcam.Tests.CrrcContractTests.PreciseState_RetainsLowEnergyPulseWithinDerivedArithmeticError(index: 0)
+    Gcam.Tests.CrrcContractTests.PreciseState_RetainsLowEnergyPulseWithinDerivedArithmeticError(index: 1)
+    Gcam.Tests.CrrcContractTests.PreciseState_RetainsLowEnergyPulseWithinDerivedArithmeticError(index: 2)
+    Gcam.Tests.CrrcContractTests.SignedFullScale_StaysInsideTheConvexStateBound(fractionalBits: 0)
+    Gcam.Tests.CrrcContractTests.SignedFullScale_StaysInsideTheConvexStateBound(fractionalBits: 12)
+    Gcam.Tests.CrrcContractTests.ParametersOutsideTheBound_AreRejected
+    Gcam.Tests.CrrcContractTests.CsharpContractVectors_UseConfiguredCoefficientsAndOptionalExport
+    Gcam.Tests.CrystalMaterialTests.Gagg_IsJustBelowNistTotalWithCoherent(keV: 300, nistTotal: 0.17624000000000001)
+    Gcam.Tests.CrystalMaterialTests.Gagg_IsJustBelowNistTotalWithCoherent(keV: 600, nistTotal: 0.085849999999999996)
+    Gcam.Tests.CrystalMaterialTests.Gagg_IsJustBelowNistTotalWithCoherent(keV: 1000, nistTotal: 0.060940000000000001)
+    Gcam.Tests.CrystalMaterialTests.Gagg_IsJustBelowNistTotalWithCoherent(keV: 1250, nistTotal: 0.053379999999999997)
+    Gcam.Tests.CrystalMaterialTests.Gagg_At662_MatchesTheNistMixture
+    Gcam.Tests.CrystalMaterialTests.PhotoFraction_RisesWithZ_AndFallsWithEnergy
+    Gcam.Tests.CrystalMaterialTests.KEdge_IsAStep_NotASlope
+    Gcam.Tests.CrystalMaterialTests.Lookup_IsCaseInsensitive_AndUnknownFallsBackToGagg
+    Gcam.Tests.CsIMaterialTests.TotalWithCoherent_AgreesWithNist(keV: 300, nistTotal: 0.18179999999999999, coherent: 0.0148079546524, nistHalfUnit: 5.0000000000000002E-05, tableHalfUnit: 5.0000000000000004E-06)
+    Gcam.Tests.CsIMaterialTests.TotalWithCoherent_AgreesWithNist(keV: 600, nistTotal: 0.083729999999999999, coherent: 0.0038802801049299999, nistHalfUnit: 5.0000000000000004E-06, tableHalfUnit: 4.9999999999999998E-07)
+    Gcam.Tests.CsIMaterialTests.TotalWithCoherent_AgreesWithNist(keV: 800, nistTotal: 0.06769, coherent: 0.0022060828324800001, nistHalfUnit: 5.0000000000000004E-06, tableHalfUnit: 4.9999999999999998E-07)
+    Gcam.Tests.CsIMaterialTests.AnalyticExtension_StaysBelowNistTotal(keV: 1000, nistTotal: 0.058479999999999997)
+    Gcam.Tests.CsIMaterialTests.AnalyticExtension_StaysBelowNistTotal(keV: 1250, nistTotal: 0.0511)
+    Gcam.Tests.CsIMaterialTests.AnalyticExtension_MatchesDocumentedFormula(keV: 1000)
+    Gcam.Tests.CsIMaterialTests.AnalyticExtension_MatchesDocumentedFormula(keV: 1250)
+    Gcam.Tests.CsIMaterialTests.AnalyticExtension_MatchesDocumentedFormula(keV: 1500)
+    Gcam.Tests.CsIMaterialTests.ReferenceAnchor_UsesCsIHostDensityAndNormalizesAttenuation
+    Gcam.Tests.CsIMaterialTests.KEdges_JumpInAttenuationAndPhotoFraction(below: 33.1661, above: 33.172699999999999)
+    Gcam.Tests.CsIMaterialTests.KEdges_JumpInAttenuationAndPhotoFraction(below: 35.981000000000002, above: 35.988199999999999)
+    Gcam.Tests.CsIMaterialTests.Table_ClampsAtEndpointsAndInterpolatesLogLogBetweenNodes
+    Gcam.Tests.CsUnderCoTests.LogGamma_MatchesFactorials
+    Gcam.Tests.CsUnderCoTests.Poisson_HasPoissonMeanVarianceAndTail(lambda: 4)
+    Gcam.Tests.CsUnderCoTests.Poisson_HasPoissonMeanVarianceAndTail(lambda: 40)
+    Gcam.Tests.CsUnderCoTests.Poisson_HasPoissonMeanVarianceAndTail(lambda: 4000)
+    Gcam.Tests.CsUnderCoTests.StrippedCount_VarianceIsN662PlusRSquaredNRef
+    Gcam.Tests.CsUnderCoTests.CurrieExact_ZeroBackground_IsMinusLnBeta
+    Gcam.Tests.CsUnderCoTests.CurrieExact_MatchesBruteForceEnumeration(mu1: 2.2999999999999998, mu2: 3.1000000000000001, r: 0.69999999999999996)
+    Gcam.Tests.CsUnderCoTests.CurrieExact_MatchesBruteForceEnumeration(mu1: 0.59999999999999998, mu2: 0.59999999999999998, r: 0.85599999999999998)
+    Gcam.Tests.CsUnderCoTests.CurrieExact_MatchesBruteForceEnumeration(mu1: 9.1999999999999993, mu2: 13.1, r: 0.70030000000000003)
+    Gcam.Tests.CsUnderCoTests.CurrieExact_LargeMeans_AgreesWithTheOtherSummationOrder(mu1: 551.29999999999995, mu2: 787.20000000000005, r: 0.70030000000000003)
+    Gcam.Tests.CsUnderCoTests.CurrieExact_LargeMeans_AgreesWithTheOtherSummationOrder(mu1: 5513, mu2: 7872, r: 0.70030000000000003)
+    Gcam.Tests.CsUnderCoTests.CurrieExact_LargeMeans_AgreesWithTheOtherSummationOrder(mu1: 27600, mu2: 32250, r: 0.85599999999999998)
+    Gcam.Tests.CsUnderCoTests.CurrieExact_ConvergesToCornishFisher(mu1: 551.29999999999995, mu2: 787.20000000000005, r: 0.70030000000000003)
+    Gcam.Tests.CsUnderCoTests.CurrieExact_ConvergesToCornishFisher(mu1: 5513, mu2: 7872, r: 0.70030000000000003)
+    Gcam.Tests.CsUnderCoTests.CurrieExact_ConvergesToCornishFisher(mu1: 27600, mu2: 32250, r: 0.85599999999999998)
+    Gcam.Tests.CsUnderCoTests.ForGain_IsTheWindowOfAScaledPulseHeight
+    Gcam.Tests.CsUnderCoTests.StrippingRatio_SameMapStripsToZero_IndependentMapsAgreeWithinTheirMonteCarloError
+    Gcam.Tests.CsUnderCoTests.PerPixelRatios_StripTheirOwnMapToZero_GlobalRatioLeavesAnEdgeHeavyResidual
+    Gcam.Tests.CsUnderCoTests.StrippedStatistic_IsLinear_ExpectedNullIsZeroEverywhere
+    Gcam.Tests.CsUnderCoTests.Family_SelectionThenValidation_RunsAndReportsProbabilities
+    Gcam.Tests.DeadTimeTests.ZeroDeadTime_RecordsEverything
+    Gcam.Tests.DeadTimeTests.NonParalyzable_DeadOnlyAfterRecordedEvents
+    Gcam.Tests.DeadTimeTests.Paralyzable_EveryArrivalExtendsTheDeadPeriod
+    Gcam.Tests.DeadTimeTests.Paralyzable_LosesMoreThanNonParalyzable_UnderLoad
+    Gcam.Tests.DeadTimeTests.MatchesAnalytic_AndParalyzableTurnsOver
+    Gcam.Tests.DecoderInvariantTests.AnalyticShadow_PeaksAtItsSource(cyclic: True, kx: 0, ky: 0)
+    Gcam.Tests.DecoderInvariantTests.AnalyticShadow_PeaksAtItsSource(cyclic: True, kx: 12, ky: -7)
+    Gcam.Tests.DecoderInvariantTests.AnalyticShadow_PeaksAtItsSource(cyclic: True, kx: -20, ky: 15)
+    Gcam.Tests.DecoderInvariantTests.AnalyticShadow_PeaksAtItsSource(cyclic: False, kx: 0, ky: 0)
+    Gcam.Tests.DecoderInvariantTests.AnalyticShadow_PeaksAtItsSource(cyclic: False, kx: 12, ky: -7)
+    Gcam.Tests.DecoderInvariantTests.Decode_IsLinearInTheImage
+    Gcam.Tests.DecoderInvariantTests.Cyclic_RejectsAModestPedestal_ButNotAnUnlimitedOne
+    Gcam.Tests.DepthDesignTests.DepthResolution_WorsensWithDistance
+    Gcam.Tests.DepthDesignTests.EffectiveRange_ReadsOffTheCurve
+    Gcam.Tests.DepthLocalizationTests.TwoSourcesAtDifferentDistances_RecoveredIn3D
+    Gcam.Tests.DepthTests.NearFieldDistance_IsRecovered
+    Gcam.Tests.DepthTests.DepthResolution_DegradesWithDistance
+    Gcam.Tests.DepthTests.NearFieldDepth_ConvergesWithCounts
+    Gcam.Tests.DepthTests.Joint_LocalizesLateralBetterThanDepth
+    Gcam.Tests.DepthTests.Joint3D_BeatsAlternating_OnNearFieldCoupling
+    Gcam.Tests.DetectorDefectTests.SameSeed_IsDeterministic
+    Gcam.Tests.DetectorDefectTests.APixelIsNeverBothDeadAndHot
+    Gcam.Tests.DetectorDefectTests.DefectCounts_TrackTheFractions
+    Gcam.Tests.DetectorDefectTests.BadPixels_DegradeThenRepairRecovers
+    Gcam.Tests.DoiParallaxTests.DoiAddsAnOffAxisShiftThatGrowsWithThickness_ZeroOnAxis
+    Gcam.Tests.DoseTests.AmbientDose_MatchesIcrp74AtTablePoints(keV: 60, pSvCm2: 0.51000000000000001)
+    Gcam.Tests.DoseTests.AmbientDose_MatchesIcrp74AtTablePoints(keV: 600, pSvCm2: 3.4399999999999999)
+    Gcam.Tests.DoseTests.AmbientDose_MatchesIcrp74AtTablePoints(keV: 1000, pSvCm2: 5.2000000000000002)
+    Gcam.Tests.DoseTests.AmbientDose_InterpolatesLogLog_AndRejectsOutOfRange
+    Gcam.Tests.DoseTests.FittedWeighting_TracksDose_FrontallyButNotOffAxis
+    Gcam.Tests.DoseTests.OverRange_FollowsParalyzableDeadTime_AndLiveTimeCorrectsUntilItsResolution
+    Gcam.Tests.EmissionKindTests.Cs137_BaKLines_AreXRays_AndThePhotopeakIsGamma
+    Gcam.Tests.EmissionKindTests.EveryOtherLine_DefaultsToGamma
+    Gcam.Tests.EmissionKindTests.EnergyIntensityPair_ConvertsToAGammaLine
+    Gcam.Tests.EntranceAbsorberTests.ZeroThickness_TransmitsEverything
+    Gcam.Tests.EntranceAbsorberTests.BarelyTouches662_ButStronglyAttenuates32
+    Gcam.Tests.EntranceAbsorberTests.TransmissionIsMonotonicInEnergy
+    Gcam.Tests.EntranceAbsorberTests.ThickerAbsorbs_More
+    Gcam.Tests.EventStreamTests.Deposits_AreBoundedAndSpanPhotopeakAndContinuum
+    Gcam.Tests.EventStreamTests.Arrivals_AreMonotonic
+    Gcam.Tests.EventStreamTests.MeanGap_MatchesRequestedRate(rateCps: 200000)
+    Gcam.Tests.EventStreamTests.MeanGap_MatchesRequestedRate(rateCps: 1000000)
+    Gcam.Tests.EventStreamTests.Background_MergesExtraUncodedEvents
+    Gcam.Tests.EventStreamTests.IsotropicBackground_PhotopeakFraction_MatchesNormalIncidence_InThisSmallCrystal
+    Gcam.Tests.EventStreamTests.DarkCounts_AddSubKeVPulses
+    Gcam.Tests.EventStreamTests.Text_RoundTripsHeaderAndColumns
+    Gcam.Tests.ExponentialIntegralTests.E1_MatchesIndependentQuadrature(x: 0.0001)
+    Gcam.Tests.ExponentialIntegralTests.E1_MatchesIndependentQuadrature(x: 0.01)
+    Gcam.Tests.ExponentialIntegralTests.E1_MatchesIndependentQuadrature(x: 0.5)
+    Gcam.Tests.ExponentialIntegralTests.E1_MatchesIndependentQuadrature(x: 1)
+    Gcam.Tests.ExponentialIntegralTests.E1_MatchesIndependentQuadrature(x: 1.0000001000000001)
+    Gcam.Tests.ExponentialIntegralTests.E1_MatchesIndependentQuadrature(x: 3)
+    Gcam.Tests.ExponentialIntegralTests.E1_MatchesIndependentQuadrature(x: 20)
+    Gcam.Tests.ExponentialIntegralTests.E1_RejectsNonPositiveArgument
+    Gcam.Tests.FieldOfViewTests.FullyCodedHalfAngle_IsSquare
+    Gcam.Tests.FieldOfViewTests.NonCyclic_LocalizesBeyondTheFullyCodedField_AndCentroidGivesTheSide
+    Gcam.Tests.FieldOfViewTests.Run_IsReproducible
+    Gcam.Tests.FieldOfViewTests.NegativeAngles_AreRejected
+    Gcam.Tests.FiniteSourceTests.SourceSize_BlursTheRecon_ThenWashesItOut
+    Gcam.Tests.FiniteSourceTests.Capsule_SuppressesTheLowEnergyLineMuchMoreThanThePrimary
+    Gcam.Tests.FocusFusionTests.Consistent_WhenLaserMatchesSource
+    Gcam.Tests.FocusFusionTests.FlagsMismatch_WhenLaserHitsWrongSurface
+    Gcam.Tests.FrontEndPartsTests.Presets_BuildTheLegacyConfig_DefaultMatchesStartupSelection
+    Gcam.Tests.FrontEndPartsTests.PulseSamples_MatchesLegacyConvolutionAndSampleGuards
+    Gcam.Tests.FrontEndTests.Fwhm_MatchesPhotoelectronBudget_At662
+    Gcam.Tests.FrontEndTests.Fwhm_ImprovesWithEnergy_AsOneOverSqrtE
+    Gcam.Tests.FrontEndTests.Measure_IsUnbiased_WithFwhmSpread
+    Gcam.Tests.FrontEndTests.Dcr_IsParallelNoise_ScalingOneOverE
+    Gcam.Tests.FrontEndTests.Dcr_TermConcentratesAtLowEnergy_AndRaisesTotal
+    Gcam.Tests.FrontEndTests.FrontEnd_BroadensPhotopeak_ShrinkingTightWindowCounts
+    Gcam.Tests.GateResponseTests.NormalCdf_AgreesWithTheErfSeries(z: -3)
+    Gcam.Tests.GateResponseTests.NormalCdf_AgreesWithTheErfSeries(z: -1)
+    Gcam.Tests.GateResponseTests.NormalCdf_AgreesWithTheErfSeries(z: 0)
+    Gcam.Tests.GateResponseTests.NormalCdf_AgreesWithTheErfSeries(z: 1.5)
+    Gcam.Tests.GateResponseTests.NormalCdf_AgreesWithTheErfSeries(z: 3.3999999999999999)
+    Gcam.Tests.GateResponseTests.Acceptance_IsTheWindowProbabilityOfTheSmearedDeposit
+    Gcam.Tests.GateResponseTests.AmbientOpenWindowRate_IsTheProcessDetectedRate
+    Gcam.Tests.GateResponseTests.AmbientMap_RefusesTheNotValidatedSpectrum
+    Gcam.Tests.GateResponseTests.SourceRate_ScalesWithBranchingAndSplitsAcrossWindows
+    Gcam.Tests.HalfSpaceUncollidedTests.UniformHalfSpace_FluenceAndZenithMatchIndependentAnalogAirSurvival(airMu: 0.0001)
+    Gcam.Tests.HalfSpaceUncollidedTests.UniformHalfSpace_FluenceAndZenithMatchIndependentAnalogAirSurvival(airMu: 0.0030000000000000001)
+    Gcam.Tests.HalfSpaceUncollidedTests.UniformHalfSpace_FluenceAndZenithMatchIndependentAnalogAirSurvival(airMu: 0.029999999999999999)
+    Gcam.Tests.HalfSpaceUncollidedTests.ZeroAirAttenuation_RetainsInfiniteHalfSpaceNormalizationAndMassUnits
+    Gcam.Tests.IncidentSpectrumFileTests.PinnedAmbientFiles_HashTheBytesGitStores
+    Gcam.Tests.IncidentSpectrumFileTests.DevelopmentPlaceholder_RegeneratesTheCommittedBytes
+    Gcam.Tests.IncidentSpectrumFileTests.WriteWithSidecar_RefusesCarriageReturnsAndOverwrites
+    Gcam.Tests.IncidentSpectrumFileTests.SpectrumReference_ResolvesOnlyWithItsPinnedHash
+    Gcam.Tests.Ir192Tests.LineTable_MatchesEnsdf_PrimaryLineFirst
+    Gcam.Tests.Ir192Tests.TungstenMuRel_MatchesNist_Between200And600keV(keV: 200, nistRatio: 7.9619999999999997)
+    Gcam.Tests.Ir192Tests.TungstenMuRel_MatchesNist_Between200And600keV(keV: 300, nistRatio: 3.2869999999999999)
+    Gcam.Tests.Ir192Tests.TungstenMuRel_MatchesNist_Between200And600keV(keV: 400, nistRatio: 1.954)
+    Gcam.Tests.Ir192Tests.TungstenMuRel_MatchesNist_Between200And600keV(keV: 500, nistRatio: 1.399)
+    Gcam.Tests.Ir192Tests.TungstenMuRel_MatchesNist_Between200And600keV(keV: 600, nistRatio: 1.109)
+    Gcam.Tests.Ir192Tests.TungstenMuRel_AtIr192Lines_IsWithinOnePercentOfNist(keV: 316.5, nistRatio: 2.984)
+    Gcam.Tests.Ir192Tests.TungstenMuRel_AtIr192Lines_IsWithinOnePercentOfNist(keV: 468.10000000000002, nistRatio: 1.544)
+    Gcam.Tests.Ir192Tests.TungstenMuRel_AtIr192Lines_IsWithinOnePercentOfNist(keV: 604.39999999999998, nistRatio: 1.101)
+    Gcam.Tests.Ir192Tests.CascadeStudy_RefusesIr192_InsteadOfSilentlyRunningCs137
+    Gcam.Tests.Ir192Tests.CascadeStudy_RefusesEveryUnmodelledName(name: "Co-57")
+    Gcam.Tests.Ir192Tests.CascadeStudy_RefusesEveryUnmodelledName(name: "Am-241")
+    Gcam.Tests.Ir192Tests.CascadeStudy_RefusesEveryUnmodelledName(name: "Cs-173")
+    Gcam.Tests.Ir192Tests.CascadeStudy_RefusesEveryUnmodelledName(name: "")
+    Gcam.Tests.Ir192Tests.CascadeStudy_RefusesEveryUnmodelledName(name: null)
+    Gcam.Tests.Ir192Tests.CascadeStudy_AcceptsTheModelledNames(name: "Cs-137", expected: Cs137)
+    Gcam.Tests.Ir192Tests.CascadeStudy_AcceptsTheModelledNames(name: " co60 ", expected: Co60)
+    Gcam.Tests.Ir192Tests.CascadeStudy_AcceptsTheModelledNames(name: "NA-22", expected: Na22)
+    Gcam.Tests.Ir192Tests.Ir192Source_LocalisesThroughTheFullPipeline_AsWellAsCs137
+    Gcam.Tests.Ir192Tests.Ir192_ThroughA316keVWindow_StillLocalises
+    Gcam.Tests.KleinNishinaTests.Sample_MatchesKleinNishinaAngularDistribution(energyKeV: 30)
+    Gcam.Tests.KleinNishinaTests.Sample_MatchesKleinNishinaAngularDistribution(energyKeV: 661.70000000000005)
+    Gcam.Tests.KleinNishinaTests.Sample_MatchesKleinNishinaAngularDistribution(energyKeV: 2614.5)
+    Gcam.Tests.KleinNishinaTests.Rotate_KeepsUnitLengthAndScatteringAngle
+    Gcam.Tests.ListModeBackgroundTests.ZeroBsr_PreservesSourceStreamBitForBit
+    Gcam.Tests.ListModeBackgroundTests.BsrOne_DoublesRate_PreservesEverySourceEvent_AndMatchesBackgroundModel
+    Gcam.Tests.ListModeBackgroundTests.Background_SeedAndCancellationAreDeterministic
+    Gcam.Tests.ListModeSourceTests.PixelHistogram_MatchesIndependentWeightedComptonFlood
+    Gcam.Tests.ListModeSourceTests.Deposits_MatchIndependentWeightResampledEventStream
+    Gcam.Tests.ListModeSourceTests.RateAndGaps_MatchPhysicalEfficiencyAndExponentialLaw
+    Gcam.Tests.ListModeSourceTests.MixedDistances_RejectionPreservesWeightedFloodAndTotalEmissionRate
+    Gcam.Tests.ListModeSourceTests.PixelSink_PreservesLegacyEnergySinkAndTransport_WithOpticalCrosstalk
+    Gcam.Tests.ListModeSourceTests.SeedAndCancellation_AreDeterministicAndPrompt
+    Gcam.Tests.ListModeSourceTests.Performance_RecordAcceptedThroughputAcceptanceAndDecode(handheld: False)
+    Gcam.Tests.ListModeSourceTests.Performance_RecordAcceptedThroughputAcceptanceAndDecode(handheld: True)
+    Gcam.Tests.MaskAttenuationTests.TungstenMu_IsAnchoredAt662_AndFlatteningAtHighEnergy
+    Gcam.Tests.MaskAttenuationTests.TungstenMu_RisesBelow122keV_ForSoftLines
+    Gcam.Tests.MaskFabricationTests.SameSeed_IsDeterministic
+    Gcam.Tests.MaskFabricationTests.Wander_DriftsTheHoleCentreWithDepth
+    Gcam.Tests.MaskFabricationTests.HoleHalfWidth_FollowsNominalFraction
+    Gcam.Tests.MaskFabricationTests.BlockedCells_ReduceTransmission
+    Gcam.Tests.MaskFabricationTests.LooserTolerance_DegradesLocalization
+    Gcam.Tests.MaskGeometryTests.SmallerHole_LosesEfficiency
+    Gcam.Tests.MaskGeometryTests.FocusedChannels_ConcentrateOnFocalPoint
+    Gcam.Tests.MaskGeometryTests.TaperedChannels_WidenTheFovOfAThickMask
+    Gcam.Tests.MaskGeometryTests.CellSize_HasABoundedOptimum
+    Gcam.Tests.MaskScatterTests.Contamination_IsSmall_AndFallsAsTheGapWidens
+    Gcam.Tests.MaskScatterTests.EnergyWindow_RemovesTheDownShiftedScatter_ButNotTheForwardTail
+    Gcam.Tests.MaskScatterTests.BalancedDecoder_LargelyRejectsTheSmoothPedestal
+    Gcam.Tests.MaskSecondaryTests.PhotoFraction_DecreasesWithEnergy
+    Gcam.Tests.MaskSecondaryTests.MuRel_AnchoredAt662_HugeForFluorescence
+    Gcam.Tests.MaskSecondaryTests.At662_MostlyComptonScatter_LowerEnergy
+    Gcam.Tests.MaskSecondaryTests.BelowKEdge_NoFluorescence
+    Gcam.Tests.MaskSecondaryTests.Study_ProducesForwardScatterBackground_FluorescenceNegligible
+    Gcam.Tests.MixedFieldTests.SingleSourceScene_MatchesSinglePath
+    Gcam.Tests.MixedFieldTests.Superposition_IsActivityWeighted
+    Gcam.Tests.MixedFieldTests.MultiSource_AllLocalized_InOneRun
+    Gcam.Tests.MixedFieldTests.MixedField_ThroughEnergyWindow_SeparatesIsotopesSpatially
+    Gcam.Tests.MixedFieldTests.PerNuclideWindow_SeparatesCsFromNa_InTheImage
+    Gcam.Tests.MixedFieldTests.ComptonStripping_RecoversCoLocatedCsCount
+    Gcam.Tests.MixedFieldTests.MultiLine_SplitsByIntensity
+    Gcam.Tests.MixedFieldTests.MaskAttenuation_IsEnergyDependent
+    Gcam.Tests.MixedFieldTests.SingleSourceWithLines_EmitsAllItsLines
+    Gcam.Tests.MlemOptionTests.DefaultDecoder_IsBitIdenticalToThePreChangeAlgorithm(scenario: "scenario.json", sd: 0, cyclic: True, iterations: 80)
+    Gcam.Tests.MlemOptionTests.DefaultDecoder_IsBitIdenticalToThePreChangeAlgorithm(scenario: "scenario.json", sd: 0, cyclic: False, iterations: 33)
+    Gcam.Tests.MlemOptionTests.DefaultDecoder_IsBitIdenticalToThePreChangeAlgorithm(scenario: "scenario_handheld.json", sd: 0, cyclic: True, iterations: 60)
+    Gcam.Tests.MlemOptionTests.DefaultDecoder_IsBitIdenticalToThePreChangeAlgorithm(scenario: "scenario_handheld.json", sd: 1000, cyclic: False, iterations: 60)
+    Gcam.Tests.MlemOptionTests.DefaultDecoder_IsBitIdenticalToThePreChangeAlgorithm(scenario: "scenario_handheld.json", sd: 5000, cyclic: False, iterations: 17)
+    Gcam.Tests.MlemOptionTests.DefaultDecoder_IsBitIdenticalToThePreChangeAlgorithm(scenario: "scenario_handheld.json", sd: 1000, cyclic: False, iterations: 0)
+    Gcam.Tests.MlemOptionTests.Snapshots_OfTheDefaultLoop_EqualDecodeAtEachIterationCount
+    Gcam.Tests.MlemOptionTests.PixelAreaModel_WithOneSampleAndOpaqueCells_IsTheBinaryMatrix
+    Gcam.Tests.MlemOptionTests.PixelAreaModel_EntriesAreSampleAveragesOfOneAndT
+    Gcam.Tests.MlemOptionTests.VectorLoop_OnTheBinaryMatrix_AgreesWithTheDefaultLoop
+    Gcam.Tests.MlemOptionTests.SuppliedColumns_ReproduceTheModelTheyCameFrom
+    Gcam.Tests.MlemOptionTests.Background_DataOfTheModelAtFlatLambda_IsAFixedPoint(area: False)
+    Gcam.Tests.MlemOptionTests.Background_DataOfTheModelAtFlatLambda_IsAFixedPoint(area: True)
+    Gcam.Tests.MlemOptionTests.FarSource_NoiselessModelData_ReconstructAtItsGridPoint(area: False)
+    Gcam.Tests.MlemOptionTests.FarSource_NoiselessModelData_ReconstructAtItsGridPoint(area: True)
+    Gcam.Tests.MlemOptionTests.ClosedCellTransmission_IsTheSlabsBeerLambertFactor
+    Gcam.Tests.MlemReconstructionTests.Method_LoadsFromAJsonString_AndSurvivesCloneAndSave(method: "\"Mlem\"", iterations: 40)
+    Gcam.Tests.MlemReconstructionTests.Method_LoadsFromAJsonString_AndSurvivesCloneAndSave(method: "\"mlem\"", iterations: 7)
+    Gcam.Tests.MlemReconstructionTests.Method_AbsentMeansCrossCorrelation_AndOtherEnumsStayNumeric
+    Gcam.Tests.MlemReconstructionTests.DefaultMethod_IsTheUnchangedCrossCorrelationDecoder(name: "lab")
+    Gcam.Tests.MlemReconstructionTests.DefaultMethod_IsTheUnchangedCrossCorrelationDecoder(name: "lab-noncyclic")
+    Gcam.Tests.MlemReconstructionTests.DefaultMethod_IsTheUnchangedCrossCorrelationDecoder(name: "handheld")
+    Gcam.Tests.MlemReconstructionTests.DefaultMethod_IsTheUnchangedCrossCorrelationDecoder(name: "handheld-1m")
+    Gcam.Tests.MlemReconstructionTests.DefaultMethod_IsTheUnchangedCrossCorrelationDecoder(name: "studio")
+    Gcam.Tests.MlemReconstructionTests.FactoryMlem_EqualsTheAngresStudysConstruction_BitForBit
+    Gcam.Tests.MlemReconstructionTests.PixelSubSamples_IsTheValuePinnedInTheAngresRequests
+    Gcam.Tests.MlemReconstructionTests.ClosedCellTransmission_IsShared_AndFollowsTheLineEnergy
+    Gcam.Tests.MlemReconstructionTests.Mlem_UsesTheInvertedMosaic_WhenTheMaskIsInverted
+    Gcam.Tests.MlemReconstructionTests.FactoryMlem_NoiselessModelDataAtAGridNode_PeaksAtThatNode(name: "handheld-1m")
+    Gcam.Tests.MlemReconstructionTests.FactoryMlem_NoiselessModelDataAtAGridNode_PeaksAtThatNode(name: "studio")
+    Gcam.Tests.MlemReconstructionTests.SubCellArgument_NoneIsTheOriginalDecoder_TentRefinesTheReturnedImage
+    Gcam.Tests.MlemReconstructionTests.CorrelationSearch_RefusesAnMlemConfig
+    Gcam.Tests.MlemReconstructionTests.SingleRun_DecodesWithMlem_WhenTheScenarioSelectsIt
+    Gcam.Tests.MlemTests.SingleSource_MlemIsNonNegativeAndSharp_CrossHasSidelobes
+    Gcam.Tests.MlemTests.MlemResolvesCloserPairsThanCrossCorrelation
+    Gcam.Tests.MuraGeneratorTests.Rank7_HasCharacteristicMuraSignature
+    Gcam.Tests.MuraGeneratorTests.Rank7_OpenFractionIsNearHalf
+    Gcam.Tests.MuraGeneratorTests.NonPrimeRank_Throws
+    Gcam.Tests.MuraGeneratorTests.Mosaic2x2_TilesTheBasicPattern
+    Gcam.Tests.MuraGeneratorTests.DecodingArray_IsPlusOneAtOrigin
+    Gcam.Tests.NonProportionalityTests.AllPresets_AreNormalizedTo662
+    Gcam.Tests.NonProportionalityTests.Proportional_IsFlat_NaI_HasALowEnergyDeficit
+    Gcam.Tests.NonProportionalityTests.ProportionalCrystal_HasExactlyZeroIntrinsicResolution
+    Gcam.Tests.NonProportionalityTests.NonProportionality_GivesAnEnergyDependentIntrinsicResolution
+    Gcam.Tests.PileUpTests.CloseEvents_MergeAndSumEnergy
+    Gcam.Tests.PileUpTests.FarEvents_DoNotMerge
+    Gcam.Tests.PileUpTests.Pileup_IsExtending_ABurstPilesToThreefold
+    Gcam.Tests.PileUpTests.ResolvingTime_FromShaperPulse
+    Gcam.Tests.PileUpTests.HigherRate_LosesThroughput_AndBuildsSumContinuum
+    Gcam.Tests.PileUpTests.EnergyIsConserved_NoCountsAppearFromNowhere
+    Gcam.Tests.PipelineTests.CenteredSource_LocalizesSubMillimeter
+    Gcam.Tests.PipelineTests.OffAxisInsideFcfov_Tracks
+    Gcam.Tests.PipelineTests.OffAxisOutsideFcfov_GhostsToOppositeSide
+    Gcam.Tests.PipelineTests.Biasing_IsUnbiasedVersus4Pi
+    Gcam.Tests.PipelineTests.DenserCrystal_DetectsMore
+    Gcam.Tests.PipelineTests.LeakyMask_AddsCountsVersusOpaque
+    Gcam.Tests.PipelineTests.NonCyclicDecoding_SuppressesGhost
+    Gcam.Tests.RandomQualityTests.NearbySeeds_GiveUncorrelatedStreams(d: 1)
+    Gcam.Tests.RandomQualityTests.NearbySeeds_GiveUncorrelatedStreams(d: 777)
+    Gcam.Tests.RandomQualityTests.NearbySeeds_GiveUncorrelatedStreams(d: 104729)
+    Gcam.Tests.RandomQualityTests.SuccessiveDraws_AreUncorrelated
+    Gcam.Tests.RandomQualityTests.UnseededStream_ExposesAReplayableSeed
+    Gcam.Tests.RandomQualityTests.NextDouble_IsInTheUnitInterval_WithMeanAndVarianceOfAUniform
+    Gcam.Tests.RandomQualityTests.KleinNishina_MatchesQuadrature
+    Gcam.Tests.RangeLocalizationTests.LocalizesAtStandoff(z: 500)
+    Gcam.Tests.RangeLocalizationTests.LocalizesAtStandoff(z: 1000)
+    Gcam.Tests.RangeLocalizationTests.LocalizesAtStandoff(z: 2000)
+    Gcam.Tests.ResolvedPairTests.TwoEqualTents_SecondPeakProminence_IsDeltaOverWidthMinusOne(b: 8, delta: 10)
+    Gcam.Tests.ResolvedPairTests.TwoEqualTents_SecondPeakProminence_IsDeltaOverWidthMinusOne(b: 8, delta: 12)
+    Gcam.Tests.ResolvedPairTests.TwoEqualTents_SecondPeakProminence_IsDeltaOverWidthMinusOne(b: 8, delta: 14)
+    Gcam.Tests.ResolvedPairTests.TwoEqualTents_SecondPeakProminence_IsDeltaOverWidthMinusOne(b: 6, delta: 10)
+    Gcam.Tests.ResolvedPairTests.Plateau_GivesOnePeak
+    Gcam.Tests.ResolvedPairTests.Pedestal_DoesNotChangeTheMedianBaselineTest
+    Gcam.Tests.ResolvedPairTests.Median_IsTheMiddleOrderStatistic
+    Gcam.Tests.ResolvedPairTests.AssignmentRadius_IsCappedAtOneElement
+    Gcam.Tests.ResolvedPairTests.SingleSource_IsNeverResolved
+    Gcam.Tests.ResolvedPairTests.Fwhm_OfATent_IsItsHalfBaseInAngle
+    Gcam.Tests.ResolvedPairTests.ElementAngles_AtOneAndFiveMetres
+    Gcam.Tests.ResolvedPairTests.SecondPeak_AbsoluteProminence_IsTheAnalyticValue(delta: 10, weak: 1)
+    Gcam.Tests.ResolvedPairTests.SecondPeak_AbsoluteProminence_IsTheAnalyticValue(delta: 12, weak: 1)
+    Gcam.Tests.ResolvedPairTests.SecondPeak_AbsoluteProminence_IsTheAnalyticValue(delta: 20, weak: 0.25)
+    Gcam.Tests.ResolvedPairTests.SelectFloor_IsTheSmallestFloorWithExceedanceAtMostAlpha
+    Gcam.Tests.SamplingTests.Poisson_HasMeanAndVarianceLambda(lambda: 0.5)
+    Gcam.Tests.SamplingTests.Poisson_HasMeanAndVarianceLambda(lambda: 5)
+    Gcam.Tests.SamplingTests.Poisson_HasMeanAndVarianceLambda(lambda: 29.899999999999999)
+    Gcam.Tests.SamplingTests.Poisson_HasMeanAndVarianceLambda(lambda: 30)
+    Gcam.Tests.SamplingTests.Poisson_HasMeanAndVarianceLambda(lambda: 400)
+    Gcam.Tests.SamplingTests.Poisson_IsContinuousAcrossTheMethodSwitch
+    Gcam.Tests.SamplingTests.Poisson_OfNonPositiveMean_IsZero(lambda: 0)
+    Gcam.Tests.SamplingTests.Poisson_OfNonPositiveMean_IsZero(lambda: -3)
+    Gcam.Tests.SamplingTests.Gaussian_IsStandardNormal
+    Gcam.Tests.SamplingTests.UnitSphere_IsIsotropic
+    Gcam.Tests.SamplingTests.PoissonExact_MatchesPoissonMomentsAndTheZeroProbability(lambda: 0.29999999999999999)
+    Gcam.Tests.SamplingTests.PoissonExact_MatchesPoissonMomentsAndTheZeroProbability(lambda: 7)
+    Gcam.Tests.SamplingTests.PoissonExact_MatchesPoissonMomentsAndTheZeroProbability(lambda: 60)
+    Gcam.Tests.SamplingTests.PoissonExact_MatchesPoissonMomentsAndTheZeroProbability(lambda: 400)
+    Gcam.Tests.ScattererTests.Interact_662_MostlyScattersToLowerEnergy
+    Gcam.Tests.ScattererTests.Interact_32keV_InteractionsMostlyAbsorbed
+    Gcam.Tests.ScattererTests.EntranceScatterer_FillsTheSubPhotopeakValley
+    Gcam.Tests.SceneConfigBuilderTests.NearestPrime_SnapsRankToNearestPrime(requested: 13, expected: 13)
+    Gcam.Tests.SceneConfigBuilderTests.NearestPrime_SnapsRankToNearestPrime(requested: 12, expected: 11)
+    Gcam.Tests.SceneConfigBuilderTests.NearestPrime_SnapsRankToNearestPrime(requested: 1, expected: 2)
+    Gcam.Tests.SceneConfigBuilderTests.NearestPrime_SnapsRankToNearestPrime(requested: 20, expected: 19)
+    Gcam.Tests.SceneConfigBuilderTests.Build_MultiSourceFiniteMaskConfig
+    Gcam.Tests.SceneConfigBuilderTests.Build_RejectsNonPositivePhotonBudget
+    Gcam.Tests.SceneConfigBuilderTests.Runner_ReportsProgress_HonoursCancellation
+    Gcam.Tests.SceneSimTests.MixedScene_RunsAndDecodes
+    Gcam.Tests.SceneSimTests.MixedScene_StreamsDepositSpectrum
+    Gcam.Tests.SoilAirMaterialsTests.Load_ComposedAirReproducesNistTotalWithinTableRounding
+    Gcam.Tests.SoilAirMaterialsTests.AirMuEn_ReturnsTabulatedValuesAndTakesTheValueAboveAnEdge
+    Gcam.Tests.SoilAirMaterialsTests.Load_RejectsTamperedOrMalformedData
+    Gcam.Tests.SoilAirTransportTests.Run_IsReproduciblePerSeed
+    Gcam.Tests.SoilAirTransportTests.Run_UncollidedMatchesAnalyticHalfSpaceKernel
+    Gcam.Tests.SoilAirTransportTests.Run_TalliesAreConsistentAndPairProductionNeedsThreshold
+    Gcam.Tests.SoilAirTransportTests.Constructor_RejectsInvalidRecipes
+    Gcam.Tests.SourceDistanceTests.PerSourceDistance_FollowsInverseSquare
+    Gcam.Tests.SourceDistanceTests.ZeroZ_FallsBackToTheSharedPlane
+    Gcam.Tests.SubCellTests.Tent_IsExactForAnIdealTent(u: 0)
+    Gcam.Tests.SubCellTests.Tent_IsExactForAnIdealTent(u: 0.20000000000000001)
+    Gcam.Tests.SubCellTests.Tent_IsExactForAnIdealTent(u: 0.34999999999999998)
+    Gcam.Tests.SubCellTests.Tent_IsExactForAnIdealTent(u: -0.29999999999999999)
+    Gcam.Tests.SubCellTests.Parabolic_IsBiasedTowardTheCellForATent(u: 0.29999999999999999)
+    Gcam.Tests.SubCellTests.Parabolic_IsBiasedTowardTheCellForATent(u: -0.34999999999999998)
+    Gcam.Tests.SubCellTests.Gaussian_IsExactForAGaussianPeak
+    Gcam.Tests.SubCellTests.None_AndGridEdges_ReturnZero
+    Gcam.Tests.SubCellTests.Gaussian_FallsBackToParabolaWhenANeighbourIsNonPositive
+    Gcam.Tests.SubCellTests.Interpolation_BeatsTheQuantizationFloor
+    Gcam.Tests.TerrestrialCatalogTests.Load_PinnedCatalogFollowsAb4d
+    Gcam.Tests.TerrestrialCatalogTests.Load_RejectsWrongHashAndMalformedCatalogs
+    Gcam.Tests.TerrestrialCatalogTests.Snapshot_ManifestHashesMatchFiles
+    Gcam.Tests.TerrestrialSpectrumTests.CommittedSpectrum_HashesVersionAndValidationStateHold
+    Gcam.Tests.TerrestrialSpectrumTests.CommittedSpectrum_LoadsIntoTheEngineButNotAsEvidence
+    Gcam.Tests.TerrestrialSpectrumTests.ValidatedSpectrum_IsTheAcceptedFileWithOnlyItsStatusChanged
+    Gcam.Tests.TerrestrialSpectrumTests.ValidatedSpectrum_IsEvidenceGrade_TheNotValidatedOneAndATamperedRecordAreNot
+    Gcam.Tests.TerrestrialSpectrumTests.CommittedSpectrum_TableReproducesEveryMarginalAndUncollidedLinesPointUpward
+    Gcam.Tests.ThermalDriftTests.AtCalibration_NoShift
+    Gcam.Tests.ThermalDriftTests.Ambient_IsUniformAcrossArray
+    Gcam.Tests.ThermalDriftTests.SelfHeating_CentreHotterThanCorner
+    Gcam.Tests.ThermalDriftTests.BiasComp_ShrinksTheShift
+    Gcam.Tests.ThermalDriftTests.ShiftReducesAcceptance_ReducesToStaticAtZero
+    Gcam.Tests.ThermalDriftTests.DriftDroopsEfficiency_BiasCompRecovers
+    Gcam.Tests.ThermalReadoutTests.Dcr_DoublesEveryDoublingInterval_AndBiasCompDoesNotNullIt
+    Gcam.Tests.ThermalReadoutTests.DcrHitsLowEnergyResolutionMoreThanThePhotopeak_AndPdeDroops
+    Gcam.Tests.TransportInvariantTests.BiasedSource_MeanWeightIsTheDetectorSolidAngle(h: 160)
+    Gcam.Tests.TransportInvariantTests.BiasedSource_MeanWeightIsTheDetectorSolidAngle(h: 1055)
+    Gcam.Tests.TransportInvariantTests.BiasedSource_MeanWeightIsTheDetectorSolidAngle(h: 20)
+    Gcam.Tests.TransportInvariantTests.Crystal_StopsOneMinusExpOfMuTimesSlantPath(keV: 661.70000000000005, angleDeg: 0)
+    Gcam.Tests.TransportInvariantTests.Crystal_StopsOneMinusExpOfMuTimesSlantPath(keV: 316.5, angleDeg: 0)
+    Gcam.Tests.TransportInvariantTests.Crystal_StopsOneMinusExpOfMuTimesSlantPath(keV: 661.70000000000005, angleDeg: 30)
+    Gcam.Tests.TransportInvariantTests.Mask_PassesItsOpenFractionPlusTheTungstenLeak(muPerMm: 100)
+    Gcam.Tests.TransportInvariantTests.Mask_PassesItsOpenFractionPlusTheTungstenLeak(muPerMm: 0.17799999999999999)
+    Gcam.Tests.TransportInvariantTests.ComptonCascade_NeverDepositsMoreThanThePhotonEnergy(keV: 661.70000000000005)
+    Gcam.Tests.TransportInvariantTests.ComptonCascade_NeverDepositsMoreThanThePhotonEnergy(keV: 1332.5)
+    Gcam.Tests.TransportInvariantTests.ComptonCascade_NeverDepositsMoreThanThePhotonEnergy(keV: 122.09999999999999)
+    Gcam.Tests.TransportInvariantTests.Run_IsDeterministicForASeed_AndDiffersAcrossSeeds
+    Gcam.Tests.TransportInvariantTests.Run_ReportsMonotoneProgressEndingAtOne
+    Gcam.Tests.TransportInvariantTests.Run_StopsWhenCancelled
+    Gcam.Tests.WaveformTests.Constants_MatchThePythonReference
+    Gcam.Tests.WaveformTests.ExpPulse_MatchesGolden
+    Gcam.Tests.WaveformTests.BiexpPulse_MatchesGolden
+    Gcam.Tests.WaveformTests.TrapShape_MatchesGolden
+    Gcam.Tests.WaveformTests.CrrcInt_MatchesGolden
+    Gcam.Tests.WaveformTests.Blr_MatchesGolden
+    Gcam.Tests.WaveformTests.TrapFlatTop_IsProportionalToEnergy
+    Gcam.Tests.WaveformTests.DeriveAdc_MatchesDatasheetMath
+    Gcam.Tests.WaveformTests.Rasterize_RecoversEnergy_ViaFlatTopCalibration
+
+Workload updates are available. Run `dotnet workload list` for more information.

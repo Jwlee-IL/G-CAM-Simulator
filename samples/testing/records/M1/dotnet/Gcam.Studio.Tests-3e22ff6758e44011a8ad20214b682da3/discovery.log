@@ -1,0 +1,217 @@
+Test run for <repo>\tests\Gcam.Studio.Tests\bin\Release\net9.0\Gcam.Studio.Tests.dll (.NETCoreApp,Version=v9.0)
+VSTest version 17.14.1 (x64)
+
+The following Tests are available:
+    Gcam.Studio.Tests.AcquisitionViewModelTests.Start_CapturesDetectorInputs_AndLocksThemWhileDataExist
+    Gcam.Studio.Tests.AcquisitionViewModelTests.Start_SnapshotsGrow_StopKeepsDataAndLocks_ContinueAccumulates
+    Gcam.Studio.Tests.AcquisitionViewModelTests.Completed_StartDisabledUntilPresetRaised_LowerPresetRejected_ProgressFollowsPreset
+    Gcam.Studio.Tests.AcquisitionViewModelTests.Reset_DiscardsData_UnlocksInputs_NextStartIsANewAcquisitionWithANewSeed
+    Gcam.Studio.Tests.AcquisitionViewModelTests.Failure_WithData_KeepsItLocked_ResetOnly
+    Gcam.Studio.Tests.AcquisitionViewModelTests.Failure_WithoutData_BehavesAsEmpty
+    Gcam.Studio.Tests.AcquisitionViewModelTests.Spectrum_SnapshotsGrow_ViewSettingsReuseAcquisition_SelectionSurvives
+    Gcam.Studio.Tests.AcquisitionViewModelTests.LiveTimeAndSpeed_LockedWhileAcquiring_InvalidValuesFallBack
+    Gcam.Studio.Tests.AmbientViewModelTests.DefaultIsValidatedFrontOnlyField_ZeroIsIdeal_SourceFreeStartRequiresAbsoluteField
+    Gcam.Studio.Tests.AmbientViewModelTests.PresetListOffersOnlyTheValidatedSpectrum_ByPinnedReference
+    Gcam.Studio.Tests.AmbientViewModelTests.Start_DefaultPassesValidatedPresetReference_ZeroTakesTheLegacyPath
+    Gcam.Studio.Tests.AmbientViewModelTests.AmbientPhysicalInputsLockAndDerivedBsrHasNoSetter
+    Gcam.Studio.Tests.AmbientViewModelTests.InvalidAmbientDoseIsRefused_PreviousValueStays(dose: -1)
+    Gcam.Studio.Tests.AmbientViewModelTests.InvalidAmbientDoseIsRefused_PreviousValueStays(dose: NaN)
+    Gcam.Studio.Tests.AmbientViewModelTests.InvalidAmbientDoseIsRefused_PreviousValueStays(dose: ∞)
+    Gcam.Studio.Tests.AmbientViewModelTests.DoseTextOutsideThePattern_IsRefused_PreviousValueStays_StartBlocked(text: "")
+    Gcam.Studio.Tests.AmbientViewModelTests.DoseTextOutsideThePattern_IsRefused_PreviousValueStays_StartBlocked(text: " ")
+    Gcam.Studio.Tests.AmbientViewModelTests.DoseTextOutsideThePattern_IsRefused_PreviousValueStays_StartBlocked(text: "-1")
+    Gcam.Studio.Tests.AmbientViewModelTests.DoseTextOutsideThePattern_IsRefused_PreviousValueStays_StartBlocked(text: "+0.1")
+    Gcam.Studio.Tests.AmbientViewModelTests.DoseTextOutsideThePattern_IsRefused_PreviousValueStays_StartBlocked(text: "1e-1")
+    Gcam.Studio.Tests.AmbientViewModelTests.DoseTextOutsideThePattern_IsRefused_PreviousValueStays_StartBlocked(text: "NaN")
+    Gcam.Studio.Tests.AmbientViewModelTests.DoseTextOutsideThePattern_IsRefused_PreviousValueStays_StartBlocked(text: "Infinity")
+    Gcam.Studio.Tests.AmbientViewModelTests.DoseTextOutsideThePattern_IsRefused_PreviousValueStays_StartBlocked(text: "abc")
+    Gcam.Studio.Tests.AmbientViewModelTests.DoseTextOutsideThePattern_IsRefused_PreviousValueStays_StartBlocked(text: "0.1.2")
+    Gcam.Studio.Tests.AmbientViewModelTests.DoseTextOutsideThePattern_IsRefused_PreviousValueStays_StartBlocked(text: "0,1")
+    Gcam.Studio.Tests.AmbientViewModelTests.DoseTextOutsideThePattern_IsRefused_PreviousValueStays_StartBlocked(text: ".")
+    Gcam.Studio.Tests.AmbientViewModelTests.DoseTextMatchingThePattern_SetsTheDoseRate(text: "0", expected: 0)
+    Gcam.Studio.Tests.AmbientViewModelTests.DoseTextMatchingThePattern_SetsTheDoseRate(text: "0.1", expected: 0.10000000000000001)
+    Gcam.Studio.Tests.AmbientViewModelTests.DoseTextMatchingThePattern_SetsTheDoseRate(text: " 2.5 ", expected: 2.5)
+    Gcam.Studio.Tests.AmbientViewModelTests.DoseTextMatchingThePattern_SetsTheDoseRate(text: ".5", expected: 0.5)
+    Gcam.Studio.Tests.AmbientViewModelTests.DoseTextMatchingThePattern_SetsTheDoseRate(text: "3.", expected: 3)
+    Gcam.Studio.Tests.AmbientViewModelTests.DoseTextMatchingThePattern_SetsTheDoseRate(text: "10", expected: 10)
+    Gcam.Studio.Tests.AmbientViewModelTests.DoseText_FollowsProgrammaticValue_AndLocksWithData
+    Gcam.Studio.Tests.DetectorFaceTests.Geometry_ExactGapCoverageAndArea(gap: 0)
+    Gcam.Studio.Tests.DetectorFaceTests.Geometry_ExactGapCoverageAndArea(gap: 0.02)
+    Gcam.Studio.Tests.DetectorFaceTests.Geometry_ExactGapCoverageAndArea(gap: 0.10000000000000001)
+    Gcam.Studio.Tests.DetectorFaceTests.Geometry_ExactGapCoverageAndArea(gap: 0.20000000000000001)
+    Gcam.Studio.Tests.DetectorFaceTests.Geometry_RejectsInvalidGap(gap: -0.10000000000000001)
+    Gcam.Studio.Tests.DetectorFaceTests.Geometry_RejectsInvalidGap(gap: 0.59999999999999998)
+    Gcam.Studio.Tests.DetectorFaceTests.Geometry_RejectsInvalidGap(gap: NaN)
+    Gcam.Studio.Tests.DetectorWorkspaceTests.Gap_InvalidEditPreventsStart(value: "NaN")
+    Gcam.Studio.Tests.DetectorWorkspaceTests.Gap_InvalidEditPreventsStart(value: "-1")
+    Gcam.Studio.Tests.DetectorWorkspaceTests.Gap_InvalidEditPreventsStart(value: "600")
+    Gcam.Studio.Tests.DetectorWorkspaceTests.Gap_InvalidEditPreventsStart(value: "bad")
+    Gcam.Studio.Tests.DetectorWorkspaceTests.Gap_RevalidatesAfterPitchChange_AndConvertsUnits
+    Gcam.Studio.Tests.DetectorWorkspaceTests.Gap_ZeroAllowsPitchBelowOldDefaultGap
+    Gcam.Studio.Tests.DetectorWorkspaceTests.Face_FollowsPendingBeforeStart_AcquiredAndLockedAfter_PendingAgainAfterReset
+    Gcam.Studio.Tests.FocusSweepMathTests.Planes_UniformInverseDistance_ExactBounds
+    Gcam.Studio.Tests.FocusSweepMathTests.Interval_InterpolatesRawHalfMaximum_WithoutNoiseInterpretation
+    Gcam.Studio.Tests.FocusSweepMathTests.Interval_CensorsSweepEdges(a: 0, b: 2, c: 6, d: 5, e: 4, near: False, far: True)
+    Gcam.Studio.Tests.FocusSweepMathTests.Interval_CensorsSweepEdges(a: 4, b: 5, c: 6, d: 2, e: 0, near: True, far: False)
+    Gcam.Studio.Tests.FocusSweepMathTests.Interval_CensorsSweepEdges(a: 4, b: 4, c: 4, d: 4, e: 4, near: True, far: True)
+    Gcam.Studio.Tests.FocusSweepMathTests.Interval_FlagsDisjointModes_AndBoundaryMaximum
+    Gcam.Studio.Tests.FocusSweepMathTests.Linking_UsesAngle_NotMillimetres_AndIsOneToOne
+    Gcam.Studio.Tests.FocusSweepViewModelTests.Sweep_DoesNotHoldSnapshotConsumption_AndLabelsFrozenPrefix
+    Gcam.Studio.Tests.FocusSweepViewModelTests.Sweep_FreezesIdentity_UserK_AndNeverDelaysAcquisition
+    Gcam.Studio.Tests.FocusSweepViewModelTests.Sweep_RejectsLateResult_WhenIdentityChanges(edit: "window")
+    Gcam.Studio.Tests.FocusSweepViewModelTests.Sweep_RejectsLateResult_WhenIdentityChanges(edit: "strip")
+    Gcam.Studio.Tests.FocusSweepViewModelTests.Sweep_RejectsLateResult_WhenIdentityChanges(edit: "reset")
+    Gcam.Studio.Tests.FocusSweepViewModelTests.Sweep_RejectsLateResult_WhenIdentityChanges(edit: "K")
+    Gcam.Studio.Tests.FocusSweepViewModelTests.Sweep_RejectsLateResult_WhenIdentityChanges(edit: "cancel")
+    Gcam.Studio.Tests.FocusSweepViewModelTests.Sweep_RejectsLateResult_WhenIdentityChanges(edit: "acquisition")
+    Gcam.Studio.Tests.FocusSweepViewModelTests.ExternalRange_OnlyExplicitActionChangesFocus
+    Gcam.Studio.Tests.HeatmapViewportTests.Fit_PreservesAspectAndCentres
+    Gcam.Studio.Tests.HeatmapViewportTests.ScreenImage_RoundTripWithYUp
+    Gcam.Studio.Tests.HeatmapViewportTests.PixelAt_RespectsBoundsAndOrientation
+    Gcam.Studio.Tests.HeatmapViewportTests.ZoomAt_KeepsAnchorPointFixed
+    Gcam.Studio.Tests.HeatmapViewportTests.ZoomAt_IsClamped_FullZoomOutRefits
+    Gcam.Studio.Tests.HeatmapViewportTests.PanBy_CannotDragImageOutOfView
+    Gcam.Studio.Tests.HeatmapViewportTests.MmMapping_PutsPixelCentresOnGrid
+    Gcam.Studio.Tests.HeatmapViewportTests.Snapping_FitsWholeDevicePixelsPerCell(view: 366, ppd: 1, expectedScale: 12)
+    Gcam.Studio.Tests.HeatmapViewportTests.Snapping_FitsWholeDevicePixelsPerCell(view: 366, ppd: 1.25, expectedScale: 12)
+    Gcam.Studio.Tests.HeatmapViewportTests.Snapping_FitsWholeDevicePixelsPerCell(view: 20, ppd: 1, expectedScale: 0.66666666666666663)
+    Gcam.Studio.Tests.HeatmapViewportTests.Configure_ResizeKeepsZoom_NewImageSizeRefits
+    Gcam.Studio.Tests.HistogramPlotTests.Steps_IncludePartialBins_AndEmptyBinHasFullWidth
+    Gcam.Studio.Tests.HistogramPlotTests.Envelope_RetainsExtremaOfBinsCrossingColumns
+    Gcam.Studio.Tests.HistogramPlotTests.BinLookup_UsesHalfOpenEdges_AndReadoutUsesCountsAndUnits
+    Gcam.Studio.Tests.HistogramPlotTests.HistogramValidation_RejectsMissingEdges_NegativeCounts_AndNonIncreasingEdges
+    Gcam.Studio.Tests.HistogramPlotTests.VisibleExtent_ExcludesDistantPeak_IncludesIntersectingBins
+    Gcam.Studio.Tests.HistogramPlotTests.Configure_PreservesZoomAndPanUntilRangeChanges_AndResetStillFits
+    Gcam.Studio.Tests.HistogramPlotTests.Labels_ClampBothEdges_AndUseAdditionalRowsWithoutCollisions
+    Gcam.Studio.Tests.HistogramPlotTests.LineGeometry_PreservesSingletonsAndRightEndpoint
+    Gcam.Studio.Tests.HistogramPlotTests.LineGeometry_LogColumns_KeepNearFieldSamplesSeparate
+    Gcam.Studio.Tests.HistogramPlotTests.GeometryTiming_TenMillionLineAndHistogram_Headless
+    Gcam.Studio.Tests.ImagingWorkspaceTests.FocusSweep_ChannelChangeCancelsAndRejectsLateResult
+    Gcam.Studio.Tests.ImagingWorkspaceTests.SharedWindow_SelectorStripAndRoi_ReuseFrozenAcquisition
+    Gcam.Studio.Tests.ImagingWorkspaceTests.PeakChip_CountsSeveralFoundPeaks_AndNamesASingleOne
+    Gcam.Studio.Tests.ImagingWorkspaceTests.LateResponse_CannotReplaceNewerWindowResult
+    Gcam.Studio.Tests.ImagingWorkspaceTests.Reconstruction_IsAReprojectionSetting_KeepsMeasurementsAndSweep
+    Gcam.Studio.Tests.ImagingWorkspaceTests.ReconstructionNote_FlagsUnmeasuredOptics_AndTheAcquisitionImageIsNotShownAsMlem
+    Gcam.Studio.Tests.ImagingWorkspaceTests.StripCount_IsLabelledNetWithUncertainty_ForBothMethods
+    Gcam.Studio.Tests.ImagingWorkspaceTests.ReconstructionUnit_DescribesTheDisplayedImage_UntilTheReDecodedViewArrives
+    Gcam.Studio.Tests.ImagingWorkspaceTests.StripMetadata_AndRoiUnits_FollowPublishedViewWhileStripIsPending
+    Gcam.Studio.Tests.ImagingWorkspaceTests.NegativeNetAndUnavailableUncertainty_KeepSweepEnabledAndDisplayedRoiValues
+    Gcam.Studio.Tests.MainViewModelTests.WorkspaceActivation_SelectsShell_WhenActiveIsSetWithoutCommand
+    Gcam.Studio.Tests.MainViewModelTests.DetectorInputs_DefaultsAndValidationFallbacks_EditableWithoutData
+    Gcam.Studio.Tests.MainViewModelTests.Workspace_SharedResultAndSelectionSurviveSnapshot_ViewSettingsKeepState
+    Gcam.Studio.Tests.MainViewModelTests.ThemeToggle_FlipsThemeAndRelabels
+    Gcam.Studio.Tests.MainViewModelTests.Startup_HasOneSelectedSource
+    Gcam.Studio.Tests.MainViewModelTests.AddRemove_SelectsNewSourceThenNeighbour
+    Gcam.Studio.Tests.MainViewModelTests.RemoveAll_DisablesRemoveAndStart
+    Gcam.Studio.Tests.MainViewModelTests.SourceItem_ClampsValues_LabelFollowsEdits
+    Gcam.Studio.Tests.MainViewModelTests.NewResult_RefreshesMeasurements
+    Gcam.Studio.Tests.MainViewModelTests.IsotopePicker_OffersIr192_AndKeepsCs137AsTheDefault
+    Gcam.Studio.Tests.MainViewModelTests.SpectrumSummary_NamesTheOverflowAndTheFixedAxisEnd
+    Gcam.Studio.Tests.MeasurementMathTests.Distance_IsEuclidean
+    Gcam.Studio.Tests.MeasurementMathTests.AngleDeg_MeasuresAtTheVertex
+    Gcam.Studio.Tests.MeasurementMathTests.AngleDeg_DegenerateArm_IsZero
+    Gcam.Studio.Tests.MeasurementMathTests.Roi_CountsPixelsByCentre_CornersInAnyOrder
+    Gcam.Studio.Tests.MeasurementMathTests.Roi_ClipsToTheImage_AndIsEmptyBetweenCentres
+    Gcam.Studio.Tests.MeasurementsViewModelTests.Add_NumbersSequentially_AndSelectsTheNewOne
+    Gcam.Studio.Tests.MeasurementsViewModelTests.Add_WrongNumberOfPoints_Throws
+    Gcam.Studio.Tests.MeasurementsViewModelTests.Roi_HasNoValueBeforeARun_AndFollowsEachNewResult
+    Gcam.Studio.Tests.MeasurementsViewModelTests.Roi_OnAPaneWithoutData_StaysEmpty
+    Gcam.Studio.Tests.MeasurementsViewModelTests.Roi_WithNoPixelCentreInside_HasNoValue
+    Gcam.Studio.Tests.MeasurementsViewModelTests.Delete_SelectsTheNeighbour_ClearRestartsNumbering
+    Gcam.Studio.Tests.MeasurementsViewModelTests.ToolHint_FollowsTheActiveTool
+    Gcam.Studio.Tests.MinMaxPyramidTests.Query_EqualsBruteForce_IncludingBothEnds(count: 0, columns: 20)
+    Gcam.Studio.Tests.MinMaxPyramidTests.Query_EqualsBruteForce_IncludingBothEnds(count: 1, columns: 20)
+    Gcam.Studio.Tests.MinMaxPyramidTests.Query_EqualsBruteForce_IncludingBothEnds(count: 7, columns: 20)
+    Gcam.Studio.Tests.MinMaxPyramidTests.Query_EqualsBruteForce_IncludingBothEnds(count: 63, columns: 17)
+    Gcam.Studio.Tests.MinMaxPyramidTests.Query_EqualsBruteForce_IncludingBothEnds(count: 64, columns: 17)
+    Gcam.Studio.Tests.MinMaxPyramidTests.Query_EqualsBruteForce_IncludingBothEnds(count: 65, columns: 17)
+    Gcam.Studio.Tests.MinMaxPyramidTests.Query_EqualsBruteForce_IncludingBothEnds(count: 1000, columns: 17)
+    Gcam.Studio.Tests.MinMaxPyramidTests.Query_EqualsBruteForce_IncludingBothEnds(count: 1023, columns: 31)
+    Gcam.Studio.Tests.MinMaxPyramidTests.Query_EqualsBruteForce_IncludingBothEnds(count: 10000, columns: 133)
+    Gcam.Studio.Tests.MinMaxPyramidTests.Range_EqualsBruteForce_AcrossBlockBoundaries(count: 63)
+    Gcam.Studio.Tests.MinMaxPyramidTests.Range_EqualsBruteForce_AcrossBlockBoundaries(count: 64)
+    Gcam.Studio.Tests.MinMaxPyramidTests.Range_EqualsBruteForce_AcrossBlockBoundaries(count: 65)
+    Gcam.Studio.Tests.MinMaxPyramidTests.Range_EqualsBruteForce_AcrossBlockBoundaries(count: 1000)
+    Gcam.Studio.Tests.MinMaxPyramidTests.Storage_UsesAtMostOneSixteenthOfSampleCount(count: 63)
+    Gcam.Studio.Tests.MinMaxPyramidTests.Storage_UsesAtMostOneSixteenthOfSampleCount(count: 64)
+    Gcam.Studio.Tests.MinMaxPyramidTests.Storage_UsesAtMostOneSixteenthOfSampleCount(count: 65)
+    Gcam.Studio.Tests.MinMaxPyramidTests.Storage_UsesAtMostOneSixteenthOfSampleCount(count: 1000)
+    Gcam.Studio.Tests.MinMaxPyramidTests.Storage_UsesAtMostOneSixteenthOfSampleCount(count: 10000000)
+    Gcam.Studio.Tests.MinMaxPyramidTests.Range_ClipsOutsideData_RejectsNonFiniteSamples
+    Gcam.Studio.Tests.NiceTicksTests.Linear_Uses125Steps_EngineeringLabels_NoNegativeZero
+    Gcam.Studio.Tests.NiceTicksTests.Logarithmic_LabelsDecades_WithEightMinorTicks
+    Gcam.Studio.Tests.NiceTicksTests.LogarithmicAxis_Labels125_InsideRange_FallsBackToLinearWhenNarrow
+    Gcam.Studio.Tests.NiceTicksTests.Logarithmic_UsesGroupedNumbersThenSuperscriptPowers
+    Gcam.Studio.Tests.NiceTicksTests.Linear_ColourScaleTicksStayInsideDataRange
+    Gcam.Studio.Tests.OpticsPolicyTests.Presets_ApplyAtomically_MatchPhysicalFieldsAndShowCustom
+    Gcam.Studio.Tests.OpticsPolicyTests.Geometry_UsesEffectiveFieldsAndHasNoPerformanceBand(focal: 1000, half: 56.875, samples: 1.2681159420000001, coverage: 1.8197802199999999)
+    Gcam.Studio.Tests.OpticsPolicyTests.Geometry_UsesEffectiveFieldsAndHasNoPerformanceBand(focal: 160, half: 9.0999999999999996, samples: 2.3333333330000001, coverage: 0.98901098899999995)
+    Gcam.Studio.Tests.OpticsPolicyTests.InvalidText_IsRetainedAndCannotBecomeEffective(text: "")
+    Gcam.Studio.Tests.OpticsPolicyTests.InvalidText_IsRetainedAndCannotBecomeEffective(text: "abc")
+    Gcam.Studio.Tests.OpticsPolicyTests.InvalidText_IsRetainedAndCannotBecomeEffective(text: "NaN")
+    Gcam.Studio.Tests.OpticsPolicyTests.InvalidText_IsRetainedAndCannotBecomeEffective(text: "Infinity")
+    Gcam.Studio.Tests.OpticsPolicyTests.InvalidText_IsRetainedAndCannotBecomeEffective(text: "0.01")
+    Gcam.Studio.Tests.OpticsPolicyTests.PixelCount_RequiresSupportedInteger(text: "3")
+    Gcam.Studio.Tests.OpticsPolicyTests.PixelCount_RequiresSupportedInteger(text: "65")
+    Gcam.Studio.Tests.OpticsPolicyTests.PixelCount_RequiresSupportedInteger(text: "30.5")
+    Gcam.Studio.Tests.OpticsPolicyTests.Validation_ChecksRankGapSourceFaceFocusAndOverflow
+    Gcam.Studio.Tests.OpticsViewModelTests.Focus_AcquiringStoppedCompleted_KeepsEventsAndSpectrum_OpticsLockedWithData
+    Gcam.Studio.Tests.OpticsViewModelTests.LatestFocus_CoalescesChangesAndRejectsLateSnapshotProjection
+    Gcam.Studio.Tests.OpticsViewModelTests.OldAcquisitionWorker_CannotPublishIntoNewAcquisition
+    Gcam.Studio.Tests.OpticsViewModelTests.InvalidInput_StartExpandsSectionsAndDoesNotStartTransport
+    Gcam.Studio.Tests.OverlayLabelLayoutTests.Arrange_PreservesUncrowdedPreferredPositions
+    Gcam.Studio.Tests.OverlayLabelLayoutTests.Arrange_SeparatesEqualYLanes_AndAvoidsTruthMarkersAndMeasurement(width: 245)
+    Gcam.Studio.Tests.OverlayLabelLayoutTests.Arrange_SeparatesEqualYLanes_AndAvoidsTruthMarkersAndMeasurement(width: 327)
+    Gcam.Studio.Tests.OverlayLabelLayoutTests.Arrange_ClampsEdgeLabel_AndRecalculatesForChangedBounds
+    Gcam.Studio.Tests.OverlayLabelLayoutTests.Arrange_OmitsChip_WhenBoundsAreTooSmallOrFullyOccupied
+    Gcam.Studio.Tests.OverlayLabelLayoutTests.Arrange_RejectsNonFiniteGeometry
+    Gcam.Studio.Tests.PlotSeriesTests.LowerBound_HandlesUniformAndIrregularX_AndEnds
+    Gcam.Studio.Tests.PlotViewportTests.Mapping_RoundTrips_AndClampsLogFloor(log: False)
+    Gcam.Studio.Tests.PlotViewportTests.Mapping_RoundTrips_AndClampsLogFloor(log: True)
+    Gcam.Studio.Tests.PlotViewportTests.LogX_MapsDecadesEqually_RoundTrips_AndZoomsPansInLogSpace
+    Gcam.Studio.Tests.PlotViewportTests.PanFraction_OnLinearAxis_EqualsDataDeltaPan
+    Gcam.Studio.Tests.PlotViewportTests.ZoomPanReset_PreservesAnchor_AndBounds
+    Gcam.Studio.Tests.SpectrumBandTests.BandOfXRayLines_IsNamedByEmitter_GammaBandByIsotope
+    Gcam.Studio.Tests.ThemeContrastTests.DisabledText_MeetsRetainedValueContrastTarget(theme: "Dark", background: "Surface")
+    Gcam.Studio.Tests.ThemeContrastTests.DisabledText_MeetsRetainedValueContrastTarget(theme: "Dark", background: "Canvas")
+    Gcam.Studio.Tests.ThemeContrastTests.DisabledText_MeetsRetainedValueContrastTarget(theme: "Dark", background: "Raised")
+    Gcam.Studio.Tests.ThemeContrastTests.DisabledText_MeetsRetainedValueContrastTarget(theme: "Light", background: "Surface")
+    Gcam.Studio.Tests.ThemeContrastTests.DisabledText_MeetsRetainedValueContrastTarget(theme: "Light", background: "Canvas")
+    Gcam.Studio.Tests.ThemeContrastTests.DisabledText_MeetsRetainedValueContrastTarget(theme: "Light", background: "Raised")
+    Gcam.Studio.Tests.ThemeContrastTests.DisabledText_RemainsDimmerThanEnabledText(theme: "Dark")
+    Gcam.Studio.Tests.ThemeContrastTests.DisabledText_RemainsDimmerThanEnabledText(theme: "Light")
+    Gcam.Studio.Tests.TickFormatterTests.SmallValues_ShareOneMultiplier_AndOneDecimalCount
+    Gcam.Studio.Tests.TickFormatterTests.OrdinaryRange_HasNoMultiplier_AndNoNegativeZero
+    Gcam.Studio.Tests.TickFormatterTests.SharedExponent_IsZeroForReadableValues_OtherwiseAMultipleOfThree(maxAbs: 0.5, expected: 0)
+    Gcam.Studio.Tests.TickFormatterTests.SharedExponent_IsZeroForReadableValues_OtherwiseAMultipleOfThree(maxAbs: 5000, expected: 0)
+    Gcam.Studio.Tests.TickFormatterTests.SharedExponent_IsZeroForReadableValues_OtherwiseAMultipleOfThree(maxAbs: 0.016, expected: -3)
+    Gcam.Studio.Tests.TickFormatterTests.SharedExponent_IsZeroForReadableValues_OtherwiseAMultipleOfThree(maxAbs: 0.00016000000000000001, expected: -6)
+    Gcam.Studio.Tests.TickFormatterTests.SharedExponent_IsZeroForReadableValues_OtherwiseAMultipleOfThree(maxAbs: 25000, expected: 3)
+    Gcam.Studio.Tests.TickFormatterTests.SharedExponent_IsZeroForReadableValues_OtherwiseAMultipleOfThree(maxAbs: 0, expected: 0)
+    Gcam.Studio.Tests.TickFormatterTests.FlatImage_GivesZeroDecimals_WithoutThrowing
+    Gcam.Studio.Tests.TickFormatterTests.StepLabels_TakeDecimalsFromTheStep_AndGroupThousands
+    Gcam.Studio.Tests.TickFormatterTests.Significant_FourDigitsGroupedWithoutTrailingZeros(value: 18.532299999999999, expected: "18.53")
+    Gcam.Studio.Tests.TickFormatterTests.Significant_FourDigitsGroupedWithoutTrailingZeros(value: 3077, expected: "3,077")
+    Gcam.Studio.Tests.TickFormatterTests.Significant_FourDigitsGroupedWithoutTrailingZeros(value: 0.27500000000000002, expected: "0.275")
+    Gcam.Studio.Tests.TickFormatterTests.Significant_FourDigitsGroupedWithoutTrailingZeros(value: 10, expected: "10")
+    Gcam.Studio.Tests.TickFormatterTests.Significant_FourDigitsGroupedWithoutTrailingZeros(value: -1.0000000000000001E-05, expected: "-0.00001")
+    Gcam.Studio.Tests.TickFormatterTests.Significant_FourDigitsGroupedWithoutTrailingZeros(value: 0, expected: "0")
+    Gcam.Studio.Tests.TickFormatterTests.Significant_FourDigitsGroupedWithoutTrailingZeros(value: 123456, expected: "123,456")
+    Gcam.Studio.Tests.TickFormatterTests.GroupedFraction_KeepsResolution_InGroupsOfThree
+    Gcam.Studio.Tests.WaveformWorkspaceTests.CsI_IsOfferedAndRequiresResetForANewAcquisition
+    Gcam.Studio.Tests.WaveformWorkspaceTests.Window_CapsTotalWorkAndKeepsPretrigger(us: 10, samples: 1250, clipped: False)
+    Gcam.Studio.Tests.WaveformWorkspaceTests.Window_CapsTotalWorkAndKeepsPretrigger(us: 0.001, samples: 1, clipped: False)
+    Gcam.Studio.Tests.WaveformWorkspaceTests.Window_CapsTotalWorkAndKeepsPretrigger(us: 100000, samples: 9999000, clipped: True)
+    Gcam.Studio.Tests.WaveformWorkspaceTests.Window_RejectsInvalidLength(us: NaN)
+    Gcam.Studio.Tests.WaveformWorkspaceTests.Window_RejectsInvalidLength(us: ∞)
+    Gcam.Studio.Tests.WaveformWorkspaceTests.Window_RejectsInvalidLength(us: 0)
+    Gcam.Studio.Tests.WaveformWorkspaceTests.Window_RejectsInvalidLength(us: -1)
+    Gcam.Studio.Tests.WaveformWorkspaceTests.TimeConversion_IsCheckedAndRelative
+    Gcam.Studio.Tests.WaveformWorkspaceTests.PreparedPlot_RejectsAnotherArraysPyramid
+    Gcam.Studio.Tests.WaveformWorkspaceTests.Chain_LockedWithData_ScopeUsesAcquiredChain
+    Gcam.Studio.Tests.WaveformWorkspaceTests.ActiveAcquisition_DisablesPhysicalChainChanges
+    Gcam.Studio.Tests.WaveformWorkspaceTests.HiddenScope_DoesNotGenerateAndHeldTriggerReusesWindow
+    Gcam.Studio.Tests.WaveformWorkspaceTests.LatestSelectionWinsAndNewAcquisitionCancelsOldScope
+    Gcam.Studio.Tests.WaveformWorkspaceTests.ScopeFailure_IsVisibleAndLocalControlsKeepTheAcquisition
+
+Workload updates are available. Run `dotnet workload list` for more information.

@@ -1,0 +1,50 @@
+Test run for <repo>\tests\Gcam.Studio.UiTests\bin\Release\net9.0-windows\Gcam.Studio.UiTests.dll (.NETCoreApp,Version=v9.0)
+VSTest version 17.14.1 (x64)
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.07]     Gcam.Studio.UiTests.ScenarioTests.Readout_AndOneCellRoi_MatchAbsolutePositionAndValue [SKIP]
+[xUnit.net 00:00:00.07]     Gcam.Studio.UiTests.ScenarioTests.Roi_OnFloodMap_CountsWholePixelsByCentre [SKIP]
+[xUnit.net 00:00:00.07]     Gcam.Studio.UiTests.ScenarioTests.StopContinueReset_KeepsAccumulatesAndDiscards [SKIP]
+[xUnit.net 00:00:00.07]     Gcam.Studio.UiTests.ScenarioTests.Angle_EscAbandonsDraft_DeleteRemovesSelected [SKIP]
+[xUnit.net 00:00:00.07]     Gcam.Studio.UiTests.ScenarioTests.MoveSource_ResetEditStart_PutsPeakOnTheSource [SKIP]
+[xUnit.net 00:00:00.07]     Gcam.Studio.UiTests.ScenarioTests.ThemeToggle_RelabelsAndSwitchesBack [SKIP]
+[xUnit.net 00:00:00.07]     Gcam.Studio.UiTests.PlotViewTests.TenMillionSamples_ZoomAndResizeRedraw_Within16Milliseconds [SKIP]
+  Skipped Gcam.Studio.UiTests.ScenarioTests.Readout_AndOneCellRoi_MatchAbsolutePositionAndValue [1 ms]
+  Skipped Gcam.Studio.UiTests.ScenarioTests.Roi_OnFloodMap_CountsWholePixelsByCentre [1 ms]
+  Skipped Gcam.Studio.UiTests.ScenarioTests.StopContinueReset_KeepsAccumulatesAndDiscards [1 ms]
+  Skipped Gcam.Studio.UiTests.ScenarioTests.Angle_EscAbandonsDraft_DeleteRemovesSelected [1 ms]
+  Skipped Gcam.Studio.UiTests.ScenarioTests.MoveSource_ResetEditStart_PutsPeakOnTheSource [1 ms]
+  Skipped Gcam.Studio.UiTests.ScenarioTests.ThemeToggle_RelabelsAndSwitchesBack [1 ms]
+  Skipped Gcam.Studio.UiTests.PlotViewTests.TenMillionSamples_ZoomAndResizeRedraw_Within16Milliseconds [1 ms]
+[xUnit.net 00:00:00.10]     Gcam.Studio.UiTests.WorkspaceScenarioTests.Imaging_RefocusAndSweep_MatchProjectionAndHalfMaxInterval [SKIP]
+[xUnit.net 00:00:00.10]     Gcam.Studio.UiTests.WorkspaceScenarioTests.Waveform_SelectedEventListAndMarkers_MatchArrivalWindow [SKIP]
+[xUnit.net 00:00:00.10]     Gcam.Studio.UiTests.WorkspaceScenarioTests.Spectrum_BandCountAndWindowChange_MatchRetainedHistogram [SKIP]
+[xUnit.net 00:00:00.10]     Gcam.Studio.UiTests.WorkspaceScenarioTests.Detector_FaceBeforeStart_LockedUntilReset [SKIP]
+[xUnit.net 00:00:00.10]     Gcam.Studio.UiTests.WorkspaceScenarioTests.Imaging_ChannelAndStrip_MatchRetainedFloodAndFoundPeaks [SKIP]
+[xUnit.net 00:00:00.10]     Gcam.Studio.UiTests.PilotTests.Pilot_SimulateThenMeasureDistance_AddsRowWithExpectedLength [SKIP]
+[xUnit.net 00:00:00.10]     Gcam.Studio.UiTests.PolishSurveyTests.AllWorkspaces_BothThemesAndWindowSizes_CapturesPolishSurvey [SKIP]
+  Skipped Gcam.Studio.UiTests.WorkspaceScenarioTests.Imaging_RefocusAndSweep_MatchProjectionAndHalfMaxInterval [1 ms]
+  Skipped Gcam.Studio.UiTests.WorkspaceScenarioTests.Waveform_SelectedEventListAndMarkers_MatchArrivalWindow [1 ms]
+  Skipped Gcam.Studio.UiTests.WorkspaceScenarioTests.Spectrum_BandCountAndWindowChange_MatchRetainedHistogram [1 ms]
+  Skipped Gcam.Studio.UiTests.WorkspaceScenarioTests.Detector_FaceBeforeStart_LockedUntilReset [1 ms]
+  Skipped Gcam.Studio.UiTests.WorkspaceScenarioTests.Imaging_ChannelAndStrip_MatchRetainedFloodAndFoundPeaks [1 ms]
+  Skipped Gcam.Studio.UiTests.PilotTests.Pilot_SimulateThenMeasureDistance_AddsRowWithExpectedLength [1 ms]
+  Skipped Gcam.Studio.UiTests.PolishSurveyTests.AllWorkspaces_BothThemesAndWindowSizes_CapturesPolishSurvey [1 ms]
+[xUnit.net 00:00:00.11]     Gcam.Studio.UiTests.MlemScenarioTests.MlemSelection_SurvivesStopContinueAndReset_WithoutAStaleImage [SKIP]
+[xUnit.net 00:00:00.11]     Gcam.Studio.UiTests.MlemScenarioTests.MethodSwitch_KeepsMeasurementsOnTheSameGrid [SKIP]
+[xUnit.net 00:00:00.11]     Gcam.Studio.UiTests.MlemScenarioTests.Mlem_WithStrip_ReportsNetCountsAndFindsCsOnItsSide [SKIP]
+[xUnit.net 00:00:00.11]     Gcam.Studio.UiTests.MlemScenarioTests.FocusSweep_UnderMlem_IsTheCrossCorrelationSweep [SKIP]
+[xUnit.net 00:00:00.11]     Gcam.Studio.UiTests.MlemScenarioTests.Mlem_SelectedDuringAcquisition_NonNegativeWithUnitNoteAndAdvancingStatus [SKIP]
+[xUnit.net 00:00:00.11]     Gcam.Studio.UiTests.MlemScenarioTests.Mlem_FocalPlane1500_FlagsTheUnmeasuredIterationCount [SKIP]
+  Skipped Gcam.Studio.UiTests.MlemScenarioTests.MlemSelection_SurvivesStopContinueAndReset_WithoutAStaleImage [1 ms]
+  Skipped Gcam.Studio.UiTests.MlemScenarioTests.MethodSwitch_KeepsMeasurementsOnTheSameGrid [1 ms]
+  Skipped Gcam.Studio.UiTests.MlemScenarioTests.Mlem_WithStrip_ReportsNetCountsAndFindsCsOnItsSide [1 ms]
+  Skipped Gcam.Studio.UiTests.MlemScenarioTests.FocusSweep_UnderMlem_IsTheCrossCorrelationSweep [1 ms]
+  Skipped Gcam.Studio.UiTests.MlemScenarioTests.Mlem_SelectedDuringAcquisition_NonNegativeWithUnitNoteAndAdvancingStatus [1 ms]
+  Skipped Gcam.Studio.UiTests.MlemScenarioTests.Mlem_FocalPlane1500_FlagsTheUnmeasuredIterationCount [1 ms]
+Results File: <path><identity>\AppData\Local\Temp\gcam-todo28\M1\bundle\dotnet\Gcam.Studio.UiTests-e7b7c968e3994f2ab625980eb10d6f27\results.trx
+
+Passed!  - Failed:     0, Passed:    15, Skipped:    20, Total:    35, Duration: 34 ms - Gcam.Studio.UiTests.dll (net9.0)
+
+Workload updates are available. Run `dotnet workload list` for more information.

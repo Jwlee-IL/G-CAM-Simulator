@@ -1,0 +1,12 @@
+Test run for <repo>\tests\Gcam.Studio.RenderTests\bin\Release\net9.0-windows\Gcam.Studio.RenderTests.dll (.NETCoreApp,Version=v9.0)
+VSTest version 17.14.1 (x64)
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.07]     Gcam.Studio.RenderTests.PlotViewRenderTests.Spectrum_BothThemesFullAndZoom_RenderWithoutWindow [SKIP]
+  Skipped Gcam.Studio.RenderTests.PlotViewRenderTests.Spectrum_BothThemesFullAndZoom_RenderWithoutWindow [1 ms]
+Results File: <path><identity>\AppData\Local\Temp\gcam-todo28\M1\bundle\dotnet\Gcam.Studio.RenderTests-8fd54ac226ef403d806efbb574a64c15\results.trx
+
+Skipped! - Failed:     0, Passed:     0, Skipped:     1, Total:     1, Duration: 1 ms - Gcam.Studio.RenderTests.dll (net9.0)
+
+Workload updates are available. Run `dotnet workload list` for more information.

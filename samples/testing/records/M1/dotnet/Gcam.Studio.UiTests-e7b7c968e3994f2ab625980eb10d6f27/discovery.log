@@ -1,0 +1,41 @@
+Test run for <repo>\tests\Gcam.Studio.UiTests\bin\Release\net9.0-windows\Gcam.Studio.UiTests.dll (.NETCoreApp,Version=v9.0)
+VSTest version 17.14.1 (x64)
+
+The following Tests are available:
+    Gcam.Studio.UiTests.FloodOracleTests.ImageBounds_UseWholePixelsPerCell_Centred
+    Gcam.Studio.UiTests.FloodOracleTests.ScreenToMm_MapsImageCornersToDetectorEdges_YUp
+    Gcam.Studio.UiTests.FloodOracleTests.DistanceMm_FullDiagonal_IsSpanTimesRootTwo
+    Gcam.Studio.UiTests.FloodOracleTests.Verdict_RejectsAValueOutsideTheTolerance
+    Gcam.Studio.UiTests.FloodOracleTests.PixelsInside_CountsCentres_RobustToAPixelAtTheCorners
+    Gcam.Studio.UiTests.FloodOracleTests.AngleDeg_IsTheVertexAngle_ToleranceShrinksWithLongerArms
+    Gcam.Studio.UiTests.FloodOracleTests.Parsers_ReadPeakAndRoiDetail_RejectOtherText
+    Gcam.Studio.UiTests.FloodOracleTests.CellCentreMm_IsAbsolute_WithYUp
+    Gcam.Studio.UiTests.FloodOracleTests.ReadoutAndSumParsers_ReadTheAppsFormats
+    Gcam.Studio.UiTests.FloodOracleTests.ReadoutUnit_NamesTheImageKind_IncludingMlem
+    Gcam.Studio.UiTests.FloodOracleTests.NetCountParser_ReadsSignedUncertainty_AndRejectsMissingOrWrongUnits
+    Gcam.Studio.UiTests.FloodOracleTests.MeasurementRow_ParsesTheAutomationName
+    Gcam.Studio.UiTests.MlemScenarioTests.Mlem_SelectedDuringAcquisition_NonNegativeWithUnitNoteAndAdvancingStatus
+    Gcam.Studio.UiTests.MlemScenarioTests.Mlem_WithStrip_ReportsNetCountsAndFindsCsOnItsSide
+    Gcam.Studio.UiTests.MlemScenarioTests.Mlem_FocalPlane1500_FlagsTheUnmeasuredIterationCount
+    Gcam.Studio.UiTests.MlemScenarioTests.MethodSwitch_KeepsMeasurementsOnTheSameGrid
+    Gcam.Studio.UiTests.MlemScenarioTests.FocusSweep_UnderMlem_IsTheCrossCorrelationSweep
+    Gcam.Studio.UiTests.MlemScenarioTests.MlemSelection_SurvivesStopContinueAndReset_WithoutAStaleImage
+    Gcam.Studio.UiTests.PilotTests.Pilot_SimulateThenMeasureDistance_AddsRowWithExpectedLength
+    Gcam.Studio.UiTests.PlotViewTests.TenMillionSamples_ZoomAndResizeRedraw_Within16Milliseconds
+    Gcam.Studio.UiTests.PolishSurveyTests.AllWorkspaces_BothThemesAndWindowSizes_CapturesPolishSurvey
+    Gcam.Studio.UiTests.ScenarioTests.StopContinueReset_KeepsAccumulatesAndDiscards
+    Gcam.Studio.UiTests.ScenarioTests.Roi_OnFloodMap_CountsWholePixelsByCentre
+    Gcam.Studio.UiTests.ScenarioTests.Readout_AndOneCellRoi_MatchAbsolutePositionAndValue
+    Gcam.Studio.UiTests.ScenarioTests.Angle_EscAbandonsDraft_DeleteRemovesSelected
+    Gcam.Studio.UiTests.ScenarioTests.MoveSource_ResetEditStart_PutsPeakOnTheSource
+    Gcam.Studio.UiTests.ScenarioTests.ThemeToggle_RelabelsAndSwitchesBack
+    Gcam.Studio.UiTests.WorkspaceOracleTests.BandCount_IncludesBoundaryCentres
+    Gcam.Studio.UiTests.WorkspaceOracleTests.EventsInWindow_IncludesStartExcludesEnd
+    Gcam.Studio.UiTests.WorkspaceOracleTests.HalfMax_InterpolatesAndCensors
+    Gcam.Studio.UiTests.WorkspaceScenarioTests.Spectrum_BandCountAndWindowChange_MatchRetainedHistogram
+    Gcam.Studio.UiTests.WorkspaceScenarioTests.Waveform_SelectedEventListAndMarkers_MatchArrivalWindow
+    Gcam.Studio.UiTests.WorkspaceScenarioTests.Detector_FaceBeforeStart_LockedUntilReset
+    Gcam.Studio.UiTests.WorkspaceScenarioTests.Imaging_ChannelAndStrip_MatchRetainedFloodAndFoundPeaks
+    Gcam.Studio.UiTests.WorkspaceScenarioTests.Imaging_RefocusAndSweep_MatchProjectionAndHalfMaxInterval
+
+Workload updates are available. Run `dotnet workload list` for more information.
