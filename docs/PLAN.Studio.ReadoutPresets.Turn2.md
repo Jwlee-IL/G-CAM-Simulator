@@ -263,3 +263,529 @@ Proposal for rule v2, to bound PD-6's "numerical error ≤ 10 % of the spatial a
 - Diagnostic probe `%TEMP%\gcam-todo41\turn2s\diag` (project, build, density dumps, expected positions, analysis
   scripts); identity re-check `dotnet run` in `%TEMP%\gcam-todo41\turn2\identity` → `%TEMP%\gcam-todo41\turn2s\identity-recheck.log`.
 - No git state change, no deletion, no process stopped, no family started.
+
+---
+
+## Turn 3 — LUT v2 and rule v2 (development seed only)
+
+Status: **LUT v2 is implemented and checked on the development floods; rule v2 and recipe v2 are pinned; DEV4 v2 is
+prepared but not started.** Two measured findings need a planner / author decision before a freeze can succeed (see
+"Open questions"). Only development seed 41000001 (T41_DEV4) was used. No selection, confirmation or repair seed was
+touched, and `seeds.json` and the calibration pin are unchanged.
+
+### LUT v2 design (`FloodCalibrationMethod.LatticeGrowth`, opt-in)
+
+The matcher is `FloodTopology.Grow`, called from `FloodLut.Calibrate`. The legacy LUT stays the default; v1
+(`TopologyAware`) stays in the code for the stage-1 pilot record.
+
+1. **Noise-robust density.** The raw windowed histogram is smoothed at σ = BinsPerCrystal / 8, i.e. 4 bins at 32 bins
+   per crystal; the raw width stays constant when the bins are refined. This is fixed from the geometry before any
+   validation. It is well below the measured spot widths (FWHM / spacing 0.5 – 0.76) and wide enough to remove the
+   shot-noise maxima of a flood at about 1 count per bin (Sharp, 662 keV: 26 842 maxima at σ = 1, 900 at σ = 4).
+   This method does not use `SmoothingSigmaBins`.
+2. **Candidates:** local maxima at or above 2 % of the highest bin (the existing rule).
+3. **Lattice growth.**
+   - Seed: the highest maximum within one nominal spacing of the flood's centre of mass.
+   - Growth runs ring by ring. Each empty slot is predicted from every assigned 4-neighbour: that neighbour plus the
+     local measured step. The step is the neighbour's own previous step in the same direction; failing that, the
+     parallel steps of the adjacent assigned pairs; failing that, the nominal spacing.
+   - The slot takes the highest unused maximum within 0.4 of the mean step length. Because 0.4 < 0.5, no two slots
+     can share a maximum.
+   - Following the measured local steps is what lets the lattice follow the bowed columns. There are no axis-aligned
+     windows.
+4. **Counting-statistics valley.** A slot is accepted only if the profile between it and every assigned neighbour dips
+   below the lower of the two maxima by 3 standard deviations.
+   - Variance: Var = Σw² · λ, i.e. Poisson counts passed through the smoothing kernel. λ is estimated by the smoothed
+     value, and Σw² is computed from the same truncated kernel.
+   - Continuum or shot-noise maxima beyond the edge, or in an empty slot, fail this test, so the lattice does not grow
+     into them.
+5. **Explicit refusal.**
+   - The measured lattice must span exactly Nx × Ny with every slot filled; a failure names up to three unsupported
+     slots.
+   - Every pair of lattice neighbours must pass the valley test.
+   - The legacy monotone and regularity checks and the watershed then follow.
+   - Every marker is a measured maximum. Nothing is inserted and no truth is used.
+6. **Constants.** The σ fraction 1/8, the 0.4 search radius and the 3 σ valley are engine constants, one set for every
+   geometry. None was changed after a development result.
+
+`ReadoutFlood.Stream` (new) produces the same histories as `Transport`, one at a time, so the 32k-history calibration
+level need not be held in memory. A shorter flood of the same seed is a prefix of a longer one, which makes the levels
+nested.
+
+### Fixtures (`LatticeGrowthTests`)
+
+The fixtures are fixed-seed and use the measured engine lattice shape:
+- edge columns pulled inward at mid-height by 0.13 / 0.99 / 1.30 spacings for 12 / 30 / 34 crystals, rows straight;
+- spot FWHM 0.50 / 0.50 / 0.58 spacing;
+- counting noise at the recipe budget (700 windowed events per crystal) over a 10 % uniform continuum.
+
+**Success** means every true centre maps to its own label and every marker is a local maximum within half a spacing of
+its centre.
+
+**Refusal** (no markers, `Lookup = −1`) is required for:
+- a missing edge spot;
+- a missing corner spot;
+- two central spots merged;
+- an edge-column spot merged with its neighbour;
+- physically overlapping spots (FWHM 1.2 spacings).
+
+A High-res-shaped fixture (2.25-spacing bow, FWHM 0.76) is not asserted; the real High-res flood is the measured result
+(next section).
+
+### Development floods (seed 41000001, recipe budget: 2 000 calibration histories, 3 000 held-out per crystal)
+
+Probe: `%TEMP%\gcam-todo41\turn2s\check`, results in `lut-v2-dev-41000001-ext.json`. Truth (the noise-free expected
+centres and the largest-deposit crystal) is used only for these metrics.
+
+How to read the columns:
+- **Marker error** = |marker − expected centre| / local spacing, median / max.
+- **"1×"** = single-crystal histories (every deposit in one crystal) inside the photopeak window: mis-ID, added angular
+  RMS / allocation (X / Y), and the weakest / median per-crystal identification efficiency (W/M).
+- **"All"** = every assigned history, judged against its largest-deposit crystal (the stage-1 gate definition): mis-ID,
+  RMS X / allocation, and the weakest / median assigned / scored acceptance (W/M).
+
+| Geometry | LUT | keV | Calibration | In window | Marker error | 1× mis-ID | 1× RMS / alloc | 1× W/M | All mis-ID | All RMS / alloc | All W/M |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| Baseline | Legacy | 122.06 | no: flood peaks do not form a regular 12 × 12 grid (row 0, columns 0/1) | 275352 | – / – | – | – / – | – | – | – | – |
+| Baseline | Legacy | 661.7 | yes | 91041 | 0.017 / 0.050 | 0.0005 | 0.055 / 0.050 | 0.99 | 0.359 | 2.77 | 0.71 |
+| Baseline | Legacy | 1332.5 | yes | 58917 | 0.013 / 0.036 | 0.0000 | 0.000 / 0.000 | 1.00 | 0.334 | 2.29 | 0.66 |
+| Baseline | LatticeGrowth | 122.06 | no: measured lattice spans 10 × 10 with 75 maxima, expected 12 × 12; unsupported slots (0, 0), (1, 0), (2, 0) | 275352 | – / – | – | – / – | – | – | – | – |
+| Baseline | LatticeGrowth | 661.7 | yes | 91041 | 0.014 / 0.029 | 0.0000 | 0.000 / 0.000 | 1.00 | 0.333 | 2.71 | 0.71 |
+| Baseline | LatticeGrowth | 1332.5 | yes | 58917 | 0.015 / 0.036 | 0.0000 | 0.000 / 0.000 | 1.00 | 0.313 | 2.22 | 0.66 |
+| Sharp | LatticeGrowth | 122.06 | no: measured lattice spans 1 × 1 with 1 maxima, expected 30 × 30 | 1708832 | – / – | – | – / – | – | – | – | – |
+| Sharp | LatticeGrowth | 661.7 | yes | 635192 | 0.025 / 0.087 | 0.0065 | 0.207 / 0.189 | 0.98 | 0.481 | 6.15 | 0.62 |
+| Sharp | LatticeGrowth | 1332.5 | yes | 404464 | 0.017 / 0.068 | 0.0000 | 0.000 / 0.008 | 1.00 | 0.509 | 5.09 | 0.55 |
+| Wide | LatticeGrowth | 122.06 | no: measured lattice spans 1 × 1 with 1 maxima, expected 34 × 34 | 2208922 | – / – | – | – / – | – | – | – | – |
+| Wide | LatticeGrowth | 661.7 | yes | 880154 | 0.033 / 0.127 | 0.0174 | 0.346 / 0.305 | 0.96 | 0.499 | 6.21 | 0.60 |
+| Wide | LatticeGrowth | 1332.5 | yes | 568001 | 0.019 / 0.065 | 0.0000 | 0.010 / 0.007 | 0.99 | 0.525 | 5.18 | 0.52 |
+| High | LatticeGrowth | 122.06 | no: measured lattice spans 1 × 1 with 1 maxima, expected 44 × 44 | 3600292 | – / – | – | – / – | – | – | – | – |
+| High | LatticeGrowth | 661.7 | no: measured lattice spans 44 × 44 with 1439 maxima, expected 44 × 44; unsupported slots (0, 0), (4, 0), (7, 0) | 1357928 | – / – | – | – / – | – | – | – | – |
+| High | LatticeGrowth | 1332.5 | yes | 875019 | 0.025 / 0.112 | 0.0007 | 0.072 / 0.060 | 0.98 | 0.564 | 7.39 | 0.51 |
+Every failure is kept in the results file. What the table shows:
+
+- **662 and 1332 keV succeed on Baseline, Sharp and Wide, and 1332 keV succeeds on High-res.** Every marker is within
+  0.13 spacing of its true centre, single-crystal mis-ID is at most 1.7 %, and the single-crystal added RMS is at most
+  0.35 of the allocation.
+- **122 keV refuses on every head**, including the legacy LUT on Baseline in this seed. The measured cause: at 122 keV
+  the flood has no resolvable spot structure. Along the Sharp centre row the σ = 4 density varies only from 1.97 to
+  2.45 counts per bin, with no period at the crystal spacing; at 662 keV the same row varies from 0.76 to 2.08. This is
+  an honest physical refusal.
+- **High-res 662 keV refuses**, with 1439 of 1936 slots supported. A diagnostic at the true centres shows why: the
+  valley significance between neighbours has a median of 2.5 – 5 σ, with minima below 1 σ at the edge rows at this
+  budget (at 1332 keV it is 5 – 10 σ). Significance grows as √(histories), so 662 keV on High-res needs a larger
+  calibration budget (8 – 16× or more), not a different method. This is a measured result; no preset was tuned.
+- The 12 × 12 Baseline keeps the legacy LUT in recipe v2, byte-identical. LUT v2 also identifies it: single-crystal
+  mis-ID is 0 at both 662 and 1332 keV, against the legacy 0.0005 and 0.
+
+### Rule v2 and recipe v2 (pinned)
+
+| File | SHA-256 |
+|---|---|
+| `samples/evidence/studio-readout/rule-v2.json` | `f36509f0f70f9110ff83b4909e60727d7186701c613b99eca579f9ff83022a4e` |
+| `samples/evidence/studio-readout/recipe-v2.json` | `693e8ef13ea42307ff9c8ba6dbc11b0094864bd7895725083e395963c97dd563` (pins rule v2) |
+| `samples/evidence/manifest-studio-readout-v2.json` | `6c2d176d02d1d2be1f52c33bf2998f3fb67ace9b6e5ef6767cc857b9425fb4c5` (pins recipe v2; families `t41-*-v2` on the existing T41 seed lists) |
+| `samples/evidence/probe/StudioReadoutRecipeV2.cs` | `3373f2113c96e053a6681de74fee0965da2f4791f38ce68878c1a7f94ed08fb2` |
+| `samples/evidence/studio_readout_select.py` | `e4c170d45f22bd12e78e3100c468e3c041257e928da1ddd8649ef1f09db81ff5` |
+| `samples/evidence/studio_readout_driver.py` | `2dc8dfdb2309df15a4e2df7ce1583449001381c09166b382a9d7357f99950251` |
+
+- **PD-3 change.**
+  - Per-crystal acceptance is judged on the isolated held-out rows of each line, against `AcceptanceRatio` (0.8 × the
+    median, a pinned parameter).
+  - Rate cells gate on the spatial bound only. They report the rate-dependent loss as global throughput: pooled
+    assigned / scored, and its ratio to the isolated row.
+- **Three-level residual-bias bound.**
+  - Calibration histories 2k / 8k / 32k per crystal: nested floods, the same held-out events and streams, compared on
+    the added angular RMS of the gate event set.
+  - DOI bins 8 / 16 / 32: the expected-position proxy, sampled at the finest level's depths.
+  - Optical photons 100k / 400k: two levels only, residual D1 / (1 − 0.5).
+  - Per axis, D1 and D2 are the upper 95 % seed-cluster values of the two successive differences. The rule requires
+    r = D2 / D1 ≤ 0.5 and takes the residual as D1 / (1 − r).
+  - A line is numerically bounded when every calibration level succeeded in every development seed and optics plus
+    that line's calibration residual is at most 10 % of the allocation.
+  - FreezeEligible holds when at least one (geometry, line) is bounded. The freeze records the bounded lines, and a
+    confirmation cell of an unbounded line is refused. Development never qualifies a cell.
+- **Gate event set** (`GateEvents`, a pinned parameter).
+  - `AllDeposits` is the stage-1 definition. It stays pinned because it is the author's gate as written.
+  - `SingleCrystal` is theme 68 practice.
+  - The outputs carry the sufficient statistics of both, and the selector reports the other set beside every cell.
+    Changing the parameter is a new rule version, not a rerun.
+- **Replicates.** Recipe v2 also records one independent replicate of the recipe level per component: for calibration,
+  its own flood and streams (purpose keys 52 – 54); for optics, its own optical seed (key 51). The replicate is the
+  statistical floor of a level difference. Rule v2 does not use it (see open question 2).
+- **Versions.** The driver and selector accept rule versions 1 and 2, and the rule version must match the recipe's.
+  Version-1 semantics are unchanged.
+
+### Timing pilot (Sharp, recipe v2, seed 41000001, before the replicates were added)
+
+Command: `run_seeds.py --manifest manifest-studio-readout-v2.json --family t41-dev-Sharp-v2 --n 1 --jobs 1`, output in
+`%TEMP%\gcam-todo41\turn3\sharp-pilot-v2\`. Result: exit 0, **1 630 s**, peak working set **3.49 GB**.
+
+| Stage | Time |
+|---|---|
+| Build | 33 s |
+| Per line: calibration | 15 s |
+| Per line: held-out | 22 – 23 s |
+| Per line: five rate cells | 0.7 s |
+| Per line: calibration level 8k | 85 – 93 s |
+| Per line: calibration level 32k | 271 – 301 s |
+| Photons 400k | 132 s |
+| DOI 16 / 32 bins | 66 / 132 s |
+
+The replicates add about 150 s (scaled from the Baseline smoke run: optics replicate 6 s, calibration replicate 1.7 s
+per line). Development numbers of this seed (diagnostic):
+
+| Component (Sharp, axis X / Y) | D1 / allocation | D2 / allocation | r |
+|---|---|---|---|
+| Calibration 662 keV, single-crystal RMS | 0.57 % | 0.31 % | 0.55 |
+| Calibration 662 keV, all-deposit RMS | 0.18 % | 0.01 % | 0.03 |
+| Calibration 1332 keV, single-crystal RMS | 0 | 0 | — (residual 0) |
+| Calibration 1332 keV, all-deposit RMS | 0.15 % | 0.20 % | 1.36 |
+| DOI 8 → 16 → 32 bins | 1.44 % / 2.21 % | 1.73 % / 1.78 % | 1.20 / 0.80 |
+| Photons 100k → 400k | 1.05 % / 1.05 % | — | (assumed 0.5) |
+
+For comparison, the optics replicate floor in the Baseline smoke run is 0.83 % of Baseline's allocation, and the DOI
+differences there are 0.90 / 1.17 %.
+
+### DEV4 v2 command (prepared, not started)
+
+Run it as one background PowerShell command from the committed tree. It can be resumed per (geometry, seed): a run
+whose `done.json` says exit 0 is skipped.
+
+```powershell
+dotnet build Gcam.sln -c Release; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; dotnet build samples/evidence/probe/Gcam.EvidenceProbe.csproj -c Release; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; $env:DOTNET_CLI_UI_LANGUAGE = 'en'; python -B samples/evidence/run_seeds.py --manifest samples/evidence/manifest-studio-readout-v2.json --family t41-dev-Baseline-v2 t41-dev-Sharp-v2 t41-dev-Wide-v2 t41-dev-High-v2 --jobs 1 --out (Join-Path $env:TEMP 'gcam-todo41\dev4-v2') > (Join-Path $env:TEMP 'gcam-todo41\dev4-v2.log') 2>&1; exit $LASTEXITCODE
+```
+
+Aggregate: `python -B samples/evidence/studio_readout_select.py --manifest samples/evidence/manifest-studio-readout-v2.json --runs $env:TEMP\gcam-todo41\dev4-v2 --phase dev --out $env:TEMP\gcam-todo41\dev4-v2\dev-summary.json`.
+
+Estimated cost per seed. Sharp is measured; Baseline is measured from its smoke run. Wide and High-res are scaled from
+this turn's per-geometry stage costs, Sharp : Wide : High-res = 1 : 1.45 : 2.03 for the build and 1 : 1.53 : 3.97 for
+calibration plus held-out.
+
+| Geometry | Per seed |
+|---|---|
+| Baseline | 2 min |
+| Sharp | 30 min |
+| Wide | 45 min |
+| High-res | 105 min |
+| **Total** | **≈ 3 h per seed, ≈ 12 h for DEV4 at `--jobs 1`** |
+
+The probe is essentially single-threaded (about 1 core), so `--jobs 2` gives about 6 – 7 h. Peak memory is about
+3.5 GB for Sharp (measured) and about 7.5 GB for High-res (scaled by crystal count). Two concurrent High-res runs fit in
+32 GB; four would not.
+
+### Open questions (planner / author, before a freeze)
+
+1. **The gate event set decides every cell.**
+   - Under `AllDeposits` (pinned, the stage-1 definition), every cell of every head fails, the 12 × 12 Baseline
+     included. The all-history added RMS is 2.2 – 7.4× the allocation, and the all-history weakest / median acceptance
+     is 0.51 – 0.71. Two physical reasons: 31 – 56 % of photopeak histories are multi-crystal Compton events placed at
+     their light centroid (by design, theme 68), and edge crystals lose more photopeak histories.
+   - The all-deposit RMS also does not contract with calibration histories: Baseline 662 keV goes 0.01335 → 0.01336 →
+     0.01350, and Sharp 1332 keV has r = 1.36.
+   - Under `SingleCrystal` (theme 68's validated mis-ID metric, with acceptance as the per-crystal identification
+     efficiency), the successful cells sit at 0 – 0.35 of the allocation and 0.96 – 1.00 W/M.
+   - Recommendation: rule v3 = rule v2 with `GateEvents: SingleCrystal`, decided before the freeze. No rerun is needed,
+     because DEV4 v2 records both sets.
+2. **The contraction rule refuses statistical noise.**
+   - In the Sharp pilot, the DOI differences (1.4 – 2.2 % of the allocation) and the 662 keV single-crystal calibration
+     differences (0.3 – 0.6 %) do not contract (r = 0.55 – 1.2), although they are far below the 10 % budget.
+   - The differences are statistical: each level is an independent photon or flood realisation. On Baseline the optics
+     replicate floor (0.83 %) equals the DOI differences.
+   - Rule v2 as pinned will therefore refuse the freeze.
+   - Proposal for rule v3: a component whose D1 and D2 both lie within the measured replicate floor (upper 95 % over
+     seeds) has no resolved trend and is bounded by D1 + D2 + floor; otherwise the D1 / (1 − r) rule applies. DEV4 v2
+     records the replicates, so this also needs no rerun.
+3. **High-res 662 keV needs a larger calibration budget**, about 8 – 16 × 2 000 histories per crystal or more, to
+   resolve its edge rows (from the measured valley significance). Raising the recipe budget for all heads (cost grows
+   in proportion to histories) or accepting the refusal is the author's call. 122 keV refuses on every head on physical
+   grounds.
+4. **When DEV4 can start:** as soon as the planner either accepts open questions 1 and 2 as post-DEV4 decisions (both
+   rule changes reuse DEV4 v2 data) or rules on them first.
+
+### Verification (turn 3)
+
+| Check | Before (turn 2) | After |
+|---|---|---|
+| `dotnet build Gcam.sln -c Release` | 0 errors | 0 errors, 0 warnings |
+| `dotnet test Gcam.sln -c Release` | 895 passed | **906 passed**, 0 failed, 32 skipped (Gcam.Tests 550 → 561: `LatticeGrowthTests` 9, `ReadoutFloodStreamTests` 2) |
+| Python `unittest discover` | 51 (1 skipped) | **57** (1 skipped; `StudioReadoutRuleV2Tests` 6) |
+| `calibration_record.py --check` | pass | pass (no pin changed) |
+| `check-catalog --discover` | 170 units | **173 units** (3 entries added; source pins of the TODO-41 entries refreshed) |
+
+Baseline identity: after the turn-3 changes, the turn-2 probe (12 × 12, optics seed 402, flood seed 403) gives identical
+density, labels, markers, gains, network and configuration hashes (`%TEMP%\gcam-todo41\turn2s\identity-turn3.log`).
+
+### Commands that wrote anything (turn 3)
+
+- **Repository** (the worktree, edit tool and scripted edits): the engine, test, evidence and catalog files that
+  `git status` lists, and this section. `docs/VV.Tests.md` was updated through `check-catalog --update-discovery` and a
+  scratch entry script.
+- **Builds and tests:** `dotnet build` and `dotnet test` with TEMP / TMP = `%TEMP%\gcam-todo41\turn2s\tmp`; probe
+  builds.
+- **Scratch** under `%TEMP%\gcam-todo41\turn2s\`:
+  - `diag\`: raw flood dumps of the four heads and analysis scripts;
+  - `check\`: the LUT v2 development check, two runs;
+  - `smoke-baseline\` and `smoke-baseline2\`: recipe v2 smoke runs;
+  - generator and patch scripts, and `identity-turn3.log`.
+- **Pilot:** `%TEMP%\gcam-todo41\turn3\sharp-pilot-v2\` (the timing pilot).
+- **One file outside the allowed paths**, written by a redirect mistake: `%LOCALAPPDATA%\identity-turn3.log` (530 bytes,
+  the identity hashes; copied to the scratch folder). It has not been deleted; removal is requested from the author.
+- No git state change, no deletion, no process stopped, no family started.
+
+---
+
+## Turn 4 — rule v3 / recipe v3: first-interaction truth and the paired statistic (development seed only)
+
+Status: **recipe v3, rule v3 and manifest v3 are pinned; the driver and selector are updated; DEV4 v3 is prepared but
+not started.** The DEV4 v2 output (`%TEMP%\gcam-todo41\dev4-v2`: four Baseline seeds complete, two Sharp seeds stopped)
+is kept untouched as a record. The v1 and v2 files stay as records. `seeds.json` and the calibration pin are unchanged,
+and only development seed 41000001 was used.
+
+### Metric definitions as implemented
+
+- **Truth.** `ReadoutTruth.FirstInteraction` (a new engine helper, additive) returns the earliest site by `TimeNs`;
+  ties go to the lower site index. The truth is that site's crystal f, plus its XY for a continuous diagnostic.
+- **Paired spatial statistic** (`StudioReadoutRecipeV3.Measure`, selector `gate_statistic`).
+  - Accepted events are those inside the Anger photopeak window with a LUT-assigned crystal c. On these same events
+    the direct largest-deposit crystal d of the same history is also scored.
+  - Per axis, angles are atan((c − f) · pitch / D) and atan((d − f) · pitch / D).
+  - Per seed, G = (Σ angle_Anger² − Σ angle_direct²) / N_accepted = RMS_Anger² − RMS_direct² (signed, rad²).
+  - A cell passes when the Student one-sided 95 % upper bound of G over the seeds is ≤ allocation², with allocation
+    = (pitch / D) / √12.
+  - Also reported: both RMS values, both biases (mean signed angles), the pooled displacement matrices of c − f and
+    d − f, and the continuous diagnostic (crystal centre − first-interaction XY) for both estimators.
+- **Rate cells.** The same statistic applies. A piled event is scored by its dominant hit: f and d belong to that hit's
+  own history. The direct reference therefore has no pile-up, because it places every history by its own largest
+  deposit. Throughput (accepted / inputs, and its ratio to the isolated row) is reported, never gated.
+- **Acceptance** (isolated held-out rows only).
+  - Per first-interaction crystal: ratio = accepted full-energy histories / full-energy histories, pooled over seeds.
+  - Gate: weakest ratio ≥ `AcceptanceRatio` (0.8, pinned) × median.
+  - A full-energy history is one whose summed deposit is within `ReadoutTruth.FullEnergyToleranceKeV` = 1 keV + 1e-6
+    of the line. The tolerance comes from the deposit model: the transport drops a photon once it is at or below 1 keV,
+    so a completely absorbed history can be short by at most 1 keV; any larger shortfall is a physical loss.
+  - Caveat: a forward scatter in the entrance absorber that loses less than 1 keV also counts as full energy.
+- **Diagnostics kept** (never gating): the single-crystal subset, the stage-1 / v2 largest-deposit numbers (c against
+  d: mis-identified count and RMS), and the continuous RMS.
+- **Numerical bounds on G.** These are computed per line and axis on the isolated held-out rows, using upper 95 %
+  seed-cluster absolute differences.
+  - Calibration: 2k / 8k / 32k (D1, D2), floor F = |G(2k) − G(2k replicate: own flood and streams)|.
+  - DOI: 8 / 16 / 32 (D1, D2) with the optics floor F = |G(base) − G(independent optical seed)|. Every optics level is
+    recalibrated on the recipe calibration flood and measured on the same held-out events, so the bound is on the gate
+    statistic itself, not on a position proxy.
+  - Component bound: D1 + D2 + F when both differences are ≤ F; otherwise D1 / (1 − r) with r = D2 / D1 ≤ 0.5.
+  - Photons (two levels): D1 + F when D1 ≤ F, otherwise 2 D1.
+  - A line is bounded when every level and replicate calibration succeeded in every development seed and photons +
+    DOI + calibration ≤ 0.1 × allocation².
+- **High-res 662 keV budget.** `LargerBudgetCandidate` flags a line whose 2k calibration failed while an 8k / 32k
+  level succeeded in every development seed. Adopting a larger budget would be a new recipe version.
+
+### Pins
+
+| File | SHA-256 |
+|---|---|
+| `samples/evidence/studio-readout/rule-v3.json` | `b2a6d0b82c39befb320d01984487f261ce99b36fcbca75dffbec4d38a92244bb` |
+| `samples/evidence/studio-readout/recipe-v3.json` | `a0964d3966196f23320a60e89881ca60257e650683493aa8a972b51ead9f20d4` (budget as v2, pins rule v3) |
+| `samples/evidence/manifest-studio-readout-v3.json` | `5ea61f27c5f67be9543ccca736636829a61e8a0f506b350984291e520c5fbc7c` (families `t41-*-v3`, T41 seeds) |
+| `samples/evidence/probe/StudioReadoutRecipeV3.cs` | `e3e5c4558d20d3d06808b8ca0267f8449a52c92bbe45bd733dcb76d33c561b50` |
+| `samples/evidence/studio_readout_select.py` | `8d609bb3c0425f7f3e45c9cf3ab0d6682393898ea83629e9d9a23e6cdb5d097d` |
+| `samples/evidence/studio_readout_driver.py` | `c0ab7cc28dc7e6b0473d20ad98c3b8c3e54cc004464f0c74ad4d18b7cf81d91a` |
+| `src/Gcam.Detector/Readout/ReadoutTruth.cs` | `e2ee0d687159ba574a7c2b5aa0532bb3176464fd7c63351f760c688b45e89711` |
+
+The selector accepts rule versions 1, 2 and 3 (the version must match the recipe) and validates v3 rows. It checks that
+the per-f denominators nest (scored ≥ triggered ≥ windowed ≥ accepted; full-energy ≤ scored; accepted full-energy ≤
+both) and that both displacement matrices reproduce their angular sums within the γ(N + 4K) bound. It refuses empty
+seeds, failed calibrations, unbounded lines and non-finite values.
+
+### Development numbers (one development seed, 41000001; diagnostic, not evidence)
+
+Sharp at full budget (base cells only, `%TEMP%\gcam-todo41\turn4\sharp-base`). Allocation² = 4.69e-6 rad².
+
+| Sharp | G X / Y (allocation²) | RMS Anger X / RMS direct X (allocation) | Exact f-crystal: Anger / direct | Acceptance W/M | Throughput |
+|---|---|---|---|---|---|
+| 662 keV isolated | **−5.65 / −5.75** (Anger better) | 7.03 / 7.42 | 0.49 / 0.82 | 0.999 | 0.353 |
+| 662 keV, 1e3 … 3e5 cps | −3.1 … −1.9 (X); −2.0 … +3.0 (Y) | ≈ 6.9 – 7.3 / 7.0 – 7.4 | 0.45 – 0.48 / 0.81 | — | 0.35 → 0.27 |
+| 662 keV, 1e6 cps | +7.2 / +16.5 | 8.0 / 7.6 | 0.41 / 0.82 | — | 0.14 |
+| 1332 keV isolated | **+18.1 / +18.3** (Anger worse) | 5.33 / 3.22 | 0.47 / 0.92 | 1.000 | 0.224 |
+| 122 keV | calibration refused (no spot structure) | — | — | — | — |
+
+On the Baseline smoke (reduced budget: 500 calibration and 600 held-out histories per crystal, 20k photons), G at the
+recipe level is −1.27 allocation² at 662 keV and +3.18 at 1332 keV. The refinement differences of G there are
+0.002 – 0.13 allocation², against a calibration replicate floor of 0.008 – 0.04 and an optics floor of 0.04 – 0.10.
+
+### Tests and oracles
+
+- `ReadoutTruthTests` (C#, 6 cases):
+  - the first interaction is the earliest site, not the largest deposit (a hand-built two-site history);
+  - a time tie goes to the lower site index;
+  - an empty history is refused;
+  - full energy is checked at 661.7 / 660.7 (exactly the 1 keV cutoff) / 660.69 / 477.3 keV.
+- `StudioReadoutRuleV3Tests` (Python, 6 tests):
+  - **Anger beats direct:** 2 of 32 events at +1 vs +3 crystals, so G = 2(atan²(1/60) − atan²(3/60)) / 32 < 0, which
+    passes.
+  - **Anger loses:** 8 of 32 events at +2 vs 0, so G = 8 atan²(2/60) / 32 > allocation², which fails.
+  - **Escape cancels:** an edge crystal with half the full-energy histories but the same 8/9 accepted fraction gives
+    W/M = 1; a starved crystal at 60/90 gives exactly (60/90)/(8/9).
+  - **Replicate-floor rule:** 1 + 0.5 + 2 = 3.5; 4 / 0.75; r = 0.75 is refused.
+  - **Numerical bound on G** from constructed outputs; a failed level means unbounded.
+  - **Fail-closed:** an empty seed, an unbounded line, a failed calibration, non-nested counts, an inconsistent
+    angular sum, NaN, and a crystal with no full-energy history are all refused.
+
+### Verification
+
+| Check | Before (turn 3) | After |
+|---|---|---|
+| `dotnet build Gcam.sln -c Release` | 0 errors | 0 errors, 0 warnings |
+| `dotnet test Gcam.sln -c Release` | 906 passed | **912 passed**, 0 failed, 32 skipped (Gcam.Tests 561 → 567) |
+| Python `unittest discover` | 57 | **63** (1 skipped) |
+| `calibration_record.py --check` | pass | pass |
+| `check-catalog --discover` | 173 units | **175 units** |
+
+Baseline identity: the engine change is one new class, `ReadoutTruth`, which no engine path calls. The turn-2 identity
+probe is identical (`%TEMP%\gcam-todo41\turn4\identity-turn4.log`).
+
+### DEV4 v3 command (prepared, not started)
+
+```powershell
+dotnet build Gcam.sln -c Release; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; dotnet build samples/evidence/probe/Gcam.EvidenceProbe.csproj -c Release; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; $env:DOTNET_CLI_UI_LANGUAGE = 'en'; python -B samples/evidence/run_seeds.py --manifest samples/evidence/manifest-studio-readout-v3.json --family t41-dev-Baseline-v3 t41-dev-Sharp-v3 t41-dev-Wide-v3 t41-dev-High-v3 --jobs 2 --out (Join-Path $env:TEMP 'gcam-todo41\dev4-v3') > (Join-Path $env:TEMP 'gcam-todo41\dev4-v3.log') 2>&1; exit $LASTEXITCODE
+```
+
+The command uses a fresh output root and is resumable per (geometry, seed). Aggregate with
+`python -B samples/evidence/studio_readout_select.py --manifest samples/evidence/manifest-studio-readout-v3.json --runs $env:TEMP\gcam-todo41\dev4-v3 --phase dev --out $env:TEMP\gcam-todo41\dev4-v3\dev-summary.json`.
+
+**Duration estimate.** No new timing pilot was run: the change against the measured v2 cost is about +30 %, coming from
+four optics levels times three lines of recalibration plus held-out measurement. Per seed, from the measured v2 stages:
+
+| Geometry | Per seed |
+|---|---|
+| Baseline | ≈ 3 min (v2 measured 135 – 141 s) |
+| Sharp | ≈ 38 min |
+| Wide | ≈ 57 min |
+| High-res | ≈ 136 min |
+
+That is ≈ 3.9 h of work per seed and ≈ 15.6 h for the four seeds, so **≈ 8 h at `--jobs 2`**. Peak memory is about
+3.5 GB for Sharp and about 7.5 GB for High-res; two concurrent High-res runs fit in 32 GB.
+
+### Open questions
+
+1. **The acceptance gate is close to vacuous.** On the development floods, every full-energy history is accepted (W/M
+   = 1.000 on Baseline and Sharp 1332 keV, 0.999 on Sharp 662 keV). The ±15 % photopeak window holds the whole
+   full-energy peak, and the watershed labels the entire plane. The gate can then only fail through trigger losses,
+   positions outside the plane, or a calibration failure. That is measured behaviour, not a defect; whether
+   "accepted" should mean "identified in the first-interaction crystal" is the author's choice.
+2. **Both RMS values are 3 – 7 allocations, and the tails dominate them.** At 0.6 mm pitch the scattered photon of a
+   multi-crystal history travels many crystals. The gate therefore compares two tail-dominated numbers whose difference
+   (−6 to +18 allocation² on Sharp) is set by Compton geometry at least as much as by the LUT. The Anger readout wins
+   at 662 keV and loses at 1332 keV against the direct reference. The statistic is defined honestly for every case
+   measured; I see no case where it cannot be.
+3. **Rate cells:** the direct reference has no pile-up, as stated above, so at 1e6 cps the comparison favours the
+   direct path by construction.
+4. **Numerical budget unit:** with the gate in rad², I implemented "10 % of the spatial allocation" as
+   0.1 × allocation² (10 % of the gate threshold). The planner should confirm, or ask for (0.1 × allocation)².
+5. **Rate-cell statistics:** on one seed, G of the 662 keV rate cells (≈ 1 400 – 3 500 events each) scatters by about
+   ±2 allocation² around the isolated value. Four development seeds give a loose bound; 32 confirmation seeds tighten
+   it to roughly ±0.6.
+6. The stray file from turn 3 (`%LOCALAPPDATA%\identity-turn3.log`) is still awaiting the author's removal.
+
+### Commands that wrote anything (turn 4)
+
+- **Worktree:** the new `src/Gcam.Detector/Readout/ReadoutTruth.cs`, `tests/Gcam.Tests/ReadoutTruthTests.cs` and
+  `samples/evidence/probe/StudioReadoutRecipeV3.cs`; the edited `StudioReadoutRecipe.cs` (version dispatch), the
+  driver, the selector, `tests/test_studio_readout.py` and `docs/VV.Tests.md` (entries plus `check-catalog
+  --update-discovery`); rule / recipe / manifest v3 (generator script in `%TEMP%\gcam-todo41\turn2s\make_v3.py`); this
+  section.
+- **Builds and tests:** `dotnet build` and `dotnet test` (TEMP / TMP `%TEMP%\gcam-todo41\turn4\tmp`); the Python
+  suites (`GCAM_PROVENANCE_TEST_ROOT` = `%TEMP%\gcam-todo41\turn4\provenance-root`).
+- **Scratch** in `%TEMP%\gcam-todo41\turn4\`: `recipe-v3-smoke.json` (unpinned), `smoke-baseline\`, `sharp-base\`,
+  `test-turn4.log`, `identity-turn4.log`. Every redirect target was printed and checked before use.
+- No git state change, no deletion, no process stopped, no family started.
+
+---
+
+## Turn 5 — acceptance as a per-crystal sensitivity ratio (v3 edited in place, re-pinned)
+
+**Definition.** Acceptance is judged on the isolated held-out rows, pooled over seeds:
+
+ratio_k = (windowed Anger events assigned to crystal k, i.e. LUT crystal c = k) ÷ (full-energy histories whose
+first-interaction crystal f = k).
+
+The gate is weakest ratio_k ≥ `AcceptanceRatio` (0.8, pinned) × median ratio_k. Recipe v3 records the numerator as
+`AssignedToCrystal`. The selector (`sensitivity_v3`) checks that this array sums to the accepted total, and refuses a
+crystal with no full-energy history. The old full-energy acceptance (accepted full-energy ÷ full-energy histories by f)
+is kept as a diagnostic, `FullEnergyAcceptance`.
+
+The numerator also holds windowed events that are not full-energy. Their share is reported per cell as
+`AcceptedNotFullEnergyFraction`, and rule v3 states it:
+
+| Line | Share of windowed events that are not full-energy |
+|---|---|
+| 662 keV | 0.3 % (Baseline and Sharp) |
+| 1332 keV | 14 % (Sharp) and 21 % (Baseline) |
+
+So at 1332 keV the crystal's escape cancels only partly.
+
+The rule text also now says:
+- 0.1 × allocation² on G is about 5 % of the allocation in RMS terms at the gate threshold (√1.1 − 1 = 0.049);
+- the direct reference carries no pile-up by intent: the rate cells measure what the physical readout adds.
+
+**Tests and oracles** (`StudioReadoutRuleV3Tests`, now 8 tests):
+- **Edge compression:** edge crystal 0 loses half of its 90 events to neighbour 1. The ratios are 45/90 = 0.5,
+  135/90 = 1.5 and fourteen at 1, so the median is 1 and weakest / median = 0.5 exactly; the cell is refused.
+- **Escape:** an edge crystal with 45 instead of 90 full-energy histories and 45 assigned events gives ratio 1,
+  weakest / median = 1, and the cell qualifies.
+- **Diagnostic:** the full-energy acceptance is 1, and the not-full-energy share is (1600 − 40 − 15 · 80) / 1600.
+- **Fail-closed additions:** a crystal with no full-energy history is refused, and an assignment array that does not
+  sum to the accepted total is refused.
+
+**Development numbers** (one development seed, 41000001; full budget, base cells only, `%TEMP%\gcam-todo41\turn5\`):
+
+| Head, line | Sensitivity W/M | Min / median / max | Edge median / inner median | Full-energy W/M | G X / Y (allocation²) |
+|---|---|---|---|---|---|
+| Baseline 662 keV | 0.630 | 0.60 / 0.96 / 1.70 | 0.76 / 1.07 | 1.000 | −1.47 / −1.58 |
+| Baseline 1332 keV | 0.688 | 0.84 / 1.22 / 2.06 | 1.01 / 1.32 | 1.000 | +3.05 / +3.06 |
+| Sharp 662 keV | 0.624 | 0.64 / 1.02 / 1.31 | 0.71 / 1.04 | 0.999 | −5.65 / −5.75 |
+| Sharp 1332 keV | 0.560 | 0.66 / 1.18 / 1.66 | 0.79 / 1.20 | 1.000 | +18.1 / +18.3 |
+
+On this seed the sensitivity gate refuses every calibrated line of both heads, the 12 × 12 Baseline included, which
+keeps the legacy LUT.
+- **Edge crystals.** Their counts are systematically low, 0.71 – 1.01 of median. Multi-crystal histories whose first
+  interaction is in an edge crystal are placed at their light centroid, which lies inside the array.
+- **Interior crystals.** They also spread widely (Baseline 662 keV: inner 5th percentile 0.76, maximum 1.70) at about
+  950 full-energy histories per crystal, where counting noise would be about 3 %. The LUT boundary decides which
+  neighbour receives the centroids of multi-crystal events.
+
+This is measured behaviour of the Anger readout under this metric, not a LUT defect specific to one head. The reduced
+Baseline smoke gives the same picture (W/M 0.63 at both lines; noisier at 500 / 600 histories per crystal).
+
+**Pins (re-pinned):**
+
+| File | SHA-256 |
+|---|---|
+| `rule-v3.json` | `33a17ca50d3e72e84aaad0c5165dc9b64a11e140830bb2e579679a0731b56b3b` |
+| `recipe-v3.json` | `fb52c01505e3cc6f8eaae107c86498f856b52825463745829afe83a95edaeed6` |
+| `manifest-studio-readout-v3.json` | `b42975b42e02c9243cf9c1a1e2b624835ec306229a6e4529ef54b9fc3d59e3c3` |
+| `StudioReadoutRecipeV3.cs` | `187ef78b345d825d0f9bb8711c0a4cb40d05b5b06b8e68f1bcbec4e2cbe0f19a` |
+| `studio_readout_select.py` | `53584e9470773cbde01191ee1d7f65a400fc70fb4ac102e77d0273345a61f151` |
+
+These supersede the turn-4 v3 hashes. The driver is unchanged.
+
+**Verification.**
+
+| Check | Result |
+|---|---|
+| `dotnet build Gcam.sln -c Release` | 0 errors |
+| `dotnet test Gcam.sln -c Release` | 912 passed, 0 failed, 32 skipped (unchanged; no engine change) |
+| Python `unittest discover` | 63 → 65 (1 skipped) |
+| `calibration_record.py --check` | pass |
+| `check-catalog --discover` | 175 units (the RuleV3 entry's methods, sources and purpose refreshed) |
+
+**DEV4 v3 command** (unchanged in form; fresh root; not started; ≈ 8 h at `--jobs 2`):
+
+```powershell
+dotnet build Gcam.sln -c Release; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; dotnet build samples/evidence/probe/Gcam.EvidenceProbe.csproj -c Release; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; $env:DOTNET_CLI_UI_LANGUAGE = 'en'; python -B samples/evidence/run_seeds.py --manifest samples/evidence/manifest-studio-readout-v3.json --family t41-dev-Baseline-v3 t41-dev-Sharp-v3 t41-dev-Wide-v3 t41-dev-High-v3 --jobs 2 --out (Join-Path $env:TEMP 'gcam-todo41\dev4-v3') > (Join-Path $env:TEMP 'gcam-todo41\dev4-v3.log') 2>&1; exit $LASTEXITCODE
+```
+
+**Writes (turn 5).**
+- Worktree: `StudioReadoutRecipeV3.cs`, `studio_readout_select.py`, `test_studio_readout.py`, rule / recipe /
+  manifest v3 (regenerated by the scratch generator), `docs/VV.Tests.md`, this note.
+- Scratch in `%TEMP%\gcam-todo41\turn5\`: the smoke recipe, `smoke-baseline\`, `Baseline-base\`, `Sharp-base\`, logs.
+- No git state change, no deletion, no process stopped, no family started.
