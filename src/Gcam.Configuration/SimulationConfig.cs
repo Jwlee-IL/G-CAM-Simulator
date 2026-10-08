@@ -364,6 +364,11 @@ public sealed class DetectorConfig
 
     /// <summary>Scintillation decay time in ns (used by the RTL pile-up study; informational here).</summary>
     public double DecayTimeNs { get; set; } = 0.0;
+
+    /// <summary>Physical readout of the array (TODO-19). Null (and <see cref="ReadoutMode.DirectCrystal"/>) is today's
+    /// direct crystal assignment; not written when null, so existing configurations serialise byte-identically.</summary>
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public ReadoutConfig? Readout { get; set; }
 }
 
 /// <summary>Placement of source / mask / detector planes along the optical axis (+z).</summary>

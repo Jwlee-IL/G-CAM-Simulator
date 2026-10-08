@@ -1,0 +1,25 @@
+{
+ "_about": "TODO-19 stage 1 pilot: a minutes-long subset of request-v1.json (two geometries, three readouts, two triggers, small budgets, an optical table of 5 000 photons per bin whose own noise widens the 662 keV photopeak by about a point) to exercise every metric before the long run. Not evidence.",
+ "Geometries": [
+  { "Name": "p1.0-g0", "PitchMm": 1.0, "GapMm": 0.0 },
+  { "Name": "p3.2-g0.2", "PitchMm": 3.2, "GapMm": 0.2 }
+ ],
+ "Readouts": [
+  { "Name": "Anger-Ideal", "Mode": "FourOutputAnger", "Network": { "Topology": "IdealBilinear" } },
+  { "Name": "Anger-DPC-r0.1", "Mode": "FourOutputAnger", "Network": { "Topology": "Dpc", "RowResistanceOhm": 1000, "ColumnResistanceOhm": 100 } },
+  { "Name": "Anger-DPC-r0.3", "Mode": "FourOutputAnger", "Network": { "Topology": "Dpc", "RowResistanceOhm": 1000, "ColumnResistanceOhm": 300 } },
+  { "Name": "Independent-ZS3", "Mode": "IndependentSipm", "ZeroSuppressionSigma": 3 }
+ ],
+ "Triggers": [
+  { "Name": "Sum50", "Trigger": { "Logic": "Sum", "Threshold": 50, "Unit": "KeVEquivalent" } },
+  { "Name": "Or100", "Trigger": { "Logic": "Or", "Threshold": 100, "Unit": "KeVEquivalent" } }
+ ],
+ "EnergiesKeV": [122.06, 661.7, 1332.5],
+ "FloodHistoriesPerCrystal": 100,
+ "CalibrationHistoriesPerCrystal": 1000,
+ "LocalisationHistories": 50000,
+ "RatesCps": [1000, 100000, 1000000],
+ "RateHits": 3000,
+ "WindowFraction": 0.15,
+ "Base": { "Mode": "FourOutputAnger", "Optics": { "PhotonsPerBin": 5000 } }
+}

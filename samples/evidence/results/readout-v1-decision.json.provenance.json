@@ -1,0 +1,621 @@
+{
+ "SchemaVersion": 1,
+ "Provenance": {
+  "SchemaVersion": 1,
+  "Sources": {
+   "754b944838f2e180e951cdfaff245cd7160c41bfdcdca24b377e14e458194ac3": {
+    "Source": {
+     "Commit": "aeac875991d2ecf968f28312a126a1b23f658c8c",
+     "Dirty": true,
+     "Scope": [
+      "src",
+      "samples",
+      "rtl",
+      ".gitattributes",
+      "Directory.Build.props",
+      "Directory.Build.targets",
+      "global.json",
+      "NuGet.Config",
+      "nuget.config"
+     ],
+     "DiffSha256": "30c7ff172bc3a5b3b5ce5b17f2b194dcd8a6b7180ae335fa3780a2bf4b076e60",
+     "Untracked": {
+      "samples/evidence/manifest-readout-v1.json": "457bbce0cdf928e61ac90ec03622336150ede82a6bd0fbbf59a51dcb5bcdc328",
+      "samples/evidence/probe/ReadoutRecipe.cs": "2f8ef16e5f4024be54ed7fd34ab5fdfe40fdecac91e402d18d564115cb185f7d",
+      "samples/evidence/readout/aggregate_readout.py": "05aa8a87c3a92df892831191b3e9643d3f1f0c3759d13142e80e2d3a7f4428f6",
+      "samples/evidence/readout/request-pilot-v1.json": "75373003b26d57da7a9f546303fda9ea11ebea666bc3817028335fac733f805f",
+      "samples/evidence/readout/request-v1.json": "e12c4a41dfa5c6194106de988c4ebd32fb8547ee63bd3eef18adf8d809bab193",
+      "samples/evidence/tests/test_readout_netlist.py": "da70702ca7e3026656c7aaf2c2316a4b3e44e1d685551143f85814dbcfdd5e55",
+      "samples/readout/netlist_check.py": "12f2e8d394c9ff5a7b427386a55505f6d4a629cff00fc8291312b6609115444b",
+      "samples/readout/regenerate.py": "07e7edf0141a79521c8524f1e5b93ca824b74bd0ffdd911e94507180a837f25c",
+      "samples/readout/schematic.py": "e16280fa478c74a4b95c238c9743aaf908381552b923e71a6194aa2c21bb3c84",
+      "src/Gcam.Cli/Commands/ReadoutCommands.cs": "ab82f9d4ca570b6dd3075a9b178cec9dfa2355fffe42b28ede4365c696daf68e",
+      "src/Gcam.Configuration/Readout/ChargeNetworkConfig.cs": "a48c6b355bc54dc9886e8d8051c571ac33991f849a2164c2f361b3bbdba26b7e",
+      "src/Gcam.Configuration/Readout/FloodCalibrationConfig.cs": "612a063914abffa5903438758e22ea5eefbd3f3a6d352fbb0b1bbea95c11d4e9",
+      "src/Gcam.Configuration/Readout/FloodSegmentation.cs": "65618640b6c61ba19bdc6138115d7d0bce671e7636118bab7e9ff36b52851e43",
+      "src/Gcam.Configuration/Readout/HoldMode.cs": "bfddd3fee41de6b4636119a95c9b0b55800c8327a63723130fa0ffbca121d065",
+      "src/Gcam.Configuration/Readout/NetworkTopology.cs": "c3318dd6648a76206a3bf3d6fb85e2173dc73a25c6eb383b702d8fb76c11cd9a",
+      "src/Gcam.Configuration/Readout/ReadoutConfig.cs": "c26d37b36c999e7c334c29693af6c39d5bebddb703a4086dbfad865cf3bc1b25",
+      "src/Gcam.Configuration/Readout/ReadoutDigitizerConfig.cs": "4acf475466203459a2b61057eda2d732d05d5398eae8d0c766bdf355f592954d",
+      "src/Gcam.Configuration/Readout/ReadoutMode.cs": "66a8f44fd7b468397e7926f6d5e994dd4a6d484211334594a6ebeb4e15ccb6c6",
+      "src/Gcam.Configuration/Readout/ReadoutOpticsConfig.cs": "685d78defb149a2b1ae301019d01f45af557b41e6cbcce642a0d5ee55d4f40e8",
+      "src/Gcam.Configuration/Readout/ReadoutPulseConfig.cs": "c2f6678607586ee189b5df08061bb8978ca453255cb2db2a5aa326ef953670e9",
+      "src/Gcam.Configuration/Readout/ReadoutScintillationConfig.cs": "3e015c56730dd580d05bf112f9bef87fd89b438a2a8ce714b25e8cd404b67509",
+      "src/Gcam.Configuration/Readout/ReadoutSensorConfig.cs": "367b5204842290ab6733e3ef2c2d677095c6b9d12b63f7470002368f66544e59",
+      "src/Gcam.Configuration/Readout/ReadoutSipmConfig.cs": "77ec5609115b98435f42a8252aeaea7a5b01b1ca02dfae87ea5108c052bfd6c5",
+      "src/Gcam.Configuration/Readout/ReadoutTriggerConfig.cs": "afd67affad22e451513595ac294a944478503df4e6e0af3bef3083491d162e64",
+      "src/Gcam.Configuration/Readout/ReflectorSurface.cs": "fe668cfc5338cc5cffd78e0938bbd73cf86e065409a0555a501621ab669e6732",
+      "src/Gcam.Configuration/Readout/ThresholdUnit.cs": "c3d5b29a5cd1dfa8efab5ce2edfcb372985c0657d412d09f3e08c6d884d08fde",
+      "src/Gcam.Configuration/Readout/TriggerLogic.cs": "55adff8ebd48a59b5d44594aab3e3a51b2b653b11cd876c61f7108ab16cbb1bb",
+      "src/Gcam.Core/InteractionSite.cs": "ef6f0657993dcacbfb39416277005db4a1058086d5d6880f35f5bc855489645a",
+      "src/Gcam.Detector/Readout/ChargeDivisionNetwork.cs": "052e4cb98a8d20760f4c62ca4091a389715b41c924b3f59dabb177f9f522c36e",
+      "src/Gcam.Detector/Readout/ChargeNetworkCircuit.cs": "6dc190436f1748977ffc8fca7bc8ff15c06cbe75314414a91c72c4f28692bfd1",
+      "src/Gcam.Detector/Readout/CrystalArrayGeometry.cs": "df91f0ed8fa937a2e4fab0748feaae9fc37f1ed75990470031365d170179e8f1",
+      "src/Gcam.Detector/Readout/FloodLut.cs": "1c498db5e657a728f1ed90adeb216a6945f52100adef6e1a9153f62866ea240f",
+      "src/Gcam.Detector/Readout/OpticalResponse.cs": "425d2fc43d349f7c224d75cbc16a3bb9181f1168efdcdb9d592d5c806c1c6f45",
+      "src/Gcam.Detector/Readout/PeakToValleyResult.cs": "4335e6dd67eae9360aab782d767ad3ffb4aa539f4628715640d5d647fc971dd1",
+      "src/Gcam.Detector/Readout/ReadoutDevice.cs": "0c3f107ea997c718137226423bb209dd27de9d07fe0eb0d7c51f4ea42fc7d116",
+      "src/Gcam.Detector/Readout/ReadoutEvent.cs": "0d7b1d7b901e9569a3fcc41f0399b659128c51289e63c0ce59ed18800e4007ec",
+      "src/Gcam.Detector/Readout/ReadoutHit.cs": "366779e7dc8dbbabe94656a326cf052f0872b2f08c8b7c7bc0734aeb9992dc83",
+      "src/Gcam.Detector/Readout/ReadoutPulseProcessor.cs": "2ae782c59e230c1af4182485011342f43a4e846f839fb22cb32f90e3cb289cb5",
+      "src/Gcam.Detector/Readout/SensorLayout.cs": "51dabc983db9bcc85cdbbbae0b01403981dceb270db6f5a6638cd11e8d9554fd",
+      "src/Gcam.Simulation/Readout/ReadoutCalibration.cs": "517d2b84d65fbf6b0b4a9189f42f1a70dd6bb031f38e5c15bf28a0e5e7495faf",
+      "src/Gcam.Simulation/Readout/ReadoutExport.cs": "107e5e693b75315e4abc1288af03387a994e5dad530fa8042e7b50e3221131c2",
+      "src/Gcam.Simulation/Readout/ReadoutFlood.cs": "cb3cdecd05aecbc0c3379f2a75650bbd7f3748663fb40cedf817a5bbb226760e",
+      "src/Gcam.Simulation/Readout/ReadoutGuard.cs": "53071b59aabc78d85e4504bc297b127bfc4a1712078e722d681c066159dcf0e3",
+      "src/Gcam.Simulation/Readout/ReadoutStudy.cs": "3ba863f88ab53dba3ba1a21eaeacc04f931bd5653fd04bb4f56d780a0d79f66e",
+      "src/Gcam.Simulation/Readout/ReadoutStudyGeometry.cs": "0a60aaf1f59a0c2f159e5d344078c0922a6d80dbac0f3baeccf2f5dcf0de0673",
+      "src/Gcam.Simulation/Readout/ReadoutStudyRequest.cs": "b9e0d5e486db4e3d2490d0799946353966af453283a756cacc96efedd565642b",
+      "src/Gcam.Simulation/Readout/ReadoutStudyTrigger.cs": "03ec269f68e5acc05962491811cbf4815ccbdb434eb4834de465a63ae1a292d2",
+      "src/Gcam.Simulation/Readout/ReadoutStudyVariant.cs": "b4d1cb439c8932b2fabd5eb19bd71a19f30f8751d953ed5b6ec26f3e955b685e"
+     },
+     "SnapshotSha256": "10b84212000c9431fbb353e3855f0f8d997b6b96040511bf290fff22cefe1b2c"
+    },
+    "Executor": {
+     "Kind": "probe",
+     "Files": {
+      "samples/evidence/run_seeds.py": "61c40a75664bcfcabc6efecc3006f5f4070e43e1cbfe9b1d219d4051d3916721",
+      "samples/evidence/provenance.py": "f22d4389707c67563d20a7cc809bdab436003e56374018096e19c6a51b429a2c",
+      "managed/probe/ambient/terrestrial-unscear2000-v1.json": "4d48bc4272ce4c25ff6ae9b13ed7583e3c8f467afffdb0225956a70cc435b3f4",
+      "managed/probe/CommunityToolkit.Mvvm.dll": "7d7eb5c066cfe883b439b1200bf5dcb387b1e5319dd2edbdaa9e23adfe416452",
+      "managed/probe/Gcam.Configuration.dll": "c6d7e05a320d3d56974d4d2b33ad844f7fc47cac7ce05e6b50aaba41ee893070",
+      "managed/probe/Gcam.Configuration.pdb": "1ee6cd7ecca0c908bafe392282032564341f500ba32199e655948cd48d716a62",
+      "managed/probe/Gcam.Core.dll": "7adc7996a32cb26c42f7ff797a3704a18faee95449a23a5ca3ad3ea00f5f94a9",
+      "managed/probe/Gcam.Core.pdb": "946600ccbcafd3d8b930229648c3b2783709fe5d426a3ac7833fd1eba6cbc435",
+      "managed/probe/Gcam.Decoding.dll": "e39bab0e9910751afb946cfaaa119f7f468148cb049ccb70667edc65cb4b24d3",
+      "managed/probe/Gcam.Decoding.pdb": "d8caabd5197ce55c5547afb659bcbc18378f68420ac5f24f56f77e790610aa06",
+      "managed/probe/Gcam.Detector.dll": "f8b88f05e39a46bb8cc3e75c5cecc7bf3921ac0ef224ad2bd75a8a2fa11ef516",
+      "managed/probe/Gcam.Detector.pdb": "d90ffe7bcc42cf137a8b047446768cca2d91a97321ff6c13660cefbf572d7eeb",
+      "managed/probe/Gcam.EvidenceProbe.deps.json": "2283b4564a736cb5ececf767004aa6348fde5cfe5c588369931e42b83e5bdae0",
+      "managed/probe/Gcam.EvidenceProbe.dll": "44d2cd8c26c41eed86adcf87d5e7d15277e9dafed709294f7c6a55e9d4dd6355",
+      "managed/probe/Gcam.EvidenceProbe.exe": "f86a2d5cc864c14a04ce29d6075835f193fd39b42f3ec0648d110c239934de64",
+      "managed/probe/Gcam.EvidenceProbe.pdb": "27dd4738dc81ae5567ad8e0e7c76e8d9f39406ecbd2083447f4bab0a164c968b",
+      "managed/probe/Gcam.EvidenceProbe.runtimeconfig.json": "7e4fcf67197ad5baa5f6cbf30ef3754fb26db9b6b7f83fa36656029885dbe390",
+      "managed/probe/Gcam.Masks.dll": "584d2269e48b65bdd1ab8ef6fdd0b5092487be3b8fbf32806720f77d573ed685",
+      "managed/probe/Gcam.Masks.pdb": "5f9e8e4b7697d8e7ba2dcf479670dbb98525e2649d7f606c270fdeaaf3d1cee8",
+      "managed/probe/Gcam.Simulation.dll": "93a695fbd4a80021469b6a938d42947b22225cbc5a4eb97cc1b5402df98e4475",
+      "managed/probe/Gcam.Simulation.pdb": "dcc0800b7ff22570f9a5f1d53782a9a8861b0232d6326ac773793fffca2d4b38",
+      "managed/probe/Gcam.Studio.Core.dll": "4f09b9373007a93a0a39676e5c8341dc38de5786d2b93e7566e3d9f857866b29",
+      "managed/probe/Gcam.Studio.Core.pdb": "77e4b71e32e0bd4906d9b75f9caa35b5d08381839cc541210af661fff9b283ad",
+      "managed/probe/Gcam.Studio.Services.dll": "958ba7c413335c9e14d0e31129210f441d1464cf14154910bae74d9dc816f014",
+      "managed/probe/Gcam.Studio.Services.pdb": "a6bbb89912f3a49152f3fd95e5aba3915114d5cf22769b9ea3ff33bf1c34785e"
+     },
+     "Tools": {
+      "OS": "Windows",
+      "Architecture": "AMD64",
+      "DriverPython": "3.11.9",
+      "DotnetRuntime": "9.0.13"
+     }
+    },
+    "ExecutionId": "0440fbbe71070189e835fb63b843489b282e5f490b6924ff4228212b95556627",
+    "BuildObservation": {
+     "Git": "git version 2.45.0.windows.1",
+     "DotnetSdk": "9.0.311"
+    }
+   }
+  },
+  "Inputs": [
+   {
+    "Family": "readout_selection_v1",
+    "Seed": 6100001,
+    "SourceId": "754b944838f2e180e951cdfaff245cd7160c41bfdcdca24b377e14e458194ac3",
+    "RecipeSha256": "16771d666c9c0352a61973b541c6baaec16611919e0d97bdf9dd0373724386e2",
+    "Outputs": {
+     "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "stdout.txt": "464a9fb3bd179788f410bbfadd616cc7dc5dd5e09129de8fd2937110c2c4f9ce"
+    }
+   },
+   {
+    "Family": "readout_selection_v1",
+    "Seed": 6200004,
+    "SourceId": "754b944838f2e180e951cdfaff245cd7160c41bfdcdca24b377e14e458194ac3",
+    "RecipeSha256": "16771d666c9c0352a61973b541c6baaec16611919e0d97bdf9dd0373724386e2",
+    "Outputs": {
+     "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "stdout.txt": "8430e31a2576c1277b269611583b448f1cdb2afecba18efb8d2dfb3b757ac12c"
+    }
+   },
+   {
+    "Family": "readout_selection_v1",
+    "Seed": 6300007,
+    "SourceId": "754b944838f2e180e951cdfaff245cd7160c41bfdcdca24b377e14e458194ac3",
+    "RecipeSha256": "16771d666c9c0352a61973b541c6baaec16611919e0d97bdf9dd0373724386e2",
+    "Outputs": {
+     "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "stdout.txt": "ea65f0f9a884cd786eeb1ee081b701487c39895808cb96fb0481b5eef18e09bb"
+    }
+   },
+   {
+    "Family": "readout_selection_v1",
+    "Seed": 6400010,
+    "SourceId": "754b944838f2e180e951cdfaff245cd7160c41bfdcdca24b377e14e458194ac3",
+    "RecipeSha256": "16771d666c9c0352a61973b541c6baaec16611919e0d97bdf9dd0373724386e2",
+    "Outputs": {
+     "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "stdout.txt": "14aa8dcbe613a9c5d2d6011101fc02f88251ec68f25c1b25310024e8a11e4f49"
+    }
+   },
+   {
+    "Family": "readout_selection_v1",
+    "Seed": 6500013,
+    "SourceId": "754b944838f2e180e951cdfaff245cd7160c41bfdcdca24b377e14e458194ac3",
+    "RecipeSha256": "16771d666c9c0352a61973b541c6baaec16611919e0d97bdf9dd0373724386e2",
+    "Outputs": {
+     "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "stdout.txt": "bbcf1f67a029560e5b6bb52f057a7bc988cfc338ce734ed8bb8801df1650706c"
+    }
+   },
+   {
+    "Family": "readout_selection_v1",
+    "Seed": 6600016,
+    "SourceId": "754b944838f2e180e951cdfaff245cd7160c41bfdcdca24b377e14e458194ac3",
+    "RecipeSha256": "16771d666c9c0352a61973b541c6baaec16611919e0d97bdf9dd0373724386e2",
+    "Outputs": {
+     "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "stdout.txt": "488d184181b968996d02eb13321dd132e8f939e64973f49b94cbc933439de16e"
+    }
+   },
+   {
+    "Family": "readout_selection_v1",
+    "Seed": 6700019,
+    "SourceId": "754b944838f2e180e951cdfaff245cd7160c41bfdcdca24b377e14e458194ac3",
+    "RecipeSha256": "16771d666c9c0352a61973b541c6baaec16611919e0d97bdf9dd0373724386e2",
+    "Outputs": {
+     "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "stdout.txt": "6d57042a071500a164777e824fbbd47e50d13aa7e9805a090061733e75f77218"
+    }
+   },
+   {
+    "Family": "readout_selection_v1",
+    "Seed": 6800022,
+    "SourceId": "754b944838f2e180e951cdfaff245cd7160c41bfdcdca24b377e14e458194ac3",
+    "RecipeSha256": "16771d666c9c0352a61973b541c6baaec16611919e0d97bdf9dd0373724386e2",
+    "Outputs": {
+     "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "stdout.txt": "bc19f3e53bef0d4f025e68a380253b7901bff3b295cc9bdd6b1ad1e0063bff57"
+    }
+   },
+   {
+    "Family": "readout_selection_v1",
+    "Seed": 6900025,
+    "SourceId": "754b944838f2e180e951cdfaff245cd7160c41bfdcdca24b377e14e458194ac3",
+    "RecipeSha256": "16771d666c9c0352a61973b541c6baaec16611919e0d97bdf9dd0373724386e2",
+    "Outputs": {
+     "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "stdout.txt": "db0141083088c9fa2a1f0f6894754d8681badf4926b20ed08caaa61bbda39b8d"
+    }
+   },
+   {
+    "Family": "readout_selection_v1",
+    "Seed": 7000028,
+    "SourceId": "754b944838f2e180e951cdfaff245cd7160c41bfdcdca24b377e14e458194ac3",
+    "RecipeSha256": "16771d666c9c0352a61973b541c6baaec16611919e0d97bdf9dd0373724386e2",
+    "Outputs": {
+     "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "stdout.txt": "5d8aee083ab2aaab723ac5cabc84e9aa66e286009787e0af7967b48cb0ad5f25"
+    }
+   },
+   {
+    "Family": "readout_selection_v1",
+    "Seed": 7100031,
+    "SourceId": "754b944838f2e180e951cdfaff245cd7160c41bfdcdca24b377e14e458194ac3",
+    "RecipeSha256": "16771d666c9c0352a61973b541c6baaec16611919e0d97bdf9dd0373724386e2",
+    "Outputs": {
+     "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "stdout.txt": "34bf6b1d4a695b88da23250dc1f4c9c7762d6b129f56c2697de526fbd88cea05"
+    }
+   },
+   {
+    "Family": "readout_selection_v1",
+    "Seed": 7200034,
+    "SourceId": "754b944838f2e180e951cdfaff245cd7160c41bfdcdca24b377e14e458194ac3",
+    "RecipeSha256": "16771d666c9c0352a61973b541c6baaec16611919e0d97bdf9dd0373724386e2",
+    "Outputs": {
+     "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "stdout.txt": "6085efb55692c5c41500573a433c6ef301f03030f1317c85fccb844239fc50d1"
+    }
+   },
+   {
+    "Family": "readout_selection_v1",
+    "Seed": 7300037,
+    "SourceId": "754b944838f2e180e951cdfaff245cd7160c41bfdcdca24b377e14e458194ac3",
+    "RecipeSha256": "16771d666c9c0352a61973b541c6baaec16611919e0d97bdf9dd0373724386e2",
+    "Outputs": {
+     "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "stdout.txt": "d67c0f782071e21915c09063fe1a8d86bfb7f19342cb3a7980d2391a3a547049"
+    }
+   },
+   {
+    "Family": "readout_selection_v1",
+    "Seed": 7400040,
+    "SourceId": "754b944838f2e180e951cdfaff245cd7160c41bfdcdca24b377e14e458194ac3",
+    "RecipeSha256": "16771d666c9c0352a61973b541c6baaec16611919e0d97bdf9dd0373724386e2",
+    "Outputs": {
+     "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "stdout.txt": "5c40859ede2a60c52e1900db8d8cc88dbf3ab8d857b27888b6bae9f7f4232991"
+    }
+   },
+   {
+    "Family": "readout_selection_v1",
+    "Seed": 7500043,
+    "SourceId": "754b944838f2e180e951cdfaff245cd7160c41bfdcdca24b377e14e458194ac3",
+    "RecipeSha256": "16771d666c9c0352a61973b541c6baaec16611919e0d97bdf9dd0373724386e2",
+    "Outputs": {
+     "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "stdout.txt": "76abbe3235de2e9d0f3aa90b519288b86d9902af5b64641777f326c63b4f1410"
+    }
+   },
+   {
+    "Family": "readout_selection_v1",
+    "Seed": 7600046,
+    "SourceId": "754b944838f2e180e951cdfaff245cd7160c41bfdcdca24b377e14e458194ac3",
+    "RecipeSha256": "16771d666c9c0352a61973b541c6baaec16611919e0d97bdf9dd0373724386e2",
+    "Outputs": {
+     "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "stdout.txt": "736c789bb4be84db77f7e9f346df13c77143c7377b1d86ce81c0975c7b83e8c8"
+    }
+   },
+   {
+    "Family": "readout_validation_v1",
+    "Seed": 7700001,
+    "SourceId": "754b944838f2e180e951cdfaff245cd7160c41bfdcdca24b377e14e458194ac3",
+    "RecipeSha256": "ff20e394464f16e4bc104e08d2a1fdb5b0d50b439e3c9ed1af6c6b781f61960d",
+    "Outputs": {
+     "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "stdout.txt": "3552e35cd6a3a43a66fe8e41f10b68294dc0c0dee87c7557ddb6ec859f5e2220"
+    }
+   },
+   {
+    "Family": "readout_validation_v1",
+    "Seed": 7800020,
+    "SourceId": "754b944838f2e180e951cdfaff245cd7160c41bfdcdca24b377e14e458194ac3",
+    "RecipeSha256": "ff20e394464f16e4bc104e08d2a1fdb5b0d50b439e3c9ed1af6c6b781f61960d",
+    "Outputs": {
+     "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "stdout.txt": "17a855a20035fbcce83955b9517b21f7964df7dad89c56573fc0044b9f395726"
+    }
+   },
+   {
+    "Family": "readout_validation_v1",
+    "Seed": 7900039,
+    "SourceId": "754b944838f2e180e951cdfaff245cd7160c41bfdcdca24b377e14e458194ac3",
+    "RecipeSha256": "ff20e394464f16e4bc104e08d2a1fdb5b0d50b439e3c9ed1af6c6b781f61960d",
+    "Outputs": {
+     "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "stdout.txt": "422093bc195e6f803f9ddd7804bd45bb10ec21a2133d41a3637eb4f97dfa0418"
+    }
+   },
+   {
+    "Family": "readout_validation_v1",
+    "Seed": 8000058,
+    "SourceId": "754b944838f2e180e951cdfaff245cd7160c41bfdcdca24b377e14e458194ac3",
+    "RecipeSha256": "ff20e394464f16e4bc104e08d2a1fdb5b0d50b439e3c9ed1af6c6b781f61960d",
+    "Outputs": {
+     "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "stdout.txt": "2aaed188fb23deea88e32d31dda3b64b22f92954d71dbf4615b61fd8a37cc39d"
+    }
+   },
+   {
+    "Family": "readout_validation_v1",
+    "Seed": 8100077,
+    "SourceId": "754b944838f2e180e951cdfaff245cd7160c41bfdcdca24b377e14e458194ac3",
+    "RecipeSha256": "ff20e394464f16e4bc104e08d2a1fdb5b0d50b439e3c9ed1af6c6b781f61960d",
+    "Outputs": {
+     "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "stdout.txt": "376b8656e4ae1ca7e100223e2f860487023b27cd331eb70da0e2fd3beeb0081c"
+    }
+   },
+   {
+    "Family": "readout_validation_v1",
+    "Seed": 8200096,
+    "SourceId": "754b944838f2e180e951cdfaff245cd7160c41bfdcdca24b377e14e458194ac3",
+    "RecipeSha256": "ff20e394464f16e4bc104e08d2a1fdb5b0d50b439e3c9ed1af6c6b781f61960d",
+    "Outputs": {
+     "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "stdout.txt": "5c245536c2c2afb614a1004a971107279e481ab058cf35066759009741b7d4bc"
+    }
+   },
+   {
+    "Family": "readout_validation_v1",
+    "Seed": 8300115,
+    "SourceId": "754b944838f2e180e951cdfaff245cd7160c41bfdcdca24b377e14e458194ac3",
+    "RecipeSha256": "ff20e394464f16e4bc104e08d2a1fdb5b0d50b439e3c9ed1af6c6b781f61960d",
+    "Outputs": {
+     "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "stdout.txt": "f055f96662fc64bb82f8e0e182734564017c769a3793c19f042b3f2cf7ce0830"
+    }
+   },
+   {
+    "Family": "readout_validation_v1",
+    "Seed": 8400134,
+    "SourceId": "754b944838f2e180e951cdfaff245cd7160c41bfdcdca24b377e14e458194ac3",
+    "RecipeSha256": "ff20e394464f16e4bc104e08d2a1fdb5b0d50b439e3c9ed1af6c6b781f61960d",
+    "Outputs": {
+     "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "stdout.txt": "36818cc5db972ff7f7ccf78ff89b02e7d60b3816e9ef244239355cdf58e23c6c"
+    }
+   },
+   {
+    "Family": "readout_validation_v1",
+    "Seed": 8500153,
+    "SourceId": "754b944838f2e180e951cdfaff245cd7160c41bfdcdca24b377e14e458194ac3",
+    "RecipeSha256": "ff20e394464f16e4bc104e08d2a1fdb5b0d50b439e3c9ed1af6c6b781f61960d",
+    "Outputs": {
+     "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "stdout.txt": "31c57e00b63ea4d3c2f516db75e5a4c9588a338d2626949bc885eef127604a8a"
+    }
+   },
+   {
+    "Family": "readout_validation_v1",
+    "Seed": 8600172,
+    "SourceId": "754b944838f2e180e951cdfaff245cd7160c41bfdcdca24b377e14e458194ac3",
+    "RecipeSha256": "ff20e394464f16e4bc104e08d2a1fdb5b0d50b439e3c9ed1af6c6b781f61960d",
+    "Outputs": {
+     "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "stdout.txt": "42aa900fde163bac80d63cef6e59239b3f7bf8490ecb8e9c907c1c77a210b744"
+    }
+   },
+   {
+    "Family": "readout_validation_v1",
+    "Seed": 8700191,
+    "SourceId": "754b944838f2e180e951cdfaff245cd7160c41bfdcdca24b377e14e458194ac3",
+    "RecipeSha256": "ff20e394464f16e4bc104e08d2a1fdb5b0d50b439e3c9ed1af6c6b781f61960d",
+    "Outputs": {
+     "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "stdout.txt": "8cc43ed0b1be836221d594ccfdc01afa338794836d567ef3e8e81ae370884419"
+    }
+   },
+   {
+    "Family": "readout_validation_v1",
+    "Seed": 8800210,
+    "SourceId": "754b944838f2e180e951cdfaff245cd7160c41bfdcdca24b377e14e458194ac3",
+    "RecipeSha256": "ff20e394464f16e4bc104e08d2a1fdb5b0d50b439e3c9ed1af6c6b781f61960d",
+    "Outputs": {
+     "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "stdout.txt": "6d42dbf7c8f6df6d73db98d8a153e5d552e634035eddfb8e289b626b21dbcd0a"
+    }
+   },
+   {
+    "Family": "readout_validation_v1",
+    "Seed": 8900229,
+    "SourceId": "754b944838f2e180e951cdfaff245cd7160c41bfdcdca24b377e14e458194ac3",
+    "RecipeSha256": "ff20e394464f16e4bc104e08d2a1fdb5b0d50b439e3c9ed1af6c6b781f61960d",
+    "Outputs": {
+     "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "stdout.txt": "a4434d1f659b468d01472b08fe9531567649c24ba628fcdecf059e64ee1f0613"
+    }
+   },
+   {
+    "Family": "readout_validation_v1",
+    "Seed": 9000248,
+    "SourceId": "754b944838f2e180e951cdfaff245cd7160c41bfdcdca24b377e14e458194ac3",
+    "RecipeSha256": "ff20e394464f16e4bc104e08d2a1fdb5b0d50b439e3c9ed1af6c6b781f61960d",
+    "Outputs": {
+     "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "stdout.txt": "ad5c73214617f26547c939df3fcbcc424498a272e96b84dafaf68b64b83e1506"
+    }
+   },
+   {
+    "Family": "readout_validation_v1",
+    "Seed": 9100267,
+    "SourceId": "754b944838f2e180e951cdfaff245cd7160c41bfdcdca24b377e14e458194ac3",
+    "RecipeSha256": "ff20e394464f16e4bc104e08d2a1fdb5b0d50b439e3c9ed1af6c6b781f61960d",
+    "Outputs": {
+     "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "stdout.txt": "c96acaa03b21be05c3e35eee6f9131ec729d2fbe5489585e3374351e8950ebc0"
+    }
+   },
+   {
+    "Family": "readout_validation_v1",
+    "Seed": 9200286,
+    "SourceId": "754b944838f2e180e951cdfaff245cd7160c41bfdcdca24b377e14e458194ac3",
+    "RecipeSha256": "ff20e394464f16e4bc104e08d2a1fdb5b0d50b439e3c9ed1af6c6b781f61960d",
+    "Outputs": {
+     "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "stdout.txt": "854f5c7f96173992cd3c5f31364db405bca744adbf72e5ede0b8b5015a2f8acd"
+    }
+   },
+   {
+    "Family": "readout_validation_v1",
+    "Seed": 9300305,
+    "SourceId": "754b944838f2e180e951cdfaff245cd7160c41bfdcdca24b377e14e458194ac3",
+    "RecipeSha256": "ff20e394464f16e4bc104e08d2a1fdb5b0d50b439e3c9ed1af6c6b781f61960d",
+    "Outputs": {
+     "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "stdout.txt": "85d208c71280148c06b8cf58c02ad924cf062db12f5ac80ce980a5c2989f3014"
+    }
+   },
+   {
+    "Family": "readout_validation_v1",
+    "Seed": 9400324,
+    "SourceId": "754b944838f2e180e951cdfaff245cd7160c41bfdcdca24b377e14e458194ac3",
+    "RecipeSha256": "ff20e394464f16e4bc104e08d2a1fdb5b0d50b439e3c9ed1af6c6b781f61960d",
+    "Outputs": {
+     "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "stdout.txt": "f7b1c0942088ac1c307e5d2e7edfb9e1240b4b14a9b52645cf17d2d4329eb7f0"
+    }
+   },
+   {
+    "Family": "readout_validation_v1",
+    "Seed": 9500343,
+    "SourceId": "754b944838f2e180e951cdfaff245cd7160c41bfdcdca24b377e14e458194ac3",
+    "RecipeSha256": "ff20e394464f16e4bc104e08d2a1fdb5b0d50b439e3c9ed1af6c6b781f61960d",
+    "Outputs": {
+     "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "stdout.txt": "bc9b0bd5ec521cef46ec638f30dcfb569632e7e2c65e202fdcc9e2f4ddd78af7"
+    }
+   },
+   {
+    "Family": "readout_validation_v1",
+    "Seed": 9600362,
+    "SourceId": "754b944838f2e180e951cdfaff245cd7160c41bfdcdca24b377e14e458194ac3",
+    "RecipeSha256": "ff20e394464f16e4bc104e08d2a1fdb5b0d50b439e3c9ed1af6c6b781f61960d",
+    "Outputs": {
+     "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "stdout.txt": "f4e16a60ff40101ac615cd499fd2255b1fa41d3c6557ab55f65ce77844eb3f1a"
+    }
+   },
+   {
+    "Family": "readout_validation_v1",
+    "Seed": 9700381,
+    "SourceId": "754b944838f2e180e951cdfaff245cd7160c41bfdcdca24b377e14e458194ac3",
+    "RecipeSha256": "ff20e394464f16e4bc104e08d2a1fdb5b0d50b439e3c9ed1af6c6b781f61960d",
+    "Outputs": {
+     "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "stdout.txt": "c306b9e70afc47b3c703751a5c1aa92df42326b74add1b1a9b70c051b6e4343f"
+    }
+   },
+   {
+    "Family": "readout_validation_v1",
+    "Seed": 9800400,
+    "SourceId": "754b944838f2e180e951cdfaff245cd7160c41bfdcdca24b377e14e458194ac3",
+    "RecipeSha256": "ff20e394464f16e4bc104e08d2a1fdb5b0d50b439e3c9ed1af6c6b781f61960d",
+    "Outputs": {
+     "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "stdout.txt": "6ed50621a8fc85c8afda15990b0a52546d220b76163e91267f8d4c7b15c4ec29"
+    }
+   },
+   {
+    "Family": "readout_validation_v1",
+    "Seed": 9900419,
+    "SourceId": "754b944838f2e180e951cdfaff245cd7160c41bfdcdca24b377e14e458194ac3",
+    "RecipeSha256": "ff20e394464f16e4bc104e08d2a1fdb5b0d50b439e3c9ed1af6c6b781f61960d",
+    "Outputs": {
+     "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "stdout.txt": "3bab71fbe071a1699b75a4caed2aff7ad91da65781014ee30b4e26db8530d5f4"
+    }
+   },
+   {
+    "Family": "readout_validation_v1",
+    "Seed": 10000438,
+    "SourceId": "754b944838f2e180e951cdfaff245cd7160c41bfdcdca24b377e14e458194ac3",
+    "RecipeSha256": "ff20e394464f16e4bc104e08d2a1fdb5b0d50b439e3c9ed1af6c6b781f61960d",
+    "Outputs": {
+     "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "stdout.txt": "4d60c7786fe2dcb8c7aa854dc6904534cd36328d2968600365fdca8098e49ae6"
+    }
+   },
+   {
+    "Family": "readout_validation_v1",
+    "Seed": 10100457,
+    "SourceId": "754b944838f2e180e951cdfaff245cd7160c41bfdcdca24b377e14e458194ac3",
+    "RecipeSha256": "ff20e394464f16e4bc104e08d2a1fdb5b0d50b439e3c9ed1af6c6b781f61960d",
+    "Outputs": {
+     "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "stdout.txt": "3869664caf56b10ffd2ab40e84d7b46d7615eb4d4bbdee629bd9d2d5b058fdf9"
+    }
+   },
+   {
+    "Family": "readout_validation_v1",
+    "Seed": 10200476,
+    "SourceId": "754b944838f2e180e951cdfaff245cd7160c41bfdcdca24b377e14e458194ac3",
+    "RecipeSha256": "ff20e394464f16e4bc104e08d2a1fdb5b0d50b439e3c9ed1af6c6b781f61960d",
+    "Outputs": {
+     "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "stdout.txt": "ea7ea94cd654c61de74a12568b8bb0216b7b2145149e479250e2dc851af9c456"
+    }
+   },
+   {
+    "Family": "readout_validation_v1",
+    "Seed": 10300495,
+    "SourceId": "754b944838f2e180e951cdfaff245cd7160c41bfdcdca24b377e14e458194ac3",
+    "RecipeSha256": "ff20e394464f16e4bc104e08d2a1fdb5b0d50b439e3c9ed1af6c6b781f61960d",
+    "Outputs": {
+     "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "stdout.txt": "c6d453a650eac95513b88b5bd90e789b186d07fcf7228896618bf2372a135f0e"
+    }
+   },
+   {
+    "Family": "readout_validation_v1",
+    "Seed": 10400514,
+    "SourceId": "754b944838f2e180e951cdfaff245cd7160c41bfdcdca24b377e14e458194ac3",
+    "RecipeSha256": "ff20e394464f16e4bc104e08d2a1fdb5b0d50b439e3c9ed1af6c6b781f61960d",
+    "Outputs": {
+     "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "stdout.txt": "9ace9fd5aff0ab895006745c9cbf4ad9e759e75d2e877f1d06b077967637b83b"
+    }
+   },
+   {
+    "Family": "readout_validation_v1",
+    "Seed": 10500533,
+    "SourceId": "754b944838f2e180e951cdfaff245cd7160c41bfdcdca24b377e14e458194ac3",
+    "RecipeSha256": "ff20e394464f16e4bc104e08d2a1fdb5b0d50b439e3c9ed1af6c6b781f61960d",
+    "Outputs": {
+     "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "stdout.txt": "032da5a679a1f902de8395334eb683a162778e54441f97795d0ee8829d4f47f2"
+    }
+   },
+   {
+    "Family": "readout_validation_v1",
+    "Seed": 10600552,
+    "SourceId": "754b944838f2e180e951cdfaff245cd7160c41bfdcdca24b377e14e458194ac3",
+    "RecipeSha256": "ff20e394464f16e4bc104e08d2a1fdb5b0d50b439e3c9ed1af6c6b781f61960d",
+    "Outputs": {
+     "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "stdout.txt": "3091bbc59228a11d2461dd17bb48a7931ca7562aa9375097efb39ac4c29b5c3d"
+    }
+   },
+   {
+    "Family": "readout_validation_v1",
+    "Seed": 10700571,
+    "SourceId": "754b944838f2e180e951cdfaff245cd7160c41bfdcdca24b377e14e458194ac3",
+    "RecipeSha256": "ff20e394464f16e4bc104e08d2a1fdb5b0d50b439e3c9ed1af6c6b781f61960d",
+    "Outputs": {
+     "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "stdout.txt": "4545152c7bdf1e286d6b129f32e904c987e8348c4e877965c2cfb1dcd001c5c3"
+    }
+   },
+   {
+    "Family": "readout_validation_v1",
+    "Seed": 10800590,
+    "SourceId": "754b944838f2e180e951cdfaff245cd7160c41bfdcdca24b377e14e458194ac3",
+    "RecipeSha256": "ff20e394464f16e4bc104e08d2a1fdb5b0d50b439e3c9ed1af6c6b781f61960d",
+    "Outputs": {
+     "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "stdout.txt": "8b926d5b7b7e1e9a5260521702b72bf34d827230b380cd65788809317612c74c"
+    }
+   }
+  ],
+  "Analysis": {
+   "Files": {
+    "samples/evidence/provenance.py": "f22d4389707c67563d20a7cc809bdab436003e56374018096e19c6a51b429a2c",
+    "samples/evidence/readout/select_readout.py": "402617f00982807bb56df70144beeaa95189cb8d15d771c243919067994ff882"
+   },
+   "Tools": {
+    "Python": "3.11.9"
+   },
+   "Arguments": {
+    "selection": "readout-selection-v1.json",
+    "validation": "readout-validation-v1.json",
+    "publish": "samples/evidence/results/readout-v1-decision.json"
+   },
+   "InputFiles": {
+    "samples/evidence/readout/select_readout.py": "402617f00982807bb56df70144beeaa95189cb8d15d771c243919067994ff882"
+   }
+  }
+ },
+ "BaseParents": 0,
+ "Members": {
+  "readout-v1-decision.json": "5ca746c7fbdcccc5c6cfbd75dd5991ef26aa31bc86f22a55a3180779031e8968"
+ }
+}

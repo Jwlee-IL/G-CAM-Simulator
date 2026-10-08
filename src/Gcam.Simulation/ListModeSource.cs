@@ -53,10 +53,28 @@ public sealed class ListModeSource : IDisposable
     public double RateCps => _physical?.RateCps ?? (SourceRateCps * (1 + _bsr) + _darkRate);
     public double Acceptance => HistoriesDetected == 0 ? 0 : (double)EventsAccepted / HistoriesDetected;
 
-    public ListModeSource(SimulationConfig configuration)
+    // Pre-optical interaction sites (TODO-19): collected for the current history only when recording is requested.
+    private readonly bool _record;
+    private readonly List<InteractionSite> _historySites = new(16);
+    private InteractionSite[] _lastInteractions = [];
+
+    /// <summary>The pre-optical interaction sites (XYZ, time, energy) of the event last returned by <see cref="Advance"/>,
+    /// all photons of a decay merged; empty unless the source was built with <c>recordInteractions</c>. Recording is pure
+    /// bookkeeping: the returned event stream is identical with and without it.</summary>
+    public IReadOnlyList<InteractionSite> LastInteractions => _lastInteractions;
+
+    /// <param name="configuration">The scenario (cloned).</param>
+    /// <param name="recordInteractions">Keep each event's pre-optical interaction sites in <see cref="LastInteractions"/>
+    /// (signal-only scenes: refused with an ambient field, a relative background or dark counts).</param>
+    public ListModeSource(SimulationConfig configuration, bool recordInteractions = false)
     {
         ArgumentNullException.ThrowIfNull(configuration);
         var config = configuration.Clone();
+        ReadoutGuard.RequireDirect(config);
+        _record = recordInteractions;
+        if (_record && (config.Ambient is not null || (config.Background?.BackgroundToSignalRatio ?? 0) > 0
+            || (config.Background?.DarkCountRateKcps ?? 0) > 0))
+            throw new NotSupportedException("Interaction recording is defined for signal-only list-mode scenes.");
         if (config.Ambient is not null)
         {
             _physical = new AmbientAcquisition(config);
@@ -115,7 +133,8 @@ public sealed class ListModeSource : IDisposable
             reflectorGapMm: d.ReflectorGapMm, opticalCrosstalk: d.OpticalCrosstalkFraction,
             material: CrystalMaterial.ForConfig(d.Material),
             pixelEventSink: decays ? null : (x, y, deposit, weight) => _scored = (x, y, deposit, weight),
-            pixelSitesSink: decays ? MergeSites : null);
+            pixelSitesSink: decays ? MergeSites : null,
+            interactionSink: _record ? (sites, _) => _historySites.AddRange(sites) : null);
     }
 
     // Merge one photon's interaction sites into its decay's: two photons in one crystal add their deposits.
@@ -198,6 +217,7 @@ public sealed class ListModeSource : IDisposable
         HistoriesEmitted++;
         var photon = _photons.Current;
         _scored = null;
+        _historySites.Clear();
         if (_mask.Transmit(photon.Ray, photon.EnergyKeV, _transport)) _detector.Score(photon);
         if (_scored is not { } hit) return null;
         HistoriesDetected++;
@@ -206,6 +226,7 @@ public sealed class ListModeSource : IDisposable
         if (_rejection.NextDouble() >= hit.Weight / WeightBound) return null;
         EventsAccepted++;
         _signalTime += -Math.Log(1 - _time.NextDouble()) / SourceRateCps;
+        if (_record) _lastInteractions = _historySites.ToArray();
         return new DetectedEvent(hit.X, hit.Y, hit.Deposit, _signalTime);
     }
 
@@ -214,6 +235,7 @@ public sealed class ListModeSource : IDisposable
         HistoriesEmitted++;
         var history = _decays!.Next(_transport);
         _merged.Clear();
+        _historySites.Clear();
         double total = 0;
         int depositing = 0;
         for (int i = 0; i < history.Count; i++)
@@ -242,6 +264,7 @@ public sealed class ListModeSource : IDisposable
         foreach (var (x, y, e) in _merged)
             if (e > best) { best = e; bx = x; by = y; }
         _signalTime += -Math.Log(1 - _time.NextDouble()) / SourceRateCps;
+        if (_record) _lastInteractions = _historySites.ToArray();
         return new DetectedEvent(bx, by, total, _signalTime);
     }
 

@@ -39,6 +39,7 @@ public sealed class ComptonCrystalDetector : IDetector
     private readonly Action<double, double>? _eventSink;
     private readonly Action<int, int, double, double>? _pixelEventSink;
     private readonly Action<IReadOnlyList<(int X, int Y, double DepositKeV)>, double>? _pixelSitesSink;
+    private readonly Action<IReadOnlyList<InteractionSite>, double>? _interactionSink;
     private readonly FrontEndModel? _frontEnd;
     private readonly IRandom? _frontEndRng;
     private readonly EntranceAbsorber? _entrance;   // passive window/encapsulation in front (null = none)
@@ -59,7 +60,7 @@ public sealed class ComptonCrystalDetector : IDetector
         double reflectorGapMm = 0.0, double opticalCrosstalk = 0.0, CrystalMaterial? material = null,
         Action<int, int, double, double>? pixelEventSink = null,
         Action<IReadOnlyList<(int X, int Y, double DepositKeV)>, double>? pixelSitesSink = null,
-        bool entryThroughAllFaces = false)
+        bool entryThroughAllFaces = false, Action<IReadOnlyList<InteractionSite>, double>? interactionSink = null)
     {
         _image = new DetectorImage(pixelsX, pixelsY);
         _pitch = pixelPitchMm;
@@ -77,6 +78,7 @@ public sealed class ComptonCrystalDetector : IDetector
         _eventSink = eventSink;
         _pixelEventSink = pixelEventSink;
         _pixelSitesSink = pixelSitesSink;
+        _interactionSink = interactionSink;
         _frontEnd = frontEnd;
         _frontEndRng = frontEndRng;
         _entrance = entranceAbsorber;
@@ -118,6 +120,10 @@ public sealed class ComptonCrystalDetector : IDetector
 
     // aggregated deposits for one photon (small: a Compton cascade rarely exceeds ~4 sites)
     private readonly List<(int px, int py, double e)> _sites = new(8);
+    // The same history's individual interactions BEFORE any optical processing (XYZ, time, energy), recorded only when an
+    // interaction sink is attached. Pure bookkeeping: no random number is drawn for it, so the transport is unchanged.
+    private readonly List<InteractionSite> _raw = new(8);
+    private const double LightSpeedMmPerNs = 299.792458;
 
     public bool Score(Photon photon)
     {
@@ -154,6 +160,8 @@ public sealed class ComptonCrystalDetector : IDetector
 
         // ---- transport the Compton cascade through the crystal slab z in [-depth, 0] ----
         _sites.Clear();
+        _raw.Clear();
+        double flightNs = 0.0;
         var pos = _allFaces ? entry : new Vector3(entry.X, entry.Y, PlaneZ);
         for (int step = 0; step < 32 && e > 1.0; step++)
         {
@@ -161,6 +169,7 @@ public sealed class ComptonCrystalDetector : IDetector
             double s = -Math.Log(1.0 - _rng.NextDouble()) / mu;
             var prev = pos;
             pos += dir * s;
+            flightNs += s / LightSpeedMmPerNs;
             if (pos.Z > PlaneZ ||
                 pos.X < -_halfWidth || pos.X >= _halfWidth ||
                 pos.Y < -_halfHeight || pos.Y >= _halfHeight)
@@ -182,6 +191,8 @@ public sealed class ComptonCrystalDetector : IDetector
                         !(_reflectorGap > 0.0 && InReflectorGap(cx, cy)) &&        // re-enter a live crystal, not a gap
                         _rng.NextDouble() < _backing.Transmit(eBack))             // scattered photon must escape the backing
                     {
+                        // Time to the back face and back (the backing's own thickness is not tracked: sub-ps).
+                        flightNs += (tb - s) / LightSpeedMmPerNs;
                         pos = new Vector3(cx, cy, backZ);                          // re-enter at the crossing, heading up
                         dir = dirBack; e = eBack;
                         continue;
@@ -194,10 +205,13 @@ public sealed class ComptonCrystalDetector : IDetector
             int py = PixelIndex(pos.Y, _halfHeight);
             if (_rng.NextDouble() < _material.PhotoFraction(e))
             {
-                AddSite(px, py, e); e = 0.0; break;           // photoelectric: full absorption
+                AddSite(px, py, e);                           // photoelectric: full absorption
+                if (_interactionSink is not null) _raw.Add(new InteractionSite(pos.X, pos.Y, pos.Z, flightNs, e, px, py));
+                e = 0.0; break;
             }
             var (dep, newE, newDir) = ComptonModel.Scatter(e, dir, _rng);
             AddSite(px, py, dep);
+            if (_interactionSink is not null) _raw.Add(new InteractionSite(pos.X, pos.Y, pos.Z, flightNs, dep, px, py));
             dir = newDir; e = newE;
         }
         if (_sites.Count == 0) return false;
@@ -214,7 +228,7 @@ public sealed class ComptonCrystalDetector : IDetector
         // resampled back to the physical detected-event spectrum (unweighted would over-represent the
         // biased proposal at positions/angles where deposit/escape probability differs).
         double pulseDeposit = 0.0;
-        if (_eventSink is not null || _pixelEventSink is not null || _pixelSitesSink is not null)
+        if (_eventSink is not null || _pixelEventSink is not null || _pixelSitesSink is not null || _interactionSink is not null)
         {
             foreach (var (_, _, dep) in _sites) pulseDeposit += dep;
             _eventSink?.Invoke(pulseDeposit, weight);   // TRUE total light before the spread
@@ -245,6 +259,8 @@ public sealed class ComptonCrystalDetector : IDetector
         // deposit, for a caller that merges several photons of ONE decay into one pulse (ListModeSource). The list is
         // reused by the next Score: copy it before returning.
         _pixelSitesSink?.Invoke(_sites, pulseDeposit);
+        // The pre-optical interactions of this history (independent of the light spread above). Reused buffer: copy it.
+        _interactionSink?.Invoke(_raw, weight);
         Deposit(weight);
         return true;
     }

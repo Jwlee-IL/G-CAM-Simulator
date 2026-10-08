@@ -53,6 +53,7 @@ var commands = new Dictionary<string, Func<string[], int>>(StringComparer.Ordina
     ["pileup"]         = FrontEndCommands.RunPileUp,
     ["deadtime"]       = FrontEndCommands.RunDeadTime,
     ["defects"]        = FrontEndCommands.RunDefects,
+    ["readout-export"] = ReadoutCommands.RunExport,
 };
 
 if (args.Length < 1 || args[0] is "help" or "--help" or "-h" or "/?")
@@ -143,6 +144,7 @@ static void PrintUsage(Dictionary<string, Func<string[], int>> commands)
     Console.WriteLine("  depth           depth  depth-joint  depth3d  depthdesign  doi");
     Console.WriteLine("  scene / bg      background  shield  finitesrc  dose");
     Console.WriteLine("  front-end/RTL   frontend  eventstream  thermal  thermalro  pileup  deadtime  defects");
+    Console.WriteLine("  readout         readout-export");
     Console.WriteLine();
     Console.WriteLine($"  ({commands.Count} study commands total.)");
 }

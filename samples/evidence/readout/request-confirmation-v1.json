@@ -1,0 +1,24 @@
+{
+ "_about": "TODO-19 turn 5 pitch confirmation on fresh seeds (RO_CONFIRMATION32). Restricted to the decision: the two rule picks (p1.0-g0 DPC r0.01, p3.2-g0.5 DPC r0.03) and the nearest alternatives (both ratios at 1.0, 2.2 and 3.2 mm pitch, 0.2 and 0.5 mm walls at 3.2 mm); four outputs, sum trigger 50 keV, specular 0.98 reflector, DirectCrystal as the built-in reference; the same lines and rates. FloodHistoriesPerCrystal is 3000 (ten times the selection budget) because the seed-to-seed spread of 662 keV mis-identification equals binomial counting noise; see confirmation-pin-v1.json for the derivation and the rule.",
+ "Geometries": [
+  { "Name": "p1.0-g0", "PitchMm": 1.0, "GapMm": 0.0 },
+  { "Name": "p2.2-g0.2", "PitchMm": 2.2, "GapMm": 0.2 },
+  { "Name": "p3.2-g0.2", "PitchMm": 3.2, "GapMm": 0.2 },
+  { "Name": "p3.2-g0.5", "PitchMm": 3.2, "GapMm": 0.5 }
+ ],
+ "Readouts": [
+  { "Name": "Anger-DPC-r0.03", "Mode": "FourOutputAnger", "Network": { "Topology": "Dpc", "RowResistanceOhm": 1000, "ColumnResistanceOhm": 30 } },
+  { "Name": "Anger-DPC-r0.01", "Mode": "FourOutputAnger", "Network": { "Topology": "Dpc", "RowResistanceOhm": 1000, "ColumnResistanceOhm": 10 } }
+ ],
+ "Triggers": [
+  { "Name": "Sum50", "Trigger": { "Logic": "Sum", "Threshold": 50, "Unit": "KeVEquivalent" } }
+ ],
+ "EnergiesKeV": [122.06, 661.7, 1332.5],
+ "FloodHistoriesPerCrystal": 3000,
+ "CalibrationHistoriesPerCrystal": 2000,
+ "LocalisationHistories": 200000,
+ "RatesCps": [1000, 10000, 100000, 300000, 1000000],
+ "RateHits": 10000,
+ "WindowFraction": 0.15,
+ "Base": { "Mode": "FourOutputAnger", "Optics": { "PhotonsPerBin": 100000 } }
+}

@@ -1,0 +1,60 @@
+{
+ "_about": "TODO-19 stage 1 readout comparison (ReadoutStudy via Gcam.EvidenceProbe readout-* modes). Selection and validation seed lists are disjoint and distinct from every other list (seeds.json _rules_readout). The pilot exercises every metric in minutes and is not evidence; the timing family is one selection seed of the full request. Selection sweeps the DPC column/row resistance ratio (RD-12); validation runs the full matrix on its disjoint seeds (RD-13). Long runs (selection, validation) are started by the planner. The pitch confirmation (turn 5) runs request-confirmation-v1.json on RO_CONFIRMATION32 under the rule pinned in readout/confirmation-pin-v1.json.",
+ "config_sha256": {
+  "scenario.json": "eb5b96835c0b68a88c5c26965540f85f1a313acf1cc0b49955cf7921463edddc",
+  "evidence/readout/request-v1.json": "e12c4a41dfa5c6194106de988c4ebd32fb8547ee63bd3eef18adf8d809bab193",
+  "evidence/readout/request-pilot-v1.json": "75373003b26d57da7a9f546303fda9ea11ebea666bc3817028335fac733f805f",
+  "evidence/readout/request-confirmation-v1.json": "d70bad1ae4f0160cf61921940bdc9d37346589d71e593f100d6ab7afd2dcaee6",
+  "evidence/readout/confirmation-pin-v1.json": "2d1b73cb2d643e83a77b50a823b62246a8d957b7d2824fdaf7025882fe40478d"
+ },
+ "families": [
+  {
+   "id": "readout_pilot_v1",
+   "kind": "probe",
+   "mode": "readout-pilot",
+   "seeds": "RO_SELECTION16",
+   "n": 2,
+   "evidence": "TODO-19 stage 1; pilot (request-pilot-v1.json); not evidence"
+  },
+  {
+   "id": "readout_timing_v1",
+   "kind": "probe",
+   "mode": "readout-timing",
+   "seeds": "RO_SELECTION16",
+   "n": 1,
+   "evidence": "TODO-19 stage 1; one-seed timing of request-v1.json"
+  },
+  {
+   "id": "readout_selection_v1",
+   "kind": "probe",
+   "mode": "readout-selection",
+   "seeds": "RO_SELECTION16",
+   "n": 16,
+   "evidence": "TODO-19 stage 1; selection (request-v1.json): DirectCrystal vs FourOutputAnger / IndependentSipm"
+  },
+  {
+   "id": "readout_validation_v1",
+   "kind": "probe",
+   "mode": "readout-validation",
+   "seeds": "RO_VALIDATION32",
+   "n": 32,
+   "evidence": "TODO-19 stage 1; validation of the full matrix on disjoint seeds (request-v1.json, RD-13)"
+  },
+  {
+   "id": "readout_confirmation_pilot_v1",
+   "kind": "probe",
+   "mode": "readout-confirmation",
+   "seeds": "RO_CONFIRMATION32",
+   "n": 2,
+   "evidence": "TODO-19 turn 5; smoke test of the confirmation family (its first two seeds; identical outputs to the family's); not a decision"
+  },
+  {
+   "id": "readout_confirmation_v1",
+   "kind": "probe",
+   "mode": "readout-confirmation",
+   "seeds": "RO_CONFIRMATION32",
+   "n": 32,
+   "evidence": "TODO-19 turn 5; pitch confirmation on fresh seeds under the rule pinned in readout/confirmation-pin-v1.json"
+  }
+ ]
+}

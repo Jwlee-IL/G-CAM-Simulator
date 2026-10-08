@@ -33,6 +33,7 @@ public sealed class ComptonFactory : ISimulationFactory
 
     public IDetector CreateDetector(SimulationConfig config)
     {
+        ReadoutGuard.RequireDirect(config);
         var d = config.Detector;
         bool nonUniform = d.GainSigma != 0.0 || d.EnergyResolutionFwhmSigma != 0.0 || d.GainGradient != 0.0;
         double[]? sensitivity = nonUniform ? new CrystalUniformity(d).Sensitivity : null;

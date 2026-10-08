@@ -1,0 +1,37 @@
+{
+ "_about": "TODO-19 stage 1 readout comparison (ReadoutStudy). Geometries: the repository baseline (1 mm pitch, no gap, virtual matched 1 mm sensors); 2 mm pixels with a 0.2 mm reflector (published GAGG array example); 3 mm pixels at the 3.2 mm pitch of commercial 3 mm SiPM arrays, with the default specular reflector, a diffuse reflector and a wider 0.5 mm wall. Sensors are matched 1:1 (a virtual sensor of the crystal's active width: an assumption). Readouts: four-output Anger with the ideal separable divider, the discretised positioning circuit at column/row resistance ratios 1.0 (equal resistors, the known failing case), 0.3, 0.2, 0.1, 0.03 and 0.01 (RD-12: the engine-exported weights put the middle-row spot spacing at 0.15 / 0.43 / 0.54 / 0.69 / 0.84 / 0.89 of the ideal 2/S, the marker-suppression boundary at 0.5 lying between 0.3 and 0.2, the separable limit at S/(S+1) = 0.923) and the corner-drained grid; one channel per SiPM without and with 3-sigma zero suppression. Triggers: sum 50 / 100 keV, per-channel OR 50 / 100 keV-equivalent, AND 50 keV-equivalent. Lines 122 / 662 / 1332 keV; rates on 662 keV.",
+ "Geometries": [
+  { "Name": "p1.0-g0", "PitchMm": 1.0, "GapMm": 0.0 },
+  { "Name": "p2.2-g0.2", "PitchMm": 2.2, "GapMm": 0.2 },
+  { "Name": "p3.2-g0.2", "PitchMm": 3.2, "GapMm": 0.2 },
+  { "Name": "p3.2-g0.2-diffuse", "PitchMm": 3.2, "GapMm": 0.2, "Optics": { "Surface": "Lambertian", "WallReflectance": 0.99, "PhotonsPerBin": 100000 } },
+  { "Name": "p3.2-g0.5", "PitchMm": 3.2, "GapMm": 0.5 }
+ ],
+ "Readouts": [
+  { "Name": "Anger-Ideal", "Mode": "FourOutputAnger", "Network": { "Topology": "IdealBilinear" } },
+  { "Name": "Anger-DPC-r1.0", "Mode": "FourOutputAnger", "Network": { "Topology": "Dpc", "RowResistanceOhm": 1000, "ColumnResistanceOhm": 1000 } },
+  { "Name": "Anger-DPC-r0.3", "Mode": "FourOutputAnger", "Network": { "Topology": "Dpc", "RowResistanceOhm": 1000, "ColumnResistanceOhm": 300 } },
+  { "Name": "Anger-DPC-r0.2", "Mode": "FourOutputAnger", "Network": { "Topology": "Dpc", "RowResistanceOhm": 1000, "ColumnResistanceOhm": 200 } },
+  { "Name": "Anger-DPC-r0.1", "Mode": "FourOutputAnger", "Network": { "Topology": "Dpc", "RowResistanceOhm": 1000, "ColumnResistanceOhm": 100 } },
+  { "Name": "Anger-DPC-r0.03", "Mode": "FourOutputAnger", "Network": { "Topology": "Dpc", "RowResistanceOhm": 1000, "ColumnResistanceOhm": 30 } },
+  { "Name": "Anger-DPC-r0.01", "Mode": "FourOutputAnger", "Network": { "Topology": "Dpc", "RowResistanceOhm": 1000, "ColumnResistanceOhm": 10 } },
+  { "Name": "Anger-Grid", "Mode": "FourOutputAnger", "Network": { "Topology": "CornerGrid", "GridResistanceOhm": 1000, "DrainResistanceOhm": 1000 } },
+  { "Name": "Independent", "Mode": "IndependentSipm" },
+  { "Name": "Independent-ZS3", "Mode": "IndependentSipm", "ZeroSuppressionSigma": 3 }
+ ],
+ "Triggers": [
+  { "Name": "Sum50", "Trigger": { "Logic": "Sum", "Threshold": 50, "Unit": "KeVEquivalent" } },
+  { "Name": "Sum100", "Trigger": { "Logic": "Sum", "Threshold": 100, "Unit": "KeVEquivalent" } },
+  { "Name": "Or50", "Trigger": { "Logic": "Or", "Threshold": 50, "Unit": "KeVEquivalent" } },
+  { "Name": "Or100", "Trigger": { "Logic": "Or", "Threshold": 100, "Unit": "KeVEquivalent" } },
+  { "Name": "And50", "Trigger": { "Logic": "And", "Threshold": 50, "Unit": "KeVEquivalent" } }
+ ],
+ "EnergiesKeV": [122.06, 661.7, 1332.5],
+ "FloodHistoriesPerCrystal": 300,
+ "CalibrationHistoriesPerCrystal": 2000,
+ "LocalisationHistories": 200000,
+ "RatesCps": [1000, 10000, 100000, 300000, 1000000],
+ "RateHits": 10000,
+ "WindowFraction": 0.15,
+ "Base": { "Mode": "FourOutputAnger", "Optics": { "PhotonsPerBin": 100000 } }
+}

@@ -1,0 +1,26 @@
+{
+ "_about": "TODO-19 turn 5: the pitch-confirmation rule, pinned before any confirmation run (RO_CONFIRMATION32). confirm_readout.py refuses to decide when the request or the scripts no longer match these hashes.",
+ "PinnedUtc": "2026-10-08T02:52:09Z",
+ "Family": "readout_confirmation_v1",
+ "SeedList": "RO_CONFIRMATION32",
+ "Request": "samples/evidence/readout/request-confirmation-v1.json",
+ "RequestSha256": "d70bad1ae4f0160cf61921940bdc9d37346589d71e593f100d6ab7afd2dcaee6",
+ "Script": "samples/evidence/readout/confirm_readout.py",
+ "ScriptSha256": "bfc2b51a7e4736eeb007b39f686bd3c05688aa6ece28c3be21f1de29f22c4005",
+ "SelectScriptSha256": "402617f00982807bb56df70144beeaa95189cb8d15d771c243919067994ff882",
+ "Rule": [
+  "Seed-cluster uncertainty: SE = SD / sqrt(N) over the 32 seeds; a difference counts only when |delta| > 2 * sqrt(SE_a^2 + SE_b^2).",
+  "0. Eligible: calibration succeeded on all seeds; turn-4 constraints K1-K3 (122 keV acceptance >= 0.90, weakest crystal >= 0.50; 1332 keV acceptance >= 0.90, pooled mis-ID <= 0.002; 662 keV FWHM <= 0.08).",
+  "1. Pitch 1.0 mm vs 3.2 mm: each pitch's eligible unit with the lowest mean M1 (662 keV single-crystal photopeak mis-identification); compare M1, then M2 (662 keV localisation penalty at equal counts against the geometry's own direct reference); no difference -> 3.2 mm (less saturating: about 1.2 vs 9 photoelectrons per 50 um microcell at 662 keV; a real catalogue sensor size at its array pitch, where 1.0 mm needs a virtual 1 mm sensor). 2.2 mm is context only; if it beats both on M1 that is reported as a finding needing fresh seeds.",
+  "2. Wall at 3.2 mm (only if 3.2 mm wins): 0.2 vs 0.5 mm by M1, then M2; no difference -> 0.2 mm (geometric fill 0.88 vs 0.71; the published array example's reflector).",
+  "3. DPC column/row ratio in the chosen geometry: r0.01 vs r0.03 by M3 (122 keV single-crystal photopeak mis-identification), then M1; no difference -> r0.03 (the less extreme resistor ratio, robust on every seed in selection and validation).",
+  "The engine default stays DirectCrystal; the result defines the stage-1 physical readout preset only."
+ ],
+ "Limitation": "Microcell saturation and recovery are not modelled (infinite cells simulated); the pitch result stands with this stated limitation whichever pitch wins.",
+ "SizeDerivation": {
+  "ObservedSpread": "Seed SD of 662 keV mis-ID equals binomial counting noise (validation: 1 mm r0.01 SD 2.01e-4 vs binomial 1.75e-4; 3.2 mm/0.5 r0.03 1.69e-4 vs 1.55e-4); about 2 mis-identifications per unit per seed at 300 flood histories per crystal (6,870 / 9,330 photopeak single-crystal events).",
+  "Gap": "Pooled over selection + validation (48 seeds): 1 mm r0.01 1.854e-4 (61 / 329,000), 3.2 mm / 0.5 mm r0.03 2.278e-4 (102 / 447,800); delta 4.23e-5 with SE 3.27e-5 (1.3 SE) - the turn-4 '1e-4' was the selection-only difference.",
+  "Requirement": "Resolve delta = 4.2e-5 at the 2-SE criterion with 80 % power: SE_delta <= delta / 2.84 = 1.49e-5 -> about 1.61e6 photopeak single-crystal events at 1 mm (1.36x more at 3.2 mm).",
+  "Choice": "32 seeds x 3000 flood histories per crystal (10x the selection budget): about 2.2e6 events at 1 mm, expected SE_delta 1.27e-5, z = 3.3 for the observed gap, power about 0.91. Seeds-only alternative at 300 per crystal: about 235 seeds (needlessly long). The seed clusters still carry any calibration-to-calibration variance."
+ }
+}

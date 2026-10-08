@@ -52,6 +52,7 @@ public sealed class EventStreamStudy
         if (!(countRateCps > 0.0)) throw new ArgumentException("countRateCps must be > 0", nameof(countRateCps));
         if (!(adcSampleRateHz > 0.0)) throw new ArgumentException("adcSampleRateHz must be > 0", nameof(adcSampleRateHz));
         if (maxEvents < 1) throw new ArgumentException("maxEvents must be >= 1", nameof(maxEvents));
+        ReadoutGuard.RequireDirect(config);
 
         var rng = _base.CreateRandom(config);
         var source = _base.CreateSource(config);

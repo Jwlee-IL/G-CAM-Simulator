@@ -88,6 +88,7 @@ public sealed class DefaultSimulationFactory : ISimulationFactory
 
     public IDetector CreateDetector(SimulationConfig config)
     {
+        ReadoutGuard.RequireDirect(config);
         var d = config.Detector;
         // Non-uniform if any per-pixel variation OR a finite energy window that trims
         // the (uniform) photopeak acceptance. Note: gradient may be negative.

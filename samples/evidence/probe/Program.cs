@@ -15,6 +15,8 @@
 //   spatial     EV-15: Cs-137 at (4, 0) beside Co-60 at (−5, 3), activity ratio 1/2/4/8, per-pixel window
 //   depthsharp  EV-33: depth-from-focus width on the viewer's sharp optics (rank 13, 0.7 mm, D 80, 30×30 @ 0.6 mm)
 //   materials   EV-19: unrounded efficiency of the crystal presets in samples/materials
+//   readout-*   TODO-19: DirectCrystal vs FourOutputAnger / IndependentSipm (ReadoutStudy); phases pilot, selection,
+//               validation, timing, confirmation; requests in samples/evidence/readout/
 //   viewer      EV-33: the viewer's list-mode path at its default optics — a manual 81-plane focus scan and the
 //               current FocusSweepService, source at 300/500/700 mm and 0/15/30 mrad, 500 µCi, 60 s
 using System.Globalization;
@@ -50,6 +52,13 @@ var runner = new SimulationRunner(factory);
 
 switch (mode)
 {
+    case "readout-pilot":
+    case "readout-selection":
+    case "readout-validation":
+    case "readout-timing":
+    case "readout-confirmation":
+        Gcam.EvidenceProbe.ReadoutRecipe.Run(mode["readout-".Length..], seed, samplesDir);
+        break;
     case "background-validation-v2":
         Gcam.EvidenceProbe.BackgroundShapeRecipe.Run("validation", seed, samplesDir, version: 2);
         break;
