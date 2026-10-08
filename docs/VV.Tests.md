@@ -24,6 +24,7 @@ Run `python samples/testing/test_records.py check-catalog --discover` after a Re
 | Unit | Methods | Discovered cases |
 |---|---:|---:|
 | `Gcam.Studio.RenderTests::Gcam.Studio.RenderTests.PlotViewRenderTests` | 1 | 1 |
+| `Gcam.Studio.RenderTests::Gcam.Studio.RenderTests.ReadoutRenderTests` | 2 | 2 |
 | `Gcam.Studio.Services.Tests::Gcam.Studio.Services.Tests.AcquisitionContinuationTests` | 4 | 6 |
 | `Gcam.Studio.Services.Tests::Gcam.Studio.Services.Tests.AcquisitionServiceTests` | 6 | 9 |
 | `Gcam.Studio.Services.Tests::Gcam.Studio.Services.Tests.AmbientAcquisitionTests` | 3 | 4 |
@@ -34,6 +35,7 @@ Run `python samples/testing/test_records.py check-catalog --discover` after a Re
 | `Gcam.Studio.Services.Tests::Gcam.Studio.Services.Tests.ImagingServiceTests` | 11 | 11 |
 | `Gcam.Studio.Services.Tests::Gcam.Studio.Services.Tests.MeasurementRandomnessTests` | 1 | 1 |
 | `Gcam.Studio.Services.Tests::Gcam.Studio.Services.Tests.OpticsProjectionTests` | 6 | 14 |
+| `Gcam.Studio.Services.Tests::Gcam.Studio.Services.Tests.PhysicalReadoutTests` | 6 | 6 |
 | `Gcam.Studio.Services.Tests::Gcam.Studio.Services.Tests.SpectrumServiceTests` | 8 | 10 |
 | `Gcam.Studio.Services.Tests::Gcam.Studio.Services.Tests.StripCountEstimatorTests` | 4 | 6 |
 | `Gcam.Studio.Services.Tests::Gcam.Studio.Services.Tests.StripProjectionTests` | 3 | 4 |
@@ -57,6 +59,7 @@ Run `python samples/testing/test_records.py check-catalog --discover` after a Re
 | `Gcam.Studio.Tests::Gcam.Studio.Tests.OverlayLabelLayoutTests` | 5 | 6 |
 | `Gcam.Studio.Tests::Gcam.Studio.Tests.PlotSeriesTests` | 1 | 1 |
 | `Gcam.Studio.Tests::Gcam.Studio.Tests.PlotViewportTests` | 4 | 5 |
+| `Gcam.Studio.Tests::Gcam.Studio.Tests.ReadoutViewModelTests` | 3 | 3 |
 | `Gcam.Studio.Tests::Gcam.Studio.Tests.SpectrumBandTests` | 1 | 1 |
 | `Gcam.Studio.Tests::Gcam.Studio.Tests.ThemeContrastTests` | 2 | 8 |
 | `Gcam.Studio.Tests::Gcam.Studio.Tests.TickFormatterTests` | 7 | 18 |
@@ -66,6 +69,7 @@ Run `python samples/testing/test_records.py check-catalog --discover` after a Re
 | `Gcam.Studio.UiTests::Gcam.Studio.UiTests.PilotTests` | 1 | 1 |
 | `Gcam.Studio.UiTests::Gcam.Studio.UiTests.PlotViewTests` | 1 | 1 |
 | `Gcam.Studio.UiTests::Gcam.Studio.UiTests.PolishSurveyTests` | 1 | 1 |
+| `Gcam.Studio.UiTests::Gcam.Studio.UiTests.ReadoutScenarioTests` | 4 | 4 |
 | `Gcam.Studio.UiTests::Gcam.Studio.UiTests.ScenarioTests` | 6 | 6 |
 | `Gcam.Studio.UiTests::Gcam.Studio.UiTests.WorkspaceOracleTests` | 3 | 3 |
 | `Gcam.Studio.UiTests::Gcam.Studio.UiTests.WorkspaceScenarioTests` | 5 | 5 |
@@ -132,6 +136,7 @@ Run `python samples/testing/test_records.py check-catalog --discover` after a Re
 | `Gcam.Tests::Gcam.Tests.ReadoutDefaultPathTests` | 7 | 7 |
 | `Gcam.Tests::Gcam.Tests.ReadoutDeviceTests` | 5 | 8 |
 | `Gcam.Tests::Gcam.Tests.ReadoutPulseProcessorTests` | 7 | 7 |
+| `Gcam.Tests::Gcam.Tests.ReadoutStreamTests` | 2 | 4 |
 | `Gcam.Tests::Gcam.Tests.ReadoutStudyTests` | 3 | 3 |
 | `Gcam.Tests::Gcam.Tests.ResolvedPairTests` | 10 | 15 |
 | `Gcam.Tests::Gcam.Tests.SamplingTests` | 6 | 14 |
@@ -3427,4 +3432,79 @@ Method groups:
 
 ```json
 {"id":"unittest::test_provenance.ProvenanceTests","runner":"unittest","methods":["test_canonical_order","test_dirty_is_accepted","test_missing_root","test_missing_seed_provenance","test_malformed_source_binding","test_unsupported_schema","test_output_tampering","test_seed_binding","test_mixed_execution","test_typed_executors","test_conflicting_duplicates","test_identical_duplicates","test_recipe_conflict","test_reuse_preserves_original_source","test_reuse_changed_executor","test_sidecar_binds_every_member","test_preflight_writes_nothing_on_mixed_inputs","test_unbound_numerical_file_is_refused","test_envelope_and_sidecar_must_agree","test_sidecar_binding_across_output_directories","test_staged_python_import_and_rtl_survive_original_edits","test_staged_managed_bytes_survive_original_rebuild","test_source_hash_uses_untracked_contents","test_failed_git_query_is_not_clean","test_calibration_legacy_and_roles","test_real_ambient_aggregator_and_refusal_before_write","test_seed_offset","test_shared_calibration_file_keeps_role_families_separate","test_dirty_diff_on_temporary_repository"],"sources":{"samples/evidence/tests/test_provenance.py":"86c9df989e254140e9005baf11f4bad739d40e4198130ffbcfb125c0f3bb85aa"},"trace":[]}
+```
+
+
+## ReadoutRenderTests — dotnet
+
+Detached production readout XAML and controls: sensor/network, Anger/LUT, calibration, diagnostics, pending/preparing/ready/failed states and five waveform lanes, in both themes at 1280×800 and 1440×900. Synthetic drawing records are not calibration evidence. Snapshot output requires an explicit scratch directory. A normal ungated STA case drives bound combo-box selected indices and text edits, drains the dispatcher and verifies accepted values in the controls, including unsupported geometry, locked readout mode, invalid energy windows and physical-mode optics preset refusal. It parses the production ReadoutPanel and reproduces MainWindow's optics editor bindings without constructing a Window.
+
+Oracle: Production bindings and layout: five nonzero plot surfaces, the sum threshold series, no Window/HWND/desktop input. Engine-generated isolated conversion timestamps must agree with the trace's first sum crossing and peak. After rendering, all five plot rectangles and root-relative zero-time coordinates share exactly the same X mapping at both sizes and themes.
+
+Tolerance: Structural and exact rendered X-coordinate equality; no pixel-difference or elapsed-time acceptance band. Isolated trigger/peak marker-to-trace distance is at most max(engine sample period, scope sample period), 8 ns for this fixture; hold is within the engine-derived search window.
+
+Gates: Snapshot method: GCAM_RENDER_SNAPSHOTS=1; GCAM_RENDER_OUTPUT required. Bound-control regression: none; detached, no Window/HWND/desktop input.
+
+```json
+{"runner":"dotnet","sources":{"tests/Gcam.Studio.RenderTests/ReadoutRenderTests.cs":"3a8bd6622204253e24fee5f3504352ae242b2d9b411b5c3f8a47cbf9c5aef6bc","tests/Gcam.Studio.RenderTests/RenderSnapshotFactAttribute.cs":"95dd1088eee764d18a539ff37399a3c518aa75056d29d2de60286d2173ba1edd"},"methods":["BoundReadoutControls_RejectedEditsShowAcceptedSourceValues","ExperimentalDetectorAndFourLanes_BothThemesAndSizes"],"id":"Gcam.Studio.RenderTests::Gcam.Studio.RenderTests.ReadoutRenderTests","trace":[]}
+```
+
+
+## PhysicalReadoutTests — dotnet
+
+Builds the independent reference-head preparation, checks cache/cancellation and real virtual-clock Stop/Continue prefixes. Spectrum and Imaging count populations agree; five realised waveform lanes conserve their sum and replay the stored held analogue response.
+
+Oracle: Uninterrupted fixed-seed acquisition; immutable prior prefixes; exact count partition. Replay round-off follows the pulse derivative and floating-point summation bound. The isolated sum trigger is bracketed independently by the continuous rising-edge root and the next engine sample; the preceding engine sample is below threshold. The hold is within its search window and one engine sample of the analytic peak. Scope markers agree with the first sampled crossing and peak within max(engine period, scope period), 8 ns here.
+
+Tolerance: Exact records/counts. Analogue replay: sum(abs(channel hits)) times [8u max(1, live seconds) 1e9 (1/rise + 1/tail)/normalization + gamma_(8N+20)], u=2^-53, gamma_m=m u/(1-m u). No physics acceptance band.
+
+Gates: none.
+
+```json
+{"runner":"dotnet","sources":{"tests/Gcam.Studio.Services.Tests/PhysicalReadoutTests.cs":"a895dfff08fee72e10d3428ea7241be1419649731d6804be0626dc560dc4d4a6","tests/Gcam.Studio.Services.Tests/EvidenceFactAttribute.cs":"898301fdfe0438aa4ea3503809ee81dc90b225dff52defb3e2cee6277085cd60"},"methods":["IsolatedScope_TriggerFirstCrossingAndHoldPeakShareThePulseTimeBase","Prepare_IsIndependentCachedAndCancellationDoesNotPublish","Continuation_ConservesMeasuredRecordsAndImmutablePrefixesExactly","CancellationAtTransportBoundary_PublishesNoPartialArtifact","ManualWindowBoundariesAndUnknowns_AgreeAcrossSpectrumAndImaging","UnsupportedInputs_AreRefusedWithoutMutatingThem"],"id":"Gcam.Studio.Services.Tests::Gcam.Studio.Services.Tests.PhysicalReadoutTests","trace":[]}
+```
+
+
+## ReadoutViewModelTests — dotnet
+
+Checks supported-head selection, actionable field/preparation refusal without silent zeroing, inactive legacy controls, preparation invalidation and explicit keV-window validation.
+
+Oracle: Declared SD-2/SD-3 input policies and readout cache content identity.
+
+Tolerance: Exact/structural.
+
+Gates: none.
+
+```json
+{"runner":"dotnet","sources":{"tests/Gcam.Studio.Tests/ReadoutViewModelTests.cs":"f09badc9dca0032f975ffbb92f27d3958059c4859c91bd9eedc4361fc6e8bbe8"},"methods":["GeometryRefusalAndLegacyLocks_HaveActionableReasons","StartRefusesFieldAndMissingPreparationWithoutSilentZeroing","PreparationKeyInvalidationAndWindowValidation_AreExplicit"],"id":"Gcam.Studio.Tests::Gcam.Studio.Tests.ReadoutViewModelTests","trace":[]}
+```
+
+
+## ReadoutScenarioTests — dotnet
+
+Adds desktop reference-head and field refusal, Prepare cancellation/retry/tabs and fixed-seed uninterrupted-versus-continued count scenarios. The count parser oracle runs headlessly and rejects nonconservation.
+
+Oracle: Assigned + unknown = triggered exactly; fixed-seed continued counts equal uninterrupted counts; disabled legacy controls and explicit refusal text.
+
+Tolerance: Exact/structural. Bounded UI waits are operational deadlines, not physics tolerances.
+
+Gates: Desktop methods: GCAM_UI_TESTS=1; count oracle: none.
+
+```json
+{"runner":"dotnet","sources":{"tests/Gcam.Studio.UiTests/ReadoutScenarioTests.cs":"598070a9fae2444acfd3caa23a7b327bd91e3e7816bff9d6035a373409a20a1a","tests/Gcam.Studio.UiTests/Harness/FloodOracle.cs":"22db35cb2771a0460e437e47308b5792bf1c22d2dc077af54106223a29cd75be","tests/Gcam.Studio.UiTests/Harness/Pointer.cs":"e56d09c72e552bf5619c088150a0d6ceba0ec2eb75ee06c2744c4677b9db896c","tests/Gcam.Studio.UiTests/Harness/RepoPaths.cs":"2bdc3c25db3c74cfe32ea7f64352f36cc5fb3b8fbf7be92ce03b7184648cc655","tests/Gcam.Studio.UiTests/Harness/RunRecord.cs":"0db3b6cf367fed06ba506db2973593b100ebed4a6ca793552a77e490d0fce377","tests/Gcam.Studio.UiTests/Harness/Scenario.cs":"dac922df393236562f138489ab7a54d4ff09bb4003f7694da421564e0647b085","tests/Gcam.Studio.UiTests/Harness/StudioProcess.cs":"973777303020b10c38bcd701e991764b095cb2f149ed31da6a5d554bf73d87c2","tests/Gcam.Studio.UiTests/Harness/StudioWindow.cs":"59fca517024d117593d9056ed1c5122d2b8632b7ae179b36a8e091aea06b5bf8","tests/Gcam.Studio.UiTests/Harness/WorkspaceOracle.cs":"153e5f5ec778401b877467e405295a940d663d4fea1d32f9101139e9c0b325e5","tests/Gcam.Studio.UiTests/DesktopFactAttribute.cs":"1dcac8c38143a4d38635267e17af2acdbb5f2ee84eca07e2968a2a1e7f073bfc"},"methods":["CountOracle_RefusesNonConservationAndMissingIdentity","UnsupportedGeometryAndField_ExplainRefusalWithoutZeroing","PreparationCancelRetryAndTabs_AreExplicit","FixedSeedRepeatAndContinuation_ConserveCountsAndExposeFourLanes"],"id":"Gcam.Studio.UiTests::Gcam.Studio.UiTests.ReadoutScenarioTests","trace":[]}
+```
+
+
+## ReadoutStreamTests — dotnet
+
+Compares a persistent observed-horizon processor to the original batch processor across three partitions. An open hold waits for the observation horizon; pre-cancelled advancement consumes no noise.
+
+Oracle: Original batch arithmetic and fixed realised hits/RNG streams.
+
+Tolerance: Exact codes, hold times, associations, contributor counts and shares; no numerical tolerance.
+
+Gates: none.
+
+```json
+{"runner":"dotnet","sources":{"tests/Gcam.Tests/ReadoutStreamTests.cs":"d9dfd1c263957e59b061f495e41830b07a47e15f1644aa06188504fe712d04fe","tests/Gcam.Tests/Harness/Rigs.cs":"9b89ce04cdcb302fcefc6636d45a0d1640a48c288d1e0a3638b005c44028c3b2","tests/Gcam.Tests/Harness/Stat.cs":"4502dddc6276f9d1de0c41b2ed7246ed7f00c9266daa12a34d6174ae1cb19029"},"methods":["PartitionedObservedStream_MatchesBatchExactly","HoldWaitsForObservedFuture_AndCancellationConsumesNoNoise"],"id":"Gcam.Tests::Gcam.Tests.ReadoutStreamTests","trace":[]}
 ```

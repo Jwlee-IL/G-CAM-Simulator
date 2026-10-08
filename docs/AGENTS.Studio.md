@@ -94,6 +94,10 @@ calls `IAcquisitionSession.Continue` and must not `Begin` the workspaces (the se
 id); Reset disposes the session and resets the workspaces. `AcquisitionSession` keeps its look-ahead event across
 Stop — dropping it loses a real count (the continuation tests catch it).
 
+## Physical readout (experimental, TODO-40)
+
+Readout: DirectCrystal remains the default. Experimental FourOutputAnger requires the 12×12 Baseline head, ambient/BSR zero and explicit successful Prepare. Physical workspaces consume one immutable measured prefix; do not apply legacy MeasurementStage or energy-only pile-up to it. Preparation is independently seeded and cached by resolved detector inputs; view/source changes do not invalidate it. Keep Core WPF-free. New readout renders require GCAM_RENDER_OUTPUT under task scratch; desktop ReadoutScenarioTests remain opt-in on the author's go.
+
 ## Detector and retained-flood focus
 
 The Imaging Reconstruction selector (cross-correlation / pixel-area MLEM, SR-IMG-07) is a re-projection setting in

@@ -6,7 +6,7 @@ time-domain four-channel pulse and pile-up model, trigger, flood-map LUT). This 
 user can see the readout: the SiPM grid and charge division, the continuous Anger flood with its LUT, the four channel
 waveforms, and the effect of the readout on Spectrum and Imaging. Studio stays the simulator's engineering viewer (D-34).
 
-Status: **decided, 2026-10-08** — review by Codex (session `01a1196d-8612-7691-985f-647bf1bb3ca7`, [review](PLAN.Studio.Readout.Review.md)); decisions SD-1 … SD-6 below; implementation next (TODO-19 is merged). The engine part is not yet committed: it is in the
+Status: **done** 2026-10-08 — review and implementation by Codex (session `01a1196d-8612-7691-985f-647bf1bb3ca7`; [review](PLAN.Studio.Readout.Review.md), [turn reports](PLAN.Studio.Readout.Turn2.md), turns 2–5) in worktree `C:\gw\w40`; planner checks: build 0 / 0, full tests 868 → 883 passed, Python, calibration and catalog (166) checks; renders inspected (two defects fixed in turn 3); desktop 39 / 39, broken verdict 3 / 3 at their assertions, recovery 39 / 39 (one defect found and fixed, turn 4); SR-DET-05 … 09, SR-WAVE-09 … 11, SR-RUN-30 … 34 applied. TODO-41 (all presets) and TODO-42 (ambient; size estimate in the turn report: 325–580 production lines, a BSR spatial contract first) stay open.
 worktree `C:\gw\w19b` (branch `todo19-readout`, TODO-19 turns 2–5, docs `PLAN.Physics.RigReadout.md` RD-1 … RD-14 and
 `PLAN.Physics.RigReadout.Turn2.md`); implementation of this plan starts only after that is merged.
 

@@ -255,6 +255,8 @@ Only the rules a reviewer needs to check a requirement; the rest is in the code 
 
 ### SU-19 `AcquisitionSession`
 
+**Physical readout (TODO-40, 2026-10-08).** Physical readout uses an explicit signal-only PhysicalListModeSource and the engine's persistent observed-horizon pulse stream. AcquisitionSession freezes the prepared experimental reference-head artifact, publishes immutable chunked measured/scalar-hit prefixes and retains at most 256 diagnostic truth samples. ReadoutPreparationService owns a serialized two-entry successful-artifact cache and independent calibration/validation seeds. PhysicalReadoutProjection and PhysicalReadoutWaveform operate on stored measured facts on workers; they do not invoke MeasurementStage. Detector/Spectrum/Imaging/Waveform remain views of one acquisition. The WPF ReadoutMapView draws the detached resolved circuit and density/LUT; readout views contain layout and InitializeComponent-only companions. Default direct factories and studies retain their previous path.
+
 The flood adds one count per ComptonCrystalDetector event located by Argmax. This replaces the pre-list-mode
 geometric CrystalDetector (DefaultSimulationFactory) flood and includes in-crystal Compton scatter
 mispositioning. No size of that effect is asserted here.

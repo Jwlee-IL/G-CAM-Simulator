@@ -52,6 +52,8 @@ Imaging workspace, Cs-137 500 µCi + Co-60 200 µCi at 1 m, dark theme (desktop 
 
 ![GCAM Studio Imaging desktop with two isotope sources](docs/assets/studio-desktop-imaging.png)
 
+GCAM Studio includes an experimental four-output GAGG readout for the 12×12 Baseline reference head. Select Baseline, set ambient and BSR to zero explicitly, select FourOutputAnger and Prepare before Start. Detector shows the resolved SiPM/circuit and independent flood/LUT calibration; Waveform shows four realised lanes and their sum. Spectrum and Imaging use the same held/LUT-assigned records with explicit keV windows. Legacy gain/chain, stripping and ideal/rate replay are inactive for this mode. Other heads and physical readout with background remain separate tasks.
+
 ## What is a gamma camera?
 
 Radioactive material gives off **gamma rays** — light far too energetic for eyes or ordinary cameras. A gamma camera

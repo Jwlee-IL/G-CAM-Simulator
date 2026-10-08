@@ -260,3 +260,14 @@ TODO-39 (signed net strip count, signed cross-correlation decoding, ROI units). 
 verdict on the six MLEM scenarios and the channel / strip scenario **7 / 7 fail, each at its corrupted assertion (no
 timeout)**; recovery **7 / 7 pass** (runs `20261007-151850` … `152124`). Another session tried to use the desktop near
 the end of the recovery run; every result was judged by its exact oracle and none shows interference.
+
+## Desktop verification — physical readout, 2026-10-08
+
+TODO-40 (experimental four-output readout in Studio). Planner's runs in the worktree `C:\gw\w40` on the TODO-40 change
+over `01592a5`, Release build. First full run: 38 / 39 — `ReadoutScenarioTests.UnsupportedGeometryAndField_ExplainRefusalWithoutZeroing`
+found a real defect: a refused readout selection left the combo box showing the rejected value while the view model kept
+DirectCrystal (also present for the optics preset under physical readout). Fixed by refreshing after the binding commit,
+with an offscreen test on the bound controls' selected item. The new scenarios lacked broken-verdict handling, added.
+Final runs: full suite **39 / 39 pass**; `GCAM_UI_BREAK_VERDICT=1` on `ReadoutScenarioTests`: the three desktop scenarios
+**fail, each at its corrupted assertion (no timeout)**, the headless count oracle passes as intended; recovery **39 / 39
+pass**.

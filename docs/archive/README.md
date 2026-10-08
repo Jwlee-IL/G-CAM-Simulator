@@ -11,6 +11,12 @@ set the plan's status to done and move the plan and its review / reports into th
 
 ## Closed tasks
 
+- **TODO-40 physical readout in Studio** (2026-10-08): experimental four-output GAGG readout on the 12 × 12 reference
+  head — readout selector with refusals (other geometries, nonzero ambient / BSR), explicit Prepare with cache, Detector
+  tabs (SiPM / circuit, Anger flood with LUT, calibration, diagnostics), Waveform A–D + sum with trigger / hold, one
+  immutable measured-record stream for Spectrum / Imaging / Waveform / Detector, record-identical Stop / Continue
+  (SR-DET-05 … 09, SR-WAVE-09 … 11, SR-RUN-30 … 34). Desktop 39 / 39. Review and implementation by Codex —
+  [PLAN.Studio.Readout](PLAN.Studio.Readout.md).
 - **TODO-25 joint depth likelihood** (2026-10-08): research; re-measured on the current tree by a 32-seed screening
   (1024 fits): spread 0.6 / 2.5 / 5–8 / 17–21 mm at 300 / 500 / 700 / 1000 mm (60 s, all events), wrong maxima 7 / 1024,
   but approximate profiles (negative likelihood ratios in 249 fits) and a budget bias at the highest counts block a gate;
