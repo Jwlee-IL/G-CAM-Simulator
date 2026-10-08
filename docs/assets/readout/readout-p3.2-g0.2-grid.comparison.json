@@ -1,0 +1,16 @@
+{
+ "SchemaVersion": 1,
+ "Netlist": "readout-p3.2-g0.2-grid.cir",
+ "NetlistSha256": "dc888df98b7a9020228e606771069749693e9b1cc9a601e61e16a3aa2a955150",
+ "Config": "readout-p3.2-g0.2-grid.config.json",
+ "ConfigSha256": "a98662a494609c3d4d574f06834d7edbe16584a87b5703815475c227b694af5d",
+ "SiPMs": 144,
+ "Unknowns": 144,
+ "KappaInf": 628.654545454544,
+ "MaxVoltagePerAmp": 1317.3219959150917,
+ "MaxOutputConductance": 0.001,
+ "Bound": 1.5887617339247278e-10,
+ "MaxDeviation": 9.992007221626409e-16,
+ "MaxChargeImbalance": 3.9968028886505635e-15,
+ "Pass": true
+}

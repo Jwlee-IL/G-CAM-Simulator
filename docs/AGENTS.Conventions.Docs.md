@@ -12,8 +12,9 @@ A document's name says **what kind of document it is** (the upper-case keyword) 
 | `AGENTS` | how to work here: rules, conventions, logs, backlog | contributors and coding agents | `AGENTS.md`, `AGENTS.Studio.md`, `AGENTS.Conventions.Code.md`, `AGENTS.Findings.md`, `AGENTS.Todo.md` |
 | `DESIGN` | how GCAM Studio is designed: architecture, UI system, components | anyone changing Studio | `DESIGN.Architecture.md`, `DESIGN.Typography.md`, `DESIGN.Controls.md` |
 | `VV` | verification and validation: user / product / software requirements, the evidence behind them, design record, traceability to tests, validation scenarios, known anomalies | reviewers, anyone changing behaviour | `VV.Gcam.Overview.md`, `VV.Gcam.URS.md`, `VV.Gcam.PRS.md`, `VV.Gcam.Evidence.md`, `VV.Gcam.Limitations.md`, `VV.Gcam.Decisions.md`, `VV.Gcam.Calibration.md`, `VV.Studio.SRS.md`, `VV.Studio.SDS.md`, `VV.Studio.md` |
+| `HW` | hardware design the simulator models: readout electronics, generated schematics and netlists (illustrative, not buildable designs) | anyone changing the detector / readout model | `HW.Readout.md` |
 | `PAPER` | write-ups of the physics / results for readers | readers | `PAPER.ko.md` |
-| `PLAN` | implementation plans: goal, the author's decisions with reasons, step-by-step spec and done-criteria, written before the work and handed to whoever implements it (a person or a coding agent) | implementers, reviewers | `PLAN.Physics.RigReadout.md` (open); finished ones in `docs/archive/` |
+| `PLAN` | implementation plans: goal, the author's decisions with reasons, step-by-step spec and done-criteria, written before the work and handed to whoever implements it (a person or a coding agent) | implementers, reviewers | `PLAN.Studio.Readout.md` (open); finished ones in `docs/archive/` |
 
 Rules:
 

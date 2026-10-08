@@ -1133,3 +1133,42 @@ Review and implementation by Codex; author decisions D-52 … D-55. Evidence: EV
 - **Caveats.** Bounds, not a housing; one source; open window and bare bound only (the 662 keV window, front-only and
   centre sources are stage 2, Backlog); the √2 × grid-step target is an engineering convention relative to E4's own
   ideal response, not detector accuracy; no pair-resolution claim for E4; CLI single run and Studio not wired.
+
+## 68. A physical four-output readout — light, network, trigger, pile-up (TODO-19 stage 1, 2026-10-08)
+
+TODO-19 — [PLAN.Physics.RigReadout](archive/PLAN.Physics.RigReadout.md) (RD-1 … RD-14), review
+[PLAN.Physics.RigReadout.Review](archive/PLAN.Physics.RigReadout.Review.md) (Codex, 2026-10-02), implementation turns
+2–5 by a substitute Claude implementer ([Turn2](archive/PLAN.Physics.RigReadout.Turn2.md)). Evidence: EV-36; drawings and
+netlist check: [HW.Readout](HW.Readout.md).
+
+- **Model.** Beside the direct largest-deposit assignment (still the default), the engine models the conventional
+  Anger readout from published practice: pre-optical interaction sites → a traced optical table (crystal × depth) →
+  SiPM photoelectrons (PDE, ENF, dark counts) → a Kirchhoff-solved charge-division network → time-domain outputs in
+  which overlapping pulses sum in every channel → trigger, hold, 14-bit conversion → a blind flood-map LUT. It runs in
+  `ReadoutStudy` only; the other paths refuse a physical readout.
+- **Selected and confirmed.** Rule fixed before the data (one declared amendment — realisable readouts only — before
+  validation); 16 selection + 32 validation seeds, then a **pitch confirmation on 32 fresh seeds** with its own rule
+  pinned by hash: four outputs through a discretised positioning circuit (DPC) with column / row resistance ratio 0.01, a sum trigger at 50 keV, a specular 0.98 reflector and **1 mm pitch**. Validation: 662 keV single-crystal photopeak mis-identification
+  0.00021 ± 0.00004, 122 keV 0.375; acceptance 0.98 at 122 keV (weakest crystal 0.935) and 0.97 at 1332 keV; FWHM
+  14.9 / 5.9 / 4.9 % at 122 / 662 / 1332 keV; localisation at equal counts 0.406 ± 0.006 mm against the direct
+  assignment's 0.367 ± 0.001 mm (lab head); photopeak events mispositioned by pile-up 1.6 % at 1e5 cps, 4.3 % at
+  3e5 cps; at 1 Mcps throughput 0.39 with 54 % of events piled. Pitch confirmation (3,000 flood histories per crystal):
+  662 keV mis-ID 1.70e-4 ± 0.08e-4 at 1 mm against 2.75e-4 ± 0.13e-4 at 3.2 mm / 0.5 mm wall (≈ 7 SE); ratio 0.01
+  beats 0.03 at 122 keV (0.375 vs 0.383).
+- **Where it differs from the direct assignment:** 36 % of 662 keV photopeak events land in another crystal than the
+  largest deposit — multi-crystal Compton histories are placed at their light centroid, by design.
+- **What fails on every seed:** DPC ratio ≥ 0.2 (hour-glass flood; middle-row spots at ≤ 0.54 of the ideal spacing,
+  0.15 for equal resistors), a corner-drained grid (edge spacing 0.31 of the centre), 144 unsuppressed channels, and
+  any AND trigger. Ratio 0.1 is marginal (1 / 32 failures at 1 mm). A per-channel OR trigger leaves crystals blind to
+  122 keV; a sum trigger accepts 98 %.
+- **The price of four ADCs:** one channel per SiPM identifies 122 keV crystals ≈ 3× better (mis-ID 0.13) but is
+  ≈ 5× worse at 662 keV (0.0013) and needs 144 channels.
+- **Assumptions that decide numbers:** the reflector law — diffuse 0.96 gives ≈ 36 % FWHM at 662 keV (collection
+  0.60 → 0.37 with depth), diffuse 0.99 11 %, specular 0.98 5.6 %; no measured reflector data exist. Microcells are
+  unlimited, although a 1 mm sensor would see ≈ 9 photoelectrons per 50 µm cell — the 1 mm pick is conditional on that.
+- **Checks.** Default path bit-identical (hashes taken before the change); light and charge conservation; the network
+  against an independent standard-library nodal solve of its SPICE netlist (max deviation ≤ 7e-15 against derived
+  bounds ≥ 1e-10); single-site ideal limit = original crystal ID; pile-up at the light centroid. Engine tests 481 → 534.
+  The planner re-ran one seed of each family: identical apart from timing.
+- **Not here:** Studio integration (TODO-40); microcell recovery; measured optics; the network's RC response; gamma
+  transport in the walls.

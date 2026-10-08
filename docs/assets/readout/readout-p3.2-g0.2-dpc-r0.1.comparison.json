@@ -1,0 +1,16 @@
+{
+ "SchemaVersion": 1,
+ "Netlist": "readout-p3.2-g0.2-dpc-r0.1.cir",
+ "NetlistSha256": "b6b0c7eb46e51d08ae68fe705ee9e17dcce5c95d0e56893f3d1136bde18f6929",
+ "Config": "readout-p3.2-g0.2-dpc-r0.1.config.json",
+ "ConfigSha256": "d03a933783d5cceaf01607cecfd73dfb8a706c3311729e67d4e974989488a158",
+ "SiPMs": 144,
+ "Unknowns": 168,
+ "KappaInf": 1499.400000000004,
+ "MaxVoltagePerAmp": 3393.098109927723,
+ "MaxOutputConductance": 0.01,
+ "Bound": 1.138714809208522e-08,
+ "MaxDeviation": 2.4424906541753444e-15,
+ "MaxChargeImbalance": 6.8833827526759706e-15,
+ "Pass": true
+}

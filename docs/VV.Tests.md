@@ -6,7 +6,7 @@ verifies, where its expected value comes from and how its tolerance is justified
 [VV.Tests.Results](VV.Tests.Results.md); requirement status in [VV.Studio](VV.Studio.md).
 
 **At a glance**
-- 153 units: 118 xUnit classes, 2 unittest classes, 29 cocotb configurations, 4 checkers.
+- 161 units: 125 xUnit classes, 3 unittest classes, 29 cocotb configurations, 4 checkers.
 - Every entry states purpose, oracle, tolerance (its derivation, or "exact", "structural", "measurement only"), gates
   and requirement / evidence selectors in a fenced JSON block.
 - 70 units carry a margin the code states without a derivation — recorded as a finding, not filled in.
@@ -80,6 +80,7 @@ Run `python samples/testing/test_records.py check-catalog --discover` after a Re
 | `Gcam.Tests::Gcam.Tests.BackgroundTests` | 6 | 6 |
 | `Gcam.Tests::Gcam.Tests.CascadeEmissionTests` | 3 | 3 |
 | `Gcam.Tests::Gcam.Tests.CascadeSummingTests` | 9 | 9 |
+| `Gcam.Tests::Gcam.Tests.ChargeDivisionNetworkTests` | 7 | 13 |
 | `Gcam.Tests::Gcam.Tests.ComptonTests` | 5 | 5 |
 | `Gcam.Tests::Gcam.Tests.ConfigLoaderTests` | 4 | 19 |
 | `Gcam.Tests::Gcam.Tests.CorrelationSearchTests` | 6 | 10 |
@@ -101,6 +102,7 @@ Run `python samples/testing/test_records.py check-catalog --discover` after a Re
 | `Gcam.Tests::Gcam.Tests.ExponentialIntegralTests` | 2 | 8 |
 | `Gcam.Tests::Gcam.Tests.FieldOfViewTests` | 4 | 4 |
 | `Gcam.Tests::Gcam.Tests.FiniteSourceTests` | 2 | 2 |
+| `Gcam.Tests::Gcam.Tests.FloodLutTests` | 6 | 7 |
 | `Gcam.Tests::Gcam.Tests.FocusFusionTests` | 2 | 2 |
 | `Gcam.Tests::Gcam.Tests.FrontEndPartsTests` | 2 | 2 |
 | `Gcam.Tests::Gcam.Tests.FrontEndTests` | 6 | 6 |
@@ -122,10 +124,15 @@ Run `python samples/testing/test_records.py check-catalog --discover` after a Re
 | `Gcam.Tests::Gcam.Tests.MlemTests` | 2 | 2 |
 | `Gcam.Tests::Gcam.Tests.MuraGeneratorTests` | 5 | 5 |
 | `Gcam.Tests::Gcam.Tests.NonProportionalityTests` | 4 | 4 |
+| `Gcam.Tests::Gcam.Tests.OpticalResponseTests` | 7 | 8 |
 | `Gcam.Tests::Gcam.Tests.PileUpTests` | 6 | 6 |
 | `Gcam.Tests::Gcam.Tests.PipelineTests` | 7 | 7 |
 | `Gcam.Tests::Gcam.Tests.RandomQualityTests` | 5 | 7 |
 | `Gcam.Tests::Gcam.Tests.RangeLocalizationTests` | 1 | 3 |
+| `Gcam.Tests::Gcam.Tests.ReadoutDefaultPathTests` | 7 | 7 |
+| `Gcam.Tests::Gcam.Tests.ReadoutDeviceTests` | 5 | 8 |
+| `Gcam.Tests::Gcam.Tests.ReadoutPulseProcessorTests` | 7 | 7 |
+| `Gcam.Tests::Gcam.Tests.ReadoutStudyTests` | 3 | 3 |
 | `Gcam.Tests::Gcam.Tests.ResolvedPairTests` | 10 | 15 |
 | `Gcam.Tests::Gcam.Tests.SamplingTests` | 6 | 14 |
 | `Gcam.Tests::Gcam.Tests.ScattererTests` | 3 | 3 |
@@ -176,6 +183,7 @@ Run `python samples/testing/test_records.py check-catalog --discover` after a Re
 | `cocotb::test_trap_shaper@trapezoidal_shaper_pl` | 3 | 3 |
 | `unittest::test_background_shape.BackgroundShapeTests` | 10 | 10 |
 | `unittest::test_provenance.ProvenanceTests` | 29 | 29 |
+| `unittest::test_readout_netlist.ReadoutNetlistTests` | 4 | 4 |
 <!-- END GENERATED: TEST DISCOVERY -->
 
 ## PlotViewRenderTests — Gcam.Studio.RenderTests
@@ -1294,6 +1302,28 @@ Method groups:
 ```
 
 
+## ChargeDivisionNetworkTests — Gcam.Tests
+
+TODO-19 charge-division network: the Kirchhoff (nodal-analysis) solver behind the four-output readout reproduces hand-solved circuits and, on full 12 × 12 sensor grids, conserves charge with mirror symmetry for every topology; a solved circuit exports as a SPICE netlist (RD-10).
+
+Oracle: Hand-solved circuits whose closed forms are derived in the test comments — a one-row discretised positioning circuit as a series chain, ((k+1)·R + r/2)/((S+1)·R + r); one row of two sensors, left share (2−α)/(3−α); the 2 × 2 corner grid, 7/15, 3/15, 3/15, 2/15 — plus structural charge conservation, mirror symmetry and refusal of a floating node.
+
+Tolerance: 1e-9 absolute: round-off of a Cholesky solve of an at most ~200-node conductance Laplacian (derivation in the class summary); conservation and symmetry to the same bound; the refusal is exact.
+
+Gates: none.
+
+Source: [tests/Gcam.Tests/ChargeDivisionNetworkTests.cs](../tests/Gcam.Tests/ChargeDivisionNetworkTests.cs).
+
+Method groups:
+
+- `Dpc_OneRowOfTwo_MatchesHandSolvedCircuit`, `Dpc_SingleRow_DividesAsASeriesChain`, `CornerGrid_TwoByTwo_MatchesHandSolvedCircuit`: hand-solved closed forms within round-off; gate None.
+- `FullGrid_ConservesCharge_AndIsMirrorSymmetric`, `FiniteInputImpedance_StillConservesCharge`: structural conservation and symmetry within round-off; gate None.
+- `SolvedCircuit_ExportsAsSpice_IdealDividerHasNone`, `NodeWithoutPathToAnOutput_IsRefused`: exact / structural fixture comparisons; gate None.
+
+```json
+{"id":"Gcam.Tests::Gcam.Tests.ChargeDivisionNetworkTests","runner":"dotnet","methods":["Dpc_OneRowOfTwo_MatchesHandSolvedCircuit","CornerGrid_TwoByTwo_MatchesHandSolvedCircuit","Dpc_SingleRow_DividesAsASeriesChain","FullGrid_ConservesCharge_AndIsMirrorSymmetric","FiniteInputImpedance_StillConservesCharge","SolvedCircuit_ExportsAsSpice_IdealDividerHasNone","NodeWithoutPathToAnOutput_IsRefused"],"sources":{"tests/Gcam.Tests/ChargeDivisionNetworkTests.cs":"b753aadf285e21df0193a3f0dcf65179cb501cb74cc5a3b535e97ab6fca65ba6","tests/Gcam.Tests/Harness/Rigs.cs":"9b89ce04cdcb302fcefc6636d45a0d1640a48c288d1e0a3638b005c44028c3b2","tests/Gcam.Tests/Harness/Stat.cs":"4502dddc6276f9d1de0c41b2ed7246ed7f00c9266daa12a34d6174ae1cb19029"},"trace":[]}
+```
+
 ## ComptonTests — Gcam.Tests
 
 Crystal Compton scattering: physics kinematics, positioning-strategy behaviour, and the multi-isotope spatial-separation claim (contamination is coded from its source).
@@ -1721,6 +1751,28 @@ Source: [tests/Gcam.Tests/FiniteSourceTests.cs](../tests/Gcam.Tests/FiniteSource
 ```
 
 
+## FloodLutTests — Gcam.Tests
+
+TODO-19 crystal identification: the flood-map look-up table orders its markers into the crystal grid, generalises from a calibration flood to an independent flood (train / test split) and fails explicitly — never forced into a grid — when the flood is unresolved.
+
+Oracle: Synthetic Gaussian spots on a known, barrel-distorted 6 × 6 grid (true centres known) from independent random streams; a transported readout flood (6 × 6 array, ideal divider, 662 keV) with independent transport, light and noise streams for calibration and test; uniform and merged floods for the failure paths.
+
+Tolerance: Marker position within 0.02 raw units: two histogram bins (2/192) plus the centroid spread σ/√400, derived in the code comment. Train vs test mis-identification within k = 4 standard errors of the difference of two binomial fractions at the pooled rate (Stat.Within). Failure messages and unassigned look-ups are exact.
+
+Gates: none.
+
+Source: [tests/Gcam.Tests/FloodLutTests.cs](../tests/Gcam.Tests/FloodLutTests.cs).
+
+Method groups:
+
+- `SeparatedSpots_AreOrderedIntoTheCrystalGrid`: numerical comparison with the derived marker bound; gate None.
+- `TrainTestSplit_GivesStatisticallyEqualMisIdentification`, `TransportedFlood_CalibrationGeneralisesToAnIndependentFlood`: binomial k·σ comparison of independent floods; gate None.
+- `UnresolvedFlood_FailsExplicitly`, `MergedSpots_FailInsteadOfBeingForcedIntoAGrid`, `PointsOutsideThePlane_AreUnassigned`: exact / structural fixture comparisons; gate None.
+
+```json
+{"id":"Gcam.Tests::Gcam.Tests.FloodLutTests","runner":"dotnet","methods":["SeparatedSpots_AreOrderedIntoTheCrystalGrid","TrainTestSplit_GivesStatisticallyEqualMisIdentification","UnresolvedFlood_FailsExplicitly","MergedSpots_FailInsteadOfBeingForcedIntoAGrid","PointsOutsideThePlane_AreUnassigned","TransportedFlood_CalibrationGeneralisesToAnIndependentFlood"],"sources":{"tests/Gcam.Tests/FloodLutTests.cs":"683409d9e632b50bdcce13069c4bb6f3830a7dba96199ec3f174e47114e0ab23","tests/Gcam.Tests/Harness/Rigs.cs":"9b89ce04cdcb302fcefc6636d45a0d1640a48c288d1e0a3638b005c44028c3b2","tests/Gcam.Tests/Harness/Stat.cs":"4502dddc6276f9d1de0c41b2ed7246ed7f00c9266daa12a34d6174ae1cb19029"},"trace":[]}
+```
+
 ## FocusFusionTests — Gcam.Tests
 
 Focus fusion: cross-check the laser rangefinder against depth-from-focus.
@@ -2113,6 +2165,27 @@ Source: [tests/Gcam.Tests/NonProportionalityTests.cs](../tests/Gcam.Tests/NonPro
 ```
 
 
+## OpticalResponseTests — Gcam.Tests
+
+TODO-19 optical light spread: the scintillation-photon tracer behind the readout response table conserves light (one fate per photon) and reproduces closed forms of geometric optics; the symmetry reduction traces only the fundamental domain and maps each crystal to its own sensor.
+
+Oracle: Closed forms: direct solid angle 4·asin(a²/(a² + 4h²))/4π of the exit square (absorbing walls, index-matched exit); normal-incidence Fresnel transmission 1 − ((n1 − n2)/(n1 + n2))²; total internal reflection beyond asin(n2/n1); a lossless index-matched box delivers every photon to its own sensor. Structural: fates sum to 1, table rows equal their collection, 21 traced classes for a symmetric 12 × 12 layout and 144 for an offset one.
+
+Tolerance: k = 4 binomial standard errors of the traced fraction (Stat.BinomialSigma, N = 200 000 photons). Light accounting to 1e-12 (exact counts divided by the budget). Deterministic cases exact.
+
+Gates: none.
+
+Source: [tests/Gcam.Tests/OpticalResponseTests.cs](../tests/Gcam.Tests/OpticalResponseTests.cs).
+
+Method groups:
+
+- `BlackBox_DetectsTheDirectSolidAngle`, `NormalIncidence_TransmitsTheFresnelFraction`: binomial k·σ comparison with closed forms; gate None.
+- `EveryTracedPhoton_HasExactlyOneFate`, `LosslessIndexMatchedBox_DeliversEveryPhoton`, `BeyondTheCriticalAngle_NothingLeavesTheExitFace`, `SymmetricLayout_TracesOnlyTheFundamentalDomain_OffsetLayoutTracesAll`, `MappedTables_PointEachCrystalAtItsOwnSensor`: exact / structural fixture comparisons; gate None.
+
+```json
+{"id":"Gcam.Tests::Gcam.Tests.OpticalResponseTests","runner":"dotnet","methods":["EveryTracedPhoton_HasExactlyOneFate","LosslessIndexMatchedBox_DeliversEveryPhoton","BlackBox_DetectsTheDirectSolidAngle","NormalIncidence_TransmitsTheFresnelFraction","BeyondTheCriticalAngle_NothingLeavesTheExitFace","SymmetricLayout_TracesOnlyTheFundamentalDomain_OffsetLayoutTracesAll","MappedTables_PointEachCrystalAtItsOwnSensor"],"sources":{"tests/Gcam.Tests/OpticalResponseTests.cs":"0b431e97a29f65bcffcac94e1dec5ded92412b2111755654de62b5fd494d6cdc","tests/Gcam.Tests/Harness/Rigs.cs":"9b89ce04cdcb302fcefc6636d45a0d1640a48c288d1e0a3638b005c44028c3b2","tests/Gcam.Tests/Harness/Stat.cs":"4502dddc6276f9d1de0c41b2ed7246ed7f00c9266daa12a34d6174ae1cb19029"},"trace":[]}
+```
+
 ## PileUpTests — Gcam.Tests
 
 Random-coincidence pile-up: overlapping pulses SUM into one recorded event, adding a self-convolution continuum above the photopeak and a count-rate-dependent throughput loss.
@@ -2195,6 +2268,90 @@ Source: [tests/Gcam.Tests/RangeLocalizationTests.cs](../tests/Gcam.Tests/RangeLo
 {"id":"Gcam.Tests::Gcam.Tests.RangeLocalizationTests","runner":"dotnet","methods":["LocalizesAtStandoff"],"sources":{"tests/Gcam.Tests/RangeLocalizationTests.cs":"86ce9c7c8c6fbfdd029a12b28c1b8832a1f4794aa43c30a8da2b6c9cb4e1ddd8","tests/Gcam.Tests/Harness/Rigs.cs":"9b89ce04cdcb302fcefc6636d45a0d1640a48c288d1e0a3638b005c44028c3b2","tests/Gcam.Tests/Harness/Stat.cs":"4502dddc6276f9d1de0c41b2ed7246ed7f00c9266daa12a34d6174ae1cb19029"},"trace":[{"requirement":"EV-33","selectors":["LocalizesAtStandoff"]}]}
 ```
 
+
+## ReadoutDefaultPathTests — Gcam.Tests
+
+TODO-19 disabled path: adding the physical readout and the pre-optical interaction records leaves the direct crystal assignment bit-identical — list-mode streams, the Compton runner image and the serialised configuration match fixtures recorded before the readout existed; recorded sites conserve each event's deposit; a physical readout requested on a direct path is refused (stage 1 runs it in the study only).
+
+Oracle: SHA-256 fixtures recorded from the engine at commit aeac875 (before TODO-19) with the same seeds and budgets: list-mode event streams of the lab Cs-137 scene, the Co-60 cascade scene and a scene with reflector gap, legacy crosstalk, entrance absorber and backing; the Compton runner flood image; the serialised scenario bytes. Recorded sites: their sum equals the event deposit, their crystal indices follow their XY, their arg-max is the event pixel.
+
+Tolerance: Exact (hash equality). Site deposit sum within 1e-12·E — the summation round-off bound n·ε·E for at most 32 sites, stated in the code.
+
+Gates: none.
+
+Source: [tests/Gcam.Tests/ReadoutDefaultPathTests.cs](../tests/Gcam.Tests/ReadoutDefaultPathTests.cs).
+
+Method groups:
+
+- `DefaultListMode_MatchesPreReadoutFixtures`, `InteractionRecording_LeavesEveryStreamIdentical`, `ExplicitDirectCrystal_IsTheDefault_AndNullIsNotSerialised`, `ComptonRunnerImage_MatchesPreReadoutFixture`, `PhysicalReadoutOnADirectPath_IsRefused`, `Recording_IsRefusedWithBackgroundOrAmbient`: exact / structural fixture comparisons; gate None.
+- `RecordedSites_ConserveTheDeposit_AndReproduceTheDirectPixel`: numerical comparison within the stated round-off bound; gate None.
+
+```json
+{"id":"Gcam.Tests::Gcam.Tests.ReadoutDefaultPathTests","runner":"dotnet","methods":["DefaultListMode_MatchesPreReadoutFixtures","InteractionRecording_LeavesEveryStreamIdentical","ExplicitDirectCrystal_IsTheDefault_AndNullIsNotSerialised","ComptonRunnerImage_MatchesPreReadoutFixture","RecordedSites_ConserveTheDeposit_AndReproduceTheDirectPixel","PhysicalReadoutOnADirectPath_IsRefused","Recording_IsRefusedWithBackgroundOrAmbient"],"sources":{"tests/Gcam.Tests/ReadoutDefaultPathTests.cs":"37434d464ffdef5da011a5eeeb6b819b4b966f627ea03d31706b6cbe18ca0a6b","tests/Gcam.Tests/Harness/Rigs.cs":"9b89ce04cdcb302fcefc6636d45a0d1640a48c288d1e0a3638b005c44028c3b2","tests/Gcam.Tests/Harness/Stat.cs":"4502dddc6276f9d1de0c41b2ed7246ed7f00c9266daa12a34d6174ae1cb19029"},"trace":[]}
+```
+
+## ReadoutDeviceTests — Gcam.Tests
+
+TODO-19 readout chain from interaction sites to channel amplitudes: light and charge are conserved through optics and network, the four-channel covariance equals Wᵀ·Cov(pe)·W, the noiseless correctly calibrated single-site limit returns the original crystal, a multisite Anger position is the light centroid (not the arg-max), and saturation never exceeds the microcell count.
+
+Oracle: Analytic moments: mean CodesPerPe·Wᵀμ and Cov = CodesPerPe²·Wᵀ·[δ_kl·ENF·(μ_k + λ_d) + σ_int²·μ_k·μ_l]·W (Poisson thinning, common intrinsic factor, gain-sum second moment, baseline-subtracted dark counts); light Σ_k μ_k = PDE·LY·Σ_s E_s·collection; the light centroid Σμ_kξ_k/Σμ_k computed independently from the sensor centres; the identity of the ideal limit; the bound N·(1 − e^(−n/N)) < N.
+
+Tolerance: Covariance within k = 4 normal-theory standard errors √((Σ_aa·Σ_bb + Σ_ab²)/(N − 1)), means within 4·√(Σ_aa/N), N = 20 000 (derivation and the negligible 1/12 rounding variance of the Poisson sampler stated in the code). Conservation 1e-9 relative (round-off); light centroid 1e-12; ideal limit and saturation bound exact.
+
+Gates: none.
+
+Source: [tests/Gcam.Tests/ReadoutDeviceTests.cs](../tests/Gcam.Tests/ReadoutDeviceTests.cs).
+
+Method groups:
+
+- `ChannelCovariance_MatchesWTransposeCovPeW`: statistical k·σ comparison with analytic moments; gate None.
+- `Expected_ConservesLightThroughOpticsAndNetwork`, `Multisite_AngerPositionIsTheLightCentroid_NotTheArgMax`: numerical comparison within round-off; gate None.
+- `SingleSiteIdealLimit_IsTheOriginalCrystal`, `Saturation_NeverExceedsTheMicrocellCount`: exact / structural fixture comparisons; gate None.
+
+```json
+{"id":"Gcam.Tests::Gcam.Tests.ReadoutDeviceTests","runner":"dotnet","methods":["Expected_ConservesLightThroughOpticsAndNetwork","ChannelCovariance_MatchesWTransposeCovPeW","SingleSiteIdealLimit_IsTheOriginalCrystal","Multisite_AngerPositionIsTheLightCentroid_NotTheArgMax","Saturation_NeverExceedsTheMicrocellCount"],"sources":{"tests/Gcam.Tests/ReadoutDeviceTests.cs":"6601e3adcb00d9d04a3a579cce203f843a2b96e98e00017ae1ceac1f50d0db39","tests/Gcam.Tests/Harness/Rigs.cs":"9b89ce04cdcb302fcefc6636d45a0d1640a48c288d1e0a3638b005c44028c3b2","tests/Gcam.Tests/Harness/Stat.cs":"4502dddc6276f9d1de0c41b2ed7246ed7f00c9266daa12a34d6174ae1cb19029"},"trace":[]}
+```
+
+## ReadoutPulseProcessorTests — Gcam.Tests
+
+TODO-19 time-domain four-output model (RD-3): explicit trigger truth table and units, the isolated-pulse shortcut equal to the full time-domain path, and pile-up summed in every channel so a piled-up event's position is the light centroid of its hits weighted by their pulse heights at the hold instant.
+
+Oracle: Trigger truth table on constructed channel vectors (sum, OR, AND; ADC-code and keV-equivalent thresholds); exact equality of Process and ProcessIsolated for one hit; coincident pile-up = (X1·Σ1 + X2·Σ2)/(Σ1 + Σ2); delayed pile-up = an independent scan of the same grid over the hold window; hits beyond the pulse support stay separate; a pulse in the busy tail is never its own event.
+
+Tolerance: Electronic noise off; code rounding bounds X by 4/Σ (½ code per channel, four channels, |s_c − X| ≤ 2 — derived in the class summary) and the code sum by 2 codes. Truth table, shortcut equality and event bookkeeping exact.
+
+Gates: none.
+
+Source: [tests/Gcam.Tests/ReadoutPulseProcessorTests.cs](../tests/Gcam.Tests/ReadoutPulseProcessorTests.cs).
+
+Method groups:
+
+- `CoincidentPileUp_IsTheChargeWeightedCentroid`, `DelayedPileUp_WeightsHitsByPulseHeightAtTheHold`: numerical comparison within the code-rounding bound; gate None.
+- `TriggerTruthTable_WithExplicitUnits`, `IsolatedPulse_TimeDomainEqualsTheShortcut`, `HitsBeyondThePulseSupport_AreSeparateEvents`, `PulseDuringTheBusyTail_IsNotItsOwnEvent`, `UnsortedHits_AreRefused`: exact / structural fixture comparisons; gate None.
+
+```json
+{"id":"Gcam.Tests::Gcam.Tests.ReadoutPulseProcessorTests","runner":"dotnet","methods":["TriggerTruthTable_WithExplicitUnits","IsolatedPulse_TimeDomainEqualsTheShortcut","CoincidentPileUp_IsTheChargeWeightedCentroid","DelayedPileUp_WeightsHitsByPulseHeightAtTheHold","HitsBeyondThePulseSupport_AreSeparateEvents","PulseDuringTheBusyTail_IsNotItsOwnEvent","UnsortedHits_AreRefused"],"sources":{"tests/Gcam.Tests/ReadoutPulseProcessorTests.cs":"9fa2347b214c6af4f75c41322fb70de4ac3a78b95c2a0058d5e144e5f943166c","tests/Gcam.Tests/Harness/Rigs.cs":"9b89ce04cdcb302fcefc6636d45a0d1640a48c288d1e0a3638b005c44028c3b2","tests/Gcam.Tests/Harness/Stat.cs":"4502dddc6276f9d1de0c41b2ed7246ed7f00c9266daa12a34d6174ae1cb19029"},"trace":[]}
+```
+
+## ReadoutStudyTests — Gcam.Tests
+
+TODO-19 readout study recipe (RD-7): reproducible for a fixed seed, paired (the direct reference and every readout share the transported localisation events), reporting a failed calibration with its reason instead of numbers, refusing invalid requests.
+
+Oracle: Two runs with the same seed compared as JSON with timing fields removed; event counts of the direct reference and every readout; a readout with 500 keV channel noise (σ_X far above the spot spacing) must fail calibration; requests with DirectCrystal as a variant or no lines are refused.
+
+Tolerance: Exact / structural.
+
+Gates: none.
+
+Source: [tests/Gcam.Tests/ReadoutStudyTests.cs](../tests/Gcam.Tests/ReadoutStudyTests.cs).
+
+Method groups:
+
+- `SameSeed_GivesIdenticalNumbers_AndPairsTheReadouts`, `FailedCalibration_ReportsTheReasonAndNoNumbers`, `InvalidRequests_AreRefused`: exact / structural fixture comparisons; gate None.
+
+```json
+{"id":"Gcam.Tests::Gcam.Tests.ReadoutStudyTests","runner":"dotnet","methods":["SameSeed_GivesIdenticalNumbers_AndPairsTheReadouts","FailedCalibration_ReportsTheReasonAndNoNumbers","InvalidRequests_AreRefused"],"sources":{"tests/Gcam.Tests/ReadoutStudyTests.cs":"b0b1ae44e2c5c4bafb83682fe048233febb2178f619fa94e16a6901607e8024e","tests/Gcam.Tests/Harness/Rigs.cs":"9b89ce04cdcb302fcefc6636d45a0d1640a48c288d1e0a3638b005c44028c3b2","tests/Gcam.Tests/Harness/Stat.cs":"4502dddc6276f9d1de0c41b2ed7246ed7f00c9266daa12a34d6174ae1cb19029"},"trace":[]}
+```
 
 ## ResolvedPairTests — Gcam.Tests
 
@@ -3234,6 +3391,22 @@ Source: [samples/evidence/tests/test_background_shape.py](../samples/evidence/te
 {"id":"unittest::test_background_shape.BackgroundShapeTests","runner":"unittest","methods":["test_budget_revision_preserves_selected_physics_and_immutable_references","test_version_two_families_separate_timing_seeds_from_validation","test_conditional_screen_budget_3200_has_exact_integer_cutoff","test_vector_bound_does_not_confuse_equal_norms_with_equal_vectors","test_bootstrap_resamples_clusters_and_is_deterministic","test_no_association_valid_regime_refuses_iteration_selection","test_iteration_tie_selects_smaller_count_on_common_regimes","test_selection_acquisition_budget_is_derived_from_zero_failure_limit","test_target_scaling_preserves_the_simultaneous_bootstrap","test_phase_seed_lists_are_pinned_and_disjoint"],"sources":{"samples/evidence/tests/test_background_shape.py":"d0e52cf74f6d2df5f158afeccaac3429e35dbee4ee065a83a81d96fd9b7b474d"},"trace":[]}
 ```
 
+
+## ReadoutNetlistTests — unittest
+
+TODO-19 RD-10: the independent standard-library nodal solver (samples/readout/netlist_check.py — Gaussian elimination with partial pivoting, no engine call) reproduces hand-solved circuits, and every committed engine-exported charge-division netlist in docs/assets/readout/ yields the engine's own DC charge fractions within the derived floating-point bound; the stored comparison reports are reproduced exactly.
+
+Oracle: hand-solved circuits — 2 × 2 corner grid 7/15, 3/15, 3/15, 2/15; a single-row chain grounded through r/2 at both ends, right share ((k+1)·R + r/2)/((S+1)·R + r); load-resistor outputs dividing inversely (80/140) — and, for the committed netlists, the engine's fractions in the matching <prefix>.config.json.
+
+Tolerance: hand-solved cases 1e-12 (round-off of a ≤ 12-unknown solve). Engine comparison: the normwise forward-error bound of a backward-stable solve, per solver ‖g_out‖₁·‖v‖∞·(k/(1 − k) + γ_d) with k = 2·γ_{3n}·κ∞(G), γ_m = m·u/(1 − m·u), u = 2⁻⁵³ (Higham, Thm 7.2; growth factor ≤ 2), doubled for two solvers — computed per netlist (1.6e-10 … 1.1e-8 against observed deviations ≤ 6.7e-15). Stored reports: exact equality.
+
+Gates: none.
+
+Source: [samples/evidence/tests/test_readout_netlist.py](../samples/evidence/tests/test_readout_netlist.py).
+
+```json
+{"id":"unittest::test_readout_netlist.ReadoutNetlistTests","runner":"unittest","methods":["test_corner_grid_two_by_two_matches_hand_solution","test_single_row_chain_divides_as_a_series_chain","test_load_resistor_outputs_conserve_charge","test_committed_netlists_match_the_engine_within_the_derived_bound"],"sources":{"samples/evidence/tests/test_readout_netlist.py":"da70702ca7e3026656c7aaf2c2316a4b3e44e1d685551143f85814dbcfdd5e55"},"trace":[]}
+```
 
 ## ProvenanceTests — unittest
 

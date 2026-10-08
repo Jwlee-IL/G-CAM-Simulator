@@ -7,7 +7,7 @@ does not need any other document to check a number. Not covered: GCAM Studio's s
 ([VV.Studio](VV.Studio.md)).
 
 **At a glance**
-- 35 entries, `EV-01` … `EV-35`, grouped as imaging (with the absolute ambient field, EV-34, and decoding with its shape, EV-35), energy and isotopes,
+- 36 entries, `EV-01` … `EV-36`, grouped as imaging (with the absolute ambient field, EV-34, and decoding with its shape, EV-35), energy and isotopes,
   rate and dose, head design, manufacturing, and range.
 - Each entry gives the grade of its evidence ([PRS §1](VV.Gcam.PRS.md#1-evidence-grades)): **MC** Monte Carlo,
   **RTL** front-end model, **AN** analytical design model.
@@ -966,6 +966,38 @@ Geometries used below:
 - **Reproduce.** `montecarlo thermal samples/scenario.json samples/thermal`; ensemble: `samples/evidence` family
   `thermal`.
 - **Tests.** `ThermalDriftTests`.
+
+### EV-36 — Four-output Anger readout against direct crystal assignment
+
+- **What.** A physical readout model — traced optics, SiPM photoelectrons, a Kirchhoff-solved charge-division network,
+  four time-domain outputs in which pile-up sums in every channel, trigger, 14-bit conversion and a blind flood-map
+  LUT — compared with the direct largest-deposit assignment on the same transported histories. Study only; the direct
+  assignment stays the default.
+- **Conditions.** Lab head (rank 7, D 60 mm, S 100 mm), 12 × 12 GAGG, 10 mm deep; pitch / wall 1.0 / 0, 2.2 / 0.2,
+  3.2 / 0.2, 3.2 / 0.5 mm; SiPMs matched 1:1 (a commercial 3 mm device's PDE / ENF / dark rate per area); readouts: ideal
+  divider, DPC at column / row ratio 1.0 / 0.3 / 0.2 / 0.1 / 0.03 / 0.01, corner grid, one channel per SiPM; triggers
+  sum, per-channel OR, AND; 122 / 662 / 1332 keV; 1e3 … 1e6 cps. 16 selection seeds, 32 disjoint validation seeds, 32
+  fresh confirmation seeds.
+- **Rule.** Fixed before the data: constraints on 122 / 1332 keV acceptance and mis-identification and on 662 keV FWHM;
+  ranking by 662 keV mis-identification, localisation penalty at equal counts, 122 keV mis-identification, pile-up
+  mispositioning (2 standard errors over seeds). The pitch was then settled on fresh seeds by a rule pinned by hash
+  before the run.
+- **Result.** Four outputs, DPC ratio 0.01, sum trigger 50 keV, specular reflector, 1 mm pitch. 662 keV mis-ID
+  0.00021 ± 0.00004 (validation), 1.70e-4 ± 0.08e-4 at 1 mm against 2.75e-4 ± 0.13e-4 at 3.2 mm (confirmation);
+  FWHM 14.9 / 5.9 / 4.9 % at 122 / 662 / 1332 keV; acceptance 0.98 / 0.97 at 122 / 1332 keV; localisation 0.406 ± 0.006
+  mm against 0.367 ± 0.001 mm direct; pile-up mispositioning 1.6 % / 4.3 % at 1e5 / 3e5 cps. 36 % of 662 keV
+  photopeak events are placed at the light centroid of a multi-crystal history rather than the largest deposit. DPC
+  ratios ≥ 0.2, corner grids and AND triggers cannot be calibrated; per-channel OR triggers blind crystals at 122 keV.
+- **Not covered.** Microcell saturation and recovery (a 1 mm sensor would see ≈ 9 photoelectrons per 50 µm cell; the
+  1 mm result assumes unlimited cells), measured optical constants (the reflector law alone moves 662 keV FWHM from
+  5.6 % to 36 %), the network's RC response, gamma transport in the walls, the hand-held head.
+- **Reproduce.** `python samples/evidence/run_seeds.py --manifest samples/evidence/manifest-readout-v1.json --family
+  readout_selection_v1 readout_validation_v1 readout_confirmation_v1 --out <dir>`, then
+  `samples/evidence/readout/aggregate_readout.py`, `select_readout.py`, `confirm_readout.py`; results
+  `samples/evidence/results/readout-v1-decision.json`, `readout-confirmation-v1-decision.json` (with provenance
+  sidecars). Drawings and netlist: [HW.Readout](HW.Readout.md).
+- **Tests.** `ChargeDivisionNetworkTests`, `OpticalResponseTests`, `ReadoutDeviceTests`, `ReadoutPulseProcessorTests`,
+  `FloodLutTests`, `ReadoutDefaultPathTests`, `ReadoutStudyTests`; `samples/evidence/tests/test_readout_netlist.py`.
 
 ## 7. Manufacturing
 

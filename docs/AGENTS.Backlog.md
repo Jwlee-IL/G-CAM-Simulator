@@ -18,7 +18,7 @@ and the "Done" summary moved to the archive index; only the genuinely open items
 | Room / object / operator scatter | only the entrance and backing scatterers are modelled; also the open limit of the side-window stripping comparison (D-43, "before scatter") |
 | Scintillator K X-ray escape peak (GAGG Gd, ~43 keV below the photopeak) | a real satellite peak; low–medium impact |
 | Non-proportionality as deposit-history-dependent (Compton-split vs photoelectric histories resolve differently) | theme 46 models the intrinsic-resolution component only |
-| Per-channel SiPM / preamp gain · PDE · threshold mismatch, microcell saturation, afterpulsing | partly overlaps TODO-19 (four-channel readout, light sharing); decide when TODO-19's decisions are taken |
+| Readout follow-ons (from TODO-19): microcell saturation and recovery (the selected 1 mm sensor sees ≈ 9 pe per 50 µm cell), per-channel gain · PDE · threshold mismatch, afterpulsing, measured reflector constants, the network's RC response, gamma transport in the walls | LIM-11; the 1 mm pitch pick is conditional on unlimited microcells — revisit the pitch with a saturation model |
 | Intrinsic activity (LYSO Lu-176, LaBr3 La-138) | nil for GAGG; matters only if those scintillators are chosen |
 | Mask K-edge: proper NIST split below 122 keV | documented approximation (70–122 keV under-attenuated); no line sits there and 10 mm W is opaque, so curve fidelity only |
 | Compton-stripping response matrix for 3+ overlapping isotopes | the one-pass scalar stripping is exact for a clean pair; a per-pixel isotope × window solve would be exact for more |

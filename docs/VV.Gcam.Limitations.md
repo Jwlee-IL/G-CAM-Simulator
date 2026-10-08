@@ -6,7 +6,7 @@ says what the user experiences, why it happens, the ways to fix it and the price
 GCAM Studio as software ([VV.Studio §6](VV.Studio.md#6-known-anomalies-gaps-and-risks)).
 
 **At a glance**
-- 10 limitations; 3 rated **high**: the narrow field of view (LIM-01), ghosts before out-of-field cues (LIM-07) and
+- 11 limitations; 3 rated **high**: the narrow field of view (LIM-01), ghosts before out-of-field cues (LIM-07) and
   limited spatial isotope separation (LIM-08).
 - Three fixes are chosen (non-cyclic decoding, the software path for the field of view, a separate dose counter for
   LIM-09); LIM-02 is accepted.
@@ -32,6 +32,7 @@ ranges and sensitivities — and are not used as pass criteria ([URS §5](VV.Gca
 | LIM-05 | Co-60-class background cannot be shielded within the mass budget | UN-03 | low (handled in software) |
 | LIM-06 | Limits of the evidence itself | all performance rows | medium |
 | LIM-10 | Background correction removes the background's pull, not its counting noise | UN-01, UN-12 | medium |
+| LIM-11 | The physical readout model rests on assumed optics and unlimited SiPM microcells | UN-01, UN-02 | medium |
 
 ---
 
@@ -183,6 +184,24 @@ against a bare head) defeats it (40 / 3200), and a known scale 10 % off can too 
 **Status.** Option A chosen and validated in a stated scope (75 regimes, open window, bare bound, edge sources,
 D-54 / D-55); the 662 keV window, the front-only bound and centre sources are not yet run. The fitted amplitude is not
 a dose, the gate's trust does not certify the corrected answer, and no pair-resolution claim is made for it.
+
+## LIM-11 — The physical readout model rests on assumed optics and unlimited SiPM microcells
+
+**What the user sees.** Nothing yet: the physical four-output readout is a study model (EV-36), and the images the
+camera shows use the direct crystal assignment. Its numbers would move with two assumptions.
+
+**Why.** No measured reflector data exist: the reflector law alone moves the 662 keV resolution from 5.6 % (specular)
+to 36 % (diffuse 0.96) *(MC, EV-36)*. SiPM microcells are unlimited in the model, although the selected 1 mm sensor would
+see ≈ 9 photoelectrons per 50 µm cell at 662 keV — deep saturation; the 3.2 mm alternative sees ≈ 1.2. The network is DC
+with the shaping chain's pulse, not its RC response.
+
+| Option | Cost |
+|---|---|
+| A. Measured reflector and sensor data (a bench campaign) | hardware and time |
+| B. A time-dependent microcell saturation and recovery model | moderate code; needs device recovery data |
+| C. Keep the direct assignment for every claim until A / B exist | the readout's effects stay study results (chosen for now) |
+
+**Status.** C (D-57): the engine default stays the direct assignment.
 
 ## LIM-02 — Imaging stops in high fields
 

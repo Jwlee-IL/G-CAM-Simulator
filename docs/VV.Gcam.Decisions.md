@@ -7,7 +7,7 @@ where it was said in Korean), what was rejected, and where it landed. Physics re
 evidence, in [VV.Gcam.Evidence](VV.Gcam.Evidence.md).
 
 **At a glance**
-- 55 decisions (D-01 … D-55), taken with the author on 2026-10-01, 2026-10-02, 2026-10-06 and 2026-10-07, each with the
+- 57 decisions (D-01 … D-57), taken with the author on 2026-10-01, 2026-10-02, 2026-10-06 and 2026-10-07, each with the
   author's own words or a note that none was given.
 - The ones that shape the product most: non-cyclic decoding instead of mask rotation (D-17, D-19), no built-in
   radioactive source (D-18), dose rate required at NSS-1 range (D-21), the software path for the narrow field of
@@ -130,6 +130,8 @@ critical한 부분이니, 명확하게 기록해두는 게 좋겠어."
 | D-53 | **The background scale comes from the image**; a source-free calibration rate of the same head is reported beside it as a check; the separate dose counter (D-37) is not a subtraction scale, and the fitted amplitude is not reported as a dose | chosen (recommended); the review showed the counter measures source + ambient | a fixed calibrated rate; a dose-counter-derived scale | EV-35, LIM-10 |
 | D-54 | **Background-correction claims are scoped:** a pass only in count / field regimes that meet association and trust, against √2 × the grid step for the paired signed-vector excess with a simultaneous seed-cluster bound, all fixed before validation; every other condition is reported, not claimed | chosen (recommended) | recording only, no pass rule | EV-35 |
 | D-55 | **Stage-1 evidence only:** open window, bare bound, edge sources, cyclic and non-cyclic, 32 seeds × 100 acquisitions with 16 parallel workers; the 662 keV window, front-only bound and centre sources wait in the Backlog | chosen (recommended); then, after the serial estimate (90.7 h) exceeded the 12 h limit: 100 repeats instead of 300, in parallel; the planner runs long jobs so no implementer turn stays open | the full matrix now; 300 repeats | EV-35, Backlog |
+| D-56 | **Readout optics default: a specular 0.98 reflector**; the diffuse reflector stays a compared variant whose ≈ 36 % FWHM at 662 keV is a model finding | chosen (recommended) | diffuse 0.96 (the review's prototype) | EV-36, LIM-11 |
+| D-57 | **Readout preset: four outputs, DPC column / row ratio 0.01, sum trigger 50 keV, specular reflector, 1 mm pitch**; the engine default stays the direct crystal assignment; Studio integration is a separate task | the comparison includes one channel per SiPM and count rate ("계수율도 포함"); the pitch was settled on fresh seeds ("피치까지 새 시드로 확정") | per-SiPM channels (better at 122 keV, worse at 662 keV, 144 ADCs); OR / AND triggers; leaving the pitch open | EV-36, LIM-11 |
 
 ## Still open (not yet decided)
 

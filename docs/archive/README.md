@@ -11,6 +11,13 @@ set the plan's status to done and move the plan and its review / reports into th
 
 ## Closed tasks
 
+- **TODO-19 physical readout, stage 1** (2026-10-08): pre-optical interaction records, traced optics, SiPM, a
+  Kirchhoff-solved charge-division network, four time-domain outputs with pile-up, trigger, flood-map LUT
+  (`Detector.Readout`, study only; default stays DirectCrystal). Selected and confirmed on 16 + 32 + 32 seeds: four outputs,
+  DPC ratio 0.01, sum trigger 50 keV, specular reflector, 1 mm pitch; 36 % of 662 keV photopeak events move to their
+  light centroid; generated schematic and SPICE netlist in [HW.Readout](../HW.Readout.md) (theme 68, EV-36, LIM-11,
+  D-56 / D-57). Review by Codex, implementation by a substitute Claude implementer —
+  [PLAN.Physics.RigReadout](PLAN.Physics.RigReadout.md).
 - **TODO-28 test records** (2026-10-08; step 1, the calibration records, 2026-10-07): test catalog
   [VV.Tests](../VV.Tests.md) (153 units — xUnit classes, unittest classes, cocotb configurations, checkers — with purpose,
   oracle, tolerance and its derivation; 70 margins stated without one, recorded), run records schema v1 and a generated

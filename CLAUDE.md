@@ -6,7 +6,7 @@ This file carries the **cross-session context that isn't otherwise in the repo**
 survives moving to another computer. It is git-tracked and **auto-loaded by Claude Code on
 any clone** (the machine-local auto-memory under `~/.claude/…/memory/` does NOT travel).
 Architecture + build/run is in `@AGENTS.md` above; per-theme quantitative results are in
-`docs/AGENTS.Findings.md` (themes 1–67). Keep answers to the author in **Korean**.
+`docs/AGENTS.Findings.md` (themes 1–68). Keep answers to the author in **Korean**.
 
 ## What this is
 **Gcam** — a personal C#/.NET 9 Monte Carlo simulator for **coded-aperture gamma-source
@@ -22,8 +22,9 @@ cocotb RTL front-end path.
   high-E Compton).
 - **Reference readout (author, 2026-10-02):** the conventional design — scintillator pixels matched to the SiPM array
   1:1, with dead regions between pixels; the array read through **four 14-bit ADC channels**, position from the
-  relative-signal (Anger-type) formula, crystal from the flood map. So pile-up is array-wide and moves the position too; the engine
-  does not model this readout yet (TODO-19).
+  relative-signal (Anger-type) formula, crystal from the flood map. So pile-up is array-wide and moves the position too. The engine
+  models this readout as a study (theme 68, EV-36, `ReadoutStudy`; default stays the direct crystal assignment, D-57); Studio
+  integration is TODO-40.
   The reference scintillator is **GAGG** — GAGG is the engine default by design; the other scintillators are what-if comparisons.
 - **The classic problem of this camera class** is 662-keV window contamination — Co-60 downscatter
   reading as Cs. Gcam's crystal-Compton **spectral** lever (per-pixel stripping, themes 16–17, 26) recovers
@@ -36,7 +37,7 @@ cocotb RTL front-end path.
   an **energy-window** issue, not a position issue.
 - **Requirement set (2026-10-01, design-only)** — `docs/VV.Gcam.{Overview,URS,PRS,Evidence,Limitations,Decisions}.md`
   (+ `VV.Studio.{SRS,SDS}` for the viewer). Author decisions with reasons are logged in
-  `VV.Gcam.Decisions.md` (D-01…D-55); headlines:
+  `VV.Gcam.Decisions.md` (D-01…D-57); headlines:
   - The product is a **scintillator coded-aperture camera**: compare only with same-class imagers (iPIX),
     never with Compton / HPGe cameras (Polaris-H, GeGI). Use conditions **relaxed to iPIX level**
     (−10…+45 °C, 93 % RH, IP65, 60 cm drop, ≤ 2.5 kg).

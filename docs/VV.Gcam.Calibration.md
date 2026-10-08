@@ -94,7 +94,7 @@ Files read (SHA-256 of the bytes git stores; pinned in `samples/evidence/calibra
 | `samples/evidence/ambient/gate-thresholds-v1.json` | `83b931ac8fc720fecd2133350ecf0106c0c2af00ef1f1806bb870fd9ee678105` |
 | `samples/evidence/manifest-ambient-v1.json` | `655fefed68a903ed2292cb70d3d111759680aab89433d87c6557e948689f8ce8` |
 | `samples/evidence/results/ambient-baseline-v1-turn7-gate.json` | `2854259ed2e3a45c90162308c03e8f1441037cf625afaf02afd2ada47a553b19` |
-| `samples/evidence/seeds.json` | `1de7a0c695314acd968e0a3910c2f41b44ad8d7ffd91b5907ac965942fbd1c82` |
+| `samples/evidence/seeds.json` | `f8c3b2c1385b6d11520abd7d224181ed79d5b0e2719de300d95341c77bd82583` |
 | `samples/scenario.json` | `eb5b96835c0b68a88c5c26965540f85f1a313acf1cc0b49955cf7921463edddc` |
 | `samples/scenario_handheld.json` | `f988784c8ee266e6dd28eb898cdbbfac0e2452cb01fd3929874fd866edc98795` |
 
@@ -314,7 +314,7 @@ Files read (SHA-256 of the bytes git stores; pinned in `samples/evidence/calibra
 | `samples/evidence/ambient/gate-thresholds-v2.json` | `6352b2f692894fde1d83c6ef2c3ac2c04ee1b332c511e150d66342a516b6cdd0` |
 | `samples/evidence/manifest-ambient-v2.json` | `5d546bb4c0ec51a50f1cbad6b719ff50cead20b64666625ba101d3773c542db2` |
 | `samples/evidence/results/ambient-baseline-v1-turn8-gate.json` | `d2d55d5ec8c1bede10d601ac4fe3f9052c29691314612ffea54e91dda6ffcf51` |
-| `samples/evidence/seeds.json` | `1de7a0c695314acd968e0a3910c2f41b44ad8d7ffd91b5907ac965942fbd1c82` |
+| `samples/evidence/seeds.json` | `f8c3b2c1385b6d11520abd7d224181ed79d5b0e2719de300d95341c77bd82583` |
 | `samples/scenario.json` | `eb5b96835c0b68a88c5c26965540f85f1a313acf1cc0b49955cf7921463edddc` |
 | `samples/scenario_handheld.json` | `f988784c8ee266e6dd28eb898cdbbfac0e2452cb01fd3929874fd866edc98795` |
 
@@ -523,7 +523,7 @@ Files read (SHA-256 of the bytes git stores; pinned in `samples/evidence/calibra
 | `samples/evidence/ambient/gate-thresholds-v2.json` | `6352b2f692894fde1d83c6ef2c3ac2c04ee1b332c511e150d66342a516b6cdd0` |
 | `samples/evidence/manifest-csco-v1.json` | `5c5fcaf6eb97b1971efc01941d571be22c633b9a76ce486a5162fdc5abfc00ac` |
 | `samples/evidence/results/csco-v1-validation.json` | `79cc4d006c49167833c3a928bcb81c9045c028096eccfe082bd8c37eaced452b` |
-| `samples/evidence/seeds.json` | `1de7a0c695314acd968e0a3910c2f41b44ad8d7ffd91b5907ac965942fbd1c82` |
+| `samples/evidence/seeds.json` | `f8c3b2c1385b6d11520abd7d224181ed79d5b0e2719de300d95341c77bd82583` |
 | `samples/scenario_handheld.json` | `f988784c8ee266e6dd28eb898cdbbfac0e2452cb01fd3929874fd866edc98795` |
 
 ### 7. Values and validation
@@ -809,7 +809,7 @@ Files read (SHA-256 of the bytes git stores; pinned in `samples/evidence/calibra
 | `samples/evidence/angres/angres-request-v2-floor-5m.json` | `1c82c25f75935f17f275b82e67a6abd4a56526243ca3adfd213b3a8d450bc8a9` |
 | `samples/evidence/manifest-angres-v2.json` | `849128670a602194dc18ebd5b9225325611437034075bcc40bbc05c16b72edd8` |
 | `samples/evidence/results/angres-v2-floor.json` | `50eee9df3225b7a8a7dac40cf07faba1b6d06598d70ad7788aa4a4ae3b6438b2` |
-| `samples/evidence/seeds.json` | `1de7a0c695314acd968e0a3910c2f41b44ad8d7ffd91b5907ac965942fbd1c82` |
+| `samples/evidence/seeds.json` | `f8c3b2c1385b6d11520abd7d224181ed79d5b0e2719de300d95341c77bd82583` |
 | `samples/scenario_handheld.json` | `f988784c8ee266e6dd28eb898cdbbfac0e2452cb01fd3929874fd866edc98795` |
 
 ### 7. Values and validation
