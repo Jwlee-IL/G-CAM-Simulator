@@ -126,7 +126,13 @@ def run_one(fam, seed, out, prepared, python, force):
         record['config'] = fam['config']
         record['config_sha256'] = sha256(base)
     elif fam['kind'] == 'probe':
-        cmd = ['dotnet', '--fx-version', runtime, str(probe), fam['mode'], str(seed), str(snapshot / 'samples')]
+        if fam.get('recipe_driver'):
+            pv.write_json(work / 'recipe.json', fam)
+            cmd = [python, '-B', str(snapshot / fam['recipe_driver']),
+                   str(snapshot / 'managed/probe' / fam['executable']), runtime,
+                   str(seed), str(work / 'recipe.json')]
+        else:
+            cmd = ['dotnet', '--fx-version', runtime, str(probe), fam['mode'], str(seed), str(snapshot / 'samples')]
     elif fam['kind'] == 'rtl':
         cmd = [python, '-B', str(snapshot / 'samples/evidence/rtl_seeds.py'), fam['mode'], str(seed), '--cli', str(cli)]
         if runtime:
@@ -169,6 +175,7 @@ def main():
     ap.add_argument('--out', required=True, help='output root (runs/<family>/<seed>/ is created below it)')
     ap.add_argument('--family', nargs='*', default=[], help='family ids from manifest.json (default: all)')
     ap.add_argument('--manifest', default=str(HERE / 'manifest.json'), help='versioned manifest; default preserves legacy recipes')
+    ap.add_argument('--seed-file', default=str(HERE / 'seeds.json'), help='seed lists; default preserves existing families')
     ap.add_argument('--n', type=int, default=0, help='run only the first N seeds of each family (smoke tests)')
     ap.add_argument('--jobs', type=int, default=max(1, (os.cpu_count() or 2) // 2))
     ap.add_argument('--cli', default=str(DEFAULT_CLI))
@@ -181,7 +188,7 @@ def main():
         raise SystemExit('--n must be nonnegative and --jobs must be positive')
 
     manifest = json.loads(pathlib.Path(args.manifest).read_text(encoding='utf-8'))
-    seeds = json.loads((HERE / 'seeds.json').read_text(encoding='utf-8'))
+    seeds = json.loads(pathlib.Path(args.seed_file).read_text(encoding='utf-8'))
     unknown = set(args.family) - {f['id'] for f in manifest['families']}
     if unknown:
         raise SystemExit(f'unknown families: {sorted(unknown)}')

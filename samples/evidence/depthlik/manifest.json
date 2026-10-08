@@ -1,0 +1,148 @@
+{
+  "schema": 1,
+  "purpose": "TODO-25 exploratory screening and paired budget selection; no validation claim",
+  "config_sha256": {},
+  "families": [
+    {
+      "kind": "probe",
+      "mode": "depthlik",
+      "executable": "Probe.dll",
+      "recipe_driver": "samples/evidence/depthlik/recipe.py",
+      "coarse_histories": 90000,
+      "coarse_points": 140,
+      "id": "depthlik-screen",
+      "n": 32,
+      "seeds": "Screen32",
+      "histories": 900000,
+      "depths_mm": [
+        300,
+        500,
+        700,
+        1000
+      ],
+      "angles_mrad": [
+        0,
+        30
+      ],
+      "live_s": [
+        10,
+        60
+      ]
+    },
+    {
+      "kind": "probe",
+      "mode": "depthlik",
+      "executable": "Probe.dll",
+      "recipe_driver": "samples/evidence/depthlik/recipe.py",
+      "coarse_histories": 90000,
+      "coarse_points": 140,
+      "id": "depthlik-select-900000",
+      "n": 16,
+      "seeds": "Selection16",
+      "histories": 900000,
+      "depths_mm": [
+        300,
+        1000
+      ],
+      "angles_mrad": [
+        0,
+        30
+      ],
+      "live_s": [
+        60
+      ]
+    },
+    {
+      "kind": "probe",
+      "mode": "depthlik",
+      "executable": "Probe.dll",
+      "recipe_driver": "samples/evidence/depthlik/recipe.py",
+      "coarse_histories": 90000,
+      "coarse_points": 140,
+      "id": "depthlik-select-1800000",
+      "n": 16,
+      "seeds": "Selection16",
+      "histories": 1800000,
+      "depths_mm": [
+        300,
+        1000
+      ],
+      "angles_mrad": [
+        0,
+        30
+      ],
+      "live_s": [
+        60
+      ]
+    },
+    {
+      "kind": "probe",
+      "mode": "depthlik",
+      "executable": "Probe.dll",
+      "recipe_driver": "samples/evidence/depthlik/recipe.py",
+      "coarse_histories": 90000,
+      "coarse_points": 140,
+      "id": "depthlik-select-3600000",
+      "n": 16,
+      "seeds": "Selection16",
+      "histories": 3600000,
+      "depths_mm": [
+        300,
+        1000
+      ],
+      "angles_mrad": [
+        0,
+        30
+      ],
+      "live_s": [
+        60
+      ]
+    },
+    {
+      "kind": "probe",
+      "mode": "depthlik",
+      "executable": "Probe.dll",
+      "recipe_driver": "samples/evidence/depthlik/recipe.py",
+      "coarse_histories": 90000,
+      "coarse_points": 140,
+      "id": "depthlik-select-7200000",
+      "n": 16,
+      "seeds": "Selection16",
+      "histories": 7200000,
+      "depths_mm": [
+        300,
+        1000
+      ],
+      "angles_mrad": [
+        0,
+        30
+      ],
+      "live_s": [
+        60
+      ]
+    },
+    {
+      "kind": "probe",
+      "mode": "depthlik",
+      "executable": "Probe.dll",
+      "recipe_driver": "samples/evidence/depthlik/recipe.py",
+      "coarse_histories": 90000,
+      "coarse_points": 140,
+      "id": "depthlik-select-14400000",
+      "n": 16,
+      "seeds": "Selection16",
+      "histories": 14400000,
+      "depths_mm": [
+        300,
+        1000
+      ],
+      "angles_mrad": [
+        0,
+        30
+      ],
+      "live_s": [
+        60
+      ]
+    }
+  ]
+}

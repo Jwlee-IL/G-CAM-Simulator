@@ -1,6 +1,6 @@
 # TODO-25 joint depth likelihood — research probe and raw results
 
-Raw research material for [PLAN.Physics.DepthLikelihood](../../../docs/PLAN.Physics.DepthLikelihood.md) and its
+Raw research material for [PLAN.Physics.DepthLikelihood](../../../docs/archive/PLAN.Physics.DepthLikelihood.md) and its
 review (Findings 62), moved here from a local temporary folder on 2026-10-03 so the work can continue on another
 computer. **Not reviewed evidence**: the numbers here have not yet been folded into the review or Findings.
 
@@ -13,5 +13,6 @@ computer. **Not reviewed evidence**: the numbers here have not yet been folded i
   `fit_conv15v3.csv`, `fit_r300_n36.csv`, `v1_conv15.csv`, `v2_main10.csv`, `v2_main60*.csv`, `v3_300.csv`, `cost.txt`
   and the run logs. `log_main60v3b.txt` is a duplicate run that failed on a file lock; ignore it.
 
-Next step (TODO-25): analyse `fit_main10v3.csv` (wrong-maximum rate at 10 s), add it to the review and Findings 62, then
-the author decides on the remaining gate items (count-scaled model budget, model mismatch).
+Status (2026-10-08, TODO-25 closed): the 10 s v3 pass was analysed as a historical observation; the current tree was
+re-measured by the `depthlik-screen` family (`manifest.json`, `seeds.json`, `recipe.py`; summary
+`results/screen-v1-summary.md`, analyser `analyze.py`). Gate validation is parked in `docs/AGENTS.Backlog.md`.

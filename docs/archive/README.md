@@ -11,6 +11,12 @@ set the plan's status to done and move the plan and its review / reports into th
 
 ## Closed tasks
 
+- **TODO-25 joint depth likelihood** (2026-10-08): research; re-measured on the current tree by a 32-seed screening
+  (1024 fits): spread 0.6 / 2.5 / 5–8 / 17–21 mm at 300 / 500 / 700 / 1000 mm (60 s, all events), wrong maxima 7 / 1024,
+  but approximate profiles (negative likelihood ratios in 249 fits) and a budget bias at the highest counts block a gate;
+  gate validation (≈ 190 h, resumable per condition) parked in the Backlog; the sharpest plane stays in Studio
+  (Findings 62). Review by a substitute Claude implementer, continuation by Codex —
+  [PLAN.Physics.DepthLikelihood](PLAN.Physics.DepthLikelihood.md).
 - **TODO-19 physical readout, stage 1** (2026-10-08): pre-optical interaction records, traced optics, SiPM, a
   Kirchhoff-solved charge-division network, four time-domain outputs with pile-up, trigger, flood-map LUT
   (`Detector.Readout`, study only; default stays DirectCrystal). Selected and confirmed on 16 + 32 + 32 seeds: four outputs,

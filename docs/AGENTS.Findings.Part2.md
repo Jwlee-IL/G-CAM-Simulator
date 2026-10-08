@@ -847,8 +847,8 @@ directional biasing aims one randomly chosen gamma, weight n·w_k / (n̄·H), so
 
 ## 62. Joint forward-likelihood depth beats the sharpest plane — but is not yet a Studio replacement (2026-10-02)
 
-TODO-25 ([PLAN.Physics.DepthLikelihood](PLAN.Physics.DepthLikelihood.md), research review by a substitute Claude
-subagent; [review](PLAN.Physics.DepthLikelihood.Review.md)). Forward model = the engine's own transport replayed with
+TODO-25 ([PLAN.Physics.DepthLikelihood](archive/PLAN.Physics.DepthLikelihood.md), research review by a substitute Claude
+subagent; [review](archive/PLAN.Physics.DepthLikelihood.Review.md)). Forward model = the engine's own transport replayed with
 common random numbers (no template library), exact expected mask transmission, the engine's crystal, analytic 662 keV
 window; intensity and flat background profiled; parameters bearing + v = 1/(z − D); no step uses the truth.
 
@@ -862,6 +862,16 @@ window; intensity and flat background profiled; parameters bearing + v = 1/(z �
 - **Gate (L-5): not yet.** Open: the 10 s wrong-maximum rate with the final search (v2 gave 11 / 192), count-scaled
   model budget, and model mismatch (e.g. mask–detector distance; a 0.5 mm error ≈ −6 mm at 1 m, derived not measured).
   The sharpest plane stays in Studio until these are measured.
+- **Current-tree screening (2026-10-08, TODO-25 continuation; [continuation review](archive/PLAN.Physics.DepthLikelihood.Continuation.Review.md)).**
+  The 2026-10-02 numbers predate the xoshiro256** generator; re-measured on the current tree with 32 fresh seeds per
+  condition (1024 fits, 0.9M-history model, search v3; `samples/evidence/depthlik/results/screen-v1-summary.md`):
+  spread (all events, 60 s) 0.63–0.68 / 2.3–2.7 / 5.1–7.9 / 17–21 mm at 300 / 500 / 700 / 1000 mm; **wrong maxima
+  7 / 1024**, all in the 662 keV window channel at 500–1000 mm (6 of them at 10 s); nominal 68 / 95 % intervals cover
+  669 / 1024 and 946 / 1024. Two findings block a gate verdict: the approximate profiles give **negative likelihood
+  ratios in 249 / 1024 fits**, so the intervals are not certified; and at the highest counts (300 mm, 60 s, ≈ 45,000
+  counts) the 0.9M budget biases the estimate by ±0.4 mm (3–4 SE) and the 95 % interval covers only 24–25 / 32 —
+  the count-scaled budget is needed. A gate-grade validation (profile fix, count-scaled budget, ≥ 2,048 seeds per
+  condition, ≈ 190 h on 24 cores, resumable per condition) is parked in the Backlog; the sharpest plane stays in Studio.
 
 ## 63. Evidence quoted over seed ensembles — `samples/evidence` (2026-10-02)
 

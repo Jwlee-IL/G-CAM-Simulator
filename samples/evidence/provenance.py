@@ -385,6 +385,11 @@ def prepare(families, cli, probe, python, repo=REPO):
             files.update({f'managed/{mkind}/{p}': b for p, b in dlls.items()})
             executable.update({f'managed/{mkind}/{p}': sha(b) for p, b in dlls.items()})
             tools['DotnetRuntime'] = runtime
+        if fam.get('recipe_driver'):
+            driver = fam['recipe_driver']
+            if kind != 'probe' or not safe_path(driver) or driver not in inputs:
+                refuse('invalid probe recipe driver')
+            executable[driver] = sha(inputs[driver])
         if kind == 'rtl':
             # Local imports and AST-loaded studies keep their original repository-relative layout.
             executable.update({p: sha(b) for p, b in inputs.items() if p.endswith(('.py', '.sv', '.v'))})

@@ -3,10 +3,10 @@
 Scope: Findings 57 showed the focus sweep's "sharpest plane" is a heuristic on a forward-mismatched decode; a forward
 likelihood with a **known** bearing reduced the bias to a few mm. This research task asks whether a likelihood that also
 estimates the bearing from the data gives an unbiased, honestly-intervalled depth at Studio's geometry, before any Studio
-change. Procedure: [AGENTS.Planning](AGENTS.Planning.md); prior review:
-[PLAN.Physics.DepthBias.Review](archive/PLAN.Physics.DepthBias.Review.md).
+change. Procedure: [AGENTS.Planning](../AGENTS.Planning.md); prior review:
+[PLAN.Physics.DepthBias.Review](PLAN.Physics.DepthBias.Review.md).
 
-Status: **continuation, 2026-10-08** — review 2026-10-02 by a substitute Claude subagent ([review](PLAN.Physics.DepthLikelihood.Review.md), Findings 62: gate not yet); continuation turn 1 with Codex (see "Continuation" below).
+Status: **done** 2026-10-08 — review 2026-10-02 (substitute Claude, [review](PLAN.Physics.DepthLikelihood.Review.md)); continuation by Codex (session `01a118d3-88ec-7bd0-b1c8-6c42edb10dfa`, [continuation review](PLAN.Physics.DepthLikelihood.Continuation.Review.md)); screening family run by the planner (32 / 32 seeds, 1024 fits; `samples/evidence/depthlik/results/screen-v1-summary.md`); Findings 62 updated; gate validation parked in the Backlog with its cost and resumability requirement; the sharpest plane stays in Studio.
 
 ## Proposed protocol (reference — verify / improve)
 
