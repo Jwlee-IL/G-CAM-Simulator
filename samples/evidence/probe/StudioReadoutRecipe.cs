@@ -15,6 +15,16 @@ internal static class StudioReadoutRecipe
     internal static void Run(int seed, string samples, string recipeFile, string geometry, string phase, string familyHash)
     {
         var recipe = JsonNode.Parse(File.ReadAllText(recipeFile))!;
+        if (recipe["Version"]!.GetValue<int>() == 3)
+        {
+            StudioReadoutRecipeV3.Run(seed, samples, recipeFile, recipe, geometry, phase, familyHash);
+            return;
+        }
+        if (recipe["Version"]!.GetValue<int>() == 2)
+        {
+            StudioReadoutRecipeV2.Run(seed, samples, recipeFile, recipe, geometry, phase, familyHash);
+            return;
+        }
         var geom = recipe["Geometries"]!.AsArray().Single(g => g!["Id"]!.GetValue<string>() == geometry)!;
         int n = geom["Count"]!.GetValue<int>(); double pitch = geom["PitchMm"]!.GetValue<double>();
         double distance = geom["DistanceMm"]!.GetValue<double>();

@@ -1,0 +1,124 @@
+{
+ "SchemaVersion": 1,
+ "Status": "DevelopmentOnly;NotConfirmation",
+ "EnergyKeV": 661.7,
+ "Geometry": "High",
+ "Levels": [
+  8000,
+  32000
+ ],
+ "SelectedHistoriesPerCrystal": 32000,
+ "BudgetProbeSha256": "4142b6b7806f5336a41f17eba1f6c0a8f9627bebb6199d420980bc0b412bfd3e",
+ "BudgetProbeSource": {
+  "File": "samples/evidence/probe-v4-budget/Program.cs",
+  "Sha256": "4142b6b7806f5336a41f17eba1f6c0a8f9627bebb6199d420980bc0b412bfd3e"
+ },
+ "EngineSourceClosureSha256": "bea2109024956bbc41ad8e752b53ad742a67b5a58efd209f6782fbb8f482c219",
+ "DevelopmentSeeds": [
+  41000001,
+  41104730,
+  41209459,
+  41314188
+ ],
+ "Observations": [
+  {
+   "Seed": 41000001,
+   "BuildSeconds": 73.7370841,
+   "Rows": [
+    {
+     "Budget": 8000,
+     "Succeeded": false,
+     "Failure": "measured lattice spans 44 × 44 with 1922 maxima, expected 44 × 44; unsupported slots (43, 8), (42, 13), (42, 18)",
+     "Markers": 0,
+     "Scored": 15488000,
+     "InWindow": 5429737,
+     "Seconds": 299.3502642
+    },
+    {
+     "Budget": 32000,
+     "Succeeded": true,
+     "Failure": null,
+     "Markers": 1936,
+     "Scored": 61952000,
+     "InWindow": 21726676,
+     "Seconds": 1214.0107969
+    }
+   ]
+  },
+  {
+   "Seed": 41104730,
+   "BuildSeconds": 75.4438376,
+   "Rows": [
+    {
+     "Budget": 8000,
+     "Succeeded": false,
+     "Failure": "measured lattice spans 44 × 44 with 1920 maxima, expected 44 × 44; unsupported slots (16, 0), (0, 9), (0, 13)",
+     "Markers": 0,
+     "Scored": 15488000,
+     "InWindow": 5429629,
+     "Seconds": 300.6439809
+    },
+    {
+     "Budget": 32000,
+     "Succeeded": true,
+     "Failure": null,
+     "Markers": 1936,
+     "Scored": 61952000,
+     "InWindow": 21726390,
+     "Seconds": 1189.840544
+    }
+   ]
+  },
+  {
+   "Seed": 41209459,
+   "BuildSeconds": 74.9082312,
+   "Rows": [
+    {
+     "Budget": 8000,
+     "Succeeded": false,
+     "Failure": "measured lattice spans 44 × 44 with 1919 maxima, expected 44 × 44; unsupported slots (4, 0), (36, 0), (34, 1)",
+     "Markers": 0,
+     "Scored": 15488000,
+     "InWindow": 5429848,
+     "Seconds": 290.1984747
+    },
+    {
+     "Budget": 32000,
+     "Succeeded": true,
+     "Failure": null,
+     "Markers": 1936,
+     "Scored": 61952000,
+     "InWindow": 21726566,
+     "Seconds": 1154.9845241
+    }
+   ]
+  },
+  {
+   "Seed": 41314188,
+   "BuildSeconds": 75.5533736,
+   "Rows": [
+    {
+     "Budget": 8000,
+     "Succeeded": false,
+     "Failure": "measured lattice spans 44 × 44 with 1927 maxima, expected 44 × 44; unsupported slots (0, 6), (0, 7), (42, 18)",
+     "Markers": 0,
+     "Scored": 15488000,
+     "InWindow": 5429694,
+     "Seconds": 291.3373085
+    },
+    {
+     "Budget": 32000,
+     "Succeeded": true,
+     "Failure": null,
+     "Markers": 1936,
+     "Scored": 61952000,
+     "InWindow": 21726537,
+     "Seconds": 1152.5729509
+    }
+   ]
+  }
+ ],
+ "FailureProbabilityUpper95IfFourIndependentSeedsHaveZeroFailures": 0.5271291954984121,
+ "FailureProbabilityUpper95BonferroniTwoBudgetCandidates": 0.6023646356164747,
+ "RiskNote": "Fixed from these development data, so this binomial bound is descriptive, not an independent validation bound."
+}

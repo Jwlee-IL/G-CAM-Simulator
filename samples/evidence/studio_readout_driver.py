@@ -24,7 +24,8 @@ def main():
     family = json.loads(pathlib.Path(family_path).read_text(encoding='utf-8'))
     recipe = load_pin(root, family['Recipe'])
     rule = load_pin(root, recipe['Rule'])
-    if rule['Version'] != 1 or family['Geometry'] not in [g['Id'] for g in recipe['Geometries']]:
+    if (rule['Version'] not in (1, 2, 3) or recipe.get('Version', 1) != rule['Version']
+            or family['Geometry'] not in [g['Id'] for g in recipe['Geometries']]):
         raise ValueError('unsupported rule or geometry')
     seeds = json.loads((root / 'samples/evidence/seeds.json').read_text(encoding='utf-8'))
     if int(seed) not in seeds[family['seeds']] or len(seeds[family['seeds']]) != family['n']:

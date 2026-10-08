@@ -1,0 +1,81 @@
+{
+ "Version": 2,
+ "Rule": {
+  "File": "samples/evidence/studio-readout/rule-v2.json",
+  "Sha256": "f36509f0f70f9110ff83b4909e60727d7186701c613b99eca579f9ff83022a4e"
+ },
+ "Design": "A: matched virtual sensors, unlimited microcells; DPC 10/1000 ohm; Baseline legacy solve / LUT, fine heads adjoint solve / LatticeGrowth",
+ "Geometries": [
+  {
+   "Id": "Baseline",
+   "Count": 12,
+   "PitchMm": 1.0,
+   "DistanceMm": 60.0,
+   "Rank": 7,
+   "CellMm": 1.0
+  },
+  {
+   "Id": "Sharp",
+   "Count": 30,
+   "PitchMm": 0.6,
+   "DistanceMm": 80.0,
+   "Rank": 13,
+   "CellMm": 0.7
+  },
+  {
+   "Id": "Wide",
+   "Count": 34,
+   "PitchMm": 0.75,
+   "DistanceMm": 50.0,
+   "Rank": 17,
+   "CellMm": 1.0
+  },
+  {
+   "Id": "High",
+   "Count": 44,
+   "PitchMm": 0.4,
+   "DistanceMm": 100.0,
+   "Rank": 13,
+   "CellMm": 0.5
+  }
+ ],
+ "EnergiesKeV": [
+  122.06,
+  661.7,
+  1332.5
+ ],
+ "RatesCps": [
+  1000.0,
+  10000.0,
+  100000.0,
+  300000.0,
+  1000000.0
+ ],
+ "BaselineCount": 12,
+ "BaselineMethod": "Legacy",
+ "BaselineSolve": "Legacy",
+ "Method": "LatticeGrowth",
+ "Solve": "Adjoint",
+ "OpticalPhotons": 100000,
+ "DepthBins": 8,
+ "CalibrationHistoriesPerCrystal": 2000,
+ "HistogramBinsPerCrystal": 32,
+ "ValidationHistoriesPerCrystal": 3000,
+ "RateHits": 10000,
+ "Refinement": {
+  "CalibrationHistoriesPerCrystal": [
+   2000,
+   8000,
+   32000
+  ],
+  "DepthBins": [
+   8,
+   16,
+   32
+  ],
+  "PhotonsPerBin": [
+   100000,
+   400000
+  ]
+ }
+}

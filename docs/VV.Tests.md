@@ -6,7 +6,7 @@ verifies, where its expected value comes from and how its tolerance is justified
 [VV.Tests.Results](VV.Tests.Results.md); requirement status in [VV.Studio](VV.Studio.md).
 
 **At a glance**
-- 170 units: 133 xUnit classes, 4 unittest classes, 29 cocotb configurations, 4 checkers.
+- 176 units: 136 xUnit classes, 7 unittest classes, 29 cocotb configurations, 4 checkers.
 - Every entry states purpose, oracle, tolerance (its derivation, or "exact", "structural", "measurement only"), gates
   and requirement / evidence selectors in a fenced JSON block.
 - 70 units carry a margin the code states without a derivation — recorded as a finding, not filled in.
@@ -117,6 +117,7 @@ Run `python samples/testing/test_records.py check-catalog --discover` after a Re
 | `Gcam.Tests::Gcam.Tests.IncidentSpectrumFileTests` | 4 | 4 |
 | `Gcam.Tests::Gcam.Tests.Ir192Tests` | 8 | 20 |
 | `Gcam.Tests::Gcam.Tests.KleinNishinaTests` | 2 | 4 |
+| `Gcam.Tests::Gcam.Tests.LatticeGrowthTests` | 3 | 9 |
 | `Gcam.Tests::Gcam.Tests.ListModeBackgroundTests` | 3 | 3 |
 | `Gcam.Tests::Gcam.Tests.ListModeSourceTests` | 7 | 8 |
 | `Gcam.Tests::Gcam.Tests.MaskAttenuationTests` | 2 | 2 |
@@ -138,9 +139,11 @@ Run `python samples/testing/test_records.py check-catalog --discover` after a Re
 | `Gcam.Tests::Gcam.Tests.ReadoutArtifactTests` | 2 | 2 |
 | `Gcam.Tests::Gcam.Tests.ReadoutDefaultPathTests` | 7 | 7 |
 | `Gcam.Tests::Gcam.Tests.ReadoutDeviceTests` | 5 | 8 |
+| `Gcam.Tests::Gcam.Tests.ReadoutFloodStreamTests` | 2 | 2 |
 | `Gcam.Tests::Gcam.Tests.ReadoutPulseProcessorTests` | 7 | 7 |
 | `Gcam.Tests::Gcam.Tests.ReadoutStreamTests` | 2 | 4 |
 | `Gcam.Tests::Gcam.Tests.ReadoutStudyTests` | 3 | 3 |
+| `Gcam.Tests::Gcam.Tests.ReadoutTruthTests` | 3 | 6 |
 | `Gcam.Tests::Gcam.Tests.ResolvedPairTests` | 10 | 15 |
 | `Gcam.Tests::Gcam.Tests.SamplingTests` | 6 | 14 |
 | `Gcam.Tests::Gcam.Tests.ScattererTests` | 3 | 3 |
@@ -192,7 +195,10 @@ Run `python samples/testing/test_records.py check-catalog --discover` after a Re
 | `unittest::test_background_shape.BackgroundShapeTests` | 10 | 10 |
 | `unittest::test_provenance.ProvenanceTests` | 29 | 29 |
 | `unittest::test_readout_netlist.ReadoutNetlistTests` | 4 | 4 |
+| `unittest::test_studio_readout.StudioReadoutRuleV2Tests` | 6 | 6 |
+| `unittest::test_studio_readout.StudioReadoutRuleV3Tests` | 8 | 8 |
 | `unittest::test_studio_readout.StudioReadoutSelectorTests` | 8 | 8 |
+| `unittest::test_studio_readout_v4.StudioReadoutRuleV4Tests` | 14 | 14 |
 <!-- END GENERATED: TEST DISCOVERY -->
 
 ## PlotViewRenderTests — Gcam.Studio.RenderTests
@@ -3570,5 +3576,97 @@ Tolerance: Exact/structural. Floating angular-statistic consistency uses the der
 Gates: none.
 
 ```json
-{"id":"unittest::test_studio_readout.StudioReadoutSelectorTests","runner":"unittest","methods":["test_exact_assignment_qualifies_both_axes","test_calibration_failure_is_retained_and_refuses","test_empty_assignment_does_not_drop_a_cluster","test_weakest_crystal_uses_scored_denominator","test_angular_axis_bound_refuses_large_displacement","test_invalid_denominators_and_sufficient_statistics_refuse","test_cluster_count_and_nonfinite_values_refuse","test_positive_between_seed_variance_increases_the_upper_bound"],"sources":{"samples/evidence/tests/test_studio_readout.py":"3be2b550fb024376a17c50ff8ae2fe5159426e00245f40f77ab6e26798c1392f"},"trace":[]}
+{"id":"unittest::test_studio_readout.StudioReadoutSelectorTests","runner":"unittest","methods":["test_exact_assignment_qualifies_both_axes","test_calibration_failure_is_retained_and_refuses","test_empty_assignment_does_not_drop_a_cluster","test_weakest_crystal_uses_scored_denominator","test_angular_axis_bound_refuses_large_displacement","test_invalid_denominators_and_sufficient_statistics_refuse","test_cluster_count_and_nonfinite_values_refuse","test_positive_between_seed_variance_increases_the_upper_bound"],"sources":{"samples/evidence/tests/test_studio_readout.py":"f0d1f01cd4aecbb701f849998b2d788d48faaa499e3586f1e9b31e67da259daa"},"trace":[]}
+```
+
+
+## LatticeGrowthTests — Gcam.Tests
+
+Purpose: LUT v2 (LatticeGrowth) on floods shaped like the engine lattice: edge columns bowed by the measured 0.13 / 0.99 / 1.30 spacings, spot FWHM 0.50 - 0.58 spacing, counting noise at the recipe budget (700 windowed events per crystal) over a 10 % continuum; missing edge or corner spots, merged pairs and physically overlapping spots (FWHM 1.2 spacings) refuse; the legacy default keeps its configured smoothing.
+
+Oracle: Known fixture crystal centres: each centre must map to its own label, each marker must be a local maximum of the smoothed density within half a spacing of its centre; refusal leaves no markers and Lookup = -1.
+
+Tolerance: Exact assignment and refusal on fixed-seed fixtures; the method constants (sigma = bins/8, 0.4-step search, 3-sigma counting valley) are fixed in the engine, not in the test.
+
+Gates: none.
+
+```json
+{"id":"Gcam.Tests::Gcam.Tests.LatticeGrowthTests","runner":"dotnet","methods":["BowedLatticeWithCountingNoise_IsIdentifiedFromMeasuredMaxima","UnsupportedMergedOrOverlappingSpots_Refuse","LegacyDefault_IgnoresLatticeGrowthAndKeepsConfiguredSmoothing"],"sources":{"tests/Gcam.Tests/LatticeGrowthTests.cs":"7d55d1970f8ec20ea3f4e50e45b07c73ecdb3702a31d684745c700dd5f2cd1b9","tests/Gcam.Tests/Harness/Rigs.cs":"9b89ce04cdcb302fcefc6636d45a0d1640a48c288d1e0a3638b005c44028c3b2","tests/Gcam.Tests/Harness/Stat.cs":"4502dddc6276f9d1de0c41b2ed7246ed7f00c9266daa12a34d6174ae1cb19029"},"trace":[]}
+```
+
+
+## ReadoutFloodStreamTests — Gcam.Tests
+
+Purpose: The streamed calibration flood equals the materialised flood history by history, a shorter flood of the same seed is its prefix (nested refinement levels), and argument validation is eager.
+
+Oracle: ReadoutFlood.Transport on the same configuration and seed.
+
+Tolerance: Exact (record equality of every interaction site).
+
+Gates: none.
+
+```json
+{"id":"Gcam.Tests::Gcam.Tests.ReadoutFloodStreamTests","runner":"dotnet","methods":["Stream_EqualsTransport_AndShorterFloodIsAPrefix","Stream_ValidatesEagerly"],"sources":{"tests/Gcam.Tests/ReadoutFloodStreamTests.cs":"4af6b9b0e2386c424248a586ec7ec12e7176387f56a614936e3e4ea76a165ec3","tests/Gcam.Tests/Harness/Rigs.cs":"9b89ce04cdcb302fcefc6636d45a0d1640a48c288d1e0a3638b005c44028c3b2","tests/Gcam.Tests/Harness/Stat.cs":"4502dddc6276f9d1de0c41b2ed7246ed7f00c9266daa12a34d6174ae1cb19029"},"trace":[]}
+```
+
+
+## StudioReadoutRuleV2Tests — unittest
+
+Purpose: TODO-41 rule v2: per-crystal acceptance from the isolated held-out rows, non-gating rate throughput, the pinned gate event set (all deposits or single-crystal histories), single-crystal subset nesting, the three-level residual bound D1 / (1 - r) with r <= 0.5, and per-line numerical bounds.
+
+Oracle: Constructed rows and development outputs with known differences; geometric-series residuals computed by hand.
+
+Tolerance: Exact/structural; floating comparisons at 7 decimal places of closed-form sums.
+
+Gates: none.
+
+```json
+{"id":"unittest::test_studio_readout.StudioReadoutRuleV2Tests","runner":"unittest","methods":["test_residual_is_a_geometric_series_and_refuses_slow_contraction","test_acceptance_comes_from_isolated_rows_and_throughput_does_not_gate","test_weak_isolated_crystal_or_unbounded_line_refuses","test_single_crystal_view_gates_on_the_subset","test_single_subset_must_nest","test_numerical_bound_sums_residuals_per_line"],"sources":{"samples/evidence/tests/test_studio_readout.py":"f0d1f01cd4aecbb701f849998b2d788d48faaa499e3586f1e9b31e67da259daa"},"trace":[]}
+```
+
+
+## ReadoutTruthTests — Gcam.Tests
+
+Purpose: TODO-41 rule v3 reference quantities: the first interaction of a history (earliest TimeNs, ties to the lower site index; differs from the largest deposit) and the full-energy predicate (1 keV transport cutoff plus round-off).
+
+Oracle: Hand-built histories with known times, deposits and crystals.
+
+Tolerance: Exact; the full-energy boundary cases sit on and just beyond the documented 1 keV tolerance.
+
+Gates: none.
+
+```json
+{"id":"Gcam.Tests::Gcam.Tests.ReadoutTruthTests","runner":"dotnet","methods":["FirstInteraction_IsTheEarliestSite_NotTheLargestDeposit","FirstInteraction_TiesGoToTheLowerSiteIndex","FullEnergy_UsesTheTransportCutoff"],"sources":{"tests/Gcam.Tests/ReadoutTruthTests.cs":"87b231ecb4c37050f066ef4ab76f9eae7fb67a528ad0ddf68d30190d639e3b76","tests/Gcam.Tests/Harness/Rigs.cs":"9b89ce04cdcb302fcefc6636d45a0d1640a48c288d1e0a3638b005c44028c3b2","tests/Gcam.Tests/Harness/Stat.cs":"4502dddc6276f9d1de0c41b2ed7246ed7f00c9266daa12a34d6174ae1cb19029"},"trace":[]}
+```
+
+
+## StudioReadoutRuleV3Tests — unittest
+
+Purpose: TODO-41 rule v3: the paired statistic G = RMS_Anger^2 - RMS_direct^2 on the same accepted events (negative when the Anger readout beats the direct reference, failing when it loses beyond allocation^2), the per-crystal sensitivity acceptance (windowed events assigned to crystal k / full-energy histories with first interaction in k: an edge crystal compressed into its neighbour gives weakest / median 0.5 exactly, an edge crystal with half the full-energy histories gives 1), the full-energy acceptance kept as a diagnostic, the replicate-floor rule, numerical bounds on G, and fail-closed refusals.
+
+Oracle: Hand-computed sums of atan(k * pitch / D)^2 and ratios; constructed development outputs with chosen G.
+
+Tolerance: Exact/structural; floating comparisons at 9 - 15 decimal places of closed-form values.
+
+Gates: none.
+
+```json
+{"id":"unittest::test_studio_readout.StudioReadoutRuleV3Tests","runner":"unittest","methods":["test_paired_statistic_negative_when_anger_beats_direct","test_paired_statistic_fails_when_anger_loses_beyond_the_allocation","test_sensitivity_catches_edge_compression","test_sensitivity_cancels_the_crystal_escape","test_full_energy_acceptance_stays_a_diagnostic","test_fail_closed","test_replicate_floor_rule","test_numerical_bound_on_the_gate_statistic"],"sources":{"samples/evidence/tests/test_studio_readout.py":"f0d1f01cd4aecbb701f849998b2d788d48faaa499e3586f1e9b31e67da259daa"},"trace":[]}
+```
+
+
+## StudioReadoutRuleV4Tests — unittest
+
+Purpose: TODO-41 v4 offers an experimental (preset, line) only when every confirmation calibration succeeds. Costs never gate. Refusals retain their seed and failure message; missing/corrupt runs fail closed. Source RMS, per-position bias, remote-peak probability, paired F and crystal diagnostics aggregate at the outer-seed level; failed calibration does not produce a survivor-only Anger interval.
+
+Oracle: Constructed calibration statuses and literal failure text; MSE clusters (1, 1, 1, 9) have mean 3, sample standard deviation 4 and standard error 2. Proportional paired errors give F = 4 with zero interval width; independent numerator changes give influence (-2/3, -2/3, -2/3, 2). Alternating position signs retain bias magnitude 1. Hand-computed crystal ratios and signed G; the production provenance reader refuses an absent done record. A complete synthetic 32-seed provenance ensemble retains a failure outside the fixed eight-seed cost subset and rejects a corrupted output; no photon transport or Git mutation is used. A complete synthetic 32-seed provenance ensemble retains a failure outside the fixed eight-seed cost subset and rejects a corrupted output; no photon transport or Git mutation is used. A complete synthetic 32-seed provenance ensemble retains a failure outside the fixed eight-seed cost subset and rejects a corrupted output; no photon transport or Git mutation is used.
+
+Tolerance: Structural assertions and unittest's default seven-decimal-place comparison of analytic floating values. Student constants are the pinned two-sided 0.975 quantiles; no sampled physics tolerance.
+
+Gates: none. Git-mutation fixtures remain disabled by the provenance suite's existing explicit opt-in.
+
+Source: [samples/evidence/tests/test_studio_readout_v4.py](../samples/evidence/tests/test_studio_readout_v4.py).
+
+```json
+{"id":"unittest::test_studio_readout_v4.StudioReadoutRuleV4Tests","runner":"unittest","methods":["test_offered_is_calibration_only_even_for_large_cost","test_refused_cell_and_failure_message_carried_through","test_missing_calibration_run_fails_closed","test_duplicate_or_corrupt_status_fails_closed","test_cost_table_intervals_have_hand_computed_oracle","test_identity_control_has_unit_f","test_paired_log_ratio_interval_has_hand_computed_oracle","test_crystal_diagnostics_have_signed_g_and_isolated_sensitivity","test_bias_is_per_position_and_does_not_cancel","test_failed_calibration_does_not_publish_survivor_only_cost","test_missing_imaging_trial_fails_closed","test_nonfinite_cost_fails_closed","test_aggregate_rejects_missing_provenance_before_publication","test_complete_provenance_ensemble_and_failure_outside_cost_subset"],"sources":{"samples/evidence/tests/test_studio_readout_v4.py":"22eb656271e7a3dfae1b0e4012b40eab8eb295085188e2cc7e5fd51d7c28cd27"},"trace":[]}
 ```

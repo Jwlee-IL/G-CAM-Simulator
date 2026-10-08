@@ -1,0 +1,142 @@
+{
+ "Version": 4,
+ "Rule": {
+  "File": "samples/evidence/studio-readout/rule-v4.json",
+  "Sha256": "854adf86627977ef4be05e509dd69e550b2b8ce0372939a2379c1501bfb30d5f"
+ },
+ "Design": "Frozen A: matched sensors, unlimited microcells, DPC 10/1000 ohm; Baseline Legacy; other heads Adjoint and LatticeGrowth",
+ "Geometries": [
+  {
+   "Id": "Baseline",
+   "Count": 12,
+   "PitchMm": 1.0,
+   "DistanceMm": 60.0,
+   "Rank": 7,
+   "CellMm": 1.0
+  },
+  {
+   "Id": "Sharp",
+   "Count": 30,
+   "PitchMm": 0.6,
+   "DistanceMm": 80.0,
+   "Rank": 13,
+   "CellMm": 0.7
+  },
+  {
+   "Id": "Wide",
+   "Count": 34,
+   "PitchMm": 0.75,
+   "DistanceMm": 50.0,
+   "Rank": 17,
+   "CellMm": 1.0
+  },
+  {
+   "Id": "High",
+   "Count": 44,
+   "PitchMm": 0.4,
+   "DistanceMm": 100.0,
+   "Rank": 13,
+   "CellMm": 0.5
+  }
+ ],
+ "EnergiesKeV": [
+  122.06,
+  661.7,
+  1332.5
+ ],
+ "RatesCps": [
+  0,
+  100000
+ ],
+ "OpticalPhotons": 100000,
+ "DepthBins": 8,
+ "HistogramBinsPerCrystal": 32,
+ "CalibrationHistoriesPerCrystal": 2000,
+ "High662CalibrationHistoriesPerCrystal": 32000,
+ "High662BudgetEvidence": {
+  "File": "samples/evidence/studio-readout/development-calibration-budget-v4.json",
+  "Sha256": "688f10c6bcffafe246cf68b1f4294172afdb2e62f4751794fa161e8a170dc6b5"
+ },
+ "ValidationHistoriesPerCrystal": 3000,
+ "RateDiagnosticHits": 10000,
+ "FocalDistanceMm": 1000,
+ "PositionHalfFraction": 0.45,
+ "Positions": [
+  [
+   0,
+   0
+  ],
+  [
+   1,
+   0
+  ],
+  [
+   -1,
+   0
+  ],
+  [
+   0,
+   1
+  ],
+  [
+   0,
+   -1
+  ],
+  [
+   1,
+   1
+  ],
+  [
+   1,
+   -1
+  ],
+  [
+   -1,
+   1
+  ],
+  [
+   -1,
+   -1
+  ]
+ ],
+ "Decoder": "FiniteMaskCrossCorrelation;HalfExtent=.95*NominalFCFOVHalf;Step=max(.2mm,QuarterElement);Tent",
+ "FloodCorrection": "OwnCalibrationFloodPerPath;SamePhysicalWindowAsImaging;Weight=MeanAssignedCount/BinCount;NoClipping;EmptyBinMakesCostUnavailableOnly",
+ "DirectReferenceCounts": [
+  1000,
+  4000
+ ],
+ "ExposurePilotHistories": 120000,
+ "Exposure": "Round(TargetCounts*120000/IndependentPilotDirectAcceptance);ExactPoissonProposalCount;FreshHistories;EqualFluenceBothPaths",
+ "TrialsPerPosition": 64,
+ "CostSeeds": [
+  43000001,
+  43104730,
+  43209459,
+  43314188,
+  43418917,
+  43523646,
+  43628375,
+  43733104
+ ],
+ "CostReduction": "Proposed first-eight subset instead of 32 imaging clusters; calibration still all 32. Change requires a new recipe pin before confirmation.",
+ "PurposeKeys": {
+  "Optics": 1,
+  "CalibrationTransport": 2,
+  "CalibrationResponse": 3,
+  "CalibrationNoise": 4,
+  "DiagnosticTransport": 10,
+  "DiagnosticResponse": 20,
+  "DiagnosticIsolatedNoise": 21,
+  "DiagnosticRateNoise": 22,
+  "DiagnosticArrival": 23,
+  "ExposurePilot": "200+position",
+  "FreshTransport": "6000+k",
+  "FreshResponse": "12000+k",
+  "IsolatedNoise": "24000+k",
+  "PoissonExposure": "30000+k",
+  "RateNoise": "40000+k",
+  "RateArrival": "50000+k",
+  "k": "position*64+trial+4096*exposureIndex",
+  "LineOffset": "100*lineIndexExceptOptics;DefaultRandom.Key(outerSeed,purpose)"
+ }
+}

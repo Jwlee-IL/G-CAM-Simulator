@@ -1,0 +1,333 @@
+{
+ "_about": "V4 calibration-only experimental offering. Selection skipped. Calibration all CONFIRM32; costs predeclared first eight. No performance gate. Historical v1-v3 untouched.",
+ "Recipe": {
+  "File": "samples/evidence/studio-readout/recipe-v4.json",
+  "Sha256": "057b9e161ea91ea41f40b631cedf85faaffc0b7170f4d623e6fcf3202f678a70"
+ },
+ "config_sha256": {
+  "scenario.json": "eb5b96835c0b68a88c5c26965540f85f1a313acf1cc0b49955cf7921463edddc",
+  "evidence/studio-readout/recipe-v4.json": "057b9e161ea91ea41f40b631cedf85faaffc0b7170f4d623e6fcf3202f678a70"
+ },
+ "families": [
+  {
+   "id": "t41-dev-Baseline-v4",
+   "kind": "probe",
+   "mode": "studio-readout-v4",
+   "recipe_driver": "samples/evidence/studio_readout_v4_driver.py",
+   "executable": "Gcam.EvidenceProbe.dll",
+   "seeds": "T41_DEV4",
+   "n": 4,
+   "Phase": "dev",
+   "Geometry": "Baseline",
+   "Recipe": {
+    "File": "samples/evidence/studio-readout/recipe-v4.json",
+    "Sha256": "057b9e161ea91ea41f40b631cedf85faaffc0b7170f4d623e6fcf3202f678a70"
+   },
+   "Freeze": {
+    "Kind": "SingleFrozenCandidate;SelectionSkipped",
+    "RecipeSha256": "057b9e161ea91ea41f40b631cedf85faaffc0b7170f4d623e6fcf3202f678a70",
+    "RuleSha256": "854adf86627977ef4be05e509dd69e550b2b8ce0372939a2379c1501bfb30d5f",
+    "DriverSha256": "451d2f8f0b3f13d9c70adb660395a51feba2acf2cf00659367b6ffd74c5936e6",
+    "ManagedClosure": {
+     "Gcam.Configuration.dll": "3d474e9aa1ad2a69fef1b18b1cf2e8167a184169363a5eaca8c9000b651619f3",
+     "Gcam.Configuration.pdb": "fffa40e6534981e21e0dd47a676b0862e6c6ec79027fca73570df3daf712519f",
+     "Gcam.Core.dll": "c48a48bfaff2eff672aaa9d5cae73063afbd81f1ecfabb52c98359b83619df98",
+     "Gcam.Core.pdb": "e3561fbe2df7ee6c5abccc96cfab15162e123281dce2a506287e723ea0d58aba",
+     "Gcam.Decoding.dll": "2d21eb3d089c419320cbc645573bd121fc16e9cd9104610abc71d556604ae94d",
+     "Gcam.Decoding.pdb": "051063db978bddd7d2c9a56cd2d9759cf2391b396deff00bc156cda1df4d5017",
+     "Gcam.Detector.dll": "794892c9153e659ea2ccafc2b12fe3770ade267515014e07d5d1d25c811f7760",
+     "Gcam.Detector.pdb": "1be1f090167d18389b6f528bc90431680c921e95d07d8ee5b4ab32a6e6a0af2b",
+     "Gcam.EvidenceProbe.deps.json": "25b09c5adaa23a7ea7d112586fe5b1f01602a5812fb875e2ff7978170654a5f5",
+     "Gcam.EvidenceProbe.dll": "889d0b5e8f50b15dbe52a017ef1969a7a31525fdc4e50d58f20833bd96441f9d",
+     "Gcam.EvidenceProbe.exe": "2ce57b3b7e632223107f04e30893d486f5bb4056b0c0f7b523a02bd337992cfe",
+     "Gcam.EvidenceProbe.pdb": "a8eddbc35239e0e10d43a3610f8b97affafe6b2b084d492c79f859f2036bf99c",
+     "Gcam.EvidenceProbe.runtimeconfig.json": "86f305aced9638bcf63e9ed062b33bd4b51ede05e37bbdec2ea3eb782a606483",
+     "Gcam.Masks.dll": "7cba30d0b7239f6a510a1676f4fe9020b3e8aba43cdc711b1acfdd8615bbbf85",
+     "Gcam.Masks.pdb": "11a4c3c7cc093f1fc5e7ba1bace376da8f7c6574fb26b64f4d9ed1f4e962e618",
+     "Gcam.Simulation.dll": "9fafd50ddc8715204f5226757d031fab6c23928ac7008d77d811446c2d790b4b",
+     "Gcam.Simulation.pdb": "8f9a26487fdb416162805a28ecd52b45433e11e17b8c467935045a26d6f56220"
+    }
+   }
+  },
+  {
+   "id": "t41-dev-Sharp-v4",
+   "kind": "probe",
+   "mode": "studio-readout-v4",
+   "recipe_driver": "samples/evidence/studio_readout_v4_driver.py",
+   "executable": "Gcam.EvidenceProbe.dll",
+   "seeds": "T41_DEV4",
+   "n": 4,
+   "Phase": "dev",
+   "Geometry": "Sharp",
+   "Recipe": {
+    "File": "samples/evidence/studio-readout/recipe-v4.json",
+    "Sha256": "057b9e161ea91ea41f40b631cedf85faaffc0b7170f4d623e6fcf3202f678a70"
+   },
+   "Freeze": {
+    "Kind": "SingleFrozenCandidate;SelectionSkipped",
+    "RecipeSha256": "057b9e161ea91ea41f40b631cedf85faaffc0b7170f4d623e6fcf3202f678a70",
+    "RuleSha256": "854adf86627977ef4be05e509dd69e550b2b8ce0372939a2379c1501bfb30d5f",
+    "DriverSha256": "451d2f8f0b3f13d9c70adb660395a51feba2acf2cf00659367b6ffd74c5936e6",
+    "ManagedClosure": {
+     "Gcam.Configuration.dll": "3d474e9aa1ad2a69fef1b18b1cf2e8167a184169363a5eaca8c9000b651619f3",
+     "Gcam.Configuration.pdb": "fffa40e6534981e21e0dd47a676b0862e6c6ec79027fca73570df3daf712519f",
+     "Gcam.Core.dll": "c48a48bfaff2eff672aaa9d5cae73063afbd81f1ecfabb52c98359b83619df98",
+     "Gcam.Core.pdb": "e3561fbe2df7ee6c5abccc96cfab15162e123281dce2a506287e723ea0d58aba",
+     "Gcam.Decoding.dll": "2d21eb3d089c419320cbc645573bd121fc16e9cd9104610abc71d556604ae94d",
+     "Gcam.Decoding.pdb": "051063db978bddd7d2c9a56cd2d9759cf2391b396deff00bc156cda1df4d5017",
+     "Gcam.Detector.dll": "794892c9153e659ea2ccafc2b12fe3770ade267515014e07d5d1d25c811f7760",
+     "Gcam.Detector.pdb": "1be1f090167d18389b6f528bc90431680c921e95d07d8ee5b4ab32a6e6a0af2b",
+     "Gcam.EvidenceProbe.deps.json": "25b09c5adaa23a7ea7d112586fe5b1f01602a5812fb875e2ff7978170654a5f5",
+     "Gcam.EvidenceProbe.dll": "889d0b5e8f50b15dbe52a017ef1969a7a31525fdc4e50d58f20833bd96441f9d",
+     "Gcam.EvidenceProbe.exe": "2ce57b3b7e632223107f04e30893d486f5bb4056b0c0f7b523a02bd337992cfe",
+     "Gcam.EvidenceProbe.pdb": "a8eddbc35239e0e10d43a3610f8b97affafe6b2b084d492c79f859f2036bf99c",
+     "Gcam.EvidenceProbe.runtimeconfig.json": "86f305aced9638bcf63e9ed062b33bd4b51ede05e37bbdec2ea3eb782a606483",
+     "Gcam.Masks.dll": "7cba30d0b7239f6a510a1676f4fe9020b3e8aba43cdc711b1acfdd8615bbbf85",
+     "Gcam.Masks.pdb": "11a4c3c7cc093f1fc5e7ba1bace376da8f7c6574fb26b64f4d9ed1f4e962e618",
+     "Gcam.Simulation.dll": "9fafd50ddc8715204f5226757d031fab6c23928ac7008d77d811446c2d790b4b",
+     "Gcam.Simulation.pdb": "8f9a26487fdb416162805a28ecd52b45433e11e17b8c467935045a26d6f56220"
+    }
+   }
+  },
+  {
+   "id": "t41-dev-Wide-v4",
+   "kind": "probe",
+   "mode": "studio-readout-v4",
+   "recipe_driver": "samples/evidence/studio_readout_v4_driver.py",
+   "executable": "Gcam.EvidenceProbe.dll",
+   "seeds": "T41_DEV4",
+   "n": 4,
+   "Phase": "dev",
+   "Geometry": "Wide",
+   "Recipe": {
+    "File": "samples/evidence/studio-readout/recipe-v4.json",
+    "Sha256": "057b9e161ea91ea41f40b631cedf85faaffc0b7170f4d623e6fcf3202f678a70"
+   },
+   "Freeze": {
+    "Kind": "SingleFrozenCandidate;SelectionSkipped",
+    "RecipeSha256": "057b9e161ea91ea41f40b631cedf85faaffc0b7170f4d623e6fcf3202f678a70",
+    "RuleSha256": "854adf86627977ef4be05e509dd69e550b2b8ce0372939a2379c1501bfb30d5f",
+    "DriverSha256": "451d2f8f0b3f13d9c70adb660395a51feba2acf2cf00659367b6ffd74c5936e6",
+    "ManagedClosure": {
+     "Gcam.Configuration.dll": "3d474e9aa1ad2a69fef1b18b1cf2e8167a184169363a5eaca8c9000b651619f3",
+     "Gcam.Configuration.pdb": "fffa40e6534981e21e0dd47a676b0862e6c6ec79027fca73570df3daf712519f",
+     "Gcam.Core.dll": "c48a48bfaff2eff672aaa9d5cae73063afbd81f1ecfabb52c98359b83619df98",
+     "Gcam.Core.pdb": "e3561fbe2df7ee6c5abccc96cfab15162e123281dce2a506287e723ea0d58aba",
+     "Gcam.Decoding.dll": "2d21eb3d089c419320cbc645573bd121fc16e9cd9104610abc71d556604ae94d",
+     "Gcam.Decoding.pdb": "051063db978bddd7d2c9a56cd2d9759cf2391b396deff00bc156cda1df4d5017",
+     "Gcam.Detector.dll": "794892c9153e659ea2ccafc2b12fe3770ade267515014e07d5d1d25c811f7760",
+     "Gcam.Detector.pdb": "1be1f090167d18389b6f528bc90431680c921e95d07d8ee5b4ab32a6e6a0af2b",
+     "Gcam.EvidenceProbe.deps.json": "25b09c5adaa23a7ea7d112586fe5b1f01602a5812fb875e2ff7978170654a5f5",
+     "Gcam.EvidenceProbe.dll": "889d0b5e8f50b15dbe52a017ef1969a7a31525fdc4e50d58f20833bd96441f9d",
+     "Gcam.EvidenceProbe.exe": "2ce57b3b7e632223107f04e30893d486f5bb4056b0c0f7b523a02bd337992cfe",
+     "Gcam.EvidenceProbe.pdb": "a8eddbc35239e0e10d43a3610f8b97affafe6b2b084d492c79f859f2036bf99c",
+     "Gcam.EvidenceProbe.runtimeconfig.json": "86f305aced9638bcf63e9ed062b33bd4b51ede05e37bbdec2ea3eb782a606483",
+     "Gcam.Masks.dll": "7cba30d0b7239f6a510a1676f4fe9020b3e8aba43cdc711b1acfdd8615bbbf85",
+     "Gcam.Masks.pdb": "11a4c3c7cc093f1fc5e7ba1bace376da8f7c6574fb26b64f4d9ed1f4e962e618",
+     "Gcam.Simulation.dll": "9fafd50ddc8715204f5226757d031fab6c23928ac7008d77d811446c2d790b4b",
+     "Gcam.Simulation.pdb": "8f9a26487fdb416162805a28ecd52b45433e11e17b8c467935045a26d6f56220"
+    }
+   }
+  },
+  {
+   "id": "t41-dev-High-v4",
+   "kind": "probe",
+   "mode": "studio-readout-v4",
+   "recipe_driver": "samples/evidence/studio_readout_v4_driver.py",
+   "executable": "Gcam.EvidenceProbe.dll",
+   "seeds": "T41_DEV4",
+   "n": 4,
+   "Phase": "dev",
+   "Geometry": "High",
+   "Recipe": {
+    "File": "samples/evidence/studio-readout/recipe-v4.json",
+    "Sha256": "057b9e161ea91ea41f40b631cedf85faaffc0b7170f4d623e6fcf3202f678a70"
+   },
+   "Freeze": {
+    "Kind": "SingleFrozenCandidate;SelectionSkipped",
+    "RecipeSha256": "057b9e161ea91ea41f40b631cedf85faaffc0b7170f4d623e6fcf3202f678a70",
+    "RuleSha256": "854adf86627977ef4be05e509dd69e550b2b8ce0372939a2379c1501bfb30d5f",
+    "DriverSha256": "451d2f8f0b3f13d9c70adb660395a51feba2acf2cf00659367b6ffd74c5936e6",
+    "ManagedClosure": {
+     "Gcam.Configuration.dll": "3d474e9aa1ad2a69fef1b18b1cf2e8167a184169363a5eaca8c9000b651619f3",
+     "Gcam.Configuration.pdb": "fffa40e6534981e21e0dd47a676b0862e6c6ec79027fca73570df3daf712519f",
+     "Gcam.Core.dll": "c48a48bfaff2eff672aaa9d5cae73063afbd81f1ecfabb52c98359b83619df98",
+     "Gcam.Core.pdb": "e3561fbe2df7ee6c5abccc96cfab15162e123281dce2a506287e723ea0d58aba",
+     "Gcam.Decoding.dll": "2d21eb3d089c419320cbc645573bd121fc16e9cd9104610abc71d556604ae94d",
+     "Gcam.Decoding.pdb": "051063db978bddd7d2c9a56cd2d9759cf2391b396deff00bc156cda1df4d5017",
+     "Gcam.Detector.dll": "794892c9153e659ea2ccafc2b12fe3770ade267515014e07d5d1d25c811f7760",
+     "Gcam.Detector.pdb": "1be1f090167d18389b6f528bc90431680c921e95d07d8ee5b4ab32a6e6a0af2b",
+     "Gcam.EvidenceProbe.deps.json": "25b09c5adaa23a7ea7d112586fe5b1f01602a5812fb875e2ff7978170654a5f5",
+     "Gcam.EvidenceProbe.dll": "889d0b5e8f50b15dbe52a017ef1969a7a31525fdc4e50d58f20833bd96441f9d",
+     "Gcam.EvidenceProbe.exe": "2ce57b3b7e632223107f04e30893d486f5bb4056b0c0f7b523a02bd337992cfe",
+     "Gcam.EvidenceProbe.pdb": "a8eddbc35239e0e10d43a3610f8b97affafe6b2b084d492c79f859f2036bf99c",
+     "Gcam.EvidenceProbe.runtimeconfig.json": "86f305aced9638bcf63e9ed062b33bd4b51ede05e37bbdec2ea3eb782a606483",
+     "Gcam.Masks.dll": "7cba30d0b7239f6a510a1676f4fe9020b3e8aba43cdc711b1acfdd8615bbbf85",
+     "Gcam.Masks.pdb": "11a4c3c7cc093f1fc5e7ba1bace376da8f7c6574fb26b64f4d9ed1f4e962e618",
+     "Gcam.Simulation.dll": "9fafd50ddc8715204f5226757d031fab6c23928ac7008d77d811446c2d790b4b",
+     "Gcam.Simulation.pdb": "8f9a26487fdb416162805a28ecd52b45433e11e17b8c467935045a26d6f56220"
+    }
+   }
+  },
+  {
+   "id": "t41-confirm-Baseline-v4",
+   "kind": "probe",
+   "mode": "studio-readout-v4",
+   "recipe_driver": "samples/evidence/studio_readout_v4_driver.py",
+   "executable": "Gcam.EvidenceProbe.dll",
+   "seeds": "T41_CONFIRM32",
+   "n": 32,
+   "Phase": "confirm",
+   "Geometry": "Baseline",
+   "Recipe": {
+    "File": "samples/evidence/studio-readout/recipe-v4.json",
+    "Sha256": "057b9e161ea91ea41f40b631cedf85faaffc0b7170f4d623e6fcf3202f678a70"
+   },
+   "Freeze": {
+    "Kind": "SingleFrozenCandidate;SelectionSkipped",
+    "RecipeSha256": "057b9e161ea91ea41f40b631cedf85faaffc0b7170f4d623e6fcf3202f678a70",
+    "RuleSha256": "854adf86627977ef4be05e509dd69e550b2b8ce0372939a2379c1501bfb30d5f",
+    "DriverSha256": "451d2f8f0b3f13d9c70adb660395a51feba2acf2cf00659367b6ffd74c5936e6",
+    "ManagedClosure": {
+     "Gcam.Configuration.dll": "3d474e9aa1ad2a69fef1b18b1cf2e8167a184169363a5eaca8c9000b651619f3",
+     "Gcam.Configuration.pdb": "fffa40e6534981e21e0dd47a676b0862e6c6ec79027fca73570df3daf712519f",
+     "Gcam.Core.dll": "c48a48bfaff2eff672aaa9d5cae73063afbd81f1ecfabb52c98359b83619df98",
+     "Gcam.Core.pdb": "e3561fbe2df7ee6c5abccc96cfab15162e123281dce2a506287e723ea0d58aba",
+     "Gcam.Decoding.dll": "2d21eb3d089c419320cbc645573bd121fc16e9cd9104610abc71d556604ae94d",
+     "Gcam.Decoding.pdb": "051063db978bddd7d2c9a56cd2d9759cf2391b396deff00bc156cda1df4d5017",
+     "Gcam.Detector.dll": "794892c9153e659ea2ccafc2b12fe3770ade267515014e07d5d1d25c811f7760",
+     "Gcam.Detector.pdb": "1be1f090167d18389b6f528bc90431680c921e95d07d8ee5b4ab32a6e6a0af2b",
+     "Gcam.EvidenceProbe.deps.json": "25b09c5adaa23a7ea7d112586fe5b1f01602a5812fb875e2ff7978170654a5f5",
+     "Gcam.EvidenceProbe.dll": "889d0b5e8f50b15dbe52a017ef1969a7a31525fdc4e50d58f20833bd96441f9d",
+     "Gcam.EvidenceProbe.exe": "2ce57b3b7e632223107f04e30893d486f5bb4056b0c0f7b523a02bd337992cfe",
+     "Gcam.EvidenceProbe.pdb": "a8eddbc35239e0e10d43a3610f8b97affafe6b2b084d492c79f859f2036bf99c",
+     "Gcam.EvidenceProbe.runtimeconfig.json": "86f305aced9638bcf63e9ed062b33bd4b51ede05e37bbdec2ea3eb782a606483",
+     "Gcam.Masks.dll": "7cba30d0b7239f6a510a1676f4fe9020b3e8aba43cdc711b1acfdd8615bbbf85",
+     "Gcam.Masks.pdb": "11a4c3c7cc093f1fc5e7ba1bace376da8f7c6574fb26b64f4d9ed1f4e962e618",
+     "Gcam.Simulation.dll": "9fafd50ddc8715204f5226757d031fab6c23928ac7008d77d811446c2d790b4b",
+     "Gcam.Simulation.pdb": "8f9a26487fdb416162805a28ecd52b45433e11e17b8c467935045a26d6f56220"
+    }
+   }
+  },
+  {
+   "id": "t41-confirm-Sharp-v4",
+   "kind": "probe",
+   "mode": "studio-readout-v4",
+   "recipe_driver": "samples/evidence/studio_readout_v4_driver.py",
+   "executable": "Gcam.EvidenceProbe.dll",
+   "seeds": "T41_CONFIRM32",
+   "n": 32,
+   "Phase": "confirm",
+   "Geometry": "Sharp",
+   "Recipe": {
+    "File": "samples/evidence/studio-readout/recipe-v4.json",
+    "Sha256": "057b9e161ea91ea41f40b631cedf85faaffc0b7170f4d623e6fcf3202f678a70"
+   },
+   "Freeze": {
+    "Kind": "SingleFrozenCandidate;SelectionSkipped",
+    "RecipeSha256": "057b9e161ea91ea41f40b631cedf85faaffc0b7170f4d623e6fcf3202f678a70",
+    "RuleSha256": "854adf86627977ef4be05e509dd69e550b2b8ce0372939a2379c1501bfb30d5f",
+    "DriverSha256": "451d2f8f0b3f13d9c70adb660395a51feba2acf2cf00659367b6ffd74c5936e6",
+    "ManagedClosure": {
+     "Gcam.Configuration.dll": "3d474e9aa1ad2a69fef1b18b1cf2e8167a184169363a5eaca8c9000b651619f3",
+     "Gcam.Configuration.pdb": "fffa40e6534981e21e0dd47a676b0862e6c6ec79027fca73570df3daf712519f",
+     "Gcam.Core.dll": "c48a48bfaff2eff672aaa9d5cae73063afbd81f1ecfabb52c98359b83619df98",
+     "Gcam.Core.pdb": "e3561fbe2df7ee6c5abccc96cfab15162e123281dce2a506287e723ea0d58aba",
+     "Gcam.Decoding.dll": "2d21eb3d089c419320cbc645573bd121fc16e9cd9104610abc71d556604ae94d",
+     "Gcam.Decoding.pdb": "051063db978bddd7d2c9a56cd2d9759cf2391b396deff00bc156cda1df4d5017",
+     "Gcam.Detector.dll": "794892c9153e659ea2ccafc2b12fe3770ade267515014e07d5d1d25c811f7760",
+     "Gcam.Detector.pdb": "1be1f090167d18389b6f528bc90431680c921e95d07d8ee5b4ab32a6e6a0af2b",
+     "Gcam.EvidenceProbe.deps.json": "25b09c5adaa23a7ea7d112586fe5b1f01602a5812fb875e2ff7978170654a5f5",
+     "Gcam.EvidenceProbe.dll": "889d0b5e8f50b15dbe52a017ef1969a7a31525fdc4e50d58f20833bd96441f9d",
+     "Gcam.EvidenceProbe.exe": "2ce57b3b7e632223107f04e30893d486f5bb4056b0c0f7b523a02bd337992cfe",
+     "Gcam.EvidenceProbe.pdb": "a8eddbc35239e0e10d43a3610f8b97affafe6b2b084d492c79f859f2036bf99c",
+     "Gcam.EvidenceProbe.runtimeconfig.json": "86f305aced9638bcf63e9ed062b33bd4b51ede05e37bbdec2ea3eb782a606483",
+     "Gcam.Masks.dll": "7cba30d0b7239f6a510a1676f4fe9020b3e8aba43cdc711b1acfdd8615bbbf85",
+     "Gcam.Masks.pdb": "11a4c3c7cc093f1fc5e7ba1bace376da8f7c6574fb26b64f4d9ed1f4e962e618",
+     "Gcam.Simulation.dll": "9fafd50ddc8715204f5226757d031fab6c23928ac7008d77d811446c2d790b4b",
+     "Gcam.Simulation.pdb": "8f9a26487fdb416162805a28ecd52b45433e11e17b8c467935045a26d6f56220"
+    }
+   }
+  },
+  {
+   "id": "t41-confirm-Wide-v4",
+   "kind": "probe",
+   "mode": "studio-readout-v4",
+   "recipe_driver": "samples/evidence/studio_readout_v4_driver.py",
+   "executable": "Gcam.EvidenceProbe.dll",
+   "seeds": "T41_CONFIRM32",
+   "n": 32,
+   "Phase": "confirm",
+   "Geometry": "Wide",
+   "Recipe": {
+    "File": "samples/evidence/studio-readout/recipe-v4.json",
+    "Sha256": "057b9e161ea91ea41f40b631cedf85faaffc0b7170f4d623e6fcf3202f678a70"
+   },
+   "Freeze": {
+    "Kind": "SingleFrozenCandidate;SelectionSkipped",
+    "RecipeSha256": "057b9e161ea91ea41f40b631cedf85faaffc0b7170f4d623e6fcf3202f678a70",
+    "RuleSha256": "854adf86627977ef4be05e509dd69e550b2b8ce0372939a2379c1501bfb30d5f",
+    "DriverSha256": "451d2f8f0b3f13d9c70adb660395a51feba2acf2cf00659367b6ffd74c5936e6",
+    "ManagedClosure": {
+     "Gcam.Configuration.dll": "3d474e9aa1ad2a69fef1b18b1cf2e8167a184169363a5eaca8c9000b651619f3",
+     "Gcam.Configuration.pdb": "fffa40e6534981e21e0dd47a676b0862e6c6ec79027fca73570df3daf712519f",
+     "Gcam.Core.dll": "c48a48bfaff2eff672aaa9d5cae73063afbd81f1ecfabb52c98359b83619df98",
+     "Gcam.Core.pdb": "e3561fbe2df7ee6c5abccc96cfab15162e123281dce2a506287e723ea0d58aba",
+     "Gcam.Decoding.dll": "2d21eb3d089c419320cbc645573bd121fc16e9cd9104610abc71d556604ae94d",
+     "Gcam.Decoding.pdb": "051063db978bddd7d2c9a56cd2d9759cf2391b396deff00bc156cda1df4d5017",
+     "Gcam.Detector.dll": "794892c9153e659ea2ccafc2b12fe3770ade267515014e07d5d1d25c811f7760",
+     "Gcam.Detector.pdb": "1be1f090167d18389b6f528bc90431680c921e95d07d8ee5b4ab32a6e6a0af2b",
+     "Gcam.EvidenceProbe.deps.json": "25b09c5adaa23a7ea7d112586fe5b1f01602a5812fb875e2ff7978170654a5f5",
+     "Gcam.EvidenceProbe.dll": "889d0b5e8f50b15dbe52a017ef1969a7a31525fdc4e50d58f20833bd96441f9d",
+     "Gcam.EvidenceProbe.exe": "2ce57b3b7e632223107f04e30893d486f5bb4056b0c0f7b523a02bd337992cfe",
+     "Gcam.EvidenceProbe.pdb": "a8eddbc35239e0e10d43a3610f8b97affafe6b2b084d492c79f859f2036bf99c",
+     "Gcam.EvidenceProbe.runtimeconfig.json": "86f305aced9638bcf63e9ed062b33bd4b51ede05e37bbdec2ea3eb782a606483",
+     "Gcam.Masks.dll": "7cba30d0b7239f6a510a1676f4fe9020b3e8aba43cdc711b1acfdd8615bbbf85",
+     "Gcam.Masks.pdb": "11a4c3c7cc093f1fc5e7ba1bace376da8f7c6574fb26b64f4d9ed1f4e962e618",
+     "Gcam.Simulation.dll": "9fafd50ddc8715204f5226757d031fab6c23928ac7008d77d811446c2d790b4b",
+     "Gcam.Simulation.pdb": "8f9a26487fdb416162805a28ecd52b45433e11e17b8c467935045a26d6f56220"
+    }
+   }
+  },
+  {
+   "id": "t41-confirm-High-v4",
+   "kind": "probe",
+   "mode": "studio-readout-v4",
+   "recipe_driver": "samples/evidence/studio_readout_v4_driver.py",
+   "executable": "Gcam.EvidenceProbe.dll",
+   "seeds": "T41_CONFIRM32",
+   "n": 32,
+   "Phase": "confirm",
+   "Geometry": "High",
+   "Recipe": {
+    "File": "samples/evidence/studio-readout/recipe-v4.json",
+    "Sha256": "057b9e161ea91ea41f40b631cedf85faaffc0b7170f4d623e6fcf3202f678a70"
+   },
+   "Freeze": {
+    "Kind": "SingleFrozenCandidate;SelectionSkipped",
+    "RecipeSha256": "057b9e161ea91ea41f40b631cedf85faaffc0b7170f4d623e6fcf3202f678a70",
+    "RuleSha256": "854adf86627977ef4be05e509dd69e550b2b8ce0372939a2379c1501bfb30d5f",
+    "DriverSha256": "451d2f8f0b3f13d9c70adb660395a51feba2acf2cf00659367b6ffd74c5936e6",
+    "ManagedClosure": {
+     "Gcam.Configuration.dll": "3d474e9aa1ad2a69fef1b18b1cf2e8167a184169363a5eaca8c9000b651619f3",
+     "Gcam.Configuration.pdb": "fffa40e6534981e21e0dd47a676b0862e6c6ec79027fca73570df3daf712519f",
+     "Gcam.Core.dll": "c48a48bfaff2eff672aaa9d5cae73063afbd81f1ecfabb52c98359b83619df98",
+     "Gcam.Core.pdb": "e3561fbe2df7ee6c5abccc96cfab15162e123281dce2a506287e723ea0d58aba",
+     "Gcam.Decoding.dll": "2d21eb3d089c419320cbc645573bd121fc16e9cd9104610abc71d556604ae94d",
+     "Gcam.Decoding.pdb": "051063db978bddd7d2c9a56cd2d9759cf2391b396deff00bc156cda1df4d5017",
+     "Gcam.Detector.dll": "794892c9153e659ea2ccafc2b12fe3770ade267515014e07d5d1d25c811f7760",
+     "Gcam.Detector.pdb": "1be1f090167d18389b6f528bc90431680c921e95d07d8ee5b4ab32a6e6a0af2b",
+     "Gcam.EvidenceProbe.deps.json": "25b09c5adaa23a7ea7d112586fe5b1f01602a5812fb875e2ff7978170654a5f5",
+     "Gcam.EvidenceProbe.dll": "889d0b5e8f50b15dbe52a017ef1969a7a31525fdc4e50d58f20833bd96441f9d",
+     "Gcam.EvidenceProbe.exe": "2ce57b3b7e632223107f04e30893d486f5bb4056b0c0f7b523a02bd337992cfe",
+     "Gcam.EvidenceProbe.pdb": "a8eddbc35239e0e10d43a3610f8b97affafe6b2b084d492c79f859f2036bf99c",
+     "Gcam.EvidenceProbe.runtimeconfig.json": "86f305aced9638bcf63e9ed062b33bd4b51ede05e37bbdec2ea3eb782a606483",
+     "Gcam.Masks.dll": "7cba30d0b7239f6a510a1676f4fe9020b3e8aba43cdc711b1acfdd8615bbbf85",
+     "Gcam.Masks.pdb": "11a4c3c7cc093f1fc5e7ba1bace376da8f7c6574fb26b64f4d9ed1f4e962e618",
+     "Gcam.Simulation.dll": "9fafd50ddc8715204f5226757d031fab6c23928ac7008d77d811446c2d790b4b",
+     "Gcam.Simulation.pdb": "8f9a26487fdb416162805a28ecd52b45433e11e17b8c467935045a26d6f56220"
+    }
+   }
+  }
+ ]
+}

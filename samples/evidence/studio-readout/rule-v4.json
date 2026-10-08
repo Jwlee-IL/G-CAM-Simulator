@@ -1,0 +1,28 @@
+{
+ "Version": 4,
+ "Offer": "CalibrationSucceededOnEveryConfirmationSeed",
+ "Label": "experimental",
+ "PerformanceGate": false,
+ "MissingOrCorruptRunOrProvenance": "FailClosedBeforePublication",
+ "CalibrationFailure": "RetainExactFailureAndSeed;RefusePresetLine",
+ "CostPopulation": "FirstEightT41_CONFIRM32SeedsFixedBeforeConfirmation;AllFourT41_DEV4SeedsInDevelopment",
+ "CostDoesNotGate": true,
+ "FailedCalibrationCost": "KeepDirectCost;AngerUnavailable;NeverPublishSurvivorOnlyIntervals",
+ "Intervals": {
+  "Confidence": 0.95,
+  "Clusters": "OuterSeed;EqualWeightPositionsAndTrialsWithinSeed",
+  "Rms": "TwoSidedStudentOnSeedMSE;ClampLowerToZero;SquareRoot",
+  "Bias": "TwoSidedStudentOnSeedMeanPerPositionSquaredMeanError;ClampLowerToZero;SquareRoot",
+  "Probability": "TwoSidedStudentOnSeedRemoteFraction;ClampToUnitInterval",
+  "F": "RatioOfOuterMeanMSE;PairedLogRatioDeltaStudentInterval",
+  "Quantiles975": {"4": 3.182446305284263, "8": 2.364624251010299, "32": 2.039513446396408},
+  "Coverage": "OuterClusterApproximation;NotExactSmallSampleOrRarePeakCoverage;ZeroVarianceIsNotProofOfZeroRisk"
+ },
+ "Remote": "RadialAngularErrorDegreesGreaterThanCellMm/DistanceMm*180/pi;AllRemotePeaksRemainInRMS",
+ "FMeaning": "EqualEmittedFluenceSourceMSEPenalty;DirectReferenceEqualsOne;NotMeasurementTimeFactor",
+ "CrystalDiagnostics": "NonGating;PairedFirstInteractionGPerAxisRad2;SingleCrystalMisID;IsolatedSensitivityMapWeakestMedian;AcceptedMultiCrystalShare",
+ "CrystalDiagnosticsPopulation": "All32ConfirmationSeeds;AllDEV4InDevelopment;NoSurvivorOnlyInterval",
+ "CrystalWindow": "GlobalCodeSumWithin15PercentOfBlindPhotopeak;RateTruthUsesDominantHitWithOneAcceptancePerHistory",
+ "ImagingWindow": "DirectTrueTotalDepositWithin15PercentOfLine;AngerLUTAssignedPerCrystalCalibratedEnergyWithin15PercentOfLine",
+ "Selection": "Skipped;OneFrozenCandidate"
+}
