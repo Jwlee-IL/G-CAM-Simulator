@@ -6,7 +6,7 @@ verifies, where its expected value comes from and how its tolerance is justified
 [VV.Tests.Results](VV.Tests.Results.md); requirement status in [VV.Studio](VV.Studio.md).
 
 **At a glance**
-- 176 units: 136 xUnit classes, 7 unittest classes, 29 cocotb configurations, 4 checkers.
+- 177 units: 136 xUnit classes, 8 unittest classes, 29 cocotb configurations, 4 checkers.
 - Every entry states purpose, oracle, tolerance (its derivation, or "exact", "structural", "measurement only"), gates
   and requirement / evidence selectors in a fenced JSON block.
 - 70 units carry a margin the code states without a derivation — recorded as a finding, not filled in.
@@ -198,7 +198,8 @@ Run `python samples/testing/test_records.py check-catalog --discover` after a Re
 | `unittest::test_studio_readout.StudioReadoutRuleV2Tests` | 6 | 6 |
 | `unittest::test_studio_readout.StudioReadoutRuleV3Tests` | 8 | 8 |
 | `unittest::test_studio_readout.StudioReadoutSelectorTests` | 8 | 8 |
-| `unittest::test_studio_readout_v4.StudioReadoutRuleV4Tests` | 14 | 14 |
+| `unittest::test_studio_readout_v4.StudioReadoutRuleV4Tests` | 15 | 15 |
+| `unittest::test_studio_readout_v5.StudioReadoutRuleV5Tests` | 10 | 10 |
 <!-- END GENERATED: TEST DISCOVERY -->
 
 ## PlotViewRenderTests — Gcam.Studio.RenderTests
@@ -3659,7 +3660,7 @@ Gates: none.
 
 Purpose: TODO-41 v4 offers an experimental (preset, line) only when every confirmation calibration succeeds. Costs never gate. Refusals retain their seed and failure message; missing/corrupt runs fail closed. Source RMS, per-position bias, remote-peak probability, paired F and crystal diagnostics aggregate at the outer-seed level; failed calibration does not produce a survivor-only Anger interval.
 
-Oracle: Constructed calibration statuses and literal failure text; MSE clusters (1, 1, 1, 9) have mean 3, sample standard deviation 4 and standard error 2. Proportional paired errors give F = 4 with zero interval width; independent numerator changes give influence (-2/3, -2/3, -2/3, 2). Alternating position signs retain bias magnitude 1. Hand-computed crystal ratios and signed G; the production provenance reader refuses an absent done record. A complete synthetic 32-seed provenance ensemble retains a failure outside the fixed eight-seed cost subset and rejects a corrupted output; no photon transport or Git mutation is used. A complete synthetic 32-seed provenance ensemble retains a failure outside the fixed eight-seed cost subset and rejects a corrupted output; no photon transport or Git mutation is used. A complete synthetic 32-seed provenance ensemble retains a failure outside the fixed eight-seed cost subset and rejects a corrupted output; no photon transport or Git mutation is used.
+Oracle: Constructed calibration statuses and literal failure text; MSE clusters (1, 1, 1, 9) have mean 3, sample standard deviation 4 and standard error 2. Proportional paired errors give F = 4 with zero interval width; independent numerator changes give influence (-2/3, -2/3, -2/3, 2). Alternating position signs retain bias magnitude 1. Hand-computed crystal ratios and signed G; the production provenance reader refuses an absent done record. A complete synthetic 32-seed provenance ensemble retains a failure outside the fixed eight-seed cost subset and rejects a corrupted output; no photon transport or Git mutation is used. The CLI main entry publishes a complete synthetic fixture with the real summary provenance and publisher; its JSON envelope, analysis arguments, current selector hash and hash-bound output sidecar are checked.
 
 Tolerance: Structural assertions and unittest's default seven-decimal-place comparison of analytic floating values. Student constants are the pinned two-sided 0.975 quantiles; no sampled physics tolerance.
 
@@ -3668,5 +3669,21 @@ Gates: none. Git-mutation fixtures remain disabled by the provenance suite's exi
 Source: [samples/evidence/tests/test_studio_readout_v4.py](../samples/evidence/tests/test_studio_readout_v4.py).
 
 ```json
-{"id":"unittest::test_studio_readout_v4.StudioReadoutRuleV4Tests","runner":"unittest","methods":["test_offered_is_calibration_only_even_for_large_cost","test_refused_cell_and_failure_message_carried_through","test_missing_calibration_run_fails_closed","test_duplicate_or_corrupt_status_fails_closed","test_cost_table_intervals_have_hand_computed_oracle","test_identity_control_has_unit_f","test_paired_log_ratio_interval_has_hand_computed_oracle","test_crystal_diagnostics_have_signed_g_and_isolated_sensitivity","test_bias_is_per_position_and_does_not_cancel","test_failed_calibration_does_not_publish_survivor_only_cost","test_missing_imaging_trial_fails_closed","test_nonfinite_cost_fails_closed","test_aggregate_rejects_missing_provenance_before_publication","test_complete_provenance_ensemble_and_failure_outside_cost_subset"],"sources":{"samples/evidence/tests/test_studio_readout_v4.py":"22eb656271e7a3dfae1b0e4012b40eab8eb295085188e2cc7e5fd51d7c28cd27"},"trace":[]}
+{"id":"unittest::test_studio_readout_v4.StudioReadoutRuleV4Tests","runner":"unittest","methods":["test_offered_is_calibration_only_even_for_large_cost","test_refused_cell_and_failure_message_carried_through","test_missing_calibration_run_fails_closed","test_duplicate_or_corrupt_status_fails_closed","test_cost_table_intervals_have_hand_computed_oracle","test_identity_control_has_unit_f","test_paired_log_ratio_interval_has_hand_computed_oracle","test_crystal_diagnostics_have_signed_g_and_isolated_sensitivity","test_bias_is_per_position_and_does_not_cancel","test_failed_calibration_does_not_publish_survivor_only_cost","test_missing_imaging_trial_fails_closed","test_nonfinite_cost_fails_closed","test_aggregate_rejects_missing_provenance_before_publication","test_complete_provenance_ensemble_and_failure_outside_cost_subset","test_main_publishes_complete_fixture_with_bound_provenance"],"sources":{"samples/evidence/tests/test_studio_readout_v4.py":"7137e463abbd9fb7c3b7816a53b60a9048613086dae70712cfafc358d292c429"},"trace":[]}
+```
+
+## StudioReadoutRuleV5Tests — unittest
+
+Purpose: Declared repair changes only Wide/661.7 and High/661.7 verdicts on fresh REPAIR32 seeds. Calibration alone decides offers; complete fixed populations and provenance are required. CLI publication uses the real hash-bound publisher.
+
+Oracle: Literal calibration failures and exact seed populations; MSE clusters (1,1,1,9) give mean3, sample SD4 and SE2. Proportional error gives paired F4; varying numerator gives log influence (-2/3,-2/3,-2/3,2). Alternating source-position error does not cancel bias. A complete two-cell synthetic32 ensemble with eight cost clusters publishes through main; its analysis SHA, arguments, sidecar, F4, signed G and literal failure outside the imaging subset are checked. Missing/corrupt fixture runs publish nothing. Preparation refuses incomplete DEV4, chooses the smallest complete successful level, excludes the declaration file from result rows, freezes the expected two families and preserves v4 fixture bytes; no transport or Git mutation is used.
+
+Tolerance: Exact structure and seven-decimal unittest analytic floating comparisons; pinned Student quantiles. No sampled physics tolerance.
+
+Gates: none.
+
+Source: [samples/evidence/tests/test_studio_readout_v5.py](../samples/evidence/tests/test_studio_readout_v5.py).
+
+```json
+{"id":"unittest::test_studio_readout_v5.StudioReadoutRuleV5Tests","runner":"unittest","methods":["test_development_budget_requires_all_four_and_smallest_success","test_calibration_offer_and_literal_refusal","test_missing_duplicate_and_corrupt_status_fail_closed","test_cost_interval_and_paired_ratio_oracles","test_no_survivor_only_cost_and_bias_does_not_cancel","test_main_end_to_end_real_publisher_and_diagnostic_oracle","test_failure_outside_cost_subset_refuses_and_main_keeps_message","test_missing_or_corrupt_run_prevents_main_publication","test_repair_scope_rejects_confirmation_phase_and_other_line","test_prepare_pins_only_complete_development_and_preserves_v4"],"sources":{"samples/evidence/tests/test_studio_readout_v5.py":"ba80bacf667a88d945414a81e4964634700b3f1c878d12478a0f13cb74806d4b"},"trace":[]}
 ```

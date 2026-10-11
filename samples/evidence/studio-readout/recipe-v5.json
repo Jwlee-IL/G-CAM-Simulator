@@ -1,0 +1,144 @@
+{
+ "Version": 5,
+ "Rule": {
+  "File": "samples/evidence/studio-readout/rule-v5.json",
+  "Sha256": "5c088587263cb0cf2830793a783aac7c7c3d3870336a09b8852b0f29dc1a687d"
+ },
+ "Design": "Declared repair: identical v4 optics, sensors, pulse/trigger, LUT v2 and constants; only two calibration budgets change",
+ "Geometries": [
+  {
+   "Id": "Wide",
+   "Count": 34,
+   "PitchMm": 0.75,
+   "DistanceMm": 50.0,
+   "Rank": 17,
+   "CellMm": 1.0,
+   "CalibrationHistoriesPerCrystal": 8000
+  },
+  {
+   "Id": "High",
+   "Count": 44,
+   "PitchMm": 0.4,
+   "DistanceMm": 100.0,
+   "Rank": 13,
+   "CellMm": 0.5,
+   "CalibrationHistoriesPerCrystal": 64000
+  }
+ ],
+ "EnergiesKeV": [
+  661.7
+ ],
+ "RatesCps": [
+  0,
+  100000
+ ],
+ "OpticalPhotons": 100000,
+ "DepthBins": 8,
+ "HistogramBinsPerCrystal": 32,
+ "ValidationHistoriesPerCrystal": 3000,
+ "RateDiagnosticHits": 10000,
+ "FocalDistanceMm": 1000,
+ "PositionHalfFraction": 0.45,
+ "Positions": [
+  [
+   0,
+   0
+  ],
+  [
+   1,
+   0
+  ],
+  [
+   -1,
+   0
+  ],
+  [
+   0,
+   1
+  ],
+  [
+   0,
+   -1
+  ],
+  [
+   1,
+   1
+  ],
+  [
+   1,
+   -1
+  ],
+  [
+   -1,
+   1
+  ],
+  [
+   -1,
+   -1
+  ]
+ ],
+ "Decoder": "FiniteMaskCrossCorrelation;HalfExtent=.95*NominalFCFOVHalf;Step=max(.2mm,QuarterElement);Tent",
+ "FloodCorrection": "OwnCalibrationFloodPerPath;SamePhysicalWindowAsImaging;Weight=MeanAssignedCount/BinCount;NoClipping;EmptyBinMakesCostUnavailableOnly",
+ "DirectReferenceCounts": [
+  1000,
+  4000
+ ],
+ "ExposurePilotHistories": 120000,
+ "Exposure": "Round(TargetCounts*120000/IndependentPilotDirectAcceptance);ExactPoissonProposalCount;FreshHistories;EqualFluenceBothPaths",
+ "TrialsPerPosition": 64,
+ "CostSeeds": [
+  47000001,
+  47104730,
+  47209459,
+  47314188,
+  47418917,
+  47523646,
+  47628375,
+  47733104
+ ],
+ "CostReduction": "Fixed first eight repair seeds; calibration and crystal diagnostics all32",
+ "PurposeKeys": {
+  "Optics": 1,
+  "CalibrationTransport": 2,
+  "CalibrationResponse": 3,
+  "CalibrationNoise": 4,
+  "DiagnosticTransport": 10,
+  "DiagnosticResponse": 20,
+  "DiagnosticIsolatedNoise": 21,
+  "DiagnosticRateNoise": 22,
+  "DiagnosticArrival": 23,
+  "ExposurePilot": "200+position",
+  "FreshTransport": "6000+k",
+  "FreshResponse": "12000+k",
+  "IsolatedNoise": "24000+k",
+  "PoissonExposure": "30000+k",
+  "RateNoise": "40000+k",
+  "RateArrival": "50000+k",
+  "k": "position*64+trial+4096*exposureIndex",
+  "LineOffset": "100 fixed for 661.7keV, preserving the v4 physical stream convention; optics offset0"
+ },
+ "BudgetEvidence": {
+  "File": "samples/evidence/studio-readout/development-calibration-budget-v5.json",
+  "Sha256": "8da4a2e7fdf524eca658f9ad8fb6b50a839aeb9fb3cb2e19d3c9248821179bda"
+ },
+ "Scope": [
+  "Wide/661.7",
+  "High/661.7"
+ ],
+ "OtherCells": "RetainPublishedV4Verdicts",
+ "FinalRepair": true,
+ "BaseV4": {
+  "Recipe": {
+   "File": "samples/evidence/studio-readout/recipe-v4.json",
+   "Sha256": "057b9e161ea91ea41f40b631cedf85faaffc0b7170f4d623e6fcf3202f678a70"
+  },
+  "Rule": {
+   "File": "samples/evidence/studio-readout/rule-v4.json",
+   "Sha256": "854adf86627977ef4be05e509dd69e550b2b8ce0372939a2379c1501bfb30d5f"
+  },
+  "Manifest": {
+   "File": "samples/evidence/manifest-studio-readout-v4.json",
+   "Sha256": "c8f1d052a4f2b93343652c8046a7eaeb424f1131b89e83d9984e9e10245832b3"
+  }
+ }
+}

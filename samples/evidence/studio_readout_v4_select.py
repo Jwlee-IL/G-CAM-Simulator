@@ -247,9 +247,9 @@ def main():
     parser.add_argument('--out', required=True)
     args = parser.parse_args()
     result = aggregate(args.runs, args.manifest, args.phase)
-    result['Provenance'] = pv.summary_provenance([result['Provenance']], __file__, {'Phase': args.phase},
+    result['Provenance'] = pv.summary_provenance([result['Provenance']], __file__, argparse.Namespace(Phase=args.phase),
                                                {pathlib.Path(args.manifest).name: pv.file_sha(args.manifest)})
-    pv.publish(result['Provenance'], {pathlib.Path(args.out): pv.json_bytes(result)})
+    pv.publish({pathlib.Path(args.out): pv.json_bytes(result)}, result['Provenance'])
 
 
 if __name__ == '__main__':

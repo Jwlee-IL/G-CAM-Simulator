@@ -145,7 +145,7 @@ class StudioReadoutRuleV4Tests(unittest.TestCase):
             with self.assertRaises(SystemExit):
                 selector.aggregate(HERE / 'absent-v4-fixture', HERE / 'not-read.json', 'dev')
 
-    def test_complete_provenance_ensemble_and_failure_outside_cost_subset(self):
+    def complete_fixture(self, publish=False):
         pv = selector.pv
         parent = pathlib.Path(os.environ.get('GCAM_PROVENANCE_TEST_ROOT',
                               str(pathlib.Path(tempfile.gettempdir()) / 'gcam-todo41/v4-test-fixtures')))
@@ -213,6 +213,21 @@ class StudioReadoutRuleV4Tests(unittest.TestCase):
             self.assertEqual(cell['CalibrationSeeds'], 32)
             self.assertEqual(cell['CostTable'][0]['F']['Estimate'], 4)
             self.assertEqual(cell['CostTable'][0]['F']['Clusters'], 8)
+            if publish:
+                output = root / 'published.json'
+                argv = ['selector', '--runs', str(root), '--manifest', str(evidence / 'manifest.json'),
+                        '--phase', 'confirm', '--out', str(output)]
+                with mock.patch.object(sys, 'argv', argv):
+                    selector.main()
+                published = pv.read_json(output)
+                self.assertTrue(published['QualificationPublished'])
+                self.assertTrue(published['Matrices']['Fixture'][0]['Offered'])
+                self.assertEqual(published['Matrices']['Fixture'][0]['CostTable'][0]['F']['Estimate'], 4)
+                self.assertEqual(published['Provenance']['Analysis']['Arguments'], {'Phase': 'confirm'})
+                self.assertEqual(published['Provenance']['Analysis']['Files'][
+                    'samples/evidence/studio_readout_v4_select.py'], pv.file_sha(selector.__file__))
+                pv.validate_sidecar(output)
+                return
             write(seeds[-1], failed=True)
             refused = selector.aggregate(root, evidence / 'manifest.json', 'confirm')['Matrices']['Fixture'][0]
             self.assertFalse(refused['Offered'])
@@ -228,6 +243,12 @@ class StudioReadoutRuleV4Tests(unittest.TestCase):
             (run / 'stdout.txt').write_bytes(b'corrupt')
             with self.assertRaises(SystemExit):
                 selector.aggregate(root, evidence / 'manifest.json', 'confirm')
+
+    def test_complete_provenance_ensemble_and_failure_outside_cost_subset(self):
+        self.complete_fixture()
+
+    def test_main_publishes_complete_fixture_with_bound_provenance(self):
+        self.complete_fixture(publish=True)
 
 
 if __name__ == '__main__':

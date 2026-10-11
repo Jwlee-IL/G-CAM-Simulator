@@ -1,0 +1,49 @@
+{
+ "Version": 5,
+ "Offer": "CalibrationSucceededOnEveryRepairSeed",
+ "Label": "experimental",
+ "PerformanceGate": false,
+ "MissingOrCorruptRunOrProvenance": "FailClosedBeforePublication",
+ "CalibrationFailure": "RetainExactFailureAndSeed;RefusePresetLine",
+ "CostPopulation": "FirstEightT41_REPAIR32SeedsFixedBeforeRepair;AllFourT41_DEV4SeedsInDevelopment",
+ "CostDoesNotGate": true,
+ "FailedCalibrationCost": "KeepDirectCost;AngerUnavailable;NeverPublishSurvivorOnlyIntervals",
+ "Intervals": {
+  "Confidence": 0.95,
+  "Clusters": "OuterSeed;EqualWeightPositionsAndTrialsWithinSeed",
+  "Rms": "TwoSidedStudentOnSeedMSE;ClampLowerToZero;SquareRoot",
+  "Bias": "TwoSidedStudentOnSeedMeanPerPositionSquaredMeanError;ClampLowerToZero;SquareRoot",
+  "Probability": "TwoSidedStudentOnSeedRemoteFraction;ClampToUnitInterval",
+  "F": "RatioOfOuterMeanMSE;PairedLogRatioDeltaStudentInterval",
+  "Quantiles975": {
+   "4": 3.182446305284263,
+   "8": 2.364624251010299,
+   "32": 2.039513446396408
+  },
+  "Coverage": "OuterClusterApproximation;NotExactSmallSampleOrRarePeakCoverage;ZeroVarianceIsNotProofOfZeroRisk"
+ },
+ "Remote": "RadialAngularErrorDegreesGreaterThanCellMm/DistanceMm*180/pi;AllRemotePeaksRemainInRMS",
+ "FMeaning": "EqualEmittedFluenceSourceMSEPenalty;DirectReferenceEqualsOne;NotMeasurementTimeFactor",
+ "CrystalDiagnostics": "NonGating;PairedFirstInteractionGPerAxisRad2;SingleCrystalMisID;IsolatedSensitivityMapWeakestMedian;AcceptedMultiCrystalShare",
+ "CrystalDiagnosticsPopulation": "All32RepairSeeds;NoSurvivorOnlyInterval",
+ "CrystalWindow": "GlobalCodeSumWithin15PercentOfBlindPhotopeak;RateTruthUsesDominantHitWithOneAcceptancePerHistory",
+ "ImagingWindow": "DirectTrueTotalDepositWithin15PercentOfLine;AngerLUTAssignedPerCrystalCalibratedEnergyWithin15PercentOfLine",
+ "Selection": "DeclaredBudgetRepair;NoFurtherRepairAfterREPAIR32",
+ "Scope": [
+  "Wide/661.7",
+  "High/661.7"
+ ],
+ "OtherCells": "RetainPublishedV4Verdicts",
+ "FinalRepair": true,
+ "BudgetSelection": {
+  "WideCandidates": [
+   8000,
+   32000
+  ],
+  "HighCandidates": [
+   64000
+  ],
+  "Choose": "SmallestCandidateSucceededOnAllFourDEV4;Wide32kOnlyIfAnyWide8kFailure;NoOtherConstantChanges",
+  "NoneSucceeded": "Stop;NoFrozenRepairCandidate"
+ }
+}

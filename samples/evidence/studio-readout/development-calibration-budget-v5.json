@@ -1,0 +1,177 @@
+{
+ "Version": 5,
+ "Budgets": {
+  "Wide": 8000,
+  "High": 64000
+ },
+ "Seeds": [
+  41000001,
+  41104730,
+  41209459,
+  41314188
+ ],
+ "CandidateLevels": {
+  "Wide": [
+   8000,
+   32000
+  ],
+  "High": [
+   64000
+  ]
+ },
+ "Rule": "Smallest tested level succeeding on all four DEV4",
+ "SourceSha256": "b880fc5ba3e85a48704d9ed77f9d6b98b2fe3c3938cc78c1de207051ccfc3593",
+ "DevelopmentResults": [
+  {
+   "Seed": 41000001,
+   "Geometry": "High",
+   "Budget": 64000,
+   "EnergyKeV": 661.7,
+   "Succeeded": true,
+   "Failure": null,
+   "Markers": 1936,
+   "Scored": 123904000,
+   "InWindow": 43447895,
+   "BuildSeconds": 79.2325696,
+   "CalibrationSeconds": 2394.8309767,
+   "PeakWorkingSetBytes": 5777838080,
+   "PeakPagedMemoryBytes": 6625234944,
+   "PrivateMemoryBytes": 6604103680,
+   "ManagedRetainedBytes": 6499731680
+  },
+  {
+   "Seed": 41104730,
+   "Geometry": "High",
+   "Budget": 64000,
+   "EnergyKeV": 661.7,
+   "Succeeded": true,
+   "Failure": null,
+   "Markers": 1936,
+   "Scored": 123904000,
+   "InWindow": 43447204,
+   "BuildSeconds": 75.7621545,
+   "CalibrationSeconds": 2317.1661032,
+   "PeakWorkingSetBytes": 5725806592,
+   "PeakPagedMemoryBytes": 6595268608,
+   "PrivateMemoryBytes": 6595231744,
+   "ManagedRetainedBytes": 6498815200
+  },
+  {
+   "Seed": 41209459,
+   "Geometry": "High",
+   "Budget": 64000,
+   "EnergyKeV": 661.7,
+   "Succeeded": true,
+   "Failure": null,
+   "Markers": 1936,
+   "Scored": 123904000,
+   "InWindow": 43447666,
+   "BuildSeconds": 71.8883103,
+   "CalibrationSeconds": 2206.0745177,
+   "PeakWorkingSetBytes": 5778219008,
+   "PeakPagedMemoryBytes": 6617608192,
+   "PrivateMemoryBytes": 6594510848,
+   "ManagedRetainedBytes": 6498089040
+  },
+  {
+   "Seed": 41314188,
+   "Geometry": "High",
+   "Budget": 64000,
+   "EnergyKeV": 661.7,
+   "Succeeded": true,
+   "Failure": null,
+   "Markers": 1936,
+   "Scored": 123904000,
+   "InWindow": 43447612,
+   "BuildSeconds": 71.4648258,
+   "CalibrationSeconds": 2229.6669791,
+   "PeakWorkingSetBytes": 5776162816,
+   "PeakPagedMemoryBytes": 6620950528,
+   "PrivateMemoryBytes": 6598500352,
+   "ManagedRetainedBytes": 6498448064
+  },
+  {
+   "Seed": 41000001,
+   "Geometry": "Wide",
+   "Budget": 8000,
+   "EnergyKeV": 661.7,
+   "Succeeded": true,
+   "Failure": null,
+   "Markers": 1156,
+   "Scored": 9248000,
+   "InWindow": 3515543,
+   "BuildSeconds": 43.3510177,
+   "CalibrationSeconds": 112.6907542,
+   "PeakWorkingSetBytes": 570601472,
+   "PeakPagedMemoryBytes": 581357568,
+   "PrivateMemoryBytes": 550879232,
+   "ManagedRetainedBytes": 467748672
+  },
+  {
+   "Seed": 41104730,
+   "Geometry": "Wide",
+   "Budget": 8000,
+   "EnergyKeV": 661.7,
+   "Succeeded": true,
+   "Failure": null,
+   "Markers": 1156,
+   "Scored": 9248000,
+   "InWindow": 3515503,
+   "BuildSeconds": 42.4651997,
+   "CalibrationSeconds": 118.9448239,
+   "PeakWorkingSetBytes": 571486208,
+   "PeakPagedMemoryBytes": 582275072,
+   "PrivateMemoryBytes": 561324032,
+   "ManagedRetainedBytes": 466768024
+  },
+  {
+   "Seed": 41209459,
+   "Geometry": "Wide",
+   "Budget": 8000,
+   "EnergyKeV": 661.7,
+   "Succeeded": true,
+   "Failure": null,
+   "Markers": 1156,
+   "Scored": 9248000,
+   "InWindow": 3515550,
+   "BuildSeconds": 43.4702535,
+   "CalibrationSeconds": 113.3732954,
+   "PeakWorkingSetBytes": 571621376,
+   "PeakPagedMemoryBytes": 582291456,
+   "PrivateMemoryBytes": 562204672,
+   "ManagedRetainedBytes": 467878672
+  },
+  {
+   "Seed": 41314188,
+   "Geometry": "Wide",
+   "Budget": 8000,
+   "EnergyKeV": 661.7,
+   "Succeeded": true,
+   "Failure": null,
+   "Markers": 1156,
+   "Scored": 9248000,
+   "InWindow": 3515583,
+   "BuildSeconds": 42.401636,
+   "CalibrationSeconds": 116.3997288,
+   "PeakWorkingSetBytes": 566767616,
+   "PeakPagedMemoryBytes": 577536000,
+   "PrivateMemoryBytes": 549855232,
+   "ManagedRetainedBytes": 467904360
+  }
+ ],
+ "ZeroOfFourNominalOneSided95FailureUpper": 0.5271291954984121,
+ "WideTwoLevelBonferroniOneSided95FailureUpper": 0.6023646356164747,
+ "PriorConfirmation": {
+  "Wide": {
+   "Budget": 2000,
+   "Failed": 4,
+   "Total": 32
+  },
+  "High": {
+   "Budget": 32000,
+   "Failed": 1,
+   "Total": 32
+  }
+ },
+ "RiskScope": "Development-selected budget; old confirmation failures at different budgets cannot be pooled. Fresh REPAIR32 is final; zero/32 gives nominal one-sided95 failure upper1-.05^(1/32)."
+}
