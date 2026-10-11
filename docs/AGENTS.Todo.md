@@ -9,7 +9,7 @@ moves to the archive, marked done.
 
 | ID | Task | Origin | Owner | State |
 |---|---|---|---|---|
-| TODO-41 | **[Physical readout on every Studio preset](PLAN.Studio.ReadoutPresets.md):** the 30 × 30 default geometry builds in ~45 s and its flood-map LUT calibration fails on every fixed-seed repeat (TODO-40 review); make the readout calibrate and run on all presets, with measured cost | TODO-40 SD-2, author 2026-10-08 | Codex | confirmation run (rule v4: offer where calibration succeeds, imaging cost shown) |
+| TODO-41 | **[Physical readout on every Studio preset](PLAN.Studio.ReadoutPresets.md):** the 30 × 30 default geometry builds in ~45 s and its flood-map LUT calibration fails on every fixed-seed repeat (TODO-40 review); make the readout calibrate and run on all presets, with measured cost | TODO-40 SD-2, author 2026-10-08 | Codex | evidence complete (v4 confirmation + v5 repair: 662 / 1332 keV offered on every preset, 122 keV refused); next the Studio stage |
 | TODO-42 | **Physical readout under ambient / background:** extend pre-optical interaction recording to the ambient and BSR transport so a physical readout can run with the field on; **first step: an implementation-size estimate** for the author | TODO-40 SD-3, author 2026-10-08 | — | open — size estimate first |
 
 Next free ID: TODO-43. The `Gcam.Wpf` → Studio migration (TODO-06 … TODO-24) is complete — `Gcam.Wpf` was deleted in

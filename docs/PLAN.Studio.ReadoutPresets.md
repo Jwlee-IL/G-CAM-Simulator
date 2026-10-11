@@ -6,8 +6,10 @@ Wide FOV, High-res — and decides what Custom geometries get, with the preparat
 calibrated honestly, the outcome is an explicit, measured refusal, not a tuned pass. Studio stays the simulator's
 engineering viewer (D-34); the engine default readout stays DirectCrystal (D-57).
 
-Status: decisions after review taken 2026-10-08 (PD-1 … PD-7); implementation turn 2 in the same Codex conversation,
-worktree `C:\gw\w41`.
+Status: evidence complete 2026-10-12 — CONFIRM32 v4 and the declared REPAIR32 v5 judged (Corrections 2026-10-10 and
+2026-10-12): every preset offered (experimental) at 662 and 1332 keV, 122 keV refused on every head. Next: the Studio stage
+(generalise the 12 × 12 hard-codes, show the offer and the measured cost per preset × line, Custom experimental), then
+records and desktop scenarios on the author's go.
 
 ## What exists (checked in the code)
 
@@ -139,6 +141,26 @@ imaging cost beside it (absolute source RMS, bias and remote-peak probability fo
 exposures, with seed uncertainty), plus the crystal-level diagnostics. High-res 662 keV: offered only if a calibration
 budget fixed from development data succeeds, else refused. Readout improvements (migration-aware forward model / MLEM,
 multi-crystal event handling) are a separate Backlog item.
+
+**Correction (2026-10-10, confirmation and declared repair).** CONFIRM32 v4 (128 runs, all exit 0; interrupted twice by
+host memory pressure and resumed with one worker into the same root; selector publication bug fixed before
+aggregation): offered (experimental) — Baseline, Sharp 662 / 1332 keV, Wide and High-res 1332 keV; refused — 122 keV on
+every head (32 / 32 failures, no spot structure), Wide 662 keV (4 / 32 at 2 k histories per crystal), High-res 662 keV
+(1 / 32 at 32 k). Imaging cost (8 seeds, isolated): F at 1 k / 4 k direct counts 14.6 / 1.7 (Baseline 662), 121 / 5.0
+(Sharp 1332), 74 / 9.5 (Wide 1332), 110 / 2.7 (High-res 1332). **Author decision: a declared repair judgement** for Wide and
+High-res 662 keV on the fresh T41_REPAIR32 family (rule / recipe / manifest v5): only the calibration budget may change,
+chosen on development seeds by a pre-stated rule; offered iff calibration succeeds on all 32 repair seeds; the v4 record
+stays as published and the repair outcome is final for those two cells.
+
+**Correction (2026-10-12, repair outcome).** Development (T41_DEV4, calibration only) fixed the budgets at 8 k histories
+per crystal for Wide and 64 k for High-res (smallest level passing 4 / 4). REPAIR32 v5 (64 runs, one worker, all exit 0;
+rule `5c088587…`, recipe `e2d5f1f3…`, manifest `137377a3…`): calibration succeeded on **32 / 32** seeds in both cells →
+**Wide 662 keV and High-res 662 keV offered (experimental)**. Imaging cost (8 seeds; F at 1 k / 4 k direct counts,
+isolated): Wide 2.08 / 0.83, High-res 4.67 / 2.59; at 1e5 cps 2.80 / 0.83 and 4.68 / 2.69. Wide's F < 1 at 4 k is a
+bias effect, not an Anger advantage: the direct path's error there is almost all bias (RMS 0.517°, bias 0.511°; the same
+≈ 0.50° direct bias appears at 1332 keV), so a record must quote it with that reason. Diagnostics: single-crystal
+mis-identification 1.7 % (Wide) / 7.9 % (High-res); multi-crystal share 0.61 / 0.60. Planner re-run of the first seed of
+each v5 family: identical to the run outputs apart from timing and process-memory fields.
 
 ## Steps
 
