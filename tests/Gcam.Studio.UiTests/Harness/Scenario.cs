@@ -25,7 +25,7 @@ public static class Scenario
             record.Set("build", new { exe = app.ExePath, productVersion = app.ProductVersion, exeWritten = File.GetLastWriteTime(app.ExePath) });
             record.Set("process", new { pid = app.Process.Id, started = app.StartedAt, sandbox = app.Sandbox });
             window = app.MainWindow(TimeSpan.FromSeconds(15));
-            var ui = new StudioWindow(window);
+            var ui = new StudioWindow(window) { Log = record.Step };
             ui.Normalise(WindowWidth, WindowHeight);
             record.Set("window", window.Current.BoundingRectangle.ToString());
             Assert.Equal("Empty", ui.RunState);   // declared start state

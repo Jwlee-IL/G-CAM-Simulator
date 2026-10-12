@@ -24,14 +24,18 @@ public sealed partial class ImagingWorkspaceViewModel(MainViewModel shared, IIma
         ? OpticsGeometry.Calculate(ProjectionOptics, FocalDistanceMm) : null;
     public string GeometryText => Geometry?.Description ?? "Choose a valid decoder focal plane.";
     /// <summary>One line in the panel; <see cref="SamplingEvidence"/> is its tooltip (SR-OPT-05).</summary>
-    public string SamplingCaption => Shared.IsPhysicalReadout ? "Experimental LUT image: decoder response omits trigger efficiency and crystal migration." : "Precision is position-dependent (conditional evidence; hover for numbers).";
-    public string SamplingEvidence => "Position-dependent precision: a 1 m Sharp scan measured RMS 0.95 mm at 1.27 samples/cell and 0.24 mm at 3.8, at the same detector size. This is conditional evidence, not a pass threshold.";
+    public string SamplingCaption => Shared.IsPhysicalReadout ? "Experimental LUT image" : "Precision is position-dependent (conditional evidence; hover for numbers).";
+    public string SamplingEvidence => Shared.IsPhysicalReadout
+        ? "Experimental LUT image per calibration line: each window is assigned through its own line calibration; the decoder response omits trigger efficiency and crystal migration."
+        : "Position-dependent precision: a 1 m Sharp scan measured RMS 0.95 mm at 1.27 samples/cell and 0.24 mm at 3.8, at the same detector size. This is conditional evidence, not a pass threshold.";
     // Right-panel sections: focal plane and channel are used on every acquisition, the sweep only on demand.
     [ObservableProperty] private bool _isFocalExpanded = true;
     [ObservableProperty] private bool _isChannelExpanded = true;
     [ObservableProperty] private bool _isSweepExpanded;
     public string FocalSummary => Geometry is { } g ? $"{FocalDistanceMm:0.#} mm · element {g.ResolutionElementMm:0.##} mm" : $"{FocalPlane} mm";
-    public string ChannelSummary => Shared.IsPhysicalReadout ? $"{SelectedIsotope} · {Shared.WindowLowKeV:0.##}–{Shared.WindowHighKeV:0.##} keV" : $"{SelectedIsotope} · window {Shared.WindowFwhm:0.##} × FWHM{(Strip ? " · strip" : "")}"
+    /// <summary>Physical readout: why the selected channel has no image (never shown as a zero-count image).</summary>
+    public string? ChannelUnavailable => SelectedChannel?.Unavailable;
+    public string ChannelSummary => Shared.IsPhysicalReadout ? $"{SelectedIsotope} · {Shared.WindowLowKeV:0.##}–{Shared.WindowHighKeV:0.##} keV{(Shared.ApplyFloodCorrection ? " · flood-corrected" : "")}" : $"{SelectedIsotope} · window {Shared.WindowFwhm:0.##} × FWHM{(Strip ? " · strip" : "")}"
         + (Reconstruction == DecoderMethod.Mlem ? " · MLEM" : "");
 
     /// <summary>Reconstruction methods offered (TODO-36). Cross-correlation is the default (MD-3).</summary>
@@ -171,6 +175,7 @@ public sealed partial class ImagingWorkspaceViewModel(MainViewModel shared, IIma
     internal void RefreshChannels()
     {
         OnPropertyChanged(nameof(ChannelSummary)); // window N and strip change here
+        NotifyReadoutCost();
         _revision++;
         if (_updating) return; // A running preparation keeps its caches; one latest request follows it.
         _refresh ??= new CancellationTokenSource();
@@ -191,7 +196,7 @@ public sealed partial class ImagingWorkspaceViewModel(MainViewModel shared, IIma
                 var snapshot = Shared.Snapshot!;
                 var view = await service.ProcessAsync(_id, snapshot, _scene, _optics,
                     new(Shared.WindowFwhm, Strip, FocalDistanceMm, Reconstruction)
-                    { WindowLowKeV = Shared.WindowLowKeV, WindowHighKeV = Shared.WindowHighKeV }, token);
+                    { WindowLowKeV = Shared.WindowLowKeV, WindowHighKeV = Shared.WindowHighKeV, ApplyFloodCorrection = Shared.ApplyFloodCorrection }, token);
                 if (token.IsCancellationRequested) return;
                 if (revision != _revision) continue;
                 View = view;
@@ -215,7 +220,9 @@ public sealed partial class ImagingWorkspaceViewModel(MainViewModel shared, IIma
         SweepCommand.NotifyCanExecuteChanged();
         Measurements.Refresh(Result, ReconstructionUnit);
         foreach (string name in new[] { nameof(SelectedChannel), nameof(Result), nameof(Peaks), nameof(PeakText), nameof(Summary), nameof(ChannelSummary),
-                     nameof(DisplayedMethod), nameof(ReconstructionUnit), nameof(FloodUnit), nameof(FloodCaption), nameof(FloodHelp), nameof(StripNote) })
+                     nameof(DisplayedMethod), nameof(ReconstructionUnit), nameof(FloodUnit), nameof(FloodCaption), nameof(FloodHelp), nameof(StripNote),
+                     nameof(ChannelUnavailable) })
             OnPropertyChanged(name);
+        NotifyReadoutCost();
     }
 }

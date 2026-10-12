@@ -55,15 +55,6 @@ public sealed partial class MainViewModel : ObservableObject
         };
         DetectorWorkspace.Refresh();
         AddSource();
-        OpticsEditor.CanSelectPreset = candidate =>
-        {
-            if (IsPhysicalReadout && ReadoutPolicy.GeometryError(candidate) is { } error)
-            {
-                ReadoutMessage = error;
-                return false;
-            }
-            return true;
-        };
     }
 
     public ImagingWorkspaceViewModel Imaging { get; }
@@ -175,21 +166,17 @@ public sealed partial class MainViewModel : ObservableObject
     partial void OnOpticsChanged(OpticsSettings? oldValue, OpticsSettings newValue)
     {
         if (Locked(() => { Optics = oldValue!; OpticsEditor.Load(oldValue!); })) return;
-        if (IsPhysicalReadout && ReadoutPolicy.GeometryError(newValue) is { } error)
-        {
-            ReadoutMessage = error;
-            Optics = oldValue!;
-            OpticsEditor.RefreshPresetSelection();
-            return;
-        }
         if (OpticsEditor.Effective != newValue) OpticsEditor.Load(newValue);
         Imaging.NotifyGeometryChanged();
         ValidateGap();
         DetectorWorkspace.Refresh();
         Imaging.InvalidateSweep();
-        OnPropertyChanged(nameof(ReadoutState));
+        NotifyReadout();
     }
-    public DetectorSettings Detector => new() { ReadoutMode = ReadoutMode, PreparedReadoutId = PreparedReadout?.Id ?? Guid.Empty, GainSigma = GainSigmaPercent / 100, GainSeed = GainSeed, Chain = Chain, ReflectorGapMm = PendingGapMm };
+    /// <summary>Pending detector inputs; on the physical path they carry the captured bank of required line preparations.</summary>
+    public DetectorSettings Detector => IsPhysicalReadout && MatchingBank is { Count: > 0 } bank
+        ? ModuleDetector with { PreparedReadoutLines = new(bank.Select(p => p.Id).ToArray()) }
+        : ModuleDetector;
     public IReadOnlyList<ScintPreset> Scintillators => FrontEndMaterials.Scintillators;
     public IReadOnlyList<SensorPreset> Sensors => FrontEndParts.Sensors;
     public IReadOnlyList<PreampPreset> Preamps => FrontEndParts.Preamps;
@@ -226,8 +213,7 @@ public sealed partial class MainViewModel : ObservableObject
         if (Locked(() => ReflectorGapUm = oldValue!)) return;
         ValidateGap();
         OnPropertyChanged(nameof(Detector)); OnPropertyChanged(nameof(DetectorSummary));
-        OnPropertyChanged(nameof(ReadoutState));
-        DetectorWorkspace.Refresh();
+        NotifyReadout();
     }
     private void ValidateGap()
     {
@@ -492,9 +478,15 @@ public sealed partial class MainViewModel : ObservableObject
         if (SeedError is not null || AmbientDoseError is not null) return false;
         if (IsPhysicalReadout)
         {
-            ReadoutMessage = ReadoutPolicy.GeometryError(Optics) ?? (AmbientDoseRateMicroSvPerHour != 0 || BackgroundToSignalRatio != 0
+            var required = RequiredReadoutLines;
+            ReadoutMessage = AmbientDoseRateMicroSvPerHour != 0 || BackgroundToSignalRatio != 0
                 ? "Physical readout requires ambient and BSR at zero: their interaction records are unavailable."
-                : MatchingPreparation?.Succeeded != true ? "Prepare the matching experimental readout before Start." : null);
+                : required.Count == 0
+                    ? "No preparable calibration line is present in the scene: " + string.Join(" ", ReadoutPlans.Select(p => p.Reason))
+                    : !IsReadoutBankReady
+                        ? "Prepare the matching experimental readout before Start (every calibration line present in the scene: "
+                            + string.Join(", ", required.Select(p => p.LineKeV.ToString("0.##", CultureInfo.InvariantCulture) + " keV")) + ")."
+                        : null;
             if (ReadoutMessage is not null) { IsDetectorExpanded = true; return false; }
         }
         int seed = string.IsNullOrWhiteSpace(SeedText)
@@ -582,8 +574,20 @@ public sealed partial class MainViewModel : ObservableObject
     private void OnSourcesChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
         OnPropertyChanged(nameof(AmbientBsrReadout));
-        foreach (SourceItemViewModel s in e.NewItems ?? Array.Empty<SourceItemViewModel>()) s.IsEditable = CanEditInputs;
+        foreach (SourceItemViewModel s in e.NewItems ?? Array.Empty<SourceItemViewModel>())
+        {
+            s.IsEditable = CanEditInputs;
+            s.PropertyChanged += OnSourceIsotopeChanged;
+        }
+        foreach (SourceItemViewModel s in e.OldItems ?? Array.Empty<SourceItemViewModel>()) s.PropertyChanged -= OnSourceIsotopeChanged;
         StartCommand.NotifyCanExecuteChanged();
+        NotifyReadout();
+    }
+
+    // The calibration lines a physical acquisition needs follow the scene's isotopes (SD-A1).
+    private void OnSourceIsotopeChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(SourceItemViewModel.Isotope)) NotifyReadout();
     }
 
     internal void NotifyFocalGeometryChanged() => OnPropertyChanged(nameof(FcfovHalfMm));

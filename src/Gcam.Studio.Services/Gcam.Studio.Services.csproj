@@ -18,4 +18,11 @@
           CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 
+  <!-- TODO-41 (SD-A13): the generated readout offer / cost record, compiled in as a read-only resource and checked at
+       load against ReadoutOfferPin.Sha256; Studio never reads it from disk, TEMP or the network. -->
+  <ItemGroup>
+    <EmbeddedResource Include="..\..\samples\evidence\studio-readout\offer-cost-v1.json"
+                      LogicalName="Gcam.Studio.Services.ReadoutOfferRecord.json" />
+  </ItemGroup>
+
 </Project>

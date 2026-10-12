@@ -25,7 +25,10 @@ internal sealed class AcquisitionSession : IAcquisitionSession
     private readonly List<DetectedEvent> _events = [];
     private ListModeSource? _source;
     private PhysicalListModeSource? _physicalSource;
-    private readonly (ReadoutPreparation View, ReadoutDevice Device, ReadoutCalibration Calibration)? _prepared;
+    private readonly ReadoutBank? _prepared;
+    private readonly Action? _release;
+    private readonly ImmutableRecordStore<ReadoutLineAssignment>[] _lineAssignments = [];
+    private readonly int[] _lineAssigned = [], _lineUnknown = [];
     private readonly ImmutableRecordStore<MeasuredReadoutRecord> _measured = new();
     private readonly ImmutableRecordStore<RealisedReadoutHit> _realised = new();
     private readonly ImmutableRecordStore<ReadoutTruthSample> _truth = new();
@@ -42,13 +45,21 @@ internal sealed class AcquisitionSession : IAcquisitionSession
     private Task _worker;
 
     public AcquisitionSession(SimulationConfig config, DetectorSettings detector, double preset, double speed, TimeProvider clock,
-        (ReadoutPreparation View, ReadoutDevice Device, ReadoutCalibration Calibration)? prepared = null)
+        ReadoutBank? prepared = null, Action? release = null)
     {
         _config = config;
         _prepared = prepared;
-        if (prepared is { } artifact && artifact.View.Key != ReadoutPreparationService.Key(
-            new OpticsSettings { DetectorPixels = config.Detector.PixelsX, PixelPitchMm = config.Detector.PixelPitchMm }, detector))
-            throw new InvalidOperationException("Prepared readout does not match the acquired detector inputs.");
+        _release = release;
+        if (prepared is { } bank)
+        {
+            string key = ReadoutPreparationService.Key(
+                new OpticsSettings { DetectorPixels = config.Detector.PixelsX, PixelPitchMm = config.Detector.PixelPitchMm }, detector);
+            if (bank.Entries.Any(e => e.View.Key != key || e.View.Module is { } m && (m.CrystalsX != config.Detector.PixelsX || m.CrystalsY != config.Detector.PixelsY)))
+                throw new InvalidOperationException("Prepared readout does not match the acquired detector inputs.");
+            _lineAssignments = bank.Entries.Select(_ => new ImmutableRecordStore<ReadoutLineAssignment>()).ToArray();
+            _lineAssigned = new int[bank.Entries.Count];
+            _lineUnknown = new int[bank.Entries.Count];
+        }
         _detector = detector;
         _clock = clock;
         _flood = new DetectorImage(config.Detector.PixelsX, config.Detector.PixelsY);
@@ -110,7 +121,8 @@ internal sealed class AcquisitionSession : IAcquisitionSession
     {
         try
         {
-            if (_prepared is { } artifact) _physicalSource ??= new PhysicalListModeSource(_config, artifact.Device, artifact.Calibration, _config.Seed ?? 0);
+            if (_prepared is { } bank) _physicalSource ??= new PhysicalListModeSource(_config, bank.Reference.Device,
+                bank.Entries.Select(e => e.Calibration).ToArray(), _config.Seed ?? 0);
             else _source ??= new ListModeSource(_config);
             if (!_decoderBuilt)
             {
@@ -148,8 +160,16 @@ internal sealed class AcquisitionSession : IAcquisitionSession
                                 _measured.Add(new(_measured.Count, e.HoldTimeNs * 1e-9, e.TriggerTimeNs * 1e-9,
                                     Charges(e.Codes), Charges(e.AnalogAtHold), measured.RawX, measured.RawY, measured.Crystal,
                                     measured.EnergyKeV, e.DominantHit, e.ContributingHits, e.DominantShare));
+                                // Deposition follows the captured module (crystal index = row · Nx + column).
+                                int nx = _flood.Width;
                                 if (measured.Crystal < 0) _unknown++;
-                                else { _assigned++; _flood.Add(measured.Crystal % 12, measured.Crystal / 12, 1); }
+                                else { _assigned++; _flood.Add(measured.Crystal % nx, measured.Crystal / nx, 1); }
+                                for (int line = 0; line < _lineAssignments.Length; line++)
+                                {
+                                    var a = measured.Assignments[line];
+                                    _lineAssignments[line].Add(new(a.Crystal, a.EnergyKeV));
+                                    if (a.Crystal < 0) _lineUnknown[line]++; else _lineAssigned[line]++;
+                                }
                             }
                             foreach (var h in physical.LastHits)
                             {
@@ -195,7 +215,12 @@ internal sealed class AcquisitionSession : IAcquisitionSession
                 await channel.Writer.WriteAsync(new AcquisitionSnapshot(_live, counts, _physicalSource?.InputRateCps ?? source!.RateCps,
                     actual, limited, imaging, Array.AsReadOnly(_events.ToArray()), decodeWatch.Elapsed, completed)
                     { Detector = _detector, Optics = _optics, Seed = _config.Seed,
-                        Readout = _prepared is { } prepared ? new(prepared.View, _measured.Publish(), _realised.Publish(), _unknown, _physicalSource!.HasPendingHold) { LiveDensity = _rawDensity.ReadOnlyCopy(), TruthSamples = _truth.Publish() } : null,
+                        Readout = _prepared is { } prepared ? new(prepared.Reference.View, _measured.Publish(), _realised.Publish(), _unknown, _physicalSource!.HasPendingHold)
+                        {
+                            LiveDensity = _rawDensity.ReadOnlyCopy(), TruthSamples = _truth.Publish(),
+                            Lines = Array.AsReadOnly(prepared.Entries.Select((e, i) => new ReadoutLineView(e.View,
+                                _lineAssignments[i].Publish(), _lineAssigned[i], _lineUnknown[i])).ToArray())
+                        } : null,
                         AmbientRateCps = source?.AmbientRateCps ?? 0,
                         SourceRateCps = _config.Ambient is null ? 0 : source!.SourceRateCps,
                         AmbientMaximumEnergyKeV = _config.Ambient is { } ambient
@@ -231,5 +256,6 @@ internal sealed class AcquisitionSession : IAcquisitionSession
         _stop.Dispose();
         _source?.Dispose();
         _physicalSource?.Dispose();
+        _release?.Invoke();
     }
 }

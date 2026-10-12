@@ -288,6 +288,7 @@ def source_units():
                                    'rtl/crrc_contract.py': sha((REPO / 'rtl/crrc_contract.py').read_bytes().replace(b'\r\n', b'\n')),
                                    'rtl/run_cocotb.py': sha((REPO / 'rtl/run_cocotb.py').read_bytes().replace(b'\r\n', b'\n'))}}
     for name, path in [('calibration', 'samples/evidence/calibration_record.py'),
+                       ('studio-readout-offer', 'samples/evidence/studio_readout_offer_record.py'),
                        ('test-record-self-test', 'samples/testing/test_records.py'),
                        ('test-catalog', 'samples/testing/test_records.py'),
                        ('archived-replay', 'samples/testing/test_records.py')]:
@@ -485,8 +486,9 @@ def collect(bundle, family, no_build=False, include_background=False, checker=No
                           'executionPython': version([*interpreter, '-B', '-c',
                               'import platform; print(platform.python_implementation(), platform.python_version())'])})
         else:
-            require(checker in ('calibration', 'test-record-self-test', 'test-catalog', 'archived-replay'), 'checker: unknown')
+            require(checker in ('calibration', 'studio-readout-offer', 'test-record-self-test', 'test-catalog', 'archived-replay'), 'checker: unknown')
             args = {'calibration': [sys.executable, '-B', 'samples/evidence/calibration_record.py', '--release'],
+                    'studio-readout-offer': [sys.executable, '-B', 'samples/evidence/studio_readout_offer_record.py', '--check'],
                     'test-record-self-test': [sys.executable, '-B', str(Path(__file__)), 'self-test', '--out', str(folder / 'fixtures')],
                     'test-catalog': [sys.executable, '-B', str(Path(__file__)), 'check-catalog'],
                     'archived-replay': [sys.executable, '-B', str(Path(__file__)), 'check', '--archives']}[checker]

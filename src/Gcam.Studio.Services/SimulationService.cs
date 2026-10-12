@@ -17,9 +17,23 @@ public sealed class SimulationService(TimeProvider? timeProvider = null, IReadou
         detector ??= new DetectorSettings();
         var config = BuildConfig(scene, optics, detector, backgroundToSignalRatio);
         if (seed is { } fixedSeed) config.Seed = fixedSeed;
-        var prepared = detector.ReadoutMode == ReadoutMode.DirectCrystal ? ((ReadoutPreparation View, Gcam.Detector.ReadoutDevice Device, Gcam.Simulation.ReadoutCalibration Calibration)?)null : _readoutPreparation.Get(detector.PreparedReadoutId);
-        return new AcquisitionSession(config, detector, liveTimeS, speed,
-            timeProvider ?? TimeProvider.System, prepared);
+        if (detector.ReadoutMode == ReadoutMode.DirectCrystal)
+            return new AcquisitionSession(config, detector, liveTimeS, speed, timeProvider ?? TimeProvider.System);
+        // Start carries the captured resolved policy of the bank (its network solve); the shared prepared network is
+        // reused, never solved again. The bank stays pinned in the session cache while the session holds it.
+        var bank = _readoutPreparation.Capture(detector.PreparedReadoutIds);
+        try
+        {
+            config.Detector.Readout = ReadoutPreparationService.Policy(bank.Reference.View.Plan
+                ?? throw new InvalidOperationException("The prepared readout carries no resolved policy."));
+            return new AcquisitionSession(config, detector, liveTimeS, speed, timeProvider ?? TimeProvider.System, bank,
+                () => _readoutPreparation.Release(bank));
+        }
+        catch
+        {
+            _readoutPreparation.Release(bank);
+            throw;
+        }
     }
 
     /// <summary>Studio applies its realism inputs to a clone; existing scene-builder callers stay unchanged.</summary>
@@ -43,7 +57,6 @@ public sealed class SimulationService(TimeProvider? timeProvider = null, IReadou
         ArgumentNullException.ThrowIfNull(detector);
         if (detector.ReadoutMode != ReadoutMode.DirectCrystal)
         {
-            if (ReadoutPreparationService.GeometryError(optics) is { } readoutError) throw new ArgumentException(readoutError);
             if (ambient is not null || backgroundToSignalRatio != 0) throw new NotSupportedException("Physical readout requires ambient and BSR at zero: background interaction records are unavailable.");
             if (detector.ReadoutMode != ReadoutMode.FourOutputAnger) throw new NotSupportedException("Studio supports the experimental four-output preset only.");
         }

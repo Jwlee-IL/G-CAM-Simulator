@@ -1,7 +1,8 @@
 <UserControl x:Class="Gcam.Studio.Views.ImagingOptionsPanel"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:conv="clr-namespace:Gcam.Studio.Converters">
+             xmlns:conv="clr-namespace:Gcam.Studio.Converters"
+             xmlns:c="clr-namespace:Gcam.Studio.Controls">
     <!-- Imaging settings in three collapsible sections (same Expander.Section and one-line summary as the scene
          panel). Tools and measurements live under the images. -->
     <StackPanel>
@@ -16,9 +17,13 @@
                            AutomationProperties.AutomationId="Imaging.FocusNote" />
                 <TextBlock Text="{Binding GeometryText}" Style="{StaticResource Text.MonoCaption}" Margin="{StaticResource Gap.Tight}"
                            AutomationProperties.AutomationId="Imaging.Geometry" />
-                <TextBlock Text="{Binding SamplingCaption}" ToolTip="{Binding SamplingEvidence}" Style="{StaticResource Text.Caption}"
-                           TextWrapping="Wrap" AutomationProperties.AutomationId="Imaging.SamplingEvidence"
-                           AutomationProperties.HelpText="{Binding SamplingEvidence}" />
+                <DockPanel>
+                    <c:HelpMark DockPanel.Dock="Right" VerticalAlignment="Top" Text="{Binding SamplingEvidence}" AutomationProperties.AutomationId="Imaging.SamplingHelp"
+                                AutomationProperties.Name="About this image's precision" />
+                    <TextBlock Text="{Binding SamplingCaption}" ToolTip="{Binding SamplingEvidence}" Style="{StaticResource Text.Caption}"
+                               TextWrapping="Wrap" AutomationProperties.AutomationId="Imaging.SamplingEvidence"
+                               AutomationProperties.HelpText="{Binding SamplingEvidence}" />
+                </DockPanel>
             </StackPanel>
         </Expander>
         <TextBlock Text="{Binding FocalSummary}" Style="{StaticResource Text.MonoCaption}" TextWrapping="Wrap" TextTrimming="None"
@@ -71,6 +76,60 @@
         <TextBlock Text="{Binding ChannelSummary}" Style="{StaticResource Text.MonoCaption}" TextWrapping="Wrap" TextTrimming="None"
                    Visibility="{Binding IsChannelExpanded, Converter={x:Static conv:InverseBoolToVisibilityConverter.Instance}}" />
         <Border Style="{StaticResource Divider}" />
+
+        <!-- Physical readout (TODO-41): the window channel's own calibration line, the opt-in flood correction, and the
+             measured benchmark cost of that (preset, line) — descriptive, never a gate. F is shown without colour. -->
+        <StackPanel Visibility="{Binding ReadoutCostStatus, Converter={x:Static conv:NullToCollapsedConverter.Instance}}">
+            <Expander Header="Physical readout cost" Style="{StaticResource Expander.Section}" IsExpanded="True"
+                      AutomationProperties.AutomationId="Imaging.ReadoutCostSection">
+                <StackPanel>
+                    <CheckBox Content="Flood correction from the line calibration (opt-in)" IsChecked="{Binding Shared.ApplyFloodCorrection}"
+                              Margin="{StaticResource Gap.Field}" AutomationProperties.AutomationId="Imaging.FloodCorrection" />
+                    <TextBlock Text="{Binding ChannelUnavailable}" Style="{StaticResource Text.CaptionWarning}" TextWrapping="Wrap"
+                               Visibility="{Binding ChannelUnavailable, Converter={x:Static conv:NullToCollapsedConverter.Instance}}"
+                               AutomationProperties.AutomationId="Imaging.ChannelUnavailable" />
+                    <TextBlock Text="{Binding ReadoutCurrentCounts}" Style="{StaticResource Text.Caption}" TextWrapping="Wrap"
+                               AutomationProperties.AutomationId="Imaging.ReadoutCurrentCounts" />
+                    <DockPanel Margin="{StaticResource Gap.Tight}">
+                        <c:HelpMark DockPanel.Dock="Right" VerticalAlignment="Top" Text="{Binding ReadoutCostHelp}" AutomationProperties.AutomationId="Imaging.ReadoutCostHelp"
+                                    AutomationProperties.Name="Cost details: reasons, provenance, F and benchmark conditions" />
+                        <TextBlock Text="{Binding ReadoutCostStatus}" Style="{StaticResource Text.Caption}" TextWrapping="Wrap"
+                                   AutomationProperties.AutomationId="Imaging.ReadoutCostStatus" />
+                    </DockPanel>
+                    <TextBlock Text="{Binding ReadoutCostCard}" Style="{StaticResource Text.MonoCaption}" TextWrapping="Wrap" Margin="{StaticResource Gap.Tight}"
+                               AutomationProperties.AutomationId="Imaging.ReadoutCostCard" />
+                    <Expander Header="Full cost table" Style="{StaticResource Expander.Section}"
+                              AutomationProperties.AutomationId="Imaging.ReadoutCostTableSection">
+                        <StackPanel>
+                            <ItemsControl ItemsSource="{Binding ReadoutCostRows}" AutomationProperties.AutomationId="Imaging.ReadoutCostTable">
+                                <ItemsControl.ItemTemplate><DataTemplate>
+                                    <StackPanel Margin="{StaticResource Gap.Tight}">
+                                        <TextBlock Style="{StaticResource Text.Label}" TextWrapping="Wrap">
+                                            <Run Text="{Binding Exposure, Mode=OneWay}" /> · <Run Text="{Binding Rate, Mode=OneWay}" />
+                                        </TextBlock>
+                                        <TextBlock Style="{StaticResource Text.MonoCaption}" TextWrapping="Wrap">
+                                            <Run Text="Direct (ideal) RMS" /> <Run Text="{Binding DirectRms, Mode=OneWay}" /> · bias <Run Text="{Binding DirectBias, Mode=OneWay}" /> · remote <Run Text="{Binding DirectRemote, Mode=OneWay}" /> · accepted <Run Text="{Binding DirectAccepted, Mode=OneWay}" />
+                                        </TextBlock>
+                                        <TextBlock Style="{StaticResource Text.MonoCaption}" TextWrapping="Wrap">
+                                            <Run Text="Anger RMS" /> <Run Text="{Binding AngerRms, Mode=OneWay}" /> · bias <Run Text="{Binding AngerBias, Mode=OneWay}" /> · remote <Run Text="{Binding AngerRemote, Mode=OneWay}" /> · accepted <Run Text="{Binding AngerAccepted, Mode=OneWay}" />
+                                        </TextBlock>
+                                        <TextBlock Style="{StaticResource Text.MonoCaption}" TextWrapping="Wrap">
+                                            <Run Text="F" /> <Run Text="{Binding F, Mode=OneWay}" />
+                                        </TextBlock>
+                                    </StackPanel>
+                                </DataTemplate></ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <StackPanel Orientation="Horizontal" Margin="{StaticResource Gap.Tight}">
+                                <TextBlock Text="Benchmark conditions" Style="{StaticResource Text.Caption}" VerticalAlignment="Center" />
+                                <c:HelpMark Text="{Binding ReadoutCostScope}" AutomationProperties.AutomationId="Imaging.ReadoutCostScope"
+                                            AutomationProperties.Name="Benchmark conditions" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Expander>
+                </StackPanel>
+            </Expander>
+            <Border Style="{StaticResource Divider}" />
+        </StackPanel>
 
         <Expander Header="Focus sweep" Style="{StaticResource Expander.Section}" IsExpanded="{Binding IsSweepExpanded}"
                   AutomationProperties.AutomationId="Imaging.SweepSection">

@@ -41,10 +41,16 @@ public static class PhysicalReadoutWaveform
             Step: .008, ColourRole: PlotColourRole.Series2) { PreparedPyramid = new MinMaxPyramid(threshold) };
         var markers = selected is null ? Array.Empty<PlotMarker>() : new[] {
             new PlotMarker((selected.TriggerTimeS-hold)*1e6,"Trigger"), new PlotMarker(0,"Hold") };
+        int nx = snapshot.Imaging.Flood.Width; // the captured module, never a fixed 12
         var events = physical.Records.Where(e=>e.HoldTimeS>=origin && e.HoldTimeS<=Math.Min(snapshot.LiveTimeS,origin+length*1e-6))
-            .Select(e=>new WaveformEvent(e.Index,e.Crystal<0?-1:e.Crystal%12,e.Crystal<0?-1:e.Crystal/12,
+            .Select(e=>new WaveformEvent(e.Index,e.Crystal<0?-1:e.Crystal%nx,e.Crystal<0?-1:e.Crystal/nx,
                 double.NaN,e.HoldTimeS,(e.HoldTimeS-hold)*1e6,e.EnergyKeV) { IsMeasured = true }).ToArray();
-        string reading = selected is null ? "No observed conversion" : $"Measured #{selected.Index} · LUT {(selected.Crystal < 0 ? "unknown" : selected.Crystal.ToString())} · raw X/Y {selected.RawX:0.####} / {selected.RawY:0.####} · {(selected.Crystal < 0 ? "energy unavailable" : $"{selected.EnergyKeV:0.##} keV")}\nHeld ADC A/B/C/D {selected.Codes.A:0}/{selected.Codes.B:0}/{selected.Codes.C:0}/{selected.Codes.D:0} · dominant hit #{selected.DominantHit} · contributors {selected.Contributors}\nCalibration {p.Id}";
+        string reading = selected is null ? "No observed conversion" : $"Measured #{selected.Index} · reference {p.LineKeV:0.##} keV LUT {(selected.Crystal < 0 ? "unknown" : selected.Crystal.ToString())} · raw X/Y {selected.RawX:0.####} / {selected.RawY:0.####} · {(selected.Crystal < 0 ? "energy unavailable" : $"{selected.EnergyKeV:0.##} keV")}\nHeld ADC A/B/C/D {selected.Codes.A:0}/{selected.Codes.B:0}/{selected.Codes.C:0}/{selected.Codes.D:0} · dominant hit #{selected.DominantHit} · contributors {selected.Contributors}\nCalibration {p.Id}"
+            + string.Concat(physical.Lines.Skip(1).Select(l =>
+            {
+                var a = l.Assignments[selected.Index];
+                return $"\n{l.LineKeV:0.##} keV calibration: LUT {(a.Crystal < 0 ? "unknown" : a.Crystal.ToString())} · {(a.Crystal < 0 ? "energy unavailable" : $"{a.EnergyKeV:0.##} keV")}";
+            }));
         return new(series[4],series[4],Array.AsReadOnly(events),"Experimental GAGG · DPC 0.01 · four held 14-bit ADC outputs",reading,
             "Realised analogue pulses in code-equivalent units; held ADC values are listed separately. Sum threshold; no continuous digitizer noise, network RC, skew or jitter. " +
             (origin+length*1e-6>snapshot.LiveTimeS?"Partial observed horizon: no future hits. ":"") +

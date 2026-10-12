@@ -9,7 +9,7 @@ public sealed class PhysicalListModeSource : IDisposable
 {
     private readonly ListModeSource _source;
     private readonly ReadoutDevice _device;
-    private readonly ReadoutCalibration _calibration;
+    private readonly ReadoutCalibration[] _calibrations;
     private readonly ReadoutPulseProcessor.Stream _stream;
     private readonly IRandom _response;
     private DetectedEvent? _pending;
@@ -27,9 +27,19 @@ public sealed class PhysicalListModeSource : IDisposable
 
     public PhysicalListModeSource(SimulationConfig configuration, ReadoutDevice device,
         ReadoutCalibration calibration, int seed)
+        : this(configuration, device, [calibration], seed) { }
+
+    /// <summary>TODO-41 (SD-A1…A3): one transport / readout stream projected through several line calibrations of the same
+    /// prepared device. The held ADC facts are produced once; each calibration derives its own crystal and energy from
+    /// them — no event is ever dispatched to a calibration by its generating line or true energy. The first calibration
+    /// is the reference whose assignment is <see cref="PhysicalMeasuredEvent.Crystal"/> / <see cref="PhysicalMeasuredEvent.EnergyKeV"/>.</summary>
+    public PhysicalListModeSource(SimulationConfig configuration, ReadoutDevice device,
+        IReadOnlyList<ReadoutCalibration> calibrations, int seed)
     {
-        if (configuration.Detector.Readout is not { Mode: not ReadoutMode.DirectCrystal } readout || !calibration.Succeeded)
-            throw new ArgumentException("Physical acquisition requires a physical configuration and successful calibration.");
+        ArgumentNullException.ThrowIfNull(calibrations);
+        if (configuration.Detector.Readout is not { Mode: not ReadoutMode.DirectCrystal } readout || calibrations.Count == 0
+            || calibrations.Any(c => !c.Succeeded || c.Lut.CountX != device.Crystals.CountX || c.Lut.CountY != device.Crystals.CountY))
+            throw new ArgumentException("Physical acquisition requires a physical configuration and successful calibrations of this module.");
         if (configuration.Ambient is not null || (configuration.Background?.BackgroundToSignalRatio ?? 0) > 0 ||
             (configuration.Background?.DarkCountRateKcps ?? 0) > 0 || configuration.Detector.OpticalCrosstalkFraction != 0)
             throw new NotSupportedException("Physical interaction recording supports signal only; legacy optical crosstalk is replaced by readout optics.");
@@ -38,7 +48,7 @@ public sealed class PhysicalListModeSource : IDisposable
         transport.Detector.Readout = null;
         _source = new ListModeSource(transport, recordInteractions: true);
         // Each session owns response scratch buffers; cached optics/calibration can safely be shared.
-        _device = new ReadoutDevice(device, readout); _calibration = calibration;
+        _device = new ReadoutDevice(device, readout); _calibrations = calibrations.ToArray();
         _response = DefaultRandom.FromKey(DefaultRandom.Key(seed, 40001));
         _stream = new ReadoutPulseProcessor(_device, readout.Pulse, readout.Trigger)
             .CreateStream(DefaultRandom.FromKey(DefaultRandom.Key(seed, 40002)));
@@ -72,10 +82,18 @@ public sealed class PhysicalListModeSource : IDisposable
         return events.Select(e =>
         {
             var codes = e.Codes.ToArray();
-            int crystal = _device.Position(codes, out double x, out double y) ? _calibration.Lut.Lookup(x, y) : -1;
-            double energy = _calibration.Energy(crystal, _device.Sum(codes));
-            if (!double.IsFinite(energy) || energy < 0) crystal = -1;
-            return new PhysicalMeasuredEvent(e, x, y, crystal, energy);
+            bool positioned = _device.Position(codes, out double x, out double y);
+            double sum = _device.Sum(codes);
+            var assignments = new PhysicalAssignment[_calibrations.Length];
+            for (int i = 0; i < assignments.Length; i++)
+            {
+                int crystal = positioned ? _calibrations[i].Lut.Lookup(x, y) : -1;
+                double energy = _calibrations[i].Energy(crystal, sum);
+                if (!double.IsFinite(energy) || energy < 0) crystal = -1;
+                assignments[i] = new(crystal, energy);
+            }
+            return new PhysicalMeasuredEvent(e, x, y, assignments[0].Crystal, assignments[0].EnergyKeV)
+            { Assignments = Array.AsReadOnly(assignments) };
         }).ToArray();
     }
 

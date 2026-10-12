@@ -115,7 +115,7 @@ public sealed class WaveformServiceTests(ITestOutputHelper output)
         Assert.Single(withHistory.Events);
         Assert.Equal(1, withHistory.Events[0].Index);
         // Preceding event starts before the display, but its real ADC tail reaches the pretrigger region.
-        Assert.True(withHistory.Adc.Y.Take(250).Any(v => v > 0));
+        Assert.Contains(withHistory.Adc.Y.Take(250), v => v > 0);
         Assert.All(isolated.Adc.Y.Take(250), v => Assert.Equal(0, v));
         Assert.Equal(withHistory.Adc.Origin, withHistory.Shaped.Origin);
         Assert.Equal(withHistory.Adc.Step, withHistory.Shaped.Step);

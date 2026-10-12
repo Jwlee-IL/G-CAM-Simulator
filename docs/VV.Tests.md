@@ -6,7 +6,7 @@ verifies, where its expected value comes from and how its tolerance is justified
 [VV.Tests.Results](VV.Tests.Results.md); requirement status in [VV.Studio](VV.Studio.md).
 
 **At a glance**
-- 177 units: 136 xUnit classes, 8 unittest classes, 29 cocotb configurations, 4 checkers.
+- 183 units: 140 xUnit classes, 9 unittest classes, 29 cocotb configurations, 5 checkers.
 - Every entry states purpose, oracle, tolerance (its derivation, or "exact", "structural", "measurement only"), gates
   and requirement / evidence selectors in a fenced JSON block.
 - 70 units carry a margin the code states without a derivation — recorded as a finding, not filled in.
@@ -24,7 +24,7 @@ Run `python samples/testing/test_records.py check-catalog --discover` after a Re
 | Unit | Methods | Discovered cases |
 |---|---:|---:|
 | `Gcam.Studio.RenderTests::Gcam.Studio.RenderTests.PlotViewRenderTests` | 1 | 1 |
-| `Gcam.Studio.RenderTests::Gcam.Studio.RenderTests.ReadoutRenderTests` | 2 | 2 |
+| `Gcam.Studio.RenderTests::Gcam.Studio.RenderTests.ReadoutRenderTests` | 3 | 3 |
 | `Gcam.Studio.Services.Tests::Gcam.Studio.Services.Tests.AcquisitionContinuationTests` | 4 | 6 |
 | `Gcam.Studio.Services.Tests::Gcam.Studio.Services.Tests.AcquisitionServiceTests` | 6 | 9 |
 | `Gcam.Studio.Services.Tests::Gcam.Studio.Services.Tests.AmbientAcquisitionTests` | 3 | 4 |
@@ -36,6 +36,9 @@ Run `python samples/testing/test_records.py check-catalog --discover` after a Re
 | `Gcam.Studio.Services.Tests::Gcam.Studio.Services.Tests.MeasurementRandomnessTests` | 1 | 1 |
 | `Gcam.Studio.Services.Tests::Gcam.Studio.Services.Tests.OpticsProjectionTests` | 6 | 14 |
 | `Gcam.Studio.Services.Tests::Gcam.Studio.Services.Tests.PhysicalReadoutTests` | 6 | 6 |
+| `Gcam.Studio.Services.Tests::Gcam.Studio.Services.Tests.ReadoutBankTests` | 6 | 6 |
+| `Gcam.Studio.Services.Tests::Gcam.Studio.Services.Tests.ReadoutLegacyIdentityTests` | 1 | 1 |
+| `Gcam.Studio.Services.Tests::Gcam.Studio.Services.Tests.ReadoutOfferRecordTests` | 4 | 4 |
 | `Gcam.Studio.Services.Tests::Gcam.Studio.Services.Tests.SpectrumServiceTests` | 8 | 10 |
 | `Gcam.Studio.Services.Tests::Gcam.Studio.Services.Tests.StripCountEstimatorTests` | 4 | 6 |
 | `Gcam.Studio.Services.Tests::Gcam.Studio.Services.Tests.StripProjectionTests` | 3 | 4 |
@@ -59,7 +62,7 @@ Run `python samples/testing/test_records.py check-catalog --discover` after a Re
 | `Gcam.Studio.Tests::Gcam.Studio.Tests.OverlayLabelLayoutTests` | 5 | 6 |
 | `Gcam.Studio.Tests::Gcam.Studio.Tests.PlotSeriesTests` | 1 | 1 |
 | `Gcam.Studio.Tests::Gcam.Studio.Tests.PlotViewportTests` | 4 | 5 |
-| `Gcam.Studio.Tests::Gcam.Studio.Tests.ReadoutViewModelTests` | 3 | 3 |
+| `Gcam.Studio.Tests::Gcam.Studio.Tests.ReadoutViewModelTests` | 10 | 14 |
 | `Gcam.Studio.Tests::Gcam.Studio.Tests.SpectrumBandTests` | 1 | 1 |
 | `Gcam.Studio.Tests::Gcam.Studio.Tests.ThemeContrastTests` | 2 | 8 |
 | `Gcam.Studio.Tests::Gcam.Studio.Tests.TickFormatterTests` | 7 | 18 |
@@ -69,7 +72,7 @@ Run `python samples/testing/test_records.py check-catalog --discover` after a Re
 | `Gcam.Studio.UiTests::Gcam.Studio.UiTests.PilotTests` | 1 | 1 |
 | `Gcam.Studio.UiTests::Gcam.Studio.UiTests.PlotViewTests` | 1 | 1 |
 | `Gcam.Studio.UiTests::Gcam.Studio.UiTests.PolishSurveyTests` | 1 | 1 |
-| `Gcam.Studio.UiTests::Gcam.Studio.UiTests.ReadoutScenarioTests` | 4 | 4 |
+| `Gcam.Studio.UiTests::Gcam.Studio.UiTests.ReadoutScenarioTests` | 9 | 9 |
 | `Gcam.Studio.UiTests::Gcam.Studio.UiTests.ScenarioTests` | 6 | 6 |
 | `Gcam.Studio.UiTests::Gcam.Studio.UiTests.WorkspaceOracleTests` | 3 | 3 |
 | `Gcam.Studio.UiTests::Gcam.Studio.UiTests.WorkspaceScenarioTests` | 5 | 5 |
@@ -137,6 +140,7 @@ Run `python samples/testing/test_records.py check-catalog --discover` after a Re
 | `Gcam.Tests::Gcam.Tests.RandomQualityTests` | 5 | 7 |
 | `Gcam.Tests::Gcam.Tests.RangeLocalizationTests` | 1 | 3 |
 | `Gcam.Tests::Gcam.Tests.ReadoutArtifactTests` | 2 | 2 |
+| `Gcam.Tests::Gcam.Tests.ReadoutCorrectionTests` | 1 | 2 |
 | `Gcam.Tests::Gcam.Tests.ReadoutDefaultPathTests` | 7 | 7 |
 | `Gcam.Tests::Gcam.Tests.ReadoutDeviceTests` | 5 | 8 |
 | `Gcam.Tests::Gcam.Tests.ReadoutFloodStreamTests` | 2 | 2 |
@@ -161,6 +165,7 @@ Run `python samples/testing/test_records.py check-catalog --discover` after a Re
 | `Gcam.Tests::Gcam.Tests.WaveformTests` | 9 | 9 |
 | `checker::archived-replay` | 1 | 1 |
 | `checker::calibration` | 1 | 1 |
+| `checker::studio-readout-offer` | 1 | 1 |
 | `checker::test-catalog` | 1 | 1 |
 | `checker::test-record-self-test` | 1 | 1 |
 | `cocotb::test_blr@baseline_restorer` | 1 | 1 |
@@ -198,6 +203,7 @@ Run `python samples/testing/test_records.py check-catalog --discover` after a Re
 | `unittest::test_studio_readout.StudioReadoutRuleV2Tests` | 6 | 6 |
 | `unittest::test_studio_readout.StudioReadoutRuleV3Tests` | 8 | 8 |
 | `unittest::test_studio_readout.StudioReadoutSelectorTests` | 8 | 8 |
+| `unittest::test_studio_readout_offer.StudioReadoutOfferRecordTests` | 5 | 5 |
 | `unittest::test_studio_readout_v4.StudioReadoutRuleV4Tests` | 15 | 15 |
 | `unittest::test_studio_readout_v5.StudioReadoutRuleV5Tests` | 10 | 10 |
 <!-- END GENERATED: TEST DISCOVERY -->
@@ -361,7 +367,7 @@ Method groups:
 - `Precision_TwentySeeds_MeasuresMixedIsotopesAndCoOnlyControl`: exact / structural fixture comparisons; gate GCAM_EVIDENCE_TESTS.
 
 ```json
-{"id":"Gcam.Studio.Services.Tests::Gcam.Studio.Services.Tests.ImagingServiceTests","runner":"dotnet","methods":["Strip_CoLocatedCsAndDoubleActivityCo_RecoversSameLiveTimeCsCount","Strip_UsesSignedCcInput_AndMatchesMlemCountAndUncertainty","Strip_OverlapCovariance_ReplaysWithWindowChangesAndIncrementalPrefixes","Strip_MultipleContaminants_ReportNetWithUnavailableUncertainty","Channels_OffAxisCsAndCo_LocalizeAtTheirOwnSource","WindowChange_ReplaysRetainedEvents_RecalibratesAndMatchesFreshProcessing","Precision_TwentySeeds_MeasuresMixedIsotopesAndCoOnlyControl","IncrementalChannels_MatchWholePrefixAndSharedMeasuredEnergyWindows","Mlem_ChannelsLocalizeAtTheirOwnSource_NonNegative","Mlem_BuildsOneMatrixPerGeometryAndLine_AndReusesItAcrossRefreshes","CrossCorrelation_IsUnchangedByTheMethodField"],"sources":{"tests/Gcam.Studio.Services.Tests/ImagingServiceTests.cs":"2f327ee044a798baed14c2b26a3cf1117fd22369529d9d929e5b194e9a904e02","tests/Gcam.Studio.Services.Tests/EvidenceFactAttribute.cs":"898301fdfe0438aa4ea3503809ee81dc90b225dff52defb3e2cee6277085cd60"},"trace":[{"requirement":"SR-IMG-01","selectors":["WindowChange_ReplaysRetainedEvents_RecalibratesAndMatchesFreshProcessing"]},{"requirement":"SR-IMG-02","selectors":["Channels_OffAxisCsAndCo_LocalizeAtTheirOwnSource","CrossCorrelation_IsUnchangedByTheMethodField","IncrementalChannels_MatchWholePrefixAndSharedMeasuredEnergyWindows","Mlem_BuildsOneMatrixPerGeometryAndLine_AndReusesItAcrossRefreshes","Mlem_ChannelsLocalizeAtTheirOwnSource_NonNegative","Precision_TwentySeeds_MeasuresMixedIsotopesAndCoOnlyControl","Strip_CoLocatedCsAndDoubleActivityCo_RecoversSameLiveTimeCsCount","Strip_MultipleContaminants_ReportNetWithUnavailableUncertainty","Strip_OverlapCovariance_ReplaysWithWindowChangesAndIncrementalPrefixes","Strip_UsesSignedCcInput_AndMatchesMlemCountAndUncertainty","WindowChange_ReplaysRetainedEvents_RecalibratesAndMatchesFreshProcessing"]},{"requirement":"SR-IMG-04","selectors":["Channels_OffAxisCsAndCo_LocalizeAtTheirOwnSource","Precision_TwentySeeds_MeasuresMixedIsotopesAndCoOnlyControl"]},{"requirement":"SR-IMG-05","selectors":["Strip_CoLocatedCsAndDoubleActivityCo_RecoversSameLiveTimeCsCount","Strip_MultipleContaminants_ReportNetWithUnavailableUncertainty","Strip_OverlapCovariance_ReplaysWithWindowChangesAndIncrementalPrefixes","Strip_UsesSignedCcInput_AndMatchesMlemCountAndUncertainty","WindowChange_ReplaysRetainedEvents_RecalibratesAndMatchesFreshProcessing"]},{"requirement":"SR-IMG-07","selectors":["CrossCorrelation_IsUnchangedByTheMethodField","Mlem_BuildsOneMatrixPerGeometryAndLine_AndReusesItAcrossRefreshes","Mlem_ChannelsLocalizeAtTheirOwnSource_NonNegative"]}]}
+{"id":"Gcam.Studio.Services.Tests::Gcam.Studio.Services.Tests.ImagingServiceTests","runner":"dotnet","methods":["Strip_CoLocatedCsAndDoubleActivityCo_RecoversSameLiveTimeCsCount","Strip_UsesSignedCcInput_AndMatchesMlemCountAndUncertainty","Strip_OverlapCovariance_ReplaysWithWindowChangesAndIncrementalPrefixes","Strip_MultipleContaminants_ReportNetWithUnavailableUncertainty","Channels_OffAxisCsAndCo_LocalizeAtTheirOwnSource","WindowChange_ReplaysRetainedEvents_RecalibratesAndMatchesFreshProcessing","Precision_TwentySeeds_MeasuresMixedIsotopesAndCoOnlyControl","IncrementalChannels_MatchWholePrefixAndSharedMeasuredEnergyWindows","Mlem_ChannelsLocalizeAtTheirOwnSource_NonNegative","Mlem_BuildsOneMatrixPerGeometryAndLine_AndReusesItAcrossRefreshes","CrossCorrelation_IsUnchangedByTheMethodField"],"sources":{"tests/Gcam.Studio.Services.Tests/ImagingServiceTests.cs":"f7fb6db874865960c1d8c8cdea2ed589147909c0abff1762a5a5dbb36a2c0ba7","tests/Gcam.Studio.Services.Tests/EvidenceFactAttribute.cs":"898301fdfe0438aa4ea3503809ee81dc90b225dff52defb3e2cee6277085cd60"},"trace":[{"requirement":"SR-IMG-01","selectors":["WindowChange_ReplaysRetainedEvents_RecalibratesAndMatchesFreshProcessing"]},{"requirement":"SR-IMG-02","selectors":["Channels_OffAxisCsAndCo_LocalizeAtTheirOwnSource","CrossCorrelation_IsUnchangedByTheMethodField","IncrementalChannels_MatchWholePrefixAndSharedMeasuredEnergyWindows","Mlem_BuildsOneMatrixPerGeometryAndLine_AndReusesItAcrossRefreshes","Mlem_ChannelsLocalizeAtTheirOwnSource_NonNegative","Precision_TwentySeeds_MeasuresMixedIsotopesAndCoOnlyControl","Strip_CoLocatedCsAndDoubleActivityCo_RecoversSameLiveTimeCsCount","Strip_MultipleContaminants_ReportNetWithUnavailableUncertainty","Strip_OverlapCovariance_ReplaysWithWindowChangesAndIncrementalPrefixes","Strip_UsesSignedCcInput_AndMatchesMlemCountAndUncertainty","WindowChange_ReplaysRetainedEvents_RecalibratesAndMatchesFreshProcessing"]},{"requirement":"SR-IMG-04","selectors":["Channels_OffAxisCsAndCo_LocalizeAtTheirOwnSource","Precision_TwentySeeds_MeasuresMixedIsotopesAndCoOnlyControl"]},{"requirement":"SR-IMG-05","selectors":["Strip_CoLocatedCsAndDoubleActivityCo_RecoversSameLiveTimeCsCount","Strip_MultipleContaminants_ReportNetWithUnavailableUncertainty","Strip_OverlapCovariance_ReplaysWithWindowChangesAndIncrementalPrefixes","Strip_UsesSignedCcInput_AndMatchesMlemCountAndUncertainty","WindowChange_ReplaysRetainedEvents_RecalibratesAndMatchesFreshProcessing"]},{"requirement":"SR-IMG-07","selectors":["CrossCorrelation_IsUnchangedByTheMethodField","Mlem_BuildsOneMatrixPerGeometryAndLine_AndReusesItAcrossRefreshes","Mlem_ChannelsLocalizeAtTheirOwnSource_NonNegative"]}]}
 ```
 
 
@@ -480,7 +486,7 @@ Method groups:
 - `MaximumWindow_ReportsWorkerCostAndBoundedPlotSamples`, `RetainedMonteCarlo_IsolatedPulseReadoutsAcrossParts`, `MixedFieldCalibration_UsesAcquiredChainAndInvalidatesRatios`: exact / structural fixture comparisons; gate GCAM_EVIDENCE_TESTS.
 
 ```json
-{"id":"Gcam.Studio.Services.Tests::Gcam.Studio.Services.Tests.WaveformServiceTests","runner":"dotnet","methods":["Crrc_PlotsFractionalCodesAndLabelsSimulationTime","Chain_SetsTransportMaterialWithoutChangingEngineDefaults","Chain_RejectsUnsupportedMaterial","Response_AgreesAcrossWaveformSpectrumAndImaging","Rasterizer_MatchesLegacyWithoutSecondIntrinsicSmear","Window_PreservesRequestedLengthAndPrecedingPulseAcrossPixels","Ideal_HasNoNoiseOrSmearAndKeepsTail","TimeBase_IsOriginRelativeAtLateAcquisitionTime","RateStudy_IsDeterministicAndLeavesAcquisitionUntouched","AcquiredChain_IsUsedAfterPendingSelectionChanges","Readout_SuppressesPartialOverlapAndSaturation","InvalidRequestsAndCancellation_FailWithoutPublishing","RetainedMonteCarloEvents_PreserveAssociationAndTime","MaximumWindow_ReportsWorkerCostAndBoundedPlotSamples","RetainedMonteCarlo_IsolatedPulseReadoutsAcrossParts","MixedFieldCalibration_UsesAcquiredChainAndInvalidatesRatios"],"sources":{"tests/Gcam.Studio.Services.Tests/WaveformServiceTests.cs":"48efc865b032f8ab17aab1f8bdb13b90714b72bfce340f8ee2f1072b98302257","tests/Gcam.Studio.Services.Tests/EvidenceFactAttribute.cs":"898301fdfe0438aa4ea3503809ee81dc90b225dff52defb3e2cee6277085cd60"},"trace":[]}
+{"id":"Gcam.Studio.Services.Tests::Gcam.Studio.Services.Tests.WaveformServiceTests","runner":"dotnet","methods":["Crrc_PlotsFractionalCodesAndLabelsSimulationTime","Chain_SetsTransportMaterialWithoutChangingEngineDefaults","Chain_RejectsUnsupportedMaterial","Response_AgreesAcrossWaveformSpectrumAndImaging","Rasterizer_MatchesLegacyWithoutSecondIntrinsicSmear","Window_PreservesRequestedLengthAndPrecedingPulseAcrossPixels","Ideal_HasNoNoiseOrSmearAndKeepsTail","TimeBase_IsOriginRelativeAtLateAcquisitionTime","RateStudy_IsDeterministicAndLeavesAcquisitionUntouched","AcquiredChain_IsUsedAfterPendingSelectionChanges","Readout_SuppressesPartialOverlapAndSaturation","InvalidRequestsAndCancellation_FailWithoutPublishing","RetainedMonteCarloEvents_PreserveAssociationAndTime","MaximumWindow_ReportsWorkerCostAndBoundedPlotSamples","RetainedMonteCarlo_IsolatedPulseReadoutsAcrossParts","MixedFieldCalibration_UsesAcquiredChainAndInvalidatesRatios"],"sources":{"tests/Gcam.Studio.Services.Tests/WaveformServiceTests.cs":"a1efa24a1c6cecabf9b66399da5d37dfc05b5d68b9551d824a481edf29ba93fb","tests/Gcam.Studio.Services.Tests/EvidenceFactAttribute.cs":"898301fdfe0438aa4ea3503809ee81dc90b225dff52defb3e2cee6277085cd60"},"trace":[]}
 ```
 
 
@@ -948,7 +954,7 @@ Method groups:
 - `ReadoutUnit_NamesTheImageKind_IncludingMlem`, `NetCountParser_ReadsSignedUncertainty_AndRejectsMissingOrWrongUnits`: exact / structural fixture comparisons; gate None.
 
 ```json
-{"id":"Gcam.Studio.UiTests::Gcam.Studio.UiTests.FloodOracleTests","runner":"dotnet","methods":["ImageBounds_UseWholePixelsPerCell_Centred","ScreenToMm_MapsImageCornersToDetectorEdges_YUp","DistanceMm_FullDiagonal_IsSpanTimesRootTwo","Verdict_RejectsAValueOutsideTheTolerance","PixelsInside_CountsCentres_RobustToAPixelAtTheCorners","AngleDeg_IsTheVertexAngle_ToleranceShrinksWithLongerArms","Parsers_ReadPeakAndRoiDetail_RejectOtherText","CellCentreMm_IsAbsolute_WithYUp","ReadoutAndSumParsers_ReadTheAppsFormats","ReadoutUnit_NamesTheImageKind_IncludingMlem","NetCountParser_ReadsSignedUncertainty_AndRejectsMissingOrWrongUnits","MeasurementRow_ParsesTheAutomationName"],"sources":{"tests/Gcam.Studio.UiTests/FloodOracleTests.cs":"adb568f7478411b222f31808f6904afe2cc68fa8356de5d72f0f9a1e7c72d20e","tests/Gcam.Studio.UiTests/Harness/FloodOracle.cs":"22db35cb2771a0460e437e47308b5792bf1c22d2dc077af54106223a29cd75be","tests/Gcam.Studio.UiTests/Harness/Pointer.cs":"e56d09c72e552bf5619c088150a0d6ceba0ec2eb75ee06c2744c4677b9db896c","tests/Gcam.Studio.UiTests/Harness/RepoPaths.cs":"2bdc3c25db3c74cfe32ea7f64352f36cc5fb3b8fbf7be92ce03b7184648cc655","tests/Gcam.Studio.UiTests/Harness/RunRecord.cs":"0db3b6cf367fed06ba506db2973593b100ebed4a6ca793552a77e490d0fce377","tests/Gcam.Studio.UiTests/Harness/Scenario.cs":"dac922df393236562f138489ab7a54d4ff09bb4003f7694da421564e0647b085","tests/Gcam.Studio.UiTests/Harness/StudioProcess.cs":"973777303020b10c38bcd701e991764b095cb2f149ed31da6a5d554bf73d87c2","tests/Gcam.Studio.UiTests/Harness/StudioWindow.cs":"59fca517024d117593d9056ed1c5122d2b8632b7ae179b36a8e091aea06b5bf8","tests/Gcam.Studio.UiTests/Harness/WorkspaceOracle.cs":"153e5f5ec778401b877467e405295a940d663d4fea1d32f9101139e9c0b325e5","tests/Gcam.Studio.UiTests/DesktopFactAttribute.cs":"1dcac8c38143a4d38635267e17af2acdbb5f2ee84eca07e2968a2a1e7f073bfc"},"trace":[]}
+{"id":"Gcam.Studio.UiTests::Gcam.Studio.UiTests.FloodOracleTests","runner":"dotnet","methods":["ImageBounds_UseWholePixelsPerCell_Centred","ScreenToMm_MapsImageCornersToDetectorEdges_YUp","DistanceMm_FullDiagonal_IsSpanTimesRootTwo","Verdict_RejectsAValueOutsideTheTolerance","PixelsInside_CountsCentres_RobustToAPixelAtTheCorners","AngleDeg_IsTheVertexAngle_ToleranceShrinksWithLongerArms","Parsers_ReadPeakAndRoiDetail_RejectOtherText","CellCentreMm_IsAbsolute_WithYUp","ReadoutAndSumParsers_ReadTheAppsFormats","ReadoutUnit_NamesTheImageKind_IncludingMlem","NetCountParser_ReadsSignedUncertainty_AndRejectsMissingOrWrongUnits","MeasurementRow_ParsesTheAutomationName"],"sources":{"tests/Gcam.Studio.UiTests/FloodOracleTests.cs":"adb568f7478411b222f31808f6904afe2cc68fa8356de5d72f0f9a1e7c72d20e","tests/Gcam.Studio.UiTests/Harness/FloodOracle.cs":"22db35cb2771a0460e437e47308b5792bf1c22d2dc077af54106223a29cd75be","tests/Gcam.Studio.UiTests/Harness/Pointer.cs":"e56d09c72e552bf5619c088150a0d6ceba0ec2eb75ee06c2744c4677b9db896c","tests/Gcam.Studio.UiTests/Harness/RepoPaths.cs":"2bdc3c25db3c74cfe32ea7f64352f36cc5fb3b8fbf7be92ce03b7184648cc655","tests/Gcam.Studio.UiTests/Harness/RunRecord.cs":"0db3b6cf367fed06ba506db2973593b100ebed4a6ca793552a77e490d0fce377","tests/Gcam.Studio.UiTests/Harness/Scenario.cs":"3a7766172a9dcfb711d3b9a2b9fca9712877bd9aff35ba74f04aedc8d1b782d2","tests/Gcam.Studio.UiTests/Harness/StudioProcess.cs":"973777303020b10c38bcd701e991764b095cb2f149ed31da6a5d554bf73d87c2","tests/Gcam.Studio.UiTests/Harness/StudioWindow.cs":"870000b25e6b7a3ca9f71ebfb671658b15cbb937290d7e14050d360409940e86","tests/Gcam.Studio.UiTests/Harness/WorkspaceOracle.cs":"153e5f5ec778401b877467e405295a940d663d4fea1d32f9101139e9c0b325e5","tests/Gcam.Studio.UiTests/DesktopFactAttribute.cs":"1dcac8c38143a4d38635267e17af2acdbb5f2ee84eca07e2968a2a1e7f073bfc"},"trace":[]}
 ```
 
 
@@ -970,7 +976,7 @@ Method groups:
 - `Mlem_WithStrip_ReportsNetCountsAndFindsCsOnItsSide`, `FocusSweep_UnderMlem_IsTheCrossCorrelationSweep`: numerical comparisons described above; gate GCAM_UI_TESTS.
 
 ```json
-{"id":"Gcam.Studio.UiTests::Gcam.Studio.UiTests.MlemScenarioTests","runner":"dotnet","methods":["Mlem_SelectedDuringAcquisition_NonNegativeWithUnitNoteAndAdvancingStatus","Mlem_WithStrip_ReportsNetCountsAndFindsCsOnItsSide","Mlem_FocalPlane1500_FlagsTheUnmeasuredIterationCount","MethodSwitch_KeepsMeasurementsOnTheSameGrid","FocusSweep_UnderMlem_IsTheCrossCorrelationSweep","MlemSelection_SurvivesStopContinueAndReset_WithoutAStaleImage"],"sources":{"tests/Gcam.Studio.UiTests/MlemScenarioTests.cs":"3c2c52587a2f71b0e7d72cb3bb74a4a28bba18a2f97852f65df66cced7786c28","tests/Gcam.Studio.UiTests/Harness/FloodOracle.cs":"22db35cb2771a0460e437e47308b5792bf1c22d2dc077af54106223a29cd75be","tests/Gcam.Studio.UiTests/Harness/Pointer.cs":"e56d09c72e552bf5619c088150a0d6ceba0ec2eb75ee06c2744c4677b9db896c","tests/Gcam.Studio.UiTests/Harness/RepoPaths.cs":"2bdc3c25db3c74cfe32ea7f64352f36cc5fb3b8fbf7be92ce03b7184648cc655","tests/Gcam.Studio.UiTests/Harness/RunRecord.cs":"0db3b6cf367fed06ba506db2973593b100ebed4a6ca793552a77e490d0fce377","tests/Gcam.Studio.UiTests/Harness/Scenario.cs":"dac922df393236562f138489ab7a54d4ff09bb4003f7694da421564e0647b085","tests/Gcam.Studio.UiTests/Harness/StudioProcess.cs":"973777303020b10c38bcd701e991764b095cb2f149ed31da6a5d554bf73d87c2","tests/Gcam.Studio.UiTests/Harness/StudioWindow.cs":"59fca517024d117593d9056ed1c5122d2b8632b7ae179b36a8e091aea06b5bf8","tests/Gcam.Studio.UiTests/Harness/WorkspaceOracle.cs":"153e5f5ec778401b877467e405295a940d663d4fea1d32f9101139e9c0b325e5","tests/Gcam.Studio.UiTests/DesktopFactAttribute.cs":"1dcac8c38143a4d38635267e17af2acdbb5f2ee84eca07e2968a2a1e7f073bfc"},"trace":[]}
+{"id":"Gcam.Studio.UiTests::Gcam.Studio.UiTests.MlemScenarioTests","runner":"dotnet","methods":["Mlem_SelectedDuringAcquisition_NonNegativeWithUnitNoteAndAdvancingStatus","Mlem_WithStrip_ReportsNetCountsAndFindsCsOnItsSide","Mlem_FocalPlane1500_FlagsTheUnmeasuredIterationCount","MethodSwitch_KeepsMeasurementsOnTheSameGrid","FocusSweep_UnderMlem_IsTheCrossCorrelationSweep","MlemSelection_SurvivesStopContinueAndReset_WithoutAStaleImage"],"sources":{"tests/Gcam.Studio.UiTests/MlemScenarioTests.cs":"3c2c52587a2f71b0e7d72cb3bb74a4a28bba18a2f97852f65df66cced7786c28","tests/Gcam.Studio.UiTests/Harness/FloodOracle.cs":"22db35cb2771a0460e437e47308b5792bf1c22d2dc077af54106223a29cd75be","tests/Gcam.Studio.UiTests/Harness/Pointer.cs":"e56d09c72e552bf5619c088150a0d6ceba0ec2eb75ee06c2744c4677b9db896c","tests/Gcam.Studio.UiTests/Harness/RepoPaths.cs":"2bdc3c25db3c74cfe32ea7f64352f36cc5fb3b8fbf7be92ce03b7184648cc655","tests/Gcam.Studio.UiTests/Harness/RunRecord.cs":"0db3b6cf367fed06ba506db2973593b100ebed4a6ca793552a77e490d0fce377","tests/Gcam.Studio.UiTests/Harness/Scenario.cs":"3a7766172a9dcfb711d3b9a2b9fca9712877bd9aff35ba74f04aedc8d1b782d2","tests/Gcam.Studio.UiTests/Harness/StudioProcess.cs":"973777303020b10c38bcd701e991764b095cb2f149ed31da6a5d554bf73d87c2","tests/Gcam.Studio.UiTests/Harness/StudioWindow.cs":"870000b25e6b7a3ca9f71ebfb671658b15cbb937290d7e14050d360409940e86","tests/Gcam.Studio.UiTests/Harness/WorkspaceOracle.cs":"153e5f5ec778401b877467e405295a940d663d4fea1d32f9101139e9c0b325e5","tests/Gcam.Studio.UiTests/DesktopFactAttribute.cs":"1dcac8c38143a4d38635267e17af2acdbb5f2ee84eca07e2968a2a1e7f073bfc"},"trace":[]}
 ```
 
 
@@ -987,7 +993,7 @@ Gates: `GCAM_UI_TESTS`.
 Source: [tests/Gcam.Studio.UiTests/PilotTests.cs](../tests/Gcam.Studio.UiTests/PilotTests.cs).
 
 ```json
-{"id":"Gcam.Studio.UiTests::Gcam.Studio.UiTests.PilotTests","runner":"dotnet","methods":["Pilot_SimulateThenMeasureDistance_AddsRowWithExpectedLength"],"sources":{"tests/Gcam.Studio.UiTests/PilotTests.cs":"404762bb49012f40547f7405f6ab4b5bd448401629be1045152d755146076b1c","tests/Gcam.Studio.UiTests/Harness/FloodOracle.cs":"22db35cb2771a0460e437e47308b5792bf1c22d2dc077af54106223a29cd75be","tests/Gcam.Studio.UiTests/Harness/Pointer.cs":"e56d09c72e552bf5619c088150a0d6ceba0ec2eb75ee06c2744c4677b9db896c","tests/Gcam.Studio.UiTests/Harness/RepoPaths.cs":"2bdc3c25db3c74cfe32ea7f64352f36cc5fb3b8fbf7be92ce03b7184648cc655","tests/Gcam.Studio.UiTests/Harness/RunRecord.cs":"0db3b6cf367fed06ba506db2973593b100ebed4a6ca793552a77e490d0fce377","tests/Gcam.Studio.UiTests/Harness/Scenario.cs":"dac922df393236562f138489ab7a54d4ff09bb4003f7694da421564e0647b085","tests/Gcam.Studio.UiTests/Harness/StudioProcess.cs":"973777303020b10c38bcd701e991764b095cb2f149ed31da6a5d554bf73d87c2","tests/Gcam.Studio.UiTests/Harness/StudioWindow.cs":"59fca517024d117593d9056ed1c5122d2b8632b7ae179b36a8e091aea06b5bf8","tests/Gcam.Studio.UiTests/Harness/WorkspaceOracle.cs":"153e5f5ec778401b877467e405295a940d663d4fea1d32f9101139e9c0b325e5","tests/Gcam.Studio.UiTests/DesktopFactAttribute.cs":"1dcac8c38143a4d38635267e17af2acdbb5f2ee84eca07e2968a2a1e7f073bfc"},"trace":[{"requirement":"SR-MEAS-01","selectors":["Pilot_SimulateThenMeasureDistance_AddsRowWithExpectedLength"]},{"requirement":"SR-RUN-09","selectors":["Pilot_SimulateThenMeasureDistance_AddsRowWithExpectedLength"]},{"requirement":"VAL-01","selectors":["Pilot_SimulateThenMeasureDistance_AddsRowWithExpectedLength"]},{"requirement":"VAL-03","selectors":["Pilot_SimulateThenMeasureDistance_AddsRowWithExpectedLength"]}]}
+{"id":"Gcam.Studio.UiTests::Gcam.Studio.UiTests.PilotTests","runner":"dotnet","methods":["Pilot_SimulateThenMeasureDistance_AddsRowWithExpectedLength"],"sources":{"tests/Gcam.Studio.UiTests/PilotTests.cs":"404762bb49012f40547f7405f6ab4b5bd448401629be1045152d755146076b1c","tests/Gcam.Studio.UiTests/Harness/FloodOracle.cs":"22db35cb2771a0460e437e47308b5792bf1c22d2dc077af54106223a29cd75be","tests/Gcam.Studio.UiTests/Harness/Pointer.cs":"e56d09c72e552bf5619c088150a0d6ceba0ec2eb75ee06c2744c4677b9db896c","tests/Gcam.Studio.UiTests/Harness/RepoPaths.cs":"2bdc3c25db3c74cfe32ea7f64352f36cc5fb3b8fbf7be92ce03b7184648cc655","tests/Gcam.Studio.UiTests/Harness/RunRecord.cs":"0db3b6cf367fed06ba506db2973593b100ebed4a6ca793552a77e490d0fce377","tests/Gcam.Studio.UiTests/Harness/Scenario.cs":"3a7766172a9dcfb711d3b9a2b9fca9712877bd9aff35ba74f04aedc8d1b782d2","tests/Gcam.Studio.UiTests/Harness/StudioProcess.cs":"973777303020b10c38bcd701e991764b095cb2f149ed31da6a5d554bf73d87c2","tests/Gcam.Studio.UiTests/Harness/StudioWindow.cs":"870000b25e6b7a3ca9f71ebfb671658b15cbb937290d7e14050d360409940e86","tests/Gcam.Studio.UiTests/Harness/WorkspaceOracle.cs":"153e5f5ec778401b877467e405295a940d663d4fea1d32f9101139e9c0b325e5","tests/Gcam.Studio.UiTests/DesktopFactAttribute.cs":"1dcac8c38143a4d38635267e17af2acdbb5f2ee84eca07e2968a2a1e7f073bfc"},"trace":[{"requirement":"SR-MEAS-01","selectors":["Pilot_SimulateThenMeasureDistance_AddsRowWithExpectedLength"]},{"requirement":"SR-RUN-09","selectors":["Pilot_SimulateThenMeasureDistance_AddsRowWithExpectedLength"]},{"requirement":"VAL-01","selectors":["Pilot_SimulateThenMeasureDistance_AddsRowWithExpectedLength"]},{"requirement":"VAL-03","selectors":["Pilot_SimulateThenMeasureDistance_AddsRowWithExpectedLength"]}]}
 ```
 
 
@@ -1004,7 +1010,7 @@ Gates: `GCAM_UI_TESTS`.
 Source: [tests/Gcam.Studio.UiTests/PlotViewTests.cs](../tests/Gcam.Studio.UiTests/PlotViewTests.cs).
 
 ```json
-{"id":"Gcam.Studio.UiTests::Gcam.Studio.UiTests.PlotViewTests","runner":"dotnet","methods":["TenMillionSamples_ZoomAndResizeRedraw_Within16Milliseconds"],"sources":{"tests/Gcam.Studio.UiTests/PlotViewTests.cs":"c6304d378ffff12fc12ba8dd84649231b085b105a7ef12a810ec3ea40a63d36c","tests/Gcam.Studio.UiTests/Harness/FloodOracle.cs":"22db35cb2771a0460e437e47308b5792bf1c22d2dc077af54106223a29cd75be","tests/Gcam.Studio.UiTests/Harness/Pointer.cs":"e56d09c72e552bf5619c088150a0d6ceba0ec2eb75ee06c2744c4677b9db896c","tests/Gcam.Studio.UiTests/Harness/RepoPaths.cs":"2bdc3c25db3c74cfe32ea7f64352f36cc5fb3b8fbf7be92ce03b7184648cc655","tests/Gcam.Studio.UiTests/Harness/RunRecord.cs":"0db3b6cf367fed06ba506db2973593b100ebed4a6ca793552a77e490d0fce377","tests/Gcam.Studio.UiTests/Harness/Scenario.cs":"dac922df393236562f138489ab7a54d4ff09bb4003f7694da421564e0647b085","tests/Gcam.Studio.UiTests/Harness/StudioProcess.cs":"973777303020b10c38bcd701e991764b095cb2f149ed31da6a5d554bf73d87c2","tests/Gcam.Studio.UiTests/Harness/StudioWindow.cs":"59fca517024d117593d9056ed1c5122d2b8632b7ae179b36a8e091aea06b5bf8","tests/Gcam.Studio.UiTests/Harness/WorkspaceOracle.cs":"153e5f5ec778401b877467e405295a940d663d4fea1d32f9101139e9c0b325e5","tests/Gcam.Studio.UiTests/DesktopFactAttribute.cs":"1dcac8c38143a4d38635267e17af2acdbb5f2ee84eca07e2968a2a1e7f073bfc"},"trace":[{"requirement":"SR-PLOT-04","selectors":["TenMillionSamples_ZoomAndResizeRedraw_Within16Milliseconds"]},{"requirement":"SR-PLOT-05","selectors":["TenMillionSamples_ZoomAndResizeRedraw_Within16Milliseconds"]}]}
+{"id":"Gcam.Studio.UiTests::Gcam.Studio.UiTests.PlotViewTests","runner":"dotnet","methods":["TenMillionSamples_ZoomAndResizeRedraw_Within16Milliseconds"],"sources":{"tests/Gcam.Studio.UiTests/PlotViewTests.cs":"c6304d378ffff12fc12ba8dd84649231b085b105a7ef12a810ec3ea40a63d36c","tests/Gcam.Studio.UiTests/Harness/FloodOracle.cs":"22db35cb2771a0460e437e47308b5792bf1c22d2dc077af54106223a29cd75be","tests/Gcam.Studio.UiTests/Harness/Pointer.cs":"e56d09c72e552bf5619c088150a0d6ceba0ec2eb75ee06c2744c4677b9db896c","tests/Gcam.Studio.UiTests/Harness/RepoPaths.cs":"2bdc3c25db3c74cfe32ea7f64352f36cc5fb3b8fbf7be92ce03b7184648cc655","tests/Gcam.Studio.UiTests/Harness/RunRecord.cs":"0db3b6cf367fed06ba506db2973593b100ebed4a6ca793552a77e490d0fce377","tests/Gcam.Studio.UiTests/Harness/Scenario.cs":"3a7766172a9dcfb711d3b9a2b9fca9712877bd9aff35ba74f04aedc8d1b782d2","tests/Gcam.Studio.UiTests/Harness/StudioProcess.cs":"973777303020b10c38bcd701e991764b095cb2f149ed31da6a5d554bf73d87c2","tests/Gcam.Studio.UiTests/Harness/StudioWindow.cs":"870000b25e6b7a3ca9f71ebfb671658b15cbb937290d7e14050d360409940e86","tests/Gcam.Studio.UiTests/Harness/WorkspaceOracle.cs":"153e5f5ec778401b877467e405295a940d663d4fea1d32f9101139e9c0b325e5","tests/Gcam.Studio.UiTests/DesktopFactAttribute.cs":"1dcac8c38143a4d38635267e17af2acdbb5f2ee84eca07e2968a2a1e7f073bfc"},"trace":[{"requirement":"SR-PLOT-04","selectors":["TenMillionSamples_ZoomAndResizeRedraw_Within16Milliseconds"]},{"requirement":"SR-PLOT-05","selectors":["TenMillionSamples_ZoomAndResizeRedraw_Within16Milliseconds"]}]}
 ```
 
 
@@ -1021,7 +1027,7 @@ Gates: `GCAM_UI_TESTS`.
 Source: [tests/Gcam.Studio.UiTests/PolishSurveyTests.cs](../tests/Gcam.Studio.UiTests/PolishSurveyTests.cs).
 
 ```json
-{"id":"Gcam.Studio.UiTests::Gcam.Studio.UiTests.PolishSurveyTests","runner":"dotnet","methods":["AllWorkspaces_BothThemesAndWindowSizes_CapturesPolishSurvey"],"sources":{"tests/Gcam.Studio.UiTests/PolishSurveyTests.cs":"66935216a51fb5cb63c0220ea006991cefdee407031ce232968a7464c666b736","tests/Gcam.Studio.UiTests/Harness/FloodOracle.cs":"22db35cb2771a0460e437e47308b5792bf1c22d2dc077af54106223a29cd75be","tests/Gcam.Studio.UiTests/Harness/Pointer.cs":"e56d09c72e552bf5619c088150a0d6ceba0ec2eb75ee06c2744c4677b9db896c","tests/Gcam.Studio.UiTests/Harness/RepoPaths.cs":"2bdc3c25db3c74cfe32ea7f64352f36cc5fb3b8fbf7be92ce03b7184648cc655","tests/Gcam.Studio.UiTests/Harness/RunRecord.cs":"0db3b6cf367fed06ba506db2973593b100ebed4a6ca793552a77e490d0fce377","tests/Gcam.Studio.UiTests/Harness/Scenario.cs":"dac922df393236562f138489ab7a54d4ff09bb4003f7694da421564e0647b085","tests/Gcam.Studio.UiTests/Harness/StudioProcess.cs":"973777303020b10c38bcd701e991764b095cb2f149ed31da6a5d554bf73d87c2","tests/Gcam.Studio.UiTests/Harness/StudioWindow.cs":"59fca517024d117593d9056ed1c5122d2b8632b7ae179b36a8e091aea06b5bf8","tests/Gcam.Studio.UiTests/Harness/WorkspaceOracle.cs":"153e5f5ec778401b877467e405295a940d663d4fea1d32f9101139e9c0b325e5","tests/Gcam.Studio.UiTests/DesktopFactAttribute.cs":"1dcac8c38143a4d38635267e17af2acdbb5f2ee84eca07e2968a2a1e7f073bfc"},"trace":[]}
+{"id":"Gcam.Studio.UiTests::Gcam.Studio.UiTests.PolishSurveyTests","runner":"dotnet","methods":["AllWorkspaces_BothThemesAndWindowSizes_CapturesPolishSurvey"],"sources":{"tests/Gcam.Studio.UiTests/PolishSurveyTests.cs":"66935216a51fb5cb63c0220ea006991cefdee407031ce232968a7464c666b736","tests/Gcam.Studio.UiTests/Harness/FloodOracle.cs":"22db35cb2771a0460e437e47308b5792bf1c22d2dc077af54106223a29cd75be","tests/Gcam.Studio.UiTests/Harness/Pointer.cs":"e56d09c72e552bf5619c088150a0d6ceba0ec2eb75ee06c2744c4677b9db896c","tests/Gcam.Studio.UiTests/Harness/RepoPaths.cs":"2bdc3c25db3c74cfe32ea7f64352f36cc5fb3b8fbf7be92ce03b7184648cc655","tests/Gcam.Studio.UiTests/Harness/RunRecord.cs":"0db3b6cf367fed06ba506db2973593b100ebed4a6ca793552a77e490d0fce377","tests/Gcam.Studio.UiTests/Harness/Scenario.cs":"3a7766172a9dcfb711d3b9a2b9fca9712877bd9aff35ba74f04aedc8d1b782d2","tests/Gcam.Studio.UiTests/Harness/StudioProcess.cs":"973777303020b10c38bcd701e991764b095cb2f149ed31da6a5d554bf73d87c2","tests/Gcam.Studio.UiTests/Harness/StudioWindow.cs":"870000b25e6b7a3ca9f71ebfb671658b15cbb937290d7e14050d360409940e86","tests/Gcam.Studio.UiTests/Harness/WorkspaceOracle.cs":"153e5f5ec778401b877467e405295a940d663d4fea1d32f9101139e9c0b325e5","tests/Gcam.Studio.UiTests/DesktopFactAttribute.cs":"1dcac8c38143a4d38635267e17af2acdbb5f2ee84eca07e2968a2a1e7f073bfc"},"trace":[]}
 ```
 
 
@@ -1043,7 +1049,7 @@ Method groups:
 - `Readout_AndOneCellRoi_MatchAbsolutePositionAndValue`: numerical comparisons described above; gate GCAM_UI_TESTS.
 
 ```json
-{"id":"Gcam.Studio.UiTests::Gcam.Studio.UiTests.ScenarioTests","runner":"dotnet","methods":["StopContinueReset_KeepsAccumulatesAndDiscards","Roi_OnFloodMap_CountsWholePixelsByCentre","Readout_AndOneCellRoi_MatchAbsolutePositionAndValue","Angle_EscAbandonsDraft_DeleteRemovesSelected","MoveSource_ResetEditStart_PutsPeakOnTheSource","ThemeToggle_RelabelsAndSwitchesBack"],"sources":{"tests/Gcam.Studio.UiTests/ScenarioTests.cs":"b1f5ba72b6b3e6f826e9f6e0b675006d4b4d2072e5516515ab172c5142620450","tests/Gcam.Studio.UiTests/Harness/FloodOracle.cs":"22db35cb2771a0460e437e47308b5792bf1c22d2dc077af54106223a29cd75be","tests/Gcam.Studio.UiTests/Harness/Pointer.cs":"e56d09c72e552bf5619c088150a0d6ceba0ec2eb75ee06c2744c4677b9db896c","tests/Gcam.Studio.UiTests/Harness/RepoPaths.cs":"2bdc3c25db3c74cfe32ea7f64352f36cc5fb3b8fbf7be92ce03b7184648cc655","tests/Gcam.Studio.UiTests/Harness/RunRecord.cs":"0db3b6cf367fed06ba506db2973593b100ebed4a6ca793552a77e490d0fce377","tests/Gcam.Studio.UiTests/Harness/Scenario.cs":"dac922df393236562f138489ab7a54d4ff09bb4003f7694da421564e0647b085","tests/Gcam.Studio.UiTests/Harness/StudioProcess.cs":"973777303020b10c38bcd701e991764b095cb2f149ed31da6a5d554bf73d87c2","tests/Gcam.Studio.UiTests/Harness/StudioWindow.cs":"59fca517024d117593d9056ed1c5122d2b8632b7ae179b36a8e091aea06b5bf8","tests/Gcam.Studio.UiTests/Harness/WorkspaceOracle.cs":"153e5f5ec778401b877467e405295a940d663d4fea1d32f9101139e9c0b325e5","tests/Gcam.Studio.UiTests/DesktopFactAttribute.cs":"1dcac8c38143a4d38635267e17af2acdbb5f2ee84eca07e2968a2a1e7f073bfc"},"trace":[{"requirement":"SR-VIEW-07","selectors":["Readout_AndOneCellRoi_MatchAbsolutePositionAndValue"]},{"requirement":"SR-RUN-10","selectors":["StopContinueReset_KeepsAccumulatesAndDiscards"]},{"requirement":"SR-RUN-12","selectors":["MoveSource_ResetEditStart_PutsPeakOnTheSource","StopContinueReset_KeepsAccumulatesAndDiscards"]},{"requirement":"SR-RUN-13","selectors":["StopContinueReset_KeepsAccumulatesAndDiscards"]},{"requirement":"SR-RUN-23","selectors":["StopContinueReset_KeepsAccumulatesAndDiscards"]},{"requirement":"SR-RUN-26","selectors":["MoveSource_ResetEditStart_PutsPeakOnTheSource","StopContinueReset_KeepsAccumulatesAndDiscards"]},{"requirement":"VAL-02","selectors":["StopContinueReset_KeepsAccumulatesAndDiscards"]},{"requirement":"SR-MEAS-03","selectors":["Readout_AndOneCellRoi_MatchAbsolutePositionAndValue","Roi_OnFloodMap_CountsWholePixelsByCentre"]},{"requirement":"VAL-03","selectors":["Angle_EscAbandonsDraft_DeleteRemovesSelected","Roi_OnFloodMap_CountsWholePixelsByCentre"]},{"requirement":"SR-MEAS-02","selectors":["Angle_EscAbandonsDraft_DeleteRemovesSelected"]},{"requirement":"SR-MEAS-07","selectors":["Angle_EscAbandonsDraft_DeleteRemovesSelected"]},{"requirement":"SR-VIEW-08","selectors":["MoveSource_ResetEditStart_PutsPeakOnTheSource"]},{"requirement":"VAL-04","selectors":["MoveSource_ResetEditStart_PutsPeakOnTheSource"]},{"requirement":"VAL-05","selectors":["MoveSource_ResetEditStart_PutsPeakOnTheSource"]},{"requirement":"SR-VIEW-05","selectors":["Readout_AndOneCellRoi_MatchAbsolutePositionAndValue"]},{"requirement":"SR-THEME-01","selectors":["ThemeToggle_RelabelsAndSwitchesBack"]}]}
+{"id":"Gcam.Studio.UiTests::Gcam.Studio.UiTests.ScenarioTests","runner":"dotnet","methods":["StopContinueReset_KeepsAccumulatesAndDiscards","Roi_OnFloodMap_CountsWholePixelsByCentre","Readout_AndOneCellRoi_MatchAbsolutePositionAndValue","Angle_EscAbandonsDraft_DeleteRemovesSelected","MoveSource_ResetEditStart_PutsPeakOnTheSource","ThemeToggle_RelabelsAndSwitchesBack"],"sources":{"tests/Gcam.Studio.UiTests/ScenarioTests.cs":"b1f5ba72b6b3e6f826e9f6e0b675006d4b4d2072e5516515ab172c5142620450","tests/Gcam.Studio.UiTests/Harness/FloodOracle.cs":"22db35cb2771a0460e437e47308b5792bf1c22d2dc077af54106223a29cd75be","tests/Gcam.Studio.UiTests/Harness/Pointer.cs":"e56d09c72e552bf5619c088150a0d6ceba0ec2eb75ee06c2744c4677b9db896c","tests/Gcam.Studio.UiTests/Harness/RepoPaths.cs":"2bdc3c25db3c74cfe32ea7f64352f36cc5fb3b8fbf7be92ce03b7184648cc655","tests/Gcam.Studio.UiTests/Harness/RunRecord.cs":"0db3b6cf367fed06ba506db2973593b100ebed4a6ca793552a77e490d0fce377","tests/Gcam.Studio.UiTests/Harness/Scenario.cs":"3a7766172a9dcfb711d3b9a2b9fca9712877bd9aff35ba74f04aedc8d1b782d2","tests/Gcam.Studio.UiTests/Harness/StudioProcess.cs":"973777303020b10c38bcd701e991764b095cb2f149ed31da6a5d554bf73d87c2","tests/Gcam.Studio.UiTests/Harness/StudioWindow.cs":"870000b25e6b7a3ca9f71ebfb671658b15cbb937290d7e14050d360409940e86","tests/Gcam.Studio.UiTests/Harness/WorkspaceOracle.cs":"153e5f5ec778401b877467e405295a940d663d4fea1d32f9101139e9c0b325e5","tests/Gcam.Studio.UiTests/DesktopFactAttribute.cs":"1dcac8c38143a4d38635267e17af2acdbb5f2ee84eca07e2968a2a1e7f073bfc"},"trace":[{"requirement":"SR-VIEW-07","selectors":["Readout_AndOneCellRoi_MatchAbsolutePositionAndValue"]},{"requirement":"SR-RUN-10","selectors":["StopContinueReset_KeepsAccumulatesAndDiscards"]},{"requirement":"SR-RUN-12","selectors":["MoveSource_ResetEditStart_PutsPeakOnTheSource","StopContinueReset_KeepsAccumulatesAndDiscards"]},{"requirement":"SR-RUN-13","selectors":["StopContinueReset_KeepsAccumulatesAndDiscards"]},{"requirement":"SR-RUN-23","selectors":["StopContinueReset_KeepsAccumulatesAndDiscards"]},{"requirement":"SR-RUN-26","selectors":["MoveSource_ResetEditStart_PutsPeakOnTheSource","StopContinueReset_KeepsAccumulatesAndDiscards"]},{"requirement":"VAL-02","selectors":["StopContinueReset_KeepsAccumulatesAndDiscards"]},{"requirement":"SR-MEAS-03","selectors":["Readout_AndOneCellRoi_MatchAbsolutePositionAndValue","Roi_OnFloodMap_CountsWholePixelsByCentre"]},{"requirement":"VAL-03","selectors":["Angle_EscAbandonsDraft_DeleteRemovesSelected","Roi_OnFloodMap_CountsWholePixelsByCentre"]},{"requirement":"SR-MEAS-02","selectors":["Angle_EscAbandonsDraft_DeleteRemovesSelected"]},{"requirement":"SR-MEAS-07","selectors":["Angle_EscAbandonsDraft_DeleteRemovesSelected"]},{"requirement":"SR-VIEW-08","selectors":["MoveSource_ResetEditStart_PutsPeakOnTheSource"]},{"requirement":"VAL-04","selectors":["MoveSource_ResetEditStart_PutsPeakOnTheSource"]},{"requirement":"VAL-05","selectors":["MoveSource_ResetEditStart_PutsPeakOnTheSource"]},{"requirement":"SR-VIEW-05","selectors":["Readout_AndOneCellRoi_MatchAbsolutePositionAndValue"]},{"requirement":"SR-THEME-01","selectors":["ThemeToggle_RelabelsAndSwitchesBack"]}]}
 ```
 
 
@@ -1065,7 +1071,7 @@ Method groups:
 - `HalfMax_InterpolatesAndCensors`: exact / structural fixture comparisons; gate None.
 
 ```json
-{"id":"Gcam.Studio.UiTests::Gcam.Studio.UiTests.WorkspaceOracleTests","runner":"dotnet","methods":["BandCount_IncludesBoundaryCentres","EventsInWindow_IncludesStartExcludesEnd","HalfMax_InterpolatesAndCensors"],"sources":{"tests/Gcam.Studio.UiTests/WorkspaceOracleTests.cs":"fab3e89445eaae06aa2b82c7939d1f8d051a2a550282138e9b42b2710ccf1521","tests/Gcam.Studio.UiTests/Harness/FloodOracle.cs":"22db35cb2771a0460e437e47308b5792bf1c22d2dc077af54106223a29cd75be","tests/Gcam.Studio.UiTests/Harness/Pointer.cs":"e56d09c72e552bf5619c088150a0d6ceba0ec2eb75ee06c2744c4677b9db896c","tests/Gcam.Studio.UiTests/Harness/RepoPaths.cs":"2bdc3c25db3c74cfe32ea7f64352f36cc5fb3b8fbf7be92ce03b7184648cc655","tests/Gcam.Studio.UiTests/Harness/RunRecord.cs":"0db3b6cf367fed06ba506db2973593b100ebed4a6ca793552a77e490d0fce377","tests/Gcam.Studio.UiTests/Harness/Scenario.cs":"dac922df393236562f138489ab7a54d4ff09bb4003f7694da421564e0647b085","tests/Gcam.Studio.UiTests/Harness/StudioProcess.cs":"973777303020b10c38bcd701e991764b095cb2f149ed31da6a5d554bf73d87c2","tests/Gcam.Studio.UiTests/Harness/StudioWindow.cs":"59fca517024d117593d9056ed1c5122d2b8632b7ae179b36a8e091aea06b5bf8","tests/Gcam.Studio.UiTests/Harness/WorkspaceOracle.cs":"153e5f5ec778401b877467e405295a940d663d4fea1d32f9101139e9c0b325e5","tests/Gcam.Studio.UiTests/DesktopFactAttribute.cs":"1dcac8c38143a4d38635267e17af2acdbb5f2ee84eca07e2968a2a1e7f073bfc"},"trace":[]}
+{"id":"Gcam.Studio.UiTests::Gcam.Studio.UiTests.WorkspaceOracleTests","runner":"dotnet","methods":["BandCount_IncludesBoundaryCentres","EventsInWindow_IncludesStartExcludesEnd","HalfMax_InterpolatesAndCensors"],"sources":{"tests/Gcam.Studio.UiTests/WorkspaceOracleTests.cs":"fab3e89445eaae06aa2b82c7939d1f8d051a2a550282138e9b42b2710ccf1521","tests/Gcam.Studio.UiTests/Harness/FloodOracle.cs":"22db35cb2771a0460e437e47308b5792bf1c22d2dc077af54106223a29cd75be","tests/Gcam.Studio.UiTests/Harness/Pointer.cs":"e56d09c72e552bf5619c088150a0d6ceba0ec2eb75ee06c2744c4677b9db896c","tests/Gcam.Studio.UiTests/Harness/RepoPaths.cs":"2bdc3c25db3c74cfe32ea7f64352f36cc5fb3b8fbf7be92ce03b7184648cc655","tests/Gcam.Studio.UiTests/Harness/RunRecord.cs":"0db3b6cf367fed06ba506db2973593b100ebed4a6ca793552a77e490d0fce377","tests/Gcam.Studio.UiTests/Harness/Scenario.cs":"3a7766172a9dcfb711d3b9a2b9fca9712877bd9aff35ba74f04aedc8d1b782d2","tests/Gcam.Studio.UiTests/Harness/StudioProcess.cs":"973777303020b10c38bcd701e991764b095cb2f149ed31da6a5d554bf73d87c2","tests/Gcam.Studio.UiTests/Harness/StudioWindow.cs":"870000b25e6b7a3ca9f71ebfb671658b15cbb937290d7e14050d360409940e86","tests/Gcam.Studio.UiTests/Harness/WorkspaceOracle.cs":"153e5f5ec778401b877467e405295a940d663d4fea1d32f9101139e9c0b325e5","tests/Gcam.Studio.UiTests/DesktopFactAttribute.cs":"1dcac8c38143a4d38635267e17af2acdbb5f2ee84eca07e2968a2a1e7f073bfc"},"trace":[]}
 ```
 
 
@@ -1087,7 +1093,7 @@ Method groups:
 - `Waveform_SelectedEventListAndMarkers_MatchArrivalWindow`, `Detector_FaceBeforeStart_LockedUntilReset`, `Imaging_ChannelAndStrip_MatchRetainedFloodAndFoundPeaks`, `Imaging_RefocusAndSweep_MatchProjectionAndHalfMaxInterval`: numerical comparisons described above; gate GCAM_UI_TESTS.
 
 ```json
-{"id":"Gcam.Studio.UiTests::Gcam.Studio.UiTests.WorkspaceScenarioTests","runner":"dotnet","methods":["Spectrum_BandCountAndWindowChange_MatchRetainedHistogram","Waveform_SelectedEventListAndMarkers_MatchArrivalWindow","Detector_FaceBeforeStart_LockedUntilReset","Imaging_ChannelAndStrip_MatchRetainedFloodAndFoundPeaks","Imaging_RefocusAndSweep_MatchProjectionAndHalfMaxInterval"],"sources":{"tests/Gcam.Studio.UiTests/WorkspaceScenarioTests.cs":"c023e759ae2a4580b80a836d6bf0a99bac92030dabc8406f2cc0048b4fc39d81","tests/Gcam.Studio.UiTests/Harness/FloodOracle.cs":"22db35cb2771a0460e437e47308b5792bf1c22d2dc077af54106223a29cd75be","tests/Gcam.Studio.UiTests/Harness/Pointer.cs":"e56d09c72e552bf5619c088150a0d6ceba0ec2eb75ee06c2744c4677b9db896c","tests/Gcam.Studio.UiTests/Harness/RepoPaths.cs":"2bdc3c25db3c74cfe32ea7f64352f36cc5fb3b8fbf7be92ce03b7184648cc655","tests/Gcam.Studio.UiTests/Harness/RunRecord.cs":"0db3b6cf367fed06ba506db2973593b100ebed4a6ca793552a77e490d0fce377","tests/Gcam.Studio.UiTests/Harness/Scenario.cs":"dac922df393236562f138489ab7a54d4ff09bb4003f7694da421564e0647b085","tests/Gcam.Studio.UiTests/Harness/StudioProcess.cs":"973777303020b10c38bcd701e991764b095cb2f149ed31da6a5d554bf73d87c2","tests/Gcam.Studio.UiTests/Harness/StudioWindow.cs":"59fca517024d117593d9056ed1c5122d2b8632b7ae179b36a8e091aea06b5bf8","tests/Gcam.Studio.UiTests/Harness/WorkspaceOracle.cs":"153e5f5ec778401b877467e405295a940d663d4fea1d32f9101139e9c0b325e5","tests/Gcam.Studio.UiTests/DesktopFactAttribute.cs":"1dcac8c38143a4d38635267e17af2acdbb5f2ee84eca07e2968a2a1e7f073bfc"},"trace":[{"requirement":"SR-IMG-02","selectors":["Imaging_ChannelAndStrip_MatchRetainedFloodAndFoundPeaks"]}]}
+{"id":"Gcam.Studio.UiTests::Gcam.Studio.UiTests.WorkspaceScenarioTests","runner":"dotnet","methods":["Spectrum_BandCountAndWindowChange_MatchRetainedHistogram","Waveform_SelectedEventListAndMarkers_MatchArrivalWindow","Detector_FaceBeforeStart_LockedUntilReset","Imaging_ChannelAndStrip_MatchRetainedFloodAndFoundPeaks","Imaging_RefocusAndSweep_MatchProjectionAndHalfMaxInterval"],"sources":{"tests/Gcam.Studio.UiTests/WorkspaceScenarioTests.cs":"c023e759ae2a4580b80a836d6bf0a99bac92030dabc8406f2cc0048b4fc39d81","tests/Gcam.Studio.UiTests/Harness/FloodOracle.cs":"22db35cb2771a0460e437e47308b5792bf1c22d2dc077af54106223a29cd75be","tests/Gcam.Studio.UiTests/Harness/Pointer.cs":"e56d09c72e552bf5619c088150a0d6ceba0ec2eb75ee06c2744c4677b9db896c","tests/Gcam.Studio.UiTests/Harness/RepoPaths.cs":"2bdc3c25db3c74cfe32ea7f64352f36cc5fb3b8fbf7be92ce03b7184648cc655","tests/Gcam.Studio.UiTests/Harness/RunRecord.cs":"0db3b6cf367fed06ba506db2973593b100ebed4a6ca793552a77e490d0fce377","tests/Gcam.Studio.UiTests/Harness/Scenario.cs":"3a7766172a9dcfb711d3b9a2b9fca9712877bd9aff35ba74f04aedc8d1b782d2","tests/Gcam.Studio.UiTests/Harness/StudioProcess.cs":"973777303020b10c38bcd701e991764b095cb2f149ed31da6a5d554bf73d87c2","tests/Gcam.Studio.UiTests/Harness/StudioWindow.cs":"870000b25e6b7a3ca9f71ebfb671658b15cbb937290d7e14050d360409940e86","tests/Gcam.Studio.UiTests/Harness/WorkspaceOracle.cs":"153e5f5ec778401b877467e405295a940d663d4fea1d32f9101139e9c0b325e5","tests/Gcam.Studio.UiTests/DesktopFactAttribute.cs":"1dcac8c38143a4d38635267e17af2acdbb5f2ee84eca07e2968a2a1e7f073bfc"},"trace":[{"requirement":"SR-IMG-02","selectors":["Imaging_ChannelAndStrip_MatchRetainedFloodAndFoundPeaks"]}]}
 ```
 
 
@@ -2687,7 +2693,7 @@ Gates: none.
 Source: [samples/testing/test_records.py](../samples/testing/test_records.py).
 
 ```json
-{"id":"checker::archived-replay","runner":"checker","methods":["archived-replay"],"sources":{"samples/testing/test_records.py":"1af81531d20e73db4f23d501169114547dd0f981d015c892ea7a38fd66e47e31"},"trace":[]}
+{"id":"checker::archived-replay","runner":"checker","methods":["archived-replay"],"sources":{"samples/testing/test_records.py":"4ff55d2f937996f282d80dcdcbb4dd3cbdf78514999973b0d76eca6ee1e01b09"},"trace":[]}
 ```
 
 
@@ -2721,7 +2727,7 @@ Gates: none.
 Source: [samples/testing/test_records.py](../samples/testing/test_records.py).
 
 ```json
-{"id":"checker::test-catalog","runner":"checker","methods":["test-catalog"],"sources":{"samples/testing/test_records.py":"1af81531d20e73db4f23d501169114547dd0f981d015c892ea7a38fd66e47e31"},"trace":[]}
+{"id":"checker::test-catalog","runner":"checker","methods":["test-catalog"],"sources":{"samples/testing/test_records.py":"4ff55d2f937996f282d80dcdcbb4dd3cbdf78514999973b0d76eca6ee1e01b09"},"trace":[]}
 ```
 
 
@@ -2738,7 +2744,7 @@ Gates: none.
 Source: [samples/testing/test_records.py](../samples/testing/test_records.py).
 
 ```json
-{"id":"checker::test-record-self-test","runner":"checker","methods":["test-record-self-test"],"sources":{"samples/testing/test_records.py":"1af81531d20e73db4f23d501169114547dd0f981d015c892ea7a38fd66e47e31"},"trace":[]}
+{"id":"checker::test-record-self-test","runner":"checker","methods":["test-record-self-test"],"sources":{"samples/testing/test_records.py":"4ff55d2f937996f282d80dcdcbb4dd3cbdf78514999973b0d76eca6ee1e01b09"},"trace":[]}
 ```
 
 
@@ -3448,22 +3454,22 @@ Method groups:
 
 ## ReadoutRenderTests — dotnet
 
-Detached production readout XAML and controls: sensor/network, Anger/LUT, calibration, diagnostics, pending/preparing/ready/failed states and five waveform lanes, in both themes at 1280×800 and 1440×900. Synthetic drawing records are not calibration evidence. Snapshot output requires an explicit scratch directory. A normal ungated STA case drives bound combo-box selected indices and text edits, drains the dispatcher and verifies accepted values in the controls, including unsupported geometry, locked readout mode, invalid energy windows and physical-mode optics preset refusal. It parses the production ReadoutPanel and reproduces MainWindow's optics editor bindings without constructing a Window.
+Production readout XAML rendered detached on an STA: bound controls show accepted source values after rejected edits (mode while preparing, invalid windows) and no preset is refused on the physical path (Wide FOV resolves to its 8 k 661.7 keV plan). The opt-in render covers Detector (all tabs), four lanes, Imaging cost and Readout panel states for the 12 x 12 and the 44 x 44 module at its real LUT size (1408 x 1408 bins, 1936 peaks), checks the largest crystal index maps to the captured module, and logs the ReadoutMapView cache-build, cached and zoomed render times. Every visible help mark is a focusable tab stop with an AutomationId whose automation HelpText equals its tooltip text.
 
-Oracle: Production bindings and layout: five nonzero plot surfaces, the sum threshold series, no Window/HWND/desktop input. Engine-generated isolated conversion timestamps must agree with the trace's first sum crossing and peak. After rendering, all five plot rectangles and root-relative zero-time coordinates share exactly the same X mapping at both sizes and themes.
+Oracle: Drawing-only fixtures; real engine pulse timing; the embedded shipped record for plans; exact pixel-geometry assertions.
 
-Tolerance: Structural and exact rendered X-coordinate equality; no pixel-difference or elapsed-time acceptance band. Isolated trigger/peak marker-to-trace distance is at most max(engine sample period, scope sample period), 8 ns for this fixture; hold is within the engine-derived search window.
+Tolerance: Exact/structural. Render times are measurements, not thresholds.
 
-Gates: Snapshot method: GCAM_RENDER_SNAPSHOTS=1; GCAM_RENDER_OUTPUT required. Bound-control regression: none; detached, no Window/HWND/desktop input.
+Gates: `GCAM_RENDER_SNAPSHOTS` (render method); none for the bound-controls method.
 
 ```json
-{"runner":"dotnet","sources":{"tests/Gcam.Studio.RenderTests/ReadoutRenderTests.cs":"3a8bd6622204253e24fee5f3504352ae242b2d9b411b5c3f8a47cbf9c5aef6bc","tests/Gcam.Studio.RenderTests/RenderSnapshotFactAttribute.cs":"95dd1088eee764d18a539ff37399a3c518aa75056d29d2de60286d2173ba1edd"},"methods":["BoundReadoutControls_RejectedEditsShowAcceptedSourceValues","ExperimentalDetectorAndFourLanes_BothThemesAndSizes"],"id":"Gcam.Studio.RenderTests::Gcam.Studio.RenderTests.ReadoutRenderTests","trace":[]}
+{"runner":"dotnet","sources":{"tests/Gcam.Studio.RenderTests/ReadoutRenderTests.cs":"bbb80c0df861632856d72be324411e485995093daab564652f01f7b895eb84ba","tests/Gcam.Studio.RenderTests/RenderSnapshotFactAttribute.cs":"95dd1088eee764d18a539ff37399a3c518aa75056d29d2de60286d2173ba1edd"},"methods":["BoundReadoutControls_RejectedEditsShowAcceptedSourceValues","LineRows_ExposeTheirDetailsToAutomation_AcrossRowRebuilds","ExperimentalDetectorAndFourLanes_BothThemesAndSizes"],"id":"Gcam.Studio.RenderTests::Gcam.Studio.RenderTests.ReadoutRenderTests","trace":[]}
 ```
 
 
 ## PhysicalReadoutTests — dotnet
 
-Builds the independent reference-head preparation, checks cache/cancellation and real virtual-clock Stop/Continue prefixes. Spectrum and Imaging count populations agree; five realised waveform lanes conserve their sum and replay the stored held analogue response.
+Builds the independent reference-head preparation (the legacy 661.7 keV entry), checks cache/cancellation and real virtual-clock Stop/Continue prefixes. Spectrum and Imaging count populations agree; five realised waveform lanes conserve their sum and replay the stored held analogue response. TODO-41: a fine head builds its physical configuration (no geometry gate); ambient / BSR and a missing preparation are still refused.
 
 Oracle: Uninterrupted fixed-seed acquisition; immutable prior prefixes; exact count partition. Replay round-off follows the pulse derivative and floating-point summation bound. The isolated sum trigger is bracketed independently by the continuous rising-edge root and the next engine sample; the preceding engine sample is below threshold. The hold is within its search window and one engine sample of the analytic peak. Scope markers agree with the first sampled crossing and peak within max(engine period, scope period), 8 ns here.
 
@@ -3472,37 +3478,37 @@ Tolerance: Exact records/counts. Analogue replay: sum(abs(channel hits)) times [
 Gates: none.
 
 ```json
-{"runner":"dotnet","sources":{"tests/Gcam.Studio.Services.Tests/PhysicalReadoutTests.cs":"a895dfff08fee72e10d3428ea7241be1419649731d6804be0626dc560dc4d4a6","tests/Gcam.Studio.Services.Tests/EvidenceFactAttribute.cs":"898301fdfe0438aa4ea3503809ee81dc90b225dff52defb3e2cee6277085cd60"},"methods":["IsolatedScope_TriggerFirstCrossingAndHoldPeakShareThePulseTimeBase","Prepare_IsIndependentCachedAndCancellationDoesNotPublish","Continuation_ConservesMeasuredRecordsAndImmutablePrefixesExactly","CancellationAtTransportBoundary_PublishesNoPartialArtifact","ManualWindowBoundariesAndUnknowns_AgreeAcrossSpectrumAndImaging","UnsupportedInputs_AreRefusedWithoutMutatingThem"],"id":"Gcam.Studio.Services.Tests::Gcam.Studio.Services.Tests.PhysicalReadoutTests","trace":[]}
+{"runner":"dotnet","sources":{"tests/Gcam.Studio.Services.Tests/PhysicalReadoutTests.cs":"5867a5f2355d3817ecc49ae105a76fe7a5ec89dcc35a6acb903231aa40af99f8","tests/Gcam.Studio.Services.Tests/EvidenceFactAttribute.cs":"898301fdfe0438aa4ea3503809ee81dc90b225dff52defb3e2cee6277085cd60"},"methods":["IsolatedScope_TriggerFirstCrossingAndHoldPeakShareThePulseTimeBase","Prepare_IsIndependentCachedAndCancellationDoesNotPublish","Continuation_ConservesMeasuredRecordsAndImmutablePrefixesExactly","CancellationAtTransportBoundary_PublishesNoPartialArtifact","ManualWindowBoundariesAndUnknowns_AgreeAcrossSpectrumAndImaging","UnsupportedInputs_AreRefusedWithoutMutatingThem"],"id":"Gcam.Studio.Services.Tests::Gcam.Studio.Services.Tests.PhysicalReadoutTests","trace":[]}
 ```
 
 
 ## ReadoutViewModelTests — dotnet
 
-Checks supported-head selection, actionable field/preparation refusal without silent zeroing, inactive legacy controls, preparation invalidation and explicit keV-window validation.
+TODO-41 per-line policy in the ViewModel: any valid geometry selects the physical readout; per-line plans come only from the record and the module fingerprint (legacy Baseline 661.7, 64 k High-res, local Custom at 2 k with LatticeGrowth / adjoint); the scene decides the required lines (exact energy equality: Co-57 122.1 keV is not the 122.06 keV row); refused and incidental lines never block; Prepare runs line by line and keeps finished lines on cancellation; failures are literal; a matching Custom module inherits the offer and budget but not the cost; a missing record offers nothing; the cost card states the exact F wording and the data-derived direct-bias explanation, and is inherited only on a full imaging-profile match. The benchmark-window match accepts typed edges at their defined precision (562.445 / 760.955 and 1132.625 / 1532.375 keV; half a unit in the third decimal) and the button sets exactly those values; the inline cost card keeps the key numbers and the F sentence while reasons, provenance and the F-below-1 explanation are in the help text.
 
-Oracle: Declared SD-2/SD-3 input policies and readout cache content identity.
+Oracle: Hand-built record fixture (ReadoutOfferFixture) with hand-derived values: bias share 0.49^2/0.5^2 = 96.0 %, F = 0.45^2/0.5^2 = 0.81; declared SD-A1...A16 policies; a recording fake preparation service.
 
 Tolerance: Exact/structural.
 
 Gates: none.
 
 ```json
-{"runner":"dotnet","sources":{"tests/Gcam.Studio.Tests/ReadoutViewModelTests.cs":"f09badc9dca0032f975ffbb92f27d3958059c4859c91bd9eedc4361fc6e8bbe8"},"methods":["GeometryRefusalAndLegacyLocks_HaveActionableReasons","StartRefusesFieldAndMissingPreparationWithoutSilentZeroing","PreparationKeyInvalidationAndWindowValidation_AreExplicit"],"id":"Gcam.Studio.Tests::Gcam.Studio.Tests.ReadoutViewModelTests","trace":[]}
+{"runner":"dotnet","sources":{"tests/Gcam.Studio.Tests/ReadoutViewModelTests.cs":"fd97fedff9e2348c70df455f4409775371437afdaf2409111a14ed1c50b6446c"},"methods":["AnyValidGeometry_SelectsPhysicalReadout_WithPerLinePlansAndLegacyLocks","StartRefusesFieldAndMissingPreparationWithoutSilentZeroing","RequiredLinesFollowTheScene_RefusedAndIncidentalLinesNeverBlock_BankIsReferenceFirst","PreparationKeyInvalidationAndWindowValidation_AreExplicit","FailureAndCancellation_KeepFinishedLinesAndReportLiterally","Custom_MatchingModuleInheritsOfferAndBudget_ButNotTheCost_UnmatchedIsLocal","MissingRecord_OffersNothing_AndStartSaysWhy","CostCard_InheritsOnlyOnFullProfile_StatesFWording_AndExplainsFBelowOneFromTheData","BenchmarkWindow_MatchesTypedEdgesAtTheirDefinedPrecision","CostCard_InheritsWithHandTypedBenchmarkWindow"],"id":"Gcam.Studio.Tests::Gcam.Studio.Tests.ReadoutViewModelTests","trace":[]}
 ```
 
 
 ## ReadoutScenarioTests — dotnet
 
-Adds desktop reference-head and field refusal, Prepare cancellation/retry/tabs and fixed-seed uninterrupted-versus-continued count scenarios. The count parser oracle runs headlessly and rejects nonconservation.
+Desktop physical-readout scenarios (compiled; run on the author's go): Sharp physical selection with the published 122.06 keV refusal and field refusal without zeroing; Baseline cancel / retry / same-session hit / tabs / stale bank after a module edit; fixed-seed Stop / Continue conservation with four lanes; Sharp 661.7 + 1332.5 keV bank with per-line counts, map and Imaging line switching; Wide 8 k cost card with neutral F and the direct-bias explanation; one bundled cold 64 k High-res scenario (progress, tabs, 44 x 44 module, acquisition, session hit); Custom module inheritance without cost and a local unknown module. Headless oracles parse the count identity and the captured module, and pin the measured preparation waits.
 
-Oracle: Assigned + unknown = triggered exactly; fixed-seed continued counts equal uninterrupted counts; disabled legacy controls and explicit refusal text.
+Oracle: Assigned + unknown = triggered exactly; fixed-seed continued counts equal uninterrupted counts; literal record wording; captured module from the map ItemStatus; waits = max(90 s, 2 x measured cold wall + 10 s) rounded up to whole minutes (Turn 7).
 
 Tolerance: Exact/structural. Bounded UI waits are operational deadlines, not physics tolerances.
 
-Gates: Desktop methods: GCAM_UI_TESTS=1; count oracle: none.
+Gates: Desktop methods: GCAM_UI_TESTS=1; oracles: none.
 
 ```json
-{"runner":"dotnet","sources":{"tests/Gcam.Studio.UiTests/ReadoutScenarioTests.cs":"598070a9fae2444acfd3caa23a7b327bd91e3e7816bff9d6035a373409a20a1a","tests/Gcam.Studio.UiTests/Harness/FloodOracle.cs":"22db35cb2771a0460e437e47308b5792bf1c22d2dc077af54106223a29cd75be","tests/Gcam.Studio.UiTests/Harness/Pointer.cs":"e56d09c72e552bf5619c088150a0d6ceba0ec2eb75ee06c2744c4677b9db896c","tests/Gcam.Studio.UiTests/Harness/RepoPaths.cs":"2bdc3c25db3c74cfe32ea7f64352f36cc5fb3b8fbf7be92ce03b7184648cc655","tests/Gcam.Studio.UiTests/Harness/RunRecord.cs":"0db3b6cf367fed06ba506db2973593b100ebed4a6ca793552a77e490d0fce377","tests/Gcam.Studio.UiTests/Harness/Scenario.cs":"dac922df393236562f138489ab7a54d4ff09bb4003f7694da421564e0647b085","tests/Gcam.Studio.UiTests/Harness/StudioProcess.cs":"973777303020b10c38bcd701e991764b095cb2f149ed31da6a5d554bf73d87c2","tests/Gcam.Studio.UiTests/Harness/StudioWindow.cs":"59fca517024d117593d9056ed1c5122d2b8632b7ae179b36a8e091aea06b5bf8","tests/Gcam.Studio.UiTests/Harness/WorkspaceOracle.cs":"153e5f5ec778401b877467e405295a940d663d4fea1d32f9101139e9c0b325e5","tests/Gcam.Studio.UiTests/DesktopFactAttribute.cs":"1dcac8c38143a4d38635267e17af2acdbb5f2ee84eca07e2968a2a1e7f073bfc"},"methods":["CountOracle_RefusesNonConservationAndMissingIdentity","UnsupportedGeometryAndField_ExplainRefusalWithoutZeroing","PreparationCancelRetryAndTabs_AreExplicit","FixedSeedRepeatAndContinuation_ConserveCountsAndExposeFourLanes"],"id":"Gcam.Studio.UiTests::Gcam.Studio.UiTests.ReadoutScenarioTests","trace":[]}
+{"runner":"dotnet","sources":{"tests/Gcam.Studio.UiTests/ReadoutScenarioTests.cs":"bfa01aa87951b988f68d65239fb304d551f8bf457a9cbc2648b445595824eb0c","tests/Gcam.Studio.UiTests/Harness/FloodOracle.cs":"22db35cb2771a0460e437e47308b5792bf1c22d2dc077af54106223a29cd75be","tests/Gcam.Studio.UiTests/Harness/Pointer.cs":"e56d09c72e552bf5619c088150a0d6ceba0ec2eb75ee06c2744c4677b9db896c","tests/Gcam.Studio.UiTests/Harness/RepoPaths.cs":"2bdc3c25db3c74cfe32ea7f64352f36cc5fb3b8fbf7be92ce03b7184648cc655","tests/Gcam.Studio.UiTests/Harness/RunRecord.cs":"0db3b6cf367fed06ba506db2973593b100ebed4a6ca793552a77e490d0fce377","tests/Gcam.Studio.UiTests/Harness/Scenario.cs":"3a7766172a9dcfb711d3b9a2b9fca9712877bd9aff35ba74f04aedc8d1b782d2","tests/Gcam.Studio.UiTests/Harness/StudioProcess.cs":"973777303020b10c38bcd701e991764b095cb2f149ed31da6a5d554bf73d87c2","tests/Gcam.Studio.UiTests/Harness/StudioWindow.cs":"870000b25e6b7a3ca9f71ebfb671658b15cbb937290d7e14050d360409940e86","tests/Gcam.Studio.UiTests/Harness/WorkspaceOracle.cs":"153e5f5ec778401b877467e405295a940d663d4fea1d32f9101139e9c0b325e5","tests/Gcam.Studio.UiTests/DesktopFactAttribute.cs":"1dcac8c38143a4d38635267e17af2acdbb5f2ee84eca07e2968a2a1e7f073bfc"},"methods":["CountOracle_RefusesNonConservationAndMissingIdentity","ModuleOracle_ReadsTheCapturedGeometry_AndWaitsFollowTheMeasuredCost","RefusedLineAndField_ExplainWithoutZeroing","PreparationCancelRetryAndTabs_AreExplicit","FixedSeedRepeatAndContinuation_ConserveCountsAndExposeFourLanes","SharpTwoLineBank_SwitchesWindowAndLineWithoutTruthDispatch","WideCostCard_ShowsNeutralFAndTheDirectBiasExplanation","HighResCold_ProgressTabsCornersAndSessionHit_Bundled","CustomModules_InheritByModuleNotCost_UnknownCalibratesLocally"],"id":"Gcam.Studio.UiTests::Gcam.Studio.UiTests.ReadoutScenarioTests","trace":[]}
 ```
 
 
@@ -3686,4 +3692,106 @@ Source: [samples/evidence/tests/test_studio_readout_v5.py](../samples/evidence/t
 
 ```json
 {"id":"unittest::test_studio_readout_v5.StudioReadoutRuleV5Tests","runner":"unittest","methods":["test_development_budget_requires_all_four_and_smallest_success","test_calibration_offer_and_literal_refusal","test_missing_duplicate_and_corrupt_status_fail_closed","test_cost_interval_and_paired_ratio_oracles","test_no_survivor_only_cost_and_bias_does_not_cancel","test_main_end_to_end_real_publisher_and_diagnostic_oracle","test_failure_outside_cost_subset_refuses_and_main_keeps_message","test_missing_or_corrupt_run_prevents_main_publication","test_repair_scope_rejects_confirmation_phase_and_other_line","test_prepare_pins_only_complete_development_and_preserves_v4"],"sources":{"samples/evidence/tests/test_studio_readout_v5.py":"ba80bacf667a88d945414a81e4964634700b3f1c878d12478a0f13cb74806d4b"},"trace":[]}
+```
+
+
+## ReadoutLegacyIdentityTests — dotnet
+
+TODO-41 (SD-A1, PD-2): the 12 x 12 Baseline at 661.7 keV keeps its TODO-40 preparation and acquisition byte for byte through the per-line bank.
+
+Oracle: SHA-256 fixtures recorded from the pre-bank code (branch head 0dc0b68 plus the default-off correction histogram): every published preparation fact, every measured record, realised hit and truth sample of a fixed-seed 2 s acquisition, the assigned and live floods, and the physical imaging / spectrum projections.
+
+Tolerance: Exact (hash equality).
+
+Gates: none.
+
+Source: [tests/Gcam.Studio.Services.Tests/ReadoutLegacyIdentityTests.cs](../tests/Gcam.Studio.Services.Tests/ReadoutLegacyIdentityTests.cs).
+
+```json
+{"id":"Gcam.Studio.Services.Tests::Gcam.Studio.Services.Tests.ReadoutLegacyIdentityTests","runner":"dotnet","methods":["Baseline661_PreparationAcquisitionAndProjections_MatchPreBankFixtures"],"sources":{"tests/Gcam.Studio.Services.Tests/ReadoutLegacyIdentityTests.cs":"ade1ba829dd781d66dc79e577db996a14245fef2b6dbd197fa71b9e8cb2c52ed","tests/Gcam.Studio.Services.Tests/EvidenceFactAttribute.cs":"898301fdfe0438aa4ea3503809ee81dc90b225dff52defb3e2cee6277085cd60"},"trace":[]}
+```
+
+
+## ReadoutOfferRecordTests — dotnet
+
+TODO-41 (SD-A13): the embedded record is the repository file and matches the compiled pin; the published outcome (8 offers, 4 refusals at 122.06 keV, Wide / High 661.7 keV from the declared repair at 8 k / 64 k, superseded v4 outcomes) is read verbatim; changed or malformed bytes and a corrupt population are unavailable, never a fallback; plans follow the record and the module fingerprint.
+
+Oracle: Repository bytes and their SHA-256; Turn 7 values (Wide 661.7 / 4 k / isolated: Direct RMS 0.51664 deg, bias 0.51108 deg, F 0.82946 [0.82312, 0.83584]); literal published failures.
+
+Tolerance: Exact; recorded estimates compared to five decimals (the Turn 7 table rounding).
+
+Gates: none.
+
+Source: [tests/Gcam.Studio.Services.Tests/ReadoutOfferRecordTests.cs](../tests/Gcam.Studio.Services.Tests/ReadoutOfferRecordTests.cs).
+
+```json
+{"id":"Gcam.Studio.Services.Tests::Gcam.Studio.Services.Tests.ReadoutOfferRecordTests","runner":"dotnet","methods":["EmbeddedRecord_IsTheRepositoryFile_AndMatchesTheCompiledPin","PublishedOutcome_IsReadVerbatim","ChangedOrMalformedBytes_AreUnavailable_NeverAFallback","Plans_FollowTheRecordAndTheModuleFingerprint"],"sources":{"tests/Gcam.Studio.Services.Tests/ReadoutOfferRecordTests.cs":"e633d9c99c51fc5a01bec1a958001e60d7ac5ce989875be97ca4848cd6012697","tests/Gcam.Studio.Services.Tests/EvidenceFactAttribute.cs":"898301fdfe0438aa4ea3503809ee81dc90b225dff52defb3e2cee6277085cd60"},"trace":[]}
+```
+
+
+## ReadoutBankTests — dotnet
+
+TODO-41 per-line banks on the real engine: line preparations capture the module and declared streams; held ADC facts are acquired once and each line equals its own single-line acquisition (no truth dispatch); windows read only their own line (a 122 keV window is unavailable, not zero); the opt-in flood correction applies the calibration histogram exactly and an empty bin makes the corrected image unavailable; the session cache pins captured entries and evicts others by accounted bytes; real stage / history progress; a small local Custom module runs the LatticeGrowth / adjoint streamed path and acquires on its captured 8 x 8 geometry; cancellation inside the streamed flood publishes nothing.
+
+Oracle: Independent single-line acquisition with the same seed; hand-computed weights mean/h; declared seed formula 402 000 000 + 1 000 * line index + purpose; exact history totals (crystals x budget).
+
+Tolerance: Exact/structural. No physics acceptance band.
+
+Gates: none.
+
+Source: [tests/Gcam.Studio.Services.Tests/ReadoutBankTests.cs](../tests/Gcam.Studio.Services.Tests/ReadoutBankTests.cs).
+
+```json
+{"id":"Gcam.Studio.Services.Tests::Gcam.Studio.Services.Tests.ReadoutBankTests","runner":"dotnet","methods":["LinePreparations_CaptureTheModuleAndDeclaredStreams","HeldFactsOnce_EachLineEqualsItsOwnSingleLineAcquisition_WindowsReadOnlyTheirLine","FloodCorrection_AppliesTheHistogramExactly_EmptyBinMakesItUnavailable","SessionCache_PinsCapturedEntries_EvictsOthersByAccountedBytes_ReportsRealProgress","LocalCustomModule_UsesGrowthAdjointStreams_AndAcquiresOnItsCapturedGeometry","CancellationDuringTheStreamedFlood_PublishesNothing"],"sources":{"tests/Gcam.Studio.Services.Tests/ReadoutBankTests.cs":"f18df1656705e9d55c0d73b6f08afbf09f89e463fd35dbb0971697a31897977e","tests/Gcam.Studio.Services.Tests/EvidenceFactAttribute.cs":"898301fdfe0438aa4ea3503809ee81dc90b225dff52defb3e2cee6277085cd60"},"trace":[]}
+```
+
+
+## ReadoutCorrectionTests — dotnet
+
+TODO-41 (SD-A4): the opt-in correction histogram counts the calibration flood's own photopeak assignments from the events calibration already holds; collecting it changes no calibration output; a streamed flood gives the same calibration as a list (4 x 4 legacy and 8 x 8 LatticeGrowth / adjoint).
+
+Oracle: Independent transport / readout replay of the same flood with the same streams.
+
+Tolerance: Exact.
+
+Gates: none.
+
+Source: [tests/Gcam.Tests/ReadoutCorrectionTests.cs](../tests/Gcam.Tests/ReadoutCorrectionTests.cs).
+
+```json
+{"id":"Gcam.Tests::Gcam.Tests.ReadoutCorrectionTests","runner":"dotnet","methods":["Histogram_EqualsReplay_AndOptInLeavesCalibrationIdentical"],"sources":{"tests/Gcam.Tests/ReadoutCorrectionTests.cs":"7471c38500540b3b08abc186af69a50d3301cee64ca6a1b06effdc53ee6e55cd","tests/Gcam.Tests/Harness/Rigs.cs":"9b89ce04cdcb302fcefc6636d45a0d1640a48c288d1e0a3638b005c44028c3b2","tests/Gcam.Tests/Harness/Stat.cs":"4502dddc6276f9d1de0c41b2ed7246ed7f00c9266daa12a34d6174ae1cb19029"},"trace":[]}
+```
+
+
+## StudioReadoutOfferRecordTests — unittest
+
+Purpose: TODO-41 (SD-A13): the committed reduced offer / cost record regenerates byte for byte from its embedded projections and matches the compiled Studio pin; it stays well under 1 MB; the published outcome and the reduction (no per-seed maps, no provenance envelope) hold; each hash-chain link (projection digest, derived cells, parent pin, compiled pin, canonical bytes) and the overlay scope / population rules fail closed.
+
+Oracle: The committed record and the generator's pinned parent hashes; tampered copies in an isolated scratch root.
+
+Tolerance: Exact.
+
+Gates: none.
+
+Source: [samples/evidence/tests/test_studio_readout_offer.py](../samples/evidence/tests/test_studio_readout_offer.py).
+
+```json
+{"id":"unittest::test_studio_readout_offer.StudioReadoutOfferRecordTests","runner":"unittest","methods":["test_shipped_record_passes_the_reduced_check_and_matches_the_compiled_pin","test_published_outcome_and_reduction","test_rebuild_is_deterministic","test_each_hash_chain_link_fails_closed","test_overlay_scope_and_population_are_enforced"],"sources":{"samples/evidence/tests/test_studio_readout_offer.py":"dce3e5cd9ef618b55fb97f0cadc9a8bfe23411d282c67ec5fdde265c1b05c03a"},"trace":[]}
+```
+
+
+## studio-readout-offer — checker
+
+Purpose: Verifies the Studio readout offer / cost record (`studio_readout_offer_record.py --check`, parents absent): canonical bytes regenerated from the embedded projections, recorded projection digests, pinned full-parent SHA-256, recipe / rule identity and the SHA-256 compiled into Studio. With `--parents` (not in CI: the parents are not archived) it re-derives the record from the published parents and validates their sidecars.
+
+Oracle: Pinned parent hashes in the generator; the committed record; ReadoutOfferPin.cs.
+
+Tolerance: Exact (hash and byte equality).
+
+Gates: none.
+
+Source: [samples/evidence/studio_readout_offer_record.py](../samples/evidence/studio_readout_offer_record.py).
+
+```json
+{"id":"checker::studio-readout-offer","runner":"checker","methods":["studio-readout-offer"],"sources":{"samples/evidence/studio_readout_offer_record.py":"d1f2a5e9baaa003b3233f5189908a74653b44819c6b1d481fd476d932e5727d0"},"trace":[]}
 ```

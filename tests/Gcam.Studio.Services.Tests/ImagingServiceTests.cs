@@ -184,7 +184,7 @@ public sealed class ImagingServiceTests(ITestOutputHelper output)
         Assert.NotEqual(first.Ratios[0].R, changed.Ratios[0].R);
         Assert.True(changed.CalibrationTime > TimeSpan.Zero);
         Assert.Same(snapshot.Imaging.Flood, changed.Channels[0].Image.Flood);
-        Assert.Equal(first.Channels[1].LoKeV > changed.Channels[1].LoKeV, true);
+        Assert.True(first.Channels[1].LoKeV > changed.Channels[1].LoKeV);
         for (int i = 0; i < changed.Channels.Count; i++)
             Assert.Equal(fresh.Channels[i].Image.Flood.Raw.ToArray(), changed.Channels[i].Image.Flood.Raw.ToArray());
         var cached = await service.ProcessAsync(id, snapshot, scene, Optics, new(2, true));

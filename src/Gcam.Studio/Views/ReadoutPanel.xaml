@@ -1,21 +1,50 @@
 <UserControl x:Class="Gcam.Studio.Views.ReadoutPanel"
  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
- xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+ xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+ xmlns:c="clr-namespace:Gcam.Studio.Controls">
  <UserControl.Resources><BooleanToVisibilityConverter x:Key="PhysicalVisibility" /></UserControl.Resources>
  <StackPanel>
-  <TextBlock Text="Readout" Style="{StaticResource Text.SectionTitle}" />
+  <!-- Inline: state, one line per calibration line, inputs. Assumptions and provenance sit behind help marks. -->
+  <StackPanel Orientation="Horizontal">
+   <TextBlock Text="Readout" Style="{StaticResource Text.SectionTitle}" VerticalAlignment="Center" />
+   <c:HelpMark Text="{Binding ReadoutAssumptions}" AutomationProperties.AutomationId="Readout.AssumptionsHelp" AutomationProperties.Name="Readout model assumptions" />
+  </StackPanel>
   <ComboBox ItemsSource="{Binding ReadoutModes}" SelectedItem="{Binding ReadoutMode}" IsEnabled="{Binding CanEditInputs}"
    Margin="{StaticResource Gap.Field}" AutomationProperties.AutomationId="Readout.Mode" AutomationProperties.Name="Readout mode" />
-  <TextBlock Text="{Binding ReadoutAssumptions}" Style="{StaticResource Text.Caption}" TextWrapping="Wrap" Margin="{StaticResource Gap.Field}" />
+  <TextBlock Text="{Binding ReadoutModeSummary}" Style="{StaticResource Text.Caption}" TextWrapping="Wrap" Margin="{StaticResource Gap.Field}" AutomationProperties.AutomationId="Readout.ModeSummary" />
   <StackPanel Visibility="{Binding IsPhysicalReadout, Converter={StaticResource PhysicalVisibility}}">
+   <TextBlock Text="Calibration lines" Style="{StaticResource Text.Label}" />
+   <!-- Rows are exposed through their help marks: each mark is named after its row (the visible summary and local state)
+        and carries the full record sentence as HelpText, so a screen reader announces both with one focusable element. -->
+   <c:ContentItemsList ItemsSource="{Binding ReadoutLines}" Margin="{StaticResource Gap.Field}" AutomationProperties.AutomationId="Readout.Lines"
+    AutomationProperties.Name="Calibration lines">
+    <ItemsControl.ItemTemplate><DataTemplate>
+     <DockPanel Margin="{StaticResource Gap.Tight}">
+      <c:HelpMark DockPanel.Dock="Right" VerticalAlignment="Top" Text="{Binding Details}"
+       AutomationProperties.AutomationId="{Binding HelpId}" AutomationProperties.Name="{Binding AccessibleName}" />
+      <StackPanel>
+       <TextBlock Text="{Binding Summary}" Style="{StaticResource Text.Caption}" TextWrapping="Wrap" />
+       <TextBlock Style="{StaticResource Text.MonoCaption}" TextWrapping="Wrap">
+        <Run Text="Local:" /> <Run Text="{Binding Local, Mode=OneWay}" />
+       </TextBlock>
+      </StackPanel>
+     </DockPanel>
+    </DataTemplate></ItemsControl.ItemTemplate>
+   </c:ContentItemsList>
    <StackPanel Orientation="Horizontal">
     <Button Content="Prepare" Command="{Binding PrepareReadoutCommand}" Margin="{StaticResource Gap.Inline}" AutomationProperties.AutomationId="Readout.Prepare" />
     <Button Content="Cancel prepare" Command="{Binding PrepareReadoutCancelCommand}" AutomationProperties.AutomationId="Readout.Cancel" />
    </StackPanel>
+   <ProgressBar Maximum="1" Value="{Binding ReadoutProgress, Mode=OneWay}" Margin="{StaticResource Gap.Field}"
+    Visibility="{Binding IsPreparingReadout, Converter={StaticResource PhysicalVisibility}}"
+    AutomationProperties.AutomationId="Readout.Progress" AutomationProperties.Name="Readout preparation progress" />
    <TextBlock Text="{Binding ReadoutState}" Style="{StaticResource Text.MonoCaption}" TextWrapping="Wrap" Margin="{StaticResource Gap.Field}" AutomationProperties.AutomationId="Readout.State" />
    <TextBlock Text="Measured energy window · inclusive keV" Style="{StaticResource Text.Label}" />
    <TextBox Text="{Binding WindowLowKeV}" Tag="keV low" Margin="{StaticResource Gap.Field}" AutomationProperties.AutomationId="Readout.WindowLow" />
    <TextBox Text="{Binding WindowHighKeV}" Tag="keV high" Margin="{StaticResource Gap.Field}" AutomationProperties.AutomationId="Readout.WindowHigh" />
+   <TextBlock Text="{Binding WindowLine}" Style="{StaticResource Text.Caption}" TextWrapping="Wrap" AutomationProperties.AutomationId="Readout.WindowLine" />
+   <Button Content="Use ±15 % benchmark window" Command="{Binding UseBenchmarkWindowCommand}" HorizontalAlignment="Left" Margin="{StaticResource Gap.Field}"
+    AutomationProperties.AutomationId="Readout.BenchmarkWindow" />
   </StackPanel>
   <TextBlock Text="{Binding ReadoutMessage}" Style="{StaticResource Text.CaptionWarning}" TextWrapping="Wrap" AutomationProperties.AutomationId="Readout.Reason" />
  </StackPanel>

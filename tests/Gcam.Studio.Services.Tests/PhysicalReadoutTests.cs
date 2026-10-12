@@ -180,7 +180,8 @@ public sealed class PhysicalReadoutTests(ITestOutputHelper output)
     public void UnsupportedInputs_AreRefusedWithoutMutatingThem()
     {
         var d = new DetectorSettings { ReadoutMode = ReadoutMode.FourOutputAnger };
-        Assert.Throws<ArgumentException>(() => SimulationService.BuildConfig(Scene, new(), d));
+        // TODO-41: no geometry gate any more — a fine head builds its physical configuration (offers are per line).
+        Assert.Equal(30, SimulationService.BuildConfig(Scene, new(), d).Detector.PixelsX);
         Assert.Throws<NotSupportedException>(() => SimulationService.BuildConfig(Scene, Head, d, .1));
         Assert.Throws<NotSupportedException>(() => SimulationService.BuildConfig(Scene, Head, d, ambient: new()));
         Assert.Throws<InvalidOperationException>(() => new SimulationService().Start(Scene, Head, 1, 1, d));

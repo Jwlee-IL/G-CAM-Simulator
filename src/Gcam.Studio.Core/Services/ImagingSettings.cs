@@ -9,4 +9,6 @@ public sealed record ImagingSettings(double WindowFwhm = 1.5, bool Strip = false
 {
     public double WindowLowKeV { get; init; } = 600;
     public double WindowHighKeV { get; init; } = 720;
+    /// <summary>Physical readout (SD-A4): weight the window flood by the line calibration's own correction histogram.</summary>
+    public bool ApplyFloodCorrection { get; init; }
 }

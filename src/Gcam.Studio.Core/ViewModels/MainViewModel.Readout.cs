@@ -1,3 +1,4 @@
+using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Gcam.Configuration;
@@ -8,6 +9,8 @@ namespace Gcam.Studio.Core.ViewModels;
 public sealed partial class MainViewModel
 {
     private readonly IReadoutPreparationService? _readoutPreparation;
+    // Session results by calibration key (successes and literal failures); the service owns the reusable artifacts.
+    private readonly Dictionary<string, ReadoutPreparation> _preparations = [];
     private ReadoutMode _readoutMode;
     public IReadOnlyList<ReadoutMode> ReadoutModes { get; } = [ReadoutMode.DirectCrystal, ReadoutMode.FourOutputAnger];
     public ReadoutMode ReadoutMode
@@ -16,9 +19,7 @@ public sealed partial class MainViewModel
         set
         {
             if (!CanEditInputs || !ReadoutModes.Contains(value)) { RefreshRejectedReadoutProperty(nameof(ReadoutMode)); return; }
-            if (value != ReadoutMode.DirectCrystal && ReadoutPolicy.GeometryError(Optics) is { } error)
-            { ReadoutMessage = error; RefreshRejectedReadoutProperty(nameof(ReadoutMode)); return; }
-            if (SetProperty(ref _readoutMode, value)) NotifyReadout();
+            if (SetProperty(ref _readoutMode, value)) { ReadoutMessage = null; NotifyReadout(); }
         }
     }
     private void RefreshRejectedReadoutProperty(string name)
@@ -34,31 +35,128 @@ public sealed partial class MainViewModel
     public bool CanUseLegacy => !IsPhysicalReadout;
     public bool CanEditLegacy => CanEditInputs && CanUseLegacy;
     public int ScopeEventCount => Snapshot?.Readout?.Records.Count ?? Snapshot?.Events.Count ?? 0;
+    /// <summary>The inline one-liner of the readout section; <see cref="ReadoutAssumptions"/> is its help text.</summary>
+    public string ReadoutModeSummary => IsPhysicalReadout ? "Experimental GAGG four-output readout" : "Direct crystal assignment";
     public string ReadoutAssumptions => IsPhysicalReadout
-        ? "Experimental GAGG · DPC 0.01 · sum trigger 50 keV-equivalent · specular 0.98 · virtual matched SiPMs · unlimited cells; no RC, skew or jitter. Legacy gain and chain are inactive. Ambient and BSR must be zero: their interaction records are unavailable."
+        ? "Experimental GAGG · DPC 0.01 · sum trigger 50 keV-equivalent · specular 0.98 · virtual matched SiPMs · unlimited cells; no RC, skew or jitter. Legacy gain and chain are inactive. Ambient and BSR must be zero: their interaction records are unavailable. Each calibration line present in the scene is prepared separately."
         : "Direct crystal assignment; legacy detector gain and chain response.";
-    [ObservableProperty] private ReadoutPreparation? _preparedReadout;
+
+    /// <summary>The shipped offer / cost record (unavailable without a preparation service or when malformed).</summary>
+    public ReadoutOfferRecord ReadoutOffers => _readoutPreparation?.Offers
+        ?? ReadoutOfferRecord.Unavailable("No readout preparation service is available.");
+
     [ObservableProperty] private string? _readoutMessage;
     [ObservableProperty] private bool _isPreparingReadout;
-    public string ReadoutState => IsPreparingReadout ? ReadoutMessage ?? "Preparing…"
-        : MatchingPreparation is { } p ? p.Succeeded ? $"Ready · calibration seed 403 · {p.Cost.TotalSeconds:0.00} s · {p.InWindow:N0} windowed / {p.Scored:N0} scored" : $"Failed: {p.Failure}"
-        : "Not prepared";
-    public ReadoutPreparation? MatchingPreparation => PreparedReadout?.Key == ReadoutPolicy.Key(Optics, Detector) ? PreparedReadout : null;
+    [ObservableProperty] private double _readoutProgress;
+    [ObservableProperty] private string? _readoutProgressText;
+
+    /// <summary>The pending detector inputs without prepared ids: what the module fingerprint and plans are built from.</summary>
+    private DetectorSettings ModuleDetector => new() { ReadoutMode = ReadoutMode, GainSigma = GainSigmaPercent / 100, GainSeed = GainSeed, Chain = Chain, ReflectorGapMm = PendingGapMm };
+
+    private string ModuleKey => ReadoutPolicy.Key(Optics, ModuleDetector);
+
+    /// <summary>Every analysis line's plan for the pending module.</summary>
+    public IReadOnlyList<ReadoutLinePlan> ReadoutPlans => ReadoutPolicy.Plans(Optics, ModuleDetector, ReadoutOffers);
+
+    /// <summary>Lines the next physical acquisition must capture: present in the scene and preparable.</summary>
+    public IReadOnlyList<ReadoutLinePlan> RequiredReadoutLines => IsPhysicalReadout
+        ? ReadoutPolicy.RequiredLines(Sources.Select(s => s.ToModel()), Optics, ModuleDetector, ReadoutOffers) : [];
+
+    private ReadoutPreparation? Prepared(ReadoutLinePlan plan)
+        => _preparations.GetValueOrDefault(ReadoutPolicy.CalibrationKey(ModuleKey, plan));
+
+    /// <summary>Successful preparations of the required lines, reference line first (661.7 keV when captured).</summary>
+    public IReadOnlyList<ReadoutPreparation> MatchingBank => RequiredReadoutLines.Select(Prepared)
+        .Where(p => p is { Succeeded: true }).Cast<ReadoutPreparation>()
+        .OrderBy(p => p.LineKeV == ReadoutPolicy.ReferenceLineKeV ? 0 : 1).ThenBy(p => p.LineKeV).ToArray();
+
+    public bool IsReadoutBankReady => RequiredReadoutLines is { Count: > 0 } required && MatchingBank.Count == required.Count;
+
+    /// <summary>The reference preparation of the pending module (the first bank entry, else the most recent prepared
+    /// line of this module).</summary>
+    public ReadoutPreparation? MatchingPreparation => MatchingBank.FirstOrDefault()
+        ?? ReadoutPlans.Select(Prepared).LastOrDefault(p => p is not null);
+
+    /// <summary>Back-compatible single preparation (the reference line).</summary>
+    public ReadoutPreparation? PreparedReadout => MatchingPreparation;
+
+    public IReadOnlyList<ReadoutLineRow> ReadoutLines
+    {
+        get
+        {
+            var present = ReadoutPolicy.LinesInScene(Sources.Select(s => s.ToModel()));
+            return ReadoutPlans.Select(plan => new ReadoutLineRow(plan, present.Contains(plan.LineKeV), plan.Reason, LocalState(plan))).ToArray();
+        }
+    }
+
+    private string LocalState(ReadoutLinePlan plan) => !plan.CanPrepare ? "not preparable"
+        : Prepared(plan) is not { } p ? "not prepared"
+        : p.Succeeded ? string.Create(CultureInfo.InvariantCulture, $"ready · {p.Cost.TotalSeconds:0.00} s · {p.Peaks.Count:N0} / {p.Module?.Crystals.ToString("N0", CultureInfo.InvariantCulture) ?? "?"} peaks")
+        : $"failed: {p.Failure}";
+
+    public string ReadoutState
+    {
+        get
+        {
+            if (IsPreparingReadout) return ReadoutProgressText ?? ReadoutMessage ?? "Preparing…";
+            var required = RequiredReadoutLines;
+            if (required.Count == 0)
+                return MatchingPreparation is { Succeeded: true } ? "Ready" : "Not prepared";
+            var states = required.Select(p => (Plan: p, Prep: Prepared(p))).ToArray();
+            if (states.All(s => s.Prep is null)) return "Not prepared";
+            string Line(ReadoutLinePlan p) => p.LineKeV.ToString("0.##", CultureInfo.InvariantCulture) + " keV";
+            if (states.FirstOrDefault(s => s.Prep is { Succeeded: false }) is { Prep: { } failed } f)
+                return $"Failed: {Line(f.Plan)}: {failed.Failure}";
+            if (states.All(s => s.Prep is { Succeeded: true }))
+                return "Ready · " + string.Join("; ", states.Select(s => string.Create(CultureInfo.InvariantCulture,
+                    $"{Line(s.Plan)} · {s.Prep!.Cost.TotalSeconds:0.00} s · {s.Prep.InWindow:N0} windowed / {s.Prep.Scored:N0} scored")));
+            return "Not prepared: " + string.Join(", ", states.Where(s => s.Prep is null).Select(s => Line(s.Plan)))
+                + " · ready: " + string.Join(", ", states.Where(s => s.Prep is not null).Select(s => Line(s.Plan)));
+        }
+    }
+
     private bool CanPrepareReadout() => _readoutPreparation is not null && IsPhysicalReadout && CanEditInputs;
+
+    /// <summary>Prepares every required line not yet prepared, one at a time on the service's single worker, with real
+    /// stage / history progress; cancellation keeps the lines already finished.</summary>
     [RelayCommand(IncludeCancelCommand = true, CanExecute = nameof(CanPrepareReadout))]
     private async Task PrepareReadoutAsync(CancellationToken token)
     {
-        IsPreparingReadout = true; NotifyRunState();
+        var required = RequiredReadoutLines;
+        if (required.Count == 0)
+        {
+            ReadoutMessage = "No preparable calibration line is present in the scene: " + string.Join(" ", ReadoutPlans.Select(p => p.Reason));
+            NotifyReadout();
+            return;
+        }
+        IsPreparingReadout = true; ReadoutMessage = null; NotifyRunState();
+        var optics = Optics; var detector = ModuleDetector; string module = ModuleKey;
         try
         {
-            PreparedReadout = await _readoutPreparation!.PrepareAsync(Optics, Detector,
-                new Progress<string>(text => { if (IsPreparingReadout) { ReadoutMessage = text; OnPropertyChanged(nameof(ReadoutState)); } }), token);
-            ReadoutMessage = PreparedReadout.Succeeded ? null : PreparedReadout.Failure;
+            foreach (var plan in required)
+            {
+                string key = ReadoutPolicy.CalibrationKey(module, plan);
+                if (_preparations.TryGetValue(key, out var done) && done.Succeeded) continue;
+                var progress = new Progress<ReadoutPrepareProgress>(p =>
+                {
+                    if (!IsPreparingReadout) return;
+                    ReadoutProgress = p.Fraction; ReadoutProgressText = p.ToString();
+                    OnPropertyChanged(nameof(ReadoutState));
+                });
+                var result = await _readoutPreparation!.PrepareAsync(optics, detector, plan, progress, token);
+                _preparations[key] = result;
+                if (!result.Succeeded) { ReadoutMessage = result.Failure; break; }
+            }
         }
         catch (OperationCanceledException) when (token.IsCancellationRequested) { ReadoutMessage = "Preparation cancelled."; }
         catch (Exception ex) { ReadoutMessage = $"Preparation failed: {ex.Message}"; }
-        finally { IsPreparingReadout = false; NotifyRunState(); NotifyReadout(); }
+        finally
+        {
+            IsPreparingReadout = false; ReadoutProgress = 0; ReadoutProgressText = null;
+            NotifyRunState(); NotifyReadout();
+        }
     }
+
     private double _windowLowKeV = 600, _windowHighKeV = 720;
     public double WindowLowKeV { get => _windowLowKeV; set => SetWindow(value, WindowHighKeV); }
     public double WindowHighKeV { get => _windowHighKeV; set => SetWindow(WindowLowKeV, value); }
@@ -67,14 +165,39 @@ public sealed partial class MainViewModel
         if (!double.IsFinite(low) || !double.IsFinite(high) || low < 0 || high <= low)
         { ReadoutMessage = "Energy window needs finite 0 ≤ low < high in keV."; RefreshRejectedReadoutProperty(nameof(WindowLowKeV)); RefreshRejectedReadoutProperty(nameof(WindowHighKeV)); return; }
         _windowLowKeV = low; _windowHighKeV = high; ReadoutMessage = null;
-        OnPropertyChanged(nameof(WindowLowKeV)); OnPropertyChanged(nameof(WindowHighKeV));
-        Spectrum.Refresh(); Imaging.RefreshChannels();
+        OnPropertyChanged(nameof(WindowLowKeV)); OnPropertyChanged(nameof(WindowHighKeV)); OnPropertyChanged(nameof(WindowLine));
+        Spectrum.Refresh(); Imaging.RefreshChannels(); DetectorWorkspace.Refresh();
     }
+
+    /// <summary>The single calibration line inside the measured window, or the reason there is none.</summary>
+    public string WindowLine => ReadoutPolicy.LineForWindow(WindowLowKeV, WindowHighKeV, out string? reason) is { } line
+        ? string.Create(CultureInfo.InvariantCulture, $"Window line {line:0.##} keV") : reason!;
+
+    /// <summary>Sets the window to the benchmark's ±fraction of the line inside the current window (exactly the
+    /// arithmetic the imaging-profile comparison uses).</summary>
+    [RelayCommand]
+    private void UseBenchmarkWindow()
+    {
+        double fraction = ReadoutOffers.Benchmark?.WindowFraction ?? 0.15;
+        double line = ReadoutPolicy.LineForWindow(WindowLowKeV, WindowHighKeV, out _) ?? ReadoutPolicy.ReferenceLineKeV;
+        var (low, high) = ReadoutPolicy.BenchmarkWindow(line, fraction);
+        SetWindow(low, high);
+    }
+
+    /// <summary>SD-A4: opt-in flood correction of the physical window image from the calibration's own correction
+    /// histogram. A view setting (re-projection), never a transport or calibration input.</summary>
+    [ObservableProperty] private bool _applyFloodCorrection;
+    partial void OnApplyFloodCorrectionChanged(bool value) => Imaging.RefreshChannels();
+
     private void NotifyReadout()
     {
-        foreach (string name in new[] { nameof(IsPhysicalReadout), nameof(CanUseLegacy), nameof(CanEditLegacy), nameof(ReadoutAssumptions), nameof(ReadoutState), nameof(Detector) }) OnPropertyChanged(name);
+        foreach (string name in new[] { nameof(IsPhysicalReadout), nameof(CanUseLegacy), nameof(CanEditLegacy), nameof(ReadoutAssumptions), nameof(ReadoutModeSummary),
+            nameof(ReadoutState), nameof(Detector), nameof(ReadoutLines), nameof(ReadoutPlans), nameof(RequiredReadoutLines),
+            nameof(MatchingBank), nameof(MatchingPreparation), nameof(PreparedReadout), nameof(IsReadoutBankReady), nameof(ReadoutOffers) })
+            OnPropertyChanged(name);
         if (IsPhysicalReadout) { Spectrum.PileUp = false; Imaging.Strip = false; Waveform.RateStudy = false; Waveform.Ideal = false; }
         PrepareReadoutCommand.NotifyCanExecuteChanged();
         DetectorWorkspace.Refresh();
+        Imaging.NotifyReadoutCost();
     }
 }

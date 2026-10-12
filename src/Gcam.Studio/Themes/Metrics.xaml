@@ -37,6 +37,10 @@
     <sys:Double x:Key="Size.ReadoutLine">16</sys:Double>
     <sys:Double x:Key="Size.Logo">16</sys:Double>
     <sys:Double x:Key="Size.Icon">12</sys:Double>
+    <!-- Circled "?" help mark: large enough for a caption-size glyph inside a hairline ring. -->
+    <sys:Double x:Key="Size.HelpMark">15</sys:Double>
+    <!-- A help mark follows the text it explains: a small gap on its left only. -->
+    <Thickness x:Key="Gap.HelpMark">6,0,0,0</Thickness>
     <sys:Double x:Key="Size.Imaging.FoundMarker">7</sys:Double>
     <sys:Double x:Key="Space.Imaging.FoundLabel">4</sys:Double>
     <sys:Double x:Key="Space.Imaging.LabelGap">4</sys:Double>

@@ -32,9 +32,44 @@ public sealed class StudioWindow(AutomationElement window)
 
     public void Click(string id)
     {
+        // A real pointer click lands on whatever window is on top: never click unless the owned window is foreground.
+        if (!EnsureForeground())
+            throw new InvalidOperationException("The owned Studio window is not in the foreground; a pointer click would land on another window.");
         var r = Bounds(id);
         Pointer.Click(new Point(r.X + r.Width / 2, r.Y + r.Height / 2));
     }
+
+    /// <summary>Run-record logger (set by <see cref="Scenario"/>).</summary>
+    public Action<string>? Log { get; set; }
+
+    /// <summary>Restores and activates the owned Studio window when another window has taken the foreground (e.g. during
+    /// a long preparation wait). Acts on the owned window's own handle only — after checking that the handle belongs to
+    /// the owned process — and never on any other window. True when the owned window is foreground afterwards.</summary>
+    public bool EnsureForeground()
+    {
+        var handle = new IntPtr(Element.Current.NativeWindowHandle);
+        int pid = Element.Current.ProcessId;
+        GetWindowThreadProcessId(handle, out uint owner);
+        if (handle == IntPtr.Zero || owner != (uint)pid)
+            throw new InvalidOperationException("The automation element is not the owned Studio window.");
+        if (GetForegroundWindow() == handle) return true;
+        Log?.Invoke("foreground lost to another window; restoring and activating the owned Studio window (own handle only)");
+        if (Element.TryGetCurrentPattern(WindowPattern.Pattern, out var w) && w is WindowPattern window
+            && window.Current.WindowVisualState == WindowVisualState.Minimized)
+            window.SetWindowVisualState(WindowVisualState.Normal);
+        try { Element.SetFocus(); } catch (InvalidOperationException) { }
+        SetForegroundWindow(handle);
+        var watch = Stopwatch.StartNew();
+        while (GetForegroundWindow() != handle && watch.Elapsed < TimeSpan.FromSeconds(3)) Thread.Sleep(50);
+        bool restored = GetForegroundWindow() == handle;
+        Log?.Invoke(restored ? "owned Studio window is foreground again" : "could not restore the owned Studio window to the foreground");
+        if (restored) Thread.Sleep(200); // let the window repaint before pointer input reads bounds
+        return restored;
+    }
+
+    [System.Runtime.InteropServices.DllImport("user32.dll")] private static extern IntPtr GetForegroundWindow();
+    [System.Runtime.InteropServices.DllImport("user32.dll")] private static extern bool SetForegroundWindow(IntPtr window);
+    [System.Runtime.InteropServices.DllImport("user32.dll")] private static extern uint GetWindowThreadProcessId(IntPtr window, out uint processId);
 
     public void Toggle(string id) => Pattern<TogglePattern>(ById(id), TogglePattern.Pattern).Toggle();
 
@@ -130,6 +165,40 @@ public sealed class StudioWindow(AutomationElement window)
     }
 
     public string Text(string id) => ById(id).Current.Name;
+
+    /// <summary>The names of every descendant text of a container (an ItemsControl's rows have no list items).</summary>
+    public string AllText(string id) => string.Join('\n', ById(id)
+        .FindAll(TreeScope.Descendants, new PropertyCondition(AutomationElement.ControlTypeProperty, ControlType.Text))
+        .Cast<AutomationElement>().Select(e => e.Current.Name));
+
+    /// <summary>Everything a container says, including what sits behind help marks: the names and HelpTexts of the element
+    /// and of all its descendants. List rows of an ItemsControl appear as data items whose name is the row text, and their
+    /// help marks carry the moved details as HelpText.</summary>
+    public string Describe(string id)
+    {
+        var root = ById(id);
+        var parts = new List<string> { root.Current.Name, root.Current.HelpText };
+        foreach (AutomationElement e in root.FindAll(TreeScope.Descendants, System.Windows.Automation.Condition.TrueCondition))
+        {
+            parts.Add(e.Current.Name);
+            parts.Add(e.Current.HelpText);
+        }
+        return string.Join('\n', parts.Where(p => !string.IsNullOrEmpty(p)));
+    }
+
+    /// <summary>The HelpText of one element (a help mark's explanation).</summary>
+    public string Help(string id) => ById(id).Current.HelpText;
+
+    /// <summary>Waits until <see cref="Describe"/> of a container contains every expected fragment (it refreshes after edits).</summary>
+    public string WaitForDescription(string id, TimeSpan timeout, params string[] expected)
+    {
+        string text = "";
+        WaitUntil(() => expected.All((text = Describe(id)).Contains), timeout, $"{id} describes: {string.Join(" | ", expected)}");
+        return text;
+    }
+
+    /// <summary>A custom surface's automation ItemStatus (e.g. the readout map's line, module and zoom).</summary>
+    public string Status(string id) => ById(id).Current.ItemStatus;
 
     public IReadOnlyList<AutomationElement> Rows(string listId) =>
         ById(listId).FindAll(TreeScope.Children, new PropertyCondition(AutomationElement.ControlTypeProperty, ControlType.ListItem))

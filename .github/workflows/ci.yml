@@ -104,6 +104,9 @@ jobs:
           python-version: "3.13"
       - name: Check the calibration records
         run: python -B samples/testing/test_records.py collect --family checker --checker calibration --out "${{ runner.temp }}/gcam-todo28/python"
+      - name: Check the Studio readout offer record (reduced hash chain and compiled pin)
+        if: always()
+        run: python -B samples/testing/test_records.py collect --family checker --checker studio-readout-offer --out "${{ runner.temp }}/gcam-todo28/python"
       - name: Test evidence provenance (standard library only)
         env:
           GCAM_PROVENANCE_GIT_TESTS: '1'

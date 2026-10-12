@@ -26,6 +26,9 @@ public sealed class ReadoutCalibration
     public int CrystalsOnGlobalGain { get; }
     public bool Succeeded => Lut.Succeeded;
     public string? Failure => Lut.Failure;
+    /// <summary>Opt-in assigned photopeak counts from the original flood, after per-crystal energy calibration.
+    /// This is not the truth-labelled sensitivity diagnostic and contains no validation histories.</summary>
+    public IReadOnlyList<int>? CorrectionHistogram { get; private init; }
 
     private ReadoutCalibration(FloodLut lut, double energy, int scored, int triggered, int inWindow, double peak,
         double[] gains, int fallback)
@@ -44,7 +47,9 @@ public sealed class ReadoutCalibration
     /// <param name="response">Stream of the light / sensor fluctuations.</param>
     /// <param name="noise">Stream of the electronic noise.</param>
     public static ReadoutCalibration Build(ReadoutDevice device, ReadoutPulseProcessor processor,
-        IReadOnlyList<InteractionSite[]> flood, FloodCalibrationConfig config, IRandom response, IRandom noise, CancellationToken cancellationToken = default)
+        IReadOnlyList<InteractionSite[]> flood, FloodCalibrationConfig config, IRandom response, IRandom noise,
+        CancellationToken cancellationToken = default, bool collectCorrectionHistogram = false,
+        IProgress<int>? progress = null)
     {
         ArgumentNullException.ThrowIfNull(response);
         ArgumentNullException.ThrowIfNull(noise);
@@ -56,9 +61,11 @@ public sealed class ReadoutCalibration
             throw new ArgumentException("Calibration needs a positive line and a window fraction in (0, 1).");
         var channels = new double[device.Channels];
         var events = new List<(double X, double Y, double Sum)>(flood.Count);
+        int processed = 0;
         foreach (var sites in flood)
         {
             cancellationToken.ThrowIfCancellationRequested();
+            if ((processed++ & 4095) == 0) progress?.Report(processed);
             double sum = device.Respond(sites, response, channels);
             var ev = processor.ProcessIsolated(new ReadoutHit(0, channels, sum), noise);
             if (ev is null) continue;
@@ -94,7 +101,21 @@ public sealed class ReadoutCalibration
                 gains[c] = e / m;
             }
         }
-        return new ReadoutCalibration(lut, e, flood.Count, events.Count, windowed.Count, peak, gains, fallback);
+        progress?.Report(processed);
+        int[]? correction = null;
+        if (collectCorrectionHistogram && lut.Succeeded)
+        {
+            correction = new int[device.Crystals.Count];
+            for (int i = 0; i < events.Count; i++)
+            {
+                if ((i & 4095) == 0) cancellationToken.ThrowIfCancellationRequested();
+                var v = events[i];
+                int c = lut.Lookup(v.X, v.Y);
+                if (c >= 0 && Math.Abs(gains[c] * v.Sum - e) <= w * e) correction[c]++;
+            }
+        }
+        return new ReadoutCalibration(lut, e, flood.Count, events.Count, windowed.Count, peak, gains, fallback)
+        { CorrectionHistogram = correction is null ? null : Array.AsReadOnly(correction) };
     }
 
     // Mode of the keV-equivalent sums within ±50 % of the line: 1 %-of-line bins, 5-bin moving average.
