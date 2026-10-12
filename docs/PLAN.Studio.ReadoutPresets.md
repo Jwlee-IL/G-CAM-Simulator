@@ -6,10 +6,15 @@ Wide FOV, High-res — and decides what Custom geometries get, with the preparat
 calibrated honestly, the outcome is an explicit, measured refusal, not a tuned pass. Studio stays the simulator's
 engineering viewer (D-34); the engine default readout stays DirectCrystal (D-57).
 
-Status: evidence complete 2026-10-12 — CONFIRM32 v4 and the declared REPAIR32 v5 judged (Corrections 2026-10-10 and
-2026-10-12): every preset offered (experimental) at 662 and 1332 keV, 122 keV refused on every head. Next: the Studio stage
-(generalise the 12 × 12 hard-codes, show the offer and the measured cost per preset × line, Custom experimental), then
-records and desktop scenarios on the author's go.
+Status: Studio stage implemented 2026-10-12 (`bc542fb`) — design and measurement turn 7 by Codex; implementation turn 8
+started by Codex, which ran out of credits after the correction-histogram hook, and finished by a substitute Claude
+implementer ([Turn 8](PLAN.Studio.ReadoutPresets.Turn8.md)). Planner checks: build 0 / 0, 938 passed / 36 skipped, offer
+record `--check` both modes, offscreen renders; desktop: existing suite passed, all nine readout scenarios passed (High-res
+662 keV cold preparation 48 min), broken-verdict runs fail at their corrupted assertions (High-res checked in code), recovery
+passes; two product defects found on the desktop and fixed (exact double match of the benchmark window; line details
+unreachable to UI Automation). The author added help marks for the readout screens (Studio-wide in TODO-44). Evidence:
+CONFIRM32 v4 + declared REPAIR32 v5 — every preset offered (experimental) at 662 and 1332 keV, 122 keV refused. Next:
+records, then close.
 
 ## What exists (checked in the code)
 
@@ -161,6 +166,21 @@ bias effect, not an Anger advantage: the direct path's error there is almost all
 ≈ 0.50° direct bias appears at 1332 keV), so a record must quote it with that reason. Diagnostics: single-crystal
 mis-identification 1.7 % (Wide) / 7.9 % (High-res); multi-crystal share 0.61 / 0.60. Planner re-run of the first seed of
 each v5 family: identical to the run outputs apart from timing and process-memory fields.
+
+**Decisions for the Studio stage (2026-10-12, after [Turn 7](PLAN.Studio.ReadoutPresets.Turn7.md)).** Turn 7 measured
+cold Prepare through a copy of the Studio service path (one seed, one worker): Baseline 8 / 9 s, Sharp 60 / 68 s, Wide
+177 s (662 at 8 k) / 90 s, High-res **2 672 s and 6.2 GiB committed** (662 at 64 k) / 178 s at 662 / 1332 keV; warm hits
+< 0.1 ms; a retained High 662 flood would exceed 18 GiB, so floods are streamed. Planner-checked premises: today one
+661.7 keV LUT serves every window (`ReadoutPreparationService`: `144 * EventsPerCrystal`, validation at 661.7, `DirectCrystal(sites, 12)`),
+and the cache holds two entries.
+
+| ID | Decision | Source |
+|---|---|---|
+| SD-A1…A3 | **Per-line calibration banks:** prepare each offered analysis line present in the scene at its pinned budget; share only line-independent optics / network artifacts; acquire the held ADC facts once and project each selected line through its own entry — never dispatch by generating isotope or true energy. A selected refused line (122 keV) shows "unavailable" with its measured reason, no fallback LUT; incidental emissions stay in transport and do not block other prepared lines; unknown lines are not offered | **author** (Turn 7 A1–A3) |
+| SD-A4, A5 | **Flood correction:** an opt-in exact per-line correction histogram built from the events calibration already holds (no second flood), verified equal to a replay; raw counts kept separate; an empty correction bin makes the corrected image unavailable (explicit raw diagnostic view only), never capped or divided silently | **author** |
+| SD-A7, A8 | **Session-only reuse**, no persisted cache (Studio keeps no write surface, `AGENTS.UiAutomation` §1 unchanged); background Prepare with real line / stage / history progress and cancellation, one worker | **author** |
+| SD-A9, A10 | **Custom:** a module + line + policy fingerprint match inherits the calibration offer or refusal and its budget (Custom cannot bypass High 64 k); the reference cost table is inherited only when the full imaging profile (mask, distance, focus, decoder, window, correction) also matches, otherwise "imaging cost unmeasured for this configuration"; an unmatched module calibrates locally at 2 k with Growth / Adjoint, labelled experimental, unvalidated | **author** |
+| SD-A6, A11–A16 | Adopted as Turn 7 recommends: split cache keys, pinned active entries, byte-accounted limit after measurement; both benchmark exposures and rates shown, no interpolation or Anger-to-Direct count mapping; MLEM / other windows keep a benchmark-not-applicable notice; the cost table is a generated, hash-pinned record (`offer-cost-v1.json` from the archived published outputs, `--check` in CI), no runtime TEMP / download / write; large grids drawn from a cached raster with zoom / inspection; one cold High desktop scenario bundling its checks; the table's Direct labelled the ideal largest-deposit reference | planner |
 
 ## Steps
 
