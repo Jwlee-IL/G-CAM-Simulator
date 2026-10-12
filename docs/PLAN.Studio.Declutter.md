@@ -8,9 +8,10 @@ Spectrum / Waveform display controls) stay in their workspace panels — they ar
 the OS title bar; secondary actions become icon buttons. Studio stays the simulator's engineering viewer (D-34); no
 physics, defaults or acquisition behaviour change.
 
-Status: **planned — reference plan written 2026-10-12** from the author's design discussion (decisions below, "author:
-recommended" = the author accepted the planner's recommendation and will give feedback on the result). Next: turn 1
-(implementer review, read-only) when Codex is available.
+Status: **review done, decisions adopted 2026-10-12** — turn 1 by a substitute Claude implementer (Codex unavailable),
+[review](PLAN.Studio.Declutter.Review.md); "Decisions after review" below (author accepted the planner's positions). F1
+(help-mark tooltip throws) is hotfixed separately before stage 1. Next: stage 1 implementation when an implementer is
+available.
 
 ## What exists (checked in the repo, 2026-10-12, at `7d9c9e5`)
 
@@ -66,6 +67,32 @@ recommended" = the author accepted the planner's recommendation and will give fe
 | D12 | **Reset:** icon button plus a confirmation box — "Discard the acquired data (live s, counts)? Inputs unlock for the next acquisition." Default button Cancel; Escape cancels. Core asks through an interface (e.g. `IConfirmationService`), faked in headless tests. | author |
 | D13 | No new acquisition guard during flood preparation (already refused). | author |
 | D14 | One plan, two stages in one implementer conversation: stage 1 = TODO-44 (D1, D7–D9, D11–D12 where independent of the dialog), stage 2 = TODO-45 (D2–D6, D10). Each stage: build, normal suite, offscreen renders; desktop scenarios only on the author's go, listing exactly the scenarios each stage changes. | planner |
+
+## Decisions after review (2026-10-12, author accepted)
+
+Premise corrections (review §0–§1): the optics fields are **not** disabled under a preset — an edit switches the selector
+to Custom or a matching preset (F3), so D5 is a behaviour change; Stop carries no icon (F7); the requirement / document
+list and the UI-automation reference list in "What exists" are incomplete — review §1 (rows "Requirements touching moved
+controls" and "UI-automation reference counts") is the complete list and governs.
+
+| # | Adopted | From |
+|---|---|---|
+| R1 | **F1 hotfix first**, separately from stage 1: the help-mark tooltip width gets its own `sys:Double` token, with a headless regression test (fail before / pass after). | F1, P1 |
+| R2 | **Speed stays in the top bar** beside Live time (SR-RUN-24: editable in every state but Acquiring). The Options **Acquisition** tab holds the seed. | F2, P2 |
+| R3 | D7 per the review §2 table, with **splits**: FocusNote stays inline; SweepNote, StripNote, the MLEM ReconstructionNote, the Waveform note and the physical-mode Spectrum chain text keep a short inline label (state, image role, chain name / resolving time) and move the rest behind a help mark. | F4, P3 |
+| R4 | D8 revised: `Imaging.ChannelUnavailable`, `Imaging.ReadoutCurrentCounts` **and the flood-correction check box move into the Imaging channel section** (physical mode), not the readout panel. The UI-only cost members and their tests are deleted; the record, loader, `CostRows` and the CI check stay. The new readout line's help is built from the record (benchmark scope, F range of the module's offered cells, the direct-bias explanation for F below 1, and the sentence "F is an equal-fluence MSE ratio, not a time factor."). SR-DET-10 and SR-DET-11's cost clause are rewritten. | F5, P4, P5 |
+| R5 | D12 recorded as a **reversal**: SR-RUN-26, the AGENTS.Rationale Reset row and DESIGN.Controls' Button row are rewritten with the author's reason (a discard needs one deliberate confirmation; Cancel is the default). | F6, P6 |
+| R6 | **No Display tab**: the theme stays a top-bar icon button (D11). Options tabs: Acquisition (seed), Detector, Environment. | P7 |
+| R7 | The ambient BSR result appears in the summary line once data exist (a key number never lives only in the dialog). | P8 |
+| R8 | Options and the Reset confirmation are an **in-window modal layer** (scrim, focus kept inside, Escape = Cancel), not separate windows: one HWND and UIA tree, theme for free, offscreen-renderable. | P9 |
+| R9 | D5 gets an **explicit Custom mode** set only by the selector; while it is on, a matching edit does not re-select a preset (fields never vanish mid-typing). Choosing Custom shows the fields prefilled with the current preset's values. | P10 |
+| R10 | Options view model = a **draft copy applied on OK** with per-field validation reusing the existing rules and messages (review §4 table); per-field enables (`CanEditInputs`, `CanEditLegacy`); with nothing editable the layer shows the lock caption and one Close button. | review §4 |
+| R11 | Summary line lists **only non-default items** (text plus weight, not colour alone), compared with one Core defaults record that the view-model initialisers and fallbacks also use; "Options: defaults" otherwise. | P11 |
+| R12 | **Prepare and Sweep focus keep icon + text** (they start long computations); their Cancel twins are icon-only. Add `Icon.Stop` and one shared icon-button style (square `Size.Control`, `Size.Icon` path, tooltip and automation name required). | P12, P13 |
+| R13 | Options are session-only, never persisted. | P14 |
+| R14 | The modal-layer harness support (finder, `ConfirmReset`, close-before-shutdown) lands in stage 1 with the first modal; stage 2 reuses it. | P15 |
+| R15 | Desktop: each stage reruns essentially the whole desktop suite (27 scenarios, long High-res excluded) plus broken-verdict / recovery for changed assertions; stage 2 also redoes the UI-automation re-measure and re-pilot (window geometry changes). Each run only on the author's go, with the scenario list and duration stated first. | review §8 |
+| R16 | D9 fix per review §6: the SiPM layout uses `sx + 3` cells with sensors at `(i + 1.5)` cells, leaving 1 / 2 cells of margin; centre sensors and chain ends at `(i + 2)` cells, with a Core layout test. | review §6 |
 
 ## Steps
 
