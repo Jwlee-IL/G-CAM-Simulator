@@ -88,6 +88,7 @@ therefore use AutomationIds and require exactly one match.
 | Overlay | `MeasurementAdorner` | **not in the tree**; position from the heatmap's rectangle | real pointer input (`SetCursorPos` + `SendInput`) | cursor position | a new row in the results table |
 | Async run | Run → `StatusText` | AutomationId | `Invoke` | — | `ItemStatus` Idle → Running → Succeeded (≈ 0.7 s at 500 k photons) |
 | Cancel | Cancel button, present only while running | AutomationId while Running | `Invoke` | — | `ItemStatus` Cancelled within 0.1 s; peak chip unchanged; Cancel leaves the tree |
+| Modal layer | `ModalHost` in-window layer (Reset confirmation, 2026-10-12; Options in TODO-45) | `Modal.Layer` in the same window's tree (no second window) | its buttons by AutomationId (`Modal.Cancel`, `Reset.Discard`) via `Invoke`; harness `ConfirmReset(bool)` | layer present / gone | Cancel keeps the snapshot and the lock; Discard returns to "Ready". The harness closes an open layer before graceful shutdown |
 
 **Product defects found by this measurement (fixed in the same change).**
 

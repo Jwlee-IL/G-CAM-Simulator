@@ -285,3 +285,15 @@ TODO-41 (physical readout on every Studio preset). Planner's runs in the worktre
 - Final: readout scenarios and the full suite pass (49 pass, the long scenario skipped); `GCAM_UI_BREAK_VERDICT=1`: every
   readout desktop scenario fails at its corrupted assertion (six in the run before the polling change, HighResCoLine
   after it at its module geometry, 0 transient UIA errors); recovery passes.
+
+## Desktop verification — declutter stage 1, 2026-10-12
+
+TODO-44 (help marks, cost card removed, SiPM view centred, icon buttons, Reset confirmation in an in-window modal
+layer). Planner's runs in the worktree `C:\gw\w44`, Release build, on the author's go.
+- Full desktop suite (28 scenarios; the long cold High-res scenario skipped): 27 pass. `WideLocalisationHelp_…` failed
+  before its verdict — the rewritten scenario chose a preset named "Wide" instead of "Wide FOV" (test code; no other
+  name mismatch found, and a headless test now checks its three strings against the shipped record).
+- `GCAM_UI_BREAK_VERDICT=1` on the scenarios whose assertions changed: `StopContinueReset_…` (cancel keeps the data, then
+  discard), `CustomModules_…` and, after the fix, `WideLocalisationHelp_…` fail at their corrupted assertion; recovery
+  passes.
+- The polish survey refreshed `docs/assets/studio-polish-survey/` with the new top bar, icon buttons and help marks.

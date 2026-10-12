@@ -37,7 +37,7 @@ combine a container's padding with a child's margin for the same edge.
 ## Screen grid (`MainWindow`)
 
 ```
-Row 0  Top bar (Size.Bar)          identity · workspace switch (when ≥2) · theme · live time (s) · speed × · seed · Reset · ▶ Start / Continue / Stop
+Row 0  Top bar (Size.Bar)          identity · workspace switch (when ≥2) · theme (icon) · live time (s) · speed × · seed · Reset (icon, confirms) · ▶ Start / Continue / ■ Stop
 Row 1  Content (a Border with Pad.Window)
          Col 0  Scene panel (Size.SidePanel, scrollable)   sources · collapsible Detection chain · selected source · collapsible Physical optics · collapsible Detector
          Col 1  Gutter

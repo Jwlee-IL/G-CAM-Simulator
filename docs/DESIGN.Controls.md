@@ -37,7 +37,8 @@ its natural text height; its ScrollViewer still handles a constrained height. It
 | Style | Key | States / notes |
 |---|---|---|
 | Focus ring | `FocusVisual` | 2 px `Brush.Focus`, 3 px outside the control, on every focusable control |
-| Button | implicit | raised fill · hover · pressed · disabled; e.g. Reset in the top bar (a discarding action is never primary and has no confirmation dialog: a fixed seed reproduces an acquisition) |
+| Button | implicit | raised fill · hover · pressed · disabled; Cancel / Discard in the Reset confirmation |
+| Icon button | `Button.Icon` (`Button.Theme` for the sun / moon toggle) | square `Size.Control`, a `Path` at `Size.Icon` in the button's foreground, the implicit button's raised frame in every place and theme (subdued when disabled, border highlight on focus); a tooltip and `AutomationProperties.Name` are required. Used for secondary actions: theme, Reset, add / remove source, delete / clear measurements, cancel prepare / sweep, Waveform latest / next. Start / Continue / Stop, Prepare and Sweep focus keep icon + text |
 | Primary button | `Button.Primary` | accent fill, `OnAccent` text — **one per screen** (Start / Continue, or Stop while acquiring) |
 | Ghost button | `Button.Ghost` | borderless, for bars and panel headers |
 | TextBox | implicit | mono text; unit suffix via `Tag` (`Tag="mm"`); accent 2 px border on focus; error border + tooltip when `Validation.HasError`; themed caret and selection |
@@ -50,7 +51,8 @@ its natural text height; its ScrollViewer still handles a constrained height. It
 | ToolTip | implicit | raised surface |
 | Panel / Divider / Chip | `Panel.Surface` / `Divider` / `Chip`, `Chip.Warning` | `Border` styles for layout blocks; the warning chip pairs with `Text.CaptionWarning` |
 | Header row | `PanelHeader` (DockPanel) | title left, actions / chips right; min height `Size.Control`, `Gap.Title` below |
-| Icon | `Icon.Play` (Geometry) | drawn with a `Path` in the button's foreground — no glyph characters as icons |
+| Icon | `Icon.Play`, `Icon.Stop`, `Icon.Reset`, `Icon.Add`, `Icon.Remove`, `Icon.Clear`, `Icon.Sun`, `Icon.Moon`, … (Geometry) | drawn with a `Path` in the button's foreground — no glyph characters as icons |
+| Modal layer | `ModalHost` / `ModalLayer` | an in-window layer over the whole window (one HWND and UIA tree): themed scrim `Brush.Modal.Scrim`, underlying content disabled, keyboard navigation cycles inside, focus restored on close, Escape = the host's cancel command; content arrives as a view model with a DataTemplate; AutomationId `Modal.Layer`, Name from the hosted content (`DialogName`). Used by the Reset confirmation (TODO-44) and the Options dialog (TODO-45) |
 
 Add a shared style only when two or more views need it; otherwise keep it in the view's `Resources`, still
 built from tokens.

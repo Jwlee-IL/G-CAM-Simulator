@@ -8,10 +8,15 @@ Spectrum / Waveform display controls) stay in their workspace panels — they ar
 the OS title bar; secondary actions become icon buttons. Studio stays the simulator's engineering viewer (D-34); no
 physics, defaults or acquisition behaviour change.
 
-Status: **review done, decisions adopted 2026-10-12** — turn 1 by a substitute Claude implementer (Codex unavailable),
-[review](PLAN.Studio.Declutter.Review.md); "Decisions after review" below (author accepted the planner's positions). F1
-(help-mark tooltip throws) is hotfixed separately before stage 1. Next: stage 1 implementation when an implementer is
-available.
+Status: **stage 1 (TODO-44) done 2026-10-12** — review turn 1 by a substitute Claude implementer (Codex unavailable),
+[review](PLAN.Studio.Declutter.Review.md); "Decisions after review" below. F1 hotfixed separately (0733e6d). Stage 1
+implemented by Codex (one conversation, three turns: implementation; planner findings — measurement icons alike, an
+orphan help mark, icon frames differing by place, Reset silently inert without a confirmation service, a fixed modal
+name, formatting; a desktop-only preset-name slip in one rewritten scenario). Planner verification: Release 0 warnings,
+normal suite 961 pass / 37 skipped, offscreen renders, CI checkers; desktop suite and broken / recovery pairs pass
+([History](VV.Studio.History.md#desktop-verification--declutter-stage-1-2026-10-12)). Records applied: SR-RUN-26
+(reversal), SR-DET-10 / -11, SR-THEME-01, SRS §2 help-mark convention, AGENTS.Rationale, DESIGN.Controls / Layout,
+AGENTS.UiAutomation. Next: stage 2 (TODO-45) in the same Codex conversation.
 
 ## What exists (checked in the repo, 2026-10-12, at `7d9c9e5`)
 
