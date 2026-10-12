@@ -11,6 +11,13 @@ set the plan's status to done and move the plan and its review / reports into th
 
 ## Closed tasks
 
+- **TODO-41 physical readout on every Studio preset** (2026-10-12): per-line experimental calibration offers apart from
+  measured cost — 661.7 / 1332.5 keV offered on Baseline / Sharp / Wide / High (32 / 32 seeds each; Wide 661.7 at 8 k and
+  High 661.7 at 64 k histories per crystal after a declared repair), 122.06 keV refused; a generated, hash-pinned offer
+  record (CI-checked); Studio per-line banks with held ADC facts acquired once, streamed floods, Custom inheritance by
+  module (cost only on a full profile), opt-in flood correction, mean sensitivity maps, help marks
+  (SR-DET-05 / -10 / -11, SR-RUN-34; Findings 69, EV-36 / LIM-11 scope). Review and implementation by Codex, part of the
+  implementation by a substitute Claude implementer — [PLAN.Studio.ReadoutPresets](PLAN.Studio.ReadoutPresets.md).
 - **TODO-40 physical readout in Studio** (2026-10-08): experimental four-output GAGG readout on the 12 × 12 reference
   head — readout selector with refusals (other geometries, nonzero ambient / BSR), explicit Prepare with cache, Detector
   tabs (SiPM / circuit, Anger flood with LUT, calibration, diagnostics), Waveform A–D + sum with trigger / hold, one

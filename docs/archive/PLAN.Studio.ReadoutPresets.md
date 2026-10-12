@@ -6,15 +6,14 @@ Wide FOV, High-res — and decides what Custom geometries get, with the preparat
 calibrated honestly, the outcome is an explicit, measured refusal, not a tuned pass. Studio stays the simulator's
 engineering viewer (D-34); the engine default readout stays DirectCrystal (D-57).
 
-Status: Studio stage implemented 2026-10-12 (`bc542fb`) — design and measurement turn 7 by Codex; implementation turn 8
-started by Codex, which ran out of credits after the correction-histogram hook, and finished by a substitute Claude
-implementer ([Turn 8](PLAN.Studio.ReadoutPresets.Turn8.md)). Planner checks: build 0 / 0, 938 passed / 36 skipped, offer
-record `--check` both modes, offscreen renders; desktop: existing suite passed, all nine readout scenarios passed (High-res
-662 keV cold preparation 48 min), broken-verdict runs fail at their corrupted assertions (High-res checked in code), recovery
-passes; two product defects found on the desktop and fixed (exact double match of the benchmark window; line details
-unreachable to UI Automation). The author added help marks for the readout screens (Studio-wide in TODO-44). Evidence:
-CONFIRM32 v4 + declared REPAIR32 v5 — every preset offered (experimental) at 662 and 1332 keV, 122 keV refused. Next:
-records, then close.
+Status: **done 2026-10-12** (closed; archived). Evidence: v4 confirmation plus the final declared v5 repair — offers at
+661.7 / 1332.5 keV on every preset, 122.06 keV refused. Studio stage: implementation `bc542fb` (turn 8, Codex then a
+substitute Claude implementer), Codex review with six findings fixed in `de5cc82`, desktop split / failure recording /
+polling robustness `2518821` ([Turn 8](PLAN.Studio.ReadoutPresets.Turn8.md), "Fixes after review", "Desktop split",
+"Polling robustness"). Planner checks: build 0 / 0, 955 passed / 37 skipped, offer record `--check` both modes, renders,
+catalog; desktop: full suite and readout scenarios pass, broken-verdict / recovery pairs as recorded in VV.Studio.History
+(2026-10-12); the cold High-res 661.7 keV scenario is a long test (`GCAM_UI_LONG_TESTS=1`). Records: SR-DET-05 / -10 /
+-11, SR-RUN-34, EV-36 and LIM-11 scope notes, Findings theme 69.
 
 ## What exists (checked in the code)
 
