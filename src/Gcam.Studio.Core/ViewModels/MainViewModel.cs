@@ -33,8 +33,9 @@ public sealed partial class MainViewModel : ObservableObject
     private bool _reverting;
 
     public MainViewModel(IAcquisitionService acquisition, IThemeService theme, ISpectrumService spectrum, IImagingService? imaging = null,
-        IWaveformService? waveform = null, IDetectorFaceService? detectorFace = null, IFocusSweepService? focusSweep = null, IReadoutPreparationService? readoutPreparation = null)
+        IWaveformService? waveform = null, IDetectorFaceService? detectorFace = null, IFocusSweepService? focusSweep = null, IReadoutPreparationService? readoutPreparation = null, IConfirmationService? confirmation = null)
     {
+        Confirmation = confirmation;
         _readoutPreparation = readoutPreparation;
         if (_readoutPreparation is not null) _readoutPreparation.CacheChanged += ReadoutCacheChanged;
         _acquisition = acquisition;
@@ -58,6 +59,7 @@ public sealed partial class MainViewModel : ObservableObject
         AddSource();
     }
 
+    public IConfirmationService? Confirmation { get; }
     public ImagingWorkspaceViewModel Imaging { get; }
     public SpectrumWorkspaceViewModel Spectrum { get; }
     public WaveformWorkspaceViewModel Waveform { get; }
@@ -423,14 +425,16 @@ public sealed partial class MainViewModel : ObservableObject
     [RelayCommand(CanExecute = nameof(IsRunning))]
     private void Stop() => _session?.Stop();
 
-    private bool CanReset() => !IsRunning && HasData;
+    private bool CanReset() => Confirmation is not null && !IsRunning && HasData;
 
-    /// <summary>Discards the acquisition: no confirmation (a new acquisition is an independent measurement, and a fixed
-    /// seed reproduces one); disabled while acquiring. Measurement shapes are kept, as across Start.</summary>
+    /// <summary>Discards after deliberate confirmation; disabled while acquiring. Measurement shapes are kept.</summary>
     [RelayCommand(CanExecute = nameof(CanReset))]
     private async Task ResetAsync()
     {
         if (!CanReset()) return;
+        string message = string.Create(CultureInfo.InvariantCulture,
+            $"Discard the acquired data ({Snapshot!.LiveTimeS:0.0} live s, {Snapshot.Counts:N0} counts)? Inputs unlock for the next acquisition.");
+        if (Confirmation is null || !await Confirmation.ConfirmAsync(message) || !CanReset()) return;
         var session = _session;
         _session = null;
         if (session is not null) await session.DisposeAsync();
@@ -589,7 +593,7 @@ public sealed partial class MainViewModel : ObservableObject
     private void OnSourceIsotopeChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (e.PropertyName == nameof(SourceItemViewModel.Isotope)) NotifyReadout();
-        else if (e.PropertyName is nameof(SourceItemViewModel.X) or nameof(SourceItemViewModel.Y) or nameof(SourceItemViewModel.DistanceMm) or nameof(SourceItemViewModel.ActivityUCi)) Imaging.NotifyReadoutCost();
+        else if (e.PropertyName is nameof(SourceItemViewModel.X) or nameof(SourceItemViewModel.Y) or nameof(SourceItemViewModel.DistanceMm) or nameof(SourceItemViewModel.ActivityUCi)) Imaging.NotifyPhysicalChannel();
     }
 
     internal void NotifyFocalGeometryChanged() => OnPropertyChanged(nameof(FcfovHalfMm));

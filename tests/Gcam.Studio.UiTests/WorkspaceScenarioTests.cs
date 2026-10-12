@@ -116,6 +116,7 @@ public sealed class WorkspaceScenarioTests(ITestOutputHelper output)
             Assert.False(ui.IsEnabled("Detector.GainSigma"));
             Assert.False(ui.IsEnabled("SourceX"));
             ui.Invoke("ResetAcquisition");
+            ui.ConfirmReset(true);
             Assert.True(ui.IsEnabled("Detector.Gap"));
             Assert.Equal("Settings for the next acquisition", ui.Text("Detector.Identity"));
         });

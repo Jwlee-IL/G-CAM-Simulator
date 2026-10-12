@@ -40,9 +40,12 @@ public sealed partial class SpectrumWorkspaceViewModel : WorkspaceViewModel
     public IReadOnlyList<SpectrumBand> Lines => View?.Bands ?? [];
     public string Summary => View is { } v
         ? $"{v.TotalCounts:N0} measured pulses · {v.InWindowShare:P1} in windows · {v.OverflowCounts:N0} overflow{(v.BinEdgesKeV is [.., var end] ? $" ≥ {end:0} keV" : "")}" : "No acquired counts";
-    public string Chain => Shared.IsPhysicalReadout ? View?.Chain ?? Shared.ReadoutAssumptions : Shared.Snapshot?.Chain.ToString() ?? "No acquired chain";
+    public string? ChainHelp => Shared.IsPhysicalReadout ? View?.Chain ?? Shared.ReadoutAssumptions : null;
+    public string Chain => Shared.IsPhysicalReadout ? Shared.ReadoutModeSummary : Shared.Snapshot?.Chain.ToString() ?? "No acquired chain";
     public string Resolution => Shared.IsPhysicalReadout ? "Explicit keV window; physical resolution is not inferred from the legacy chain." : $"{(View?.Resolution662 ?? _service.Resolution662):P2} FWHM at 662 keV (single channel)";
     public string ResolvingTime => Shared.IsPhysicalReadout ? "Physical trigger / common hold / re-arm already applied." : $"Effective resolving interval {(View?.ResolvingTimeS ?? _service.ResolvingTimeS) * 1e9:F0} ns";
+
+    internal void NotifyReadoutChanged() => NotifyReadings();
 
     internal void NotifyWindowChanged()
     {
@@ -120,6 +123,7 @@ public sealed partial class SpectrumWorkspaceViewModel : WorkspaceViewModel
     private void NotifyReadings()
     {
         OnPropertyChanged(nameof(Chain));
+        OnPropertyChanged(nameof(ChainHelp));
         OnPropertyChanged(nameof(Lines));
         OnPropertyChanged(nameof(Summary));
         OnPropertyChanged(nameof(Resolution));

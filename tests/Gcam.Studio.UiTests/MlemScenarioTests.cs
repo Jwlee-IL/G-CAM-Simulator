@@ -54,7 +54,8 @@ public sealed class MlemScenarioTests(ITestOutputHelper output)
         return Verdict.ParseReadoutUnit(readout);
     }
 
-    private static string Note(StudioWindow ui) => ui.Exists("Imaging.ReconstructionNote") ? ui.Text("Imaging.ReconstructionNote") : "";
+    private static string Note(StudioWindow ui) => ui.Exists("Imaging.ReconstructionNote")
+        ? ui.Text("Imaging.ReconstructionNote") + "\n" + ui.Help("Imaging.MlemHelp") : "";
 
     private static void StartLong(StudioWindow ui)
     {
@@ -289,6 +290,7 @@ public sealed class MlemScenarioTests(ITestOutputHelper output)
             AssertNonNegative(again);
 
             ui.Invoke("ResetAcquisition");
+            ui.ConfirmReset(true);
             StudioWindow.WaitUntil(() => ui.RunState == "Empty", TimeSpan.FromSeconds(5), "reset");
             Assert.Equal(MlemItem, ui.SelectedItem("Imaging.Reconstruction"));   // a view setting, not acquisition data
             Assert.False(ui.Evidence("ReconView").TryGetProperty("Reconstruction", out _), "no image after Reset");

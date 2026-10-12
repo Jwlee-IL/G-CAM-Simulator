@@ -39,6 +39,7 @@ public sealed partial class PlotViewRenderTests(ITestOutputHelper output)
                     RenderWaveforms(theme);
                     RenderDetectorAndFocus(theme);
                     RenderAmbientInputs(theme);
+                    RenderResetConfirmation(theme);
                 }
             }
             catch (Exception ex) { failure = ex; }

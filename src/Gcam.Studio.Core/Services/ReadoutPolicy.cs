@@ -110,39 +110,7 @@ public static class ReadoutPolicy
     /// the button sets exactly what a user would type.</summary>
     public static (double Low, double High) BenchmarkWindow(double lineKeV, double fraction)
     {
-        var (low, high, _) = ExactWindow(lineKeV, fraction);
-        return ((double)low, (double)high);
-    }
-
-    // The record states the line and the window fraction as decimals (661.7 / 1332.5 keV: 1 decimal; 0.15: 2 decimals), so
-    // each benchmark edge line * (1 -/+ fraction) is an exact decimal with at most (line decimals + fraction decimals)
-    // places, 3 here. That is the precision at which the benchmark window is defined and typed.
-    private static (decimal Low, decimal High, int Decimals) ExactWindow(double lineKeV, double fraction)
-    {
         decimal line = (decimal)lineKeV, f = (decimal)fraction;
-        return (line * (1 - f), line * (1 + f), line.Scale + f.Scale);
-    }
-
-    /// <summary>Whether [<paramref name="lowKeV"/>, <paramref name="highKeV"/>] is the benchmark window of the line. Tolerance:
-    /// half a unit in the edges' last defined decimal place (0.0005 keV for the record's lines): a typed edge matches iff it
-    /// rounds to the exact benchmark edge at the precision the benchmark is defined with. Binary representation error of the
-    /// typed or computed doubles (about 1e-13 keV) is far below it; no arbitrary epsilon is involved.</summary>
-    public static bool IsBenchmarkWindow(double lowKeV, double highKeV, double lineKeV, double fraction)
-    {
-        if (!double.IsFinite(lowKeV) || !double.IsFinite(highKeV) || Math.Abs(lowKeV) > 1e12 || Math.Abs(highKeV) > 1e12) return false;
-        var (low, high, decimals) = ExactWindow(lineKeV, fraction);
-        decimal half = 0.5m / (decimal)Math.Pow(10, decimals);
-        return Math.Abs((decimal)lowKeV - low) < half && Math.Abs((decimal)highKeV - high) < half;
-    }
-
-    /// <summary>SD-A9: the full imaging profile of a confirmed geometry (mask rank / cell, distance, focus, decoder, window
-    /// and flood correction) — the only case in which the reference cost table is inherited.</summary>
-    public static bool MatchesImagingProfile(OpticsSettings optics, ReadoutOfferGeometry geometry, ReadoutBenchmark benchmark,
-        DecoderMethod method, double lineKeV, double lowKeV, double highKeV, bool floodCorrection)
-    {
-        return optics.MuraRank == geometry.Rank && optics.CellPitchMm == geometry.CellMm
-            && optics.MaskDetectorDistanceMm == geometry.DistanceMm && optics.FocalDistanceMm == benchmark.FocalDistanceMm
-            && method == DecoderMethod.CrossCorrelation && IsBenchmarkWindow(lowKeV, highKeV, lineKeV, benchmark.WindowFraction)
-            && floodCorrection;
+        return ((double)(line * (1 - f)), (double)(line * (1 + f)));
     }
 }

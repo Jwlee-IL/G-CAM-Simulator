@@ -21,4 +21,12 @@
     <ProjectReference Include="..\..\src\Gcam.Studio.Core\Gcam.Studio.Core.csproj" />
   </ItemGroup>
 
+  <!-- Exercise the shipped record with its production parser and pin, keeping this headless project Core-only. -->
+  <ItemGroup>
+    <Compile Include="../../src/Gcam.Studio.Services/ReadoutOfferRecordLoader.cs" Link="Fixtures/ReadoutOfferRecordLoader.cs" />
+    <Compile Include="../../src/Gcam.Studio.Services/ReadoutOfferPin.cs" Link="Fixtures/ReadoutOfferPin.cs" />
+    <EmbeddedResource Include="../../samples/evidence/studio-readout/offer-cost-v1.json"
+                      LogicalName="Gcam.Studio.Services.ReadoutOfferRecord.json" />
+  </ItemGroup>
+
 </Project>

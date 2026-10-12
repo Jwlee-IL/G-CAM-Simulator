@@ -37,6 +37,15 @@ public sealed partial class WaveformWorkspaceViewModel(MainViewModel shared, IWa
         ? View.PhysicalThreshold is { } threshold ? new[] { View.PhysicalLanes[4], threshold } : new[] { View.PhysicalLanes[4] } : [];
     private IReadOnlyList<PlotSeries> Lane(int index) => View?.PhysicalLanes.Count == 5 ? new[] { View.PhysicalLanes[index] } : [];
     public IReadOnlyList<PlotMarker> PhysicalMarkers => View?.PhysicalMarkers ?? [];
+    public string? Note => View?.Note
+        .Replace("Summed energy channel; four position channels are not modelled. ", "")
+        .Replace("Finite filter warm-up; uncorrected shaped baseline. ", "")
+        .Replace("Ideal shaper stimulus: no response smear, noise or rise.", "Ideal shaper stimulus.")
+        .Replace("ADC simulation: shaped heights are not the analytic MCA spectrum.", "ADC simulation: shaped heights ≠ analytic MCA.")
+        .Replace("Partial acquisition window: no future deposits; pulse response and baseline beyond acquired live time are simulated.", "Partial acquisition window: no acquired future.")
+        .Replace("Realised analogue pulses in code-equivalent units; held ADC values are listed separately.", "Realised analogue pulses · held ADC values listed separately.")
+        .Replace("Sum threshold; no continuous digitizer noise, network RC, skew or jitter. ", "");
+    public string? NoteHelp => View?.Note;
     public string Summary => View is { } v ? $"{v.Events.Count} {(v.Events.Count == 1 ? "event" : "events")} · {v.WindowUs:0.###} µs · worker {v.ProcessingTime.TotalMilliseconds:0.##} ms" : "Select an acquired event";
     partial void OnTriggerIndexChanged(int value) { if (!_updating) { FollowLatest = false; Refresh(); } }
     partial void OnFollowLatestChanged(bool value) => NotifySnapshot();
@@ -48,7 +57,7 @@ public sealed partial class WaveformWorkspaceViewModel(MainViewModel shared, IWa
     {
         if (value is not null && ViewRange is null && value.Adc.Y.Length > 0)
             ViewRange = new(value.Adc.Origin, value.Adc.Y.Length == 1 ? value.Adc.Origin + value.Adc.Step : value.Adc.XAt(value.Adc.Y.Length - 1));
-        foreach (string name in new[] { nameof(AdcSeries), nameof(ShapedSeries), nameof(Markers), nameof(Events), nameof(Summary), nameof(LaneA), nameof(LaneB), nameof(LaneC), nameof(LaneD), nameof(LaneSum), nameof(PhysicalMarkers) })
+        foreach (string name in new[] { nameof(AdcSeries), nameof(ShapedSeries), nameof(Markers), nameof(Events), nameof(Summary), nameof(Note), nameof(NoteHelp), nameof(LaneA), nameof(LaneB), nameof(LaneC), nameof(LaneD), nameof(LaneSum), nameof(PhysicalMarkers) })
             OnPropertyChanged(name);
     }
 

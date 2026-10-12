@@ -75,4 +75,5 @@
     <sys:Double x:Key="FontSize.Title">14</sys:Double>
     <!-- Imaging centre: height always left under the image pair for measurements and the focus curve -->
     <sys:Double x:Key="Size.Imaging.Lower">240</sys:Double>
+    <sys:Double x:Key="Size.Modal">480</sys:Double>
 </ResourceDictionary>

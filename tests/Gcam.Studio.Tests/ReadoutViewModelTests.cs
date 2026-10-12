@@ -9,6 +9,23 @@ namespace Gcam.Studio.Tests;
 /// inherits by module; the cost card carries the exact F wording and the data's own bias explanation.</summary>
 public sealed class ReadoutViewModelTests
 {
+    [Fact]
+    public void WideFovLocalisationHelp_ShippedRecordSupportsDesktopWording_AndRejectsBrokenVerdict()
+    {
+        var record = Gcam.Studio.Services.ReadoutOfferRecordLoader.LoadEmbedded();
+        Assert.True(record.IsAvailable, record.UnavailableReason);
+        var optics = Gcam.Studio.Core.Optics.OpticsPreset.All.Single(p => p.Name == "Wide FOV").Settings!;
+        var detector = new DetectorSettings { ReadoutMode = ReadoutMode.FourOutputAnger };
+        var plans = ReadoutPolicy.Plans(optics, detector, record);
+        Assert.Contains(plans, p => p.Status == ReadoutLineStatus.Offered && p.Cell!.CostRows.Any(r =>
+            r.F is { Estimate: < 1 } && r.Direct.RmsDeg is not null && r.Direct.BiasDeg is not null));
+        string help = ReadoutCostHelp.Build(record, plans);
+        Assert.Contains("F is an equal-fluence MSE ratio, not a time factor.", help);
+        Assert.Contains("F below 1 is chiefly direct-reference bias", help);
+        Assert.Contains("Benchmark: one mono-line point source", help);
+        Assert.DoesNotContain("wrong benchmark wording", help);
+    }
+
     private static readonly OpticsSettings Head = new() { DetectorPixels = 12, PixelPitchMm = 1, MuraRank = 7, CellPitchMm = 1, MaskDetectorDistanceMm = 60 };
     private static readonly OpticsSettings High = new() { DetectorPixels = 44, PixelPitchMm = .4, MuraRank = 13, CellPitchMm = .5, MaskDetectorDistanceMm = 100 };
 
@@ -166,22 +183,17 @@ public sealed class ReadoutViewModelTests
     }
 
     [Fact]
-    public void Custom_MatchingModuleInheritsOfferAndBudget_ButNotTheCost_UnmatchedIsLocal()
+    public void Custom_MatchingModuleInheritsOfferAndBudget_UnmatchedIsLocal()
     {
         var vm = Model(); vm.ReadoutMode = ReadoutMode.FourOutputAnger;
         // Same module as High (44 × 44 at 0.4 mm), different mask and distance: Custom cannot bypass the 64 k budget.
         vm.Optics = High with { MuraRank = 7, CellPitchMm = 1, MaskDetectorDistanceMm = 60 };
         var plan = vm.ReadoutPlans.Single(p => p.LineKeV == 661.7);
         Assert.Equal(ReadoutLineStatus.Offered, plan.Status); Assert.Equal(64000, plan.Budget); Assert.Equal("High", plan.GeometryId);
-        Assert.False(vm.Imaging.ReadoutCostInherited);
-        Assert.Contains("Imaging cost unmeasured for this configuration", vm.Imaging.ReadoutCostStatus);
-        Assert.Contains("mask differs", vm.Imaging.ReadoutCostStatusDetails); // the reasons live in the help text
-        Assert.Contains("mask-detector distance differs", vm.Imaging.ReadoutCostHelp);
         vm.Optics = new() { DetectorPixels = 20, PixelPitchMm = .5, MuraRank = 7, CellPitchMm = 1, MaskDetectorDistanceMm = 60 };
         var local = vm.ReadoutPlans.Single(p => p.LineKeV == 661.7);
         Assert.True(local is { Status: ReadoutLineStatus.Local, Budget: ReadoutPolicy.LocalBudget, Method: FloodCalibrationMethod.LatticeGrowth, Solve: ChargeNetworkSolveMethod.Adjoint, Cell: null });
         Assert.Contains("experimental, unvalidated", local.Reason);
-        Assert.StartsWith("Imaging cost unmeasured for this configuration", vm.Imaging.ReadoutCostStatus);
     }
 
     [Fact]
@@ -193,63 +205,19 @@ public sealed class ReadoutViewModelTests
         Assert.Empty(vm.RequiredReadoutLines);
         await vm.StartCommand.ExecuteAsync(null);
         Assert.Contains("fixture: hash mismatch", vm.ReadoutMessage);
-        Assert.Contains("Imaging cost unavailable", vm.Imaging.ReadoutCostStatus);
     }
 
-    [Fact]
-    public void CostCard_InheritsOnlyOnFullProfile_StatesFWording_AndExplainsFBelowOneFromTheData()
-    {
-        var vm = Model(); vm.Optics = High; vm.ReadoutMode = ReadoutMode.FourOutputAnger;
-        Assert.False(vm.Imaging.ReadoutCostInherited); // window 600–720 is not ±15 % of 661.7, correction off
-        vm.UseBenchmarkWindowCommand.Execute(null);
-        Assert.Equal(562.445, vm.WindowLowKeV); Assert.Equal(760.955, vm.WindowHighKeV); // exact decimal edges
-        Assert.False(vm.Imaging.ReadoutCostInherited);
-        vm.ApplyFloodCorrection = true;
-        Assert.False(vm.Imaging.ReadoutCostInherited);
-        Assert.Contains("source emits multiple lines", vm.Imaging.ReadoutCostStatusDetails);
-        Assert.Contains("rate not measured", vm.Imaging.ReadoutCostStatusDetails);
-        vm.Imaging.Reconstruction = DecoderMethod.Mlem;
-        Assert.False(vm.Imaging.ReadoutCostInherited);
-        Assert.Contains("MLEM selected", vm.Imaging.ReadoutCostStatusDetails);
-        string card = vm.Imaging.ReadoutCostCard;
-        Assert.Contains(ImagingWorkspaceViewModel.FWording, card);
-        Assert.Contains("0.5° · Anger RMS 0.45° · F 0.81", card); // key numbers stay inline
-        string help = vm.Imaging.ReadoutCostHelp;
-        // Hand-derived oracle: Direct RMS 0.5°, bias 0.49° -> 0.49² / 0.5² = 96.0 % of the Direct MSE is bias.
-        Assert.Contains("(96.0 % of its MSE is bias)", help);
-        Assert.Contains("it does not establish a general Anger advantage", help);
-        Assert.Contains("64,000 histories per crystal (repair-v5.json, repair)", help);
-        Assert.DoesNotContain("of its MSE is bias", card);
-        Assert.Equal(4, vm.Imaging.ReadoutCostRows.Count);
-        Assert.Equal("0.81 [0.729, 0.891]", vm.Imaging.ReadoutCostRows[0].F);
-        Assert.Equal("0.5° [0.45, 0.55]", vm.Imaging.ReadoutCostRows[0].DirectRms);
-    }
+
 
     [Theory]
-    // Typed edges as a user enters them, for each record line (exact decimals 661.7 x 0.85 / 1.15 and 1332.5 x 0.85 / 1.15).
-    [InlineData(661.7, 562.445, 760.955, true)]
-    [InlineData(1332.5, 1132.625, 1532.375, true)]
-    // One unit in the third decimal off: not the benchmark window (the tolerance is half a unit, 0.0005 keV).
-    [InlineData(661.7, 562.446, 760.955, false)]
-    [InlineData(1332.5, 1132.625, 1532.374, false)]
-    [InlineData(1332.5, 1132.62, 1532.38, false)]
-    public void BenchmarkWindow_MatchesTypedEdgesAtTheirDefinedPrecision(double line, double low, double high, bool expected)
+    [InlineData(661.7, 562.445, 760.955)]
+    [InlineData(1332.5, 1132.625, 1532.375)]
+    public void BenchmarkWindow_SetsExactDecimalEdges(double line, double low, double high)
     {
-        Assert.Equal(expected, ReadoutPolicy.IsBenchmarkWindow(low, high, line, .15));
-        var (bl, bh) = ReadoutPolicy.BenchmarkWindow(line, .15); // the button's values pass the same check …
-        Assert.True(ReadoutPolicy.IsBenchmarkWindow(bl, bh, line, .15));
-        if (expected) Assert.Equal((low, high), (bl, bh)); // … and are exactly what a user types
-        Assert.NotEqual(1532.375, 1332.5 * 1.15); // binary 1532.3749999999998: why the exact comparison failed
+        Assert.Equal((low, high), ReadoutPolicy.BenchmarkWindow(line, .15));
     }
 
-    [Fact]
-    public void CostCard_InheritsWithHandTypedBenchmarkWindow()
-    {
-        var vm = Model(); vm.Optics = High; vm.ReadoutMode = ReadoutMode.FourOutputAnger; vm.ApplyFloodCorrection = true;
-        vm.WindowHighKeV = 760.955; vm.WindowLowKeV = 562.445;
-        Assert.False(vm.Imaging.ReadoutCostInherited);
-        Assert.DoesNotContain("window is not", vm.Imaging.ReadoutCostStatusDetails);
-    }
+
 
     [Fact]
     public async Task Eviction_RefusesStart_ReleasesViews_AndPrepareRecovers()
@@ -275,24 +243,21 @@ public sealed class ReadoutViewModelTests
     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
     private static WeakReference<ReadoutPreparation> Track(MainViewModel vm) => new(vm.MatchingPreparation!);
 
+
+
     [Fact]
-    public void MixedSceneAtTwoMetres_AndCurrentRate_AreReferenceOnly_WithLiteralDifferences()
+    public void LocalisationHelp_UsesOfferedModuleCellsAndRecordScope_ExplainsDirectBias()
     {
         var vm = Model(); vm.Optics = High; vm.ReadoutMode = ReadoutMode.FourOutputAnger;
-        vm.UseBenchmarkWindowCommand.Execute(null); vm.ApplyFloodCorrection = true;
-        vm.AddSourceCommand.Execute(null); vm.Sources[^1].Isotope = "Co-60";
-        vm.Sources[0].DistanceMm = 2000; vm.Sources[0].X = 5;
-        Assert.False(vm.Imaging.ReadoutCostInherited);
-        Assert.Contains("source mixture", vm.Imaging.ReadoutCostStatusDetails);
-        Assert.Contains("source distance differs", vm.Imaging.ReadoutCostStatusDetails);
-        Assert.Contains("sampling positions", vm.Imaging.ReadoutCostStatusDetails);
-        Assert.Contains("reference only", vm.Imaging.ReadoutCostStatusDetails);
-        var flood = new Gcam.Core.DetectorImage(44, 44).ReadOnlyCopy();
-        vm.Imaging.Begin(vm.Sources.Select(s => s.ToModel()).ToArray(), High);
-        vm.Snapshot = new(1, 1, 12345, 1, false, new(flood, 0, 1, null, 0, 0, null, 1, TimeSpan.Zero), [], TimeSpan.Zero, true)
-        { Detector = vm.Detector, Optics = High };
-        Assert.Contains("scored-input rate 12345", vm.Imaging.ReadoutCostStatusDetails);
-        Assert.Equal(4, vm.Imaging.ReadoutCostRows.Count); // descriptive rows are not gated
+        string help = vm.ReadoutLocalisationHelp;
+        // High's two offered lines have (.45/.5)^2 and (.6/.16)^2; include all offered module cells.
+        Assert.Contains("F 0.81–14.0625", help);
+        Assert.Contains("(96.0 % of its MSE is bias)", help);
+        Assert.Contains("it does not establish a general Anger advantage", help);
+        Assert.Contains(ReadoutCostHelp.FWording, help);
+        Assert.Contains(vm.ReadoutOffers.Benchmark!.Decoder, help);
+        vm.Optics = new() { DetectorPixels = 20, PixelPitchMm = .5 };
+        Assert.Contains("No offered cost cells for this module.", vm.ReadoutLocalisationHelp);
     }
 
     private sealed class Theme : IThemeService

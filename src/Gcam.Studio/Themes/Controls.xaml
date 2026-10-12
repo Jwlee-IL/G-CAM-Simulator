@@ -1,30 +1,26 @@
 <!--
-    Shared control styles. Default WPF (Aero2) templates hard-code system colours (white combo popups,
-    grey selection, black dotted focus) and ignore Background on hover, so the controls used here are
-    re-templated against the colour tokens. Implicit styles = the default look; keyed styles = variants.
+Shared control styles. Default WPF (Aero2) templates hard-code system colours (white combo popups,
+grey selection, black dotted focus) and ignore Background on hover, so the controls used here are
+re-templated against the colour tokens. Implicit styles = the default look; keyed styles = variants.
 -->
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                    xmlns:c="clr-namespace:Gcam.Studio.Controls">
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:c="clr-namespace:Gcam.Studio.Controls">
     <!-- StaticResource can't see sibling dictionaries at load time, so pull in what this one needs. -->
     <ResourceDictionary.MergedDictionaries>
         <ResourceDictionary Source="Metrics.xaml" />
         <ResourceDictionary Source="Typography.xaml" />
     </ResourceDictionary.MergedDictionaries>
-
-
     <!-- ===== Focus: one 2 px ring for every keyboard-focusable control ===== -->
     <Style x:Key="FocusVisual">
         <Setter Property="Control.Template">
             <Setter.Value>
                 <ControlTemplate>
-                    <Border Margin="-3" BorderThickness="2" CornerRadius="5"
-                            BorderBrush="{DynamicResource Brush.Focus}" SnapsToDevicePixels="True" />
+                    <Border Margin="-3" BorderThickness="2" CornerRadius="5" BorderBrush="{DynamicResource Brush.Focus}"
+                            SnapsToDevicePixels="True" />
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
     </Style>
-
     <Style x:Key="ToggleButton.Section" TargetType="ToggleButton">
         <Setter Property="Foreground" Value="{DynamicResource Brush.Text.Primary}" />
         <Setter Property="Background" Value="{DynamicResource Brush.Bg.Surface}" />
@@ -33,22 +29,28 @@
         <Setter Property="FocusVisualStyle" Value="{StaticResource FocusVisual}" />
         <Setter Property="MinHeight" Value="{StaticResource Size.Control}" />
         <Setter Property="HorizontalContentAlignment" Value="Left" />
-        <Setter Property="Template"><Setter.Value>
-            <ControlTemplate TargetType="ToggleButton">
-                <Border Background="{TemplateBinding Background}" Padding="{StaticResource Pad.Control}" CornerRadius="{StaticResource Radius.Control}">
-                    <DockPanel>
-                        <TextBlock x:Name="Chevron" Text="▸" Style="{StaticResource Text.Label}" Margin="{StaticResource Gap.Inline}" />
-                        <ContentPresenter VerticalAlignment="Center" RecognizesAccessKey="True" />
-                    </DockPanel>
-                </Border>
-                <ControlTemplate.Triggers>
-                    <Trigger Property="IsChecked" Value="True"><Setter TargetName="Chevron" Property="Text" Value="▾" /></Trigger>
-                    <Trigger Property="IsMouseOver" Value="True"><Setter Property="Background" Value="{DynamicResource Brush.Bg.Raised}" /></Trigger>
-                </ControlTemplate.Triggers>
-            </ControlTemplate>
-        </Setter.Value></Setter>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ToggleButton">
+                    <Border Background="{TemplateBinding Background}" Padding="{StaticResource Pad.Control}"
+                            CornerRadius="{StaticResource Radius.Control}">
+                        <DockPanel>
+                            <TextBlock x:Name="Chevron" Text="▸" Style="{StaticResource Text.Label}" Margin="{StaticResource Gap.Inline}" />
+                            <ContentPresenter VerticalAlignment="Center" RecognizesAccessKey="True" />
+                        </DockPanel>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="Chevron" Property="Text" Value="▾" />
+                        </Trigger>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Background" Value="{DynamicResource Brush.Bg.Raised}" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
     </Style>
-
     <!-- Section headers inherit palette and keyboard focus instead of the system Expander theme. -->
     <Style x:Key="Expander.Section" TargetType="Expander">
         <Setter Property="Foreground" Value="{DynamicResource Brush.Text.Primary}" />
@@ -58,17 +60,18 @@
                 <ControlTemplate TargetType="Expander">
                     <StackPanel>
                         <ToggleButton Content="{TemplateBinding Header}" Style="{StaticResource ToggleButton.Section}"
-                                      IsChecked="{Binding IsExpanded, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}" />
+                                IsChecked="{Binding IsExpanded, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}" />
                         <ContentPresenter x:Name="SectionContent" ContentSource="Content" Visibility="Collapsed" />
                     </StackPanel>
                     <ControlTemplate.Triggers>
-                        <Trigger Property="IsExpanded" Value="True"><Setter TargetName="SectionContent" Property="Visibility" Value="Visible" /></Trigger>
+                        <Trigger Property="IsExpanded" Value="True">
+                            <Setter TargetName="SectionContent" Property="Visibility" Value="Visible" />
+                        </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
     </Style>
-
     <!-- ===== Panels ===== -->
     <Style x:Key="Panel.Surface" TargetType="Border">
         <Setter Property="Background" Value="{DynamicResource Brush.Bg.Surface}" />
@@ -78,21 +81,18 @@
         <Setter Property="Padding" Value="{StaticResource Pad.Panel}" />
         <Setter Property="SnapsToDevicePixels" Value="True" />
     </Style>
-
     <Style x:Key="Divider" TargetType="Border">
         <Setter Property="Height" Value="1" />
         <Setter Property="Background" Value="{DynamicResource Brush.Line}" />
         <Setter Property="Margin" Value="0,4,0,12" />
     </Style>
-
     <!-- Header row of a panel or section: title left, actions / chips right. Owns the gap below and a fixed
-         row height, so titles with and without buttons line up. -->
+    row height, so titles with and without buttons line up. -->
     <Style x:Key="PanelHeader" TargetType="DockPanel">
         <Setter Property="LastChildFill" Value="False" />
         <Setter Property="MinHeight" Value="{StaticResource Size.Control}" />
         <Setter Property="Margin" Value="{StaticResource Gap.Title}" />
     </Style>
-
     <!-- Small rounded label, e.g. units or the decoded peak -->
     <Style x:Key="Chip" TargetType="Border">
         <Setter Property="BorderBrush" Value="{DynamicResource Brush.Line.Control}" />
@@ -101,15 +101,47 @@
         <Setter Property="Padding" Value="8,1" />
         <Setter Property="VerticalAlignment" Value="Center" />
     </Style>
-
     <!-- Status variant: the result is out of date -->
     <Style x:Key="Chip.Warning" TargetType="Border" BasedOn="{StaticResource Chip}">
         <Setter Property="BorderBrush" Value="{DynamicResource Brush.Status.Warning}" />
     </Style>
-
     <!-- Play triangle for the primary action, drawn in the button's foreground -->
-    <Geometry x:Key="Icon.Play">M0,0 L10,6 L0,12 Z</Geometry>
-
+    <Geometry x:Key="Icon.Play">
+        M0,0 L10,6 L0,12 Z
+    </Geometry>
+    <Geometry x:Key="Icon.Stop">
+        M0,0 H12 V12 H0 Z
+    </Geometry>
+    <Geometry x:Key="Icon.Add">
+        M5,0 H7 V5 H12 V7 H7 V12 H5 V7 H0 V5 H5 Z
+    </Geometry>
+    <Geometry x:Key="Icon.Remove">
+        M0,5 H12 V7 H0 Z
+    </Geometry>
+    <Geometry x:Key="Icon.Cancel">
+        M1,0 L6,5 L11,0 L12,1 L7,6 L12,11 L11,12 L6,7 L1,12 L0,11 L5,6 L0,1 Z
+    </Geometry>
+    <Geometry x:Key="Icon.Delete">
+        M2,3 H10 V12 H2 Z M1,1 H5 V0 H7 V1 H11 V2 H1 Z
+    </Geometry>
+    <Geometry x:Key="Icon.Clear">
+        M0,3 H8 V12 H0 Z M0,1 H3 V0 H5 V1 H8 V2 H0 Z M10,4 H12 V12 H10 Z
+    </Geometry>
+    <Geometry x:Key="Icon.Reset">
+        M2,3 A5,5 0 1 1 1,8 L3,7 A3,3 0 1 0 4,4 L4,6 L0,6 L0,2 Z
+    </Geometry>
+    <Geometry x:Key="Icon.Latest">
+        M0,0 L8,6 L0,12 Z M9,0 H11 V12 H9 Z
+    </Geometry>
+    <Geometry x:Key="Icon.Next">
+        M0,0 L6,6 L0,12 Z M6,0 L12,6 L6,12 Z
+    </Geometry>
+    <Geometry x:Key="Icon.Sun">
+        M6,3 A3,3 0 1 1 5.99,3 Z M5.5,0 H6.5 V2 H5.5 Z M5.5,10 H6.5 V12 H5.5 Z M0,5.5 H2 V6.5 H0 Z M10,5.5 H12 V6.5 H10 Z M1,1 L3,2 L2,3 Z M9,2 L11,1 L10,3 Z M1,11 L2,9 L3,10 Z M9,10 L10,9 L11,11 Z
+    </Geometry>
+    <Geometry x:Key="Icon.Moon">
+        M8,0 A6,6 0 1 0 12,9 A6,6 0 0 1 8,0 Z
+    </Geometry>
     <!-- ===== Buttons ===== -->
     <Style TargetType="Button">
         <Setter Property="FocusVisualStyle" Value="{StaticResource FocusVisual}" />
@@ -137,6 +169,9 @@
                         <Trigger Property="IsPressed" Value="True">
                             <Setter TargetName="Chrome" Property="Background" Value="{DynamicResource Brush.Line}" />
                         </Trigger>
+                        <Trigger Property="IsKeyboardFocused" Value="True">
+                            <Setter TargetName="Chrome" Property="BorderBrush" Value="{DynamicResource Brush.Focus}" />
+                        </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter TargetName="Chrome" Property="Background" Value="{DynamicResource Brush.Bg.Surface}" />
                             <Setter TargetName="Chrome" Property="BorderBrush" Value="{DynamicResource Brush.Line}" />
@@ -148,7 +183,6 @@
             </Setter.Value>
         </Setter>
     </Style>
-
     <!-- The one primary action per screen -->
     <Style x:Key="Button.Primary" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
         <Setter Property="Background" Value="{DynamicResource Brush.Accent}" />
@@ -179,7 +213,6 @@
             </Setter.Value>
         </Setter>
     </Style>
-
     <!-- Borderless button for toolbars and panel headers -->
     <Style x:Key="Button.Ghost" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
         <Setter Property="Background" Value="Transparent" />
@@ -188,7 +221,55 @@
         <Setter Property="Padding" Value="{StaticResource Pad.Control}" />
         <Setter Property="MinWidth" Value="{StaticResource Size.Control}" />
     </Style>
-
+    <Style x:Key="Button.Icon" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+        <Setter Property="Padding" Value="{StaticResource Pad.Control}" />
+        <Setter Property="Width" Value="{StaticResource Size.Control}" />
+        <Setter Property="Height" Value="{StaticResource Size.Control}" />
+        <Setter Property="ContentTemplate">
+            <Setter.Value>
+                <DataTemplate>
+                    <Path Data="{Binding}" Stretch="Uniform"
+                            Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                            Width="{StaticResource Size.Icon}" Height="{StaticResource Size.Icon}" />
+                </DataTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    <Style x:Key="Button.Theme" TargetType="Button" BasedOn="{StaticResource Button.Icon}">
+        <Setter Property="Content" Value="{StaticResource Icon.Sun}" />
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding ThemeToggleLabel}" Value="Dark theme">
+                <Setter Property="Content" Value="{StaticResource Icon.Moon}" />
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+    <Style TargetType="c:ModalHost">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="c:ModalHost">
+                    <Grid>
+                        <ContentPresenter x:Name="BaseContent" Content="{TemplateBinding Content}" />
+                        <c:ModalLayer x:Name="PART_Dialog" Background="{DynamicResource Brush.Modal.Scrim}"
+                                KeyboardNavigation.TabNavigation="Cycle" KeyboardNavigation.ControlTabNavigation="Cycle"
+                                AutomationProperties.AutomationId="Modal.Layer" AutomationProperties.Name="{TemplateBinding DialogName}">
+                            <Border Style="{StaticResource Panel.Surface}" Width="{StaticResource Size.Modal}" HorizontalAlignment="Center"
+                                    VerticalAlignment="Center">
+                                <ContentPresenter Content="{TemplateBinding DialogContent}" />
+                            </Border>
+                        </c:ModalLayer>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="DialogContent" Value="{x:Null}">
+                            <Setter TargetName="PART_Dialog" Property="Visibility" Value="Collapsed" />
+                        </Trigger>
+                        <Trigger SourceName="PART_Dialog" Property="Visibility" Value="Visible">
+                            <Setter TargetName="BaseContent" Property="IsEnabled" Value="False" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
     <!-- ===== Segmented picker: RadioButtons in a Segment.Track, one per option (tool picker) ===== -->
     <Style x:Key="Segment.Track" TargetType="Border">
         <Setter Property="Background" Value="{DynamicResource Brush.Bg.Canvas}" />
@@ -198,7 +279,6 @@
         <Setter Property="Padding" Value="2" />
         <Setter Property="SnapsToDevicePixels" Value="True" />
     </Style>
-
     <Style x:Key="RadioButton.Segment" TargetType="RadioButton">
         <Setter Property="FocusVisualStyle" Value="{StaticResource FocusVisual}" />
         <Setter Property="FontFamily" Value="{StaticResource Font.UI}" />
@@ -234,7 +314,6 @@
             </Setter.Value>
         </Setter>
     </Style>
-
     <!-- ===== Text input ===== -->
     <Style TargetType="TextBox">
         <Setter Property="FocusVisualStyle" Value="{x:Null}" />
@@ -258,10 +337,10 @@
                             SnapsToDevicePixels="True">
                         <Grid>
                             <ScrollViewer x:Name="PART_ContentHost" Margin="{TemplateBinding Padding}" VerticalAlignment="Center"
-                                          Focusable="False" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Hidden" />
+                                    Focusable="False" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Hidden" />
                             <!-- Unit suffix, set with the attached Tag (e.g. Tag="mm") -->
-                            <TextBlock Text="{TemplateBinding Tag}" Style="{StaticResource Text.MonoCaption}"
-                                       HorizontalAlignment="Right" Margin="0,0,8,0" IsHitTestVisible="False" />
+                            <TextBlock Text="{TemplateBinding Tag}" Style="{StaticResource Text.MonoCaption}" HorizontalAlignment="Right"
+                                    Margin="0,0,8,0" IsHitTestVisible="False" />
                         </Grid>
                     </Border>
                     <ControlTemplate.Triggers>
@@ -274,7 +353,8 @@
                         </Trigger>
                         <Trigger Property="Validation.HasError" Value="True">
                             <Setter TargetName="Chrome" Property="BorderBrush" Value="{DynamicResource Brush.Status.Error}" />
-                            <Setter Property="ToolTip" Value="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors)[0].ErrorContent}" />
+                            <Setter Property="ToolTip"
+                                    Value="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors)[0].ErrorContent}" />
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter TargetName="Chrome" Property="Background" Value="{DynamicResource Brush.Bg.Surface}" />
@@ -286,13 +366,14 @@
             </Setter.Value>
         </Setter>
     </Style>
-
     <!-- ===== ComboBox (closed box + popup + items) ===== -->
     <ControlTemplate x:Key="ComboBoxToggle" TargetType="ToggleButton">
-        <Border x:Name="Chrome" Background="{DynamicResource Brush.Bg.Canvas}" BorderBrush="{DynamicResource Brush.Line.Control}"
-                BorderThickness="1" CornerRadius="{StaticResource Radius.Control}" SnapsToDevicePixels="True">
-            <Path x:Name="Arrow" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,10,0"
-                  Data="M 0 0 L 4 4 L 8 0" Stroke="{DynamicResource Brush.Text.Secondary}" StrokeThickness="1.5" />
+        <Border x:Name="Chrome" Background="{DynamicResource Brush.Bg.Canvas}"
+                BorderBrush="{DynamicResource Brush.Line.Control}" BorderThickness="1"
+                CornerRadius="{StaticResource Radius.Control}" SnapsToDevicePixels="True">
+            <Path x:Name="Arrow"
+                    Data="M 0 0 L 4 4 L 8 0" Stroke="{DynamicResource Brush.Text.Secondary}" StrokeThickness="1.5"
+                    HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,10,0" />
         </Border>
         <ControlTemplate.Triggers>
             <Trigger Property="IsMouseOver" Value="True">
@@ -308,7 +389,6 @@
             </Trigger>
         </ControlTemplate.Triggers>
     </ControlTemplate>
-
     <Style TargetType="ComboBox">
         <Setter Property="FocusVisualStyle" Value="{StaticResource FocusVisual}" />
         <Setter Property="FontFamily" Value="{StaticResource Font.UI}" />
@@ -320,14 +400,13 @@
                 <ControlTemplate TargetType="ComboBox">
                     <Grid>
                         <ToggleButton Template="{StaticResource ComboBoxToggle}" Focusable="False" ClickMode="Press"
-                                      IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}" />
+                                IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}" />
                         <ContentPresenter Margin="9,0,28,0" VerticalAlignment="Center" IsHitTestVisible="False"
-                                          Content="{TemplateBinding SelectionBoxItem}"
-                                          ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
-                                          ContentTemplateSelector="{TemplateBinding ItemTemplateSelector}"
-                                          ContentStringFormat="{TemplateBinding SelectionBoxItemStringFormat}" />
-                        <Popup x:Name="PART_Popup" IsOpen="{TemplateBinding IsDropDownOpen}" Placement="Bottom"
-                               AllowsTransparency="False" Focusable="False" PopupAnimation="None">
+                                Content="{TemplateBinding SelectionBoxItem}" ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                                ContentTemplateSelector="{TemplateBinding ItemTemplateSelector}"
+                                ContentStringFormat="{TemplateBinding SelectionBoxItemStringFormat}" />
+                        <Popup x:Name="PART_Popup" IsOpen="{TemplateBinding IsDropDownOpen}" Placement="Bottom" AllowsTransparency="False"
+                                Focusable="False" PopupAnimation="None">
                             <Border MinWidth="{Binding ActualWidth, RelativeSource={RelativeSource TemplatedParent}}"
                                     MaxHeight="{TemplateBinding MaxDropDownHeight}" Margin="0,2,0,0"
                                     Background="{DynamicResource Brush.Bg.Raised}" BorderBrush="{DynamicResource Brush.Line.Control}"
@@ -347,7 +426,6 @@
             </Setter.Value>
         </Setter>
     </Style>
-
     <Style TargetType="ComboBoxItem">
         <Setter Property="Foreground" Value="{DynamicResource Brush.Text.Primary}" />
         <Setter Property="MinHeight" Value="{StaticResource Size.Control}" />
@@ -370,7 +448,6 @@
             </Setter.Value>
         </Setter>
     </Style>
-
     <!-- ===== Lists: selection = subtle fill + 2 px accent bar (not colour alone); stays visible unfocused ===== -->
     <Style TargetType="ListBox">
         <Setter Property="Background" Value="Transparent" />
@@ -387,7 +464,6 @@
             </Setter.Value>
         </Setter>
     </Style>
-
     <Style TargetType="ListBoxItem">
         <Setter Property="FocusVisualStyle" Value="{x:Null}" />
         <Setter Property="MinHeight" Value="{StaticResource Size.Control}" />
@@ -399,8 +475,8 @@
                     <Grid x:Name="Row" Background="Transparent">
                         <Border x:Name="Bar" Width="2" HorizontalAlignment="Left" Background="Transparent" />
                         <ContentPresenter Margin="{TemplateBinding Padding}" VerticalAlignment="Center" />
-                        <Border x:Name="Focus" BorderThickness="2" CornerRadius="2" Margin="1"
-                                BorderBrush="{DynamicResource Brush.Focus}" Visibility="Collapsed" />
+                        <Border x:Name="Focus" BorderThickness="2" CornerRadius="2" Margin="1" BorderBrush="{DynamicResource Brush.Focus}"
+                                Visibility="Collapsed" />
                     </Grid>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
@@ -418,7 +494,6 @@
             </Setter.Value>
         </Setter>
     </Style>
-
     <!-- ===== Scroll bars: thin, no arrows ===== -->
     <Style x:Key="ScrollThumb" TargetType="Thumb">
         <Setter Property="Template">
@@ -434,7 +509,6 @@
             </Setter.Value>
         </Setter>
     </Style>
-
     <Style TargetType="ScrollBar">
         <Setter Property="Width" Value="8" />
         <Setter Property="MinWidth" Value="8" />
@@ -467,7 +541,6 @@
             </Trigger>
         </Style.Triggers>
     </Style>
-
     <!-- ===== Progress: flat 4 px bar, no Aero glow animation ===== -->
     <Style TargetType="ProgressBar">
         <Setter Property="Height" Value="4" />
@@ -478,13 +551,13 @@
                 <ControlTemplate TargetType="ProgressBar">
                     <Grid>
                         <Border x:Name="PART_Track" Background="{TemplateBinding Background}" CornerRadius="2" />
-                        <Border x:Name="PART_Indicator" HorizontalAlignment="Left" Background="{TemplateBinding Foreground}" CornerRadius="2" />
+                        <Border x:Name="PART_Indicator" HorizontalAlignment="Left" Background="{TemplateBinding Foreground}"
+                                CornerRadius="2" />
                     </Grid>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
     </Style>
-
     <!-- ===== HelpMark: circled "?" carrying secondary explanation (tooltip on hover and keyboard focus) ===== -->
     <Style TargetType="c:HelpMark">
         <Setter Property="Width" Value="{StaticResource Size.HelpMark}" />
@@ -501,8 +574,8 @@
                     <Grid Background="Transparent">
                         <Ellipse x:Name="Ring" Stroke="{TemplateBinding BorderBrush}" StrokeThickness="1" />
                         <TextBlock x:Name="Glyph" Text="?" Foreground="{TemplateBinding Foreground}" FontFamily="{StaticResource Font.UI}"
-                                   FontSize="{StaticResource FontSize.Caption}" FontWeight="SemiBold"
-                                   HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                FontSize="{StaticResource FontSize.Caption}" FontWeight="SemiBold" HorizontalAlignment="Center"
+                                VerticalAlignment="Center" />
                     </Grid>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
@@ -518,7 +591,6 @@
             </Setter.Value>
         </Setter>
     </Style>
-
     <!-- ===== ToolTip ===== -->
     <Style TargetType="ToolTip">
         <Setter Property="Background" Value="{DynamicResource Brush.Bg.Raised}" />
@@ -528,7 +600,6 @@
         <Setter Property="FontSize" Value="{StaticResource FontSize.Label}" />
         <Setter Property="Padding" Value="8,4" />
     </Style>
-
     <Style TargetType="c:PlotView">
         <Setter Property="Foreground" Value="{DynamicResource Brush.Text.Secondary}" />
         <Setter Property="FocusBrush" Value="{DynamicResource Brush.Focus}" />
@@ -553,12 +624,12 @@
             <Setter.Value>
                 <ControlTemplate TargetType="CheckBox">
                     <DockPanel>
-                        <Border x:Name="Box" DockPanel.Dock="Left" VerticalAlignment="Center" Width="{StaticResource Size.Logo}" Height="{StaticResource Size.Logo}"
-                                BorderBrush="{DynamicResource Brush.Line.Control}" BorderThickness="{StaticResource Border.Hairline}"
-                                Background="{DynamicResource Brush.Bg.Raised}" CornerRadius="{StaticResource Radius.Control}"
-                                Margin="{StaticResource Gap.Inline}">
+                        <Border x:Name="Box" DockPanel.Dock="Left" VerticalAlignment="Center" Width="{StaticResource Size.Logo}"
+                                Height="{StaticResource Size.Logo}" BorderBrush="{DynamicResource Brush.Line.Control}"
+                                BorderThickness="{StaticResource Border.Hairline}" Background="{DynamicResource Brush.Bg.Raised}"
+                                CornerRadius="{StaticResource Radius.Control}" Margin="{StaticResource Gap.Inline}">
                             <TextBlock x:Name="Tick" Text="✓" Visibility="Hidden" HorizontalAlignment="Center" VerticalAlignment="Center"
-                                       Foreground="{DynamicResource Brush.Text.OnAccent}" />
+                                    Foreground="{DynamicResource Brush.Text.OnAccent}" />
                         </Border>
                         <ContentPresenter VerticalAlignment="Center" RecognizesAccessKey="True" />
                     </DockPanel>
@@ -567,8 +638,12 @@
                             <Setter TargetName="Tick" Property="Visibility" Value="Visible" />
                             <Setter TargetName="Box" Property="Background" Value="{DynamicResource Brush.Accent}" />
                         </Trigger>
-                        <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Box" Property="BorderBrush" Value="{DynamicResource Brush.Accent.Hover}" /></Trigger>
-                        <Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.5" /></Trigger>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Box" Property="BorderBrush" Value="{DynamicResource Brush.Accent.Hover}" />
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Opacity" Value="0.5" />
+                        </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>

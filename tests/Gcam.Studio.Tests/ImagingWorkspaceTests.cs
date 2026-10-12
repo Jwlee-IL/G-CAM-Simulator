@@ -159,7 +159,7 @@ public sealed class ImagingWorkspaceTests
         Assert.Equal(DecoderMethod.CrossCorrelation, vm.Imaging.Reconstruction);
         Assert.Equal(new[] { DecoderMethod.CrossCorrelation, DecoderMethod.Mlem }, vm.Imaging.Reconstructions.Select(r => r.Method));
         Assert.Equal("(decoded)", vm.Imaging.ReconstructionUnit);
-        Assert.Null(vm.Imaging.ReconstructionNote);
+        Assert.Null(vm.Imaging.ReconstructionHelp);
         await vm.StartCommand.ExecuteAsync(null);
         await vm.Imaging.WhenUpdated;
         Assert.Equal(DecoderMethod.CrossCorrelation, imaging.Requests[^1].Settings.Method);
@@ -183,8 +183,8 @@ public sealed class ImagingWorkspaceTests
         Assert.Single(vm.Imaging.Measurements.Items);           // same grid, same mm: kept
         Assert.NotNull(vm.Imaging.SweepResult);                  // the sweep cross-correlates whatever the method
         Assert.Equal("(MLEM λ)", vm.Imaging.ReconstructionUnit);
-        Assert.Contains($"{StudioMlem.Iterations} iterations", vm.Imaging.ReconstructionNote);
-        Assert.DoesNotContain("not measured", vm.Imaging.ReconstructionNote);
+        Assert.Contains($"{StudioMlem.Iterations} iterations", vm.Imaging.ReconstructionHelp);
+        Assert.DoesNotContain("not measured", vm.Imaging.ReconstructionHelp);
         Assert.EndsWith("· MLEM", vm.Imaging.ChannelSummary);
     }
 
@@ -194,11 +194,11 @@ public sealed class ImagingWorkspaceTests
         var vm = new MainViewModel(new Acquisition(), new Theme(), new FakeSpectrumService(), new Imaging()) { AmbientDoseRateMicroSvPerHour = 0 };
         vm.Imaging.Reconstruction = DecoderMethod.Mlem;
         vm.Imaging.FocalPlane = "1500";   // another decoder plane than the one the count was selected at
-        Assert.Contains("not measured", vm.Imaging.ReconstructionNote);
+        Assert.Contains("not measured", vm.Imaging.ReconstructionHelp);
         vm.Imaging.FocalPlane = "1000";
-        Assert.DoesNotContain("not measured", vm.Imaging.ReconstructionNote);
+        Assert.DoesNotContain("not measured", vm.Imaging.ReconstructionHelp);
         vm.Optics = new() { CellPitchMm = 1 };
-        Assert.Contains("not measured", vm.Imaging.ReconstructionNote);
+        Assert.Contains("not measured", vm.Imaging.ReconstructionHelp);
         // Before a worker view exists, All falls back to the acquisition's own image — a cross-correlation decode, so not under MLEM.
         await vm.StartCommand.ExecuteAsync(null);
         vm.Imaging.View = null;
@@ -250,7 +250,7 @@ public sealed class ImagingWorkspaceTests
         Assert.Equal(DecoderMethod.CrossCorrelation, vm.Imaging.DisplayedMethod);
         Assert.Equal("(decoded)", vm.Imaging.ReconstructionUnit);
         // (The summary line reads "Building channels…" while a request is in flight; its count label is checked after.)
-        Assert.NotNull(vm.Imaging.ReconstructionNote);               // the setting's caveats show at once
+        Assert.NotNull(vm.Imaging.ReconstructionHelp);               // the setting's caveats show at once
         imaging.Pending.SetResult(imaging.Latest!);
         await vm.Imaging.WhenUpdated;
         Assert.Equal(DecoderMethod.Mlem, vm.Imaging.DisplayedMethod);

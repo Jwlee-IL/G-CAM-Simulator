@@ -37,6 +37,7 @@ public sealed partial class MainViewModel
     public int ScopeEventCount => Snapshot?.Readout?.Records.Count ?? Snapshot?.Events.Count ?? 0;
     /// <summary>The inline one-liner of the readout section; <see cref="ReadoutAssumptions"/> is its help text.</summary>
     public string ReadoutModeSummary => IsPhysicalReadout ? "Experimental GAGG four-output readout" : "Direct crystal assignment";
+    public string ReadoutLocalisationHelp => ReadoutCostHelp.Build(ReadoutOffers, ReadoutPlans);
     public string ReadoutAssumptions => IsPhysicalReadout
         ? "Experimental GAGG · DPC 0.01 · sum trigger 50 keV-equivalent · specular 0.98 · virtual matched SiPMs · unlimited cells; no RC, skew or jitter. Legacy gain and chain are inactive. Ambient and BSR must be zero: their interaction records are unavailable. Each calibration line present in the scene is prepared separately."
         : "Direct crystal assignment; legacy detector gain and chain response.";
@@ -225,6 +226,8 @@ public sealed partial class MainViewModel
         if (IsPhysicalReadout) { Spectrum.PileUp = false; Imaging.Strip = false; Waveform.RateStudy = false; Waveform.Ideal = false; }
         PrepareReadoutCommand.NotifyCanExecuteChanged();
         DetectorWorkspace.Refresh();
-        Imaging.NotifyReadoutCost();
+        Spectrum.NotifyReadoutChanged();
+        OnPropertyChanged(nameof(ReadoutLocalisationHelp));
+        Imaging.NotifyPhysicalChannel();
     }
 }

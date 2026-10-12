@@ -158,21 +158,35 @@ public sealed class ReadoutRenderTests(ITestOutputHelper output)
         if (failure is not null) ExceptionDispatchInfo.Capture(failure).Throw();
     }
 
-    private static void Drain()
+    internal static void Drain()
     {
         var frame = new DispatcherFrame();
         Dispatcher.CurrentDispatcher.BeginInvoke(DispatcherPriority.Background, new Action(() => frame.Continue = false));
         Dispatcher.PushFrame(frame);
     }
 
-    private static FrameworkElement ProductionView(string view, string theme)
+    internal static FrameworkElement ProductionView(string view, string theme)
     {
         string repo = AppContext.BaseDirectory;
         while (!File.Exists(Path.Combine(repo, "Gcam.sln"))) repo = Directory.GetParent(repo)!.FullName;
         string xaml = File.ReadAllText(Path.Combine(repo, "src/Gcam.Studio/Views", view + ".xaml"));
         xaml = Regex.Replace(xaml, "x:Class=\"[^\"]+\"", "");
+        if (view == "MainWindow")
+        {
+            // Exercise the production modal resources and host bindings without constructing compiled child views,
+            // whose InitializeComponent requires Application resources. Full shell snapshots cover those views.
+            string header = xaml[..(xaml.IndexOf('>') + 1)];
+            string modalResources = Regex.Match(xaml, "<Window.Resources>[\\s\\S]*?</Window.Resources>").Value;
+            string host = Regex.Match(xaml, "<c:ModalHost[^>]*>").Value;
+            header = Regex.Replace(header.Replace("<Window", "<UserControl"), " (Title|Width|Height|MinWidth|MinHeight|WindowStartupLocation|FontFamily)=\"[^\"]+\"", "");
+            xaml = header + modalResources.Replace("Window.Resources", "UserControl.Resources") + host
+                + "<Button Content='Underlying input' AutomationProperties.AutomationId='UnderlyingInput' />"
+                + "</c:ModalHost></UserControl>";
+        }
         xaml = xaml.Replace("clr-namespace:Gcam.Studio.Controls", "clr-namespace:Gcam.Studio.Controls;assembly=Gcam.Studio")
-            .Replace("clr-namespace:Gcam.Studio.Converters", "clr-namespace:Gcam.Studio.Converters;assembly=Gcam.Studio");
+            .Replace("clr-namespace:Gcam.Studio.Converters", "clr-namespace:Gcam.Studio.Converters;assembly=Gcam.Studio")
+            .Replace("clr-namespace:Gcam.Studio.Views", "clr-namespace:Gcam.Studio.Views;assembly=Gcam.Studio")
+            .Replace("clr-namespace:Gcam.Studio.Services", "clr-namespace:Gcam.Studio.Services;assembly=Gcam.Studio");
         string dictionaries = string.Concat(new[] { $"Tokens.{theme}", "Metrics", "Typography", "Controls" }
             .Select(f => $"<ResourceDictionary Source='/Gcam.Studio;component/Themes/{f}.xaml' />"));
         string resources = $"<ResourceDictionary.MergedDictionaries>{dictionaries}</ResourceDictionary.MergedDictionaries>";
@@ -280,7 +294,7 @@ public sealed class ReadoutRenderTests(ITestOutputHelper output)
                     Capture("ReadoutDetectorView", model.DetectorWorkspace, $"{name}-detector-{tab}", theme, size, tab == ReadoutDetectorTab.Anger || tab == ReadoutDetectorTab.Sipm);
                 }
                 Capture("ReadoutWaveformView", model.Waveform, $"{name}-four-lanes", theme, size);
-                Capture("ImagingOptionsPanel", model.Imaging, $"{name}-imaging-cost", theme, size);
+                Capture("ImagingOptionsPanel", model.Imaging, $"{name}-imaging-channel", theme, size);
                 Capture("ReadoutPanel", model, $"{name}-ready", theme, size);
                 Capture("ReadoutPanel", pending, $"{name}-pending", theme, size);
                 pending.IsPreparingReadout = true; pending.ReadoutProgressText = $"661.7 keV · Transporting independent calibration flood… · 1,000 / {n * n * 2000:N0} histories (0 %)";
@@ -392,7 +406,7 @@ public sealed class ReadoutRenderTests(ITestOutputHelper output)
     private static string AutomationPeerStatus(ReadoutMapView map)
         => System.Windows.Automation.Peers.UIElementAutomationPeer.CreatePeerForElement(map).GetItemStatus();
 
-    private static IEnumerable<DependencyObject> Descendants(DependencyObject node)
+    internal static IEnumerable<DependencyObject> Descendants(DependencyObject node)
     { for(int i=0;i<VisualTreeHelper.GetChildrenCount(node);i++) { var c=VisualTreeHelper.GetChild(node,i); yield return c; foreach(var d in Descendants(c)) yield return d; } }
     private sealed class Theme : IThemeService { public AppTheme Current => AppTheme.Dark; public void Apply(AppTheme theme) { } }
     private sealed class RefusingAcquisition : IAcquisitionService

@@ -154,6 +154,7 @@ public sealed class ReadoutScenarioTests(ITestOutputHelper output)
         var expected = Counts(ui.Text("Readout.Counts"));
         Assert.Equal(expected.Assigned, ui.Counts);
         ui.Invoke("ResetAcquisition");
+            ui.ConfirmReset(true);
         ui.Invoke("StartAcquisition");
         StudioWindow.WaitUntil(() => ui.RunState == "Acquiring" && ui.Counts > 0, TimeSpan.FromSeconds(10), "live measured counts");
         ui.Invoke("StopAcquisition");
@@ -209,23 +210,15 @@ public sealed class ReadoutScenarioTests(ITestOutputHelper output)
     });
 
     [DesktopFact]
-    public void WideCostCard_ShowsNeutralFAndTheDirectBiasExplanation() => Scenario.Run(nameof(WideCostCard_ShowsNeutralFAndTheDirectBiasExplanation), output, (ui, record) =>
+    public void WideLocalisationHelp_ShowsRecordScopeAndDirectBias() => Scenario.Run(nameof(WideLocalisationHelp_ShowsRecordScopeAndDirectBias), output, (ui, record) =>
     {
         SelectHead(ui, "Wide FOV");
-        ui.WaitForDescription("Readout.Lines", TimeSpan.FromSeconds(5), "8,000 histories per crystal");
-        ui.Invoke("Readout.BenchmarkWindow");
-        ui.Workspace("Imaging", "FloodView");
-        ui.Toggle("Imaging.FloodCorrection");
-        StudioWindow.WaitUntil(() => ui.Text("Imaging.ReadoutCostStatus").StartsWith("Imaging cost unmeasured", StringComparison.Ordinal),
-            TimeSpan.FromSeconds(10), "reference-only cost for the actual source scope");
-        string card = ui.Text("Imaging.ReadoutCostCard");
-        Assert.Contains("F is an equal-fluence MSE ratio, not a time factor.", card); // stays inline beside F
-        string help = ui.Help("Imaging.ReadoutCostHelp");                              // explanation moved behind "?"
-        Assert.Contains("source emits multiple lines", help);
-        Assert.Contains("rate not measured", help);
-        Assert.Contains("F below 1 at 4,000 counts, isolated", help);
-        Assert.Contains(Broken ? "general Anger advantage is established" : "it does not establish a general Anger advantage", help);
-        record.Step("Wide 661.7 keV: offered at 8 k; benchmark reference only for this source scope; F wording and the data's direct-bias explanation, no colour badge.");
+        string help = ui.Help("Readout.LocalisationHelp");
+        Assert.Contains(Broken ? "wrong benchmark wording" : "F is an equal-fluence MSE ratio, not a time factor.", help);
+        Assert.Contains("F below 1 is chiefly direct-reference bias", help);
+        Assert.Contains("Benchmark: one mono-line point source", help);
+        Assert.False(ui.Exists("Imaging.ReadoutCostSection"));
+        record.Step("Experimental localisation help carries the record scope, module F range and direct-bias explanation.");
     });
 
     [DesktopFact(longRunning: true)]
@@ -257,6 +250,7 @@ public sealed class ReadoutScenarioTests(ITestOutputHelper output)
         Assert.Equal("Completed", ui.Acquire(TimeSpan.FromSeconds(120)));
         Counts(ui.Text("Readout.Counts"));
         ui.Invoke("ResetAcquisition");
+            ui.ConfirmReset(true);
         var watch = System.Diagnostics.Stopwatch.StartNew();
         ui.Invoke("Readout.Prepare");
         StudioWindow.WaitUntil(() => ui.Text("Readout.State").StartsWith("Ready", StringComparison.Ordinal), TimeSpan.FromSeconds(30), "session hit");
@@ -307,6 +301,7 @@ public sealed class ReadoutScenarioTests(ITestOutputHelper output)
         Assert.Equal("Completed", ui.Acquire(TimeSpan.FromSeconds(120)));
         Counts(ui.Text("Readout.Counts"));
         ui.Invoke("ResetAcquisition");
+            ui.ConfirmReset(true);
         var cacheWatch = System.Diagnostics.Stopwatch.StartNew();
         ui.Invoke("Readout.Prepare");
         StudioWindow.WaitUntil(() => ui.Text("Readout.State").StartsWith("Ready", StringComparison.Ordinal), TimeSpan.FromSeconds(30), "1332.5 keV session hit");
@@ -327,7 +322,7 @@ public sealed class ReadoutScenarioTests(ITestOutputHelper output)
         // Key verdict: the matching module inherits High's pinned 64 k budget (a broken verdict expects the superseded 32 k).
         Assert.Contains(Broken ? "32,000 histories per crystal" : "64,000 histories per crystal", inherited);
         ui.Workspace("Imaging", "FloodView");
-        Assert.Contains("Imaging cost unmeasured for this configuration", ui.Text("Imaging.ReadoutCostStatus"));
+        Assert.Contains("Benchmark reference only", ui.Help("Readout.LocalisationHelp"));
         ui.SetText("Optics.Pixels", "20", "SourceY");
         ui.SetText("Optics.PixelPitch", "0.5", "SourceY");
         ui.WaitForDescription("Readout.Lines", TimeSpan.FromSeconds(5), "experimental, unvalidated");

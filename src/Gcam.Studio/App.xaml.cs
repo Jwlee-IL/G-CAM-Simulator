@@ -25,6 +25,7 @@ public partial class App : Application
             .AddSingleton<IFocusSweepService, FocusSweepService>()
             .AddSingleton<ThemeService>()
             .AddSingleton<IThemeService>(sp => sp.GetRequiredService<ThemeService>())
+            .AddSingleton<IConfirmationService, ModalService>()
             .AddSingleton<MainViewModel>()
             .AddSingleton<MainWindow>()
             .BuildServiceProvider();

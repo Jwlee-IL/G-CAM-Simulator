@@ -60,7 +60,8 @@ public sealed partial class ImagingWorkspaceViewModel(MainViewModel shared, IIma
         ? "Displayed clipped strip values per crystal; the net count is reported separately."
         : "Detected events per crystal; each list-mode event contributes one count.";
     /// <summary>Roles of the published images, independent of a pending strip/method selection.</summary>
-    public string? StripNote => Result?.StripCount is null ? null
+    public string UncertaintyHelp => "1σ includes counting and calibration uncertainty, not scalar-model error or detection confidence.";
+    public string? StripHelp => Result?.StripCount is null ? null
         : (DisplayedMethod == DecoderMethod.Mlem
             ? "Display: clipped strip flood. MLEM: raw low with the higher-line background. "
             : "Display: clipped strip flood. Cross-correlation: signed difference. ") +
@@ -68,14 +69,21 @@ public sealed partial class ImagingWorkspaceViewModel(MainViewModel shared, IIma
           "Focus sweep: clipped flood.";
     /// <summary>The MLEM caveats, shown while MLEM is selected: the low-count side effect of the selected iteration count,
     /// whether the count was measured for the current optics, and the missing background term.</summary>
-    public string? ReconstructionNote => Reconstruction != DecoderMethod.Mlem ? null
+    public string? ReconstructionHelp => Reconstruction != DecoderMethod.Mlem ? null
         : $"{StudioMlem.Iterations} iterations, chosen for pair resolution at the default optics. Below ~1000 counts a " +
           $"single source often shows a false second peak (≈{StudioMlem.LowCountSecondPeakShare:P0} of 250-count frames at quarter height)." +
           (StudioMlem.IsMeasured(ProjectionOptics, FocalDistanceMm) ? "" : " Iteration count not measured for these optics.") +
           " No background term: an ambient field pulls the image." + (Strip ? " Strip: the higher lines enter as a known background." : "");
+    public string? StripNote => StripHelp is null ? null
+        : (DisplayedMethod == DecoderMethod.Mlem
+            ? "Display: clipped strip flood. MLEM: raw low with the higher-line background."
+            : "Display: clipped strip flood. Cross-correlation: signed difference.") + " Net count: scalar model. Focus sweep: clipped flood.";
+    public string? ReconstructionNote => ReconstructionHelp is null ? null
+        : "MLEM: low-count false peaks; no ambient background term." +
+          (StudioMlem.IsMeasured(ProjectionOptics, FocalDistanceMm) ? "" : " Iteration count not measured for these optics.");
     partial void OnReconstructionChanged(DecoderMethod value)
     {
-        foreach (string name in new[] { nameof(ReconstructionUnit), nameof(ReconstructionNote), nameof(ChannelSummary) }) OnPropertyChanged(name);
+        foreach (string name in new[] { nameof(ReconstructionUnit), nameof(ReconstructionHelp), nameof(ReconstructionNote), nameof(ChannelSummary) }) OnPropertyChanged(name);
         NotifyResult();
         RefreshChannels();
     }
@@ -99,7 +107,7 @@ public sealed partial class ImagingWorkspaceViewModel(MainViewModel shared, IIma
         OnPropertyChanged(nameof(Geometry));
         OnPropertyChanged(nameof(GeometryText));
         OnPropertyChanged(nameof(FocalSummary));
-        OnPropertyChanged(nameof(ReconstructionNote));
+        OnPropertyChanged(nameof(ReconstructionHelp)); OnPropertyChanged(nameof(ReconstructionNote));
         Shared.NotifyFocalGeometryChanged();
         UseAsFocusCommand.NotifyCanExecuteChanged();
     }
@@ -138,7 +146,7 @@ public sealed partial class ImagingWorkspaceViewModel(MainViewModel shared, IIma
         InvalidateSweep();
         NotifyResult();
     }
-    partial void OnStripChanged(bool value) { if (value && Shared.IsPhysicalReadout) { Strip = false; return; } InvalidateSweep(); OnPropertyChanged(nameof(ReconstructionNote)); RefreshChannels(); }
+    partial void OnStripChanged(bool value) { if (value && Shared.IsPhysicalReadout) { Strip = false; return; } InvalidateSweep(); OnPropertyChanged(nameof(ReconstructionHelp)); OnPropertyChanged(nameof(ReconstructionNote)); RefreshChannels(); }
     partial void OnIsProcessingChanged(bool value) { OnPropertyChanged(nameof(Summary)); SweepCommand.NotifyCanExecuteChanged(); }
 
     internal void Begin(IReadOnlyList<SceneSource> scene, OpticsSettings optics)
@@ -175,7 +183,7 @@ public sealed partial class ImagingWorkspaceViewModel(MainViewModel shared, IIma
     internal void RefreshChannels()
     {
         OnPropertyChanged(nameof(ChannelSummary)); // window N and strip change here
-        NotifyReadoutCost();
+        NotifyPhysicalChannel();
         _revision++;
         if (_updating) return; // A running preparation keeps its caches; one latest request follows it.
         _refresh ??= new CancellationTokenSource();
@@ -220,9 +228,9 @@ public sealed partial class ImagingWorkspaceViewModel(MainViewModel shared, IIma
         SweepCommand.NotifyCanExecuteChanged();
         Measurements.Refresh(Result, ReconstructionUnit);
         foreach (string name in new[] { nameof(SelectedChannel), nameof(Result), nameof(Peaks), nameof(PeakText), nameof(Summary), nameof(ChannelSummary),
-                     nameof(DisplayedMethod), nameof(ReconstructionUnit), nameof(FloodUnit), nameof(FloodCaption), nameof(FloodHelp), nameof(StripNote),
+                     nameof(DisplayedMethod), nameof(ReconstructionUnit), nameof(FloodUnit), nameof(FloodCaption), nameof(FloodHelp), nameof(StripNote), nameof(StripHelp),
                      nameof(ChannelUnavailable) })
             OnPropertyChanged(name);
-        NotifyReadoutCost();
+        NotifyPhysicalChannel();
     }
 }

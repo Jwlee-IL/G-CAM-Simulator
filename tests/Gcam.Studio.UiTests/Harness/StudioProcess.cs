@@ -90,6 +90,7 @@ public sealed class StudioProcess : IDisposable
         {
             if (!Process.HasExited)
             {
+                new StudioWindow(MainWindow(TimeSpan.FromSeconds(5))).CloseModalLayer();
                 Process.CloseMainWindow();
                 if (!Process.WaitForExit(5000))
                 {

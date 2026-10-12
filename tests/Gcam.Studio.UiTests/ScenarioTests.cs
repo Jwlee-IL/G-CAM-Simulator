@@ -65,8 +65,14 @@ public sealed class ScenarioTests(ITestOutputHelper output)
             long continued = ui.Counts;
             Assert.True(continued > kept, $"Continue accumulated: {continued} vs {kept}");
 
-            // Reset discards and unlocks.
+            // Cancel keeps the frozen acquisition and its input lock; a second deliberate confirmation discards.
             ui.Invoke("ResetAcquisition");
+            ui.ConfirmReset(false);
+            Assert.Equal(continued, ui.Counts);
+            Assert.Equal("Stopped", ui.RunState);
+            Assert.False(ui.IsEnabled("SourceX"));
+            ui.Invoke("ResetAcquisition");
+            ui.ConfirmReset(true);
             StudioWindow.WaitUntil(() => ui.RunState == "Empty", TimeSpan.FromSeconds(5), "acquisition reset");
             Assert.Equal("Ready", ui.Text("StatusText"));
             Assert.True(ui.IsEnabled("AddSource"));
@@ -205,6 +211,7 @@ public sealed class ScenarioTests(ITestOutputHelper output)
             Assert.Equal(("0", "0"), (ui.Value("SourceX"), ui.Value("SourceY")));
 
             ui.Invoke("ResetAcquisition");
+            ui.ConfirmReset(true);
             StudioWindow.WaitUntil(() => ui.RunState == "Empty", TimeSpan.FromSeconds(5), "acquisition reset");
             // The position of the earlier drag scenario (21.4, 16.0) mm, now typed (see AN-11 for its 1.43 mm result).
             const double x = 21.4, y = 16.0;

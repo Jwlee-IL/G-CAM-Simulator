@@ -25,6 +25,22 @@ public sealed class StudioWindow(AutomationElement window)
             : throw new SelectorMatchException(automationId, matches.Count);
     }
 
+    /// <summary>The in-window modal layer, in this window's single UIA tree.</summary>
+    public AutomationElement ModalLayer() => ById("Modal.Layer");
+
+    public void ConfirmReset(bool confirm)
+    {
+        WaitUntil(() => Exists("Reset.Message"), TimeSpan.FromSeconds(5), "reset confirmation opened");
+        _ = ModalLayer();
+        Invoke(confirm ? "Reset.Discard" : "Modal.Cancel");
+        WaitUntil(() => !Exists("Reset.Message"), TimeSpan.FromSeconds(5), "reset confirmation closed");
+    }
+
+    public void CloseModalLayer()
+    {
+        if (Exists("Modal.Cancel")) Invoke("Modal.Cancel");
+    }
+
     public bool Exists(string automationId) =>
         Element.FindFirst(TreeScope.Descendants, new PropertyCondition(AutomationElement.AutomationIdProperty, automationId)) is not null;
 

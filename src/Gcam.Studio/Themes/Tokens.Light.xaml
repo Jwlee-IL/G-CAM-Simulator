@@ -57,4 +57,5 @@
     <SolidColorBrush x:Key="Brush.Plot.BandEdge" Color="{StaticResource Color.Plot.BandEdge}" />
     <Color x:Key="Color.Plot.Grid">#CCD4DC</Color>
     <SolidColorBrush x:Key="Brush.Plot.Grid" Color="{StaticResource Color.Plot.Grid}" />
+    <SolidColorBrush x:Key="Brush.Modal.Scrim" Color="#99000000" />
 </ResourceDictionary>

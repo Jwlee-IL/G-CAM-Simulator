@@ -79,7 +79,7 @@ public sealed partial class PlotViewRenderTests
                     c => AutomationProperties.GetAutomationId(c) is "Chain.Pending" or "Chain.Acquired");
                 var note = Assert.Single(Descendants(root).OfType<TextBlock>(),
                     c => AutomationProperties.GetAutomationId(c) == "Waveform.Note");
-                Assert.Equal(model.Waveform.View.Note, note.Text);
+                Assert.Equal(model.Waveform.Note, note.Text);
                 root.UpdateLayout();
                 var bitmap = new RenderTargetBitmap((int)size.Width, (int)size.Height, 96, 96, PixelFormats.Pbgra32);
                 bitmap.Render(root);

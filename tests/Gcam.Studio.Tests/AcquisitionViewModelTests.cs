@@ -79,14 +79,14 @@ public sealed class AcquisitionViewModelTests
     }
 
     private static MainViewModel Model(Service service, double liveTime = 60) =>
-        new(service, new Theme(), new FakeSpectrumService()) { LiveTimeS = liveTime, SeedText = "42", AmbientDoseRateMicroSvPerHour = 0 };
+        new(service, new Theme(), new FakeSpectrumService(), confirmation: new FakeConfirmation()) { LiveTimeS = liveTime, SeedText = "42", AmbientDoseRateMicroSvPerHour = 0 };
 
     [Fact]
     public async Task Start_CapturesDetectorInputs_AndLocksThemWhileDataExist()
     {
         var acquisition = new Service();
         var spectrum = new FakeSpectrumService();
-        var vm = new MainViewModel(acquisition, new Theme(), spectrum)
+        var vm = new MainViewModel(acquisition, new Theme(), spectrum, confirmation: new FakeConfirmation())
             { LiveTimeS = 5, GainSigmaPercent = 4, GainSeed = 7, BackgroundToSignalRatio = 1, SeedText = "42", AmbientDoseRateMicroSvPerHour = 0 };
         var run = vm.StartCommand.ExecuteAsync(null);
         Assert.Equal(0.04, acquisition.Detector!.GainSigma);
@@ -220,7 +220,7 @@ public sealed class AcquisitionViewModelTests
     public async Task Reset_DiscardsData_UnlocksInputs_NextStartIsANewAcquisitionWithANewSeed()
     {
         var service = new Service();
-        var vm = new MainViewModel(service, new Theme(), new FakeSpectrumService()) { LiveTimeS = 5, AmbientDoseRateMicroSvPerHour = 0 };
+        var vm = new MainViewModel(service, new Theme(), new FakeSpectrumService(), confirmation: new FakeConfirmation()) { LiveTimeS = 5, AmbientDoseRateMicroSvPerHour = 0 };
         vm.Imaging.Measurements.AddCommand.Execute(new MeasurementDraft(ImagePane.Flood, MeasurementKind.Roi,
             [new Vec2(-2, -2), new Vec2(2, 2)]));
         Assert.False(vm.ResetCommand.CanExecute(null));
@@ -318,7 +318,7 @@ public sealed class AcquisitionViewModelTests
     {
         var acquisition = new Service();
         var spectrum = new FakeSpectrumService();
-        var vm = new MainViewModel(acquisition, new Theme(), spectrum) { LiveTimeS = 5, SeedText = "1", AmbientDoseRateMicroSvPerHour = 0 };
+        var vm = new MainViewModel(acquisition, new Theme(), spectrum, confirmation: new FakeConfirmation()) { LiveTimeS = 5, SeedText = "1", AmbientDoseRateMicroSvPerHour = 0 };
         vm.SelectWorkspaceCommand.Execute("1");
         var run = vm.StartCommand.ExecuteAsync(null);
         acquisition.Session.AdvanceWallTime(0.25);

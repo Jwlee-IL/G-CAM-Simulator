@@ -182,13 +182,12 @@ public sealed class ReadoutMapView : FrameworkElement
     private static Point Node(ReadoutCircuit circuit, int n, int sx, int sy)
     {
         string name = circuit.Nodes[n];
-        double cellX = 1.0 / (sx + 3), cellY = 1.0 / (sy + 3);
         if (name.StartsWith('S'))
         {
             var xy = name[1..].Split('_');
-            return new((int.Parse(xy[0], CultureInfo.InvariantCulture) + 1.5) * cellX, (int.Parse(xy[1], CultureInfo.InvariantCulture) + 1.5) * cellY);
+            return new(ReadoutSensorLayout.Centre(int.Parse(xy[0], CultureInfo.InvariantCulture), sx), ReadoutSensorLayout.Centre(int.Parse(xy[1], CultureInfo.InvariantCulture), sy));
         }
-        if (name.StartsWith('L') || name.StartsWith('R')) return new(name[0] == 'L' ? .025 : .975, (int.Parse(name[1..], CultureInfo.InvariantCulture) + 1.5) * cellY);
+        if (name.StartsWith('L') || name.StartsWith('R')) return new(name[0] == 'L' ? .025 : .975, ReadoutSensorLayout.Centre(int.Parse(name[1..], CultureInfo.InvariantCulture), sy));
         int c = "ABCD".IndexOf(name[^1]);
         return new(c % 2 == 0 ? .025 : .975, c < 2 ? .025 : .975);
     }
@@ -196,7 +195,7 @@ public sealed class ReadoutMapView : FrameworkElement
     private void BuildCircuit(ReadoutPreparation p, ReadoutCircuit circuit)
     {
         var (sx, sy) = SensorGrid(p, circuit);
-        double cellX = 1.0 / (sx + 3), cellY = 1.0 / (sy + 3);
+        double cellX = ReadoutSensorLayout.CellSize(sx), cellY = ReadoutSensorLayout.CellSize(sy);
         // Active width as a fraction of the actual sensor pitch (virtual matched sensors: pitch − gap).
         double pitch = p.Module?.SensorPitchMm ?? 0, fraction = pitch > 0 ? Math.Clamp(p.SensorActiveWidthMm / pitch, 0, 1) : 1;
         var cells = new StreamGeometry(); var active = new StreamGeometry(); var lines = new StreamGeometry();

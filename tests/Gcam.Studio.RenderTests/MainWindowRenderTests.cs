@@ -21,6 +21,41 @@ namespace Gcam.Studio.RenderTests;
 
 public sealed partial class PlotViewRenderTests
 {
+    private void RenderResetConfirmation(string theme)
+    {
+        var confirmation = new Gcam.Studio.Services.ModalService();
+        var model = new MainViewModel(new FixtureAcquisition(), new FixtureTheme(Enum.Parse<AppTheme>(theme)), new FixtureSpectrum(), confirmation: confirmation)
+            { SeedText = "12345", AmbientDoseRateMicroSvPerHour = 0 };
+        model.StartCommand.ExecuteAsync(null).GetAwaiter().GetResult();
+        var reset = model.ResetCommand.ExecuteAsync(null);
+        Assert.False(reset.IsCompleted);
+        Assert.IsType<Gcam.Studio.Services.ConfirmationRequest>(confirmation.ActiveContent);
+        foreach (var size in new[] { new Size(1280, 800), new Size(1440, 900) })
+        {
+            var (root, content) = DetachMainWindow(model, size);
+            Dispatcher.CurrentDispatcher.Invoke(() => { }, DispatcherPriority.ContextIdle);
+            root.UpdateLayout();
+            var layer = Descendants(root).OfType<ModalLayer>().Single();
+            Assert.Equal(Visibility.Visible, layer.Visibility);
+            var cancel = Descendants(layer).OfType<Button>().Single(b => AutomationProperties.GetAutomationId(b) == "Modal.Cancel");
+            Assert.True(cancel.IsDefault);
+            var message = Descendants(layer).OfType<TextBlock>().Single(b => AutomationProperties.GetAutomationId(b) == "Reset.Message");
+            Assert.Contains("live s", message.Text);
+            Assert.Contains("counts)? Inputs unlock", message.Text);
+            var bitmap = new RenderTargetBitmap((int)size.Width, (int)size.Height, 96, 96, PixelFormats.Pbgra32);
+            bitmap.Render(root);
+            var encoder = new PngBitmapEncoder(); encoder.Frames.Add(BitmapFrame.Create(bitmap));
+            string directory = SnapshotDirectory("studio-render"); Directory.CreateDirectory(directory);
+            string path = Path.Combine(directory, $"reset-confirmation-{theme.ToLowerInvariant()}-{size.Width:0}x{size.Height:0}.png");
+            using (var file = File.Create(path)) encoder.Save(file);
+            output.WriteLine(path);
+            content.DataContext = null;
+        }
+        confirmation.CancelCommand.Execute(null);
+        reset.GetAwaiter().GetResult();
+        Assert.NotNull(model.Snapshot);
+    }
+
     private void RenderWindows(string theme, bool mixed = false, bool? opticsExpanded = null, bool crowded = false, bool mlem = false)
     {
         // Share the existing STA/Application lifetime: WPF permits only one Application per AppDomain.
