@@ -21,7 +21,7 @@ present at `85b2ed1`). The conventional Anger readout model (TODO-19) continues 
 | 7 | TODO-11 Detector workspace, depth (3D) / rangefinder | [PLAN.Studio.Detector](PLAN.Studio.Detector.md) | **done** 2026-10-02 |
 | 7b | TODO-24 acquisition control Start / Stop / Reset (author 2026-10-02) | [PLAN.Studio.AcquisitionControl](PLAN.Studio.AcquisitionControl.md) | **done** 2026-10-02 |
 | 7c | TODO-22 final desktop pass (UI tests, survey, 16 ms gate, README screenshot) | — | **done** 2026-10-02 |
-| 7d | TODO-19 conventional Anger readout (SiPM pitch, crosstalk) — moved before the deletion, author 2026-10-02 | [PLAN.Physics.RigReadout](../PLAN.Physics.RigReadout.md) | draft; waiting for the author's rig details |
+| 7d | TODO-19 conventional Anger readout (SiPM pitch, crosstalk) — moved before the deletion, author 2026-10-02 | [PLAN.Physics.RigReadout](PLAN.Physics.RigReadout.md) | draft; waiting for the author's rig details |
 | 8 | TODO-12 delete `Gcam.Wpf` (README screenshot done in TODO-22) | [PLAN.Studio.WpfRemoval](PLAN.Studio.WpfRemoval.md) | **done** 2026-10-02 (before TODO-19, author) |
 
 **Order of polish and testing (author, 2026-10-01).** UI polish is the focus; **desktop UI tests run last**, once
