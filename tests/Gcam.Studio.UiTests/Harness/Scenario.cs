@@ -16,6 +16,7 @@ public static class Scenario
     public static void Run(string name, ITestOutputHelper output, Action<StudioWindow, RunRecord> body)
     {
         var record = new RunRecord(name);
+        using var pollingLog = PollingWait.Record(record.Step);
         StudioProcess? app = null;
         AutomationElement? window = null;
         string result = "failed";

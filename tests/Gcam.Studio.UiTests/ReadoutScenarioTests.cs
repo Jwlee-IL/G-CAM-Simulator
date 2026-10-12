@@ -76,6 +76,23 @@ public sealed class ReadoutScenarioTests(ITestOutputHelper output)
         Assert.All(PrepareWait.Values, w => Assert.True(w >= TimeSpan.FromSeconds(90)));
     }
 
+    [Fact]
+    public void DesktopGate_LongPreparationRequiresBothExplicitOptIns()
+    {
+        foreach (bool desktop in new[] { false, true })
+        foreach (bool longOptIn in new[] { false, true })
+        {
+            string? reason = DesktopFactAttribute.SkipReason(desktop, longOptIn, longRunning: true);
+            if (desktop && longOptIn) Assert.Null(reason);
+            else
+            {
+                Assert.Contains("GCAM_UI_TESTS=1 AND GCAM_UI_LONG_TESTS=1", reason);
+                Assert.Contains("64 k preparation, ≈ 45 min, ≈ 6 GiB", reason);
+            }
+            Assert.Equal(desktop, DesktopFactAttribute.SkipReason(desktop, longOptIn, longRunning: false) is null);
+        }
+    }
+
     [DesktopFact]
     public void RefusedLineAndField_ExplainWithoutZeroing() => Scenario.Run(nameof(RefusedLineAndField_ExplainWithoutZeroing), output, (ui, record) =>
     {
@@ -211,7 +228,7 @@ public sealed class ReadoutScenarioTests(ITestOutputHelper output)
         record.Step("Wide 661.7 keV: offered at 8 k; benchmark reference only for this source scope; F wording and the data's direct-bias explanation, no colour badge.");
     });
 
-    [DesktopFact]
+    [DesktopFact(longRunning: true)]
     public void HighResCold_ProgressTabsCornersAndSessionHit_Bundled() => Scenario.Run(nameof(HighResCold_ProgressTabsCornersAndSessionHit_Bundled), output, (ui, record) =>
     {
         // One cold 64 k High-res preparation (≈ 45 min, ≈ 6 GiB) bundles every High check; later steps reuse the session.
@@ -244,6 +261,56 @@ public sealed class ReadoutScenarioTests(ITestOutputHelper output)
         ui.Invoke("Readout.Prepare");
         StudioWindow.WaitUntil(() => ui.Text("Readout.State").StartsWith("Ready", StringComparison.Ordinal), TimeSpan.FromSeconds(30), "session hit");
         record.Step($"High-res 64 k cold preparation with streamed progress; 44 × 44 module captured; acquisition conserved; session hit in {watch.Elapsed.TotalSeconds:0.0} s.");
+    });
+
+    [DesktopFact]
+    public void HighResCoLine_ProgressTabsSensitivityAndSessionHit() => Scenario.Run(nameof(HighResCoLine_ProgressTabsSensitivityAndSessionHit), output, (ui, record) =>
+    {
+        SelectHead(ui, "High-res");
+        // Replace the default Cs source: do not add it to a two-line bank that would prepare the 64 k line.
+        ui.Choose("SourceIsotope", "Co-60");
+        Assert.Equal("Co-60", ui.SelectedItem("SourceIsotope"));
+        ui.SetText("Acquisition.AmbientDose", "0", "SourceY");
+        ui.SetText("Readout.WindowHigh", "1532.375", "Readout.WindowLow");
+        ui.SetText("Readout.WindowLow", "1132.625", "Readout.WindowHigh");
+        Assert.Equal("Window line 1332.5 keV", ui.Text("Readout.WindowLine"));
+        string lines = ui.WaitForDescription("Readout.Lines", TimeSpan.FromSeconds(5), "1332.5 keV · Offered (experimental) · in scene");
+        Assert.DoesNotContain("661.7 keV · Offered (experimental) · in scene", lines);
+        Assert.Contains("2,000 histories per crystal", ui.Help("Readout.LineHelp.1332.5"));
+        var prepareWatch = System.Diagnostics.Stopwatch.StartNew();
+        var wait = PrepareWait[("High-res", 1332.5)];
+        ui.Invoke("Readout.Prepare");
+        StudioWindow.WaitUntil(() => ui.Text("Readout.State").Contains("histories", StringComparison.Ordinal)
+            || ui.Text("Readout.State").StartsWith("Failed", StringComparison.Ordinal), wait, "1332.5 keV streamed flood progress");
+        Assert.Contains("histories", ui.Text("Readout.State"));
+        Assert.True(ui.Bounds("Readout.Progress").Height > 0);
+        var remaining = wait - prepareWatch.Elapsed;
+        Assert.True(remaining > TimeSpan.Zero, "history progress arrived within the measured preparation wait");
+        StudioWindow.WaitUntil(() => ui.Text("Readout.State").StartsWith("Ready", StringComparison.Ordinal)
+            || ui.Text("Readout.State").StartsWith("Failed", StringComparison.Ordinal), remaining, "High-res 1332.5 keV preparation");
+        Assert.StartsWith("Ready", ui.Text("Readout.State"));
+        Assert.Contains("1332.5 keV", ui.Text("Readout.State"));
+        Assert.DoesNotContain("661.7 keV", ui.Text("Readout.State"));
+        Assert.True(ui.EnsureForeground(), "owned Studio window restored to the foreground");
+        ui.Workspace("Detector", "Readout.Map");
+        foreach (string tab in new[] { "Sipm", "Anger", "Calibration", "Diagnostics" }) ui.Select("Readout." + tab + "Tab");
+        ui.Select("Readout.CalibrationTab");
+        Assert.Contains("mean sensitivity map (32 seeds)", ui.Text("Readout.SensitivityCaption"));
+        Assert.True(ui.Bounds("Readout.SensitivityMap").Height > 0);
+        Assert.Contains("never flood-correction weights", ui.Help("Readout.SensitivityHelp"));
+        ui.Select("Readout.AngerTab");
+        // This scenario has its own deliberately corrupted key verdict.
+        Assert.Equal(Broken ? (44, 44, .5) : (44, 44, .4), Module(ui.Status("Readout.Map")));
+        Assert.Contains("line 1332.5 keV", ui.Status("Readout.Map"));
+        Assert.Contains("1936 calibration peaks", ui.Status("Readout.Map"));
+        ui.SetText("AcquisitionLiveTime", "2", "SourceY");
+        Assert.Equal("Completed", ui.Acquire(TimeSpan.FromSeconds(120)));
+        Counts(ui.Text("Readout.Counts"));
+        ui.Invoke("ResetAcquisition");
+        var cacheWatch = System.Diagnostics.Stopwatch.StartNew();
+        ui.Invoke("Readout.Prepare");
+        StudioWindow.WaitUntil(() => ui.Text("Readout.State").StartsWith("Ready", StringComparison.Ordinal), TimeSpan.FromSeconds(30), "1332.5 keV session hit");
+        record.Step($"High-res 1332.5 keV only, pinned 2 k budget: history progress, tabs, mean sensitivity map and help, captured 44 × 44 module and 1936 peaks, conserved acquisition; session hit in {cacheWatch.Elapsed.TotalSeconds:0.0} s.");
     });
 
     [DesktopFact]

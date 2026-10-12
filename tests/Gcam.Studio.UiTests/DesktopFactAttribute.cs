@@ -9,9 +9,17 @@ public sealed class DesktopFactAttribute : FactAttribute
 {
     public const string OptInVariable = "GCAM_UI_TESTS";
 
-    public DesktopFactAttribute()
+    public const string LongOptInVariable = "GCAM_UI_LONG_TESTS";
+
+    public DesktopFactAttribute(bool longRunning = false)
     {
-        if (Environment.GetEnvironmentVariable(OptInVariable) != "1")
-            Skip = $"desktop UI test: set {OptInVariable}=1 to run (takes over mouse and focus)";
+        Skip = SkipReason(Environment.GetEnvironmentVariable(OptInVariable) == "1",
+            Environment.GetEnvironmentVariable(LongOptInVariable) == "1", longRunning);
+    }
+    internal static string? SkipReason(bool desktop, bool longOptIn, bool longRunning)
+    {
+        if (longRunning && !(desktop && longOptIn))
+            return $"long desktop UI test: set {OptInVariable}=1 AND {LongOptInVariable}=1; one cold 64 k preparation, ≈ 45 min, ≈ 6 GiB (takes over mouse and focus)";
+        return desktop ? null : $"desktop UI test: set {OptInVariable}=1 to run (takes over mouse and focus)";
     }
 }

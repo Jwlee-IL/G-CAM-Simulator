@@ -297,3 +297,130 @@ Write-command inventory for this fix turn:
 10. Python wrote this dated section / authorized wording corrections, and refreshed final source hashes / LF audits.
 
 APPROVAL REQUESTS: none. No deletion, repository Git state change, process stop, install, upload or desktop action.
+
+
+## Desktop split (2026-10-12)
+
+The cold HighResCold_ProgressTabsCornersAndSessionHit_Bundled scenario now uses
+DesktopFact(longRunning: true): it requires BOTH GCAM_UI_TESTS=1 and GCAM_UI_LONG_TESTS=1.
+Its skip reason names the one cold 64 k preparation (approximately 45 minutes / 6 GiB).
+Its body, measured 5400-second wait and deliberately corrupted module verdict are unchanged
+from the committed fix. Body SHA-256: 5ee945b7da1c43430bcfcf358370ca54f7779e9910a3869969297fbe37f84c29.
+A headless truth-table oracle checks all four opt-in combinations and the ordinary desktop gate.
+
+HighResCoLine_ProgressTabsSensitivityAndSessionHit is the routine replacement for the 44 x 44
+checks. It replaces the default Cs-137 source with Co-60, rather than adding a second source.
+Before Prepare it verifies the Co-60 selection, that 1332.5 keV is in scene and 661.7 keV is not,
+the 1332.5 keV window, and the record's 2,000 histories-per-crystal budget. A headless policy
+oracle independently verifies this scene has only one required calibration line; the incidental
+1173.2 keV Co line requires no separate preparation. The overall preparation wait is the existing
+PrepareWait[(High-res, 1332.5)] = 420 seconds, shared between progress and completion waits.
+The scenario checks stage / history progress and the progress control, restores the owned window
+to the foreground before further pointer input, visits Sipm / Anger / Calibration / Diagnostics,
+checks the mean sensitivity map, caption and help, and verifies the captured (44, 44, 0.4) module,
+1332.5 keV identity and 1936 peaks. It acquires for two seconds, checks count conservation, resets,
+and checks a second Prepare within the existing 30-second cache-hit wait. Its own broken verdict
+expects 0.5 mm sensor pitch at the module assertion. No preparation budget or numerical check changed.
+
+Unexpected PrepareAsync exceptions now record a compact failure against the captured active
+line key. The local row and overall state say Failed: <line> keV: <literal message>; a failed line
+is excluded from the Start bank even if the service published its entry before throwing. An
+explicit retry clears the prior attempt's failure, reuses a completed cached artifact or rebuilds
+a missing entry, and preserves successful other lines. Requested cancellation still says
+Preparation cancelled. and does not record a failure. An OperationCanceledException without
+cancellation of the command's token remains an unexpected failure, as before; it is now recorded
+on the line too. Regression tests cover throws before and after publication, Start refusal,
+finished-line preservation, retry, requested cancellation and Co-60 / window wiring.
+
+Diagnosis (code reading and cheap headless tests only): no most likely preparation exception
+was established. The desktop failure directly reports a collapsed Detector expander and a missing
+Readout.State element. MainViewModel has no preparation code that collapses that expander;
+unobserved user interaction remains possible but unconfirmed. The pending-preparation fake
+reproduces local: not prepared and acquisition status Ready while ReadoutState is Preparing...
+and the preparation is still running. Thus those two tree values do not prove an exception.
+No 64 k preparation, desktop test or window automation was run in this turn.
+
+Potential exception paths in the first minutes:
+
+| Path | Code evidence and interpretation |
+|---|---|
+| Device / network build | ArgumentException for invalid optics / sensor / digitiser configuration or a singular network; OperationCanceledException at bounded checks; allocation failure is possible. The pinned valid module has no demonstrated configuration defect. |
+| Streamed flood / calibration storage | Stream validates line and history count and guards almost-zero scoring. Transport is streamed, but ReadoutCalibration reserves a list of three-double tuples for all histories. High-res 64 k means 1936 x 64000 = 123904000 tuples, 2973696000 payload bytes (2.77 GiB), before list / other buffers. OutOfMemoryException is plausible under host pressure, not established here. The service reports its history stage before this allocation, so merely seeing histories does not prove positive histories have been processed. |
+| Progress marshalling | Progress<T> posts to its captured context. A posting failure can fault preparation; a callback exception after posting belongs to the receiving context and does not travel through the awaited service task. No failing callback was identified. |
+| CacheChanged | The service invokes the event in finally after cleanup / gate release; a synchronous observer or context.Post failure can fault PrepareAsync. NotifyReadout uses normal property / command notifications. No observer failure was demonstrated; the new after-publication regression ensures any such escaping exception is visible and cannot permit Start. |
+| Cancellation | Device / flood / calibration checks can throw OperationCanceledException. The real requested-token regression confirms the cancellation message and absence of a line failure. No evidence establishes that the desktop run was cancelled. |
+
+The prior missing-failure defect is fixed; the original selector disappearance / any underlying
+exception remains unresolved without an exception message or stack. This turn does not attribute
+it to memory pressure, peak finding, transport or the user as a confirmed cause.
+
+Verification: Release build 0 warnings / 0 errors. Normal suite: 945 -> 950 passed,
+36 -> 37 skipped, zero failures (572 engine, 231 Studio Core, 127 Services, 18 UI oracles,
+2 render oracles passed). The additional skip is the new routine desktop scenario; the cold scenario
+was already skipped normally. Check-catalog --discover passes: 183 units, zero incomplete descriptions.
+All desktop code compiled. The initial suite passed at 949 / 37; adding the after-publication oracle
+produced the final 950 / 37. Logs and TRX files are under the task's studio5 scratch directory.
+
+Planner desktop runs: run HighResCoLine_ProgressTabsSensitivityAndSessionHit normally, with
+GCAM_UI_BREAK_VERDICT=1, then recovery without corruption. Re-run PreparationCancelRetryAndTabs_AreExplicit
+for cancellation / retry, and SharpTwoLineBank_SwitchesWindowAndLineWithoutTruthDispatch for the
+multi-line bank integration. A routine desktop run with GCAM_UI_TESTS=1 alone must skip the cold
+HighResCold scenario with its resource reason. The full cold scenario and its broken / recovery
+pair are retained for a separate explicit GCAM_UI_LONG_TESTS=1 request; no cold rerun is needed
+for the routine split.
+
+Write-command inventory:
+
+1. Inline python -B scripts edited MainViewModel.Readout.cs, FakeReadoutPreparation.cs,
+   ReadoutViewModelTests.cs, DesktopFactAttribute.cs and ReadoutScenarioTests.cs; a later script
+   added the after-publication fake and theory case. The initial script failed during UTF-8 reading
+   before writing anything; subsequent scripts explicitly use UTF-8 and LF.
+2. New-Item -ItemType Directory -Force created the studio5 scratch directory.
+3. Two dotnet build Gcam.sln -c Release commands wrote permitted build outputs and
+   studio5/build.log / build-final.log, with process-local TEMP / TMP under studio5.
+4. Two dotnet test Gcam.sln -c Release --no-build commands, with TRX logging and explicit UI,
+   long-UI, evidence and render opt-outs, wrote permitted test outputs and studio5/test.log /
+   test-final.log plus studio5-prefixed TRX files. No desktop scenario ran.
+5. Inline python -B refreshed the permitted VV.Tests source / method entries and descriptions.
+   test_records.py check-catalog --update-discovery updated its generated discovery block and
+   wrote studio5/catalog-update.log; --discover wrote studio5/catalog.log.
+6. Inline python -B appended this dated section. No planner-owned document, pinned evidence file,
+   published output root or repository Git state was changed by these commands.
+
+APPROVAL REQUESTS: none.
+
+
+## Polling robustness (2026-10-12)
+
+StudioWindow.WaitUntil now delegates to PollingWait: only COMException,
+ElementNotAvailableException and the harness's typed zero-match SelectorMatchException count
+as not yet. Duplicate selectors, assertions and other exceptions propagate immediately; direct
+Text / Help / Bounds reads remain strict. Every wait writes its transient count and last error
+(including zero / none) into the scenario's RunRecord steps on success or failure. TimeoutException
+includes the count and retains the last transient as its inner exception. Five plain Fact oracles
+use a fake elapsed clock to check transient recovery, exact timeout count / inner exception,
+non-transient propagation, false-condition timeout and nested logger restoration without desktop
+access. The 50 ms polling interval, timeouts, cold opt-in and all scenario verdicts are unchanged.
+This addresses the observed polling failure class; it does not prove the cause of the earlier
+collapsed-expander failure. Planner should repeat the routine readout normal / broken-verdict /
+recovery runs, especially HighResCoLine, checking transient-count steps and that corrupted runs
+reach their corrupted assertion. Cold High-res remains separately opted in; no cold rerun is
+required for this harness-only change.
+
+Verification: Release build 0 warnings / 0 errors; normal suite 950 -> 955 passed, 37 -> 37 skipped,
+zero failures. PollingWaitTests: 5 / 5 passed; no desktop or window automation ran. Catalog discovery
+covers the new test class (184 units). Logs and TRX files are under task scratch studio6.
+
+Write commands: inline python -B created PollingWait.cs, SelectorMatchException.cs and
+PollingWaitTests.cs, and edited StudioWindow.cs / Scenario.cs; New-Item created studio6 scratch;
+two dotnet build Gcam.sln -c Release commands wrote build outputs / build.log / build-final.log;
+two dotnet test Gcam.sln -c Release --no-build commands with TRX logging wrote test outputs /
+test.log / test-final.log and TRX files; inline python -B updated
+permitted VV.Tests source / method entries and added the oracle description; test_records.py
+check-catalog --update-discovery updated its discovery block / catalog-update.log, and --discover
+wrote catalog.log / catalog-final.log; inline python -B appended this section, bounded the strict-error
+oracle's fake clock against a future overly broad catch, and refreshed the affected catalog hash.
+Build / test / discovery use process-local
+TEMP / TMP under studio6 and explicit desktop opt-outs. Planner-owned documents were untouched.
+
+APPROVAL REQUESTS: none.

@@ -17,11 +17,16 @@ internal sealed class FakeReadoutPreparation(ReadoutOfferRecord? offers = null) 
     public Dictionary<double, string> Failures { get; } = [];
     /// <summary>Lines whose preparation is cancelled (throws as a cancelled token would).</summary>
     public HashSet<double> Cancel { get; } = [];
+    public Dictionary<double, Exception> Exceptions { get; } = [];
+    public Dictionary<double, Exception> ExceptionsAfterPublication { get; } = [];
+    public HashSet<double> WaitForCancellation { get; } = [];
 
     public Task<ReadoutPreparation> PrepareAsync(OpticsSettings optics, DetectorSettings detector, ReadoutLinePlan line,
         IProgress<ReadoutPrepareProgress>? progress = null, CancellationToken cancellationToken = default)
     {
         Requests.Add(line);
+        if (Exceptions.TryGetValue(line.LineKeV, out var exception)) throw exception;
+        if (WaitForCancellation.Contains(line.LineKeV)) return UntilCancelledAsync(cancellationToken);
         if (Cancel.Contains(line.LineKeV)) throw new OperationCanceledException(cancellationToken);
         string module = ReadoutPolicy.Key(optics, detector);
         bool ok = !Failures.TryGetValue(line.LineKeV, out string? failure);
@@ -35,6 +40,12 @@ internal sealed class FakeReadoutPreparation(ReadoutOfferRecord? offers = null) 
         };
         if (ok) _cache[result.CalibrationKey] = result;
         CacheChanged?.Invoke(this, EventArgs.Empty);
+        if (ExceptionsAfterPublication.TryGetValue(line.LineKeV, out var lateException)) throw lateException;
         return Task.FromResult(result);
+    }
+    private static async Task<ReadoutPreparation> UntilCancelledAsync(CancellationToken token)
+    {
+        await Task.Delay(Timeout.Infinite, token);
+        throw new InvalidOperationException("The cancellation wait cannot complete normally.");
     }
 }

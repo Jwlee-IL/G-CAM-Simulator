@@ -66,7 +66,7 @@ public sealed partial class MainViewModel
         => _readoutPreparation?.FindCached(ReadoutPolicy.CalibrationKey(ModuleKey, plan));
 
     /// <summary>Successful preparations of the required lines, reference line first (661.7 keV when captured).</summary>
-    public IReadOnlyList<ReadoutPreparation> MatchingBank => RequiredReadoutLines.Select(Prepared)
+    public IReadOnlyList<ReadoutPreparation> MatchingBank => RequiredReadoutLines.Where(p => Failure(p) is null).Select(Prepared)
         .Where(p => p is { Succeeded: true }).Cast<ReadoutPreparation>()
         .OrderBy(p => p.LineKeV == ReadoutPolicy.ReferenceLineKeV ? 0 : 1).ThenBy(p => p.LineKeV).ToArray();
 
@@ -99,7 +99,8 @@ public sealed partial class MainViewModel
     }
 
     private string LocalState(ReadoutLinePlan plan) => !plan.CanPrepare ? "not preparable"
-        : Prepared(plan) is not { } p ? Failure(plan) is { } failure ? $"failed: {failure}" : "not prepared"
+        : Failure(plan) is { } failure ? string.Create(CultureInfo.InvariantCulture, $"Failed: {plan.LineKeV:0.##} keV: {failure}")
+        : Prepared(plan) is not { } p ? "not prepared"
         : p.Succeeded ? string.Create(CultureInfo.InvariantCulture, $"ready · {p.Cost.TotalSeconds:0.00} s · {p.Peaks.Count:N0} / {p.Module?.Crystals.ToString("N0", CultureInfo.InvariantCulture) ?? "?"} peaks")
         : $"failed: {p.Failure}";
 
@@ -142,11 +143,15 @@ public sealed partial class MainViewModel
         }
         IsPreparingReadout = true; ReadoutMessage = null; NotifyRunState();
         var optics = Optics; var detector = ModuleDetector; string module = ModuleKey;
+        string? activeKey = null;
         try
         {
             foreach (var plan in required)
             {
                 string key = ReadoutPolicy.CalibrationKey(module, plan);
+                activeKey = key;
+                // A retry acknowledges the previous attempt; cancellation must not retain its stale failure.
+                _preparationFailures.Remove(key);
                 if (_readoutPreparation!.FindCached(key) is { Succeeded: true }) continue;
                 var progress = new Progress<ReadoutPrepareProgress>(p =>
                 {
@@ -156,21 +161,27 @@ public sealed partial class MainViewModel
                 });
                 var result = await _readoutPreparation!.PrepareAsync(optics, detector, plan, progress, token);
                 if (result.Succeeded) _preparationFailures.Remove(key);
-                else
-                {
-                    _preparationFailures[key] = result.Failure ?? "Calibration failed.";
-                    if (_preparationFailures.Count > 64) _preparationFailures.Remove(_preparationFailures.Keys.First());
-                }
+                else RecordPreparationFailure(key, result.Failure ?? "Calibration failed.");
                 if (!result.Succeeded) { ReadoutMessage = result.Failure; break; }
             }
         }
         catch (OperationCanceledException) when (token.IsCancellationRequested) { ReadoutMessage = "Preparation cancelled."; }
-        catch (Exception ex) { ReadoutMessage = $"Preparation failed: {ex.Message}"; }
+        catch (Exception ex)
+        {
+            if (activeKey is not null) RecordPreparationFailure(activeKey, ex.Message);
+            ReadoutMessage = $"Preparation failed: {ex.Message}";
+        }
         finally
         {
             IsPreparingReadout = false; ReadoutProgress = 0; ReadoutProgressText = null;
             NotifyRunState(); NotifyReadout();
         }
+    }
+
+    private void RecordPreparationFailure(string key, string message)
+    {
+        _preparationFailures[key] = message;
+        if (_preparationFailures.Count > 64) _preparationFailures.Remove(_preparationFailures.Keys.First());
     }
 
     private double _windowLowKeV = 600, _windowHighKeV = 720;

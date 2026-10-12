@@ -22,7 +22,7 @@ public sealed class StudioWindow(AutomationElement window)
             new PropertyCondition(AutomationElement.AutomationIdProperty, automationId));
         return matches.Count == 1
             ? matches[0]
-            : throw new InvalidOperationException($"selector '{automationId}' matched {matches.Count} elements (expected exactly 1)");
+            : throw new SelectorMatchException(automationId, matches.Count);
     }
 
     public bool Exists(string automationId) =>
@@ -225,13 +225,5 @@ public sealed class StudioWindow(AutomationElement window)
             : throw new InvalidOperationException($"'{element.Current.AutomationId}' ({element.Current.ControlType.ProgrammaticName}) does not support {pattern.ProgrammaticName}");
 
     public static void WaitUntil(Func<bool> condition, TimeSpan timeout, string what)
-    {
-        var watch = Stopwatch.StartNew();
-        while (watch.Elapsed < timeout)
-        {
-            if (condition()) return;
-            Thread.Sleep(50);
-        }
-        throw new TimeoutException($"timed out after {timeout.TotalSeconds:0.#} s waiting for: {what}");
-    }
+        => PollingWait.WaitUntil(condition, timeout, what);
 }

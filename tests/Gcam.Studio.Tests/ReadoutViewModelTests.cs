@@ -99,13 +99,70 @@ public sealed class ReadoutViewModelTests
         vm.AddSourceCommand.Execute(null); vm.Sources[^1].Isotope = "Co-60";
         await vm.PrepareReadoutCommand.ExecuteAsync(null);
         Assert.Equal("Preparation failed: The operation was canceled.", vm.ReadoutMessage);
-        Assert.StartsWith("Not prepared: 1332.5 keV · ready: 661.7 keV", vm.ReadoutState);
+        Assert.Equal("Failed: 1332.5 keV: The operation was canceled.", vm.ReadoutState); // unrequested OCE is an unexpected exception
         preparation.Cancel.Clear(); preparation.Failures[1332.5] = "fixture: unsupported slots (0, 17)";
         await vm.PrepareReadoutCommand.ExecuteAsync(null);
         Assert.Equal("fixture: unsupported slots (0, 17)", vm.ReadoutMessage);
         Assert.Equal("Failed: 1332.5 keV: fixture: unsupported slots (0, 17)", vm.ReadoutState);
         Assert.False(vm.IsReadoutBankReady);
         Assert.Equal(3, preparation.Requests.Count); // 661.7 once, 1332.5 cancelled then failed
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task UnexpectedPreparationException_FailsTheActiveLine_PreservesFinishedLines_AndRetryRecovers(bool afterPublication)
+    {
+        var service = new FakeReadoutPreparation();
+        var exceptions = afterPublication ? service.ExceptionsAfterPublication : service.Exceptions;
+        exceptions[1332.5] = new InvalidOperationException("fixture: unexpected transport failure");
+        var vm = Model(service); vm.Optics = Head; vm.ReadoutMode = ReadoutMode.FourOutputAnger;
+        vm.AmbientDoseRateMicroSvPerHour = 0;
+        vm.AddSourceCommand.Execute(null); vm.Sources[^1].Isotope = "Co-60";
+        await vm.PrepareReadoutCommand.ExecuteAsync(null);
+        const string failed = "Failed: 1332.5 keV: fixture: unexpected transport failure";
+        Assert.Equal(failed, vm.ReadoutState);
+        Assert.Equal(failed, vm.ReadoutLines.Single(r => r.LineKeV == 1332.5).Local);
+        Assert.Equal(661.7, Assert.Single(vm.MatchingBank).LineKeV);
+        Assert.False(vm.IsReadoutBankReady);
+        await vm.StartCommand.ExecuteAsync(null);
+        Assert.Null(vm.Snapshot); Assert.Contains("Prepare", vm.ReadoutMessage);
+        exceptions.Clear();
+        await vm.PrepareReadoutCommand.ExecuteAsync(null);
+        Assert.True(vm.IsReadoutBankReady); Assert.StartsWith("Ready", vm.ReadoutState);
+        Assert.Equal(afterPublication ? new[] { 661.7, 1332.5 } : new[] { 661.7, 1332.5, 1332.5 }, service.Requests.Select(p => p.LineKeV));
+    }
+
+    [Fact]
+    public async Task PendingPreparation_CanShowNotPreparedAndReadyAcquisition_CancellationIsNotFailure()
+    {
+        var service = new FakeReadoutPreparation(); service.WaitForCancellation.Add(661.7);
+        var vm = Model(service); vm.Optics = Head; vm.ReadoutMode = ReadoutMode.FourOutputAnger;
+        var pending = vm.PrepareReadoutCommand.ExecuteAsync(null);
+        Assert.True(vm.IsPreparingReadout); Assert.Equal("Preparing…", vm.ReadoutState);
+        Assert.Equal("not prepared", vm.ReadoutLines.Single(r => r.LineKeV == 661.7).Local);
+        Assert.Equal("Ready", vm.Status); // acquisition status is not preparation status
+        vm.PrepareReadoutCommand.Cancel();
+        await pending;
+        Assert.Equal("Preparation cancelled.", vm.ReadoutMessage);
+        Assert.Equal("Not prepared", vm.ReadoutState);
+        Assert.Equal("not prepared", vm.ReadoutLines.Single(r => r.LineKeV == 661.7).Local);
+        service.WaitForCancellation.Clear();
+        await vm.PrepareReadoutCommand.ExecuteAsync(null);
+        Assert.True(vm.IsReadoutBankReady);
+    }
+
+    [Fact]
+    public void HighResCoScene_RequiresOnly1332Line_AndWindowUsesItsPinnedTwoThousandBudget()
+    {
+        var vm = Model(); vm.Optics = High; vm.ReadoutMode = ReadoutMode.FourOutputAnger;
+        vm.Sources[0].Isotope = "Co-60";
+        var plan = Assert.Single(vm.RequiredReadoutLines);
+        Assert.Equal(1332.5, plan.LineKeV); Assert.Equal(2000, plan.Budget);
+        Assert.Equal(ReadoutLineStatus.Offered, plan.Status);
+        vm.WindowHighKeV = 1532.375; vm.WindowLowKeV = 1132.625;
+        Assert.Equal("Window line 1332.5 keV", vm.WindowLine);
+        Assert.False(vm.ReadoutLines.Single(r => r.LineKeV == 661.7).InScene);
     }
 
     [Fact]
