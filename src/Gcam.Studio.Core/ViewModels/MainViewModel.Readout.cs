@@ -9,8 +9,8 @@ namespace Gcam.Studio.Core.ViewModels;
 public sealed partial class MainViewModel
 {
     private readonly IReadoutPreparationService? _readoutPreparation;
-    // Session results by calibration key (successes and literal failures); the service owns the reusable artifacts.
-    private readonly Dictionary<string, ReadoutPreparation> _preparations = [];
+    // Keep only compact failure messages; reusable views belong to the live service cache.
+    private readonly Dictionary<string, string> _preparationFailures = [];
     private ReadoutMode _readoutMode;
     public IReadOnlyList<ReadoutMode> ReadoutModes { get; } = [ReadoutMode.DirectCrystal, ReadoutMode.FourOutputAnger];
     public ReadoutMode ReadoutMode
@@ -63,12 +63,21 @@ public sealed partial class MainViewModel
         ? ReadoutPolicy.RequiredLines(Sources.Select(s => s.ToModel()), Optics, ModuleDetector, ReadoutOffers) : [];
 
     private ReadoutPreparation? Prepared(ReadoutLinePlan plan)
-        => _preparations.GetValueOrDefault(ReadoutPolicy.CalibrationKey(ModuleKey, plan));
+        => _readoutPreparation?.FindCached(ReadoutPolicy.CalibrationKey(ModuleKey, plan));
 
     /// <summary>Successful preparations of the required lines, reference line first (661.7 keV when captured).</summary>
     public IReadOnlyList<ReadoutPreparation> MatchingBank => RequiredReadoutLines.Select(Prepared)
         .Where(p => p is { Succeeded: true }).Cast<ReadoutPreparation>()
         .OrderBy(p => p.LineKeV == ReadoutPolicy.ReferenceLineKeV ? 0 : 1).ThenBy(p => p.LineKeV).ToArray();
+
+    private string? Failure(ReadoutLinePlan plan) => _preparationFailures.GetValueOrDefault(ReadoutPolicy.CalibrationKey(ModuleKey, plan));
+    private readonly SynchronizationContext? _readoutContext = SynchronizationContext.Current;
+    private void ReadoutCacheChanged(object? sender, EventArgs e)
+    {
+        if (_readoutContext is { } context && SynchronizationContext.Current != context)
+            context.Post(_ => NotifyReadout(), null);
+        else NotifyReadout();
+    }
 
     public bool IsReadoutBankReady => RequiredReadoutLines is { Count: > 0 } required && MatchingBank.Count == required.Count;
 
@@ -90,7 +99,7 @@ public sealed partial class MainViewModel
     }
 
     private string LocalState(ReadoutLinePlan plan) => !plan.CanPrepare ? "not preparable"
-        : Prepared(plan) is not { } p ? "not prepared"
+        : Prepared(plan) is not { } p ? Failure(plan) is { } failure ? $"failed: {failure}" : "not prepared"
         : p.Succeeded ? string.Create(CultureInfo.InvariantCulture, $"ready · {p.Cost.TotalSeconds:0.00} s · {p.Peaks.Count:N0} / {p.Module?.Crystals.ToString("N0", CultureInfo.InvariantCulture) ?? "?"} peaks")
         : $"failed: {p.Failure}";
 
@@ -103,6 +112,8 @@ public sealed partial class MainViewModel
             if (required.Count == 0)
                 return MatchingPreparation is { Succeeded: true } ? "Ready" : "Not prepared";
             var states = required.Select(p => (Plan: p, Prep: Prepared(p))).ToArray();
+            if (required.FirstOrDefault(p => Failure(p) is not null) is { } failedPlan)
+                return $"Failed: {failedPlan.LineKeV:0.##} keV: {Failure(failedPlan)}";
             if (states.All(s => s.Prep is null)) return "Not prepared";
             string Line(ReadoutLinePlan p) => p.LineKeV.ToString("0.##", CultureInfo.InvariantCulture) + " keV";
             if (states.FirstOrDefault(s => s.Prep is { Succeeded: false }) is { Prep: { } failed } f)
@@ -136,7 +147,7 @@ public sealed partial class MainViewModel
             foreach (var plan in required)
             {
                 string key = ReadoutPolicy.CalibrationKey(module, plan);
-                if (_preparations.TryGetValue(key, out var done) && done.Succeeded) continue;
+                if (_readoutPreparation!.FindCached(key) is { Succeeded: true }) continue;
                 var progress = new Progress<ReadoutPrepareProgress>(p =>
                 {
                     if (!IsPreparingReadout) return;
@@ -144,7 +155,12 @@ public sealed partial class MainViewModel
                     OnPropertyChanged(nameof(ReadoutState));
                 });
                 var result = await _readoutPreparation!.PrepareAsync(optics, detector, plan, progress, token);
-                _preparations[key] = result;
+                if (result.Succeeded) _preparationFailures.Remove(key);
+                else
+                {
+                    _preparationFailures[key] = result.Failure ?? "Calibration failed.";
+                    if (_preparationFailures.Count > 64) _preparationFailures.Remove(_preparationFailures.Keys.First());
+                }
                 if (!result.Succeeded) { ReadoutMessage = result.Failure; break; }
             }
         }

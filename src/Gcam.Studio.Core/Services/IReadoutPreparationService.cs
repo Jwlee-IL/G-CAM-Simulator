@@ -8,6 +8,12 @@ public interface IReadoutPreparationService
     /// <summary>The shipped, hash-pinned offer / cost record (unavailable when missing or malformed).</summary>
     ReadoutOfferRecord Offers { get; }
 
+    /// <summary>Raised after publication or eviction. Consumers must release views that are no longer cached.</summary>
+    event EventHandler? CacheChanged;
+
+    /// <summary>A live, reusable entry; an evicted key is not prepared.</summary>
+    ReadoutPreparation? FindCached(string calibrationKey);
+
     /// <summary>Prepares (or returns the session-cached) calibration of one line for the given module.</summary>
     Task<ReadoutPreparation> PrepareAsync(OpticsSettings optics, DetectorSettings detector, ReadoutLinePlan line,
         IProgress<ReadoutPrepareProgress>? progress = null, CancellationToken cancellationToken = default);

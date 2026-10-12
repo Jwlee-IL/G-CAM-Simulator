@@ -17,7 +17,7 @@ below is a proposal; the planner applies it to VV / AGENTS / Findings.
 | Legacy identity | `ReadoutLegacyIdentityTests` | Baseline 661.7 keV keeps seeds 402 – 408, the legacy LUT / solve and its outputs byte for byte (§3). |
 | Start carries the captured policy | `SimulationService.Start` | The acquisition configuration's readout is the reference entry's resolved policy (solve, method, line, budget); the prepared network is reused (the device guard refuses a different network). |
 | Captured geometry | `ReadoutModuleGeometry` on every preparation; `AcquisitionSession`, `PhysicalReadoutWaveform`, `DetectorWorkspaceViewModel`, `ReadoutMapView` | Deposition, waveform coordinates, detector text and the circuit follow the captured module (crystal and sensor counts, pitch, gap, sensor pitch and active width); no 12 / 144 literal remains on the physical path. |
-| A9, A10 Custom | `ReadoutPolicy.MatchModule`, `.Plan`, `.MatchesImagingProfile`; `ImagingWorkspaceViewModel.ReadoutCost*` | A module that matches a confirmed geometry (crystal count and pitch, gap 0.1 mm, entrance absorber 0.15 mm, backing 2 mm) inherits that geometry's offer or refusal and budget whatever the preset label (Custom cannot bypass High's 64 k). The reference cost is inherited only on a full imaging-profile match (rank, cell, distance, focus 1 000 mm, cross-correlation, the exact ±15 % window, flood correction on); otherwise "Imaging cost unmeasured for this configuration: <differences>" with the matched table shown as reference only. An unmatched module calibrates locally at 2 000 histories per crystal with LatticeGrowth / adjoint, labelled "experimental, unvalidated", imaging cost unmeasured. |
+| A9, A10 Custom | `ReadoutPolicy.MatchModule`, `.Plan`, `.MatchesImagingProfile`; `ImagingWorkspaceViewModel.ReadoutCost*` | A module that matches a confirmed geometry (crystal count and pitch, gap 0.1 mm, entrance absorber 0.15 mm, backing 2 mm) inherits that geometry's offer or refusal and budget whatever the preset label (Custom cannot bypass High's 64 k). The reference cost is inherited only on a full imaging-profile match (rank, cell, distance, focus 1 000 mm, cross-correlation, the ±15 % window by rounding equivalence at the record's precision, flood correction on, and matching source / rate scope); otherwise "Imaging cost unmeasured for this configuration: <differences>" with the matched table shown as reference only. An unmatched module calibrates locally at 2 000 histories per crystal with LatticeGrowth / adjoint, labelled "experimental, unvalidated", imaging cost unmeasured. |
 | A11, A12 exposures, MLEM | `ImagingWorkspaceViewModel.Readout.cs` | Both benchmark exposures (1 000 / 4 000 ideal-Direct counts) and both rates (isolated / 100 000 input hits/s) are listed; the acquisition's own window counts are shown separately; nothing is interpolated or mapped. MLEM decodes with the window line's energy and gets the "benchmark not applicable" notice. |
 | A13 shipped record | `samples/evidence/studio_readout_offer_record.py`, `offer-cost-v1.json`, `ReadoutOfferPin`, `ReadoutOfferRecordLoader` | §2. |
 | A14 large grids | `ReadoutMapView` | Cached raster (one pixel per LUT bin, viridis, built once per density image), cached frozen geometries for LUT boundaries (merged straight runs), peak marks and the circuit; zoom (wheel, + / −, 0 resets, up to 32×), pan (drag, arrows) and inspection (LUT crystal, row / column, density under the pointer, shown below the map and in the automation help text). A live snapshot tick only replaces the live raster. Actual sensor pitch and active width from the captured module. |
@@ -76,8 +76,7 @@ or corrupt population makes the whole record unavailable (every line then plans 
 ## 3. Legacy byte identity
 
 `ReadoutLegacyIdentityTests` pins three SHA-256 fixtures recorded from the pre-bank code (branch head `0dc0b68` plus the
-stopped turn's correction histogram, default off) before any service change: preparation `6a8b291c…24ae82` (every
-published fact: density, labels, peaks, diagnostics, counts, timing, circuit), acquisition `6b169b2f…67b16d` (seed 4711,
+stopped turn's correction histogram, default off) before any service change: preparation `6a8b291c…24ae82` (the deterministic published facts covered by the fixtures: density, labels, peaks, diagnostics, counts, pulse timing constants, circuit), acquisition `6b169b2f…67b16d` (seed 4711,
 500 µCi, 2 s: 68 records, 82 hits, every field, truth samples, floods) and projections `74a59000…edfa71` (imaging
 channels, spectrum). All three still match after the bank, streaming and captured-geometry changes. The existing
 TODO-40 tests (`PhysicalReadoutTests`) pass unchanged apart from the removed geometry gate.
@@ -88,10 +87,10 @@ TODO-40 tests (`PhysicalReadoutTests`) pass unchanged apart from the removed geo
 |---|---|
 | Local 8 × 8 Custom (LatticeGrowth / adjoint, 2 000 per crystal) | 4.0 s preparation, 64 / 64 peaks (service test) |
 | Accounted bytes per entry | Baseline 384² bins: ≈ 3.5 MB; High 1408² bins: ≈ 47.6 MB (formula in the service) |
-| ReadoutMapView 44 × 44 offscreen (RenderTargetBitmap, 1408² bins, 1936 peaks, 1 280 × 800 and 1 440 × 900 views) | Two runs, both themes and sizes. Anger: cache build 37 – 112 ms once per preparation; cached redraw 29 – 37 ms; zoom 4× redraw 6 – 12 ms. SiPM: cache build 2 – 9 ms; redraw 39 – 55 ms; zoom 4× 10 – 21 ms |
-| ReadoutMapView 12 × 12 offscreen | 5 – 18 ms redraw |
+| ReadoutMapView 44 × 44 offscreen on synthetic straight-grid labels / Gaussian density (RenderTargetBitmap, 1408² bins, 1936 peaks, 1 280 × 800 and 1 440 × 900 views) | Two runs, both themes and sizes. Anger: cache build 37 – 112 ms once per preparation; cached redraw 29 – 37 ms; zoom 4× redraw 6 – 12 ms. SiPM: cache build 2 – 9 ms; redraw 39 – 55 ms; zoom 4× 10 – 21 ms |
+| ReadoutMapView 12 × 12 offscreen on the same synthetic drawing fixture | 5 – 18 ms redraw |
 
-Before the boundary-run merge the 44 × 44 Anger redraw took 154 – 178 ms. Offscreen software rendering is not desktop
+Before the boundary-run merge the 44 × 44 Anger redraw took 154 – 178 ms. The labels are synthetic straight grids, not real noisy watershed boundaries. Offscreen software rendering is not desktop
 frame latency; the desktop pilot remains the planner's.
 
 ## 5. Desktop scenarios (compiled, not run)
@@ -159,25 +158,22 @@ requirement-critical state only behind it.
    calibration output (tests). The replay oracle runs on small modules (4 × 4 legacy, 8 × 8 LatticeGrowth / adjoint),
    not on each preset (a 64 k High preparation is out of the normal suite).
 3. **Cache limit provisional.** 512 MiB of accounted calibration bytes; optical tables / networks are not measured or
-   accounted (dropped when unreferenced). Only live acquisitions pin entries; a pending bank is not pinned (with the
-   limit, a High 661.7 + 1332.5 bank accounts ≈ 95 MB, so a few module switches do not evict it).
-4. **No averaged sensitivity map** is shipped (Turn 7 proposed one as a declared visual summary); the 32 maps remain in
-   the parents only.
-5. **Cost inheritance needs the exact benchmark window** (button) and flood correction on; a hand-typed 562.445 keV may
-   not equal 661.7 × 0.85 in floating point.
-6. **Device-build progress** has a stage but no count (the optical table and network expose none); cancellation there is
+   accounted (dropped when unreferenced). Only live acquisitions pin entries; pending readiness is now derived from live service entries and eviction invalidates it. The shell retains compact failures, not preparation buffers; cancelled / failed orphan devices are pruned.
+4. **Averaged sensitivity restored after review:** offered cells ship the exact 32-seed arithmetic mean as a labelled
+   visual summary; the original per-seed maps remain in the published parents. It is never a correction weight.
+5. **Device-build progress** has a stage but no count (the optical table and network expose none); cancellation there is
    the engine's existing token.
-7. The local check in Diagnostics keeps TODO-40's design (200 histories per crystal, all energies, single-crystal), now at
+6. The local check in Diagnostics keeps TODO-40's design (200 histories per crystal, all energies, single-crystal), now at
    the line's energy, labelled apart from the confirmed 32-seed diagnostics (Calibration tab, `OfferDetails`).
 
 ## 7. Proposed record wording (implemented behaviour)
 
 | Row | Proposed wording |
 |---|---|
-| SR-DET-05 | Detector shall retain DirectCrystal as default and support experimental GAGG FourOutputAnger on any valid geometry. Each calibration line (122.06 / 661.7 / 1332.5 keV) of the pending module shall be planned from the shipped, hash-pinned offer record and the module fingerprint: offered (experimental, at the pinned budget) when the confirmed cell's calibration succeeded on every seed, refused with its literal published reason and population otherwise, locally calibrated (experimental, unvalidated) for an unmatched module, and unavailable when the record is missing or malformed. Preparation shall capture the resolved module geometry, line, policy, budget, seeds and calibration identity; the 12×12 Baseline at 661.7 keV keeps its TODO-40 preparation byte for byte. Start shall capture an immutable bank of the required line preparations, used by Detector, Imaging, Spectrum, Waveform and circuit views. IndependentSipm remains outside this Studio implementation. |
-| SR-RUN-34 | Physical Start shall require a matching successful preparation for every preparable calibration line the scene emits (exact energy equality) and shall refuse an unprepared, failed or stale line, a scene without a preparable line, and nonzero ambient/BSR before transport, preserving entered values and displaying an actionable reason. Refused and incidental emissions remain in transport and do not block. Imaging-cost values and crystal diagnostics shall never gate an otherwise calibrated experimental readout. DirectCrystal inputs, seeded stream, defaults and microcell policy shall remain unchanged. |
-| SR-DET-10 | Detector and Imaging shall display, per line, the confirmed offer or refusal (population, budget, source record and phase, literal failures, superseded outcome) separately from the local preparation state and its stage / history progress. Imaging shall show, for the window's calibration line, a reference card and the full shipped table: both readouts' absolute angular source RMS, per-position bias and remote-peak probability, accepted counts and F with seed-cluster intervals at 1000 / 4000 expected ideal-Direct counts, isolated and 100000 scored input hits/s, the declared benchmark scope, the sentence "F is an equal-fluence MSE ratio, not a time factor.", and for every F below 1 the Direct path's own bias share with the statement that it does not establish a general Anger advantage. F carries no colour. The acquisition's own counts are shown separately; nothing is interpolated or mapped. MLEM, other windows and unmatched profiles show "imaging cost unmeasured for this configuration" with the reference table labelled not applicable. |
-| SR-DET-11 | Any valid Custom geometry may Prepare. A module matching a confirmed geometry (crystal count, pitch, gap, entrance absorber, backing) shall inherit that geometry's per-line offer or refusal and pinned budget irrespective of the preset label; the reference cost is inherited only when the full imaging profile (mask rank and cell, distance, focus, decoder, window, flood correction) also matches. An unmatched module calibrates locally at 2000 histories per crystal with LatticeGrowth and the adjoint solve, labelled experimental and unvalidated, with imaging cost unmeasured; its failure shows its own reason. Held ADC facts shall be acquired once and projected through each captured line calibration, never dispatched by generating line or true energy. |
+| SR-DET-05 | Detector shall retain DirectCrystal as default and support experimental GAGG FourOutputAnger on any valid geometry. Each calibration line (122.06 / 661.7 / 1332.5 keV) of the pending module shall be planned from the shipped, hash-pinned offer record and the module fingerprint: offered (experimental, at the pinned budget) when the confirmed cell's calibration succeeded on every seed, refused with its literal published reason and population otherwise, locally calibrated (experimental, unvalidated) for an unmatched module, and unavailable when the record is missing or malformed. Preparation shall capture the resolved module geometry, line, policy, budget, seeds and calibration identity; the 12×12 Baseline at 661.7 keV keeps its TODO-40 preparation byte for byte. Local readiness shall follow live cache entries; an evicted line shall read Not prepared and Prepare shall rebuild it. The shell shall not retain evicted preparation buffers. Start shall capture an immutable bank of the required line preparations, used by Detector, Imaging, Spectrum, Waveform and circuit views. IndependentSipm remains outside this Studio implementation. |
+| SR-RUN-34 | Physical Start, enforced in both shell and service before transport, shall require a matching successful preparation for every preparable calibration line the scene emits (exact energy equality) and shall refuse an unprepared, failed or stale line, a scene without a preparable line, and nonzero ambient/BSR before transport, preserving entered values and displaying an actionable reason. Refused and incidental emissions remain in transport and do not block. Imaging-cost values and crystal diagnostics shall never gate an otherwise calibrated experimental readout. DirectCrystal inputs, seeded stream, defaults and microcell policy shall remain unchanged. |
+| SR-DET-10 | Detector and Imaging shall display, per line, the confirmed offer or refusal (population, budget, source record and phase, literal failures, superseded outcome) separately from the local preparation state and its stage / history progress. Imaging shall show, for the window's calibration line, a reference card and the full shipped table: both readouts' absolute angular source RMS, per-position bias and remote-peak probability, accepted counts and F with seed-cluster intervals at 1000 / 4000 expected ideal-Direct counts, isolated and 100000 scored input hits/s, the declared benchmark scope and a labelled 32-seed mean sensitivity map beside the recorded weakest / median scalar (truth-referenced validation ratios, never flood weights), the sentence "F is an equal-fluence MSE ratio, not a time factor.", and for every F below 1 the Direct path's own bias share with the statement that it does not establish a general Anger advantage. F carries no colour. The acquisition's own counts are shown separately; nothing is interpolated or mapped. MLEM, windows outside rounding equivalence at the record's precision, source mixtures / multiple emissions (including incidental lines), source distances or positions outside the declared 1 m / nine-position scope, unknown or unmatched scored-input rates and other unmatched profiles show "imaging cost unmeasured for this configuration" with the reference table labelled not applicable. |
+| SR-DET-11 | Any valid Custom geometry may Prepare. A module matching a confirmed geometry (crystal count, pitch, gap, entrance absorber, backing) shall inherit that geometry's per-line offer or refusal and pinned budget irrespective of the preset label; the reference cost is inherited only when the full imaging profile (mask rank and cell, mask-detector distance, focus, decoder, ±15 % window by rounding equivalence at the record's precision, flood correction, mono-line point-source distance / sampled position and scored-input rate scope) also matches. Isolated-pulse rows remain descriptive reference rows, never inferred from a live zero rate. An unmatched module calibrates locally at 2000 histories per crystal with LatticeGrowth and the adjoint solve, labelled experimental and unvalidated, with imaging cost unmeasured; its failure shows its own reason. Held ADC facts shall be acquired once and projected through each captured line calibration, never dispatched by generating line or true energy. |
 | SR-IMG (new or note under SR-DET-10) | The physical window image may apply an opt-in flood correction from the line calibration's own photopeak-assigned flood counts (weight = mean / bin, no clipping); raw counts remain the reported count; an empty correction bin makes the corrected image unavailable, the raw image remaining available. |
 
 **EV-36 scope note.** Retain the original lab result, rule and conditions; its localisation is mean radial error, not
@@ -208,8 +204,8 @@ emitted fluence, 1 k / 4 k ideal-Direct counts, isolated / 1e5 input hits/s (Wid
 / 0.8295 [0.8231, 0.8358]; High 4.668 [3.063, 7.115] / 2.586 [2.550, 2.623]). Studio stage: per-line banks with held
 facts acquired once and per-line projection, streamed floods with record budgets (LatticeGrowth / adjoint on the fine
 heads, Baseline 661.7 byte-identical), an opt-in exact flood correction, Custom inheritance by module (cost only on a
-full profile), a 243 kB generated record checked against its parents and a compiled pin, and a cached large-grid map
-(44 × 44 offscreen redraw 29 – 37 ms after a 37 – 112 ms cache build).
+full profile), a 687 kB generated record with declared mean sensitivity summaries, checked against its parents and a compiled pin, and a cached large-grid map
+(44 × 44 synthetic straight-grid offscreen redraw 29 – 37 ms after a 37 – 112 ms cache build in the original run; not real-watershed or desktop latency).
 
 **AGENTS.Studio "Physical readout" paragraph (proposal).** Readout: DirectCrystal remains the default. Experimental
 FourOutputAnger runs on any valid geometry; each calibration line is offered, refused, local (unmatched Custom) or
@@ -229,3 +225,75 @@ ReadoutScenarioTests remain opt-in on the author's go.
   AGENTS.Findings, and the Todo row.
 - Optional: an evidence-switch (`GCAM_EVIDENCE_TESTS=1`) test that prepares a real fine-head cell through the service
   (Sharp 661.7 ≈ 60 s) — not added this turn.
+
+
+## Fixes after review (2026-10-12)
+
+All six findings and four notes in the Studio review were adopted. The preceding measurements / hashes are the original
+implementation record; this section supersedes its cache, applicability and scalar-only diagnostic descriptions. No
+published confirmation / repair output, v1-v5 pin, budget, numerical tolerance or offer verdict changes.
+
+| Finding | Fixed behaviour | Verification |
+|---|---|---|
+| R1 / R2 | IReadoutPreparationService exposes live lookup and cache-change notifications. The shell obtains views from that cache and retains at most 64 compact failure strings, not density / label buffers. Evicted lines are Not prepared; Start refuses before transport; Prepare recovers. Active acquisition entries remain pinned. | Fake eviction plus weak-reference collection test; real two-line 8x8 bank, subsequent Baseline eviction, Start refusal and two-line recovery with a fitting cache limit. |
+| R3 | Preparation finally prunes devices with no successful entry, including cancelled and failed calibration paths. | Two distinct cancelled modules leave zero devices, entries and accounted bytes; the existing inside-flood cancellation test also checks devices. |
+| R4 | Full applicability requires source scope and scored-input rate as well as module / decoder / window. Pending source edits refresh reasons; after acquisition the captured scene supplies the scope. Mixtures, incidental emissions, source distance / sampling mismatches and unknown / unmatched rates are explicitly unmeasured, reference only. | Mixed Cs+Co at 2 m / off-grid position and captured 12345 hits/s regression; tables remain displayed and never gate acquisition. Standard isotope definitions have multiple emissions, so even Cs-137 is correctly reference only relative to the mono-line benchmark. |
+| R5 | Each offered cell has a deterministic arithmetic mean of the 32 isolated validation maps. Detector Calibration draws it on the confirmed module's centred physical pitch beside the recorded weakest / median statistic. Its scope says visual summary, truth-referenced validation ratios, never flood-correction weights. New AutomationIds: Readout.SensitivityMap / SensitivityCaption / SensitivityHelp. | Hand-computed Python mean oracle; offered-cell dimension / scope tests; offscreen binding and 12x12 / 44x44 Calibration renders. |
+| R6 | The calibration announces peak / LUT work before global peak scans, then energy gains and correction counting at their actual entry. Enumeration, smoothing, maxima, matching, sorting and watershed passes check cancellation at bounded iteration intervals without changing accumulation or RNG order. | Phase-entry cancellation tests, ordered progress oracle and Sharp headless latency pilot. |
+| Note a | The service enforces the complete required scene bank as well as the shell. Single-line independence oracles use PhysicalListModeSource below this boundary rather than bypassing it. | Incomplete Cs+Co bank refused with required-line reason; independent held-fact / per-line image comparisons retained. |
+| Notes b / c / d | Wording now says rounding equivalence at the record's precision; stale section 6 item 5 removed. Deterministic module / line / policy / key / seed metadata and the entire 144-crystal legacy gain array are covered. Render numbers identify synthetic straight-grid labels. | Old three hashes unchanged; gain SHA-256 ff8cb478d33726d3e532f35c703b6925bcc61dc4b1bc067cc9ada7f8b2952bda recorded from pre-fix binaries and still matches. Guid generation and elapsed wall cost are not byte-deterministic; cache / captured identity is checked structurally. |
+
+Record: 242860 -> 687228 bytes (+444368, below 1000000 bytes). The mean arrays are retained in the reduced parent
+projections and the derived cells, preserving deterministic regeneration. New compiled SHA-256:
+`24b3bf6714e9b856a9b8aaac8d95c2bdbd212659808172440716e15fdeda8b6a`.
+Both --check modes pass. Parents-absent mode still proves integrity / consistency of the pinned reduced record, not
+independent derivation from unavailable originals; full-parent mode re-derives the mean arrays and verifies original
+parent hashes / publisher sidecars. Full parents and their sidecars remain read-only.
+
+Cancellation pilot: one worker, Sharp 661.7 at its unchanged 2000 histories/crystal service policy; cancellation requested
+20 ms after entry into the global calibration phase. Request-to-observation latency 2.4922 ms; total cold run 56.6421 s;
+zero cache entries / devices after cancellation. This is one host measurement, not a worst-case guarantee or High-res
+latency claim. The pilot never ran a full High-res calibration.
+
+Verification: Release build 0 warnings / 0 errors; normal .NET suite 938 -> 945 passed, 36 skipped, no failures.
+Python evidence unittests: 95 -> 96 total, 1 skipped (95 passed after); six offer-record tests pass. Offscreen render suite
+4 / 4 passes, both themes / sizes, with output under task scratch. Check-catalog --discover passes (183 units);
+calibration_record --check passes (4 records). Existing render fixture is synthetic straight-grid density / labels:
+new 44x44 Anger cached redraw 31.9-39.6 ms; one-time cache build 32.4-79.5 ms; SiPM cached redraw 41.8-51.0 ms.
+These are offscreen drawing numbers, not real-watershed desktop latency. The initial development checks caught a
+missing namespace qualification / hit-field name and a single-line test fixture lacking Lines metadata; these were
+fixed, with assertions / tolerances retained.
+
+Desktop rerun required (compiled, not run here): PreparationCancelRetryAndTabs_AreExplicit (stage / cancellation / cache
+state); SharpTwoLineBank_SwitchesWindowAndLineWithoutTruthDispatch (complete service bank / summary line switching);
+WideCostCard_ShowsNeutralFAndTheDirectBiasExplanation (reference-only source / rate notice: its former inherited verdict
+is no longer correct); HighResCold_ProgressTabsCornersAndSessionHit_Bundled (updated progress and mean map checks in
+one cold run, unchanged 5400 s wait); CustomModules_InheritByModuleNotCost_UnknownCalibratesLocally (scope notices /
+cache recovery). FixedSeedRepeatAndContinuation_ConserveCountsAndExposeFourLanes should also rerun as the integration
+guard for captured identity / pinning. The new eviction / mixed 2 m cases are headless regressions; desktop coverage can
+extend the existing bundled scenarios. Repeat the relevant broken-verdict and recovery pairs after updated assertions.
+No desktop process or UI test was launched.
+
+Write-command inventory for this fix turn:
+
+1. Edit-tool patches changed the listed engine, Core / Services, view and test files; added CancellationSequence and
+   the test-friend assembly attribute. No forbidden documentation or pinned v1-v5 file was edited.
+2. Python -B inline scripts revised repository sources / tests, normalized edited text to LF, and generated / refreshed
+   VV.Tests source-method entries (only the permitted catalog).
+3. Python -B inline script created the task-only LegacyGainProbe project / source; dotnet run compiled / ran it against
+   existing pre-fix binaries and redirected legacy-before.log. It later became the Sharp cancellation pilot; dotnet run
+   redirected cancellation.log. Scratch project / bin / obj outputs stay under studio4.
+4. studio_readout_offer_record.py --parents read the two published roots and wrote only offer-cost-v1.json (two
+   regenerations, second after reduction wording was updated). Python refreshed the compiled pin each time.
+5. dotnet build Gcam.sln -c Release wrote allowed build / restore outputs and task logs build1, build2, build3 and
+   build-final; the two intermediate compilation failures were fixed. Final build is 0 / 0.
+6. dotnet test Gcam.sln -c Release wrote build / test outputs and task tests1 / tests2 / final logs, with process-local
+   TEMP / TMP and UI / render switches disabled. The one intermediate fixture failure was fixed without loosening checks.
+7. dotnet test Gcam.Studio.RenderTests -c Release --no-build with GCAM_RENDER_SNAPSHOTS=1 and GCAM_RENDER_OUTPUT set
+   to studio4/render wrote renders.log and task PNGs; final render verification covers the new summary binding.
+8. Python unittests with GCAM_PROVENANCE_TEST_ROOT under studio4/python wrote isolated scratch fixtures / python.log;
+   generator --check in both modes and calibration_record --check wrote task logs and did not publish evidence.
+9. test_records.py check-catalog --update-discovery updated only VV.Tests and its task log; --discover wrote its task log.
+10. Python wrote this dated section / authorized wording corrections, and refreshed final source hashes / LF audits.
+
+APPROVAL REQUESTS: none. No deletion, repository Git state change, process stop, install, upload or desktop action.

@@ -5,7 +5,7 @@ The record never re-judges published evidence. It is a deterministic reduction o
 
 * each parent is kept as a projection: the parent JSON without its `Provenance` envelope (bound instead by the
   publisher sidecar's hash and the provenance digest) and without the per-seed `SensitivityMapsPerSeed` arrays
-  (diagnostic maps Studio does not display; the declared weakest / median scalar stays);
+  (offered cells add the deterministic 32-seed mean as a visual summary; the recorded weakest / median scalar stays);
 * `Cells` is the declared overlay: every v4 cell, with exactly Wide 661.7 and High 661.7 replaced by their v5 cells
   (the superseded v4 outcome stays in `Superseded`).
 
@@ -22,6 +22,7 @@ import argparse
 import copy
 import hashlib
 import json
+import math
 import pathlib
 import re
 import sys
@@ -45,7 +46,7 @@ LINES = (122.06, 661.7, 1332.5)
 REPAIRED = (('Wide', 661.7), ('High', 661.7))
 REDUCTION = ('Projection = parent JSON without its Provenance envelope (bound by the publisher sidecar SHA-256 and '
              'the provenance digest) and without the per-seed SensitivityMapsPerSeed diagnostic arrays; every other '
-             'value is copied verbatim. Cells = v4 cells with exactly Wide/661.7 and High/661.7 replaced by the v5 '
+             'value is copied verbatim; offered cells add the arithmetic 32-seed mean sensitivity summary, never flood weights. Cells = v4 cells with exactly Wide/661.7 and High/661.7 replaced by the v5 '
              'repair cells; the superseded v4 outcome is kept in Superseded.')
 # Benchmark fields Studio displays; identical in both recipes (checked).
 BENCHMARK_FIELDS = ('FocalDistanceMm', 'PositionHalfFraction', 'Positions', 'Decoder', 'FloodCorrection',
@@ -70,6 +71,16 @@ def project(parent):
     value = {k: copy.deepcopy(v) for k, v in parent.items() if k != 'Provenance'}
     for cells in value.get('Matrices', {}).values():
         for cell in cells:
+            if cell['Offered']:
+                maps = cell['Diagnostics']['0']['SensitivityMapsPerSeed']
+                require(len(maps) == 32 and len(maps[0]) > 0 and all(len(m) == len(maps[0]) for m in maps),
+                        'incomplete sensitivity map population')
+                require(all(math.isfinite(v) and v >= 0 for m in maps for v in m), 'invalid sensitivity ratio')
+                cell['SensitivitySummary'] = {
+                    'Clusters': 32,
+                    'Meaning': 'Arithmetic mean over 32 isolated held-out seed maps; visual summary of truth-referenced validation ratios, never flood-correction weights.',
+                    'Values': [math.fsum(m[k] for m in maps) / 32 for k in range(len(maps[0]))],
+                }
             for diagnostics in (cell.get('Diagnostics') or {}).values():
                 if isinstance(diagnostics, dict):
                     diagnostics.pop('SensitivityMapsPerSeed', None)
@@ -144,6 +155,12 @@ def check_cell(cell):
         if value.get('Available'):
             for key in ('GXRad2', 'GYRad2', 'SingleMisId', 'MultiCrystalShare', 'WeakestMedianSensitivity'):
                 interval(value.get(key), 32)
+    if cell['Offered']:
+        summary = cell.get('SensitivitySummary', {})
+        require(summary.get('Clusters') == 32 and isinstance(summary.get('Meaning'), str)
+                and isinstance(summary.get('Values'), list) and len(summary['Values']) > 0
+                and all(isinstance(v, (int, float)) and math.isfinite(v) and v >= 0 for v in summary['Values']),
+                'invalid averaged sensitivity summary')
 
 
 def build(entries):

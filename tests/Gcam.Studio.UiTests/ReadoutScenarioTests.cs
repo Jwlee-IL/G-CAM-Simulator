@@ -199,14 +199,16 @@ public sealed class ReadoutScenarioTests(ITestOutputHelper output)
         ui.Invoke("Readout.BenchmarkWindow");
         ui.Workspace("Imaging", "FloodView");
         ui.Toggle("Imaging.FloodCorrection");
-        StudioWindow.WaitUntil(() => ui.Text("Imaging.ReadoutCostStatus").StartsWith("Reference benchmark inherited", StringComparison.Ordinal),
-            TimeSpan.FromSeconds(10), "inherited reference cost");
+        StudioWindow.WaitUntil(() => ui.Text("Imaging.ReadoutCostStatus").StartsWith("Imaging cost unmeasured", StringComparison.Ordinal),
+            TimeSpan.FromSeconds(10), "reference-only cost for the actual source scope");
         string card = ui.Text("Imaging.ReadoutCostCard");
         Assert.Contains("F is an equal-fluence MSE ratio, not a time factor.", card); // stays inline beside F
         string help = ui.Help("Imaging.ReadoutCostHelp");                              // explanation moved behind "?"
+        Assert.Contains("source emits multiple lines", help);
+        Assert.Contains("rate not measured", help);
         Assert.Contains("F below 1 at 4,000 counts, isolated", help);
         Assert.Contains(Broken ? "general Anger advantage is established" : "it does not establish a general Anger advantage", help);
-        record.Step("Wide 661.7 keV: offered at 8 k; inherited benchmark; F wording and the data's direct-bias explanation, no colour badge.");
+        record.Step("Wide 661.7 keV: offered at 8 k; benchmark reference only for this source scope; F wording and the data's direct-bias explanation, no colour badge.");
     });
 
     [DesktopFact]
@@ -226,6 +228,10 @@ public sealed class ReadoutScenarioTests(ITestOutputHelper output)
         Assert.True(ui.EnsureForeground(), "owned Studio window restored to the foreground");
         ui.Workspace("Detector", "Readout.Map");
         foreach (string tab in new[] { "Sipm", "Anger", "Calibration", "Diagnostics" }) ui.Select("Readout." + tab + "Tab");
+        ui.Select("Readout.CalibrationTab");
+        Assert.Contains("mean sensitivity map (32 seeds)", ui.Text("Readout.SensitivityCaption"));
+        Assert.True(ui.Bounds("Readout.SensitivityMap").Height > 0);
+        Assert.Contains("never flood-correction weights", ui.Help("Readout.SensitivityHelp"));
         ui.Select("Readout.AngerTab");
         // Key verdict (after the unavoidable preparation): the captured 44 × 44 module at 0.4 mm (corrupted when broken).
         Assert.Equal(Broken ? (44, 44, .5) : (44, 44, .4), Module(ui.Status("Readout.Map")));

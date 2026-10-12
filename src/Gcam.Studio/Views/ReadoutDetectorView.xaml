@@ -48,6 +48,12 @@
        <TextBlock Text="{Binding Summary}" Style="{StaticResource Text.Caption}" TextWrapping="Wrap" Margin="{StaticResource Gap.Tight}" />
       </DataTemplate></ItemsControl.ItemTemplate>
      </ItemsControl>
+     <TextBlock Text="{Binding SensitivityCaption}" Style="{StaticResource Text.Caption}" TextWrapping="Wrap" AutomationProperties.AutomationId="Readout.SensitivityCaption" />
+     <c:HelpMark Text="{Binding SensitivityHelp}" AutomationProperties.AutomationId="Readout.SensitivityHelp" AutomationProperties.Name="About the mean sensitivity map" />
+     <c:HeatmapView Image="{Binding SensitivitySummary}" Height="{StaticResource Size.Imaging.Lower}"
+                    OriginMm="{Binding SensitivityOriginMm}" StepMm="{Binding SensitivityStepMm}"
+                    ValueUnit="validation ratio" EmptyText="No offered-cell summary" AutomationProperties.AutomationId="Readout.SensitivityMap"
+                    AutomationProperties.Name="Mean truth-referenced validation sensitivity map" AutomationProperties.HelpText="Visual summary, never flood-correction weights. Row and column are crystal indices." />
     </StackPanel>
    </ScrollViewer>
    <DockPanel>

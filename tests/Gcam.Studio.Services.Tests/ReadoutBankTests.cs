@@ -24,6 +24,8 @@ public sealed class ReadoutBankTests(ITestOutputHelper output)
 
     private static async Task<AcquisitionSnapshot> Acquire(ReadoutPreparationService service, IReadOnlyList<ReadoutPreparation> bank)
     {
+        // Single-line oracle lives below Studio's complete-bank Start guard: replay the SAME full scene and held facts.
+        if (bank.Count == 1) return AcquireSingleLineOracle(service, bank[0]);
         var clock = new ManualTimeProvider();
         var detector = Physical with { PreparedReadoutLines = new(bank.Select(p => p.Id).ToArray()) };
         await using var session = new SimulationService(clock, service).Start(Scene, Head, 2, 4, detector, seed: 4711);
@@ -35,6 +37,32 @@ public sealed class ReadoutBankTests(ITestOutputHelper output)
             await clock.WaitForTimerAsync(); clock.Advance(TimeSpan.FromMilliseconds(250));
         }
         return last!;
+    }
+
+    private static AcquisitionSnapshot AcquireSingleLineOracle(ReadoutPreparationService service, ReadoutPreparation preparation)
+    {
+        var artifact = service.Get(preparation.Id);
+        var config = SimulationService.BuildConfig(Scene, Head, Physical);
+        config.Seed = 4711; config.Detector.Readout = ReadoutPreparationService.Policy(preparation.Plan!);
+        using var source = new Gcam.Simulation.PhysicalListModeSource(config, artifact.Device, artifact.Calibration, 4711);
+        var records = new List<MeasuredReadoutRecord>(); var hits = new List<RealisedReadoutHit>();
+        var image = new DetectorImage(12, 12);
+        static ReadoutCharges Charges(IReadOnlyList<double> q) => new(q[0], q[1], q[2], q[3]);
+        while (source.ObservedTimeS < 2)
+        {
+            foreach (var measured in source.AdvanceUntil(2))
+            {
+                var e = measured.Conversion;
+                records.Add(new(records.Count, e.HoldTimeNs * 1e-9, e.TriggerTimeNs * 1e-9, Charges(e.Codes), Charges(e.AnalogAtHold),
+                    measured.RawX, measured.RawY, measured.Crystal, measured.EnergyKeV, e.DominantHit, e.ContributingHits, e.DominantShare));
+                if (measured.Crystal >= 0) image.Add(measured.Crystal % 12, measured.Crystal / 12, 1);
+            }
+            hits.AddRange(source.LastHits.Select(h => new RealisedReadoutHit(h.TimeNs * 1e-9, Charges(h.Channels))));
+        }
+        int assigned = records.Count(r => r.Crystal >= 0);
+        return new(2, assigned, source.InputRateCps, 1, false, new(image.ReadOnlyCopy(), -5.5, 1, null, 0, 0, null, assigned, TimeSpan.Zero), [], TimeSpan.Zero, true)
+        { Detector = Physical, Optics = Head, Readout = new(preparation, records.AsReadOnly(), hits.AsReadOnly(), records.Count - assigned, source.HasPendingHold)
+            { Lines = [new(preparation, records.Select(r => new ReadoutLineAssignment(r.Crystal, r.EnergyKeV)).ToArray(), assigned, records.Count - assigned)] } };
     }
 
     [Fact]
@@ -125,14 +153,14 @@ public sealed class ReadoutBankTests(ITestOutputHelper output)
         var cs = await service.PrepareAsync(Head, Physical, ReadoutPolicy.Plan(Head, Physical, 661.7, service.Offers), new Inline(reports.Add));
         var stages = reports.Select(r => r.Stage).Distinct().ToArray();
         Assert.Equal(new[] { "Preparing optical table and DC network…", "Transporting independent calibration flood…",
-            "Finding calibration peaks and building LUT…", "Checking independent single-crystal validation flood…" }, stages);
+            "Finding calibration peaks and building LUT…", "Calibrating crystal energy gains…", "Counting assigned correction flood…", "Checking independent single-crystal validation flood…" }, stages);
         var flood = reports.Where(r => r.Stage.StartsWith("Transporting", StringComparison.Ordinal)).ToArray();
         Assert.True(flood.Zip(flood.Skip(1)).All(p => p.First.Done <= p.Second.Done));
         Assert.Equal(144L * 2000, flood[^1].Done); Assert.All(flood, r => Assert.Equal(144L * 2000, r.Total));
         var co = await service.PrepareAsync(Head, Physical, ReadoutPolicy.Plan(Head, Physical, 1332.5, service.Offers));
         Assert.Equal(1, service.CachedEntries); // the 661.7 entry was over the limit and unpinned
         var clock = new ManualTimeProvider();
-        await using (var session = new SimulationService(clock, service).Start(Scene, Head, 1, 1,
+        await using (var session = new SimulationService(clock, service).Start([Scene[1]], Head, 1, 1,
             Physical with { PreparedReadoutLines = new([co.Id]) }, seed: 1))
         {
             var again = await service.PrepareAsync(Head, Physical, ReadoutPolicy.Plan(Head, Physical, 661.7, service.Offers));
@@ -160,7 +188,7 @@ public sealed class ReadoutBankTests(ITestOutputHelper output)
         Assert.Contains("transport 402002003", p.Seeds);
         Assert.Equal(64, p.CorrectionHistogram!.Count);
         var clock = new ManualTimeProvider();
-        await using var session = new SimulationService(clock, service).Start(Scene, optics, 1, 4,
+        await using var session = new SimulationService(clock, service).Start([Scene[0]], optics, 1, 4,
             Physical with { PreparedReadoutLines = new([p.Id]) }, seed: 99);
         AcquisitionSnapshot? last = null;
         await foreach (var s in session.ReadSnapshotsAsync())
@@ -190,10 +218,61 @@ public sealed class ReadoutBankTests(ITestOutputHelper output)
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() => service.PrepareAsync(optics, Physical, plan, progress, cancel.Token));
         Assert.InRange(seen, 2, 64L * 2000 - 1); // cancelled inside the flood, not at a stage boundary
         Assert.Equal(0, service.CachedEntries);
+        Assert.Equal(0, service.CachedDevices);
+    }
+
+    [Fact]
+    public async Task TwoCancelledModules_RetainNoDevices_AndMissingSceneLineIsRefused()
+    {
+        var service = new ReadoutPreparationService();
+        foreach (double pitch in new[] { 1.0, 1.1 })
+        {
+            var optics = Head with { DetectorPixels = 8, PixelPitchMm = pitch };
+            using var cancel = new CancellationTokenSource();
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => service.PrepareAsync(optics, Physical,
+                ReadoutPolicy.Plan(optics, Physical, 661.7, service.Offers),
+                new Inline(r => { if (r.Stage.StartsWith("Transporting", StringComparison.Ordinal)) cancel.Cancel(); }), cancel.Token));
+            Assert.Equal(0, service.CachedEntries); Assert.Equal(0, service.CachedDevices); Assert.Equal(0, service.CachedBytes);
+        }
+        var (cs, _) = await Ready.Value;
+        var ex = Assert.Throws<InvalidOperationException>(() => new SimulationService(readoutPreparation: Service).Start(Scene, Head, 1, 1,
+            Physical with { PreparedReadoutId = cs.Id }));
+        Assert.Contains("every calibration line", ex.Message); Assert.Contains("1332.5", ex.Message);
     }
 
     private sealed class Inline(Action<ReadoutPrepareProgress> action) : IProgress<ReadoutPrepareProgress>
     {
         public void Report(ReadoutPrepareProgress value) => action(value);
+    }
+
+    [Fact]
+    public async Task RealCacheEviction_ChangesShellReadiness_AndRecoversTheTwoLineBank()
+    {
+        // Two 8x8 entries fit; a subsequently prepared Baseline entry evicts them.
+        const long twoEntries = 2 * (256L * 256 * 24 + 64 * 12);
+        var service = new ReadoutPreparationService(ReadoutOfferRecordLoader.LoadEmbedded, twoEntries);
+        var optics = Head with { DetectorPixels = 8 };
+        var acquisition = new SimulationService(readoutPreparation: service);
+        var vm = new Gcam.Studio.Core.ViewModels.MainViewModel(acquisition, new TestTheme(), new SpectrumService(), readoutPreparation: service);
+        vm.Optics = optics; vm.ReadoutMode = ReadoutMode.FourOutputAnger; vm.AmbientDoseRateMicroSvPerHour = 0;
+        vm.AddSourceCommand.Execute(null); vm.Sources[^1].Isotope = "Co-60";
+        await vm.PrepareReadoutCommand.ExecuteAsync(null);
+        Assert.True(vm.IsReadoutBankReady); Assert.Equal(2, vm.MatchingBank.Count);
+        var ids = vm.MatchingBank.Select(p => p.Id).ToArray();
+        await service.PrepareAsync(Head, Physical);
+        Assert.False(vm.IsReadoutBankReady); Assert.Equal("Not prepared", vm.ReadoutState);
+        Assert.All(ids, id => Assert.Throws<InvalidOperationException>(() => service.Get(id)));
+        await vm.StartCommand.ExecuteAsync(null);
+        Assert.Contains("Prepare", vm.ReadoutMessage); Assert.Null(vm.Snapshot);
+        await vm.PrepareReadoutCommand.ExecuteAsync(null);
+        Assert.True(vm.IsReadoutBankReady); Assert.Equal(2, service.CachedEntries);
+        Assert.True(service.CachedBytes <= twoEntries);
+        Assert.All(vm.MatchingBank, p => Assert.DoesNotContain(p.Id, ids));
+    }
+
+    private sealed class TestTheme : IThemeService
+    {
+        public AppTheme Current => AppTheme.Dark;
+        public void Apply(AppTheme theme) { }
     }
 }

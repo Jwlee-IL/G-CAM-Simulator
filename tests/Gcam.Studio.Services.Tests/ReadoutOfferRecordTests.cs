@@ -51,6 +51,12 @@ public sealed class ReadoutOfferRecordTests
         Assert.All(record.Cells.SelectMany(c => c.CostRows), r => Assert.Equal(r.F is not null, r.Direct.Available && r.Anger.Available));
         Assert.Contains("not a measurement-time factor", record.FMeaning);
         Assert.Equal(0.15, record.Benchmark!.WindowFraction);
+        Assert.All(record.Cells.Where(c => c.Offered), c =>
+        {
+            int n = record.Geometries.Single(g => g.Id == c.Geometry).Count;
+            Assert.Equal(n, c.SensitivitySummary!.Width); Assert.Equal(n, c.SensitivitySummary.Height);
+            Assert.Contains("never flood-correction weights", c.SensitivitySummaryMeaning);
+        });
     }
 
     [Fact]

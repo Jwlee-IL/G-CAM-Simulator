@@ -343,6 +343,15 @@ public sealed class ReadoutRenderTests(ITestOutputHelper output)
             if (view == "ReadoutPanel" || view == "ImagingOptionsPanel" || view == "ReadoutDetectorView")
                 output.WriteLine($"HELP {name} {theme} {size.Width:0}x{size.Height:0}: {marks.Length} visible marks ({string.Join(", ", marks.Select(AutomationProperties.GetAutomationId))})");
             var bitmap = new RenderTargetBitmap((int)size.Width,(int)size.Height,96,96,PixelFormats.Pbgra32);
+            if (data is DetectorWorkspaceViewModel detectorView && detectorView.ReadoutTab == ReadoutDetectorTab.Calibration
+                && detectorView.SensitivitySummary is { } summary)
+            {
+                var summaryControl = Descendants(root).OfType<HeatmapView>()
+                    .Single(h => AutomationProperties.GetAutomationId(h) == "Readout.SensitivityMap");
+                Assert.Same(summary, summaryControl.Image);
+                Assert.Equal(detectorView.Shared.Optics.DetectorPixels, summary.Width);
+                Assert.Contains("never flood-correction weights", detectorView.SensitivityHelp);
+            }
             var watch = Stopwatch.StartNew();
             bitmap.Render(root);
             var first = watch.Elapsed;
@@ -394,16 +403,22 @@ public sealed class ReadoutRenderTests(ITestOutputHelper output)
     /// <summary>The real embedded record; preparations come from a drawing fixture stamped with the request's keys.</summary>
     private sealed class FixturePreparation(Func<ReadoutLinePlan, ReadoutPreparation> template) : IReadoutPreparationService
     {
+        private readonly Dictionary<string, ReadoutPreparation> _cache = [];
+        public event EventHandler? CacheChanged;
+        public ReadoutPreparation? FindCached(string key) => _cache.GetValueOrDefault(key);
         public ReadoutOfferRecord Offers { get; } = ReadoutOfferRecordLoader.LoadEmbedded();
         public Task<ReadoutPreparation> PrepareAsync(OpticsSettings optics, DetectorSettings detector, ReadoutLinePlan line,
             IProgress<ReadoutPrepareProgress>? progress = null, CancellationToken cancellationToken = default)
         {
             string module = ReadoutPolicy.Key(optics, detector);
-            return Task.FromResult(template(line) with
+            var result = template(line) with
             {
                 Id = Guid.NewGuid(), Key = module, LineKeV = line.LineKeV, Plan = line,
                 CalibrationKey = ReadoutPolicy.CalibrationKey(module, line),
-            });
+            };
+            _cache[result.CalibrationKey] = result;
+            CacheChanged?.Invoke(this, EventArgs.Empty);
+            return Task.FromResult(result);
         }
     }
 }

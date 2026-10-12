@@ -54,6 +54,17 @@ public sealed class ReadoutLegacyIdentityTests(ITestOutputHelper output)
         var service = new ReadoutPreparationService();
         var p = await service.PrepareAsync(Head, new());
         string preparation = HashPreparation(p);
+        Assert.Equal("readout-v1|12|1|0.1|0.15|2", p.Key);
+        Assert.Equal("readout-v1|12|1|0.1|0.15|2|line 661.7|2000|Legacy|Legacy|legacy-seeds-402", p.CalibrationKey);
+        Assert.Equal("optical 402; transport 403; response 404; ADC 405; independent validation 406/407/408", p.Seeds);
+        Assert.Equal(new ReadoutModuleGeometry(12, 12, 1, .1, 12, 12, 1, .9), p.Module);
+        Assert.True(p.Plan is { IsLegacy: true, LineKeV: 661.7, Budget: 2000, Method: FloodCalibrationMethod.Legacy, Solve: ChargeNetworkSolveMethod.Legacy });
+        Assert.NotEqual(Guid.Empty, p.Id);
+        Assert.Equal(p.Id, (await service.PrepareAsync(Head, new())).Id);
+        Assert.Equal(144, p.Gains.Count);
+        // Recorded from the pre-fix Release calibration's entire private gain array; not a sampled acquisition.
+        Assert.Equal("ff8cb478d33726d3e532f35c703b6925bcc61dc4b1bc067cc9ada7f8b2952bda",
+            Hash(w => { foreach (double gain in p.Gains) w.Write(gain); }));
 
         var detector = new DetectorSettings { ReadoutMode = ReadoutMode.FourOutputAnger, PreparedReadoutId = p.Id };
         var clock = new ManualTimeProvider();

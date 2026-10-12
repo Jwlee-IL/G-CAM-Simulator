@@ -12,6 +12,23 @@ namespace Gcam.Tests;
 public sealed class ReadoutCorrectionTests
 {
     [Theory]
+    [InlineData("Finding calibration peaks and building LUT…")]
+    [InlineData("Calibrating crystal energy gains…")]
+    [InlineData("Counting assigned correction flood…")]
+    public void CancellationAtCalibrationPhases_IsObservedBeforePublication(string phase)
+    {
+        var config = new SimulationConfig(); config.Detector.PixelsX = config.Detector.PixelsY = 4; config.Detector.Material = "GAGG";
+        var policy = new ReadoutConfig { Mode = ReadoutMode.FourOutputAnger, Network = new() { ColumnResistanceOhm = 10 } };
+        var device = new ReadoutDevice(config.Detector, policy, 41000001);
+        var processor = new ReadoutPulseProcessor(device, policy.Pulse, policy.Trigger);
+        var flood = ReadoutFlood.Transport(config, 661.7, 16 * 2000, 41000002);
+        using var cancel = new CancellationTokenSource(); bool reached = false;
+        Assert.ThrowsAny<OperationCanceledException>(() => ReadoutCalibration.Build(device, processor, flood, policy.Calibration,
+            new DefaultRandom(41000003), new DefaultRandom(41000004), cancel.Token, collectCorrectionHistogram: true,
+            stage: value => { if (value == phase) { reached = true; cancel.Cancel(); } }));
+        Assert.True(reached);
+    }
+    [Theory]
     [InlineData(4, FloodCalibrationMethod.Legacy, ChargeNetworkSolveMethod.Legacy)]
     [InlineData(8, FloodCalibrationMethod.LatticeGrowth, ChargeNetworkSolveMethod.Adjoint)]
     public void Histogram_EqualsReplay_AndOptInLeavesCalibrationIdentical(int n, FloodCalibrationMethod method, ChargeNetworkSolveMethod solve)

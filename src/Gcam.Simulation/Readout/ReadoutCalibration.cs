@@ -26,6 +26,8 @@ public sealed class ReadoutCalibration
     public int CrystalsOnGlobalGain { get; }
     public bool Succeeded => Lut.Succeeded;
     public string? Failure => Lut.Failure;
+    /// <summary>Complete deterministic per-crystal energy gains, immutable to callers.</summary>
+    public IReadOnlyList<double> Gains => Array.AsReadOnly(_kevPerCode);
     /// <summary>Opt-in assigned photopeak counts from the original flood, after per-crystal energy calibration.
     /// This is not the truth-labelled sensitivity diagnostic and contains no validation histories.</summary>
     public IReadOnlyList<int>? CorrectionHistogram { get; private init; }
@@ -49,7 +51,7 @@ public sealed class ReadoutCalibration
     public static ReadoutCalibration Build(ReadoutDevice device, ReadoutPulseProcessor processor,
         IReadOnlyList<InteractionSite[]> flood, FloodCalibrationConfig config, IRandom response, IRandom noise,
         CancellationToken cancellationToken = default, bool collectCorrectionHistogram = false,
-        IProgress<int>? progress = null)
+        IProgress<int>? progress = null, Action<string>? stage = null)
     {
         ArgumentNullException.ThrowIfNull(response);
         ArgumentNullException.ThrowIfNull(noise);
@@ -72,39 +74,44 @@ public sealed class ReadoutCalibration
             double s = device.Sum(ev.Codes);
             if (device.Position(ev.Codes, out double x, out double y)) events.Add((x, y, s));
         }
+        progress?.Report(processed);
+        stage?.Invoke("Finding calibration peaks and building LUT…");
+        IEnumerable<(double X, double Y, double Sum)> CheckedEvents() => CancellationSequence.Checked(events, cancellationToken);
         double e = config.EnergyKeV, w = config.WindowFraction;
-        double peak = GlobalPeak(events.Select(v => v.Sum / device.CodesPerKeV), e) * device.CodesPerKeV;
+        double peak = GlobalPeak(CheckedEvents().Select(v => v.Sum / device.CodesPerKeV), e) * device.CodesPerKeV;
         for (int it = 0; it < 3 && peak > 0; it++)
-            peak = MeanWithin(events.Select(v => v.Sum), peak, w) ?? peak;
-        var windowed = events.Where(v => Math.Abs(v.Sum - peak) <= w * peak).ToList();
+            peak = MeanWithin(CheckedEvents().Select(v => v.Sum), peak, w) ?? peak;
+        var windowed = CheckedEvents().Where(v => Math.Abs(v.Sum - peak) <= w * peak).ToList();
         cancellationToken.ThrowIfCancellationRequested();
-        var lut = FloodLut.Calibrate(windowed.Select(v => (v.X, v.Y)).ToList(), device.Crystals.CountX,
-            device.Crystals.CountY, config);
+        var lut = FloodLut.Calibrate(CancellationSequence.Checked(windowed, cancellationToken).Select(v => (v.X, v.Y)).ToList(), device.Crystals.CountX,
+            device.Crystals.CountY, config, cancellationToken);
         cancellationToken.ThrowIfCancellationRequested();
         var gains = Enumerable.Repeat(peak > 0 ? e / peak : double.NaN, device.Crystals.Count).ToArray();
         int fallback = device.Crystals.Count;
         if (lut.Succeeded && peak > 0)
         {
+            stage?.Invoke("Calibrating crystal energy gains…");
             fallback = 0;
             var perCrystal = new List<double>[device.Crystals.Count];
             for (int c = 0; c < perCrystal.Length; c++) perCrystal[c] = [];
-            foreach (var v in windowed)
+            foreach (var v in CancellationSequence.Checked(windowed, cancellationToken))
             {
                 int c = lut.Lookup(v.X, v.Y);
                 if (c >= 0) perCrystal[c].Add(v.Sum);
             }
             for (int c = 0; c < perCrystal.Length; c++)
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 if (perCrystal[c].Count < MinGainEvents) { fallback++; continue; }
                 double m = peak;
-                for (int it = 0; it < 3; it++) m = MeanWithin(perCrystal[c], m, w) ?? m;
+                for (int it = 0; it < 3; it++) m = MeanWithin(CancellationSequence.Checked(perCrystal[c], cancellationToken), m, w) ?? m;
                 gains[c] = e / m;
             }
         }
-        progress?.Report(processed);
         int[]? correction = null;
         if (collectCorrectionHistogram && lut.Succeeded)
         {
+            stage?.Invoke("Counting assigned correction flood…");
             correction = new int[device.Crystals.Count];
             for (int i = 0; i < events.Count; i++)
             {

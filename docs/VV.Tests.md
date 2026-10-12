@@ -36,7 +36,7 @@ Run `python samples/testing/test_records.py check-catalog --discover` after a Re
 | `Gcam.Studio.Services.Tests::Gcam.Studio.Services.Tests.MeasurementRandomnessTests` | 1 | 1 |
 | `Gcam.Studio.Services.Tests::Gcam.Studio.Services.Tests.OpticsProjectionTests` | 6 | 14 |
 | `Gcam.Studio.Services.Tests::Gcam.Studio.Services.Tests.PhysicalReadoutTests` | 6 | 6 |
-| `Gcam.Studio.Services.Tests::Gcam.Studio.Services.Tests.ReadoutBankTests` | 6 | 6 |
+| `Gcam.Studio.Services.Tests::Gcam.Studio.Services.Tests.ReadoutBankTests` | 8 | 8 |
 | `Gcam.Studio.Services.Tests::Gcam.Studio.Services.Tests.ReadoutLegacyIdentityTests` | 1 | 1 |
 | `Gcam.Studio.Services.Tests::Gcam.Studio.Services.Tests.ReadoutOfferRecordTests` | 4 | 4 |
 | `Gcam.Studio.Services.Tests::Gcam.Studio.Services.Tests.SpectrumServiceTests` | 8 | 10 |
@@ -62,7 +62,7 @@ Run `python samples/testing/test_records.py check-catalog --discover` after a Re
 | `Gcam.Studio.Tests::Gcam.Studio.Tests.OverlayLabelLayoutTests` | 5 | 6 |
 | `Gcam.Studio.Tests::Gcam.Studio.Tests.PlotSeriesTests` | 1 | 1 |
 | `Gcam.Studio.Tests::Gcam.Studio.Tests.PlotViewportTests` | 4 | 5 |
-| `Gcam.Studio.Tests::Gcam.Studio.Tests.ReadoutViewModelTests` | 10 | 14 |
+| `Gcam.Studio.Tests::Gcam.Studio.Tests.ReadoutViewModelTests` | 12 | 16 |
 | `Gcam.Studio.Tests::Gcam.Studio.Tests.SpectrumBandTests` | 1 | 1 |
 | `Gcam.Studio.Tests::Gcam.Studio.Tests.ThemeContrastTests` | 2 | 8 |
 | `Gcam.Studio.Tests::Gcam.Studio.Tests.TickFormatterTests` | 7 | 18 |
@@ -140,7 +140,7 @@ Run `python samples/testing/test_records.py check-catalog --discover` after a Re
 | `Gcam.Tests::Gcam.Tests.RandomQualityTests` | 5 | 7 |
 | `Gcam.Tests::Gcam.Tests.RangeLocalizationTests` | 1 | 3 |
 | `Gcam.Tests::Gcam.Tests.ReadoutArtifactTests` | 2 | 2 |
-| `Gcam.Tests::Gcam.Tests.ReadoutCorrectionTests` | 1 | 2 |
+| `Gcam.Tests::Gcam.Tests.ReadoutCorrectionTests` | 2 | 5 |
 | `Gcam.Tests::Gcam.Tests.ReadoutDefaultPathTests` | 7 | 7 |
 | `Gcam.Tests::Gcam.Tests.ReadoutDeviceTests` | 5 | 8 |
 | `Gcam.Tests::Gcam.Tests.ReadoutFloodStreamTests` | 2 | 2 |
@@ -203,7 +203,7 @@ Run `python samples/testing/test_records.py check-catalog --discover` after a Re
 | `unittest::test_studio_readout.StudioReadoutRuleV2Tests` | 6 | 6 |
 | `unittest::test_studio_readout.StudioReadoutRuleV3Tests` | 8 | 8 |
 | `unittest::test_studio_readout.StudioReadoutSelectorTests` | 8 | 8 |
-| `unittest::test_studio_readout_offer.StudioReadoutOfferRecordTests` | 5 | 5 |
+| `unittest::test_studio_readout_offer.StudioReadoutOfferRecordTests` | 6 | 6 |
 | `unittest::test_studio_readout_v4.StudioReadoutRuleV4Tests` | 15 | 15 |
 | `unittest::test_studio_readout_v5.StudioReadoutRuleV5Tests` | 10 | 10 |
 <!-- END GENERATED: TEST DISCOVERY -->
@@ -3463,7 +3463,7 @@ Tolerance: Exact/structural. Render times are measurements, not thresholds.
 Gates: `GCAM_RENDER_SNAPSHOTS` (render method); none for the bound-controls method.
 
 ```json
-{"runner":"dotnet","sources":{"tests/Gcam.Studio.RenderTests/ReadoutRenderTests.cs":"bbb80c0df861632856d72be324411e485995093daab564652f01f7b895eb84ba","tests/Gcam.Studio.RenderTests/RenderSnapshotFactAttribute.cs":"95dd1088eee764d18a539ff37399a3c518aa75056d29d2de60286d2173ba1edd"},"methods":["BoundReadoutControls_RejectedEditsShowAcceptedSourceValues","LineRows_ExposeTheirDetailsToAutomation_AcrossRowRebuilds","ExperimentalDetectorAndFourLanes_BothThemesAndSizes"],"id":"Gcam.Studio.RenderTests::Gcam.Studio.RenderTests.ReadoutRenderTests","trace":[]}
+{"runner":"dotnet","sources":{"tests/Gcam.Studio.RenderTests/ReadoutRenderTests.cs":"a8a3cff229504bfc279ceceacc960a1e50d26f56aa121e0e0299bb1aa8a32b8c","tests/Gcam.Studio.RenderTests/RenderSnapshotFactAttribute.cs":"95dd1088eee764d18a539ff37399a3c518aa75056d29d2de60286d2173ba1edd"},"methods":["BoundReadoutControls_RejectedEditsShowAcceptedSourceValues","LineRows_ExposeTheirDetailsToAutomation_AcrossRowRebuilds","ExperimentalDetectorAndFourLanes_BothThemesAndSizes"],"id":"Gcam.Studio.RenderTests::Gcam.Studio.RenderTests.ReadoutRenderTests","trace":[]}
 ```
 
 
@@ -3493,7 +3493,7 @@ Tolerance: Exact/structural.
 Gates: none.
 
 ```json
-{"runner":"dotnet","sources":{"tests/Gcam.Studio.Tests/ReadoutViewModelTests.cs":"fd97fedff9e2348c70df455f4409775371437afdaf2409111a14ed1c50b6446c"},"methods":["AnyValidGeometry_SelectsPhysicalReadout_WithPerLinePlansAndLegacyLocks","StartRefusesFieldAndMissingPreparationWithoutSilentZeroing","RequiredLinesFollowTheScene_RefusedAndIncidentalLinesNeverBlock_BankIsReferenceFirst","PreparationKeyInvalidationAndWindowValidation_AreExplicit","FailureAndCancellation_KeepFinishedLinesAndReportLiterally","Custom_MatchingModuleInheritsOfferAndBudget_ButNotTheCost_UnmatchedIsLocal","MissingRecord_OffersNothing_AndStartSaysWhy","CostCard_InheritsOnlyOnFullProfile_StatesFWording_AndExplainsFBelowOneFromTheData","BenchmarkWindow_MatchesTypedEdgesAtTheirDefinedPrecision","CostCard_InheritsWithHandTypedBenchmarkWindow"],"id":"Gcam.Studio.Tests::Gcam.Studio.Tests.ReadoutViewModelTests","trace":[]}
+{"runner":"dotnet","sources":{"tests/Gcam.Studio.Tests/ReadoutViewModelTests.cs":"d208425129d4ea54cb2978d1e0e9d105a069bd9f3a8c782dd8690b42065ea914"},"methods":["AnyValidGeometry_SelectsPhysicalReadout_WithPerLinePlansAndLegacyLocks","StartRefusesFieldAndMissingPreparationWithoutSilentZeroing","RequiredLinesFollowTheScene_RefusedAndIncidentalLinesNeverBlock_BankIsReferenceFirst","PreparationKeyInvalidationAndWindowValidation_AreExplicit","FailureAndCancellation_KeepFinishedLinesAndReportLiterally","Custom_MatchingModuleInheritsOfferAndBudget_ButNotTheCost_UnmatchedIsLocal","MissingRecord_OffersNothing_AndStartSaysWhy","CostCard_InheritsOnlyOnFullProfile_StatesFWording_AndExplainsFBelowOneFromTheData","BenchmarkWindow_MatchesTypedEdgesAtTheirDefinedPrecision","CostCard_InheritsWithHandTypedBenchmarkWindow","Eviction_RefusesStart_ReleasesViews_AndPrepareRecovers","MixedSceneAtTwoMetres_AndCurrentRate_AreReferenceOnly_WithLiteralDifferences"],"id":"Gcam.Studio.Tests::Gcam.Studio.Tests.ReadoutViewModelTests","trace":[]}
 ```
 
 
@@ -3508,7 +3508,7 @@ Tolerance: Exact/structural. Bounded UI waits are operational deadlines, not phy
 Gates: Desktop methods: GCAM_UI_TESTS=1; oracles: none.
 
 ```json
-{"runner":"dotnet","sources":{"tests/Gcam.Studio.UiTests/ReadoutScenarioTests.cs":"bfa01aa87951b988f68d65239fb304d551f8bf457a9cbc2648b445595824eb0c","tests/Gcam.Studio.UiTests/Harness/FloodOracle.cs":"22db35cb2771a0460e437e47308b5792bf1c22d2dc077af54106223a29cd75be","tests/Gcam.Studio.UiTests/Harness/Pointer.cs":"e56d09c72e552bf5619c088150a0d6ceba0ec2eb75ee06c2744c4677b9db896c","tests/Gcam.Studio.UiTests/Harness/RepoPaths.cs":"2bdc3c25db3c74cfe32ea7f64352f36cc5fb3b8fbf7be92ce03b7184648cc655","tests/Gcam.Studio.UiTests/Harness/RunRecord.cs":"0db3b6cf367fed06ba506db2973593b100ebed4a6ca793552a77e490d0fce377","tests/Gcam.Studio.UiTests/Harness/Scenario.cs":"3a7766172a9dcfb711d3b9a2b9fca9712877bd9aff35ba74f04aedc8d1b782d2","tests/Gcam.Studio.UiTests/Harness/StudioProcess.cs":"973777303020b10c38bcd701e991764b095cb2f149ed31da6a5d554bf73d87c2","tests/Gcam.Studio.UiTests/Harness/StudioWindow.cs":"870000b25e6b7a3ca9f71ebfb671658b15cbb937290d7e14050d360409940e86","tests/Gcam.Studio.UiTests/Harness/WorkspaceOracle.cs":"153e5f5ec778401b877467e405295a940d663d4fea1d32f9101139e9c0b325e5","tests/Gcam.Studio.UiTests/DesktopFactAttribute.cs":"1dcac8c38143a4d38635267e17af2acdbb5f2ee84eca07e2968a2a1e7f073bfc"},"methods":["CountOracle_RefusesNonConservationAndMissingIdentity","ModuleOracle_ReadsTheCapturedGeometry_AndWaitsFollowTheMeasuredCost","RefusedLineAndField_ExplainWithoutZeroing","PreparationCancelRetryAndTabs_AreExplicit","FixedSeedRepeatAndContinuation_ConserveCountsAndExposeFourLanes","SharpTwoLineBank_SwitchesWindowAndLineWithoutTruthDispatch","WideCostCard_ShowsNeutralFAndTheDirectBiasExplanation","HighResCold_ProgressTabsCornersAndSessionHit_Bundled","CustomModules_InheritByModuleNotCost_UnknownCalibratesLocally"],"id":"Gcam.Studio.UiTests::Gcam.Studio.UiTests.ReadoutScenarioTests","trace":[]}
+{"runner":"dotnet","sources":{"tests/Gcam.Studio.UiTests/ReadoutScenarioTests.cs":"42944ee4afd56d9b61007da179dcc7e0ca725069bbed7e9de31b24c8cb2e37cf","tests/Gcam.Studio.UiTests/Harness/FloodOracle.cs":"22db35cb2771a0460e437e47308b5792bf1c22d2dc077af54106223a29cd75be","tests/Gcam.Studio.UiTests/Harness/Pointer.cs":"e56d09c72e552bf5619c088150a0d6ceba0ec2eb75ee06c2744c4677b9db896c","tests/Gcam.Studio.UiTests/Harness/RepoPaths.cs":"2bdc3c25db3c74cfe32ea7f64352f36cc5fb3b8fbf7be92ce03b7184648cc655","tests/Gcam.Studio.UiTests/Harness/RunRecord.cs":"0db3b6cf367fed06ba506db2973593b100ebed4a6ca793552a77e490d0fce377","tests/Gcam.Studio.UiTests/Harness/Scenario.cs":"3a7766172a9dcfb711d3b9a2b9fca9712877bd9aff35ba74f04aedc8d1b782d2","tests/Gcam.Studio.UiTests/Harness/StudioProcess.cs":"973777303020b10c38bcd701e991764b095cb2f149ed31da6a5d554bf73d87c2","tests/Gcam.Studio.UiTests/Harness/StudioWindow.cs":"870000b25e6b7a3ca9f71ebfb671658b15cbb937290d7e14050d360409940e86","tests/Gcam.Studio.UiTests/Harness/WorkspaceOracle.cs":"153e5f5ec778401b877467e405295a940d663d4fea1d32f9101139e9c0b325e5","tests/Gcam.Studio.UiTests/DesktopFactAttribute.cs":"1dcac8c38143a4d38635267e17af2acdbb5f2ee84eca07e2968a2a1e7f073bfc"},"methods":["CountOracle_RefusesNonConservationAndMissingIdentity","ModuleOracle_ReadsTheCapturedGeometry_AndWaitsFollowTheMeasuredCost","RefusedLineAndField_ExplainWithoutZeroing","PreparationCancelRetryAndTabs_AreExplicit","FixedSeedRepeatAndContinuation_ConserveCountsAndExposeFourLanes","SharpTwoLineBank_SwitchesWindowAndLineWithoutTruthDispatch","WideCostCard_ShowsNeutralFAndTheDirectBiasExplanation","HighResCold_ProgressTabsCornersAndSessionHit_Bundled","CustomModules_InheritByModuleNotCost_UnknownCalibratesLocally"],"id":"Gcam.Studio.UiTests::Gcam.Studio.UiTests.ReadoutScenarioTests","trace":[]}
 ```
 
 
@@ -3708,7 +3708,7 @@ Gates: none.
 Source: [tests/Gcam.Studio.Services.Tests/ReadoutLegacyIdentityTests.cs](../tests/Gcam.Studio.Services.Tests/ReadoutLegacyIdentityTests.cs).
 
 ```json
-{"id":"Gcam.Studio.Services.Tests::Gcam.Studio.Services.Tests.ReadoutLegacyIdentityTests","runner":"dotnet","methods":["Baseline661_PreparationAcquisitionAndProjections_MatchPreBankFixtures"],"sources":{"tests/Gcam.Studio.Services.Tests/ReadoutLegacyIdentityTests.cs":"ade1ba829dd781d66dc79e577db996a14245fef2b6dbd197fa71b9e8cb2c52ed","tests/Gcam.Studio.Services.Tests/EvidenceFactAttribute.cs":"898301fdfe0438aa4ea3503809ee81dc90b225dff52defb3e2cee6277085cd60"},"trace":[]}
+{"id":"Gcam.Studio.Services.Tests::Gcam.Studio.Services.Tests.ReadoutLegacyIdentityTests","runner":"dotnet","methods":["Baseline661_PreparationAcquisitionAndProjections_MatchPreBankFixtures"],"sources":{"tests/Gcam.Studio.Services.Tests/ReadoutLegacyIdentityTests.cs":"e43779ec3601c56b9ea68eebc22a91e396cb80064bcedc257ab6b180be72fc6a","tests/Gcam.Studio.Services.Tests/EvidenceFactAttribute.cs":"898301fdfe0438aa4ea3503809ee81dc90b225dff52defb3e2cee6277085cd60"},"trace":[]}
 ```
 
 
@@ -3725,13 +3725,13 @@ Gates: none.
 Source: [tests/Gcam.Studio.Services.Tests/ReadoutOfferRecordTests.cs](../tests/Gcam.Studio.Services.Tests/ReadoutOfferRecordTests.cs).
 
 ```json
-{"id":"Gcam.Studio.Services.Tests::Gcam.Studio.Services.Tests.ReadoutOfferRecordTests","runner":"dotnet","methods":["EmbeddedRecord_IsTheRepositoryFile_AndMatchesTheCompiledPin","PublishedOutcome_IsReadVerbatim","ChangedOrMalformedBytes_AreUnavailable_NeverAFallback","Plans_FollowTheRecordAndTheModuleFingerprint"],"sources":{"tests/Gcam.Studio.Services.Tests/ReadoutOfferRecordTests.cs":"e633d9c99c51fc5a01bec1a958001e60d7ac5ce989875be97ca4848cd6012697","tests/Gcam.Studio.Services.Tests/EvidenceFactAttribute.cs":"898301fdfe0438aa4ea3503809ee81dc90b225dff52defb3e2cee6277085cd60"},"trace":[]}
+{"id":"Gcam.Studio.Services.Tests::Gcam.Studio.Services.Tests.ReadoutOfferRecordTests","runner":"dotnet","methods":["EmbeddedRecord_IsTheRepositoryFile_AndMatchesTheCompiledPin","PublishedOutcome_IsReadVerbatim","ChangedOrMalformedBytes_AreUnavailable_NeverAFallback","Plans_FollowTheRecordAndTheModuleFingerprint"],"sources":{"tests/Gcam.Studio.Services.Tests/ReadoutOfferRecordTests.cs":"5e6fd097af91c280819a5b1c272a3dec89d0b4886e44dd2d3d90b8174233c3bc","tests/Gcam.Studio.Services.Tests/EvidenceFactAttribute.cs":"898301fdfe0438aa4ea3503809ee81dc90b225dff52defb3e2cee6277085cd60"},"trace":[]}
 ```
 
 
 ## ReadoutBankTests — dotnet
 
-TODO-41 per-line banks on the real engine: line preparations capture the module and declared streams; held ADC facts are acquired once and each line equals its own single-line acquisition (no truth dispatch); windows read only their own line (a 122 keV window is unavailable, not zero); the opt-in flood correction applies the calibration histogram exactly and an empty bin makes the corrected image unavailable; the session cache pins captured entries and evicts others by accounted bytes; real stage / history progress; a small local Custom module runs the LatticeGrowth / adjoint streamed path and acquires on its captured 8 x 8 geometry; cancellation inside the streamed flood publishes nothing.
+TODO-41 per-line banks on the real engine: line preparations capture the module and declared streams; held ADC facts are acquired once and each line equals its own single-line acquisition (no truth dispatch); windows read only their own line (a 122 keV window is unavailable, not zero); the opt-in flood correction applies the calibration histogram exactly and an empty bin makes the corrected image unavailable; the session cache pins captured entries and evicts others by accounted bytes; real stage / history progress; a small local Custom module runs the LatticeGrowth / adjoint streamed path and acquires on its captured 8 x 8 geometry; cancellation inside the streamed flood publishes nothing; cancelled modules retain no devices; a real cache eviction invalidates the shell bank and Prepare recovers; the service rejects incomplete scene banks. The independent single-line oracle runs below the complete-bank Studio boundary.
 
 Oracle: Independent single-line acquisition with the same seed; hand-computed weights mean/h; declared seed formula 402 000 000 + 1 000 * line index + purpose; exact history totals (crystals x budget).
 
@@ -3742,7 +3742,7 @@ Gates: none.
 Source: [tests/Gcam.Studio.Services.Tests/ReadoutBankTests.cs](../tests/Gcam.Studio.Services.Tests/ReadoutBankTests.cs).
 
 ```json
-{"id":"Gcam.Studio.Services.Tests::Gcam.Studio.Services.Tests.ReadoutBankTests","runner":"dotnet","methods":["LinePreparations_CaptureTheModuleAndDeclaredStreams","HeldFactsOnce_EachLineEqualsItsOwnSingleLineAcquisition_WindowsReadOnlyTheirLine","FloodCorrection_AppliesTheHistogramExactly_EmptyBinMakesItUnavailable","SessionCache_PinsCapturedEntries_EvictsOthersByAccountedBytes_ReportsRealProgress","LocalCustomModule_UsesGrowthAdjointStreams_AndAcquiresOnItsCapturedGeometry","CancellationDuringTheStreamedFlood_PublishesNothing"],"sources":{"tests/Gcam.Studio.Services.Tests/ReadoutBankTests.cs":"f18df1656705e9d55c0d73b6f08afbf09f89e463fd35dbb0971697a31897977e","tests/Gcam.Studio.Services.Tests/EvidenceFactAttribute.cs":"898301fdfe0438aa4ea3503809ee81dc90b225dff52defb3e2cee6277085cd60"},"trace":[]}
+{"id":"Gcam.Studio.Services.Tests::Gcam.Studio.Services.Tests.ReadoutBankTests","runner":"dotnet","methods":["LinePreparations_CaptureTheModuleAndDeclaredStreams","HeldFactsOnce_EachLineEqualsItsOwnSingleLineAcquisition_WindowsReadOnlyTheirLine","FloodCorrection_AppliesTheHistogramExactly_EmptyBinMakesItUnavailable","SessionCache_PinsCapturedEntries_EvictsOthersByAccountedBytes_ReportsRealProgress","LocalCustomModule_UsesGrowthAdjointStreams_AndAcquiresOnItsCapturedGeometry","CancellationDuringTheStreamedFlood_PublishesNothing","TwoCancelledModules_RetainNoDevices_AndMissingSceneLineIsRefused","RealCacheEviction_ChangesShellReadiness_AndRecoversTheTwoLineBank"],"sources":{"tests/Gcam.Studio.Services.Tests/ReadoutBankTests.cs":"dd1d004fbca3bc8e8cc700a136ebafc66317df7b52af3d423f6f82308905a7bb","tests/Gcam.Studio.Services.Tests/EvidenceFactAttribute.cs":"898301fdfe0438aa4ea3503809ee81dc90b225dff52defb3e2cee6277085cd60"},"trace":[]}
 ```
 
 
@@ -3759,7 +3759,7 @@ Gates: none.
 Source: [tests/Gcam.Tests/ReadoutCorrectionTests.cs](../tests/Gcam.Tests/ReadoutCorrectionTests.cs).
 
 ```json
-{"id":"Gcam.Tests::Gcam.Tests.ReadoutCorrectionTests","runner":"dotnet","methods":["Histogram_EqualsReplay_AndOptInLeavesCalibrationIdentical"],"sources":{"tests/Gcam.Tests/ReadoutCorrectionTests.cs":"7471c38500540b3b08abc186af69a50d3301cee64ca6a1b06effdc53ee6e55cd","tests/Gcam.Tests/Harness/Rigs.cs":"9b89ce04cdcb302fcefc6636d45a0d1640a48c288d1e0a3638b005c44028c3b2","tests/Gcam.Tests/Harness/Stat.cs":"4502dddc6276f9d1de0c41b2ed7246ed7f00c9266daa12a34d6174ae1cb19029"},"trace":[]}
+{"id":"Gcam.Tests::Gcam.Tests.ReadoutCorrectionTests","runner":"dotnet","methods":["CancellationAtCalibrationPhases_IsObservedBeforePublication","Histogram_EqualsReplay_AndOptInLeavesCalibrationIdentical"],"sources":{"tests/Gcam.Tests/ReadoutCorrectionTests.cs":"ae5d494b5b9df8208c85ce5a6b2853b8c6437996eaa2deb8128f25bf09b4a1db","tests/Gcam.Tests/Harness/Rigs.cs":"9b89ce04cdcb302fcefc6636d45a0d1640a48c288d1e0a3638b005c44028c3b2","tests/Gcam.Tests/Harness/Stat.cs":"4502dddc6276f9d1de0c41b2ed7246ed7f00c9266daa12a34d6174ae1cb19029"},"trace":[]}
 ```
 
 
@@ -3776,7 +3776,7 @@ Gates: none.
 Source: [samples/evidence/tests/test_studio_readout_offer.py](../samples/evidence/tests/test_studio_readout_offer.py).
 
 ```json
-{"id":"unittest::test_studio_readout_offer.StudioReadoutOfferRecordTests","runner":"unittest","methods":["test_shipped_record_passes_the_reduced_check_and_matches_the_compiled_pin","test_published_outcome_and_reduction","test_rebuild_is_deterministic","test_each_hash_chain_link_fails_closed","test_overlay_scope_and_population_are_enforced"],"sources":{"samples/evidence/tests/test_studio_readout_offer.py":"dce3e5cd9ef618b55fb97f0cadc9a8bfe23411d282c67ec5fdde265c1b05c03a"},"trace":[]}
+{"id":"unittest::test_studio_readout_offer.StudioReadoutOfferRecordTests","runner":"unittest","methods":["test_shipped_record_passes_the_reduced_check_and_matches_the_compiled_pin","test_published_outcome_and_reduction","test_rebuild_is_deterministic","test_sensitivity_mean_has_a_hand_computed_oracle","test_each_hash_chain_link_fails_closed","test_overlay_scope_and_population_are_enforced"],"sources":{"samples/evidence/tests/test_studio_readout_offer.py":"4bd95f8c9173fe518d1d5b9b043060308b527dcd32f12d6e66d6c20e95379d61"},"trace":[]}
 ```
 
 
@@ -3793,5 +3793,5 @@ Gates: none.
 Source: [samples/evidence/studio_readout_offer_record.py](../samples/evidence/studio_readout_offer_record.py).
 
 ```json
-{"id":"checker::studio-readout-offer","runner":"checker","methods":["studio-readout-offer"],"sources":{"samples/evidence/studio_readout_offer_record.py":"d1f2a5e9baaa003b3233f5189908a74653b44819c6b1d481fd476d932e5727d0"},"trace":[]}
+{"id":"checker::studio-readout-offer","runner":"checker","methods":["studio-readout-offer"],"sources":{"samples/evidence/studio_readout_offer_record.py":"f306f1ee42b53f5b9beabdd06a61b060c4941a19b26e1f33eef2baebb5c88f5e"},"trace":[]}
 ```

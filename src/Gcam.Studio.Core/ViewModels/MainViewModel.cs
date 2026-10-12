@@ -36,6 +36,7 @@ public sealed partial class MainViewModel : ObservableObject
         IWaveformService? waveform = null, IDetectorFaceService? detectorFace = null, IFocusSweepService? focusSweep = null, IReadoutPreparationService? readoutPreparation = null)
     {
         _readoutPreparation = readoutPreparation;
+        if (_readoutPreparation is not null) _readoutPreparation.CacheChanged += ReadoutCacheChanged;
         _acquisition = acquisition;
         _theme = theme;
         Imaging = new ImagingWorkspaceViewModel(this, imaging, focusSweep);
@@ -588,6 +589,7 @@ public sealed partial class MainViewModel : ObservableObject
     private void OnSourceIsotopeChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (e.PropertyName == nameof(SourceItemViewModel.Isotope)) NotifyReadout();
+        else if (e.PropertyName is nameof(SourceItemViewModel.X) or nameof(SourceItemViewModel.Y) or nameof(SourceItemViewModel.DistanceMm) or nameof(SourceItemViewModel.ActivityUCi)) Imaging.NotifyReadoutCost();
     }
 
     internal void NotifyFocalGeometryChanged() => OnPropertyChanged(nameof(FcfovHalfMm));

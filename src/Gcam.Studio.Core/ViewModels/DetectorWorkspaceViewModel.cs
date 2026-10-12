@@ -53,6 +53,14 @@ public sealed partial class DetectorWorkspaceViewModel(MainViewModel shared, IDe
 
     /// <summary>The confirmed offer / refusal rows of the pending module, kept apart from local preparation state.</summary>
     public IReadOnlyList<ReadoutLineRow> OfferRows => Shared.IsPhysicalReadout ? Shared.ReadoutLines : [];
+    public Gcam.Core.DetectorImage? SensitivitySummary => SensitivityCell?.SensitivitySummary;
+    public double SensitivityStepMm => Shared.ReadoutOffers.Geometries.FirstOrDefault(g => g.Id == SensitivityCell?.Geometry)?.PitchMm ?? 1;
+    public double SensitivityOriginMm => -((SensitivitySummary?.Width ?? 1) - 1) * SensitivityStepMm / 2;
+    private ReadoutOfferCell? SensitivityCell => Shared.ReadoutPlans.FirstOrDefault(p => p.LineKeV ==
+        (ShownLineKeV ?? ReadoutPolicy.LineForWindow(Shared.WindowLowKeV, Shared.WindowHighKeV, out _) ?? ReadoutPolicy.ReferenceLineKeV))?.Cell;
+    public string SensitivityCaption => SensitivityCell is { SensitivitySummary: not null } cell
+        ? $"{Kev(cell.EnergyKeV)} keV · mean sensitivity map (32 seeds) · weakest / median {cell.Diagnostics.First(d => d.RateCps == 0).WeakestMedianSensitivity!.Estimate:0.###} (recorded seed statistic)" : "Sensitivity summary unavailable for this line";
+    public string SensitivityHelp => SensitivityCell?.SensitivitySummaryMeaning ?? "No offered-cell sensitivity summary.";
 
     /// <summary>Literal published failures and the confirmed 32-seed crystal diagnostics of each line (record values,
     /// distinct from the local 200-history check in Diagnostics).</summary>
@@ -147,6 +155,6 @@ public sealed partial class DetectorWorkspaceViewModel(MainViewModel shared, IDe
         else { Face = null; _faceOptics = null; _faceDetector = null; }
         foreach (string name in new[] { nameof(Identity), nameof(Readout), nameof(Counts), nameof(GainLegend), nameof(MinimumGain), nameof(MaximumGain) }) OnPropertyChanged(name);
         foreach (string name in new[] { nameof(Bank), nameof(BankLines), nameof(ShownLineKeV), nameof(Preparation), nameof(PhysicalSnapshot), nameof(Diagnostics), nameof(CalibrationState),
-            nameof(PhysicalCounts), nameof(OfferRows), nameof(OfferDetails) }) OnPropertyChanged(name);
+            nameof(PhysicalCounts), nameof(OfferRows), nameof(OfferDetails), nameof(SensitivitySummary), nameof(SensitivityStepMm), nameof(SensitivityOriginMm), nameof(SensitivityCaption), nameof(SensitivityHelp) }) OnPropertyChanged(name);
     }
 }

@@ -11,6 +11,7 @@ public sealed record ReadoutPreparation(Guid Id, string Key, bool Succeeded, str
 {
     public ReadoutCircuit? Circuit { get; init; }
     public double SensorActiveWidthMm { get; init; }
+    public IReadOnlyList<double> Gains { get; init; } = [];
 
     /// <summary>Calibration line (keV) this entry was prepared for.</summary>
     public double LineKeV { get; init; } = 661.7;

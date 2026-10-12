@@ -1,4 +1,5 @@
 using Gcam.Configuration;
+using Gcam.Core;
 
 namespace Gcam.Detector;
 
@@ -64,10 +65,10 @@ public sealed class FloodLut
     }
 
     /// <summary>Histogram of raw positions over [−1, 1)² (points outside are dropped).</summary>
-    public static double[] Histogram(IEnumerable<(double X, double Y)> points, int binsX, int binsY)
+    public static double[] Histogram(IEnumerable<(double X, double Y)> points, int binsX, int binsY, CancellationToken token = default)
     {
         var h = new double[binsX * binsY];
-        foreach (var (x, y) in points)
+        foreach (var (x, y) in CancellationSequence.Checked(points, token))
         {
             int b = Bin(x, y, binsX, binsY);
             if (b >= 0) h[b]++;
@@ -76,8 +77,9 @@ public sealed class FloodLut
     }
 
     /// <summary>Separable Gaussian smoothing, kernel truncated at 4σ, zero outside the plane. σ = 0 returns a copy.</summary>
-    public static double[] Smooth(double[] h, int binsX, int binsY, double sigma)
+    public static double[] Smooth(double[] h, int binsX, int binsY, double sigma, CancellationToken token = default)
     {
+        token.ThrowIfCancellationRequested();
         if (!(sigma > 0)) return (double[])h.Clone();
         int r = (int)Math.Ceiling(4 * sigma);
         var k = new double[2 * r + 1];
@@ -89,6 +91,7 @@ public sealed class FloodLut
         for (int y = 0; y < binsY; y++)
             for (int x = 0; x < binsX; x++)
             {
+                if ((x & 255) == 0) token.ThrowIfCancellationRequested();
                 double s = 0;
                 for (int i = -r; i <= r; i++)
                 {
@@ -100,6 +103,7 @@ public sealed class FloodLut
         for (int y = 0; y < binsY; y++)
             for (int x = 0; x < binsX; x++)
             {
+                if ((x & 255) == 0) token.ThrowIfCancellationRequested();
                 double s = 0;
                 for (int i = -r; i <= r; i++)
                 {
@@ -112,8 +116,9 @@ public sealed class FloodLut
     }
 
     public static FloodLut Calibrate(IReadOnlyCollection<(double X, double Y)> points, int countX, int countY,
-        FloodCalibrationConfig config)
+        FloodCalibrationConfig config, CancellationToken token = default)
     {
+        token.ThrowIfCancellationRequested();
         ArgumentNullException.ThrowIfNull(points);
         ArgumentNullException.ThrowIfNull(config);
         if (countX < 1 || countY < 1 || config.BinsPerCrystal < 2 || !(config.SmoothingSigmaBins >= 0)
@@ -123,8 +128,8 @@ public sealed class FloodLut
         // LatticeGrowth fixes its own detection scale: one eighth of the nominal spot spacing (constant raw width).
         double sigma = config.Method == FloodCalibrationMethod.LatticeGrowth
             ? config.BinsPerCrystal * FloodTopology.SigmaFraction : config.SmoothingSigmaBins;
-        var density = Smooth(Histogram(points, bx, by), bx, by, sigma);
-        double max = density.Max();
+        var density = Smooth(Histogram(points, bx, by, token), bx, by, sigma, token);
+        double max = CancellationSequence.Checked(density, token).Max();
         FloodLut Fail(int found, string why) => new(countX, countY, bx, by, sigma, density, found, why, [], []);
         if (!(max > 0)) return Fail(0, "empty calibration flood");
 
@@ -133,6 +138,7 @@ public sealed class FloodLut
         for (int y = 0; y < by; y++)
             for (int x = 0; x < bx; x++)
             {
+                if ((x & 255) == 0) token.ThrowIfCancellationRequested();
                 double v = density[y * bx + x];
                 if (v < config.MinPeakFraction * max || v <= 0) continue;
                 bool peak = true;
@@ -151,25 +157,34 @@ public sealed class FloodLut
         int[]? topologyGrid = null;
         if (config.Method == FloodCalibrationMethod.TopologyAware)
         {
-            topologyGrid = FloodTopology.Match(density, candidates, countX, countY, bx, by, out string? failure);
+            topologyGrid = FloodTopology.Match(density, candidates, countX, countY, bx, by, out string? failure, token);
             if (topologyGrid is null) return Fail(candidates.Count, failure!);
         }
         else if (config.Method == FloodCalibrationMethod.LatticeGrowth)
         {
             topologyGrid = FloodTopology.Grow(density, candidates, countX, countY, bx, by, config.BinsPerCrystal, sigma,
-                out string? failure);
+                out string? failure, token);
             if (topologyGrid is null) return Fail(candidates.Count, failure!);
         }
         else if (config.Method != FloodCalibrationMethod.Legacy)
             throw new ArgumentOutOfRangeException(nameof(config.Method));
-        candidates.Sort((p, q) => density[q] != density[p] ? density[q].CompareTo(density[p]) : p.CompareTo(q));
+        int comparisons = 0;
+        try
+        {
+            candidates.Sort((p, q) =>
+            {
+                if ((comparisons++ & 4095) == 0) token.ThrowIfCancellationRequested();
+                return density[q] != density[p] ? density[q].CompareTo(density[p]) : p.CompareTo(q);
+            });
+        }
+        catch (InvalidOperationException) when (token.IsCancellationRequested) { token.ThrowIfCancellationRequested(); throw; }
         double radius = config.MinSeparationFraction * config.BinsPerCrystal;
         var kept = new List<int>();
-        foreach (int c in topologyGrid is null ? candidates : topologyGrid.ToList())
+        foreach (int c in CancellationSequence.Checked(topologyGrid is null ? candidates : topologyGrid.ToList(), token))
         {
             int cx = c % bx, cy = c / bx;
             bool near = false;
-            foreach (int m in topologyGrid is null ? kept : [])
+            foreach (int m in CancellationSequence.Checked(topologyGrid is null ? kept : [], token))
             {
                 double ddx = m % bx - cx, ddy = m / bx - cy;
                 if (ddx * ddx + ddy * ddy < radius * radius) { near = true; break; }
@@ -209,6 +224,7 @@ public sealed class FloodLut
             for (int y = 0; y < by; y++)
                 for (int x = 0; x < bx; x++)
                 {
+                    if ((x & 255) == 0) token.ThrowIfCancellationRequested();
                     int best = 0;
                     double bd = double.PositiveInfinity;
                     for (int crystal = 0; crystal < n; crystal++)
@@ -231,8 +247,10 @@ public sealed class FloodLut
             queue.Enqueue(grid[crystal], (-density[grid[crystal]], order++));
         }
         Span<(int, int)> nb = [(1, 0), (-1, 0), (0, 1), (0, -1)];
+        int processed = 0;
         while (queue.TryDequeue(out int b, out _))
         {
+            if ((processed++ & 4095) == 0) token.ThrowIfCancellationRequested();
             int x = b % bx, y = b / bx;
             foreach (var (dx, dy) in nb)
             {

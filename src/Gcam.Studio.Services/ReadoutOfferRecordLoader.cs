@@ -58,7 +58,7 @@ public static class ReadoutOfferRecordLoader
             b.GetProperty("Positions").GetArrayLength(), b.GetProperty("Decoder").GetString()!, b.GetProperty("FloodCorrection").GetString()!,
             b.GetProperty("WindowFraction").GetDouble(), b.GetProperty("TrialsPerPosition").GetInt32(), b.GetProperty("Exposure").GetString()!,
             b.GetProperty("CostSeeds").GetInt32(), b.GetProperty("CalibrationSeeds").GetInt32());
-        var cells = root.GetProperty("Cells").EnumerateArray().Select(c => Cell(c, benchmark)).ToArray();
+        var cells = root.GetProperty("Cells").EnumerateArray().Select(c => Cell(c, benchmark, geometries)).ToArray();
         foreach (var g in geometries)
             Require(cells.Where(c => c.Geometry == g.Id).Select(c => c.EnergyKeV).Order().SequenceEqual(Lines), $"{g.Id}: incomplete line matrix");
         Require(cells.Length == geometries.Length * Lines.Length, "cell count");
@@ -70,7 +70,7 @@ public static class ReadoutOfferRecordLoader
     private static ReadoutCalibrationFailure[] Failures(JsonElement value) => value.EnumerateArray()
         .Select(f => new ReadoutCalibrationFailure(f.GetProperty("Seed").GetInt32(), f.GetProperty("Failure").GetString()!)).ToArray();
 
-    private static ReadoutOfferCell Cell(JsonElement c, ReadoutBenchmark benchmark)
+    private static ReadoutOfferCell Cell(JsonElement c, ReadoutBenchmark benchmark, IReadOnlyList<ReadoutOfferGeometry> geometries)
     {
         string geometry = c.GetProperty("Geometry").GetString()!;
         double energy = c.GetProperty("EnergyKeV").GetDouble();
@@ -106,9 +106,25 @@ public static class ReadoutOfferRecordLoader
             superseded = new ReadoutOfferOutcome(s.GetProperty("Offered").GetBoolean(), s.GetProperty("Label").GetString()!,
                 s.GetProperty("CalibrationSeeds").GetInt32(), Array.AsReadOnly(Failures(s.GetProperty("Failures"))), s.GetProperty("Budget").GetInt32(),
                 s.GetProperty("SourceRecord").GetString()!, s.GetProperty("SourcePhase").GetString()!);
+        Gcam.Core.DetectorImage? summaryImage = null;
+        string? summaryMeaning = null;
+        if (offered)
+        {
+            var summary = c.GetProperty("SensitivitySummary");
+            int n = geometries.FirstOrDefault(g => g.Id == geometry)?.Count ?? 0;
+            var values = summary.GetProperty("Values").EnumerateArray().Select(v => v.GetDouble()).ToArray();
+            Require(n > 0 && values.Length == n * n && summary.GetProperty("Clusters").GetInt32() == 32
+                && values.All(v => double.IsFinite(v) && v >= 0), "invalid sensitivity summary");
+            var image = new Gcam.Core.DetectorImage(n, n);
+            for (int k = 0; k < values.Length; k++) image[k % n, k / n] = values[k];
+            summaryImage = image.ReadOnlyCopy();
+            summaryMeaning = summary.GetProperty("Meaning").GetString();
+            Require(!string.IsNullOrWhiteSpace(summaryMeaning), "missing sensitivity scope");
+        }
         return new ReadoutOfferCell(geometry, energy, offered, label, seeds, Array.AsReadOnly(failures), budget,
             c.GetProperty("SourceRecord").GetString()!, c.GetProperty("SourcePhase").GetString()!, Array.AsReadOnly(rows),
-            Array.AsReadOnly(diagnostics), superseded);
+            Array.AsReadOnly(diagnostics), superseded)
+        { SensitivitySummary = summaryImage, SensitivitySummaryMeaning = summaryMeaning };
     }
 
     private static ReadoutCostPath Path(JsonElement p, int clusters)

@@ -148,8 +148,9 @@ public sealed class ReadoutViewModelTests
         Assert.Equal(562.445, vm.WindowLowKeV); Assert.Equal(760.955, vm.WindowHighKeV); // exact decimal edges
         Assert.False(vm.Imaging.ReadoutCostInherited);
         vm.ApplyFloodCorrection = true;
-        Assert.True(vm.Imaging.ReadoutCostInherited);
-        Assert.StartsWith("Reference benchmark inherited", vm.Imaging.ReadoutCostStatus);
+        Assert.False(vm.Imaging.ReadoutCostInherited);
+        Assert.Contains("source emits multiple lines", vm.Imaging.ReadoutCostStatusDetails);
+        Assert.Contains("rate not measured", vm.Imaging.ReadoutCostStatusDetails);
         vm.Imaging.Reconstruction = DecoderMethod.Mlem;
         Assert.False(vm.Imaging.ReadoutCostInherited);
         Assert.Contains("MLEM selected", vm.Imaging.ReadoutCostStatusDetails);
@@ -189,8 +190,52 @@ public sealed class ReadoutViewModelTests
     {
         var vm = Model(); vm.Optics = High; vm.ReadoutMode = ReadoutMode.FourOutputAnger; vm.ApplyFloodCorrection = true;
         vm.WindowHighKeV = 760.955; vm.WindowLowKeV = 562.445;
-        Assert.True(vm.Imaging.ReadoutCostInherited);
-        Assert.StartsWith("Reference benchmark inherited", vm.Imaging.ReadoutCostStatus);
+        Assert.False(vm.Imaging.ReadoutCostInherited);
+        Assert.DoesNotContain("window is not", vm.Imaging.ReadoutCostStatusDetails);
+    }
+
+    [Fact]
+    public async Task Eviction_RefusesStart_ReleasesViews_AndPrepareRecovers()
+    {
+        var service = new FakeReadoutPreparation();
+        var acquisition = new CapturingAcquisition();
+        var vm = Model(service, acquisition); vm.Optics = Head; vm.ReadoutMode = ReadoutMode.FourOutputAnger;
+        vm.AmbientDoseRateMicroSvPerHour = 0;
+        vm.AddSourceCommand.Execute(null); vm.Sources[^1].Isotope = "Co-60";
+        await vm.PrepareReadoutCommand.ExecuteAsync(null);
+        var old = Track(vm);
+        Assert.True(vm.IsReadoutBankReady);
+        service.EvictAll();
+        Assert.Equal("Not prepared", vm.ReadoutState); Assert.Empty(vm.MatchingBank);
+        await vm.StartCommand.ExecuteAsync(null);
+        Assert.Contains("Prepare", vm.ReadoutMessage); Assert.Empty(acquisition.Detectors);
+        GC.Collect(); GC.WaitForPendingFinalizers(); GC.Collect();
+        Assert.False(old.TryGetTarget(out _));
+        await vm.PrepareReadoutCommand.ExecuteAsync(null);
+        Assert.True(vm.IsReadoutBankReady); Assert.Equal(4, service.Requests.Count);
+    }
+
+    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
+    private static WeakReference<ReadoutPreparation> Track(MainViewModel vm) => new(vm.MatchingPreparation!);
+
+    [Fact]
+    public void MixedSceneAtTwoMetres_AndCurrentRate_AreReferenceOnly_WithLiteralDifferences()
+    {
+        var vm = Model(); vm.Optics = High; vm.ReadoutMode = ReadoutMode.FourOutputAnger;
+        vm.UseBenchmarkWindowCommand.Execute(null); vm.ApplyFloodCorrection = true;
+        vm.AddSourceCommand.Execute(null); vm.Sources[^1].Isotope = "Co-60";
+        vm.Sources[0].DistanceMm = 2000; vm.Sources[0].X = 5;
+        Assert.False(vm.Imaging.ReadoutCostInherited);
+        Assert.Contains("source mixture", vm.Imaging.ReadoutCostStatusDetails);
+        Assert.Contains("source distance differs", vm.Imaging.ReadoutCostStatusDetails);
+        Assert.Contains("sampling positions", vm.Imaging.ReadoutCostStatusDetails);
+        Assert.Contains("reference only", vm.Imaging.ReadoutCostStatusDetails);
+        var flood = new Gcam.Core.DetectorImage(44, 44).ReadOnlyCopy();
+        vm.Imaging.Begin(vm.Sources.Select(s => s.ToModel()).ToArray(), High);
+        vm.Snapshot = new(1, 1, 12345, 1, false, new(flood, 0, 1, null, 0, 0, null, 1, TimeSpan.Zero), [], TimeSpan.Zero, true)
+        { Detector = vm.Detector, Optics = High };
+        Assert.Contains("scored-input rate 12345", vm.Imaging.ReadoutCostStatusDetails);
+        Assert.Equal(4, vm.Imaging.ReadoutCostRows.Count); // descriptive rows are not gated
     }
 
     private sealed class Theme : IThemeService

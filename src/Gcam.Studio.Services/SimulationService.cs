@@ -24,6 +24,11 @@ public sealed class SimulationService(TimeProvider? timeProvider = null, IReadou
         var bank = _readoutPreparation.Capture(detector.PreparedReadoutIds);
         try
         {
+            var required = ReadoutPolicy.RequiredLines(scene, optics, detector, _readoutPreparation.Offers);
+            var captured = bank.Entries.Select(e => e.View.LineKeV).Order().ToArray();
+            if (required.Count == 0 || !captured.SequenceEqual(required.Select(p => p.LineKeV).Order()))
+                throw new InvalidOperationException("Prepare every calibration line present in the scene before Start (required: "
+                    + string.Join(", ", required.Select(p => p.LineKeV.ToString(System.Globalization.CultureInfo.InvariantCulture))) + " keV).");
             config.Detector.Readout = ReadoutPreparationService.Policy(bank.Reference.View.Plan
                 ?? throw new InvalidOperationException("The prepared readout carries no resolved policy."));
             return new AcquisitionSession(config, detector, liveTimeS, speed, timeProvider ?? TimeProvider.System, bank,

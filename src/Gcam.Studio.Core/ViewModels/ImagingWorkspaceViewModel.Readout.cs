@@ -33,7 +33,8 @@ public sealed partial class ImagingWorkspaceViewModel
         && Shared.ReadoutOffers.Geometries.FirstOrDefault(g => g.Id == id) is { } geometry
         && Shared.ReadoutOffers.Benchmark is { } benchmark
         && ReadoutPolicy.MatchesImagingProfile(CostOptics, geometry, benchmark, Reconstruction, plan.LineKeV,
-            Shared.WindowLowKeV, Shared.WindowHighKeV, Shared.ApplyFloodCorrection);
+            Shared.WindowLowKeV, Shared.WindowHighKeV, Shared.ApplyFloodCorrection)
+        && SceneDifferences(geometry, benchmark).Count == 0;
 
     /// <summary>Short status above the card (inline): inherited, unmeasured, not offered, local or unavailable. The reasons
     /// are in <see cref="ReadoutCostStatusDetails"/> (help).</summary>
@@ -86,7 +87,29 @@ public sealed partial class ImagingWorkspaceViewModel
         if (Reconstruction != DecoderMethod.CrossCorrelation) differences.Add("MLEM selected (benchmark: finite-mask cross-correlation)");
         if (!ReadoutPolicy.IsBenchmarkWindow(Shared.WindowLowKeV, Shared.WindowHighKeV, plan.LineKeV, b.WindowFraction)) differences.Add(string.Create(CultureInfo.InvariantCulture, $"window is not ±{b.WindowFraction:P0} of {plan.LineKeV:0.##} keV"));
         if (!Shared.ApplyFloodCorrection) differences.Add("flood correction off (benchmark: per-path correction)");
+        differences.AddRange(SceneDifferences(g, b));
         return differences.Count == 0 ? "no difference found" : string.Join("; ", differences);
+    }
+
+    private IReadOnlyList<string> SceneDifferences(ReadoutOfferGeometry geometry, ReadoutBenchmark benchmark)
+    {
+        var differences = new List<string>();
+        var scene = Shared.Snapshot is not null ? _scene : Shared.Sources.Select(s => s.ToModel()).ToArray();
+        if (scene.Count != 1) differences.Add("source mixture / multiplicity differs (benchmark: one mono-line point source)");
+        if (scene.Any(s => Gcam.Configuration.Isotopes.Get(s.Isotope).Lines.Count(l => l.Intensity > 0) != 1))
+            differences.Add("source emits multiple lines, including incidental emissions (benchmark: mono-line)");
+        if (scene.Any(s => s.DistanceMm != benchmark.FocalDistanceMm))
+            differences.Add($"source distance differs (benchmark: {Num(benchmark.FocalDistanceMm)} mm)");
+        double half = geometry.Rank * geometry.CellMm * benchmark.FocalDistanceMm / geometry.DistanceMm / 2;
+        double offset = benchmark.PositionHalfFraction * half;
+        bool Sampled(double value) => value == 0 || value == offset || value == -offset;
+        if (scene.Any(s => !Sampled(s.X) || !Sampled(s.Y)))
+            differences.Add("source position is outside the nine declared sampling positions");
+        if (Shared.Snapshot is not { } snapshot)
+            differences.Add("scored-input rate not measured before acquisition; isolated and 100,000 input hits/s rows are reference only");
+        else if (snapshot.RateCps != 100000)
+            differences.Add($"scored-input rate {Num(snapshot.RateCps)} hits/s differs (benchmark: isolated pulses or 100,000 input hits/s; no interpolation)");
+        return differences;
     }
 
     /// <summary>The full table of the cell (1 000 / 4 000 expected ideal-Direct counts × isolated / 100 000 input hits/s).</summary>

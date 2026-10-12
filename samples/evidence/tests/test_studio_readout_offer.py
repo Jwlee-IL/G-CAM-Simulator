@@ -74,6 +74,16 @@ class StudioReadoutOfferRecordTests(unittest.TestCase):
     def test_rebuild_is_deterministic(self):
         self.assertEqual(record.encode(record.build(self.value['Parents'])), self.shipped)
 
+    def test_sensitivity_mean_has_a_hand_computed_oracle(self):
+        maps = [[1.0, 3.0], [3.0, 1.0]] * 16
+        cell = {'Offered': True, 'Diagnostics': {'0': {'SensitivityMapsPerSeed': maps}}}
+        projected = record.project({'Matrices': {'Fixture': [cell]}})['Matrices']['Fixture'][0]
+        self.assertEqual(projected['SensitivitySummary']['Values'], [2.0, 2.0])
+        self.assertEqual(projected['SensitivitySummary']['Clusters'], 32)
+        self.assertIn('never flood-correction weights', projected['SensitivitySummary']['Meaning'])
+        self.assertNotIn('SensitivityMapsPerSeed', projected['Diagnostics']['0'])
+        self.assertNotIn('SensitivitySummary', cell)
+
     def test_each_hash_chain_link_fails_closed(self):
         # A changed value inside a projection breaks its recorded projection digest.
         value = copy.deepcopy(self.value)

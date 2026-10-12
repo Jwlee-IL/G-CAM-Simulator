@@ -49,6 +49,12 @@ public sealed class ReadoutPreparationService : IReadoutPreparationService
     }
 
     public ReadoutOfferRecord Offers => _offers.Value;
+    public event EventHandler? CacheChanged;
+    public ReadoutPreparation? FindCached(string calibrationKey)
+    {
+        lock (_entries) return _entries.FirstOrDefault(e => e.View.CalibrationKey == calibrationKey)?.View;
+    }
+    public int CachedDevices { get { lock (_entries) return _devices.Count; } }
 
     public static string Key(OpticsSettings optics, DetectorSettings detector) => ReadoutPolicy.Key(optics, detector);
 
@@ -158,7 +164,12 @@ public sealed class ReadoutPreparationService : IReadoutPreparationService
             }
             return artifact.View;
         }
-        finally { _gate.Release(); }
+        finally
+        {
+            lock (_entries) PruneDevices();
+            _gate.Release();
+            CacheChanged?.Invoke(this, EventArgs.Empty);
+        }
     }
 
     // Oldest unpinned entries go first; the entry just added and every pinned entry stay. Devices no entry references
@@ -173,6 +184,11 @@ public sealed class ReadoutPreparationService : IReadoutPreparationService
             _entries.RemoveAt(i);
             total -= e.AccountedBytes;
         }
+        PruneDevices();
+    }
+
+    private void PruneDevices()
+    {
         foreach (var unused in _devices.Where(d => _entries.All(e => !ReferenceEquals(e.Device, d.Value))).Select(d => d.Key).ToArray())
             _devices.Remove(unused);
     }
@@ -205,8 +221,8 @@ public sealed class ReadoutPreparationService : IReadoutPreparationService
         var flood = new StreamedFlood(() => ReadoutFlood.Stream(config, line, histories, floodSeed, token), histories);
         var cal = ReadoutCalibration.Build(device, processor, flood, ro.Calibration, new DefaultRandom(responseSeed),
             new DefaultRandom(noiseSeed), token, collectCorrectionHistogram: true,
-            progress: progress is null ? null : new CountProgress(progress, line, "Transporting independent calibration flood…", histories));
-        progress?.Report(new(line, "Finding calibration peaks and building LUT…", histories, histories));
+            progress: progress is null ? null : new CountProgress(progress, line, "Transporting independent calibration flood…", histories),
+            stage: stage => progress?.Report(new(line, stage, 0, 0)));
         var lut = cal.Lut;
         var density = new DetectorImage(lut.BinsX, lut.BinsY);
         var labels = new int[lut.BinsX * lut.BinsY];
@@ -258,6 +274,7 @@ public sealed class ReadoutPreparationService : IReadoutPreparationService
                 ? "optical 402; transport 403; response 404; ADC 405; independent validation 406/407/408"
                 : FormattableString.Invariant($"optical {DeviceSeed}; transport {floodSeed}; response {responseSeed}; ADC {noiseSeed}; independent validation {vFlood}/{vResponse}/{vNoise}"),
             CorrectionHistogram = cal.CorrectionHistogram,
+            Gains = cal.Gains,
         };
         long bins = (long)lut.BinsX * lut.BinsY;
         long bytes = bins * (sizeof(double) + sizeof(int)) * 2 + (long)crystals * (sizeof(double) + sizeof(int));

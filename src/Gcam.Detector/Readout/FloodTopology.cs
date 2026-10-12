@@ -1,3 +1,5 @@
+using Gcam.Core;
+
 namespace Gcam.Detector;
 
 /// <summary>Separable marginal initialization followed by one-to-one measured maximum matching. The marginal peaks
@@ -6,12 +8,13 @@ namespace Gcam.Detector;
 internal static class FloodTopology
 {
     internal static int[]? Match(double[] density, IReadOnlyList<int> candidates, int nx, int ny, int bx, int by,
-        out string? failure)
+        out string? failure, CancellationToken token = default)
     {
         failure = null;
+        token.ThrowIfCancellationRequested();
         var px = new double[bx]; var py = new double[by];
         for (int y = 0; y < by; y++)
-            for (int x = 0; x < bx; x++) { px[x] += density[y * bx + x]; py[y] += density[y * bx + x]; }
+            for (int x = 0; x < bx; x++) { if ((x & 255) == 0) token.ThrowIfCancellationRequested(); px[x] += density[y * bx + x]; py[y] += density[y * bx + x]; }
         int[] Axis(double[] p, int count) => Enumerable.Range(1, p.Length - 2)
             .Where(i => p[i] > p[i - 1] && p[i] >= p[i + 1])
             .OrderByDescending(i => p[i]).ThenBy(i => i).Take(count).Order().ToArray();
@@ -31,7 +34,7 @@ internal static class FloodTopology
             for (int c = 0; c < nx; c++)
             {
                 double rx = Radius(xs, c, bx), ry = Radius(ys, r, by);
-                int marker = candidates.Where(p => Math.Abs(p % bx - xs[c]) < rx && Math.Abs(p / bx - ys[r]) < ry)
+                int marker = CancellationSequence.Checked(candidates, token).Where(p => Math.Abs(p % bx - xs[c]) < rx && Math.Abs(p / bx - ys[r]) < ry)
                     .OrderByDescending(p => density[p]).ThenBy(p => p).DefaultIfEmpty(-1).First();
                 if (marker < 0 || !used.Add(marker))
                 { failure = $"unsupported lattice slot ({c}, {r}); no distinct measured maximum"; return null; }
@@ -86,12 +89,13 @@ internal static class FloodTopology
     /// lower maximum by <see cref="ValleySigmas"/> counting standard deviations (Poisson variance of the smoothed counts,
     /// Var = Σw² · λ, λ estimated by the smoothed value). Nothing is inserted: every marker is a measured maximum.</summary>
     internal static int[]? Grow(double[] density, IReadOnlyList<int> candidates, int nx, int ny, int bx, int by,
-        int binsPerCrystal, double sigma, out string? failure)
+        int binsPerCrystal, double sigma, out string? failure, CancellationToken token = default)
     {
         failure = null;
+        token.ThrowIfCancellationRequested();
         var at = new int[bx * by];
         Array.Fill(at, -1);
-        for (int i = 0; i < candidates.Count; i++) at[candidates[i]] = i;
+        for (int i = 0; i < candidates.Count; i++) { if ((i & 4095) == 0) token.ThrowIfCancellationRequested(); at[candidates[i]] = i; }
         var used = new bool[candidates.Count];
         double nominal = binsPerCrystal;
         int Best(double px, double py, double r)
@@ -100,6 +104,7 @@ internal static class FloodTopology
             for (int y = Math.Max(0, (int)Math.Ceiling(py - r)); y <= Math.Min(by - 1, (int)Math.Floor(py + r)); y++)
                 for (int x = Math.Max(0, (int)Math.Ceiling(px - r)); x <= Math.Min(bx - 1, (int)Math.Floor(px + r)); x++)
                 {
+                    if ((x & 255) == 0) token.ThrowIfCancellationRequested();
                     int i = at[y * bx + x];
                     if (i < 0 || used[i] || (x - px) * (x - px) + (y - py) * (y - py) >= r * r) continue;
                     if (best < 0 || density[candidates[i]] > density[candidates[best]]
@@ -109,7 +114,7 @@ internal static class FloodTopology
         }
         double total = 0, mx = 0, my = 0;
         for (int y = 0; y < by; y++)
-            for (int x = 0; x < bx; x++) { double v = density[y * bx + x]; total += v; mx += v * x; my += v * y; }
+            for (int x = 0; x < bx; x++) { if ((x & 255) == 0) token.ThrowIfCancellationRequested(); double v = density[y * bx + x]; total += v; mx += v * x; my += v * y; }
         if (!(total > 0)) { failure = "empty calibration flood"; return null; }
         // Σw² of the separable smoothing kernel exactly as FloodLut.Smooth builds it (4σ truncation, unit sum).
         int radius = (int)Math.Ceiling(4 * sigma);
@@ -166,6 +171,7 @@ internal static class FloodTopology
         int limit = 4 * nx * ny;
         while (lattice.Count <= limit && queue.TryDequeue(out var k, out _))
         {
+            token.ThrowIfCancellationRequested();
             if (lattice.ContainsKey(k) || dead.Contains(k)) continue;
             double px = 0, py = 0, length = 0; int count = 0;
             foreach (var (di, dj) in directions)
