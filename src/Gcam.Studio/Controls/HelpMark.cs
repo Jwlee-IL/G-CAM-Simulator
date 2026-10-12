@@ -32,7 +32,7 @@ public sealed class HelpMark : Control
         Visibility = Visibility.Collapsed; // until it has something to say
         ToolTip = new ToolTip { Content = _content, PlacementTarget = this };
         // A long explanation wraps at the side-panel width rather than spanning the screen.
-        _content.SetResourceReference(MaxWidthProperty, "Size.SidePanel");
+        _content.SetResourceReference(MaxWidthProperty, "Size.HelpMark.TooltipWidth");
         ToolTipService.SetShowDuration(this, int.MaxValue);
     }
 

@@ -41,6 +41,8 @@
     <sys:Double x:Key="Size.HelpMark">15</sys:Double>
     <!-- A help mark follows the text it explains: a small gap on its left only. -->
     <Thickness x:Key="Gap.HelpMark">6,0,0,0</Thickness>
+    <!-- A help-mark tooltip wraps at the side-panel width (a double for MaxWidth; Size.SidePanel is a GridLength). -->
+    <sys:Double x:Key="Size.HelpMark.TooltipWidth">300</sys:Double>
     <sys:Double x:Key="Size.Imaging.FoundMarker">7</sys:Double>
     <sys:Double x:Key="Space.Imaging.FoundLabel">4</sys:Double>
     <sys:Double x:Key="Space.Imaging.LabelGap">4</sys:Double>

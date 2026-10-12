@@ -23,6 +23,7 @@ Run `python samples/testing/test_records.py check-catalog --discover` after a Re
 <!-- BEGIN GENERATED: TEST DISCOVERY -->
 | Unit | Methods | Discovered cases |
 |---|---:|---:|
+| `Gcam.Studio.RenderTests::Gcam.Studio.RenderTests.HelpMarkTooltipTests` | 1 | 1 |
 | `Gcam.Studio.RenderTests::Gcam.Studio.RenderTests.PlotViewRenderTests` | 1 | 1 |
 | `Gcam.Studio.RenderTests::Gcam.Studio.RenderTests.ReadoutRenderTests` | 3 | 3 |
 | `Gcam.Studio.Services.Tests::Gcam.Studio.Services.Tests.AcquisitionContinuationTests` | 4 | 6 |
@@ -3810,4 +3811,19 @@ Gates: none; plain Fact oracles. Desktop callers remain separately opt-in.
 
 ```json
 {"runner":"dotnet","sources":{"tests/Gcam.Studio.UiTests/PollingWaitTests.cs":"f4e6b57b213558692561327ba6a4a8d6ab7e4ed6a7c307a5b76231aeed83f37c","tests/Gcam.Studio.UiTests/Harness/FloodOracle.cs":"22db35cb2771a0460e437e47308b5792bf1c22d2dc077af54106223a29cd75be","tests/Gcam.Studio.UiTests/Harness/Pointer.cs":"e56d09c72e552bf5619c088150a0d6ceba0ec2eb75ee06c2744c4677b9db896c","tests/Gcam.Studio.UiTests/Harness/PollingWait.cs":"9a7363b5886fb6bda28179ded7c4e7bad0c63cf43c010fa52b8e070eaa3622eb","tests/Gcam.Studio.UiTests/Harness/RepoPaths.cs":"2bdc3c25db3c74cfe32ea7f64352f36cc5fb3b8fbf7be92ce03b7184648cc655","tests/Gcam.Studio.UiTests/Harness/RunRecord.cs":"0db3b6cf367fed06ba506db2973593b100ebed4a6ca793552a77e490d0fce377","tests/Gcam.Studio.UiTests/Harness/Scenario.cs":"3cc799a46694f4276abf1aec98b3a80f4199d35287b6c5dd49ca6fc9e75f0c87","tests/Gcam.Studio.UiTests/Harness/SelectorMatchException.cs":"65fd2d3ee54bed05d06ceaad6a4217c12885fd8196927581acaf71f2ba51b445","tests/Gcam.Studio.UiTests/Harness/StudioProcess.cs":"973777303020b10c38bcd701e991764b095cb2f149ed31da6a5d554bf73d87c2","tests/Gcam.Studio.UiTests/Harness/StudioWindow.cs":"b786c8bbe60338533024e4441a202a5580ca5bc93ededca711ce1841937ede8b","tests/Gcam.Studio.UiTests/Harness/WorkspaceOracle.cs":"153e5f5ec778401b877467e405295a940d663d4fea1d32f9101139e9c0b325e5","tests/Gcam.Studio.UiTests/DesktopFactAttribute.cs":"7f52c09af061c7fb6e9c9c12def2640bd3743a7eb6932b6603d7da5d85d1bfc7"},"methods":["TransientThenSuccess_Returns_AndRecordsAllThreeKinds","PersistentTransient_TimesOut_WithLastExceptionAndExactCount","NonTransient_PropagatesImmediately_IncludingAssertionsAndDuplicateSelectors","FalseCondition_TimesOut_WithZeroTransientsAndNoInnerException","RunRecordScope_RestoresPreviousLogger_AndDoesNotLeakBetweenRuns"],"id":"Gcam.Studio.UiTests::Gcam.Studio.UiTests.PollingWaitTests","trace":[]}
+```
+
+
+## HelpMarkTooltipTests — dotnet
+
+Declutter review F1: a help mark's tooltip text resolves its MaxWidth from a Double theme token. The real HelpMark's tooltip carries the production theme dictionaries (Dark and Light) and is measured and arranged as a root on an STA, without a window or popup; the reference resolves without an exception, MaxWidth equals `Size.HelpMark.TooltipWidth`, and the wrapped text is laid out within it. With the former GridLength token the same steps throw InvalidOperationException.
+
+Oracle: The token value read from the same merged dictionaries; WPF layout.
+
+Tolerance: Exact/structural.
+
+Gates: none; plain Fact.
+
+```json
+{"id":"Gcam.Studio.RenderTests::Gcam.Studio.RenderTests.HelpMarkTooltipTests","runner":"dotnet","methods":["TooltipContent_ResolvesItsWidthTokenAsADouble_UnderTheRealThemes"],"sources":{"tests/Gcam.Studio.RenderTests/HelpMarkTooltipTests.cs":"fbeea2cfa3ae257622b68e8cc2251d5fc6809b577357148bfe86fa7695a06e63","tests/Gcam.Studio.RenderTests/RenderSnapshotFactAttribute.cs":"95dd1088eee764d18a539ff37399a3c518aa75056d29d2de60286d2173ba1edd"},"trace":[{"requirement":"SR-DET-10","selectors":["TooltipContent_ResolvesItsWidthTokenAsADouble_UnderTheRealThemes"]}]}
 ```
