@@ -94,9 +94,9 @@ calls `IAcquisitionSession.Continue` and must not `Begin` the workspaces (the se
 id); Reset disposes the session and resets the workspaces. `AcquisitionSession` keeps its look-ahead event across
 Stop — dropping it loses a real count (the continuation tests catch it).
 
-## Physical readout (experimental, TODO-40)
+## Physical readout (experimental, TODO-40 / TODO-41)
 
-Readout: DirectCrystal remains the default. Experimental FourOutputAnger requires the 12×12 Baseline head, ambient/BSR zero and explicit successful Prepare. Physical workspaces consume one immutable measured prefix; do not apply legacy MeasurementStage or energy-only pile-up to it. Preparation is independently seeded and cached by resolved detector inputs; view/source changes do not invalidate it. Keep Core WPF-free. New readout renders require GCAM_RENDER_OUTPUT under task scratch; desktop ReadoutScenarioTests remain opt-in on the author's go.
+Readout: DirectCrystal remains the default. Experimental FourOutputAnger runs on any valid geometry; each calibration line is offered, refused, local (unmatched Custom) or unavailable from the embedded, hash-pinned record (`ReadoutOfferPin`, `studio_readout_offer_record.py --check`). Prepare streams one flood per required line on one worker with progress; the session cache pins captured entries; nothing is persisted. Physical workspaces consume one immutable measured prefix with per-line projections; never read a window through another line's LUT; do not apply legacy MeasurementStage or energy-only pile-up to it. The 12 × 12 Baseline 661.7 keV entry is pinned byte for byte (`ReadoutLegacyIdentityTests`). A 64 k High-res preparation never runs in the normal suite. Keep Core WPF-free. New readout renders require GCAM_RENDER_OUTPUT under task scratch; desktop ReadoutScenarioTests remain opt-in on the author's go. Secondary explanation goes behind a `HelpMark`; requirement-critical state stays inline (SR-DET-10).
 
 ## Detector and retained-flood focus
 

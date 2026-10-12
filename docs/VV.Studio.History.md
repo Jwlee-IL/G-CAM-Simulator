@@ -271,3 +271,17 @@ with an offscreen test on the bound controls' selected item. The new scenarios l
 Final runs: full suite **39 / 39 pass**; `GCAM_UI_BREAK_VERDICT=1` on `ReadoutScenarioTests`: the three desktop scenarios
 **fail, each at its corrupted assertion (no timeout)**, the headless count oracle passes as intended; recovery **39 / 39
 pass**.
+
+## Desktop verification — readout presets, 2026-10-12
+
+TODO-41 (physical readout on every Studio preset). Planner's runs in the worktree `C:\gw\w41`, Release build.
+- Before the review fixes: full suite pass with every readout scenario, including one cold High-res 661.7 keV
+  preparation (48 min); two product defects found and fixed on the way (exact double comparison of the ±15 % benchmark
+  window; calibration-line details unreachable to UI Automation, fixed with `ContentItemsList`).
+- After the review fixes: the cold High-res scenario failed once 5 min 44 s into its wait (state element missing, Detector
+  expander collapsed; cause not established). By the author's decision it became a long scenario, run only with
+  `GCAM_UI_LONG_TESTS=1` as well; `HighResCoLine_…` (Co-60, 1332.5 keV, 2 000 histories per crystal) carries the 44 × 44
+  checks in the routine run. Polling waits now treat transient UIA errors as "not yet" and record their count.
+- Final: readout scenarios and the full suite pass (49 pass, the long scenario skipped); `GCAM_UI_BREAK_VERDICT=1`: every
+  readout desktop scenario fails at its corrupted assertion (six in the run before the polling change, HighResCoLine
+  after it at its module geometry, 0 transient UIA errors); recovery passes.

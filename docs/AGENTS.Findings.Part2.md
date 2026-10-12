@@ -1182,3 +1182,36 @@ netlist check: [HW.Readout](HW.Readout.md).
   The planner re-ran one seed of each family: identical apart from timing.
 - **Not here:** Studio integration (TODO-40); microcell recovery; measured optics; the network's RC response; gamma
   transport in the walls.
+- **Scope (2026-10-12, TODO-41).** The 0.406 ± 0.006 mm versus 0.367 ± 0.001 mm result is mean radial localisation error
+  at equal accepted counts for one centred near-field lab source, not field-wide source RMS / equal-fluence cost at 1 m.
+  TODO-41 calibrates per line, reports absolute costs, and Studio's physical path now runs on every preset with per-line
+  banks; calibration success, not imaging cost, decides an offer. Ordinary engine defaults remain DirectCrystal.
+
+## 69. Physical readout on every Studio preset — per-line calibration offers apart from measured cost (TODO-41, 2026-10-12)
+
+TODO-41 — [PLAN.Studio.ReadoutPresets](archive/PLAN.Studio.ReadoutPresets.md) (decisions SD-A1 … A16), review
+[PLAN.Studio.ReadoutPresets.Review](archive/PLAN.Studio.ReadoutPresets.Review.md), turn reports
+[Turn7](archive/PLAN.Studio.ReadoutPresets.Turn7.md) (design and cost measurement) and
+[Turn8](archive/PLAN.Studio.ReadoutPresets.Turn8.md) (Studio stage, fixes after review). Record:
+`samples/evidence/studio-readout/offer-cost-v1.json` (`studio_readout_offer_record.py --check`, CI).
+
+- **Result.** TODO-41 separates per-line experimental calibration availability from measured cost. V4 confirmed Baseline
+  / Sharp 661.7 / 1332.5 and Wide / High 1332.5; four Wide 661.7 and one High 661.7 failures remain published; the final
+  declared v5 repair fixed 8 k / 64 k on DEV4 and passed 32 / 32 fresh seeds each — 8 offers, 4 refusals at 122.06 keV.
+  Costs: 8 fixed seeds, nine positions at 1 m, fresh paired histories, per-path correction, equal emitted fluence, 1 k /
+  4 k ideal-Direct counts, isolated / 1e5 input hits/s (Wide 661.7 isolated F 2.078 [1.363, 3.170] / 0.8295 [0.8231,
+  0.8358]; High 4.668 [3.063, 7.115] / 2.586 [2.550, 2.623]). Studio stage: per-line banks with held facts acquired once
+  and per-line projection, streamed floods with record budgets (LatticeGrowth / adjoint on the fine heads, Baseline
+  661.7 byte-identical), an opt-in exact flood correction, Custom inheritance by module (cost only on a full profile), a
+  687 kB generated record with declared mean sensitivity summaries, checked against its parents and a compiled pin, and
+  a cached large-grid map (44 × 44 synthetic straight-grid offscreen redraw 29 – 37 ms after a 37 – 112 ms cache build
+  in the original run; not real-watershed or desktop latency).
+- **Cost applicability.** The benchmark is one mono-line point source at 1 m on nine positions, isolated pulses or 1e5
+  input hits/s; a scene that differs (source mixture or several emissions — every standard isotope —, distance,
+  position, an unmatched or not yet measured rate) shows the table as reference only with the differences listed. No
+  standard Studio scene reaches the inherited state.
+- **Checks.** Normal suite 945 passed / 36 skipped; Baseline 661.7 keV preparation, acquisition, projections and all 144
+  gains byte-identical to the pre-bank fixtures; cancellation inside a Sharp calibration pass observed after 2.5 ms (one
+  host measurement); desktop: see VV.Studio.History (2026-10-12).
+- **Not here:** microcell saturation / recovery, measured optics, arbitrary Custom source geometry, a measured cache
+  limit including optical tables; a 64 k High-res preparation is outside the normal suite.

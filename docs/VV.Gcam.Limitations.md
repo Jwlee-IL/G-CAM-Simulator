@@ -187,8 +187,8 @@ a dose, the gate's trust does not certify the corrected answer, and no pair-reso
 
 ## LIM-11 — The physical readout model rests on assumed optics and unlimited SiPM microcells
 
-**What the user sees.** Nothing yet: the physical four-output readout is a study model (EV-36), and the images the
-camera shows use the direct crystal assignment. Its numbers would move with two assumptions.
+**What the user sees.** The physical four-output readout is a study model (EV-36) and an experimental mode of the
+simulator's viewer; the default images use the direct crystal assignment. Its numbers would move with two assumptions.
 
 **Why.** No measured reflector data exist: the reflector law alone moves the 662 keV resolution from 5.6 % (specular)
 to 36 % (diffuse 0.96) *(MC, EV-36)*. SiPM microcells are unlimited in the model, although the selected 1 mm sensor would
@@ -202,6 +202,12 @@ with the shaping chain's pulse, not its RC response.
 | C. Keep the direct assignment for every claim until A / B exist | the readout's effects stay study results (chosen for now) |
 
 **Status.** C (D-57): the engine default stays the direct assignment.
+
+**Scope (2026-10-12).** Virtual matched sensors, assumed optical / reflector constants and unlimited cells remain
+assumptions, increasingly consequential at fine pitch. Numerical flood success does not validate an instrument or remove
+multi-crystal migration / remote peaks. Studio offers the four module designs at 661.7 / 1332.5 keV (experimental) and
+refuses 122.06 keV; it shows absolute RMS / bias / remote / F with their scope, never a performance or duration promise.
+High-res 661.7 keV needs a streamed 64 k flood (≈ 45 min, ≈ 6 GiB, one worker); reuse is session-only.
 
 ## LIM-02 — Imaging stops in high fields
 

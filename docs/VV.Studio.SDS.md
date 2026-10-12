@@ -257,6 +257,19 @@ Only the rules a reviewer needs to check a requirement; the rest is in the code 
 
 **Physical readout (TODO-40, 2026-10-08).** Physical readout uses an explicit signal-only PhysicalListModeSource and the engine's persistent observed-horizon pulse stream. AcquisitionSession freezes the prepared experimental reference-head artifact, publishes immutable chunked measured/scalar-hit prefixes and retains at most 256 diagnostic truth samples. ReadoutPreparationService owns a serialized two-entry successful-artifact cache and independent calibration/validation seeds. PhysicalReadoutProjection and PhysicalReadoutWaveform operate on stored measured facts on workers; they do not invoke MeasurementStage. Detector/Spectrum/Imaging/Waveform remain views of one acquisition. The WPF ReadoutMapView draws the detached resolved circuit and density/LUT; readout views contain layout and InitializeComponent-only companions. Default direct factories and studies retain their previous path.
 
+**Readout presets (TODO-41, 2026-10-12).** Supersedes the reference-head-only and two-entry-cache statements above.
+`ReadoutOfferRecordLoader` reads the embedded offer record and refuses it unless its SHA-256 equals the compiled
+`ReadoutOfferPin` (missing or malformed: every line unavailable, never a fallback). `ReadoutPolicy` plans each required
+calibration line of the pending module (offered / refused / local / unavailable) from the module fingerprint.
+`ReadoutPreparationService` streams one flood per line on one worker (`StreamedFlood`, record budgets; LatticeGrowth with
+the adjoint solve on the fine heads, the 12×12 Baseline 661.7 keV path unchanged) into a session-only cache bounded at
+512 MiB of accounted calibration bytes; live acquisitions pin their entries, cancelled or failed preparations leave no
+device, and the shell derives readiness from the live cache (eviction reads Not prepared). Start captures an immutable
+`ReadoutBank`; `SimulationService` refuses an incomplete bank. Held ADC facts are acquired once and projected through each
+line's calibration (`PhysicalAssignment`), never dispatched by true energy. The opt-in flood correction uses the line
+calibration's own photopeak-assigned histogram. Secondary text sits behind `HelpMark`; calibration-line rows use
+`ContentItemsList` so their automation peers expose content.
+
 The flood adds one count per ComptonCrystalDetector event located by Argmax. This replaces the pre-list-mode
 geometric CrystalDetector (DefaultSimulationFactory) flood and includes in-crystal Compton scatter
 mispositioning. No size of that effect is asserted here.

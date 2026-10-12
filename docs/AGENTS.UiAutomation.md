@@ -184,6 +184,8 @@ image was deleted and the capture fixed. Open a failure bundle's image before sh
 
 - `GCAM_UI_TESTS=1 dotnet test tests/Gcam.Studio.UiTests -c Release` — only when the desktop is free.
   Without the variable the desktop tests are **skipped** and reported as skipped, never as passed.
+- Long scenarios need `GCAM_UI_LONG_TESTS=1` as well: today only `ReadoutScenarioTests.HighResCold_…` (one cold 64 k
+  High-res 661.7 keV preparation, ≈ 45 min, ≈ 6 GiB). Ordinary desktop runs skip it; run it alone, on request.
 - Runs are serial. A run that fails is not retried automatically; read its manifest first.
 - CI (`.github/workflows/ci.yml`) runs the oracle tests but not the desktop tests — it has no interactive session. Say so in its
   summary rather than reporting the UI suite green.

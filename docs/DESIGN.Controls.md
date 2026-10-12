@@ -177,6 +177,16 @@ Lays out an image with its legend: the first child stays **square** and as large
 readout stack directly beneath it at the image's width; spare height collects below. The images are square grids —
 letting the heatmap fill a tall panel centred the image in empty space with the legend ~175 px away from it.
 
+### HelpMark and ContentItemsList
+
+`HelpMark` (TODO-41) is the control for secondary explanation: a circled "?" (`Size.HelpMark`, `Gap.HelpMark`, accent on
+hover and keyboard focus, own focus visual) that is a tab stop, opens its tooltip on hover and on keyboard focus, and
+carries the same text as `AutomationProperties.HelpText`, one AutomationId per mark. Never put requirement-critical
+state only behind it (a label, a refusal and its short reason, local state, progress, key numbers stay inline).
+`ContentItemsList` is an ItemsControl whose automation peer exposes each row's content instead of WPF data-item peers,
+so help marks inside rebuilt rows stay reachable to screen readers and UI tests. The Studio-wide move of secondary text
+behind help marks is TODO-44.
+
 ## Known dark-theme pitfalls (handled)
 
 ComboBox popup and highlight · button hover background · TextBox caret / selection · black dotted focus ·

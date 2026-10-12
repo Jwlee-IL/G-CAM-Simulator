@@ -991,6 +991,14 @@ Geometries used below:
 - **Not covered.** Microcell saturation and recovery (a 1 mm sensor would see ≈ 9 photoelectrons per 50 µm cell; the
   1 mm result assumes unlimited cells), measured optical constants (the reflector law alone moves 662 keV FWHM from
   5.6 % to 36 %), the network's RC response, gamma transport in the walls, the hand-held head.
+- **Readout presets (2026-10-12).** The result above is the original lab study; its localisation is mean radial error,
+  not the field-wide source RMS below. The readout-preset study: the v4 confirmation plus the final declared v5 repair support experimental
+  calibration offers for Baseline / Sharp / Wide / High at 661.7 and 1332.5 keV, 32 / 32 seeds each, at 2 000 histories
+  per crystal except Wide 661.7 (8 000) and High 661.7 (64 000); 122.06 keV is refused on every head. Studio implements
+  these offers per line from a generated, hash-pinned record and streams every calibration flood; costs use eight
+  predeclared seeds, 1 000 / 4 000 ideal-Direct exposures, isolated / 100 000 input hits/s, per-path correction and
+  finite correlation at 1 m. F is not a time factor; Wide 661.7 / 4 k F below 1 reflects direct-reference bias.
+  Saturation / recovery and arbitrary Custom source geometry are not validated.
 - **Reproduce.** `python samples/evidence/run_seeds.py --manifest samples/evidence/manifest-readout-v1.json --family
   readout_selection_v1 readout_validation_v1 readout_confirmation_v1 --out <dir>`, then
   `samples/evidence/readout/aggregate_readout.py`, `select_readout.py`, `confirm_readout.py`; results
