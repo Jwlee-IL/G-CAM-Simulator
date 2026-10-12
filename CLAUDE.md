@@ -6,7 +6,7 @@ This file carries the **cross-session context that isn't otherwise in the repo**
 survives moving to another computer. It is git-tracked and **auto-loaded by Claude Code on
 any clone** (the machine-local auto-memory under `~/.claude/…/memory/` does NOT travel).
 Architecture + build/run is in `@AGENTS.md` above; per-theme quantitative results are in
-`docs/AGENTS.Findings.md` (themes 1–68). Keep answers to the author in **Korean**.
+`docs/AGENTS.Findings.md` (themes 1–69). Keep answers to the author in **Korean**.
 
 ## What this is
 **Gcam** — a personal C#/.NET 9 Monte Carlo simulator for **coded-aperture gamma-source
