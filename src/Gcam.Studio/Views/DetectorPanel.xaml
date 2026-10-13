@@ -6,7 +6,8 @@
         <BooleanToVisibilityConverter x:Key="BoolToVis" />
     </UserControl.Resources>
     <!-- Sections in the shared panel language (PanelHeader title, Divider between sections, label / value rows):
-    Detector geometry · Gain pattern (or, on the physical readout, Readout network · Measured conversions). -->
+    Detector geometry · Gain pattern · Acquired (or, on the physical readout, Readout network · Measured conversions ·
+    Calibration (this session) · Confirmed offers). -->
     <Border Style="{StaticResource Panel.Surface}" VerticalAlignment="Top">
         <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
             <StackPanel>
@@ -93,7 +94,7 @@
                         </DockPanel>
                         <!-- The conversion counts as rows (the same facts as PhysicalCounts, which names this group);
                         before any measured conversion the one-line message shows instead. -->
-                        <c:SettingsGroup AutomationProperties.Name="{Binding PhysicalCounts}">
+                        <c:SettingsGroup AutomationProperties.Name="{Binding PhysicalCounts}" AutomationProperties.AutomationId="Readout.Counts">
                             <DockPanel>
                                 <FrameworkElement DockPanel.Dock="Right" Width="{StaticResource Size.HelpMark}" Margin="{StaticResource Gap.HelpMark}" />
                                 <ItemsControl ItemsSource="{Binding ConversionRows}" ItemTemplate="{StaticResource Template.FactRow}" Focusable="False" />
@@ -113,6 +114,59 @@
                                 </TextBlock.Style>
                             </TextBlock>
                         </c:SettingsGroup>
+                        <Border Style="{StaticResource Divider}" />
+                        <!-- ===== Calibration (this session): the shown line's local preparation as rows (moved from the
+                        centre's Calibration view); the group is named with the one-text calibration state ===== -->
+                        <DockPanel Style="{StaticResource PanelHeader}">
+                            <TextBlock Text="Calibration (this session)" Style="{StaticResource Text.PanelTitle}" />
+                        </DockPanel>
+                        <c:SettingsGroup AutomationProperties.Name="{Binding CalibrationState}" AutomationProperties.AutomationId="Readout.CalibrationFacts">
+                            <DockPanel>
+                                <FrameworkElement DockPanel.Dock="Right" Width="{StaticResource Size.HelpMark}" Margin="{StaticResource Gap.HelpMark}" />
+                                <ItemsControl ItemsSource="{Binding CalibrationRows}" ItemTemplate="{StaticResource Template.FactRow}" Focusable="False" />
+                            </DockPanel>
+                            <TextBlock Text="{Binding CalibrationState}" TextWrapping="Wrap">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock" BasedOn="{StaticResource Text.Caption}">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding CalibrationRows.Count}" Value="0">
+                                                <Setter Property="Visibility" Value="Visible" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                        </c:SettingsGroup>
+                        <Border Style="{StaticResource Divider}" />
+                        <!-- ===== Confirmed offers (shipped record), one row per line; provenance behind the help mark ===== -->
+                        <DockPanel Style="{StaticResource PanelHeader}">
+                            <c:HelpMark DockPanel.Dock="Right"
+                                    Text="{Binding OfferDetails}"
+                                    AutomationProperties.AutomationId="Readout.OfferDetails"
+                                    AutomationProperties.Name="Confirmed record: provenance, failures and diagnostics" />
+                            <TextBlock Text="Confirmed offers" Style="{StaticResource Text.PanelTitle}" />
+                        </DockPanel>
+                        <ItemsControl ItemsSource="{Binding OfferRows}" Grid.IsSharedSizeScope="True" Focusable="False"
+                                AutomationProperties.AutomationId="Readout.Offers" AutomationProperties.Name="Confirmed offer per calibration line">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Margin="{StaticResource Gap.Tight}">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" SharedSizeGroup="OfferLine" />
+                                            <ColumnDefinition Width="Auto" SharedSizeGroup="OfferStatus" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="{Binding EnergyText, StringFormat={}{0} keV}" Style="{StaticResource Text.Mono}"
+                                                VerticalAlignment="Top" Margin="{StaticResource Gap.Inline}" />
+                                        <TextBlock Grid.Column="1" Text="{Binding RecordLabel}" Style="{StaticResource Text.Label}"
+                                                VerticalAlignment="Top" Margin="{StaticResource Gap.Inline}" />
+                                        <TextBlock Grid.Column="2" Text="{Binding RecordDetail}" Style="{StaticResource Text.Caption}" TextWrapping="Wrap"
+                                                TextTrimming="None" VerticalAlignment="Top" />
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
                     </StackPanel>
                 </c:SettingsGroup>
             </StackPanel>

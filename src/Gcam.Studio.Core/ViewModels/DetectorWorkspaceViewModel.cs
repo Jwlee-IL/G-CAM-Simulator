@@ -20,6 +20,75 @@ public sealed partial class DetectorWorkspaceViewModel(MainViewModel shared, IDe
     [ObservableProperty] private double? _selectedLineKeV;
     partial void OnSelectedLineKeVChanged(double? value) => Refresh();
 
+    // View switch (Face · SiPM · Anger · Calibration · Diagnostics): always shown. The Face view is the detector face of
+    // either readout; the readout views show the physical readout, or an empty state with "Choose readout…" when the
+    // direct crystal assignment is active. A readout-mode change selects that mode's first view.
+    private bool _wasPhysical;
+    public int ReadoutTabIndex
+    {
+        get => (int)ReadoutTab;
+        set { if (Enum.IsDefined((ReadoutDetectorTab)value)) ReadoutTab = (ReadoutDetectorTab)value; }
+    }
+    public bool IsFaceView => ReadoutTab == ReadoutDetectorTab.Face;
+    public bool ShowReadoutView => !IsFaceView && Shared.IsPhysicalReadout;
+    public bool ShowReadoutEmpty => !IsFaceView && !Shared.IsPhysicalReadout;
+    /// <summary>The centre heading follows the view and the mode: the face; the physical head; or the mode-neutral
+    /// "Detector" over the empty state of a readout view under the direct readout.</summary>
+    public string CentreTitle => IsFaceView ? "Detector face · gain pattern" : Shared.IsPhysicalReadout ? "Experimental four-output head" : "Detector";
+    partial void OnReadoutTabChanged(ReadoutDetectorTab value)
+    {
+        foreach (string name in new[] { nameof(ReadoutTabIndex), nameof(IsFaceView), nameof(ShowReadoutView), nameof(ShowReadoutEmpty), nameof(CentreTitle) })
+            OnPropertyChanged(name);
+    }
+
+    /// <summary>The local preparation (<see cref="CalibrationState"/>) as label / value rows; empty without a preparation,
+    /// where the panel shows the readout state line.</summary>
+    public IReadOnlyList<FactRow> CalibrationRows
+    {
+        get
+        {
+            if (Preparation is not { } p) return [];
+            var c = CultureInfo.InvariantCulture;
+            var rows = new List<FactRow>
+            {
+                new("State", p.Succeeded ? "Ready" : "Failed: " + p.Failure), new("Line", $"{Kev(p.LineKeV)} keV"),
+                new("Peaks", $"{p.Peaks.Count} / {Crystals(p)}"),
+            };
+            if (p.Plan is { } plan)
+            {
+                rows.Add(new("Method", plan.MethodLabel)); rows.Add(new("Solve", plan.SolveLabel));
+                rows.Add(new("Histories / crystal", plan.Budget.ToString("N0", c)));
+            }
+            rows.Add(new("Seeds", p.Seeds));
+            rows.Add(new("Scored", p.Scored.ToString("N0", c))); rows.Add(new("Triggered", p.Triggered.ToString("N0", c)));
+            rows.Add(new("Windowed", p.InWindow.ToString("N0", c)));
+            rows.Add(new("Gain fallback", $"{p.GainFallback} / {Crystals(p)} crystals"));
+            rows.Add(new("Cost", p.Cost.TotalSeconds.ToString("0.00", c) + " s"));
+            rows.Add(new("LUT bins", $"{p.Density.Width} × {p.Density.Height}"));
+            if (p.Module is { } m)
+            {
+                rows.Add(new("Sensors", string.Create(c, $"{m.SensorsX} × {m.SensorsY} virtual matched SiPMs")));
+                rows.Add(new("Sensor pitch", string.Create(c, $"{m.SensorPitchMm:0.###} mm, active {m.SensorActiveWidthMm:0.###} mm")));
+                rows.Add(new("Microcells", "Unlimited"));
+            }
+            rows.Add(new("Flood correction", p.CorrectionHistogram is { } h
+                ? string.Create(c, $"{h.Sum():N0} photopeak events; {h.Count(v => v <= 0)} empty bins") : "Unavailable"));
+            rows.Add(new("Calibration id", p.Id.ToString()));
+            return rows;
+        }
+    }
+
+    /// <summary>The local per-crystal check as table rows (crystal · assigned · wrong); lines that are not crystal checks
+    /// (hand-built views) stay as notes across the table.</summary>
+    public IReadOnlyList<ReadoutDiagnosticRow> DiagnosticRows => Preparation is not { } p ? []
+        : p.CrystalChecks.Count > 0
+            ? p.CrystalChecks.Select(k => new ReadoutDiagnosticRow(k.Crystal.ToString(CultureInfo.InvariantCulture),
+                $"{k.Assigned} / {k.Total}", $"{k.Wrong} / {k.Assigned}")).ToArray()
+            : p.Diagnostics.Select(d => new ReadoutDiagnosticRow("", "", "", d)).ToArray();
+
+    /// <summary>What the per-crystal check covers (line, energies, validation seeds), shown above the table.</summary>
+    public string DiagnosticScope => Preparation is { CheckScope: { Length: > 0 } scope } ? scope : "";
+
     private static string Kev(double value) => value.ToString("0.##", CultureInfo.InvariantCulture);
 
     /// <summary>Successful line preparations in view: the acquisition's captured bank once data exist, else every line of
@@ -180,10 +249,10 @@ public sealed partial class DetectorWorkspaceViewModel(MainViewModel shared, IDe
             if (Shared.IsPhysicalReadout)
                 return Preparation?.Module is { } m
                     ? [new("Readout", "Experimental GAGG"), new("Module", string.Create(c, $"{m.CrystalsX} × {m.CrystalsY} (captured)")),
-                        new("Sensors", "Matched virtual SiPMs"),
+                        new("SiPMs", "Matched, virtual"),
                         new("Pitch", string.Create(c, $"{m.PitchMm:0.###} mm")), new("Reflector gap", string.Create(c, $"{m.GapMm * 1000:0.###} µm"))]
                     : [new("Readout", "Experimental GAGG"), new("Module", string.Create(c, $"{optics.DetectorPixels} × {optics.DetectorPixels} (pending)")),
-                        new("Sensors", "Matched virtual SiPMs"),
+                        new("SiPMs", "Matched, virtual"),
                         new("Pitch", string.Create(c, $"{optics.PixelPitchMm:0.###} mm")), new("Reflector gap", string.Create(c, $"{detector.ReflectorGapMm * 1000:0.###} µm"))];
             return [new("Scintillator", detector.Chain.Scintillator.Name), new("Crystals", $"{optics.DetectorPixels} × {optics.DetectorPixels}"),
                 new("Pitch", $"{optics.PixelPitchMm:0.###} mm"), new("Reflector gap", $"{detector.ReflectorGapMm * 1000:0.###} µm"),
@@ -192,7 +261,7 @@ public sealed partial class DetectorWorkspaceViewModel(MainViewModel shared, IDe
     }
 
     /// <summary>The geometric active-area fraction (the row that carries the area help mark).</summary>
-    public string ActiveAreaText => $"{Face?.ActiveAreaFraction:P2}";
+    public string ActiveAreaText => Face is { } f ? $"{f.ActiveAreaFraction:P2}" : "—";
 
     /// <summary>Title of the second section: the legacy gain pattern, or the physical readout network.</summary>
     public string ResponseTitle => Shared.IsPhysicalReadout ? "Readout network" : "Gain pattern";
@@ -205,7 +274,7 @@ public sealed partial class DetectorWorkspaceViewModel(MainViewModel shared, IDe
             var detector = Shared.Snapshot?.Detector ?? Shared.Detector;
             return Shared.IsPhysicalReadout
                 ? [new("Network", "DPC"), new("Row / column", "1000 Ω / 10 Ω"), new("Outputs", "A–D virtual grounds"),
-                    new("Trigger", "Sum 50 keV-equivalent"), new("Hold", "Common"), new("Reflector", "Specular 0.98")]
+                    new("Trigger", "Sum, 50 keV-eq."), new("Hold", "Common"), new("Reflector", "Specular 0.98")]
                 : [new("Gain σ", $"{detector.GainSigma * 100:0.#}%"), new("Gain seed", $"{detector.GainSeed}"), .. GainMapRows];
         }
     }
@@ -227,6 +296,12 @@ public sealed partial class DetectorWorkspaceViewModel(MainViewModel shared, IDe
         : "No acquired counts";
     internal void Refresh()
     {
+        if (Shared.IsPhysicalReadout != _wasPhysical)
+        {
+            _wasPhysical = Shared.IsPhysicalReadout;
+            ReadoutTab = _wasPhysical ? ReadoutDetectorTab.Sipm : ReadoutDetectorTab.Face;
+        }
+        foreach (string name in new[] { nameof(ShowReadoutView), nameof(ShowReadoutEmpty), nameof(CentreTitle) }) OnPropertyChanged(name);
         var optics = Shared.Snapshot?.Optics ?? Shared.Optics;
         var detector = Shared.Snapshot?.Detector ?? Shared.Detector;
         if (Shared.Snapshot is not null || Shared.GapError is null)
@@ -241,6 +316,6 @@ public sealed partial class DetectorWorkspaceViewModel(MainViewModel shared, IDe
         foreach (string name in new[] { nameof(Identity), nameof(Readout), nameof(Counts), nameof(GainLegend), nameof(MinimumGain), nameof(MaximumGain),
             nameof(GeometryRows), nameof(ActiveAreaText), nameof(ResponseTitle), nameof(ResponseRows), nameof(GainMapRows), nameof(CountRows) }) OnPropertyChanged(name);
         foreach (string name in new[] { nameof(Bank), nameof(BankLines), nameof(ShownLineKeV), nameof(Preparation), nameof(PhysicalSnapshot), nameof(Diagnostics), nameof(CalibrationState),
-            nameof(PhysicalCounts), nameof(ConversionRows), nameof(ConversionNote), nameof(OfferRows), nameof(OfferDetails), nameof(SensitivitySummary), nameof(SensitivityStepMm), nameof(SensitivityOriginMm), nameof(SensitivityCaption), nameof(SensitivityHelp) }) OnPropertyChanged(name);
+            nameof(PhysicalCounts), nameof(ConversionRows), nameof(ConversionNote), nameof(CalibrationRows), nameof(DiagnosticRows), nameof(DiagnosticScope), nameof(OfferRows), nameof(OfferDetails), nameof(SensitivitySummary), nameof(SensitivityStepMm), nameof(SensitivityOriginMm), nameof(SensitivityCaption), nameof(SensitivityHelp) }) OnPropertyChanged(name);
     }
 }

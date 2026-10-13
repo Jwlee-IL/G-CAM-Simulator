@@ -8,6 +8,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using Gcam.Studio.Controls;
+using Gcam.Studio.Core.Detector;
 using Gcam.Studio.Core.ViewModels;
 using Gcam.Studio.Services;
 using Gcam.Studio.Core.Services;
@@ -21,7 +22,7 @@ public sealed partial class PlotViewRenderTests
     {
         var modal = new ModalService();
         var model = new MainViewModel(new FixtureAcquisition(), new FixtureTheme(Enum.Parse<Gcam.Studio.Core.Services.AppTheme>(theme)),
-            new FixtureSpectrum(), confirmation: modal);
+            new FixtureSpectrum(), confirmation: modal, detectorFace: new DetectorFaceService());
         foreach (var size in new[] { new Size(1280, 800), new Size(1440, 900) })
         {
             CaptureStage2(model, theme, size, "summary-defaults");
@@ -60,6 +61,17 @@ public sealed partial class PlotViewRenderTests
             model.ReadoutMode = ReadoutMode.DirectCrystal;
             model.SelectedLeftTab = 0;
             RenderLeftReadoutStates(theme, size);
+            // Review 7: the physical views under the direct readout — the switch stays, the content is the empty state.
+            model.SelectedWorkspace = model.DetectorWorkspace;
+            model.DetectorWorkspace.ReadoutTab = ReadoutDetectorTab.Sipm;
+            CaptureStage2(model, theme, size, "detector-direct-empty");
+            model.DetectorWorkspace.ReadoutTab = ReadoutDetectorTab.Face;
+            CaptureStage2(model, theme, size, "detector-direct-face");
+            model.SelectedWorkspace = model.Waveform;
+            model.Waveform.ScopeView = WaveformScopeView.FourOutputs;
+            CaptureStage2(model, theme, size, "waveform-direct-empty");
+            model.Waveform.ScopeView = WaveformScopeView.EnergySum;
+            model.SelectedWorkspace = model.Imaging;
             model.Imaging.IsSweepExpanded = true;
             model.Imaging.IsSweeping = true;
             CaptureStage2(model, theme, size, "icons-sweep");
@@ -129,7 +141,7 @@ public sealed partial class PlotViewRenderTests
         MainViewModel Model(ReadoutPreparation? prepared)
         {
             var model = new MainViewModel(new FixtureAcquisition(), new FixtureTheme(Enum.Parse<Gcam.Studio.Core.Services.AppTheme>(theme)),
-                new FixtureSpectrum(), readoutPreparation: new ReadoutRenderTests.FixturePreparation(_ => prepared ?? throw new OperationCanceledException()))
+                new FixtureSpectrum(), detectorFace: new DetectorFaceService(), readoutPreparation: new ReadoutRenderTests.FixturePreparation(_ => prepared ?? throw new OperationCanceledException()))
             { Optics = baseline, AmbientDoseRateMicroSvPerHour = 0, ReadoutMode = ReadoutMode.FourOutputAnger, SelectedLeftTab = 2 };
             if (prepared is not null) model.PrepareReadoutCommand.ExecuteAsync(null).GetAwaiter().GetResult();
             return model;
@@ -141,12 +153,92 @@ public sealed partial class PlotViewRenderTests
         pending.ReadoutProgressText = $"661.7 keV · Transporting independent calibration flood… · 115,200 / {baseline.DetectorPixels * baseline.DetectorPixels * 2000:N0} histories (40 %)";
         notifyRunState.Invoke(pending, null);
         CaptureStage2(pending, theme, size, "left-detector-preparing");
+        // Review 7: the physical Detector workspace (view switch, centre view, right-panel rows) in each state.
+        pending.SelectedWorkspace = pending.DetectorWorkspace;
+        CaptureStage2(pending, theme, size, "detector-physical-preparing-sipm");
+        pending.IsPreparingReadout = false; pending.ReadoutProgressText = null;
+        notifyRunState.Invoke(pending, null);
+        foreach (var tab in new[] { ReadoutDetectorTab.Sipm, ReadoutDetectorTab.Calibration })
+        {
+            pending.DetectorWorkspace.ReadoutTab = tab;
+            CaptureStage2(pending, theme, size, $"detector-physical-pending-{tab.ToString().ToLowerInvariant()}");
+        }
         var ready = Model(template);
         Assert.StartsWith("Ready", ready.ReadoutState);
         CaptureStage2(ready, theme, size, "left-detector-ready");
+        // The ±15 % (benchmark) preset applied: its segment is marked.
+        ready.UseBenchmarkWindowCommand.Execute(null);
+        CaptureStage2(ready, theme, size, "left-detector-ready-benchmark");
+        ready.SelectedWorkspace = ready.DetectorWorkspace;
+        foreach (var tab in Enum.GetValues<ReadoutDetectorTab>())
+        {
+            ready.DetectorWorkspace.ReadoutTab = tab;
+            CaptureStage2(ready, theme, size, $"detector-physical-ready-{tab.ToString().ToLowerInvariant()}");
+        }
         var failed = Model(template with { Succeeded = false, Failure = $"Fixture: {baseline.DetectorPixels * baseline.DetectorPixels - 1} of {baseline.DetectorPixels * baseline.DetectorPixels} peaks found" });
         Assert.StartsWith("Failed", failed.ReadoutState);
         CaptureStage2(failed, theme, size, "left-detector-failed");
+        failed.SelectedWorkspace = failed.DetectorWorkspace;
+        foreach (var tab in new[] { ReadoutDetectorTab.Anger, ReadoutDetectorTab.Calibration })
+        {
+            failed.DetectorWorkspace.ReadoutTab = tab;
+            CaptureStage2(failed, theme, size, $"detector-physical-failed-{tab.ToString().ToLowerInvariant()}");
+        }
+    }
+
+    /// <summary>Review 7: the Detector and Waveform view switches and their content; the empty state under the direct
+    /// readout; Prepare in the accent style; the energy-window presets with the matching one marked.</summary>
+    private static void AssertReadoutViews(FrameworkElement root, MainViewModel model)
+    {
+        if (model.SelectedWorkspace == model.DetectorWorkspace)
+        {
+            var d = model.DetectorWorkspace;
+            // The centre heading follows view and mode (never the physical head's name under the direct readout).
+            string expectedTitle = d.IsFaceView ? "Detector face · gain pattern" : model.IsPhysicalReadout ? "Experimental four-output head" : "Detector";
+            var detectorView = Descendants(root).OfType<Gcam.Studio.Views.DetectorView>().Single();
+            Assert.Equal(expectedTitle, Descendants(detectorView).OfType<TextBlock>().First().Text);
+            var tabs = Descendants(root).OfType<TabControl>().Single(t => AutomationProperties.GetAutomationId(t) == "Detector.Views");
+            Assert.Equal(new[] { "Detector.FaceTab", "Readout.SipmTab", "Readout.AngerTab", "Readout.CalibrationTab", "Readout.DiagnosticsTab" },
+                tabs.Items.Cast<TabItem>().Select(AutomationProperties.GetAutomationId));
+            Assert.Equal((int)d.ReadoutTab, tabs.SelectedIndex);
+            var face = Descendants(root).OfType<DetectorFaceView>().Single();
+            Assert.Equal(d.IsFaceView, Shown(face, root));
+            var empty = Descendants(root).OfType<Gcam.Studio.Views.EmptyReadoutState>().Single();
+            Assert.Equal(d.ShowReadoutEmpty, Shown(empty, root));
+            var readout = Descendants(root).OfType<Gcam.Studio.Views.ReadoutDetectorView>().Single();
+            Assert.Equal(d.ShowReadoutView, Shown(readout, root));
+            if (d.ShowReadoutEmpty)
+            {
+                var choose = Descendants(empty).OfType<Button>().Single(b => AutomationProperties.GetAutomationId(b) == "Readout.ChooseReadout");
+                Assert.Same(model.ChooseReadoutCommand, choose.Command);
+            }
+        }
+        if (model.SelectedWorkspace == model.Waveform)
+        {
+            var w = model.Waveform;
+            string expectedTitle = w.ScopeView == WaveformScopeView.EnergySum && !model.IsPhysicalReadout ? "Waveform · energy sum"
+                : w.ScopeView == WaveformScopeView.FourOutputs && model.IsPhysicalReadout ? "Waveform · four outputs" : "Waveform";
+            var waveformView = Descendants(root).OfType<Gcam.Studio.Views.WaveformView>().Single();
+            Assert.Equal(expectedTitle, Descendants(waveformView).OfType<TextBlock>().First().Text);
+            var tabs = Descendants(root).OfType<TabControl>().Single(t => AutomationProperties.GetAutomationId(t) == "Waveform.Views");
+            Assert.Equal((int)w.ScopeView, tabs.SelectedIndex);
+            var empty = Descendants(root).OfType<Gcam.Studio.Views.EmptyReadoutState>().Single();
+            Assert.Equal(w.ShowLanesEmpty, Shown(empty, root));
+        }
+        if (model.SelectedLeftTab == MainViewModel.DetectorTab && model.IsPhysicalReadout)
+        {
+            var prepare = Descendants(root).OfType<Button>().Single(b => AutomationProperties.GetAutomationId(b) == "Readout.Prepare");
+            Assert.Same(root.FindResource("Button.Primary"), prepare.Style);
+            Assert.Equal((double)root.FindResource("Size.Control"), prepare.ActualHeight);
+            foreach (var preset in model.WindowPresets)
+            {
+                var button = Descendants(root).OfType<Button>().Single(b => AutomationProperties.GetAutomationId(b) == preset.AutomationId);
+                Assert.Equal(preset.Label, button.Content);
+                Assert.Same(model.UseWindowPresetCommand, button.Command);
+                var accent = root.FindResource("Brush.Accent.Subtle");
+                if (preset.IsActive) Assert.Same(accent, button.Background); else Assert.NotSame(accent, button.Background);
+            }
+        }
     }
 
     /// <summary>Laid out and visible through every ancestor (a detached tree has no PresentationSource, so IsVisible is false).</summary>
@@ -268,7 +360,7 @@ public sealed partial class PlotViewRenderTests
 
     private static void AssertLeftTab(FrameworkElement root, MainViewModel model)
     {
-        var tabs = Descendants(root).OfType<TabControl>().Single();
+        var tabs = Descendants(root).OfType<TabControl>().Single(t => t.Items.OfType<TabItem>().Any(i => AutomationProperties.GetAutomationId(i) == "Left.SceneTab")); // the left panel (workspaces have view switches too)
         Assert.Equal(model.SelectedLeftTab, tabs.SelectedIndex);
         Assert.Equal(new[] { "Scene", "Optics", "Detector" }, tabs.Items.Cast<TabItem>().Select(t => (string)t.Header));
         Assert.Equal(new[] { "Left.SceneTab", "Left.OpticsTab", "Left.DetectorTab" }, tabs.Items.Cast<TabItem>().Select(AutomationProperties.GetAutomationId));
@@ -375,6 +467,7 @@ public sealed partial class PlotViewRenderTests
         AssertLeftTab(root, model);
         AssertStatusBar(root, model);
         AssertScrollGutters(root);
+        AssertReadoutViews(root, model);
         var cog = Descendants(root).OfType<Button>().Single(b => AutomationProperties.GetAutomationId(b) == "OpenOptions");
         Assert.Equal(model.OptionsHelpText, AutomationProperties.GetHelpText(cog));
         var badge = Descendants(root).OfType<System.Windows.Shapes.Ellipse>().Single(b => AutomationProperties.GetAutomationId(b) == "Options.Badge");

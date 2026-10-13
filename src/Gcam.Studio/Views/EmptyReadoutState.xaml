@@ -1,0 +1,12 @@
+<UserControl x:Class="Gcam.Studio.Views.EmptyReadoutState"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- A physical-readout view while the direct crystal assignment is active: says why it is empty and leads to the
+    readout choice (left Detector tab, readout combo focused). DataContext: a workspace view model with Shared. -->
+    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+        <TextBlock Text="Available with the experimental physical readout" Style="{StaticResource Text.Body}"
+                HorizontalAlignment="Center" Margin="{StaticResource Gap.Field}" AutomationProperties.AutomationId="Readout.EmptyState" />
+        <Button Content="Choose readout…" Command="{Binding Shared.ChooseReadoutCommand}" HorizontalAlignment="Center"
+                AutomationProperties.AutomationId="Readout.ChooseReadout" />
+    </StackPanel>
+</UserControl>

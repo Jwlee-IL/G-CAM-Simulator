@@ -24,6 +24,44 @@ public sealed partial class WaveformWorkspaceViewModel(MainViewModel shared, IWa
     [ObservableProperty] private WaveformView? _view;
     [ObservableProperty] private string? _error;
     [ObservableProperty] private PlotViewRange? _viewRange;
+
+    // View switch (Energy sum · Four outputs): always shown. Energy sum is the direct readout's scope; Four outputs the
+    // physical readout's lanes, or an empty state with "Choose readout…" when the direct crystal assignment is active.
+    // A readout-mode change selects that mode's view.
+    [ObservableProperty] private WaveformScopeView _scopeView;
+    private bool _wasPhysical;
+    public int ScopeViewIndex
+    {
+        get => (int)ScopeView;
+        set { if (Enum.IsDefined((WaveformScopeView)value)) ScopeView = (WaveformScopeView)value; }
+    }
+    public bool ShowSumPlots => ScopeView == WaveformScopeView.EnergySum && !Shared.IsPhysicalReadout;
+    public bool ShowSumPhysicalNote => ScopeView == WaveformScopeView.EnergySum && Shared.IsPhysicalReadout;
+    public bool ShowLanes => ScopeView == WaveformScopeView.FourOutputs && Shared.IsPhysicalReadout;
+    public bool ShowLanesEmpty => ScopeView == WaveformScopeView.FourOutputs && !Shared.IsPhysicalReadout;
+    /// <summary>The centre heading follows the view and the mode: the energy-sum scope (direct readout) or the four outputs
+    /// (physical readout); the mode-neutral "Waveform" over a view the current readout does not draw.</summary>
+    public string CentreTitle => ShowSumPlots ? "Waveform · energy sum" : ShowLanes ? "Waveform · four outputs" : "Waveform";
+    partial void OnScopeViewChanged(WaveformScopeView value) => NotifyScopeView();
+    private void NotifyScopeView()
+    {
+        foreach (string name in new[] { nameof(ScopeViewIndex), nameof(ShowSumPlots), nameof(ShowSumPhysicalNote), nameof(ShowLanes), nameof(ShowLanesEmpty), nameof(CentreTitle) })
+            OnPropertyChanged(name);
+    }
+    /// <summary>Follows the readout mode (called whenever the readout changes): a mode change selects that mode's view.</summary>
+    internal void SyncReadoutMode()
+    {
+        if (Shared.IsPhysicalReadout != _wasPhysical)
+        {
+            _wasPhysical = Shared.IsPhysicalReadout;
+            ScopeView = _wasPhysical ? WaveformScopeView.FourOutputs : WaveformScopeView.EnergySum;
+        }
+        NotifyScopeView();
+    }
+
+    /// <summary>The selected physical conversion as label / value rows (the same facts as the pulse readout, which names
+    /// the group); empty on the direct readout, whose pulse readout is one short statement.</summary>
+    public IReadOnlyList<FactRow> ReadingRows => View?.ReadingFacts.Select(f => new FactRow(f.Key, f.Value)).ToArray() ?? [];
     public IReadOnlyList<PlotSeries> AdcSeries => View is { } v ? new[] { v.Adc } : [];
     public IReadOnlyList<PlotSeries> ShapedSeries => View is { } v ? new[] { v.Shaped } : [];
     /// <summary>Short "#index" labels: nine markers fit one label row above the plot; pixel and deposit are in the event list.</summary>
@@ -59,7 +97,7 @@ public sealed partial class WaveformWorkspaceViewModel(MainViewModel shared, IWa
     {
         if (value is not null && ViewRange is null && value.Adc.Y.Length > 0)
             ViewRange = new(value.Adc.Origin, value.Adc.Y.Length == 1 ? value.Adc.Origin + value.Adc.Step : value.Adc.XAt(value.Adc.Y.Length - 1));
-        foreach (string name in new[] { nameof(AdcSeries), nameof(ShapedSeries), nameof(Markers), nameof(Events), nameof(ChainRows), nameof(Summary), nameof(Note), nameof(NoteHelp), nameof(LaneA), nameof(LaneB), nameof(LaneC), nameof(LaneD), nameof(LaneSum), nameof(PhysicalMarkers) })
+        foreach (string name in new[] { nameof(AdcSeries), nameof(ShapedSeries), nameof(Markers), nameof(Events), nameof(ChainRows), nameof(ReadingRows), nameof(Summary), nameof(Note), nameof(NoteHelp), nameof(LaneA), nameof(LaneB), nameof(LaneC), nameof(LaneD), nameof(LaneSum), nameof(PhysicalMarkers) })
             OnPropertyChanged(name);
     }
 

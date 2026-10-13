@@ -65,7 +65,8 @@ public sealed partial class PlotViewRenderTests
                 var (root, content) = DetachMainWindow(model, size);
                 Dispatcher.CurrentDispatcher.Invoke(() => { }, DispatcherPriority.ContextIdle);
                 root.UpdateLayout();
-                var plots = Descendants(root).OfType<PlotView>().ToArray();
+                // The shown plots (the four-output lanes are present but collapsed under the direct readout).
+                var plots = Descendants(root).OfType<PlotView>().Where(p => Shown(p, root)).ToArray();
                 Assert.Equal(2, plots.Length);
                 Assert.True(plots[0].ShowMarkerLabels);
                 Assert.False(plots[1].ShowMarkerLabels);

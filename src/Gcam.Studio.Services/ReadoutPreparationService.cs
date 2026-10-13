@@ -229,6 +229,8 @@ public sealed class ReadoutPreparationService : IReadoutPreparationService
         for (int y = 0; y < lut.BinsY; y++) for (int x = 0; x < lut.BinsX; x++)
         { density[x, y] = lut.Density[y * lut.BinsX + x]; labels[y * lut.BinsX + x] = lut.LabelOfBin(x, y); }
         var diagnostics = new List<string>();
+        var checks = new List<ReadoutCrystalCheck>();
+        string checkScope = "";
         int vFlood = LineSeed(plan, 6), vResponse = LineSeed(plan, 7), vNoise = LineSeed(plan, 8);
         if (cal.Succeeded)
         {
@@ -253,7 +255,11 @@ public sealed class ReadoutPreparationService : IReadoutPreparationService
             string lineText = line.ToString("0.##", CultureInfo.InvariantCulture);
             string seedText = plan.IsLegacy ? "validation seed 406" : FormattableString.Invariant($"validation seeds {vFlood}/{vResponse}/{vNoise}");
             for (int c = 0; c < crystals; c++)
+            {
                 diagnostics.Add($"Crystal {c}: assigned {accepted[c]} / {total[c]} single-crystal histories; wrong {wrong[c]} / {accepted[c]} assigned ({lineText} keV, all energies; {seedText}).");
+                checks.Add(new(c, accepted[c], total[c], wrong[c]));
+            }
+            checkScope = $"{lineText} keV, all energies; {seedText}";
         }
         var sensors = device.Sensors;
         var view = new ReadoutPreparation(Guid.NewGuid(), module, cal.Succeeded, cal.Failure, density.ReadOnlyCopy(),
@@ -262,6 +268,7 @@ public sealed class ReadoutPreparationService : IReadoutPreparationService
             processor.Unit(processor.PeakGridNs) == 1 ? Math.Exp(-processor.PeakGridNs / processor.TailNs) - Math.Exp(-processor.PeakGridNs / processor.RiseNs) : 1,
             processor.SupportNs, processor.ThresholdCodes)
         {
+            CrystalChecks = checks.AsReadOnly(), CheckScope = checkScope,
             Circuit = device.Network.Circuit is { } circuit ? new(Array.AsReadOnly((string[])circuit.NodeNames.Clone()),
                 Array.AsReadOnly(((int A, int B, double Ohm)[])circuit.Resistors.Clone()), circuit.InputOhm) : null,
             SensorActiveWidthMm = ro.Sensors.ActiveWidthMm ?? config.Detector.PixelPitchMm - config.Detector.ReflectorGapMm,

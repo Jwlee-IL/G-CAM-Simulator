@@ -243,6 +243,9 @@ public sealed class ReadoutRenderTests(ITestOutputHelper output)
             Circuit = new(Array.AsReadOnly(circuit.NodeNames), Array.AsReadOnly(circuit.Resistors), 0), SensorActiveWidthMm = pitchMm - .1,
             Module = new(n, n, pitchMm, .1, n, n, pitchMm, pitchMm - .1), CorrectionHistogram = Enumerable.Repeat(100, n * n).ToArray(),
             Seeds = "fixture",
+            // Drawing fixture of the per-crystal check table (not measured): 200 histories, 190 assigned, 2 wrong.
+            CrystalChecks = Enumerable.Range(0, n * n).Select(c => new ReadoutCrystalCheck(c, 190, 200, c % 7 == 0 ? 4 : 2)).ToArray(),
+            CheckScope = "drawing fixture; no measured calibration result",
         };
     }
 
@@ -310,7 +313,7 @@ public sealed class ReadoutRenderTests(ITestOutputHelper output)
             foreach (string theme in new[] { "Dark", "Light" })
             foreach (var size in new[] { new Size(1280,800), new Size(1440,900) })
             {
-                foreach (var tab in Enum.GetValues<ReadoutDetectorTab>())
+                foreach (var tab in Enum.GetValues<ReadoutDetectorTab>().Where(t => t != ReadoutDetectorTab.Face)) // Face is DetectorView's
                 {
                     model.DetectorWorkspace.ReadoutTab = tab;
                     Capture("ReadoutDetectorView", model.DetectorWorkspace, $"{name}-detector-{tab}", theme, size, tab == ReadoutDetectorTab.Anger || tab == ReadoutDetectorTab.Sipm);
@@ -318,6 +321,7 @@ public sealed class ReadoutRenderTests(ITestOutputHelper output)
                 Capture("ReadoutWaveformView", model.Waveform, $"{name}-four-lanes", theme, size);
                 Capture("ImagingOptionsPanel", model.Imaging, $"{name}-imaging-channel", theme, size);
                 Capture("DetectorPanel", model.DetectorWorkspace, $"{name}-detector-panel", theme, size);
+                Capture("WaveformPanel", model.Waveform, $"{name}-waveform-panel", theme, size);
                 Capture("ReadoutPanel", model, $"{name}-ready", theme, size);
                 Capture("ReadoutPanel", pending, $"{name}-pending", theme, size);
                 pending.IsPreparingReadout = true; pending.ReadoutProgressText = $"661.7 keV · Transporting independent calibration flood… · 1,000 / {n * n * 2000:N0} histories (0 %)";
@@ -353,7 +357,7 @@ public sealed class ReadoutRenderTests(ITestOutputHelper output)
             else { int start=xaml.IndexOf('>')+1; xaml=xaml.Insert(start,$"<UserControl.Resources><ResourceDictionary>{resources}</ResourceDictionary></UserControl.Resources>"); }
             var element = (FrameworkElement)XamlReader.Parse(xaml); element.DataContext=data;
             var root = new Border { Child=element, Width=size.Width, Height=size.Height };
-            if (view is "ReadoutPanel" or "ImagingOptionsPanel" or "DetectorPanel")
+            if (view is "ReadoutPanel" or "ImagingOptionsPanel" or "DetectorPanel" or "WaveformPanel")
             {
                 root.Child = null;
                 // These panels live in a fixed-width side panel (Size.SidePanel, Panel.Surface; DetectorPanel brings its
@@ -363,7 +367,7 @@ public sealed class ReadoutRenderTests(ITestOutputHelper output)
                     root.Resources.MergedDictionaries.Add(new ResourceDictionary { Source = new Uri($"pack://application:,,,/Gcam.Studio;component/Themes/{f}.xaml") });
                 root.Child = new Border
                 {
-                    Style = view == "DetectorPanel" ? null : (Style)root.FindResource("Panel.Surface"),
+                    Style = view is "DetectorPanel" or "WaveformPanel" ? null : (Style)root.FindResource("Panel.Surface"),
                     Width = ((GridLength)root.FindResource("Size.SidePanel")).Value, VerticalAlignment = VerticalAlignment.Top,
                     HorizontalAlignment = HorizontalAlignment.Left, Margin = (Thickness)root.FindResource("Pad.Window"), Child = element,
                 };

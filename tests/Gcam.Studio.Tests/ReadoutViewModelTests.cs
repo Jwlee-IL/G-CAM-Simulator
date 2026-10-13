@@ -1,5 +1,6 @@
 using Gcam.Configuration;
 using Gcam.Studio.Core.Services;
+using Gcam.Studio.Core.Detector;
 using Gcam.Studio.Core.ViewModels;
 
 namespace Gcam.Studio.Tests;
@@ -269,6 +270,108 @@ public sealed class ReadoutViewModelTests
     }
 
 
+
+    /// <summary>Review 7: the energy-window presets ±10, ±15 (benchmark, from the record), ±20 and ±25 % use the benchmark
+    /// window's exact decimal arithmetic around the line inside the current window; only ±15 % is the benchmark; the mark
+    /// follows the values (a typed window is custom); presets are not sticky — after the window moves to another line a
+    /// preset re-centres there.</summary>
+    [Theory]
+    [InlineData(.10, 595.53, 727.87)]
+    [InlineData(.15, 562.445, 760.955)]
+    [InlineData(.20, 529.36, 794.04)]
+    [InlineData(.25, 496.275, 827.125)]
+    public void WindowPresets_ApplyEachWidthWithBenchmarkRounding_MarkFollowsValues(double fraction, double low, double high)
+    {
+        var vm = Model(); vm.Optics = Head; vm.ReadoutMode = ReadoutMode.FourOutputAnger;
+        Assert.Equal(new[] { .10, .15, .20, .25 }, vm.WindowPresets.Select(p => p.Fraction));
+        Assert.Equal(new[] { false, true, false, false }, vm.WindowPresets.Select(p => p.IsBenchmark));
+        Assert.Equal(new[] { "Readout.Window10", "Readout.BenchmarkWindow", "Readout.Window20", "Readout.Window25" }, vm.WindowPresets.Select(p => p.AutomationId));
+        Assert.DoesNotContain(vm.WindowPresets, p => p.IsActive); // 600–720 keV is a typed (custom) window
+        vm.UseWindowPresetCommand.Execute(fraction);
+        Assert.Equal((low, high), (vm.WindowLowKeV, vm.WindowHighKeV));
+        Assert.Equal((low, high), ReadoutPolicy.BenchmarkWindow(661.7, fraction));
+        Assert.Equal(fraction, Assert.Single(vm.WindowPresets, p => p.IsActive).Fraction);
+        vm.WindowHighKeV = high + 1; // typed: custom again
+        Assert.DoesNotContain(vm.WindowPresets, p => p.IsActive);
+        vm.WindowHighKeV = 1400; vm.WindowLowKeV = 1200; // the 1332.5 keV line
+        Assert.DoesNotContain(vm.WindowPresets, p => p.IsActive); // not sticky: the width does not follow the line
+        vm.UseWindowPresetCommand.Execute(fraction);
+        Assert.Equal(ReadoutPolicy.BenchmarkWindow(1332.5, fraction), (vm.WindowLowKeV, vm.WindowHighKeV));
+        Assert.Equal("Window line 1332.5 keV", vm.WindowLine);
+    }
+
+    [Fact]
+    public void BenchmarkWindowCommand_IsTheFifteenPercentPreset()
+    {
+        var vm = Model(); vm.Optics = Head; vm.ReadoutMode = ReadoutMode.FourOutputAnger;
+        vm.UseBenchmarkWindowCommand.Execute(null);
+        Assert.Equal((562.445, 760.955), (vm.WindowLowKeV, vm.WindowHighKeV));
+        var active = Assert.Single(vm.WindowPresets, p => p.IsActive);
+        Assert.True(active.IsBenchmark);
+        Assert.Equal("±15 %", active.Label);
+        Assert.Contains("no measured cost", MainViewModel.WindowPresetHelp);
+    }
+
+    /// <summary>Review 7: the Detector and Waveform view switches are always shown; a readout-mode change selects that mode's
+    /// view; a physical view under the direct readout is an empty state, and "Choose readout…" selects the left Detector tab
+    /// and asks the view to focus the readout combo.</summary>
+    [Fact]
+    public void ViewSwitches_FollowTheReadoutMode_EmptyStateLeadsToTheReadoutChoice()
+    {
+        var vm = Model();
+        var d = vm.DetectorWorkspace; var w = vm.Waveform;
+        Assert.Equal(ReadoutDetectorTab.Face, d.ReadoutTab);
+        Assert.True(d.IsFaceView); Assert.False(d.ShowReadoutEmpty); Assert.False(d.ShowReadoutView);
+        Assert.Equal(WaveformScopeView.EnergySum, w.ScopeView);
+        Assert.True(w.ShowSumPlots); Assert.False(w.ShowLanesEmpty);
+        Assert.Equal("Detector face · gain pattern", d.CentreTitle); Assert.Equal("Waveform · energy sum", w.CentreTitle);
+        d.ReadoutTabIndex = (int)ReadoutDetectorTab.Anger;
+        Assert.True(d.ShowReadoutEmpty); Assert.False(d.ShowReadoutView);
+        Assert.Equal("Detector", d.CentreTitle); // mode-neutral over the empty state: not the physical head's name
+        w.ScopeViewIndex = (int)WaveformScopeView.FourOutputs;
+        Assert.True(w.ShowLanesEmpty); Assert.False(w.ShowLanes);
+        Assert.Equal("Waveform", w.CentreTitle);
+        int request = vm.ReadoutModeFocusRequest;
+        vm.ChooseReadoutCommand.Execute(null);
+        Assert.Equal(MainViewModel.DetectorTab, vm.SelectedLeftTab);
+        Assert.Equal(request + 1, vm.ReadoutModeFocusRequest);
+        vm.Optics = Head; vm.ReadoutMode = ReadoutMode.FourOutputAnger;
+        Assert.Equal(ReadoutDetectorTab.Sipm, d.ReadoutTab); // the physical mode's first view
+        Assert.True(d.ShowReadoutView);
+        Assert.Equal("Experimental four-output head", d.CentreTitle); Assert.Equal("Waveform · four outputs", w.CentreTitle);
+        Assert.Equal(WaveformScopeView.FourOutputs, w.ScopeView);
+        Assert.True(w.ShowLanes);
+        w.ScopeViewIndex = (int)WaveformScopeView.EnergySum;
+        Assert.True(w.ShowSumPhysicalNote); Assert.False(w.ShowSumPlots);
+        Assert.Equal("Waveform", w.CentreTitle);
+        d.ReadoutTabIndex = (int)ReadoutDetectorTab.Face;
+        Assert.True(d.IsFaceView); Assert.Equal("Detector face · gain pattern", d.CentreTitle);
+        vm.ReadoutMode = ReadoutMode.DirectCrystal;
+        Assert.Equal(ReadoutDetectorTab.Face, d.ReadoutTab);
+        Assert.Equal(WaveformScopeView.EnergySum, w.ScopeView);
+        d.ReadoutTabIndex = 99; // out of range: ignored
+        Assert.Equal(ReadoutDetectorTab.Face, d.ReadoutTab);
+    }
+
+    /// <summary>Review 7: the Calibration facts and the per-crystal check are rows / a table with the same facts as the text
+    /// forms; a preparation without numeric checks keeps its text lines as notes.</summary>
+    [Fact]
+    public async Task CalibrationAndDiagnosticRows_CarryTheTextFacts()
+    {
+        var vm = Model(); vm.Optics = Head; vm.ReadoutMode = ReadoutMode.FourOutputAnger;
+        vm.AmbientDoseRateMicroSvPerHour = 0;
+        var d = vm.DetectorWorkspace;
+        Assert.Empty(d.CalibrationRows);
+        await vm.PrepareReadoutCommand.ExecuteAsync(null);
+        var p = d.Preparation!;
+        string Row(string label) => Assert.Single(d.CalibrationRows, r => r.Label == label).Value;
+        Assert.StartsWith($"{Row("State")} · {Row("Line")} · {Row("Peaks")} peaks", d.CalibrationState);
+        Assert.Contains($"Seeds: {Row("Seeds")}", d.CalibrationState);
+        Assert.Contains($"Cost {Row("Cost")}", d.CalibrationState);
+        Assert.Contains($"Calibration {Row("Calibration id")}", d.CalibrationState);
+        Assert.All(d.DiagnosticRows, r => Assert.True(r.IsNote)); // the fixture preparation has text lines only
+        Assert.Equal(p.Diagnostics, d.DiagnosticRows.Select(r => r.Note));
+    }
 
     [Theory]
     [InlineData(661.7, 562.445, 760.955)]

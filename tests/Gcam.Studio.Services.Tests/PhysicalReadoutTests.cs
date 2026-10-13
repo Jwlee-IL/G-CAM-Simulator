@@ -77,6 +77,11 @@ public sealed class PhysicalReadoutTests(ITestOutputHelper output)
         Assert.True(p.Succeeded, p.Failure);
         Assert.Equal(144, p.Peaks.Count);
         Assert.Equal(144, p.Diagnostics.Count);
+        // Review 7: the per-crystal check as numbers for the Diagnostics table carries exactly the facts of the text record.
+        Assert.Equal(144, p.CrystalChecks.Count);
+        Assert.All(p.CrystalChecks.Zip(p.Diagnostics), pair => Assert.StartsWith(
+            $"Crystal {pair.First.Crystal}: assigned {pair.First.Assigned} / {pair.First.Total} single-crystal histories; wrong {pair.First.Wrong} / {pair.First.Assigned} assigned ({p.CheckScope}).",
+            pair.Second));
         output.WriteLine($"Preparation: {p.Cost.TotalSeconds:R} s, scored {p.Scored}, triggered with valid position {p.Triggered}, photopeak {p.InWindow}, gain fallback {p.GainFallback}, ordered peaks {p.Peaks.Count}.");
         Assert.Equal(p.Density.Width * p.Density.Height, p.Labels.Count);
         Assert.Same(p, await Preparation.PrepareAsync(Head, new() { GainSigma = .5, GainSeed = 999 }));

@@ -57,6 +57,26 @@ public static class PhysicalReadoutWaveform
             (length<settings.WindowUs?"Window clipped to shared five-lane sample budget.":""),length,watch.Elapsed)
         { PhysicalLanes = Array.AsReadOnly(series), PhysicalMarkers = Array.AsReadOnly(markers), PhysicalThreshold = thresholdSeries,
           ChainFacts = Array.AsReadOnly(new KeyValuePair<string, string>[] { new("Readout", "Experimental GAGG"), new("Network", "DPC 0.01"),
-              new("Outputs", "Four held 14-bit ADC outputs") }) };
+              new("Outputs", "Four held 14-bit ADC outputs") }),
+          ReadingFacts = selected is null ? [] : Array.AsReadOnly(ReadingFacts(selected, p, physical).ToArray()) };
+    }
+
+    /// <summary>The facts of the pulse reading (same values and formats) as rows for the Waveform panel.</summary>
+    private static IEnumerable<KeyValuePair<string, string>> ReadingFacts(MeasuredReadoutRecord selected, ReadoutPreparation p, ReadoutSnapshot physical)
+    {
+        yield return new("Conversion", $"#{selected.Index}");
+        yield return new("LUT crystal", selected.Crystal < 0 ? "unknown" : selected.Crystal.ToString());
+        yield return new("Energy", selected.Crystal < 0 ? "unavailable" : $"{selected.EnergyKeV:0.##} keV");
+        yield return new("Raw X / Y", $"{selected.RawX:0.####} / {selected.RawY:0.####}");
+        yield return new("Held ADC A/B/C/D", $"{selected.Codes.A:0}/{selected.Codes.B:0}/{selected.Codes.C:0}/{selected.Codes.D:0}");
+        yield return new("Dominant hit", $"#{selected.DominantHit}");
+        yield return new("Contributors", $"{selected.Contributors}");
+        yield return new("Reference", $"{p.LineKeV:0.##} keV calibration");
+        foreach (var l in physical.Lines.Skip(1))
+        {
+            var a = l.Assignments[selected.Index];
+            yield return new($"{l.LineKeV:0.##} keV calibration", $"LUT {(a.Crystal < 0 ? "unknown" : a.Crystal.ToString())}, {(a.Crystal < 0 ? "energy unavailable" : $"{a.EnergyKeV:0.##} keV")}");
+        }
+        yield return new("Calibration id", p.Id.ToString());
     }
 }

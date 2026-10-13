@@ -1,6 +1,7 @@
 <UserControl x:Class="Gcam.Studio.Views.ReadoutPanel"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:c="clr-namespace:Gcam.Studio.Controls">
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:c="clr-namespace:Gcam.Studio.Controls"
+        xmlns:vm="clr-namespace:Gcam.Studio.Core.ViewModels;assembly=Gcam.Studio.Core">
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="PhysicalVisibility" />
         <!-- The status word of a calibration-line cell; its detail below uses Text.Caption. -->
@@ -50,8 +51,10 @@
                     AutomationProperties.AutomationId="Readout.AssumptionsHelp"
                     AutomationProperties.Name="Readout model assumptions" />
         </DockPanel>
+        <!-- "Choose readout…" in an empty readout view selects this tab and focuses this combo (FocusRequest). -->
         <ComboBox ItemsSource="{Binding ReadoutModes}" SelectedItem="{Binding ReadoutMode}"
                 IsEnabled="{Binding CanEditInputs}" Margin="{StaticResource Gap.Tight}"
+                c:FocusRequest.Counter="{Binding ReadoutModeFocusRequest}"
                 AutomationProperties.AutomationId="Readout.Mode" AutomationProperties.Name="Readout mode" />
         <TextBlock Text="{Binding ReadoutModeSummary}" Style="{StaticResource Text.Caption}" TextWrapping="Wrap"
                 Margin="{StaticResource Gap.Field}" AutomationProperties.AutomationId="Readout.ModeSummary" />
@@ -130,7 +133,9 @@
                 <TextBlock DockPanel.Dock="Left" Text="Preparation" Style="{StaticResource Text.PanelTitle}" />
                 <!-- One right-docked group, so the tab order follows the visual order (Prepare, then Cancel). -->
                 <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                    <Button Command="{Binding PrepareReadoutCommand}"
+                    <!-- Prepare starts a long computation the user waits for: the primary (accent) style, like Start -->
+                    <Button Command="{Binding PrepareReadoutCommand}" Style="{StaticResource Button.Primary}"
+                            Height="{StaticResource Size.Control}" VerticalAlignment="Center"
                             Margin="{StaticResource Gap.Inline}"
                             AutomationProperties.AutomationId="Readout.Prepare" AutomationProperties.Name="Prepare">
                         <StackPanel Orientation="Horizontal">
@@ -201,16 +206,42 @@
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
-                <TextBox Grid.Column="0" Text="{Binding WindowLowKeV}" Tag="keV low" Margin="{StaticResource Gap.Inline}"
+                <TextBox Grid.Column="0" Text="{Binding WindowLowKeV}" Tag="low" Margin="{StaticResource Gap.Inline}"
                         AutomationProperties.AutomationId="Readout.WindowLow" />
-                <TextBox Grid.Column="1" Text="{Binding WindowHighKeV}" Tag="keV high"
+                <TextBox Grid.Column="1" Text="{Binding WindowHighKeV}" Tag="high"
                         AutomationProperties.AutomationId="Readout.WindowHigh" />
             </Grid>
             <TextBlock Text="{Binding WindowLine}" Style="{StaticResource Text.Caption}" TextWrapping="Wrap"
                     Margin="{StaticResource Gap.Field}" AutomationProperties.AutomationId="Readout.WindowLine" />
-            <Button Content="Use ±15 % benchmark window" Command="{Binding UseBenchmarkWindowCommand}"
-                    HorizontalAlignment="Left" Margin="{StaticResource Gap.Field}"
-                    AutomationProperties.AutomationId="Readout.BenchmarkWindow" />
+            <!-- Presets around the window line: ±10 · ±15 (EV-36 benchmark) · ±20 · ±25 %. They write the fields (still
+            editable); the matching preset is marked. ContentItemsList exposes each button (and its AutomationId) to UIA. -->
+            <DockPanel Margin="{StaticResource Gap.Tight}">
+                <c:HelpMark DockPanel.Dock="Right"
+                        Text="{x:Static vm:MainViewModel.WindowPresetHelp}"
+                        AutomationProperties.AutomationId="Readout.WindowPresetHelp"
+                        AutomationProperties.Name="About the window presets" />
+                <Border Style="{StaticResource Segment.Track}" Height="{StaticResource Size.Control}" Padding="{StaticResource Pad.None}">
+                    <c:ContentItemsList ItemsSource="{Binding WindowPresets}" AutomationProperties.AutomationId="Readout.WindowPresets"
+                            AutomationProperties.Name="Energy window presets">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <UniformGrid Rows="1" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Button Content="{Binding Label}" Tag="{Binding IsActive}" ToolTip="{Binding ToolTip}"
+                                        Command="{Binding DataContext.UseWindowPresetCommand, RelativeSource={RelativeSource AncestorType=c:ContentItemsList}}"
+                                        CommandParameter="{Binding Fraction}" Style="{StaticResource Button.Segment}"
+                                        AutomationProperties.AutomationId="{Binding AutomationId}"
+                                        AutomationProperties.Name="{Binding AccessibleName}" />
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </c:ContentItemsList>
+                </Border>
+            </DockPanel>
+            <TextBlock Text="±15 % is the EV-36 benchmark (measured cost)." Style="{StaticResource Text.Caption}"
+                    TextWrapping="Wrap" Margin="{StaticResource Gap.Field}" AutomationProperties.AutomationId="Readout.WindowPresetNote" />
         </StackPanel>
         <TextBlock Text="{Binding ReadoutMessage}" Style="{StaticResource Text.CaptionWarning}" TextWrapping="Wrap"
                 AutomationProperties.AutomationId="Readout.Reason" />

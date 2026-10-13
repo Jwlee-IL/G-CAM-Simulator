@@ -170,7 +170,7 @@ public sealed partial class PlotViewRenderTests
                     t => AutomationProperties.GetAutomationId(t) == "Imaging.FocalPlane");
                 Assert.Equal(model.Imaging.FocalPlane, focus.Text);
             }
-            var left = Descendants(root).OfType<TabControl>().Single();
+            var left = Descendants(root).OfType<TabControl>().Single(t => t.Items.OfType<TabItem>().Any(i => AutomationProperties.GetAutomationId(i) == "Left.SceneTab")); // the left panel (workspaces have view switches too)
             Assert.Equal(3, left.Items.Count);
             var scene = Assert.IsType<ScrollViewer>(left.SelectedContent);
             Assert.Equal(0, scene.ScrollableHeight);
@@ -186,7 +186,8 @@ public sealed partial class PlotViewRenderTests
             Assert.Equal(BindingStatus.Active,
                 BindingOperations.GetBindingExpression(sourceEditor, UIElement.IsEnabledProperty)!.Status);
 
-            foreach (var heatmap in Descendants(root).OfType<HeatmapView>())
+            // Every heatmap with an image (the Detector workspace's sensitivity map has none under the direct readout).
+            foreach (var heatmap in Descendants(root).OfType<HeatmapView>().Where(h => h.Image is not null))
             {
                 // Exercise the actual readout path without a mouse event (same API used by adorners).
                 var point = heatmap.MmToScreen(new Vec2(0, 0));

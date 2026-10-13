@@ -13,6 +13,13 @@ public sealed record ReadoutPreparation(Guid Id, string Key, bool Succeeded, str
     public double SensorActiveWidthMm { get; init; }
     public IReadOnlyList<double> Gains { get; init; } = [];
 
+    /// <summary>The local per-crystal check as numbers (the same facts as <see cref="Diagnostics"/>, which stays the
+    /// text record): crystal, assigned / total single-crystal histories, wrong / assigned. Empty for hand-built views.</summary>
+    public IReadOnlyList<ReadoutCrystalCheck> CrystalChecks { get; init; } = [];
+
+    /// <summary>What the per-crystal check covers ("661.7 keV, all energies; validation seeds …").</summary>
+    public string CheckScope { get; init; } = "";
+
     /// <summary>Calibration line (keV) this entry was prepared for.</summary>
     public double LineKeV { get; init; } = 661.7;
 

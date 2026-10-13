@@ -13,4 +13,6 @@ public sealed record WaveformView(PlotSeries Adc, PlotSeries Shaped, IReadOnlyLi
     public IReadOnlyList<KeyValuePair<string, string>> ChainFacts { get; init; } = [];
     /// <summary>The caveats of <see cref="ChainReadout"/> that qualify the rows (kept visible under them).</summary>
     public string? ChainNote { get; init; }
+    /// <summary>The facts of <see cref="PulseReadout"/> as (label, value) pairs on the physical readout; empty otherwise.</summary>
+    public IReadOnlyList<KeyValuePair<string, string>> ReadingFacts { get; init; } = [];
 }

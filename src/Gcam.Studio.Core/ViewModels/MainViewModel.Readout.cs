@@ -232,6 +232,7 @@ public sealed partial class MainViewModel
         { ReadoutMessage = "Energy window needs finite 0 ≤ low < high in keV."; RefreshRejectedReadoutProperty(nameof(WindowLowKeV)); RefreshRejectedReadoutProperty(nameof(WindowHighKeV)); return; }
         _windowLowKeV = low; _windowHighKeV = high; ReadoutMessage = null;
         OnPropertyChanged(nameof(WindowLowKeV)); OnPropertyChanged(nameof(WindowHighKeV)); OnPropertyChanged(nameof(WindowLine));
+        OnPropertyChanged(nameof(WindowPresets));
         Spectrum.Refresh(); Imaging.RefreshChannels(); DetectorWorkspace.Refresh();
     }
 
@@ -242,13 +243,50 @@ public sealed partial class MainViewModel
     /// <summary>Sets the window to the benchmark's ±fraction of the line inside the current window (exactly the
     /// arithmetic the imaging-profile comparison uses).</summary>
     [RelayCommand]
-    private void UseBenchmarkWindow()
+    private void UseBenchmarkWindow() => UseWindowPreset(BenchmarkWindowFraction);
+
+    private double BenchmarkWindowFraction => ReadoutOffers.Benchmark?.WindowFraction ?? 0.15;
+
+    /// <summary>The energy-window presets: ±10, ±15 (the EV-36 benchmark, from the record), ±20 and ±25 % around the line
+    /// inside the current window. A preset only writes the low / high fields (they stay editable; a typed window is the
+    /// custom case). It is not sticky: the active mark follows the values, and choosing a preset again re-centres it on
+    /// the line inside the window now.</summary>
+    public IReadOnlyList<ReadoutWindowPreset> WindowPresets
     {
-        double fraction = ReadoutOffers.Benchmark?.WindowFraction ?? 0.15;
+        get
+        {
+            double benchmark = BenchmarkWindowFraction;
+            double? line = ReadoutPolicy.LineForWindow(WindowLowKeV, WindowHighKeV, out _);
+            bool Active(double f) => line is { } l && ReadoutPolicy.BenchmarkWindow(l, f) == (WindowLowKeV, WindowHighKeV);
+            return new[] { (0.10, "Readout.Window10"), (benchmark, "Readout.BenchmarkWindow"), (0.20, "Readout.Window20"), (0.25, "Readout.Window25") }
+                .Select(p => new ReadoutWindowPreset(p.Item1, p.Item1 == benchmark, Active(p.Item1), p.Item2)).ToArray();
+        }
+    }
+
+    public const string WindowPresetHelp = "Each preset sets the window to the calibration line ± that width (the line inside the current window, "
+        + "else 661.7 keV), with the benchmark's exact decimal rounding; the fields stay editable and a typed window is the custom case. "
+        + "The localisation cost (EV-36) was measured at ±15 % only: ±10, ±20 and ±25 % have no measured cost.";
+
+    /// <summary>Applies one preset width (the same arithmetic as the benchmark window).</summary>
+    [RelayCommand]
+    private void UseWindowPreset(double fraction)
+    {
         double line = ReadoutPolicy.LineForWindow(WindowLowKeV, WindowHighKeV, out _) ?? ReadoutPolicy.ReferenceLineKeV;
         var (low, high) = ReadoutPolicy.BenchmarkWindow(line, fraction);
         SetWindow(low, high);
     }
+
+    /// <summary>Leads from an empty readout view to the readout choice: selects the left Detector tab and asks the view to
+    /// focus the readout combo (<see cref="ReadoutModeFocusRequest"/>).</summary>
+    [RelayCommand]
+    private void ChooseReadout()
+    {
+        SelectedLeftTab = DetectorTab;
+        ReadoutModeFocusRequest++;
+    }
+
+    /// <summary>Incremented to ask the view to focus the readout-mode combo (a view-side focus request; no WPF in Core).</summary>
+    [ObservableProperty] private int _readoutModeFocusRequest;
 
     /// <summary>SD-A4: opt-in flood correction of the physical window image from the calibration's own correction
     /// histogram. A view setting (re-projection), never a transport or calibration input.</summary>
@@ -259,8 +297,9 @@ public sealed partial class MainViewModel
     {
         foreach (string name in new[] { nameof(IsPhysicalReadout), nameof(CanUseLegacy), nameof(CanEditLegacy), nameof(ReadoutAssumptions), nameof(ReadoutModeSummary),
             nameof(ReadoutState), nameof(ReadoutReadyRows), nameof(Detector), nameof(ReadoutLines), nameof(ReadoutPlans), nameof(RequiredReadoutLines),
-            nameof(MatchingBank), nameof(MatchingPreparation), nameof(PreparedReadout), nameof(IsReadoutBankReady), nameof(ReadoutOffers) })
+            nameof(MatchingBank), nameof(MatchingPreparation), nameof(PreparedReadout), nameof(IsReadoutBankReady), nameof(ReadoutOffers), nameof(WindowPresets) })
             OnPropertyChanged(name);
+        Waveform.SyncReadoutMode();
         if (IsPhysicalReadout) { Spectrum.PileUp = false; Imaging.Strip = false; Waveform.RateStudy = false; Waveform.Ideal = false; }
         PrepareReadoutCommand.NotifyCanExecuteChanged();
         DetectorWorkspace.Refresh();

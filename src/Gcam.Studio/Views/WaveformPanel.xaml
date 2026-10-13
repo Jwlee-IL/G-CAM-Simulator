@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:c="clr-namespace:Gcam.Studio.Controls"
         xmlns:conv="clr-namespace:Gcam.Studio.Converters">
     <!-- Sections in the shared panel language (PanelHeader title, Divider between sections, field and fact rows):
-    Scope window · Rate study · Acquired chain · Events in window (a table like the Measurements list). -->
+    Scope window · Selected event · Rate study · Acquired chain · Events in window (a table like the Measurements list). -->
     <Border Style="{StaticResource Panel.Surface}">
         <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
             <StackPanel>
@@ -33,6 +33,40 @@
                     <TextBox Text="{Binding WindowUs}" Tag="µs"
                             AutomationProperties.AutomationId="Waveform.Window" AutomationProperties.Name="Window length (microseconds)" />
                 </DockPanel>
+                <!-- The scope's mode statement (moved from above the plots); the model's limits behind the help mark -->
+                <DockPanel Margin="{StaticResource Gap.Field}">
+                    <c:HelpMark DockPanel.Dock="Right"
+                            Text="{Binding NoteHelp}"
+                            VerticalAlignment="Top"
+                            AutomationProperties.AutomationId="Waveform.NoteHelp" AutomationProperties.Name="About the waveform model" />
+                    <TextBlock Text="{Binding Note}" Style="{StaticResource Text.Caption}" TextWrapping="Wrap"
+                            AutomationProperties.AutomationId="Waveform.Note" />
+                </DockPanel>
+                <Border Style="{StaticResource Divider}" />
+
+                <!-- ===== Selected event (moved from under the plots): the window summary, then the pulse reading — rows on
+                the physical readout (the group is named with the full reading), one statement on the direct readout ===== -->
+                <DockPanel Style="{StaticResource PanelHeader}">
+                    <TextBlock Text="Selected event" Style="{StaticResource Text.PanelTitle}" />
+                </DockPanel>
+                <TextBlock Text="{Binding Summary}" Style="{StaticResource Text.Caption}" TextWrapping="Wrap" Margin="{StaticResource Gap.Tight}"
+                        AutomationProperties.AutomationId="Waveform.Summary" />
+                <c:SettingsGroup Grid.IsSharedSizeScope="True" Margin="{StaticResource Gap.Field}"
+                        AutomationProperties.AutomationId="Waveform.PulseReadout" AutomationProperties.Name="{Binding View.PulseReadout}">
+                    <ItemsControl ItemsSource="{Binding ReadingRows}" ItemTemplate="{StaticResource Template.FactRow}" Focusable="False" />
+                    <TextBlock Text="{Binding View.PulseReadout}" TextWrapping="Wrap">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock" BasedOn="{StaticResource Text.Caption}">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding ReadingRows.Count}" Value="0">
+                                        <Setter Property="Visibility" Value="Visible" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </c:SettingsGroup>
                 <Border Style="{StaticResource Divider}" />
 
                 <!-- ===== Rate study ===== -->
