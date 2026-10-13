@@ -99,6 +99,19 @@ controls" and "UI-automation reference counts") is the complete list and governs
 | R15 | Desktop: each stage reruns essentially the whole desktop suite (27 scenarios, long High-res excluded) plus broken-verdict / recovery for changed assertions; stage 2 also redoes the UI-automation re-measure and re-pilot (window geometry changes). Each run only on the author's go, with the scenario list and duration stated first. | review §8 |
 | R16 | D9 fix per review §6: the SiPM layout uses `sx + 3` cells with sensors at `(i + 1.5)` cells, leaving 1 / 2 cells of margin; centre sensors and chain ends at `(i + 2)` cells, with a Core layout test. | review §6 |
 
+## Decisions after the author's desktop review (2026-10-13)
+
+The stage-2 build was reviewed by the author in the real window; offscreen renders had missed the faults below.
+These rows win over D4, D10 and R7 where they differ.
+
+| # | Decision | Kind |
+|---|---|---|
+| W1 | `WindowStyle="None"` with the WindowChrome resize borders: the OS title bar was still drawn because WindowStyle stayed at its default. A maximised window fits the monitor work area; move, resize, snap, Alt+Space and Alt+F4 kept. A desktop scenario asserts that no OS title bar exists. | author |
+| W2 | The left panel becomes a **TabControl** — Scene (sources, selected source), Optics (preset, summary or Custom fields), Detector (readout panel) — replacing the stacked sections and expanders. | author |
+| W3 | **Options opens from a cog icon in the top bar** (global chrome), not from the left panel. Non-default options show as a badge on the cog and as a summary in the status bar, which also carries the acquired ambient BSR (replaces D4's left-panel summary line and R7's place). | author |
+| W4 | One control height per top-bar row: Start / Continue / Stop are `Size.Control` high on the same centre line as the text boxes; only the caption buttons keep the bar height. | author |
+| W5 | The shared icon-button style clipped every glyph (28 px width − 2 × 8 px padding − borders = 10 px for a 12 px glyph). Fixed in the shared style, with a render test over every icon button. | author |
+
 ## Steps
 
 1. Turn 1 (review, read-only): check every *verify* row and the "What exists" list; propose the per-screen help-mark
