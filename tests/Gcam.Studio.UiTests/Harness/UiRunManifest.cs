@@ -79,7 +79,8 @@ public sealed class UiRunManifest(string runId, string scenario)
                 Enumerable.Range(2, 5).Select(n => new Gate("G" + n, n is 4 or 6 && profile == "P1" ? "not_applicable" : "blocked", basis)).ToArray(),
                 new(profile is "P3" or "P4", profile == "P4" ? new[] { "final-render", "new-or-changed-capture-template" } : [],
                     profile == "P4" ? "every edition figure and flagged template" : "no initial-probe figure review", profile == "P4" ? new[] { "HUM-10" } : []), [] ) },
-            charter = new { status = _package is null ? "draft" : "approved", approvals = _package?.Approvals ?? [] },
+            charter = new { status = _package is null ? "draft" : "approved", scope = _package is null ? "unapproved" : "launch-idle-exit-probe-only",
+                p4Status = "draft-not-approved", approvals = _package?.Approvals ?? [] },
             adoption = new { mode = "existing", qualificationScopes = new[] { "isolation", "process-monitor", "probe-launch" }.Select(id => new
             {
                 id, status = "blocked", allowedUses = Array.Empty<string>(),

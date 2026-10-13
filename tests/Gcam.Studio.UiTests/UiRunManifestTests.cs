@@ -6,6 +6,18 @@ namespace Gcam.Studio.UiTests;
 public sealed class UiRunManifestTests
 {
     [Fact]
+    public void ProbeApproval_DoesNotApproveTheP4Charter()
+    {
+        var manifest = new UiRunManifest("fixture", "probe");
+        manifest.RecordApprovedProbe(new("fixture", new string('a', 40), DateTimeOffset.UtcNow, "isolation", "deployment", []));
+        manifest.CleanupCompleted([]);
+        using var json = JsonDocument.Parse(JsonSerializer.Serialize(manifest.Finalise("passed", observed: true)));
+        var charter = json.RootElement.GetProperty("charter");
+        Assert.Equal("launch-idle-exit-probe-only", charter.GetProperty("scope").GetString());
+        Assert.Equal("draft-not-approved", charter.GetProperty("p4Status").GetString());
+    }
+
+    [Fact]
     public void CleanupAndRecordFailure_DoNotMaskTheBodyFailure()
     {
         var body = new Xunit.Sdk.XunitException("fixture body");

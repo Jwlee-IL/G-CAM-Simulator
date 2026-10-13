@@ -11,6 +11,7 @@
         <Keyword Value="Loader" />
         <Keyword Value="FileIO" />
         <Keyword Value="FileIOInit" />
+        <!-- Registry includes create/open/set-value events for the harness-owned HKCU marker. -->
         <Keyword Value="Registry" />
         <Keyword Value="NetworkTrace" />
       </Keywords>

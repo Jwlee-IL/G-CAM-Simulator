@@ -155,8 +155,52 @@ def parse_trace(path):
         rows.append({'pid': pid, 'channel': channel, 'operation': data.get('Operation', data.get('Opcode', '')),
                      'destination': data.get('FileName', data.get('KeyName', data.get('ImageName', data.get('daddr', '')))),
                      'parentPid': parent,
+                     'valueName': data.get('ValueName', ''),
+                     'valueData': data.get('ValueData'),
+                     'status': data.get('Status'),
                      'at': data.get('TimeCreated', ''), 'provider': provider, 'fields': data})
     return rows
+
+
+def registry_marker_match(event, control, rules, harness, proof=False):
+    """One narrow approved harness surface; unknown registry events are never PID-filtered away."""
+    rule = rules.get('registryMarker', {})
+    run_id = control.get('runId', '')
+    if (event.get('channel') != 'registry' or control.get('channel') != 'registry'
+            or event.get('pid') != control.get('pid') or event.get('pid') not in harness
+            or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_-]{0,70}', run_id)
+            or control.get('valueData') != run_id or control.get('valueName') != rule.get('valueName')):
+        return False
+    key = rule.get('keyRoot', '') + '\\' + run_id
+    native = control.get('traceKeyPath', '')
+    if control.get('keyPath', '').casefold() != key.casefold():
+        return False
+    if not re.fullmatch(r'\\REGISTRY\\USER\\S-1-[0-9]+(?:-[0-9]+)+\\Software\\GcamUiaProbe\\' + re.escape(run_id), native, re.I):
+        return False
+    operation = event.get('operation')
+    if operation not in rule.get('declaredOperations', []) or (proof and operation != rule.get('proofOperation')):
+        return False
+    destination = event.get('destination', '').rstrip('\\')
+    names = (key, 'HKEY_CURRENT_USER' + key[4:], native)
+    # Some exports put the value name at the end of the destination instead of in a separate field.
+    is_value_path = any(destination.casefold() == (name + '\\' + control['valueName']).casefold() for name in names)
+    if not is_value_path and not any(destination.casefold() == name.casefold() for name in names):
+        return False
+    if proof and not is_value_path and event.get('valueName') != control['valueName']:
+        return False
+    if event.get('valueName') and event['valueName'] != control['valueName']:
+        return False
+    if event.get('valueData') is not None and event['valueData'] != run_id:
+        return False
+    if event.get('status') not in (None, 0, '0', '0x0', '0x00000000', 'SUCCESS'):
+        return False
+    try:
+        time = lambda value: dt.datetime.fromisoformat(value.replace('Z', '+00:00'))
+        if not time(control['startedAt']) <= time(event.get('at', '')) <= time(control['finishedAt']):
+            return False
+    except (KeyError, ValueError, TypeError):
+        return False
+    return True
 
 
 def classify(events, context, rules):
@@ -186,7 +230,8 @@ def classify(events, context, rules):
     for event in events:
         pid = event.get('pid')
         owners = [o for o in tree if o['pid'] == pid and in_lifetime(o, event)]
-        positive = any(event.get('channel') == c['channel'] and pid == c['pid']
+        positive = any(registry_marker_match(event, c, rules, harness, proof=True) if c.get('channel') == 'registry'
+                       else event.get('channel') == c['channel'] and pid == c['pid']
                        and c['token'] in event.get('destination', '') for c in context.get('positiveControls', []))
         if positive:
             controls[event['channel']] = True
@@ -209,6 +254,8 @@ def classify(events, context, rules):
                     category = 'out-of-declaration'
             else:
                 category = 'unknown'
+        elif any(registry_marker_match(event, c, rules, harness) for c in context.get('positiveControls', [])):
+            category = 'os-or-harness-actor'
         elif pid in harness and event.get('channel') in rules.get('harnessChannels', []):
             category = 'os-or-harness-actor'
             if (event.get('channel') == 'file' and event.get('operation') in rules.get('writeOperations', {}).get('file', [])
@@ -234,6 +281,7 @@ def classify(events, context, rules):
             'reason': 'undeclared-app-effect' if unsafe else 'instrument-not-proven' if not proven else 'trace-health-not-proven' if not loss_proven else 'unresolved-candidate' if unresolved else '',
             'g1Eligible': proven and loss_proven and not unsafe and not unresolved,
             'blindSpots': context.get('blindSpots', []),
+            'channelApplicability': context.get('channelApplicability', []),
             'warning': 'Only this trace window is assessed; raw events and context remain local.'}
 
 

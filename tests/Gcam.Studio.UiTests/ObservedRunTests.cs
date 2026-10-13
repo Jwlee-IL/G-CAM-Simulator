@@ -30,10 +30,13 @@ public sealed class ObservedRunTests(ITestOutputHelper output)
         manifest.RecordApprovedProbe(package);
         var issues = new List<UiRunManifest.Issue>();
         OwnedStudioProcess? app = null;
+        RegistryMarker.Control? registryControl = null;
         Exception? error = null;
         DateTimeOffset finished = DateTimeOffset.UtcNow;
         try
         {
+            // trace.ready has been checked; the actor is this test host, before any product launch.
+            registryControl = new RegistryMarker(new WindowsRegistryMarkerStore()).Write(runId, Environment.ProcessId);
             app = OwnedStudioProcess.Start(runId);
             File.WriteAllText(IsolationPaths.Inside(app.Sandbox, "probe-diagnostic.txt"), runId + "\n");
             // Idle observation is time-bounded and deliberately does not ask UI Automation for a tree/window.
@@ -65,18 +68,21 @@ public sealed class ObservedRunTests(ITestOutputHelper output)
                     ownedProcesses = app.Ledger.Owned.Select(p => new { pid = p.Pid, parentPid = p.ParentPid, startedAt = p.StartedAt.ToUniversalTime().ToString("O"), finishedAt = finished.ToString("O") }),
                     harnessPids = new[] { Environment.ProcessId }, osPids = Array.Empty<int>(), ownedRoots = new[] { app.Sandbox, runDirectory },
                     requiredChannels = new[] { "file", "process", "registry" },
+                    channelApplicability = new[] { ProbeChannels.Network },
                     traceHealth = new { complete = false, eventsLost = (int?)null, buffersLost = (int?)null },
-                    positiveControls = new[] {
+                    positiveControls = new object[] {
                         new { channel = "file", pid = Environment.ProcessId, token = "probe-diagnostic.txt" },
-                        new { channel = "process", pid = app.Ledger.Owned[0].Pid, token = "Gcam.Studio" } },
-                    blindSpots = new[] { "No guaranteed Studio registry effect; registry instrument proof requires approved fixture/channel evidence",
-                        "No declared network traffic; network channel has no positive control and cannot establish absence",
+                        new { channel = "process", pid = app.Ledger.Owned[0].Pid, token = "Gcam.Studio" }, registryControl! },
+                    blindSpots = new[] {
                         "100 ms polling misses short-lived processes; ETW supplies event evidence", "Shell-mediated effects require causal metadata" },
                 };
-                error = CleanupBoundary.Attempt(error, () => File.WriteAllText(IsolationPaths.Inside(runDirectory, "trace-context.json"), JsonSerializer.Serialize(context) + "\n"), issues, "blocked");
+                error = CleanupBoundary.Attempt(error, () => File.WriteAllText(IsolationPaths.Inside(runDirectory, "trace-context.json"), JsonSerializer.Serialize(context,
+                    new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase }) + "\n"), issues, "blocked");
             }
             manifest.WriteAudit = new { mode = "launch-idle-exit", reused = false, scenarioIds = Array.Empty<string>(),
-                positiveControls = new[] { new { channel = "file", seen = false }, new { channel = "process", seen = false }, new { channel = "registry", seen = false } },
+                positiveControls = new object[] { new { channel = "file", seen = false }, new { channel = "process", seen = false },
+                    new { channel = "registry", seen = false, written = registryControl is not null, declaration = registryControl, actor = "harness" } },
+                channelApplicability = new[] { ProbeChannels.Network },
                 reason = "ETL export and classifier required before any G1 promotion",
                 validFor = new { productBuild = package.DeploymentSha256, isolationContent = package.IsolationSha256,
                     pathRules = IsolationPaths.Hash(File.ReadAllBytes(Path.Combine(isolation, "surface-list.json"))),
