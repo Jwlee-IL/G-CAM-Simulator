@@ -13,10 +13,9 @@ Acquired 4,223 counts. Imaging uses All, N=1.5, strip off, 1000 mm focus; Wavefo
 10 µs window, real arrivals. The measurement table is empty. No focus sweep is displayed in this survey.
 
 Files: `{imaging,spectrum,waveform,detector}-{dark,light}-{1280x800,1440x900}.png`.
-The repository README uses a separate Imaging / dark / 1440×900
-[studio-desktop-imaging.png](../studio-desktop-imaging.png) capture, retaken with Co-60 at **200 µCi**;
-Cs-137 remains 500 µCi and the positions, distance, seed, live time and other settings are unchanged.
-It has 6,974 counts and found peaks Cs-137 (−20.6, 0.3) mm / Co-60 (20.2, 0.5) mm.
+Since 2026-10-13 the repository README image [studio-desktop-imaging.png](../studio-desktop-imaging.png) is a copy of
+this survey's `imaging-dark-1440x900.png` (Cs-137 500 µCi and Co-60 20 µCi, 60 s, seed 12345: 4,268 counts, two peaks
+found). Before that it was a separate capture with Co-60 at 200 µCi (2026-10-02).
 Their unrounded position errors, 0.676 / 0.546 mm, are below one 8.75 mm resolution element.
 Run `20261002-130331-aa0ebe`; hash and raw coordinates are in [desktop evidence](../studio-desktop-evidence.json).
 The 16 survey frames retain their original 20 µCi Co-60 scene. Their current hashes identify the planner's

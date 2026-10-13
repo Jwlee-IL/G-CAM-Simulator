@@ -70,11 +70,9 @@ Task state lives in **`docs/AGENTS.Todo.md`** (each row links its plan; the plan
 copy it here, it goes stale. Only what the Todo does not hold:
 - **Ambient background (TODO-30, done 2026-10-04):** the evidence register now quotes an absolute terrestrial field next to
   every ideal value it re-measured (EV-34); results not re-measured are still ideal-environment best cases.
-- Waiting for a free desktop (author's go): the desktop UI scenarios after TODO-30's Studio default and fixed spectrum
-  axis (list in `samples/evidence/results/ambient-baseline-v1-turn10.md`), and the README desktop screenshot that still
-  shows the old preset label "(original rig)" (TODO-29). PR-SENS-02's count gate is settled (measured gate, EV-34).
-  The TODO-44 / 45 stage-2 suite and TODO-42's scenarios passed on 2026-10-13 (`docs/VV.Studio.History.md`); still
-  open: the README screenshot retake, and a hands-on check of the tool Alt keys and Enter in the Options dialog.
+- Desktop (author's go each run): the whole desktop suite passed on 2026-10-13 after TODO-42 / 44 / 45
+  (`docs/VV.Studio.History.md`), and the README screenshot is now the refreshed polish-survey capture. PR-SENS-02's count
+  gate is settled (measured gate, EV-34). Still open: a hands-on check of the tool Alt keys and Enter in the Options dialog.
 - TODO-25 (depth likelihood) closed 2026-10-08 after a current-tree screening (Findings 62); its gate validation (≈ 190 h,
   resumable per condition) is parked in the Backlog; probe, recipes and summary in `samples/evidence/depthlik/`.
 - Codex conversations, worktrees (`C:\gw\…`) and probe outputs (`%TEMP%\gcam-*`) are machine-local: start new

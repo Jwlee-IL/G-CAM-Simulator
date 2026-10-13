@@ -48,11 +48,11 @@ The full working log of all 70 study themes: [`docs/AGENTS.Findings.md`](docs/AG
 
 ## GCAM Studio
 
-Imaging workspace, Cs-137 500 µCi + Co-60 200 µCi at 1 m, dark theme (desktop capture):
+Imaging workspace, Cs-137 500 µCi at (−20, 0) mm + Co-60 20 µCi at (20, 0) mm, 1 m, 60 s, dark theme (desktop capture):
 
 ![GCAM Studio Imaging desktop with two isotope sources](docs/assets/studio-desktop-imaging.png)
 
-<sub>Captured 2026-10-02, before the 2026-10-13 redesign (themed caption, left tabs, Options dialog behind the cog).</sub>
+<sub>Captured 2026-10-13 by the polish-survey desktop scenario (`imaging-dark-1440x900.png`).</sub>
 
 GCAM Studio includes an experimental four-output GAGG readout. Set ambient and BSR to zero in Options → Environment,
 then in the left Detector tab select FourOutputAnger and Prepare before Start; each calibration line is offered or refused

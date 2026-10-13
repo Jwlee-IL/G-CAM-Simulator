@@ -246,9 +246,9 @@ the pointer command path; it does not establish a keyboard-only or screen-reader
 Diagnostic survey: all four workspaces × both themes × 1280×800 / 1440×900 = 16 visible-frame PNGs,
 opened and inspected; reproduction and P-12 … P-16 observations in
 [survey README](assets/studio-polish-survey/README.md). No layout fixes. Representative two-isotope dark Imaging
-capture: [studio-desktop-imaging.png](assets/studio-desktop-imaging.png). The README image was separately retaken
-with Co-60 at 200 µCi (Cs-137 remains 500 µCi), all other scene / acquisition settings unchanged. Found peaks:
-Cs-137 (−20.6, 0.3), Co-60 (20.2, 0.5) mm; unrounded errors 0.676 / 0.546 mm versus one 8.75 mm resolution element.
+capture: [studio-desktop-imaging.png](assets/studio-desktop-imaging.png). The README image was then a separate capture
+with Co-60 at 200 µCi (found peaks Cs-137 (−20.6, 0.3), Co-60 (20.2, 0.5) mm); since 2026-10-13 it is a copy of the
+survey's `imaging-dark-1440x900.png`.
 Run `20261002-130331-aa0ebe` passed the truth-distance check before writing the capture; 6,974 acquired counts,
 exit 0, no sandbox writes. Reproduce only this image with `GCAM_UI_TESTS=1`, `GCAM_README_CAPTURE_ONLY=1` and
 `dotnet test tests/Gcam.Studio.UiTests -c Release --filter FullyQualifiedName~PolishSurveyTests`.
