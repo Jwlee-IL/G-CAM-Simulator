@@ -98,18 +98,20 @@ public sealed class StartRefusalTests
     }
 
     [Fact]
-    public async Task BsrWithPhysicalReadout_ShowsOptionsReason_SelectsDetectorTab_WarnsOnTheCog()
+    public async Task BsrWithPhysicalReadout_RequiresBank_ThenStartsWithoutOptionsWarning()
     {
         var (vm, acquisition) = Model();
         vm.Optics = Head; vm.ReadoutMode = ReadoutMode.FourOutputAnger;
         vm.BackgroundToSignalRatio = .5;
         await Refused(vm, acquisition);
-        Assert.Equal("Options: " + MainViewModel.PhysicalFieldMessage, vm.Status);
-        Assert.Equal(MainViewModel.PhysicalFieldMessage, vm.ReadoutMessage); // the Detector tab's message stays
+        Assert.Contains("Prepare", vm.Status);
         Assert.Equal(MainViewModel.DetectorTab, vm.SelectedLeftTab);
-        Assert.True(vm.HasOptionsWarning);
-        vm.BackgroundToSignalRatio = 0;
         Assert.False(vm.HasOptionsWarning);
+        await vm.PrepareReadoutCommand.ExecuteAsync(null);
+        await vm.StartCommand.ExecuteAsync(null);
+        Assert.Equal(1, acquisition.Starts);
+        Assert.Equal(.5, vm.BackgroundToSignalRatio);
+        Assert.Null(vm.StartRefusal);
     }
 
     [Fact]

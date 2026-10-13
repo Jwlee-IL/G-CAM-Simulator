@@ -15,7 +15,6 @@ public sealed partial class MainViewModel
     /// a refused Start selects the tab holding the offending input.</summary>
     [ObservableProperty] private int _selectedLeftTab;
     public const int SceneTab = 0, OpticsTab = 1, DetectorTab = 2;
-    public const string PhysicalFieldMessage = ReadoutPolicy.BsrMessage;
 
     /// <summary>The reason of the last refused Start, as the status bar shows it ("Start refused: …" or "Options: …");
     /// null after a started acquisition or Reset.</summary>
@@ -28,10 +27,8 @@ public sealed partial class MainViewModel
     public bool ShowSeedErrorInStatus => SeedError is not null && StartRefusal != "Options: " + SeedError;
     private bool _optionsRefused;
 
-    /// <summary>The Options input that blocks Start now (seed, ambient dose, gap, or a nonzero field with the physical
-    /// readout), or null.</summary>
-    public string? OptionsProblem => SeedError ?? AmbientDoseError ?? GapError
-        ?? (IsPhysicalReadout && BackgroundToSignalRatio != 0 ? ReadoutPolicy.BsrMessage : null);
+    /// <summary>The Options input that blocks Start now (seed, ambient dose or gap), or null.</summary>
+    public string? OptionsProblem => SeedError ?? AmbientDoseError ?? GapError;
 
     /// <summary>The cog's warning state: a Start was refused for an Options input that is still wrong.</summary>
     public bool HasOptionsWarning => _optionsRefused && OptionsProblem is not null;

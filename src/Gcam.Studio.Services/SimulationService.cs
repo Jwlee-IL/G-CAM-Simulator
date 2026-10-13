@@ -67,7 +67,7 @@ public sealed class SimulationService(TimeProvider? timeProvider = null, IReadou
         ArgumentNullException.ThrowIfNull(detector);
         if (detector.ReadoutMode != ReadoutMode.DirectCrystal)
         {
-            if (ReadoutPolicy.AcquisitionError(scene.Count, backgroundToSignalRatio) is { } refusal)
+            if (ReadoutPolicy.AcquisitionError(scene.Count) is { } refusal)
                 throw new NotSupportedException(refusal);
             if (detector.ReadoutMode != ReadoutMode.FourOutputAnger) throw new NotSupportedException("Studio supports the experimental four-output preset only.");
         }

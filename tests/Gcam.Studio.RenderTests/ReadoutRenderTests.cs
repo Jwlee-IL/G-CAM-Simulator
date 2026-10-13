@@ -345,6 +345,15 @@ public sealed class ReadoutRenderTests(ITestOutputHelper output)
                 Assert.Contains("Unmasked all-face module approximation", fieldReady.AmbientEnvironmentLabel);
                 Assert.Contains("unvalidated", fieldReady.ReadoutAssumptions);
                 Capture("ReadoutPanel", fieldReady, $"{name}-ambient-ready", theme, size);
+                fieldPending.BackgroundToSignalRatio = 1;
+                fieldPending.StartCommand.ExecuteAsync(null).GetAwaiter().GetResult();
+                Assert.Contains("Prepare", fieldPending.ReadoutMessage);
+                Assert.False(fieldPending.HasOptionsWarning);
+                Capture("ReadoutPanel", fieldPending, $"{name}-bsr-missing-bank", theme, size);
+                fieldReady.BackgroundToSignalRatio = 1;
+                Assert.True(fieldReady.IsReadoutBankReady);
+                Assert.Contains("before trigger or assignment", fieldReady.ReadoutAssumptions);
+                Capture("ReadoutPanel", fieldReady, $"{name}-bsr-ambient-ready", theme, size);
             }
         }
 

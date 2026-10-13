@@ -52,6 +52,7 @@ public sealed class ListModeSource : IDisposable
     public double WeightBound { get; }
     public double SourceRateCps => _physical?.SourceRateCps ?? (HistoriesEmitted == 0 ? 0 : _emissionRateCps * DetectedWeight / HistoriesEmitted);
     public double AmbientRateCps => _physical?.AmbientRateCps ?? 0;
+    public long BackgroundAttempts => _physical?.BackgroundAttempts ?? _background?.PhysicalAttempts ?? 0;
     public double RateCps => _physical?.RateCps ?? (SourceRateCps * (1 + _bsr) + _darkRate);
     public double Acceptance => HistoriesDetected == 0 ? 0 : (double)EventsAccepted / HistoriesDetected;
 
@@ -61,20 +62,18 @@ public sealed class ListModeSource : IDisposable
 
     /// <summary>The pre-optical interaction sites (XYZ, time, energy) of the event last returned by <see cref="Advance"/>,
     /// all photons of a decay merged; empty unless the source was built with <c>recordInteractions</c>. Recording is pure
-    /// bookkeeping: the returned event stream is identical with and without it.</summary>
+    /// bookkeeping for signal/ambient; BSR recording selects physical paired transport instead of legacy Place.</summary>
     public IReadOnlyList<InteractionSite> LastInteractions => LastRecordedEvent?.Sites ?? [];
 
     /// <param name="configuration">The scenario (cloned).</param>
     /// <param name="recordInteractions">Keep each event's pre-optical interaction sites in <see cref="LastInteractions"/>
-    /// (source/ambient scenes: relative background and electronic dark counts are still refused).</param>
+    /// (relative background selects paired physical transport; electronic dark counts are refused).</param>
     public ListModeSource(SimulationConfig configuration, bool recordInteractions = false, bool physicalModule = false)
     {
         ArgumentNullException.ThrowIfNull(configuration);
         var config = configuration.Clone();
         ReadoutGuard.RequireDirect(config);
         _record = recordInteractions;
-        if (_record && (config.Background?.BackgroundToSignalRatio ?? 0) > 0)
-            throw new NotSupportedException("Physical interaction recording requires BSR = 0 in this stage.");
         if (_record && (config.Background?.DarkCountRateKcps ?? 0) > 0)
             throw new NotSupportedException("Physical readout does not support electronic dark arrivals: gamma interaction sites are unavailable.");
         if (config.Ambient is not null)
@@ -89,7 +88,7 @@ public sealed class ListModeSource : IDisposable
             throw new ArgumentOutOfRangeException(nameof(configuration));
         if (_bsr > 0 || _darkRate > 0)
         {
-            _background = new ListModeBackground(config);
+            _background = new ListModeBackground(config, physical: _record);
             _backgroundTime = new DefaultRandom((config.Seed ?? 0) + 909);
             _darkTime = new DefaultRandom((config.Seed ?? 0) + 1717);
         }
@@ -169,6 +168,7 @@ public sealed class ListModeSource : IDisposable
         {
             _pendingSignal = AdvanceSignal();
             _recordedSignalPending = LastRecordedEvent;
+            LastRecordedEvent = null;
             if (_pendingSignal is null) return null;
         }
         if (double.IsNaN(_nextBackgroundTime))
@@ -177,8 +177,10 @@ public sealed class ListModeSource : IDisposable
             _nextDarkTime = _darkRate > 0 ? Gap(_darkTime!, _darkRate) : double.PositiveInfinity;
         if (_nextBackgroundTime < _pendingSignal.Value.ArrivalTimeS && _nextBackgroundTime <= _nextDarkTime)
         {
-            var background = _background.Advance(_nextBackgroundTime);
+            var recorded = _record ? _background.AdvancePhysical(_nextBackgroundTime, cancellationToken) : null;
+            var background = _record ? recorded?.Event : _background.Advance(_nextBackgroundTime);
             if (background is null) return null;
+            LastRecordedEvent = recorded;
             ArrivalTimeS = _nextBackgroundTime;
             _nextBackgroundTime += Gap(_backgroundTime!, _bsr * SourceRateCps);
             return background;

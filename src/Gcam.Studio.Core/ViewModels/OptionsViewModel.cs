@@ -66,6 +66,9 @@ public sealed partial class OptionsViewModel : ObservableObject
             ? AmbientIncidenceDescription.For(AmbientGeometry, true)
             : AmbientGeometry == AmbientGeometry.FrontOnlyThroughMask ? "front-only bound" : "bare-crystal bound")}";
     public string AmbientBsrReadout => _owner.AmbientBsrReadout;
+    public string BackgroundHelp => _owner.IsPhysicalReadout
+        ? "BSR is a detected-input ratio to the running source rate, before trigger and assignment. Fresh unmasked front-entry cosine-flux histories use module gaps and passive proxies; each input keeps its transported sites and pixel. Zero source rate gives zero BSR inputs. Off-energy positioning is unvalidated."
+        : "BSR is a detected background/source ratio. Fresh diffuse deposits use the legacy uniform detected pedestal.";
     partial void OnAmbientDoseTextChanged(string value) => OnPropertyChanged(nameof(AmbientEnvironmentLabel));
     partial void OnAmbientGeometryChanged(AmbientGeometry value) => OnPropertyChanged(nameof(AmbientEnvironmentLabel));
     private void OwnerChanged(object? sender, PropertyChangedEventArgs e)

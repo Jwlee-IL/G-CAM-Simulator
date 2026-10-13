@@ -488,8 +488,7 @@ public sealed partial class MainViewModel : ObservableObject
         if (IsPhysicalReadout)
         {
             var required = RequiredReadoutLines;
-            bool bsr = Sources.Count > 0 && BackgroundToSignalRatio != 0;
-            ReadoutMessage = ReadoutPolicy.AcquisitionError(Sources.Count, BackgroundToSignalRatio)
+            ReadoutMessage = ReadoutPolicy.AcquisitionError(Sources.Count)
                 ?? (required.Count == 0
                     ? "No preparable calibration line is present in the scene: " + string.Join(" ", ReadoutPlans.Select(p => p.Reason))
                     : !IsReadoutBankReady
@@ -497,7 +496,7 @@ public sealed partial class MainViewModel : ObservableObject
                             + string.Join(", ", required.Select(p => p.LineKeV.ToString("0.##", CultureInfo.InvariantCulture) + " keV")) + ")."
                         : null);
             if (ReadoutMessage is not null) return RefuseStart(ReadoutMessage,
-                Sources.Count == 0 ? SceneTab : DetectorTab, options: bsr);
+                Sources.Count == 0 ? SceneTab : DetectorTab);
         }
         ClearStartRefusal();
         int seed = string.IsNullOrWhiteSpace(SeedText)

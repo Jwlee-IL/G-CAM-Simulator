@@ -9,10 +9,8 @@ namespace Gcam.Studio.Core.Services;
 public static class ReadoutPolicy
 {
     public const string FieldOnlyMessage = "Physical readout cannot start a field-only scene: no field calibration line is offered. Add a source with a preparable calibration line, or select DirectCrystal.";
-    public const string BsrMessage = "Physical readout requires BSR = 0 in this stage: diffuse background interaction recording is not supported yet. Set BSR to 0, or select DirectCrystal.";
-
-    public static string? AcquisitionError(int sourceCount, double bsr)
-        => sourceCount == 0 ? FieldOnlyMessage : bsr != 0 ? BsrMessage : null;
+    public static string? AcquisitionError(int sourceCount)
+        => sourceCount == 0 ? FieldOnlyMessage : null;
 
     /// <summary>Module constants the confirmation recipe fixed for every geometry (Studio forces GAGG and matched
     /// virtual sensors on the physical path).</summary>

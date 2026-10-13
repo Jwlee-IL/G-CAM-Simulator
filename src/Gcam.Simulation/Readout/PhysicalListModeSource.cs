@@ -28,6 +28,7 @@ public sealed class PhysicalListModeSource : IDisposable
     public double InputRateCps => _source.RateCps;
     public double SourceRateCps => _source.SourceRateCps;
     public double AmbientRateCps => _source.AmbientRateCps;
+    public long BackgroundAttempts => _source.BackgroundAttempts;
     public bool HasPendingHold => _stream.HasPendingHold;
 
     public PhysicalListModeSource(SimulationConfig configuration, ReadoutDevice device,
@@ -46,8 +47,6 @@ public sealed class PhysicalListModeSource : IDisposable
         if (configuration.Detector.Readout is not { Mode: not ReadoutMode.DirectCrystal } readout || calibrations.Count == 0
             || calibrations.Any(c => !c.Succeeded || c.Lut.CountX != device.Crystals.CountX || c.Lut.CountY != device.Crystals.CountY))
             throw new ArgumentException("Physical acquisition requires a physical configuration and successful calibrations of this module.");
-        if ((configuration.Background?.BackgroundToSignalRatio ?? 0) > 0)
-            throw new NotSupportedException("Physical interaction recording requires BSR = 0 in this stage.");
         if ((configuration.Background?.DarkCountRateKcps ?? 0) > 0)
             throw new NotSupportedException("Physical readout does not support electronic dark arrivals: gamma interaction sites are unavailable.");
         if (configuration.Detector.OpticalCrosstalkFraction != 0)

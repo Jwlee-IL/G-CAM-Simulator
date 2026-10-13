@@ -13,9 +13,16 @@ internal sealed class ListModeBackground
     private readonly double _halfW, _halfH, _energy;
     private readonly int _width, _height;
     private double? _deposit;
+    private readonly bool _physical;
+    private readonly List<InteractionSite> _sites = [];
+    private (int X, int Y, double Energy)? _physicalDeposit;
+    public long PhysicalAttempts { get; private set; }
 
-    public ListModeBackground(SimulationConfig config)
+    public ListModeBackground(SimulationConfig config) : this(config, false) { }
+
+    public ListModeBackground(SimulationConfig config, bool physical)
     {
+        _physical = physical;
         var d = config.Detector;
         _width = d.PixelsX; _height = d.PixelsY;
         _halfW = _width * d.PixelPitchMm / 2;
@@ -26,9 +33,34 @@ internal sealed class ListModeBackground
         // Same energy response as BackgroundDepositSpectrum: unmasked diffuse crystal transport.
         // BSR specifies detected counts, already including shielding/entrance loss. No recycled pool.
         _detector = new ComptonCrystalDetector(d.PixelsX, d.PixelsY, d.PixelPitchMm,
-            661.7, 1, ComptonStrategy.Argmax, new DefaultRandom((config.Seed ?? 0) + 555),
+            661.7, physical ? double.MaxValue : 1, ComptonStrategy.Argmax, new DefaultRandom((config.Seed ?? 0) + 555),
             d.CrystalAttenuationPerMm > 0 ? d.CrystalAttenuationPerMm : null, d.CrystalThicknessMm,
-            eventSink: (deposit, _) => _deposit = deposit, material: CrystalMaterial.ForConfig(d.Material));
+            eventSink: (deposit, _) => _deposit = deposit, material: CrystalMaterial.ForConfig(d.Material),
+            pixelEventSink: physical ? (x, y, e, _) => _physicalDeposit = (x, y, e) : null,
+            interactionSink: physical ? (sites, _) => _sites.AddRange(sites) : null,
+            reflectorGapMm: physical ? d.ReflectorGapMm : 0,
+            entranceAbsorber: physical && d.EntranceAbsorberMm > 0 ? new(d.EntranceAbsorberMm) : null,
+            backingScatterer: physical && d.BackingScatterMm > 0 ? new(d.BackingScatterMm) : null,
+            boundaryAwareModule: physical);
+    }
+
+    /// <summary>One conditional detected-input attempt at the scheduled time. Front-entry cosine flux,
+    /// unmasked, with the module entrance and outgoing backing proxies; no random pixel relocation.</summary>
+    public RecordedTransportEvent? AdvancePhysical(double arrivalTimeS, CancellationToken token = default)
+    {
+        token.ThrowIfCancellationRequested();
+        if (!_physical) throw new InvalidOperationException("Physical background transport was not selected.");
+        _physicalDeposit = null; _sites.Clear();
+        PhysicalAttempts++;
+        double x = (2 * _entry.NextDouble() - 1) * _halfW * 0.999;
+        double y = (2 * _entry.NextDouble() - 1) * _halfH * 0.999;
+        double u = _entry.NextDouble(), phi = 2 * Math.PI * _entry.NextDouble();
+        var dir = new Vector3(Math.Sqrt(u) * Math.Cos(phi), Math.Sqrt(u) * Math.Sin(phi), -Math.Sqrt(1 - u));
+        double lead = 10 / -dir.Z;
+        _detector.Score(new Photon { Ray = new(new(x - dir.X * lead, y - dir.Y * lead, 10), dir),
+            EnergyKeV = _energy, Weight = 1 });
+        return _physicalDeposit is { } hit
+            ? new(new(hit.X, hit.Y, hit.Energy, arrivalTimeS), _sites, TransportOrigin.Background) : null;
     }
 
     /// <summary>One background history per call, so Stop remains bounded even for rare detections.</summary>

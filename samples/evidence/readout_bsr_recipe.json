@@ -1,0 +1,19 @@
+{
+  "version": 2,
+  "family": "readout-field-v2",
+  "scope": "Physical BSR detected-input acquisition conditional on fixed successful source-line banks; no localisation claim",
+  "outerSeeds": 16,
+  "proposedFirstSeed": 42042017,
+  "familyHorizonS": 1000,
+  "pilotHorizonS": 10,
+  "pilotDeadlineS": 570,
+  "pilotCellDeadlineS": 30,
+  "bsr": [0.5, 1],
+  "ambientDoseMicroSvPerHour": 0.1,
+  "independentReferenceHistoriesPerSeed": 10000,
+  "familyErrorBudget": 0.01,
+  "stochasticChecks": 16,
+  "normalApproximationMinimumPooledCount": 100,
+  "uncertainty": "Eight positive-dose module/bound/BSR groups: incident Poisson and scored-vs-independent-binomial-reference checks, two-sided budget 0.01/16 each. Use exact low-count tails. BSR schedule is checked against paired pre-trigger legacy timelines exactly, never BSR times assigned counts. Assignment/window summaries use outer-seed s/sqrt(N) and Student-t intervals, not hit-wise binomial trials.",
+  "excluded": ["calibration seed uncertainty", "field-only Studio support", "electronic dark arrivals", "off-energy localisation accuracy"]
+}

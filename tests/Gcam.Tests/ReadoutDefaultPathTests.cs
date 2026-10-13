@@ -142,10 +142,19 @@ public class ReadoutDefaultPathTests
     }
 
     [Fact]
-    public void Recording_IsRefusedWithBsr()
+    public void Recording_WithBsr_ReturnsOwnedBackgroundSites()
     {
         var c = Load("scenario.json");
         c.Background = new BackgroundConfig { BackgroundToSignalRatio = 1 };
-        Assert.Throws<NotSupportedException>(() => new ListModeSource(c, recordInteractions: true));
+        using var source = new ListModeSource(c, recordInteractions: true);
+        RecordedTransportEvent? background = null;
+        while (background is null)
+        {
+            source.Advance();
+            if (source.LastRecordedEvent is { Origin: TransportOrigin.Background } e) background = e;
+        }
+        Assert.NotEmpty(background.Sites);
+        Assert.Equal(background.Event.PixelY * c.Detector.PixelsX + background.Event.PixelX,
+            ReadoutDevice.DirectCrystal(background.Sites, c.Detector.PixelsX));
     }
 }

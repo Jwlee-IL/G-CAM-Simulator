@@ -118,15 +118,16 @@ public sealed class ReadoutScenarioTests(ITestOutputHelper output)
     });
 
     [DesktopFact]
-    public void PhysicalAmbient_BothBounds_ContinuationConservesMeasuredCounts() => Scenario.Run(nameof(PhysicalAmbient_BothBounds_ContinuationConservesMeasuredCounts), output, (ui, record) =>
+    public void PhysicalBsrAndAmbient_ContinuationConservesMeasuredCounts() => Scenario.Run(nameof(PhysicalBsrAndAmbient_ContinuationConservesMeasuredCounts), output, (ui, record) =>
     {
         SelectHead(ui);
-        ui.SetOption("Acquisition.AmbientDose", "1");
+        ui.SetOption("Acquisition.Background", "1");
         ui.SetText("AcquisitionLiveTime", "4", "SourceY");
         ui.SetText("AcquisitionSpeed", "1", "SourceY");
         Prepare(ui, PrepareWait[("Baseline", 661.7)]);
-        foreach (string bound in new[] { "FrontOnlyThroughMask", "BareCrystalAllFaces" })
+        foreach (var (bound, dose) in new[] { ("FrontOnlyThroughMask", "0"), ("FrontOnlyThroughMask", "1"), ("BareCrystalAllFaces", "1") })
         {
+            ui.SetOption("Acquisition.AmbientDose", dose);
             ui.OpenOptions("Environment"); ui.Choose("Acquisition.AmbientBound", bound); ui.ApplyOptions();
             Assert.Equal("Completed", ui.Acquire(TimeSpan.FromSeconds(60)));
             ui.Workspace("Detector", "Readout.Map");
@@ -140,8 +141,9 @@ public sealed class ReadoutScenarioTests(ITestOutputHelper output)
             Assert.Equal("Completed", ui.Acquire(TimeSpan.FromSeconds(60)));
             Assert.Equal(Broken ? (expected.Assigned + 1, expected.Unknown, expected.Triggered) : expected,
                 Counts(ui.Text("Readout.Counts")));
-            Assert.Equal("1", ui.OptionValue("Acquisition.AmbientDose"));
-            record.Step($"{bound}: continued physical ambient counts conserved; entered dose retained.");
+            Assert.Equal(dose, ui.OptionValue("Acquisition.AmbientDose"));
+            Assert.Equal("1", ui.OptionValue("Acquisition.Background"));
+            record.Step($"BSR 1, ambient {dose}, {bound}: continued physical counts conserved; entered inputs retained.");
             ui.Invoke("ResetAcquisition"); ui.ConfirmReset(true);
         }
     });

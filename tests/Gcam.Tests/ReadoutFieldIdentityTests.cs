@@ -9,6 +9,28 @@ namespace Gcam.Tests;
 /// <summary>Captured at the unchanged TODO-42 baseline before production edits; complete bits and suffix progression.</summary>
 public sealed class ReadoutFieldIdentityTests
 {
+    [Theory]
+    [InlineData(12345, .5, "786D08D9FA3E576651983021402AF8EAE1725EA231AD70263FD29D87D7C01B4C")]
+    [InlineData(12345, 1, "8857DC97C1D47E2AEE35CA9078BB16805C88F9B1EB7AEDEE1366477B2BA68F7F")]
+    [InlineData(4711, .5, "B67891917F04EBD545F03F7CE7E593B33BA8E12045375EAA3BE4C6431384065E")]
+    [InlineData(4711, 1, "1248A36FB537DCD0FD831C4A979E7C4A01D8CB1DEBFB910B8FCB59797ADD326C")]
+    public void BsrWithoutAmbient_RecordingOffMatchesStageABits(int seed, double bsr, string expected)
+    {
+        // Captured from the committed stage-A Release binary before the stage-B build.
+        var c = new SimulationConfig { Seed = seed, Background = new() { BackgroundToSignalRatio = bsr } };
+        using var source = new ListModeSource(c);
+        Assert.Equal(expected, Hash(w =>
+        {
+            for (int i = 1; i <= 44; i++) while (source.ArrivalTimeS < i * .25)
+            {
+                var next = source.AdvanceUntil(i * .25); w.Write(next.HasValue); w.Write(source.ArrivalTimeS);
+                if (next is { } e) { w.Write(e.PixelX); w.Write(e.PixelY); w.Write(e.DepositKeV); w.Write(e.ArrivalTimeS); }
+            }
+            w.Write(source.HistoriesEmitted); w.Write(source.HistoriesDetected); w.Write(source.EventsAccepted);
+            w.Write(source.DetectedWeight); w.Write(source.SourceRateCps); w.Write(source.RateCps);
+        }));
+    }
+
     private static string Hash(Action<BinaryWriter> action)
     {
         using var memory = new MemoryStream(); using var writer = new BinaryWriter(memory);

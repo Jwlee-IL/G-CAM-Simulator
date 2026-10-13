@@ -18,6 +18,7 @@ internal sealed class AmbientAcquisition : IDisposable
     public double TimeS { get; private set; }
     public double SourceRateCps => _source?.SourceRateCps ?? 0;
     public double AmbientRateCps => _ambient.DetectedRateCps;
+    public long BackgroundAttempts => _source?.BackgroundAttempts ?? 0;
     public double RateCps => (_source?.RateCps ?? _darkRate) + AmbientRateCps;
     public long HistoriesEmitted => _source?.HistoriesEmitted ?? 0;
     public long HistoriesDetected => _source?.HistoriesDetected ?? 0;

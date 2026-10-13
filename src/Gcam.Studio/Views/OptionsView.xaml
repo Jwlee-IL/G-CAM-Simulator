@@ -124,7 +124,11 @@
                     <TextBlock Text="Ambient bound" Style="{StaticResource Text.Label}" />
                     <ComboBox ItemsSource="{Binding AmbientGeometries}" SelectedItem="{Binding AmbientGeometry}" IsEnabled="{Binding CanEditInputs}"
                               Margin="{StaticResource Gap.Field}" AutomationProperties.AutomationId="Acquisition.AmbientBound" AutomationProperties.Name="Ambient bound geometry" />
-                    <TextBlock Text="Background BSR" Style="{StaticResource Text.Label}" />
+                    <DockPanel>
+                        <c:HelpMark DockPanel.Dock="Right" Text="{Binding BackgroundHelp}"
+                                    AutomationProperties.AutomationId="Acquisition.BackgroundHelp" AutomationProperties.Name="Background BSR help" />
+                        <TextBlock Text="Background BSR" Style="{StaticResource Text.Label}" />
+                    </DockPanel>
                     <TextBox Text="{Binding BackgroundToSignalRatio, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding CanEditInputs}" Tag="× signal"
                              Margin="{StaticResource Gap.Field}" AutomationProperties.AutomationId="Acquisition.Background" AutomationProperties.Name="Background BSR (detected background to signal ratio)" />
                     <TextBlock Text="{Binding BackgroundError}" Style="{StaticResource Text.CaptionWarning}" TextWrapping="Wrap" />

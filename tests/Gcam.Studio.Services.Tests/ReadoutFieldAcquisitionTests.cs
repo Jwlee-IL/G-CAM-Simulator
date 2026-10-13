@@ -35,16 +35,24 @@ public sealed class ReadoutFieldAcquisitionTests
     }
 
     [Theory]
-    [InlineData(AmbientGeometry.FrontOnlyThroughMask)]
-    [InlineData(AmbientGeometry.BareCrystalAllFaces)]
-    public async Task AmbientBothBounds_ContinueKeepsFactsAndEveryLine_AndPublishesComponentRates(AmbientGeometry geometry)
+    [InlineData(AmbientGeometry.FrontOnlyThroughMask, 0, true)]
+    [InlineData(AmbientGeometry.BareCrystalAllFaces, 0, true)]
+    [InlineData(AmbientGeometry.FrontOnlyThroughMask, .5, true)]
+    [InlineData(AmbientGeometry.BareCrystalAllFaces, .5, true)]
+    [InlineData(AmbientGeometry.FrontOnlyThroughMask, 1, true)]
+    [InlineData(AmbientGeometry.BareCrystalAllFaces, 1, true)]
+    [InlineData(AmbientGeometry.FrontOnlyThroughMask, .5, false)]
+    [InlineData(AmbientGeometry.FrontOnlyThroughMask, 1, false)]
+    public async Task BsrAndAmbient_ContinueKeepsFactsAndEveryLine_AndPublishesComponentRates(AmbientGeometry geometry, double bsr, bool ambient)
     {
         var detector = await Ready.Value;
         var clock = new ManualTimeProvider(); var service = new SimulationService(clock, Preparation);
         var field = new AmbientFieldConfig { DoseRateMicroSvPerHour = 1, Geometry = geometry };
-        await using var whole = service.StartAmbient(Scene, Head, 2, 4, field, detector, seed: 4711);
+        await using var whole = ambient ? service.StartAmbient(Scene, Head, 2, 4, field, detector, bsr, seed: 4711)
+            : service.Start(Scene, Head, 2, 4, detector, bsr, seed: 4711);
         var expected = await Segment(whole, clock);
-        await using var paused = service.StartAmbient(Scene, Head, 2, 4, field, detector, seed: 4711);
+        await using var paused = ambient ? service.StartAmbient(Scene, Head, 2, 4, field, detector, bsr, seed: 4711)
+            : service.Start(Scene, Head, 2, 4, detector, bsr, seed: 4711);
         var stopped = await Segment(paused, clock, true);
         var frozen = stopped.Readout!.Records.ToArray();
         clock.Advance(TimeSpan.FromSeconds(100)); paused.Continue(2, 4);
@@ -54,8 +62,12 @@ public sealed class ReadoutFieldAcquisitionTests
         Assert.Equal(frozen, stopped.Readout.Records);
         Assert.Equal(expected.SourceRateCps, actual.SourceRateCps);
         Assert.Equal(expected.AmbientRateCps, actual.AmbientRateCps);
-        Assert.True(actual.SourceRateCps > 0); Assert.True(actual.AmbientRateCps > 0);
-        Assert.Equal(AmbientIncidenceDescription.For(geometry, true), actual.AmbientIncidence);
+        if (ambient)
+        {
+            Assert.True(actual.SourceRateCps > 0); Assert.True(actual.AmbientRateCps > 0);
+            Assert.Equal(AmbientIncidenceDescription.For(geometry, true), actual.AmbientIncidence);
+        }
+        else { Assert.Equal(0, actual.AmbientRateCps); Assert.Null(actual.AmbientIncidence); }
         for (int i = 0; i < 2; i++)
         {
             var a = actual.Readout.Lines[i]; var e = expected.Readout.Lines[i];
@@ -63,7 +75,7 @@ public sealed class ReadoutFieldAcquisitionTests
             Assert.Equal(actual.Readout.Records.Count, a.Assigned + a.Unknown);
         }
         var settings = new ImagingSettings { WindowLowKeV = 600, WindowHighKeV = 720 };
-        var config = SimulationService.BuildConfig(Scene, Head, detector, ambient: field);
+        var config = SimulationService.BuildConfig(Scene, Head, detector, bsr, ambient: ambient ? field : null);
         var image = PhysicalReadoutProjection.Imaging(actual, config, settings, default).Channels[1];
         var spectrum = PhysicalReadoutProjection.Spectrum(actual.Readout,
             new() { WindowLowKeV = 600, WindowHighKeV = 720 }, default);
@@ -72,13 +84,12 @@ public sealed class ReadoutFieldAcquisitionTests
     }
 
     [Fact]
-    public async Task FieldOnlyAndBsr_RefuseBeforeCapture_AndMissingAmbientBankDoesNotStart()
+    public async Task FieldOnly_RefusesBeforeCapture_AndMissingAmbientBsrBankDoesNotStart()
     {
         var service = new SimulationService(readoutPreparation: Preparation);
         Assert.Equal(ReadoutPolicy.FieldOnlyMessage, Assert.Throws<NotSupportedException>(() =>
             service.StartAmbient([], Head, 1, 1, new(), Physical)).Message);
-        Assert.Equal(ReadoutPolicy.BsrMessage, Assert.Throws<NotSupportedException>(() =>
-            service.StartAmbient(Scene, Head, 1, 1, new(), Physical, 1)).Message);
+        Assert.Throws<InvalidOperationException>(() => service.StartAmbient(Scene, Head, 1, 1, new(), Physical, 1));
         Assert.Throws<InvalidOperationException>(() => service.StartAmbient(Scene, Head, 1, 1, new(), Physical));
         // The refused calls do not poison reuse of either prepared entry.
         var detector = await Ready.Value;
