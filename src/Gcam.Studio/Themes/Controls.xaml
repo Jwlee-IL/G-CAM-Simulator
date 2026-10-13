@@ -159,9 +159,6 @@ re-templated against the colour tokens. Implicit styles = the default look; keye
     <Geometry x:Key="Icon.Cancel">
         M1,0 L6,5 L11,0 L12,1 L7,6 L12,11 L11,12 L6,7 L1,12 L0,11 L5,6 L0,1 Z
     </Geometry>
-    <Geometry x:Key="Icon.Delete">
-        M2,3 H10 V12 H2 Z M1,1 H5 V0 H7 V1 H11 V2 H1 Z
-    </Geometry>
     <!-- Trash can, one connected shape: handle on a full-width lid, body with two even-odd slot cut-outs -->
     <Geometry x:Key="Icon.Clear">
         F0 M4,0 H8 V1 H12 V3 H10 V12 H2 V3 H0 V1 H4 Z M4,5 H5 V10 H4 Z M7,5 H8 V10 H7 Z
@@ -265,14 +262,6 @@ re-templated against the colour tokens. Implicit styles = the default look; keye
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
-    </Style>
-    <!-- Borderless button for toolbars and panel headers -->
-    <Style x:Key="Button.Ghost" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
-        <Setter Property="Background" Value="Transparent" />
-        <Setter Property="BorderBrush" Value="Transparent" />
-        <Setter Property="Foreground" Value="{DynamicResource Brush.Text.Secondary}" />
-        <Setter Property="Padding" Value="{StaticResource Pad.Control}" />
-        <Setter Property="MinWidth" Value="{StaticResource Size.Control}" />
     </Style>
     <Style x:Key="Button.Icon" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
         <Setter Property="Padding" Value="{StaticResource Pad.None}" />

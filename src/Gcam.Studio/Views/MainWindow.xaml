@@ -64,6 +64,13 @@
         <KeyBinding Modifiers="Control" Key="D2" Command="{Binding SelectWorkspaceCommand}" CommandParameter="1" />
         <KeyBinding Modifiers="Control" Key="D3" Command="{Binding SelectWorkspaceCommand}" CommandParameter="2" />
         <KeyBinding Modifiers="Control" Key="D4" Command="{Binding SelectWorkspaceCommand}" CommandParameter="3" />
+        <!-- Measurement tool access keys (SR-A11Y-03): the icon toggles carry no text for an underlined access key, so the
+        window binds Alt+P / D / A / R. The command acts only while Imaging is shown and no modal layer is open; a focused
+        control that handles the combination keeps it (bindings only see unhandled keys). -->
+        <KeyBinding Modifiers="Alt" Key="P" Command="{Binding SelectMeasureToolCommand}" CommandParameter="{x:Static vm:MeasureTool.Pan}" />
+        <KeyBinding Modifiers="Alt" Key="D" Command="{Binding SelectMeasureToolCommand}" CommandParameter="{x:Static vm:MeasureTool.Distance}" />
+        <KeyBinding Modifiers="Alt" Key="A" Command="{Binding SelectMeasureToolCommand}" CommandParameter="{x:Static vm:MeasureTool.Angle}" />
+        <KeyBinding Modifiers="Alt" Key="R" Command="{Binding SelectMeasureToolCommand}" CommandParameter="{x:Static vm:MeasureTool.Roi}" />
     </Window.InputBindings>
     <c:WindowFrame>
         <c:ModalHost DialogContent="{Binding Confirmation.ActiveContent}"
@@ -455,28 +462,30 @@
                                                     </Style>
                                                 </Border.Style>
                                                 <DockPanel DataContext="{Binding Measurements}" Grid.IsSharedSizeScope="True">
-                                                    <!-- Header: title, the pointer tools as icon toggles (one active tool), Clear all at the right.
+                                                    <!-- Header: title, the pointer tools as icon toggles (one active tool; IconToggle reports the access key to UI
+                                                    Automation), Clear all at the right.
                                                     A single measurement is deleted with its row's delete button or the Delete key. -->
                                                     <DockPanel DockPanel.Dock="Top" Style="{StaticResource PanelHeader}">
                                                         <TextBlock DockPanel.Dock="Left" Text="Measurements" Style="{StaticResource Text.PanelTitle}"
                                                                 Margin="{StaticResource Gap.InlineWide}" />
                                                         <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" AutomationProperties.Name="Pointer tool">
-                                                            <RadioButton Content="{StaticResource Icon.Pan}" GroupName="Tool" Style="{StaticResource RadioButton.Icon}"
+                                                            <c:IconToggle Content="{StaticResource Icon.Pan}" GroupName="Tool" Style="{StaticResource RadioButton.Icon}"
                                                                     IsChecked="{Binding ActiveTool, Converter={x:Static conv:EnumMatchConverter.Instance}, ConverterParameter=Pan}"
-                                                                    ToolTip="Pan" Margin="{StaticResource Gap.Tool}"
-                                                                    AutomationProperties.AutomationId="ToolPan" AutomationProperties.Name="Pan tool" />
-                                                            <RadioButton Content="{StaticResource Icon.Ruler}" GroupName="Tool" Style="{StaticResource RadioButton.Icon}"
+                                                                    ToolTip="Pan (Alt+P)" Margin="{StaticResource Gap.Tool}"
+                                                                    AutomationProperties.AutomationId="ToolPan" AutomationProperties.Name="Pan tool" AutomationProperties.AccessKey="Alt+P" />
+                                                            <c:IconToggle Content="{StaticResource Icon.Ruler}" GroupName="Tool" Style="{StaticResource RadioButton.Icon}"
                                                                     IsChecked="{Binding ActiveTool, Converter={x:Static conv:EnumMatchConverter.Instance}, ConverterParameter=Distance}"
-                                                                    ToolTip="Distance" Margin="{StaticResource Gap.Tool}"
-                                                                    AutomationProperties.AutomationId="ToolDistance" AutomationProperties.Name="Distance tool" />
-                                                            <RadioButton Content="{StaticResource Icon.Angle}" GroupName="Tool" Style="{StaticResource RadioButton.Icon}"
+                                                                    ToolTip="Distance (Alt+D)" Margin="{StaticResource Gap.Tool}"
+                                                                    AutomationProperties.AutomationId="ToolDistance" AutomationProperties.Name="Distance tool" AutomationProperties.AccessKey="Alt+D" />
+                                                            <c:IconToggle Content="{StaticResource Icon.Angle}" GroupName="Tool" Style="{StaticResource RadioButton.Icon}"
                                                                     IsChecked="{Binding ActiveTool, Converter={x:Static conv:EnumMatchConverter.Instance}, ConverterParameter=Angle}"
-                                                                    ToolTip="Angle" Margin="{StaticResource Gap.Tool}"
-                                                                    AutomationProperties.AutomationId="ToolAngle" AutomationProperties.Name="Angle tool" />
-                                                            <RadioButton Content="{StaticResource Icon.Roi}" GroupName="Tool" Style="{StaticResource RadioButton.Icon}"
+                                                                    ToolTip="Angle (Alt+A)" Margin="{StaticResource Gap.Tool}"
+                                                                    AutomationProperties.AutomationId="ToolAngle" AutomationProperties.Name="Angle tool" AutomationProperties.AccessKey="Alt+A" />
+                                                            <c:IconToggle Content="{StaticResource Icon.Roi}" GroupName="Tool" Style="{StaticResource RadioButton.Icon}"
                                                                     IsChecked="{Binding ActiveTool, Converter={x:Static conv:EnumMatchConverter.Instance}, ConverterParameter=Roi}"
-                                                                    ToolTip="ROI (region of interest)"
-                                                                    AutomationProperties.AutomationId="ToolRoi" AutomationProperties.Name="ROI tool (region of interest)" />
+                                                                    ToolTip="ROI, region of interest (Alt+R)"
+                                                                    AutomationProperties.AutomationId="ToolRoi" AutomationProperties.Name="ROI tool (region of interest)"
+                                                                    AutomationProperties.AccessKey="Alt+R" />
                                                         </StackPanel>
                                                         <Button DockPanel.Dock="Right"
                                                                 Command="{Binding ClearCommand}" Content="{StaticResource Icon.Clear}" ToolTip="Clear all measurements"

@@ -24,6 +24,32 @@ public class MainViewModelTests
     }
 
     [Fact]
+    public void MeasureToolAccessKeys_SelectTheTool_OnlyInImagingWithoutOptions()
+    {
+        // The command behind the window's Alt+P / D / A / R key bindings (SR-A11Y-03).
+        var vm = new MainViewModel(new FakeAcquisition(), new FakeTheme(), new FakeSpectrumService());
+        var command = vm.SelectMeasureToolCommand;
+        foreach (var tool in new[] { MeasureTool.Distance, MeasureTool.Angle, MeasureTool.Roi, MeasureTool.Pan })
+        {
+            Assert.True(command.CanExecute(tool));
+            command.Execute(tool);
+            Assert.Equal(tool, vm.Imaging.Measurements.ActiveTool);
+        }
+        int changed = 0;
+        command.CanExecuteChanged += (_, _) => changed++;
+        vm.SelectedWorkspace = vm.Spectrum;
+        Assert.False(command.CanExecute(MeasureTool.Distance));
+        vm.SelectedWorkspace = vm.Imaging;
+        Assert.True(command.CanExecute(MeasureTool.Distance));
+        vm.OpenOptionsCommand.Execute(null);
+        Assert.False(command.CanExecute(MeasureTool.Distance));
+        vm.Options!.CancelCommand.Execute(null);
+        Assert.True(command.CanExecute(MeasureTool.Distance));
+        Assert.True(changed >= 4); // workspace switch and the dialog's open / close re-query the bindings
+        Assert.Equal(MeasureTool.Pan, vm.Imaging.Measurements.ActiveTool);
+    }
+
+    [Fact]
     public void DetectorInputs_DefaultsAndValidationFallbacks_EditableWithoutData()
     {
         var vm = new MainViewModel(new FakeAcquisition(), new FakeTheme(), new FakeSpectrumService());

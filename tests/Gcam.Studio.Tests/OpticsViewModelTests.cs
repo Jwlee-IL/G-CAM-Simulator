@@ -150,8 +150,7 @@ public sealed class OpticsViewModelTests
     }
 
     [Fact]
-    // The name predates the left tabs (Start now selects the input's tab); kept because VV.Studio cites it.
-    public async Task InvalidInput_StartExpandsSectionsAndDoesNotStartTransport()
+    public async Task InvalidInput_StartSelectsTheInputTab_AndDoesNotStartTransport()
     {
         var acquisition = new Acquisition();
         var vm = new MainViewModel(acquisition, new Theme(), new FakeSpectrumService(), confirmation: new FakeConfirmation());
@@ -159,7 +158,7 @@ public sealed class OpticsViewModelTests
         vm.OpticsEditor.PixelPitch = "0.1";
         await vm.StartCommand.ExecuteAsync(null);
         Assert.Equal(0, acquisition.Starts);
-        Assert.Equal(MainViewModel.OpticsTab, vm.SelectedLeftTab); // replaces the removed optics / detector expander flags
+        Assert.Equal(MainViewModel.OpticsTab, vm.SelectedLeftTab);
         Assert.Contains("reflector", vm.ValidationError);
         Assert.Contains("reflector", vm.Status);
         vm.OpticsEditor.SelectedPreset = OpticsPreset.All[1];

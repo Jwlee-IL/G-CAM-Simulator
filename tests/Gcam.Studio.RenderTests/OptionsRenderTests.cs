@@ -2,6 +2,7 @@ using System.Runtime.ExceptionServices;
 using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
 using Gcam.Configuration;
 using Gcam.Studio.Controls;
@@ -84,6 +85,58 @@ public sealed class OptionsRenderTests
         });
         thread.SetApartmentState(ApartmentState.STA); thread.Start(); thread.Join();
         if (failure is not null) ExceptionDispatchInfo.Capture(failure).Throw();
+    }
+    [Fact]
+    public void OptionsDialog_HasNoDefaultButton_EnterInAFieldKeepsTheDraftOpen()
+    {
+        // Author, 2026-10-13: Enter in a field must neither apply nor discard the draft, so no button is the default;
+        // Escape still cancels through the modal layer (ModalHost, covered by DeclutterRenderTests).
+        Exception? failure = null;
+        var thread = new Thread(() =>
+        {
+            try
+            {
+                foreach (bool locked in new[] { false, true })
+                {
+                    var vm = new MainViewModel(new UnusedAcquisition(), new Theme(), new SpectrumService());
+                    vm.IsRunning = locked;
+                    vm.OpenOptionsCommand.Execute(null);
+                    var draft = vm.Options!;
+                    var view = ReadoutRenderTests.ProductionView("OptionsView", "Dark"); view.DataContext = draft;
+                    void Layout() { view.Measure(new Size(450, 600)); view.Arrange(new Rect(0, 0, 450, 600)); ReadoutRenderTests.Drain(); view.UpdateLayout(); }
+                    foreach (var tab in Enum.GetValues<OptionsTab>())
+                    {
+                        draft.SelectedTab = tab; Layout();
+                        var buttons = ReadoutRenderTests.Descendants(view).OfType<Button>().ToArray();
+                        Assert.Contains(buttons, b => AutomationProperties.GetAutomationId(b) == "Modal.Close");
+                        Assert.All(buttons, b => Assert.False(b.IsDefault, AutomationProperties.GetAutomationId(b) + " is a default button"));
+                    }
+                    if (!locked)
+                    {
+                        draft.SelectedTab = OptionsTab.Acquisition; Layout();
+                        var seed = ReadoutRenderTests.Descendants(view).OfType<TextBox>().Single(t => AutomationProperties.GetAutomationId(t) == "AcquisitionSeed");
+                        seed.Text = "42"; seed.GetBindingExpression(TextBox.TextProperty)!.UpdateSource();
+                        // Routed Enter through the field without a presentation source or real keyboard input.
+                        foreach (var routed in new[] { Keyboard.PreviewKeyDownEvent, Keyboard.KeyDownEvent, Keyboard.PreviewKeyUpEvent, Keyboard.KeyUpEvent })
+                            seed.RaiseEvent(new KeyEventArgs(Keyboard.PrimaryDevice, new DetachedSource(), 0, Key.Enter) { RoutedEvent = routed });
+                        Layout();
+                        Assert.True(draft.IsOpen); Assert.Same(draft, vm.Options);
+                        Assert.Equal("42", draft.SeedText); Assert.Equal("42", seed.Text); Assert.Equal("", vm.SeedText);
+                    }
+                    draft.CancelCommand.Execute(null); view.DataContext = null;
+                    Assert.Null(vm.Options);
+                }
+            }
+            catch (Exception ex) { failure = ex; }
+        });
+        thread.SetApartmentState(ApartmentState.STA); thread.Start(); thread.Join();
+        if (failure is not null) ExceptionDispatchInfo.Capture(failure).Throw();
+    }
+    private sealed class DetachedSource : PresentationSource
+    {
+        public override Visual RootVisual { get; set; } = null!;
+        public override bool IsDisposed => false;
+        protected override CompositionTarget GetCompositionTargetCore() => null!;
     }
     private sealed class Theme : IThemeService { public AppTheme Current => AppTheme.Dark; public void Apply(AppTheme theme) { } }
     private sealed class UnusedAcquisition : IAcquisitionService

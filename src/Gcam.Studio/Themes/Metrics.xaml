@@ -30,7 +30,6 @@
     <!-- Sizes -->
     <sys:Double x:Key="Size.Control">28</sys:Double>
     <GridLength x:Key="Size.Bar">48</GridLength>
-    <GridLength x:Key="Size.StatusBar">28</GridLength>
     <GridLength x:Key="Size.SidePanel">300</GridLength>
     <sys:Double x:Key="Size.FieldLabel">84</sys:Double>
     <sys:Double x:Key="Size.ColorBar">8</sys:Double>
@@ -77,7 +76,6 @@
     <sys:Double x:Key="Size.Imaging.Lower">240</sys:Double>
     <sys:Double x:Key="Size.Modal">480</sys:Double>
     <sys:Double x:Key="Size.Caption">47</sys:Double>
-    <sys:Double x:Key="Size.Options.Content">480</sys:Double>
     <sys:Double x:Key="Size.Options">520</sys:Double>
     <sys:Double x:Key="Size.Options.LockCaption">16</sys:Double>
     <sys:Double x:Key="Size.CaptionButton">46</sys:Double>
