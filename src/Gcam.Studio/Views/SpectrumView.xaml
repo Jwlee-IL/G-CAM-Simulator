@@ -17,7 +17,8 @@
                 </DockPanel>
                 <!-- Shared Auto columns measure headers and realized rows together; cell gaps are explicit. -->
                 <Border Padding="{StaticResource Pad.ListItem}" Margin="{StaticResource Gap.Tight}">
-                <Grid>
+                <!-- The rows' scroll gutter is reserved here too, so the header columns stay over the row columns. -->
+                <Grid Margin="{StaticResource Gap.ScrollGutter}">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="Auto" SharedSizeGroup="EmissionLine" />

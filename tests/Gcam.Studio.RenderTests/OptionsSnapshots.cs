@@ -157,6 +157,76 @@ public sealed partial class PlotViewRenderTests
         return element.ActualWidth > 0 && element.ActualHeight > 0;
     }
 
+    /// <summary>Review 6: the status bar is one line in every state: the same height (Size.Control plus its top hairline),
+    /// the run status left and the Options summary right, both single-line with an ellipsis and their full text as tooltip,
+    /// neither outside the bar nor overlapping.</summary>
+    internal static void AssertStatusBar(FrameworkElement root, MainViewModel model)
+    {
+        var bar = Descendants(root).OfType<Border>().Single(b => AutomationProperties.GetAutomationId(b) == "Window.StatusBar");
+        Assert.Equal((double)root.FindResource("Size.Control") + ((Thickness)root.FindResource("Border.Hairline")).Top, bar.ActualHeight);
+        Rect Bounds(FrameworkElement e) => e.TransformToAncestor(root).TransformBounds(new Rect(e.RenderSize));
+        var barBounds = Bounds(bar);
+        var status = Descendants(bar).OfType<TextBlock>().Single(t => AutomationProperties.GetAutomationId(t) == "StatusText");
+        var summary = Descendants(bar).OfType<TextBlock>().Single(t => AutomationProperties.GetAutomationId(t) == "Options.Summary");
+        Assert.Equal(model.Status, status.Text);
+        Assert.Equal(model.OptionsStatusSummary, summary.Text);
+        foreach (var text in new[] { status, summary })
+        {
+            Assert.Equal(TextWrapping.NoWrap, text.TextWrapping);
+            Assert.Equal(TextTrimming.CharacterEllipsis, text.TextTrimming);
+            Assert.Equal(text.Text, text.ToolTip as string);
+            if (text.Visibility != Visibility.Visible || text.ActualWidth == 0) continue;
+            var bounds = Bounds(text);
+            Assert.True(bounds.Top >= barBounds.Top - .5 && bounds.Bottom <= barBounds.Bottom + .5, $"{AutomationProperties.GetAutomationId(text)} outside the status bar");
+        }
+        if (summary.Visibility == Visibility.Visible && summary.ActualWidth > 0 && status.ActualWidth > 0)
+            Assert.True(Bounds(status).Right <= Bounds(summary).Left + .5, "status text overlaps the Options summary");
+        var seed = Descendants(bar).OfType<TextBlock>().Single(t => AutomationProperties.GetAutomationId(t) == "AcquisitionSeedError");
+        Assert.Equal(model.ShowSeedErrorInStatus ? Visibility.Visible : Visibility.Collapsed, seed.Visibility);
+        StatusBarHeights.Add(bar.ActualHeight);
+        Assert.Single(StatusBarHeights);
+    }
+
+    /// <summary>Every status-bar height seen across all states and sizes (must stay one value).</summary>
+    internal static readonly HashSet<double> StatusBarHeights = [];
+
+    /// <summary>Review 6: every vertically scrolling viewer reserves the scroll gutter (content width independent of the
+    /// bar), keeps the bar 4 px clear of the content, and the bar stays inside its panel clear of the rounded corner.</summary>
+    internal static void AssertScrollGutters(FrameworkElement root)
+    {
+        double gutter = (double)root.FindResource("Size.ScrollGutter"), barWidth = (double)root.FindResource("Size.ScrollBar");
+        Rect Bounds(FrameworkElement e) => e.TransformToAncestor(root).TransformBounds(new Rect(e.RenderSize));
+        int checkedViewers = 0;
+        foreach (var viewer in Descendants(root).OfType<ScrollViewer>())
+        {
+            if (viewer.VerticalScrollBarVisibility is not (ScrollBarVisibility.Auto or ScrollBarVisibility.Visible)) continue;
+            if (viewer.ActualWidth == 0) continue;
+            bool shown = true;
+            for (DependencyObject? n = viewer; n is not null && n != root; n = VisualTreeHelper.GetParent(n))
+                if (n is UIElement u && u.Visibility != Visibility.Visible) { shown = false; break; }
+            if (!shown || viewer.Template is null) continue;
+            var gutterBorder = (Border)viewer.Template.FindName("VerticalGutter", viewer);
+            var presenter = (FrameworkElement)viewer.Template.FindName("PART_ScrollContentPresenter", viewer);
+            Assert.Equal(Visibility.Visible, gutterBorder.Visibility);
+            Assert.Equal(gutter, gutterBorder.ActualWidth);
+            Assert.Equal(viewer.ActualWidth - gutter - viewer.Padding.Left - viewer.Padding.Right, presenter.ActualWidth, 1);
+            var scrollBar = (ScrollBar)viewer.Template.FindName("PART_VerticalScrollBar", viewer);
+            if (scrollBar.Visibility == Visibility.Visible && scrollBar.ActualWidth > 0)
+            {
+                Assert.Equal(barWidth, scrollBar.ActualWidth);
+                Assert.True(Bounds(scrollBar).Left - Bounds(presenter).Right >= gutter - barWidth - .5, "scroll bar touches the content");
+                for (DependencyObject? n = VisualTreeHelper.GetParent(viewer); n is not null && n != root; n = VisualTreeHelper.GetParent(n))
+                    if (n is Border { CornerRadius.TopRight: > 0 } panel && panel.BorderThickness.Right > 0)
+                    {
+                        Assert.True(Bounds(panel).Right - Bounds(scrollBar).Right >= panel.CornerRadius.TopRight, "scroll bar under the panel's rounded corner");
+                        break;
+                    }
+            }
+            checkedViewers++;
+        }
+        Assert.True(checkedViewers > 0, "no scrolling panel checked");
+    }
+
     private static void AssertTopBar(FrameworkElement root)
     {
         var top = Descendants(root).OfType<Border>().Single(b => AutomationProperties.GetAutomationId(b) == "Window.TopBar");
@@ -303,6 +373,8 @@ public sealed partial class PlotViewRenderTests
         Assert.Equal(model.HasNonDefaultOptions ? FontWeights.SemiBold : FontWeights.Normal, summary.FontWeight);
         AssertTopBar(root);
         AssertLeftTab(root, model);
+        AssertStatusBar(root, model);
+        AssertScrollGutters(root);
         var cog = Descendants(root).OfType<Button>().Single(b => AutomationProperties.GetAutomationId(b) == "OpenOptions");
         Assert.Equal(model.OptionsHelpText, AutomationProperties.GetHelpText(cog));
         var badge = Descendants(root).OfType<System.Windows.Shapes.Ellipse>().Single(b => AutomationProperties.GetAutomationId(b) == "Options.Badge");

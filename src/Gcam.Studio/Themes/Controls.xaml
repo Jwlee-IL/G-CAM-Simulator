@@ -704,9 +704,50 @@ re-templated against the colour tokens. Implicit styles = the default look; keye
             </Setter.Value>
         </Setter>
     </Style>
+    <!-- Shared scroller: a vertically scrolling viewer (Auto / Visible) reserves Size.ScrollGutter at its right in every
+    state, so the content width never jumps when the bar appears; the bar sits right-aligned in the gutter, 4 px from the
+    content. Viewers with Hidden / Disabled vertical bars (text boxes) reserve nothing. -->
+    <Style TargetType="ScrollViewer">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ScrollViewer">
+                    <Grid Background="{TemplateBinding Background}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <ScrollContentPresenter x:Name="PART_ScrollContentPresenter" Margin="{TemplateBinding Padding}"
+                                CanContentScroll="{TemplateBinding CanContentScroll}" />
+                        <Border x:Name="VerticalGutter" Grid.Column="1" Width="{StaticResource Size.ScrollGutter}" Visibility="Collapsed">
+                            <ScrollBar x:Name="PART_VerticalScrollBar" HorizontalAlignment="Right" Orientation="Vertical"
+                                    Maximum="{TemplateBinding ScrollableHeight}" Value="{TemplateBinding VerticalOffset}"
+                                    ViewportSize="{TemplateBinding ViewportHeight}" Cursor="Arrow"
+                                    Visibility="{TemplateBinding ComputedVerticalScrollBarVisibility}" />
+                        </Border>
+                        <ScrollBar x:Name="PART_HorizontalScrollBar" Grid.Row="1" Orientation="Horizontal" Cursor="Arrow"
+                                Maximum="{TemplateBinding ScrollableWidth}" Value="{TemplateBinding HorizontalOffset}"
+                                ViewportSize="{TemplateBinding ViewportWidth}"
+                                Visibility="{TemplateBinding ComputedHorizontalScrollBarVisibility}" />
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="VerticalScrollBarVisibility" Value="Auto">
+                            <Setter TargetName="VerticalGutter" Property="Visibility" Value="Visible" />
+                        </Trigger>
+                        <Trigger Property="VerticalScrollBarVisibility" Value="Visible">
+                            <Setter TargetName="VerticalGutter" Property="Visibility" Value="Visible" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
     <Style TargetType="ScrollBar">
-        <Setter Property="Width" Value="8" />
-        <Setter Property="MinWidth" Value="8" />
+        <Setter Property="Width" Value="{StaticResource Size.ScrollBar}" />
+        <Setter Property="MinWidth" Value="{StaticResource Size.ScrollBar}" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ScrollBar">

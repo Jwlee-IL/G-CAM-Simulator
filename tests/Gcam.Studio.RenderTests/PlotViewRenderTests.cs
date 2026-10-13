@@ -12,6 +12,9 @@ using Xunit.Abstractions;
 
 namespace Gcam.Studio.RenderTests;
 
+// One collection with ReadoutRenderTests: the two long offscreen renders run one after the other, so neither competes for the
+// CPU against its own deadlock deadline (the 60 s join).
+[Collection(OffscreenRenderCollection.Name)]
 public sealed partial class PlotViewRenderTests(ITestOutputHelper output)
 {
     [RenderSnapshotFact]

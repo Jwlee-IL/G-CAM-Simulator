@@ -25,6 +25,7 @@ namespace Gcam.Studio.RenderTests;
 
 /// <summary>Production readout XAML rendered detached on an STA, with synthetic drawing-only records (12 × 12 and the
 /// 44 × 44 High-res module at its real LUT size: 1408 × 1408 bins, 1936 peaks).</summary>
+[Collection(OffscreenRenderCollection.Name)]
 public sealed class ReadoutRenderTests(ITestOutputHelper output)
 {
     private static readonly OpticsSettings Baseline = OpticsPreset.All.Single(p => p.Name == "Baseline").Settings!;

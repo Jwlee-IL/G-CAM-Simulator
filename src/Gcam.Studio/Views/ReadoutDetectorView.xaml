@@ -66,7 +66,7 @@
             </Grid>
             <ScrollViewer VerticalScrollBarVisibility="Auto">
                 <ScrollViewer.Style>
-                    <Style TargetType="ScrollViewer">
+                    <Style TargetType="ScrollViewer" BasedOn="{StaticResource {x:Type ScrollViewer}}">
                         <Setter Property="Visibility" Value="Collapsed" />
                         <Style.Triggers>
                             <DataTrigger Binding="{Binding ReadoutTab}" Value="Calibration">

@@ -70,7 +70,7 @@
                     <TextBlock Text="Events in window" Style="{StaticResource Text.PanelTitle}" />
                 </DockPanel>
                 <StackPanel Grid.IsSharedSizeScope="True">
-                    <Border Padding="{StaticResource Pad.ListItem}">
+                    <Border Padding="{StaticResource Pad.ListItem}" Margin="{StaticResource Gap.ScrollGutter}">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto" SharedSizeGroup="EventId" />

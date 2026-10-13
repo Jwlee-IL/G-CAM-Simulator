@@ -90,4 +90,13 @@
     <!-- Between the measurement tool toggles; before a row's action button (after the Value column). -->
     <Thickness x:Key="Gap.Tool">0,0,4,0</Thickness>
     <Thickness x:Key="Gap.RowAction">8,0,0,0</Thickness>
+    <!-- Scroll gutter: every vertically scrolling ScrollViewer reserves Size.ScrollGutter at its right, whether or not the bar
+    shows (content width never jumps): 4 px between the content and the bar, then the Size.ScrollBar (8) bar, which ends at
+    the scroller's right edge, inside the panel's padding (so the thumb clears the panel's rounded border). Header rows of
+    lists reserve the same width with Gap.ScrollGutter, so their columns stay over the rows' columns. -->
+    <sys:Double x:Key="Size.ScrollBar">8</sys:Double>
+    <sys:Double x:Key="Size.ScrollGutter">12</sys:Double>
+    <Thickness x:Key="Gap.ScrollGutter">0,0,12,0</Thickness>
+    <!-- Before an item that follows another on the same line (status-bar messages). -->
+    <Thickness x:Key="Gap.InlineWide.Leading">16,0,0,0</Thickness>
 </ResourceDictionary>

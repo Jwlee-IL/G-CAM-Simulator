@@ -117,8 +117,10 @@ public sealed class StartRefusalTests
     {
         var (vm, acquisition) = Model();
         vm.SeedText = "x";
+        Assert.True(vm.ShowSeedErrorInStatus); // before Start: the seed message beside the run status
         await Refused(vm, acquisition);
         Assert.Equal("Options: " + vm.SeedError, vm.Status);
+        Assert.False(vm.ShowSeedErrorInStatus); // the status line already says it: no second copy in the one-line bar
         Assert.True(vm.HasOptionsWarning);
         Assert.Equal(MainViewModel.SceneTab, vm.SelectedLeftTab);
         vm.SeedText = "42";

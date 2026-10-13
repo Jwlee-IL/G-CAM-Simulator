@@ -203,6 +203,8 @@ public sealed partial class PlotViewRenderTests
                 Assert.Equal(28, input.ActualHeight);
             }
             root.UpdateLayout();
+            AssertStatusBar(root, model); // Completed, non-default options (fixed seed, ideal environment): still one line
+            AssertScrollGutters(root);
             var bitmap = new RenderTargetBitmap((int)size.Width, (int)size.Height, 96, 96, PixelFormats.Pbgra32);
             bitmap.Render(root);
             if (mixed && workspace == model.Imaging) VerifyOverlayChips(root);

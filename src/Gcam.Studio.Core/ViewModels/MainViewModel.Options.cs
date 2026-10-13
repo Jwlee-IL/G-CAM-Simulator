@@ -21,6 +21,8 @@ public sealed partial class MainViewModel
     [NotifyPropertyChangedFor(nameof(IsStartRefused))]
     private string? _startRefusal;
     public bool IsStartRefused => StartRefusal is not null;
+    /// <summary>The status bar shows the seed message beside the run status unless the refused-Start text already says it.</summary>
+    public bool ShowSeedErrorInStatus => SeedError is not null && StartRefusal != "Options: " + SeedError;
     private bool _optionsRefused;
 
     /// <summary>The Options input that blocks Start now (seed, ambient dose, gap, or a nonzero field with the physical
@@ -90,6 +92,7 @@ public sealed partial class MainViewModel
     protected override void OnPropertyChanged(System.ComponentModel.PropertyChangedEventArgs e)
     {
         base.OnPropertyChanged(e);
+        if (e.PropertyName is nameof(SeedError) or nameof(StartRefusal)) base.OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs(nameof(ShowSeedErrorInStatus)));
         if (e.PropertyName is nameof(SeedText) or nameof(ReflectorGapUm) or nameof(GapError) or nameof(Scintillator) or nameof(Sensor)
             or nameof(Preamp) or nameof(GainSigmaPercent) or nameof(GainSeed) or nameof(BackgroundToSignalRatio) or nameof(AmbientDoseRateMicroSvPerHour)
             or nameof(AmbientGeometry) or nameof(Snapshot) or nameof(IsPhysicalReadout) or nameof(SeedError) or nameof(AmbientDoseError)

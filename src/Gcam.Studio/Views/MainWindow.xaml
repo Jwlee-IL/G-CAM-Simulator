@@ -487,7 +487,7 @@
                                                             Margin="{StaticResource Gap.Field}" AutomationProperties.AutomationId="ToolHint" />
                                                     <!-- Column header: the same shared Auto columns (scope: this panel) and inner padding as the rows; the
                                                     Value column takes the rest and wraps rather than cuts when the panel is half width. -->
-                                                    <Border DockPanel.Dock="Top" Padding="{StaticResource Pad.ListItem}">
+                                                    <Border DockPanel.Dock="Top" Padding="{StaticResource Pad.ListItem}" Margin="{StaticResource Gap.ScrollGutter}">
                                                         <Grid>
                                                             <Grid.ColumnDefinitions>
                                                                 <ColumnDefinition Width="Auto" SharedSizeGroup="MeasId" />
@@ -605,28 +605,22 @@
                     </Grid>
                 </Border>
                 <!-- ================= Status bar ================= -->
+                <!-- One line in every state (height Size.Control): run status at the left, the Options summary at the right,
+                then the top-bar input messages and, while running, the progress. Both texts trim with an ellipsis and keep their
+                full text as tooltip and accessible name (a TextBlock's name is its whole text); a refused Start takes the
+                status text in the warning colour. -->
                 <Border Grid.Row="2" Background="{DynamicResource Brush.Bg.Surface}" BorderBrush="{DynamicResource Brush.Line}"
-                        BorderThickness="0,1,0,0" Padding="{StaticResource Pad.Bar}">
-                    <StackPanel>
-                        <DockPanel Height="{StaticResource Size.Control}">
-                            <!-- Progress only while running: a full accent bar at rest would be cyan that means nothing -->
-                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal"
-                                    Visibility="{Binding IsRunning, Converter={StaticResource BoolToVis}}">
-                                <ProgressBar Width="{StaticResource Size.Progress}" Maximum="1" Value="{Binding Progress, Mode=OneWay}"
-                                        VerticalAlignment="Center" Margin="{StaticResource Gap.Inline}"
-                                        AutomationProperties.AutomationId="RunProgress" AutomationProperties.Name="Simulation progress" />
-                                <TextBlock Text="{Binding Progress, StringFormat={}{0:P0}}" Style="{StaticResource Text.MonoCaption}" />
-                            </StackPanel>
-                            <!-- Top-bar input messages (the bar has no room under its fields): a rejected preset, an invalid seed -->
-                            <TextBlock DockPanel.Dock="Right" Text="{Binding LiveTimeError}" Style="{StaticResource Text.CaptionWarning}"
-                                    VerticalAlignment="Center"
-                                    Visibility="{Binding LiveTimeError, Converter={x:Static conv:NullToCollapsedConverter.Instance}}"
-                                    Margin="{StaticResource Gap.InlineWide}" AutomationProperties.AutomationId="AcquisitionLiveTimeError" />
-                            <TextBlock DockPanel.Dock="Right" Text="{Binding SeedError}" Style="{StaticResource Text.CaptionWarning}"
-                                    VerticalAlignment="Center"
-                                    Visibility="{Binding SeedError, Converter={x:Static conv:NullToCollapsedConverter.Instance}}"
-                                    Margin="{StaticResource Gap.InlineWide}" AutomationProperties.AutomationId="AcquisitionSeedError" />
-                            <Ellipse Width="{StaticResource Size.StatusDot}" Height="{StaticResource Size.StatusDot}"
+                        BorderThickness="0,1,0,0" Padding="{StaticResource Pad.Bar}" AutomationProperties.AutomationId="Window.StatusBar">
+                    <Grid Height="{StaticResource Size.Control}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="3*" />
+                            <ColumnDefinition Width="2*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                            <Ellipse Grid.Column="0" Width="{StaticResource Size.StatusDot}" Height="{StaticResource Size.StatusDot}"
                                     Margin="{StaticResource Gap.Inline}" VerticalAlignment="Center">
                                 <Ellipse.Style>
                                     <Style TargetType="Ellipse">
@@ -648,26 +642,26 @@
                                     </Style>
                                 </Ellipse.Style>
                             </Ellipse>
-                            <TextBlock Text="{Binding Status}"
-                                    AutomationProperties.AutomationId="StatusText" AutomationProperties.ItemStatus="{Binding State}"
-                                    AutomationProperties.LiveSetting="Polite">
-                                <!-- A refused Start (validation or Options) reads in the warning colour until the next start or Reset. -->
-                                <TextBlock.Style>
-                                    <Style TargetType="TextBlock" BasedOn="{StaticResource Text.Label}">
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding IsStartRefused}" Value="True">
-                                                <Setter Property="Foreground" Value="{DynamicResource Brush.Status.Warning}" />
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </TextBlock.Style>
-                            </TextBlock>
-                        </DockPanel>
-                        <TextBlock Text="{Binding OptionsStatusSummary}" TextWrapping="Wrap"
+                        <TextBlock Grid.Column="1" Text="{Binding Status}" ToolTip="{Binding Status}" TextWrapping="NoWrap"
+                                TextTrimming="CharacterEllipsis" Margin="{StaticResource Gap.InlineWide}"
+                                AutomationProperties.AutomationId="StatusText" AutomationProperties.ItemStatus="{Binding State}"
+                                AutomationProperties.LiveSetting="Polite">
+                            <!-- A refused Start (validation or Options) reads in the warning colour until the next start or Reset. -->
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock" BasedOn="{StaticResource Text.Label}">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsStartRefused}" Value="True">
+                                            <Setter Property="Foreground" Value="{DynamicResource Brush.Status.Warning}" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                        <TextBlock Grid.Column="2" Text="{Binding OptionsStatusSummary}" ToolTip="{Binding OptionsStatusSummary}"
+                                TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" HorizontalAlignment="Right"
                                 AutomationProperties.AutomationId="Options.Summary">
                             <TextBlock.Style>
                                 <Style TargetType="TextBlock" BasedOn="{StaticResource Text.Caption}">
-                                    <Setter Property="Margin" Value="{StaticResource Gap.Tight}" />
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding HasNonDefaultOptions}" Value="True">
                                             <Setter Property="FontWeight" Value="SemiBold" />
@@ -679,7 +673,24 @@
                                 </Style>
                             </TextBlock.Style>
                         </TextBlock>
-                    </StackPanel>
+                        <!-- Top-bar input messages (the bar has no room under its fields): a rejected preset, an invalid seed -->
+                        <TextBlock Grid.Column="3" Text="{Binding LiveTimeError}" Style="{StaticResource Text.CaptionWarning}"
+                                VerticalAlignment="Center" TextWrapping="NoWrap"
+                                Visibility="{Binding LiveTimeError, Converter={x:Static conv:NullToCollapsedConverter.Instance}}"
+                                Margin="{StaticResource Gap.InlineWide.Leading}" AutomationProperties.AutomationId="AcquisitionLiveTimeError" />
+                        <TextBlock Grid.Column="4" Text="{Binding SeedError}" Style="{StaticResource Text.CaptionWarning}"
+                                VerticalAlignment="Center" TextWrapping="NoWrap"
+                                Visibility="{Binding ShowSeedErrorInStatus, Converter={StaticResource BoolToVis}}"
+                                Margin="{StaticResource Gap.InlineWide.Leading}" AutomationProperties.AutomationId="AcquisitionSeedError" />
+                        <!-- Progress only while running: a full accent bar at rest would be cyan that means nothing -->
+                        <StackPanel Grid.Column="5" Orientation="Horizontal" Margin="{StaticResource Gap.InlineWide.Leading}"
+                                Visibility="{Binding IsRunning, Converter={StaticResource BoolToVis}}">
+                            <ProgressBar Width="{StaticResource Size.Progress}" Maximum="1" Value="{Binding Progress, Mode=OneWay}"
+                                    VerticalAlignment="Center" Margin="{StaticResource Gap.Inline}"
+                                    AutomationProperties.AutomationId="RunProgress" AutomationProperties.Name="Simulation progress" />
+                            <TextBlock Text="{Binding Progress, StringFormat={}{0:P0}}" Style="{StaticResource Text.MonoCaption}" />
+                        </StackPanel>
+                    </Grid>
                 </Border>
             </Grid>
         </c:ModalHost>
