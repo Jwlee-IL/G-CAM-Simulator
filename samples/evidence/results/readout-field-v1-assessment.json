@@ -1,0 +1,89 @@
+{
+ "version": 1,
+ "family": "readout-field-v1",
+ "source": "samples/evidence/results/readout-field-v1-family.json",
+ "code": "todo42-readout-field 4330c0b (the run used the working tree later committed unchanged as 4330c0b)",
+ "command": "dotnet samples/evidence/probe/bin/Release/net9.0/Gcam.EvidenceProbe.dll readout-field-family 42042001 samples",
+ "familyErrorBudget": 0.01,
+ "stochasticChecks": 8,
+ "criticalAbsZTwoSided": 3.227,
+ "exactIdentityRows": 160,
+ "exactIdentityViolations": 0,
+ "checks": [
+  {
+   "module": "Baseline",
+   "bound": "BareCrystalAllFaces",
+   "doseMicroSvPerH": 0.1,
+   "outerSeeds": 16,
+   "incident": {
+    "observed": 390762,
+    "expected": 391312.6,
+    "z": -0.88
+   },
+   "scored": {
+    "observed": 67929,
+    "expected": 68758.5,
+    "z": -1.822,
+    "referenceEfficiency": 0.175712,
+    "referenceHistories": 160000
+   }
+  },
+  {
+   "module": "Baseline",
+   "bound": "FrontOnlyThroughMask",
+   "doseMicroSvPerH": 0.1,
+   "outerSeeds": 16,
+   "incident": {
+    "observed": 73272,
+    "expected": 73345.0,
+    "z": -0.269
+   },
+   "scored": {
+    "observed": 732,
+    "expected": 747.2,
+    "z": -0.461,
+    "referenceEfficiency": 0.010188,
+    "referenceHistories": 160000
+   }
+  },
+  {
+   "module": "Sharp",
+   "bound": "BareCrystalAllFaces",
+   "doseMicroSvPerH": 0.1,
+   "outerSeeds": 16,
+   "incident": {
+    "observed": 696763,
+    "expected": 696986.3,
+    "z": -0.267
+   },
+   "scored": {
+    "observed": 140821,
+    "expected": 140503.7,
+    "z": 0.4,
+    "referenceEfficiency": 0.201588,
+    "referenceHistories": 160000
+   }
+  },
+  {
+   "module": "Sharp",
+   "bound": "FrontOnlyThroughMask",
+   "doseMicroSvPerH": 0.1,
+   "outerSeeds": 16,
+   "incident": {
+    "observed": 164257,
+    "expected": 165026.2,
+    "z": -1.894
+   },
+   "scored": {
+    "observed": 1528,
+    "expected": 1549.2,
+    "z": -0.379,
+    "referenceEfficiency": 0.009388,
+    "referenceHistories": 160000
+   }
+  }
+ ],
+ "allStochasticChecksPass": true,
+ "plannerRerun": "identical apart from timing fields (second full run of the same command)",
+ "scope": "Acquisition variability conditional on fixed successful source-line preparations; no localisation claim or offer change"
+}
