@@ -19,4 +19,9 @@
     <ProjectReference Include="..\Gcam.Studio.Services\Gcam.Studio.Services.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- The offscreen render tests check the modal focus boundary (ModalHost.IsInsideDialog) without a window. -->
+    <InternalsVisibleTo Include="Gcam.Studio.RenderTests" />
+  </ItemGroup>
+
 </Project>

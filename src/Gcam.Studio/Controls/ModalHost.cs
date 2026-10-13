@@ -1,7 +1,9 @@
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Media3D;
 using System.Windows.Threading;
 
 namespace Gcam.Studio.Controls;
@@ -43,11 +45,25 @@ public sealed class ModalHost : ContentControl
         };
     }
 
+    /// <summary>The focus boundary's containment test (offscreen render tests check it without a window).</summary>
+    internal bool IsInsideDialog(DependencyObject target) => _dialog is not null && IsInside(target);
+
+    // A popup's root has no visual parent, so the walk continues through the logical parent (popup root → Popup) and, for
+    // a popup without one (a tooltip's or context menu's own popup), through its placement target. Elements in a popup
+    // owned by a dialog control (a combo's drop-down) are then inside; desktop run 2026-10-13 found the visual-only walk
+    // refusing the drop-down's focus in the Options dialog.
     private bool IsInside(DependencyObject target)
     {
-        for (DependencyObject? node = target; node is not null; node = VisualTreeHelper.GetParent(node))
+        for (DependencyObject? node = target; node is not null; node = ParentOf(node))
             if (node == _dialog) return true;
         return false;
+    }
+
+    private static DependencyObject? ParentOf(DependencyObject node)
+    {
+        if (node is (Visual or Visual3D) && VisualTreeHelper.GetParent(node) is { } visual) return visual;
+        if (node is Popup { Parent: null, PlacementTarget: { } target }) return target;
+        return LogicalTreeHelper.GetParent(node);
     }
 
     private void FocusDefault()

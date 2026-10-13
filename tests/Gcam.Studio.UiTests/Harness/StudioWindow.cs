@@ -45,8 +45,15 @@ public sealed class StudioWindow(AutomationElement window)
         if (tab is not null) SelectLeftTab(tab);
     }
 
-    /// <summary>The in-window modal layer, in this window's single UIA tree.</summary>
-    public AutomationElement ModalLayer() => ById("Modal.Layer");
+    /// <summary>The in-window modal layer, in this window's single UIA tree. The dialog's own elements can be found a moment
+    /// before the layer group itself (recovery run 20261013-170634: the Options tab existed, the layer matched 0), so the
+    /// layer is waited for; more than one match stays a selector error.</summary>
+    public AutomationElement ModalLayer()
+    {
+        AutomationElement? layer = null;
+        WaitUntil(() => (layer = ById("Modal.Layer")) is not null, TimeSpan.FromSeconds(5), "modal layer in the tree");
+        return layer!;
+    }
 
     public void ConfirmReset(bool confirm)
     {
@@ -66,7 +73,6 @@ public sealed class StudioWindow(AutomationElement window)
     {
         Invoke("OpenOptions");
         WaitUntil(() => Exists("Options." + tab + "Tab"), TimeSpan.FromSeconds(5), "Options opened");
-        _ = ModalLayer();
         Assert.Equal("Options", ModalLayer().Current.Name);
         Select("Options." + tab + "Tab");
     }
@@ -155,18 +161,73 @@ public sealed class StudioWindow(AutomationElement window)
         else Pattern<ExpandCollapsePattern>(ById(id), ExpandCollapsePattern.Pattern).Expand();
     }
 
+    /// <summary>Selects a combo box item by name through its opened drop-down and reads the selection back. Throws
+    /// <see cref="InvalidOperationException"/> when the drop-down does not open (or does not stay open until the item is
+    /// selected), the item is absent, or the selection does not take; callers poll on that for late-published items. An item
+    /// that is already selected returns without opening the drop-down.</summary>
+    /// <remarks>A WPF combo exposes as items only the containers realised in its drop-down's items host, which lives in the
+    /// drop-down Popup (its own HWND). Run 20261013-165943 found no item under the Options dialog's combo ("No
+    /// FrontOnlyThroughMask in Acquisition.AmbientBound") and captured the drop-down closed, although Choose had not collapsed
+    /// it: ModalHost's focus boundary walked the visual tree only, where the Popup root has no parent, and refused the focus
+    /// the opening combo gives its selected item (fixed in ModalHost). The drop-down must therefore be open, and still open
+    /// when the item is selected, so a drop-down that cannot open fails here. The item is looked up under the combo first
+    /// and, while the drop-down is open, also through the combo's own item-container provider (which cannot match an element
+    /// of another control); the selection is then read back.</remarks>
     public void Choose(string id, string name)
     {
         var combo = ById(id);
+        if (SelectedName(combo) == name) return;
         var expand = Pattern<ExpandCollapsePattern>(combo, ExpandCollapsePattern.Pattern);
         expand.Expand();
-        var item = combo.FindFirst(TreeScope.Descendants, new AndCondition(
-            new PropertyCondition(AutomationElement.ControlTypeProperty, ControlType.ListItem),
-            new PropertyCondition(AutomationElement.NameProperty, name)))
-            ?? throw new InvalidOperationException($"No {name} in {id}");
-        Pattern<SelectionItemPattern>(item, SelectionItemPattern.Pattern).Select();
-        expand.Collapse();
+        AutomationElement? item = null;
+        try
+        {
+            WaitUntil(() => IsOpen(expand) && (item = DropDownItem(combo, name)) is not null, TimeSpan.FromSeconds(5), $"{name} in the open drop-down of {id}");
+        }
+        catch (TimeoutException e)
+        {
+            bool open = IsOpen(expand);
+            Collapse(expand);
+            throw new InvalidOperationException(open ? $"No {name} in {id}" : $"The drop-down of {id} did not open or stay open", e);
+        }
+        if (!IsOpen(expand))
+            throw new InvalidOperationException($"The drop-down of {id} closed before {name} was selected");
+        Pattern<SelectionItemPattern>(item!, SelectionItemPattern.Pattern).Select();
+        Collapse(expand);
+        try
+        {
+            WaitUntil(() => SelectedName(combo) == name, TimeSpan.FromSeconds(5), $"{id} selects {name}");
+        }
+        catch (TimeoutException e)
+        {
+            throw new InvalidOperationException($"{id} did not select {name} (selected: {SelectedName(combo) ?? "none"})", e);
+        }
         Thread.Sleep(150);
+    }
+
+    private static bool IsOpen(ExpandCollapsePattern expand) => expand.Current.ExpandCollapseState == ExpandCollapseState.Expanded;
+
+    private static AutomationElement? DropDownItem(AutomationElement combo, string name)
+    {
+        var realised = combo.FindFirst(TreeScope.Descendants, new AndCondition(
+            new PropertyCondition(AutomationElement.ControlTypeProperty, ControlType.ListItem),
+            new PropertyCondition(AutomationElement.NameProperty, name)));
+        if (realised is not null) return realised;
+        if (!combo.TryGetCurrentPattern(ItemContainerPattern.Pattern, out var p) || p is not ItemContainerPattern items) return null;
+        var item = items.FindItemByProperty(null, AutomationElement.NameProperty, name);
+        return item is not null && item.Current.ControlType == ControlType.ListItem ? item : null;
+    }
+
+    private static void Collapse(ExpandCollapsePattern expand)
+    {
+        if (expand.Current.ExpandCollapseState != ExpandCollapseState.Collapsed) expand.Collapse();
+        WaitUntil(() => expand.Current.ExpandCollapseState == ExpandCollapseState.Collapsed, TimeSpan.FromSeconds(2), "drop-down closed");
+    }
+
+    private static string? SelectedName(AutomationElement selector)
+    {
+        var selection = Pattern<SelectionPattern>(selector, SelectionPattern.Pattern).Current.GetSelection();
+        return selection.Length == 1 ? selection[0].Current.Name : null;
     }
 
     /// <summary>The selected item's name of a selector (combo box) — read back, not set.</summary>
