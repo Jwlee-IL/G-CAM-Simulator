@@ -21,7 +21,7 @@ combine a container's padding with a child's margin for the same edge.
 | Key | Value | Used for |
 |---|---|---|
 | `Size.Control` | 28 | min height of buttons, inputs, list rows |
-| `Size.Bar` | 48 | top bar height (`GridLength`); the status bar is one `Size.Control` line plus its top hairline (the `Size.StatusBar` key, 28, is no longer referenced) |
+| `Size.Bar` | 48 | top bar height (`GridLength`); the status bar is one `Size.Control` line plus its top hairline |
 | `Size.Caption` · `Size.CaptionButton` | 47 · 46 | `WindowChrome` caption height (`Size.Bar` − 1, so the bar's bottom line runs under the caption buttons) · caption-button width |
 | `Size.Control.Row` | 20 | a row action button inside a `Size.Control` list row (`Button.Icon.Row`: a `Size.Icon` glyph plus 4 on each side) |
 | `Size.ScrollBar` · `Size.ScrollGutter` | 8 · 12 | scroll bar width · the gutter every vertically scrolling viewer reserves at its right (4 gap + 8 bar), whether or not the bar shows |
@@ -103,7 +103,8 @@ right) holds the inputs changed rarely: Acquisition (seed), Detector (scintillat
 0.15 mm and backing 2 mm steel-equivalent facts; reflector gap, default 100 µm; Gain σ, default 3, `%` suffix; Gain seed,
 default 1) and Environment (photon H*(10), preset and bound captions, ambient bound, Background, default 0, `× signal`
 BSR suffix — detected background/source ratio at 200 keV — and the acquired ambient BSR). It edits a draft applied on OK;
-while data exist it shows the values read-only with the lock caption and one Close button. These inputs are disabled
+no button is the default, so Enter in a field neither applies nor discards the draft (Escape cancels); while data exist it
+shows the values read-only with the lock caption and one Close button. These inputs are disabled
 during acquisition and while acquired data exist (until Reset); a refused Start selects the tab holding the invalid
 input, or marks the cog for an Options input, and states the reason in the status bar (see Screen rules). Workspace
 activation follows `IsActive` as well as commands, so a UI Automation SelectionItem selection changes the centre and

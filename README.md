@@ -34,16 +34,16 @@ The evidence behind these numbers — conditions, limits, reproduce command and,
 it: [`docs/VV.Gcam.Evidence.md`](docs/VV.Gcam.Evidence.md) (EV-01, EV-11, EV-15, EV-17). Monte Carlo numbers are
 quoted over seed ensembles, not single runs; the seed lists, recipes and per-metric summaries are in
 [`samples/evidence/`](samples/evidence/).
-The full working log of all 59 study themes: [`docs/AGENTS.Findings.md`](docs/AGENTS.Findings.md).
+The full working log of all 69 study themes: [`docs/AGENTS.Findings.md`](docs/AGENTS.Findings.md).
 
 ## What it demonstrates
 
 | | |
 |---|---|
-| **Physics engine** | Photon transport with directional biasing (ratio to 4π 0.999 ± 0.006 over 32 seeds, with 100× fewer photons), Klein–Nishina Compton in the crystal, tabulated tungsten / scintillator cross sections, cross-correlation and **MLEM** decoders. One JSON config describes a scenario; 41 CLI studies sweep it. |
-| **Tests that check physics, not snapshots** | 550+ .NET tests. Each transport stage is held to a closed form — biased-source weight = the detector's solid angle, crystal stopping 1 − exp(−μt/cosθ), mask transmission = open fraction + tungsten leak, Compton energy conservation, decoder peak on an analytic shadow — with k·σ tolerances that follow the sample size; study-level tests assert physics (MLEM is non-negative and out-resolves cross-correlation, ghosts appear outside the fully-coded field) rather than pinning output numbers. A mutation check (Poisson off-by-one, half-pixel flood origin, slant path ignored) fails each one. |
+| **Physics engine** | Photon transport with directional biasing (ratio to 4π 0.999 ± 0.006 over 32 seeds, with 100× fewer photons), Klein–Nishina Compton in the crystal, tabulated tungsten / scintillator cross sections, cross-correlation and **MLEM** decoders. One JSON config describes a scenario; 49 CLI study commands sweep it. |
+| **Tests that check physics, not snapshots** | Over 1,000 .NET tests in the normal suite ([current inventory](docs/VV.Studio.md#current-test-inventory), [catalog](docs/VV.Tests.md)). Each transport stage is held to a closed form — biased-source weight = the detector's solid angle, crystal stopping 1 − exp(−μt/cosθ), mask transmission = open fraction + tungsten leak, Compton energy conservation, decoder peak on an analytic shadow — with k·σ tolerances that follow the sample size; study-level tests assert physics (MLEM is non-negative and out-resolves cross-correlation, ghosts appear outside the fully-coded field) rather than pinning output numbers. A mutation check (Poisson off-by-one, half-pixel flood origin, slant path ignored) fails each one. |
 | **Hardware path** | CR-RC⁴ / trapezoidal shapers and a baseline restorer in SystemVerilog. The RTL (cocotb + Icarus) and the native C# `Waveform` model (xUnit golden values) are each held **bit-exact** to one shared fixed-point reference (Q12 CR-RC state; legacy F=0 goldens retained), both in CI. Pipelining raised Fmax from 59 to 119 MHz (ECP5, nextpnr timing). |
-| **Viewer** | GCAM Studio: live list-mode acquisition (Start / Stop / Continue / Reset over live time, with physical inputs locked until Reset); Imaging, Spectrum, Waveform and Detector workspaces — every count is one independent Compton-transported event, so in-crystal scatter mispositioning is part of the image. WPF + CommunityToolkit.Mvvm, split into `Studio.Core` (no WPF) → `Studio.Services` (only layer touching the engine) → `Studio` (views), so the boundaries are compiler-enforced; ViewModel tests plus a UI-automation harness with independent oracles. |
+| **Viewer** | GCAM Studio: live list-mode acquisition (Start / Stop / Continue / Reset over live time, with physical inputs locked until a confirmed Reset); Imaging, Spectrum, Waveform and Detector workspaces — every count is one independent Compton-transported event, so in-crystal scatter mispositioning is part of the image. Scene, optics and readout inputs sit in left tabs and seed, chain and environment settings in an Options dialog; a refused Start states its reason in the status bar. WPF + CommunityToolkit.Mvvm, split into `Studio.Core` (no WPF) → `Studio.Services` (only layer touching the engine) → `Studio` (views), so the boundaries are compiler-enforced; ViewModel tests plus a UI-automation harness with independent oracles. |
 | **Self-correction on record** | When the crystal model moved to physical cross sections, earlier multi-isotope results got weaker; they were re-run and revised in place ([theme 52](docs/AGENTS.Findings.Part2.md#52-crystal-attenuation-from-tabulated-cross-sections--crystalmaterial-2026-10-01)), not left standing. |
 
 ## GCAM Studio
@@ -52,7 +52,15 @@ Imaging workspace, Cs-137 500 µCi + Co-60 200 µCi at 1 m, dark theme (desktop 
 
 ![GCAM Studio Imaging desktop with two isotope sources](docs/assets/studio-desktop-imaging.png)
 
-GCAM Studio includes an experimental four-output GAGG readout for the 12×12 Baseline reference head. Select Baseline, set ambient and BSR to zero explicitly, select FourOutputAnger and Prepare before Start. Detector shows the resolved SiPM/circuit and independent flood/LUT calibration; Waveform shows four realised lanes and their sum. Spectrum and Imaging use the same held/LUT-assigned records with explicit keV windows. Legacy gain/chain, stripping and ideal/rate replay are inactive for this mode. Other heads and physical readout with background remain separate tasks.
+<sub>Captured 2026-10-02, before the 2026-10-13 redesign (themed caption, left tabs, Options dialog behind the cog).</sub>
+
+GCAM Studio includes an experimental four-output GAGG readout. Set ambient and BSR to zero in Options → Environment,
+then in the left Detector tab select FourOutputAnger and Prepare before Start; each calibration line is offered or refused
+from an embedded, hash-pinned record (a module matching no preset calibrates locally, unvalidated), and preparation
+progress shows in the status bar. Detector gains SiPM, Anger, Calibration and Diagnostics view tabs and Waveform the four
+outputs with their sum (an empty state under DirectCrystal). Spectrum and Imaging use the same held/LUT-assigned records
+with an explicit keV window (±10 / 15 / 20 / 25 % presets). Legacy gain/chain, stripping, pile-up and ideal/rate replay are
+inactive for this mode; physical readout with background remains a separate task.
 
 ## What is a gamma camera?
 
@@ -94,9 +102,9 @@ IEC 62304, no compliance claimed), and they are self-contained:
 | [Overview](docs/VV.Gcam.Overview.md) | the whole set on one page — **start here** |
 | [URS](docs/VV.Gcam.URS.md) | 19 user needs, use conditions from standards, real industrial reference sources, benchmark imagers |
 | [PRS](docs/VV.Gcam.PRS.md) | 51 product requirements, each with its evidence and grade (simulated / analytical / standard / open), traced to the needs; Korean law |
-| [Evidence](docs/VV.Gcam.Evidence.md) | 33 simulation and design-model results behind those numbers, each with the command that reproduces it and, where one exists, the test that pins it |
-| [Limitations](docs/VV.Gcam.Limitations.md) | 9 things the concept cannot do, every fix and its cost |
-| [Decisions](docs/VV.Gcam.Decisions.md) | 40 decisions with the author's reasons, and what is still open |
+| [Evidence](docs/VV.Gcam.Evidence.md) | 36 simulation and design-model results behind those numbers, each with the command that reproduces it and, where one exists, the test that pins it |
+| [Limitations](docs/VV.Gcam.Limitations.md) | 11 things the concept cannot do, every fix and its cost |
+| [Decisions](docs/VV.Gcam.Decisions.md) | 57 decisions with the author's reasons, and what is still open |
 | [Studio SRS](docs/VV.Studio.SRS.md) · [SDS](docs/VV.Studio.SDS.md) · [V&V](docs/VV.Studio.md) | the engineering viewer as a software item: requirements, design record, test traceability, UI-automation validation |
 
 ## A 10-minute tour for reviewers
@@ -150,8 +158,9 @@ python rtl/run_cocotb.py
   camera**, and are reported that way.
 - **Depth is weak at a distance.** A single coded-aperture view ranges a source only in the near field, and the
   viewer's focus sweep is a biased descriptive measure (theme 57) — distance comes from a rangefinder.
-- The detector is read out as one channel per crystal; the four-channel Anger-type readout of a real SiPM array
-  (light sharing, crystal identification) is not modelled yet.
+- By default the detector is read out as one channel per crystal. The four-output Anger-type readout of a real SiPM
+  array (light sharing, crystal identification) is modelled only as an experimental study and Studio option, on assumed
+  optics and unlimited SiPM microcells ([Evidence EV-36](docs/VV.Gcam.Evidence.md), Limitations LIM-11).
 
 ## How it was built
 

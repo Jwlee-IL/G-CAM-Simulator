@@ -4,7 +4,7 @@ Scope: automated UI runs against the real GCAM Studio window (`tests/Gcam.Studio
 ViewModels and geometry are not covered here (see [DESIGN.Architecture](DESIGN.Architecture.md#testing-strategy));
 what the UI runs verify is traced in [VV.Studio](VV.Studio.md).
 
-Current suite: 13 headless oracle cases plus 14 opt-in desktop cases (12 regression scenarios, plot gate and survey), 27 total. The retained final desktop run passed 27/27; it is not re-executed by a normal test run. Start / Stop / Continue / Reset and all four workspaces are covered. Source drag and stale-result marking were withdrawn; the initial charter, pilot and coverage tables below are historical records. Current totals: [VV.Studio](VV.Studio.md#current-test-inventory).
+Current suite (2026-10-13): 24 headless oracle cases plus 29 opt-in desktop cases — 26 regression scenarios (`ScenarioTests` 6, `WorkspaceScenarioTests` 5, `MlemScenarioTests` 6, `ReadoutScenarioTests` 8 of which one is the long opt-in, `ChromeScenarioTests` 1), the pilot, the plot gate and the survey — 53 total. The retained final desktop run (2026-10-02) passed 27/27 of the suite as it then stood (13 oracle, 12 scenarios, plot gate, survey); it is not re-executed by a normal test run. Start / Stop / Continue / Reset and all four workspaces are covered. Source drag and stale-result marking were withdrawn; the initial charter, pilot and coverage tables below are historical records. Current totals: [VV.Studio](VV.Studio.md#current-test-inventory).
 
 The work goes through stages, and a stage is not skipped because a later one looks easy. Each stage has an exit
 condition and a record below.
@@ -80,7 +80,7 @@ therefore use AutomationIds and require exactly one match.
 | Contract | Implementation | Find | Act | Read back the input | Judge the product's handler |
 |---|---|---|---|---|---|
 | Button | `Button` (Add / Remove source, Run, Cancel, Clear, Delete, theme) | AutomationId | `InvokePattern.Invoke` | — | the effect, e.g. source rows 1 → 2 |
-| Tool toggle | `RadioButton.Icon` (Pan / Distance / Angle / ROI: `ToolPan`, `ToolDistance`, `ToolAngle`, `ToolRoi`; a segmented `RadioButton.Segment` until 2026-10-13) | AutomationId | `SelectionItemPattern.Select` | `IsSelected` | tool hint text changes |
+| Tool toggle | `IconToggle` (a `RadioButton`, class name unchanged) with `RadioButton.Icon` (Pan / Distance / Angle / ROI: `ToolPan`, `ToolDistance`, `ToolAngle`, `ToolRoi`; a segmented `RadioButton.Segment` until 2026-10-13) | AutomationId | `SelectionItemPattern.Select` | `IsSelected` | tool hint text changes |
 | Text field | `TextBox` (X, Y, distance, activity, photons) | AutomationId | `ValuePattern.SetValue` | `ValuePattern.Value` | **only after focus leaves** — the binding commits on LostFocus; the source row label then updates |
 | Combo | `ComboBox` (isotope) | AutomationId | `ExpandCollapse.Expand` → item `Select` → `Collapse` | selection | source row label |
 | List row | `ListBoxItem` (sources, measurements) | list AutomationId → children | `SelectionItemPattern.Select` | `IsSelected` | row name is the item's description |

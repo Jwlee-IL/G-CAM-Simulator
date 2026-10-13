@@ -46,10 +46,9 @@ workspace right panels and the Options dialog use the same language.
 | Button | implicit | raised fill · hover · pressed · disabled; Cancel / Discard in the Reset confirmation, OK / Cancel / Close in the Options dialog, "Choose readout…" in the empty readout state |
 | Icon button | `Button.Icon` (`Button.Theme` for the sun / moon toggle) | square `Size.Control`, no content padding (`Pad.None`), a `Path` at `Size.Icon` in the button's foreground, the implicit button's raised frame in every place and theme (subdued when disabled, border highlight on focus); a tooltip and `AutomationProperties.Name` are required. Used for secondary actions: theme, Reset, the Options cog (with the non-default badge, warning colour after an Options refusal), add / remove source, clear all measurements, cancel prepare / sweep, Waveform latest / next. Start / Continue / Stop, Prepare and Sweep focus keep icon + text |
 | Row action | `Button.Icon.Row` | `Button.Icon` without the resting frame at `Size.Control.Row` (20), so it fits a list row; hover, press and the focus border still show. The measurement row's delete (✕, `Icon.Cancel`), visible on the selected row and under the pointer, its column always reserved |
-| Icon toggle | `RadioButton.Icon` | one-of-several tool choice drawn like `Button.Icon`; checked = accent border + `Accent.Subtle` fill + accent glyph (border and fill change, not colour alone); keyboard focus = focus border plus `FocusVisual`. The Measurements tools Pan / Distance / Angle / ROI (`Gap.Tool` apart). No access keys (see VV.Studio AN-16) |
+| Icon toggle | `RadioButton.Icon` on `IconToggle` | one-of-several tool choice drawn like `Button.Icon`; checked = accent border + `Accent.Subtle` fill + accent glyph (border and fill change, not colour alone); keyboard focus = focus border plus `FocusVisual`. The Measurements tools Pan / Distance / Angle / ROI (`Gap.Tool` apart). An icon has no text to carry an underlined access key, so the window binds Alt+P / D / A / R to the tool selection (acting while Imaging is shown and no modal layer is open); each toggle names its key in the tooltip ("Distance (Alt+D)") and in `AutomationProperties.AccessKey`, which `IconToggle`'s peer reports to UI Automation |
 | Caption button | `Button.Caption`, `Button.Caption.Close` | `Size.CaptionButton` wide, the full caption height, transparent at rest, hover `Bg.Hover`, pressed `Line`; Close hovers `Brush.Caption.Close.Hover` with a white glyph; a 1 px focus cue inset by `Gap.Caption.Focus`; built by `CaptionButtons` |
 | Primary button | `Button.Primary` | accent fill, `OnAccent` text — the acquisition action (Start / Continue, or Stop while acquiring) and Prepare, which starts a long computation (author 2026-10-13) |
-| Ghost button | `Button.Ghost` | borderless, for bars and panel headers |
 | TextBox | implicit | mono text; unit suffix via `Tag` (`Tag="mm"`); accent 2 px border on focus; error border + tooltip when `Validation.HasError`; themed caret and selection |
 | CheckBox | implicit | themed box and visible check mark, focus ring, hover border and disabled state; used for Spectrum log Y / pile-up; DockPanel constrains wrapping content to the available width |
 | ComboBox / ComboBoxItem | implicit | full template including popup, arrow and item highlight |
@@ -65,7 +64,7 @@ workspace right panels and the Options dialog use the same language.
 | Panel / Divider / Chip | `Panel.Surface` / `Divider` / `Chip`, `Chip.Warning` | `Border` styles for layout blocks; the warning chip pairs with `Text.CaptionWarning` |
 | Header row | `PanelHeader` (DockPanel) | title left, actions / chips right; min height `Size.Control`, `Gap.Title` below |
 | Icon | `Icon.Play`, `Icon.Stop`, `Icon.Reset`, `Icon.Add`, `Icon.Remove`, `Icon.Cancel`, `Icon.Clear` (trash can), `Icon.Sun`, `Icon.Moon`, `Icon.Settings` (cog), `Icon.Pan`, `Icon.Ruler`, `Icon.Angle`, `Icon.Roi`, `Icon.Minimize`, `Icon.Maximize`, `Icon.Restore`, `Icon.Close`, … (Geometry, 12 × 12) | drawn with a `Path` in the button's foreground — no glyph characters as icons |
-| Modal layer | `ModalHost` / `ModalLayer` | an in-window layer over the whole window (one HWND and UIA tree): themed scrim `Brush.Modal.Scrim`, underlying content disabled, keyboard navigation cycles inside, focus restored on close, Escape = the host's cancel command; content arrives as a view model with a DataTemplate; AutomationId `Modal.Layer`, Name from the hosted content (`DialogName`). Used by the Reset confirmation (TODO-44) and the Options dialog (TODO-45: `Size.Options` high on every tab, a reserved lock-caption line, tabs as a segmented picker, Cancel the default button and OK beside it, or one Close while the inputs are locked) |
+| Modal layer | `ModalHost` / `ModalLayer` | an in-window layer over the whole window (one HWND and UIA tree): themed scrim `Brush.Modal.Scrim`, underlying content disabled, keyboard navigation cycles inside, focus restored on close, Escape = the host's cancel command; content arrives as a view model with a DataTemplate; AutomationId `Modal.Layer`, Name from the hosted content (`DialogName`). Used by the Reset confirmation (TODO-44) and the Options dialog (TODO-45: `Size.Options` high on every tab, a reserved lock-caption line, tabs as a segmented picker, Cancel and OK, or one Close while the inputs are locked; no default button — the author, 2026-10-13: Enter in a field must neither apply nor discard a draft; Escape cancels) |
 
 Add a shared style only when two or more views need it; otherwise keep it in the view's `Resources`, still
 built from tokens.
@@ -236,6 +235,14 @@ in the UIA tree (`Optics.Section`, `Detector.Section`, `Readout.State`, `Detecto
 replaced by tabs and rows. `FocusRequest.Counter` is an attached property: when the bound counter changes, the element
 takes keyboard focus — "Choose readout…" in an empty readout view selects the left Detector tab and focuses the readout
 combo through it.
+
+### IconToggle
+
+A `RadioButton` for icon-only tool choices (the Measurements tools, style `RadioButton.Icon`). An icon has no text for
+an underlined access key, so the key is a window key binding, named in the tooltip and in `AutomationProperties.AccessKey`.
+WPF's stock `UIElementAutomationPeer` returns an empty access key whenever that property is set (it reports only an
+underlined `AccessText` character); `IconToggle`'s peer returns the property, and keeps the RadioButton control type and
+class name, so selectors and UIA clients see the same element as before.
 
 ## Known dark-theme pitfalls (handled)
 
