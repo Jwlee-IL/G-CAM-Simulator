@@ -28,6 +28,8 @@ public sealed class ListModeSource : IDisposable
     private readonly ComptonCrystalDetector _detector = null!;
     private readonly AmbientAcquisition? _physical;
     private DetectedEvent? _fixedPending;
+    private RecordedTransportEvent? _fixedRecordedPending, _recordedSignalPending;
+    public RecordedTransportEvent? LastRecordedEvent { get; private set; }
     private readonly double _emissionRateCps;
     private readonly double _bsr, _darkRate;
     private readonly ListModeBackground? _background;
@@ -56,28 +58,28 @@ public sealed class ListModeSource : IDisposable
     // Pre-optical interaction sites (TODO-19): collected for the current history only when recording is requested.
     private readonly bool _record;
     private readonly List<InteractionSite> _historySites = new(16);
-    private InteractionSite[] _lastInteractions = [];
 
     /// <summary>The pre-optical interaction sites (XYZ, time, energy) of the event last returned by <see cref="Advance"/>,
     /// all photons of a decay merged; empty unless the source was built with <c>recordInteractions</c>. Recording is pure
     /// bookkeeping: the returned event stream is identical with and without it.</summary>
-    public IReadOnlyList<InteractionSite> LastInteractions => _lastInteractions;
+    public IReadOnlyList<InteractionSite> LastInteractions => LastRecordedEvent?.Sites ?? [];
 
     /// <param name="configuration">The scenario (cloned).</param>
     /// <param name="recordInteractions">Keep each event's pre-optical interaction sites in <see cref="LastInteractions"/>
-    /// (signal-only scenes: refused with an ambient field, a relative background or dark counts).</param>
-    public ListModeSource(SimulationConfig configuration, bool recordInteractions = false)
+    /// (source/ambient scenes: relative background and electronic dark counts are still refused).</param>
+    public ListModeSource(SimulationConfig configuration, bool recordInteractions = false, bool physicalModule = false)
     {
         ArgumentNullException.ThrowIfNull(configuration);
         var config = configuration.Clone();
         ReadoutGuard.RequireDirect(config);
         _record = recordInteractions;
-        if (_record && (config.Ambient is not null || (config.Background?.BackgroundToSignalRatio ?? 0) > 0
-            || (config.Background?.DarkCountRateKcps ?? 0) > 0))
-            throw new NotSupportedException("Interaction recording is defined for signal-only list-mode scenes.");
+        if (_record && (config.Background?.BackgroundToSignalRatio ?? 0) > 0)
+            throw new NotSupportedException("Physical interaction recording requires BSR = 0 in this stage.");
+        if (_record && (config.Background?.DarkCountRateKcps ?? 0) > 0)
+            throw new NotSupportedException("Physical readout does not support electronic dark arrivals: gamma interaction sites are unavailable.");
         if (config.Ambient is not null)
         {
-            _physical = new AmbientAcquisition(config);
+            _physical = new AmbientAcquisition(config, _record, physicalModule);
             return;
         }
         _bsr = config.Background?.BackgroundToSignalRatio ?? 0;
@@ -154,6 +156,7 @@ public sealed class ListModeSource : IDisposable
     public DetectedEvent? Advance(CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
+        LastRecordedEvent = null;
         if (_physical is not null) throw new InvalidOperationException("Absolute ambient acquisitions require AdvanceUntil with a fixed live-time horizon.");
         // The disabled path consumes precisely the legacy RNG draws and preserves every source record.
         if (_background is null)
@@ -165,6 +168,7 @@ public sealed class ListModeSource : IDisposable
         if (_pendingSignal is null)
         {
             _pendingSignal = AdvanceSignal();
+            _recordedSignalPending = LastRecordedEvent;
             if (_pendingSignal is null) return null;
         }
         if (double.IsNaN(_nextBackgroundTime))
@@ -188,6 +192,8 @@ public sealed class ListModeSource : IDisposable
             return dark;
         }
         var next = _pendingSignal;
+        LastRecordedEvent = _recordedSignalPending;
+        _recordedSignalPending = null;
         _pendingSignal = null;
         ArrivalTimeS = next.Value.ArrivalTimeS;
         return next;
@@ -226,8 +232,9 @@ public sealed class ListModeSource : IDisposable
         if (_rejection.NextDouble() >= hit.Weight / WeightBound) return null;
         EventsAccepted++;
         _signalTime += -Math.Log(1 - _time.NextDouble()) / SourceRateCps;
-        if (_record) _lastInteractions = _historySites.ToArray();
-        return new DetectedEvent(hit.X, hit.Y, hit.Deposit, _signalTime);
+        var result = new DetectedEvent(hit.X, hit.Y, hit.Deposit, _signalTime);
+        if (_record) LastRecordedEvent = new(result, _historySites, TransportOrigin.Signal);
+        return result;
     }
 
     private DetectedEvent? AdvanceDecay()
@@ -264,8 +271,9 @@ public sealed class ListModeSource : IDisposable
         foreach (var (x, y, e) in _merged)
             if (e > best) { best = e; bx = x; by = y; }
         _signalTime += -Math.Log(1 - _time.NextDouble()) / SourceRateCps;
-        if (_record) _lastInteractions = _historySites.ToArray();
-        return new DetectedEvent(bx, by, total, _signalTime);
+        var result = new DetectedEvent(bx, by, total, _signalTime);
+        if (_record) LastRecordedEvent = new(result, _historySites, TransportOrigin.Signal);
+        return result;
     }
 
     /// <summary>One bounded history toward a fixed live-time horizon. Repeat until ArrivalTimeS reaches the horizon.
@@ -273,16 +281,25 @@ public sealed class ListModeSource : IDisposable
     public DetectedEvent? AdvanceUntil(double horizonS, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
+        LastRecordedEvent = null;
         if (_physical is not null)
         {
             var next = _physical.AdvanceUntil(horizonS, cancellationToken);
             ArrivalTimeS = _physical.TimeS;
+            LastRecordedEvent = _physical.LastRecordedEvent;
             return next;
         }
         if (!double.IsFinite(horizonS) || horizonS < ArrivalTimeS) throw new ArgumentOutOfRangeException(nameof(horizonS));
-        if (_fixedPending is null) _fixedPending = Advance(cancellationToken);
+        if (_fixedPending is null)
+        {
+            _fixedPending = Advance(cancellationToken);
+            _fixedRecordedPending = LastRecordedEvent;
+        }
+        LastRecordedEvent = null;
         if (_fixedPending is not { } pending) return null;
         if (pending.ArrivalTimeS > horizonS) { ArrivalTimeS = horizonS; return null; }
+        LastRecordedEvent = _fixedRecordedPending;
+        _fixedRecordedPending = null;
         _fixedPending = null; ArrivalTimeS = pending.ArrivalTimeS; return pending;
     }
 

@@ -17,6 +17,12 @@ public sealed class SimulationService(TimeProvider? timeProvider = null, IReadou
         detector ??= new DetectorSettings();
         var config = BuildConfig(scene, optics, detector, backgroundToSignalRatio);
         if (seed is { } fixedSeed) config.Seed = fixedSeed;
+        return CreateSession(scene, optics, detector, config, liveTimeS, speed);
+    }
+
+    private IAcquisitionSession CreateSession(IReadOnlyList<SceneSource> scene, OpticsSettings optics,
+        DetectorSettings detector, SimulationConfig config, double liveTimeS, double speed)
+    {
         if (detector.ReadoutMode == ReadoutMode.DirectCrystal)
             return new AcquisitionSession(config, detector, liveTimeS, speed, timeProvider ?? TimeProvider.System);
         // Start carries the captured resolved policy of the bank (its network solve); the shared prepared network is
@@ -50,10 +56,9 @@ public sealed class SimulationService(TimeProvider? timeProvider = null, IReadou
         if (!(liveTimeS > 0) || !double.IsFinite(liveTimeS)) throw new ArgumentOutOfRangeException(nameof(liveTimeS));
         if (!(speed > 0) || !double.IsFinite(speed)) throw new ArgumentOutOfRangeException(nameof(speed));
         detector ??= new DetectorSettings();
-        if (detector.ReadoutMode != ReadoutMode.DirectCrystal) throw new NotSupportedException("Physical readout requires ambient and BSR at zero: ambient interaction records are unavailable.");
         var config = BuildConfig(scene, optics, detector, backgroundToSignalRatio, ambient);
         if (seed is { } fixedSeed) config.Seed = fixedSeed;
-        return new AcquisitionSession(config, detector, liveTimeS, speed, timeProvider ?? TimeProvider.System);
+        return CreateSession(scene, optics, detector, config, liveTimeS, speed);
     }
 
     public static SimulationConfig BuildConfig(IReadOnlyList<SceneSource> scene, OpticsSettings optics,
@@ -62,7 +67,8 @@ public sealed class SimulationService(TimeProvider? timeProvider = null, IReadou
         ArgumentNullException.ThrowIfNull(detector);
         if (detector.ReadoutMode != ReadoutMode.DirectCrystal)
         {
-            if (ambient is not null || backgroundToSignalRatio != 0) throw new NotSupportedException("Physical readout requires ambient and BSR at zero: background interaction records are unavailable.");
+            if (ReadoutPolicy.AcquisitionError(scene.Count, backgroundToSignalRatio) is { } refusal)
+                throw new NotSupportedException(refusal);
             if (detector.ReadoutMode != ReadoutMode.FourOutputAnger) throw new NotSupportedException("Studio supports the experimental four-output preset only.");
         }
         string? error = OpticsPolicy.Validate(optics, detector.ReflectorGapMm)

@@ -328,6 +328,23 @@ public sealed class ReadoutRenderTests(ITestOutputHelper output)
                 Capture("ReadoutPanel", pending, $"{name}-preparing", theme, size);
                 pending.IsPreparingReadout = false; pending.ReadoutProgressText = null;
                 Capture("ReadoutPanel", failed, $"{name}-failed", theme, size);
+                var fieldOnly = Model(optics, null);
+                fieldOnly.Sources.Clear(); fieldOnly.AmbientDoseRateMicroSvPerHour = .1;
+                fieldOnly.StartCommand.ExecuteAsync(null).GetAwaiter().GetResult();
+                Assert.Equal("Start refused: " + ReadoutPolicy.FieldOnlyMessage, fieldOnly.Status);
+                Capture("ReadoutPanel", fieldOnly, $"{name}-field-only-refusal", theme, size);
+                var fieldPending = Model(optics, null);
+                fieldPending.AmbientDoseRateMicroSvPerHour = .1;
+                fieldPending.StartCommand.ExecuteAsync(null).GetAwaiter().GetResult();
+                Assert.Contains("Prepare", fieldPending.ReadoutMessage);
+                Capture("ReadoutPanel", fieldPending, $"{name}-ambient-missing-bank", theme, size);
+                var fieldReady = Model(optics, template);
+                fieldReady.AmbientDoseRateMicroSvPerHour = .1;
+                fieldReady.AmbientGeometry = AmbientGeometry.BareCrystalAllFaces;
+                Assert.True(fieldReady.IsReadoutBankReady);
+                Assert.Contains("Unmasked all-face module approximation", fieldReady.AmbientEnvironmentLabel);
+                Assert.Contains("unvalidated", fieldReady.ReadoutAssumptions);
+                Capture("ReadoutPanel", fieldReady, $"{name}-ambient-ready", theme, size);
             }
         }
 

@@ -9,6 +9,8 @@ internal sealed class AmbientAcquisition : IDisposable
     private readonly ListModeSource? _source;
     private readonly AmbientPhotonProcess _ambient;
     private DetectedEvent? _pending;
+    private RecordedTransportEvent? _recordedPending;
+    public RecordedTransportEvent? LastRecordedEvent { get; private set; }
     private readonly ListModeBackground? _darkPlacement;
     private readonly IRandom? _darkTime;
     private readonly double _darkRate;
@@ -24,14 +26,14 @@ internal sealed class AmbientAcquisition : IDisposable
     public long EventsAccepted => _source?.EventsAccepted ?? 0;
     public double DetectedWeight => _source?.DetectedWeight ?? 0;
 
-    public AmbientAcquisition(SimulationConfig configuration)
+    public AmbientAcquisition(SimulationConfig configuration, bool recordInteractions = false, bool physicalModule = false)
     {
-        _ambient = new AmbientPhotonProcess(configuration);
+        _ambient = new AmbientPhotonProcess(configuration, recordInteractions, physicalModule);
         bool empty = configuration.Sources is { Length: 0 } || configuration.Sources is null && configuration.Source.ActivityBq == 0;
         if (!empty)
         {
             var legacy = configuration.Clone(); legacy.Ambient = null;
-            _source = new ListModeSource(legacy);
+            _source = new ListModeSource(legacy, recordInteractions);
         }
         else
         {
@@ -52,16 +54,18 @@ internal sealed class AmbientAcquisition : IDisposable
     public DetectedEvent? AdvanceUntil(double horizonS, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
+        LastRecordedEvent = null;
         if (!double.IsFinite(horizonS) || horizonS < TimeS) throw new ArgumentOutOfRangeException(nameof(horizonS));
         if (_source is not null && _pending is null)
         {
             _pending = _source.Advance(cancellationToken);
+            _recordedPending = _source.LastRecordedEvent;
             if (_pending is null) return null;
         }
         double cutoff = Math.Min(Math.Min(horizonS, _pending?.ArrivalTimeS ?? horizonS), _nextDark);
         var ambient = _ambient.AdvanceUntil(cutoff, cancellationToken);
         TimeS = _ambient.TimeS;
-        if (ambient is not null) return ambient;
+        if (ambient is not null) { LastRecordedEvent = _ambient.LastRecordedEvent; return ambient; }
         if (TimeS < cutoff) return null;
         if (_nextDark <= horizonS && _nextDark <= (_pending?.ArrivalTimeS ?? double.PositiveInfinity))
         {
@@ -70,6 +74,7 @@ internal sealed class AmbientAcquisition : IDisposable
         }
         if (_pending is { } signal && signal.ArrivalTimeS <= horizonS)
         {
+            LastRecordedEvent = _recordedPending; _recordedPending = null;
             _pending = null; TimeS = signal.ArrivalTimeS; return signal;
         }
         TimeS = horizonS; return null;

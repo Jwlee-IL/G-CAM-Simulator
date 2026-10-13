@@ -64,7 +64,7 @@ public sealed class ReadoutViewModelTests
         var vm = Model(); vm.Optics = Head; vm.ReadoutMode = ReadoutMode.FourOutputAnger;
         vm.AmbientDoseRateMicroSvPerHour = 1; vm.BackgroundToSignalRatio = .5;
         await vm.StartCommand.ExecuteAsync(null);
-        Assert.Contains("zero", vm.ReadoutMessage); Assert.Equal(1, vm.AmbientDoseRateMicroSvPerHour); Assert.Equal(.5, vm.BackgroundToSignalRatio);
+        Assert.Equal(ReadoutPolicy.BsrMessage, vm.ReadoutMessage); Assert.Equal(1, vm.AmbientDoseRateMicroSvPerHour); Assert.Equal(.5, vm.BackgroundToSignalRatio);
         vm.AmbientDoseRateMicroSvPerHour = 0; vm.BackgroundToSignalRatio = 0;
         await vm.StartCommand.ExecuteAsync(null);
         Assert.Contains("Prepare", vm.ReadoutMessage); Assert.Contains("661.7 keV", vm.ReadoutMessage); Assert.Null(vm.Snapshot);

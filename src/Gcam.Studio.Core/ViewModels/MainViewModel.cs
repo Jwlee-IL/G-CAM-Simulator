@@ -232,7 +232,9 @@ public sealed partial class MainViewModel : ObservableObject
     public AmbientPreset AmbientPreset => AmbientPreset.TerrestrialUnscear2000V1;
     public string AmbientPresetName => AmbientPreset.Name;
     public string AmbientEnvironmentLabel => AmbientDoseRateMicroSvPerHour == 0 ? "ideal environment"
-        : $"{AmbientPreset.Id} · {(AmbientGeometry == AmbientGeometry.FrontOnlyThroughMask ? "front-only bound" : "bare-crystal bound")}";
+        : $"{AmbientPreset.Id} · {Snapshot?.AmbientIncidence ?? (IsPhysicalReadout
+            ? AmbientIncidenceDescription.For(AmbientGeometry, true)
+            : AmbientGeometry == AmbientGeometry.FrontOnlyThroughMask ? "front-only bound" : "bare-crystal bound")}";
     public string AmbientBsrReadout => AmbientDoseRateMicroSvPerHour == 0 ? "off"
         : Snapshot?.AmbientBackgroundToSignalRatio is { } ratio ? $"{ratio:G4} × signal"
         : Sources.Count == 0 ? "undefined (source-free)" : "available during acquisition";
@@ -478,16 +480,16 @@ public sealed partial class MainViewModel : ObservableObject
         if (IsPhysicalReadout)
         {
             var required = RequiredReadoutLines;
-            bool field = AmbientDoseRateMicroSvPerHour != 0 || BackgroundToSignalRatio != 0;
-            ReadoutMessage = field
-                ? PhysicalFieldMessage
-                : required.Count == 0
+            bool bsr = Sources.Count > 0 && BackgroundToSignalRatio != 0;
+            ReadoutMessage = ReadoutPolicy.AcquisitionError(Sources.Count, BackgroundToSignalRatio)
+                ?? (required.Count == 0
                     ? "No preparable calibration line is present in the scene: " + string.Join(" ", ReadoutPlans.Select(p => p.Reason))
                     : !IsReadoutBankReady
                         ? "Prepare the matching experimental readout before Start (every calibration line present in the scene: "
                             + string.Join(", ", required.Select(p => p.LineKeV.ToString("0.##", CultureInfo.InvariantCulture) + " keV")) + ")."
-                        : null;
-            if (ReadoutMessage is not null) return RefuseStart(ReadoutMessage, DetectorTab, options: field);
+                        : null);
+            if (ReadoutMessage is not null) return RefuseStart(ReadoutMessage,
+                Sources.Count == 0 ? SceneTab : DetectorTab, options: bsr);
         }
         ClearStartRefusal();
         int seed = string.IsNullOrWhiteSpace(SeedText)

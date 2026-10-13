@@ -18,6 +18,9 @@ public sealed class AmbientPhotonProcess
     private (int X, int Y, double Energy)? _deposit;
     private double _incidentEnergy;
     private double _next;
+    private readonly bool _record;
+    private readonly List<InteractionSite> _sites = [];
+    public RecordedTransportEvent? LastRecordedEvent { get; private set; }
     public double TimeS { get; private set; }
     public double FluencePerCm2PerSecond { get; }
     public double IncidentRateCps { get; }
@@ -25,8 +28,9 @@ public sealed class AmbientPhotonProcess
     public long Detected { get; private set; }
     public double DetectedRateCps => Histories > 0 ? IncidentRateCps * Detected / Histories : 0;
 
-    public AmbientPhotonProcess(SimulationConfig configuration)
+    public AmbientPhotonProcess(SimulationConfig configuration, bool recordInteractions = false, bool physicalModule = false)
     {
+        _record = recordInteractions;
         var config = configuration.Clone();
         _field = config.Ambient ?? throw new ArgumentException("An ambient field is required.");
         if (!double.IsFinite(_field.DoseRateMicroSvPerHour) || _field.DoseRateMicroSvPerHour < 0
@@ -75,14 +79,20 @@ public sealed class AmbientPhotonProcess
         _time = new DefaultRandom(unchecked(seed + 29001)); _entry = new DefaultRandom(unchecked(seed + 29002));
         _energy = new DefaultRandom(unchecked(seed + 29003)); _maskRandom = new DefaultRandom(unchecked(seed + 29004));
         _mask = new DefaultSimulationFactory().CreateMask(config);
-        // Bare bound is the homogeneous nominal crystal envelope, with no passive entrance or backing.
+        // The default bare bound remains homogeneous. Physical module transport opts into gaps and
+        // incoming-face passive proxies; its all-face proposal is not a bare-crystal upper bound.
         _detector = new ComptonCrystalDetector(d.PixelsX, d.PixelsY, d.PixelPitchMm, 1, double.MaxValue,
             ComptonStrategy.Argmax, new DefaultRandom(unchecked(seed + 29005)),
             d.CrystalAttenuationPerMm > 0 ? d.CrystalAttenuationPerMm : null, _depth,
             material: CrystalMaterial.ForConfig(d.Material), entryThroughAllFaces: bare,
             // Enforce energy conservation in this new event projection: floating-point addition of cascade
             // deposits can otherwise exceed incident energy by a few ulps. Legacy detector records stay untouched.
-            pixelEventSink: (x, y, e, _) => _deposit = (x, y, Math.Min(e, _incidentEnergy)));
+            pixelEventSink: (x, y, e, _) => _deposit = (x, y, Math.Min(e, _incidentEnergy)),
+            interactionSink: _record ? (sites, _) => _sites.AddRange(sites) : null,
+            reflectorGapMm: physicalModule ? d.ReflectorGapMm : 0,
+            entranceAbsorber: physicalModule && d.EntranceAbsorberMm > 0 ? new EntranceAbsorber(d.EntranceAbsorberMm) : null,
+            backingScatterer: physicalModule && d.BackingScatterMm > 0 ? new EntranceAbsorber(d.BackingScatterMm) : null,
+            boundaryAwareModule: physicalModule);
         _next = Gap();
     }
 
@@ -105,6 +115,7 @@ public sealed class AmbientPhotonProcess
     {
         cancellationToken.ThrowIfCancellationRequested();
         if (!double.IsFinite(horizonS) || horizonS < TimeS) throw new ArgumentOutOfRangeException(nameof(horizonS));
+        LastRecordedEvent = null; _sites.Clear();
         if (_next > horizonS) { TimeS = horizonS; return null; }
         TimeS = _next; _next += Gap(); Histories++;
         var sampled = _angular?.Sample(_entry, _energy, _maskFrontZ);
@@ -116,7 +127,9 @@ public sealed class AmbientPhotonProcess
         _detector.Score(new Photon { Ray = ray, EnergyKeV = energy, Weight = 1 });
         if (_deposit is not { } deposit) return null;
         Detected++;
-        return new(deposit.X, deposit.Y, deposit.Energy, TimeS);
+        var result = new DetectedEvent(deposit.X, deposit.Y, deposit.Energy, TimeS);
+        if (_record) LastRecordedEvent = new(result, _sites, TransportOrigin.Ambient);
+        return result;
     }
 
     private double SampleEnergy()

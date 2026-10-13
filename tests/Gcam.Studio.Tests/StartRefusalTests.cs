@@ -98,7 +98,7 @@ public sealed class StartRefusalTests
     }
 
     [Fact]
-    public async Task AmbientOrBsrWithPhysicalReadout_ShowsOptionsReason_SelectsDetectorTab_WarnsOnTheCog()
+    public async Task BsrWithPhysicalReadout_ShowsOptionsReason_SelectsDetectorTab_WarnsOnTheCog()
     {
         var (vm, acquisition) = Model();
         vm.Optics = Head; vm.ReadoutMode = ReadoutMode.FourOutputAnger;
@@ -110,6 +110,34 @@ public sealed class StartRefusalTests
         Assert.True(vm.HasOptionsWarning);
         vm.BackgroundToSignalRatio = 0;
         Assert.False(vm.HasOptionsWarning);
+    }
+
+    [Fact]
+    public async Task PhysicalFieldOnly_ShowsOwnReason_SelectsSceneTab_WithoutOptionsWarning()
+    {
+        var (vm, acquisition) = Model();
+        vm.Sources.Clear(); vm.AmbientDoseRateMicroSvPerHour = .1;
+        vm.ReadoutMode = ReadoutMode.FourOutputAnger;
+        await Refused(vm, acquisition);
+        Assert.Equal("Start refused: " + ReadoutPolicy.FieldOnlyMessage, vm.Status);
+        Assert.Equal(MainViewModel.SceneTab, vm.SelectedLeftTab);
+        Assert.False(vm.HasOptionsWarning); Assert.Equal(.1, vm.AmbientDoseRateMicroSvPerHour);
+    }
+
+    [Fact]
+    public async Task SourceWithAmbient_RequiresBank_ThenRoutesStartAmbientAndClearsRefusal()
+    {
+        var preparation = new FakeReadoutPreparation();
+        var (vm, acquisition) = Model(preparation);
+        vm.Optics = Head; vm.ReadoutMode = ReadoutMode.FourOutputAnger;
+        vm.AmbientDoseRateMicroSvPerHour = .1;
+        await Refused(vm, acquisition);
+        Assert.Contains("Prepare", vm.Status); Assert.False(vm.HasOptionsWarning);
+        await vm.PrepareReadoutCommand.ExecuteAsync(null);
+        await vm.StartCommand.ExecuteAsync(null);
+        Assert.Equal(1, acquisition.Starts); Assert.Equal(1, acquisition.AmbientStarts);
+        Assert.Null(vm.StartRefusal); Assert.False(vm.HasOptionsWarning);
+        Assert.Equal(.1, vm.AmbientDoseRateMicroSvPerHour);
     }
 
     [Fact]
@@ -153,8 +181,12 @@ public sealed class StartRefusalTests
     private sealed class CountingAcquisition : IAcquisitionService
     {
         public int Starts { get; private set; }
+        public int AmbientStarts { get; private set; }
         public IAcquisitionSession Start(IReadOnlyList<SceneSource> scene, OpticsSettings optics, double liveTimeS, double speed,
             DetectorSettings? detector = null, double backgroundToSignalRatio = 0, int? seed = null)
         { Starts++; throw new InvalidOperationException("fixture: start reached the service"); }
+        public IAcquisitionSession StartAmbient(IReadOnlyList<SceneSource> scene, OpticsSettings optics, double liveTimeS,
+            double speed, AmbientFieldConfig ambient, DetectorSettings? detector = null, double backgroundToSignalRatio = 0, int? seed = null)
+        { Starts++; AmbientStarts++; throw new InvalidOperationException("fixture: ambient start reached the service"); }
     }
 }

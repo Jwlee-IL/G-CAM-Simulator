@@ -62,7 +62,9 @@ public sealed partial class OptionsViewModel : ObservableObject
     public double BackingScatterMm => _owner.Detector.BackingScatterMm;
     public string AmbientPresetName => _owner.AmbientPresetName;
     public string AmbientEnvironmentLabel => StudioOptionValidation.TryAmbientDose(AmbientDoseText, out double dose) && dose == 0
-        ? "ideal environment" : $"{_owner.AmbientPreset.Id} · {(AmbientGeometry == AmbientGeometry.FrontOnlyThroughMask ? "front-only bound" : "bare-crystal bound")}";
+        ? "ideal environment" : $"{_owner.AmbientPreset.Id} · {(_owner.IsPhysicalReadout
+            ? AmbientIncidenceDescription.For(AmbientGeometry, true)
+            : AmbientGeometry == AmbientGeometry.FrontOnlyThroughMask ? "front-only bound" : "bare-crystal bound")}";
     public string AmbientBsrReadout => _owner.AmbientBsrReadout;
     partial void OnAmbientDoseTextChanged(string value) => OnPropertyChanged(nameof(AmbientEnvironmentLabel));
     partial void OnAmbientGeometryChanged(AmbientGeometry value) => OnPropertyChanged(nameof(AmbientEnvironmentLabel));

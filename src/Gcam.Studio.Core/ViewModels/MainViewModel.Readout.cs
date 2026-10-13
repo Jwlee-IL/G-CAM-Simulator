@@ -19,7 +19,11 @@ public sealed partial class MainViewModel
         set
         {
             if (!CanEditInputs || !ReadoutModes.Contains(value)) { RefreshRejectedReadoutProperty(nameof(ReadoutMode)); return; }
-            if (SetProperty(ref _readoutMode, value)) { ReadoutMessage = null; NotifyReadout(); }
+            if (SetProperty(ref _readoutMode, value))
+            {
+                ReadoutMessage = null; NotifyReadout();
+                OnPropertyChanged(nameof(AmbientEnvironmentLabel));
+            }
         }
     }
     private void RefreshRejectedReadoutProperty(string name)
@@ -39,7 +43,7 @@ public sealed partial class MainViewModel
     public string ReadoutModeSummary => IsPhysicalReadout ? "Experimental GAGG four-output readout" : "Direct crystal assignment";
     public string ReadoutLocalisationHelp => ReadoutCostHelp.Build(ReadoutOffers, ReadoutPlans);
     public string ReadoutAssumptions => IsPhysicalReadout
-        ? "Experimental GAGG · DPC 0.01 · sum trigger 50 keV-equivalent · specular 0.98 · virtual matched SiPMs · unlimited cells; no RC, skew or jitter. Legacy gain and chain are inactive. Ambient and BSR must be zero: their interaction records are unavailable. Each calibration line present in the scene is prepared separately."
+        ? "Experimental GAGG · DPC 0.01 · sum trigger 50 keV-equivalent · specular 0.98 · virtual matched SiPMs · unlimited cells; no RC, skew or jitter. Legacy gain and chain are inactive. Source and ambient deposits share one measured pulse stream. Only the source's preparable analysis lines are calibrated; positioning other-energy deposits through those calibrations is unvalidated. Field-only scenes and nonzero BSR are unavailable in this stage. " + AmbientIncidenceDescription.PhysicalHelp
         : "Direct crystal assignment; legacy detector gain and chain response.";
 
     /// <summary>The shipped offer / cost record (unavailable without a preparation service or when malformed).</summary>

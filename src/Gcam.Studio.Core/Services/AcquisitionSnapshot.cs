@@ -21,5 +21,6 @@ public sealed record AcquisitionSnapshot(double LiveTimeS, long Counts, double R
     public double AmbientRateCps { get; init; }
     public double SourceRateCps { get; init; }
     public double? AmbientMaximumEnergyKeV { get; init; }
+    public string? AmbientIncidence { get; init; }
     public double? AmbientBackgroundToSignalRatio => SourceRateCps > 0 ? AmbientRateCps / SourceRateCps : null;
 }

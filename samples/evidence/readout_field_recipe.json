@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "scope": "Acquisition variability conditional on fixed successful source-line preparations; no localisation claim or offer change",
+  "modules": ["Baseline", "Sharp"],
+  "lineKeV": 661.7,
+  "outerSeeds": 16,
+  "proposedFirstSeed": 42042001,
+  "familyHorizonS": 1000,
+  "independentReferenceHistoriesPerSeed": 10000,
+  "pilotHorizonS": 10,
+  "pilotDeadlineS": 840,
+  "pilotCellDeadlineS": 30,
+  "pilotRepeatsAtNominalDose": 3,
+  "familyErrorBudget": 0.01,
+  "stochasticChecks": 8,
+  "planningRelativeStandardError": 0.05,
+  "normalApproximationMinimumPooledCount": 100,
+  "uncertainty": "Four positive-dose module/bound groups, pooled incident and scored checks each. Two-sided tail budget 0.01/8 per check. Independent fixed-M detection reference; include binomial reference variance. Exact Poisson/binomial tails below 100 expected/observed counts. Assignment/window uncertainty uses outer-seed spread, never binomial hit trials. Report achieved precision without tuning the sample after confirmation.",
+  "twoLineControl": "Baseline Cs plus Co-60, both bounds, every outer seed, exact per-line count identities",
+  "excluded": ["field-only Studio support", "BSR", "calibration seed uncertainty", "localisation accuracy"]
+}

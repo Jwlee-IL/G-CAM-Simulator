@@ -13,7 +13,7 @@ public sealed partial class MainViewModel
     /// a refused Start selects the tab holding the offending input.</summary>
     [ObservableProperty] private int _selectedLeftTab;
     public const int SceneTab = 0, OpticsTab = 1, DetectorTab = 2;
-    public const string PhysicalFieldMessage = "Physical readout requires ambient and BSR at zero: their interaction records are unavailable.";
+    public const string PhysicalFieldMessage = ReadoutPolicy.BsrMessage;
 
     /// <summary>The reason of the last refused Start, as the status bar shows it ("Start refused: …" or "Options: …");
     /// null after a started acquisition or Reset.</summary>
@@ -29,7 +29,7 @@ public sealed partial class MainViewModel
     /// <summary>The Options input that blocks Start now (seed, ambient dose, gap, or a nonzero field with the physical
     /// readout), or null.</summary>
     public string? OptionsProblem => SeedError ?? AmbientDoseError ?? GapError
-        ?? (IsPhysicalReadout && (AmbientDoseRateMicroSvPerHour != 0 || BackgroundToSignalRatio != 0) ? PhysicalFieldMessage : null);
+        ?? (IsPhysicalReadout && BackgroundToSignalRatio != 0 ? ReadoutPolicy.BsrMessage : null);
 
     /// <summary>The cog's warning state: a Start was refused for an Options input that is still wrong.</summary>
     public bool HasOptionsWarning => _optionsRefused && OptionsProblem is not null;
@@ -76,7 +76,8 @@ public sealed partial class MainViewModel
             if (BackgroundToSignalRatio != d.BackgroundToSignalRatio) parts.Add($"BSR {BackgroundToSignalRatio:G} × signal");
             if (AmbientDoseRateMicroSvPerHour != d.AmbientDoseMicroSvPerHour)
                 parts.Add(AmbientDoseRateMicroSvPerHour == 0 ? "ideal environment" : $"H*(10) {AmbientDoseRateMicroSvPerHour:G} µSv/h");
-            if (AmbientGeometry != d.AmbientGeometry) parts.Add("bare-crystal bound");
+            if (AmbientGeometry != d.AmbientGeometry) parts.Add(IsPhysicalReadout
+                ? AmbientIncidenceDescription.For(AmbientGeometry, true) : "bare-crystal bound");
             string summary = parts.Count == 0 ? "Options: defaults" : "Options: " + string.Join(" · ", parts);
             return HasData ? summary + " · ambient BSR " + AmbientBsrReadout : summary;
         }

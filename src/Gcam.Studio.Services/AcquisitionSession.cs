@@ -221,8 +221,10 @@ internal sealed class AcquisitionSession : IAcquisitionSession
                             Lines = Array.AsReadOnly(prepared.Entries.Select((e, i) => new ReadoutLineView(e.View,
                                 _lineAssignments[i].Publish(), _lineAssigned[i], _lineUnknown[i])).ToArray())
                         } : null,
-                        AmbientRateCps = source?.AmbientRateCps ?? 0,
-                        SourceRateCps = _config.Ambient is null ? 0 : source!.SourceRateCps,
+                        AmbientRateCps = _physicalSource?.AmbientRateCps ?? source?.AmbientRateCps ?? 0,
+                        SourceRateCps = _config.Ambient is null ? 0 : _physicalSource?.SourceRateCps ?? source?.SourceRateCps ?? 0,
+                        AmbientIncidence = _physicalSource is not null && _config.Ambient is { } field
+                            ? AmbientIncidenceDescription.For(field.Geometry, true) : null,
                         AmbientMaximumEnergyKeV = _config.Ambient is { } ambient
                             ? ambient.Spectrum.Lines.Select(l => l.EnergyKeV).Concat(ambient.Spectrum.Continuum.Select(b => b.HighKeV)).Max()
                             : null });

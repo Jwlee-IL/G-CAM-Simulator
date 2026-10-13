@@ -94,7 +94,7 @@ public sealed class ReadoutScenarioTests(ITestOutputHelper output)
     }
 
     [DesktopFact]
-    public void RefusedLineAndField_ExplainWithoutZeroing() => Scenario.Run(nameof(RefusedLineAndField_ExplainWithoutZeroing), output, (ui, record) =>
+    public void RefusedLineAndMissingPreparation_ExplainWithoutZeroing() => Scenario.Run(nameof(RefusedLineAndMissingPreparation_ExplainWithoutZeroing), output, (ui, record) =>
     {
         // TODO-41: the default Sharp head selects the physical readout; 122.06 keV is refused with its published reason.
         ui.SelectLeftTab("Detector");
@@ -109,12 +109,41 @@ public sealed class ReadoutScenarioTests(ITestOutputHelper output)
         Assert.Equal("Window line 122.06 keV", ui.Text("Readout.WindowLine"));
         string field = ui.OptionValue("Acquisition.AmbientDose");
         ui.Invoke("StartAcquisition");
-        Assert.Contains("zero", ui.Text("Readout.Reason"));
+        Assert.Contains("Prepare", ui.Text("Readout.Reason"));
         Assert.Equal(field, ui.OptionValue("Acquisition.AmbientDose"));
         Assert.Equal("Empty", ui.RunState);
         Assert.False(ui.OptionEnabled("Detector.GainSigma"));
         Assert.False(ui.OptionEnabled("Chain.Scintillator"));
-        record.Step("Sharp physical selection; 122.06 keV refused with population and literal reason; nonzero field refusal preserves inputs.");
+        record.Step("Sharp physical selection; 122.06 keV refused with population and literal reason; missing preparation refusal preserves the nonzero field input.");
+    });
+
+    [DesktopFact]
+    public void PhysicalAmbient_BothBounds_ContinuationConservesMeasuredCounts() => Scenario.Run(nameof(PhysicalAmbient_BothBounds_ContinuationConservesMeasuredCounts), output, (ui, record) =>
+    {
+        SelectHead(ui);
+        ui.SetOption("Acquisition.AmbientDose", "1");
+        ui.SetText("AcquisitionLiveTime", "4", "SourceY");
+        ui.SetText("AcquisitionSpeed", "1", "SourceY");
+        Prepare(ui, PrepareWait[("Baseline", 661.7)]);
+        foreach (string bound in new[] { "FrontOnlyThroughMask", "BareCrystalAllFaces" })
+        {
+            ui.OpenOptions("Environment"); ui.Choose("Acquisition.AmbientBound", bound); ui.ApplyOptions();
+            Assert.Equal("Completed", ui.Acquire(TimeSpan.FromSeconds(60)));
+            ui.Workspace("Detector", "Readout.Map");
+            var expected = Counts(ui.Text("Readout.Counts"));
+            Assert.Equal(expected.Assigned, ui.Counts);
+            ui.Invoke("ResetAcquisition"); ui.ConfirmReset(true);
+            ui.Invoke("StartAcquisition");
+            StudioWindow.WaitUntil(() => ui.RunState == "Acquiring" && ui.Counts > 0, TimeSpan.FromSeconds(20), "physical ambient counts");
+            ui.Invoke("StopAcquisition");
+            StudioWindow.WaitUntil(() => ui.RunState == "Stopped", TimeSpan.FromSeconds(10), "stopped ambient");
+            Assert.Equal("Completed", ui.Acquire(TimeSpan.FromSeconds(60)));
+            Assert.Equal(Broken ? (expected.Assigned + 1, expected.Unknown, expected.Triggered) : expected,
+                Counts(ui.Text("Readout.Counts")));
+            Assert.Equal("1", ui.OptionValue("Acquisition.AmbientDose"));
+            record.Step($"{bound}: continued physical ambient counts conserved; entered dose retained.");
+            ui.Invoke("ResetAcquisition"); ui.ConfirmReset(true);
+        }
     });
 
     [DesktopFact]

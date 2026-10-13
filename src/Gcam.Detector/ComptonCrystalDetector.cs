@@ -50,6 +50,7 @@ public sealed class ComptonCrystalDetector : IDetector
 
     public double PlaneZ { get; }
     private readonly bool _allFaces;
+    private readonly bool _boundaryAwareModule;
 
     public ComptonCrystalDetector(int pixelsX, int pixelsY, double pixelPitchMm,
         double windowCenterKeV, double windowFraction, ComptonStrategy strategy, IRandom rng,
@@ -60,7 +61,8 @@ public sealed class ComptonCrystalDetector : IDetector
         double reflectorGapMm = 0.0, double opticalCrosstalk = 0.0, CrystalMaterial? material = null,
         Action<int, int, double, double>? pixelEventSink = null,
         Action<IReadOnlyList<(int X, int Y, double DepositKeV)>, double>? pixelSitesSink = null,
-        bool entryThroughAllFaces = false, Action<IReadOnlyList<InteractionSite>, double>? interactionSink = null)
+        bool entryThroughAllFaces = false, Action<IReadOnlyList<InteractionSite>, double>? interactionSink = null,
+        bool boundaryAwareModule = false)
     {
         _image = new DetectorImage(pixelsX, pixelsY);
         _pitch = pixelPitchMm;
@@ -91,6 +93,7 @@ public sealed class ComptonCrystalDetector : IDetector
         _crosstalk = opticalCrosstalk * Math.Exp(-reflectorGapMm / CrosstalkLambdaMm);
         PlaneZ = planeZ;
         _allFaces = entryThroughAllFaces;
+        _boundaryAwareModule = boundaryAwareModule;
     }
 
     private bool InWindow(double e)
@@ -150,7 +153,20 @@ public sealed class ComptonCrystalDetector : IDetector
         // fills the Compton-edge-to-photopeak valley. Back-scatters head away from the crystal and are lost.
         double e = photon.EnergyKeV;
         var dir = photon.Direction;
-        if (_entrance is not null)
+        // Opt-in module approximation: nominal envelope with lumped slabs, no side housing or
+        // angle-dependent passive path. Default transport deliberately retains its historical branch.
+        if (_boundaryAwareModule)
+        {
+            var inward = EntryNormal(photon.Ray);
+            var passive = inward.Z < 0 ? _entrance : inward.Z > 0 ? _backing : null;
+            if (passive is not null)
+            {
+                var (absorbed, eScat, dirScat) = passive.Interact(e, dir, _rng);
+                if (absorbed || dirScat.X * inward.X + dirScat.Y * inward.Y + dirScat.Z * inward.Z <= 0) return false;
+                e = eScat; dir = dirScat;
+            }
+        }
+        else if (_entrance is not null)
         {
             var (absorbed, eScat, dirScat) = _entrance.Interact(e, dir, _rng);
             if (absorbed) return false;
@@ -281,6 +297,22 @@ public sealed class ComptonCrystalDetector : IDetector
             && Slab(ray.Origin.Z, ray.Direction.Z, PlaneZ - _depth, PlaneZ);
         entry = hit ? ray.At(near) : default;
         return hit;
+    }
+
+    private Vector3 EntryNormal(Ray ray)
+    {
+        if (!_allFaces) return new(0, 0, -1);
+        // Identify the slab that set the near intersection, rather than comparing rounded coordinates.
+        double tx = ray.Direction.X == 0 ? double.NegativeInfinity
+            : ((ray.Direction.X > 0 ? -_halfWidth : _halfWidth) - ray.Origin.X) / ray.Direction.X;
+        double ty = ray.Direction.Y == 0 ? double.NegativeInfinity
+            : ((ray.Direction.Y > 0 ? -_halfHeight : _halfHeight) - ray.Origin.Y) / ray.Direction.Y;
+        double tz = ray.Direction.Z == 0 ? double.NegativeInfinity
+            : ((ray.Direction.Z > 0 ? PlaneZ - _depth : PlaneZ) - ray.Origin.Z) / ray.Direction.Z;
+        // At edges/corners the X, then Y, then Z tie order is deterministic.
+        if (tx >= ty && tx >= tz) return new(Math.Sign(ray.Direction.X), 0, 0);
+        if (ty >= tz) return new(0, Math.Sign(ray.Direction.Y), 0);
+        return new(0, 0, Math.Sign(ray.Direction.Z));
     }
 
     private void ApplyOpticalCrosstalk(double c)

@@ -142,7 +142,7 @@ public class ReadoutDefaultPathTests
     }
 
     [Fact]
-    public void Recording_IsRefusedWithBackgroundOrAmbient()
+    public void Recording_IsRefusedWithBsr()
     {
         var c = Load("scenario.json");
         c.Background = new BackgroundConfig { BackgroundToSignalRatio = 1 };

@@ -52,6 +52,10 @@ var runner = new SimulationRunner(factory);
 
 switch (mode)
 {
+    case "readout-field-pilot":
+    case "readout-field-family":
+        await Gcam.EvidenceProbe.ReadoutFieldRecipe.RunAsync(seed, mode.EndsWith("pilot", StringComparison.Ordinal), samplesDir);
+        break;
     case "studio-readout":
         Gcam.EvidenceProbe.StudioReadoutRecipe.Run(seed, samplesDir, args[3], args[4], args[5], args[6]);
         break;

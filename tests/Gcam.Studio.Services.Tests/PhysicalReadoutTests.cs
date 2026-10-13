@@ -188,7 +188,8 @@ public sealed class PhysicalReadoutTests(ITestOutputHelper output)
         // TODO-41: no geometry gate any more — a fine head builds its physical configuration (offers are per line).
         Assert.Equal(30, SimulationService.BuildConfig(Scene, new(), d).Detector.PixelsX);
         Assert.Throws<NotSupportedException>(() => SimulationService.BuildConfig(Scene, Head, d, .1));
-        Assert.Throws<NotSupportedException>(() => SimulationService.BuildConfig(Scene, Head, d, ambient: new()));
+        Assert.NotNull(SimulationService.BuildConfig(Scene, Head, d, ambient: new() { DoseRateMicroSvPerHour = .1 }).Ambient);
+        Assert.Equal(ReadoutPolicy.FieldOnlyMessage, Assert.Throws<NotSupportedException>(() => SimulationService.BuildConfig([], Head, d, ambient: new())).Message);
         Assert.Throws<InvalidOperationException>(() => new SimulationService().Start(Scene, Head, 1, 1, d));
         Assert.Equal(ReadoutMode.DirectCrystal, new DetectorSettings().ReadoutMode);
     }
