@@ -20,11 +20,14 @@ internal sealed class FakeReadoutPreparation(ReadoutOfferRecord? offers = null) 
     public Dictionary<double, Exception> Exceptions { get; } = [];
     public Dictionary<double, Exception> ExceptionsAfterPublication { get; } = [];
     public HashSet<double> WaitForCancellation { get; } = [];
+    /// <summary>Progress reported for every line before it completes (or waits for cancellation).</summary>
+    public List<ReadoutPrepareProgress> Reports { get; } = [];
 
     public Task<ReadoutPreparation> PrepareAsync(OpticsSettings optics, DetectorSettings detector, ReadoutLinePlan line,
         IProgress<ReadoutPrepareProgress>? progress = null, CancellationToken cancellationToken = default)
     {
         Requests.Add(line);
+        foreach (var report in Reports) progress?.Report(report with { LineKeV = line.LineKeV });
         if (Exceptions.TryGetValue(line.LineKeV, out var exception)) throw exception;
         if (WaitForCancellation.Contains(line.LineKeV)) return UntilCancelledAsync(cancellationToken);
         if (Cancel.Contains(line.LineKeV)) throw new OperationCanceledException(cancellationToken);

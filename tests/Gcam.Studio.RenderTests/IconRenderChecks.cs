@@ -14,6 +14,9 @@ internal static class IconRenderChecks
 {
     public static void CheckAndInspect(FrameworkElement root, RenderTargetBitmap window, string? snapshot = null)
     {
+        // The ink check always runs; the enlarged inspection crops (thousands of PNGs per run) are written only on request
+        // (GCAM_RENDER_ICON_CROPS=1), so the offscreen render stays inside its deadlock deadline.
+        bool export = snapshot is not null && Environment.GetEnvironmentVariable("GCAM_RENDER_ICON_CROPS") == "1";
         // Icon buttons (Button.Icon and its variants) and icon toggles (RadioButton.Icon: the measurement tools).
         foreach (var button in ReadoutRenderTests.Descendants(root).OfType<System.Windows.Controls.Primitives.ButtonBase>()
             .Where(b => b is Button or RadioButton))
@@ -73,8 +76,8 @@ internal static class IconRenderChecks
             Assert.True(samples > 0, $"{id}: no opaque reference ink");
             var bounds = button.TransformToAncestor(root).TransformBounds(new Rect(button.RenderSize));
             Assert.True(new Rect(root.RenderSize).Contains(bounds), $"{id}: button outside rendered window");
-            if (snapshot is null) continue;
-            string directory = InspectionDirectory(snapshot);
+            if (!export) continue;
+            string directory = InspectionDirectory(snapshot!);
             Directory.CreateDirectory(directory);
             string file = System.IO.Path.GetFileNameWithoutExtension(snapshot) + "-" + id.Replace('.', '-')
                 + (caption ? "-" + AutomationProperties.GetName(button) : "") + ".png";
@@ -82,10 +85,10 @@ internal static class IconRenderChecks
         }
         foreach (string id in new[] { "Window.TopBar", "Options.Summary" })
         {
-            if (snapshot is null) break;
+            if (!export) break;
             var element = ReadoutRenderTests.Descendants(root).OfType<FrameworkElement>().SingleOrDefault(e => AutomationProperties.GetAutomationId(e) == id);
             if (element is null || !Visible(element, root) || element.ActualHeight == 0) continue;
-            string directory = InspectionDirectory(snapshot);
+            string directory = InspectionDirectory(snapshot!);
             Crop(window, element.TransformToAncestor(root).TransformBounds(new Rect(element.RenderSize)),
                 System.IO.Path.Combine(directory, System.IO.Path.GetFileNameWithoutExtension(snapshot) + "-" + id.Replace('.', '-') + ".png"));
         }

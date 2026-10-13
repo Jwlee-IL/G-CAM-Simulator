@@ -151,15 +151,12 @@
                             AutomationProperties.AutomationId="Readout.Cancel" AutomationProperties.Name="Cancel prepare" />
                 </StackPanel>
             </DockPanel>
-            <ProgressBar Maximum="1" Value="{Binding ReadoutProgress, Mode=OneWay}" Margin="{StaticResource Gap.Field}"
-                    Visibility="{Binding IsPreparingReadout, Converter={StaticResource PhysicalVisibility}}"
-                    AutomationProperties.AutomationId="Readout.Progress"
-                    AutomationProperties.Name="Readout preparation progress" />
             <!-- The state keeps its AutomationId and its full text as the group's name. A ready bank shows "Ready" and a
             table (line · time · windowed · scored, one row per prepared line); every other state is one short line. -->
             <c:SettingsGroup Margin="{StaticResource Gap.Field}" AutomationProperties.AutomationId="Readout.State"
                     AutomationProperties.Name="{Binding ReadoutState}">
-                <TextBlock Text="{Binding ReadoutState}" Style="{StaticResource Readout.StateLine}" />
+                <!-- A short state word while preparing ("Preparing…"); the progress text and bar are in the status bar -->
+                <TextBlock Text="{Binding ReadoutStateLine}" Style="{StaticResource Readout.StateLine}" />
                 <StackPanel Style="{StaticResource Readout.ReadyTable}">
                     <TextBlock Text="Ready" Style="{StaticResource Readout.Cell}" Margin="{StaticResource Gap.Tight}" />
                     <Grid Margin="{StaticResource Gap.Tight}">

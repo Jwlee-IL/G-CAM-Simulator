@@ -650,7 +650,7 @@
                             <TextBlock.Style>
                                 <Style TargetType="TextBlock" BasedOn="{StaticResource Text.Label}">
                                     <Style.Triggers>
-                                        <DataTrigger Binding="{Binding IsStartRefused}" Value="True">
+                                        <DataTrigger Binding="{Binding IsStatusWarning}" Value="True">
                                             <Setter Property="Foreground" Value="{DynamicResource Brush.Status.Warning}" />
                                         </DataTrigger>
                                     </Style.Triggers>
@@ -682,14 +682,23 @@
                                 VerticalAlignment="Center" TextWrapping="NoWrap"
                                 Visibility="{Binding ShowSeedErrorInStatus, Converter={StaticResource BoolToVis}}"
                                 Margin="{StaticResource Gap.InlineWide.Leading}" AutomationProperties.AutomationId="AcquisitionSeedError" />
-                        <!-- Progress only while running: a full accent bar at rest would be cyan that means nothing -->
-                        <StackPanel Grid.Column="5" Orientation="Horizontal" Margin="{StaticResource Gap.InlineWide.Leading}"
-                                Visibility="{Binding IsRunning, Converter={StaticResource BoolToVis}}">
-                            <ProgressBar Width="{StaticResource Size.Progress}" Maximum="1" Value="{Binding Progress, Mode=OneWay}"
-                                    VerticalAlignment="Center" Margin="{StaticResource Gap.Inline}"
-                                    AutomationProperties.AutomationId="RunProgress" AutomationProperties.Name="Simulation progress" />
-                            <TextBlock Text="{Binding Progress, StringFormat={}{0:P0}}" Style="{StaticResource Text.MonoCaption}" />
-                        </StackPanel>
+                        <!-- One progress element for whichever runs (acquisition and readout preparation never run together),
+                        only while running: a full accent bar at rest would be cyan that means nothing. -->
+                        <Grid Grid.Column="5" Margin="{StaticResource Gap.InlineWide.Leading}">
+                            <StackPanel Orientation="Horizontal" Visibility="{Binding IsRunning, Converter={StaticResource BoolToVis}}">
+                                <ProgressBar Width="{StaticResource Size.Progress}" Maximum="1" Value="{Binding Progress, Mode=OneWay}"
+                                        VerticalAlignment="Center" Margin="{StaticResource Gap.Inline}"
+                                        AutomationProperties.AutomationId="RunProgress" AutomationProperties.Name="Simulation progress" />
+                                <TextBlock Text="{Binding Progress, StringFormat={}{0:P0}}" Style="{StaticResource Text.MonoCaption}" />
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Visibility="{Binding IsPreparingReadout, Converter={StaticResource BoolToVis}}">
+                                <ProgressBar Width="{StaticResource Size.Progress}" Maximum="1" Value="{Binding ReadoutProgress, Mode=OneWay}"
+                                        VerticalAlignment="Center" Margin="{StaticResource Gap.Inline}"
+                                        AutomationProperties.AutomationId="Readout.Progress"
+                                        AutomationProperties.Name="Readout preparation progress" />
+                                <TextBlock Text="{Binding ReadoutProgress, StringFormat={}{0:P0}}" Style="{StaticResource Text.MonoCaption}" />
+                            </StackPanel>
+                        </Grid>
                     </Grid>
                 </Border>
             </Grid>

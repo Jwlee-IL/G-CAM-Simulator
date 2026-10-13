@@ -19,6 +19,7 @@ public sealed partial class MainViewModel
     /// null after a started acquisition or Reset.</summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsStartRefused))]
+    [NotifyPropertyChangedFor(nameof(IsStatusWarning))]
     private string? _startRefusal;
     public bool IsStartRefused => StartRefusal is not null;
     /// <summary>The status bar shows the seed message beside the run status unless the refused-Start text already says it.</summary>
@@ -46,6 +47,7 @@ public sealed partial class MainViewModel
     private void ClearStartRefusal()
     {
         StartRefusal = null;
+        IsPreparationFailed = false;
         _optionsRefused = false;
         NotifyOptions();
     }

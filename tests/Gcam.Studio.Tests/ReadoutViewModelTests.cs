@@ -220,7 +220,8 @@ public sealed class ReadoutViewModelTests
         var pending = vm.PrepareReadoutCommand.ExecuteAsync(null);
         Assert.True(vm.IsPreparingReadout); Assert.Equal("Preparing…", vm.ReadoutState);
         Assert.Equal("not prepared", vm.ReadoutLines.Single(r => r.LineKeV == 661.7).Local);
-        Assert.Equal("Ready", vm.Status); // acquisition status is not preparation status
+        // Review 9 (author): the status bar's one status text serves whichever runs; the run state stays the acquisition's.
+        Assert.Equal("Preparing…", vm.Status); Assert.Equal(RunState.Empty, vm.State);
         vm.PrepareReadoutCommand.Cancel();
         await pending;
         Assert.Equal("Preparation cancelled.", vm.ReadoutMessage);
@@ -229,6 +230,52 @@ public sealed class ReadoutViewModelTests
         service.WaitForCancellation.Clear();
         await vm.PrepareReadoutCommand.ExecuteAsync(null);
         Assert.True(vm.IsReadoutBankReady);
+    }
+
+    /// <summary>Review 9 (author): the readout preparation's progress text and bar moved to the status bar. While preparing,
+    /// the status text is "Preparing &lt;line · stage · histories&gt;" and the preparation progress drives the status-bar
+    /// bar; the Preparation section keeps a short "Preparing…" (its accessible name keeps the full progress text). The
+    /// outcome stays in the status bar — ready, cancelled, or failed in the warning colour, which also stays inline — until
+    /// the next acquisition writes its own status.</summary>
+    [Fact]
+    public async Task PreparationProgressAndOutcome_AreTheStatusBarText_ThenAcquisitionTakesOver()
+    {
+        var service = new FakeReadoutPreparation(); service.WaitForCancellation.Add(661.7);
+        service.Reports.Add(new ReadoutPrepareProgress(661.7, "Transporting independent calibration flood…", 115_200, 288_000));
+        var acquisition = new CapturingAcquisition();
+        var vm = Model(service, acquisition); vm.Optics = Head; vm.ReadoutMode = ReadoutMode.FourOutputAnger;
+        vm.AmbientDoseRateMicroSvPerHour = 0;
+        var pending = vm.PrepareReadoutCommand.ExecuteAsync(null);
+        Assert.True(vm.IsPreparingReadout); Assert.False(vm.IsRunning);
+        var deadline = DateTime.UtcNow.AddSeconds(5); // Progress<T> posts the report; wait for it
+        while (!vm.Status.Contains("histories") && DateTime.UtcNow < deadline) await Task.Delay(10);
+        Assert.Equal("Preparing 661.7 keV · Transporting independent calibration flood… · 115,200 / 288,000 histories (40 %)", vm.Status);
+        Assert.Equal(0.4, vm.ReadoutProgress, 12);
+        Assert.Equal("Preparing…", vm.ReadoutStateLine);
+        Assert.Contains("histories", vm.ReadoutState); // the section's accessible name keeps the full progress
+        Assert.False(vm.IsStatusWarning);
+        Assert.True(vm.PrepareReadoutCancelCommand.CanExecute(null)); // ✕ stays enabled while preparing
+        vm.PrepareReadoutCommand.Cancel();
+        await pending;
+        Assert.Equal("Readout preparation cancelled", vm.Status);
+        Assert.False(vm.IsStatusWarning);
+        Assert.Equal(0, vm.ReadoutProgress);
+
+        service.WaitForCancellation.Clear(); service.Failures[661.7] = "fixture: 143 of 144 peaks found";
+        await vm.PrepareReadoutCommand.ExecuteAsync(null);
+        Assert.Equal("Readout preparation failed: fixture: 143 of 144 peaks found", vm.Status);
+        Assert.True(vm.IsStatusWarning);
+        Assert.StartsWith("Failed", vm.ReadoutStateLine); // the failure stays visible inline too (D1)
+
+        service.Failures.Clear();
+        await vm.PrepareReadoutCommand.ExecuteAsync(null);
+        Assert.Equal("Readout ready: 661.7 keV", vm.Status);
+        Assert.False(vm.IsStatusWarning);
+        Assert.StartsWith("Ready", vm.ReadoutStateLine);
+
+        await vm.StartCommand.ExecuteAsync(null); // the acquisition writes its own status (this fixture completes at once)
+        Assert.DoesNotContain("Readout", vm.Status);
+        Assert.False(vm.IsStatusWarning);
     }
 
     [Fact]

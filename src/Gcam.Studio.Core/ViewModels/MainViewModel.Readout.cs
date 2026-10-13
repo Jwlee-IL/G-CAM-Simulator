@@ -52,7 +52,27 @@ public sealed partial class MainViewModel
     partial void OnIsPreparingReadoutChanged(bool value)
     {
         OnPropertyChanged(nameof(ReadoutState));
+        OnPropertyChanged(nameof(ReadoutStateLine));
         OnPropertyChanged(nameof(ReadoutReadyRows));
+    }
+
+    /// <summary>The Preparation section's own state line: a short "Preparing…" while running (the progress itself is in the
+    /// status bar), otherwise <see cref="ReadoutState"/> (ready summary, failure, not prepared). <see cref="ReadoutState"/>
+    /// keeps the full text, progress included, as the section's accessible name.</summary>
+    public string ReadoutStateLine => IsPreparingReadout ? "Preparing…" : ReadoutState;
+
+    /// <summary>A preparation failure (or refusal) shown in the status bar, in the warning colour, until the next start or Reset.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsStatusWarning))]
+    private bool _isPreparationFailed;
+
+    /// <summary>The status text is a warning: a refused Start or a failed readout preparation.</summary>
+    public bool IsStatusWarning => IsStartRefused || IsPreparationFailed;
+
+    private void SetPreparationStatus(string text, bool warning)
+    {
+        Status = text;
+        IsPreparationFailed = warning;
     }
     [ObservableProperty] private double _readoutProgress;
     [ObservableProperty] private string? _readoutProgressText;
@@ -176,10 +196,14 @@ public sealed partial class MainViewModel
         if (required.Count == 0)
         {
             ReadoutMessage = "No preparable calibration line is present in the scene: " + string.Join(" ", ReadoutPlans.Select(p => p.Reason));
+            SetPreparationStatus("Readout preparation refused: " + ReadoutMessage, warning: true);
             NotifyReadout();
             return;
         }
+        // Preparation and acquisition never run together (Start is refused while preparing), so the status bar's one
+        // status text and one progress element serve whichever runs: "Preparing <progress>" with the preparation bar.
         IsPreparingReadout = true; ReadoutMessage = null; NotifyRunState();
+        SetPreparationStatus("Preparing…", warning: false);
         var optics = Optics; var detector = ModuleDetector; string module = ModuleKey;
         string? activeKey = null;
         try
@@ -195,7 +219,8 @@ public sealed partial class MainViewModel
                 {
                     if (!IsPreparingReadout) return;
                     ReadoutProgress = p.Fraction; ReadoutProgressText = p.ToString();
-                    OnPropertyChanged(nameof(ReadoutState));
+                    Status = "Preparing " + ReadoutProgressText;
+                    OnPropertyChanged(nameof(ReadoutState)); OnPropertyChanged(nameof(ReadoutStateLine));
                     OnPropertyChanged(nameof(ReadoutReadyRows));
                 });
                 var result = await _readoutPreparation!.PrepareAsync(optics, detector, plan, progress, token);
@@ -213,6 +238,11 @@ public sealed partial class MainViewModel
         finally
         {
             IsPreparingReadout = false; ReadoutProgress = 0; ReadoutProgressText = null;
+            // The outcome stays in the status bar (failures in the warning colour) until the next acquisition or Reset;
+            // the Preparation section keeps its own state word and the failure inline (D1).
+            if (ReadoutMessage == "Preparation cancelled.") SetPreparationStatus("Readout preparation cancelled", warning: false);
+            else if (ReadoutMessage is { } failure) SetPreparationStatus("Readout preparation failed: " + failure, warning: true);
+            else SetPreparationStatus("Readout ready: " + string.Join(", ", required.Select(p => p.LineKeV.ToString("0.##", CultureInfo.InvariantCulture) + " keV")), warning: false);
             NotifyRunState(); NotifyReadout();
         }
     }
@@ -296,7 +326,7 @@ public sealed partial class MainViewModel
     private void NotifyReadout()
     {
         foreach (string name in new[] { nameof(IsPhysicalReadout), nameof(CanUseLegacy), nameof(CanEditLegacy), nameof(ReadoutAssumptions), nameof(ReadoutModeSummary),
-            nameof(ReadoutState), nameof(ReadoutReadyRows), nameof(Detector), nameof(ReadoutLines), nameof(ReadoutPlans), nameof(RequiredReadoutLines),
+            nameof(ReadoutState), nameof(ReadoutStateLine), nameof(ReadoutReadyRows), nameof(Detector), nameof(ReadoutLines), nameof(ReadoutPlans), nameof(RequiredReadoutLines),
             nameof(MatchingBank), nameof(MatchingPreparation), nameof(PreparedReadout), nameof(IsReadoutBankReady), nameof(ReadoutOffers), nameof(WindowPresets) })
             OnPropertyChanged(name);
         Waveform.SyncReadoutMode();

@@ -151,6 +151,7 @@ public sealed partial class PlotViewRenderTests
         CaptureStage2(pending, theme, size, "left-detector-pending");
         pending.IsPreparingReadout = true; pending.ReadoutProgress = 0.4;
         pending.ReadoutProgressText = $"661.7 keV · Transporting independent calibration flood… · 115,200 / {baseline.DetectorPixels * baseline.DetectorPixels * 2000:N0} histories (40 %)";
+        pending.Status = "Preparing " + pending.ReadoutProgressText; // what the preparation command writes on each progress report
         notifyRunState.Invoke(pending, null);
         CaptureStage2(pending, theme, size, "left-detector-preparing");
         // Review 7: the physical Detector workspace (view switch, centre view, right-panel rows) in each state.
@@ -275,6 +276,14 @@ public sealed partial class PlotViewRenderTests
             Assert.True(Bounds(status).Right <= Bounds(summary).Left + .5, "status text overlaps the Options summary");
         var seed = Descendants(bar).OfType<TextBlock>().Single(t => AutomationProperties.GetAutomationId(t) == "AcquisitionSeedError");
         Assert.Equal(model.ShowSeedErrorInStatus ? Visibility.Visible : Visibility.Collapsed, seed.Visibility);
+        // Review 9: one progress element in the status bar for whichever runs; the preparation bar lives only there.
+        var runBar = Descendants(bar).OfType<ProgressBar>().Single(p => AutomationProperties.GetAutomationId(p) == "RunProgress");
+        var prepareBar = Descendants(bar).OfType<ProgressBar>().Single(p => AutomationProperties.GetAutomationId(p) == "Readout.Progress");
+        Assert.Equal(model.IsRunning, Shown(runBar, root));
+        Assert.Equal(model.IsPreparingReadout, Shown(prepareBar, root));
+        Assert.False(model.IsRunning && model.IsPreparingReadout);
+        Assert.Single(Descendants(root).OfType<ProgressBar>(), p => AutomationProperties.GetAutomationId(p) == "Readout.Progress");
+        if (model.IsPreparingReadout) Assert.Equal(model.ReadoutProgress, prepareBar.Value);
         StatusBarHeights.Add(bar.ActualHeight);
         Assert.Single(StatusBarHeights);
     }
@@ -459,7 +468,7 @@ public sealed partial class PlotViewRenderTests
         }
         var status = Descendants(root).OfType<TextBlock>().Single(t => AutomationProperties.GetAutomationId(t) == "StatusText");
         Assert.Equal(model.Status, status.Text);
-        Assert.Same(Application.Current.FindResource(model.IsStartRefused ? "Brush.Status.Warning" : "Brush.Text.Secondary"), status.Foreground);
+        Assert.Same(Application.Current.FindResource(model.IsStatusWarning ? "Brush.Status.Warning" : "Brush.Text.Secondary"), status.Foreground);
         var summary = Descendants(root).OfType<TextBlock>().Single(t => AutomationProperties.GetAutomationId(t) == "Options.Summary");
         Assert.Equal(model.OptionsStatusSummary, summary.Text);
         Assert.Equal(model.HasNonDefaultOptions ? FontWeights.SemiBold : FontWeights.Normal, summary.FontWeight);
