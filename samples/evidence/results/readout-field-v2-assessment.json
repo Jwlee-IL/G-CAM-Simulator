@@ -1,0 +1,166 @@
+{
+ "version": 1,
+ "family": "readout-field-v2",
+ "source": "samples/evidence/results/readout-field-v2-family.json",
+ "code": "todo42-readout-field 2c3d9fe",
+ "command": "dotnet samples/evidence/probe/bin/Release/net9.0/Gcam.EvidenceProbe.dll readout-bsr-family 42042017 samples",
+ "familyErrorBudget": 0.01,
+ "stochasticChecks": 16,
+ "criticalAbsZTwoSided": 3.4205,
+ "exactIdentityRows": 192,
+ "exactIdentityViolations": 0,
+ "checks": [
+  {
+   "module": "Baseline",
+   "bound": "BareCrystalAllFaces",
+   "bsr": 0.5,
+   "outerSeeds": 16,
+   "incident": {
+    "observed": 391809,
+    "expected": 391312.6,
+    "z": 0.794
+   },
+   "scored": {
+    "observed": 68329,
+    "expected": 68362.3,
+    "z": -0.073,
+    "referenceEfficiency": 0.1747,
+    "referenceHistories": 160000
+   }
+  },
+  {
+   "module": "Baseline",
+   "bound": "BareCrystalAllFaces",
+   "bsr": 1,
+   "outerSeeds": 16,
+   "incident": {
+    "observed": 391809,
+    "expected": 391312.6,
+    "z": 0.794
+   },
+   "scored": {
+    "observed": 68329,
+    "expected": 68362.3,
+    "z": -0.073,
+    "referenceEfficiency": 0.1747,
+    "referenceHistories": 160000
+   }
+  },
+  {
+   "module": "Baseline",
+   "bound": "FrontOnlyThroughMask",
+   "bsr": 0.5,
+   "outerSeeds": 16,
+   "incident": {
+    "observed": 73572,
+    "expected": 73345.0,
+    "z": 0.838
+   },
+   "scored": {
+    "observed": 756,
+    "expected": 760.0,
+    "z": -0.121,
+    "referenceEfficiency": 0.010363,
+    "referenceHistories": 160000
+   }
+  },
+  {
+   "module": "Baseline",
+   "bound": "FrontOnlyThroughMask",
+   "bsr": 1,
+   "outerSeeds": 16,
+   "incident": {
+    "observed": 73572,
+    "expected": 73345.0,
+    "z": 0.838
+   },
+   "scored": {
+    "observed": 756,
+    "expected": 760.0,
+    "z": -0.121,
+    "referenceEfficiency": 0.010363,
+    "referenceHistories": 160000
+   }
+  },
+  {
+   "module": "Sharp",
+   "bound": "BareCrystalAllFaces",
+   "bsr": 0.5,
+   "outerSeeds": 16,
+   "incident": {
+    "observed": 697834,
+    "expected": 696986.3,
+    "z": 1.015
+   },
+   "scored": {
+    "observed": 141258,
+    "expected": 140042.0,
+    "z": 1.535,
+    "referenceEfficiency": 0.200925,
+    "referenceHistories": 160000
+   }
+  },
+  {
+   "module": "Sharp",
+   "bound": "BareCrystalAllFaces",
+   "bsr": 1,
+   "outerSeeds": 16,
+   "incident": {
+    "observed": 697834,
+    "expected": 696986.3,
+    "z": 1.015
+   },
+   "scored": {
+    "observed": 141258,
+    "expected": 140042.0,
+    "z": 1.535,
+    "referenceEfficiency": 0.200925,
+    "referenceHistories": 160000
+   }
+  },
+  {
+   "module": "Sharp",
+   "bound": "FrontOnlyThroughMask",
+   "bsr": 0.5,
+   "outerSeeds": 16,
+   "incident": {
+    "observed": 165586,
+    "expected": 165026.2,
+    "z": 1.378
+   },
+   "scored": {
+    "observed": 1517,
+    "expected": 1503.8,
+    "z": 0.239,
+    "referenceEfficiency": 0.009113,
+    "referenceHistories": 160000
+   }
+  },
+  {
+   "module": "Sharp",
+   "bound": "FrontOnlyThroughMask",
+   "bsr": 1,
+   "outerSeeds": 16,
+   "incident": {
+    "observed": 165586,
+    "expected": 165026.2,
+    "z": 1.378
+   },
+   "scored": {
+    "observed": 1517,
+    "expected": 1503.8,
+    "z": 0.239,
+    "referenceEfficiency": 0.009113,
+    "referenceHistories": 160000
+   }
+  }
+ ],
+ "allStochasticChecksPass": true,
+ "bsrInputsPerSourceInput": {
+  "0.5": 0.50085,
+  "1": 1.00034
+ },
+ "note": "Ambient checks repeat across BSR 0.5 and 1 because the ambient stream is independent of BSR with the same seeds; they are not independent tests.",
+ "plannerRerun": "identical apart from timing fields and the wall-time-bounded cancellation attempt count",
+ "scope": "Physical BSR detected-input acquisition conditional on fixed successful source-line banks; no localisation claim"
+}
