@@ -45,9 +45,7 @@ public static partial class IsolationPaths
 
     public static string Fingerprint(string directory)
     {
-        string entries = string.Join('\n', Directory.EnumerateFiles(directory, "*", SearchOption.AllDirectories)
-            .Order(StringComparer.Ordinal).Select(p => Path.GetRelativePath(directory, p).Replace('\\', '/') + ":" + Hash(File.ReadAllBytes(p))));
-        return Hash(Encoding.UTF8.GetBytes(entries));
+        return ContentFingerprint.Digest(ContentFingerprint.Files(directory));
     }
 
     public static string Hash(byte[] bytes) => Convert.ToHexStringLower(SHA256.HashData(bytes));

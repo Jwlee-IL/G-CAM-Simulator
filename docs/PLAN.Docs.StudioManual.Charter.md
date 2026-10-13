@@ -32,35 +32,41 @@ Isolation location: `tests/Gcam.Studio.UiTests/Harness/Isolation/`. Its content 
 
 ## First observed run: author instructions (prepared, not executed)
 
-The planner first reviews and commits the concrete stage-0 change on the author's approval. The author’s HUM-04 quote must approve only this limited probe purpose, scope and declared harness writes; it does not approve the eventual P4 manual charter. After inspecting first-run artefacts, the author may approve a separately concrete P4 charter. Run the final headless build/tests and pin **after** that commit; changing isolation files afterward invalidates the package. Choose a new run name such as `probe-20261013-01`. All commands below start from the worktree root. They are future author commands, not permission granted to the implementer.
+The planner first reviews and commits the concrete stage-0 change on the author's approval. The author’s HUM-04 quote must approve only this limited probe purpose, scope and declared harness writes; it does not approve the eventual P4 manual charter. After inspecting first-run artefacts, the author may approve a separately concrete P4 charter. Run the final headless build/tests and pin **after** that commit; changing isolation files afterward invalidates the package. Choose a new run name such as `probe-20261014-03`. All commands below start from the worktree root. They are future author commands, not permission granted to the implementer.
 
 In a **normal, non-administrator PowerShell 7**:
 
 ```powershell
-$runId = 'probe-20261013-01'
+$runId = 'probe-20261014-03'
 $runDir = Join-Path $env:TEMP ('gcam-todo43/' + $runId)
 New-Item -ItemType Directory -Path $runDir
 python -B tests/Gcam.Studio.UiTests/Harness/Isolation/stage0.py pin --out (Join-Path $runDir 'pin.json')
 ```
 
-Create `approvals.json` in that run folder using the pin's `isolationSha256` and `deploymentSha256`, the actual full commit and its `git show -s --format=%cI HEAD` date. Fields: `runId`, `commit`, `committedAt`, `isolationSha256`, `deploymentSha256`, `approvals`. Each approval has `id`, `humanActId` (HUM-01, HUM-04 or HUM-07), `targetCommit`, the **author's actual nonempty `quote`**, and offset `quotedAt` not earlier than the approved commit. No example statement is an approval. The package is local; do not commit personal statements or paths. The harness checks the actual HEAD/date and hashes before launching.
+Create `approvals.json` in that run folder using the pin's `isolationSha256` and `deploymentSha256`, the actual full commit and its `git show -s --format=%cI HEAD` date. Fields: `runId`, `commit`, `committedAt`, `isolationSha256`, `deploymentSha256`, `approvals`. Each approval has `id`, `humanActId` (HUM-01, HUM-04 or HUM-07), `targetCommit`, the **author's actual nonempty `quote`**, and offset `quotedAt` not earlier than the approved commit. No example statement is an approval. The package is local; do not commit personal statements or paths. The harness checks the actual HEAD/date and hashes before launching. Use `probe-YYYYMMDD-NN` with a fresh increasing two-digit suffix; a completed or failed attempt is never reused. Before asking the author to open an administrator terminal, the planner runs this **non-elevated preflight**:
+
+```powershell
+python -B tests/Gcam.Studio.UiTests/Harness/Isolation/stage0.py preflight --run-directory $runDir
+```
+
+Proceed only on `Preflight PASS`. It checks the complete approval package, actual HEAD/commit date, clean checkout, pin/live isolation/deployment/source hashes, canonical pin self-consistency, run ID, fresh run-folder state and an executable PowerShell 7. It collects explicit failures rather than starting a trace to discover them. An old pin has no fingerprint specification version and is refused; regenerate it and approvals against the reviewed change. The probe still independently validates source/package/live fingerprints after trace-ready.
 
 On the free desktop, in a separate **administrator PowerShell 7** (the author starts it):
 
 ```powershell
-$runDir = Join-Path $env:TEMP 'gcam-todo43/probe-20261013-01'
+$runDir = Join-Path $env:TEMP 'gcam-todo43/probe-20261014-03'
 & tests/Gcam.Studio.UiTests/Harness/Isolation/Trace-Probe.ps1 -RunDirectory $runDir -TimeoutSeconds 120
 ```
 
-This starts only the named instance and writes `trace.ready.json`; it waits for the harness signal. It never launches Studio, changes registry/settings, or cancels another WPR session. Its WPR temporary files and ETL destination are scratch-directed; OS ETW bookkeeping is not asserted to write only scratch. On timeout/abort, finally attempts to stop/save only the instance it started. A completed rerun is a no-op; unresolved prior state is refused. A WPR start/profile failure is a block, not a reason to reuse a global trace. Custom-profile runtime acceptance and loss statistics await this first elevated run.
+`Trace-Probe.ps1` requires PowerShell 7 at parse time; use `pwsh`, never Windows PowerShell 5.1 / `powershell.exe`. This starts only the named instance and writes `trace.ready.json`; it waits for the harness signal. It never launches Studio, changes registry/settings, or cancels another WPR session. Its WPR temporary files and ETL destination are scratch-directed; OS ETW bookkeeping is not asserted to write only scratch. On timeout/abort, finally attempts to stop/save only the instance it started. A completed rerun is a no-op; unresolved prior state is refused. A WPR start/profile failure is a block, not a reason to reuse a global trace. Custom-profile runtime acceptance and loss statistics await this first elevated run.
 
 Back in the **non-administrator** terminal, after `trace.ready.json` exists:
 
 ```powershell
 $env:GCAM_UI_TESTS = '1'
 $env:GCAM_UI_PROBE = '1'
-$env:GCAM_UI_PROBE_RUN = 'probe-20261013-01'
-$env:GCAM_UI_PROBE_DIRECTORY = Join-Path $env:TEMP 'gcam-todo43/probe-20261013-01'
+$env:GCAM_UI_PROBE_RUN = 'probe-20261014-03'
+$env:GCAM_UI_PROBE_DIRECTORY = Join-Path $env:TEMP 'gcam-todo43/probe-20261014-03'
 dotnet test tests/Gcam.Studio.UiTests -c Release --no-build --filter FullyQualifiedName~ObservedRunTests --logger "trx;LogFileName=probe.trx" --results-directory $env:GCAM_UI_PROBE_DIRECTORY
 ```
 
@@ -73,7 +79,7 @@ tracerpt (Join-Path $runDir 'probe.etl') -o (Join-Path $runDir 'events.xml') -of
 python -B tests/Gcam.Studio.UiTests/Harness/Isolation/stage0.py classify --trace (Join-Path $runDir 'events.xml') --context (Join-Path $runDir 'trace-context.json') --out (Join-Path $runDir 'classified.json')
 ```
 
-The parser accepts explicit fixture/metadata labels and leaves unfamiliar provider/opcode data unknown. The first real export may need a reviewed normalisation rule, then its own approved observed pilot; do not guess numeric ETW semantics or suppress unrelated candidates broadly. Check trace loss and channel evidence before any promotion: the context's `traceHealth` starts unproven, and zero lost events/buffers must be supported by the retained trace summary, never filled from an assumption. A2: the probe writes a harness-owned registry control after `trace.ready.json` is validated and before Studio launch: `HKCU\Software\GcamUiaProbe\<run-id>`, one `REG_SZ` value named `RunId` whose data is the run ID. The namespace separates harness evidence from Studio; the key and value both identify the run. Native create disposition refuses an existing run key without overwriting it; choose a new run ID if refused. The key is retained even after a failed/incomplete write, and markers are never deleted by the harness. Each later cleanup needs the author’s explicit approval. The control record contains the harness PID, exact HKCU/native key identities, value declaration and write interval. A successful recognised set-value event at that exact key/name proves the channel; value payload is checked if exported, otherwise the run identity is established by the key path. Missing/unmapped marker evidence remains **instrument-not-proven**. The WPR Registry keyword captures key and value operations; actual profile/export mapping still requires the observed run. Other registry candidates remain unknown under existing rules; A3 forbids broad actor/provider exclusions.
+The parser accepts explicit fixture/metadata labels and leaves unfamiliar provider/opcode data unknown. The first real export may need a reviewed normalisation rule, then its own approved observed pilot; do not guess numeric ETW semantics or suppress unrelated candidates broadly. Check trace loss and channel evidence before any promotion: the context's `traceHealth` starts unproven, and zero lost events/buffers must be supported by the retained trace summary, never filled from an assumption. A2: the probe writes a harness-owned registry control after `trace.ready.json` is validated and before Studio launch: `HKCU\Software\GcamUiaProbe\<run-id>`, one `REG_SZ` value named `RunId` whose data is the run ID. The namespace separates harness evidence from Studio; the key and value both identify the run. Native create disposition refuses an existing run key without overwriting it; choose a new run ID if refused. The key is retained even after a failed/incomplete write, and markers are never deleted by the harness. Each later cleanup needs the author’s explicit approval. The control record contains the harness PID, exact HKCU/native key identities, value declaration and write interval. A successful recognised set-value event at that exact key/name proves the channel; value payload is checked if exported, otherwise the run identity is established by the key path. Missing/unmapped marker evidence remains **instrument-not-proven**. The filtered Kernel-Registry manifest provider retains marker and mutation/name-association events; actual profile/export mapping still requires the observed run. Other registry candidates remain unknown under existing rules; A3 forbids broad actor/provider exclusions.
 
 MR6: network observation is **not applicable**, rather than a blind spot or a positive control, because current Studio source has no network code or authorised external connection. Source evidence: `src/Gcam.Studio/App.xaml.cs:17`, `src/Gcam.Studio.Services/SimulationService.cs:105` and the `app-network-process` surface. Both trace context and writeAudit record this decision and evidence. Unexpected observed connections are still undeclared effects/unknown candidates; not-applicable does not filter them. A4 retains the raw ETL and run folder locally until the edition using them is accepted, without built-in deletion. Raw traces are never committed; public summaries strip destinations and retain raw/context/rule hashes.
 
@@ -93,3 +99,14 @@ The fallback observes selected HKCU keys, owned-file hashes and process/TCP snap
 “The manual bundle uses P4. Common safety/ownership gates and per-bundle qualification are separate from product assertions. Existing scopes qualify through current source/deployment pins, observed-run channel controls and pilot evidence. Schema-1 manifests remain historical diagnostics. Final UI manifests are saved after cleanup and linked separately from manual/verification records. Raw machine-wide traces remain local; classification must preserve unknown candidates. A free desktop and author-approved charter/permission package precede launch. Initial qualification runs launch–idle–exit without UIA input/discovery. Capture definitions and quality checks are machine-reviewed; the author judges final figures on their output hashes.”
 
 Open decisions: approve charter/policy/qualification scopes; review real registry-marker channel/export proof and acceptable unresolved native effects (network is not applicable under MR6); set transition policy (A4 fixes local retention until edition acceptance); SM-7, SM-9, overlays and first-edition scope. No stage-0 headless pass is represented as runtime G1 or P4 qualification.
+
+
+## Fingerprint specification and effect-profile budget
+
+Specification 1 is shared by Python and C#: hash raw file bytes with SHA-256; use slash-normalised relative paths; exclude any relative path component named `bin`, `obj` or `__pycache__`. Isolation includes every other regular file; deployment includes only the case-sensitive suffixes `.dll`, `.exe`, `.json`. Sort the final relative strings by .NET ordinal (UTF-16 code-unit) order, independent of filesystem/path-component/case-insensitive order. Join `path:lowercase-sha256` with LF, without a final LF, encode UTF-8 and hash. The emitted deployment file map has the same canonical order, and its digest is checked against the pin. Cross-language fixtures cover nested punctuation, case, non-BMP names and exclusions. Changes invalidate isolation approval and the observed basis.
+
+The effect profile retains system process/thread and image start/stop/name evidence, plus explicit Kernel-File and Kernel-Registry event filters for create/write/set-info/rename/delete, registry key/value mutation and name/handle association. It drops file reads, registry query/enumeration, disk I/O detail, stacks, sampling and network (MR6). Each of two collectors requests 32 buffers of 64 KiB (2 MiB per collector). This is a buffer budget, not a truncating file-size cap: do not discard evidence to meet a size target. Required event/control coverage, provider-ID mapping and loss counts must be verified on the next observed run; schema validity alone is insufficient.
+
+Target **20–60 MB for two minutes** on an ordinary desktop, rather than hundreds of MB, because high-frequency read/query and all-I/O streams are removed. This is an unmeasured scheduling/storage target: a busy machine can exceed it. Reject missing required controls or lost events; never broaden an OS/runtime exclusion to shrink the output. New profile/mapping rules require HUM-07 reapproval.
+
+Export locally with tracerpt as above. The classifier streams XML event subtrees (or JSONL), replays the file for owned-descendant discovery, hashes files in chunks and streams every sanitised candidate into a `.candidates.jsonl` sidecar. The summary stores counts and the sidecar/trace/context/rule hashes; it never silently caps unknown candidates. Small JSON arrays remain synthetic-fixture inputs. Raw XML and all identifying export/schema/context files remain local under A4.

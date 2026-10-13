@@ -14,6 +14,81 @@ spec.loader.exec_module(stage0)
 
 
 class StageZeroIsolationTests(unittest.TestCase):
+    @staticmethod
+    def scratch():
+        root = Path(tempfile.gettempdir()) / ('gcam-stage0-fixture-' + __import__('uuid').uuid4().hex)
+        root.mkdir()
+        return root
+
+    def test_pin_deployment_hash_is_the_digest_of_its_serialised_file_list(self):
+        path = self.scratch() / 'pin.json'
+        stage0.pin(path)
+        emitted = json.loads(path.read_text(encoding='utf-8'))
+        self.assertEqual(1, emitted['fingerprintSpecVersion'])
+        self.assertEqual(stage0.digest('\n'.join(k + ':' + v for k, v in emitted['deploymentFiles'].items()).encode()),
+                         emitted['deploymentSha256'])
+
+    def test_preflight_checks_all_failures_without_registry_trace_or_launch(self):
+        root = self.scratch(); run = root / 'probe-20261014-03'; run.mkdir()
+        commit = 'a' * 40
+        files = {'a.dll': 'b' * 64}
+        live = {'workingTree': 'clean', 'sourceCommit': commit, 'fingerprintSpecVersion': 1,
+                'isolationSha256': 'i', 'deploymentSha256': stage0.fingerprint_map(files), 'deploymentFiles': files,
+                'sourceSha256': 's', 'runnerSourceSha256': 'r'}
+        approval = {'runId': run.name, 'commit': commit, 'committedAt': '2026-10-14T00:00:00Z',
+                    'isolationSha256': live['isolationSha256'], 'deploymentSha256': live['deploymentSha256'],
+                    'approvals': [{'id': act + '-fixture', 'humanActId': act, 'quote': 'synthetic approval fixture', 'targetCommit': commit,
+                                   'quotedAt': '2026-10-14T00:01:00Z'} for act in ('HUM-01', 'HUM-04', 'HUM-07')]}
+        stage0.write(run / 'pin.json', live); stage0.write(run / 'approvals.json', approval)
+        check = lambda version=7: stage0.preflight(run, lambda: live, lambda: (commit, approval['committedAt']),
+                                                 lambda: version, root)
+        self.assertEqual([], check())
+        for name in ('trace.ready.json', 'trace.complete.json', 'probe.etl'):
+            (run / name).write_text('retained synthetic evidence')
+        stale = dict(live); stale['deploymentSha256'] = 'stale'; stale.pop('fingerprintSpecVersion')
+        stage0.write(run / 'pin.json', stale)
+        approval['approvals'][0]['quotedAt'] = '2026-10-13T00:00:00Z'
+        approval['runId'] = 'another'; stage0.write(run / 'approvals.json', approval)
+        issues = check(5)
+        for token in ('trace.ready', 'trace.complete', 'ETL', 'pwsh', 'runId', 'fingerprintSpecVersion',
+                      'deploymentFiles', 'deploymentSha256', 'predates'):
+            self.assertTrue(any(token in issue for issue in issues), token)
+        self.assertTrue((run / 'probe.etl').exists())
+        self.assertTrue(stage0.preflight(root.parent / 'foreign', scratch_root=root))
+
+    def test_streaming_xml_releases_events_and_sink_preserves_unknown_candidates(self):
+        import tracemalloc
+        path = self.scratch() / 'large.xml'
+        with path.open('w', encoding='utf-8') as stream:
+            stream.write('<Events>')
+            for _ in range(12000):
+                stream.write('<Event><System><Provider Name="Unmapped"/><Execution ProcessID="99"/></System></Event>')
+            stream.write('</Events>')
+        count = 0
+        def sink(candidate):
+            nonlocal count
+            count += 1
+            self.assertEqual('unknown', candidate['classification'])
+        tracemalloc.start()
+        try:
+            result = stage0.classify(lambda: stage0.parse_trace(path), {'ownedProcesses': []}, self.rules, sink)
+            peak = tracemalloc.get_traced_memory()[1]
+        finally:
+            tracemalloc.stop()
+        self.assertEqual(12000, count)
+        self.assertEqual(count, result['candidateCount'])
+        self.assertEqual([], result['candidates'])
+        self.assertFalse(result['g1Eligible'])
+        self.assertLess(peak, 4 * 1024 * 1024)  # Regression bound on a fixed synthetic tree, not a capture margin.
+
+    def test_stream_factory_and_list_have_identical_tree_and_candidate_verdicts(self):
+        child = self.event(11, 'process', 'ProcessStart', 'child'); child['parentPid'] = 10
+        grandchild = self.event(12, 'process', 'ProcessStart', 'child'); grandchild['parentPid'] = 11
+        events = self.controls + [grandchild, child, self.event(12, 'file', 'Write', 'outside/data')]
+        expected = stage0.classify(events, self.context, self.rules)
+        self.assertEqual(expected, stage0.classify(lambda: iter(events), self.context, self.rules))
+        with self.assertRaises(ValueError): stage0.classify(iter(events), self.context, self.rules)
+
     def setUp(self):
         self.rules = json.loads((SCRIPT.parent / 'classification-rules.json').read_text())
         # A synthetic two-channel scope is not the real three-channel probe policy.
@@ -156,7 +231,7 @@ class StageZeroIsolationTests(unittest.TestCase):
                         '<TimeCreated SystemTime="2026-10-13T00:00:05Z"/><Opcode>SetValue</Opcode></System><EventData>'
                         '<Data Name="KeyName">' + marker['destination'] + '</Data><Data Name="ValueName">RunId</Data>'
                         '<Data Name="ValueData">probe-01</Data><Data Name="Status">0</Data></EventData></Event></Events>')
-        events = stage0.parse_trace(path)
+        events = list(stage0.parse_trace(path))
         self.assertTrue(stage0.classify(self.controls + events, self.context, self.rules)['g1Eligible'])
 
     def test_no_owned_product_run_is_not_green(self):
@@ -200,7 +275,7 @@ class StageZeroIsolationTests(unittest.TestCase):
         root.mkdir()
         path = root / 'events.xml'
         path.write_text('<Events><Event><System><Provider Name="FileIo"/><Execution ProcessID="10"/><TimeCreated SystemTime="2026-10-13T00:00:05Z"/><Opcode>Read</Opcode></System><EventData><Data Name="FileName">ambient.json</Data></EventData></Event><Event><System><Provider Name="Unmapped"/><Execution ProcessID="20"/></System></Event></Events>')
-        events = stage0.parse_trace(path)
+        events = list(stage0.parse_trace(path))
         self.assertEqual(('file', 10, 'ambient.json'), (events[0]['channel'], events[0]['pid'], events[0]['destination']))
         self.assertEqual('unknown', events[1]['channel'])
 

@@ -8,7 +8,9 @@ import hashlib
 import json
 from pathlib import Path
 import re
+import shutil
 import subprocess
+import tempfile
 import xml.etree.ElementTree as ET
 
 REPO = Path(__file__).resolve().parents[4]
@@ -16,7 +18,17 @@ ISOLATION = Path(__file__).resolve().parent
 
 
 def canonical(value):
-    return (json.dumps(value, sort_keys=True, indent=2, ensure_ascii=True, allow_nan=False) + '\n').encode()
+    def ordered(item):
+        if isinstance(item, dict):
+            return {key: ordered(item[key]) for key in sorted(item, key=ordinal)}
+        if isinstance(item, (list, tuple)):
+            return [ordered(entry) for entry in item]
+        return item
+    return (json.dumps(ordered(value), indent=2, ensure_ascii=True, allow_nan=False) + '\n').encode()
+
+
+def ordinal(value):
+    return value.encode('utf-16-be', errors='surrogatepass')  # .NET StringComparer.Ordinal
 
 
 def digest(data):
@@ -81,13 +93,34 @@ def check_policy(policy, declared):
             raise ValueError('unknown-policy-value')
 
 
+def file_digest(path):
+    result = hashlib.sha256()
+    with Path(path).open('rb') as stream:
+        for chunk in iter(lambda: stream.read(1024 * 1024), b''):
+            result.update(chunk)
+    return result.hexdigest()
+
+
+def fingerprint_files(directory, deployment=False):
+    files = {}
+    for path in Path(directory).rglob('*'):
+        relative = path.relative_to(directory)
+        if (not path.is_file() or any(part in ('bin', 'obj', '__pycache__') for part in relative.parts)
+                or deployment and path.suffix not in ('.dll', '.exe', '.json')):
+            continue
+        files[relative.as_posix()] = file_digest(path)
+    return {name: files[name] for name in sorted(files, key=ordinal)}
+
+
+def fingerprint_map(files):
+    return digest('\n'.join(key + ':' + files[key] for key in sorted(files, key=ordinal)).encode('utf-8'))
+
+
 def fingerprint(directory):
-    entries = [p.relative_to(directory).as_posix() + ':' + digest(p.read_bytes())
-               for p in sorted(directory.rglob('*')) if p.is_file() and '__pycache__' not in p.parts]
-    return digest('\n'.join(entries).encode())
+    return fingerprint_map(fingerprint_files(directory))
 
 
-def pin(out):
+def pin(out=None):
     # Pin exact product inputs and binaries produced by the recorded build; not a runtime qualification.
     source = {}
     for path in sorted((REPO / 'src').rglob('*')):
@@ -98,8 +131,7 @@ def pin(out):
     for name in ('samples/ambient/terrestrial-unscear2000-v1.json', 'samples/evidence/studio-readout/offer-cost-v1.json'):
         source[name] = digest((REPO / name).read_bytes())
     deployment = REPO / 'src/Gcam.Studio/bin/Release/net9.0-windows'
-    binaries = {p.relative_to(deployment).as_posix(): digest(p.read_bytes()) for p in sorted(deployment.rglob('*'))
-                if p.is_file() and p.suffix in ('.dll', '.exe', '.json')}
+    binaries = fingerprint_files(deployment, deployment=True)
     if not binaries or 'Gcam.Studio.dll' not in binaries:
         raise ValueError('build-required')
     commit = subprocess.run(['git', '--no-optional-locks', 'rev-parse', 'HEAD'], cwd=REPO, check=True, capture_output=True, text=True).stdout.strip()
@@ -108,58 +140,189 @@ def pin(out):
               if p.is_file() and not any(part in ('bin', 'obj', '__pycache__') for part in p.parts)}
     result = {'schemaVersion': 1, 'sourceCommit': commit, 'sourceFiles': source, 'sourceSha256': digest(canonical(source)),
               'workingTree': 'dirty' if dirty else 'clean', 'runnerSourceFiles': runner, 'runnerSourceSha256': digest(canonical(runner)),
-              'deploymentFiles': binaries, 'deploymentSha256': digest('\n'.join(k + ':' + v for k, v in binaries.items()).encode()),
+              'fingerprintSpecVersion': 1,
+              'deploymentFiles': binaries, 'deploymentSha256': fingerprint_map(binaries),
               'isolationSha256': fingerprint(ISOLATION),
               'linkBasis': 'same-checkout Release build invocation; source and deployed file hashes; runtime not executed',
               'runtimeQualification': 'not performed'}
-    write(out, result)
+    if out is not None:
+        write(out, result)
     return result
 
 
+def source_identity():
+    commit = subprocess.run(['git', '--no-optional-locks', 'rev-parse', 'HEAD'], cwd=REPO,
+                            check=True, capture_output=True, text=True, timeout=10).stdout.strip()
+    date = subprocess.run(['git', '--no-optional-locks', 'show', '-s', '--format=%cI', 'HEAD'], cwd=REPO,
+                          check=True, capture_output=True, text=True, timeout=10).stdout.strip()
+    return commit, date
+
+
+def pwsh_version():
+    executable = shutil.which('pwsh')
+    if executable is None:
+        raise ValueError('pwsh 7 is missing; use PowerShell 7, not Windows PowerShell 5.1')
+    result = subprocess.run([executable, '-NoLogo', '-NoProfile', '-NonInteractive', '-Command',
+                             '$PSVersionTable.PSVersion.Major'], check=True, capture_output=True, text=True, timeout=10)
+    return int(result.stdout.strip())
+
+
+def preflight(run_directory, live_pin=None, identity=None, version=None, scratch_root=None):
+    """Read-only. Collect all failures before an administrator opens the trace window."""
+    issues = []
+    root = Path(scratch_root or Path(tempfile.gettempdir()) / 'gcam-todo43').resolve()
+    path = Path(run_directory).absolute()
+    try:
+        path.relative_to(root)
+        if path == root:
+            raise ValueError('run folder is the scratch root')
+        for ancestor in [path, *path.parents]:
+            if ancestor.exists() and (ancestor.is_symlink() or getattr(ancestor.stat(), 'st_file_attributes', 0) & 0x400):
+                raise ValueError('reparse point in run folder')
+            if ancestor == root:
+                break
+    except ValueError as error:
+        return [f'run folder is not a confined scratch child: {error}']
+    run_id = path.name
+    if not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_-]{0,70}', run_id):
+        issues.append('invalid run ID')
+    if not path.is_dir():
+        issues.append('run folder does not exist')
+    for name in ('trace.ready.json', 'trace.complete.json', 'harness.complete.json', 'trace.lock'):
+        if (path / name).exists():
+            issues.append('run folder already contains ' + name + '; choose a fresh run ID')
+    if path.exists() and any(path.glob('*.etl')):
+        issues.append('run folder already contains ETL; retained runs are read-only')
+    documents = {}
+    for name in ('approvals.json', 'pin.json'):
+        try:
+            target = path / name
+            if target.is_symlink() or getattr(target.stat(), 'st_file_attributes', 0) & 0x400:
+                raise ValueError('reparse document')
+            documents[name] = json.loads(target.read_text(encoding='utf-8-sig'))
+            if not isinstance(documents[name], dict):
+                raise ValueError('expected an object')
+        except (OSError, ValueError) as error:
+            issues.append(name + ' is missing/invalid: ' + type(error).__name__)
+    try:
+        major = (version or pwsh_version)()
+        if major < 7:
+            issues.append('pwsh must be version 7 or later; use pwsh, not powershell.exe')
+    except (OSError, ValueError, subprocess.SubprocessError) as error:
+        issues.append('pwsh 7 validation failed: ' + str(error))
+    try:
+        live = (live_pin or pin)()
+        commit, committed_at = (identity or source_identity)()
+        if live.get('workingTree') != 'clean':
+            issues.append('current HEAD worktree is dirty; review/commit and regenerate pin/approvals')
+        approval = documents.get('approvals.json', {})
+        recorded = documents.get('pin.json', {})
+        if approval.get('runId') != run_id:
+            issues.append('approvals runId differs from run folder')
+        if approval.get('commit') != commit or recorded.get('sourceCommit') != commit:
+            issues.append('approval/pin commit differs from current HEAD')
+        parse_date = lambda value: dt.datetime.fromisoformat(value.replace('Z', '+00:00'))
+        try:
+            if parse_date(approval.get('committedAt', '')) != parse_date(committed_at):
+                issues.append('approval commit date differs from actual HEAD commit date')
+        except (ValueError, AttributeError, TypeError):
+            issues.append('approval commit date is missing/invalid')
+        if recorded.get('fingerprintSpecVersion') != 1:
+            issues.append('stale pin: fingerprintSpecVersion must be 1; regenerate pin')
+        if recorded.get('workingTree') != 'clean':
+            issues.append('pin was made from a dirty worktree')
+        if recorded.get('deploymentSha256') != fingerprint_map(recorded.get('deploymentFiles', {})):
+            issues.append('stale pin: deploymentSha256 is not the canonical digest of deploymentFiles')
+        for field in ('isolationSha256', 'deploymentSha256'):
+            if recorded.get(field) != live.get(field):
+                issues.append('stale pin: ' + field + ' differs from live files')
+            if approval.get(field) != live.get(field):
+                issues.append('approval ' + field + ' differs from live files')
+        for field in ('sourceSha256', 'runnerSourceSha256'):
+            if recorded.get(field) != live.get(field):
+                issues.append('stale pin: ' + field + ' differs from live sources')
+        records = approval.get('approvals', [])
+        for act in ('HUM-01', 'HUM-04', 'HUM-07'):
+            matches = [record for record in records if isinstance(record, dict) and record.get('humanActId') == act]
+            if len(matches) != 1:
+                issues.append(act + ' requires exactly one approval')
+                continue
+            record = matches[0]
+            if (not isinstance(record.get('id'), str) or not record['id'].strip()
+                    or not isinstance(record.get('quote'), str) or not record['quote'].strip()
+                    or not re.fullmatch(r'[0-9a-f]{40}', str(record.get('targetCommit', '')))
+                    or record.get('targetCommit') != commit):
+                issues.append(act + ' record ID/quote/target commit is invalid')
+            try:
+                if parse_date(record.get('quotedAt', '')) < parse_date(committed_at):
+                    issues.append(act + ' approval predates the approved commit')
+            except (ValueError, TypeError, AttributeError):
+                issues.append(act + ' approval date is missing/invalid')
+    except (OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError) as error:
+        issues.append('live source/deployment validation failed: ' + str(error))
+    return issues
+
+
 def parse_trace(path):
-    """Read a normalised fixture or tracerpt XML; unrecognised providers/fields stay unknown."""
+    """Stream XML/JSONL. Retain only one Event subtree; array JSON is for small synthetic fixtures."""
     path = Path(path)
     if path.suffix == '.json':
-        return json.loads(path.read_text(encoding='utf-8'))
-    root = ET.parse(path).getroot()
-    rows = []
-    for event in root.iter():
-        if event.tag.rsplit('}', 1)[-1] != 'Event':
-            continue
-        data = {}
-        provider = ''
-        for node in event.iter():
-            name = node.tag.rsplit('}', 1)[-1]
-            if name == 'Provider':
-                provider = node.attrib.get('Name', node.attrib.get('Guid', ''))
-            if name == 'Data':
-                data[node.attrib.get('Name', '')] = node.text or ''
-            if name == 'Execution':
-                data.setdefault('ProcessId', node.attrib.get('ProcessID', ''))
-            if name in ('Opcode', 'Task', 'EventID', 'TimeCreated'):
-                data[name] = node.attrib.get('SystemTime', node.text or '')
-        raw_pid = data.get('PID', data.get('ProcessId', data.get('ProcessID', '')))
-        try:
-            pid = int(raw_pid, 16) if raw_pid.lower().startswith('0x') else int(raw_pid)
-        except ValueError:
-            pid = None
-        text = (provider + ' ' + data.get('Task', '')).lower()
-        channel = next((c for c, hints in {'file': ('file',), 'registry': ('registry', 'reg'),
-                                         'process': ('process', 'image'), 'network': ('network', 'tcp', 'udp')}.items()
-                        if any(h in text for h in hints)), 'unknown')
-        raw_parent = data.get('ParentProcessID', data.get('ParentID', data.get('ParentId', '')))
-        try:
-            parent = int(raw_parent, 16) if raw_parent.lower().startswith('0x') else int(raw_parent)
-        except ValueError:
-            parent = None
-        rows.append({'pid': pid, 'channel': channel, 'operation': data.get('Operation', data.get('Opcode', '')),
-                     'destination': data.get('FileName', data.get('KeyName', data.get('ImageName', data.get('daddr', '')))),
-                     'parentPid': parent,
-                     'valueName': data.get('ValueName', ''),
-                     'valueData': data.get('ValueData'),
-                     'status': data.get('Status'),
-                     'at': data.get('TimeCreated', ''), 'provider': provider, 'fields': data})
-    return rows
+        yield from json.loads(path.read_text(encoding='utf-8'))
+        return
+    if path.suffix == '.jsonl':
+        with path.open(encoding='utf-8') as stream:
+            for line in stream:
+                yield json.loads(line)
+        return
+    stack = []
+    with path.open('rb') as stream:
+        for action, element in ET.iterparse(stream, events=('start', 'end')):
+            if action == 'start':
+                stack.append(element)
+                continue
+            if element.tag.rsplit('}', 1)[-1] == 'Event':
+                row = parse_event(element)
+                if len(stack) > 1:
+                    stack[-2].remove(element)
+                element.clear()
+                yield row
+            stack.pop()
+
+
+def parse_event(event):
+    data = {}
+    provider = ''
+    for node in event.iter():
+        name = node.tag.rsplit('}', 1)[-1]
+        if name == 'Provider':
+            provider = node.attrib.get('Name', node.attrib.get('Guid', ''))
+        if name == 'Data':
+            data[node.attrib.get('Name', '')] = node.text or ''
+        if name == 'Execution':
+            data.setdefault('ProcessId', node.attrib.get('ProcessID', ''))
+        if name in ('Opcode', 'Task', 'EventID', 'TimeCreated'):
+            data[name] = node.attrib.get('SystemTime', node.text or '')
+    raw_pid = data.get('PID', data.get('ProcessId', data.get('ProcessID', '')))
+    try:
+        pid = int(raw_pid, 16) if raw_pid.lower().startswith('0x') else int(raw_pid)
+    except ValueError:
+        pid = None
+    text = (provider + ' ' + data.get('Task', '')).lower()
+    channel = next((c for c, hints in {'file': ('file',), 'registry': ('registry', 'reg'),
+                                     'process': ('process', 'image'), 'network': ('network', 'tcp', 'udp')}.items()
+                    if any(h in text for h in hints)), 'unknown')
+    raw_parent = data.get('ParentProcessID', data.get('ParentID', data.get('ParentId', '')))
+    try:
+        parent = int(raw_parent, 16) if raw_parent.lower().startswith('0x') else int(raw_parent)
+    except ValueError:
+        parent = None
+    return {'pid': pid, 'channel': channel, 'operation': data.get('Operation', data.get('Opcode', '')),
+                 'destination': data.get('FileName', data.get('KeyName', data.get('ImageName', data.get('daddr', '')))),
+                 'parentPid': parent,
+                 'valueName': data.get('ValueName', ''),
+                 'valueData': data.get('ValueData'),
+                 'status': data.get('Status'),
+                 'at': data.get('TimeCreated', ''), 'provider': provider, 'fields': data}
 
 
 def registry_marker_match(event, control, rules, harness, proof=False):
@@ -203,10 +366,16 @@ def registry_marker_match(event, control, rules, harness, proof=False):
     return True
 
 
-def classify(events, context, rules):
+def classify(events, context, rules, candidate_sink=None):
     """Identity/time is required; PID alone cannot promote recycled process events."""
     required = set(context.get('requiredChannels', [])) | set(rules.get('requiredChannels', []))
     candidates, controls = [], {channel: False for channel in sorted(required)}
+    read_events = events if callable(events) else lambda: iter(events)
+    if not callable(events) and iter(events) is events:
+        raise ValueError("Supply a replayable event factory, not a consumed iterator")
+    counts = {}
+    candidate_count = 0
+    unsafe = unresolved = False
     owned = context.get('ownedProcesses', [])
     harness = set(context.get('harnessPids', []))
     roots = context.get('ownedRoots', [])
@@ -217,17 +386,17 @@ def classify(events, context, rules):
         except (ValueError, TypeError):
             return False
     tree = list(owned)
-    grew = True
+    grew = bool(tree)
     while grew:
         grew = False
-        for event in events:
+        for event in read_events():
             if event.get('channel') != 'process' or event.get('operation') != 'ProcessStart':
                 continue
             parents = [o for o in tree if o['pid'] == event.get('parentPid') and in_lifetime(o, event)]
             if parents and not any(o['pid'] == event.get('pid') and in_lifetime(o, event) for o in tree):
                 tree.append({'pid': event['pid'], 'startedAt': event['at'], 'finishedAt': parents[0]['finishedAt'], 'parentPid': event['parentPid']})
                 grew = True
-    for event in events:
+    for event in read_events():
         pid = event.get('pid')
         owners = [o for o in tree if o['pid'] == pid and in_lifetime(o, event)]
         positive = any(registry_marker_match(event, c, rules, harness, proof=True) if c.get('channel') == 'registry'
@@ -268,15 +437,22 @@ def classify(events, context, rules):
         else:
             # Includes app-requested shell effects without sufficient causal metadata.
             category = 'unknown'
-        candidates.append({'channel': event.get('channel', 'unknown'), 'pid': pid, 'classification': category,
-                           'eventSha256': digest(canonical(event))})
+        candidate = {'channel': event.get('channel', 'unknown'), 'pid': pid, 'classification': category,
+                     'eventSha256': digest(canonical(event))}
+        if candidate_sink is None:
+            candidates.append(candidate)
+        else:
+            candidate_sink(candidate)
+        candidate_count += 1
+        counts[category] = counts.get(category, 0) + 1
+        unsafe |= category == 'out-of-declaration'
+        unresolved |= category == 'unknown'
     proven = all(controls.values()) and bool(controls) and bool(owned)
     health = context.get('traceHealth', {})
     loss_proven = (health.get('complete') is True and type(health.get('eventsLost')) is int and type(health.get('buffersLost')) is int
                    and health['eventsLost'] == 0 and health['buffersLost'] == 0)
-    unsafe = any(c['classification'] == 'out-of-declaration' for c in candidates)
-    unresolved = any(c['classification'] == 'unknown' for c in candidates)
-    return {'schemaVersion': 1, 'candidates': candidates, 'positiveControls': controls,
+    return {'schemaVersion': 1, 'candidates': candidates, 'candidateCount': candidate_count,
+            'classificationCounts': counts, 'positiveControls': controls,
             'runStatus': 'unsafe_effect' if unsafe else 'blocked' if not proven or not loss_proven or unresolved else 'completed',
             'reason': 'undeclared-app-effect' if unsafe else 'instrument-not-proven' if not proven else 'trace-health-not-proven' if not loss_proven else 'unresolved-candidate' if unresolved else '',
             'g1Eligible': proven and loss_proven and not unsafe and not unresolved,
@@ -296,6 +472,8 @@ def main():
     sub = parser.add_subparsers(dest='command', required=True)
     sub.add_parser('check-policy')
     p = sub.add_parser('pin'); p.add_argument('--out', required=True)
+    p = sub.add_parser('fingerprint'); p.add_argument('--directory', required=True); p.add_argument('--kind', choices=('isolation', 'deployment'), default='isolation')
+    p = sub.add_parser('preflight'); p.add_argument('--run-directory', required=True)
     p = sub.add_parser('classify'); p.add_argument('--trace', required=True); p.add_argument('--context', required=True); p.add_argument('--out', required=True)
     args = parser.parse_args()
     if args.command == 'check-policy':
@@ -303,11 +481,27 @@ def main():
         print('Action policy and current declarations agree; runtime qualification not performed.')
     elif args.command == 'pin':
         pin(args.out)
+    elif args.command == 'fingerprint':
+        files = fingerprint_files(Path(args.directory), args.kind == 'deployment')
+        print(canonical({'files': files, 'sha256': fingerprint_map(files)}).decode(), end='')
+    elif args.command == 'preflight':
+        issues = preflight(args.run_directory)
+        for issue in issues:
+            print('FAIL: ' + issue)
+        print('Preflight BLOCKED; do not start tracing.' if issues else 'Preflight PASS; author may now prepare the approved tracing window.')
+        if issues:
+            raise SystemExit(2)
     else:
         context = json.loads(Path(args.context).read_text())
         rules = json.loads((ISOLATION / 'classification-rules.json').read_text())
-        result = classify(parse_trace(args.trace), context, rules)
-        result['traceSha256'] = digest(Path(args.trace).read_bytes())
+        candidate_path = Path(args.out).with_suffix('.candidates.jsonl')
+        candidate_path.parent.mkdir(parents=True, exist_ok=True)
+        with candidate_path.open('w', encoding='utf-8', newline='\n') as stream:
+            result = classify(lambda: parse_trace(args.trace), context, rules,
+                              lambda candidate: stream.write(json.dumps(candidate, separators=(',', ':')) + '\n'))
+        result['candidateFile'] = candidate_path.name
+        result['candidateSha256'] = file_digest(candidate_path)
+        result['traceSha256'] = file_digest(args.trace)
         result['contextSha256'] = digest(canonical(context))
         result['rulesSha256'] = digest(canonical(rules))
         write(args.out, result)

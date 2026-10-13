@@ -30,9 +30,6 @@ public sealed record ProbePackage(string RunId, string Commit, DateTimeOffset Co
     public static string DeploymentFingerprint(string exe)
     {
         string root = Path.GetDirectoryName(exe)!;
-        var files = Directory.EnumerateFiles(root, "*", SearchOption.AllDirectories)
-            .Where(p => Path.GetExtension(p) is ".dll" or ".exe" or ".json").Order(StringComparer.Ordinal);
-        return IsolationPaths.Hash(System.Text.Encoding.UTF8.GetBytes(string.Join('\n', files.Select(p =>
-            Path.GetRelativePath(root, p).Replace('\\', '/') + ":" + IsolationPaths.Hash(File.ReadAllBytes(p))))));
+        return ContentFingerprint.Digest(ContentFingerprint.Files(root, deployment: true));
     }
 }

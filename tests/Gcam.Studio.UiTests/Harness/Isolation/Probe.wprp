@@ -1,23 +1,48 @@
 <?xml version="1.0" encoding="utf-8"?>
 <WindowsPerformanceRecorder Version="1.0" Author="GCAM" Company="GCAM">
   <Profiles>
-    <SystemCollector Id="ProbeCollector" Name="GCAM probe collector">
-      <BufferSize Value="256" />
-      <Buffers Value="64" />
+    <SystemCollector Id="ProbeCollector" Name="GCAM process and image collector">
+      <BufferSize Value="64" />
+      <Buffers Value="32" />
     </SystemCollector>
+    <EventCollector Id="EffectCollector" Name="GCAM effect collector">
+      <BufferSize Value="64" />
+      <Buffers Value="32" />
+    </EventCollector>
     <SystemProvider Id="ProbeProvider">
       <Keywords>
         <Keyword Value="ProcessThread" />
         <Keyword Value="Loader" />
-        <Keyword Value="FileIO" />
-        <Keyword Value="FileIOInit" />
-        <!-- Registry includes create/open/set-value events for the harness-owned HKCU marker. -->
-        <Keyword Value="Registry" />
-        <Keyword Value="NetworkTrace" />
       </Keywords>
     </SystemProvider>
-    <Profile Id="GcamProbe.Verbose.File" Name="GcamProbe" Description="GCAM first qualification observation" LoggingMode="File" DetailLevel="Verbose">
-      <Collectors><SystemCollectorId Value="ProbeCollector"><SystemProviderId Value="ProbeProvider" /></SystemCollectorId></Collectors>
+    <!-- Manifest-provider event filters avoid the classic all-I/O/all-registry streams.
+         File: name association, create/cleanup/close, write, set-info/delete/rename, operation end.
+         Registry: create/delete/set-value/delete-value/set-info and key-handle/name association.
+         No stacks, disk payload, file reads, registry queries/enumeration, network or CPU sampling.
+         Required controls and zero-loss evidence must prove acceptance on the observed machine. -->
+    <EventProvider Id="FileEffects" Name="Microsoft-Windows-Kernel-File" Level="5">
+      <Keywords><Keyword Value="0xFFFFFFFFFFFFFFFF" /></Keywords>
+      <EventFilters FilterIn="true">
+        <EventId Value="10" /><EventId Value="11" /><EventId Value="12" />
+        <EventId Value="64" /><EventId Value="65" /><EventId Value="66" />
+        <EventId Value="68" /><EventId Value="69" /><EventId Value="70" /><EventId Value="71" />
+        <EventId Value="74" /><EventId Value="76" /><EventId Value="77" />
+      </EventFilters>
+    </EventProvider>
+    <EventProvider Id="RegistryEffects" Name="Microsoft-Windows-Kernel-Registry" Level="5">
+      <Keywords><Keyword Value="0xFFFFFFFFFFFFFFFF" /></Keywords>
+      <EventFilters FilterIn="true">
+        <EventId Value="1" /><EventId Value="3" /><EventId Value="5" /><EventId Value="6" /><EventId Value="11" />
+        <EventId Value="13" /><EventId Value="14" /><EventId Value="15" /><EventId Value="16" /><EventId Value="18" />
+      </EventFilters>
+    </EventProvider>
+    <Profile Id="GcamProbe.Verbose.File" Name="GcamProbe" Description="GCAM bounded effect audit" LoggingMode="File" DetailLevel="Verbose">
+      <Collectors>
+        <SystemCollectorId Value="ProbeCollector"><SystemProviderId Value="ProbeProvider" /></SystemCollectorId>
+        <EventCollectorId Value="EffectCollector"><EventProviders>
+          <EventProviderId Value="FileEffects" /><EventProviderId Value="RegistryEffects" />
+        </EventProviders></EventCollectorId>
+      </Collectors>
     </Profile>
   </Profiles>
 </WindowsPerformanceRecorder>

@@ -1,3 +1,5 @@
+#Requires -Version 7.0
+# Use pwsh 7; Windows PowerShell 5.1 does not support ProcessStartInfo.ArgumentList.
 param(
     [Parameter(Mandatory)][string]$RunDirectory,
     [ValidateRange(10, 600)][int]$TimeoutSeconds = 120
