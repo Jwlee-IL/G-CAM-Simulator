@@ -95,15 +95,29 @@ public sealed partial class MainViewModel
         get
         {
             var present = ReadoutPolicy.LinesInScene(Sources.Select(s => s.ToModel()));
-            return ReadoutPlans.Select(plan => new ReadoutLineRow(plan, present.Contains(plan.LineKeV), plan.Reason, LocalState(plan))).ToArray();
+            return ReadoutPlans.Select(plan =>
+            {
+                var (local, label, detail) = LocalState(plan);
+                return new ReadoutLineRow(plan, present.Contains(plan.LineKeV), plan.Reason, local) { LocalLabel = label, LocalDetail = detail };
+            }).ToArray();
         }
     }
 
-    private string LocalState(ReadoutLinePlan plan) => !plan.CanPrepare ? "not preparable"
-        : Failure(plan) is { } failure ? string.Create(CultureInfo.InvariantCulture, $"Failed: {plan.LineKeV:0.##} keV: {failure}")
-        : Prepared(plan) is not { } p ? "not prepared"
-        : p.Succeeded ? string.Create(CultureInfo.InvariantCulture, $"ready · {p.Cost.TotalSeconds:0.00} s · {p.Peaks.Count:N0} / {p.Module?.Crystals.ToString("N0", CultureInfo.InvariantCulture) ?? "?"} peaks")
-        : $"failed: {p.Failure}";
+    /// <summary>The local state as one line (<see cref="ReadoutLineRow.Local"/>) and as the panel's word + detail cells.</summary>
+    private (string Local, string Label, string Detail) LocalState(ReadoutLinePlan plan)
+    {
+        const char nbsp = ' '; // keeps "11.00 s" and "144 / 144 peaks" whole when the column wraps
+        if (!plan.CanPrepare) return ("not preparable", "not preparable", "");
+        if (Failure(plan) is { } failure)
+            return (string.Create(CultureInfo.InvariantCulture, $"Failed: {plan.LineKeV:0.##} keV: {failure}"), "failed", failure);
+        if (Prepared(plan) is not { } p) return ("not prepared", "not prepared", "");
+        if (!p.Succeeded) return ($"failed: {p.Failure}", "failed", p.Failure ?? "");
+        string seconds = p.Cost.TotalSeconds.ToString("0.00", CultureInfo.InvariantCulture);
+        string peaks = p.Peaks.Count.ToString("N0", CultureInfo.InvariantCulture);
+        string crystals = p.Module?.Crystals.ToString("N0", CultureInfo.InvariantCulture) ?? "?";
+        return ($"ready · {seconds} s · {peaks} / {crystals} peaks", "ready",
+            $"{seconds}{nbsp}s · {peaks}{nbsp}/{nbsp}{crystals}{nbsp}peaks");
+    }
 
     public string ReadoutState
     {

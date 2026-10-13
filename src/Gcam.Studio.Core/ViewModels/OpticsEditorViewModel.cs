@@ -35,6 +35,7 @@ public sealed partial class OpticsEditorViewModel : ObservableObject
             if (SetProperty(ref _selectedPreset, value))
             {
                 OnPropertyChanged(nameof(IsCustom));
+                OnPropertyChanged(nameof(CanEditFields));
                 if (!_loading) Load(value.Settings is { } settings
                     ? settings with { FocalDistanceMm = Effective.FocalDistanceMm } : Effective);
             }
@@ -42,6 +43,10 @@ public sealed partial class OpticsEditorViewModel : ObservableObject
         }
     }
     public bool IsCustom => SelectedPreset.Settings is null;
+    /// <summary>The numeric fields are always shown; a preset writes its values into them and disables them, Custom
+    /// enables them (starting from the current values). The shell's input lock (<see cref="IsEditable"/>) applies too.</summary>
+    public bool CanEditFields => IsEditable && IsCustom;
+    partial void OnIsEditableChanged(bool value) => OnPropertyChanged(nameof(CanEditFields));
     public int SelectedPresetIndex
     {
         get => Array.IndexOf(OpticsPreset.All.ToArray(), SelectedPreset);
@@ -51,7 +56,6 @@ public sealed partial class OpticsEditorViewModel : ObservableObject
             else RefreshPresetSelection();
         }
     }
-    public string Summary => $"rank {Effective.MuraRank} · {Effective.CellPitchMm:0.##} mm · D {Effective.MaskDetectorDistanceMm:0.#} mm · {Effective.DetectorPixels}×{Effective.DetectorPixels} @ {Effective.PixelPitchMm:0.##} mm";
     partial void OnRankChanged(int value) => Validate();
     partial void OnCellPitchChanged(string value) => Validate();
     partial void OnDistanceChanged(string value) => Validate();
@@ -102,7 +106,6 @@ public sealed partial class OpticsEditorViewModel : ObservableObject
             if (Error is null) Effective = candidate;
         }
         _loading = false;
-        OnPropertyChanged(nameof(Summary));
         Changed?.Invoke(this, EventArgs.Empty);
     }
 }

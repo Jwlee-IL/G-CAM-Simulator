@@ -3,23 +3,41 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:c="clr-namespace:Gcam.Studio.Controls">
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="PhysicalVisibility" />
+        <!-- The status word of a calibration-line cell; its detail below uses Text.Caption. -->
+        <Style x:Key="Readout.Cell" TargetType="TextBlock" BasedOn="{StaticResource Text.Label}">
+            <Setter Property="Foreground" Value="{DynamicResource Brush.Text.Primary}" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+            <Setter Property="TextTrimming" Value="None" />
+        </Style>
+        <Style x:Key="Readout.CellDetail" TargetType="TextBlock" BasedOn="{StaticResource Text.Caption}">
+            <Setter Property="TextWrapping" Value="Wrap" />
+            <Setter Property="TextTrimming" Value="None" />
+            <Style.Triggers>
+                <Trigger Property="Text" Value="">
+                    <Setter Property="Visibility" Value="Collapsed" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
     </UserControl.Resources>
+    <!-- Sections in the left tabs' shared style: a PanelHeader title, a Divider between sections. Readout · Calibration
+    lines · Preparation · Energy window; DirectCrystal shows the Readout section only. State, refusals, local state and
+    progress stay inline; assumptions and provenance sit behind help marks. -->
     <StackPanel>
-        <!-- Inline: state, one line per calibration line, inputs. Assumptions and provenance sit behind help marks. -->
-        <DockPanel>
+        <!-- ===== Readout ===== -->
+        <DockPanel Style="{StaticResource PanelHeader}">
+            <TextBlock DockPanel.Dock="Left" Text="Readout" Style="{StaticResource Text.PanelTitle}" />
             <c:HelpMark DockPanel.Dock="Right"
                     Text="{Binding ReadoutAssumptions}"
                     AutomationProperties.AutomationId="Readout.AssumptionsHelp"
                     AutomationProperties.Name="Readout model assumptions" />
-            <TextBlock Text="Readout" Style="{StaticResource Text.SectionTitle}" VerticalAlignment="Center" />
         </DockPanel>
         <ComboBox ItemsSource="{Binding ReadoutModes}" SelectedItem="{Binding ReadoutMode}"
-                IsEnabled="{Binding CanEditInputs}" Margin="{StaticResource Gap.Field}"
+                IsEnabled="{Binding CanEditInputs}" Margin="{StaticResource Gap.Tight}"
                 AutomationProperties.AutomationId="Readout.Mode" AutomationProperties.Name="Readout mode" />
         <TextBlock Text="{Binding ReadoutModeSummary}" Style="{StaticResource Text.Caption}" TextWrapping="Wrap"
                 Margin="{StaticResource Gap.Field}" AutomationProperties.AutomationId="Readout.ModeSummary" />
         <StackPanel Visibility="{Binding IsPhysicalReadout, Converter={StaticResource PhysicalVisibility}}">
-            <DockPanel>
+            <DockPanel Margin="{StaticResource Gap.Field}">
                 <c:HelpMark DockPanel.Dock="Right"
                         Text="{Binding ReadoutLocalisationHelp}"
                         AutomationProperties.AutomationId="Readout.LocalisationHelp"
@@ -27,57 +45,113 @@
                 <TextBlock Text="experimental readout · localisation cost (EV-36)" Style="{StaticResource Text.Caption}"
                         TextWrapping="Wrap" />
             </DockPanel>
-            <TextBlock Text="Calibration lines" Style="{StaticResource Text.Label}" />
-            <!-- Rows are exposed through their help marks: each mark is named after its row (the visible summary and local state)
-            and carries the full record sentence as HelpText, so a screen reader announces both with one focusable element. -->
-            <c:ContentItemsList ItemsSource="{Binding ReadoutLines}" Margin="{StaticResource Gap.Field}"
-                    AutomationProperties.AutomationId="Readout.Lines" AutomationProperties.Name="Calibration lines">
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate>
-                        <DockPanel Margin="{StaticResource Gap.Tight}">
-                            <c:HelpMark DockPanel.Dock="Right"
-                                    Text="{Binding Details}"
-                                    VerticalAlignment="Top"
-                                    AutomationProperties.AutomationId="{Binding HelpId}" AutomationProperties.Name="{Binding AccessibleName}" />
-                            <StackPanel>
-                                <TextBlock Text="{Binding Summary}" Style="{StaticResource Text.Caption}" TextWrapping="Wrap" />
-                                <TextBlock Style="{StaticResource Text.MonoCaption}" TextWrapping="Wrap">
-                                <Run Text="Local:" /> <Run Text="{Binding Local, Mode=OneWay}" />
-                                </TextBlock>
-                            </StackPanel>
-                        </DockPanel>
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </c:ContentItemsList>
-            <StackPanel Orientation="Horizontal">
-                <Button Command="{Binding PrepareReadoutCommand}"
-                        Margin="{StaticResource Gap.Inline}"
-                        AutomationProperties.AutomationId="Readout.Prepare" AutomationProperties.Name="Prepare">
-                    <StackPanel Orientation="Horizontal">
-                        <Path Data="{StaticResource Icon.Play}" Stretch="Uniform"
-                                Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
-                                Width="{StaticResource Size.Icon}" Height="{StaticResource Size.Icon}" Margin="{StaticResource Gap.Inline}" />
-                        <TextBlock Text="Prepare" />
-                    </StackPanel>
-                </Button>
-                <Button Command="{Binding PrepareReadoutCancelCommand}" Content="{StaticResource Icon.Cancel}"
-                        ToolTip="Cancel prepare"
-                        Style="{StaticResource Button.Icon}"
-                        AutomationProperties.AutomationId="Readout.Cancel" AutomationProperties.Name="Cancel prepare" />
+            <Border Style="{StaticResource Divider}" />
+
+            <!-- ===== Calibration lines: one row per line, columns line · record · local, help mark at the right ===== -->
+            <DockPanel Style="{StaticResource PanelHeader}">
+                <TextBlock DockPanel.Dock="Left" Text="Calibration lines" Style="{StaticResource Text.PanelTitle}" />
+            </DockPanel>
+            <!-- The line column is shared between the header and every row (Auto, SharedSizeGroup), and every row reserves
+            the same help-mark width at the right (the header a blank of that width), so the two star columns line up from
+            row to row. -->
+            <StackPanel Grid.IsSharedSizeScope="True">
+                <DockPanel Margin="{StaticResource Gap.Tight}">
+                    <FrameworkElement DockPanel.Dock="Right" Width="{StaticResource Size.HelpMark}" Margin="{StaticResource Gap.HelpMark}" />
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="ReadoutLine" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="keV" Style="{StaticResource Text.ColumnHeader}" Margin="{StaticResource Gap.Inline}" />
+                        <TextBlock Grid.Column="1" Text="Record" Style="{StaticResource Text.ColumnHeader}" Margin="{StaticResource Gap.Inline}" />
+                        <TextBlock Grid.Column="2" Text="Local" Style="{StaticResource Text.ColumnHeader}" />
+                    </Grid>
+                </DockPanel>
+                <!-- Rows are exposed through their help marks: each mark is named after its row (the visible summary and local
+                state) and carries the full record sentence as HelpText, so a screen reader announces both with one focusable
+                element. -->
+                <c:ContentItemsList ItemsSource="{Binding ReadoutLines}"
+                        AutomationProperties.AutomationId="Readout.Lines" AutomationProperties.Name="Calibration lines">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <DockPanel Margin="{StaticResource Gap.Field}">
+                                <c:HelpMark DockPanel.Dock="Right"
+                                        Text="{Binding Details}"
+                                        VerticalAlignment="Top"
+                                        AutomationProperties.AutomationId="{Binding HelpId}" AutomationProperties.Name="{Binding AccessibleName}" />
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" SharedSizeGroup="ReadoutLine" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0" Margin="{StaticResource Gap.Inline}">
+                                        <TextBlock Text="{Binding EnergyText}" Style="{StaticResource Text.Mono}" />
+                                        <TextBlock Text="{Binding SceneText}" Style="{StaticResource Readout.CellDetail}" />
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="1" Margin="{StaticResource Gap.Inline}">
+                                        <TextBlock Text="{Binding RecordLabel}" Style="{StaticResource Readout.Cell}" />
+                                        <TextBlock Text="{Binding RecordDetail}" Style="{StaticResource Readout.CellDetail}" />
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2">
+                                        <TextBlock Text="{Binding LocalLabel}" Style="{StaticResource Readout.Cell}" />
+                                        <TextBlock Text="{Binding LocalDetail}" Style="{StaticResource Readout.CellDetail}" />
+                                    </StackPanel>
+                                </Grid>
+                            </DockPanel>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </c:ContentItemsList>
             </StackPanel>
+            <Border Style="{StaticResource Divider}" />
+
+            <!-- ===== Preparation: the actions sit in the section header (like the Sources + / −) ===== -->
+            <DockPanel Style="{StaticResource PanelHeader}">
+                <TextBlock DockPanel.Dock="Left" Text="Preparation" Style="{StaticResource Text.PanelTitle}" />
+                <!-- One right-docked group, so the tab order follows the visual order (Prepare, then Cancel). -->
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                    <Button Command="{Binding PrepareReadoutCommand}"
+                            Margin="{StaticResource Gap.Inline}"
+                            AutomationProperties.AutomationId="Readout.Prepare" AutomationProperties.Name="Prepare">
+                        <StackPanel Orientation="Horizontal">
+                            <Path Data="{StaticResource Icon.Play}" Stretch="Uniform"
+                                    Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                                    Width="{StaticResource Size.Icon}" Height="{StaticResource Size.Icon}" Margin="{StaticResource Gap.Inline}" />
+                            <TextBlock Text="Prepare" />
+                        </StackPanel>
+                    </Button>
+                    <Button Command="{Binding PrepareReadoutCancelCommand}" Content="{StaticResource Icon.Cancel}"
+                            ToolTip="Cancel prepare"
+                            Style="{StaticResource Button.Icon}"
+                            AutomationProperties.AutomationId="Readout.Cancel" AutomationProperties.Name="Cancel prepare" />
+                </StackPanel>
+            </DockPanel>
             <ProgressBar Maximum="1" Value="{Binding ReadoutProgress, Mode=OneWay}" Margin="{StaticResource Gap.Field}"
                     Visibility="{Binding IsPreparingReadout, Converter={StaticResource PhysicalVisibility}}"
                     AutomationProperties.AutomationId="Readout.Progress"
                     AutomationProperties.Name="Readout preparation progress" />
             <TextBlock Text="{Binding ReadoutState}" Style="{StaticResource Text.MonoCaption}" TextWrapping="Wrap"
-                    Margin="{StaticResource Gap.Field}" AutomationProperties.AutomationId="Readout.State" />
-            <TextBlock Text="Measured energy window · inclusive keV" Style="{StaticResource Text.Label}" />
-            <TextBox Text="{Binding WindowLowKeV}" Tag="keV low" Margin="{StaticResource Gap.Field}"
-                    AutomationProperties.AutomationId="Readout.WindowLow" />
-            <TextBox Text="{Binding WindowHighKeV}" Tag="keV high" Margin="{StaticResource Gap.Field}"
-                    AutomationProperties.AutomationId="Readout.WindowHigh" />
+                    TextTrimming="None" Margin="{StaticResource Gap.Field}" AutomationProperties.AutomationId="Readout.State" />
+            <Border Style="{StaticResource Divider}" />
+
+            <!-- ===== Energy window: low and high side by side ===== -->
+            <DockPanel Style="{StaticResource PanelHeader}">
+                <TextBlock DockPanel.Dock="Left" Text="Energy window" Style="{StaticResource Text.PanelTitle}" />
+                <TextBlock DockPanel.Dock="Right" Text="measured · inclusive keV" Style="{StaticResource Text.Caption}" />
+            </DockPanel>
+            <Grid Margin="{StaticResource Gap.Field}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <TextBox Grid.Column="0" Text="{Binding WindowLowKeV}" Tag="keV low" Margin="{StaticResource Gap.Inline}"
+                        AutomationProperties.AutomationId="Readout.WindowLow" />
+                <TextBox Grid.Column="1" Text="{Binding WindowHighKeV}" Tag="keV high"
+                        AutomationProperties.AutomationId="Readout.WindowHigh" />
+            </Grid>
             <TextBlock Text="{Binding WindowLine}" Style="{StaticResource Text.Caption}" TextWrapping="Wrap"
-                    AutomationProperties.AutomationId="Readout.WindowLine" />
+                    Margin="{StaticResource Gap.Field}" AutomationProperties.AutomationId="Readout.WindowLine" />
             <Button Content="Use ±15 % benchmark window" Command="{Binding UseBenchmarkWindowCommand}"
                     HorizontalAlignment="Left" Margin="{StaticResource Gap.Field}"
                     AutomationProperties.AutomationId="Readout.BenchmarkWindow" />

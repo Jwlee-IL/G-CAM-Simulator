@@ -93,6 +93,39 @@ public sealed class ReadoutViewModelTests
         Assert.False(row.InScene); Assert.Equal("not preparable", row.Local);
     }
 
+    /// <summary>Author review 2 (TODO-45): the Readout panel shows each calibration line as aligned cells (line · record ·
+    /// local). The cells carry the same inline facts as the one-line Summary and Local, which stay the row's accessible
+    /// name and help text: the experimental label, the refusal and its short reason, local readiness and failures.</summary>
+    [Fact]
+    public async Task LineRows_SplitIntoLineRecordAndLocalCells_KeepingEveryInlineFact()
+    {
+        static string Plain(string text) => text.Replace('\u00A0', ' ');
+        var unavailable = new MainViewModel(new RefusingAcquisition(), new Theme(), new FakeSpectrumService()) { ReadoutMode = ReadoutMode.FourOutputAnger };
+        Assert.All(unavailable.ReadoutLines, r => Assert.Equal(("Unavailable", ""), (r.RecordLabel, r.RecordDetail)));
+        var preparation = new FakeReadoutPreparation(); preparation.Failures[1332.5] = "fixture: unsupported slots (0, 17)";
+        var vm = Model(preparation); vm.ReadoutMode = ReadoutMode.FourOutputAnger;
+        vm.AmbientDoseRateMicroSvPerHour = 0;
+        Assert.All(vm.ReadoutLines, r => Assert.Equal(("Local", "experimental, unvalidated"), (r.RecordLabel, r.RecordDetail)));
+        vm.Optics = Head;
+        vm.AddSourceCommand.Execute(null); vm.Sources[^1].Isotope = "Co-60";
+        var refused = vm.ReadoutLines.Single(r => r.LineKeV == 122.06);
+        var cell = refused.Plan.Cell!;
+        Assert.Equal(("122.06", "", "Refused", "not preparable", ""), (refused.EnergyText, refused.SceneText, refused.RecordLabel, refused.LocalLabel, refused.LocalDetail));
+        Assert.Equal($"failed on {cell.Failures.Count} / {cell.CalibrationSeeds} seeds", Plain(refused.RecordDetail));
+        Assert.EndsWith("calibration " + Plain(refused.RecordDetail), refused.Summary);
+        var cs = vm.ReadoutLines.Single(r => r.LineKeV == 661.7);
+        Assert.Equal(("661.7", "in scene", "Offered", "experimental", "not prepared", ""),
+            (cs.EnergyText, Plain(cs.SceneText), cs.RecordLabel, cs.RecordDetail, cs.LocalLabel, cs.LocalDetail));
+        await vm.PrepareReadoutCommand.ExecuteAsync(null);
+        var ready = vm.ReadoutLines.Single(r => r.LineKeV == 661.7);
+        Assert.Equal("ready", ready.LocalLabel);
+        Assert.Equal(ready.Local, "ready · " + Plain(ready.LocalDetail));
+        Assert.Contains(" peaks", Plain(ready.LocalDetail));
+        var failed = vm.ReadoutLines.Single(r => r.LineKeV == 1332.5);
+        Assert.Equal(("failed", "fixture: unsupported slots (0, 17)"), (failed.LocalLabel, failed.LocalDetail));
+        Assert.Equal("Failed: 1332.5 keV: fixture: unsupported slots (0, 17)", failed.Local);
+    }
+
     [Fact]
     public async Task PreparationKeyInvalidationAndWindowValidation_AreExplicit()
     {

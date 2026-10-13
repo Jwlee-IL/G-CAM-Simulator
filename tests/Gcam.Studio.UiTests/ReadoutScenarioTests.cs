@@ -312,7 +312,13 @@ public sealed class ReadoutScenarioTests(ITestOutputHelper output)
     public void CustomModules_InheritByModuleNotCost_UnknownCalibratesLocally() => Scenario.Run(nameof(CustomModules_InheritByModuleNotCost_UnknownCalibratesLocally), output, (ui, record) =>
     {
         SelectHead(ui, "High-res");
+        // Author review 2 (TODO-45): the fields are shown under a preset too, holding its values, but disabled.
+        var high = Gcam.Studio.Core.Optics.OpticsPreset.All.Single(p => p.Name == "High-res").Settings!;
+        Assert.False(ui.IsEnabled("Optics.CellPitch"));
+        Assert.Equal(high.CellPitchMm, double.Parse(ui.Value("Optics.CellPitch")));
         ui.Choose("Optics.Preset", "Custom");
+        Assert.True(ui.IsEnabled("Optics.CellPitch")); // Custom enables them, starting from the preset's values
+        Assert.Equal(high.CellPitchMm, double.Parse(ui.Value("Optics.CellPitch")));
         ui.Choose("Optics.Rank", "7"); // a ComboBox of primes (the other optics fields are text boxes)
         ui.SetText("Optics.CellPitch", "1", "SourceY");
         ui.SetText("Optics.Distance", "60", "SourceY");

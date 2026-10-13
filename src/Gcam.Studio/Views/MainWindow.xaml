@@ -216,7 +216,7 @@
                                                             AutomationProperties.AutomationId="AddSource" AutomationProperties.Name="Add source" />
                                                 </DockPanel>
                                                 <ListBox MaxHeight="{StaticResource Size.SourceList}" ItemsSource="{Binding Sources}"
-                                                        SelectedItem="{Binding SelectedSource}" Margin="{StaticResource Gap.Section}"
+                                                        SelectedItem="{Binding SelectedSource}" Margin="{StaticResource Gap.Field}"
                                                         AutomationProperties.AutomationId="SourceList" AutomationProperties.Name="Source list">
                                                     <!-- Without this a row's automation name is the ViewModel's type name. -->
                                                     <ListBox.ItemContainerStyle>
@@ -243,10 +243,11 @@
                                                         </DataTemplate>
                                                     </ListBox.ItemTemplate>
                                                 </ListBox>
+                                                <Border Style="{StaticResource Divider}" />
                                                 <!-- Selected source -->
                                                 <StackPanel DataContext="{Binding SelectedSource}" IsEnabled="{Binding IsEditable}">
                                                     <DockPanel Style="{StaticResource PanelHeader}">
-                                                        <TextBlock Text="Selected source" Style="{StaticResource Text.SectionTitle}" />
+                                                        <TextBlock Text="Selected source" Style="{StaticResource Text.PanelTitle}" />
                                                     </DockPanel>
                                                     <DockPanel Style="{StaticResource FieldRow}">
                                                         <TextBlock Text="Isotope" Style="{StaticResource FieldLabel}" />
@@ -280,15 +281,20 @@
                                     <TabItem Header="Optics" AutomationProperties.AutomationId="Left.OpticsTab">
                                         <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                                             <StackPanel Margin="{StaticResource Gap.TabContent}">
+                                                <!-- One section in the left tabs' shared style (PanelHeader title, label / value rows).
+                                                The fields are always shown: a preset writes its values and disables them, Custom enables them. -->
                                                 <c:SettingsGroup DataContext="{Binding OpticsEditor}" IsEnabled="{Binding IsEditable}"
                                                         AutomationProperties.AutomationId="Optics.Section" AutomationProperties.Name="Optics settings">
-                                                    <TextBlock Text="Engineering geometry" Style="{StaticResource Text.Caption}" />
-                                                    <ComboBox ItemsSource="{Binding Presets}" DisplayMemberPath="Name" SelectedIndex="{Binding SelectedPresetIndex}"
-                                                            Margin="{StaticResource Gap.Field}" AutomationProperties.AutomationId="Optics.Preset"
-                                                            AutomationProperties.Name="Engineering geometry" />
-                                                    <TextBlock Text="{Binding Summary}" Style="{StaticResource Text.MonoCaption}" TextWrapping="Wrap"
-                                                            Visibility="{Binding IsCustom, Converter={x:Static conv:InverseBoolToVisibilityConverter.Instance}}" />
-                                                    <StackPanel Visibility="{Binding IsCustom, Converter={StaticResource BoolToVis}}">
+                                                    <DockPanel Style="{StaticResource PanelHeader}">
+                                                        <TextBlock Text="Engineering geometry" Style="{StaticResource Text.PanelTitle}" />
+                                                    </DockPanel>
+                                                    <DockPanel Style="{StaticResource FieldRow}">
+                                                        <TextBlock Text="Preset" Style="{StaticResource FieldLabel}" />
+                                                        <ComboBox ItemsSource="{Binding Presets}" DisplayMemberPath="Name" SelectedIndex="{Binding SelectedPresetIndex}"
+                                                                AutomationProperties.AutomationId="Optics.Preset"
+                                                                AutomationProperties.Name="Preset (engineering geometry)" />
+                                                    </DockPanel>
+                                                    <StackPanel IsEnabled="{Binding IsCustom}">
                                                         <DockPanel Style="{StaticResource FieldRow}">
                                                             <TextBlock Text="Prime rank" Style="{StaticResource FieldLabel}" />
                                                             <ComboBox ItemsSource="{Binding Ranks}" SelectedItem="{Binding Rank}"

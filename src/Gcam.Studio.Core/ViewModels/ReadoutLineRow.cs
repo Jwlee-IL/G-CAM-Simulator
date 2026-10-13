@@ -14,6 +14,41 @@ public sealed record ReadoutLineRow(ReadoutLinePlan Plan, bool InScene, string O
 
     private string Line => LineKeV.ToString("0.##", CultureInfo.InvariantCulture) + " keV";
 
+    // Table cells of the Readout panel (line · record · local). They carry the same facts as Summary and Local, split
+    // into a status word and its detail; non-breaking spaces keep each detail fragment ("144 / 144 peaks") on one line
+    // when a narrow column wraps.
+    private const char Nbsp = ' ';
+
+    /// <summary>The line energy without its unit (the column header carries "keV").</summary>
+    public string EnergyText => LineKeV.ToString("0.##", CultureInfo.InvariantCulture);
+
+    /// <summary>"in scene" when a source of the scene emits this line, else empty.</summary>
+    public string SceneText => InScene ? "in" + Nbsp + "scene" : "";
+
+    /// <summary>The record status word: Offered, Refused, Local or Unavailable.</summary>
+    public string RecordLabel => Plan.Status switch
+    {
+        ReadoutLineStatus.Offered => "Offered",
+        ReadoutLineStatus.Refused => "Refused",
+        ReadoutLineStatus.Local => "Local",
+        _ => "Unavailable",
+    };
+
+    /// <summary>The record qualifier kept inline (D1): the experimental label or the refusal's short reason.</summary>
+    public string RecordDetail => Plan.Status switch
+    {
+        ReadoutLineStatus.Offered => "experimental",
+        ReadoutLineStatus.Refused => $"failed{Nbsp}on {Plan.Cell!.Failures.Count}{Nbsp}/{Nbsp}{Plan.Cell.CalibrationSeeds}{Nbsp}seeds",
+        ReadoutLineStatus.Local => "experimental, unvalidated",
+        _ => "",
+    };
+
+    /// <summary>The local preparation state word (ready, failed, not prepared, not preparable).</summary>
+    public string LocalLabel { get; init; } = Local;
+
+    /// <summary>The local state's detail (cost and peaks when ready, the failure message when failed), else empty.</summary>
+    public string LocalDetail { get; init; } = "";
+
     /// <summary>The inline label: the offer fact and a short reason (the refusal stays inline; its literal text is in help).</summary>
     public string Summary => Plan.Status switch
     {

@@ -57,6 +57,7 @@ public sealed partial class PlotViewRenderTests
             typeof(MainViewModel).GetMethod("NotifyRunState", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.Invoke(model, null);
             model.ReadoutMode = ReadoutMode.DirectCrystal;
             model.SelectedLeftTab = 0;
+            RenderLeftReadoutStates(theme, size);
             model.Imaging.IsSweepExpanded = true;
             model.Imaging.IsSweeping = true;
             CaptureStage2(model, theme, size, "icons-sweep");
@@ -93,6 +94,43 @@ public sealed partial class PlotViewRenderTests
         CaptureStage2(model, theme, new Size(1536, 832), "caption-maximized-workarea-125", maximized: true);
         CaptureStage2(model, theme, new Size(1280, 693), "caption-maximized-workarea-150", maximized: true);
     }
+    /// <summary>The left Detector tab in the physical readout's states (pending, preparing, ready, failed), with the real
+    /// offer record and drawing-fixture preparations of the Baseline module (DirectCrystal is left-detector-editable).</summary>
+    private void RenderLeftReadoutStates(string theme, Size size)
+    {
+        var baseline = Gcam.Studio.Core.Optics.OpticsPreset.All.Single(p => p.Name == "Baseline").Settings!;
+        var template = ReadoutRenderTests.DrawingFixture(baseline);
+        MainViewModel Model(ReadoutPreparation? prepared)
+        {
+            var model = new MainViewModel(new FixtureAcquisition(), new FixtureTheme(Enum.Parse<Gcam.Studio.Core.Services.AppTheme>(theme)),
+                new FixtureSpectrum(), readoutPreparation: new ReadoutRenderTests.FixturePreparation(_ => prepared ?? throw new OperationCanceledException()))
+            { Optics = baseline, AmbientDoseRateMicroSvPerHour = 0, ReadoutMode = ReadoutMode.FourOutputAnger, SelectedLeftTab = 2 };
+            if (prepared is not null) model.PrepareReadoutCommand.ExecuteAsync(null).GetAwaiter().GetResult();
+            return model;
+        }
+        var notifyRunState = typeof(MainViewModel).GetMethod("NotifyRunState", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!;
+        var pending = Model(null);
+        CaptureStage2(pending, theme, size, "left-detector-pending");
+        pending.IsPreparingReadout = true; pending.ReadoutProgress = 0.4;
+        pending.ReadoutProgressText = $"661.7 keV · Transporting independent calibration flood… · 115,200 / {baseline.DetectorPixels * baseline.DetectorPixels * 2000:N0} histories (40 %)";
+        notifyRunState.Invoke(pending, null);
+        CaptureStage2(pending, theme, size, "left-detector-preparing");
+        var ready = Model(template);
+        Assert.StartsWith("Ready", ready.ReadoutState);
+        CaptureStage2(ready, theme, size, "left-detector-ready");
+        var failed = Model(template with { Succeeded = false, Failure = $"Fixture: {baseline.DetectorPixels * baseline.DetectorPixels - 1} of {baseline.DetectorPixels * baseline.DetectorPixels} peaks found" });
+        Assert.StartsWith("Failed", failed.ReadoutState);
+        CaptureStage2(failed, theme, size, "left-detector-failed");
+    }
+
+    /// <summary>Laid out and visible through every ancestor (a detached tree has no PresentationSource, so IsVisible is false).</summary>
+    private static bool Shown(FrameworkElement element, FrameworkElement root)
+    {
+        for (DependencyObject? node = element; node is not null && node != root; node = VisualTreeHelper.GetParent(node))
+            if (node is UIElement visual && visual.Visibility != Visibility.Visible) return false;
+        return element.ActualWidth > 0 && element.ActualHeight > 0;
+    }
+
     private static void AssertTopBar(FrameworkElement root)
     {
         var top = Descendants(root).OfType<Border>().Single(b => AutomationProperties.GetAutomationId(b) == "Window.TopBar");
@@ -190,10 +228,29 @@ public sealed partial class PlotViewRenderTests
         }
         if (model.SelectedLeftTab == 1)
         {
-            var pitch = Descendants(root).OfType<TextBox>().Single(t => AutomationProperties.GetAutomationId(t) == "Optics.CellPitch");
-            var fields = (StackPanel)VisualTreeHelper.GetParent(VisualTreeHelper.GetParent(pitch));
-            Assert.Equal(model.OpticsEditor.IsCustom ? Visibility.Visible : Visibility.Collapsed, fields.Visibility);
-            Assert.Equal(model.OpticsEditor.CellPitch, pitch.Text);
+            // Author review 2: the fields are shown in every mode; a preset's values are written in and disabled, Custom
+            // enables them (and the shell lock or an open modal disables everything).
+            var editor = model.OpticsEditor;
+            var expected = new Dictionary<string, string>
+            {
+                ["Optics.CellPitch"] = editor.CellPitch, ["Optics.Distance"] = editor.Distance,
+                ["Optics.Pixels"] = editor.Pixels, ["Optics.PixelPitch"] = editor.PixelPitch,
+            };
+            bool enabled = editor.CanEditFields && model.Modal?.ActiveContent is null;
+            foreach (var (id, text) in expected)
+            {
+                var field = Descendants(root).OfType<TextBox>().Single(t => AutomationProperties.GetAutomationId(t) == id);
+                Assert.True(Shown(field, root), $"{id} hidden");
+                Assert.Equal(text, field.Text);
+                Assert.Equal(enabled, field.IsEnabled);
+            }
+            var rank = Descendants(root).OfType<ComboBox>().Single(c => AutomationProperties.GetAutomationId(c) == "Optics.Rank");
+            Assert.True(Shown(rank, root), "Optics.Rank hidden");
+            Assert.Equal(editor.Rank, rank.SelectedItem);
+            Assert.Equal(enabled, rank.IsEnabled);
+            if (editor.SelectedPreset.Settings is { } preset)
+                Assert.Equal((preset.MuraRank, preset.CellPitchMm, preset.MaskDetectorDistanceMm, preset.DetectorPixels, preset.PixelPitchMm),
+                    (editor.Rank, double.Parse(editor.CellPitch), double.Parse(editor.Distance), int.Parse(editor.Pixels), double.Parse(editor.PixelPitch)));
         }
         var summary = Descendants(root).OfType<TextBlock>().Single(t => AutomationProperties.GetAutomationId(t) == "Options.Summary");
         Assert.Equal(model.OptionsStatusSummary, summary.Text);

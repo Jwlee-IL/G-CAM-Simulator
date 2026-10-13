@@ -222,7 +222,7 @@ public sealed class ReadoutRenderTests(ITestOutputHelper output)
 
     /// <summary>Synthetic Gaussian spots on the nominal lattice with nearest labels: layout fixtures, not calibration
     /// evidence. <paramref name="n"/> crystals per side at 32 bins per crystal (the Studio LUT scale).</summary>
-    private static ReadoutPreparation Fixture(int n, double pitchMm, ProcessorTiming timing)
+    internal static ReadoutPreparation Fixture(int n, double pitchMm, ProcessorTiming timing)
     {
         const int binsPerCrystal = 32;
         int bins = n * binsPerCrystal;
@@ -245,7 +245,24 @@ public sealed class ReadoutRenderTests(ITestOutputHelper output)
         };
     }
 
-    private sealed record ProcessorTiming(double RiseNs, double TailNs, double Normalization, double SupportNs, double ThresholdCodes);
+    internal sealed record ProcessorTiming(double RiseNs, double TailNs, double Normalization, double SupportNs, double ThresholdCodes);
+
+    /// <summary>The engine's preset readout processor (one depth bin, ideal bilinear network, ADC-code trigger) used by the
+    /// drawing fixtures; its timing is real, the fixture density is synthetic.</summary>
+    private static (ReadoutPulseProcessor Processor, ProcessorTiming Timing) EngineProcessor()
+    {
+        var ro = ReadoutPreparationService.Preset();
+        ro.Optics.DepthBins = 1; ro.Optics.PhotonsPerBin = 10;
+        ro.Network.Topology = NetworkTopology.IdealBilinear;
+        ro.Trigger.Unit = ThresholdUnit.AdcCode; ro.Trigger.Threshold = 400;
+        var processor = new ReadoutPulseProcessor(new ReadoutDevice(new DetectorConfig { PixelsX=2, PixelsY=2 },ro,1),ro.Pulse,ro.Trigger);
+        double normalization = Math.Exp(-processor.PeakGridNs/processor.TailNs)-Math.Exp(-processor.PeakGridNs/processor.RiseNs);
+        return (processor, new ProcessorTiming(processor.RiseNs, processor.TailNs, normalization, processor.SupportNs, processor.ThresholdCodes));
+    }
+
+    /// <summary>A drawing-fixture preparation of <paramref name="optics"/>'s module (for the left Detector tab renders).</summary>
+    internal static ReadoutPreparation DrawingFixture(OpticsSettings optics)
+        => Fixture(optics.DetectorPixels, optics.PixelPitchMm, EngineProcessor().Timing);
 
     private void Render()
     {
@@ -256,13 +273,7 @@ public sealed class ReadoutRenderTests(ITestOutputHelper output)
         target = Path.Combine(target, "readout-render"); Directory.CreateDirectory(target);
         var detector = new DetectorSettings { ReadoutMode = ReadoutMode.FourOutputAnger };
         // Real engine timing and held values from one realised hit; drawing density remains synthetic.
-        var ro = ReadoutPreparationService.Preset();
-        ro.Optics.DepthBins = 1; ro.Optics.PhotonsPerBin = 10;
-        ro.Network.Topology = NetworkTopology.IdealBilinear;
-        ro.Trigger.Unit = ThresholdUnit.AdcCode; ro.Trigger.Threshold = 400;
-        var processor = new ReadoutPulseProcessor(new ReadoutDevice(new DetectorConfig { PixelsX=2, PixelsY=2 },ro,1),ro.Pulse,ro.Trigger);
-        double normalization = Math.Exp(-processor.PeakGridNs/processor.TailNs)-Math.Exp(-processor.PeakGridNs/processor.RiseNs);
-        var timing = new ProcessorTiming(processor.RiseNs, processor.TailNs, normalization, processor.SupportNs, processor.ThresholdCodes);
+        var (processor, timing) = EngineProcessor();
         var hit = new ReadoutHit(1000,[1000,500,800,400],2700);
         var stream = processor.CreateStream(new DefaultRandom(2)); stream.Append(hit);
         var conversion = Assert.Single(stream.AdvanceTo(5000));
@@ -340,6 +351,20 @@ public sealed class ReadoutRenderTests(ITestOutputHelper output)
             else { int start=xaml.IndexOf('>')+1; xaml=xaml.Insert(start,$"<UserControl.Resources><ResourceDictionary>{resources}</ResourceDictionary></UserControl.Resources>"); }
             var element = (FrameworkElement)XamlReader.Parse(xaml); element.DataContext=data;
             var root = new Border { Child=element, Width=size.Width, Height=size.Height };
+            if (view == "ReadoutPanel")
+            {
+                root.Child = null;
+                // The panel lives in the fixed-width left panel (Size.SidePanel, Panel.Surface): render it at that width,
+                // not stretched over the window, so wrapping and column widths match the application.
+                foreach (string f in new[] { $"Tokens.{theme}", "Metrics", "Typography", "Controls" })
+                    root.Resources.MergedDictionaries.Add(new ResourceDictionary { Source = new Uri($"pack://application:,,,/Gcam.Studio;component/Themes/{f}.xaml") });
+                root.Child = new Border
+                {
+                    Style = (Style)root.FindResource("Panel.Surface"), Width = ((GridLength)root.FindResource("Size.SidePanel")).Value,
+                    HorizontalAlignment = HorizontalAlignment.Left, Margin = (Thickness)root.FindResource("Pad.Window"), Child = element,
+                };
+                root.SetResourceReference(Border.BackgroundProperty, "Brush.Bg.Canvas");
+            }
             root.Measure(size); root.Arrange(new Rect(size)); root.UpdateLayout();
             if (view=="ReadoutWaveformView")
             {
@@ -425,7 +450,7 @@ public sealed class ReadoutRenderTests(ITestOutputHelper output)
     }
 
     /// <summary>The real embedded record; preparations come from a drawing fixture stamped with the request's keys.</summary>
-    private sealed class FixturePreparation(Func<ReadoutLinePlan, ReadoutPreparation> template) : IReadoutPreparationService
+    internal sealed class FixturePreparation(Func<ReadoutLinePlan, ReadoutPreparation> template) : IReadoutPreparationService
     {
         private readonly Dictionary<string, ReadoutPreparation> _cache = [];
         public event EventHandler? CacheChanged;

@@ -50,6 +50,40 @@ public sealed class OpticsPolicyTests
         Assert.True(editor.IsCustom);
     }
 
+    /// <summary>Author review 2 (TODO-45): the numeric fields are always shown. A preset writes its values into them and
+    /// disables them; Custom enables them, starting from the current values; the shell's input lock disables them in every
+    /// mode.</summary>
+    [Fact]
+    public void PresetWritesItsValuesAndDisablesFields_CustomEnablesThemFromCurrentValues()
+    {
+        var editor = new OpticsEditorViewModel();
+        // xUnit's synchronization context runs the editor's posted selector refresh concurrently: count atomically.
+        int notified = 0;
+        editor.PropertyChanged += (_, e) => { if (e.PropertyName == nameof(OpticsEditorViewModel.CanEditFields)) Interlocked.Increment(ref notified); };
+        foreach (var preset in OpticsPreset.All.Skip(1))
+        {
+            editor.SelectedPreset = preset;
+            var settings = preset.Settings!;
+            Assert.False(editor.CanEditFields);
+            Assert.Equal((settings.MuraRank, settings.CellPitchMm, settings.MaskDetectorDistanceMm, settings.DetectorPixels, settings.PixelPitchMm),
+                (editor.Rank, double.Parse(editor.CellPitch), double.Parse(editor.Distance), int.Parse(editor.Pixels), double.Parse(editor.PixelPitch)));
+        }
+        var current = (editor.Rank, editor.CellPitch, editor.Distance, editor.Pixels, editor.PixelPitch);
+        int before = Volatile.Read(ref notified);
+        editor.SelectedPreset = OpticsPreset.All[0];
+        Assert.True(Volatile.Read(ref notified) > before);
+        Assert.True(editor.CanEditFields);
+        Assert.Equal(current, (editor.Rank, editor.CellPitch, editor.Distance, editor.Pixels, editor.PixelPitch));
+        before = Volatile.Read(ref notified);
+        editor.IsEditable = false;
+        Assert.True(Volatile.Read(ref notified) > before);
+        Assert.False(editor.CanEditFields);
+        editor.IsEditable = true;
+        Assert.True(editor.CanEditFields);
+        editor.SelectedPreset = OpticsPreset.All[1];
+        Assert.False(editor.CanEditFields);
+    }
+
     [Theory]
     [InlineData(1000, 56.875, 1.268115942, 1.81978022)]
     [InlineData(160, 9.1, 2.333333333, 0.989010989)]
