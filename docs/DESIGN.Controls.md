@@ -39,13 +39,13 @@ its natural text height; its ScrollViewer still handles a constrained height. It
 | Focus ring | `FocusVisual` | 2 px `Brush.Focus`, 3 px outside the control, on every focusable control |
 | Button | implicit | raised fill · hover · pressed · disabled; Cancel / Discard in the Reset confirmation |
 | Icon button | `Button.Icon` (`Button.Theme` for the sun / moon toggle) | square `Size.Control`, a `Path` at `Size.Icon` in the button's foreground, the implicit button's raised frame in every place and theme (subdued when disabled, border highlight on focus); a tooltip and `AutomationProperties.Name` are required. Used for secondary actions: theme, Reset, add / remove source, delete / clear measurements, cancel prepare / sweep, Waveform latest / next. Start / Continue / Stop, Prepare and Sweep focus keep icon + text |
-| Primary button | `Button.Primary` | accent fill, `OnAccent` text — **one per screen** (Start / Continue, or Stop while acquiring) |
+| Primary button | `Button.Primary` | accent fill, `OnAccent` text — the acquisition action (Start / Continue, or Stop while acquiring) and Prepare, which starts a long computation (author 2026-10-13) |
 | Ghost button | `Button.Ghost` | borderless, for bars and panel headers |
 | TextBox | implicit | mono text; unit suffix via `Tag` (`Tag="mm"`); accent 2 px border on focus; error border + tooltip when `Validation.HasError`; themed caret and selection |
 | CheckBox | implicit | themed box and visible check mark, focus ring, hover border and disabled state; used for Spectrum log Y / pile-up; DockPanel constrains wrapping content to the available width |
 | ComboBox / ComboBoxItem | implicit | full template including popup, arrow and item highlight |
 | ListBox / ListBoxItem | implicit | selection = subtle fill **+ 2 px accent bar** (not colour alone), stays visible when unfocused, inset focus ring |
-| Segmented picker | `Segment.Track` (Border) + `RadioButton.Segment` | one radio button per option in a `UniformGrid`; checked = subtle fill + accent text + semibold (not colour alone); access keys (`_Distance` → Alt+D). Bind with `EnumMatchConverter` (tool picker) |
+| Segmented picker | `Segment.Track` (Border) + `RadioButton.Segment` | one radio button per option in a `UniformGrid`; checked = subtle fill + accent text + semibold (not colour alone); access keys (`_Distance` → Alt+D). Bind with `EnumMatchConverter`. For switching views or content (workspace switch); never for a tool picker, which uses icon toggles (author 2026-10-13) |
 | ScrollBar | implicit | 8 px, no arrow buttons |
 | ProgressBar | implicit | flat 4 px, no Aero glow animation |
 | ToolTip | implicit | raised surface |
@@ -56,6 +56,21 @@ its natural text height; its ScrollViewer still handles a constrained height. It
 
 Add a shared style only when two or more views need it; otherwise keep it in the view's `Resources`, still
 built from tokens.
+
+### Control rules (author's desktop review, 2026-10-13)
+
+Normative; reasons in [AGENTS.Rationale](AGENTS.Rationale.md#visual-design).
+
+- **An icon is never clipped.** An icon button gives the whole `Size.Icon` glyph room with even margins; a render
+  test checks the ink of every icon button. A cause found in one control is fixed in the shared style for every
+  control that uses it.
+- **Different actions get clearly different icons.** Two look-alike glyphs for two actions (a minus and a trash can
+  side by side) are a defect; deleting one list row is a per-row ✕ on that row, clearing all is the header trash can.
+- **A tool or mode selector must not look like content tabs.** Measurement tools are icon toggles in the panel
+  header; segmented or tab styling is for switching views or content.
+- **Primary actions share the accent style:** the acquisition action (Start / Continue / Stop) and an action that
+  starts a long computation the user waits for (Prepare). Everything else is an ordinary or icon button.
+- **Glyphs are drawn shapes** — each a single clean `Path` in its 12 × 12 box, centred, no detached parts.
 
 ## Custom controls
 

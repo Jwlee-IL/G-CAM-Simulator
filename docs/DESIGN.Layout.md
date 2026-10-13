@@ -37,9 +37,9 @@ combine a container's padding with a child's margin for the same edge.
 ## Screen grid (`MainWindow`)
 
 ```
-Row 0  Top bar (Size.Bar)          identity · workspace switch (when ≥2) · theme (icon) · live time (s) · speed × · seed · Reset (icon, confirms) · ▶ Start / Continue / ■ Stop
+Row 0  Top bar (Size.Bar, the window caption)  identity · workspace switch · live time (s) · speed × · ▶ Start / Continue / ■ Stop · Reset (icon, confirms) · theme (icon) · Options (cog, badge) · caption buttons
 Row 1  Content (a Border with Pad.Window)
-         Col 0  Scene panel (Size.SidePanel, scrollable)   sources · collapsible Detection chain · selected source · collapsible Physical optics · collapsible Detector
+         Col 0  Left panel (Size.SidePanel), a TabControl   Scene (sources, selected source) · Optics (preset, fields) · Detector (readout sections)
          Col 1  Gutter
          Col 2  Selected workspace centre (DataTemplate by workspace type)
                 Imaging (ImageAreaPanel): [flood map] Gutter [reconstruction] on top, each = PanelHeader (title + chips) ·
@@ -53,13 +53,13 @@ Row 1  Content (a Border with Pad.Window)
                 with the evidence as tooltip) · Imaging channel (selector, window N, strip, ratios, found peaks) · Focus sweep
                 (collapsed until used; opens on a result)
                 Spectrum: Display (log Y) · Window (N × FWHM) · Pile-up (resolving time) · Resolution (read-only chain)
-Row 2  Status bar (Size.StatusBar) state dot · live time / counts / cps / MC-limited (live region) · live-time progress
+Row 2  Status bar (Size.StatusBar, one line) state dot · live time / counts / cps / MC-limited or a refusal (live region) · Options summary right
 ```
 
 Top-bar live-time and speed inputs are vertically centred at `Size.Control` (28 DIP), with
 `Size.NumberInput.Short` width (80 DIP). Labels are "Live time" / "Speed" / "Seed"; `Tag` supplies "s" / "×"
 inside the inputs, matching the scene fields (the seed has no unit; blank means a new seed per acquisition).
-Reset is an ordinary (implicit-style) button left of the primary action, never primary, with no shortcut and no
+Reset is an icon button right of the primary action (then theme and Options), never primary, with no shortcut and no
 default; the primary button reads Start without data and Continue with data, and is not the window's default
 button, so Enter in a field cannot resume counting. Messages of the top-bar inputs (a rejected preset, an invalid
 seed) appear at the right of the status bar, which has room for them.
@@ -79,10 +79,42 @@ then an editable reflector gap (default 100 µm), Gain σ
 (default 3, `%` suffix), Gain seed (default 1) and Background (default 0, `× signal` BSR suffix;
 detected background/source ratio at 200 keV). Short labels fit the existing 84-DIP field column.
 These inputs are disabled during
-acquisition and while acquired data exist (until Reset). Physical optics and Detector start collapsed (Start
-expands a section with an invalid input), Detection chain starts expanded, so the default left panel fits 1280 × 800
-without scrolling (asserted in the offscreen renders); expanded sections scroll. Workspace activation follows `IsActive` as well as commands,
+acquisition and while acquired data exist (until Reset). Since 2026-10-13 the left panel is a TabControl (Scene ·
+Optics · Detector) and the detector inputs above live in the Options dialog; a refused Start selects the tab holding
+the invalid input and states the reason in the status bar (see Screen rules). Workspace activation follows `IsActive` as well as commands,
 so a UI Automation SelectionItem selection changes the centre and right panel.
+
+## Screen rules (author's desktop review, 2026-10-13)
+
+Normative; each rule with its reason is also in [AGENTS.Rationale](AGENTS.Rationale.md#visual-design).
+
+- **No OS title bar.** The window is `WindowStyle="None"` with `WindowChrome`; the top bar is the caption (drag,
+  double-click maximise / restore, snap, resize borders, Alt+Space / Alt+F4). Caption buttons follow the Windows
+  convention: frameless at rest, full bar height, flush top-right, Close's hover red.
+- **Program-wide settings live in the global chrome.** Options open from a cog icon in the top bar, never from a
+  button inside a content panel. A non-default option is never hidden: a badge on the cog and a summary in the
+  status bar.
+- **Top-bar order:** workspace switch · acquisition inputs (live time, speed) · primary action (Start / Continue /
+  Stop) · secondary global actions (Reset, theme, Options) · caption buttons.
+- **One height per row.** Controls in one row share `Size.Control` and one centre line — a button is never taller
+  than the text boxes beside it; only the caption buttons take the bar height.
+- **A side panel holding several independent groups is a TabControl**, not a stack of expanders (left panel:
+  Scene · Optics · Detector).
+- **Every panel is sections:** a heading, a divider between sections, information as aligned label / value rows or
+  a table. No run-on stacks of small text blocks, and no "·"-joined line of more than about three facts.
+- **One visual language across panels** — the same heading style, divider and row layout in the left tabs, the
+  workspace right panels and the dialogs.
+- **The centre shows the visual; its legend facts and captions go to the side panel.** An image keeps only its
+  colour bar and readout line beneath it.
+- **Controls do not appear and vanish with a mode.** Fields driven by a preset are always shown: a preset writes its
+  values and disables them; Custom enables them.
+- **A refused action says why where the user is looking** — the status bar — and leads to the input (selects the
+  tab holding it, or marks the cog for an Options input); a field message alone, on a hidden tab or in a closed
+  dialog, is not enough.
+- **The status bar is one line in every state**, fixed height: run status left, the Options summary right, both
+  trimmed with the full text in a tooltip.
+- **A dialog keeps one size across its tabs**; its OK / Cancel (or Close) never move.
+- **Scrollbars keep a gap** from the content and from the panel border.
 
 ## Window sizing: fixed grid, flexible centre
 

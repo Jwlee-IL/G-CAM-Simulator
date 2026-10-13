@@ -76,12 +76,28 @@ Enforcement: **C** compiler / build · **T** automated test · **R** review agai
 | Image overlays never use the accent; a selected overlay is a thicker line + inverted chip. | Cyan collides with viridis' teal band. | `DESIGN.Color`, `MeasurementAdorner` | R |
 | Heatmaps use viridis and always have a colour bar with numeric ticks; ticks never show `-0`. | Perceptually uniform and colour-blind safe; colours must be readable as values. | `DESIGN.Color`, `DESIGN.Controls` | R |
 | Status and selection are never signalled by colour alone. | Colour-blind users, and screen readers. | `DESIGN.Color` | R |
-| One primary button per screen, top right. | The main action is always in the same place. | `DESIGN.Controls`, `DESIGN.Layout` | R |
+| Primary (accent) style only for the acquisition action, top right, and for Prepare, which starts a long computation. | The main action is always in the same place; a computation the user waits for reads as a primary action (author 2026-10-13). | `DESIGN.Controls`, `DESIGN.Layout` | R |
 | Spacing on a 4 px grid; a container owns its inner space (`Pad.*`), the gap between siblings is the preceding sibling's margin (`Gap.*`). | Never split one gap between two elements, never stack padding and margin on one edge — that's how spacing drifts. | `DESIGN.Layout` | R |
 | Fixed-width side panels, flexible centre, minimum window 1280×800 (not a fixed window). | A fixed window breaks on 1366×768 and overflows at 125 / 150 % scaling. | `DESIGN.Layout`, `App.xaml.cs` | R |
 | At fit, heatmap cells span a whole number of device pixels. | Nearest-neighbour cells stay equal width at any DPI. | `DESIGN.Controls`, `HeatmapViewport` | T |
 | Views pick a text role (`Text.*`), never set `FontSize` / `FontWeight` / `Foreground` directly. | *Partly stated* (roles exist so text follows the theme). Proposed: one type scale, changed in one file. | `DESIGN.Typography` | R |
 | Numbers, coordinates and units use the mono font. | Values line up in columns. | `DESIGN.Typography` | R |
+| No OS title bar: `WindowStyle="None"` + `WindowChrome`, the top bar is the caption; caption buttons follow the Windows convention. | Author's decision (2026-10-13): the OS bar duplicated the top bar and ignored the theme; offscreen renders cannot show it, so it is asserted on the desktop. | `DESIGN.Layout` | T (render: caption, hit testing) · desktop scenario |
+| Program-wide settings open from a cog in the top bar; non-default options show as a cog badge and a status-bar summary. | Global settings belong to the global chrome — a button inside a content panel was not found (author, 2026-10-13); a hidden non-default must not change a result unseen. | `DESIGN.Layout` | T (summary, badge) |
+| Top-bar order: inputs · primary action · Reset / theme / Options · caption buttons. | Author's decision (2026-10-13): secondary global actions sit together beside the action they qualify. | `DESIGN.Layout` | T (render: order) |
+| Controls in one row share `Size.Control` and one centre line; only caption buttons take the bar height. | A Start button taller than the text boxes beside it looked broken (author, 2026-10-13). | `DESIGN.Layout` | T (render) · R |
+| A side panel with several independent groups is a TabControl, not stacked expanders. | A long expander stack hid inputs and read as one block (author, 2026-10-13). | `DESIGN.Layout` | R |
+| Panels are sections — heading, divider, aligned label / value rows or a table; no run-on text blocks or "·"-joined lines of more than about three facts; one visual language across panels. | The reader could not tell where one fact ended and the next began (author, 2026-10-13). | `DESIGN.Layout` | R · T (row / name checks per panel) |
+| The centre shows the visual; legends and captions go to the side panel. | Text under the Detector face crowded the view and duplicated the panel's role (author, 2026-10-13). | `DESIGN.Layout` | R |
+| Preset-driven fields are always shown: a preset fills and disables them, Custom enables them. | Fields that appear and vanish with a mode hide what the preset means (author, 2026-10-13; reverses the plan's D5). | `DESIGN.Layout` | T |
+| A refused action states its reason in the status bar and leads to the input. | Start "did nothing" when its refusal sat on a hidden tab or in a closed dialog (author, 2026-10-13). | `DESIGN.Layout` | T (`StartRefusalTests`) |
+| The status bar is one line with a fixed height in every state. | A bar that grew to two lines during a measurement shifted the layout (author, 2026-10-13). | `DESIGN.Layout` | T (render: height) |
+| A dialog keeps one size across its tabs; its buttons never move. | The Options dialog jumped when switching tabs (planner review, 2026-10-13). | `DESIGN.Layout` | T (render: bounds) |
+| Scrollbars keep a gap from content and panel border. | A scrollbar flush against the content looked cramped (author, 2026-10-13). | `DESIGN.Layout` | R |
+| An icon is never clipped; a cause found in one control is fixed in the shared style. | The shared icon style left 10 px for a 12 px glyph on every icon button, and was first fixed only on the caption buttons (author, 2026-10-13). | `DESIGN.Controls` | T (icon-ink render check) |
+| Different actions get clearly different icons; deleting one row is a per-row ✕, clearing all is the header trash can. | A minus beside a trash can read as the same action (author, 2026-10-13). | `DESIGN.Controls` | R |
+| A tool selector must not look like content tabs; tools are icon toggles. | The segmented tool picker read as tabs over separate lists (author, 2026-10-13). | `DESIGN.Controls` | R |
+| Glyphs are single clean shapes centred in their 12 × 12 box. | A trash can with a detached bar read as broken (planner review, 2026-10-13). | `DESIGN.Controls` | T (glyph connectivity check) |
 
 ## Measurement semantics
 
