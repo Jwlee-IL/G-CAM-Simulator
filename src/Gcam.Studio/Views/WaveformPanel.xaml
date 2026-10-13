@@ -1,64 +1,121 @@
 <UserControl x:Class="Gcam.Studio.Views.WaveformPanel"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:c="clr-namespace:Gcam.Studio.Controls"
+        xmlns:conv="clr-namespace:Gcam.Studio.Converters">
+    <!-- Sections in the shared panel language (PanelHeader title, Divider between sections, field and fact rows):
+    Scope window · Rate study · Acquired chain · Events in window (a table like the Measurements list). -->
     <Border Style="{StaticResource Panel.Surface}">
-        <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
             <StackPanel>
+                <!-- ===== Scope window: latest / next in the header ===== -->
                 <DockPanel Style="{StaticResource PanelHeader}">
-                    <TextBlock Text="Scope window" Style="{StaticResource Text.PanelTitle}" />
+                    <TextBlock DockPanel.Dock="Left" Text="Scope window" Style="{StaticResource Text.PanelTitle}" />
+                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                        <Button Command="{Binding LatestCommand}" Content="{StaticResource Icon.Latest}" ToolTip="Latest event"
+                                Style="{StaticResource Button.Icon}"
+                                Margin="{StaticResource Gap.Tool}"
+                                AutomationProperties.AutomationId="Waveform.Latest" AutomationProperties.Name="Latest event" />
+                        <Button Command="{Binding NextCommand}" Content="{StaticResource Icon.Next}" ToolTip="Next event"
+                                Style="{StaticResource Button.Icon}"
+                                AutomationProperties.AutomationId="Waveform.Next" AutomationProperties.Name="Next event" />
+                    </StackPanel>
                 </DockPanel>
                 <CheckBox Content="Follow latest acquired event" IsChecked="{Binding FollowLatest}"
                         Margin="{StaticResource Gap.Field}" AutomationProperties.AutomationId="Waveform.FollowLatest" />
-                <StackPanel Orientation="Horizontal" Margin="{StaticResource Gap.Field}">
-                    <Button Command="{Binding LatestCommand}" Content="{StaticResource Icon.Latest}" ToolTip="Latest event"
-                            Style="{StaticResource Button.Icon}"
-                            Margin="{StaticResource Gap.Inline}"
-                            AutomationProperties.AutomationId="Waveform.Latest" AutomationProperties.Name="Latest event" />
-                    <Button Command="{Binding NextCommand}" Content="{StaticResource Icon.Next}" ToolTip="Next event"
-                            Style="{StaticResource Button.Icon}"
-                            AutomationProperties.AutomationId="Waveform.Next" AutomationProperties.Name="Next event" />
-                </StackPanel>
-                <TextBlock Text="Acquired event index (zero-based)" Style="{StaticResource Text.Label}" />
-                <TextBox Text="{Binding TriggerIndex}" Margin="{StaticResource Gap.Field}"
-                        AutomationProperties.AutomationId="Waveform.Index"
-                        AutomationProperties.Name="Acquired event index (zero-based)" />
-                <TextBlock Text="Window length" Style="{StaticResource Text.Label}" />
-                <TextBox Text="{Binding WindowUs}" Tag="µs" Margin="{StaticResource Gap.Section}"
-                        AutomationProperties.AutomationId="Waveform.Window" AutomationProperties.Name="Window length (microseconds)" />
+                <DockPanel Style="{StaticResource FieldRow}">
+                    <TextBlock Text="Event index" Style="{StaticResource FieldLabel}" />
+                    <TextBox Text="{Binding TriggerIndex}" Tag="zero-based"
+                            AutomationProperties.AutomationId="Waveform.Index"
+                            AutomationProperties.Name="Acquired event index (zero-based)" />
+                </DockPanel>
+                <DockPanel Style="{StaticResource FieldRow}">
+                    <TextBlock Text="Window" Style="{StaticResource FieldLabel}" />
+                    <TextBox Text="{Binding WindowUs}" Tag="µs"
+                            AutomationProperties.AutomationId="Waveform.Window" AutomationProperties.Name="Window length (microseconds)" />
+                </DockPanel>
+                <Border Style="{StaticResource Divider}" />
+
+                <!-- ===== Rate study ===== -->
                 <DockPanel Style="{StaticResource PanelHeader}">
                     <TextBlock Text="Rate study" Style="{StaticResource Text.PanelTitle}" />
                 </DockPanel>
                 <CheckBox Content="Re-space arrivals (rate study)" IsChecked="{Binding RateStudy}"
                         IsEnabled="{Binding Shared.CanUseLegacy}" Margin="{StaticResource Gap.Field}"
                         AutomationProperties.AutomationId="Waveform.RateStudy" />
-                <TextBlock Text="Simulated rate · energy channel" Style="{StaticResource Text.Label}" />
-                <TextBox Text="{Binding RateKcps}" Tag="kcps" IsEnabled="{Binding RateStudy}" Margin="{StaticResource Gap.Section}"
-                        AutomationProperties.AutomationId="Waveform.Rate"
-                        AutomationProperties.Name="Simulated rate in kilocounts per second" />
+                <DockPanel Style="{StaticResource FieldRow}">
+                    <TextBlock Text="Rate" Style="{StaticResource FieldLabel}" />
+                    <TextBox Text="{Binding RateKcps}" Tag="kcps" IsEnabled="{Binding RateStudy}"
+                            AutomationProperties.AutomationId="Waveform.Rate"
+                            AutomationProperties.Name="Simulated rate in kilocounts per second" />
+                </DockPanel>
                 <CheckBox Content="Ideal shaper stimulus" IsChecked="{Binding Ideal}" IsEnabled="{Binding Shared.CanUseLegacy}"
-                        Margin="{StaticResource Gap.Section}" AutomationProperties.AutomationId="Waveform.Ideal" />
+                        Margin="{StaticResource Gap.Field}" AutomationProperties.AutomationId="Waveform.Ideal" />
+                <Border Style="{StaticResource Divider}" />
+
+                <!-- ===== Acquired chain: rows; the group keeps the AutomationId and the chain readout as its name ===== -->
                 <DockPanel Style="{StaticResource PanelHeader}">
                     <TextBlock Text="Acquired chain" Style="{StaticResource Text.PanelTitle}" />
                 </DockPanel>
-                <TextBlock Text="{Binding View.ChainReadout}" TextWrapping="Wrap" Style="{StaticResource Text.MonoCaption}"
-                        Margin="{StaticResource Gap.Section}" AutomationProperties.AutomationId="Waveform.ChainReadout" />
+                <c:SettingsGroup Grid.IsSharedSizeScope="True" Margin="{StaticResource Gap.Field}"
+                        AutomationProperties.AutomationId="Waveform.ChainReadout" AutomationProperties.Name="{Binding View.ChainReadout}">
+                    <ItemsControl ItemsSource="{Binding ChainRows}" ItemTemplate="{StaticResource Template.FactRow}" Focusable="False" />
+                    <TextBlock Text="{Binding View.ChainNote}" Style="{StaticResource Text.Caption}" TextWrapping="Wrap"
+                            Visibility="{Binding View.ChainNote, Converter={x:Static conv:NullToCollapsedConverter.Instance}}" />
+                </c:SettingsGroup>
+                <Border Style="{StaticResource Divider}" />
+
+                <!-- ===== Events in window: a table like the Measurements list (shared Auto columns, scope time at the right;
+                the acquired absolute time on the row's second line) ===== -->
                 <DockPanel Style="{StaticResource PanelHeader}">
                     <TextBlock Text="Events in window" Style="{StaticResource Text.PanelTitle}" />
                 </DockPanel>
-                <ListBox ItemsSource="{Binding Events}" MaxHeight="{StaticResource Size.ResultsList}"
-                        AutomationProperties.AutomationId="Waveform.Events"
-                        AutomationProperties.Name="Acquired events in scope window">
-                    <ListBox.ItemContainerStyle>
-                        <Style TargetType="ListBoxItem" BasedOn="{StaticResource {x:Type ListBoxItem}}">
-                            <Setter Property="AutomationProperties.Name" Value="{Binding Description}" />
-                        </Style>
-                    </ListBox.ItemContainerStyle>
-                    <ListBox.ItemTemplate>
-                        <DataTemplate>
-                            <TextBlock Text="{Binding Description}" TextWrapping="Wrap" Style="{StaticResource Text.MonoCaption}" />
-                        </DataTemplate>
-                    </ListBox.ItemTemplate>
-                </ListBox>
+                <StackPanel Grid.IsSharedSizeScope="True">
+                    <Border Padding="{StaticResource Pad.ListItem}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" SharedSizeGroup="EventId" />
+                                <ColumnDefinition Width="Auto" SharedSizeGroup="EventPixel" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" SharedSizeGroup="EventScope" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="#" Style="{StaticResource Text.ColumnHeader}" Margin="{StaticResource Gap.Inline}" />
+                            <TextBlock Grid.Column="1" Text="Pixel" Style="{StaticResource Text.ColumnHeader}" Margin="{StaticResource Gap.Inline}" />
+                            <TextBlock Grid.Column="2" Text="Energy" Style="{StaticResource Text.ColumnHeader}" Margin="{StaticResource Gap.Inline}" />
+                            <TextBlock Grid.Column="3" Text="Scope" Style="{StaticResource Text.ColumnHeader}" HorizontalAlignment="Right" />
+                        </Grid>
+                    </Border>
+                    <ListBox ItemsSource="{Binding Events}" MaxHeight="{StaticResource Size.ResultsList}"
+                            AutomationProperties.AutomationId="Waveform.Events"
+                            AutomationProperties.Name="Acquired events in scope window">
+                        <ListBox.ItemContainerStyle>
+                            <Style TargetType="ListBoxItem" BasedOn="{StaticResource {x:Type ListBoxItem}}">
+                                <Setter Property="AutomationProperties.Name" Value="{Binding Description}" />
+                            </Style>
+                        </ListBox.ItemContainerStyle>
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="{StaticResource Gap.Tight}">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" SharedSizeGroup="EventId" />
+                                        <ColumnDefinition Width="Auto" SharedSizeGroup="EventPixel" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" SharedSizeGroup="EventScope" />
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+                                    <TextBlock Grid.Column="0" Text="{Binding IndexText}" Style="{StaticResource Text.Mono}" Margin="{StaticResource Gap.Inline}" />
+                                    <TextBlock Grid.Column="1" Text="{Binding PixelText}" Style="{StaticResource Text.Mono}" Margin="{StaticResource Gap.Inline}" />
+                                    <TextBlock Grid.Column="2" Text="{Binding EnergyText}" Style="{StaticResource Text.Mono}" Margin="{StaticResource Gap.Inline}" />
+                                    <TextBlock Grid.Column="3" Text="{Binding ScopeText}" Style="{StaticResource Text.Mono}" HorizontalAlignment="Right" />
+                                    <TextBlock Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3" Text="{Binding AcquiredText}"
+                                            Style="{StaticResource Text.MonoCaption}" TextWrapping="Wrap" TextTrimming="None" />
+                                </Grid>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </StackPanel>
             </StackPanel>
         </ScrollViewer>
     </Border>

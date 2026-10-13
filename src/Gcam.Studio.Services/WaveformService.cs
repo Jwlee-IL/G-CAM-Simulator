@@ -146,8 +146,32 @@ public sealed class WaveformService : IWaveformService
             "Finite filter warm-up; uncorrected shaped baseline. " +
             (window.Clipped ? "Window clipped to the 10 M-sample work cap. " : "") +
             (!settings.RateStudy && endTime > snapshot.LiveTimeS ? "Partial acquisition window: no future deposits; pulse response and baseline beyond acquired live time are simulated." : "");
+        // The same facts as `readout`, as rows; the caveats stay visible as the note under them.
+        var facts = new List<KeyValuePair<string, string>>
+        {
+            new("Scintillator", chain.Scintillator.Name), new("Photosensor", chain.Sensor.Name), new("Preamp / shaper", chain.Preamp.Name),
+            new("N_pe (662 keV)", $"{model.Photoelectrons(662):0}"), new("FWHM (662 keV)", $"{model.FwhmFraction(662):P2}"),
+            new("Rise / tail", $"{pulse.RiseSamples * 8:0} / {pulse.TailSamples * 8:0} ns"),
+        };
+        if (chain.Preamp.Crrc)
+        {
+            facts.Add(new("Filter", $"CR-RC order {chain.Preamp.CrrcOrder}"));
+            facts.Add(new("Fixed point", "Q12 state / Q16 coefficients"));
+            facts.Add(new("A / K", $"{a} / {chain.CrrcKQ16}"));
+            facts.Add(new("Shaping T_sum", $"{chain.Preamp.CrrcShapingTimeNs:0} ns"));
+            facts.Add(new("DCR noise window", $"{chain.Preamp.IntegrationNs:0} ns"));
+        }
+        else
+        {
+            facts.Add(new("Filter", "Trapezoid"));
+            facts.Add(new("Ramp / flat", "80 / 64 ns"));
+            facts.Add(new("M", $"{m}"));
+        }
+        facts.Add(new("Resolving interval", $"{EventStreamStudy.ResolvingSamples(pulse.RiseSamples, pulse.TailSamples) * 8:0} ns"));
+        string chainNote = "FWHM: single channel; excludes pixel gain spread."
+            + (chain.Preamp.Crrc ? " Shaping T_sum: simulation convention; not peaking time or hardware evidence." : "");
         return new(adcSeries, shapedSeries, markers.AsReadOnly(), readout, pulseReadout, note,
-            window.Samples / ScopeWindow.SamplesPerUs, watch.Elapsed);
+            window.Samples / ScopeWindow.SamplesPerUs, watch.Elapsed) { ChainFacts = facts.AsReadOnly(), ChainNote = chainNote };
     }
 
     private static int LowerBound(double[] times, double time)

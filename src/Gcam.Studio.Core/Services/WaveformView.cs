@@ -9,4 +9,8 @@ public sealed record WaveformView(PlotSeries Adc, PlotSeries Shaped, IReadOnlyLi
     public IReadOnlyList<PlotSeries> PhysicalLanes { get; init; } = [];
     public IReadOnlyList<PlotMarker> PhysicalMarkers { get; init; } = [];
     public PlotSeries? PhysicalThreshold { get; init; }
+    /// <summary>The facts of <see cref="ChainReadout"/> as (label, value) pairs for the panel's rows, same numbers.</summary>
+    public IReadOnlyList<KeyValuePair<string, string>> ChainFacts { get; init; } = [];
+    /// <summary>The caveats of <see cref="ChainReadout"/> that qualify the rows (kept visible under them).</summary>
+    public string? ChainNote { get; init; }
 }

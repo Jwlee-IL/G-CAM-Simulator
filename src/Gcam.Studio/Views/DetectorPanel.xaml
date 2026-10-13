@@ -18,6 +18,9 @@
                             AutomationProperties.Name="Readout model assumptions" />
                     <TextBlock Text="Detector geometry" Style="{StaticResource Text.PanelTitle}" />
                 </DockPanel>
+                <!-- Whose settings the face and these rows show (moved from under the face) -->
+                <TextBlock Text="{Binding Identity}" Style="{StaticResource Text.Caption}" Margin="{StaticResource Gap.Field}"
+                        AutomationProperties.AutomationId="Detector.Identity" />
                 <!-- The rows group keeps the readout's AutomationId (a Group peer); its name is the same facts as one text. -->
                 <c:SettingsGroup Grid.IsSharedSizeScope="True" AutomationProperties.AutomationId="Detector.Readout"
                         AutomationProperties.Name="{Binding Readout}">
@@ -45,6 +48,11 @@
                     <Border Style="{StaticResource Divider}" />
                     <!-- ===== Gain pattern / Readout network ===== -->
                     <DockPanel Style="{StaticResource PanelHeader}">
+                        <!-- The gain-pattern help (moved from under the face); the physical readout has no gain pattern -->
+                        <c:HelpMark DockPanel.Dock="Right"
+                                Text="Static relative gain · viridis scale · gaps are dead geometric area"
+                                Visibility="{Binding Shared.CanUseLegacy, Converter={StaticResource BoolToVis}}"
+                                AutomationProperties.AutomationId="Detector.GainHelp" AutomationProperties.Name="About the gain pattern" />
                         <TextBlock Text="{Binding ResponseTitle}" Style="{StaticResource Text.PanelTitle}" />
                     </DockPanel>
                     <!-- Values end where the help marks begin (the same right gutter as the Active area row). -->
@@ -52,6 +60,31 @@
                         <FrameworkElement DockPanel.Dock="Right" Width="{StaticResource Size.HelpMark}" Margin="{StaticResource Gap.HelpMark}" />
                         <ItemsControl ItemsSource="{Binding ResponseRows}" ItemTemplate="{StaticResource Template.FactRow}" Focusable="False" />
                     </DockPanel>
+                    <!-- ===== Acquired (legacy readout): counts and rate, moved from under the face ===== -->
+                    <StackPanel Visibility="{Binding Shared.CanUseLegacy, Converter={StaticResource BoolToVis}}">
+                        <Border Style="{StaticResource Divider}" />
+                        <DockPanel Style="{StaticResource PanelHeader}">
+                            <TextBlock Text="Acquired" Style="{StaticResource Text.PanelTitle}" />
+                        </DockPanel>
+                        <c:SettingsGroup AutomationProperties.Name="{Binding Counts}">
+                            <DockPanel>
+                                <FrameworkElement DockPanel.Dock="Right" Width="{StaticResource Size.HelpMark}" Margin="{StaticResource Gap.HelpMark}" />
+                                <ItemsControl ItemsSource="{Binding CountRows}" ItemTemplate="{StaticResource Template.FactRow}" Focusable="False" />
+                            </DockPanel>
+                            <TextBlock Text="{Binding Counts}" TextWrapping="Wrap">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock" BasedOn="{StaticResource Text.Caption}">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding CountRows.Count}" Value="0">
+                                                <Setter Property="Visibility" Value="Visible" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                        </c:SettingsGroup>
+                    </StackPanel>
                     <StackPanel Visibility="{Binding Shared.IsPhysicalReadout, Converter={StaticResource BoolToVis}}">
                         <Border Style="{StaticResource Divider}" />
                         <!-- ===== Measured conversions (physical readout) ===== -->

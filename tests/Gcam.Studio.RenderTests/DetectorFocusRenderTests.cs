@@ -27,7 +27,6 @@ public sealed partial class PlotViewRenderTests
             dictionaries.Add(new ResourceDictionary { Source = new Uri($"/Gcam.Studio;component/Themes/{file}.xaml", UriKind.Relative) });
         var model = new MainViewModel(new WaveformAcquisition(), new FixtureTheme(Enum.Parse<AppTheme>(theme)),
             new FixtureSpectrum(), detectorFace: new DetectorFaceService()) { SeedText = "12345", AmbientDoseRateMicroSvPerHour = 0 };
-        model.IsOpticsExpanded = model.IsDetectorExpanded = false;
         model.SelectedWorkspace = model.DetectorWorkspace;
         Capture("detector-before");
         model.StartCommand.ExecuteAsync(null).GetAwaiter().GetResult();
@@ -45,7 +44,6 @@ public sealed partial class PlotViewRenderTests
             double sourceMm = far ? 1000 : 300;
             model = new MainViewModel(new FixtureAcquisition(), new FixtureTheme(Enum.Parse<AppTheme>(theme)),
                 new FixtureSpectrum(), new FixtureImaging(), detectorFace: new DetectorFaceService()) { SeedText = "12345", AmbientDoseRateMicroSvPerHour = 0 };
-            model.IsOpticsExpanded = model.IsDetectorExpanded = false;
             model.Sources[0].DistanceMm = sourceMm;
             model.StartCommand.ExecuteAsync(null).GetAwaiter().GetResult();
             model.Imaging.WhenUpdated.GetAwaiter().GetResult();

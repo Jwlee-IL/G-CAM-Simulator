@@ -70,6 +70,7 @@ Run `python samples/testing/test_records.py check-catalog --discover` after a Re
 | `Gcam.Studio.Tests::Gcam.Studio.Tests.PlotViewportTests` | 4 | 5 |
 | `Gcam.Studio.Tests::Gcam.Studio.Tests.ReadoutViewModelTests` | 16 | 18 |
 | `Gcam.Studio.Tests::Gcam.Studio.Tests.SpectrumBandTests` | 1 | 1 |
+| `Gcam.Studio.Tests::Gcam.Studio.Tests.StartRefusalTests` | 8 | 8 |
 | `Gcam.Studio.Tests::Gcam.Studio.Tests.ThemeContrastTests` | 2 | 8 |
 | `Gcam.Studio.Tests::Gcam.Studio.Tests.TickFormatterTests` | 7 | 18 |
 | `Gcam.Studio.Tests::Gcam.Studio.Tests.WaveformWorkspaceTests` | 10 | 15 |
@@ -267,7 +268,7 @@ Source: [tests/Gcam.Studio.RenderTests/OptionsRenderTests.cs](../tests/Gcam.Stud
 
 ## PlotViewRenderTests — Gcam.Studio.RenderTests
 
-Checks detached Studio views in both themes and at different plot scales, including bindings, layout, hover readouts, workspace controls, caption and Options tabs. Stage-2 checks cover editable/locked left tabs and Options tabs, cog badges and status summaries, explicit Custom optics (fields shown under every preset with the preset's values, enabled only for Custom), the left Detector tab in the physical readout's pending, preparing, ready and failed states (real offer record, drawing-fixture preparations) without scrolling at 1280 x 800, the Imaging focal-plane geometry as label / value rows named with the geometry text, the Measurements panel (no measurements, four rows with one selected under each tool, half width beside a focus curve: checked toggle frame and glyph colour, the row delete shown on the selected row only, which alone is a tab stop, Value cells shown whole or wrapped, never cut or overlapped), one top-bar control height/centre line, independent flush caption buttons, every icon's unclipped ink and margins, and detached maximized client layouts with the restore glyph. Section and caption identifiers have automation peers. Analytic fixtures exercise rendering without starting Studio or creating a visible window.
+Checks detached Studio views in both themes and at different plot scales, including bindings, layout, hover readouts, workspace controls, caption and Options tabs. Stage-2 checks cover editable/locked left tabs and Options tabs, cog badges and status summaries, explicit Custom optics (fields shown under every preset with the preset's values, enabled only for Custom), the left Detector tab in the physical readout's pending, preparing, ready and failed states (real offer record, drawing-fixture preparations) without scrolling at 1280 x 800, the Imaging focal-plane geometry as label / value rows named with the geometry text, the Measurements panel (no measurements, four rows with one selected under each tool, half width beside a focus curve: checked toggle frame and glyph colour, the row delete shown on the selected row only, which alone is a tab stop, Value cells shown whole or wrapped, never cut or overlapped), one top-bar control height/centre line, the top-bar order (inputs, Start / Stop, Reset, Theme, Options, caption buttons) with every interactive top-bar control and all its inner visuals hit-testable in the WindowChrome caption, refused Starts in the status bar (warning colour; Options refusals with the cog's warning badge and help text, left-panel refusals selecting their tab), the Waveform panel's acquired chain as rows named with the chain readout and its events table with no cut cell, independent flush caption buttons, every icon's unclipped ink and margins, and detached maximized client layouts with the restore glyph. Section and caption identifiers have automation peers. Analytic fixtures exercise rendering without starting Studio or creating a visible window.
 
 Oracle: Analytic spectrum, waveform and focus curves, fake acquisition snapshots and direct production control/viewmodel state supply binding, readout and layout expectations. Saved PNGs have no golden-pixel oracle.
 
@@ -278,7 +279,7 @@ Gates: `GCAM_RENDER_SNAPSHOTS`.
 Source: [tests/Gcam.Studio.RenderTests/PlotViewRenderTests.cs](../tests/Gcam.Studio.RenderTests/PlotViewRenderTests.cs), [tests/Gcam.Studio.RenderTests/AmbientRenderTests.cs](../tests/Gcam.Studio.RenderTests/AmbientRenderTests.cs), [tests/Gcam.Studio.RenderTests/DetectorFocusRenderTests.cs](../tests/Gcam.Studio.RenderTests/DetectorFocusRenderTests.cs), [tests/Gcam.Studio.RenderTests/HeatmapReadoutChecks.cs](../tests/Gcam.Studio.RenderTests/HeatmapReadoutChecks.cs), [tests/Gcam.Studio.RenderTests/MainWindowRenderTests.cs](../tests/Gcam.Studio.RenderTests/MainWindowRenderTests.cs), [tests/Gcam.Studio.RenderTests/WaveformRenderTests.cs](../tests/Gcam.Studio.RenderTests/WaveformRenderTests.cs), [tests/Gcam.Studio.RenderTests/OptionsSnapshots.cs](../tests/Gcam.Studio.RenderTests/OptionsSnapshots.cs), [tests/Gcam.Studio.RenderTests/MeasurementSnapshots.cs](../tests/Gcam.Studio.RenderTests/MeasurementSnapshots.cs).
 
 ```json
-{"id":"Gcam.Studio.RenderTests::Gcam.Studio.RenderTests.PlotViewRenderTests","runner":"dotnet","methods":["Spectrum_BothThemesFullAndZoom_RenderWithoutWindow"],"sources":{"tests/Gcam.Studio.RenderTests/PlotViewRenderTests.cs":"02da7383037d90b88c6992e6c7ba3734f1a968e1b889e6c22aa823db0d5a37be","tests/Gcam.Studio.RenderTests/AmbientRenderTests.cs":"e06175b20dd8c249a5e93f7871f85197973dd2072f5249b413450ac1507f01ae","tests/Gcam.Studio.RenderTests/DetectorFocusRenderTests.cs":"9a6159983d89d12dd7dfdc507bc85f982e60826a7b7de786cf09749a1eb81d60","tests/Gcam.Studio.RenderTests/HeatmapReadoutChecks.cs":"213a8cd5030d7cc186ed144c4459cb38330c0a1e4174720ad0abe67145be6471","tests/Gcam.Studio.RenderTests/MainWindowRenderTests.cs":"776d5e812034a6f7a5eecdcd51ebb573d1486fa0bdb2d4f32be7faa43ed5a289","tests/Gcam.Studio.RenderTests/MeasurementSnapshots.cs":"58a11e0d2aeae5d63808de12341935018001fcacc1d51d8568b50dc17a531e87","tests/Gcam.Studio.RenderTests/OptionsSnapshots.cs":"81382545b3124f38f9aefde753ff281278e405fe4e744416af083ecab742ead6","tests/Gcam.Studio.RenderTests/WaveformRenderTests.cs":"665d6a04ab57c9fd4262698ea4914bef6a9bcb97493a348cf3dccc33dad49567","tests/Gcam.Studio.RenderTests/RenderSnapshotFactAttribute.cs":"95dd1088eee764d18a539ff37399a3c518aa75056d29d2de60286d2173ba1edd"},"trace":[{"requirement":"SR-OPT-06","selectors":["Spectrum_BothThemesFullAndZoom_RenderWithoutWindow"]},{"requirement":"SR-RUN-29","selectors":["Spectrum_BothThemesFullAndZoom_RenderWithoutWindow"]},{"requirement":"SR-PLOT-06","selectors":["Spectrum_BothThemesFullAndZoom_RenderWithoutWindow"]},{"requirement":"SR-PLOT-11","selectors":["Spectrum_BothThemesFullAndZoom_RenderWithoutWindow"]}]}
+{"id":"Gcam.Studio.RenderTests::Gcam.Studio.RenderTests.PlotViewRenderTests","runner":"dotnet","methods":["Spectrum_BothThemesFullAndZoom_RenderWithoutWindow"],"sources":{"tests/Gcam.Studio.RenderTests/PlotViewRenderTests.cs":"02da7383037d90b88c6992e6c7ba3734f1a968e1b889e6c22aa823db0d5a37be","tests/Gcam.Studio.RenderTests/AmbientRenderTests.cs":"4bb4285a47fbea2287420b91b8fb5f9c2d83552f38d16a78f52746f9f7426359","tests/Gcam.Studio.RenderTests/DetectorFocusRenderTests.cs":"f0affde1191f9198040720fbfdeb442630c80ad4e712ff91456d2c8243540b26","tests/Gcam.Studio.RenderTests/HeatmapReadoutChecks.cs":"213a8cd5030d7cc186ed144c4459cb38330c0a1e4174720ad0abe67145be6471","tests/Gcam.Studio.RenderTests/MainWindowRenderTests.cs":"c8bbd22bfc6d0ee4dd179185f87e4ef381a69d2984f48633f2ced17dc2881491","tests/Gcam.Studio.RenderTests/MeasurementSnapshots.cs":"58a11e0d2aeae5d63808de12341935018001fcacc1d51d8568b50dc17a531e87","tests/Gcam.Studio.RenderTests/OptionsSnapshots.cs":"59cfc9cd6d13102363e9da41a028b8d82546bb0d41553016e08672497e615f00","tests/Gcam.Studio.RenderTests/WaveformRenderTests.cs":"2015bf87ad5c31d9ff00d84b54ff9e36338ee4208d690857679b2468d63f11e7","tests/Gcam.Studio.RenderTests/RenderSnapshotFactAttribute.cs":"95dd1088eee764d18a539ff37399a3c518aa75056d29d2de60286d2173ba1edd"},"trace":[{"requirement":"SR-OPT-06","selectors":["Spectrum_BothThemesFullAndZoom_RenderWithoutWindow"]},{"requirement":"SR-RUN-29","selectors":["Spectrum_BothThemesFullAndZoom_RenderWithoutWindow"]},{"requirement":"SR-PLOT-06","selectors":["Spectrum_BothThemesFullAndZoom_RenderWithoutWindow"]},{"requirement":"SR-PLOT-11","selectors":["Spectrum_BothThemesFullAndZoom_RenderWithoutWindow"]}]}
 ```
 
 
@@ -605,7 +606,7 @@ Method groups:
 
 ## DetectorWorkspaceTests — Gcam.Studio.Tests
 
-Checks reflector-gap validation as pitch and units change, and whether edits can permit Start. The displayed detector face must follow pending settings before acquisition, acquired settings while data exist and pending settings again after Reset. The Detector panel's label / value rows (geometry, active area, gain pattern) carry the same values as the one-text readout and follow pending, then acquired settings.
+Checks reflector-gap validation as pitch and units change, and whether edits can permit Start. The displayed detector face must follow pending settings before acquisition, acquired settings while data exist and pending settings again after Reset. The Detector panel's label / value rows (geometry, active area, gain pattern with the face legend moved from under the face, acquired counts and live-time rate) carry the same values as the one-text readout, legend and counts lines and follow pending, then acquired settings.
 
 Oracle: Controlled pending/acquired settings and reflector-gap validation/unit conversion are exact fixtures. Start rejection, reset unlock and displayed face identity are structural.
 
@@ -616,7 +617,7 @@ Gates: none.
 Source: [tests/Gcam.Studio.Tests/DetectorWorkspaceTests.cs](../tests/Gcam.Studio.Tests/DetectorWorkspaceTests.cs).
 
 ```json
-{"id":"Gcam.Studio.Tests::Gcam.Studio.Tests.DetectorWorkspaceTests","runner":"dotnet","methods":["Gap_InvalidEditPreventsStart","Gap_RevalidatesAfterPitchChange_AndConvertsUnits","Gap_ZeroAllowsPitchBelowOldDefaultGap","Face_FollowsPendingBeforeStart_AcquiredAndLockedAfter_PendingAgainAfterReset","PanelRows_CarryTheReadoutFacts_PendingThenAcquired"],"sources":{"tests/Gcam.Studio.Tests/DetectorWorkspaceTests.cs":"59157e61b69c32d37645326826cbe1421907246757c591ad0c3c53cd6b210886"},"trace":[{"requirement":"SR-RUN-26","selectors":["Face_FollowsPendingBeforeStart_AcquiredAndLockedAfter_PendingAgainAfterReset"]}]}
+{"id":"Gcam.Studio.Tests::Gcam.Studio.Tests.DetectorWorkspaceTests","runner":"dotnet","methods":["Gap_InvalidEditPreventsStart","Gap_RevalidatesAfterPitchChange_AndConvertsUnits","Gap_ZeroAllowsPitchBelowOldDefaultGap","Face_FollowsPendingBeforeStart_AcquiredAndLockedAfter_PendingAgainAfterReset","PanelRows_CarryTheReadoutFacts_PendingThenAcquired"],"sources":{"tests/Gcam.Studio.Tests/DetectorWorkspaceTests.cs":"68fc17ec0c360f9d7a72acf9e3b576d8bfff9b05d96b58a74e0b1d6a9d026109"},"trace":[{"requirement":"SR-RUN-26","selectors":["Face_FollowsPendingBeforeStart_AcquiredAndLockedAfter_PendingAgainAfterReset"]}]}
 ```
 
 
@@ -771,6 +772,23 @@ Source: [tests/Gcam.Studio.Tests/MeasurementsViewModelTests.cs](../tests/Gcam.St
 ```
 
 
+## StartRefusalTests — Gcam.Studio.Tests
+
+Checks that every refusal of Start is visible: the status bar carries the reason ("Start refused: …", or "Options: …" for an Options input), the left tab holding the offending input is selected (optics and gap: Optics; scene: Scene; physical readout: Detector), a focal-plane refusal opens the Imaging focal section, and an Options refusal (seed, ambient dose, gap, nonzero ambient or BSR with the physical readout) gives the cog its warning state until the input is fixed, without opening the dialog. Field messages stay; inputs that pass reach the acquisition service and clear the refusal.
+
+Oracle: The existing validation messages (optics editor, gap, scene, focus, readout, seed, ambient dose) define the expected status text; a counting acquisition fixture shows whether a start reached the service.
+
+Tolerance: Exact/structural.
+
+Gates: none.
+
+Source: [tests/Gcam.Studio.Tests/StartRefusalTests.cs](../tests/Gcam.Studio.Tests/StartRefusalTests.cs).
+
+```json
+{"id":"Gcam.Studio.Tests::Gcam.Studio.Tests.StartRefusalTests","runner":"dotnet","methods":["OpticsError_ShowsReason_SelectsOpticsTab","GapError_ShowsOptionsReason_SelectsOpticsTab_WarnsOnTheCogUntilFixed","SceneError_SelectsSceneTab","FocusError_ShowsReason_OpensTheFocalSection","ReadoutNotPrepared_ShowsReason_SelectsDetectorTab","AmbientOrBsrWithPhysicalReadout_ShowsOptionsReason_SelectsDetectorTab_WarnsOnTheCog","SeedError_ShowsOptionsReason_WarnsOnTheCog","AmbientDoseError_ShowsOptionsReason_WarnsOnTheCog_PassingInputsClearTheRefusal"],"sources":{"tests/Gcam.Studio.Tests/StartRefusalTests.cs":"0f175ba1b03a7e7bfcad6092cd2b77ac8e8d5b9102f4b6ce300238331c419987"},"trace":[]}
+```
+
+
 ## MinMaxPyramidTests — Gcam.Studio.Tests
 
 Checks that plot-envelope queries return the same extrema as a direct scan, including endpoints and block boundaries. It also checks clipped ranges, rejection of non-finite samples and the storage bound.
@@ -839,7 +857,7 @@ Method groups:
 
 ## OpticsViewModelTests — Gcam.Studio.Tests
 
-Checks that focus changes preserve acquired events and spectrum while physical optics remain locked with data. Projection requests must coalesce, reject stale workers across acquisition identities and refuse Start when inputs are invalid.
+Checks that focus changes preserve acquired events and spectrum while physical optics remain locked with data. Projection requests must coalesce, reject stale workers across acquisition identities and refuse Start when inputs are invalid, with the reason in the status line and the inputs' left tab selected.
 
 Oracle: Fake session/projection workers and controlled completion order supply the oracle for pending/acquired locks, event preservation and latest-focus identity. Exact/structural; timeouts protect completion, not imaging accuracy.
 
@@ -850,7 +868,7 @@ Gates: none.
 Source: [tests/Gcam.Studio.Tests/OpticsViewModelTests.cs](../tests/Gcam.Studio.Tests/OpticsViewModelTests.cs).
 
 ```json
-{"id":"Gcam.Studio.Tests::Gcam.Studio.Tests.OpticsViewModelTests","runner":"dotnet","methods":["Focus_AcquiringStoppedCompleted_KeepsEventsAndSpectrum_OpticsLockedWithData","LatestFocus_CoalescesChangesAndRejectsLateSnapshotProjection","OldAcquisitionWorker_CannotPublishIntoNewAcquisition","InvalidInput_StartExpandsSectionsAndDoesNotStartTransport"],"sources":{"tests/Gcam.Studio.Tests/OpticsViewModelTests.cs":"5e300a980f49e81e7c67703065b19cc7e547db71105a17b3db90371a2027ba56"},"trace":[{"requirement":"SR-OPT-01","selectors":["Focus_AcquiringStoppedCompleted_KeepsEventsAndSpectrum_OpticsLockedWithData"]},{"requirement":"SR-OPT-02","selectors":["Focus_AcquiringStoppedCompleted_KeepsEventsAndSpectrum_OpticsLockedWithData"]},{"requirement":"SR-OPT-03","selectors":["InvalidInput_StartExpandsSectionsAndDoesNotStartTransport"]},{"requirement":"SR-OPT-04","selectors":["Focus_AcquiringStoppedCompleted_KeepsEventsAndSpectrum_OpticsLockedWithData","InvalidInput_StartExpandsSectionsAndDoesNotStartTransport","LatestFocus_CoalescesChangesAndRejectsLateSnapshotProjection","OldAcquisitionWorker_CannotPublishIntoNewAcquisition"]},{"requirement":"SR-RUN-23","selectors":["Focus_AcquiringStoppedCompleted_KeepsEventsAndSpectrum_OpticsLockedWithData"]}]}
+{"id":"Gcam.Studio.Tests::Gcam.Studio.Tests.OpticsViewModelTests","runner":"dotnet","methods":["Focus_AcquiringStoppedCompleted_KeepsEventsAndSpectrum_OpticsLockedWithData","LatestFocus_CoalescesChangesAndRejectsLateSnapshotProjection","OldAcquisitionWorker_CannotPublishIntoNewAcquisition","InvalidInput_StartExpandsSectionsAndDoesNotStartTransport"],"sources":{"tests/Gcam.Studio.Tests/OpticsViewModelTests.cs":"9807622b79aac8ae99e1954131f6c81ccab1a40f068cdfc1945bd3f818f00b68"},"trace":[{"requirement":"SR-OPT-01","selectors":["Focus_AcquiringStoppedCompleted_KeepsEventsAndSpectrum_OpticsLockedWithData"]},{"requirement":"SR-OPT-02","selectors":["Focus_AcquiringStoppedCompleted_KeepsEventsAndSpectrum_OpticsLockedWithData"]},{"requirement":"SR-OPT-03","selectors":["InvalidInput_StartExpandsSectionsAndDoesNotStartTransport"]},{"requirement":"SR-OPT-04","selectors":["Focus_AcquiringStoppedCompleted_KeepsEventsAndSpectrum_OpticsLockedWithData","InvalidInput_StartExpandsSectionsAndDoesNotStartTransport","LatestFocus_CoalescesChangesAndRejectsLateSnapshotProjection","OldAcquisitionWorker_CannotPublishIntoNewAcquisition"]},{"requirement":"SR-RUN-23","selectors":["Focus_AcquiringStoppedCompleted_KeepsEventsAndSpectrum_OpticsLockedWithData"]}]}
 ```
 
 

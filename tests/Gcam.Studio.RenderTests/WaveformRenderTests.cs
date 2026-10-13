@@ -30,7 +30,6 @@ public sealed partial class PlotViewRenderTests
         var model = new MainViewModel(acquisition, new FixtureTheme(Enum.Parse<AppTheme>(theme)), new FixtureSpectrum(),
             waveform: new FixedTimeWaveformService(), confirmation: new ModalService()) { SeedText = "12345", AmbientDoseRateMicroSvPerHour = 0 };
         model.StartCommand.ExecuteAsync(null).GetAwaiter().GetResult();
-        model.IsOpticsExpanded = model.IsDetectorExpanded = false;
         model.SelectedWorkspace = model.Waveform;
         CompleteWaveform(model.Waveform.WhenUpdated);
         model.Waveform.FollowLatest = false;
@@ -87,6 +86,23 @@ public sealed partial class PlotViewRenderTests
                 var note = Assert.Single(Descendants(root).OfType<TextBlock>(),
                     c => AutomationProperties.GetAutomationId(c) == "Waveform.Note");
                 Assert.Equal(model.Waveform.Note, note.Text);
+                // Review 5: the acquired chain is label / value rows (the group keeps its AutomationId and is named with the
+                // chain readout); the events are a table with one row per event (name = the event's description).
+                var chain = Assert.Single(Descendants(root).OfType<SettingsGroup>(), g => AutomationProperties.GetAutomationId(g) == "Waveform.ChainReadout");
+                Assert.Equal(model.Waveform.View!.ChainReadout, AutomationProperties.GetName(chain));
+                Assert.NotEmpty(model.Waveform.ChainRows);
+                foreach (var row in model.Waveform.ChainRows) Assert.Contains(row.Value.Split(' ')[0], model.Waveform.View.ChainReadout);
+                var events = Assert.Single(Descendants(root).OfType<ListBox>(), l => AutomationProperties.GetAutomationId(l) == "Waveform.Events");
+                Assert.Equal(model.Waveform.Events.Count, events.Items.Count);
+                foreach (var cell in Descendants(events).OfType<TextBlock>().Where(t => t.ActualWidth > 0))
+                {
+                    // No cell text is cut: its laid-out width holds its whole one-line text (the acquired line wraps).
+                    var probe = new TextBlock { Text = cell.Text, FontFamily = cell.FontFamily, FontSize = cell.FontSize };
+                    TextOptions.SetTextFormattingMode(probe, TextOptions.GetTextFormattingMode(cell));
+                    probe.Measure(new Size(cell.TextWrapping == TextWrapping.Wrap ? cell.ActualWidth + .5 : double.PositiveInfinity, double.PositiveInfinity));
+                    Assert.True(cell.TextWrapping == TextWrapping.Wrap ? probe.DesiredSize.Width <= cell.ActualWidth + .5 : cell.ActualWidth + .5 >= probe.DesiredSize.Width,
+                        $"event cell '{cell.Text}' cut ({cell.ActualWidth:0.#} < {probe.DesiredSize.Width:0.#})");
+                }
                 root.UpdateLayout();
                 var bitmap = new RenderTargetBitmap((int)size.Width, (int)size.Height, 96, 96, PixelFormats.Pbgra32);
                 bitmap.Render(root);

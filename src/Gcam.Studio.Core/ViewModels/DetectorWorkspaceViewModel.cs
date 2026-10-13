@@ -206,9 +206,21 @@ public sealed partial class DetectorWorkspaceViewModel(MainViewModel shared, IDe
             return Shared.IsPhysicalReadout
                 ? [new("Network", "DPC"), new("Row / column", "1000 Ω / 10 Ω"), new("Outputs", "A–D virtual grounds"),
                     new("Trigger", "Sum 50 keV-equivalent"), new("Hold", "Common"), new("Reflector", "Specular 0.98")]
-                : [new("Gain σ", $"{detector.GainSigma * 100:0.#}%"), new("Gain seed", $"{detector.GainSeed}")];
+                : [new("Gain σ", $"{detector.GainSigma * 100:0.#}%"), new("Gain seed", $"{detector.GainSeed}"), .. GainMapRows];
         }
     }
+
+    /// <summary>The face legend (<see cref="GainLegend"/>) as rows: the relative-gain range and the face size, or the
+    /// settings message when no face can be built.</summary>
+    public IReadOnlyList<FactRow> GainMapRows => Face is { } f
+        ? [new("Relative gain", $"{f.Crystals.Min(c => c.Gain):0.000}–{f.Crystals.Max(c => c.Gain):0.000}"), new("Face", $"{f.SizeMm:0.###} mm square")]
+        : [new("Gain map", "Enter valid detector settings")];
+
+    /// <summary>The acquired counts and rate (<see cref="Counts"/>) as rows; empty before an acquisition, where the panel
+    /// shows <see cref="Counts"/>' message.</summary>
+    public IReadOnlyList<FactRow> CountRows => Shared.Snapshot is { } s
+        ? [new("Counts", $"{s.Counts:N0}"), new("Live-time rate", $"{s.ObservedRateCps:0.0} cps")] // rate = counts / live time
+        : [];
 
     public string Counts => Shared.Snapshot is { } s
         ? $"Acquired {s.Counts:N0} counts · {s.ObservedRateCps:0.0} cps (counts / live time)"
@@ -227,7 +239,7 @@ public sealed partial class DetectorWorkspaceViewModel(MainViewModel shared, IDe
         }
         else { Face = null; _faceOptics = null; _faceDetector = null; }
         foreach (string name in new[] { nameof(Identity), nameof(Readout), nameof(Counts), nameof(GainLegend), nameof(MinimumGain), nameof(MaximumGain),
-            nameof(GeometryRows), nameof(ActiveAreaText), nameof(ResponseTitle), nameof(ResponseRows) }) OnPropertyChanged(name);
+            nameof(GeometryRows), nameof(ActiveAreaText), nameof(ResponseTitle), nameof(ResponseRows), nameof(GainMapRows), nameof(CountRows) }) OnPropertyChanged(name);
         foreach (string name in new[] { nameof(Bank), nameof(BankLines), nameof(ShownLineKeV), nameof(Preparation), nameof(PhysicalSnapshot), nameof(Diagnostics), nameof(CalibrationState),
             nameof(PhysicalCounts), nameof(ConversionRows), nameof(ConversionNote), nameof(OfferRows), nameof(OfferDetails), nameof(SensitivitySummary), nameof(SensitivityStepMm), nameof(SensitivityOriginMm), nameof(SensitivityCaption), nameof(SensitivityHelp) }) OnPropertyChanged(name);
     }

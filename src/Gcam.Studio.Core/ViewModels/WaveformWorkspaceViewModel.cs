@@ -29,6 +29,8 @@ public sealed partial class WaveformWorkspaceViewModel(MainViewModel shared, IWa
     /// <summary>Short "#index" labels: nine markers fit one label row above the plot; pixel and deposit are in the event list.</summary>
     public IReadOnlyList<PlotMarker> Markers => View?.Events.Select(e => new PlotMarker(e.RelativeTimeUs, $"#{e.Index}")).ToArray() ?? [];
     public IReadOnlyList<WaveformEvent> Events => View?.Events ?? [];
+    /// <summary>The acquired chain as label / value rows (the same facts as the view's chain readout, which names the group).</summary>
+    public IReadOnlyList<FactRow> ChainRows => View?.ChainFacts.Select(f => new FactRow(f.Key, f.Value)).ToArray() ?? [];
     public IReadOnlyList<PlotSeries> LaneA => Lane(0);
     public IReadOnlyList<PlotSeries> LaneB => Lane(1);
     public IReadOnlyList<PlotSeries> LaneC => Lane(2);
@@ -57,7 +59,7 @@ public sealed partial class WaveformWorkspaceViewModel(MainViewModel shared, IWa
     {
         if (value is not null && ViewRange is null && value.Adc.Y.Length > 0)
             ViewRange = new(value.Adc.Origin, value.Adc.Y.Length == 1 ? value.Adc.Origin + value.Adc.Step : value.Adc.XAt(value.Adc.Y.Length - 1));
-        foreach (string name in new[] { nameof(AdcSeries), nameof(ShapedSeries), nameof(Markers), nameof(Events), nameof(Summary), nameof(Note), nameof(NoteHelp), nameof(LaneA), nameof(LaneB), nameof(LaneC), nameof(LaneD), nameof(LaneSum), nameof(PhysicalMarkers) })
+        foreach (string name in new[] { nameof(AdcSeries), nameof(ShapedSeries), nameof(Markers), nameof(Events), nameof(ChainRows), nameof(Summary), nameof(Note), nameof(NoteHelp), nameof(LaneA), nameof(LaneB), nameof(LaneC), nameof(LaneD), nameof(LaneSum), nameof(PhysicalMarkers) })
             OnPropertyChanged(name);
     }
 

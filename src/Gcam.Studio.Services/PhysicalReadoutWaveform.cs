@@ -55,6 +55,8 @@ public static class PhysicalReadoutWaveform
             "Realised analogue pulses in code-equivalent units; held ADC values are listed separately. Sum threshold; no continuous digitizer noise, network RC, skew or jitter. " +
             (origin+length*1e-6>snapshot.LiveTimeS?"Partial observed horizon: no future hits. ":"") +
             (length<settings.WindowUs?"Window clipped to shared five-lane sample budget.":""),length,watch.Elapsed)
-        { PhysicalLanes = Array.AsReadOnly(series), PhysicalMarkers = Array.AsReadOnly(markers), PhysicalThreshold = thresholdSeries };
+        { PhysicalLanes = Array.AsReadOnly(series), PhysicalMarkers = Array.AsReadOnly(markers), PhysicalThreshold = thresholdSeries,
+          ChainFacts = Array.AsReadOnly(new KeyValuePair<string, string>[] { new("Readout", "Experimental GAGG"), new("Network", "DPC 0.01"),
+              new("Outputs", "Four held 14-bit ADC outputs") }) };
     }
 }

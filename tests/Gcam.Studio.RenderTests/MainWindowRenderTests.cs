@@ -87,9 +87,8 @@ public sealed partial class PlotViewRenderTests
         Assert.Same(acquisition.Snapshot, model.Snapshot);
         Assert.NotEmpty(model.Spectrum.Series);
 
-        if (opticsExpanded is { } expanded)
+        if (opticsExpanded is not null) // the former optics-section variants: focal plane 800 (the left tabs replaced the sections)
         {
-            model.IsOpticsExpanded = model.IsDetectorExpanded = expanded;
             model.Imaging.FocalPlane = "800";
             model.Imaging.WhenUpdated.GetAwaiter().GetResult();
         }

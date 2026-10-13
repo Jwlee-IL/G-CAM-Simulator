@@ -109,23 +109,9 @@
                                         </ItemsControl>
                                     </Border>
                                 </StackPanel>
+                                <!-- Inputs, then the primary action, then the secondary actions: Start / Stop · Reset · Theme · Options;
+                                the caption buttons follow at the far right. Every interactive control is hit-testable in the chrome. -->
                                 <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                                    <Button shell:WindowChrome.IsHitTestVisibleInChrome="True" Command="{Binding ToggleThemeCommand}" ToolTip="{Binding ThemeToggleLabel}"
-                                            Style="{StaticResource Button.Theme}"
-                                            Margin="{StaticResource Gap.InlineWide}"
-                                            AutomationProperties.AutomationId="ThemeToggle" AutomationProperties.Name="{Binding ThemeToggleLabel}" />
-                                    <Grid Width="{StaticResource Size.Control}" Height="{StaticResource Size.Control}"
-                                            VerticalAlignment="Center" Margin="{StaticResource Gap.InlineWide}">
-                                        <Button shell:WindowChrome.IsHitTestVisibleInChrome="True" Command="{Binding OpenOptionsCommand}" Content="{StaticResource Icon.Settings}" ToolTip="Options"
-                                                Style="{StaticResource Button.Icon}"
-                                                AutomationProperties.AutomationId="OpenOptions" AutomationProperties.Name="Options"
-                                                AutomationProperties.HelpText="{Binding OptionsHelpText}" />
-                                        <Ellipse Width="{StaticResource Size.OptionsBadge}" Height="{StaticResource Size.OptionsBadge}"
-                                                Fill="{DynamicResource Brush.Options.Badge}" HorizontalAlignment="Right" VerticalAlignment="Top"
-                                                Margin="{StaticResource Gap.Caption.Focus}" IsHitTestVisible="False"
-                                                Visibility="{Binding HasNonDefaultOptions, Converter={StaticResource BoolToVis}}"
-                                                AutomationProperties.AutomationId="Options.Badge" />
-                                    </Grid>
                                     <TextBlock Text="Live time" Style="{StaticResource Text.Label}" Margin="{StaticResource Gap.Inline}" />
                                     <TextBox shell:WindowChrome.IsHitTestVisibleInChrome="True" Width="{StaticResource Size.NumberInput.Short}" Height="{StaticResource Size.Control}"
                                             VerticalAlignment="Center" Tag="s" Text="{Binding LiveTimeS, UpdateSourceTrigger=LostFocus}"
@@ -138,14 +124,9 @@
                                             IsEnabled="{Binding CanEditSpeed}" Margin="{StaticResource Gap.InlineWide}"
                                             AutomationProperties.AutomationId="AcquisitionSpeed"
                                             AutomationProperties.Name="Speed × (live seconds per wall second)" />
-                                    <!-- Reset opens a deliberate discard confirmation. -->
-                                    <Button shell:WindowChrome.IsHitTestVisibleInChrome="True" Command="{Binding ResetCommand}" Content="{StaticResource Icon.Reset}" ToolTip="Reset acquisition"
-                                            Style="{StaticResource Button.Icon}"
-                                            Margin="{StaticResource Gap.InlineWide}"
-                                            AutomationProperties.AutomationId="ResetAcquisition" AutomationProperties.Name="Reset acquisition" />
                                     <Button shell:WindowChrome.IsHitTestVisibleInChrome="True" Command="{Binding StopCommand}" Visibility="{Binding IsRunning, Converter={StaticResource BoolToVis}}"
                                             Style="{StaticResource Button.Primary}" Height="{StaticResource Size.Control}" VerticalAlignment="Center"
-                                            Margin="{StaticResource Gap.Inline}"
+                                            Margin="{StaticResource Gap.InlineWide}"
                                             AutomationProperties.AutomationId="StopAcquisition" AutomationProperties.Name="Stop">
                                         <StackPanel Orientation="Horizontal">
                                             <Path Data="{StaticResource Icon.Stop}" Stretch="Uniform"
@@ -166,6 +147,50 @@
                                             <TextBlock Text="{Binding StartLabel}" VerticalAlignment="Center" />
                                         </StackPanel>
                                     </Button>
+                                    <!-- Reset opens a deliberate discard confirmation. -->
+                                    <Button shell:WindowChrome.IsHitTestVisibleInChrome="True" Command="{Binding ResetCommand}" Content="{StaticResource Icon.Reset}" ToolTip="Reset acquisition"
+                                            Style="{StaticResource Button.Icon}"
+                                            Margin="{StaticResource Gap.InlineWide}"
+                                            AutomationProperties.AutomationId="ResetAcquisition" AutomationProperties.Name="Reset acquisition" />
+                                    <Button shell:WindowChrome.IsHitTestVisibleInChrome="True" Command="{Binding ToggleThemeCommand}" ToolTip="{Binding ThemeToggleLabel}"
+                                            Style="{StaticResource Button.Theme}"
+                                            Margin="{StaticResource Gap.InlineWide}"
+                                            AutomationProperties.AutomationId="ThemeToggle" AutomationProperties.Name="{Binding ThemeToggleLabel}" />
+                                    <Grid Width="{StaticResource Size.Control}" Height="{StaticResource Size.Control}"
+                                            VerticalAlignment="Center" Margin="{StaticResource Gap.InlineWide}">
+                                        <Button shell:WindowChrome.IsHitTestVisibleInChrome="True" Command="{Binding OpenOptionsCommand}" Content="{StaticResource Icon.Settings}" ToolTip="Options"
+                                                AutomationProperties.AutomationId="OpenOptions" AutomationProperties.Name="Options"
+                                                AutomationProperties.HelpText="{Binding OptionsHelpText}">
+                                            <!-- Warning state: a Start was refused for an Options input that is still wrong (the dialog opens on click) -->
+                                            <Button.Style>
+                                                <Style TargetType="Button" BasedOn="{StaticResource Button.Icon}">
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding HasOptionsWarning}" Value="True">
+                                                            <Setter Property="BorderBrush" Value="{DynamicResource Brush.Status.Warning}" />
+                                                            <Setter Property="Foreground" Value="{DynamicResource Brush.Status.Warning}" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Button.Style>
+                                        </Button>
+                                        <Ellipse Width="{StaticResource Size.OptionsBadge}" Height="{StaticResource Size.OptionsBadge}"
+                                                HorizontalAlignment="Right" VerticalAlignment="Top"
+                                                Margin="{StaticResource Gap.Caption.Focus}" IsHitTestVisible="False"
+                                                AutomationProperties.AutomationId="Options.Badge">
+                                            <Ellipse.Style>
+                                                <Style TargetType="Ellipse">
+                                                    <Setter Property="Fill" Value="{DynamicResource Brush.Options.Badge}" />
+                                                    <Setter Property="Visibility" Value="{Binding HasNonDefaultOptions, Converter={StaticResource BoolToVis}}" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding HasOptionsWarning}" Value="True">
+                                                            <Setter Property="Fill" Value="{DynamicResource Brush.Status.Warning}" />
+                                                            <Setter Property="Visibility" Value="Visible" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Ellipse.Style>
+                                        </Ellipse>
+                                    </Grid>
                                 </StackPanel>
                             </DockPanel>
                         </Border>
@@ -623,9 +648,20 @@
                                     </Style>
                                 </Ellipse.Style>
                             </Ellipse>
-                            <TextBlock Text="{Binding Status}" Style="{StaticResource Text.Label}"
+                            <TextBlock Text="{Binding Status}"
                                     AutomationProperties.AutomationId="StatusText" AutomationProperties.ItemStatus="{Binding State}"
-                                    AutomationProperties.LiveSetting="Polite" />
+                                    AutomationProperties.LiveSetting="Polite">
+                                <!-- A refused Start (validation or Options) reads in the warning colour until the next start or Reset. -->
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock" BasedOn="{StaticResource Text.Label}">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsStartRefused}" Value="True">
+                                                <Setter Property="Foreground" Value="{DynamicResource Brush.Status.Warning}" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
                         </DockPanel>
                         <TextBlock Text="{Binding OptionsStatusSummary}" TextWrapping="Wrap"
                                 AutomationProperties.AutomationId="Options.Summary">

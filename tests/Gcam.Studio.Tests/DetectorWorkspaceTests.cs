@@ -73,7 +73,10 @@ public sealed class DetectorWorkspaceTests
         Assert.Equal("20 µm", Row(d.GeometryRows, "Reflector gap"));
         Assert.Contains("Gap 20 µm", d.Readout);
         Assert.Equal("Gain pattern", d.ResponseTitle);
-        Assert.Equal(new[] { "Gain σ", "Gain seed" }, d.ResponseRows.Select(r => r.Label));
+        Assert.Equal(new[] { "Gain σ", "Gain seed", "Relative gain", "Face" }, d.ResponseRows.Select(r => r.Label));
+        // Review 5: the face legend and the counts moved from under the face into the panel's rows (same facts).
+        Assert.Equal($"Relative gain {Row(d.GainMapRows, "Relative gain")} · face {Row(d.GainMapRows, "Face")}", d.GainLegend);
+        Assert.Empty(d.CountRows); Assert.Equal("No acquired counts", d.Counts);
         Assert.Contains($"Gain σ {Row(d.ResponseRows, "Gain σ")} · seed {Row(d.ResponseRows, "Gain seed")}", d.Readout);
         Assert.Contains($"active width {Row(d.GeometryRows, "Active width")}", d.Readout);
         Assert.Contains(d.GeometryRows[0].Value, d.Readout);
@@ -86,6 +89,7 @@ public sealed class DetectorWorkspaceTests
         await vm.StartCommand.ExecuteAsync(null);
         vm.ReflectorGapUm = "100"; // locked: reverted, rows keep the acquired gap
         Assert.Equal("40 µm", Row(d.GeometryRows, "Reflector gap"));
+        Assert.Equal($"Acquired {Row(d.CountRows, "Counts")} counts · {Row(d.CountRows, "Live-time rate")} (counts / live time)", d.Counts);
     }
 
     private sealed class Face : IDetectorFaceService

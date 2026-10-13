@@ -26,14 +26,11 @@
                         </Style.Triggers>
                     </Style>
                 </DockPanel.Style>
-                <StackPanel DockPanel.Dock="Top">
-                    <DockPanel Style="{StaticResource PanelHeader}">
-                        <TextBlock Text="Detector face · gain pattern" Style="{StaticResource Text.PanelTitle}" />
-                    </DockPanel>
-                    <TextBlock Text="{Binding Identity}" Style="{StaticResource Text.Caption}" Margin="{StaticResource Gap.Field}"
-                            AutomationProperties.AutomationId="Detector.Identity" />
-                </StackPanel>
-                <!-- Square face with its colour bar and legend directly beneath, at the face's width (ImageStackPanel) -->
+                <DockPanel DockPanel.Dock="Top" Style="{StaticResource PanelHeader}">
+                    <TextBlock Text="Detector face · gain pattern" Style="{StaticResource Text.PanelTitle}" />
+                </DockPanel>
+                <!-- Square face with its colour bar directly beneath, at the face's width (ImageStackPanel). Whose settings it
+                shows, the legend facts and the acquired counts are rows in the right panel (DetectorPanel). -->
                 <c:ImageStackPanel>
                     <c:DetectorFaceView Margin="{StaticResource Gap.Field}" Face="{Binding Face}"
                             GapBrush="{DynamicResource Brush.Bg.Canvas}" AutomationProperties.AutomationId="Detector.Face"
@@ -44,15 +41,6 @@
                             FontFamily="{StaticResource Font.Mono}" Margin="{StaticResource Gap.Tight}"
                             AutomationProperties.AutomationId="Detector.GainScale"
                             AutomationProperties.Name="Detector relative gain colour scale" />
-                    <TextBlock Text="{Binding GainLegend}" Style="{StaticResource Text.MonoCaption}" TextWrapping="Wrap" />
-                    <DockPanel>
-                        <c:HelpMark DockPanel.Dock="Right"
-                                Text="Static relative gain · viridis scale · gaps are dead geometric area"
-                                VerticalAlignment="Top"
-                                AutomationProperties.AutomationId="Detector.GainHelp" AutomationProperties.Name="About the gain pattern" />
-                        <TextBlock Text="Gain pattern" Style="{StaticResource Text.Caption}" TextWrapping="Wrap" />
-                    </DockPanel>
-                    <TextBlock Text="{Binding Counts}" Style="{StaticResource Text.MonoCaption}" TextWrapping="Wrap" />
                 </c:ImageStackPanel>
             </DockPanel>
         </Grid>

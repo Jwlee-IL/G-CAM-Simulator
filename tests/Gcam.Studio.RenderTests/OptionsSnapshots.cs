@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Automation.Peers;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
@@ -27,6 +28,7 @@ public sealed partial class PlotViewRenderTests
             model.SeedText = "12345"; model.GainSigmaPercent = 4; model.AmbientDoseText = "0";
             CaptureStage2(model, theme, size, "summary-nondefaults");
             model.SeedText = StudioOptionDefaults.Current.SeedText;
+            RenderStartRefusals(theme, size);
             model.GainSigmaPercent = StudioOptionDefaults.Current.GainSigmaPercent;
             model.AmbientDoseRateMicroSvPerHour = StudioOptionDefaults.Current.AmbientDoseMicroSvPerHour;
             model.SelectedLeftTab = 1;
@@ -94,6 +96,30 @@ public sealed partial class PlotViewRenderTests
         CaptureStage2(model, theme, new Size(1536, 832), "caption-maximized-workarea-125", maximized: true);
         CaptureStage2(model, theme, new Size(1280, 693), "caption-maximized-workarea-150", maximized: true);
     }
+    /// <summary>Review 5: a refused Start shows its reason in the status bar (warning colour); an Options input also gives the
+    /// cog its warning state (badge in the warning colour, help text) without opening the dialog; a left-panel input selects
+    /// its tab.</summary>
+    private void RenderStartRefusals(string theme, Size size)
+    {
+        var refused = new MainViewModel(new FixtureAcquisition(), new FixtureTheme(Enum.Parse<Gcam.Studio.Core.Services.AppTheme>(theme)),
+            new FixtureSpectrum(), confirmation: new ModalService());
+        refused.SeedText = "x";
+        refused.StartCommand.ExecuteAsync(null).GetAwaiter().GetResult();
+        Assert.Null(refused.Snapshot);
+        Assert.True(refused.HasOptionsWarning);
+        Assert.Null(refused.Options);
+        Assert.Equal("Options: " + refused.SeedError, refused.Status);
+        CaptureStage2(refused, theme, size, "status-refused-options");
+        refused.SeedText = "";
+        refused.OpticsEditor.SelectedPresetIndex = 0;
+        refused.OpticsEditor.Pixels = "abc";
+        refused.StartCommand.ExecuteAsync(null).GetAwaiter().GetResult();
+        Assert.Equal(1, refused.SelectedLeftTab);
+        Assert.False(refused.HasOptionsWarning);
+        Assert.Equal("Start refused: " + refused.OpticsEditor.Error, refused.Status);
+        CaptureStage2(refused, theme, size, "status-refused-optics");
+    }
+
     /// <summary>The left Detector tab in the physical readout's states (pending, preparing, ready, failed), with the real
     /// offer record and drawing-fixture preparations of the Baseline module (DirectCrystal is left-detector-editable).</summary>
     private void RenderLeftReadoutStates(string theme, Size size)
@@ -151,6 +177,22 @@ public sealed partial class PlotViewRenderTests
         {
             if (previous is { } last) Assert.True(bounds.Left >= last.Right, "top-bar controls overlap");
             previous = bounds;
+        }
+        // Review 5 (author): Start / Stop, then Reset, Theme, Options, then the caption buttons at the far right.
+        double Left(string id) => Bounds(Descendants(top).OfType<FrameworkElement>().Single(e => AutomationProperties.GetAutomationId(e) == id)).Left;
+        var action = Descendants(top).OfType<Button>().Single(b => b.Visibility == Visibility.Visible
+            && AutomationProperties.GetAutomationId(b) is "StartAcquisition" or "StopAcquisition");
+        double[] order = [Bounds(action).Left, Left("ResetAcquisition"), Left("ThemeToggle"), Left("OpenOptions"), Left("Window.Minimize")];
+        Assert.Equal(order.OrderBy(x => x), order);
+        Assert.True(Left("AcquisitionSpeed") < Bounds(action).Left, "the inputs precede the acquisition action");
+        // Every interactive element of row 0, and every visual inside it (icon, text, template parts), is hit-testable in
+        // the WindowChrome caption: otherwise a click on the button's icon or text would be taken by the caption.
+        foreach (var control in Descendants(top).OfType<Control>().Where(c => c is ButtonBase or TextBox))
+        {
+            string id = AutomationProperties.GetAutomationId(control);
+            Assert.True(System.Windows.Shell.WindowChrome.GetIsHitTestVisibleInChrome(control), $"{id}: not hit-testable in the chrome");
+            foreach (var inner in Descendants(control).OfType<UIElement>())
+                Assert.True(System.Windows.Shell.WindowChrome.GetIsHitTestVisibleInChrome(inner), $"{id}: inner {inner.GetType().Name} not hit-testable in the chrome");
         }
     }
 
@@ -253,6 +295,9 @@ public sealed partial class PlotViewRenderTests
                 Assert.Equal((preset.MuraRank, preset.CellPitchMm, preset.MaskDetectorDistanceMm, preset.DetectorPixels, preset.PixelPitchMm),
                     (editor.Rank, double.Parse(editor.CellPitch), double.Parse(editor.Distance), int.Parse(editor.Pixels), double.Parse(editor.PixelPitch)));
         }
+        var status = Descendants(root).OfType<TextBlock>().Single(t => AutomationProperties.GetAutomationId(t) == "StatusText");
+        Assert.Equal(model.Status, status.Text);
+        Assert.Same(Application.Current.FindResource(model.IsStartRefused ? "Brush.Status.Warning" : "Brush.Text.Secondary"), status.Foreground);
         var summary = Descendants(root).OfType<TextBlock>().Single(t => AutomationProperties.GetAutomationId(t) == "Options.Summary");
         Assert.Equal(model.OptionsStatusSummary, summary.Text);
         Assert.Equal(model.HasNonDefaultOptions ? FontWeights.SemiBold : FontWeights.Normal, summary.FontWeight);
@@ -261,7 +306,8 @@ public sealed partial class PlotViewRenderTests
         var cog = Descendants(root).OfType<Button>().Single(b => AutomationProperties.GetAutomationId(b) == "OpenOptions");
         Assert.Equal(model.OptionsHelpText, AutomationProperties.GetHelpText(cog));
         var badge = Descendants(root).OfType<System.Windows.Shapes.Ellipse>().Single(b => AutomationProperties.GetAutomationId(b) == "Options.Badge");
-        Assert.Equal(model.HasNonDefaultOptions ? Visibility.Visible : Visibility.Collapsed, badge.Visibility);
+        Assert.Equal(model.HasNonDefaultOptions || model.HasOptionsWarning ? Visibility.Visible : Visibility.Collapsed, badge.Visibility);
+        Assert.Same(Application.Current.FindResource(model.HasOptionsWarning ? "Brush.Status.Warning" : "Brush.Options.Badge"), badge.Fill);
         var bitmap = new RenderTargetBitmap((int)size.Width, (int)size.Height, 96, 96, PixelFormats.Pbgra32); bitmap.Render(root);
         var encoder = new PngBitmapEncoder(); encoder.Frames.Add(BitmapFrame.Create(bitmap));
         string directory = SnapshotDirectory("studio-render"); Directory.CreateDirectory(directory);

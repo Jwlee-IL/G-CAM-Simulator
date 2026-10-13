@@ -16,7 +16,7 @@ public sealed partial class PlotViewRenderTests
     {
         var model = new MainViewModel(new FixtureAcquisition(), new FixtureTheme(Enum.Parse<AppTheme>(theme)), new FixtureSpectrum(false), confirmation: new ModalService())
         {
-            IsChainExpanded = false, IsOpticsExpanded = false, IsDetectorExpanded = true
+            IsChainExpanded = false
         };
         // AB-15 default: validated terrestrial preset at 0.10 µSv/h, front-only bound — rendered as Studio starts.
         Assert.Equal(.1, model.AmbientDoseRateMicroSvPerHour);

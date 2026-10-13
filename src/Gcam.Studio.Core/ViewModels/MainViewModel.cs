@@ -159,10 +159,7 @@ public sealed partial class MainViewModel : ObservableObject
     /// <summary>Half-width of the fully-coded field of view at the focal plane (mm).</summary>
     public double FcfovHalfMm => Imaging.Geometry?.NominalHalfFieldMm ?? 0;
     public OpticsEditorViewModel OpticsEditor { get; } = new();
-    // Optics and detector are set up once and rarely edited, so they start collapsed to their one-line summaries
-    // (Start expands a section whose input is invalid); the detection chain is chosen more often and starts open.
-    [ObservableProperty] private bool _isOpticsExpanded;
-    [ObservableProperty] private bool _isDetectorExpanded;
+    // The detection chain moved to Options; its (unused) section view keeps this flag.
     [ObservableProperty] private bool _isChainExpanded = true;
     [ObservableProperty] private string? _validationError;
     public string DetectorSummary => $"gap {Detector.ReflectorGapMm * 1000:0.###} µm · gain σ {GainSigmaPercent:0.#}%";
@@ -440,6 +437,7 @@ public sealed partial class MainViewModel : ObservableObject
         Progress = 0;
         State = RunState.Empty;
         Status = "Ready";
+        ClearStartRefusal();
         NotifyRunState();
     }
 
@@ -464,29 +462,34 @@ public sealed partial class MainViewModel : ObservableObject
     private bool BeginAcquisition()
     {
         var scene = Sources.Select(s => s.ToModel()).ToArray();
-        ValidationError = GapError ?? OpticsEditor.Error ?? OpticsPolicy.Validate(Optics, Detector.ReflectorGapMm)
-            ?? OpticsPolicy.ValidateScene(Optics, scene) ?? OpticsPolicy.ValidateFocus(Optics, Imaging.FocalDistanceMm)
-            ?? Imaging.FocusError;
-        if (ValidationError is not null)
-        {
-            IsOpticsExpanded = true;
-            IsDetectorExpanded = true;
-            return false;
-        }
-        if (SeedError is not null || AmbientDoseError is not null) return false;
+        // Every refusal is visible: its reason in the status bar (the field messages stay where they are), the left tab
+        // holding the offending input selected, and for an Options input the cog's warning state (the dialog opens only
+        // on the user's click).
+        string? optics = OpticsEditor.Error ?? OpticsPolicy.Validate(Optics, Detector.ReflectorGapMm);
+        string? sceneError = OpticsPolicy.ValidateScene(Optics, scene);
+        string? focus = OpticsPolicy.ValidateFocus(Optics, Imaging.FocalDistanceMm) ?? Imaging.FocusError;
+        ValidationError = GapError ?? optics ?? sceneError ?? focus;
+        if (GapError is not null) return RefuseStart(GapError, OpticsTab, options: true); // the gap is checked against the pixel pitch
+        if (optics is not null) return RefuseStart(optics, OpticsTab);
+        if (sceneError is not null) return RefuseStart(sceneError, SceneTab);
+        if (focus is not null) { Imaging.IsFocalExpanded = true; return RefuseStart("Decoder focal plane: " + focus); }
+        if (SeedError is not null) return RefuseStart(SeedError, options: true);
+        if (AmbientDoseError is not null) return RefuseStart(AmbientDoseError, options: true);
         if (IsPhysicalReadout)
         {
             var required = RequiredReadoutLines;
-            ReadoutMessage = AmbientDoseRateMicroSvPerHour != 0 || BackgroundToSignalRatio != 0
-                ? "Physical readout requires ambient and BSR at zero: their interaction records are unavailable."
+            bool field = AmbientDoseRateMicroSvPerHour != 0 || BackgroundToSignalRatio != 0;
+            ReadoutMessage = field
+                ? PhysicalFieldMessage
                 : required.Count == 0
                     ? "No preparable calibration line is present in the scene: " + string.Join(" ", ReadoutPlans.Select(p => p.Reason))
                     : !IsReadoutBankReady
                         ? "Prepare the matching experimental readout before Start (every calibration line present in the scene: "
                             + string.Join(", ", required.Select(p => p.LineKeV.ToString("0.##", CultureInfo.InvariantCulture) + " keV")) + ")."
                         : null;
-            if (ReadoutMessage is not null) { IsDetectorExpanded = true; return false; }
+            if (ReadoutMessage is not null) return RefuseStart(ReadoutMessage, DetectorTab, options: field);
         }
+        ClearStartRefusal();
         int seed = string.IsNullOrWhiteSpace(SeedText)
             ? Random.Shared.Next(1, int.MaxValue)
             : int.Parse(SeedText, NumberStyles.Integer, CultureInfo.CurrentCulture);
