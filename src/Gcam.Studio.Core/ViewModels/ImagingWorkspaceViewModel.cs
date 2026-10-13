@@ -23,6 +23,13 @@ public sealed partial class ImagingWorkspaceViewModel(MainViewModel shared, IIma
     public OpticsGeometry? Geometry => OpticsPolicy.ValidateFocus(ProjectionOptics, FocalDistanceMm) is null
         ? OpticsGeometry.Calculate(ProjectionOptics, FocalDistanceMm) : null;
     public string GeometryText => Geometry?.Description ?? "Choose a valid decoder focal plane.";
+    /// <summary>The geometry facts as label / value rows (the same numbers and formats as <see cref="GeometryText"/>);
+    /// empty when the focal plane is invalid, where the panel shows <see cref="GeometryText"/>'s message instead.</summary>
+    public IReadOnlyList<FactRow> GeometryRows => Geometry is { } g
+        ? [new("Resolution element", $"{g.ResolutionElementMm:0.##} mm"), new("Nominal cyclic field", $"± {g.NominalHalfFieldMm:0.#} mm"),
+            new("Samples per mask cell", $"{g.SamplesPerCell:0.##}"), new("Coverage", $"{g.CoveragePeriods:0.##} mask periods"),
+            new("Mask width", $"{g.MaskWidthMm:0.##} mm")]
+        : [];
     /// <summary>One line in the panel; <see cref="SamplingEvidence"/> is its tooltip (SR-OPT-05).</summary>
     public string SamplingCaption => Shared.IsPhysicalReadout ? "Experimental LUT image" : "Precision is position-dependent (conditional evidence; hover for numbers).";
     public string SamplingEvidence => Shared.IsPhysicalReadout
@@ -106,6 +113,7 @@ public sealed partial class ImagingWorkspaceViewModel(MainViewModel shared, IIma
             ? OpticsPolicy.ValidateFocus(ProjectionOptics, focal) : "Enter a numeric decoder focal plane.";
         OnPropertyChanged(nameof(Geometry));
         OnPropertyChanged(nameof(GeometryText));
+        OnPropertyChanged(nameof(GeometryRows));
         OnPropertyChanged(nameof(FocalSummary));
         OnPropertyChanged(nameof(ReconstructionHelp)); OnPropertyChanged(nameof(ReconstructionNote));
         Shared.NotifyFocalGeometryChanged();

@@ -9,6 +9,25 @@
             <Setter Property="TextWrapping" Value="Wrap" />
             <Setter Property="TextTrimming" Value="None" />
         </Style>
+        <!-- Preparation state: one line, hidden when the ready table shows the bank (ReadoutReadyRows non-empty). -->
+        <Style x:Key="Readout.StateLine" TargetType="TextBlock" BasedOn="{StaticResource Text.MonoCaption}">
+            <Setter Property="TextWrapping" Value="Wrap" />
+            <Setter Property="TextTrimming" Value="None" />
+            <Setter Property="Visibility" Value="Collapsed" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding ReadoutReadyRows.Count}" Value="0">
+                    <Setter Property="Visibility" Value="Visible" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="Readout.ReadyTable" TargetType="StackPanel">
+            <Setter Property="Grid.IsSharedSizeScope" Value="True" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding ReadoutReadyRows.Count}" Value="0">
+                    <Setter Property="Visibility" Value="Collapsed" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
         <Style x:Key="Readout.CellDetail" TargetType="TextBlock" BasedOn="{StaticResource Text.Caption}">
             <Setter Property="TextWrapping" Value="Wrap" />
             <Setter Property="TextTrimming" Value="None" />
@@ -131,8 +150,45 @@
                     Visibility="{Binding IsPreparingReadout, Converter={StaticResource PhysicalVisibility}}"
                     AutomationProperties.AutomationId="Readout.Progress"
                     AutomationProperties.Name="Readout preparation progress" />
-            <TextBlock Text="{Binding ReadoutState}" Style="{StaticResource Text.MonoCaption}" TextWrapping="Wrap"
-                    TextTrimming="None" Margin="{StaticResource Gap.Field}" AutomationProperties.AutomationId="Readout.State" />
+            <!-- The state keeps its AutomationId and its full text as the group's name. A ready bank shows "Ready" and a
+            table (line · time · windowed · scored, one row per prepared line); every other state is one short line. -->
+            <c:SettingsGroup Margin="{StaticResource Gap.Field}" AutomationProperties.AutomationId="Readout.State"
+                    AutomationProperties.Name="{Binding ReadoutState}">
+                <TextBlock Text="{Binding ReadoutState}" Style="{StaticResource Readout.StateLine}" />
+                <StackPanel Style="{StaticResource Readout.ReadyTable}">
+                    <TextBlock Text="Ready" Style="{StaticResource Readout.Cell}" Margin="{StaticResource Gap.Tight}" />
+                    <Grid Margin="{StaticResource Gap.Tight}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="ReadyLine" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="keV" Style="{StaticResource Text.ColumnHeader}" Margin="{StaticResource Gap.Inline}" />
+                        <TextBlock Grid.Column="1" Text="Time" Style="{StaticResource Text.ColumnHeader}" HorizontalAlignment="Right" />
+                        <TextBlock Grid.Column="2" Text="Windowed" Style="{StaticResource Text.ColumnHeader}" HorizontalAlignment="Right" />
+                        <TextBlock Grid.Column="3" Text="Scored" Style="{StaticResource Text.ColumnHeader}" HorizontalAlignment="Right" />
+                    </Grid>
+                    <ItemsControl ItemsSource="{Binding ReadoutReadyRows}" Focusable="False">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="{StaticResource Gap.Tight}">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" SharedSizeGroup="ReadyLine" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="{Binding LineKeV}" Style="{StaticResource Text.Mono}" Margin="{StaticResource Gap.Inline}" />
+                                    <TextBlock Grid.Column="1" Text="{Binding Time}" Style="{StaticResource Text.Mono}" HorizontalAlignment="Right" />
+                                    <TextBlock Grid.Column="2" Text="{Binding Windowed}" Style="{StaticResource Text.Mono}" HorizontalAlignment="Right" />
+                                    <TextBlock Grid.Column="3" Text="{Binding Scored}" Style="{StaticResource Text.Mono}" HorizontalAlignment="Right" />
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </c:SettingsGroup>
             <Border Style="{StaticResource Divider}" />
 
             <!-- ===== Energy window: low and high side by side ===== -->

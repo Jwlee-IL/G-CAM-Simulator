@@ -3,6 +3,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Automation;
+using System.Windows.Automation.Peers;
 using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Data;
@@ -149,9 +150,23 @@ public sealed partial class PlotViewRenderTests
             if (workspace == model.Spectrum) VerifyEmissionTable(root, model.Spectrum);
             if (workspace == model.Imaging)
             {
-                var geometry = Assert.Single(Descendants(root).OfType<TextBlock>(),
+                // The geometry facts are label / value rows; the group keeps the AutomationId and names itself with
+                // GeometryText, and every rendered row is one line of that text (same numbers, same formats).
+                var geometry = Assert.Single(Descendants(root).OfType<SettingsGroup>(),
                     t => AutomationProperties.GetAutomationId(t) == "Imaging.Geometry");
-                Assert.Equal(model.Imaging.GeometryText, geometry.Text);
+                Assert.Equal(model.Imaging.GeometryText, AutomationProperties.GetName(geometry));
+                Assert.Equal(AutomationControlType.Group, UIElementAutomationPeer.CreatePeerForElement(geometry).GetAutomationControlType());
+                var rows = model.Imaging.GeometryRows;
+                Assert.Equal(5, rows.Count);
+                var shown = Descendants(geometry).OfType<TextBlock>().Where(t => t.ActualHeight > 0).Select(t => t.Text).ToArray();
+                string[] lines = model.Imaging.GeometryText.Split('\n');
+                for (int i = 0; i < rows.Count; i++)
+                {
+                    Assert.Contains(rows[i].Label, shown);
+                    Assert.Contains(rows[i].Value, shown);
+                    // Same number in the same line of the text (the sample count reads value-first there).
+                    Assert.Contains(rows[i].Value.Split(' ')[0] == "±" ? rows[i].Value : rows[i].Value.Split(' ')[0], lines[i]);
+                }
                 var focus = Assert.Single(Descendants(root).OfType<TextBox>(),
                     t => AutomationProperties.GetAutomationId(t) == "Imaging.FocalPlane");
                 Assert.Equal(model.Imaging.FocalPlane, focus.Text);

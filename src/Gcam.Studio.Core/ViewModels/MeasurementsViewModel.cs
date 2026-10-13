@@ -67,6 +67,16 @@ public sealed partial class MeasurementsViewModel : ObservableObject
         Selected = Items.Count == 0 ? null : Items[Math.Min(index, Items.Count - 1)];
     }
 
+    /// <summary>Deletes one row's measurement (the row's ✕). Removing the selected row selects its neighbour, as Delete
+    /// does; removing another row keeps the selection.</summary>
+    [RelayCommand]
+    private void Remove(MeasurementViewModel? item)
+    {
+        if (item is null || !Items.Contains(item)) return;
+        if (ReferenceEquals(item, Selected)) { Delete(); return; }
+        Items.Remove(item);
+    }
+
     [RelayCommand(CanExecute = nameof(HasItems))]
     private void Clear()
     {

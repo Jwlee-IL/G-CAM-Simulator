@@ -21,21 +21,25 @@ re-templated against the colour tokens. Implicit styles = the default look; keye
             </Setter.Value>
         </Setter>
     </Style>
+    <!-- A collapsible section's heading reads like the fixed section headings of the left tabs (PanelHeader + Text.PanelTitle):
+    13 px SemiBold primary text aligned with the section content, Size.Control high, Gap.Title below; the chevron sits at
+    the right edge (where help marks sit), and hover tints text and chevron with the accent instead of a fill. -->
     <Style x:Key="ToggleButton.Section" TargetType="ToggleButton">
         <Setter Property="Foreground" Value="{DynamicResource Brush.Text.Primary}" />
-        <Setter Property="Background" Value="{DynamicResource Brush.Bg.Surface}" />
+        <Setter Property="Background" Value="Transparent" />
         <Setter Property="FontFamily" Value="{StaticResource Font.UI}" />
         <Setter Property="FontSize" Value="{StaticResource FontSize.Body}" />
+        <Setter Property="FontWeight" Value="SemiBold" />
         <Setter Property="FocusVisualStyle" Value="{StaticResource FocusVisual}" />
         <Setter Property="MinHeight" Value="{StaticResource Size.Control}" />
+        <Setter Property="Margin" Value="{StaticResource Gap.Title}" />
         <Setter Property="HorizontalContentAlignment" Value="Left" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ToggleButton">
-                    <Border Background="{TemplateBinding Background}" Padding="{StaticResource Pad.Control}"
-                            CornerRadius="{StaticResource Radius.Control}">
+                    <Border Background="{TemplateBinding Background}">
                         <DockPanel>
-                            <TextBlock x:Name="Chevron" Text="▸" Style="{StaticResource Text.Label}" Margin="{StaticResource Gap.Inline}" />
+                            <TextBlock x:Name="Chevron" DockPanel.Dock="Right" Text="▸" Style="{StaticResource Text.Label}" />
                             <ContentPresenter VerticalAlignment="Center" RecognizesAccessKey="True" />
                         </DockPanel>
                     </Border>
@@ -44,7 +48,8 @@ re-templated against the colour tokens. Implicit styles = the default look; keye
                             <Setter TargetName="Chevron" Property="Text" Value="▾" />
                         </Trigger>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter Property="Background" Value="{DynamicResource Brush.Bg.Raised}" />
+                            <Setter Property="Foreground" Value="{DynamicResource Brush.Accent}" />
+                            <Setter TargetName="Chevron" Property="Foreground" Value="{DynamicResource Brush.Accent}" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -72,6 +77,35 @@ re-templated against the colour tokens. Implicit styles = the default look; keye
             </Setter.Value>
         </Setter>
     </Style>
+    <!-- ===== Forms and read-only facts (MainWindow's left tabs, Imaging options, Detector panel) ===== -->
+    <!-- Field row: fixed-width label + control -->
+    <Style x:Key="FieldLabel" TargetType="TextBlock" BasedOn="{StaticResource Text.Label}">
+        <Setter Property="Width" Value="{StaticResource Size.FieldLabel}" />
+    </Style>
+    <Style x:Key="FieldRow" TargetType="DockPanel">
+        <Setter Property="Margin" Value="{StaticResource Gap.Field}" />
+    </Style>
+    <!-- Read-only key/value line (geometry) -->
+    <Style x:Key="FactRow" TargetType="DockPanel">
+        <Setter Property="Margin" Value="{StaticResource Gap.Tight}" />
+    </Style>
+    <Style x:Key="FactValue" TargetType="TextBlock" BasedOn="{StaticResource Text.Mono}">
+        <Setter Property="HorizontalAlignment" Value="Right" />
+    </Style>
+    <!-- One FactRow item (label left, mono value right-aligned and wrapping). The label column is shared within the
+    ItemsControl that sets Grid.IsSharedSizeScope, so the values line up. -->
+    <DataTemplate x:Key="Template.FactRow">
+        <Grid Margin="{StaticResource Gap.Tight}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" SharedSizeGroup="FactLabel" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <TextBlock Grid.Column="0" Text="{Binding Label}" Style="{StaticResource Text.Label}" VerticalAlignment="Top"
+                    Margin="{StaticResource Gap.Inline}" />
+            <TextBlock Grid.Column="1" Text="{Binding Value}" Style="{StaticResource Text.Mono}" VerticalAlignment="Top"
+                    TextAlignment="Right" TextWrapping="Wrap" TextTrimming="None" />
+        </Grid>
+    </DataTemplate>
     <!-- ===== Panels ===== -->
     <Style x:Key="Panel.Surface" TargetType="Border">
         <Setter Property="Background" Value="{DynamicResource Brush.Bg.Surface}" />
@@ -146,6 +180,20 @@ re-templated against the colour tokens. Implicit styles = the default look; keye
     </Geometry>
     <Geometry x:Key="Icon.Moon">
         M8,0 A6,6 0 1 0 12,9 A6,6 0 0 1 8,0 Z
+    </Geometry>
+    <!-- Measurement tools (12 × 12, whole-pixel edges where possible, one winding direction so overlaps stay filled):
+    an open hand (Pan), a ruler with ticks (Distance), two rays with an arc (Angle), a dashed region outline (ROI). -->
+    <Geometry x:Key="Icon.Pan">
+        M3,1 H5 V6 H3 Z M6,0 H8 V6 H6 Z M9,2 H11 V6 H9 Z M3,6 H11 V9 Q11,12 8,12 H5 Q3,12 2,10.5 L0,7.5 L1.2,6.5 L3,8 Z
+    </Geometry>
+    <Geometry x:Key="Icon.Ruler">
+        M0,8 H12 V11 H0 Z M1,2 H2 V8 H1 Z M4,5 H5 V8 H4 Z M7,5 H8 V8 H7 Z M10,2 H11 V8 H10 Z
+    </Geometry>
+    <Geometry x:Key="Icon.Angle">
+        M0,10 H12 V12 H0 Z M0,11 L7,0 L8.6,1 L1.6,12 Z M7.85,9.54 A7,7 0 0 0 5.86,5.96 L4.82,7.04 A5.5,5.5 0 0 1 6.38,9.86 Z
+    </Geometry>
+    <Geometry x:Key="Icon.Roi">
+        M0,0 H5 V2 H0 Z M0,0 H2 V5 H0 Z M7,0 H12 V2 H7 Z M10,0 H12 V5 H10 Z M0,10 H5 V12 H0 Z M0,7 H2 V12 H0 Z M7,10 H12 V12 H7 Z M10,7 H12 V12 H10 Z
     </Geometry>
     <!-- ===== Buttons ===== -->
     <Style TargetType="Button">
@@ -239,6 +287,61 @@ re-templated against the colour tokens. Implicit styles = the default look; keye
                 </DataTemplate>
             </Setter.Value>
         </Setter>
+    </Style>
+    <!-- A one-of-several tool choice drawn like Button.Icon (square Size.Control, raised frame, Size.Icon glyph in the
+    foreground). Checked = accent border + subtle accent fill + accent glyph (not colour alone: border and fill change);
+    keyboard focus = the focus border plus the shared FocusVisual ring. Content is the icon Geometry. -->
+    <Style x:Key="RadioButton.Icon" TargetType="RadioButton">
+        <Setter Property="FocusVisualStyle" Value="{StaticResource FocusVisual}" />
+        <Setter Property="Foreground" Value="{DynamicResource Brush.Text.Primary}" />
+        <Setter Property="Background" Value="{DynamicResource Brush.Bg.Raised}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.Line.Control}" />
+        <Setter Property="BorderThickness" Value="{StaticResource Border.Hairline}" />
+        <Setter Property="Width" Value="{StaticResource Size.Control}" />
+        <Setter Property="Height" Value="{StaticResource Size.Control}" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="RadioButton">
+                    <Border x:Name="Chrome" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="{StaticResource Radius.Control}"
+                            SnapsToDevicePixels="True">
+                        <Path Data="{TemplateBinding Content}" Stretch="Uniform" Fill="{TemplateBinding Foreground}"
+                                Width="{StaticResource Size.Icon}" Height="{StaticResource Size.Icon}"
+                                HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Chrome" Property="Background" Value="{DynamicResource Brush.Bg.Hover}" />
+                        </Trigger>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="Chrome" Property="Background" Value="{DynamicResource Brush.Accent.Subtle}" />
+                            <Setter TargetName="Chrome" Property="BorderBrush" Value="{DynamicResource Brush.Accent}" />
+                            <Setter Property="Foreground" Value="{DynamicResource Brush.Accent}" />
+                        </Trigger>
+                        <Trigger Property="IsKeyboardFocused" Value="True">
+                            <Setter TargetName="Chrome" Property="BorderBrush" Value="{DynamicResource Brush.Focus}" />
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="Chrome" Property="Background" Value="{DynamicResource Brush.Bg.Surface}" />
+                            <Setter TargetName="Chrome" Property="BorderBrush" Value="{DynamicResource Brush.Line}" />
+                            <Setter Property="Foreground" Value="{DynamicResource Brush.Text.Disabled}" />
+                            <Setter Property="Cursor" Value="Arrow" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    <!-- A row action inside a list row (the measurement row's delete): Button.Icon without the resting frame, at
+    Size.Control.Row so it fits the row height; hover, press and the keyboard-focus border still show. -->
+    <Style x:Key="Button.Icon.Row" TargetType="Button" BasedOn="{StaticResource Button.Icon}">
+        <Setter Property="Width" Value="{StaticResource Size.Control.Row}" />
+        <Setter Property="Height" Value="{StaticResource Size.Control.Row}" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderBrush" Value="Transparent" />
+        <Setter Property="Foreground" Value="{DynamicResource Brush.Text.Secondary}" />
+        <Setter Property="MinHeight" Value="0" />
     </Style>
     <!-- Native caption proportions, with no content padding or resting frame to clip a Size.Icon glyph. -->
     <Style x:Key="Button.Caption" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">

@@ -48,6 +48,12 @@ public sealed partial class MainViewModel
 
     [ObservableProperty] private string? _readoutMessage;
     [ObservableProperty] private bool _isPreparingReadout;
+    // The state line and the ready table switch to "Preparing…" as soon as a preparation starts.
+    partial void OnIsPreparingReadoutChanged(bool value)
+    {
+        OnPropertyChanged(nameof(ReadoutState));
+        OnPropertyChanged(nameof(ReadoutReadyRows));
+    }
     [ObservableProperty] private double _readoutProgress;
     [ObservableProperty] private string? _readoutProgressText;
 
@@ -142,6 +148,23 @@ public sealed partial class MainViewModel
         }
     }
 
+    /// <summary>The ready bank as a table (line · time · windowed · scored): one row per required line when every one is
+    /// prepared, the same numbers as the "Ready · …" form of <see cref="ReadoutState"/>; empty in every other state.</summary>
+    public IReadOnlyList<ReadoutReadyRow> ReadoutReadyRows
+    {
+        get
+        {
+            if (IsPreparingReadout) return [];
+            var required = RequiredReadoutLines;
+            if (required.Count == 0 || required.Any(p => Failure(p) is not null)) return [];
+            var prepared = required.Select(Prepared).ToArray();
+            if (!prepared.All(p => p is { Succeeded: true })) return [];
+            var c = CultureInfo.InvariantCulture;
+            return required.Zip(prepared, (plan, p) => new ReadoutReadyRow(plan.LineKeV.ToString("0.##", c),
+                p!.Cost.TotalSeconds.ToString("0.00", c) + " s", p.InWindow.ToString("N0", c), p.Scored.ToString("N0", c))).ToArray();
+        }
+    }
+
     private bool CanPrepareReadout() => _readoutPreparation is not null && IsPhysicalReadout && CanEditInputs;
 
     /// <summary>Prepares every required line not yet prepared, one at a time on the service's single worker, with real
@@ -173,6 +196,7 @@ public sealed partial class MainViewModel
                     if (!IsPreparingReadout) return;
                     ReadoutProgress = p.Fraction; ReadoutProgressText = p.ToString();
                     OnPropertyChanged(nameof(ReadoutState));
+                    OnPropertyChanged(nameof(ReadoutReadyRows));
                 });
                 var result = await _readoutPreparation!.PrepareAsync(optics, detector, plan, progress, token);
                 if (result.Succeeded) _preparationFailures.Remove(key);
@@ -234,7 +258,7 @@ public sealed partial class MainViewModel
     private void NotifyReadout()
     {
         foreach (string name in new[] { nameof(IsPhysicalReadout), nameof(CanUseLegacy), nameof(CanEditLegacy), nameof(ReadoutAssumptions), nameof(ReadoutModeSummary),
-            nameof(ReadoutState), nameof(Detector), nameof(ReadoutLines), nameof(ReadoutPlans), nameof(RequiredReadoutLines),
+            nameof(ReadoutState), nameof(ReadoutReadyRows), nameof(Detector), nameof(ReadoutLines), nameof(ReadoutPlans), nameof(RequiredReadoutLines),
             nameof(MatchingBank), nameof(MatchingPreparation), nameof(PreparedReadout), nameof(IsReadoutBankReady), nameof(ReadoutOffers) })
             OnPropertyChanged(name);
         if (IsPhysicalReadout) { Spectrum.PileUp = false; Imaging.Strip = false; Waveform.RateStudy = false; Waveform.Ideal = false; }

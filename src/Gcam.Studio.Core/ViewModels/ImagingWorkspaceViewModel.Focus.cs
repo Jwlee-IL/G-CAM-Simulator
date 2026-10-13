@@ -54,14 +54,32 @@ public sealed partial class ImagingWorkspaceViewModel
     private bool CanUseAsFocus() => ExternalRangeMm is { } range && OpticsPolicy.ValidateFocus(ProjectionOptics, range) is null;
     [RelayCommand(CanExecute = nameof(CanUseAsFocus))]
     private void UseAsFocus() => FocalPlane = ExternalRangeMm!.Value.ToString("G", System.Globalization.CultureInfo.CurrentCulture);
+    /// <summary>A sweep result's identity and cost as label / value rows (the same facts as <see cref="SweepSummary"/>,
+    /// which names the group); empty while sweeping or without a result, where the one-line summary shows.</summary>
+    public IReadOnlyList<FactRow> SweepSummaryRows
+    {
+        get
+        {
+            if (IsSweeping || SweepResult is not { } r) return [];
+            var rows = new List<FactRow>
+            {
+                new("Channel", r.Identity.Channel), new("Retained at", $"{r.Identity.LiveTimeS:0.0} s"),
+                new("Acquired counts", $"{r.Identity.Counts:N0}"), new("Worker", $"{r.ProcessingTime.TotalMilliseconds:0} ms"),
+            };
+            if (r.Tracks.Count == 0) rows.Add(new("Tracks", "Unresolved (no complete peak track)"));
+            return rows;
+        }
+    }
+
     partial void OnIsSweepingChanged(bool value)
     {
         SweepCommand.NotifyCanExecuteChanged(); CancelSweepCommand.NotifyCanExecuteChanged();
         OnPropertyChanged(nameof(SweepSummary));
+        OnPropertyChanged(nameof(SweepSummaryRows));
     }
     partial void OnSweepResultChanged(FocusSweepResult? value)
     {
-        foreach (string name in new[] { nameof(FocusSeries), nameof(FocusBands), nameof(FocusMarkers), nameof(SweepSummary), nameof(HasSweepResult) }) OnPropertyChanged(name);
+        foreach (string name in new[] { nameof(FocusSeries), nameof(FocusBands), nameof(FocusMarkers), nameof(SweepSummary), nameof(SweepSummaryRows), nameof(HasSweepResult) }) OnPropertyChanged(name);
         if (value is not null) IsSweepExpanded = true; // a result opens its section so its tracks and caveats are read
     }
     internal void InvalidateSweep()

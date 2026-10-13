@@ -110,20 +110,38 @@ public sealed class DeclutterRenderTests
     {
         string repo = AppContext.BaseDirectory;
         while (!System.IO.File.Exists(System.IO.Path.Combine(repo, "Gcam.sln"))) repo = System.IO.Directory.GetParent(repo)!.FullName;
-        var icons = new[] { "ThemeToggle", "ResetAcquisition", "AddSource", "RemoveSource", "ClearMeasurements", "DeleteMeasurement", "Readout.Cancel", "Imaging.CancelSweep", "Waveform.Latest", "Waveform.Next" };
-        var buttons = new[] { "MainWindow", "ReadoutPanel", "ImagingOptionsPanel", "WaveformPanel" }
+        var icons = new[] { "ThemeToggle", "ResetAcquisition", "AddSource", "RemoveSource", "ClearMeasurements", "Readout.Cancel", "Imaging.CancelSweep", "Waveform.Latest", "Waveform.Next" };
+        var elements = new[] { "MainWindow", "ReadoutPanel", "ImagingOptionsPanel", "WaveformPanel" }
             .SelectMany(name => System.Xml.Linq.XDocument.Load(System.IO.Path.Combine(repo, "src/Gcam.Studio/Views", name + ".xaml")).Descendants())
-            .Where(e => e.Name.LocalName == "Button").ToArray();
+            .ToArray();
+        var buttons = elements.Where(e => e.Name.LocalName == "Button").ToArray();
         foreach (string id in icons)
         {
             var button = Assert.Single(buttons, b => (string?)b.Attribute("AutomationProperties.AutomationId") == id);
             Assert.NotNull(button.Attribute("ToolTip")); Assert.NotNull(button.Attribute("AutomationProperties.Name"));
             Assert.Equal(id == "ThemeToggle" ? "{StaticResource Button.Theme}" : "{StaticResource Button.Icon}", (string?)button.Attribute("Style"));
-            if (id == "DeleteMeasurement")
-            {
-                Assert.Equal("{StaticResource Icon.Remove}", (string?)button.Attribute("Content"));
-                Assert.Equal("Delete selected measurement (Delete)", (string?)button.Attribute("ToolTip"));
-            }
+            if (id == "ClearMeasurements")
+                Assert.Equal("Clear all measurements", (string?)button.Attribute("ToolTip"));
+        }
+        // Author decision (TODO-45 review 3): no header "−"; each measurement row has its own delete icon button, with a
+        // per-row AutomationId, the row-action icon style, the cross glyph and the Delete-key tooltip.
+        Assert.DoesNotContain(buttons, b => (string?)b.Attribute("AutomationProperties.AutomationId") == "DeleteMeasurement");
+        var rowDelete = Assert.Single(buttons, b => (string?)b.Attribute("AutomationProperties.AutomationId") == "{Binding DeleteAutomationId}");
+        Assert.Equal("{StaticResource Icon.Cancel}", (string?)rowDelete.Attribute("Content"));
+        Assert.Equal("Delete measurement (Delete)", (string?)rowDelete.Attribute("ToolTip"));
+        Assert.NotNull(rowDelete.Attribute("AutomationProperties.Name"));
+        Assert.Equal("{Binding}", (string?)rowDelete.Attribute("CommandParameter"));
+        Assert.Contains(rowDelete.Descendants(), e => e.Name.LocalName == "Style" && (string?)e.Attribute("BasedOn") == "{StaticResource Button.Icon.Row}");
+        // The pointer tools are icon toggles (radio semantics) with their glyphs and tooltips.
+        foreach (var (id, icon, tip) in new[] { ("ToolPan", "Icon.Pan", "Pan"), ("ToolDistance", "Icon.Ruler", "Distance"),
+            ("ToolAngle", "Icon.Angle", "Angle"), ("ToolRoi", "Icon.Roi", "ROI (region of interest)") })
+        {
+            var tool = Assert.Single(elements, e => e.Name.LocalName == "RadioButton" && (string?)e.Attribute("AutomationProperties.AutomationId") == id);
+            Assert.Equal("{StaticResource RadioButton.Icon}", (string?)tool.Attribute("Style"));
+            Assert.Equal($"{{StaticResource {icon}}}", (string?)tool.Attribute("Content"));
+            Assert.Equal(tip, (string?)tool.Attribute("ToolTip"));
+            Assert.Equal("Tool", (string?)tool.Attribute("GroupName"));
+            Assert.NotNull(tool.Attribute("AutomationProperties.Name"));
         }
     }
 

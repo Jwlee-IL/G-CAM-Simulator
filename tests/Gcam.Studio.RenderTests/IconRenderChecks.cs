@@ -14,9 +14,11 @@ internal static class IconRenderChecks
 {
     public static void CheckAndInspect(FrameworkElement root, RenderTargetBitmap window, string? snapshot = null)
     {
-        foreach (var button in ReadoutRenderTests.Descendants(root).OfType<Button>())
+        // Icon buttons (Button.Icon and its variants) and icon toggles (RadioButton.Icon: the measurement tools).
+        foreach (var button in ReadoutRenderTests.Descendants(root).OfType<System.Windows.Controls.Primitives.ButtonBase>()
+            .Where(b => b is Button or RadioButton))
         {
-            var iconStyle = (Style)button.FindResource("Button.Icon");
+            var iconStyle = (Style)button.FindResource(button is RadioButton ? "RadioButton.Icon" : "Button.Icon");
             bool icon = false;
             for (var style = button.Style; style is not null; style = style.BasedOn) icon |= ReferenceEquals(style, iconStyle);
             string id = AutomationProperties.GetAutomationId(button);
@@ -45,9 +47,11 @@ internal static class IconRenderChecks
             {
                 // The scrim/dialog intentionally covers underlying ink. Check that same production template
                 // separately at its actual size, rather than mistaking modal occlusion for icon clipping.
-                var clone = new Button { Style = button.Style, Content = button.Content, Foreground = button.Foreground,
-                    IsEnabled = button.IsEnabled, DataContext = button.DataContext,
-                    UseLayoutRounding = button.UseLayoutRounding, SnapsToDevicePixels = button.SnapsToDevicePixels };
+                System.Windows.Controls.Primitives.ButtonBase clone = button is RadioButton radio
+                    ? new RadioButton { IsChecked = radio.IsChecked } : new Button();
+                clone.Style = button.Style; clone.Content = button.Content; clone.Foreground = button.Foreground;
+                clone.IsEnabled = button.IsEnabled; clone.DataContext = button.DataContext;
+                clone.UseLayoutRounding = button.UseLayoutRounding; clone.SnapsToDevicePixels = button.SnapsToDevicePixels;
                 clone.Measure(button.RenderSize); clone.Arrange(new Rect(button.RenderSize)); clone.UpdateLayout();
                 var clonePath = ReadoutRenderTests.Descendants(clone).OfType<Path>().Single();
                 origin = clonePath.TransformToAncestor(clone).Transform(new Point());

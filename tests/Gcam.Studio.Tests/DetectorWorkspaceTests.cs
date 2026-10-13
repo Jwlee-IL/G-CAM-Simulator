@@ -60,6 +60,34 @@ public sealed class DetectorWorkspaceTests
         Assert.Contains("Gap 100 µm", vm.DetectorWorkspace.Readout);
         Assert.NotEqual(area, vm.DetectorWorkspace.Face!.ActiveAreaFraction);
     }
+    /// <summary>TODO-45 review 3: the Detector panel shows its facts as label / value rows in two sections; the rows carry
+    /// the same values as the one-text <see cref="DetectorWorkspaceViewModel.Readout"/> (its accessible name), follow pending
+    /// edits before acquisition and stay on the acquired settings while data exist.</summary>
+    [Fact]
+    public async Task PanelRows_CarryTheReadoutFacts_PendingThenAcquired()
+    {
+        var vm = Model(); vm.ReflectorGapUm = "20";
+        string Row(IReadOnlyList<FactRow> rows, string label) => Assert.Single(rows, r => r.Label == label).Value;
+        var d = vm.DetectorWorkspace;
+        Assert.Equal(new[] { "Scintillator", "Crystals", "Pitch", "Reflector gap", "Active width" }, d.GeometryRows.Select(r => r.Label));
+        Assert.Equal("20 µm", Row(d.GeometryRows, "Reflector gap"));
+        Assert.Contains("Gap 20 µm", d.Readout);
+        Assert.Equal("Gain pattern", d.ResponseTitle);
+        Assert.Equal(new[] { "Gain σ", "Gain seed" }, d.ResponseRows.Select(r => r.Label));
+        Assert.Contains($"Gain σ {Row(d.ResponseRows, "Gain σ")} · seed {Row(d.ResponseRows, "Gain seed")}", d.Readout);
+        Assert.Contains($"active width {Row(d.GeometryRows, "Active width")}", d.Readout);
+        Assert.Contains(d.GeometryRows[0].Value, d.Readout);
+        Assert.EndsWith(d.ActiveAreaText, d.Readout);
+        var changed = new List<string?>(); d.PropertyChanged += (_, e) => changed.Add(e.PropertyName);
+        vm.ReflectorGapUm = "40";
+        Assert.Contains(nameof(DetectorWorkspaceViewModel.GeometryRows), changed);
+        Assert.Contains(nameof(DetectorWorkspaceViewModel.ActiveAreaText), changed);
+        Assert.Equal("40 µm", Row(d.GeometryRows, "Reflector gap"));
+        await vm.StartCommand.ExecuteAsync(null);
+        vm.ReflectorGapUm = "100"; // locked: reverted, rows keep the acquired gap
+        Assert.Equal("40 µm", Row(d.GeometryRows, "Reflector gap"));
+    }
+
     private sealed class Face : IDetectorFaceService
     {
         public DetectorFace Build(OpticsSettings optics, DetectorSettings detector) => DetectorFace.Create(

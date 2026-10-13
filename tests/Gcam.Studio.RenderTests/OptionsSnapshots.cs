@@ -162,7 +162,8 @@ public sealed partial class PlotViewRenderTests
         Assert.Equal(new[] { "Left.SceneTab", "Left.OpticsTab", "Left.DetectorTab" }, tabs.Items.Cast<TabItem>().Select(AutomationProperties.GetAutomationId));
         if (model.SelectedLeftTab != 0)
         {
-            var group = Descendants(tabs).OfType<SettingsGroup>().Single();
+            // Exactly one tab-level section group; nested groups (e.g. Readout.State) carry their own ids.
+            var group = Descendants(tabs).OfType<SettingsGroup>().Single(g => AutomationProperties.GetAutomationId(g).EndsWith(".Section", StringComparison.Ordinal));
             var peer = UIElementAutomationPeer.CreatePeerForElement(group);
             Assert.Equal(model.SelectedLeftTab == 1 ? "Optics.Section" : "Detector.Section", peer.GetAutomationId());
             Assert.Equal(AutomationControlType.Group, peer.GetAutomationControlType());

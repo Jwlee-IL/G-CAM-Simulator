@@ -67,6 +67,52 @@ public sealed class ImagingWorkspaceTests
         { Request = request; Token = cancellationToken; return Pending.Task; }
     }
 
+    /// <summary>TODO-45 review 3: the focal-plane geometry is shown as label / value rows with the same numbers and formats
+    /// as <see cref="ImagingWorkspaceViewModel.GeometryText"/> (which stays the group's accessible name); rejected focal-plane
+    /// text keeps the last valid rows beside its inline error, and rows exist exactly when a geometry does.</summary>
+    [Fact]
+    public void GeometryRows_MatchGeometryText_FollowTheValidFocalPlane()
+    {
+        var vm = new MainViewModel(new Acquisition(), new Theme(), new FakeSpectrumService(), new Imaging()) { AmbientDoseRateMicroSvPerHour = 0 };
+        var imaging = vm.Imaging;
+        var rows = imaging.GeometryRows;
+        Assert.Equal(new[] { "Resolution element", "Nominal cyclic field", "Samples per mask cell", "Coverage", "Mask width" }, rows.Select(r => r.Label));
+        var g = imaging.Geometry!;
+        Assert.Equal(string.Join("\n", $"Resolution element {rows[0].Value}", $"Nominal cyclic field {rows[1].Value}",
+            $"{rows[2].Value} samples per mask cell", $"Coverage {rows[3].Value}", $"Mask width {rows[4].Value}"), imaging.GeometryText);
+        Assert.Equal($"{g.ResolutionElementMm:0.##} mm", rows[0].Value);
+        var changed = new List<string?>(); imaging.PropertyChanged += (_, e) => changed.Add(e.PropertyName);
+        imaging.FocalPlane = "800";
+        Assert.Contains(nameof(ImagingWorkspaceViewModel.GeometryRows), changed);
+        Assert.NotEqual(rows[0].Value, imaging.GeometryRows[0].Value);
+        var valid = imaging.GeometryRows;
+        imaging.FocalPlane = "1"; // rejected text: the last valid plane's rows stay, with the inline focus error
+        Assert.NotNull(imaging.FocusError);
+        Assert.Equal(valid, imaging.GeometryRows);
+        Assert.Equal(imaging.Geometry is null, imaging.GeometryRows.Count == 0);
+    }
+
+    /// <summary>TODO-45 review 4: a sweep result's summary is shown as label / value rows with the facts of the one-line
+    /// <see cref="ImagingWorkspaceViewModel.SweepSummary"/> (the group's name); no rows while sweeping or without a result.</summary>
+    [Fact]
+    public async Task SweepSummaryRows_CarryTheSummaryFacts_OnlyForAResult()
+    {
+        var focus = new DeferredFocus();
+        var vm = new MainViewModel(new Acquisition(), new Theme(), new FakeSpectrumService(), new Imaging(), focusSweep: focus) { AmbientDoseRateMicroSvPerHour = 0 };
+        await vm.StartCommand.ExecuteAsync(null);
+        var imaging = vm.Imaging;
+        Assert.Empty(imaging.SweepSummaryRows);
+        var task = imaging.SweepCommand.ExecuteAsync(null);
+        Assert.Empty(imaging.SweepSummaryRows);
+        Assert.Equal("Sweeping retained flood…", imaging.SweepSummary);
+        focus.Pending.SetResult(new(focus.Request!.Identity, [], TimeSpan.FromMilliseconds(42)));
+        await task;
+        var rows = imaging.SweepSummaryRows;
+        Assert.Equal(new[] { "Channel", "Retained at", "Acquired counts", "Worker", "Tracks" }, rows.Select(r => r.Label));
+        string plain = imaging.SweepSummary.Replace((char)0xA0, (char)0x20).ToLowerInvariant();
+        foreach (var row in rows) Assert.Contains(row.Value.ToLowerInvariant(), plain);
+    }
+
     [Fact]
     public async Task FocusSweep_ChannelChangeCancelsAndRejectsLateResult()
     {

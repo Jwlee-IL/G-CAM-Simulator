@@ -85,4 +85,9 @@
     <Thickness x:Key="Pad.None">0</Thickness>
     <Thickness x:Key="Gap.TabContent">0,12,0,0</Thickness>
     <sys:Double x:Key="Size.OptionsBadge">4</sys:Double>
+    <!-- A row action button (Button.Icon.Row): a Size.Icon glyph plus 4 px on each side, inside a Size.Control list row. -->
+    <sys:Double x:Key="Size.Control.Row">20</sys:Double>
+    <!-- Between the measurement tool toggles; before a row's action button (after the Value column). -->
+    <Thickness x:Key="Gap.Tool">0,0,4,0</Thickness>
+    <Thickness x:Key="Gap.RowAction">8,0,0,0</Thickness>
 </ResourceDictionary>

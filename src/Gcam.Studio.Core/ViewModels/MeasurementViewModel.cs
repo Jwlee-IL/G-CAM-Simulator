@@ -23,6 +23,8 @@ public sealed partial class MeasurementViewModel : ObservableObject
 
     public int Number { get; }
     public string Name => $"M{Number}";
+    /// <summary>AutomationId of the row's delete button, unique per row ("M2.Delete").</summary>
+    public string DeleteAutomationId => Name + ".Delete";
     public ImagePane Pane { get; }
     public string PaneLabel => Pane == ImagePane.Flood ? "Flood" : "Recon";
     public MeasurementKind Kind { get; }

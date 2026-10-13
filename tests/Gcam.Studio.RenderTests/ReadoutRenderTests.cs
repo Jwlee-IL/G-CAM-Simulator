@@ -316,6 +316,7 @@ public sealed class ReadoutRenderTests(ITestOutputHelper output)
                 }
                 Capture("ReadoutWaveformView", model.Waveform, $"{name}-four-lanes", theme, size);
                 Capture("ImagingOptionsPanel", model.Imaging, $"{name}-imaging-channel", theme, size);
+                Capture("DetectorPanel", model.DetectorWorkspace, $"{name}-detector-panel", theme, size);
                 Capture("ReadoutPanel", model, $"{name}-ready", theme, size);
                 Capture("ReadoutPanel", pending, $"{name}-pending", theme, size);
                 pending.IsPreparingReadout = true; pending.ReadoutProgressText = $"661.7 keV · Transporting independent calibration flood… · 1,000 / {n * n * 2000:N0} histories (0 %)";
@@ -351,21 +352,38 @@ public sealed class ReadoutRenderTests(ITestOutputHelper output)
             else { int start=xaml.IndexOf('>')+1; xaml=xaml.Insert(start,$"<UserControl.Resources><ResourceDictionary>{resources}</ResourceDictionary></UserControl.Resources>"); }
             var element = (FrameworkElement)XamlReader.Parse(xaml); element.DataContext=data;
             var root = new Border { Child=element, Width=size.Width, Height=size.Height };
-            if (view == "ReadoutPanel")
+            if (view is "ReadoutPanel" or "ImagingOptionsPanel" or "DetectorPanel")
             {
                 root.Child = null;
-                // The panel lives in the fixed-width left panel (Size.SidePanel, Panel.Surface): render it at that width,
-                // not stretched over the window, so wrapping and column widths match the application.
+                // These panels live in a fixed-width side panel (Size.SidePanel, Panel.Surface; DetectorPanel brings its
+                // own surface): render them at that width, not stretched over the window, so wrapping and column widths
+                // match the application.
                 foreach (string f in new[] { $"Tokens.{theme}", "Metrics", "Typography", "Controls" })
                     root.Resources.MergedDictionaries.Add(new ResourceDictionary { Source = new Uri($"pack://application:,,,/Gcam.Studio;component/Themes/{f}.xaml") });
                 root.Child = new Border
                 {
-                    Style = (Style)root.FindResource("Panel.Surface"), Width = ((GridLength)root.FindResource("Size.SidePanel")).Value,
+                    Style = view == "DetectorPanel" ? null : (Style)root.FindResource("Panel.Surface"),
+                    Width = ((GridLength)root.FindResource("Size.SidePanel")).Value, VerticalAlignment = VerticalAlignment.Top,
                     HorizontalAlignment = HorizontalAlignment.Left, Margin = (Thickness)root.FindResource("Pad.Window"), Child = element,
                 };
                 root.SetResourceReference(Border.BackgroundProperty, "Brush.Bg.Canvas");
             }
             root.Measure(size); root.Arrange(new Rect(size)); root.UpdateLayout();
+            if (data is DetectorWorkspaceViewModel { PhysicalSnapshot: not null } conversions && view == "DetectorPanel")
+            {
+                // TODO-45 review 4: the measured conversions are label / value rows carrying PhysicalCounts' facts.
+                Assert.NotEmpty(conversions.ConversionRows);
+                foreach (var row in conversions.ConversionRows)
+                    Assert.Contains(row.Value.Split(' ')[0], conversions.PhysicalCounts, StringComparison.OrdinalIgnoreCase);
+                Assert.Contains(Descendants(root).OfType<SettingsGroup>(), g => AutomationProperties.GetName(g) == conversions.PhysicalCounts);
+            }
+            if (data is MainViewModel { ReadoutReadyRows.Count: > 0 } ready && view == "ReadoutPanel")
+            {
+                var state = Descendants(root).OfType<SettingsGroup>().Single(g => AutomationProperties.GetAutomationId(g) == "Readout.State");
+                Assert.Equal(ready.ReadoutState, AutomationProperties.GetName(state));
+                foreach (var row in ready.ReadoutReadyRows)
+                    Assert.Contains($"{row.LineKeV} keV · {row.Time} · {row.Windowed} windowed / {row.Scored} scored", ready.ReadoutState);
+            }
             if (view=="ReadoutWaveformView")
             {
                 var plots = Descendants(root).OfType<PlotView>().ToArray(); Assert.Equal(5,plots.Length);
@@ -389,7 +407,7 @@ public sealed class ReadoutRenderTests(ITestOutputHelper output)
                 Assert.False(string.IsNullOrEmpty(AutomationProperties.GetAutomationId(mark)));
                 Assert.True(mark.ActualWidth > 0 && mark.ActualHeight > 0);
             }
-            if (view == "ReadoutPanel" || view == "ImagingOptionsPanel" || view == "ReadoutDetectorView")
+            if (view is "ReadoutPanel" or "ImagingOptionsPanel" or "ReadoutDetectorView" or "DetectorPanel")
                 output.WriteLine($"HELP {name} {theme} {size.Width:0}x{size.Height:0}: {marks.Length} visible marks ({string.Join(", ", marks.Select(AutomationProperties.GetAutomationId))})");
             var bitmap = new RenderTargetBitmap((int)size.Width,(int)size.Height,96,96,PixelFormats.Pbgra32);
             if (data is DetectorWorkspaceViewModel detectorView && detectorView.ReadoutTab == ReadoutDetectorTab.Calibration

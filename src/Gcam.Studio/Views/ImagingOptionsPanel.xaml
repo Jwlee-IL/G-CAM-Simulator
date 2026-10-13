@@ -2,31 +2,55 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:conv="clr-namespace:Gcam.Studio.Converters"
         xmlns:c="clr-namespace:Gcam.Studio.Controls">
-    <!-- Imaging settings in three collapsible sections (same Expander.Section and one-line summary as the scene
-    panel). Tools and measurements live under the images. -->
+    <!-- Imaging settings in three collapsible sections in the shared panel language: the section heading (Expander.Section,
+    styled like the left tabs' PanelHeader titles), a Divider between sections, label / value rows, help marks at the
+    right. A collapsed section keeps its one-line summary. Tools and measurements live under the images. -->
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="PhysicalVisibility" />
     </UserControl.Resources>
     <StackPanel>
+        <!-- ===== Decoder focal plane ===== -->
         <Expander Header="Decoder focal plane" Style="{StaticResource Expander.Section}"
                 IsExpanded="{Binding IsFocalExpanded}" AutomationProperties.AutomationId="Imaging.FocalSection">
             <StackPanel>
-                <DockPanel>
+                <DockPanel Margin="{StaticResource Gap.Field}">
                     <c:HelpMark DockPanel.Dock="Right"
                             Text="Reprojects the retained flood at this focal plane; no new acquisition."
                             AutomationProperties.AutomationId="Imaging.FocalHelp" AutomationProperties.Name="About the focal plane" />
-                    <TextBlock Text="mm from detector" Style="{StaticResource Text.Caption}" />
+                    <DockPanel>
+                        <TextBlock Text="From detector" Style="{StaticResource FieldLabel}" />
+                        <TextBox Text="{Binding FocalPlane, UpdateSourceTrigger=PropertyChanged}" Tag="mm"
+                                AutomationProperties.AutomationId="Imaging.FocalPlane"
+                                AutomationProperties.Name="Decoder focal plane (mm from detector)" />
+                    </DockPanel>
                 </DockPanel>
-                <TextBox Text="{Binding FocalPlane, UpdateSourceTrigger=PropertyChanged}" Tag="mm"
-                        Margin="{StaticResource Gap.Field}" AutomationProperties.AutomationId="Imaging.FocalPlane"
-                        AutomationProperties.Name="Decoder focal plane (mm from detector)" />
                 <TextBlock Text="{Binding FocusNote}" Style="{StaticResource Text.Caption}" TextWrapping="Wrap"
-                        Margin="{StaticResource Gap.Tight}"
+                        Margin="{StaticResource Gap.Field}"
                         Visibility="{Binding FocusNote, Converter={x:Static conv:NullToCollapsedConverter.Instance}}"
                         AutomationProperties.AutomationId="Imaging.FocusNote" />
-                <TextBlock Text="{Binding GeometryText}" Style="{StaticResource Text.MonoCaption}"
-                        Margin="{StaticResource Gap.Tight}" AutomationProperties.AutomationId="Imaging.Geometry" />
-                <DockPanel>
+                <!-- Geometry facts as label / value rows; the group keeps the AutomationId and names itself with the same
+                facts as one text. An invalid focal plane shows the message instead of rows. -->
+                <c:SettingsGroup Grid.IsSharedSizeScope="True" Margin="{StaticResource Gap.Tight}"
+                        AutomationProperties.AutomationId="Imaging.Geometry" AutomationProperties.Name="{Binding GeometryText}">
+                    <!-- Values end where the help marks begin, at the focal-plane field's right edge. -->
+                    <DockPanel>
+                        <FrameworkElement DockPanel.Dock="Right" Width="{StaticResource Size.HelpMark}" Margin="{StaticResource Gap.HelpMark}" />
+                        <ItemsControl ItemsSource="{Binding GeometryRows}" ItemTemplate="{StaticResource Template.FactRow}" Focusable="False" />
+                    </DockPanel>
+                    <TextBlock Text="{Binding GeometryText}" TextWrapping="Wrap" Margin="{StaticResource Gap.Tight}">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock" BasedOn="{StaticResource Text.Caption}">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Geometry}" Value="{x:Null}">
+                                        <Setter Property="Visibility" Value="Visible" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </c:SettingsGroup>
+                <DockPanel Margin="{StaticResource Gap.Field}">
                     <c:HelpMark DockPanel.Dock="Right"
                             Text="{Binding SamplingEvidence}"
                             VerticalAlignment="Top"
@@ -40,16 +64,21 @@
             </StackPanel>
         </Expander>
         <TextBlock Text="{Binding FocalSummary}" Style="{StaticResource Text.MonoCaption}" TextWrapping="Wrap"
-                TextTrimming="None"
+                TextTrimming="None" Margin="{StaticResource Gap.Field}"
                 Visibility="{Binding IsFocalExpanded, Converter={x:Static conv:InverseBoolToVisibilityConverter.Instance}}" />
-        <TextBlock Text="{Binding FocusError}" Style="{StaticResource Text.CaptionWarning}" TextWrapping="Wrap" />
+        <TextBlock Text="{Binding FocusError}" Style="{StaticResource Text.CaptionWarning}" TextWrapping="Wrap"
+                Margin="{StaticResource Gap.Field}" />
         <Border Style="{StaticResource Divider}" />
+
+        <!-- ===== Imaging channel: settings as field rows, then the channel's result lines ===== -->
         <Expander Header="Imaging channel" Style="{StaticResource Expander.Section}"
                 IsExpanded="{Binding IsChannelExpanded}" AutomationProperties.AutomationId="Imaging.ChannelSection">
             <StackPanel>
-                <ComboBox ItemsSource="{Binding Isotopes}" SelectedItem="{Binding SelectedIsotope, Mode=TwoWay}"
-                        Margin="{StaticResource Gap.Field}" AutomationProperties.AutomationId="Imaging.Channel"
-                        AutomationProperties.Name="Imaging channel" />
+                <DockPanel Style="{StaticResource FieldRow}">
+                    <TextBlock Text="Channel" Style="{StaticResource FieldLabel}" />
+                    <ComboBox ItemsSource="{Binding Isotopes}" SelectedItem="{Binding SelectedIsotope, Mode=TwoWay}"
+                            AutomationProperties.AutomationId="Imaging.Channel" AutomationProperties.Name="Imaging channel" />
+                </DockPanel>
                 <StackPanel Visibility="{Binding Shared.IsPhysicalReadout, Converter={StaticResource PhysicalVisibility}}">
                     <CheckBox IsChecked="{Binding Shared.ApplyFloodCorrection}" Margin="{StaticResource Gap.Field}"
                             AutomationProperties.AutomationId="Imaging.FloodCorrection">
@@ -57,95 +86,123 @@
                                 Style="{StaticResource Text.Label}" TextWrapping="Wrap" />
                     </CheckBox>
                     <TextBlock Text="{Binding ChannelUnavailable}" Style="{StaticResource Text.CaptionWarning}" TextWrapping="Wrap"
+                            Margin="{StaticResource Gap.Field}"
                             Visibility="{Binding ChannelUnavailable, Converter={x:Static conv:NullToCollapsedConverter.Instance}}"
                             AutomationProperties.AutomationId="Imaging.ChannelUnavailable" />
-                    <TextBlock Text="{Binding ReadoutCurrentCounts}" Style="{StaticResource Text.Caption}" TextWrapping="Wrap"
-                            AutomationProperties.AutomationId="Imaging.ReadoutCurrentCounts" />
+                    <TextBlock Text="{Binding ReadoutCurrentCounts}" TextWrapping="Wrap"
+                            Margin="{StaticResource Gap.Field}" AutomationProperties.AutomationId="Imaging.ReadoutCurrentCounts">
+                        <!-- An empty count line takes no height (no blank gap under the check box). -->
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock" BasedOn="{StaticResource Text.Caption}">
+                                <Style.Triggers>
+                                    <Trigger Property="Text" Value="">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                    </Trigger>
+                                    <Trigger Property="Text" Value="{x:Null}">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
                 </StackPanel>
+                <!-- The decoder names are long ("MLEM (pixel-area, …)"): label above, the combo at the full row width. -->
                 <TextBlock Text="Reconstruction" Style="{StaticResource Text.Label}" Margin="{StaticResource Gap.Tight}" />
-                <DockPanel>
+                <DockPanel Margin="{StaticResource Gap.Field}">
                     <c:HelpMark DockPanel.Dock="Right"
                             Text="Re-decodes the retained floods. The focus sweep always uses cross-correlation: its peak prominence is a correlation z-score, and MLEM is not depth-calibrated."
                             AutomationProperties.AutomationId="Imaging.ReconstructionHelp"
                             AutomationProperties.Name="About reconstruction" />
                     <ComboBox ItemsSource="{Binding Reconstructions}" DisplayMemberPath="Label" SelectedValuePath="Method"
-                            SelectedValue="{Binding Reconstruction, Mode=TwoWay}" Margin="{StaticResource Gap.Field}"
+                            SelectedValue="{Binding Reconstruction, Mode=TwoWay}"
                             AutomationProperties.AutomationId="Imaging.Reconstruction" AutomationProperties.Name="Reconstruction" />
                 </DockPanel>
-                <DockPanel Visibility="{Binding ReconstructionNote, Converter={x:Static conv:NullToCollapsedConverter.Instance}}">
+                <DockPanel Margin="{StaticResource Gap.Field}"
+                        Visibility="{Binding ReconstructionNote, Converter={x:Static conv:NullToCollapsedConverter.Instance}}">
                     <c:HelpMark DockPanel.Dock="Right"
                             Text="{Binding ReconstructionHelp}"
                             VerticalAlignment="Top"
                             AutomationProperties.AutomationId="Imaging.MlemHelp" AutomationProperties.Name="About MLEM limitations" />
                     <TextBlock Text="{Binding ReconstructionNote}" TextWrapping="Wrap" Style="{StaticResource Text.Caption}"
-                            Margin="{StaticResource Gap.Tight}" AutomationProperties.AutomationId="Imaging.ReconstructionNote" />
+                            AutomationProperties.AutomationId="Imaging.ReconstructionNote" />
                 </DockPanel>
-                <TextBlock Text="Window N × FWHM at each line" Style="{StaticResource Text.Label}"
-                        Margin="{StaticResource Gap.Tight}" />
-                <TextBox Text="{Binding Shared.WindowFwhm}" IsEnabled="{Binding Shared.CanUseLegacy}" Tag="× FWHM"
-                        Margin="{StaticResource Gap.Field}" AutomationProperties.AutomationId="Imaging.Window"
-                        AutomationProperties.Name="Window N times FWHM at each line" />
-                <DockPanel>
+                <DockPanel Style="{StaticResource FieldRow}">
+                    <TextBlock Text="Window" Style="{StaticResource FieldLabel}" />
+                    <TextBox Text="{Binding Shared.WindowFwhm}" IsEnabled="{Binding Shared.CanUseLegacy}" Tag="× FWHM at each line"
+                            AutomationProperties.AutomationId="Imaging.Window"
+                            AutomationProperties.Name="Window N times FWHM at each line" />
+                </DockPanel>
+                <DockPanel Margin="{StaticResource Gap.Field}">
                     <c:HelpMark DockPanel.Dock="Right"
                             Text="One-pass scalar estimate: assumes the calibrated ratio applies to this scene; approximate for 3+ overlapping contaminants. Ambient counts are not subtracted."
                             AutomationProperties.AutomationId="Imaging.StripHelp" AutomationProperties.Name="About Compton stripping" />
                     <CheckBox Content="Compton strip" IsChecked="{Binding Strip}" IsEnabled="{Binding Shared.CanUseLegacy}"
-                            Margin="{StaticResource Gap.Field}" AutomationProperties.AutomationId="Imaging.Strip" />
+                            AutomationProperties.AutomationId="Imaging.Strip" />
                 </DockPanel>
-                <ItemsControl ItemsSource="{Binding Ratios}">
+                <!-- Result lines of the selected channel: ratios, count summary, notes, costs, errors, found peaks -->
+                <TextBlock Text="Result" Style="{StaticResource Text.ColumnHeader}" Margin="{StaticResource Gap.Tight}" />
+                <ItemsControl ItemsSource="{Binding Ratios}" Focusable="False">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <TextBlock Text="{Binding Description}" TextWrapping="Wrap" Style="{StaticResource Text.MonoCaption}" />
+                            <TextBlock Text="{Binding Description}" TextWrapping="Wrap" Style="{StaticResource Text.MonoCaption}"
+                                    Margin="{StaticResource Gap.Tight}" />
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
-                <DockPanel>
+                <DockPanel Margin="{StaticResource Gap.Tight}">
                     <c:HelpMark DockPanel.Dock="Right"
                             Text="{Binding UncertaintyHelp}"
                             VerticalAlignment="Top"
                             AutomationProperties.AutomationId="Imaging.UncertaintyHelp"
                             AutomationProperties.Name="About count uncertainty" />
-                    <TextBlock Text="{Binding Summary}" TextWrapping="Wrap" Style="{StaticResource Text.Caption}"
-                            Margin="{StaticResource Gap.Tight}" />
+                    <TextBlock Text="{Binding Summary}" TextWrapping="Wrap" Style="{StaticResource Text.Mono}" />
                 </DockPanel>
-                <DockPanel Visibility="{Binding StripNote, Converter={x:Static conv:NullToCollapsedConverter.Instance}}">
+                <DockPanel Margin="{StaticResource Gap.Tight}"
+                        Visibility="{Binding StripNote, Converter={x:Static conv:NullToCollapsedConverter.Instance}}">
                     <c:HelpMark DockPanel.Dock="Right"
                             Text="{Binding StripHelp}"
                             VerticalAlignment="Top"
                             AutomationProperties.AutomationId="Imaging.StripRoleHelp"
                             AutomationProperties.Name="About the stripped image roles" />
                     <TextBlock Text="{Binding StripNote}" TextWrapping="Wrap" Style="{StaticResource Text.Caption}"
-                            Margin="{StaticResource Gap.Tight}" AutomationProperties.AutomationId="Imaging.StripNote" />
+                            AutomationProperties.AutomationId="Imaging.StripNote" />
                 </DockPanel>
-                <DockPanel Visibility="{Binding WorkerCosts, Converter={x:Static conv:NullToCollapsedConverter.Instance}}">
+                <DockPanel Margin="{StaticResource Gap.Tight}"
+                        Visibility="{Binding WorkerCosts, Converter={x:Static conv:NullToCollapsedConverter.Instance}}">
                     <c:HelpMark DockPanel.Dock="Right"
                             Text="{Binding WorkerCosts}"
                             VerticalAlignment="Top"
                             AutomationProperties.AutomationId="Imaging.WorkerHelp" AutomationProperties.Name="Processing costs" />
                     <TextBlock Text="Processing costs" Style="{StaticResource Text.Caption}" TextWrapping="Wrap" />
                 </DockPanel>
-                <TextBlock Text="{Binding Error}" TextWrapping="Wrap" Style="{StaticResource Text.CaptionWarning}" />
-                <TextBlock Text="○ Truth / ◇ Found (read-only)" Style="{StaticResource Text.Caption}"
+                <TextBlock Text="{Binding Error}" TextWrapping="Wrap" Style="{StaticResource Text.CaptionWarning}"
                         Margin="{StaticResource Gap.Tight}" />
-                <ItemsControl ItemsSource="{Binding Peaks}">
+                <TextBlock Text="○ Truth / ◇ Found (read-only)" Style="{StaticResource Text.Label}"
+                        Margin="{StaticResource Gap.Field}" />
+                <ItemsControl ItemsSource="{Binding Peaks}" Focusable="False">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <TextBlock Text="{Binding Description}" TextWrapping="Wrap" Style="{StaticResource Text.MonoCaption}" />
+                            <TextBlock Text="{Binding Description}" TextWrapping="Wrap" Style="{StaticResource Text.MonoCaption}"
+                                    Margin="{StaticResource Gap.Tight}" />
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
             </StackPanel>
         </Expander>
         <TextBlock Text="{Binding ChannelSummary}" Style="{StaticResource Text.MonoCaption}" TextWrapping="Wrap"
-                TextTrimming="None"
+                TextTrimming="None" Margin="{StaticResource Gap.Field}"
                 Visibility="{Binding IsChannelExpanded, Converter={x:Static conv:InverseBoolToVisibilityConverter.Instance}}" />
         <Border Style="{StaticResource Divider}" />
+
+        <!-- ===== Focus sweep ===== -->
         <Expander Header="Focus sweep" Style="{StaticResource Expander.Section}" IsExpanded="{Binding IsSweepExpanded}"
                 AutomationProperties.AutomationId="Imaging.SweepSection">
             <StackPanel>
-                <TextBlock Text="Peaks to track (K)" Style="{StaticResource Text.Label}" />
-                <ComboBox ItemsSource="{Binding PeakCounts}" SelectedItem="{Binding PeakCount}" Margin="{StaticResource Gap.Field}"
-                        AutomationProperties.AutomationId="Imaging.FocusPeaks" AutomationProperties.Name="Peaks to track (K)" />
+                <DockPanel Style="{StaticResource FieldRow}">
+                    <TextBlock Text="Peaks (K)" Style="{StaticResource FieldLabel}" />
+                    <ComboBox ItemsSource="{Binding PeakCounts}" SelectedItem="{Binding PeakCount}"
+                            AutomationProperties.AutomationId="Imaging.FocusPeaks" AutomationProperties.Name="Peaks to track (K)" />
+                </DockPanel>
                 <StackPanel Orientation="Horizontal" Margin="{StaticResource Gap.Field}">
                     <Button Command="{Binding SweepCommand}"
                             Margin="{StaticResource Gap.Inline}"
@@ -161,24 +218,28 @@
                             Style="{StaticResource Button.Icon}"
                             AutomationProperties.AutomationId="Imaging.CancelSweep" AutomationProperties.Name="Cancel sweep" />
                 </StackPanel>
-                <ItemsControl ItemsSource="{Binding SweepResult.Tracks}">
+                <ItemsControl ItemsSource="{Binding SweepResult.Tracks}" Focusable="False">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
                             <TextBlock Text="{Binding Description}" Style="{StaticResource Text.MonoCaption}" TextWrapping="Wrap"
-                                    Margin="{StaticResource Gap.Tight}" />
+                                    Margin="{StaticResource Gap.Field}" />
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
-                <TextBlock Text="{Binding SweepError}" Style="{StaticResource Text.CaptionWarning}" TextWrapping="Wrap" />
-                <TextBlock Text="External surface range" Style="{StaticResource Text.Label}" Margin="{StaticResource Gap.Tight}" />
-                <TextBox Text="{Binding ExternalRange, UpdateSourceTrigger=PropertyChanged}" Tag="mm"
-                        Margin="{StaticResource Gap.Field}" AutomationProperties.AutomationId="Imaging.ExternalRange"
-                        AutomationProperties.Name="External surface range (mm from detector)" />
-                <TextBlock Text="{Binding ExternalRangeError}" Style="{StaticResource Text.CaptionWarning}" TextWrapping="Wrap" />
+                <TextBlock Text="{Binding SweepError}" Style="{StaticResource Text.CaptionWarning}" TextWrapping="Wrap"
+                        Margin="{StaticResource Gap.Field}" />
+                <DockPanel Style="{StaticResource FieldRow}">
+                    <TextBlock Text="Surface range" Style="{StaticResource FieldLabel}" />
+                    <TextBox Text="{Binding ExternalRange, UpdateSourceTrigger=PropertyChanged}" Tag="mm"
+                            AutomationProperties.AutomationId="Imaging.ExternalRange"
+                            AutomationProperties.Name="External surface range (mm from detector)" />
+                </DockPanel>
+                <TextBlock Text="{Binding ExternalRangeError}" Style="{StaticResource Text.CaptionWarning}" TextWrapping="Wrap"
+                        Margin="{StaticResource Gap.Field}" />
                 <Button Content="Use as focus" Command="{Binding UseAsFocusCommand}"
                         HorizontalAlignment="Left" Margin="{StaticResource Gap.Field}"
                         AutomationProperties.AutomationId="Imaging.UseAsFocus" />
-                <DockPanel>
+                <DockPanel Margin="{StaticResource Gap.Field}">
                     <c:HelpMark DockPanel.Dock="Right"
                             Text="{Binding SweepHelp}"
                             VerticalAlignment="Top"
@@ -189,6 +250,25 @@
             </StackPanel>
         </Expander>
         <!-- Sweep state stays visible collapsed or open: "Sweeping…", the retained prefix, or the prompt -->
-        <TextBlock Text="{Binding SweepSummary}" Style="{StaticResource Text.Caption}" TextWrapping="Wrap" />
+        <!-- A result's channel, retained prefix, counts and worker time as rows (named with the one-line summary);
+        "Sweeping…" or the prompt as one line otherwise. -->
+        <c:SettingsGroup Grid.IsSharedSizeScope="True" AutomationProperties.Name="{Binding SweepSummary}">
+            <DockPanel>
+                <FrameworkElement DockPanel.Dock="Right" Width="{StaticResource Size.HelpMark}" Margin="{StaticResource Gap.HelpMark}" />
+                <ItemsControl ItemsSource="{Binding SweepSummaryRows}" ItemTemplate="{StaticResource Template.FactRow}" Focusable="False" />
+            </DockPanel>
+            <TextBlock Text="{Binding SweepSummary}" TextWrapping="Wrap">
+                <TextBlock.Style>
+                    <Style TargetType="TextBlock" BasedOn="{StaticResource Text.Caption}">
+                        <Setter Property="Visibility" Value="Collapsed" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding SweepSummaryRows.Count}" Value="0">
+                                <Setter Property="Visibility" Value="Visible" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </TextBlock.Style>
+            </TextBlock>
+        </c:SettingsGroup>
     </StackPanel>
 </UserControl>

@@ -126,6 +126,34 @@ public sealed class ReadoutViewModelTests
         Assert.Equal("Failed: 1332.5 keV: fixture: unsupported slots (0, 17)", failed.Local);
     }
 
+    /// <summary>TODO-45 review 4: a ready bank shows as a table (line · time · windowed · scored), one row per required line,
+    /// with exactly the numbers of the one-line "Ready · …" state (which stays the state's accessible name); no table while
+    /// not prepared, preparing or failed. The conversion rows of the Detector panel are empty before measured data.</summary>
+    [Fact]
+    public async Task ReadyBank_TableRowsCarryTheReadyStateNumbers_OnlyWhenReady()
+    {
+        var preparation = new FakeReadoutPreparation();
+        var vm = Model(preparation); vm.Optics = Head; vm.ReadoutMode = ReadoutMode.FourOutputAnger;
+        vm.AmbientDoseRateMicroSvPerHour = 0;
+        vm.AddSourceCommand.Execute(null); vm.Sources[^1].Isotope = "Co-60";
+        Assert.Empty(vm.ReadoutReadyRows);
+        Assert.Empty(vm.DetectorWorkspace.ConversionRows);
+        Assert.Null(vm.DetectorWorkspace.ConversionNote);
+        var notified = new List<string?>(); vm.PropertyChanged += (_, e) => notified.Add(e.PropertyName);
+        await vm.PrepareReadoutCommand.ExecuteAsync(null);
+        Assert.Contains(nameof(MainViewModel.ReadoutReadyRows), notified);
+        var rows = vm.ReadoutReadyRows;
+        Assert.Equal(new[] { "661.7", "1332.5" }, rows.Select(r => r.LineKeV));
+        Assert.Equal("Ready · " + string.Join("; ", rows.Select(r => $"{r.LineKeV} keV · {r.Time} · {r.Windowed} windowed / {r.Scored} scored")), vm.ReadoutState);
+        vm.IsPreparingReadout = true;
+        Assert.Empty(vm.ReadoutReadyRows);
+        vm.IsPreparingReadout = false;
+        preparation.Failures[1332.5] = "fixture: refused";
+        vm.ReflectorGapUm = "90"; // a module edit: nothing prepared for the new key
+        Assert.Empty(vm.ReadoutReadyRows);
+        Assert.StartsWith("Not prepared", vm.ReadoutState);
+    }
+
     [Fact]
     public async Task PreparationKeyInvalidationAndWindowValidation_AreExplicit()
     {

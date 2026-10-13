@@ -113,6 +113,35 @@ public sealed partial class DetectorWorkspaceViewModel(MainViewModel shared, IDe
         ? $"Assigned {Shared.Snapshot!.Counts:N0} · unknown {p.Unknown:N0} · triggered {p.Records.Count:N0} · realised hits {p.Hits.Count:N0} · diagnostic truth {p.TruthSamples.Count} / 256 first hits{(p.PendingHold ? " · hold pending observed horizon" : "")} · reference {Kev(p.Preparation.LineKeV)} keV calibration"
           + string.Concat(p.Lines.Skip(1).Select(l => $"\n{Kev(l.LineKeV)} keV calibration: assigned {l.Assigned:N0} · unknown {l.Unknown:N0} (same held records; not additional counts)"))
         : "No measured conversions";
+    /// <summary>The facts of <see cref="PhysicalCounts"/> as label / value rows (the panel's Measured conversions
+    /// section); empty before measured conversions exist, where the panel shows <see cref="PhysicalCounts"/>.</summary>
+    public IReadOnlyList<FactRow> ConversionRows
+    {
+        get
+        {
+            if (PhysicalSnapshot is not { } p) return [];
+            var c = CultureInfo.InvariantCulture;
+            var rows = new List<FactRow>
+            {
+                new("Assigned", Shared.Snapshot!.Counts.ToString("N0", c)), new("Unknown", p.Unknown.ToString("N0", c)),
+                new("Triggered", p.Records.Count.ToString("N0", c)), new("Realised hits", p.Hits.Count.ToString("N0", c)),
+                new("Diagnostic truth", string.Create(c, $"{p.TruthSamples.Count} / 256 first hits")),
+            };
+            if (p.PendingHold) rows.Add(new("Hold", "Pending observed horizon"));
+            rows.Add(new("Reference", $"{Kev(p.Preparation.LineKeV)} keV calibration"));
+            foreach (var l in p.Lines.Skip(1))
+            {
+                rows.Add(new($"{Kev(l.LineKeV)} keV assigned", l.Assigned.ToString("N0", c)));
+                rows.Add(new($"{Kev(l.LineKeV)} keV unknown", l.Unknown.ToString("N0", c)));
+            }
+            return rows;
+        }
+    }
+
+    /// <summary>Shown under the rows when other line calibrations project the same held records.</summary>
+    public string? ConversionNote => PhysicalSnapshot is { Lines.Count: > 1 }
+        ? "Other line calibrations project the same held records (not additional counts)." : null;
+
     public double MinimumGain => Face?.Crystals.Min(c => c.Gain) ?? 0;
     public double MaximumGain => Face?.Crystals.Max(c => c.Gain) ?? 0;
     public string GainLegend => Face is { } f ? $"Relative gain {f.Crystals.Min(c => c.Gain):0.000}–{f.Crystals.Max(c => c.Gain):0.000} · face {f.SizeMm:0.###} mm square" : "Enter valid detector settings";
@@ -137,6 +166,50 @@ public sealed partial class DetectorWorkspaceViewModel(MainViewModel shared, IDe
                 + $"Gain σ {detector.GainSigma * 100:0.#}% · seed {detector.GainSeed}\nGeometric active-area fraction: {Face?.ActiveAreaFraction:P2}";
         }
     }
+    // The right panel shows the facts of Readout as label / value rows in two sections (geometry; gain or readout network);
+    // Readout stays the same facts as one text (the rows container's accessible name).
+
+    /// <summary>Geometry section rows: material or readout, module / crystals, pitch, gap, active width.</summary>
+    public IReadOnlyList<FactRow> GeometryRows
+    {
+        get
+        {
+            var detector = Shared.Snapshot?.Detector ?? Shared.Detector;
+            var optics = Shared.Snapshot?.Optics ?? Shared.Optics;
+            var c = CultureInfo.InvariantCulture;
+            if (Shared.IsPhysicalReadout)
+                return Preparation?.Module is { } m
+                    ? [new("Readout", "Experimental GAGG"), new("Module", string.Create(c, $"{m.CrystalsX} × {m.CrystalsY} (captured)")),
+                        new("Sensors", "Matched virtual SiPMs"),
+                        new("Pitch", string.Create(c, $"{m.PitchMm:0.###} mm")), new("Reflector gap", string.Create(c, $"{m.GapMm * 1000:0.###} µm"))]
+                    : [new("Readout", "Experimental GAGG"), new("Module", string.Create(c, $"{optics.DetectorPixels} × {optics.DetectorPixels} (pending)")),
+                        new("Sensors", "Matched virtual SiPMs"),
+                        new("Pitch", string.Create(c, $"{optics.PixelPitchMm:0.###} mm")), new("Reflector gap", string.Create(c, $"{detector.ReflectorGapMm * 1000:0.###} µm"))];
+            return [new("Scintillator", detector.Chain.Scintillator.Name), new("Crystals", $"{optics.DetectorPixels} × {optics.DetectorPixels}"),
+                new("Pitch", $"{optics.PixelPitchMm:0.###} mm"), new("Reflector gap", $"{detector.ReflectorGapMm * 1000:0.###} µm"),
+                new("Active width", $"{optics.PixelPitchMm - detector.ReflectorGapMm:0.###} mm")];
+        }
+    }
+
+    /// <summary>The geometric active-area fraction (the row that carries the area help mark).</summary>
+    public string ActiveAreaText => $"{Face?.ActiveAreaFraction:P2}";
+
+    /// <summary>Title of the second section: the legacy gain pattern, or the physical readout network.</summary>
+    public string ResponseTitle => Shared.IsPhysicalReadout ? "Readout network" : "Gain pattern";
+
+    /// <summary>Second section rows (same facts as <see cref="Readout"/>).</summary>
+    public IReadOnlyList<FactRow> ResponseRows
+    {
+        get
+        {
+            var detector = Shared.Snapshot?.Detector ?? Shared.Detector;
+            return Shared.IsPhysicalReadout
+                ? [new("Network", "DPC"), new("Row / column", "1000 Ω / 10 Ω"), new("Outputs", "A–D virtual grounds"),
+                    new("Trigger", "Sum 50 keV-equivalent"), new("Hold", "Common"), new("Reflector", "Specular 0.98")]
+                : [new("Gain σ", $"{detector.GainSigma * 100:0.#}%"), new("Gain seed", $"{detector.GainSeed}")];
+        }
+    }
+
     public string Counts => Shared.Snapshot is { } s
         ? $"Acquired {s.Counts:N0} counts · {s.ObservedRateCps:0.0} cps (counts / live time)"
         : "No acquired counts";
@@ -153,8 +226,9 @@ public sealed partial class DetectorWorkspaceViewModel(MainViewModel shared, IDe
             }
         }
         else { Face = null; _faceOptics = null; _faceDetector = null; }
-        foreach (string name in new[] { nameof(Identity), nameof(Readout), nameof(Counts), nameof(GainLegend), nameof(MinimumGain), nameof(MaximumGain) }) OnPropertyChanged(name);
+        foreach (string name in new[] { nameof(Identity), nameof(Readout), nameof(Counts), nameof(GainLegend), nameof(MinimumGain), nameof(MaximumGain),
+            nameof(GeometryRows), nameof(ActiveAreaText), nameof(ResponseTitle), nameof(ResponseRows) }) OnPropertyChanged(name);
         foreach (string name in new[] { nameof(Bank), nameof(BankLines), nameof(ShownLineKeV), nameof(Preparation), nameof(PhysicalSnapshot), nameof(Diagnostics), nameof(CalibrationState),
-            nameof(PhysicalCounts), nameof(OfferRows), nameof(OfferDetails), nameof(SensitivitySummary), nameof(SensitivityStepMm), nameof(SensitivityOriginMm), nameof(SensitivityCaption), nameof(SensitivityHelp) }) OnPropertyChanged(name);
+            nameof(PhysicalCounts), nameof(ConversionRows), nameof(ConversionNote), nameof(OfferRows), nameof(OfferDetails), nameof(SensitivitySummary), nameof(SensitivityStepMm), nameof(SensitivityOriginMm), nameof(SensitivityCaption), nameof(SensitivityHelp) }) OnPropertyChanged(name);
     }
 }

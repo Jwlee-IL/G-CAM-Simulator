@@ -95,6 +95,49 @@ public class MeasurementsViewModelTests
         Assert.Equal("M1", vm.Items[0].Name);
     }
 
+    /// <summary>Author decision (TODO-45 review 3): each row has its own delete button. Removing another row keeps the
+    /// selection; removing the selected row selects its neighbour exactly as the Delete key does; a stale or null row is
+    /// ignored. Each row's button has its own AutomationId.</summary>
+    [Fact]
+    public void Remove_DeletesThatRow_KeepsOrMovesSelectionLikeDelete()
+    {
+        var vm = new MeasurementsViewModel();
+        for (int i = 0; i < 4; i++) vm.AddCommand.Execute(Roi(ImagePane.Flood));
+        Assert.Equal(["M1.Delete", "M2.Delete", "M3.Delete", "M4.Delete"], vm.Items.Select(m => m.DeleteAutomationId));
+        vm.Selected = vm.Items[1];
+        var first = vm.Items[0];
+
+        vm.RemoveCommand.Execute(first);
+        Assert.Equal(["M2", "M3", "M4"], vm.Items.Select(m => m.Name));
+        Assert.Equal("M2", vm.Selected?.Name);
+
+        vm.RemoveCommand.Execute(vm.Selected);
+        Assert.Equal(["M3", "M4"], vm.Items.Select(m => m.Name));
+        Assert.Equal("M3", vm.Selected?.Name); // the neighbour, as Delete selects it
+
+        vm.RemoveCommand.Execute(first);   // already removed
+        vm.RemoveCommand.Execute(null);
+        Assert.Equal(["M3", "M4"], vm.Items.Select(m => m.Name));
+        vm.RemoveCommand.Execute(vm.Items[1]);
+        vm.RemoveCommand.Execute(vm.Items[0]);
+        Assert.False(vm.HasItems);
+        Assert.Null(vm.Selected);
+    }
+
+    /// <summary>The icon toggles keep one active tool (radio semantics through ActiveTool).</summary>
+    [Fact]
+    public void ActiveTool_IsOneOfFour_DefaultPan()
+    {
+        var vm = new MeasurementsViewModel();
+        Assert.Equal(MeasureTool.Pan, vm.ActiveTool);
+        foreach (var tool in new[] { MeasureTool.Distance, MeasureTool.Angle, MeasureTool.Roi, MeasureTool.Pan })
+        {
+            vm.ActiveTool = tool;
+            Assert.Equal(tool, vm.ActiveTool);
+        }
+        Assert.Equal(4, Enum.GetValues<MeasureTool>().Length);
+    }
+
     [Fact]
     public void ToolHint_FollowsTheActiveTool()
     {

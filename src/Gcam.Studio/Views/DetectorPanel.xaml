@@ -1,9 +1,16 @@
 <UserControl x:Class="Gcam.Studio.Views.DetectorPanel"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:c="clr-namespace:Gcam.Studio.Controls">
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:c="clr-namespace:Gcam.Studio.Controls"
+        xmlns:conv="clr-namespace:Gcam.Studio.Converters">
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis" />
+    </UserControl.Resources>
+    <!-- Sections in the shared panel language (PanelHeader title, Divider between sections, label / value rows):
+    Detector geometry · Gain pattern (or, on the physical readout, Readout network · Measured conversions). -->
     <Border Style="{StaticResource Panel.Surface}" VerticalAlignment="Top">
         <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
             <StackPanel>
+                <!-- ===== Detector geometry ===== -->
                 <DockPanel Style="{StaticResource PanelHeader}">
                     <c:HelpMark DockPanel.Dock="Right"
                             Text="{Binding Shared.ReadoutAssumptions}"
@@ -11,15 +18,70 @@
                             AutomationProperties.Name="Readout model assumptions" />
                     <TextBlock Text="Detector geometry" Style="{StaticResource Text.PanelTitle}" />
                 </DockPanel>
-                <TextBlock Text="{Binding Readout}" Style="{StaticResource Text.MonoCaption}" TextWrapping="Wrap"
-                        Margin="{StaticResource Gap.Section}" AutomationProperties.AutomationId="Detector.Readout" />
-                <DockPanel>
-                    <c:HelpMark DockPanel.Dock="Right"
-                            Text="Geometric active-area fraction describes the face, not detection efficiency. Acquired rate needs transport, energy response and a stated channel."
-                            VerticalAlignment="Top"
-                            AutomationProperties.AutomationId="Detector.AreaHelp" AutomationProperties.Name="About active area" />
-                    <TextBlock Text="Active area" Style="{StaticResource Text.Caption}" TextWrapping="Wrap" />
-                </DockPanel>
+                <!-- The rows group keeps the readout's AutomationId (a Group peer); its name is the same facts as one text. -->
+                <c:SettingsGroup Grid.IsSharedSizeScope="True" AutomationProperties.AutomationId="Detector.Readout"
+                        AutomationProperties.Name="{Binding Readout}">
+                    <!-- Values end where the help marks begin (the same right gutter as the Active area row). -->
+                    <DockPanel>
+                        <FrameworkElement DockPanel.Dock="Right" Width="{StaticResource Size.HelpMark}" Margin="{StaticResource Gap.HelpMark}" />
+                        <ItemsControl ItemsSource="{Binding GeometryRows}" ItemTemplate="{StaticResource Template.FactRow}" Focusable="False" />
+                    </DockPanel>
+                    <DockPanel Margin="{StaticResource Gap.Field}">
+                        <c:HelpMark DockPanel.Dock="Right"
+                                Text="Geometric active-area fraction describes the face, not detection efficiency. Acquired rate needs transport, energy response and a stated channel."
+                                VerticalAlignment="Top"
+                                AutomationProperties.AutomationId="Detector.AreaHelp" AutomationProperties.Name="About active area" />
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" SharedSizeGroup="FactLabel" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="Active area" Style="{StaticResource Text.Label}" VerticalAlignment="Top"
+                                    Margin="{StaticResource Gap.Inline}" />
+                            <TextBlock Grid.Column="1" Text="{Binding ActiveAreaText}" Style="{StaticResource Text.Mono}"
+                                    VerticalAlignment="Top" TextAlignment="Right" />
+                        </Grid>
+                    </DockPanel>
+                    <Border Style="{StaticResource Divider}" />
+                    <!-- ===== Gain pattern / Readout network ===== -->
+                    <DockPanel Style="{StaticResource PanelHeader}">
+                        <TextBlock Text="{Binding ResponseTitle}" Style="{StaticResource Text.PanelTitle}" />
+                    </DockPanel>
+                    <!-- Values end where the help marks begin (the same right gutter as the Active area row). -->
+                    <DockPanel>
+                        <FrameworkElement DockPanel.Dock="Right" Width="{StaticResource Size.HelpMark}" Margin="{StaticResource Gap.HelpMark}" />
+                        <ItemsControl ItemsSource="{Binding ResponseRows}" ItemTemplate="{StaticResource Template.FactRow}" Focusable="False" />
+                    </DockPanel>
+                    <StackPanel Visibility="{Binding Shared.IsPhysicalReadout, Converter={StaticResource BoolToVis}}">
+                        <Border Style="{StaticResource Divider}" />
+                        <!-- ===== Measured conversions (physical readout) ===== -->
+                        <DockPanel Style="{StaticResource PanelHeader}">
+                            <TextBlock Text="Measured conversions" Style="{StaticResource Text.PanelTitle}" />
+                        </DockPanel>
+                        <!-- The conversion counts as rows (the same facts as PhysicalCounts, which names this group);
+                        before any measured conversion the one-line message shows instead. -->
+                        <c:SettingsGroup AutomationProperties.Name="{Binding PhysicalCounts}">
+                            <DockPanel>
+                                <FrameworkElement DockPanel.Dock="Right" Width="{StaticResource Size.HelpMark}" Margin="{StaticResource Gap.HelpMark}" />
+                                <ItemsControl ItemsSource="{Binding ConversionRows}" ItemTemplate="{StaticResource Template.FactRow}" Focusable="False" />
+                            </DockPanel>
+                            <TextBlock Text="{Binding ConversionNote}" Style="{StaticResource Text.Caption}" TextWrapping="Wrap"
+                                    Visibility="{Binding ConversionNote, Converter={x:Static conv:NullToCollapsedConverter.Instance}}" />
+                            <TextBlock Text="{Binding PhysicalCounts}" TextWrapping="Wrap">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock" BasedOn="{StaticResource Text.Caption}">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding PhysicalSnapshot}" Value="{x:Null}">
+                                                <Setter Property="Visibility" Value="Visible" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                        </c:SettingsGroup>
+                    </StackPanel>
+                </c:SettingsGroup>
             </StackPanel>
         </ScrollViewer>
     </Border>
