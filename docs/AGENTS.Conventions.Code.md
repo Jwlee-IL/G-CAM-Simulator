@@ -15,7 +15,7 @@ Documents (`DESIGN.Typography`), resource keys (`Brush.Bg.Canvas`, `Text.Label`)
 | Document | `KEYWORD.Section[.Sub].md` | see [AGENTS.Conventions.Docs](AGENTS.Conventions.Docs.md) |
 
 Resource key kinds: `Color`, `Brush`, `Space`, `Pad` (padding), `Gap` (margin), `Size`, `Radius`, `Border`,
-`Font`, `FontSize`, `Text` (text roles), and the control name for keyed control styles (`Button.Ghost`).
+`Font`, `FontSize`, `Text` (text roles), and the control name for keyed control styles (`Button.Icon`).
 
 ## C#
 

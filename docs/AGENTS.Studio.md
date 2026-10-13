@@ -80,7 +80,7 @@ name a helper `Select` (the `Select-Object` alias wins).
 | 2 | `HeatmapView`: zoom, pan, mm readout, automation peer | done |
 | 2.5 | Theme tokens (dark / light), metrics, typography, shared control styles; fixed-grid layout; colour bars | done |
 | 3 | Measurement tools (distance, angle, ROI) as an adorner, source drag on the reconstruction, measurement panel, results table, stale-result chip | originally done; source drag and stale-result chip withdrawn by TODO-24 |
-| 4 | UI automation (12 regression scenarios plus plot gate and survey; heatmap navigation remains a follow-up), keyboard crosshair for measuring, high-contrast mode, colormap choice | in progress |
+| 4 | UI automation (26 regression scenarios plus pilot, plot gate and survey; heatmap navigation remains a follow-up), keyboard crosshair for measuring, high-contrast mode, colormap choice | in progress |
 | Migration | One shared run, workspace templates and first-party `PlotView` (TODO-06); four workspaces implemented in TODO-07 … TODO-11; legacy removal remains TODO-12 | implemented; final desktop suite recorded 27/27 (13 headless oracles, 12 scenarios, plot gate, survey); legacy removal remains TODO-12 |
 | Live acquisition | Fresh list-mode MC, weight rejection, shared immutable 4 Hz snapshots, Start / Stop / Continue / Reset with preset live time and speed (TODO-13, TODO-24) | implemented; physics / headless validation in VV.Studio; desktop validation recorded in the final TODO-22 pass |
 | Spectrum | Shared live counts, physical default chain, per-energy windows with unresolved-line grouping, optional arrival-time pile-up (TODO-07) | implemented; headless evidence in VV.Studio; desktop validation recorded in the final TODO-22 pass |

@@ -14,10 +14,7 @@ public sealed partial class PlotViewRenderTests
 {
     private void RenderAmbientInputs(string theme)
     {
-        var model = new MainViewModel(new FixtureAcquisition(), new FixtureTheme(Enum.Parse<AppTheme>(theme)), new FixtureSpectrum(false), confirmation: new ModalService())
-        {
-            IsChainExpanded = false
-        };
+        var model = new MainViewModel(new FixtureAcquisition(), new FixtureTheme(Enum.Parse<AppTheme>(theme)), new FixtureSpectrum(false), confirmation: new ModalService());
         // AB-15 default: validated terrestrial preset at 0.10 µSv/h, front-only bound — rendered as Studio starts.
         Assert.Equal(.1, model.AmbientDoseRateMicroSvPerHour);
         Assert.Equal(AmbientGeometry.FrontOnlyThroughMask, model.AmbientGeometry);

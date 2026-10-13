@@ -6,13 +6,14 @@ Spacing is in [DESIGN.Layout](DESIGN.Layout.md), text in [DESIGN.Typography](DES
 ## Direction: "dark instrument"
 
 Near-neutral cool greys and **one cyan accent used only where it means something** — the primary action,
-selection, keyboard focus and progress. No glow, gradients or neon text. Dark is the default because image
+selection, keyboard focus, progress and the badge that marks non-default options. No glow, gradients or neon text. Dark is the default because image
 data reads better on dark chrome (as in ImageJ, 3D Slicer or PACS viewers); a light theme with the same keys
 shows it is a choice, not a limitation.
 
 ## Tokens
 
-Every colour exists as a `Color.*` and a matching `Brush.*`; views use the brush with `DynamicResource`.
+Every colour exists as a `Color.*` and a matching `Brush.*`; views use the brush with `DynamicResource`. The
+exceptions are the modal scrim and the caption Close brushes, which are brush-only and equal in both themes.
 
 | Key | Dark | Light | Use |
 |---|---|---|---|
@@ -38,6 +39,9 @@ Every colour exists as a `Color.*` and a matching `Brush.*`; views use the brush
 | `Brush.Plot.Band` | `#26999999` | `#26808080` | neutral translucent X interval, separate from series hues |
 | `Brush.Plot.BandEdge` | `#B8B8B8` | `#505050` | one-DIP interval boundaries, drawn above the series fill |
 | `Brush.Plot.Grid` | `#394650` | `#CCD4DC` | axis grid |
+| `Brush.Options.Badge` | accent | accent | the badge on the Options cog while an option differs from its default (a state signal, not decoration); `Status.Warning` replaces it after an Options refusal |
+| `Brush.Modal.Scrim` | `#99000000` | `#99000000` | the scrim of the in-window modal layer (Reset confirmation, Options) |
+| `Brush.Caption.Close.Hover` / `.Pressed` / `.Foreground` | `#E81123` / `#C50F1F` / `#FFFFFF` | same | the Close caption button's hover and pressed fill and its glyph there (the Windows convention) |
 
 ## Contrast (WCAG 2.1)
 
@@ -104,8 +108,10 @@ it deliberately matches the plot background while the existing band edges convey
 1. Replace the `Themes/Tokens.*.xaml` dictionary **in place** in `Application.Resources.MergedDictionaries`.
    Inserting a second one would not work: later merged dictionaries win, so the old one would stay in effect.
 2. Because views and styles reference colours with `DynamicResource`, every open window repaints.
-3. Ask DWM for a matching title bar (`DWMWA_USE_IMMERSIVE_DARK_MODE`) and force a frame refresh
-   (`SetWindowPos … SWP_FRAMECHANGED`) — the attribute alone doesn't repaint an existing frame.
+3. Ask DWM for a matching native frame (`DWMWA_USE_IMMERSIVE_DARK_MODE`) and force a frame refresh
+   (`SetWindowPos … SWP_FRAMECHANGED`) — the attribute alone doesn't repaint an existing frame. Since 2026-10-13 the
+   window has no OS title bar (`WindowStyle="None"` with `WindowChrome`): the caption is the themed top bar, so it
+   follows step 2; the DWM call only matches what remains of the native frame, best effort.
 
 The ViewModel exposes `ToggleThemeCommand` and `ThemeToggleLabel`; the top-bar button binds to them.
 

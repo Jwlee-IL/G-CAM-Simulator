@@ -132,17 +132,83 @@ public sealed class DeclutterRenderTests
         Assert.NotNull(rowDelete.Attribute("AutomationProperties.Name"));
         Assert.Equal("{Binding}", (string?)rowDelete.Attribute("CommandParameter"));
         Assert.Contains(rowDelete.Descendants(), e => e.Name.LocalName == "Style" && (string?)e.Attribute("BasedOn") == "{StaticResource Button.Icon.Row}");
-        // The pointer tools are icon toggles (radio semantics) with their glyphs and tooltips.
-        foreach (var (id, icon, tip) in new[] { ("ToolPan", "Icon.Pan", "Pan"), ("ToolDistance", "Icon.Ruler", "Distance"),
-            ("ToolAngle", "Icon.Angle", "Angle"), ("ToolRoi", "Icon.Roi", "ROI (region of interest)") })
+        // The pointer tools are icon toggles (radio semantics) with their glyphs, and tooltips naming their access key,
+        // which the toggles also expose to assistive technology (author, 2026-10-13: access keys restored).
+        foreach (var (id, icon, tip, key) in new[] { ("ToolPan", "Icon.Pan", "Pan", "Alt+P"), ("ToolDistance", "Icon.Ruler", "Distance", "Alt+D"),
+            ("ToolAngle", "Icon.Angle", "Angle", "Alt+A"), ("ToolRoi", "Icon.Roi", "ROI, region of interest", "Alt+R") })
         {
-            var tool = Assert.Single(elements, e => e.Name.LocalName == "RadioButton" && (string?)e.Attribute("AutomationProperties.AutomationId") == id);
+            var tool = Assert.Single(elements, e => e.Name.LocalName == "IconToggle" && (string?)e.Attribute("AutomationProperties.AutomationId") == id);
             Assert.Equal("{StaticResource RadioButton.Icon}", (string?)tool.Attribute("Style"));
             Assert.Equal($"{{StaticResource {icon}}}", (string?)tool.Attribute("Content"));
-            Assert.Equal(tip, (string?)tool.Attribute("ToolTip"));
+            Assert.Equal($"{tip} ({key})", (string?)tool.Attribute("ToolTip"));
+            Assert.Equal(key, (string?)tool.Attribute("AutomationProperties.AccessKey"));
             Assert.Equal("Tool", (string?)tool.Attribute("GroupName"));
             Assert.NotNull(tool.Attribute("AutomationProperties.Name"));
         }
+    }
+
+    [Fact]
+    public void ToolAccessKeys_AreWindowKeyBindings_SelectTheTool_OnlyInImagingWithoutModal()
+        => Sta(() =>
+        {
+            var service = new ModalService();
+            var vm = Model(service);
+            var bindings = WindowKeyBindings(vm);
+            // Alt+letter on the window, not an access key on a text label: the toggles are icon-only.
+            foreach (var (key, tool) in new[] { (Key.D, MeasureTool.Distance), (Key.A, MeasureTool.Angle), (Key.R, MeasureTool.Roi), (Key.P, MeasureTool.Pan) })
+            {
+                var binding = Assert.Single(bindings, b => b.Key == key && b.Modifiers == ModifierKeys.Alt);
+                Assert.Same(vm.SelectMeasureToolCommand, binding.Command);
+                Assert.Equal(tool, binding.CommandParameter);
+                Assert.True(binding.Command.CanExecute(binding.CommandParameter));
+                binding.Command.Execute(binding.CommandParameter);
+                Assert.Equal(tool, vm.Imaging.Measurements.ActiveTool);
+            }
+            var distance = Assert.Single(bindings, b => b.Key == Key.D && b.Modifiers == ModifierKeys.Alt);
+            bool Available() => distance.Command.CanExecute(distance.CommandParameter);
+            // Another workspace shown: the key does nothing (the tools are not on screen).
+            vm.SelectedWorkspace = vm.Spectrum;
+            Assert.False(Available());
+            vm.SelectedWorkspace = vm.Imaging;
+            Assert.True(Available());
+            // A modal layer is open (Reset confirmation, Options dialog): the tools never change behind it.
+            var request = service.ConfirmAsync("confirm fixture");
+            Assert.False(Available());
+            service.CancelCommand.Execute(null);
+            Assert.False(request.GetAwaiter().GetResult());
+            Assert.True(Available());
+            vm.OpenOptionsCommand.Execute(null);
+            Assert.False(Available());
+            vm.Options!.CancelCommand.Execute(null);
+            Assert.True(Available());
+            Assert.Equal(MeasureTool.Pan, vm.Imaging.Measurements.ActiveTool);
+            // The toggles are IconToggles: their peer reports AutomationProperties.AccessKey (the stock peer drops it) and
+            // stays a RadioButton for UI Automation.
+            var toggle = new IconToggle();
+            AutomationProperties.SetAccessKey(toggle, "Alt+D");
+            var peer = UIElementAutomationPeer.CreatePeerForElement(toggle);
+            Assert.Equal("Alt+D", peer.GetAccessKey());
+            Assert.Equal(nameof(RadioButton), peer.GetClassName());
+            Assert.Equal(AutomationControlType.RadioButton, peer.GetAutomationControlType());
+        });
+
+    /// <summary>The production window's key bindings, bound to <paramref name="model"/> as on the window (a UserControl
+    /// carries them, so no HWND is created).</summary>
+    private static KeyBinding[] WindowKeyBindings(MainViewModel model)
+    {
+        string repo = AppContext.BaseDirectory;
+        while (!System.IO.File.Exists(System.IO.Path.Combine(repo, "Gcam.sln"))) repo = System.IO.Directory.GetParent(repo)!.FullName;
+        string xaml = System.IO.File.ReadAllText(System.IO.Path.Combine(repo, "src/Gcam.Studio/Views/MainWindow.xaml"));
+        string header = xaml[..(xaml.IndexOf('>') + 1)];
+        header = System.Text.RegularExpressions.Regex.Replace(header.Replace("<Window", "<UserControl"),
+            " (x:Class|Title|Width|Height|MinWidth|MinHeight|WindowStartupLocation|WindowStyle|Background|FontFamily)=\"[^\"]+\"", "");
+        string bindings = System.Text.RegularExpressions.Regex.Match(xaml, @"<Window.InputBindings>[\s\S]*?</Window.InputBindings>").Value;
+        Assert.NotEmpty(bindings);
+        var host = (UserControl)System.Windows.Markup.XamlReader.Parse(
+            header + bindings.Replace("Window.InputBindings", "UserControl.InputBindings") + "<Grid /></UserControl>");
+        host.DataContext = model;
+        ReadoutRenderTests.Drain();
+        return host.InputBindings.OfType<KeyBinding>().ToArray();
     }
 
     [Fact]

@@ -132,12 +132,14 @@
                 </StackPanel>
             </Grid>
         </ScrollViewer>
+        <!-- No default button (author, 2026-10-13): Enter in a field must neither apply nor discard the draft. Escape cancels
+        through the modal layer; OK, Cancel and Close are clicked or reached with Tab. -->
         <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right" Margin="{StaticResource Gap.Section}">
-            <Button Content="Cancel" Command="{Binding CancelCommand}" IsDefault="True" Margin="{StaticResource Gap.Inline}"
+            <Button Content="Cancel" Command="{Binding CancelCommand}" Margin="{StaticResource Gap.Inline}"
                     Visibility="{Binding IsReadOnly, Converter={x:Static conv:InverseBoolToVisibilityConverter.Instance}}" AutomationProperties.AutomationId="Modal.Cancel" />
             <Button Content="OK" Command="{Binding ApplyCommand}"
                     Visibility="{Binding IsReadOnly, Converter={x:Static conv:InverseBoolToVisibilityConverter.Instance}}" AutomationProperties.AutomationId="Options.Apply" />
-            <Button Content="Close" Command="{Binding CancelCommand}" IsDefault="{Binding IsReadOnly}"
+            <Button Content="Close" Command="{Binding CancelCommand}"
                     Visibility="{Binding IsReadOnly, Converter={StaticResource BoolToVis}}" AutomationProperties.AutomationId="Modal.Close" />
         </StackPanel>
     </Grid>

@@ -78,6 +78,7 @@ public sealed partial class MainViewModel : ObservableObject
     {
         foreach (var workspace in Workspaces) workspace.IsActive = ReferenceEquals(workspace, value);
         Waveform.Refresh();
+        SelectMeasureToolCommand.NotifyCanExecuteChanged();
     }
 
     [RelayCommand]
@@ -92,6 +93,15 @@ public sealed partial class MainViewModel : ObservableObject
         if (int.TryParse(index, out int i) && i >= 0 && i < Workspaces.Count)
             SelectedWorkspace = Workspaces[i];
     }
+
+    /// <summary>The measurement tools' access keys (Alt+P / D / A / R, window key bindings — the icon toggles have no text
+    /// to carry an underlined key). They act only while the Imaging workspace is shown and no modal layer (Options dialog,
+    /// Reset confirmation) is open, so the tools never change behind a dialog.</summary>
+    [RelayCommand(CanExecute = nameof(CanSelectMeasureTool))]
+    private void SelectMeasureTool(MeasureTool tool) => Imaging.Measurements.ActiveTool = tool;
+
+    private bool CanSelectMeasureTool(MeasureTool tool)
+        => ReferenceEquals(SelectedWorkspace, Imaging) && Modal?.ActiveContent is null && Options is not { IsOpen: true };
 
     // ---------------------------------------------------------------- state and command table
 
@@ -159,8 +169,6 @@ public sealed partial class MainViewModel : ObservableObject
     /// <summary>Half-width of the fully-coded field of view at the focal plane (mm).</summary>
     public double FcfovHalfMm => Imaging.Geometry?.NominalHalfFieldMm ?? 0;
     public OpticsEditorViewModel OpticsEditor { get; } = new();
-    // The detection chain moved to Options; its (unused) section view keeps this flag.
-    [ObservableProperty] private bool _isChainExpanded = true;
     [ObservableProperty] private string? _validationError;
     public string DetectorSummary => $"gap {Detector.ReflectorGapMm * 1000:0.###} µm · gain σ {GainSigmaPercent:0.#}%";
     partial void OnOpticsChanged(OpticsSettings? oldValue, OpticsSettings newValue)

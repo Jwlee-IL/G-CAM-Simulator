@@ -8,7 +8,9 @@ namespace Gcam.Studio.Core.ViewModels;
 public sealed partial class MainViewModel
 {
     public IModalService? Modal => Confirmation as IModalService;
-    [ObservableProperty] private OptionsViewModel? _options;
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(SelectMeasureToolCommand))]
+    private OptionsViewModel? _options;
     /// <summary>The selected left-panel tab (<see cref="SceneTab"/>, <see cref="OpticsTab"/>, <see cref="DetectorTab"/>);
     /// a refused Start selects the tab holding the offending input.</summary>
     [ObservableProperty] private int _selectedLeftTab;

@@ -8,15 +8,27 @@ Spectrum / Waveform display controls) stay in their workspace panels — they ar
 the OS title bar; secondary actions become icon buttons. Studio stays the simulator's engineering viewer (D-34); no
 physics, defaults or acquisition behaviour change.
 
-Status: **stage 1 (TODO-44) done 2026-10-12** — review turn 1 by a substitute Claude implementer (Codex unavailable),
-[review](PLAN.Studio.Declutter.Review.md); "Decisions after review" below. F1 hotfixed separately (0733e6d). Stage 1
-implemented by Codex (one conversation, three turns: implementation; planner findings — measurement icons alike, an
-orphan help mark, icon frames differing by place, Reset silently inert without a confirmation service, a fixed modal
-name, formatting; a desktop-only preset-name slip in one rewritten scenario). Planner verification: Release 0 warnings,
-normal suite 961 pass / 37 skipped, offscreen renders, CI checkers; desktop suite and broken / recovery pairs pass
-([History](VV.Studio.History.md#desktop-verification--declutter-stage-1-2026-10-12)). Records applied: SR-RUN-26
-(reversal), SR-DET-10 / -11, SR-THEME-01, SRS §2 help-mark convention, AGENTS.Rationale, DESIGN.Controls / Layout,
-AGENTS.UiAutomation. Next: stage 2 (TODO-45) in the same Codex conversation.
+Status: **done 2026-10-13** (closed; archived). **Stage 1 (TODO-44), 2026-10-12** — help marks, the Imaging cost card
+removed, SiPM view centred, icon buttons, Reset confirmation: review turn 1 by a substitute Claude implementer (Codex
+unavailable), [review](PLAN.Studio.Declutter.Review.md), "Decisions after review" below; F1 hotfixed separately
+(0733e6d); implementation by Codex in one conversation (three turns: implementation; planner findings — measurement
+icons alike, an orphan help mark, icon frames differing by place, Reset silently inert without a confirmation service, a
+fixed modal name, formatting; a desktop-only preset-name slip in one rewritten scenario). Verification: Release 0
+warnings, normal suite 961 passed / 37 skipped, offscreen renders, CI checkers; desktop suite and broken / recovery pairs
+pass ([History](../VV.Studio.History.md#desktop-verification--declutter-stage-1-2026-10-12)). **Stage 2 (TODO-45) and
+the author's desktop-review redesign, 2026-10-13** — Options dialog, borderless window, left tabs (`b6a90b0`), the
+decisions W1–W5 (`b9eb73b`) and "Decisions after the author's second review" below (`82c68c5` … `0d21524`; the
+normative screen and control rules in DESIGN.Layout / DESIGN.Controls, `91a74ca`). Implementers: Codex for stage 1 and
+most of stage 2 (the same conversation); after the Codex allowance ran out, substitute Claude implementers made the
+remaining review fixes. Planner verification at `0d21524`: Release 0 warnings, normal suite 1,010 passed / 48 skipped,
+opt-in offscreen renders 25 / 25, catalog 193 units, CI checkers
+([History](../VV.Studio.History.md#declutter-stage-2-and-desktop-review-redesign-2026-10-13)). **Pending: the stage-2
+desktop run** — the whole desktop suite plus broken-verdict / recovery runs for the changed assertions, and the
+UI-automation re-measure and re-pilot including the no-title-bar assertion — on the author's go (R15). Records:
+SR-RUN-26 (reversal), SR-DET-10 / -11, SR-THEME-01 and the SRS §2 help-mark convention (stage 1); SR-RUN-12 / -13 /
+-20 / -25 / -29 / -33, SR-OPT-01 … -03, SR-OPT-06 and SR-THEME-02 (revised), SR-ENV-01, SR-CHAIN-01 / -02,
+SR-DET-01 … -03 / -06 / -07, SR-WAVE-09, SR-MEAS-05 / -06, VV.Studio AN-16 (tool access keys), VV.Studio.SDS,
+DESIGN.Layout / Controls / Color / Typography, AGENTS.UiAutomation, AGENTS.Rationale (stage 2).
 
 ## What exists (checked in the repo, 2026-10-12, at `7d9c9e5`)
 
@@ -111,6 +123,28 @@ These rows win over D4, D10 and R7 where they differ.
 | W3 | **Options opens from a cog icon in the top bar** (global chrome), not from the left panel. Non-default options show as a badge on the cog and as a summary in the status bar, which also carries the acquired ambient BSR (replaces D4's left-panel summary line and R7's place). | author |
 | W4 | One control height per top-bar row: Start / Continue / Stop are `Size.Control` high on the same centre line as the text boxes; only the caption buttons keep the bar height. | author |
 | W5 | The shared icon-button style clipped every glyph (28 px width − 2 × 8 px padding − borders = 10 px for a 12 px glyph). Fixed in the shared style, with a render test over every icon button. | author |
+
+## Decisions after the author's second review (2026-10-13)
+
+The author reviewed the stage-2 build again in the real window. These decisions, and one test-infrastructure change,
+came after W1–W5 and win over D5 and R9 where they differ; the general rules they rest on are written as the normative
+"Screen rules" and "Control rules" of DESIGN.Layout and DESIGN.Controls (`91a74ca`).
+
+| # | Decision | Commit |
+|---|---|---|
+| X1 | **Optics fields always shown:** a preset writes its values into the fields and disables them; Custom (chosen only through the selector — R9's explicit Custom mode stays) enables them from the current values; the geometry summary line is removed. **Reverses D5 and R9's "fields only for Custom"**: fields that appear and vanish with a mode hide what the preset means. | `82c68c5` |
+| X2 | **Every panel in headed sections** (heading, divider, aligned label / value rows or a table): the left Scene and Detector tabs (Readout · Calibration lines keV / Record / Local · Preparation with the keV / Time / Windowed / Scored table · Energy window, low / high on one row), the Detector workspace panel, the Imaging right panel and the Waveform panel (Scope window · Selected event · Rate study · Acquired chain · Events in window). | `82c68c5`, `c704331`, `9462d18`, `5cd097d` |
+| X3 | **Measurement tools as icon toggles** in the Measurements header (not a segmented picker that reads as tabs); a per-row delete (✕) replaces the header minus; the trash can clears all. | `c704331` |
+| X4 | **Top-bar order:** inputs · Start / Continue / Stop · Reset · theme · Options · caption buttons. | `9462d18` |
+| X5 | **Detector-face captions to the right panel:** identity line, gain legend rows and acquired counts move out of the centre, which keeps the face and its colour bar. | `9462d18` |
+| X6 | **Visible Start refusals:** the reason in the status bar ("Start refused: …" / "Options: …"), the left tab holding the input selected, a warning state on the cog for an Options input; the dialog opens only on the user's click. | `9462d18` |
+| X7 | **Readout view tabs and empty state:** Detector Face / SiPM / Anger / Calibration / Diagnostics and Waveform Energy sum / Four outputs (A–D) as view tabs in every readout mode; under DirectCrystal a readout view shows "Available with the experimental physical readout" and "Choose readout…" (selects the left Detector tab, focuses the readout selector). Calibration facts, measured conversions and confirmed offers move to the right panel as rows. | `5cd097d` |
+| X8 | **Prepare in the accent (primary) style**, as an action that starts a long computation the user waits for. | `5cd097d` |
+| X9 | **Energy-window presets** ±10 / ±15 / ±20 / ±25 % around the window line; only ±15 % (the EV-36 benchmark) carries the benchmark label, and the help states that the other widths have no measured cost. | `5cd097d` |
+| X10 | **Scrollbar gutter** in every scrolling panel: 12 px reserved (4 px gap + 8 px bar) whether or not the bar shows; list headers reserve the same width. | `d5a4d85` |
+| X11 | **One-line status bar** of fixed height: run status or refusal at the left, the Options summary at the right, both trimmed with the full text as tooltip; the duplicated seed message removed. | `d5a4d85` |
+| X12 | **Readout preparation progress in the status bar** (one progress element for preparation or acquisition); the outcome stays there until the next acquisition or Reset; the Preparation section keeps Prepare / cancel, the ready table and a short state line. | `7e062a2` |
+| X13 | **Main-window render test split** (test infrastructure): the single offscreen main-window test (55 s against its 60 s deadlock deadline) became ten tests (five screen groups × two themes) on one shared render host, every capture and assertion kept; deadline unchanged. | `0d21524` |
 
 ## Steps
 

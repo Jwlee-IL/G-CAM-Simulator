@@ -11,6 +11,18 @@ set the plan's status to done and move the plan and its review / reports into th
 
 ## Closed tasks
 
+- **TODO-44 / TODO-45 Studio declutter: help marks, Options dialog, quieter window** (2026-10-13; stage 1 2026-10-12):
+  three tiers — the main screen keeps state, refusals and key numbers, help marks carry explanations, an in-window
+  Options dialog (Acquisition / Detector / Environment, a draft applied on OK, Close-only while data exist, one Core
+  defaults record, non-default badge on the top-bar cog and summary in the status bar) holds inputs changed rarely;
+  Imaging cost card removed, SiPM view centred, icon buttons, Reset confirmation; no OS title bar (themed caption
+  buttons); left panel as Scene / Optics / Detector tabs with the optics fields always shown (reversing the plan's
+  D5); sectioned panels with label / value rows, measurement tool toggles with per-row delete, readout view tabs with
+  an empty state, accent Prepare, energy-window presets, Start refusals in a one-line status bar that also carries
+  preparation progress (SR-RUN-12 / -13 / -26, SR-OPT-02 / -06, SR-THEME-02, SR-DET-01 … -03 / -06 / -07 / -10 / -11;
+  VV.Studio AN-16). Normal suite 1,010 passed / 48 skipped, renders 25 / 25; stage-1 desktop passed, **stage-2 desktop run
+  pending** the author's go. Review by a substitute Claude implementer, implementation by Codex, the last review fixes
+  by substitute Claude implementers — [PLAN.Studio.Declutter](PLAN.Studio.Declutter.md).
 - **TODO-41 physical readout on every Studio preset** (2026-10-12): per-line experimental calibration offers apart from
   measured cost — 661.7 / 1332.5 keV offered on Baseline / Sharp / Wide / High (32 / 32 seeds each; Wide 661.7 at 8 k and
   High 661.7 at 64 k histories per crystal after a declared repair), 122.06 keV refused; a generated, hash-pinned offer

@@ -59,17 +59,22 @@ public sealed partial class PlotViewRenderTests
                 Dispatcher.CurrentDispatcher.Invoke(() => { }, DispatcherPriority.ContextIdle); root.UpdateLayout();
                 var accent = (Brush)Application.Current.FindResource("Brush.Accent");
                 var frame = (Brush)Application.Current.FindResource("Brush.Line.Control");
-                foreach (var (id, tool) in new[] { ("ToolPan", MeasureTool.Pan), ("ToolDistance", MeasureTool.Distance),
-                    ("ToolAngle", MeasureTool.Angle), ("ToolRoi", MeasureTool.Roi) })
+                foreach (var (id, tool, key) in new[] { ("ToolPan", MeasureTool.Pan, "Alt+P"), ("ToolDistance", MeasureTool.Distance, "Alt+D"),
+                    ("ToolAngle", MeasureTool.Angle, "Alt+A"), ("ToolRoi", MeasureTool.Roi, "Alt+R") })
                 {
                     var toggle = Assert.Single(Descendants(root).OfType<RadioButton>(), r => AutomationProperties.GetAutomationId(r) == id);
+                    // The window's access key (SR-A11Y-03) reaches assistive technology through the toggle's peer (IconToggle:
+                    // the stock peer drops AutomationProperties.AccessKey); the class name stays RadioButton.
+                    var peer = System.Windows.Automation.Peers.UIElementAutomationPeer.CreatePeerForElement(toggle);
+                    Assert.Equal(key, peer.GetAccessKey());
+                    Assert.Equal(nameof(RadioButton), peer.GetClassName());
                     bool active = measurements.ActiveTool == tool;
                     Assert.Equal(active, toggle.IsChecked);
                     var chrome = (Border)toggle.Template.FindName("Chrome", toggle);
                     Assert.Same(active ? accent : frame, chrome.BorderBrush);
                     Assert.Same(active ? accent : Application.Current.FindResource("Brush.Text.Primary"), toggle.Foreground);
                     Assert.Equal((double)Application.Current.FindResource("Size.Control"), toggle.ActualHeight);
-                    Assert.NotNull(toggle.ToolTip);
+                    Assert.EndsWith($"({key})", Assert.IsType<string>(toggle.ToolTip));
                 }
                 Assert.DoesNotContain(Descendants(root).OfType<Button>(), b => AutomationProperties.GetAutomationId(b) == "DeleteMeasurement");
                 var list = Assert.Single(Descendants(root).OfType<ListBox>(), l => AutomationProperties.GetAutomationId(l) == "MeasurementList");
