@@ -80,7 +80,7 @@ therefore use AutomationIds and require exactly one match.
 | Contract | Implementation | Find | Act | Read back the input | Judge the product's handler |
 |---|---|---|---|---|---|
 | Button | `Button` (Add / Remove source, Run, Cancel, Clear, Delete, theme) | AutomationId | `InvokePattern.Invoke` | — | the effect, e.g. source rows 1 → 2 |
-| Segment | `RadioButton.Segment` (tool picker) | AutomationId | `SelectionItemPattern.Select` | `IsSelected` | tool hint text changes |
+| Tool toggle | `RadioButton.Icon` (Pan / Distance / Angle / ROI: `ToolPan`, `ToolDistance`, `ToolAngle`, `ToolRoi`; a segmented `RadioButton.Segment` until 2026-10-13) | AutomationId | `SelectionItemPattern.Select` | `IsSelected` | tool hint text changes |
 | Text field | `TextBox` (X, Y, distance, activity, photons) | AutomationId | `ValuePattern.SetValue` | `ValuePattern.Value` | **only after focus leaves** — the binding commits on LostFocus; the source row label then updates |
 | Combo | `ComboBox` (isotope) | AutomationId | `ExpandCollapse.Expand` → item `Select` → `Collapse` | selection | source row label |
 | List row | `ListBoxItem` (sources, measurements) | list AutomationId → children | `SelectionItemPattern.Select` | `IsSelected` | row name is the item's description |
@@ -88,7 +88,12 @@ therefore use AutomationIds and require exactly one match.
 | Overlay | `MeasurementAdorner` | **not in the tree**; position from the heatmap's rectangle | real pointer input (`SetCursorPos` + `SendInput`) | cursor position | a new row in the results table |
 | Async run | Run → `StatusText` | AutomationId | `Invoke` | — | `ItemStatus` Idle → Running → Succeeded (≈ 0.7 s at 500 k photons) |
 | Cancel | Cancel button, present only while running | AutomationId while Running | `Invoke` | — | `ItemStatus` Cancelled within 0.1 s; peak chip unchanged; Cancel leaves the tree |
-| Modal layer | `ModalHost` in-window layer (Reset confirmation, 2026-10-12; Options in TODO-45) | `Modal.Layer` in the same window's tree (no second window) | its buttons by AutomationId (`Modal.Cancel`, `Reset.Discard`) via `Invoke`; harness `ConfirmReset(bool)` | layer present / gone | Cancel keeps the snapshot and the lock; Discard returns to "Ready". The harness closes an open layer before graceful shutdown |
+| Modal layer | `ModalHost` in-window layer (Reset confirmation, 2026-10-12; Options dialog, 2026-10-13) | `Modal.Layer` in the same window's tree (no second window), Name = the hosted content's title | its buttons by AutomationId (`Modal.Cancel`, `Reset.Discard`, `Options.Apply`, `Modal.Close`) via `Invoke`; harness `ConfirmReset(bool)` | layer present / gone | Cancel keeps the snapshot and the lock; Discard returns to "Ready". The harness closes an open layer before graceful shutdown (`CloseModalLayer`), and `Normalise` refuses to run with a layer open |
+| Options dialog | `OptionsView` in the modal layer, opened by the top-bar cog `OpenOptions` (its HelpText is the Options summary, "Options: defaults" otherwise); tabs `Options.AcquisitionTab` / `DetectorTab` / `EnvironmentTab`; fields keep their former ids (`AcquisitionSeed`, `Chain.*`, `Detector.Gap` / `GainSigma` / `GainSeed`, `Acquisition.AmbientDose` / `AmbientBound` / `Background`); `Options.LockCaption` while locked | AutomationId inside the layer | harness `OpenOptions(tab)` (Invoke the cog, wait for the tab, check the layer's Name, Select the tab), `SetOption(id, value)` (open the field's tab, type, commit by moving focus to `Options.Apply`, `ApplyOptions`), `ApplyOptions()` (Invoke `Options.Apply`, wait until the layer closes), `CancelOptions()` (`Modal.Close` when locked, else `Modal.Cancel`), `OptionEnabled(id)` / `OptionValue(id)` (open, read, cancel) | the field's `ValuePattern` / `IsEnabled` after reopening; `Options.Summary` in the status bar | an applied value appears in the summary and the cog's HelpText; a cancelled draft changes nothing; with data the fields are disabled and only Close shows |
+| Left tab | `TabItem` `Left.SceneTab` / `Left.OpticsTab` / `Left.DetectorTab` | AutomationId | `SelectionItemPattern.Select` (harness `SelectLeftTab(name)`); `ById` first selects the tab owning `Optics.*`, `Readout.*`, `Detector.Section`, `Source*`, `AddSource` / `RemoveSource` (also for `Readout.*` ids of the Detector workspace — a harmless extra selection) | `IsSelected` | the tab's controls become reachable (WPF builds only the selected tab's content) |
+| Caption | `CaptionBar` `Window.TopBar` (Pane) and the caption buttons `Window.Minimize`, `Window.Maximize` (Name "Restore" while maximised), `Window.Close` | AutomationId | `InvokePattern.Invoke` | `WindowPattern.WindowVisualState`; bounds | maximise fills the monitor work area; restore returns; no element of control type `TitleBar` exists in the window |
+| Status bar | `Window.StatusBar` holding `StatusText` (run state as `ItemStatus`, a refusal or the preparation outcome as text), `Options.Summary`, `AcquisitionLiveTimeError`, `AcquisitionSeedError`, `RunProgress` / `Readout.Progress` (only while their run is active) | AutomationId | — | Name (a TextBlock's name is its text) | one line in every state |
+| View tabs | Detector `Detector.Views` (`Detector.FaceTab`, `Readout.SipmTab`, `Readout.AngerTab`, `Readout.CalibrationTab`, `Readout.DiagnosticsTab`); Waveform `Waveform.Views` (`Waveform.EnergySumTab`, `Waveform.FourOutputsTab`); under DirectCrystal a readout view shows `Readout.EmptyState` and the button `Readout.ChooseReadout` | AutomationId | `SelectionItemPattern.Select`; Choose readout by `Invoke` | `IsSelected` | the view's surface appears; Choose readout selects `Left.DetectorTab` and focuses `Readout.Mode` |
 
 **Product defects found by this measurement (fixed in the same change).**
 
@@ -98,6 +103,15 @@ therefore use AutomationIds and require exactly one match.
 
 **Pointer coordinates.** The test process makes itself per-monitor DPI aware, so UIA rectangles, `SetCursorPos` and
 the screen are all physical pixels. The window is normalised to 1440×900 before measuring.
+
+**Borderless window (2026-10-13).** The window has no OS title bar: the top bar is the caption and starts at the
+window's top edge, so every position comes from the target element's UIA bounds, never from the window rectangle plus
+a title-bar offset. `ChromeScenarioTests.BorderlessCaption_HasNoNativeTitleBar_AndStartsAtWindowTop` asserts that no
+`TitleBar` element exists, that `Window.TopBar` and `Window.Close` sit within 1 px of the window's top and right
+edges, and that Maximize fills the monitor work area; the pilot checks that the caption buttons lie inside the owned
+frame and above the flood map. The stage-2 measurement and pilot are **pending**: the window geometry changed, so
+stage 2 (re-measure) and stage 3 (re-pilot, with a broken verdict and a recovery run) are redone on the next desktop
+run, on the author's go.
 
 ## 3. Pilot
 
@@ -191,7 +205,8 @@ image was deleted and the capture fixed. Open a failure bundle's image before sh
 - CI (`.github/workflows/ci.yml`) runs the oracle tests but not the desktop tests — it has no interactive session. Say so in its
   summary rather than reporting the UI suite green.
 - Re-measure (stage 2) and re-pilot (stage 3) after changing AutomationIds, the window layout, the adorner's input
-  handling, or the test machine's display scaling.
+  handling, or the test machine's display scaling. Due now: the borderless window, the Options dialog and the left tabs
+  (2026-10-13) changed the layout and moved controls; the desktop suite has not been run since.
 
 ## Remaining coverage
 

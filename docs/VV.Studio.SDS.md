@@ -53,7 +53,7 @@ one class, or a small group of types that only make sense together. Unit IDs are
 
 | Unit | Item | Type(s) | File(s) | Responsibility |
 |---|---|---|---|---|
-| SU-01 | SI-1 | `MainViewModel`, `RunState` | `Core/ViewModels/MainViewModel.cs` | scene list and selection, live time / speed / seed, snapshots, workspace selection, Start / Continue / Stop / Reset / failure state machine with its command table and input locks, progress, theme toggle, the ambient field input (dose rate, the dose text with its pattern validation and warning, bound, preset and environment labels) |
+| SU-01 | SI-1 | `MainViewModel`, `RunState`, `OptionsViewModel`, `OptionsTab`, `StudioOptionDefaults`, `StudioOptionValidation` | `Core/ViewModels/MainViewModel*.cs`, `Core/ViewModels/Options*.cs`, `Core/Services/StudioOption*.cs` | scene list and selection, live time / speed / seed, snapshots, workspace selection, Start / Continue / Stop / Reset / failure state machine with its command table and input locks, visible Start refusals (status text, left-tab selection, Options warning), progress, theme toggle, the ambient field input (dose rate, the dose text with its pattern validation and warning, bound, preset and environment labels); the session-only Options draft, the one defaults record and the non-default summary |
 | SU-02 | SI-1 | `SourceItemViewModel` | `Core/ViewModels/SourceItemViewModel.cs` | one editable source; input clamping; list and marker labels; `IPlaneMarker`; → `SceneSource` |
 | SU-03 | SI-1 | `MeasurementsViewModel`, `MeasureTool` | `Core/ViewModels/MeasurementsViewModel.cs`, `MeasureTool.cs` | measurement session: active tool and hint, numbering, add / delete / clear, selection, refresh on a new result |
 | SU-04 | SI-1 | `MeasurementViewModel`, `MeasurementKind`, `ImagePane`, `MeasurementDraft` | `Core/ViewModels/Measurement*.cs`, `ImagePane.cs` | one measurement: point-count check, value and detail text, description for screen readers |
@@ -64,10 +64,10 @@ one class, or a small group of types that only make sense together. Unit IDs are
 | SU-09 | SI-4 | `HeatmapView` (+ `HeatmapViewAutomationPeer`) | `Studio/Controls/HeatmapView.cs` | draw a grid with the colormap, zoom / pan input, hover readout, automation peer, exposes data range and mm mapping |
 | SU-10 | SI-4 | `MeasurementAdorner`, `MeasurementOverlay` | `Studio/Controls/Measurement*.cs` | draw measurements and (display-only) source markers over a heatmap; turn gestures into `MeasurementDraft`s |
 | SU-11 | SI-4 | `ColorBar`, `Colormap` | `Studio/Controls/ColorBar.cs`, `Studio/Rendering/Colormap.cs` | viridis lookup table; colour scale with ticks |
-| SU-12 | SI-4 | `ThemeService` | `Studio/Services/ThemeService.cs` | swap the token dictionary in place; DWM title bar |
+| SU-12 | SI-4 | `ThemeService` | `Studio/Services/ThemeService.cs` | swap the token dictionary in place; DWM attribute for the remaining native frame |
 | SU-13 | SI-4 | `NullToCollapsedConverter`, `InverseBoolToVisibilityConverter`, `EnumMatchConverter` | `Studio/Converters/*.cs` | value → visibility / radio-button mapping |
-| SU-14 | SI-4 | `MainWindow`, theme dictionaries, `ImageStackPanel`, `ImageAreaPanel` | `Studio/Views/MainWindow.xaml(.cs)`, `Studio/Themes/*.xaml`, `Studio/Controls/Image*Panel.cs` | screen layout and bindings (a square image with its legend at the drawn width; the image pair above the measurements, which take the remaining height); tokens, metrics, typography, control styles ([DESIGN.Layout](DESIGN.Layout.md), [DESIGN.Color](DESIGN.Color.md), [DESIGN.Typography](DESIGN.Typography.md), [DESIGN.Controls](DESIGN.Controls.md)) |
-| SU-15 | SI-4 | `App` | `Studio/App.xaml(.cs)` | DI composition root, startup window placement, title-bar hook |
+| SU-14 | SI-4 | `MainWindow`, `OptionsView`, `EmptyReadoutState`, theme dictionaries, `ImageStackPanel`, `ImageAreaPanel`, `WindowFrame`, `CaptionBar`, `CaptionButtons`, `SettingsGroup`, `FocusRequest` | `Studio/Views/MainWindow.xaml(.cs)`, `Studio/Views/OptionsView.xaml(.cs)`, `Studio/Views/EmptyReadoutState.xaml(.cs)`, `Studio/Themes/*.xaml`, `Studio/Controls/Image*Panel.cs`, `Studio/Controls/{WindowFrame,CaptionBar,CaptionButtons,SettingsGroup,FocusRequest}.cs` | screen layout and bindings (borderless window with a themed caption, left tabs, Options dialog in the modal layer, one-line status bar) (a square image with its legend at the drawn width; the image pair above the measurements, which take the remaining height); tokens, metrics, typography, control styles ([DESIGN.Layout](DESIGN.Layout.md), [DESIGN.Color](DESIGN.Color.md), [DESIGN.Typography](DESIGN.Typography.md), [DESIGN.Controls](DESIGN.Controls.md)) |
+| SU-15 | SI-4 | `App` | `Studio/App.xaml(.cs)` | DI composition root, startup window placement, native-frame (DWM) hook |
 | SU-16 | SI-1 | `WorkspaceViewModel`, `ImagingWorkspaceViewModel` | `Core/ViewModels/*WorkspaceViewModel.cs` | title, automation key, active state; imaging measurements and peak over the shared result TODO-39: `CountSummary`, `FloodUnit`, `FloodCaption`, `FloodHelp`, `StripNote` from the published view; ROI units refreshed with it. |
 | SU-17 | SI-2 | `PlotSeries`, `PlotBand`, `PlotMarker`, `PlotViewport`, `NiceTicks`, `MinMaxPyramid`, `PlotGeometry`, `PlotAutoScale`, `PlotBinReadout`, `PlotBandLayout`, `PlotViewRange` | `Core/Plotting/*.cs` | finite / increasing inputs, sample limit, linear / log mapping, X navigation, ticks, exact range extrema |
 | SU-18 | SI-4 | `PlotView` (+ automation peer) | `Studio/Controls/PlotView.cs` | cached preparation, frozen geometry, themed axes / series / bands / markers, readout, pointer / key input, measured CPU redraw |
@@ -144,7 +144,8 @@ leave SI-4.
 | Interface | Used for | Failure handling |
 |---|---|---|
 | WPF resource system | theme tokens, styles | missing token dictionary → exception at switch (see above) |
-| `dwmapi.DwmSetWindowAttribute` (attr. 20), `user32.SetWindowPos` | title bar colour and repaint | return values ignored: best effort (SR-ENV-01) |
+| `dwmapi.DwmSetWindowAttribute` (attr. 20), `user32.SetWindowPos` | colour and repaint of the remaining native frame (the caption is themed WPF content since 2026-10-13) | return values ignored: best effort (SR-ENV-01) |
+| `WindowChrome`; `WM_GETMINMAXINFO` / `WM_NCHITTEST` hook and `GetMonitorInfo` in `WindowFrame` | borderless caption, resize strip, maximised size = monitor work area (SR-THEME-02) | — |
 | UI Automation (`AutomationProperties`, `HeatmapViewAutomationPeer`) | screen readers, scripted checks | — |
 | `SystemParameters.WorkArea` | maximise on small screens (SR-ENV-02) | — |
 
@@ -248,10 +249,12 @@ Only the rules a reviewer needs to check a requirement; the rest is in the code 
 | Input locks | physical setters revert any change while `HasData` or `IsRunning`; a preset below the acquired live time is reverted with `LiveTimeError`; speed reverts only while running. |
 | Seed | blank `SeedText` draws `Random.Shared.Next(1, int.MaxValue)` per new acquisition; a nonnegative integer is used as given; `AcquisitionSeed` holds the acquisition's seed until Reset. |
 | Inputs | default 60 s and ×10; invalid non-positive / non-finite UI values return to defaults; service rejects them. |
-| Ambient dose | default 0.10 µSv/h, front-only bound; `AmbientDoseText` must match `AmbientDosePatternText` (digits with at most one decimal point); any other text is refused: the dose rate keeps its previous value, `AmbientDoseError` shows under the field and Start does nothing until it is corrected; a non-finite or negative value set in code is reverted to the previous value. 0 calls the ideal `Start`, any other value `StartAmbient` with `AmbientPreset.Field(dose, bound)`. |
+| Ambient dose | default 0.10 µSv/h, front-only bound; `AmbientDoseText` must match `AmbientDosePatternText` (digits with at most one decimal point); any other text is refused: the dose rate keeps its previous value, `AmbientDoseError` shows under the field (in the Options dialog, whose OK refuses it) and Start is refused with "Options: <message>" until it is corrected; a non-finite or negative value set in code is reverted to the previous value. 0 calls the ideal `Start`, any other value `StartAmbient` with `AmbientPreset.Field(dose, bound)`. |
 | Add source | new source at `X = 15 mm · count`, `Y = 0`, selected. |
 | Remove source | select the item now at the removed index, or the new last item; `null` when empty. |
-| Status text | `"t = {live:F1} s of {preset:G} s · {counts:N0} counts · {counts / live:F0} cps · seed {seed}"` (observed rate); MC-limited appends achieved speed; terminal text prefixes Stopped / Completed; Reset shows "Ready". |
+| Status text | `"t = {live:F1} s of {preset:G} s · {counts:N0} counts · {counts / live:F0} cps · seed {seed}"` (observed rate); MC-limited appends achieved speed; terminal text prefixes Stopped / Completed; Reset shows "Ready"; a readout preparation writes "Preparing …" and then its outcome. |
+| Start refusal | `BeginAcquisition` checks gap, optics, scene, focus, seed, ambient dose and the physical-readout conditions in that order; the first failure sets `StartRefusal` ("Start refused: …" or "Options: …") as the status, selects `SelectedLeftTab` (Optics / Scene / Detector) or opens the Imaging focal section, and for an Options input sets the cog warning (`HasOptionsWarning`) until `OptionsProblem` clears; a started acquisition or Reset clears the refusal. |
+| Options | `OpenOptionsCommand` shows a new `OptionsViewModel` draft in the modal layer; `Apply` validates every field with `StudioOptionValidation` and writes the owner only when all pass (first invalid tab selected otherwise); `Cancel` / Escape discards; read-only (Close only) while `CanEditInputs` is false; `OptionsSummary` lists the values differing from `StudioOptionDefaults.Current`, with the acquired ambient BSR once data exist. |
 
 ### SU-19 `AcquisitionSession`
 
@@ -423,7 +426,7 @@ from the builder: non-cyclic, recon half-extent `0.95 · rank · pitch / (D/F) /
 ### SU-12 `ThemeService`
 
 Finds the merged dictionary whose source contains `Themes/Tokens.` and replaces it **at the same index** (adding a
-second dictionary would lose to the old one), then updates the title bar of every open window.
+second dictionary would lose to the old one), then asks DWM to match each open window's remaining native frame (the caption is themed content).
 
 ### SU-13, SU-14, SU-15
 
@@ -469,8 +472,12 @@ OpticsSettings record. A supported-prime selector removes ambiguity about snappi
 fields once and preserves focus. Studio policy rejects finite-range, gap/pitch, source/front-face and projected
 allocation violations; the engine scene builder remains unchanged. Start freezes scene, detector and optics.
 The acquisition snapshot carries effective optics; the Imaging workspace also retains its Start context, never
-current pending physical inputs. Validation before transport expands both physical sections and leaves an error
-outside the collapsed content.
+current pending physical inputs. Validation before transport keeps the error visible outside the left panel's tab
+content (until 2026-10-13 it expanded both physical sections).
+
+Since 2026-10-13 the fields are always shown: a preset writes its values and disables them, Custom (chosen only through
+the selector) enables them from the current values, and an edit never re-selects a preset; a validation failure at
+Start selects the left tab holding the input and states the reason in the status bar instead of expanding sections.
 
 ImagingSettings.FocalDistanceMm is independent of physical OpticsSettings. ImagingProjection.AtFocus clones the
 acquired config and changes only decoder plane and search grid. Sources retain their real z; physical mask
@@ -488,7 +495,8 @@ D; Start additionally validates current pending physical geometry. Projection do
 SU-03 removes reconstruction-only measurements and increments ReconstructionRevision. SU-10 cancels only a
 reconstruction draft on this notification; flood measurements/drafts remain. The panel explains the clearing.
 The heatmap viewport stays in image coordinates while its mm mapping follows the projected grid. SU-14 uses
-themed Expander.Section headers, collapsed summaries, and an independently scrollable Imaging panel.
+the left panel's tabs (until 2026-10-13 themed Expander.Section headers with collapsed summaries), Expander.Section
+headers in the independently scrollable Imaging panel.
 
 ## 7. Requirement allocation
 

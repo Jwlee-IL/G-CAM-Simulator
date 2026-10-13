@@ -28,8 +28,8 @@ Views pick a role; they never set `FontSize`, `FontWeight` or `Foreground` on a 
 | Role | Size · weight · colour | Use |
 |---|---|---|
 | `Text.AppTitle` | Title · SemiBold · Primary | app name in the top bar |
-| `Text.PanelTitle` | Body · SemiBold · Primary | top of a panel ("Sources", "Detector flood map") |
-| `Text.SectionTitle` | Label · SemiBold · Secondary | a group inside a panel ("Selected source", "Measurements") |
+| `Text.PanelTitle` | Body · SemiBold · Primary | top of a panel or a section heading in the shared panel language ("Sources", "Selected source", "Measurements", "Detector flood map", "Energy window") |
+| `Text.SectionTitle` | Label · SemiBold · Secondary | a small group title inside a panel (the focus curve's "Focus curve · sharpest plane") |
 | `Text.Strong` | Body · SemiBold · Primary | emphasised body text (the isotope in a source row) |
 | `Text.Body` | Body · Regular · Primary | default text |
 | `Text.Label` | Label · Regular · Secondary | field labels, secondary text, status sentence |
@@ -43,6 +43,11 @@ Views pick a role; they never set `FontSize`, `FontWeight` or `Foreground` on a 
 All roles derive from `Text.Base` (UI font, Body size, Primary colour, vertical centre, ellipsis trimming).
 Colours inside roles are `DynamicResource`, so text follows the theme. Headings carry no margin — the
 `PanelHeader` row owns the gap ([DESIGN.Layout](DESIGN.Layout.md#screen-grid-mainwindow)).
+
+State-driven emphasis is a style trigger on a style based on the role, never a literal on the element: the status
+text (`Text.Label`) takes `Brush.Status.Warning` after a refused Start or a failed readout preparation, and the status
+bar's Options summary (`Text.Caption`) turns semibold while an option differs from its default. Both status-bar texts
+stay on one line with an ellipsis and carry their full text as tooltip.
 
 Text drawn by controls (heatmap labels, overlay chips, colour-bar ticks) uses the inherited
 `TextElement.FontFamily`, which the view sets to `Font.Mono` on the heatmaps — no control hard-codes a typeface,

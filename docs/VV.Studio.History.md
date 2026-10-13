@@ -297,3 +297,23 @@ layer). Planner's runs in the worktree `C:\gw\w44`, Release build, on the author
   discard), `CustomModules_…` and, after the fix, `WideLocalisationHelp_…` fail at their corrupted assertion; recovery
   passes.
 - The polish survey refreshed `docs/assets/studio-polish-survey/` with the new top bar, icon buttons and help marks.
+
+## Declutter stage 2 and desktop-review redesign, 2026-10-13
+
+TODO-45 and the author's desktop review of the stage-2 build (Options dialog, borderless window with a themed caption,
+left panel as Scene / Optics / Detector tabs with the optics fields always shown, sectioned panels with label / value
+rows, measurement tool toggles and per-row delete, readout view tabs with an empty state, accent Prepare, energy-window
+presets, visible Start refusals, scrollbar gutter, one-line status bar carrying acquisition or preparation progress).
+Planner's verification in the worktree `C:\gw\w44` on `0d21524`, Release build:
+- Build: 0 warnings, 0 errors.
+- Normal suite: **1,010 passed / 48 skipped** (the opt-in desktop, render and long-evidence cases skip).
+- Opt-in offscreen renders (`GCAM_RENDER_SNAPSHOTS=1`): 25 / 25 pass — the main-window render test now runs as ten tests
+  (five screen groups × two themes) on one shared render host, keeping every capture and assertion; the captures cover
+  both themes at 1280×800 and 1440×900.
+- Test catalog: 193 units, `check-catalog --discover` passes; the CI checkers (calibration record, readout offer record,
+  test-record self-test, archived replay) pass.
+- **Not run: the desktop.** The desktop was not available after stage 2. Pending the author's go: the whole desktop
+  suite (the long cold High-res scenario excluded), broken-verdict / recovery runs for every scenario whose assertions
+  changed (Options helpers, left-tab selection, `Detector.Identity`, readout view tabs), and the UI-automation re-measure
+  and re-pilot for the borderless window, including `ChromeScenarioTests.BorderlessCaption_HasNoNativeTitleBar_AndStartsAtWindowTop`
+  (no OS title bar) and the pilot's caption-button bounds. Until then the desktop statuses in VV.Studio predate stage 2.

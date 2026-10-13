@@ -17,8 +17,8 @@ are read-only and excluded from drag hit testing. The coordinate list provides a
 `Size.Imaging.FoundMarker` is a 7-DIP diamond radius (matching the truth ring's scale);
 `Space.Imaging.FoundLabel` is a 4-DIP gap to its label. Both live in Metrics.xaml and are theme-independent.
 The Imaging options panel reuses the existing label, caption, mono-caption, control and gap resources; it adds
-no new colour token. It shows All / isotope, shared window N, strip, R, worker costs and found coordinates above
-the measurement tools.
+no new colour token. It shows All / isotope, shared window N, strip, R, worker costs and found coordinates; the
+measurement tools are in the Measurements header under the images.
 
 Truth, found, measurement and draft chips are measured before drawing and packed together by the UI-free
 Core `OverlayLabelLayout`. Preferred offsets remain when clear; collisions choose the nearest candidate
@@ -31,28 +31,41 @@ and measurement lists remain the text equivalent.
 
 Spectrum's emission table measures numeric headers and rows together with local shared Auto columns;
 `Gap.Inline` supplies an explicit 8-DIP gap before the next cell. Names take the flexible remainder and numeric
-values retain right alignment and common row/header padding. Detector's right geometry card top-aligns to
-its natural text height; its ScrollViewer still handles a constrained height. It adds no new statistics.
+values retain right alignment and common row/header padding. Detector's right panel top-aligns to its natural
+height; its ScrollViewer still handles a constrained height. It adds no new statistics.
+
+Panels are built from headed sections (`PanelHeader` + `Text.PanelTitle`, a `Divider` between sections) holding
+label / value rows: `FieldRow` / `FieldLabel` for an input with its label, `FactRow` / `FactValue` and the item template
+`Template.FactRow` for read-only facts (label left in a shared column, mono value right-aligned and wrapping), or a
+table whose header row reserves `Gap.ScrollGutter` so its columns stay over the scrolling rows. The left tabs, the
+workspace right panels and the Options dialog use the same language.
 
 | Style | Key | States / notes |
 |---|---|---|
 | Focus ring | `FocusVisual` | 2 px `Brush.Focus`, 3 px outside the control, on every focusable control |
-| Button | implicit | raised fill · hover · pressed · disabled; Cancel / Discard in the Reset confirmation |
-| Icon button | `Button.Icon` (`Button.Theme` for the sun / moon toggle) | square `Size.Control`, a `Path` at `Size.Icon` in the button's foreground, the implicit button's raised frame in every place and theme (subdued when disabled, border highlight on focus); a tooltip and `AutomationProperties.Name` are required. Used for secondary actions: theme, Reset, add / remove source, delete / clear measurements, cancel prepare / sweep, Waveform latest / next. Start / Continue / Stop, Prepare and Sweep focus keep icon + text |
+| Button | implicit | raised fill · hover · pressed · disabled; Cancel / Discard in the Reset confirmation, OK / Cancel / Close in the Options dialog, "Choose readout…" in the empty readout state |
+| Icon button | `Button.Icon` (`Button.Theme` for the sun / moon toggle) | square `Size.Control`, no content padding (`Pad.None`), a `Path` at `Size.Icon` in the button's foreground, the implicit button's raised frame in every place and theme (subdued when disabled, border highlight on focus); a tooltip and `AutomationProperties.Name` are required. Used for secondary actions: theme, Reset, the Options cog (with the non-default badge, warning colour after an Options refusal), add / remove source, clear all measurements, cancel prepare / sweep, Waveform latest / next. Start / Continue / Stop, Prepare and Sweep focus keep icon + text |
+| Row action | `Button.Icon.Row` | `Button.Icon` without the resting frame at `Size.Control.Row` (20), so it fits a list row; hover, press and the focus border still show. The measurement row's delete (✕, `Icon.Cancel`), visible on the selected row and under the pointer, its column always reserved |
+| Icon toggle | `RadioButton.Icon` | one-of-several tool choice drawn like `Button.Icon`; checked = accent border + `Accent.Subtle` fill + accent glyph (border and fill change, not colour alone); keyboard focus = focus border plus `FocusVisual`. The Measurements tools Pan / Distance / Angle / ROI (`Gap.Tool` apart). No access keys (see VV.Studio AN-16) |
+| Caption button | `Button.Caption`, `Button.Caption.Close` | `Size.CaptionButton` wide, the full caption height, transparent at rest, hover `Bg.Hover`, pressed `Line`; Close hovers `Brush.Caption.Close.Hover` with a white glyph; a 1 px focus cue inset by `Gap.Caption.Focus`; built by `CaptionButtons` |
 | Primary button | `Button.Primary` | accent fill, `OnAccent` text — the acquisition action (Start / Continue, or Stop while acquiring) and Prepare, which starts a long computation (author 2026-10-13) |
 | Ghost button | `Button.Ghost` | borderless, for bars and panel headers |
 | TextBox | implicit | mono text; unit suffix via `Tag` (`Tag="mm"`); accent 2 px border on focus; error border + tooltip when `Validation.HasError`; themed caret and selection |
 | CheckBox | implicit | themed box and visible check mark, focus ring, hover border and disabled state; used for Spectrum log Y / pile-up; DockPanel constrains wrapping content to the available width |
 | ComboBox / ComboBoxItem | implicit | full template including popup, arrow and item highlight |
 | ListBox / ListBoxItem | implicit | selection = subtle fill **+ 2 px accent bar** (not colour alone), stays visible when unfocused, inset focus ring |
-| Segmented picker | `Segment.Track` (Border) + `RadioButton.Segment` | one radio button per option in a `UniformGrid`; checked = subtle fill + accent text + semibold (not colour alone); access keys (`_Distance` → Alt+D). Bind with `EnumMatchConverter`. For switching views or content (workspace switch); never for a tool picker, which uses icon toggles (author 2026-10-13) |
-| ScrollBar | implicit | 8 px, no arrow buttons |
+| Segmented picker | `Segment.Track` (Border) + `RadioButton.Segment` | one radio button per option in a `UniformGrid`; checked = subtle fill + accent text + semibold (not colour alone); access keys where the content is text (`_Distance` → Alt+D). Bind with `EnumMatchConverter`. For switching views or content (workspace switch, Options dialog tabs); never for a tool picker, which uses icon toggles (author 2026-10-13) |
+| Segment action | `Button.Segment` | a segment that applies a choice rather than selecting state, drawn like `RadioButton.Segment`; `Tag="True"` marks the segment matching the current values. The energy-window presets ±10 / ±15 / ±20 / ±25 % |
+| Tabs | `TabControl.Segment` + `TabItem.Segment` | a tab strip in the segmented-picker look (same selected fill, weight and focus cue) above the content: the left panel (Scene / Optics / Detector), the Detector views (Face / SiPM / Anger / Calibration / Diagnostics) and the Waveform views (Energy sum / Four outputs) |
+| Collapsible section | `Expander.Section` (header `ToggleButton.Section`) | a section heading that reads like `PanelHeader` + `Text.PanelTitle`, themed arrow and focus; the Imaging right panel's three sections |
+| ScrollViewer | implicit | a vertically scrolling viewer (`Auto` / `Visible`) reserves `Size.ScrollGutter` (12) at its right in every state — 4 px gap, then the bar — so the content width never jumps and the bar clears the content and the panel's rounded border; viewers without a vertical bar reserve nothing |
+| ScrollBar | implicit | `Size.ScrollBar` (8 px), no arrow buttons |
 | ProgressBar | implicit | flat 4 px, no Aero glow animation |
 | ToolTip | implicit | raised surface |
 | Panel / Divider / Chip | `Panel.Surface` / `Divider` / `Chip`, `Chip.Warning` | `Border` styles for layout blocks; the warning chip pairs with `Text.CaptionWarning` |
 | Header row | `PanelHeader` (DockPanel) | title left, actions / chips right; min height `Size.Control`, `Gap.Title` below |
-| Icon | `Icon.Play`, `Icon.Stop`, `Icon.Reset`, `Icon.Add`, `Icon.Remove`, `Icon.Clear`, `Icon.Sun`, `Icon.Moon`, … (Geometry) | drawn with a `Path` in the button's foreground — no glyph characters as icons |
-| Modal layer | `ModalHost` / `ModalLayer` | an in-window layer over the whole window (one HWND and UIA tree): themed scrim `Brush.Modal.Scrim`, underlying content disabled, keyboard navigation cycles inside, focus restored on close, Escape = the host's cancel command; content arrives as a view model with a DataTemplate; AutomationId `Modal.Layer`, Name from the hosted content (`DialogName`). Used by the Reset confirmation (TODO-44) and the Options dialog (TODO-45) |
+| Icon | `Icon.Play`, `Icon.Stop`, `Icon.Reset`, `Icon.Add`, `Icon.Remove`, `Icon.Cancel`, `Icon.Clear` (trash can), `Icon.Sun`, `Icon.Moon`, `Icon.Settings` (cog), `Icon.Pan`, `Icon.Ruler`, `Icon.Angle`, `Icon.Roi`, `Icon.Minimize`, `Icon.Maximize`, `Icon.Restore`, `Icon.Close`, … (Geometry, 12 × 12) | drawn with a `Path` in the button's foreground — no glyph characters as icons |
+| Modal layer | `ModalHost` / `ModalLayer` | an in-window layer over the whole window (one HWND and UIA tree): themed scrim `Brush.Modal.Scrim`, underlying content disabled, keyboard navigation cycles inside, focus restored on close, Escape = the host's cancel command; content arrives as a view model with a DataTemplate; AutomationId `Modal.Layer`, Name from the hosted content (`DialogName`). Used by the Reset confirmation (TODO-44) and the Options dialog (TODO-45: `Size.Options` high on every tab, a reserved lock-caption line, tabs as a segmented picker, Cancel the default button and OK beside it, or one Close while the inputs are locked) |
 
 Add a shared style only when two or more views need it; otherwise keep it in the view's `Resources`, still
 built from tokens.
@@ -204,12 +217,30 @@ put requirement-critical state only behind it (a label, a refusal and its short 
 numbers stay inline).
 `ContentItemsList` is an ItemsControl whose automation peer exposes each row's content instead of WPF data-item peers,
 so help marks inside rebuilt rows stay reachable to screen readers and UI tests. The Studio-wide move of secondary text
-behind help marks is TODO-44.
+behind help marks was done in TODO-44 (2026-10-12).
+
+### Window chrome: WindowFrame, CaptionBar, CaptionButtons
+
+The window has no OS title bar (`WindowStyle="None"` with `WindowChrome`, caption height `Size.Caption`, the system
+resize borders). `WindowFrame` fits a maximised window to the monitor work area in physical pixels (`WM_GETMINMAXINFO`)
+and keeps the outer resize strip and the system commands (Alt+Space, Alt+F4). `CaptionBar` is the top bar's `Border`
+with an automation peer (Pane, AutomationId `Window.TopBar`), so UI tests read the caption's bounds. `CaptionButtons`
+builds Minimize, Maximize / Restore and Close (`Window.Minimize`, `Window.Maximize`, `Window.Close`) with tooltips and
+accessible names; Maximize changes glyph and name to Restore when the window is maximised. Every interactive top-bar
+control sets `WindowChrome.IsHitTestVisibleInChrome`; the rest of the bar drags the window.
+
+### SettingsGroup and FocusRequest
+
+`SettingsGroup` is a `StackPanel` with a Group automation peer, so a section keeps its AutomationId and accessible name
+in the UIA tree (`Optics.Section`, `Detector.Section`, `Readout.State`, `Detector.Readout`, …) after the expanders were
+replaced by tabs and rows. `FocusRequest.Counter` is an attached property: when the bound counter changes, the element
+takes keyboard focus — "Choose readout…" in an empty readout view selects the left Detector tab and focuses the readout
+combo through it.
 
 ## Known dark-theme pitfalls (handled)
 
 ComboBox popup and highlight · button hover background · TextBox caret / selection · black dotted focus ·
-ListBox inactive-selection grey · Aero progress glow · light title bar (DWM) · `-0` labels from rounding.
+ListBox inactive-selection grey · Aero progress glow · light title bar (DWM; since 2026-10-13 there is no OS title bar) · `-0` labels from rounding.
 Not styled yet because unused: Slider, ContextMenu, DataGrid — style them when they are introduced
 (the results table is a `ListBox` with a column template, so it reuses the list style instead of a `DataGrid`).
 

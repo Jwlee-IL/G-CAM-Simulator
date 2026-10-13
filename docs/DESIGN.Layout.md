@@ -7,9 +7,9 @@ Scope: GCAM Studio layout metrics (`src/Gcam.Studio/Themes/Metrics.xaml`) and ho
 | Kind | Keys (value) |
 |---|---|
 | Scale | 4 · 8 · 12 · 16 · 24 · 32 — expressed as the `Pad.*` / `Gap.*` Thickness keys below (XAML can't build a `Thickness` from `Double` keys, so there are no separate `Space.*` keys) |
-| Padding (`Pad.*`, inside a container) | `Pad.Window` 12 · `Pad.Panel` 12 · `Pad.Bar` 16,0 · `Pad.Control` 8,0 · `Pad.Button` 12,0 · `Pad.ListItem` 8,0 |
+| Padding (`Pad.*`, inside a container) | `Pad.Window` 12 · `Pad.Panel` 12 · `Pad.Bar` 16,0 · `Pad.Control` 8,0 · `Pad.Button` 12,0 · `Pad.ListItem` 8,0 · `Pad.None` 0 (icon buttons, segment tracks of control height) |
 | Plot label plate | `Pad.Plot.BandLabel` 4 on every side — prevents edges, grid and traces from touching band text; padded widths also determine collision rows |
-| Margin (`Gap.*`, after an element) | `Gap.Tight` 0,0,0,4 · `Gap.Field` 0,0,0,8 · `Gap.Section` 0,0,0,16 · `Gap.Title` 0,0,0,8 · `Gap.Inline` 0,0,8,0 · `Gap.InlineWide` 0,0,16,0 |
+| Margin (`Gap.*`, after an element) | `Gap.Tight` 0,0,0,4 · `Gap.Field` 0,0,0,8 · `Gap.Section` 0,0,0,16 · `Gap.Title` 0,0,0,8 · `Gap.Inline` 0,0,8,0 · `Gap.InlineWide` 0,0,16,0 · `Gap.InlineWide.Leading` 16,0,0,0 (before an item that follows another on the line: status-bar messages) · `Gap.Tool` 0,0,4,0 (between tool toggles) · `Gap.RowAction` 8,0,0,0 (before a row's action button) · `Gap.TabContent` 0,12,0,0 (between a tab strip and its content) · `Gap.ScrollGutter` 0,0,12,0 (a list header over scrolling rows) · `Gap.Caption.Focus` 2 (caption-button focus cue inset, Options badge offset) |
 | Grid gutter | `Gutter` 12 (a `GridLength` for gutter columns) · `Gap.Row` 0,0,0,12 (the same gutter between stacked panels) |
 
 **Padding vs margin rule.** A container owns its inner space (`Pad.*`). Space *between siblings* is the
@@ -21,8 +21,12 @@ combine a container's padding with a child's margin for the same edge.
 | Key | Value | Used for |
 |---|---|---|
 | `Size.Control` | 28 | min height of buttons, inputs, list rows |
-| `Size.Bar` / `Size.StatusBar` | 48 / 28 | top bar / status bar height (`GridLength`, used directly as row heights) |
-| `Size.SidePanel` | 300 | scene and measurement panel width (`GridLength`) |
+| `Size.Bar` | 48 | top bar height (`GridLength`); the status bar is one `Size.Control` line plus its top hairline (the `Size.StatusBar` key, 28, is no longer referenced) |
+| `Size.Caption` · `Size.CaptionButton` | 47 · 46 | `WindowChrome` caption height (`Size.Bar` − 1, so the bar's bottom line runs under the caption buttons) · caption-button width |
+| `Size.Control.Row` | 20 | a row action button inside a `Size.Control` list row (`Button.Icon.Row`: a `Size.Icon` glyph plus 4 on each side) |
+| `Size.ScrollBar` · `Size.ScrollGutter` | 8 · 12 | scroll bar width · the gutter every vertically scrolling viewer reserves at its right (4 gap + 8 bar), whether or not the bar shows |
+| `Size.Options` · `Size.Options.LockCaption` · `Size.OptionsBadge` | 520 · 16 · 4 | Options dialog height (one size across its tabs) · its reserved lock-caption line · the non-default badge on the cog |
+| `Size.SidePanel` | 300 | left panel and workspace right panel width (`GridLength`) |
 | `Size.SourceList` / `Size.ResultsList` | 168 / 280 | **max** heights: lists grow with their rows, then scroll — no reserved empty space |
 | `Size.NumberInput` · `Size.Progress` | 120 · 160 | general numeric input width · progress bar |
 | `Size.NumberInput.Short` | 80 | short live-time / speed values with s / × suffixes; preserves top-bar space |
@@ -37,32 +41,45 @@ combine a container's padding with a child's margin for the same edge.
 ## Screen grid (`MainWindow`)
 
 ```
-Row 0  Top bar (Size.Bar, the window caption)  identity · workspace switch · live time (s) · speed × · ▶ Start / Continue / ■ Stop · Reset (icon, confirms) · theme (icon) · Options (cog, badge) · caption buttons
+Row 0  Top bar (Size.Bar, the window caption)  identity · workspace switch · live time (s) · speed × · ▶ Start / Continue / ■ Stop · Reset (icon, confirms) · theme (icon) · Options (cog, badge) · caption buttons (minimise, maximise / restore, close)
 Row 1  Content (a Border with Pad.Window)
-         Col 0  Left panel (Size.SidePanel), a TabControl   Scene (sources, selected source) · Optics (preset, fields) · Detector (readout sections)
+         Col 0  Left panel (Size.SidePanel), a TabControl   Scene (Sources with + / −, Selected source) · Optics (Engineering
+                geometry: preset, the five fields, geometry-performance help) · Detector (readout panel: Readout · Calibration
+                lines · Preparation · Energy window); input errors at the panel foot, outside the tabs
          Col 1  Gutter
          Col 2  Selected workspace centre (DataTemplate by workspace type)
                 Imaging (ImageAreaPanel): [flood map] Gutter [reconstruction] on top, each = PanelHeader (title + chips) ·
                 ImageStackPanel: square HeatmapView (+ adorner), ColorBar and readout directly beneath, at the drawn
-                image's width; below (Gap.Row), filling the remaining height: Measurements (header with − / Clear,
-                tool picker, hint, table, selected-row detail) full width, or left half beside the focus curve
+                image's width; below (Gap.Row), filling the remaining height: Measurements (header: title, Pan / Distance /
+                Angle / ROI icon toggles, clear-all trash at the right; hint; table # · Image · Kind · Value · row delete;
+                selected-row detail) full width, or left half beside the focus curve
                 Spectrum: stepped histogram PlotView with line bands · readout · acquired-pulse summary · emission-window table (select a row to zoom to its window)
+                Waveform: heading · view tabs Energy sum / Four outputs (A–D) · the plots (or the empty state)
+                Detector: heading · view tabs Face / SiPM / Anger / Calibration / Diagnostics · the face and its colour bar,
+                a readout view, or the empty state
          Col 3  Gutter
          Col 4  Selected workspace panel (DataTemplate by workspace type, Size.SidePanel)
-                Imaging: scrollable collapsible sections — Decoder focal plane (geometry facts, one-line precision caption
-                with the evidence as tooltip) · Imaging channel (selector, window N, strip, ratios, found peaks) · Focus sweep
-                (collapsed until used; opens on a result)
+                Imaging: scrollable collapsible sections — Decoder focal plane (field, geometry rows, one-line precision
+                caption with the evidence behind a help mark) · Imaging channel (selector, physical-mode channel controls,
+                reconstruction, window N, strip, result lines, found peaks) · Focus sweep (collapsed until used; opens on a result)
                 Spectrum: Display (log Y) · Window (N × FWHM) · Pile-up (resolving time) · Resolution (read-only chain)
-Row 2  Status bar (Size.StatusBar, one line) state dot · live time / counts / cps / MC-limited or a refusal (live region) · Options summary right
+                Waveform: Scope window · Selected event · Rate study · Acquired chain · Events in window (table)
+                Detector: Detector geometry · Gain pattern · Acquired, or on the physical readout Detector geometry ·
+                Readout network · Measured conversions · Calibration (this session) · Confirmed offers
+Row 2  Status bar (one Size.Control line)  state dot · run status, a refusal or the preparation outcome (live region) · Options summary right · top-bar input messages · one progress bar (acquisition or preparation, only while running)
+Modal  ModalHost layer over the whole window: the Reset confirmation, the Options dialog (Size.Options high)
 ```
 
 Top-bar live-time and speed inputs are vertically centred at `Size.Control` (28 DIP), with
-`Size.NumberInput.Short` width (80 DIP). Labels are "Live time" / "Speed" / "Seed"; `Tag` supplies "s" / "×"
-inside the inputs, matching the scene fields (the seed has no unit; blank means a new seed per acquisition).
-Reset is an icon button right of the primary action (then theme and Options), never primary, with no shortcut and no
-default; the primary button reads Start without data and Continue with data, and is not the window's default
-button, so Enter in a field cannot resume counting. Messages of the top-bar inputs (a rejected preset, an invalid
-seed) appear at the right of the status bar, which has room for them.
+`Size.NumberInput.Short` width (80 DIP), and Start / Continue / Stop share that height and centre line. Labels are
+"Live time" / "Speed"; `Tag` supplies "s" / "×" inside the inputs, matching the scene fields. The seed moved to the
+Options dialog's Acquisition tab (blank means a new seed per acquisition). Reset is an icon button right of the primary
+action (then theme and the Options cog), never primary, with no shortcut and no default; the primary button reads Start
+without data and Continue with data, and is not the window's default button, so Enter in a field cannot resume
+counting. Every interactive top-bar control is hit-testable in the `WindowChrome` caption; the rest of the bar drags the
+window. The caption buttons fill `Size.Caption` at the far right and rest transparent on the bar, whose bottom line runs
+under them. Messages of the top-bar inputs (a rejected preset, an invalid seed) appear at the right of the status bar,
+which has room for them.
 
 The primary action sits at the same place on every screen (top right); the status of the last run is always
 visible at the bottom, full width, regardless of which panel has focus.
@@ -73,16 +90,24 @@ an unavailable index leaves selection unchanged. Acquisition preserves selection
 detector, chain, seed) are disabled while acquired data exist and unlock after Reset; workspace view settings stay
 editable in every state and only re-render retained data.
 
-Physical optics contains editable geometry and engineering presets, while decoder focus remains a view setting.
-A separate Detector section contains entrance (0.15 mm steel-equivalent) and backing (2 mm) facts,
-then an editable reflector gap (default 100 µm), Gain σ
-(default 3, `%` suffix), Gain seed (default 1) and Background (default 0, `× signal` BSR suffix;
-detected background/source ratio at 200 keV). Short labels fit the existing 84-DIP field column.
-These inputs are disabled during
-acquisition and while acquired data exist (until Reset). Since 2026-10-13 the left panel is a TabControl (Scene ·
-Optics · Detector) and the detector inputs above live in the Options dialog; a refused Start selects the tab holding
-the invalid input and states the reason in the status bar (see Screen rules). Workspace activation follows `IsActive` as well as commands,
-so a UI Automation SelectionItem selection changes the centre and right panel.
+The left panel is a TabControl (Scene · Optics · Detector) in the shared `TabControl.Segment` style; each tab is a
+scroller with `Gap.TabContent` above its sections. The Optics tab holds the engineering presets and the editable
+geometry, always shown (a preset fills and disables the fields, Custom enables them), while decoder focus remains an
+Imaging view setting. The Detector tab holds the readout panel: Readout (mode, summary, the experimental localisation
+line), Calibration lines (keV · Record · Local), Preparation (accent Prepare, cancel, the ready table keV · Time ·
+Windowed · Scored, a short state line) and Energy window (low / high side by side, the window line, the ±10 / ±15 / ±20 /
+±25 % presets). Input errors stay at the foot of the panel whichever tab is selected.
+
+The Options dialog (in the modal layer, `Size.Options` high on every tab, OK / Cancel or Close fixed at the bottom
+right) holds the inputs changed rarely: Acquisition (seed), Detector (scintillator, photosensor, preamp / shaper; entrance
+0.15 mm and backing 2 mm steel-equivalent facts; reflector gap, default 100 µm; Gain σ, default 3, `%` suffix; Gain seed,
+default 1) and Environment (photon H*(10), preset and bound captions, ambient bound, Background, default 0, `× signal`
+BSR suffix — detected background/source ratio at 200 keV — and the acquired ambient BSR). It edits a draft applied on OK;
+while data exist it shows the values read-only with the lock caption and one Close button. These inputs are disabled
+during acquisition and while acquired data exist (until Reset); a refused Start selects the tab holding the invalid
+input, or marks the cog for an Options input, and states the reason in the status bar (see Screen rules). Workspace
+activation follows `IsActive` as well as commands, so a UI Automation SelectionItem selection changes the centre and
+right panel.
 
 ## Screen rules (author's desktop review, 2026-10-13)
 
@@ -118,7 +143,7 @@ Normative; each rule with its reason is also in [AGENTS.Rationale](AGENTS.Ration
 
 ## Window sizing: fixed grid, flexible centre
 
-- Side panels (scene left, measurements right) are a **fixed** width; the image area takes the rest (`*`). At the
+- Side panels (the left tabs, the workspace panel right) are a **fixed** width; the image area takes the rest (`*`). At the
   1280 px minimum each image still gets about 300 px.
 - The window has a **minimum** size (1280×800) and a default of 1440×900 instead of a fixed size. A fixed
   window breaks on 1366×768 laptops and overflows the screen at 125 / 150 % scaling.
@@ -151,37 +176,39 @@ the survey identified label crowding, subsequently addressed by the overlay layo
 
 ## Editable optics and focus
 
-The shared Physical optics and Detector sections use themed `Expander.Section` headers. When collapsed,
-a one-line effective summary remains visible (full text in its tooltip). Errors are outside collapsed content;
-Start expands invalid sections. Physical fields and atomic engineering presets are disabled while acquiring and while data exist, until Reset.
+The Optics and Detector inputs sit on the left panel's tabs (until 2026-10-13 they were `Expander.Section` sections
+with one-line summaries). Errors stay visible outside the tab content, and a refused Start selects the tab holding the
+invalid input. Physical fields and atomic engineering presets are disabled while acquiring and while data exist, until Reset.
 The decoder focal plane is a separate Imaging view setting, in mm from the detector, enabled during and after
 acquisition. Its readout uses acquired physical geometry after a run, including when pending inputs differ.
 Geometry readings carry no pass/fail glyph; sampling has a conditional precision-evidence note. No depth-reach
 hint is shown. The Imaging right panel scrolls independently so measurements remain reachable at small sizes.
 Focus changes visibly explain why reconstruction measurements were cleared; flood measurements stay.
-Offscreen render cases cover expanded/collapsed panels and F=800 at 1280×800 and 1440×900 in both themes.
+Offscreen render cases cover F=800 and each left tab at 1280×800 and 1440×900 in both themes.
 
 ## Waveform workspace and shared chain (2026-10-02)
 
-The top workspace switch now includes Waveform (Ctrl+3). The shared left panel places Detection chain after the source list, before the selected-source editor and Physical optics. Its scintillator / photosensor / preamp selectors are disabled during acquisition and while acquired data exist; collapsed, it shows the selected chain on one wrapped line. Retained data are never repainted with other physics.
+The top workspace switch now includes Waveform (Ctrl+3). The detection chain's scintillator / photosensor / preamp selectors are on the Options dialog's Detector tab (until 2026-10-13 a Detection chain section in the left panel); they are disabled during acquisition, while acquired data exist and under the physical readout. Retained data are never repainted with other physics.
 
-Waveform centre stacks two flexible-height PlotViews: ADC energy sum above shaped output (fractional code equivalents for Q12 CR-RC; integer codes for trapezoid). Both share the time-from-trigger axis (µs), zoom, pan and reset; Y remains independent. Event markers identify acquired index, pixel and deposit, with an event list in the right panel also giving the original absolute acquisition time. The title and simulation/mode/partial-window note sit above the plots; worker summary and pulse readout are below.
+Waveform centre: a heading that follows the view, the view tabs Energy sum / Four outputs (A–D), then the plots. Energy sum stacks two flexible-height PlotViews: ADC energy sum above shaped output (fractional code equivalents for Q12 CR-RC; integer codes for trapezoid). Both share the time-from-trigger axis (µs), zoom, pan and reset; Y remains independent. Event markers identify acquired index, pixel and deposit, with an event list in the right panel also giving the original absolute acquisition time. Four outputs shows the physical readout's lanes, or under DirectCrystal the empty state ("Available with the experimental physical readout", "Choose readout…"). The mode note, the window summary and the pulse readout moved to the right panel (2026-10-13).
 
-The right ScrollViewer contains latest/next/index, Follow latest, window µs, a separate rate-study toggle and simulated energy-channel kcps, ideal stimulus, acquired-chain/readout facts and the event list. Default is real 10 µs with 20% pretrigger; wider windows may be clipped to the sample work budget. Rate study and ideal status are explicit in the centre note. No controls imply that the position channels or their pile-up behavior have been simulated.
+The right ScrollViewer holds headed sections: Scope window (Latest / Next in the header, Follow latest, event index, window µs, the mode note with its help mark), Selected event (window summary, pulse readout), Rate study (toggle, simulated energy-channel kcps, ideal stimulus), Acquired chain (label / value rows) and Events in window (a table # · Pixel · Energy · Scope). Default is real 10 µs with 20% pretrigger; wider windows may be clipped to the sample work budget. Rate study and ideal status are explicit in the mode note. No controls imply that the position channels or their pile-up behavior have been simulated.
 
-New views use the existing surface, type, field, gap and button tokens. Automation IDs are `Chain.Section`, `Chain.Scintillator`, `Chain.Sensor`, `Chain.Preamp`, `Chain.Pending`, `Chain.Acquired`, `Waveform.Adc`, `Waveform.Shaped`, `Waveform.FollowLatest`, `Waveform.Latest`, `Waveform.Next`, `Waveform.Index`, `Waveform.Window`, `Waveform.RateStudy`, `Waveform.Rate`, `Waveform.Ideal`, `Waveform.Events`, `Waveform.ChainReadout` and `Waveform.Note`. Accessible names include visible labels/units. No new desktop accessibility/layout pass is claimed; the 1280×800 and 1440×900 offscreen paths are prepared but were not executed after sandbox denial.
+New views use the existing surface, type, field, gap and button tokens. Automation IDs are `Chain.Section`, `Chain.Scintillator`, `Chain.Sensor`, `Chain.Preamp` (in the Options dialog's Detector tab since 2026-10-13), `Waveform.Adc`, `Waveform.Shaped`, `Waveform.FollowLatest`, `Waveform.Latest`, `Waveform.Next`, `Waveform.Index`, `Waveform.Window`, `Waveform.RateStudy`, `Waveform.Rate`, `Waveform.Ideal`, `Waveform.Events`, `Waveform.ChainReadout` and `Waveform.Note`. Accessible names include visible labels/units. No new desktop accessibility/layout pass is claimed; the 1280×800 and 1440×900 offscreen paths are prepared but were not executed after sandbox denial.
 
 ## Detector and focus sweep
 
-Detector is Ctrl+4. Its centre draws a square vector face with exact active and reflector-gap rectangles;
-opaque viridis colours encode seeded relative gain, with a numeric colour bar and size below. Acquired
-counts/live-time rate is a separate readout. The right scrollable panel lists material, geometry, geometric
-active-area fraction and gain σ/seed. Without data the face uses the pending settings, captioned "Settings for the
-next acquisition"; with data it shows the acquired, locked settings, captioned "Acquired settings · locked until
-Reset" — neutral caption text, not the warning colour.
-The geometry card is top-aligned to its content, with the standard panel padding and scrolling when height is
-constrained; the shell's workspace host remains stretched. Gain extrema remain under the face legend.
-The shared gap editor uses µm and retains invalid text; physical pitch edits revalidate it.
+Detector is Ctrl+4. Its centre has a heading that follows the view and the readout mode, the view tabs Face / SiPM /
+Anger / Calibration / Diagnostics, and the view: Face draws a square vector face with exact active and reflector-gap
+rectangles, opaque viridis colours encoding seeded relative gain, with only its numeric colour bar beneath; the
+readout views show the physical readout or, under DirectCrystal, the empty state. Since 2026-10-13 the captions and
+legend facts are in the right panel: Detector geometry (an identity line — "Settings for the next acquisition" without
+data, "Acquired settings · locked until Reset" with data, neutral caption text, not the warning colour — then material
+and geometry rows and the active area), Gain pattern (gain σ / seed, relative-gain range, face size) and Acquired
+(counts, live-time rate); on the physical readout Readout network, Measured conversions, Calibration (this session) and
+Confirmed offers. The panel is top-aligned to its content, with the standard panel padding and scrolling when height is
+constrained; the shell's workspace host remains stretched.
+The gap editor (Options dialog, Detector tab) uses µm; OK refuses invalid text, and physical pitch edits revalidate the applied gap.
 
 Imaging's scrollable options contain K (1–4), Sweep focus/Cancel sweep, sharpest-plane and half-max
 descriptions, optional external surface range and Use as focus. A result opens FocusSweepView beside the
