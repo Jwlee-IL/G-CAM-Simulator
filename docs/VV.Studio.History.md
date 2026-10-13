@@ -327,3 +327,17 @@ exact-hash fixtures pass. Evidence families readout-field-v1 (ambient) and reado
 pass and were re-run identically (Findings 70). Pending (desktop unavailable): the desktop scenarios
 `PhysicalBsrAndAmbient_ContinuationConservesMeasuredCounts` and `RefusedLineAndMissingPreparation_ExplainWithoutZeroing`
 with broken-verdict / recovery.
+
+## Desktop verification — declutter stage 2 and TODO-42, 2026-10-13
+
+Main tree at `ed1298b` (Release). Full desktop suite with `GCAM_UI_TESTS=1` (the long High-res cold test excluded): 28 of 29
+desktop scenarios passed, including `ChromeScenarioTests.BorderlessCaption_HasNoNativeTitleBar_AndStartsAtWindowTop` (no
+native title bar in the real window), the pilot (caption geometry), every scenario that now goes through the Options
+dialog, the readout scenarios and the polish survey (16 PNGs refreshed in `docs/assets/studio-polish-survey/`). Failures:
+`PhysicalBsrAndAmbient_ContinuationConservesMeasuredCounts` (never run before) could not choose the ambient bound in the
+Options dialog — a product defect in the modal focus boundary (VV.Studio AN-17), fixed with `ModalFocusRenderTests`; and
+`RefusedLineAndMissingPreparation_ExplainWithoutZeroing` failed once on a harness race (the layer looked up before it
+existed), fixed by waiting for the layer. Broken-verdict runs of the five changed scenarios failed on their verdicts;
+after the fixes the re-run (both scenarios plus four regression scenarios for the stricter `Choose`) passed, its
+broken-verdict pair failed on the verdict and the recovery passed. Not covered by a scenario: real Alt-key routing for
+the tool toggles and Enter inside the Options dialog (headless tests only).

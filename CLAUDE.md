@@ -73,11 +73,8 @@ copy it here, it goes stale. Only what the Todo does not hold:
 - Waiting for a free desktop (author's go): the desktop UI scenarios after TODO-30's Studio default and fixed spectrum
   axis (list in `samples/evidence/results/ambient-baseline-v1-turn10.md`), and the README desktop screenshot that still
   shows the old preset label "(original rig)" (TODO-29). PR-SENS-02's count gate is settled (measured gate, EV-34).
-  Also the stage-2 desktop run of TODO-44 / 45 (closed 2026-10-13 without it): the whole desktop suite, broken-verdict /
-  recovery for the changed assertions, and the UI-automation re-measure and re-pilot including the no-title-bar
-  assertion (`docs/VV.Studio.History.md`, "Declutter stage 2 …"); the README screenshot is retaken after it.
-  And TODO-42's two physical-readout scenarios (`PhysicalBsrAndAmbient_ContinuationConservesMeasuredCounts`,
-  `RefusedLineAndMissingPreparation_ExplainWithoutZeroing`) with broken-verdict / recovery.
+  The TODO-44 / 45 stage-2 suite and TODO-42's scenarios passed on 2026-10-13 (`docs/VV.Studio.History.md`); still
+  open: the README screenshot retake, and a hands-on check of the tool Alt keys and Enter in the Options dialog.
 - TODO-25 (depth likelihood) closed 2026-10-08 after a current-tree screening (Findings 62); its gate validation (≈ 190 h,
   resumable per condition) is parked in the Backlog; probe, recipes and summary in `samples/evidence/depthlik/`.
 - Codex conversations, worktrees (`C:\gw\…`) and probe outputs (`%TEMP%\gcam-*`) are machine-local: start new

@@ -130,6 +130,12 @@ build 0 warnings, normal suite **1,013 passed / 48 skipped** (three new cases), 
 193 units with current discovery. Desktop not run: real Alt-key routing and Enter in the Options dialog on the window
 wait for the stage-2 desktop run.
 
+**Desktop verification (2026-10-13, `ed1298b`).** The stage-2 desktop run and TODO-42's scenarios: 28 of 29 desktop
+scenarios passed, including the no-title-bar scenario and the pilot; the one failure exposed a product defect in the modal
+focus boundary (AN-17), fixed and re-run with broken-verdict / recovery pairs
+([History](VV.Studio.History.md#desktop-verification--declutter-stage-2-and-todo-42-2026-10-13)). The "Desktop pending" note
+above is superseded; real Alt-key routing and Enter in the Options dialog remain headless-only.
+
 ## 1. Scope and intended use
 
 **Intended use.** GCAM Studio is a portfolio demo viewer for Gcam, a Monte Carlo simulator of a coded-aperture
@@ -530,7 +536,7 @@ they are skipped and reported as skipped, not passed. Each scenario starts its o
 | `ScenarioTests.MoveSource_ResetEditStart_PutsPeakOnTheSource` | VAL-04, VAL-05 · SR-RUN-12, SR-RUN-26, SR-VIEW-08 | physics: after Reset, an X / Y edit and a new acquisition the decoded peak must sit on the moved source (≤ 1.5 mm) | pass 2026-10-02: peak (21.6, 17.1), source (21.4, 16.0) mm; existing 1.5 mm tolerance |
 | `ScenarioTests.Readout_AndOneCellRoi_MatchAbsolutePositionAndValue` | SR-VIEW-05, SR-VIEW-07, SR-MEAS-03 | absolute mm of two cells (both signs); a one-cell ROI must sum to the readout's value | (−6.3, 5.1) and (6.3, −4.5) mm exact; sum = cell value |
 | `ScenarioTests.ThemeToggle_RelabelsAndSwitchesBack` | SR-THEME-01 | the label names the other theme; the app still simulates after two swaps | pass (the visual swap stays manual) |
-| `ChromeScenarioTests.BorderlessCaption_HasNoNativeTitleBar_AndStartsAtWindowTop` | SR-THEME-02, SR-RUN-12 | no UIA `TitleBar` element in the window; top bar and Close within 1 px of the window's top and right edges; the Options summary follows an applied seed and ignores a cancelled one; Maximize fills the monitor work area (Win32 monitor info), Restore returns | written 2026-10-13, not yet run — pending the stage-2 desktop run |
+| `ChromeScenarioTests.BorderlessCaption_HasNoNativeTitleBar_AndStartsAtWindowTop` | SR-THEME-02, SR-RUN-12 | no UIA `TitleBar` element in the window; top bar and Close within 1 px of the window's top and right edges; the Options summary follows an applied seed and ignores a cancelled one; Maximize fills the monitor work area (Win32 monitor info), Restore returns | desktop pass 2026-10-13 ([History](VV.Studio.History.md#desktop-verification--declutter-stage-2-and-todo-42-2026-10-13)) |
 
 Record (list-mode acquisition, 2026-10-01): all 19 UI tests passed (10 oracle, 7 desktop scenarios, the plot gate,
 the polish survey); with every scenario's expectation deliberately corrupted (`GCAM_UI_BREAK_VERDICT=1`) all 7
@@ -559,6 +565,7 @@ folder was left behind. UIA Select on the workspace switch does not change the w
 | AN-14 | `TickFormatterTests` (colour-bar tick labels: one shared multiplier, one decimal count, no negative zero) test behaviour that no SRS row states | the behaviour is verified but not required, so a change to it would not be traced | add an `SR-VIEW` row for colour-bar labels |
 | AN-15 | The opt-in offscreen render test (then the single `PlotViewRenderTests.Spectrum_BothThemesFullAndZoom_RenderWithoutWindow`; since the 2026-10-13 split the emission-table check runs in `MainWindow_Workspaces_*`, `MainWindow_MixedField_*` and `MainWindow_FocalPlaneAndMlem_*`) fails on one machine (2026-10-04) in its emission-table check ("Truncated table value: Window (keV)") before it reaches the later renders; it fails the same way at a commit before the ambient default and fixed axis, so it predates them (likely a font or display difference on that machine — not established) | on that machine the repository test does not complete SR-SPEC-05's table check or produce the renders after it; the ambient-panel PNGs (SR-RUN-29) came from a scratch copy that logged that assertion instead | find why the window column truncates there, then re-run the opt-in render test unchanged |
 | AN-16 | Closed (2026-10-13): SR-A11Y-03 named tool access keys (Alt+P / D / A / R) and "Enter runs (default button)" after the access keys were lost with the icon toggles and Start had stopped being the default button (SR-RUN-13) | the access keys are restored as window key bindings (tooltips name them, the toggles expose them as their accessible access key) and SR-A11Y-03 states the shipped Enter behaviour | key routing on the real window is verified with the next desktop run |
+| AN-17 | Closed (2026-10-13): the desktop run found that the modal focus boundary walked only the visual tree and refused the focus an opening combo gives its drop-down item (a popup root has no visual parent), so the Options dialog's combos (ambient bound, detection chain) could not be chosen through their drop-down and a UI scenario failed ("No FrontOnlyThroughMask in Acquisition.AmbientBound") | Options inputs set through a combo were unusable | `ModalHost` follows the logical parent and popup placement target; `ModalFocusRenderTests` checks it windowlessly (fails on the old boundary); `Choose` requires an open drop-down; desktop re-run passes |
 
 No screen-reader (Narrator / NVDA) session has been run. Not verified.
 

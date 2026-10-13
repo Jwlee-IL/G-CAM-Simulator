@@ -109,9 +109,9 @@ window's top edge, so every position comes from the target element's UIA bounds,
 a title-bar offset. `ChromeScenarioTests.BorderlessCaption_HasNoNativeTitleBar_AndStartsAtWindowTop` asserts that no
 `TitleBar` element exists, that `Window.TopBar` and `Window.Close` sit within 1 px of the window's top and right
 edges, and that Maximize fills the monitor work area; the pilot checks that the caption buttons lie inside the owned
-frame and above the flood map. The stage-2 measurement and pilot are **pending**: the window geometry changed, so
-stage 2 (re-measure) and stage 3 (re-pilot, with a broken verdict and a recovery run) are redone on the next desktop
-run, on the author's go.
+frame and above the flood map. After the geometry change both were redone on 2026-10-13: the no-title-bar scenario and
+the pilot passed, and the pilot's broken-verdict / recovery pair behaved as intended (VV.Studio History, "Desktop
+verification — declutter stage 2 and TODO-42").
 
 ## 3. Pilot
 
