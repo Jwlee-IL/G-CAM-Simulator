@@ -12,48 +12,95 @@ using Xunit.Abstractions;
 
 namespace Gcam.Studio.RenderTests;
 
-// One collection with ReadoutRenderTests: the two long offscreen renders run one after the other, so neither competes for the
-// CPU against its own deadlock deadline (the 60 s join).
-[Collection(OffscreenRenderCollection.Name)]
-public sealed partial class PlotViewRenderTests(ITestOutputHelper output)
+// The main-window offscreen renders, split by screen / capture group so no test comes near the 60 s deadlock deadline.
+// They share one STA thread and Application (MainWindowRenderHost; WPF allows one Application per AppDomain), so they run
+// one after the other in this collection; each test runs under its own deadline.
+[Collection(MainWindowRenderCollection.Name)]
+public sealed partial class PlotViewRenderTests(ITestOutputHelper output, MainWindowRenderHost host)
 {
+    /// <summary>The spectrum PlotView in both themes (full and 662 keV zoom), and the heatmap readout across refreshes.</summary>
     [RenderSnapshotFact]
-    public void Spectrum_BothThemesFullAndZoom_RenderWithoutWindow()
+    public void Spectrum_BothThemesFullAndZoom_RenderWithoutWindow() => host.Run(() =>
     {
-        Exception? failure = null;
-        var thread = new Thread(() =>
-        {
-            System.Globalization.CultureInfo.CurrentCulture = System.Globalization.CultureInfo.GetCultureInfo("en-US");
-            System.Globalization.CultureInfo.CurrentUICulture = System.Globalization.CultureInfo.GetCultureInfo("en-US");
-            // Base WPF resource infrastructure only: no Studio App, Run(), window or startup handler.
-            var application = new Application { ShutdownMode = ShutdownMode.OnExplicitShutdown };
-            try
-            {
-                CheckHeatmapReadoutAcrossRefresh();
-                foreach (string theme in new[] { "Dark", "Light" })
-                {
-                    Render(theme);
-                    RenderWindows(theme);
-                    RenderWindows(theme, mixed: true);
-                    RenderWindows(theme, mixed: true, crowded: true);
-                    RenderWindows(theme, mixed: true, opticsExpanded: true);
-                    RenderWindows(theme, mixed: true, opticsExpanded: false);
-                    RenderWindows(theme, mixed: true, mlem: true);
-                    RenderWaveforms(theme);
-                    RenderDetectorAndFocus(theme);
-                    RenderMeasurements(theme);
-                    RenderAmbientInputs(theme);
-                    RenderResetConfirmation(theme);
-                    RenderOptions(theme);
-                }
-            }
-            catch (Exception ex) { failure = ex; }
-            finally { application.Shutdown(); Dispatcher.CurrentDispatcher.InvokeShutdown(); }
-        });
-        thread.SetApartmentState(ApartmentState.STA);
-        thread.Start();
-        Assert.True(thread.Join(TimeSpan.FromSeconds(60)), "Offscreen rendering timed out.");
-        if (failure is not null) ExceptionDispatchInfo.Capture(failure).Throw();
+        // As in the former single test: the readout check runs before any theme is loaded into the Application.
+        Application.Current.Resources.MergedDictionaries.Clear();
+        CheckHeatmapReadoutAcrossRefresh();
+        foreach (string theme in new[] { "Dark", "Light" }) Render(theme);
+    });
+
+    /// <summary>Every workspace of the main window after a completed acquisition (single source), both sizes.</summary>
+    [RenderSnapshotFact]
+    public void MainWindow_Workspaces_Dark_RenderWithoutWindow() => MainWindow_Workspaces("Dark");
+
+    [RenderSnapshotFact]
+    public void MainWindow_Workspaces_Light_RenderWithoutWindow() => MainWindow_Workspaces("Light");
+
+    private void MainWindow_Workspaces(string theme) => host.Run(() => RenderWindows(theme));
+
+    /// <summary>The mixed two-isotope field: All / Cs-137 channels, and the crowded scene.</summary>
+    [RenderSnapshotFact]
+    public void MainWindow_MixedField_Dark_RenderWithoutWindow() => MainWindow_MixedField("Dark");
+
+    [RenderSnapshotFact]
+    public void MainWindow_MixedField_Light_RenderWithoutWindow() => MainWindow_MixedField("Light");
+
+    private void MainWindow_MixedField(string theme) => host.Run(() =>
+    {
+        RenderWindows(theme, mixed: true);
+        RenderWindows(theme, mixed: true, crowded: true);
+    });
+
+    /// <summary>The mixed field at focal plane 800 mm (the former optics-section variants) and with MLEM.</summary>
+    [RenderSnapshotFact]
+    public void MainWindow_FocalPlaneAndMlem_Dark_RenderWithoutWindow() => MainWindow_FocalPlaneAndMlem("Dark");
+
+    [RenderSnapshotFact]
+    public void MainWindow_FocalPlaneAndMlem_Light_RenderWithoutWindow() => MainWindow_FocalPlaneAndMlem("Light");
+
+    private void MainWindow_FocalPlaneAndMlem(string theme) => host.Run(() =>
+    {
+        RenderWindows(theme, mixed: true, opticsExpanded: true);
+        RenderWindows(theme, mixed: true, opticsExpanded: false);
+        RenderWindows(theme, mixed: true, mlem: true);
+    });
+
+    /// <summary>The Waveform workspace modes, the Detector workspace and focus sweep, and the Measurements panel.</summary>
+    [RenderSnapshotFact]
+    public void Workspaces_WaveformDetectorMeasurements_Dark_RenderWithoutWindow() => Workspaces_WaveformDetectorMeasurements("Dark");
+
+    [RenderSnapshotFact]
+    public void Workspaces_WaveformDetectorMeasurements_Light_RenderWithoutWindow() => Workspaces_WaveformDetectorMeasurements("Light");
+
+    private void Workspaces_WaveformDetectorMeasurements(string theme) => host.Run(() =>
+    {
+        RenderWaveforms(theme);
+        RenderDetectorAndFocus(theme);
+        RenderMeasurements(theme);
+    });
+
+    /// <summary>The shell: ambient inputs, the Reset confirmation, and the Options / top bar / status bar / left tabs /
+    /// physical-readout captures.</summary>
+    [RenderSnapshotFact]
+    public void Shell_OptionsCaptionStatusLeftTabs_Dark_RenderWithoutWindow() => Shell_OptionsCaptionStatusLeftTabs("Dark");
+
+    [RenderSnapshotFact]
+    public void Shell_OptionsCaptionStatusLeftTabs_Light_RenderWithoutWindow() => Shell_OptionsCaptionStatusLeftTabs("Light");
+
+    private void Shell_OptionsCaptionStatusLeftTabs(string theme) => host.Run(() =>
+    {
+        UseTheme(theme); // these captures read the Application's theme (the former test loaded it in an earlier step)
+        RenderAmbientInputs(theme);
+        RenderResetConfirmation(theme);
+        RenderOptions(theme);
+    });
+
+    /// <summary>Loads one theme's dictionaries into the shared Application, as the workspace renders do themselves.</summary>
+    private static void UseTheme(string theme)
+    {
+        var dictionaries = Application.Current.Resources.MergedDictionaries;
+        dictionaries.Clear();
+        foreach (string file in new[] { $"Tokens.{theme}", "Metrics", "Typography", "Controls" })
+            dictionaries.Add(new ResourceDictionary { Source = new Uri($"/Gcam.Studio;component/Themes/{file}.xaml", UriKind.Relative) });
     }
 
     private void Render(string theme)

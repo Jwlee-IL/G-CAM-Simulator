@@ -1,7 +1,8 @@
 namespace Gcam.Studio.RenderTests;
 
-/// <summary>The long offscreen render tests (PlotViewRenderTests, ReadoutRenderTests) share this xUnit collection, so they run
-/// one after the other instead of in parallel: each keeps its own deadlock deadline without CPU contention.</summary>
+/// <summary>The readout offscreen render (ReadoutRenderTests). It parses its views detached on its own STA thread and needs
+/// no Application, so its collection runs in parallel with the main-window renders (MainWindowRenderCollection), which stay
+/// one after the other on their shared render thread.</summary>
 [CollectionDefinition(Name)]
 public sealed class OffscreenRenderCollection
 {
