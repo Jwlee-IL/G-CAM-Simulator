@@ -1,5 +1,6 @@
 using System.Runtime.InteropServices;
 using System.Windows;
+using Gcam.Studio.UiTests.Harness.Isolation;
 
 namespace Gcam.Studio.UiTests.Harness;
 
@@ -25,6 +26,7 @@ public static class Pointer
 
     public static void MoveTo(Point p)
     {
+        PointerBoundary.Require(p);
         if (!SetCursorPos((int)Math.Round(p.X), (int)Math.Round(p.Y))) throw new InvalidOperationException("SetCursorPos failed");
         Thread.Sleep(StepDelayMs);
     }

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WindowsPerformanceRecorder Version="1.0" Author="GCAM" Company="GCAM">
+  <Profiles>
+    <SystemCollector Id="ProbeCollector" Name="GCAM probe collector">
+      <BufferSize Value="256" />
+      <Buffers Value="64" />
+    </SystemCollector>
+    <SystemProvider Id="ProbeProvider">
+      <Keywords>
+        <Keyword Value="ProcessThread" />
+        <Keyword Value="Loader" />
+        <Keyword Value="FileIO" />
+        <Keyword Value="FileIOInit" />
+        <Keyword Value="Registry" />
+        <Keyword Value="NetworkTrace" />
+      </Keywords>
+    </SystemProvider>
+    <Profile Id="GcamProbe.Verbose.File" Name="GcamProbe" Description="GCAM first qualification observation" LoggingMode="File" DetailLevel="Verbose">
+      <Collectors><SystemCollectorId Value="ProbeCollector"><SystemProviderId Value="ProbeProvider" /></SystemCollectorId></Collectors>
+    </Profile>
+  </Profiles>
+</WindowsPerformanceRecorder>

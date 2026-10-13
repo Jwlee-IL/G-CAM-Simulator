@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using Gcam.Studio.UiTests.Harness.Isolation;
 using System.Windows;
 using System.Windows.Automation;
 
@@ -15,19 +16,25 @@ namespace Gcam.Studio.UiTests.Harness;
 public sealed class StudioWindow(AutomationElement window)
 {
     public AutomationElement Element { get; } = window;
+    private static readonly Lazy<ActionPolicy> Policy = new(() => ActionPolicy.Load(Path.Combine(RepoPaths.Root(),
+        "tests/Gcam.Studio.UiTests/Harness/Isolation/action-policy.json")));
+    private static void Guard(string id, string operation) => Policy.Value.Require(id, operation);
 
     public AutomationElement ById(string automationId, AutomationElement? scope = null)
     {
+        Guard(automationId, "read");
         if (scope is null) SelectLeftTabFor(automationId);
         var matches = (scope ?? Element).FindAll(TreeScope.Descendants,
             new PropertyCondition(AutomationElement.AutomationIdProperty, automationId));
-        return matches.Count == 1
-            ? matches[0]
-            : throw new SelectorMatchException(automationId, matches.Count);
+        if (matches.Count != 1) throw new SelectorMatchException(automationId, matches.Count);
+        var match = matches[0];
+        Policy.Value.VerifyControlType(automationId, match.Current.ControlType.ProgrammaticName.Replace("ControlType.", ""));
+        return match;
     }
 
     public void SelectLeftTab(string tab)
     {
+        Guard("Left." + tab + "Tab", "select");
         var element = Element.FindFirst(TreeScope.Descendants,
             new PropertyCondition(AutomationElement.AutomationIdProperty, "Left." + tab + "Tab"))
             ?? throw new SelectorMatchException("Left." + tab + "Tab", 0);
@@ -110,10 +117,11 @@ public sealed class StudioWindow(AutomationElement window)
 
     private bool Visible(string id) => Exists(id) && !ById(id).Current.IsOffscreen;
 
-    public void Invoke(string id) => Pattern<InvokePattern>(ById(id), InvokePattern.Pattern).Invoke();
+    public void Invoke(string id) { Guard(id, "invoke"); Pattern<InvokePattern>(ById(id), InvokePattern.Pattern).Invoke(); }
 
     public void Click(string id)
     {
+        Guard(id, "click");
         // A real pointer click lands on whatever window is on top: never click unless the owned window is foreground.
         if (!EnsureForeground())
             throw new InvalidOperationException("The owned Studio window is not in the foreground; a pointer click would land on another window.");
@@ -152,10 +160,11 @@ public sealed class StudioWindow(AutomationElement window)
     [System.Runtime.InteropServices.DllImport("user32.dll")] private static extern bool SetForegroundWindow(IntPtr window);
     [System.Runtime.InteropServices.DllImport("user32.dll")] private static extern uint GetWindowThreadProcessId(IntPtr window, out uint processId);
 
-    public void Toggle(string id) => Pattern<TogglePattern>(ById(id), TogglePattern.Pattern).Toggle();
+    public void Toggle(string id) { Guard(id, "toggle"); Pattern<TogglePattern>(ById(id), TogglePattern.Pattern).Toggle(); }
 
     public void Expand(string id)
     {
+        Guard(id, "expand");
         if (id == "Optics.Section") SelectLeftTab("Optics");
         else if (id == "Detector.Section") SelectLeftTab("Detector");
         else Pattern<ExpandCollapsePattern>(ById(id), ExpandCollapsePattern.Pattern).Expand();
@@ -175,6 +184,7 @@ public sealed class StudioWindow(AutomationElement window)
     /// of another control); the selection is then read back.</remarks>
     public void Choose(string id, string name)
     {
+        Guard(id, "choose");
         var combo = ById(id);
         if (SelectedName(combo) == name) return;
         var expand = Pattern<ExpandCollapsePattern>(combo, ExpandCollapsePattern.Pattern);
@@ -249,6 +259,7 @@ public sealed class StudioWindow(AutomationElement window)
     /// <summary>Selects a radio button / list item and reads the selection back.</summary>
     public void Select(string id)
     {
+        Guard(id, "select");
         var item = Pattern<SelectionItemPattern>(ById(id), SelectionItemPattern.Pattern);
         item.Select();
         WaitUntil(() => item.Current.IsSelected, TimeSpan.FromSeconds(2), $"{id} selected");
@@ -260,11 +271,14 @@ public sealed class StudioWindow(AutomationElement window)
     /// </summary>
     public void SetText(string id, string text, string commitBy)
     {
+        Guard(id, "set");
         var value = Pattern<ValuePattern>(ById(id), ValuePattern.Pattern);
         value.SetValue(text);
         ById(id).SetFocus();
         ById(commitBy).SetFocus();
         Thread.Sleep(150);
+        // Rejected/canonicalised edits are intentional regression inputs; their scenario judges the handler.
+        Log?.Invoke($"input read-back {id}: requested '{text}', displayed '{Value(id)}'");
     }
 
     public string Value(string id) => Pattern<ValuePattern>(ById(id), ValuePattern.Pattern).Current.Value;
@@ -274,6 +288,8 @@ public sealed class StudioWindow(AutomationElement window)
     /// <summary>Keys to the element (focused first), as <c>SendKeys</c> syntax: "{ESC}", "{DELETE}".</summary>
     public void Keys(string id, string keys)
     {
+        Guard(id, "keys");
+        if (!EnsureForeground()) throw new InvalidOperationException("Owned window lost foreground before keyboard input");
         ById(id).SetFocus();
         Thread.Sleep(100);
         System.Windows.Forms.SendKeys.SendWait(keys);

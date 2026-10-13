@@ -44,7 +44,8 @@ public sealed class PilotTests(ITestOutputHelper output)
             var to = oracle.ScreenAt(0.75, 0.3);
             double expected = oracle.DistanceMm(from, to);
             bool broken = Environment.GetEnvironmentVariable(BreakVerdictVariable) == "1";
-            if (broken) expected += 1.0;
+            double originalExpected = expected;
+            expected = VerdictMutation.Apply(expected, oracle.ToleranceMm, broken);
             record.Set("oracle", new { view = oracle.ViewBounds.ToString(), image = oracle.ImageBounds.ToString(), oracle.CellPx, from = from.ToString(), to = to.ToString(), expected, tolerance = oracle.ToleranceMm, verdictBroken = broken });
             Pointer.Drag(from, to);
             Assert.Equal(to, Pointer.Position());   // the input landed where the oracle assumed
@@ -56,6 +57,7 @@ public sealed class PilotTests(ITestOutputHelper output)
             record.Set("actual", new { row = rowElement.Current.Name, id = rowElement.Current.AutomationId, detail = ui.Text("MeasurementDetail") });
             Assert.Equal(("M1", "M1", "Distance", "Flood"), (rowElement.Current.AutomationId, row.Name, row.Kind, row.Pane));
             double actual = row.LengthMm();
+            if (broken) VerdictMutation.Verify(originalExpected, expected, actual, oracle.ToleranceMm);
             output.WriteLine($"expected {expected:F3} mm ± {oracle.ToleranceMm:F3}, actual {actual:F1} mm");
             Assert.True(Verdict.Within(actual, expected, oracle.ToleranceMm),
                 $"length {actual} mm is not within {oracle.ToleranceMm:F3} mm of the expected {expected:F3} mm");

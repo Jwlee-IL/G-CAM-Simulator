@@ -11,10 +11,17 @@ public sealed class DesktopFactAttribute : FactAttribute
 
     public const string LongOptInVariable = "GCAM_UI_LONG_TESTS";
 
-    public DesktopFactAttribute(bool longRunning = false)
+    internal static string? ConditionId(bool desktop, bool longOptIn, bool longRunning) =>
+        !desktop ? "desktop-opt-in-off" : longRunning && !longOptIn ? "long-desktop-opt-in-off" : null;
+
+    public DesktopFactAttribute(bool longRunning = false, bool probe = false)
     {
-        Skip = SkipReason(Environment.GetEnvironmentVariable(OptInVariable) == "1",
-            Environment.GetEnvironmentVariable(LongOptInVariable) == "1", longRunning);
+        bool desktop = Environment.GetEnvironmentVariable(OptInVariable) == "1";
+        bool longOptIn = Environment.GetEnvironmentVariable(LongOptInVariable) == "1";
+        Skip = SkipReason(desktop, longOptIn, longRunning);
+        if (Skip is not null) Skip = "[" + ConditionId(desktop, longOptIn, longRunning) + "] " + Skip;
+        if (Skip is null && probe && Environment.GetEnvironmentVariable("GCAM_UI_PROBE") != "1")
+            Skip = "probe-opt-in-off: set GCAM_UI_PROBE=1 for the separately approved observed run";
     }
     internal static string? SkipReason(bool desktop, bool longOptIn, bool longRunning)
     {

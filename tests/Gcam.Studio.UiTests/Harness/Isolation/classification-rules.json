@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "allowAppFileWrites": false,
+  "requiredChannels": ["file", "process", "registry"],
+  "readOperations": {
+    "file": ["Read", "ReadFile", "QueryInformation", "OpenRead"],
+    "registry": ["QueryValue", "OpenKey", "QueryKey"],
+    "process": ["ImageLoad"]
+  },
+  "writeOperations": {
+    "file": ["Write", "WriteFile", "Delete", "Rename", "CreateFile"],
+    "registry": ["SetValue", "CreateKey", "DeleteValue", "DeleteKey"],
+    "process": ["ProcessStart"],
+    "network": ["Send", "Connect", "Bind", "Receive"]
+  },
+  "harnessChannels": ["file", "process", "network"],
+  "osBookkeepingOperations": ["ProcessAccounting", "WindowSessionAccounting"],
+  "unknownOpcodePolicy": "unknown; no blanket provider or PID exclusion",
+  "externalConnectionPolicy": "Studio has no authorised network destination; any attributed connection is undeclared"
+}

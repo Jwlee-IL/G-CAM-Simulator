@@ -262,7 +262,9 @@ def source_units():
     for unit_id, entry in units.items():
         entry['sources'].update(pieces[unit_id])
         project = REPO / 'tests' / unit_id.split('::')[0]
-        helpers = list((project / 'Harness').glob('*.cs')) + list(project.glob('*FactAttribute.cs'))
+        helpers = list((project / 'Harness').rglob('*.cs')) + list(project.glob('*FactAttribute.cs'))
+        if project.name == 'Gcam.Studio.UiTests':
+            helpers += [p for p in (project / 'Harness/Isolation').glob('*') if p.suffix in ('.py', '.json', '.ps1', '.wprp')]
         for path in helpers:
             entry['sources'][path.relative_to(REPO).as_posix()] = sha(path.read_bytes().replace(b'\r\n', b'\n'))
     for path in sorted((REPO / 'samples/evidence/tests').glob('test_*.py')):
@@ -273,6 +275,10 @@ def source_units():
                 unit = 'unittest::' + path.stem + '.' + cls.name
                 units[unit] = {'runner': 'unittest', 'methods': [path.stem + '.' + cls.name + '.' + m for m in methods],
                                'sources': {path.relative_to(REPO).as_posix(): sha(path.read_bytes().replace(b'\r\n', b'\n'))}}
+                if path.stem == 'test_stage0_isolation':
+                    isolation = REPO / 'tests/Gcam.Studio.UiTests/Harness/Isolation'
+                    for helper in (isolation / 'stage0.py', isolation / 'classification-rules.json', isolation / 'action-policy.json'):
+                        units[unit]['sources'][helper.relative_to(REPO).as_posix()] = sha(helper.read_bytes().replace(b'\r\n', b'\n'))
     # The configuration is part of the test identity, not a suffix discarded by aggregation.
     sys.path.insert(0, str(REPO / 'rtl'))
     from crrc_contract import fixtures

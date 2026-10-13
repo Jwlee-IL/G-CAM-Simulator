@@ -1,0 +1,2961 @@
+{
+  "approvalStatus": "draft",
+  "qualifiedUse": "requires-author-approved-policy-commit",
+  "schemaVersion": 1,
+  "targets": [
+    {
+      "controlTypes": [
+        "ComboBox"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "choose",
+        "expand",
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Acquisition.AmbientBound",
+      "target": "Acquisition.AmbientBound"
+    },
+    {
+      "controlTypes": [
+        "TextBox"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read",
+        "set"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Acquisition.AmbientDose",
+      "target": "Acquisition.AmbientDose"
+    },
+    {
+      "controlTypes": [
+        "TextBlock"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Acquisition.AmbientDoseError",
+      "target": "Acquisition.AmbientDoseError"
+    },
+    {
+      "controlTypes": [
+        "TextBox"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read",
+        "set"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Acquisition.Background",
+      "target": "Acquisition.Background"
+    },
+    {
+      "controlTypes": [
+        "HelpMark"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Acquisition.BackgroundHelp",
+      "target": "Acquisition.BackgroundHelp"
+    },
+    {
+      "controlTypes": [
+        "TextBlock"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Acquisition.InputError",
+      "target": "Acquisition.InputError"
+    },
+    {
+      "controlTypes": [
+        "TextBox"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read",
+        "set"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.AcquisitionLiveTime",
+      "target": "AcquisitionLiveTime"
+    },
+    {
+      "controlTypes": [
+        "TextBlock"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.AcquisitionLiveTimeError",
+      "target": "AcquisitionLiveTimeError"
+    },
+    {
+      "controlTypes": [
+        "TextBox"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read",
+        "set"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.AcquisitionSeed",
+      "target": "AcquisitionSeed"
+    },
+    {
+      "controlTypes": [
+        "TextBlock"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.AcquisitionSeedError",
+      "target": "AcquisitionSeedError"
+    },
+    {
+      "controlTypes": [
+        "TextBox"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read",
+        "set"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.AcquisitionSpeed",
+      "target": "AcquisitionSpeed"
+    },
+    {
+      "controlTypes": [
+        "Button"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "click",
+        "invoke",
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.AddSource",
+      "target": "AddSource"
+    },
+    {
+      "controlTypes": [
+        "ComboBox"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "choose",
+        "expand",
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Chain.Preamp",
+      "target": "Chain.Preamp"
+    },
+    {
+      "controlTypes": [
+        "ComboBox"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "choose",
+        "expand",
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Chain.Scintillator",
+      "target": "Chain.Scintillator"
+    },
+    {
+      "controlTypes": [
+        "StackPanel"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Chain.Section",
+      "target": "Chain.Section"
+    },
+    {
+      "controlTypes": [
+        "ComboBox"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "choose",
+        "expand",
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Chain.Sensor",
+      "target": "Chain.Sensor"
+    },
+    {
+      "controlTypes": [
+        "Button"
+      ],
+      "effect": "in-memory-measurement-delete",
+      "operations": [
+        "click",
+        "invoke",
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "measurements.modify",
+      "target": "ClearMeasurements"
+    },
+    {
+      "controlTypes": [
+        "HelpMark"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Detector.AreaHelp",
+      "target": "Detector.AreaHelp"
+    },
+    {
+      "controlTypes": [
+        "DetectorFaceView"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Detector.Face",
+      "target": "Detector.Face"
+    },
+    {
+      "controlTypes": [
+        "TabItem"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read",
+        "select"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Detector.FaceTab",
+      "target": "Detector.FaceTab"
+    },
+    {
+      "controlTypes": [
+        "HelpMark"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Detector.GainHelp",
+      "target": "Detector.GainHelp"
+    },
+    {
+      "controlTypes": [
+        "ColorBar"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Detector.GainScale",
+      "target": "Detector.GainScale"
+    },
+    {
+      "controlTypes": [
+        "TextBox"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read",
+        "set"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Detector.GainSeed",
+      "target": "Detector.GainSeed"
+    },
+    {
+      "controlTypes": [
+        "TextBox"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read",
+        "set"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Detector.GainSigma",
+      "target": "Detector.GainSigma"
+    },
+    {
+      "controlTypes": [
+        "TextBox"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read",
+        "set"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Detector.Gap",
+      "target": "Detector.Gap"
+    },
+    {
+      "controlTypes": [
+        "TextBlock"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Detector.Identity",
+      "target": "Detector.Identity"
+    },
+    {
+      "controlTypes": [
+        "SettingsGroup"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "expand",
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Detector.Readout",
+      "target": "Detector.Readout"
+    },
+    {
+      "controlTypes": [
+        "HelpMark"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Detector.ReadoutAssumptionsHelp",
+      "target": "Detector.ReadoutAssumptionsHelp"
+    },
+    {
+      "controlTypes": [
+        "SettingsGroup"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "expand",
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Detector.Section",
+      "target": "Detector.Section"
+    },
+    {
+      "controlTypes": [
+        "TabControl"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Detector.Views",
+      "target": "Detector.Views"
+    },
+    {
+      "controlTypes": [
+        "ColorBar"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.FloodColorBar",
+      "target": "FloodColorBar"
+    },
+    {
+      "controlTypes": [
+        "TextBlock"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.FloodReadout",
+      "target": "FloodReadout"
+    },
+    {
+      "controlTypes": [
+        "TextBlock"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.FloodValueUnit",
+      "target": "FloodValueUnit"
+    },
+    {
+      "controlTypes": [
+        "HeatmapView"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.FloodView",
+      "target": "FloodView"
+    },
+    {
+      "controlTypes": [
+        "Button"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "click",
+        "invoke",
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Imaging.CancelSweep",
+      "target": "Imaging.CancelSweep"
+    },
+    {
+      "controlTypes": [
+        "ComboBox"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "choose",
+        "expand",
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Imaging.Channel",
+      "target": "Imaging.Channel"
+    },
+    {
+      "controlTypes": [
+        "Expander"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "expand",
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Imaging.ChannelSection",
+      "target": "Imaging.ChannelSection"
+    },
+    {
+      "controlTypes": [
+        "TextBlock"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Imaging.ChannelUnavailable",
+      "target": "Imaging.ChannelUnavailable"
+    },
+    {
+      "controlTypes": [
+        "TextBox"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read",
+        "set"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Imaging.ExternalRange",
+      "target": "Imaging.ExternalRange"
+    },
+    {
+      "controlTypes": [
+        "CheckBox"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read",
+        "toggle"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Imaging.FloodCorrection",
+      "target": "Imaging.FloodCorrection"
+    },
+    {
+      "controlTypes": [
+        "HelpMark"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Imaging.FocalHelp",
+      "target": "Imaging.FocalHelp"
+    },
+    {
+      "controlTypes": [
+        "TextBox"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read",
+        "set"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Imaging.FocalPlane",
+      "target": "Imaging.FocalPlane"
+    },
+    {
+      "controlTypes": [
+        "Expander"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "expand",
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Imaging.FocalSection",
+      "target": "Imaging.FocalSection"
+    },
+    {
+      "controlTypes": [
+        "PlotView"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Imaging.FocusCurve",
+      "target": "Imaging.FocusCurve"
+    },
+    {
+      "controlTypes": [
+        "TextBlock"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Imaging.FocusNote",
+      "target": "Imaging.FocusNote"
+    },
+    {
+      "controlTypes": [
+        "ComboBox"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "choose",
+        "expand",
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Imaging.FocusPeaks",
+      "target": "Imaging.FocusPeaks"
+    },
+    {
+      "controlTypes": [
+        "SettingsGroup"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "expand",
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Imaging.Geometry",
+      "target": "Imaging.Geometry"
+    },
+    {
+      "controlTypes": [
+        "HelpMark"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Imaging.MlemHelp",
+      "target": "Imaging.MlemHelp"
+    },
+    {
+      "controlTypes": [
+        "TextBlock"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Imaging.ReadoutCurrentCounts",
+      "target": "Imaging.ReadoutCurrentCounts"
+    },
+    {
+      "controlTypes": [
+        "ComboBox"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "choose",
+        "expand",
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Imaging.Reconstruction",
+      "target": "Imaging.Reconstruction"
+    },
+    {
+      "controlTypes": [
+        "HelpMark"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Imaging.ReconstructionHelp",
+      "target": "Imaging.ReconstructionHelp"
+    },
+    {
+      "controlTypes": [
+        "TextBlock"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Imaging.ReconstructionNote",
+      "target": "Imaging.ReconstructionNote"
+    },
+    {
+      "controlTypes": [
+        "TextBlock"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Imaging.SamplingEvidence",
+      "target": "Imaging.SamplingEvidence"
+    },
+    {
+      "controlTypes": [
+        "HelpMark"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Imaging.SamplingHelp",
+      "target": "Imaging.SamplingHelp"
+    },
+    {
+      "controlTypes": [
+        "CheckBox"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read",
+        "toggle"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Imaging.Strip",
+      "target": "Imaging.Strip"
+    },
+    {
+      "controlTypes": [
+        "HelpMark"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Imaging.StripHelp",
+      "target": "Imaging.StripHelp"
+    },
+    {
+      "controlTypes": [
+        "TextBlock"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Imaging.StripNote",
+      "target": "Imaging.StripNote"
+    },
+    {
+      "controlTypes": [
+        "HelpMark"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Imaging.StripRoleHelp",
+      "target": "Imaging.StripRoleHelp"
+    },
+    {
+      "controlTypes": [
+        "Button"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "click",
+        "invoke",
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Imaging.Sweep",
+      "target": "Imaging.Sweep"
+    },
+    {
+      "controlTypes": [
+        "HelpMark"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Imaging.SweepHelp",
+      "target": "Imaging.SweepHelp"
+    },
+    {
+      "controlTypes": [
+        "Expander"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "expand",
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Imaging.SweepSection",
+      "target": "Imaging.SweepSection"
+    },
+    {
+      "controlTypes": [
+        "HelpMark"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Imaging.UncertaintyHelp",
+      "target": "Imaging.UncertaintyHelp"
+    },
+    {
+      "controlTypes": [
+        "Button"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "click",
+        "invoke",
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Imaging.UseAsFocus",
+      "target": "Imaging.UseAsFocus"
+    },
+    {
+      "controlTypes": [
+        "TextBox"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read",
+        "set"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Imaging.Window",
+      "target": "Imaging.Window"
+    },
+    {
+      "controlTypes": [
+        "HelpMark"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Imaging.WorkerHelp",
+      "target": "Imaging.WorkerHelp"
+    },
+    {
+      "controlTypes": [
+        "TabItem"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read",
+        "select"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Left.DetectorTab",
+      "target": "Left.DetectorTab"
+    },
+    {
+      "controlTypes": [
+        "TabItem"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read",
+        "select"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Left.OpticsTab",
+      "target": "Left.OpticsTab"
+    },
+    {
+      "controlTypes": [
+        "TabItem"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read",
+        "select"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Left.SceneTab",
+      "target": "Left.SceneTab"
+    },
+    {
+      "controlTypes": [
+        "TextBlock"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.MeasurementDetail",
+      "target": "MeasurementDetail"
+    },
+    {
+      "controlTypes": [
+        "ListBox"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.MeasurementList",
+      "target": "MeasurementList"
+    },
+    {
+      "controlTypes": [
+        "Button"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "click",
+        "invoke",
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Modal.Cancel",
+      "target": "Modal.Cancel"
+    },
+    {
+      "controlTypes": [
+        "Button"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "click",
+        "invoke",
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Modal.Close",
+      "target": "Modal.Close"
+    },
+    {
+      "controlTypes": [
+        "ModalLayer"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Modal.Layer",
+      "target": "Modal.Layer"
+    },
+    {
+      "controlTypes": [
+        "Button"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "click",
+        "invoke",
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.OpenOptions",
+      "target": "OpenOptions"
+    },
+    {
+      "controlTypes": [
+        "TextBox"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read",
+        "set"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Optics.CellPitch",
+      "target": "Optics.CellPitch"
+    },
+    {
+      "controlTypes": [
+        "TextBox"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read",
+        "set"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Optics.Distance",
+      "target": "Optics.Distance"
+    },
+    {
+      "controlTypes": [
+        "TextBlock"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Optics.Error",
+      "target": "Optics.Error"
+    },
+    {
+      "controlTypes": [
+        "HelpMark"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Optics.PerformanceHelp",
+      "target": "Optics.PerformanceHelp"
+    },
+    {
+      "controlTypes": [
+        "TextBox"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read",
+        "set"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Optics.PixelPitch",
+      "target": "Optics.PixelPitch"
+    },
+    {
+      "controlTypes": [
+        "TextBox"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read",
+        "set"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Optics.Pixels",
+      "target": "Optics.Pixels"
+    },
+    {
+      "controlTypes": [
+        "ComboBox"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "choose",
+        "expand",
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Optics.Preset",
+      "target": "Optics.Preset"
+    },
+    {
+      "controlTypes": [
+        "ComboBox"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "choose",
+        "expand",
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Optics.Rank",
+      "target": "Optics.Rank"
+    },
+    {
+      "controlTypes": [
+        "SettingsGroup"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "expand",
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Optics.Section",
+      "target": "Optics.Section"
+    },
+    {
+      "controlTypes": [
+        "RadioButton"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "click",
+        "keys",
+        "pointer",
+        "read",
+        "select"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Options.AcquisitionTab",
+      "target": "Options.AcquisitionTab"
+    },
+    {
+      "controlTypes": [
+        "Button"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "click",
+        "invoke",
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Options.Apply",
+      "target": "Options.Apply"
+    },
+    {
+      "controlTypes": [
+        "Ellipse"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Options.Badge",
+      "target": "Options.Badge"
+    },
+    {
+      "controlTypes": [
+        "RadioButton"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "click",
+        "keys",
+        "pointer",
+        "read",
+        "select"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Options.DetectorTab",
+      "target": "Options.DetectorTab"
+    },
+    {
+      "controlTypes": [
+        "RadioButton"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "click",
+        "keys",
+        "pointer",
+        "read",
+        "select"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Options.EnvironmentTab",
+      "target": "Options.EnvironmentTab"
+    },
+    {
+      "controlTypes": [
+        "TextBlock"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Options.LockCaption",
+      "target": "Options.LockCaption"
+    },
+    {
+      "controlTypes": [
+        "HelpMark"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Options.SeedHelp",
+      "target": "Options.SeedHelp"
+    },
+    {
+      "controlTypes": [
+        "TextBlock"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Options.Summary",
+      "target": "Options.Summary"
+    },
+    {
+      "controlTypes": [
+        "TextBlock"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.PeakText",
+      "target": "PeakText"
+    },
+    {
+      "controlTypes": [
+        "TabItem"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read",
+        "select"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Readout.AngerTab",
+      "target": "Readout.AngerTab"
+    },
+    {
+      "controlTypes": [
+        "HelpMark"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Readout.AssumptionsHelp",
+      "target": "Readout.AssumptionsHelp"
+    },
+    {
+      "controlTypes": [
+        "Button"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "click",
+        "invoke",
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Readout.BenchmarkWindow",
+      "target": "Readout.BenchmarkWindow"
+    },
+    {
+      "controlTypes": [
+        "SettingsGroup"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "expand",
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Readout.CalibrationFacts",
+      "target": "Readout.CalibrationFacts"
+    },
+    {
+      "controlTypes": [
+        "TabItem"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read",
+        "select"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Readout.CalibrationTab",
+      "target": "Readout.CalibrationTab"
+    },
+    {
+      "controlTypes": [
+        "Button"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "click",
+        "invoke",
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Readout.Cancel",
+      "target": "Readout.Cancel"
+    },
+    {
+      "controlTypes": [
+        "Button"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "click",
+        "invoke",
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Readout.ChooseReadout",
+      "target": "Readout.ChooseReadout"
+    },
+    {
+      "controlTypes": [
+        "SettingsGroup"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "expand",
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Readout.Counts",
+      "target": "Readout.Counts"
+    },
+    {
+      "controlTypes": [
+        "ListBox"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Readout.Diagnostics",
+      "target": "Readout.Diagnostics"
+    },
+    {
+      "controlTypes": [
+        "HelpMark"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Readout.DiagnosticsHelp",
+      "target": "Readout.DiagnosticsHelp"
+    },
+    {
+      "controlTypes": [
+        "TabItem"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read",
+        "select"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Readout.DiagnosticsTab",
+      "target": "Readout.DiagnosticsTab"
+    },
+    {
+      "controlTypes": [
+        "TextBlock"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Readout.EmptyState",
+      "target": "Readout.EmptyState"
+    },
+    {
+      "controlTypes": [
+        "ComboBox"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "choose",
+        "expand",
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Readout.Line",
+      "target": "Readout.Line"
+    },
+    {
+      "controlTypes": [
+        "ContentItemsList"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Readout.Lines",
+      "target": "Readout.Lines"
+    },
+    {
+      "controlTypes": [
+        "CheckBox"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read",
+        "toggle"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Readout.LiveDensity",
+      "target": "Readout.LiveDensity"
+    },
+    {
+      "controlTypes": [
+        "HelpMark"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Readout.LocalisationHelp",
+      "target": "Readout.LocalisationHelp"
+    },
+    {
+      "controlTypes": [
+        "ReadoutMapView"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Readout.Map",
+      "target": "Readout.Map"
+    },
+    {
+      "controlTypes": [
+        "HelpMark"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Readout.MapHelp",
+      "target": "Readout.MapHelp"
+    },
+    {
+      "controlTypes": [
+        "TextBlock"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Readout.MapInspection",
+      "target": "Readout.MapInspection"
+    },
+    {
+      "controlTypes": [
+        "ComboBox"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "choose",
+        "expand",
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Readout.Mode",
+      "target": "Readout.Mode"
+    },
+    {
+      "controlTypes": [
+        "TextBlock"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Readout.ModeSummary",
+      "target": "Readout.ModeSummary"
+    },
+    {
+      "controlTypes": [
+        "HelpMark"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Readout.OfferDetails",
+      "target": "Readout.OfferDetails"
+    },
+    {
+      "controlTypes": [
+        "ItemsControl"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Readout.Offers",
+      "target": "Readout.Offers"
+    },
+    {
+      "controlTypes": [
+        "Button"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "click",
+        "invoke",
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Readout.Prepare",
+      "target": "Readout.Prepare"
+    },
+    {
+      "controlTypes": [
+        "ProgressBar"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Readout.Progress",
+      "target": "Readout.Progress"
+    },
+    {
+      "controlTypes": [
+        "TextBlock"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Readout.Reason",
+      "target": "Readout.Reason"
+    },
+    {
+      "controlTypes": [
+        "TextBlock"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Readout.SensitivityCaption",
+      "target": "Readout.SensitivityCaption"
+    },
+    {
+      "controlTypes": [
+        "HelpMark"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Readout.SensitivityHelp",
+      "target": "Readout.SensitivityHelp"
+    },
+    {
+      "controlTypes": [
+        "HeatmapView"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Readout.SensitivityMap",
+      "target": "Readout.SensitivityMap"
+    },
+    {
+      "controlTypes": [
+        "TextBlock"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Readout.SensitivityReadout",
+      "target": "Readout.SensitivityReadout"
+    },
+    {
+      "controlTypes": [
+        "ColorBar"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Readout.SensitivityScale",
+      "target": "Readout.SensitivityScale"
+    },
+    {
+      "controlTypes": [
+        "TabItem"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read",
+        "select"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Readout.SipmTab",
+      "target": "Readout.SipmTab"
+    },
+    {
+      "controlTypes": [
+        "SettingsGroup"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "expand",
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Readout.State",
+      "target": "Readout.State"
+    },
+    {
+      "controlTypes": [
+        "Button"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "click",
+        "invoke",
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Readout.Window10",
+      "target": "Readout.Window10"
+    },
+    {
+      "controlTypes": [
+        "Button"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "click",
+        "invoke",
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Readout.Window20",
+      "target": "Readout.Window20"
+    },
+    {
+      "controlTypes": [
+        "Button"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "click",
+        "invoke",
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Readout.Window25",
+      "target": "Readout.Window25"
+    },
+    {
+      "controlTypes": [
+        "TextBox"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read",
+        "set"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Readout.WindowHigh",
+      "target": "Readout.WindowHigh"
+    },
+    {
+      "controlTypes": [
+        "TextBlock"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Readout.WindowLine",
+      "target": "Readout.WindowLine"
+    },
+    {
+      "controlTypes": [
+        "TextBox"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read",
+        "set"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Readout.WindowLow",
+      "target": "Readout.WindowLow"
+    },
+    {
+      "controlTypes": [
+        "HelpMark"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Readout.WindowPresetHelp",
+      "target": "Readout.WindowPresetHelp"
+    },
+    {
+      "controlTypes": [
+        "TextBlock"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Readout.WindowPresetNote",
+      "target": "Readout.WindowPresetNote"
+    },
+    {
+      "controlTypes": [
+        "ContentItemsList"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Readout.WindowPresets",
+      "target": "Readout.WindowPresets"
+    },
+    {
+      "controlTypes": [
+        "ColorBar"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.ReconColorBar",
+      "target": "ReconColorBar"
+    },
+    {
+      "controlTypes": [
+        "TextBlock"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.ReconReadout",
+      "target": "ReconReadout"
+    },
+    {
+      "controlTypes": [
+        "HeatmapView"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.ReconView",
+      "target": "ReconView"
+    },
+    {
+      "controlTypes": [
+        "Button"
+      ],
+      "effect": "in-memory-scene-delete",
+      "operations": [
+        "click",
+        "invoke",
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "scene.remove-source",
+      "target": "RemoveSource"
+    },
+    {
+      "controlTypes": [
+        "Button"
+      ],
+      "effect": "in-memory-acquisition-reset",
+      "operations": [
+        "click",
+        "invoke",
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "acquisition.discard-confirmed",
+      "target": "Reset.Discard"
+    },
+    {
+      "controlTypes": [
+        "TextBlock"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Reset.Message",
+      "target": "Reset.Message"
+    },
+    {
+      "controlTypes": [
+        "Button"
+      ],
+      "effect": "in-memory-acquisition-reset",
+      "operations": [
+        "click",
+        "invoke",
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "acquisition.request-discard",
+      "target": "ResetAcquisition"
+    },
+    {
+      "controlTypes": [
+        "ProgressBar"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.RunProgress",
+      "target": "RunProgress"
+    },
+    {
+      "controlTypes": [
+        "TextBox"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read",
+        "set"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.SourceActivity",
+      "target": "SourceActivity"
+    },
+    {
+      "controlTypes": [
+        "TextBox"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read",
+        "set"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.SourceDistance",
+      "target": "SourceDistance"
+    },
+    {
+      "controlTypes": [
+        "ComboBox"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "choose",
+        "expand",
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.SourceIsotope",
+      "target": "SourceIsotope"
+    },
+    {
+      "controlTypes": [
+        "ListBox"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.SourceList",
+      "target": "SourceList"
+    },
+    {
+      "controlTypes": [
+        "TextBox"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read",
+        "set"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.SourceX",
+      "target": "SourceX"
+    },
+    {
+      "controlTypes": [
+        "TextBox"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read",
+        "set"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.SourceY",
+      "target": "SourceY"
+    },
+    {
+      "controlTypes": [
+        "HelpMark"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Spectrum.ChainHelp",
+      "target": "Spectrum.ChainHelp"
+    },
+    {
+      "controlTypes": [
+        "ListBox"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Spectrum.Lines",
+      "target": "Spectrum.Lines"
+    },
+    {
+      "controlTypes": [
+        "CheckBox"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read",
+        "toggle"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Spectrum.LogY",
+      "target": "Spectrum.LogY"
+    },
+    {
+      "controlTypes": [
+        "CheckBox"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read",
+        "toggle"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Spectrum.PileUp",
+      "target": "Spectrum.PileUp"
+    },
+    {
+      "controlTypes": [
+        "PlotView"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Spectrum.Plot",
+      "target": "Spectrum.Plot"
+    },
+    {
+      "controlTypes": [
+        "TextBox"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read",
+        "set"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Spectrum.Window",
+      "target": "Spectrum.Window"
+    },
+    {
+      "controlTypes": [
+        "Button"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "click",
+        "invoke",
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.StartAcquisition",
+      "target": "StartAcquisition"
+    },
+    {
+      "controlTypes": [
+        "TextBlock"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.StatusText",
+      "target": "StatusText"
+    },
+    {
+      "controlTypes": [
+        "Button"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "click",
+        "invoke",
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.StopAcquisition",
+      "target": "StopAcquisition"
+    },
+    {
+      "controlTypes": [
+        "Button"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "click",
+        "invoke",
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.ThemeToggle",
+      "target": "ThemeToggle"
+    },
+    {
+      "controlTypes": [
+        "IconToggle"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read",
+        "select"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.ToolAngle",
+      "target": "ToolAngle"
+    },
+    {
+      "controlTypes": [
+        "IconToggle"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read",
+        "select"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.ToolDistance",
+      "target": "ToolDistance"
+    },
+    {
+      "controlTypes": [
+        "TextBlock"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.ToolHint",
+      "target": "ToolHint"
+    },
+    {
+      "controlTypes": [
+        "IconToggle"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read",
+        "select"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.ToolPan",
+      "target": "ToolPan"
+    },
+    {
+      "controlTypes": [
+        "IconToggle"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read",
+        "select"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.ToolRoi",
+      "target": "ToolRoi"
+    },
+    {
+      "controlTypes": [
+        "PlotView"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Waveform.A",
+      "target": "Waveform.A"
+    },
+    {
+      "controlTypes": [
+        "PlotView"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Waveform.Adc",
+      "target": "Waveform.Adc"
+    },
+    {
+      "controlTypes": [
+        "PlotView"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Waveform.B",
+      "target": "Waveform.B"
+    },
+    {
+      "controlTypes": [
+        "PlotView"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Waveform.C",
+      "target": "Waveform.C"
+    },
+    {
+      "controlTypes": [
+        "SettingsGroup"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "expand",
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Waveform.ChainReadout",
+      "target": "Waveform.ChainReadout"
+    },
+    {
+      "controlTypes": [
+        "PlotView"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Waveform.D",
+      "target": "Waveform.D"
+    },
+    {
+      "controlTypes": [
+        "TabItem"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read",
+        "select"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Waveform.EnergySumTab",
+      "target": "Waveform.EnergySumTab"
+    },
+    {
+      "controlTypes": [
+        "ListBox"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Waveform.Events",
+      "target": "Waveform.Events"
+    },
+    {
+      "controlTypes": [
+        "CheckBox"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read",
+        "toggle"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Waveform.FollowLatest",
+      "target": "Waveform.FollowLatest"
+    },
+    {
+      "controlTypes": [
+        "TabItem"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read",
+        "select"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Waveform.FourOutputsTab",
+      "target": "Waveform.FourOutputsTab"
+    },
+    {
+      "controlTypes": [
+        "CheckBox"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read",
+        "toggle"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Waveform.Ideal",
+      "target": "Waveform.Ideal"
+    },
+    {
+      "controlTypes": [
+        "TextBox"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read",
+        "set"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Waveform.Index",
+      "target": "Waveform.Index"
+    },
+    {
+      "controlTypes": [
+        "Button"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "click",
+        "invoke",
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Waveform.Latest",
+      "target": "Waveform.Latest"
+    },
+    {
+      "controlTypes": [
+        "Button"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "click",
+        "invoke",
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Waveform.Next",
+      "target": "Waveform.Next"
+    },
+    {
+      "controlTypes": [
+        "TextBlock"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Waveform.Note",
+      "target": "Waveform.Note"
+    },
+    {
+      "controlTypes": [
+        "HelpMark"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Waveform.NoteHelp",
+      "target": "Waveform.NoteHelp"
+    },
+    {
+      "controlTypes": [
+        "SettingsGroup"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "expand",
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Waveform.PulseReadout",
+      "target": "Waveform.PulseReadout"
+    },
+    {
+      "controlTypes": [
+        "TextBox"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read",
+        "set"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Waveform.Rate",
+      "target": "Waveform.Rate"
+    },
+    {
+      "controlTypes": [
+        "CheckBox"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read",
+        "toggle"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Waveform.RateStudy",
+      "target": "Waveform.RateStudy"
+    },
+    {
+      "controlTypes": [
+        "PlotView"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Waveform.Shaped",
+      "target": "Waveform.Shaped"
+    },
+    {
+      "controlTypes": [
+        "PlotView"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Waveform.Sum",
+      "target": "Waveform.Sum"
+    },
+    {
+      "controlTypes": [
+        "TextBlock"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Waveform.SumPhysicalNote",
+      "target": "Waveform.SumPhysicalNote"
+    },
+    {
+      "controlTypes": [
+        "TextBlock"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Waveform.Summary",
+      "target": "Waveform.Summary"
+    },
+    {
+      "controlTypes": [
+        "TabControl"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Waveform.Views",
+      "target": "Waveform.Views"
+    },
+    {
+      "controlTypes": [
+        "TextBox"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read",
+        "set"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Waveform.Window",
+      "target": "Waveform.Window"
+    },
+    {
+      "controlTypes": [
+        "Button"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "click",
+        "invoke",
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Window.Close",
+      "target": "Window.Close"
+    },
+    {
+      "controlTypes": [
+        "Button"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "click",
+        "invoke",
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Window.Maximize",
+      "target": "Window.Maximize"
+    },
+    {
+      "controlTypes": [
+        "Button"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "click",
+        "invoke",
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Window.Minimize",
+      "target": "Window.Minimize"
+    },
+    {
+      "controlTypes": [
+        "Border"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Window.StatusBar",
+      "target": "Window.StatusBar"
+    },
+    {
+      "controlTypes": [
+        "CaptionBar"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Window.TopBar",
+      "target": "Window.TopBar"
+    },
+    {
+      "controlTypes": [
+        "RadioButton"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "click",
+        "keys",
+        "pointer",
+        "read",
+        "select"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Workspace.Detector",
+      "target": "Workspace.Detector"
+    },
+    {
+      "controlTypes": [
+        "RadioButton"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "click",
+        "keys",
+        "pointer",
+        "read",
+        "select"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Workspace.Imaging",
+      "target": "Workspace.Imaging"
+    },
+    {
+      "controlTypes": [
+        "RadioButton"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "click",
+        "keys",
+        "pointer",
+        "read",
+        "select"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Workspace.Spectrum",
+      "target": "Workspace.Spectrum"
+    },
+    {
+      "controlTypes": [
+        "RadioButton"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "click",
+        "keys",
+        "pointer",
+        "read",
+        "select"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Workspace.Waveform",
+      "target": "Workspace.Waveform"
+    },
+    {
+      "controlTypes": [
+        "Border"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.WorkspaceSwitch",
+      "target": "WorkspaceSwitch"
+    },
+    {
+      "controlTypes": [
+        "Button",
+        "ListBoxItem"
+      ],
+      "effect": "in-memory-measurement-delete",
+      "operations": [
+        "click",
+        "invoke",
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "measurements.modify",
+      "target": "measurement-row"
+    },
+    {
+      "controlTypes": [
+        "HelpMark"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.readout-line-help",
+      "target": "readout-line-help"
+    }
+  ]
+}
