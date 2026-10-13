@@ -1215,3 +1215,33 @@ TODO-41 — [PLAN.Studio.ReadoutPresets](archive/PLAN.Studio.ReadoutPresets.md) 
   host measurement); desktop: see VV.Studio.History (2026-10-12).
 - **Not here:** microcell saturation / recovery, measured optics, arbitrary Custom source geometry, a measured cache
   limit including optical tables; a 64 k High-res preparation is outside the normal suite.
+
+## 70. Physical readout with the ambient field and BSR on — owned interaction sites through one pulse stream (TODO-42, 2026-10-13)
+
+TODO-42 — [PLAN.Studio.ReadoutField](archive/PLAN.Studio.ReadoutField.md) (decisions D1 … D8, R1 … R7, the calibration-
+convention literature check), review [PLAN.Studio.ReadoutField.Review](archive/PLAN.Studio.ReadoutField.Review.md).
+Evidence: `samples/evidence/results/readout-field-v1-{family,assessment}.json` (ambient) and
+`readout-field-v2-{family,assessment}.json` (BSR); probe `samples/evidence/probe/ReadoutFieldRecipe.cs`,
+`ReadoutBsrRecipe.cs`.
+
+- **Result.** The physical four-output readout now runs with the terrestrial ambient field (both bounds) and with BSR,
+  for scenes with a source. Ambient and BSR histories carry their own interaction sites through the ambient merge and the
+  fixed-horizon look-ahead into the one physical pulse stream; field and BSR deposits are windowed and assigned by the
+  measured record through the source-line calibrations, never by origin or true energy. Field-only scenes stay refused:
+  no field calibration line is offered (a product decision; Backlog: a K-40 1460.8 keV line). DirectCrystal is
+  bit-identical (exact-hash fixtures for signal, ambient, BSR, dark and Place).
+- **Geometry.** The physical path uses the signal's module construction with an opt-in incoming-face convention (front
+  entrance slab on front entry, backing slab on rear entry, no side housing). On the physical path the all-face bound is
+  an unmasked all-face module approximation, not a bare-crystal upper bound; the DirectCrystal ambient numbers (EV-34)
+  are unchanged.
+- **BSR.** On the physical path each BSR input is a fresh unmasked front-entry cosine-flux history through the module that
+  keeps its transported pixel and sites; the ratio stays a pre-trigger detected-input ratio. Measured over 16 seeds × 1,000 s:
+  BSR inputs / source inputs = 0.5009 at BSR 0.5 and 1.0004 at BSR 1; bounded retries (≈ 0.57 detections per attempt
+  on Baseline) cancel within ≈ 20–30 ms even after > 10^5 attempts.
+- **Checks.** v1 (ambient, 160 cells): zero exact-identity violations; eight pooled Poisson / binomial-reference checks
+  |z| ≤ 1.89 (critical 3.23, family budget 0.01). v2 (BSR, 192 cells): zero exact-identity violations (paired pre-trigger
+  schedules identical); sixteen checks |z| ≤ 1.54 (critical 3.42). Both families re-run by the planner: identical apart
+  from timing (and v2's wall-time-bounded cancellation attempt count). Normal suite 1,050 passed / 49 skipped.
+- **Not here:** positioning accuracy of off-energy field deposits with a source-line calibration (a declared,
+  unvalidated approximation); field-only physical acquisition; electronic dark triggers; side housing or explicit
+  passive volumes; any new localisation claim. Desktop scenarios compiled, not run (desktop unavailable).

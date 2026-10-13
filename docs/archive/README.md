@@ -11,6 +11,13 @@ set the plan's status to done and move the plan and its review / reports into th
 
 ## Closed tasks
 
+- **TODO-42 physical readout with the ambient field and BSR** (2026-10-13): owned interaction sites for ambient and BSR
+  histories through one physical pulse stream; source scenes run the four-output readout with the terrestrial field (both
+  bounds; the physical all-face bound is an unmasked all-face module approximation with an incoming-face entrance /
+  backing convention) and with BSR (module-transported histories keep their own pixel and sites); field-only scenes
+  refused (no field calibration line offered; K-40 line in the Backlog); calibration convention checked in the
+  literature; DirectCrystal bit-identical; 16-seed families v1 / v2 pass (SR-RUN-13 / -22 / -29 / -34, SR-DET-05;
+  Findings 70). Review and implementation by Codex — [PLAN.Studio.ReadoutField](PLAN.Studio.ReadoutField.md).
 - **TODO-44 / TODO-45 Studio declutter: help marks, Options dialog, quieter window** (2026-10-13; stage 1 2026-10-12):
   three tiers — the main screen keeps state, refusals and key numbers, help marks carry explanations, an in-window
   Options dialog (Acquisition / Detector / Environment, a draft applied on OK, Close-only while data exist, one Core

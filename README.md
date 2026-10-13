@@ -34,7 +34,7 @@ The evidence behind these numbers — conditions, limits, reproduce command and,
 it: [`docs/VV.Gcam.Evidence.md`](docs/VV.Gcam.Evidence.md) (EV-01, EV-11, EV-15, EV-17). Monte Carlo numbers are
 quoted over seed ensembles, not single runs; the seed lists, recipes and per-metric summaries are in
 [`samples/evidence/`](samples/evidence/).
-The full working log of all 69 study themes: [`docs/AGENTS.Findings.md`](docs/AGENTS.Findings.md).
+The full working log of all 70 study themes: [`docs/AGENTS.Findings.md`](docs/AGENTS.Findings.md).
 
 ## What it demonstrates
 

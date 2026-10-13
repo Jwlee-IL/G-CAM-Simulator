@@ -317,3 +317,13 @@ Planner's verification in the worktree `C:\gw\w44` on `0d21524`, Release build:
   changed (Options helpers, left-tab selection, `Detector.Identity`, readout view tabs), and the UI-automation re-measure
   and re-pilot for the borderless window, including `ChromeScenarioTests.BorderlessCaption_HasNoNativeTitleBar_AndStartsAtWindowTop`
   (no OS title bar) and the pilot's caption-button bounds. Until then the desktop statuses in VV.Studio predate stage 2.
+
+## Physical readout with the ambient field and BSR (TODO-42), 2026-10-13
+
+Worktree `C:\gw\w42`, branch `todo42-readout-field`. Release build 0 warnings; normal suite 1,050 passed / 49 skipped;
+opt-in offscreen renders 27 / 27 (refusal, missing-bank and ready states with ambient and BSR inspected); catalog 197
+units; CI checkers (studio-readout-offer, test-catalog, archived-replay, test-record-self-test) pass. DirectCrystal
+exact-hash fixtures pass. Evidence families readout-field-v1 (ambient) and readout-field-v2 (BSR), 16 outer seeds each,
+pass and were re-run identically (Findings 70). Pending (desktop unavailable): the desktop scenarios
+`PhysicalBsrAndAmbient_ContinuationConservesMeasuredCounts` and `RefusedLineAndMissingPreparation_ExplainWithoutZeroing`
+with broken-verdict / recovery.

@@ -6,7 +6,7 @@ This file carries the **cross-session context that isn't otherwise in the repo**
 survives moving to another computer. It is git-tracked and **auto-loaded by Claude Code on
 any clone** (the machine-local auto-memory under `~/.claude/…/memory/` does NOT travel).
 Architecture + build/run is in `@AGENTS.md` above; per-theme quantitative results are in
-`docs/AGENTS.Findings.md` (themes 1–69). Keep answers to the author in **Korean**.
+`docs/AGENTS.Findings.md` (themes 1–70). Keep answers to the author in **Korean**.
 
 ## What this is
 **Gcam** — a personal C#/.NET 9 Monte Carlo simulator for **coded-aperture gamma-source
@@ -76,6 +76,8 @@ copy it here, it goes stale. Only what the Todo does not hold:
   Also the stage-2 desktop run of TODO-44 / 45 (closed 2026-10-13 without it): the whole desktop suite, broken-verdict /
   recovery for the changed assertions, and the UI-automation re-measure and re-pilot including the no-title-bar
   assertion (`docs/VV.Studio.History.md`, "Declutter stage 2 …"); the README screenshot is retaken after it.
+  And TODO-42's two physical-readout scenarios (`PhysicalBsrAndAmbient_ContinuationConservesMeasuredCounts`,
+  `RefusedLineAndMissingPreparation_ExplainWithoutZeroing`) with broken-verdict / recovery.
 - TODO-25 (depth likelihood) closed 2026-10-08 after a current-tree screening (Findings 62); its gate validation (≈ 190 h,
   resumable per condition) is parked in the Backlog; probe, recipes and summary in `samples/evidence/depthlik/`.
 - Codex conversations, worktrees (`C:\gw\…`) and probe outputs (`%TEMP%\gcam-*`) are machine-local: start new

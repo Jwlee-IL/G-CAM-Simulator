@@ -2,22 +2,21 @@
 
 Scope: TODO-42. Today a physical readout (`FourOutputAnger`) starts only with ambient and BSR at zero, because the
 ambient and BSR transports keep no interaction sites for the readout network (SD-3 in
-[archive/PLAN.Studio.Readout](archive/PLAN.Studio.Readout.md)). This plan extends interaction recording to the
+[archive/PLAN.Studio.Readout](PLAN.Studio.Readout.md)). This plan extends interaction recording to the
 ambient transport so a scene **with a source** can run the physical readout with the terrestrial field on (stage A),
 and leaves BSR to a later stage B with a decided spatial contract. No change to the DirectCrystal path, its RNG
 streams or the published evidence; no new localisation-performance claim.
 
-Status: **stage A done 2026-10-13; stage B (BSR, D2) next** — size estimate by Codex (`01a130ff…`, read-only); turn 1
-review by Codex (`01a133ac…`, [review](PLAN.Studio.ReadoutField.Review.md)); decisions D1–D8 and R1–R7 below. Stage A
-implemented by Codex in the review conversation; it stopped at the final verification ("model at capacity", thread lost),
-and a new Codex conversation (`01a133d2…`) found the implementation complete, regenerated the catalog discovery and
-verified. Planner verification: Release 0 warnings, normal suite 1,033 / 49 (1,036 after merging MainRoot), opt-in
-renders 25 / 25, catalog 196 units, CI checkers pass; DirectCrystal exact-hash identities pass. Evidence: timing pilot
-(Codex) and the 16-seed family `samples/evidence/results/readout-field-v1-family.json` run by the planner — zero exact-
-identity violations over 160 cells, eight stochastic checks within |z| < 3.23 (family budget 0.01), assessment
-`readout-field-v1-assessment.json`; a second full run is identical apart from timing fields. Desktop scenarios
-`PhysicalAmbient_BothBounds_ContinuationConservesMeasuredCounts` and `RefusedLineAndMissingPreparation_ExplainWithoutZeroing`
-compiled, not run (desktop unavailable). Findings and EV wording follow at closure, after stage B.
+Status: **done 2026-10-13** — size estimate by Codex (`01a130ff…`, read-only); turn 1 review by Codex (`01a133ac…`,
+[review](PLAN.Studio.ReadoutField.Review.md)); decisions D1–D8 and R1–R7 below. Stage A implemented by Codex in the
+review conversation, which stopped at its final verification ("model at capacity", thread lost); a new Codex
+conversation (`01a133d2…`) found it complete, verified it and implemented stage B (BSR, D2). Planner verification:
+Release 0 warnings; normal suite 1,050 passed / 49 skipped; opt-in renders 27 / 27; catalog 197 units; CI checkers
+pass; DirectCrystal exact-hash identities pass. Evidence run by the planner: readout-field-v1 (ambient, 160 cells) and
+readout-field-v2 (BSR, 192 cells) — zero exact-identity violations, all derived-tolerance checks within their critical
+values; each family re-run identical apart from timing fields (Findings 70). Desktop scenarios
+`PhysicalBsrAndAmbient_ContinuationConservesMeasuredCounts` and `RefusedLineAndMissingPreparation_ExplainWithoutZeroing`
+compiled, not run (desktop unavailable; listed with the pending desktop runs).
 
 ## Calibration convention (literature check, 2026-10-13)
 
