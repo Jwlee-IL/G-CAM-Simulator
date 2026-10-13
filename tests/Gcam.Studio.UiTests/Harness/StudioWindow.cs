@@ -18,11 +18,31 @@ public sealed class StudioWindow(AutomationElement window)
 
     public AutomationElement ById(string automationId, AutomationElement? scope = null)
     {
+        if (scope is null) SelectLeftTabFor(automationId);
         var matches = (scope ?? Element).FindAll(TreeScope.Descendants,
             new PropertyCondition(AutomationElement.AutomationIdProperty, automationId));
         return matches.Count == 1
             ? matches[0]
             : throw new SelectorMatchException(automationId, matches.Count);
+    }
+
+    public void SelectLeftTab(string tab)
+    {
+        var element = Element.FindFirst(TreeScope.Descendants,
+            new PropertyCondition(AutomationElement.AutomationIdProperty, "Left." + tab + "Tab"))
+            ?? throw new SelectorMatchException("Left." + tab + "Tab", 0);
+        var selection = Pattern<SelectionItemPattern>(element, SelectionItemPattern.Pattern);
+        if (selection.Current.IsSelected) return;
+        selection.Select();
+        WaitUntil(() => selection.Current.IsSelected, TimeSpan.FromSeconds(2), "left " + tab + " tab selected");
+    }
+
+    private void SelectLeftTabFor(string id)
+    {
+        string? tab = id.StartsWith("Optics.", StringComparison.Ordinal) ? "Optics"
+            : id.StartsWith("Readout.", StringComparison.Ordinal) || id == "Detector.Section" ? "Detector"
+            : id.StartsWith("Source", StringComparison.Ordinal) || id is "AddSource" or "RemoveSource" ? "Scene" : null;
+        if (tab is not null) SelectLeftTab(tab);
     }
 
     /// <summary>The in-window modal layer, in this window's single UIA tree.</summary>
@@ -38,11 +58,51 @@ public sealed class StudioWindow(AutomationElement window)
 
     public void CloseModalLayer()
     {
-        if (Exists("Modal.Cancel")) Invoke("Modal.Cancel");
+        if (Visible("Modal.Close")) Invoke("Modal.Close");
+        else if (Exists("Modal.Cancel")) Invoke("Modal.Cancel");
+    }
+
+    public void OpenOptions(string tab = "Acquisition")
+    {
+        Invoke("OpenOptions");
+        WaitUntil(() => Exists("Options." + tab + "Tab"), TimeSpan.FromSeconds(5), "Options opened");
+        _ = ModalLayer();
+        Assert.Equal("Options", ModalLayer().Current.Name);
+        Select("Options." + tab + "Tab");
+    }
+    public void ApplyOptions()
+    {
+        Invoke("Options.Apply");
+        WaitUntil(() => !Exists("Options.AcquisitionTab"), TimeSpan.FromSeconds(5), "Options applied");
+    }
+    public void CancelOptions()
+    {
+        Invoke(Visible("Modal.Close") ? "Modal.Close" : "Modal.Cancel");
+        WaitUntil(() => !Exists("Options.AcquisitionTab"), TimeSpan.FromSeconds(5), "Options cancelled or closed");
+    }
+    private static string OptionTab(string id) => id == "AcquisitionSeed" ? "Acquisition"
+        : id.StartsWith("Detector.", StringComparison.Ordinal) || id.StartsWith("Chain.", StringComparison.Ordinal) ? "Detector" : "Environment";
+    public void SetOption(string id, string value)
+    {
+        OpenOptions(OptionTab(id));
+        SetText(id, value, "Options.Apply");
+        ApplyOptions();
+    }
+    public bool OptionEnabled(string id)
+    {
+        OpenOptions(OptionTab(id));
+        bool enabled = IsEnabled(id); CancelOptions(); return enabled;
+    }
+    public string OptionValue(string id)
+    {
+        OpenOptions(OptionTab(id));
+        string value = Value(id); CancelOptions(); return value;
     }
 
     public bool Exists(string automationId) =>
         Element.FindFirst(TreeScope.Descendants, new PropertyCondition(AutomationElement.AutomationIdProperty, automationId)) is not null;
+
+    private bool Visible(string id) => Exists(id) && !ById(id).Current.IsOffscreen;
 
     public void Invoke(string id) => Pattern<InvokePattern>(ById(id), InvokePattern.Pattern).Invoke();
 
@@ -73,7 +133,6 @@ public sealed class StudioWindow(AutomationElement window)
         if (Element.TryGetCurrentPattern(WindowPattern.Pattern, out var w) && w is WindowPattern window
             && window.Current.WindowVisualState == WindowVisualState.Minimized)
             window.SetWindowVisualState(WindowVisualState.Normal);
-        try { Element.SetFocus(); } catch (InvalidOperationException) { }
         SetForegroundWindow(handle);
         var watch = Stopwatch.StartNew();
         while (GetForegroundWindow() != handle && watch.Elapsed < TimeSpan.FromSeconds(3)) Thread.Sleep(50);
@@ -89,7 +148,12 @@ public sealed class StudioWindow(AutomationElement window)
 
     public void Toggle(string id) => Pattern<TogglePattern>(ById(id), TogglePattern.Pattern).Toggle();
 
-    public void Expand(string id) => Pattern<ExpandCollapsePattern>(ById(id), ExpandCollapsePattern.Pattern).Expand();
+    public void Expand(string id)
+    {
+        if (id == "Optics.Section") SelectLeftTab("Optics");
+        else if (id == "Detector.Section") SelectLeftTab("Detector");
+        else Pattern<ExpandCollapsePattern>(ById(id), ExpandCollapsePattern.Pattern).Expand();
+    }
 
     public void Choose(string id, string name)
     {
@@ -226,12 +290,24 @@ public sealed class StudioWindow(AutomationElement window)
     /// <summary>Puts the window in front at a fixed size, so pointer positions are reproducible.</summary>
     public void Normalise(int width, int height)
     {
+        if (Visible("Modal.Layer"))
+            throw new InvalidOperationException("Normalise requires a closed modal layer; the scenario left a dialog open.");
         if (Element.TryGetCurrentPattern(WindowPattern.Pattern, out var w) && w is WindowPattern window
             && window.Current.WindowVisualState != WindowVisualState.Normal)
             window.SetWindowVisualState(WindowVisualState.Normal);
         if (Element.TryGetCurrentPattern(TransformPattern.Pattern, out var t) && t is TransformPattern transform && transform.Current.CanResize)
             transform.Resize(width, height);
-        Element.SetFocus();
+        AutomationElement? focusTarget = null;
+        FocusPreparation.Wait(() =>
+        {
+            if (!EnsureForeground()) return false;
+            focusTarget = ById("ThemeToggle");
+            return focusTarget.Current.IsEnabled && !focusTarget.Current.IsOffscreen && focusTarget.Current.IsKeyboardFocusable;
+        }, () =>
+        {
+            focusTarget!.SetFocus();
+            return focusTarget.Current.HasKeyboardFocus;
+        }, TimeSpan.FromSeconds(5), Log);
         Thread.Sleep(300);   // let layout settle after the resize; the verdict re-reads every bound it uses
     }
 

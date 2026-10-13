@@ -24,7 +24,7 @@ public sealed class ScenarioTests(ITestOutputHelper output)
             // A preset long enough to still be acquiring when we stop: 600 s at x1 is 10 wall minutes.
             ui.SetText("AcquisitionLiveTime", "600", commitBy: "SourceY");
             ui.SetText("AcquisitionSpeed", "1", commitBy: "SourceY");
-            ui.SetText("AcquisitionSeed", "12345", commitBy: "SourceY");   // reproducible (seed fixed explicitly)
+            ui.SetOption("AcquisitionSeed", "12345");   // reproducible (seed fixed explicitly)
             Assert.Equal("600", ui.Value("AcquisitionLiveTime"));
             Assert.Equal("Start", ui.Text("StartAcquisition"));
 
@@ -199,7 +199,7 @@ public sealed class ScenarioTests(ITestOutputHelper output)
     public void MoveSource_ResetEditStart_PutsPeakOnTheSource() =>
         Scenario.Run(nameof(MoveSource_ResetEditStart_PutsPeakOnTheSource), output, (ui, record) =>
         {
-            ui.SetText("AcquisitionSeed", "12345", commitBy: "SourceY");   // reproducible (seed fixed explicitly)
+            ui.SetOption("AcquisitionSeed", "12345");   // reproducible (seed fixed explicitly)
             Assert.Equal("Completed", ui.Acquire(RunTimeout));
             Assert.Equal(("0", "0"), (ui.Value("SourceX"), ui.Value("SourceY")));
             Assert.False(ui.IsEnabled("SourceX"), "source fields locked while data exist");

@@ -22,11 +22,11 @@ public sealed class ReadoutScenarioTests(ITestOutputHelper output)
 
     private static void SelectHead(StudioWindow ui, string preset = "Baseline")
     {
-        ui.Expand("Optics.Section");
+        ui.SelectLeftTab("Optics");
         ui.Choose("Optics.Preset", preset);
-        ui.Expand("Detector.Section");
+        ui.SelectLeftTab("Detector");
         ui.Choose("Readout.Mode", "FourOutputAnger");
-        ui.SetText("AcquisitionSeed", "12345", "SourceY");
+        ui.SetOption("AcquisitionSeed", "12345");
     }
 
     private static void Prepare(StudioWindow ui, TimeSpan wait)
@@ -97,7 +97,7 @@ public sealed class ReadoutScenarioTests(ITestOutputHelper output)
     public void RefusedLineAndField_ExplainWithoutZeroing() => Scenario.Run(nameof(RefusedLineAndField_ExplainWithoutZeroing), output, (ui, record) =>
     {
         // TODO-41: the default Sharp head selects the physical readout; 122.06 keV is refused with its published reason.
-        ui.Expand("Detector.Section");
+        ui.SelectLeftTab("Detector");
         ui.Choose("Readout.Mode", "FourOutputAnger");
         Assert.Equal("FourOutputAnger", ui.SelectedItem("Readout.Mode"));
         // The refusal fact stays inline; the record sentence (population, source, first failure) is the row's help text.
@@ -107,13 +107,13 @@ public sealed class ReadoutScenarioTests(ITestOutputHelper output)
         ui.SetText("Readout.WindowLow", "100", "SourceY");
         ui.SetText("Readout.WindowHigh", "140", "SourceY");
         Assert.Equal("Window line 122.06 keV", ui.Text("Readout.WindowLine"));
-        string field = ui.Value("Acquisition.AmbientDose");
+        string field = ui.OptionValue("Acquisition.AmbientDose");
         ui.Invoke("StartAcquisition");
         Assert.Contains("zero", ui.Text("Readout.Reason"));
-        Assert.Equal(field, ui.Value("Acquisition.AmbientDose"));
+        Assert.Equal(field, ui.OptionValue("Acquisition.AmbientDose"));
         Assert.Equal("Empty", ui.RunState);
-        Assert.False(ui.IsEnabled("Detector.GainSigma"));
-        Assert.False(ui.IsEnabled("Chain.Scintillator"));
+        Assert.False(ui.OptionEnabled("Detector.GainSigma"));
+        Assert.False(ui.OptionEnabled("Chain.Scintillator"));
         record.Step("Sharp physical selection; 122.06 keV refused with population and literal reason; nonzero field refusal preserves inputs.");
     });
 
@@ -135,8 +135,8 @@ public sealed class ReadoutScenarioTests(ITestOutputHelper output)
         Assert.Equal(!Broken, ui.Rows("Readout.Diagnostics").Any());
         ui.Select("Readout.AngerTab"); // the map is in the tree only on the SiPM / Anger tabs
         Assert.Equal((12, 12, 1.0), Module(ui.Status("Readout.Map")));
-        ui.Expand("Detector.Section");
-        ui.SetText("Detector.Gap", "90", "SourceY");
+        ui.SelectLeftTab("Detector");
+        ui.SetOption("Detector.Gap", "90");
         Assert.Equal("Not prepared", ui.Text("Readout.State")); // a stale bank after a module edit
         record.Step("Cancelled preparation is retryable; same-session hit; tabs and per-crystal diagnostics; module edit makes the bank stale.");
     });
@@ -145,7 +145,7 @@ public sealed class ReadoutScenarioTests(ITestOutputHelper output)
     public void FixedSeedRepeatAndContinuation_ConserveCountsAndExposeFourLanes() => Scenario.Run(nameof(FixedSeedRepeatAndContinuation_ConserveCountsAndExposeFourLanes), output, (ui, record) =>
     {
         SelectHead(ui);
-        ui.SetText("Acquisition.AmbientDose", "0", "SourceY");
+        ui.SetOption("Acquisition.AmbientDose", "0");
         ui.SetText("AcquisitionLiveTime", "4", "SourceY");
         ui.SetText("AcquisitionSpeed", "1", "SourceY");
         Prepare(ui, PrepareWait[("Baseline", 661.7)]);
@@ -178,7 +178,7 @@ public sealed class ReadoutScenarioTests(ITestOutputHelper output)
     public void SharpTwoLineBank_SwitchesWindowAndLineWithoutTruthDispatch() => Scenario.Run(nameof(SharpTwoLineBank_SwitchesWindowAndLineWithoutTruthDispatch), output, (ui, record) =>
     {
         SelectHead(ui, "Sharp");
-        ui.SetText("Acquisition.AmbientDose", "0", "SourceY");
+        ui.SetOption("Acquisition.AmbientDose", "0");
         ui.Invoke("AddSource");
         ui.Choose("SourceIsotope", "Co-60");
         Prepare(ui, PrepareWait[("Sharp", 661.7)] + PrepareWait[("Sharp", 1332.5)]);
@@ -226,7 +226,7 @@ public sealed class ReadoutScenarioTests(ITestOutputHelper output)
     {
         // One cold 64 k High-res preparation (≈ 45 min, ≈ 6 GiB) bundles every High check; later steps reuse the session.
         SelectHead(ui, "High-res");
-        ui.SetText("Acquisition.AmbientDose", "0", "SourceY");
+        ui.SetOption("Acquisition.AmbientDose", "0");
         ui.WaitForDescription("Readout.Lines", TimeSpan.FromSeconds(5), "64,000 histories per crystal");
         ui.Invoke("Readout.Prepare");
         StudioWindow.WaitUntil(() => ui.Text("Readout.State").Contains("histories", StringComparison.Ordinal), TimeSpan.FromSeconds(600), "streamed flood progress");
@@ -264,7 +264,7 @@ public sealed class ReadoutScenarioTests(ITestOutputHelper output)
         // Replace the default Cs source: do not add it to a two-line bank that would prepare the 64 k line.
         ui.Choose("SourceIsotope", "Co-60");
         Assert.Equal("Co-60", ui.SelectedItem("SourceIsotope"));
-        ui.SetText("Acquisition.AmbientDose", "0", "SourceY");
+        ui.SetOption("Acquisition.AmbientDose", "0");
         ui.SetText("Readout.WindowHigh", "1532.375", "Readout.WindowLow");
         ui.SetText("Readout.WindowLow", "1132.625", "Readout.WindowHigh");
         Assert.Equal("Window line 1332.5 keV", ui.Text("Readout.WindowLine"));
@@ -312,6 +312,7 @@ public sealed class ReadoutScenarioTests(ITestOutputHelper output)
     public void CustomModules_InheritByModuleNotCost_UnknownCalibratesLocally() => Scenario.Run(nameof(CustomModules_InheritByModuleNotCost_UnknownCalibratesLocally), output, (ui, record) =>
     {
         SelectHead(ui, "High-res");
+        ui.Choose("Optics.Preset", "Custom");
         ui.Choose("Optics.Rank", "7"); // a ComboBox of primes (the other optics fields are text boxes)
         ui.SetText("Optics.CellPitch", "1", "SourceY");
         ui.SetText("Optics.Distance", "60", "SourceY");

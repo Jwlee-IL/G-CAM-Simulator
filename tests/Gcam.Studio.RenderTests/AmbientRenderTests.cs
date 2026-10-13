@@ -6,6 +6,7 @@ using System.Windows.Media.Imaging;
 using Gcam.Configuration;
 using Gcam.Studio.Core.Services;
 using Gcam.Studio.Core.ViewModels;
+using Gcam.Studio.Services;
 
 namespace Gcam.Studio.RenderTests;
 
@@ -13,7 +14,7 @@ public sealed partial class PlotViewRenderTests
 {
     private void RenderAmbientInputs(string theme)
     {
-        var model = new MainViewModel(new FixtureAcquisition(), new FixtureTheme(Enum.Parse<AppTheme>(theme)), new FixtureSpectrum(false))
+        var model = new MainViewModel(new FixtureAcquisition(), new FixtureTheme(Enum.Parse<AppTheme>(theme)), new FixtureSpectrum(false), confirmation: new ModalService())
         {
             IsChainExpanded = false, IsOpticsExpanded = false, IsDetectorExpanded = true
         };
@@ -22,11 +23,14 @@ public sealed partial class PlotViewRenderTests
         Assert.Equal(AmbientGeometry.FrontOnlyThroughMask, model.AmbientGeometry);
         model.RemoveSourceCommand.Execute(null);
         Assert.True(model.StartCommand.CanExecute(null));
+        model.OpenOptionsCommand.Execute(null);
+        var draft = model.Options!;
+        draft.SelectedTab = OptionsTab.Environment;
         foreach (string state in new[] { "", "-invalid" })
         foreach (var size in new[] { new Size(1280, 800), new Size(1440, 900) })
         {
             // AB-16: an entry outside the pattern is refused; the previous value stays and the warning shows.
-            if (state.Length > 0) { model.AmbientDoseText = "-0.1"; Assert.Equal(.1, model.AmbientDoseRateMicroSvPerHour); Assert.NotNull(model.AmbientDoseError); }
+            if (state.Length > 0) { draft.AmbientDoseText = "-0.1"; draft.ApplyCommand.Execute(null); Assert.True(draft.IsOpen); Assert.Equal(.1, model.AmbientDoseRateMicroSvPerHour); Assert.NotNull(draft.AmbientDoseError); }
             var (root, _) = DetachMainWindow(model, size);
             var dose = Assert.Single(Descendants(root).OfType<TextBox>(),
                 box => AutomationProperties.GetAutomationId(box) == "Acquisition.AmbientDose");
@@ -34,7 +38,7 @@ public sealed partial class PlotViewRenderTests
                 box => AutomationProperties.GetAutomationId(box) == "Acquisition.AmbientBound");
             Assert.True(dose.IsEnabled); Assert.True(bound.IsEnabled);
             Assert.Equal(model.AmbientGeometry, bound.SelectedItem);
-            // Scroll the existing offscreen panel to expose the absolute-field input, preset and both-bound selector.
+            // Scroll the Options tab if constrained; its draft owns the field, preset and bound selector.
             for (DependencyObject? parent = System.Windows.Media.VisualTreeHelper.GetParent(dose); parent is not null;
                 parent = System.Windows.Media.VisualTreeHelper.GetParent(parent))
                 if (parent is ScrollViewer scroll) { scroll.ScrollToBottom(); root.UpdateLayout(); break; }
@@ -45,5 +49,6 @@ public sealed partial class PlotViewRenderTests
             string path = Path.Combine(directory, $"ambient-inputs{state}-{theme.ToLowerInvariant()}-{size.Width:0}x{size.Height:0}.png");
             using var stream = File.Create(path); encoder.Save(stream); output.WriteLine(path);
         }
+        draft.CancelCommand.Execute(null);
     }
 }

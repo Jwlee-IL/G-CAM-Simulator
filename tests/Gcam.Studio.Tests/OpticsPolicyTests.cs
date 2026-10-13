@@ -21,9 +21,33 @@ public sealed class OpticsPolicyTests
             Assert.Same(preset, OpticsPreset.Match(editor.Effective with { FocalDistanceMm = 800 }));
             Assert.Null(OpticsPolicy.Validate(editor.Effective));
         }
+        var prefill = editor.Effective;
+        Assert.False(editor.IsCustom);
+        editor.SelectedPreset = OpticsPreset.All[0];
+        Assert.True(editor.IsCustom);
+        Assert.Equal(prefill, editor.Effective);
         editor.CellPitch = "0.51";
         Assert.Equal("Custom", editor.SelectedPreset.Name);
         Assert.Equal(0.51, editor.Effective.CellPitchMm);
+        editor.CellPitch = "0.5";
+        Assert.Equal("Custom", editor.SelectedPreset.Name); // matching High-res must not hide fields mid-edit
+        Assert.True(editor.IsCustom);
+    }
+
+    [Fact]
+    public void CustomMode_ChangesOnlyThroughSelector_PresetFieldsCannotBeEdited()
+    {
+        var editor = new OpticsEditorViewModel();
+        var before = editor.Effective;
+        editor.CellPitch = "0.51";
+        Assert.Equal(before, editor.Effective);
+        Assert.Equal("Sharp", editor.SelectedPreset.Name);
+        Assert.False(editor.IsCustom);
+        editor.Load(before with { FocalDistanceMm = 800 });
+        Assert.False(editor.IsCustom);
+        editor.SelectedPresetIndex = 0;
+        editor.Load(before);
+        Assert.True(editor.IsCustom);
     }
 
     [Theory]
@@ -51,7 +75,7 @@ public sealed class OpticsPolicyTests
     [InlineData("0.01")]
     public void InvalidText_IsRetainedAndCannotBecomeEffective(string text)
     {
-        var editor = new OpticsEditorViewModel();
+        var editor = new OpticsEditorViewModel { SelectedPreset = OpticsPreset.All[0] };
         var before = editor.Effective;
         editor.CellPitch = text;
         Assert.NotNull(editor.Error);
@@ -66,7 +90,7 @@ public sealed class OpticsPolicyTests
     [InlineData("30.5")]
     public void PixelCount_RequiresSupportedInteger(string text)
     {
-        var editor = new OpticsEditorViewModel { Pixels = text };
+        var editor = new OpticsEditorViewModel { SelectedPreset = OpticsPreset.All[0], Pixels = text };
         Assert.NotNull(editor.Error);
         Assert.Equal(30, editor.Effective.DetectorPixels);
     }

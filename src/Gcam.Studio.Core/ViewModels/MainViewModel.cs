@@ -183,9 +183,9 @@ public sealed partial class MainViewModel : ObservableObject
     public IReadOnlyList<ScintPreset> Scintillators => FrontEndMaterials.Scintillators;
     public IReadOnlyList<SensorPreset> Sensors => FrontEndParts.Sensors;
     public IReadOnlyList<PreampPreset> Preamps => FrontEndParts.Preamps;
-    private ScintPreset _scintillator = FrontEndParts.Default.Scintillator;
-    private SensorPreset _sensor = FrontEndParts.Default.Sensor;
-    private PreampPreset _preamp = FrontEndParts.Default.Preamp;
+    private ScintPreset _scintillator = StudioOptionDefaults.Current.Chain.Scintillator;
+    private SensorPreset _sensor = StudioOptionDefaults.Current.Chain.Sensor;
+    private PreampPreset _preamp = StudioOptionDefaults.Current.Chain.Preamp;
     public ScintPreset Scintillator
     {
         get => _scintillator;
@@ -208,7 +208,7 @@ public sealed partial class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(Chain)); OnPropertyChanged(nameof(Detector)); OnPropertyChanged(nameof(ChainSummary));
         DetectorWorkspace.Refresh();
     }
-    [ObservableProperty] private string _reflectorGapUm = "100";
+    [ObservableProperty] private string _reflectorGapUm = StudioOptionDefaults.Current.GapUm.ToString("G", CultureInfo.CurrentCulture);
     [ObservableProperty] private string? _gapError;
     private double PendingGapMm => double.TryParse(ReflectorGapUm, out double gap) ? gap / 1000 : double.NaN;
     partial void OnReflectorGapUmChanged(string? oldValue, string newValue)
@@ -220,18 +220,16 @@ public sealed partial class MainViewModel : ObservableObject
     }
     private void ValidateGap()
     {
-        double gap = PendingGapMm;
-        GapError = !double.IsFinite(gap) || gap < 0 || gap >= OpticsEditor.Effective.PixelPitchMm
-            ? "The reflector gap must be finite, nonnegative and less than pixel pitch." : null;
+        GapError = StudioOptionValidation.GapError(ReflectorGapUm, OpticsEditor.Effective.PixelPitchMm);
         ValidationError = OpticsEditor.Error ?? GapError;
     }
-    [ObservableProperty] private double _gainSigmaPercent = 3;
-    [ObservableProperty] private int _gainSeed = 1;
-    [ObservableProperty] private double _backgroundToSignalRatio;
+    [ObservableProperty] private double _gainSigmaPercent = StudioOptionDefaults.Current.GainSigmaPercent;
+    [ObservableProperty] private int _gainSeed = StudioOptionDefaults.Current.GainSeed;
+    [ObservableProperty] private double _backgroundToSignalRatio = StudioOptionDefaults.Current.BackgroundToSignalRatio;
     /// <summary>Photon H*(10) of the absolute ambient field; default 0.10 µSv/h (AB-15). 0 is the ideal environment.</summary>
     [ObservableProperty] private double _ambientDoseRateMicroSvPerHour = DefaultAmbientDoseRateMicroSvPerHour;
-    [ObservableProperty] private AmbientGeometry _ambientGeometry = AmbientGeometry.FrontOnlyThroughMask;
-    public const double DefaultAmbientDoseRateMicroSvPerHour = 0.10;
+    [ObservableProperty] private AmbientGeometry _ambientGeometry = StudioOptionDefaults.Current.AmbientGeometry;
+    public static double DefaultAmbientDoseRateMicroSvPerHour => StudioOptionDefaults.Current.AmbientDoseMicroSvPerHour;
     public IReadOnlyList<AmbientGeometry> AmbientGeometries { get; } = Enum.GetValues<AmbientGeometry>();
     /// <summary>The validated spectrum every non-zero field uses (the only user-facing preset, AB-15).</summary>
     public AmbientPreset AmbientPreset => AmbientPreset.TerrestrialUnscear2000V1;
@@ -245,7 +243,7 @@ public sealed partial class MainViewModel : ObservableObject
     partial void OnAmbientDoseRateMicroSvPerHourChanged(double oldValue, double newValue)
     {
         if (Locked(() => AmbientDoseRateMicroSvPerHour = oldValue)) return;
-        if (!double.IsFinite(newValue) || newValue < 0)
+        if (!StudioOptionValidation.Nonnegative(newValue))
         {
             // Refused (AB-16): the previous value stays; there is no silent fall back to the ideal environment.
             _reverting = true;
@@ -255,7 +253,7 @@ public sealed partial class MainViewModel : ObservableObject
         }
         AmbientDoseError = null;
         string text = FormatAmbientDose(newValue);
-        if (!AmbientDosePattern().IsMatch(AmbientDoseText) || ParseAmbientDose(AmbientDoseText) != newValue) SetAmbientDoseText(text);
+        if (ParseAmbientDose(AmbientDoseText) != newValue) SetAmbientDoseText(text);
         OnPropertyChanged(nameof(AmbientEnvironmentLabel)); OnPropertyChanged(nameof(AmbientBsrReadout));
         StartCommand.NotifyCanExecuteChanged();
     }
@@ -265,12 +263,8 @@ public sealed partial class MainViewModel : ObservableObject
     /// with <see cref="AmbientDoseError"/>, keeps the previous dose rate and blocks Start until corrected.</summary>
     [ObservableProperty] private string _ambientDoseText = FormatAmbientDose(DefaultAmbientDoseRateMicroSvPerHour);
     [ObservableProperty] private string? _ambientDoseError;
-    public const string AmbientDosePatternText = @"^\s*(\d+(\.\d*)?|\.\d+)\s*$";
-    private const string AmbientDoseMessage = "The ambient dose rate must be a number ≥ 0 in µSv/h (digits and one decimal point, e.g. 0.1).";
-    [GeneratedRegex(AmbientDosePatternText, RegexOptions.CultureInvariant)]
-    private static partial Regex AmbientDosePattern();
-    private static double ParseAmbientDose(string text) => double.Parse(text, NumberStyles.AllowDecimalPoint | NumberStyles.AllowLeadingWhite
-        | NumberStyles.AllowTrailingWhite, CultureInfo.InvariantCulture);
+    public const string AmbientDosePatternText = StudioOptionValidation.AmbientDosePatternText;
+    private static double ParseAmbientDose(string text) => StudioOptionValidation.TryAmbientDose(text, out double value) ? value : double.NaN;
     private static string FormatAmbientDose(double value) => value.ToString("R", CultureInfo.InvariantCulture);
     private bool _syncingDoseText;
     private void SetAmbientDoseText(string text)
@@ -283,8 +277,8 @@ public sealed partial class MainViewModel : ObservableObject
     {
         if (_syncingDoseText) return;
         if (Locked(() => AmbientDoseText = oldValue ?? "")) return;
-        double value = AmbientDosePattern().IsMatch(newValue ?? "") ? ParseAmbientDose(newValue!) : double.NaN;
-        if (!double.IsFinite(value)) { AmbientDoseError = AmbientDoseMessage; return; } // previous dose rate stays
+        double value = ParseAmbientDose(newValue ?? "");
+        if (!double.IsFinite(value)) { AmbientDoseError = StudioOptionValidation.AmbientDoseMessage; return; } // previous dose rate stays
         AmbientDoseError = null;
         AmbientDoseRateMicroSvPerHour = value;
     }
@@ -298,7 +292,7 @@ public sealed partial class MainViewModel : ObservableObject
     partial void OnGainSigmaPercentChanged(double oldValue, double newValue)
     {
         if (LockedLegacy(() => GainSigmaPercent = oldValue)) return;
-        if (!double.IsFinite(newValue) || newValue < 0) { GainSigmaPercent = 3; return; }
+        if (!StudioOptionValidation.Nonnegative(newValue)) { GainSigmaPercent = StudioOptionDefaults.Current.GainSigmaPercent; return; }
         OnPropertyChanged(nameof(Detector));
         OnPropertyChanged(nameof(DetectorSummary));
         DetectorWorkspace.Refresh();
@@ -311,27 +305,26 @@ public sealed partial class MainViewModel : ObservableObject
     partial void OnBackgroundToSignalRatioChanged(double oldValue, double newValue)
     {
         if (Locked(() => BackgroundToSignalRatio = oldValue)) return;
-        if (!double.IsFinite(newValue) || newValue < 0) BackgroundToSignalRatio = 0;
+        if (!StudioOptionValidation.Nonnegative(newValue)) BackgroundToSignalRatio = StudioOptionDefaults.Current.BackgroundToSignalRatio;
     }
 
     /// <summary>Monte Carlo seed input: blank draws a new seed for every acquisition (independent measurements);
     /// a number fixes it to reproduce an acquisition. Continue keeps the acquisition's seed.</summary>
-    [ObservableProperty] private string _seedText = "";
+    [ObservableProperty] private string _seedText = StudioOptionDefaults.Current.SeedText;
     [ObservableProperty] private string? _seedError;
     /// <summary>Seed of the retained (or running) acquisition; null in Empty.</summary>
     [ObservableProperty] private int? _acquisitionSeed;
     partial void OnSeedTextChanged(string? oldValue, string newValue)
     {
         if (Locked(() => SeedText = oldValue ?? "")) return;
-        SeedError = string.IsNullOrWhiteSpace(newValue) || int.TryParse(newValue, NumberStyles.Integer, CultureInfo.CurrentCulture, out int s) && s >= 0
-            ? null : "The seed must be blank (new each acquisition) or a nonnegative integer.";
+        SeedError = StudioOptionValidation.SeedError(newValue);
     }
 
     // ---------------------------------------------------------------- acquisition inputs (not physics)
 
-    [ObservableProperty] private double _liveTimeS = 60;
+    [ObservableProperty] private double _liveTimeS = StudioOptionDefaults.Current.LiveTimeS;
     [ObservableProperty] private string? _liveTimeError;
-    [ObservableProperty] private double _speed = 10;
+    [ObservableProperty] private double _speed = StudioOptionDefaults.Current.Speed;
     [ObservableProperty] private AcquisitionSnapshot? _snapshot;
     partial void OnSnapshotChanged(AcquisitionSnapshot? oldValue, AcquisitionSnapshot? newValue)
     {
@@ -340,10 +333,10 @@ public sealed partial class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(ScopeEventCount));
         if (oldValue is null != newValue is null) NotifyRunState();
     }
-    [ObservableProperty] private double _windowFwhm = 1.5;
+    [ObservableProperty] private double _windowFwhm = StudioOptionDefaults.Current.WindowFwhm;
     partial void OnWindowFwhmChanged(double value)
     {
-        if (!double.IsFinite(value) || value <= 0) { WindowFwhm = 1.5; return; }
+        if (!double.IsFinite(value) || value <= 0) { WindowFwhm = StudioOptionDefaults.Current.WindowFwhm; return; }
         Imaging.InvalidateSweep();
         Spectrum.NotifyWindowChanged();
         Imaging.RefreshChannels();
@@ -352,7 +345,7 @@ public sealed partial class MainViewModel : ObservableObject
     partial void OnLiveTimeSChanged(double oldValue, double newValue)
     {
         if (Locked(() => LiveTimeS = oldValue, allowed: CanEditLiveTime)) return;
-        if (!(newValue > 0) || !double.IsFinite(newValue)) { LiveTimeS = 60; return; }
+        if (!(newValue > 0) || !double.IsFinite(newValue)) { LiveTimeS = StudioOptionDefaults.Current.LiveTimeS; return; }
         if (Snapshot is { } s && newValue < s.LiveTimeS)
         {
             // The preset can be raised to continue, never lowered below what was already acquired.
@@ -369,7 +362,7 @@ public sealed partial class MainViewModel : ObservableObject
     partial void OnSpeedChanged(double oldValue, double newValue)
     {
         if (Locked(() => Speed = oldValue, allowed: CanEditSpeed)) return;
-        if (!(newValue > 0) || !double.IsFinite(newValue)) Speed = 10;
+        if (!(newValue > 0) || !double.IsFinite(newValue)) Speed = StudioOptionDefaults.Current.Speed;
     }
 
     [ObservableProperty]

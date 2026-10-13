@@ -62,7 +62,7 @@ public sealed class MlemScenarioTests(ITestOutputHelper output)
         // 600 s at ×1 stays acquiring for the whole scenario (10 wall minutes).
         ui.SetText("AcquisitionLiveTime", "600", "SourceY");
         ui.SetText("AcquisitionSpeed", "1", "SourceY");
-        ui.SetText("AcquisitionSeed", "12345", "SourceY");
+        ui.SetOption("AcquisitionSeed", "12345");
         ui.Invoke("StartAcquisition");
         StudioWindow.WaitUntil(() => ui.RunState == "Acquiring", TimeSpan.FromSeconds(5), "acquisition started");
         StudioWindow.WaitUntil(() => ui.Counts > 0, TimeSpan.FromSeconds(20), "first counts");
@@ -171,7 +171,7 @@ public sealed class MlemScenarioTests(ITestOutputHelper output)
     public void Mlem_FocalPlane1500_FlagsTheUnmeasuredIterationCount() =>
         Scenario.Run(nameof(Mlem_FocalPlane1500_FlagsTheUnmeasuredIterationCount), output, (ui, record) =>
         {
-            ui.SetText("AcquisitionSeed", "12345", "SourceY");
+            ui.SetOption("AcquisitionSeed", "12345");
             Assert.Equal("Completed", ui.Acquire(PilotTests.RunTimeout));
             ui.Choose("Imaging.Reconstruction", MlemItem);
             var at1000 = Decoded(ui, "Mlem");
@@ -192,7 +192,7 @@ public sealed class MlemScenarioTests(ITestOutputHelper output)
     public void MethodSwitch_KeepsMeasurementsOnTheSameGrid() =>
         Scenario.Run(nameof(MethodSwitch_KeepsMeasurementsOnTheSameGrid), output, (ui, record) =>
         {
-            ui.SetText("AcquisitionSeed", "12345", "SourceY");
+            ui.SetOption("AcquisitionSeed", "12345");
             Assert.Equal("Completed", ui.Acquire(PilotTests.RunTimeout));
             Decoded(ui, "CrossCorrelation");
             var view = ui.Bounds("ReconView");
@@ -231,7 +231,7 @@ public sealed class MlemScenarioTests(ITestOutputHelper output)
     public void FocusSweep_UnderMlem_IsTheCrossCorrelationSweep() =>
         Scenario.Run(nameof(FocusSweep_UnderMlem_IsTheCrossCorrelationSweep), output, (ui, record) =>
         {
-            ui.SetText("AcquisitionSeed", "12345", "SourceY");
+            ui.SetOption("AcquisitionSeed", "12345");
             Assert.Equal("Completed", ui.Acquire(PilotTests.RunTimeout));
             ui.Choose("Imaging.Channel", "Cs-137");
             Decoded(ui, "CrossCorrelation");

@@ -76,4 +76,13 @@
     <!-- Imaging centre: height always left under the image pair for measurements and the focus curve -->
     <sys:Double x:Key="Size.Imaging.Lower">240</sys:Double>
     <sys:Double x:Key="Size.Modal">480</sys:Double>
+    <sys:Double x:Key="Size.Caption">47</sys:Double>
+    <sys:Double x:Key="Size.Options.Content">480</sys:Double>
+    <sys:Double x:Key="Size.Options">520</sys:Double>
+    <sys:Double x:Key="Size.Options.LockCaption">16</sys:Double>
+    <sys:Double x:Key="Size.CaptionButton">46</sys:Double>
+    <Thickness x:Key="Gap.Caption.Focus">2</Thickness>
+    <Thickness x:Key="Pad.None">0</Thickness>
+    <Thickness x:Key="Gap.TabContent">0,12,0,0</Thickness>
+    <sys:Double x:Key="Size.OptionsBadge">4</sys:Double>
 </ResourceDictionary>

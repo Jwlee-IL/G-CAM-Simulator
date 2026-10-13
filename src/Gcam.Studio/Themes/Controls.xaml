@@ -109,6 +109,10 @@ re-templated against the colour tokens. Implicit styles = the default look; keye
     <Geometry x:Key="Icon.Play">
         M0,0 L10,6 L0,12 Z
     </Geometry>
+    <Geometry x:Key="Icon.Minimize">M0,10 H12 V12 H0 Z</Geometry>
+    <Geometry x:Key="Icon.Maximize">F0 M0,0 H12 V12 H0 Z M2,2 V10 H10 V2 Z</Geometry>
+    <Geometry x:Key="Icon.Restore">F0 M3,0 H12 V9 H9 V12 H0 V3 H3 Z M5,2 V3 H9 V7 H10 V2 Z M2,5 V10 H7 V5 Z</Geometry>
+    <Geometry x:Key="Icon.Close">M1,0 L6,5 L11,0 L12,1 L7,6 L12,11 L11,12 L6,7 L1,12 L0,11 L5,6 L0,1 Z</Geometry>
     <Geometry x:Key="Icon.Stop">
         M0,0 H12 V12 H0 Z
     </Geometry>
@@ -124,8 +128,9 @@ re-templated against the colour tokens. Implicit styles = the default look; keye
     <Geometry x:Key="Icon.Delete">
         M2,3 H10 V12 H2 Z M1,1 H5 V0 H7 V1 H11 V2 H1 Z
     </Geometry>
+    <!-- Trash can, one connected shape: handle on a full-width lid, body with two even-odd slot cut-outs -->
     <Geometry x:Key="Icon.Clear">
-        M0,3 H8 V12 H0 Z M0,1 H3 V0 H5 V1 H8 V2 H0 Z M10,4 H12 V12 H10 Z
+        F0 M4,0 H8 V1 H12 V3 H10 V12 H2 V3 H0 V1 H4 Z M4,5 H5 V10 H4 Z M7,5 H8 V10 H7 Z
     </Geometry>
     <Geometry x:Key="Icon.Reset">
         M2,3 A5,5 0 1 1 1,8 L3,7 A3,3 0 1 0 4,4 L4,6 L0,6 L0,2 Z
@@ -222,7 +227,7 @@ re-templated against the colour tokens. Implicit styles = the default look; keye
         <Setter Property="MinWidth" Value="{StaticResource Size.Control}" />
     </Style>
     <Style x:Key="Button.Icon" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
-        <Setter Property="Padding" Value="{StaticResource Pad.Control}" />
+        <Setter Property="Padding" Value="{StaticResource Pad.None}" />
         <Setter Property="Width" Value="{StaticResource Size.Control}" />
         <Setter Property="Height" Value="{StaticResource Size.Control}" />
         <Setter Property="ContentTemplate">
@@ -234,6 +239,53 @@ re-templated against the colour tokens. Implicit styles = the default look; keye
                 </DataTemplate>
             </Setter.Value>
         </Setter>
+    </Style>
+    <!-- Native caption proportions, with no content padding or resting frame to clip a Size.Icon glyph. -->
+    <Style x:Key="Button.Caption" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+        <Setter Property="Width" Value="{StaticResource Size.CaptionButton}" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Cursor" Value="Arrow" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Grid Background="{TemplateBinding Background}">
+                        <Path Data="{TemplateBinding Content}" Stretch="Uniform"
+                                Fill="{TemplateBinding Foreground}" Width="{StaticResource Size.Icon}" Height="{StaticResource Size.Icon}"
+                                HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        <Border x:Name="FocusCue" BorderBrush="Transparent" BorderThickness="{StaticResource Border.Hairline}"
+                                Margin="{StaticResource Gap.Caption.Focus}" IsHitTestVisible="False" />
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsKeyboardFocused" Value="True">
+                            <Setter TargetName="FocusCue" Property="BorderBrush" Value="{DynamicResource Brush.Focus}" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Background" Value="{DynamicResource Brush.Bg.Hover}" />
+            </Trigger>
+            <Trigger Property="IsPressed" Value="True">
+                <Setter Property="Background" Value="{DynamicResource Brush.Line}" />
+            </Trigger>
+            <Trigger Property="IsEnabled" Value="False">
+                <Setter Property="Foreground" Value="{DynamicResource Brush.Text.Disabled}" />
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+    <Style x:Key="Button.Caption.Close" TargetType="Button" BasedOn="{StaticResource Button.Caption}">
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Background" Value="{DynamicResource Brush.Caption.Close.Hover}" />
+                <Setter Property="Foreground" Value="{DynamicResource Brush.Caption.Close.Foreground}" />
+            </Trigger>
+            <Trigger Property="IsPressed" Value="True">
+                <Setter Property="Background" Value="{DynamicResource Brush.Caption.Close.Pressed}" />
+                <Setter Property="Foreground" Value="{DynamicResource Brush.Caption.Close.Foreground}" />
+            </Trigger>
+        </Style.Triggers>
     </Style>
     <Style x:Key="Button.Theme" TargetType="Button" BasedOn="{StaticResource Button.Icon}">
         <Setter Property="Content" Value="{StaticResource Icon.Sun}" />
@@ -310,6 +362,46 @@ re-templated against the colour tokens. Implicit styles = the default look; keye
                             <Setter Property="Cursor" Value="Arrow" />
                         </Trigger>
                     </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    <!-- The left tabs use the same selected fill, weight and focus cue as segmented pickers. -->
+    <Style x:Key="TabItem.Segment" TargetType="TabItem">
+        <Setter Property="Foreground" Value="{DynamicResource Brush.Text.Secondary}" />
+        <Setter Property="FocusVisualStyle" Value="{StaticResource FocusVisual}" />
+        <Setter Property="Height" Value="{StaticResource Size.Control}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="TabItem">
+                    <Border x:Name="Chrome" Background="Transparent" CornerRadius="{StaticResource Radius.Control}">
+                        <ContentPresenter ContentSource="Header" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Chrome" Property="Background" Value="{DynamicResource Brush.Bg.Hover}" />
+                        </Trigger>
+                        <Trigger Property="IsSelected" Value="True">
+                            <Setter TargetName="Chrome" Property="Background" Value="{DynamicResource Brush.Accent.Subtle}" />
+                            <Setter Property="Foreground" Value="{DynamicResource Brush.Accent}" />
+                            <Setter Property="FontWeight" Value="SemiBold" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    <Style x:Key="TabControl.Segment" TargetType="TabControl">
+        <Setter Property="ItemContainerStyle" Value="{StaticResource TabItem.Segment}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="TabControl">
+                    <DockPanel>
+                        <Border DockPanel.Dock="Top" Style="{StaticResource Segment.Track}" Padding="{StaticResource Pad.None}">
+                            <UniformGrid Rows="1" IsItemsHost="True" KeyboardNavigation.TabNavigation="Once" />
+                        </Border>
+                        <ContentPresenter x:Name="PART_SelectedContentHost" ContentSource="SelectedContent" />
+                    </DockPanel>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
@@ -649,4 +741,5 @@ re-templated against the colour tokens. Implicit styles = the default look; keye
             </Setter.Value>
         </Setter>
     </Style>
+    <Geometry x:Key="Icon.Settings">F0 M4,0 L8,0 8.5,2 10,2 12,4 10.5,6 12,8 10,10 8.5,10 8,12 4,12 3.5,10 2,10 0,8 1.5,6 0,4 2,2 3.5,2 Z M6,3 A3,3 0 1 0 6,9 A3,3 0 1 0 6,3 Z</Geometry>
 </ResourceDictionary>

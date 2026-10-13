@@ -12,7 +12,7 @@ public sealed class WorkspaceScenarioTests(ITestOutputHelper output)
     internal static double[] Numbers(JsonElement e, string key) => e.GetProperty(key).EnumerateArray().Select(v => v.GetDouble()).ToArray();
     private static void AcquireFixed(StudioWindow ui)
     {
-        ui.SetText("AcquisitionSeed", "12345", "SourceY");
+        ui.SetOption("AcquisitionSeed", "12345");
         Assert.Equal("Completed", ui.Acquire(PilotTests.RunTimeout));
     }
 
@@ -34,7 +34,7 @@ public sealed class WorkspaceScenarioTests(ITestOutputHelper output)
         ui.Choose("SourceIsotope", "Co-60");
         ui.SetText("SourceX", "20", "SourceY");
         ui.SetText("SourceActivity", coActivityUCi, "SourceY");
-        ui.SetText("AcquisitionSeed", "12345", "SourceY");
+        ui.SetOption("AcquisitionSeed", "12345");
     }
 
     [DesktopFact]
@@ -107,17 +107,17 @@ public sealed class WorkspaceScenarioTests(ITestOutputHelper output)
             Assert.False(ui.ById("Detector.Face").Current.IsOffscreen);
             Assert.Contains("900 crystals; 18 mm square", ui.ById("Detector.Face").Current.ItemStatus);
             Assert.Equal("Settings for the next acquisition", ui.Text("Detector.Identity"));
-            ui.Expand("Detector.Section");
-            Assert.True(ui.IsEnabled("Detector.Gap"));
+            ui.SelectLeftTab("Detector");
+            Assert.True(ui.OptionEnabled("Detector.Gap"));
             AcquireFixed(ui);
             record.Set("actual", new { caption = ui.Text("Detector.Identity"), face = ui.ById("Detector.Face").Current.ItemStatus });
             Assert.Equal(Broken ? "Settings for the next acquisition" : "Acquired settings · locked until Reset", ui.Text("Detector.Identity"));
-            Assert.False(ui.IsEnabled("Detector.Gap"));
-            Assert.False(ui.IsEnabled("Detector.GainSigma"));
+            Assert.False(ui.OptionEnabled("Detector.Gap"));
+            Assert.False(ui.OptionEnabled("Detector.GainSigma"));
             Assert.False(ui.IsEnabled("SourceX"));
             ui.Invoke("ResetAcquisition");
             ui.ConfirmReset(true);
-            Assert.True(ui.IsEnabled("Detector.Gap"));
+            Assert.True(ui.OptionEnabled("Detector.Gap"));
             Assert.Equal("Settings for the next acquisition", ui.Text("Detector.Identity"));
         });
 

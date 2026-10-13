@@ -40,6 +40,7 @@ public sealed partial class PlotViewRenderTests(ITestOutputHelper output)
                     RenderDetectorAndFocus(theme);
                     RenderAmbientInputs(theme);
                     RenderResetConfirmation(theme);
+                    RenderOptions(theme);
                 }
             }
             catch (Exception ex) { failure = ex; }

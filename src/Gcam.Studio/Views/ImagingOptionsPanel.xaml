@@ -51,9 +51,11 @@
                         Margin="{StaticResource Gap.Field}" AutomationProperties.AutomationId="Imaging.Channel"
                         AutomationProperties.Name="Imaging channel" />
                 <StackPanel Visibility="{Binding Shared.IsPhysicalReadout, Converter={StaticResource PhysicalVisibility}}">
-                    <CheckBox Content="Flood correction from the line calibration (opt-in)"
-                            IsChecked="{Binding Shared.ApplyFloodCorrection}" Margin="{StaticResource Gap.Field}"
-                            AutomationProperties.AutomationId="Imaging.FloodCorrection" />
+                    <CheckBox IsChecked="{Binding Shared.ApplyFloodCorrection}" Margin="{StaticResource Gap.Field}"
+                            AutomationProperties.AutomationId="Imaging.FloodCorrection">
+                        <TextBlock Text="Flood correction from the line calibration (opt-in)"
+                                Style="{StaticResource Text.Label}" TextWrapping="Wrap" />
+                    </CheckBox>
                     <TextBlock Text="{Binding ChannelUnavailable}" Style="{StaticResource Text.CaptionWarning}" TextWrapping="Wrap"
                             Visibility="{Binding ChannelUnavailable, Converter={x:Static conv:NullToCollapsedConverter.Instance}}"
                             AutomationProperties.AutomationId="Imaging.ChannelUnavailable" />

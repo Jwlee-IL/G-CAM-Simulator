@@ -7,7 +7,7 @@ namespace Gcam.Studio.Services;
 
 /// <summary>
 /// Swaps the colour-token dictionary (Themes/Tokens.*.xaml) in the application resources. Styles reference
-/// tokens through DynamicResource, so every open window repaints. Also asks DWM to draw a matching title bar.
+/// tokens through DynamicResource, so every open window repaints. Also asks DWM to match the remaining native frame (best effort); the main caption uses theme tokens.
 /// </summary>
 public sealed class ThemeService : IThemeService
 {

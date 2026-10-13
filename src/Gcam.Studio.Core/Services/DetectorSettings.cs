@@ -8,12 +8,12 @@ public sealed record DetectorSettings
     public Guid PreparedReadoutId { get; init; }
     /// <summary>TODO-41: the captured line preparations, reference line first (SD-A1…A3).</summary>
     public PreparedReadoutSet? PreparedReadoutLines { get; init; }
-    public Gcam.Configuration.FrontEndChain Chain { get; init; } = Gcam.Configuration.FrontEndParts.Default;
-    public double EntranceAbsorberMm { get; init; } = 0.15;
-    public double BackingScatterMm { get; init; } = 2;
-    public double GainSigma { get; init; } = 0.03;
-    public int GainSeed { get; init; } = 1;
-    public double ReflectorGapMm { get; init; } = 0.1;
+    public Gcam.Configuration.FrontEndChain Chain { get; init; } = StudioOptionDefaults.Current.Chain;
+    public double EntranceAbsorberMm { get; init; } = StudioOptionDefaults.Current.EntranceAbsorberMm;
+    public double BackingScatterMm { get; init; } = StudioOptionDefaults.Current.BackingScatterMm;
+    public double GainSigma { get; init; } = StudioOptionDefaults.Current.GainSigmaPercent / 100;
+    public int GainSeed { get; init; } = StudioOptionDefaults.Current.GainSeed;
+    public double ReflectorGapMm { get; init; } = StudioOptionDefaults.Current.GapUm / 1000;
 
     /// <summary>The line preparation ids an acquisition captures, reference first.</summary>
     public IReadOnlyList<Guid> PreparedReadoutIds => PreparedReadoutLines?.Ids

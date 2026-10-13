@@ -48,6 +48,7 @@ public sealed partial class PlotViewRenderTests
             string directory = SnapshotDirectory("studio-render"); Directory.CreateDirectory(directory);
             string path = Path.Combine(directory, $"reset-confirmation-{theme.ToLowerInvariant()}-{size.Width:0}x{size.Height:0}.png");
             using (var file = File.Create(path)) encoder.Save(file);
+            IconRenderChecks.CheckAndInspect(root, bitmap, path);
             output.WriteLine(path);
             content.DataContext = null;
         }
@@ -101,17 +102,8 @@ public sealed partial class PlotViewRenderTests
             model.Imaging.SelectedIsotope = isotope;
             // Construct XAML only. Never Show(), Run(), create an HWND, or send desktop input.
             var (root, content) = DetachMainWindow(model, size);
-            // A collapsed Expander has no input controls in the visual tree. Check the expanded fixtures.
-            if (model.IsDetectorExpanded)
-            {
-                var ambientDose = Assert.Single(Descendants(root).OfType<TextBox>(),
-                    box => AutomationProperties.GetAutomationId(box) == "Acquisition.AmbientDose");
-                var ambientBound = Assert.Single(Descendants(root).OfType<ComboBox>(),
-                    box => AutomationProperties.GetAutomationId(box) == "Acquisition.AmbientBound");
-                Assert.Equal(model.CanEditInputs, ambientDose.IsEnabled);
-                Assert.Equal(model.CanEditInputs, ambientBound.IsEnabled);
-                Assert.Equal(model.AmbientGeometry, ambientBound.SelectedItem);
-            }
+            Assert.DoesNotContain(Descendants(root).OfType<TextBox>(), t => AutomationProperties.GetAutomationId(t) == "AcquisitionSeed");
+            Assert.DoesNotContain(Descendants(root).OfType<TextBox>(), t => AutomationProperties.GetAutomationId(t) == "Acquisition.AmbientDose");
 
             if (mixed && workspace == model.Imaging)
             {
@@ -155,14 +147,6 @@ public sealed partial class PlotViewRenderTests
             root.UpdateLayout();
 
             if (workspace == model.Spectrum) VerifyEmissionTable(root, model.Spectrum);
-            var seed = Assert.Single(Descendants(root).OfType<TextBox>(),
-                t => AutomationProperties.GetAutomationId(t) == "AcquisitionSeed");
-            Assert.False(seed.IsEnabled);
-            Assert.Equal(((SolidColorBrush)Application.Current.FindResource("Brush.Text.Disabled")).Color,
-                ((SolidColorBrush)seed.Foreground).Color);
-            Assert.Equal(((SolidColorBrush)Application.Current.FindResource("Brush.Bg.Surface")).Color,
-                ((SolidColorBrush)Descendants(seed).OfType<Border>().First().Background).Color);
-
             if (workspace == model.Imaging)
             {
                 var geometry = Assert.Single(Descendants(root).OfType<TextBlock>(),
@@ -172,14 +156,10 @@ public sealed partial class PlotViewRenderTests
                     t => AutomationProperties.GetAutomationId(t) == "Imaging.FocalPlane");
                 Assert.Equal(model.Imaging.FocalPlane, focus.Text);
             }
-            var scene = Descendants(root).OfType<ScrollViewer>().First(v => v.Content is StackPanel p
-                && Descendants(p).OfType<Expander>().Any(e => AutomationProperties.GetAutomationId(e) == "Optics.Section"));
-            output.WriteLine($"scene panel overflow {scene.ScrollableHeight:F0} px ({workspace.Title}, {size.Width:0}x{size.Height:0}, optics expanded {model.IsOpticsExpanded})");
-            // Default state (sections as the app starts them) fits the minimum window without a scroll bar.
-            if (opticsExpanded is null) Assert.Equal(0, scene.ScrollableHeight);
-            var section = Assert.Single(Descendants(root).OfType<Expander>(),
-                e => AutomationProperties.GetAutomationId(e) == "Optics.Section");
-            Assert.Equal(model.IsOpticsExpanded, section.IsExpanded);
+            var left = Descendants(root).OfType<TabControl>().Single();
+            Assert.Equal(3, left.Items.Count);
+            var scene = Assert.IsType<ScrollViewer>(left.SelectedContent);
+            Assert.Equal(0, scene.ScrollableHeight);
             var pickers = Descendants(root).OfType<RadioButton>().Where(
                 b => AutomationProperties.GetAutomationId(b).StartsWith("Workspace.", StringComparison.Ordinal)).ToArray();
             Assert.Equal(model.Workspaces.Count, pickers.Length);
@@ -201,7 +181,7 @@ public sealed partial class PlotViewRenderTests
                 Assert.Contains(heatmap.ValueUnit, heatmap.Readout);
                 Assert.DoesNotContain("E+", heatmap.Readout);
             }
-            foreach (string id in new[] { "AcquisitionLiveTime", "AcquisitionSpeed", "AcquisitionSeed" })
+            foreach (string id in new[] { "AcquisitionLiveTime", "AcquisitionSpeed" })
             {
                 var input = Assert.Single(Descendants(root).OfType<TextBox>(),
                     t => AutomationProperties.GetAutomationId(t) == id);
@@ -220,6 +200,7 @@ public sealed partial class PlotViewRenderTests
                 $"{workspace.Title.ToLowerInvariant()}{(crowded ? "-crowded" : "")}{(opticsExpanded.HasValue ? "-optics-" + (opticsExpanded.Value ? "expanded" : "collapsed") + "-focus800" : "")}{(mixed ? "-mixed-" + isotope.ToLowerInvariant() : "")}{(mlem ? "-mlem" : "")}-{theme.ToLowerInvariant()}-{size.Width:0}x{size.Height:0}.png");
             using var stream = File.Create(path);
             encoder.Save(stream);
+            IconRenderChecks.CheckAndInspect(root, bitmap, path);
             output.WriteLine(path);
             // Detached RadioButtons have no window group scope. Remove old bindings before
             // changing the shared workspace so an earlier tree cannot uncheck the new picker.
@@ -299,6 +280,13 @@ public sealed partial class PlotViewRenderTests
     private static (Border Root, FrameworkElement Content) DetachMainWindow(MainViewModel model, Size size)
     {
         var window = new MainWindow();
+        Assert.Equal(WindowStyle.None, window.WindowStyle);
+        var chrome = System.Windows.Shell.WindowChrome.GetWindowChrome(window);
+        Assert.NotNull(chrome);
+        Assert.Equal(((GridLength)Application.Current.FindResource("Size.Bar")).Value - 1, chrome.CaptionHeight);
+        Assert.Equal(SystemParameters.WindowResizeBorderThickness, chrome.ResizeBorderThickness);
+        Assert.False(chrome.UseAeroCaptionButtons);
+        Assert.Equal(new Thickness(0, 0, 0, 1), chrome.GlassFrameThickness);
         var content = (FrameworkElement)window.Content;
         window.Content = null;
         content.Resources.MergedDictionaries.Add(window.Resources);
@@ -315,6 +303,9 @@ public sealed partial class PlotViewRenderTests
         root.Measure(size);
         root.Arrange(new Rect(size));
         root.UpdateLayout();
+        var bitmap = new RenderTargetBitmap((int)size.Width, (int)size.Height, 96, 96, PixelFormats.Pbgra32);
+        bitmap.Render(root);
+        IconRenderChecks.CheckAndInspect(root, bitmap);
         return (root, content);
     }
 

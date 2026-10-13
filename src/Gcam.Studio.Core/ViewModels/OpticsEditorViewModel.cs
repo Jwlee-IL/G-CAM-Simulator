@@ -32,11 +32,16 @@ public sealed partial class OpticsEditorViewModel : ObservableObject
                 RefreshPresetSelection();
                 return;
             }
-            if (SetProperty(ref _selectedPreset, value) && !_loading && value.Settings is { } settings)
-                Load(settings with { FocalDistanceMm = Effective.FocalDistanceMm });
+            if (SetProperty(ref _selectedPreset, value))
+            {
+                OnPropertyChanged(nameof(IsCustom));
+                if (!_loading) Load(value.Settings is { } settings
+                    ? settings with { FocalDistanceMm = Effective.FocalDistanceMm } : Effective);
+            }
             RefreshPresetSelection();
         }
     }
+    public bool IsCustom => SelectedPreset.Settings is null;
     public int SelectedPresetIndex
     {
         get => Array.IndexOf(OpticsPreset.All.ToArray(), SelectedPreset);
@@ -82,7 +87,7 @@ public sealed partial class OpticsEditorViewModel : ObservableObject
     {
         if (_loading) return;
         // Locked while the shell holds acquired data: any writer is reverted to the effective geometry.
-        if (!IsEditable && !loading) { Load(Effective); return; }
+        if ((!IsEditable || !IsCustom) && !loading) { Load(Effective); return; }
         _loading = true;
         if (!double.TryParse(CellPitch, out double cell) || !double.TryParse(Distance, out double distance) ||
             !int.TryParse(Pixels, out int pixels) || !double.TryParse(PixelPitch, out double pitch))
@@ -96,7 +101,6 @@ public sealed partial class OpticsEditorViewModel : ObservableObject
             Error = OpticsPolicy.Validate(candidate, reflectorGapMm: 0);
             if (Error is null) Effective = candidate;
         }
-        SelectedPreset = Error is null ? OpticsPreset.Match(Effective) : OpticsPreset.All[0];
         _loading = false;
         OnPropertyChanged(nameof(Summary));
         Changed?.Invoke(this, EventArgs.Empty);

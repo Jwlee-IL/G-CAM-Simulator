@@ -36,7 +36,7 @@ public sealed class DetectorWorkspaceTests
     [Fact]
     public void Gap_ZeroAllowsPitchBelowOldDefaultGap()
     {
-        var vm = Model(); vm.ReflectorGapUm = "0"; vm.OpticsEditor.PixelPitch = "0.05";
+        var vm = Model(); vm.ReflectorGapUm = "0"; vm.OpticsEditor.SelectedPresetIndex = 0; vm.OpticsEditor.PixelPitch = "0.05";
         Assert.Null(vm.OpticsEditor.Error); Assert.Null(vm.GapError);
         Assert.Equal(.05, vm.Optics.PixelPitchMm);
     }

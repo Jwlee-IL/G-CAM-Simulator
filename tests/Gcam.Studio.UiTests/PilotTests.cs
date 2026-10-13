@@ -21,6 +21,11 @@ public sealed class PilotTests(ITestOutputHelper output)
         Scenario.Run(nameof(Pilot_SimulateThenMeasureDistance_AddsRowWithExpectedLength), output, (ui, record) =>
         {
             Assert.Empty(ui.Rows("MeasurementList"));
+            foreach (string id in new[] { "Window.Minimize", "Window.Maximize", "Window.Close" })
+            {
+                Assert.True(ui.Element.Current.BoundingRectangle.Contains(ui.Bounds(id)), "caption button inside the owned frame");
+                Assert.True(ui.Bounds(id).Bottom <= ui.Bounds("FloodView").Top, "caption is above the image");
+            }
 
             // Progress end and result presence are separate conditions
             Assert.Equal("Completed", ui.Acquire(RunTimeout));

@@ -96,6 +96,7 @@ public sealed partial class PlotViewRenderTests
                 string directory = SnapshotDirectory("studio-render"); Directory.CreateDirectory(directory);
                 string path = Path.Combine(directory, $"{name}-{theme.ToLowerInvariant()}-{size.Width:0}x{size.Height:0}.png");
                 using (var stream = File.Create(path)) encoder.Save(stream);
+            IconRenderChecks.CheckAndInspect(root, bitmap, path);
                 output.WriteLine(path);
                 content.DataContext = null; root.UpdateLayout();
             }

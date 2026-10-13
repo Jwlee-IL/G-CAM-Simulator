@@ -41,6 +41,9 @@ public sealed class DeclutterRenderTests
                 ReadoutRenderTests.Drain();
                 imaging.UpdateLayout();
                 var correction = Nodes(imaging).OfType<CheckBox>().Single(c => AutomationProperties.GetAutomationId(c) == "Imaging.FloodCorrection");
+                var correctionLabel = Assert.IsType<TextBlock>(correction.Content);
+                Assert.Equal("Flood correction from the line calibration (opt-in)", correctionLabel.Text);
+                Assert.Equal(TextWrapping.Wrap, correctionLabel.TextWrapping);
                 // IsVisible is false without a presentation source; inspect the bound physical-mode container.
                 Assert.Equal(Visibility.Visible, ((StackPanel)correction.Parent).Visibility);
                 var readout = View("ReadoutPanel", theme, vm);

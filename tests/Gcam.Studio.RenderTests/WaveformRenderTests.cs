@@ -28,7 +28,7 @@ public sealed partial class PlotViewRenderTests
             resources.Add(new ResourceDictionary { Source = new Uri($"/Gcam.Studio;component/Themes/{file}.xaml", UriKind.Relative) });
         var acquisition = new WaveformAcquisition();
         var model = new MainViewModel(acquisition, new FixtureTheme(Enum.Parse<AppTheme>(theme)), new FixtureSpectrum(),
-            waveform: new FixedTimeWaveformService()) { SeedText = "12345", AmbientDoseRateMicroSvPerHour = 0 };
+            waveform: new FixedTimeWaveformService(), confirmation: new ModalService()) { SeedText = "12345", AmbientDoseRateMicroSvPerHour = 0 };
         model.StartCommand.ExecuteAsync(null).GetAwaiter().GetResult();
         model.IsOpticsExpanded = model.IsDetectorExpanded = false;
         model.SelectedWorkspace = model.Waveform;
@@ -40,6 +40,17 @@ public sealed partial class PlotViewRenderTests
         var acquiredPreamp = model.Preamp;
         model.Preamp = FrontEndParts.Preamps[3];
         Assert.Same(acquiredPreamp, model.Preamp);
+        model.OpenOptionsCommand.Execute(null);
+        model.Options!.SelectedTab = OptionsTab.Detector;
+        var (optionsRoot, optionsContent) = DetachMainWindow(model, new Size(1280, 800));
+        var scintillator = Assert.Single(Descendants(optionsRoot).OfType<ComboBox>(),
+            c => AutomationProperties.GetAutomationId(c) == "Chain.Scintillator");
+        Assert.Same(model.Scintillator, scintillator.SelectedItem);
+        Assert.Equal(5, scintillator.Items.Count);
+        Assert.Contains(scintillator.Items.Cast<ScintPreset>(), s => s.Name == "CsI(Tl)");
+        Assert.False(scintillator.IsEnabled, "chain selectors are locked while data exist");
+        model.Options.CancelCommand.Execute(null);
+        optionsContent.DataContext = null;
         foreach (string mode in new[] { "real10us", "rate-study", "ideal" })
         {
             model.Waveform.RateStudy = mode == "rate-study";
@@ -69,12 +80,8 @@ public sealed partial class PlotViewRenderTests
                 plots[1].ResetView();
                 Dispatcher.CurrentDispatcher.Invoke(() => { }, DispatcherPriority.ContextIdle);
                 Assert.Equal(plots[0].CurrentViewRange, plots[1].CurrentViewRange);
-                var scintillator = Assert.Single(Descendants(root).OfType<ComboBox>(),
+                Assert.DoesNotContain(Descendants(root).OfType<ComboBox>(),
                     c => AutomationProperties.GetAutomationId(c) == "Chain.Scintillator");
-                Assert.Same(model.Scintillator, scintillator.SelectedItem);
-                Assert.Equal(5, scintillator.Items.Count);
-                Assert.Contains(scintillator.Items.Cast<ScintPreset>(), s => s.Name == "CsI(Tl)");
-                Assert.False(scintillator.IsEnabled, "chain selectors are locked while data exist");
                 Assert.DoesNotContain(Descendants(root).OfType<TextBlock>(),
                     c => AutomationProperties.GetAutomationId(c) is "Chain.Pending" or "Chain.Acquired");
                 var note = Assert.Single(Descendants(root).OfType<TextBlock>(),
@@ -88,6 +95,7 @@ public sealed partial class PlotViewRenderTests
                 Directory.CreateDirectory(directory);
                 string path = Path.Combine(directory, $"waveform-{mode}-{theme.ToLowerInvariant()}-{size.Width:0}x{size.Height:0}.png");
                 using (var stream = File.Create(path)) encoder.Save(stream);
+            IconRenderChecks.CheckAndInspect(root, bitmap, path);
                 output.WriteLine(path);
                 content.DataContext = null; root.UpdateLayout();
                 Dispatcher.CurrentDispatcher.Invoke(() => { }, DispatcherPriority.ContextIdle);

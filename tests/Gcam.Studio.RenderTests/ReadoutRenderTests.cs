@@ -169,16 +169,26 @@ public sealed class ReadoutRenderTests(ITestOutputHelper output)
     {
         string repo = AppContext.BaseDirectory;
         while (!File.Exists(Path.Combine(repo, "Gcam.sln"))) repo = Directory.GetParent(repo)!.FullName;
-        string xaml = File.ReadAllText(Path.Combine(repo, "src/Gcam.Studio/Views", view + ".xaml"));
+        bool topBar = view == "MainWindow.TopBar";
+        string xaml = File.ReadAllText(Path.Combine(repo, "src/Gcam.Studio/Views", (topBar ? "MainWindow" : view) + ".xaml"));
         xaml = Regex.Replace(xaml, "x:Class=\"[^\"]+\"", "");
-        if (view == "MainWindow")
+        if (topBar)
+        {
+            // The production caption bar alone, with the window's resources; its bindings stay unresolved (no view model).
+            string header = xaml[..(xaml.IndexOf('>') + 1)];
+            string windowResources = Regex.Match(xaml, "<Window.Resources>[\\s\\S]*?</Window.Resources>").Value;
+            string bar = Regex.Match(xaml, "<c:CaptionBar[\\s\\S]*?</c:CaptionBar>").Value;
+            header = Regex.Replace(header.Replace("<Window", "<UserControl"), " (Title|Width|Height|MinWidth|MinHeight|WindowStartupLocation|WindowStyle|FontFamily)=\"[^\"]+\"", "");
+            xaml = header + windowResources.Replace("Window.Resources", "UserControl.Resources") + bar + "</UserControl>";
+        }
+        else if (view == "MainWindow")
         {
             // Exercise the production modal resources and host bindings without constructing compiled child views,
             // whose InitializeComponent requires Application resources. Full shell snapshots cover those views.
             string header = xaml[..(xaml.IndexOf('>') + 1)];
             string modalResources = Regex.Match(xaml, "<Window.Resources>[\\s\\S]*?</Window.Resources>").Value;
             string host = Regex.Match(xaml, "<c:ModalHost[^>]*>").Value;
-            header = Regex.Replace(header.Replace("<Window", "<UserControl"), " (Title|Width|Height|MinWidth|MinHeight|WindowStartupLocation|FontFamily)=\"[^\"]+\"", "");
+            header = Regex.Replace(header.Replace("<Window", "<UserControl"), " (Title|Width|Height|MinWidth|MinHeight|WindowStartupLocation|WindowStyle|FontFamily)=\"[^\"]+\"", "");
             xaml = header + modalResources.Replace("Window.Resources", "UserControl.Resources") + host
                 + "<Button Content='Underlying input' AutomationProperties.AutomationId='UnderlyingInput' />"
                 + "</c:ModalHost></UserControl>";

@@ -58,4 +58,8 @@
     <Color x:Key="Color.Plot.Grid">#CCD4DC</Color>
     <SolidColorBrush x:Key="Brush.Plot.Grid" Color="{StaticResource Color.Plot.Grid}" />
     <SolidColorBrush x:Key="Brush.Modal.Scrim" Color="#99000000" />
+    <SolidColorBrush x:Key="Brush.Caption.Close.Hover" Color="#E81123" />
+    <SolidColorBrush x:Key="Brush.Caption.Close.Pressed" Color="#C50F1F" />
+    <SolidColorBrush x:Key="Brush.Caption.Close.Foreground" Color="#FFFFFF" />
+    <SolidColorBrush x:Key="Brush.Options.Badge" Color="{StaticResource Color.Accent}" />
 </ResourceDictionary>

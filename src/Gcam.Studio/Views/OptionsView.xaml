@@ -1,0 +1,144 @@
+<UserControl x:Class="Gcam.Studio.Views.OptionsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:c="clr-namespace:Gcam.Studio.Controls"
+             xmlns:conv="clr-namespace:Gcam.Studio.Converters">
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis" />
+    </UserControl.Resources>
+    <Grid Height="{StaticResource Size.Options}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <TextBlock Grid.Row="0" Text="Options" Style="{StaticResource Text.PanelTitle}" Margin="{StaticResource Gap.Field}" />
+        <TextBlock Grid.Row="1" Text="{Binding LockCaption}" TextWrapping="Wrap"
+                   Height="{StaticResource Size.Options.LockCaption}" Margin="{StaticResource Gap.Field}"
+                   AutomationProperties.AutomationId="Options.LockCaption">
+            <TextBlock.Style>
+                <Style TargetType="TextBlock" BasedOn="{StaticResource Text.Caption}">
+                    <Setter Property="Visibility" Value="Hidden" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding IsReadOnly}" Value="True">
+                            <Setter Property="Visibility" Value="Visible" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </TextBlock.Style>
+        </TextBlock>
+        <Border Grid.Row="2" Style="{StaticResource Segment.Track}" Margin="{StaticResource Gap.Section}">
+            <UniformGrid Rows="1">
+                <RadioButton Content="Acquisition" GroupName="OptionsTab" Style="{StaticResource RadioButton.Segment}"
+                             IsChecked="{Binding SelectedTab, Converter={x:Static conv:EnumMatchConverter.Instance}, ConverterParameter=Acquisition}"
+                             AutomationProperties.AutomationId="Options.AcquisitionTab" />
+                <RadioButton Content="Detector" GroupName="OptionsTab" Style="{StaticResource RadioButton.Segment}"
+                             IsChecked="{Binding SelectedTab, Converter={x:Static conv:EnumMatchConverter.Instance}, ConverterParameter=Detector}"
+                             AutomationProperties.AutomationId="Options.DetectorTab" />
+                <RadioButton Content="Environment" GroupName="OptionsTab" Style="{StaticResource RadioButton.Segment}"
+                             IsChecked="{Binding SelectedTab, Converter={x:Static conv:EnumMatchConverter.Instance}, ConverterParameter=Environment}"
+                             AutomationProperties.AutomationId="Options.EnvironmentTab" />
+            </UniformGrid>
+        </Border>
+        <ScrollViewer Grid.Row="3" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+            <Grid>
+                <StackPanel>
+                    <StackPanel.Style>
+                        <Style TargetType="StackPanel">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding SelectedTab}" Value="Acquisition">
+                                    <Setter Property="Visibility" Value="Visible" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </StackPanel.Style>
+                    <DockPanel Margin="{StaticResource Gap.Field}">
+                        <c:HelpMark DockPanel.Dock="Right" Text="Monte Carlo seed. Blank: a new seed for every acquisition (independent measurements). A number fixes it to reproduce an acquisition."
+                                    AutomationProperties.AutomationId="Options.SeedHelp" AutomationProperties.Name="About the Monte Carlo seed" />
+                        <TextBlock Text="Seed" Style="{StaticResource Text.Label}" />
+                    </DockPanel>
+                    <TextBox Text="{Binding SeedText, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding CanEditInputs}"
+                             Margin="{StaticResource Gap.Field}"
+                             AutomationProperties.AutomationId="AcquisitionSeed" AutomationProperties.Name="Seed (blank: new for every acquisition)" />
+                    <TextBlock Text="{Binding SeedError}" Style="{StaticResource Text.CaptionWarning}" TextWrapping="Wrap" />
+                </StackPanel>
+                <StackPanel>
+                    <StackPanel.Style>
+                        <Style TargetType="StackPanel">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding SelectedTab}" Value="Detector">
+                                    <Setter Property="Visibility" Value="Visible" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </StackPanel.Style>
+                    <StackPanel IsEnabled="{Binding CanEditLegacy}" AutomationProperties.AutomationId="Chain.Section">
+                        <TextBlock Text="Scintillator" Style="{StaticResource Text.Label}" />
+                        <ComboBox ItemsSource="{Binding Scintillators}" DisplayMemberPath="Name" SelectedItem="{Binding Scintillator}"
+                                  Margin="{StaticResource Gap.Field}" AutomationProperties.AutomationId="Chain.Scintillator" AutomationProperties.Name="Scintillator" />
+                        <TextBlock Text="Photosensor" Style="{StaticResource Text.Label}" />
+                        <ComboBox ItemsSource="{Binding Sensors}" DisplayMemberPath="Name" SelectedItem="{Binding Sensor}"
+                                  Margin="{StaticResource Gap.Field}" AutomationProperties.AutomationId="Chain.Sensor" AutomationProperties.Name="Photosensor" />
+                        <TextBlock Text="Preamp / shaper" Style="{StaticResource Text.Label}" />
+                        <ComboBox ItemsSource="{Binding Preamps}" DisplayMemberPath="Name" SelectedItem="{Binding Preamp}"
+                                  Margin="{StaticResource Gap.Field}" AutomationProperties.AutomationId="Chain.Preamp" AutomationProperties.Name="Preamp / shaper" />
+                    </StackPanel>
+                    <TextBlock Style="{StaticResource Text.MonoCaption}" Margin="{StaticResource Gap.Field}">
+                        Entrance <Run Text="{Binding EntranceAbsorberMm, Mode=OneWay}" /> mm steel · backing <Run Text="{Binding BackingScatterMm, Mode=OneWay}" /> mm steel
+                    </TextBlock>
+                    <TextBlock Text="Gap (µm)" Style="{StaticResource Text.Label}" />
+                    <TextBox Text="{Binding GapUm, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding CanEditInputs}" Tag="µm"
+                             Margin="{StaticResource Gap.Field}" AutomationProperties.AutomationId="Detector.Gap" AutomationProperties.Name="Gap reflector (µm)" />
+                    <TextBlock Text="{Binding GapError}" Style="{StaticResource Text.CaptionWarning}" TextWrapping="Wrap" />
+                    <TextBlock Text="Gain σ (%)" Style="{StaticResource Text.Label}" />
+                    <TextBox Text="{Binding GainSigmaPercent, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding CanEditLegacy}" Tag="%"
+                             Margin="{StaticResource Gap.Field}" AutomationProperties.AutomationId="Detector.GainSigma" AutomationProperties.Name="Gain σ (%)" />
+                    <TextBlock Text="{Binding GainSigmaError}" Style="{StaticResource Text.CaptionWarning}" TextWrapping="Wrap" />
+                    <TextBlock Text="Gain seed" Style="{StaticResource Text.Label}" />
+                    <TextBox Text="{Binding GainSeed, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding CanEditLegacy}"
+                             Margin="{StaticResource Gap.Field}" AutomationProperties.AutomationId="Detector.GainSeed" AutomationProperties.Name="Gain seed" />
+                    <TextBlock Text="{Binding GainSeedError}" Style="{StaticResource Text.CaptionWarning}" TextWrapping="Wrap" />
+                </StackPanel>
+                <StackPanel>
+                    <StackPanel.Style>
+                        <Style TargetType="StackPanel">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding SelectedTab}" Value="Environment">
+                                    <Setter Property="Visibility" Value="Visible" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </StackPanel.Style>
+                    <TextBlock Text="Photon H*(10)" Style="{StaticResource Text.Label}" />
+                    <TextBox Text="{Binding AmbientDoseText, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding CanEditInputs}" Tag="µSv/h"
+                             Margin="{StaticResource Gap.Field}" AutomationProperties.AutomationId="Acquisition.AmbientDose" AutomationProperties.Name="Photon H*(10) ambient dose rate (µSv/h)" />
+                    <TextBlock Text="{Binding AmbientDoseError}" Style="{StaticResource Text.CaptionWarning}" TextWrapping="Wrap"
+                               AutomationProperties.AutomationId="Acquisition.AmbientDoseError" />
+                    <TextBlock Text="{Binding AmbientPresetName}" Style="{StaticResource Text.MonoCaption}" TextWrapping="Wrap" />
+                    <TextBlock Text="{Binding AmbientEnvironmentLabel}" Style="{StaticResource Text.MonoCaption}" TextWrapping="Wrap" Margin="{StaticResource Gap.Field}" />
+                    <TextBlock Text="Ambient bound" Style="{StaticResource Text.Label}" />
+                    <ComboBox ItemsSource="{Binding AmbientGeometries}" SelectedItem="{Binding AmbientGeometry}" IsEnabled="{Binding CanEditInputs}"
+                              Margin="{StaticResource Gap.Field}" AutomationProperties.AutomationId="Acquisition.AmbientBound" AutomationProperties.Name="Ambient bound geometry" />
+                    <TextBlock Text="Background BSR" Style="{StaticResource Text.Label}" />
+                    <TextBox Text="{Binding BackgroundToSignalRatio, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding CanEditInputs}" Tag="× signal"
+                             Margin="{StaticResource Gap.Field}" AutomationProperties.AutomationId="Acquisition.Background" AutomationProperties.Name="Background BSR (detected background to signal ratio)" />
+                    <TextBlock Text="{Binding BackgroundError}" Style="{StaticResource Text.CaptionWarning}" TextWrapping="Wrap" />
+                    <TextBlock Style="{StaticResource Text.MonoCaption}" Margin="{StaticResource Gap.Field}">Ambient BSR: <Run Text="{Binding AmbientBsrReadout, Mode=OneWay}" /></TextBlock>
+                </StackPanel>
+            </Grid>
+        </ScrollViewer>
+        <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right" Margin="{StaticResource Gap.Section}">
+            <Button Content="Cancel" Command="{Binding CancelCommand}" IsDefault="True" Margin="{StaticResource Gap.Inline}"
+                    Visibility="{Binding IsReadOnly, Converter={x:Static conv:InverseBoolToVisibilityConverter.Instance}}" AutomationProperties.AutomationId="Modal.Cancel" />
+            <Button Content="OK" Command="{Binding ApplyCommand}"
+                    Visibility="{Binding IsReadOnly, Converter={x:Static conv:InverseBoolToVisibilityConverter.Instance}}" AutomationProperties.AutomationId="Options.Apply" />
+            <Button Content="Close" Command="{Binding CancelCommand}" IsDefault="{Binding IsReadOnly}"
+                    Visibility="{Binding IsReadOnly, Converter={StaticResource BoolToVis}}" AutomationProperties.AutomationId="Modal.Close" />
+        </StackPanel>
+    </Grid>
+</UserControl>

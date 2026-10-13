@@ -155,12 +155,14 @@ public sealed class OpticsViewModelTests
         var acquisition = new Acquisition();
         var vm = new MainViewModel(acquisition, new Theme(), new FakeSpectrumService(), confirmation: new FakeConfirmation());
         vm.IsOpticsExpanded = vm.IsDetectorExpanded = false;
+        vm.OpticsEditor.SelectedPresetIndex = 0;
         vm.OpticsEditor.PixelPitch = "0.1";
         await vm.StartCommand.ExecuteAsync(null);
         Assert.Equal(0, acquisition.Starts);
         Assert.True(vm.IsOpticsExpanded); Assert.True(vm.IsDetectorExpanded);
         Assert.Contains("reflector", vm.ValidationError);
         vm.OpticsEditor.SelectedPreset = OpticsPreset.All[1];
+        vm.OpticsEditor.SelectedPresetIndex = 0;
         vm.OpticsEditor.Distance = "1000";
         await vm.StartCommand.ExecuteAsync(null);
         Assert.Equal(0, acquisition.Starts);
