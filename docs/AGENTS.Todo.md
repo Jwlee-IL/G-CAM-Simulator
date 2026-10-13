@@ -9,7 +9,7 @@ moves to the archive, marked done.
 
 | ID | Task | Origin | Owner | State |
 |---|---|---|---|---|
-| TODO-42 | **Physical readout under ambient / background:** extend pre-optical interaction recording to the ambient and BSR transport so a physical readout can run with the field on; **first step: an implementation-size estimate** for the author | TODO-40 SD-3, author 2026-10-08 | — | open — size estimate first |
+| TODO-42 | **[Physical readout under ambient / background](PLAN.Studio.ReadoutField.md):** extend pre-optical interaction recording to the ambient and BSR transport so a physical readout can run with the field on | TODO-40 SD-3, author 2026-10-08 | Codex | stage A (ambient, source scenes) done 2026-10-13; stage B (BSR) next |
 | TODO-43 | **[GCAM Studio manual generated from UI-automation runs](PLAN.Docs.StudioManual.md):** operating chapters generated from desktop runs that drove the app (labels, steps, figures from one run's record), static chapters for the rest; the author's document-automation procedure from another project, process only | author 2026-10-12 | — | planned — plan written; review turn when the author starts it |
 
 Next free ID: TODO-46. The `Gcam.Wpf` → Studio migration (TODO-06 … TODO-24) is complete — `Gcam.Wpf` was deleted in
