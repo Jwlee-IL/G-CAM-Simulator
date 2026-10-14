@@ -50,6 +50,7 @@ public static class ManualScenario
                 try
                 {
                     body(ui, run);
+                    run.ResolveLabels(requireAll: true);
                 }
                 catch (Exception e)
                 {

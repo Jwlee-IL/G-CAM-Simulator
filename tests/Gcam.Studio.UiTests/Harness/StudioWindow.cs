@@ -323,6 +323,16 @@ public sealed class StudioWindow(AutomationElement window)
 
     public string Text(string id) => ById(id).Current.Name;
 
+    /// <summary>An empty TextBlock may be absent from UIA. Only zero matches count as cleared; other failures propagate.</summary>
+    public (string Text, bool Absent) TextOrAbsent(string id) => ReadTextOrAbsent(() => Text(id));
+
+    /// <summary>The optional-text rule, separated from desktop access for headless tests.</summary>
+    public static (string Text, bool Absent) ReadTextOrAbsent(Func<string> read)
+    {
+        try { return (read(), false); }
+        catch (SelectorMatchException e) when (e.Matches == 0) { return ("", true); }
+    }
+
     /// <summary>The names of every descendant text of a container (an ItemsControl's rows have no list items).</summary>
     public string AllText(string id) => string.Join('\n', ById(id)
         .FindAll(TreeScope.Descendants, new PropertyCondition(AutomationElement.ControlTypeProperty, ControlType.Text))

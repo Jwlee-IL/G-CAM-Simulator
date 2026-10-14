@@ -183,7 +183,8 @@ public sealed class ManualScenarioTests(ITestOutputHelper output)
 
         run.BeginStep("Type 12 in {Optics.Pixels:label} again: the message clears.");
         ui.SetText("Optics.Pixels", "12", "Optics.PixelPitch");
-        run.CheckEqual("optics.correction-clears", "", ui.Text("Optics.Error"));
+        var cleared = ui.TextOrAbsent("Optics.Error");
+        run.Check("optics.correction-clears", cleared.Text == "", $"error text '{cleared.Text}'; absent from UIA: {cleared.Absent}");
     });
 
     [DesktopFact, ManualChapter("manual.acquisition")]
@@ -360,7 +361,16 @@ public sealed class ManualScenarioTests(ITestOutputHelper output)
             string.Join(',', WorkspaceScenarioTests.Numbers(after, "Counts")));
         run.Capture("The wider window at 2 × FWHM.", [new("Spectrum.Window", LabelSource.PrecedingText)], region: "Spectrum.Plot");
 
-        run.BeginStep("Tick {Spectrum.LogY}: the counts axis becomes logarithmic, so small and large bins can be read together; the data are unchanged.");
+        run.BeginStep("{Spectrum.LogY} is checked initially. Untick it to show a linear counts axis; the histogram data are unchanged.");
+        run.CheckEqual("spectrum.logy-default", ToggleState.On,
+            StudioWindow.Pattern<TogglePattern>(Find(ui, "Spectrum.LogY"), TogglePattern.Pattern).Current.ToggleState);
+        ui.Toggle("Spectrum.LogY");
+        StudioWindow.WaitUntil(() => StudioWindow.Pattern<TogglePattern>(Find(ui, "Spectrum.LogY"), TogglePattern.Pattern).Current.ToggleState == ToggleState.Off,
+            TimeSpan.FromSeconds(3), "Log Y off");
+        run.CheckEqual("spectrum.linear-display-only", string.Join(',', WorkspaceScenarioTests.Numbers(after, "Counts")),
+            string.Join(',', WorkspaceScenarioTests.Numbers(ui.Evidence("Spectrum.Plot"), "PlotCounts")));
+
+        run.BeginStep("Tick {Spectrum.LogY} again: the counts axis becomes logarithmic, so small and large bins can be read together; the data are unchanged.");
         ui.Toggle("Spectrum.LogY");
         StudioWindow.WaitUntil(() => StudioWindow.Pattern<TogglePattern>(Find(ui, "Spectrum.LogY"), TogglePattern.Pattern).Current.ToggleState == ToggleState.On,
             TimeSpan.FromSeconds(3), "Log Y on");

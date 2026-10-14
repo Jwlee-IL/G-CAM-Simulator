@@ -108,8 +108,70 @@ public sealed class ManualRecordTests
         run.ResolveLabels();
         Assert.Equal(@"Click **Start \*now\***.", run.Steps[0].Text);
         run.BeginStep("Click {Empty}.");
-        Assert.Throws<InvalidOperationException>(run.ResolveLabels);
+        Assert.Throws<InvalidOperationException>(() => run.ResolveLabels(requireAll: true));
         string clean = ManualRun.Sanitise(@"IOException: C:\Users\someone\x.png missing" + "\n   at Stack.Frame()");
         Assert.Equal("IOException: <path> missing", clean);
+    }
+
+    [Fact]
+    public void Labels_ReplacedButtons_KeepTheActionLabelAndRefreshContinue()
+    {
+        var visible = new Dictionary<string, string> { ["StartAcquisition"] = "Start" };
+        var run = new ManualRun("manual.fixture", new ManualRegistry(Registry, Notices), "unused", "fixture", DateTimeOffset.UnixEpoch,
+            (id, _) => visible.TryGetValue(id, out var text) ? text : throw new SelectorMatchException(id, 0));
+        run.BeginStep("Click {StartAcquisition}; it becomes {StopAcquisition}.");
+        visible.Clear(); visible["StopAcquisition"] = "Stop";
+        run.Check("started", true, "Acquiring");
+        Assert.Equal("Click **Start**; it becomes **Stop**.", run.Steps[0].Text);
+        run.BeginStep("Click {StopAcquisition}; it becomes {StartAcquisition}.");
+        visible.Clear(); visible["StartAcquisition"] = "Continue";
+        run.Check("stopped", true, "Stopped");
+        Assert.Equal("Click **Stop**; it becomes **Continue**.", run.Steps[1].Text);
+        run.ResolveLabels(requireAll: true);
+    }
+
+    [Fact]
+    public void Labels_DeferUntilReadable_AndKeepAlreadyReadWords()
+    {
+        var visible = new Dictionary<string, string> { ["StartAcquisition"] = "Start" };
+        var run = Fixture(visible);
+        run.BeginStep("Click {StartAcquisition}; it becomes {StopAcquisition}.");
+        run.Check("pending", true, "label not yet exposed");
+        Assert.Null(run.Steps[0].Text);
+        visible["StartAcquisition"] = "Continue"; visible["StopAcquisition"] = "Stop";
+        run.BeginStep("Next step.");
+        run.ResolveLabels(requireAll: true);
+        Assert.Equal("Click **Start**; it becomes **Stop**.", run.Steps[0].Text);
+    }
+
+    [Fact]
+    public void Labels_NeverReadable_RefuseCompletion()
+    {
+        var run = Fixture(new());
+        run.BeginStep("Click {Missing}.");
+        run.Check("otherwise-passed", true, "functional assertion passed");
+        run.BeginStep("Next step.");
+        Assert.Throws<InvalidOperationException>(() => run.ResolveLabels(requireAll: true));
+    }
+
+    [Fact]
+    public void Labels_AmbiguousSelectorAndOtherReadFailures_AreNotCachedAway()
+    {
+        var run = new ManualRun("manual.fixture", new ManualRegistry(Registry, Notices), "unused", "fixture", DateTimeOffset.UnixEpoch,
+            (id, _) => throw new SelectorMatchException(id, 2));
+        Assert.Throws<SelectorMatchException>(() => run.BeginStep("Click {StartAcquisition}."));
+        var broken = new ManualRun("manual.fixture", new ManualRegistry(Registry, Notices), "unused", "fixture", DateTimeOffset.UnixEpoch,
+            (_, _) => throw new IOException("reader failed"));
+        Assert.Throws<IOException>(() => broken.BeginStep("Click {StartAcquisition}."));
+    }
+
+    [Fact]
+    public void OptionalText_OnlyAbsenceCountsAsCleared_OtherErrorsPropagate()
+    {
+        Assert.Equal(("", true), StudioWindow.ReadTextOrAbsent(() => throw new SelectorMatchException("Optics.Error", 0)));
+        Assert.Equal(("", false), StudioWindow.ReadTextOrAbsent(() => ""));
+        Assert.Equal(("Invalid", false), StudioWindow.ReadTextOrAbsent(() => "Invalid"));
+        Assert.Throws<SelectorMatchException>(() => StudioWindow.ReadTextOrAbsent(() => throw new SelectorMatchException("Optics.Error", 2)));
+        Assert.Throws<IOException>(() => StudioWindow.ReadTextOrAbsent(() => throw new IOException("reader failed")));
     }
 }

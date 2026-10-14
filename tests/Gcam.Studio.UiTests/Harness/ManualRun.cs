@@ -50,6 +50,7 @@ public sealed partial class ManualRun
     private readonly List<Step> _steps = [];
     private readonly List<Evidence> _evidence = [];
     private readonly Dictionary<string, object?> _environment = [];
+    private readonly Dictionary<(string Id, LabelSource Source), string> _labelsRead = [];
     private int _figures;
 
     public ManualRun(string scenario, ManualRegistry registry, string directory, string runId, DateTimeOffset startedAt,
@@ -89,26 +90,48 @@ public sealed partial class ManualRun
     /// <summary>Opens the next reader step. <c>{Id}</c> in the text becomes the control's label as the screen shows it
     /// (<c>{Id:label}</c> its field label, <c>{Id:child}</c> its first child text). Labels are read at the step's first
     /// check or capture, after its action, or earlier with <see cref="ResolveLabels"/> when the action removes them
-    /// (a dialog that closes); the previous step is resolved now if it was not.</summary>
+    /// (a dialog that closes). Labels are retained across control replacement; unread labels defer until a later step.
+    /// The scenario requires all labels before completing.</summary>
     public void BeginStep(string text, params string[] notices)
     {
         foreach (string notice in notices) _registry.RequireNotice(notice, Chapter.Number);
         if (_steps.Count > 0) ResolveLabels();
         _steps.Add(new Step(_steps.Count + 1, text, notices));
+        // Read action labels before an action can replace its control, without freezing the step's resulting text.
+        foreach (Match token in LabelToken().Matches(text)) _ = TryReadLabel(token);
     }
 
-    public void ResolveLabels()
+    public void ResolveLabels(bool requireAll = false)
     {
-        var step = Current;
-        if (step.Text is not null) return;
-        step.Text = LabelToken().Replace(step.Template, m =>
+        foreach (var step in _steps.Where(s => s.Text is null))
         {
-            var source = m.Groups["source"].Value switch { "label" => LabelSource.PrecedingText, "child" => LabelSource.ChildText, _ => LabelSource.Name };
-            string label = _label(m.Groups["id"].Value, source);
-            if (string.IsNullOrWhiteSpace(label)) throw new InvalidOperationException("No visible label for " + m.Groups["id"].Value);
-            step.Labels[m.Groups["id"].Value] = label;
-            return "**" + EscapeMarkdown(label) + "**";
-        });
+            bool complete = true;
+            string text = LabelToken().Replace(step.Template, m =>
+            {
+                string id = m.Groups["id"].Value;
+                string? label = step.Labels.TryGetValue(id, out var alreadyRead) ? alreadyRead : TryReadLabel(m);
+                if (label is null)
+                {
+                    if (requireAll) throw new InvalidOperationException("No visible label read in this run for " + id);
+                    complete = false;
+                    return m.Value;
+                }
+                step.Labels[id] = label;
+                return "**" + EscapeMarkdown(label) + "**";
+            });
+            if (complete) step.Text = text;
+        }
+    }
+
+    private string? TryReadLabel(Match token)
+    {
+        var source = token.Groups["source"].Value switch { "label" => LabelSource.PrecedingText, "child" => LabelSource.ChildText, _ => LabelSource.Name };
+        var key = (token.Groups["id"].Value, source);
+        string? label = null;
+        try { label = _label(key.Item1, source); }
+        catch (SelectorMatchException e) when (e.Matches == 0) { } // replacement/empty controls only; ambiguous selectors still fail
+        if (!string.IsNullOrWhiteSpace(label)) _labelsRead[key] = label;
+        return _labelsRead.GetValueOrDefault(key);
     }
 
     private Step Current => _steps.Count > 0 ? _steps[^1] : throw new InvalidOperationException("A check or capture needs an open step");
