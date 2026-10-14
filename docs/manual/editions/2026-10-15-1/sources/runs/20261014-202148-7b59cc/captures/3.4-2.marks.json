@@ -1,0 +1,51 @@
+{
+  "schema": "gcam.figure-marks",
+  "schemaVersion": 1,
+  "capture": "captures/3.4-2.png",
+  "captureSha256": "e1b957741c141c55cc42cd3eb34037836a3ee3127e86cf2374f28f9b21dec0d9",
+  "widthPx": 1440,
+  "heightPx": 900,
+  "frameOriginPx": [
+    560,
+    246
+  ],
+  "dpi": 96,
+  "perMonitorAware": true,
+  "templateSha256": "522ee499b4a544f550deb9213b200c775efd273a097dd85ae1c50ddac84207a1",
+  "crop": "marks",
+  "region": {
+    "target": "Spectrum.Plot",
+    "screen": [
+      897,
+      355,
+      766,
+      579
+    ],
+    "image": [
+      337,
+      109,
+      766,
+      579
+    ]
+  },
+  "marks": [
+    {
+      "n": 1,
+      "target": "Spectrum.Window",
+      "label": "N × FWHM at each line",
+      "labelSource": "preceding-text",
+      "screen": [
+        1701,
+        455,
+        262,
+        28
+      ],
+      "image": [
+        1141,
+        209,
+        262,
+        28
+      ]
+    }
+  ]
+}

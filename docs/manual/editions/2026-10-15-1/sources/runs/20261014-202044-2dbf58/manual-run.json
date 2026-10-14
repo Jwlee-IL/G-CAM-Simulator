@@ -1,0 +1,316 @@
+{
+  "schema": "gcam.manual-run",
+  "schemaVersion": 1,
+  "runId": "20261014-202044-2dbf58",
+  "scenario": "manual.navigate",
+  "chapter": {
+    "number": "1.2",
+    "title": "Window, workspaces and view tabs"
+  },
+  "registrySha256": "67a5caf676b4ce9aa0fe9a4f668eaa461a370352be12a2003f852439b26f50c3",
+  "noticesSha256": "3259dc4074c7978bdf276f0155fbcd87115d5d56898331db5bc36364e11cbe4d",
+  "startedAt": "2026-10-14T20:20:44.663+09:00",
+  "finishedAt": "2026-10-14T20:20:59.200+09:00",
+  "status": "passed",
+  "execution": {
+    "status": "completed",
+    "uiRunStatus": "completed",
+    "abortReason": null
+  },
+  "subject": {
+    "deploymentSha256": "03742d883dbd3991517f70dd0ac6c9f6b116f29224c294e6e0105f36b28dcc48",
+    "files": {
+      "CommunityToolkit.Mvvm.dll": "7d7eb5c066cfe883b439b1200bf5dcb387b1e5319dd2edbdaa9e23adfe416452",
+      "Gcam.Configuration.dll": "29a9583b0b3a354d38b1ab63b322a3b365437d4fdc6ed081ccc8135f01cece89",
+      "Gcam.Core.dll": "df7b5eaab4825fdb3f9aa44d5c14a6ddbb51772cf6ea5268f5a0dac39921a4ea",
+      "Gcam.Decoding.dll": "08c357f2b2cbe405e534cbf208437cb505ecd213110076acb36cc50cf003fa26",
+      "Gcam.Detector.dll": "a0e147817db52fcfaf501faece12696d211c900a223d4c39b03252350c3579fd",
+      "Gcam.Masks.dll": "ece836c6e130030ae51916c85471ff5be377d76c2918395ce6d07f51b8691555",
+      "Gcam.Simulation.dll": "5a195eff18bf29e21ecaa69c9c00faa4e64cabee2dfb8dd0546d5fb6e78528db",
+      "Gcam.Studio.Core.dll": "cddf7dc61739c76d73e09aadad6840b80fb902b5e080ab30ec60da3da4ffca7a",
+      "Gcam.Studio.Services.dll": "bba1021d955515f8d4b99c700275c2f085700e6cb33fe095c44339e60afe5928",
+      "Gcam.Studio.deps.json": "c0788e904cc56d7536666b829af0e74890b4ed2cdc18541e0e2427bfe2840a9d",
+      "Gcam.Studio.dll": "6908420ceb7738c01ad4d9527d8e28f83dbc297a450072411e4d55ef66f5d907",
+      "Gcam.Studio.exe": "c4b705938847afd4c1e74f6c75bb82559a691ace0042b9dd5d9d01e0ec1e3ab8",
+      "Gcam.Studio.runtimeconfig.json": "f1105b6b9a1edbeb3b8ebf90f94c4a3a554e1de005e60fcd9a20978501dc2d54",
+      "Microsoft.Extensions.DependencyInjection.Abstractions.dll": "99a08f73aa1568c8a614ac4d76fe1cf9a27e10f7c02f9afd65da2c6e25d6ff04",
+      "Microsoft.Extensions.DependencyInjection.dll": "09c80cce213152ced75d791fc4fd57b34f79a2026c69d133b0380f10128096ce",
+      "ambient/terrestrial-unscear2000-v1.json": "4d48bc4272ce4c25ff6ae9b13ed7583e3c8f467afffdb0225956a70cc435b3f4"
+    },
+    "unchanged": true
+  },
+  "tool": {
+    "commit": "663eb771d334c59f309c4e5af7ec5aac54999eb2",
+    "dirtyFiles": 0,
+    "assemblySha256": "49293371cc344c96215dee40d59b389c1d227c32cbb5ebdc3c04d631416d5ab6"
+  },
+  "environment": {
+    "frameWidthPx": 1440,
+    "frameHeightPx": 900,
+    "dpi": 96,
+    "perMonitorAware": true,
+    "themeAtStart": "dark",
+    "os": "Microsoft Windows NT 10.0.26200.0",
+    "uiLocale": "en",
+    "formattingCulture": "ko-KR",
+    "runtime": "9.0.13"
+  },
+  "links": {
+    "uiManifest": {
+      "sha256": "70bbc53d3f43a6cca7bf6571beb70ece3ad0451e397cbe4734577fe35173f5c4",
+      "retained": false,
+      "reason": "the UI manifest names local paths; its hash is the lineage"
+    }
+  },
+  "steps": [
+    {
+      "n": 1,
+      "text": "GCAM Studio opens with the top bar — the workspace switch **Imaging**, **Spectrum**, **Waveform**, **Detector** and the **Start** button — the left panel with the tabs **Scene**, **Optics** and **Detector**, the workspace in the centre and the status bar at the bottom.",
+      "labels": {
+        "Workspace.Imaging": "Imaging",
+        "Workspace.Spectrum": "Spectrum",
+        "Workspace.Waveform": "Waveform",
+        "Workspace.Detector": "Detector",
+        "StartAcquisition": "Start",
+        "Left.SceneTab": "Scene",
+        "Left.OpticsTab": "Optics",
+        "Left.DetectorTab": "Detector"
+      },
+      "notices": [],
+      "checks": [
+        {
+          "id": "window.starts-empty",
+          "result": "pass",
+          "detail": "expected Empty, actual Empty"
+        },
+        {
+          "id": "window.imaging-first",
+          "result": "pass",
+          "detail": "Imaging shows the flood map and the reconstruction"
+        }
+      ],
+      "figures": [
+        {
+          "id": "1.2-1",
+          "capture": "captures/1.2-1.png",
+          "marks": "captures/1.2-1.marks.json",
+          "caption": "The window after start, Imaging workspace."
+        }
+      ],
+      "missingFigures": [],
+      "verdict": "passed",
+      "error": null
+    },
+    {
+      "n": 2,
+      "text": "Select the **Optics** tab: the engineering geometry replaces the source list in the left panel.",
+      "labels": {
+        "Left.OpticsTab": "Optics"
+      },
+      "notices": [],
+      "checks": [
+        {
+          "id": "navigation.left-tab",
+          "result": "pass",
+          "detail": "Optics tab selected, its preset visible"
+        }
+      ],
+      "figures": [
+        {
+          "id": "1.2-2",
+          "capture": "captures/1.2-2.png",
+          "marks": "captures/1.2-2.marks.json",
+          "caption": "The Optics tab."
+        }
+      ],
+      "missingFigures": [],
+      "verdict": "passed",
+      "error": null
+    },
+    {
+      "n": 3,
+      "text": "Choose **Spectrum** in the workspace switch: the centre shows the spectrum instead of the images.",
+      "labels": {
+        "Workspace.Spectrum": "Spectrum"
+      },
+      "notices": [],
+      "checks": [
+        {
+          "id": "navigation.workspace-surface",
+          "result": "pass",
+          "detail": "Spectrum plot shown, flood map gone"
+        }
+      ],
+      "figures": [],
+      "missingFigures": [],
+      "verdict": "passed",
+      "error": null
+    },
+    {
+      "n": 4,
+      "text": "Choose **Waveform**, then its view tab **Four outputs (A–D)**. With the default direct crystal assignment there are no four outputs: the view reads **Available with the experimental physical readout** and offers **Choose readout…**.",
+      "labels": {
+        "Workspace.Waveform": "Waveform",
+        "Waveform.FourOutputsTab": "Four outputs (A–D)",
+        "Readout.EmptyState": "Available with the experimental physical readout",
+        "Readout.ChooseReadout": "Choose readout…"
+      },
+      "notices": [],
+      "checks": [
+        {
+          "id": "navigation.waveform-empty-state",
+          "result": "pass",
+          "detail": "expected Available with the experimental physical readout, actual Available with the experimental physical readout"
+        }
+      ],
+      "figures": [
+        {
+          "id": "1.2-3",
+          "capture": "captures/1.2-3.png",
+          "marks": "captures/1.2-3.marks.json",
+          "caption": "Four outputs under the direct crystal assignment."
+        }
+      ],
+      "missingFigures": [],
+      "verdict": "passed",
+      "error": null
+    },
+    {
+      "n": 5,
+      "text": "Choose **Detector**, then its view tab **SiPM**: the physical readout views are empty in the same way.",
+      "labels": {
+        "Workspace.Detector": "Detector",
+        "Readout.SipmTab": "SiPM"
+      },
+      "notices": [],
+      "checks": [
+        {
+          "id": "navigation.detector-empty-state",
+          "result": "pass",
+          "detail": "SiPM tab selected, readout choice offered"
+        }
+      ],
+      "figures": [
+        {
+          "id": "1.2-4",
+          "capture": "captures/1.2-4.png",
+          "marks": "captures/1.2-4.marks.json",
+          "caption": "A Detector readout view under the direct crystal assignment."
+        }
+      ],
+      "missingFigures": [],
+      "verdict": "passed",
+      "error": null
+    },
+    {
+      "n": 6,
+      "text": "Click **Choose readout…**: the left panel switches to its **Detector** tab with the keyboard focus on the readout choice.",
+      "labels": {
+        "Readout.ChooseReadout": "Choose readout…",
+        "Left.DetectorTab": "Detector"
+      },
+      "notices": [
+        "N-READOUT"
+      ],
+      "checks": [
+        {
+          "id": "navigation.choose-readout",
+          "result": "pass",
+          "detail": "left Detector tab selected and the readout mode focused"
+        }
+      ],
+      "figures": [
+        {
+          "id": "1.2-5",
+          "capture": "captures/1.2-5.png",
+          "marks": "captures/1.2-5.marks.json",
+          "caption": "The readout choice in the left Detector tab."
+        }
+      ],
+      "missingFigures": [],
+      "verdict": "passed",
+      "error": null
+    },
+    {
+      "n": 7,
+      "text": "Choose **Imaging** to return to the images.",
+      "labels": {
+        "Workspace.Imaging": "Imaging"
+      },
+      "notices": [],
+      "checks": [
+        {
+          "id": "navigation.back-to-imaging",
+          "result": "pass",
+          "detail": "flood map shown again"
+        }
+      ],
+      "figures": [],
+      "missingFigures": [],
+      "verdict": "passed",
+      "error": null
+    }
+  ],
+  "evidence": [
+    {
+      "path": "captures/1.2-1.png",
+      "sha256": "b3b4edcb227cd0c616c8999ae6b7d54be96dd0a0f290077ebdcced7e6a5bb2d3",
+      "bytes": 62586,
+      "role": "capture"
+    },
+    {
+      "path": "captures/1.2-1.marks.json",
+      "sha256": "a04b9668955dc3cb11d1ccb870dad1ea329f77fd8b37ac7741e25e7883e85169",
+      "bytes": 2580,
+      "role": "marks"
+    },
+    {
+      "path": "captures/1.2-2.png",
+      "sha256": "f654c2c5f216af953d1f224a92adec73e04a6c11df6c77aae15b341b85ed9b47",
+      "bytes": 63679,
+      "role": "capture"
+    },
+    {
+      "path": "captures/1.2-2.marks.json",
+      "sha256": "9b975939782035f50967b61090fbf2bfc08ef08403aa200bda15ad663ee86608",
+      "bytes": 1145,
+      "role": "marks"
+    },
+    {
+      "path": "captures/1.2-3.png",
+      "sha256": "ffa7a04a6b92a02fd51ca699dd9708d1441416f24265f8ff36ca8a2a9d254c8c",
+      "bytes": 40525,
+      "role": "capture"
+    },
+    {
+      "path": "captures/1.2-3.marks.json",
+      "sha256": "23efba97cfb06a0fce9a07f8130c8ed683b026add8198870527a8ab21446d63d",
+      "bytes": 1495,
+      "role": "marks"
+    },
+    {
+      "path": "captures/1.2-4.png",
+      "sha256": "ca15b38bc336c744820fb24a23fccd3c3319b7c2cd1eabc0314948c9c5f72a17",
+      "bytes": 40261,
+      "role": "capture"
+    },
+    {
+      "path": "captures/1.2-4.marks.json",
+      "sha256": "8f0aec3c8552842d9b294debca3b947386d23940ce66cc3c567df12d3ade2a19",
+      "bytes": 1471,
+      "role": "marks"
+    },
+    {
+      "path": "captures/1.2-5.png",
+      "sha256": "ca15b38bc336c744820fb24a23fccd3c3319b7c2cd1eabc0314948c9c5f72a17",
+      "bytes": 40261,
+      "role": "capture"
+    },
+    {
+      "path": "captures/1.2-5.marks.json",
+      "sha256": "6bbccb46c92c40ed220c7cdf89b7038c4f4983d75df158d40053169593bb80e3",
+      "bytes": 869,
+      "role": "marks"
+    }
+  ]
+}

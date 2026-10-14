@@ -1,0 +1,73 @@
+{
+  "schema": "gcam.figure-marks",
+  "schemaVersion": 1,
+  "capture": "captures/2.2-3.png",
+  "captureSha256": "c7f949b28e019bd9745059db14a6d3afb64231042962063070184e32ba074997",
+  "widthPx": 1440,
+  "heightPx": 900,
+  "frameOriginPx": [
+    560,
+    246
+  ],
+  "dpi": 96,
+  "perMonitorAware": true,
+  "templateSha256": "da17de71a2548ab172d505bda21d1dd2f0488744d38a5c3af8aac3dede8c8ac8",
+  "crop": "marks",
+  "region": null,
+  "marks": [
+    {
+      "n": 1,
+      "target": "Optics.Pixels",
+      "label": "Pixels / side",
+      "labelSource": "preceding-text",
+      "screen": [
+        669,
+        541,
+        178,
+        28
+      ],
+      "image": [
+        109,
+        295,
+        178,
+        28
+      ]
+    },
+    {
+      "n": 2,
+      "target": "Optics.Error",
+      "label": "Detector pixels must be an integer from 4 to 64.",
+      "labelSource": "name",
+      "screen": [
+        585,
+        628,
+        262,
+        15
+      ],
+      "image": [
+        25,
+        382,
+        262,
+        15
+      ]
+    },
+    {
+      "n": 3,
+      "target": "StatusText",
+      "label": "Start refused: Detector pixels must be an integer from 4 to 64.",
+      "labelSource": "name",
+      "screen": [
+        592,
+        1124,
+        810,
+        16
+      ],
+      "image": [
+        32,
+        878,
+        810,
+        16
+      ]
+    }
+  ]
+}

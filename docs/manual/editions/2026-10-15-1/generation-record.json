@@ -1,0 +1,1196 @@
+{
+ "budgetBytes": 10485760,
+ "bytesExcludingRecord": 2009631,
+ "chapterOutputSha256": {
+  "1.1": "139af52524d0092f48789c91d61f4cce314fe4256125246dbedacc12f39dc4e9",
+  "1.2": "102294d4f6b344e2084f13416cf06b5abed7fb7fdf83ddc346feb23ae6bb69c7",
+  "2.1": "388b0bd2f6d5a5d01b58af7145bcef1319377b7431edfd123a08d7db19854592",
+  "2.2": "fb954893b541416e0365da001e9c54f9ec51ba50f320a34327d9508d6ed4edde",
+  "2.4": "e6fc95fe05eb745213b44558d310762b73a949b198967b76dece4dde1e4c1d23",
+  "3.1": "4ac477deac52fe237d2d2133bda3be933458ac408b3a2a4117f7d10e0e8b97d8",
+  "3.4": "9b9ebbd260e40870fac7a2547f512174afabf9337db2d0040ef0e8c8c8e8e06e",
+  "5.2": "1396bc5c1bea3d3aa3d62d13ef07528e9e2a0d7c3a1105a4fa5d70ae8acdd25c"
+ },
+ "chapters": [
+  {
+   "candidates": [
+    {
+     "execution": "completed",
+     "runId": "20261014-202044-2dbf58",
+     "selection": "latest",
+     "startedAt": "2026-10-14T20:20:44.663+09:00",
+     "status": "passed"
+    }
+   ],
+   "number": "1.2",
+   "omission": null,
+   "scenario": "manual.navigate"
+  },
+  {
+   "candidates": [
+    {
+     "execution": "completed",
+     "runId": "20261014-202059-544edf",
+     "selection": "latest",
+     "startedAt": "2026-10-14T20:20:59.217+09:00",
+     "status": "passed"
+    }
+   ],
+   "number": "2.1",
+   "omission": null,
+   "scenario": "manual.sources"
+  },
+  {
+   "candidates": [
+    {
+     "execution": "completed",
+     "runId": "20261014-202201-b1fbf6",
+     "selection": "latest",
+     "startedAt": "2026-10-14T20:22:01.753+09:00",
+     "status": "passed"
+    }
+   ],
+   "number": "2.2",
+   "omission": null,
+   "scenario": "manual.geometry"
+  },
+  {
+   "candidates": [
+    {
+     "execution": "completed",
+     "runId": "20261014-202133-886f72",
+     "selection": "latest",
+     "startedAt": "2026-10-14T20:21:33.908+09:00",
+     "status": "passed"
+    }
+   ],
+   "number": "2.4",
+   "omission": null,
+   "scenario": "manual.acquisition"
+  },
+  {
+   "candidates": [
+    {
+     "execution": "completed",
+     "runId": "20261014-202118-3646b1",
+     "selection": "latest",
+     "startedAt": "2026-10-14T20:21:18.398+09:00",
+     "status": "passed"
+    }
+   ],
+   "number": "3.1",
+   "omission": null,
+   "scenario": "manual.measurements"
+  },
+  {
+   "candidates": [
+    {
+     "execution": "completed",
+     "runId": "20261014-202148-7b59cc",
+     "selection": "latest",
+     "startedAt": "2026-10-14T20:21:48.977+09:00",
+     "status": "passed"
+    }
+   ],
+   "number": "3.4",
+   "omission": null,
+   "scenario": "manual.spectrum"
+  }
+ ],
+ "date": "2026-10-15",
+ "draftReasons": [
+  "static chapter 1.1 is a draft",
+  "static chapter 5.2 is a draft",
+  "the notice list is not approved"
+ ],
+ "editionId": "2026-10-15-1",
+ "figures": [
+  {
+   "chapter": "1.2",
+   "figure": "1.2-1",
+   "flags": [],
+   "marksSha256": "a04b9668955dc3cb11d1ccb870dad1ea329f77fd8b37ac7741e25e7883e85169",
+   "operation": {
+    "badges": [
+     {
+      "at": [
+       133,
+       41
+      ],
+      "n": 1,
+      "side": "below"
+     },
+     {
+      "at": [
+       203,
+       41
+      ],
+      "n": 2,
+      "side": "below"
+     },
+     {
+      "at": [
+       312,
+       41
+      ],
+      "n": 3,
+      "side": "below"
+     },
+     {
+      "at": [
+       419,
+       13
+      ],
+      "n": 4,
+      "side": "right"
+     },
+     {
+      "at": [
+       1142,
+       13
+      ],
+      "n": 5,
+      "side": "right"
+     },
+     {
+      "at": [
+       7,
+       77
+      ],
+      "n": 6,
+      "side": "left"
+     },
+     {
+      "at": [
+       131,
+       106
+      ],
+      "n": 7,
+      "side": "below"
+     },
+     {
+      "at": [
+       302,
+       77
+      ],
+      "n": 8,
+      "side": "right"
+     }
+    ],
+    "crop": [
+     0,
+     0,
+     1440,
+     900
+    ],
+    "cropRule": "full",
+    "overlay": "rectangles+numbered-badges-v2"
+   },
+   "path": "figures/1.2-1.png",
+   "pixelSha256": "a17241cbe37f217cee64dc727c30d9a05b2bd0631fe51705aaa61503194982f6",
+   "resultSha256": "51c7f4cf7e8c2d8b0262fd80e7650fb733788dde02748f5215aac9be93afdbae",
+   "runId": "20261014-202044-2dbf58",
+   "source": "captures/1.2-1.png",
+   "sourceSha256": "b3b4edcb227cd0c616c8999ae6b7d54be96dd0a0f290077ebdcced7e6a5bb2d3",
+   "step": 1
+  },
+  {
+   "chapter": "1.2",
+   "figure": "1.2-2",
+   "flags": [],
+   "marksSha256": "9b975939782035f50967b61090fbf2bfc08ef08403aa200bda15ad663ee86608",
+   "operation": {
+    "badges": [
+     {
+      "at": [
+       93,
+       24
+      ],
+      "n": 1,
+      "side": "left"
+     },
+     {
+      "at": [
+       85,
+       101
+      ],
+      "n": 2,
+      "side": "left"
+     }
+    ],
+    "crop": [
+     5,
+     53,
+     314,
+     813
+    ],
+    "cropRule": "panel-edges",
+    "overlay": "rectangles+numbered-badges-v2"
+   },
+   "path": "figures/1.2-2.png",
+   "pixelSha256": "4e905221ce14633a83b8bd32440f8e4e2a387b76ed7af799cedf0ecb41d27e37",
+   "resultSha256": "3d5832faf0825c3a005e1bce522837830f495be9116df53255d87c9d82e9cb66",
+   "runId": "20261014-202044-2dbf58",
+   "source": "captures/1.2-2.png",
+   "sourceSha256": "f654c2c5f216af953d1f224a92adec73e04a6c11df6c77aae15b341b85ed9b47",
+   "step": 2
+  },
+  {
+   "chapter": "1.2",
+   "figure": "1.2-3",
+   "flags": [],
+   "marksSha256": "23efba97cfb06a0fce9a07f8130c8ed683b026add8198870527a8ab21446d63d",
+   "operation": {
+    "badges": [
+     {
+      "at": [
+       384,
+       60
+      ],
+      "n": 1,
+      "side": "left"
+     },
+     {
+      "at": [
+       244,
+       415
+      ],
+      "n": 2,
+      "side": "left"
+     },
+     {
+      "at": [
+       319,
+       448
+      ],
+      "n": 3,
+      "side": "left"
+     }
+    ],
+    "crop": [
+     317,
+     53,
+     806,
+     813
+    ],
+    "cropRule": "panel-edges",
+    "overlay": "rectangles+numbered-badges-v2"
+   },
+   "path": "figures/1.2-3.png",
+   "pixelSha256": "2c592ec36c3392da0830134338f22dc460f74acd5dea0dd05d806176160c5cac",
+   "resultSha256": "f1a1ac543882ffc516004cbd3d4bb0c9003679b186ae16bc7eef8c159eb0954b",
+   "runId": "20261014-202044-2dbf58",
+   "source": "captures/1.2-3.png",
+   "sourceSha256": "ffa7a04a6b92a02fd51ca699dd9708d1441416f24265f8ff36ca8a2a9d254c8c",
+   "step": 4
+  },
+  {
+   "chapter": "1.2",
+   "figure": "1.2-4",
+   "flags": [],
+   "marksSha256": "8f0aec3c8552842d9b294debca3b947386d23940ce66cc3c567df12d3ade2a19",
+   "operation": {
+    "badges": [
+     {
+      "at": [
+       155,
+       60
+      ],
+      "n": 1,
+      "side": "left"
+     },
+     {
+      "at": [
+       244,
+       415
+      ],
+      "n": 2,
+      "side": "left"
+     },
+     {
+      "at": [
+       319,
+       448
+      ],
+      "n": 3,
+      "side": "left"
+     }
+    ],
+    "crop": [
+     317,
+     53,
+     806,
+     813
+    ],
+    "cropRule": "panel-edges",
+    "overlay": "rectangles+numbered-badges-v2"
+   },
+   "path": "figures/1.2-4.png",
+   "pixelSha256": "fb0c47d0b3abc4cad0e5c494a9a5182e7604f052b7fb064417560a116da6474e",
+   "resultSha256": "e32982a4f67f8607f2c0ddc55ce336cc19c99c2df1b0d61afe7e3c7195ed8aef",
+   "runId": "20261014-202044-2dbf58",
+   "source": "captures/1.2-4.png",
+   "sourceSha256": "ca15b38bc336c744820fb24a23fccd3c3319b7c2cd1eabc0314948c9c5f72a17",
+   "step": 5
+  },
+  {
+   "chapter": "1.2",
+   "figure": "1.2-5",
+   "flags": [],
+   "marksSha256": "6bbccb46c92c40ed220c7cdf89b7038c4f4983d75df158d40053169593bb80e3",
+   "operation": {
+    "badges": [
+     {
+      "at": [
+       183,
+       24
+      ],
+      "n": 1,
+      "side": "left"
+     }
+    ],
+    "crop": [
+     5,
+     53,
+     314,
+     813
+    ],
+    "cropRule": "panel-edges",
+    "overlay": "rectangles+numbered-badges-v2"
+   },
+   "path": "figures/1.2-5.png",
+   "pixelSha256": "79add990a7632086440cada6f69797426db409ec374205f3684d0bc9ff3d0dd7",
+   "resultSha256": "b7f3ec04b25878ed6f63e4c7316b7144a3ba06852a28cfbbd4b3d004b4f86d8d",
+   "runId": "20261014-202044-2dbf58",
+   "source": "captures/1.2-5.png",
+   "sourceSha256": "ca15b38bc336c744820fb24a23fccd3c3319b7c2cd1eabc0314948c9c5f72a17",
+   "step": 6
+  },
+  {
+   "chapter": "2.1",
+   "figure": "2.1-1",
+   "flags": [],
+   "marksSha256": "001d77cf296539f5a30c4a179ccfb2be6c62e5d4031688575ac21b9bb05e0a15",
+   "operation": {
+    "badges": [
+     {
+      "at": [
+       85,
+       188
+      ],
+      "n": 1,
+      "side": "left"
+     },
+     {
+      "at": [
+       85,
+       226
+      ],
+      "n": 2,
+      "side": "left"
+     },
+     {
+      "at": [
+       85,
+       262
+      ],
+      "n": 3,
+      "side": "left"
+     },
+     {
+      "at": [
+       85,
+       298
+      ],
+      "n": 4,
+      "side": "left"
+     },
+     {
+      "at": [
+       85,
+       337
+      ],
+      "n": 5,
+      "side": "left"
+     }
+    ],
+    "crop": [
+     5,
+     53,
+     314,
+     813
+    ],
+    "cropRule": "panel-edges",
+    "overlay": "rectangles+numbered-badges-v2"
+   },
+   "path": "figures/2.1-1.png",
+   "pixelSha256": "4f42edf4d149d5dfad7df0dfbb63183326c19bf6234fb25214e3bb75fe3f5743",
+   "resultSha256": "b4ec7a7f4803d2a3e4da8e61e5ee9ca97aa1d6bd601a2f30cfbeee82a69e7e57",
+   "runId": "20261014-202059-544edf",
+   "source": "captures/2.1-1.png",
+   "sourceSha256": "c24740fd306d2cf979ad0eb19e51e864f1d014d62978c060006eb7c25b16b297",
+   "step": 1
+  },
+  {
+   "chapter": "2.1",
+   "figure": "2.1-2",
+   "flags": [],
+   "marksSha256": "37e32072ffc006ab1f165db583f594c822b86ff259fdfac6583623d53ef9f7ff",
+   "operation": {
+    "badges": [
+     {
+      "at": [
+       85,
+       216
+      ],
+      "n": 1,
+      "side": "left"
+     },
+     {
+      "at": [
+       85,
+       257
+      ],
+      "n": 2,
+      "side": "left"
+     },
+     {
+      "at": [
+       85,
+       362
+      ],
+      "n": 3,
+      "side": "left"
+     }
+    ],
+    "crop": [
+     5,
+     53,
+     314,
+     813
+    ],
+    "cropRule": "panel-edges",
+    "overlay": "rectangles+numbered-badges-v2"
+   },
+   "path": "figures/2.1-2.png",
+   "pixelSha256": "39305b96cab01b4ae420d0b18768c76d7f68999c00900462e48c35d1e6f4a8f5",
+   "resultSha256": "c9e483758d253665838d2b5979821686d9081063461b5d095a93be57c206da63",
+   "runId": "20261014-202059-544edf",
+   "source": "captures/2.1-2.png",
+   "sourceSha256": "99afd7ee56842130cb4ffbff90fe67def8ea752517e79c01f8c69b46202319fa",
+   "step": 4
+  },
+  {
+   "chapter": "2.1",
+   "figure": "2.1-3",
+   "flags": [],
+   "marksSha256": "c8cb49fcdeeb7e573905758d73faa8bbeb9e3e6b40317315de6d098d116d114b",
+   "operation": {
+    "badges": [
+     {
+      "at": [
+       85,
+       226
+      ],
+      "n": 1,
+      "side": "left"
+     },
+     {
+      "at": [
+       85,
+       334
+      ],
+      "n": 2,
+      "side": "left"
+     }
+    ],
+    "crop": [
+     5,
+     53,
+     314,
+     813
+    ],
+    "cropRule": "panel-edges",
+    "overlay": "rectangles+numbered-badges-v2"
+   },
+   "path": "figures/2.1-3.png",
+   "pixelSha256": "f419b30e6971e34aef57ba3f14f0623017996fa50f5f56efd0b8d9bf8908d1ce",
+   "resultSha256": "125e56edcff2827235c64e9d47e1ab783a29d41d2aae27eaf41be3d1539855c3",
+   "runId": "20261014-202059-544edf",
+   "source": "captures/2.1-3.png",
+   "sourceSha256": "a1770eea6afc2caa291327147c27e1a7276e6a2b962be024e9da033fd2ec3b84",
+   "step": 6
+  },
+  {
+   "chapter": "2.2",
+   "figure": "2.2-1",
+   "flags": [],
+   "marksSha256": "e7bf00f8921863cd8d8a6e32ce3d9527a002d2e294affe9eea90b4f27a9397b1",
+   "operation": {
+    "badges": [
+     {
+      "at": [
+       85,
+       99
+      ],
+      "n": 1,
+      "side": "left"
+     },
+     {
+      "at": [
+       85,
+       137
+      ],
+      "n": 2,
+      "side": "left"
+     },
+     {
+      "at": [
+       85,
+       173
+      ],
+      "n": 3,
+      "side": "left"
+     },
+     {
+      "at": [
+       286,
+       209
+      ],
+      "n": 4,
+      "side": "right"
+     },
+     {
+      "at": [
+       85,
+       245
+      ],
+      "n": 5,
+      "side": "left"
+     },
+     {
+      "at": [
+       85,
+       284
+      ],
+      "n": 6,
+      "side": "left"
+     }
+    ],
+    "crop": [
+     5,
+     53,
+     314,
+     813
+    ],
+    "cropRule": "panel-edges",
+    "overlay": "rectangles+numbered-badges-v2"
+   },
+   "path": "figures/2.2-1.png",
+   "pixelSha256": "1b1a0ff78ac542c8ae2ef07cb872bba981a44934e8fd1c2a4d69880812dd2f1c",
+   "resultSha256": "147fb5f26e125b381399454be9ff75d60a37f6573ffd5af1c92d075dc8a24f5e",
+   "runId": "20261014-202201-b1fbf6",
+   "source": "captures/2.2-1.png",
+   "sourceSha256": "7016e80a5deac5efcc01584425a8c9c27ec52f436cc99023c049d3c86e5ccfff",
+   "step": 1
+  },
+  {
+   "chapter": "2.2",
+   "figure": "2.2-2",
+   "flags": [],
+   "marksSha256": "2f60c84d3c34d3a5cf2525e10109a69dc1aa377339a374dbfb63a19ebf694891",
+   "operation": {
+    "badges": [
+     {
+      "at": [
+       6,
+       60
+      ],
+      "n": 1,
+      "side": "left"
+     },
+     {
+      "at": [
+       809,
+       53
+      ],
+      "n": 2,
+      "side": "left"
+     }
+    ],
+    "crop": [
+     313,
+     53,
+     1122,
+     813
+    ],
+    "cropRule": "panel-edges",
+    "overlay": "rectangles+numbered-badges-v2"
+   },
+   "path": "figures/2.2-2.png",
+   "pixelSha256": "70bc0697aecf19e5d6c233fec20b939786cf4d4f83848c8ed28b58531f9f11a4",
+   "resultSha256": "e976e24b86d2577571b41dfca119a9f82faa1c52fa9834507d8b355b79930b15",
+   "runId": "20261014-202201-b1fbf6",
+   "source": "captures/2.2-2.png",
+   "sourceSha256": "07950bbf16d31b9667e1ab9d2eb87dd93310b340cf4546c998c4076dab4b8bf5",
+   "step": 3
+  },
+  {
+   "chapter": "2.2",
+   "figure": "2.2-3",
+   "flags": [],
+   "marksSha256": "f24c484e72b30752de51b8ff98b5e51d9b80455146d6ec45bdad1d5f8cbb4ae3",
+   "operation": {
+    "badges": [
+     {
+      "at": [
+       90,
+       245
+      ],
+      "n": 1,
+      "side": "left"
+     },
+     {
+      "at": [
+       6,
+       326
+      ],
+      "n": 2,
+      "side": "left"
+     },
+     {
+      "at": [
+       30,
+       800
+      ],
+      "n": 3,
+      "side": "above"
+     }
+    ],
+    "crop": [
+     0,
+     53,
+     1440,
+     847
+    ],
+    "cropRule": "panel-edges",
+    "overlay": "rectangles+numbered-badges-v2"
+   },
+   "path": "figures/2.2-3.png",
+   "pixelSha256": "2396589961fe9de75ff9a16c9a36eba996f3b2161dcd3dfb640ead3b46fb61bd",
+   "resultSha256": "0266fc95f17134d2695e9cb6860fbd43da30fe8d25ca606b2a4c01c38acfb095",
+   "runId": "20261014-202201-b1fbf6",
+   "source": "captures/2.2-3.png",
+   "sourceSha256": "c7f949b28e019bd9745059db14a6d3afb64231042962063070184e32ba074997",
+   "step": 5
+  },
+  {
+   "chapter": "2.4",
+   "figure": "2.4-1",
+   "flags": [],
+   "marksSha256": "72907e3af3d12f4fec7173b047490088e56fcc4b621293309534762d3be0ccc3",
+   "operation": {
+    "badges": [
+     {
+      "at": [
+       1039,
+       13
+      ],
+      "n": 1,
+      "side": "left"
+     }
+    ],
+    "crop": [
+     0,
+     0,
+     1440,
+     55
+    ],
+    "cropRule": "panel-edges",
+    "overlay": "rectangles+numbered-badges-v2"
+   },
+   "path": "figures/2.4-1.png",
+   "pixelSha256": "174726b9d6282c261fa46491373abf62dd85ec9ccea376d27fcaf7b520c9b07a",
+   "resultSha256": "06110f63afdd558cedb7ac8348f3e2dcb6ff46750374338a0b503adf5585b38e",
+   "runId": "20261014-202133-886f72",
+   "source": "captures/2.4-1.png",
+   "sourceSha256": "83fa3ead146fcca598c00c02170f23d20bb130154773bead6548433aee950497",
+   "step": 3
+  },
+  {
+   "chapter": "2.4",
+   "figure": "2.4-2",
+   "flags": [],
+   "marksSha256": "23945683af5c849ada4c61038c08de1b127ca83891d63e58edc7f745334ee391",
+   "operation": {
+    "badges": [
+     {
+      "at": [
+       1029,
+       42
+      ],
+      "n": 1,
+      "side": "below"
+     },
+     {
+      "at": [
+       30,
+       853
+      ],
+      "n": 2,
+      "side": "above"
+     }
+    ],
+    "crop": [
+     0,
+     0,
+     1440,
+     900
+    ],
+    "cropRule": "full",
+    "overlay": "rectangles+numbered-badges-v2"
+   },
+   "path": "figures/2.4-2.png",
+   "pixelSha256": "49956cea0f9dde34eda854bbe314343d7009448d0029c7dc72a9d4c4759e743a",
+   "resultSha256": "1a74b2b83bda7348227f0843bbd972db5fbc53908209cde09376826d5d466c8b",
+   "runId": "20261014-202133-886f72",
+   "source": "captures/2.4-2.png",
+   "sourceSha256": "d4ab8ec380e51276d56bc7562fdbf25db89a2fb19ba8cf9cd96c7ea49c954e38",
+   "step": 4
+  },
+  {
+   "chapter": "2.4",
+   "figure": "2.4-3",
+   "flags": [],
+   "marksSha256": "94037532b4f6bcff7c0e6cb98061a368258383e264ae0d5d998c4bb5b90d28f5",
+   "operation": {
+    "badges": [
+     {
+      "at": [
+       157,
+       377
+      ],
+      "n": 1,
+      "side": "left"
+     },
+     {
+      "at": [
+       469,
+       424
+      ],
+      "n": 2,
+      "side": "left"
+     },
+     {
+      "at": [
+       634,
+       425
+      ],
+      "n": 3,
+      "side": "right"
+     }
+    ],
+    "crop": [
+     317,
+     53,
+     806,
+     480
+    ],
+    "cropRule": "panel-edges",
+    "overlay": "rectangles+numbered-badges-v2"
+   },
+   "path": "figures/2.4-3.png",
+   "pixelSha256": "a7d888f23b2156fbdc559379e2c0d2a3244571c84f7442cc77351f1c6b34cb0a",
+   "resultSha256": "aad4d5d8da1c3a91b80e8744438e8ab50d6f9a6dffbd4513a42367212f8600df",
+   "runId": "20261014-202133-886f72",
+   "source": "captures/2.4-3.png",
+   "sourceSha256": "d5dc354ca5fd173657e3e69fb2e0312b9d49097cc0ff54b87fb29436c295d5e6",
+   "step": 6
+  },
+  {
+   "chapter": "2.4",
+   "figure": "2.4-4",
+   "flags": [],
+   "marksSha256": "e32b90a0f712031aa06b90238944d9d375250a0d3d33d9282e644e052896aca9",
+   "operation": {
+    "badges": [
+     {
+      "at": [
+       1142,
+       13
+      ],
+      "n": 1,
+      "side": "right"
+     },
+     {
+      "at": [
+       30,
+       853
+      ],
+      "n": 2,
+      "side": "above"
+     }
+    ],
+    "crop": [
+     0,
+     0,
+     1440,
+     900
+    ],
+    "cropRule": "full",
+    "overlay": "rectangles+numbered-badges-v2"
+   },
+   "path": "figures/2.4-4.png",
+   "pixelSha256": "5bdc715222510655f2c280145022bd063744e77cead1fee1a3e6d8937380e174",
+   "resultSha256": "2c919704e78bb9f696ca4a5648762121bc5628ee86fe7eda4699c17fce0fac71",
+   "runId": "20261014-202133-886f72",
+   "source": "captures/2.4-4.png",
+   "sourceSha256": "c4866a28e34c7e06c159411b702876654554c9bf940e2b058c7b8af1f69b8442",
+   "step": 7
+  },
+  {
+   "chapter": "3.1",
+   "figure": "3.1-1",
+   "flags": [],
+   "marksSha256": "2f4b167d75ec6882160d8681599f727acb1ad067a1862c1855a4bdc86f357147",
+   "operation": {
+    "badges": [
+     {
+      "at": [
+       18,
+       421
+      ],
+      "n": 1,
+      "side": "left"
+     }
+    ],
+    "crop": [
+     317,
+     53,
+     404,
+     480
+    ],
+    "cropRule": "panel-edges",
+    "overlay": "rectangles+numbered-badges-v2"
+   },
+   "path": "figures/3.1-1.png",
+   "pixelSha256": "82bd945283106585bad4ffa5d22dcd188f5e92b87128a48687b6037143d17134",
+   "resultSha256": "cb19b95e87a9a93cd663d4bb80c6d6bac236e3ce42b88318ab591377b183e399",
+   "runId": "20261014-202118-3646b1",
+   "source": "captures/3.1-1.png",
+   "sourceSha256": "ad109d40bd95aca892c352c9d74e06a725a036ca50769d24cf5599e0439aa084",
+   "step": 2
+  },
+  {
+   "chapter": "3.1",
+   "figure": "3.1-2",
+   "flags": [],
+   "marksSha256": "e2ffb298faf6041643fe9fbd97284866b5b34469063d3ec0a9b4bcb93bdaa92d",
+   "operation": {
+    "badges": [
+     {
+      "at": [
+       6,
+       87
+      ],
+      "n": 1,
+      "side": "left"
+     },
+     {
+      "at": [
+       6,
+       125
+      ],
+      "n": 2,
+      "side": "left"
+     },
+     {
+      "at": [
+       6,
+       164
+      ],
+      "n": 3,
+      "side": "left"
+     },
+     {
+      "at": [
+       6,
+       298
+      ],
+      "n": 4,
+      "side": "left"
+     }
+    ],
+    "crop": [
+     312,
+     531,
+     811,
+     335
+    ],
+    "cropRule": "panel-edges",
+    "overlay": "rectangles+numbered-badges-v2"
+   },
+   "path": "figures/3.1-2.png",
+   "pixelSha256": "b7355ba5784eb87582f30c59dd1c6cd6d64583aef6f5ae033d580797f4079a2f",
+   "resultSha256": "1a22ea7c7e97ac256a3dab8863d1c316faa46f9188917071a8d6b08ce2e7141a",
+   "runId": "20261014-202118-3646b1",
+   "source": "captures/3.1-2.png",
+   "sourceSha256": "377b9f4391a907f92d9c3c256e271cceb76ddd58effaf888aeeceedc341e3ff7",
+   "step": 5
+  },
+  {
+   "chapter": "3.4",
+   "figure": "3.4-1",
+   "flags": [],
+   "marksSha256": "5434ae85536db6708a7724e16e2b97a6dfecc9e483af13763b3fee7b25b82283",
+   "operation": {
+    "badges": [
+     {
+      "at": [
+       805,
+       59
+      ],
+      "n": 1,
+      "side": "left"
+     },
+     {
+      "at": [
+       805,
+       159
+      ],
+      "n": 2,
+      "side": "left"
+     }
+    ],
+    "crop": [
+     317,
+     53,
+     1118,
+     813
+    ],
+    "cropRule": "panel-edges",
+    "overlay": "rectangles+numbered-badges-v2"
+   },
+   "path": "figures/3.4-1.png",
+   "pixelSha256": "7c9cd91cce2982ab9bc289d43ad9cdb3524e34b4b7929119896a89aa352e6ab7",
+   "resultSha256": "92df8b10538a358fe585d06dac8bf2a464e74c3fc89afd1fd782e14b518bfbc8",
+   "runId": "20261014-202148-7b59cc",
+   "source": "captures/3.4-1.png",
+   "sourceSha256": "5f429379355daf3df55c897e9c099e9ed19b7e0ca68fc386e8c3b301fe0b6bbe",
+   "step": 2
+  },
+  {
+   "chapter": "3.4",
+   "figure": "3.4-2",
+   "flags": [],
+   "marksSha256": "d545275d8d1ef394fd6e83595e0134a353fdf7b56c692302b1283e8a83c74363",
+   "operation": {
+    "badges": [
+     {
+      "at": [
+       805,
+       159
+      ],
+      "n": 1,
+      "side": "left"
+     }
+    ],
+    "crop": [
+     317,
+     53,
+     1118,
+     813
+    ],
+    "cropRule": "panel-edges",
+    "overlay": "rectangles+numbered-badges-v2"
+   },
+   "path": "figures/3.4-2.png",
+   "pixelSha256": "d5ebdf3e9cee129d73a327ba0cd5a264f6b04fd7004b58cce1d7c167b2d6fc92",
+   "resultSha256": "d13f31bc21316a54bd3f7c629112a493fee1dc20d5ae2df7c2d563a42c7e2c09",
+   "runId": "20261014-202148-7b59cc",
+   "source": "captures/3.4-2.png",
+   "sourceSha256": "e1b957741c141c55cc42cd3eb34037836a3ee3127e86cf2374f28f9b21dec0d9",
+   "step": 3
+  },
+  {
+   "chapter": "3.4",
+   "figure": "3.4-3",
+   "flags": [],
+   "marksSha256": "4fb78f3041c023800b7e1dc502844af394258a7a840562d8d4906fe4b551f221",
+   "operation": {
+    "badges": [
+     {
+      "at": [
+       805,
+       59
+      ],
+      "n": 1,
+      "side": "left"
+     }
+    ],
+    "crop": [
+     317,
+     53,
+     1118,
+     813
+    ],
+    "cropRule": "panel-edges",
+    "overlay": "rectangles+numbered-badges-v2"
+   },
+   "path": "figures/3.4-3.png",
+   "pixelSha256": "12e7b58f9d99814142d4247de170549a8c1fd26f00113b1a25486642f5baf3db",
+   "resultSha256": "6439c67f818d75524fc4fe1d16afb778a830b1913ecbdb5bd6dcc8a4e5c11387",
+   "runId": "20261014-202148-7b59cc",
+   "source": "captures/3.4-3.png",
+   "sourceSha256": "6a6203dcd098da045f3f8fee759474ad2d61211001c35e1eb280a3f9eb1a1e59",
+   "step": 5
+  }
+ ],
+ "flags": [],
+ "formal": false,
+ "generator": {
+  "path": "samples/manual/manual_records.py",
+  "sha256": "258fc3407c7195e2854cc9345cc47197e9159e993bd8942b313b34ae8eff5783"
+ },
+ "notices": {
+  "sha256": "a736a7c4bcf62c998f63be92bba935eb669b74e6e5e5bfde09eb2b0aa8943cb9",
+  "status": "draft"
+ },
+ "outputs": {
+  "MANUAL.Studio.md": "3118601f7d02f34cf1b4eb589f69085e31b182b7876963c264bc7af6ea5c7b0d",
+  "figures/1.2-1.png": "51c7f4cf7e8c2d8b0262fd80e7650fb733788dde02748f5215aac9be93afdbae",
+  "figures/1.2-2.png": "3d5832faf0825c3a005e1bce522837830f495be9116df53255d87c9d82e9cb66",
+  "figures/1.2-3.png": "f1a1ac543882ffc516004cbd3d4bb0c9003679b186ae16bc7eef8c159eb0954b",
+  "figures/1.2-4.png": "e32982a4f67f8607f2c0ddc55ce336cc19c99c2df1b0d61afe7e3c7195ed8aef",
+  "figures/1.2-5.png": "b7f3ec04b25878ed6f63e4c7316b7144a3ba06852a28cfbbd4b3d004b4f86d8d",
+  "figures/2.1-1.png": "b4ec7a7f4803d2a3e4da8e61e5ee9ca97aa1d6bd601a2f30cfbeee82a69e7e57",
+  "figures/2.1-2.png": "c9e483758d253665838d2b5979821686d9081063461b5d095a93be57c206da63",
+  "figures/2.1-3.png": "125e56edcff2827235c64e9d47e1ab783a29d41d2aae27eaf41be3d1539855c3",
+  "figures/2.2-1.png": "147fb5f26e125b381399454be9ff75d60a37f6573ffd5af1c92d075dc8a24f5e",
+  "figures/2.2-2.png": "e976e24b86d2577571b41dfca119a9f82faa1c52fa9834507d8b355b79930b15",
+  "figures/2.2-3.png": "0266fc95f17134d2695e9cb6860fbd43da30fe8d25ca606b2a4c01c38acfb095",
+  "figures/2.4-1.png": "06110f63afdd558cedb7ac8348f3e2dcb6ff46750374338a0b503adf5585b38e",
+  "figures/2.4-2.png": "1a74b2b83bda7348227f0843bbd972db5fbc53908209cde09376826d5d466c8b",
+  "figures/2.4-3.png": "aad4d5d8da1c3a91b80e8744438e8ab50d6f9a6dffbd4513a42367212f8600df",
+  "figures/2.4-4.png": "2c919704e78bb9f696ca4a5648762121bc5628ee86fe7eda4699c17fce0fac71",
+  "figures/3.1-1.png": "cb19b95e87a9a93cd663d4bb80c6d6bac236e3ce42b88318ab591377b183e399",
+  "figures/3.1-2.png": "1a22ea7c7e97ac256a3dab8863d1c316faa46f9188917071a8d6b08ce2e7141a",
+  "figures/3.4-1.png": "92df8b10538a358fe585d06dac8bf2a464e74c3fc89afd1fd782e14b518bfbc8",
+  "figures/3.4-2.png": "d13f31bc21316a54bd3f7c629112a493fee1dc20d5ae2df7c2d563a42c7e2c09",
+  "figures/3.4-3.png": "6439c67f818d75524fc4fe1d16afb778a830b1913ecbdb5bd6dcc8a4e5c11387",
+  "sources/manual/chapters.json": "67a5caf676b4ce9aa0fe9a4f668eaa461a370352be12a2003f852439b26f50c3",
+  "sources/manual/notices.json": "a736a7c4bcf62c998f63be92bba935eb669b74e6e5e5bfde09eb2b0aa8943cb9",
+  "sources/manual/static/interpretation-and-limitations.md": "cef06522c61ddbf52b71af1e2b2d802fc53304064b214a51e5887ef0dcadf642",
+  "sources/manual/static/purpose-and-scope.md": "44f1388d27f8f224ac2cc32a96c9a18bf669fad6aa63d4923b6cacaffe69ebaa",
+  "sources/runs/20261014-202044-2dbf58/captures/1.2-1.marks.json": "a04b9668955dc3cb11d1ccb870dad1ea329f77fd8b37ac7741e25e7883e85169",
+  "sources/runs/20261014-202044-2dbf58/captures/1.2-1.png": "b3b4edcb227cd0c616c8999ae6b7d54be96dd0a0f290077ebdcced7e6a5bb2d3",
+  "sources/runs/20261014-202044-2dbf58/captures/1.2-2.marks.json": "9b975939782035f50967b61090fbf2bfc08ef08403aa200bda15ad663ee86608",
+  "sources/runs/20261014-202044-2dbf58/captures/1.2-2.png": "f654c2c5f216af953d1f224a92adec73e04a6c11df6c77aae15b341b85ed9b47",
+  "sources/runs/20261014-202044-2dbf58/captures/1.2-3.marks.json": "23efba97cfb06a0fce9a07f8130c8ed683b026add8198870527a8ab21446d63d",
+  "sources/runs/20261014-202044-2dbf58/captures/1.2-3.png": "ffa7a04a6b92a02fd51ca699dd9708d1441416f24265f8ff36ca8a2a9d254c8c",
+  "sources/runs/20261014-202044-2dbf58/captures/1.2-4.marks.json": "8f0aec3c8552842d9b294debca3b947386d23940ce66cc3c567df12d3ade2a19",
+  "sources/runs/20261014-202044-2dbf58/captures/1.2-4.png": "ca15b38bc336c744820fb24a23fccd3c3319b7c2cd1eabc0314948c9c5f72a17",
+  "sources/runs/20261014-202044-2dbf58/captures/1.2-5.marks.json": "6bbccb46c92c40ed220c7cdf89b7038c4f4983d75df158d40053169593bb80e3",
+  "sources/runs/20261014-202044-2dbf58/captures/1.2-5.png": "ca15b38bc336c744820fb24a23fccd3c3319b7c2cd1eabc0314948c9c5f72a17",
+  "sources/runs/20261014-202044-2dbf58/manual-run.json": "5470f1b91f14e129d1d09a26f90a8ad02f21527b79fe1e360ff2b04fe8dbf1bb",
+  "sources/runs/20261014-202059-544edf/captures/2.1-1.marks.json": "001d77cf296539f5a30c4a179ccfb2be6c62e5d4031688575ac21b9bb05e0a15",
+  "sources/runs/20261014-202059-544edf/captures/2.1-1.png": "c24740fd306d2cf979ad0eb19e51e864f1d014d62978c060006eb7c25b16b297",
+  "sources/runs/20261014-202059-544edf/captures/2.1-2.marks.json": "37e32072ffc006ab1f165db583f594c822b86ff259fdfac6583623d53ef9f7ff",
+  "sources/runs/20261014-202059-544edf/captures/2.1-2.png": "99afd7ee56842130cb4ffbff90fe67def8ea752517e79c01f8c69b46202319fa",
+  "sources/runs/20261014-202059-544edf/captures/2.1-3.marks.json": "c8cb49fcdeeb7e573905758d73faa8bbeb9e3e6b40317315de6d098d116d114b",
+  "sources/runs/20261014-202059-544edf/captures/2.1-3.png": "a1770eea6afc2caa291327147c27e1a7276e6a2b962be024e9da033fd2ec3b84",
+  "sources/runs/20261014-202059-544edf/manual-run.json": "d0c66602b73d868ccb001cf07e61383fe369bedabef156906b65193e370b61be",
+  "sources/runs/20261014-202118-3646b1/captures/3.1-1.marks.json": "2f4b167d75ec6882160d8681599f727acb1ad067a1862c1855a4bdc86f357147",
+  "sources/runs/20261014-202118-3646b1/captures/3.1-1.png": "ad109d40bd95aca892c352c9d74e06a725a036ca50769d24cf5599e0439aa084",
+  "sources/runs/20261014-202118-3646b1/captures/3.1-2.marks.json": "e2ffb298faf6041643fe9fbd97284866b5b34469063d3ec0a9b4bcb93bdaa92d",
+  "sources/runs/20261014-202118-3646b1/captures/3.1-2.png": "377b9f4391a907f92d9c3c256e271cceb76ddd58effaf888aeeceedc341e3ff7",
+  "sources/runs/20261014-202118-3646b1/manual-run.json": "1c89b9ca9eeae33eac2b3d34307457a8b5322eb93d286c6ab298af88b80a92df",
+  "sources/runs/20261014-202133-886f72/captures/2.4-1.marks.json": "72907e3af3d12f4fec7173b047490088e56fcc4b621293309534762d3be0ccc3",
+  "sources/runs/20261014-202133-886f72/captures/2.4-1.png": "83fa3ead146fcca598c00c02170f23d20bb130154773bead6548433aee950497",
+  "sources/runs/20261014-202133-886f72/captures/2.4-2.marks.json": "23945683af5c849ada4c61038c08de1b127ca83891d63e58edc7f745334ee391",
+  "sources/runs/20261014-202133-886f72/captures/2.4-2.png": "d4ab8ec380e51276d56bc7562fdbf25db89a2fb19ba8cf9cd96c7ea49c954e38",
+  "sources/runs/20261014-202133-886f72/captures/2.4-3.marks.json": "94037532b4f6bcff7c0e6cb98061a368258383e264ae0d5d998c4bb5b90d28f5",
+  "sources/runs/20261014-202133-886f72/captures/2.4-3.png": "d5dc354ca5fd173657e3e69fb2e0312b9d49097cc0ff54b87fb29436c295d5e6",
+  "sources/runs/20261014-202133-886f72/captures/2.4-4.marks.json": "e32b90a0f712031aa06b90238944d9d375250a0d3d33d9282e644e052896aca9",
+  "sources/runs/20261014-202133-886f72/captures/2.4-4.png": "c4866a28e34c7e06c159411b702876654554c9bf940e2b058c7b8af1f69b8442",
+  "sources/runs/20261014-202133-886f72/manual-run.json": "305ee9f98495b47c76631219e96165f5e883997b95b0d9b1474b36a882bda2eb",
+  "sources/runs/20261014-202148-7b59cc/captures/3.4-1.marks.json": "5434ae85536db6708a7724e16e2b97a6dfecc9e483af13763b3fee7b25b82283",
+  "sources/runs/20261014-202148-7b59cc/captures/3.4-1.png": "5f429379355daf3df55c897e9c099e9ed19b7e0ca68fc386e8c3b301fe0b6bbe",
+  "sources/runs/20261014-202148-7b59cc/captures/3.4-2.marks.json": "d545275d8d1ef394fd6e83595e0134a353fdf7b56c692302b1283e8a83c74363",
+  "sources/runs/20261014-202148-7b59cc/captures/3.4-2.png": "e1b957741c141c55cc42cd3eb34037836a3ee3127e86cf2374f28f9b21dec0d9",
+  "sources/runs/20261014-202148-7b59cc/captures/3.4-3.marks.json": "4fb78f3041c023800b7e1dc502844af394258a7a840562d8d4906fe4b551f221",
+  "sources/runs/20261014-202148-7b59cc/captures/3.4-3.png": "6a6203dcd098da045f3f8fee759474ad2d61211001c35e1eb280a3f9eb1a1e59",
+  "sources/runs/20261014-202148-7b59cc/manual-run.json": "de7a791df842de4cc1709c008f7f232354d73febe3e48b6a12a5c34dbc179924",
+  "sources/runs/20261014-202201-b1fbf6/captures/2.2-1.marks.json": "e7bf00f8921863cd8d8a6e32ce3d9527a002d2e294affe9eea90b4f27a9397b1",
+  "sources/runs/20261014-202201-b1fbf6/captures/2.2-1.png": "7016e80a5deac5efcc01584425a8c9c27ec52f436cc99023c049d3c86e5ccfff",
+  "sources/runs/20261014-202201-b1fbf6/captures/2.2-2.marks.json": "2f60c84d3c34d3a5cf2525e10109a69dc1aa377339a374dbfb63a19ebf694891",
+  "sources/runs/20261014-202201-b1fbf6/captures/2.2-2.png": "07950bbf16d31b9667e1ab9d2eb87dd93310b340cf4546c998c4076dab4b8bf5",
+  "sources/runs/20261014-202201-b1fbf6/captures/2.2-3.marks.json": "f24c484e72b30752de51b8ff98b5e51d9b80455146d6ec45bdad1d5f8cbb4ae3",
+  "sources/runs/20261014-202201-b1fbf6/captures/2.2-3.png": "c7f949b28e019bd9745059db14a6d3afb64231042962063070184e32ba074997",
+  "sources/runs/20261014-202201-b1fbf6/manual-run.json": "ba86114c56060db9a29c9435343a4d4937998aa7f3b69ffa65b3a52a24dd0d42"
+ },
+ "registry": {
+  "id": "gcam-studio-manual",
+  "locale": "en",
+  "sha256": "67a5caf676b4ce9aa0fe9a4f668eaa461a370352be12a2003f852439b26f50c3"
+ },
+ "reviews": "none recorded here: figure, source and edition review are the author's acts outside the generator",
+ "runs": [
+  {
+   "retained": "full",
+   "runId": "20261014-202044-2dbf58",
+   "scenario": "manual.navigate",
+   "sha256": "5470f1b91f14e129d1d09a26f90a8ad02f21527b79fe1e360ff2b04fe8dbf1bb"
+  },
+  {
+   "retained": "full",
+   "runId": "20261014-202059-544edf",
+   "scenario": "manual.sources",
+   "sha256": "d0c66602b73d868ccb001cf07e61383fe369bedabef156906b65193e370b61be"
+  },
+  {
+   "retained": "full",
+   "runId": "20261014-202118-3646b1",
+   "scenario": "manual.measurements",
+   "sha256": "1c89b9ca9eeae33eac2b3d34307457a8b5322eb93d286c6ab298af88b80a92df"
+  },
+  {
+   "retained": "full",
+   "runId": "20261014-202133-886f72",
+   "scenario": "manual.acquisition",
+   "sha256": "305ee9f98495b47c76631219e96165f5e883997b95b0d9b1474b36a882bda2eb"
+  },
+  {
+   "retained": "full",
+   "runId": "20261014-202148-7b59cc",
+   "scenario": "manual.spectrum",
+   "sha256": "de7a791df842de4cc1709c008f7f232354d73febe3e48b6a12a5c34dbc179924"
+  },
+  {
+   "retained": "full",
+   "runId": "20261014-202201-b1fbf6",
+   "scenario": "manual.geometry",
+   "sha256": "ba86114c56060db9a29c9435343a4d4937998aa7f3b69ffa65b3a52a24dd0d42"
+  }
+ ],
+ "schema": "gcam.manual-generation",
+ "schemaVersion": 1,
+ "static": [
+  {
+   "chapter": "1.1",
+   "draft": true,
+   "path": "static/purpose-and-scope.md",
+   "sha256": "44f1388d27f8f224ac2cc32a96c9a18bf669fad6aa63d4923b6cacaffe69ebaa"
+  },
+  {
+   "chapter": "5.2",
+   "draft": true,
+   "path": "static/interpretation-and-limitations.md",
+   "sha256": "cef06522c61ddbf52b71af1e2b2d802fc53304064b214a51e5887ef0dcadf642"
+  }
+ ],
+ "status": "draft",
+ "subject": {
+  "deploymentSha256": "03742d883dbd3991517f70dd0ac6c9f6b116f29224c294e6e0105f36b28dcc48"
+ }
+}

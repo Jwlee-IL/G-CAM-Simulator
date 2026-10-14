@@ -47,7 +47,7 @@
     {
       "id": "N-NOT-SAVED",
       "level": "note",
-      "text": "Studio saves nothing: the scene, the results and the measurements live in memory only and are gone when the window closes.",
+      "text": "Studio saves nothing on its own and keeps no settings: the scene, the results and the measurements live in memory and are gone when the window closes.",
       "chapters": [
         "1.1"
       ],

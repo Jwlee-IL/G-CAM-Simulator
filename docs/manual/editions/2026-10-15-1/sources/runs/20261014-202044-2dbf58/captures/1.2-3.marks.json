@@ -1,0 +1,87 @@
+{
+  "schema": "gcam.figure-marks",
+  "schemaVersion": 1,
+  "capture": "captures/1.2-3.png",
+  "captureSha256": "ffa7a04a6b92a02fd51ca699dd9708d1441416f24265f8ff36ca8a2a9d254c8c",
+  "widthPx": 1440,
+  "heightPx": 900,
+  "frameOriginPx": [
+    560,
+    246
+  ],
+  "dpi": 96,
+  "perMonitorAware": true,
+  "templateSha256": "3c351ced3a91307171cedafc86b4b9ddeb9c108c4bedf3354fe0d18b1d4fe158",
+  "crop": "marks",
+  "region": {
+    "target": "Waveform.Views",
+    "screen": [
+      897,
+      355,
+      766,
+      30
+    ],
+    "image": [
+      337,
+      109,
+      766,
+      30
+    ]
+  },
+  "marks": [
+    {
+      "n": 1,
+      "target": "Waveform.FourOutputsTab",
+      "label": "Four outputs (A–D)",
+      "labelSource": "name",
+      "screen": [
+        1280,
+        356,
+        382,
+        28
+      ],
+      "image": [
+        720,
+        110,
+        382,
+        28
+      ]
+    },
+    {
+      "n": 2,
+      "target": "Readout.EmptyState",
+      "label": "Available with the experimental physical readout",
+      "labelSource": "name",
+      "screen": [
+        1140,
+        716,
+        280,
+        17
+      ],
+      "image": [
+        580,
+        470,
+        280,
+        17
+      ]
+    },
+    {
+      "n": 3,
+      "target": "Readout.ChooseReadout",
+      "label": "Choose readout…",
+      "labelSource": "name",
+      "screen": [
+        1215,
+        741,
+        130,
+        28
+      ],
+      "image": [
+        655,
+        495,
+        130,
+        28
+      ]
+    }
+  ]
+}

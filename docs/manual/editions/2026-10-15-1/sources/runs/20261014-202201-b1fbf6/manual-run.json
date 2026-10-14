@@ -1,0 +1,271 @@
+{
+  "schema": "gcam.manual-run",
+  "schemaVersion": 1,
+  "runId": "20261014-202201-b1fbf6",
+  "scenario": "manual.geometry",
+  "chapter": {
+    "number": "2.2",
+    "title": "Choose optics and detector settings"
+  },
+  "registrySha256": "67a5caf676b4ce9aa0fe9a4f668eaa461a370352be12a2003f852439b26f50c3",
+  "noticesSha256": "3259dc4074c7978bdf276f0155fbcd87115d5d56898331db5bc36364e11cbe4d",
+  "startedAt": "2026-10-14T20:22:01.753+09:00",
+  "finishedAt": "2026-10-14T20:22:15.041+09:00",
+  "status": "passed",
+  "execution": {
+    "status": "completed",
+    "uiRunStatus": "completed",
+    "abortReason": null
+  },
+  "subject": {
+    "deploymentSha256": "03742d883dbd3991517f70dd0ac6c9f6b116f29224c294e6e0105f36b28dcc48",
+    "files": {
+      "CommunityToolkit.Mvvm.dll": "7d7eb5c066cfe883b439b1200bf5dcb387b1e5319dd2edbdaa9e23adfe416452",
+      "Gcam.Configuration.dll": "29a9583b0b3a354d38b1ab63b322a3b365437d4fdc6ed081ccc8135f01cece89",
+      "Gcam.Core.dll": "df7b5eaab4825fdb3f9aa44d5c14a6ddbb51772cf6ea5268f5a0dac39921a4ea",
+      "Gcam.Decoding.dll": "08c357f2b2cbe405e534cbf208437cb505ecd213110076acb36cc50cf003fa26",
+      "Gcam.Detector.dll": "a0e147817db52fcfaf501faece12696d211c900a223d4c39b03252350c3579fd",
+      "Gcam.Masks.dll": "ece836c6e130030ae51916c85471ff5be377d76c2918395ce6d07f51b8691555",
+      "Gcam.Simulation.dll": "5a195eff18bf29e21ecaa69c9c00faa4e64cabee2dfb8dd0546d5fb6e78528db",
+      "Gcam.Studio.Core.dll": "cddf7dc61739c76d73e09aadad6840b80fb902b5e080ab30ec60da3da4ffca7a",
+      "Gcam.Studio.Services.dll": "bba1021d955515f8d4b99c700275c2f085700e6cb33fe095c44339e60afe5928",
+      "Gcam.Studio.deps.json": "c0788e904cc56d7536666b829af0e74890b4ed2cdc18541e0e2427bfe2840a9d",
+      "Gcam.Studio.dll": "6908420ceb7738c01ad4d9527d8e28f83dbc297a450072411e4d55ef66f5d907",
+      "Gcam.Studio.exe": "c4b705938847afd4c1e74f6c75bb82559a691ace0042b9dd5d9d01e0ec1e3ab8",
+      "Gcam.Studio.runtimeconfig.json": "f1105b6b9a1edbeb3b8ebf90f94c4a3a554e1de005e60fcd9a20978501dc2d54",
+      "Microsoft.Extensions.DependencyInjection.Abstractions.dll": "99a08f73aa1568c8a614ac4d76fe1cf9a27e10f7c02f9afd65da2c6e25d6ff04",
+      "Microsoft.Extensions.DependencyInjection.dll": "09c80cce213152ced75d791fc4fd57b34f79a2026c69d133b0380f10128096ce",
+      "ambient/terrestrial-unscear2000-v1.json": "4d48bc4272ce4c25ff6ae9b13ed7583e3c8f467afffdb0225956a70cc435b3f4"
+    },
+    "unchanged": true
+  },
+  "tool": {
+    "commit": "663eb771d334c59f309c4e5af7ec5aac54999eb2",
+    "dirtyFiles": 0,
+    "assemblySha256": "49293371cc344c96215dee40d59b389c1d227c32cbb5ebdc3c04d631416d5ab6"
+  },
+  "environment": {
+    "frameWidthPx": 1440,
+    "frameHeightPx": 900,
+    "dpi": 96,
+    "perMonitorAware": true,
+    "themeAtStart": "dark",
+    "os": "Microsoft Windows NT 10.0.26200.0",
+    "uiLocale": "en",
+    "formattingCulture": "ko-KR",
+    "runtime": "9.0.13"
+  },
+  "links": {
+    "uiManifest": {
+      "sha256": "0f805635a93a37c69bc3514f3b195d078ec6a721e07676af06a35fc85f140dca",
+      "retained": false,
+      "reason": "the UI manifest names local paths; its hash is the lineage"
+    }
+  },
+  "steps": [
+    {
+      "n": 1,
+      "text": "Select the **Optics** tab. **Preset** shows Sharp, the default engineering geometry. A preset writes its five values — **Prime rank**, **Cell pitch**, **Mask–detector**, **Pixels / side** and **Pixel pitch** — into the fields and keeps them read-only.",
+      "labels": {
+        "Left.OpticsTab": "Optics",
+        "Optics.Preset": "Preset",
+        "Optics.Rank": "Prime rank",
+        "Optics.CellPitch": "Cell pitch",
+        "Optics.Distance": "Mask–detector",
+        "Optics.Pixels": "Pixels / side",
+        "Optics.PixelPitch": "Pixel pitch"
+      },
+      "notices": [],
+      "checks": [
+        {
+          "id": "optics.default-preset",
+          "result": "pass",
+          "detail": "expected Sharp, actual Sharp"
+        },
+        {
+          "id": "optics.preset-locks-fields",
+          "result": "pass",
+          "detail": "all five fields disabled under a preset"
+        }
+      ],
+      "figures": [
+        {
+          "id": "2.2-1",
+          "capture": "captures/2.2-1.png",
+          "marks": "captures/2.2-1.marks.json",
+          "caption": "The Optics tab with the default preset."
+        }
+      ],
+      "missingFigures": [],
+      "verdict": "passed",
+      "error": null
+    },
+    {
+      "n": 2,
+      "text": "Choose Baseline in **Preset**: the fields now hold the 12 × 12 pixel, rank-7 reference geometry, still read-only.",
+      "labels": {
+        "Optics.Preset": "Preset"
+      },
+      "notices": [],
+      "checks": [
+        {
+          "id": "optics.baseline-geometry",
+          "result": "pass",
+          "detail": "expected (7, 12), actual (7, 12)"
+        },
+        {
+          "id": "optics.preset-still-locked",
+          "result": "pass",
+          "detail": "fields disabled under Baseline"
+        }
+      ],
+      "figures": [],
+      "missingFigures": [],
+      "verdict": "passed",
+      "error": null
+    },
+    {
+      "n": 3,
+      "text": "Choose **Detector**: its **Face** view draws the detector face for these settings, captioned **Settings for the next acquisition**.",
+      "labels": {
+        "Workspace.Detector": "Detector",
+        "Detector.FaceTab": "Face",
+        "Detector.Identity": "Settings for the next acquisition"
+      },
+      "notices": [],
+      "checks": [
+        {
+          "id": "detector.face-geometry",
+          "result": "pass",
+          "detail": "face status '144 crystals; 12 mm square' names '144 crystals; 12 mm square'"
+        },
+        {
+          "id": "detector.pending-caption",
+          "result": "pass",
+          "detail": "expected Settings for the next acquisition, actual Settings for the next acquisition"
+        }
+      ],
+      "figures": [
+        {
+          "id": "2.2-2",
+          "capture": "captures/2.2-2.png",
+          "marks": "captures/2.2-2.marks.json",
+          "caption": "The detector face of the Baseline geometry before an acquisition."
+        }
+      ],
+      "missingFigures": [],
+      "verdict": "passed",
+      "error": null
+    },
+    {
+      "n": 4,
+      "text": "Back on the **Optics** tab, choose Custom in **Preset**: the fields keep the Baseline values and become editable.",
+      "labels": {
+        "Left.OpticsTab": "Optics",
+        "Optics.Preset": "Preset"
+      },
+      "notices": [],
+      "checks": [
+        {
+          "id": "optics.custom-enables",
+          "result": "pass",
+          "detail": "fields enabled, values kept"
+        }
+      ],
+      "figures": [],
+      "missingFigures": [],
+      "verdict": "passed",
+      "error": null
+    },
+    {
+      "n": 5,
+      "text": "Type 3 in **Pixels / side**. The geometry is refused — the tab reads **Detector pixels must be an integer from 4 to 64.** — and **Start** does not start: the status bar gives the reason.",
+      "labels": {
+        "Optics.Pixels": "Pixels / side",
+        "Optics.Error": "Detector pixels must be an integer from 4 to 64.",
+        "StartAcquisition": "Start"
+      },
+      "notices": [],
+      "checks": [
+        {
+          "id": "optics.invalid-refused",
+          "result": "pass",
+          "detail": "message 'Detector pixels must be an integer from 4 to 64.'"
+        },
+        {
+          "id": "optics.start-refused",
+          "result": "pass",
+          "detail": "status 'Start refused: Detector pixels must be an integer from 4 to 64.'"
+        }
+      ],
+      "figures": [
+        {
+          "id": "2.2-3",
+          "capture": "captures/2.2-3.png",
+          "marks": "captures/2.2-3.marks.json",
+          "caption": "A refused geometry: the message under the fields and the refusal in the status bar."
+        }
+      ],
+      "missingFigures": [],
+      "verdict": "passed",
+      "error": null
+    },
+    {
+      "n": 6,
+      "text": "Type 12 in **Pixels / side** again: the message clears.",
+      "labels": {
+        "Optics.Pixels": "Pixels / side"
+      },
+      "notices": [],
+      "checks": [
+        {
+          "id": "optics.correction-clears",
+          "result": "pass",
+          "detail": "error text ''; absent from UIA: True"
+        }
+      ],
+      "figures": [],
+      "missingFigures": [],
+      "verdict": "passed",
+      "error": null
+    }
+  ],
+  "evidence": [
+    {
+      "path": "captures/2.2-1.png",
+      "sha256": "7016e80a5deac5efcc01584425a8c9c27ec52f436cc99023c049d3c86e5ccfff",
+      "bytes": 63683,
+      "role": "capture"
+    },
+    {
+      "path": "captures/2.2-1.marks.json",
+      "sha256": "e7bf00f8921863cd8d8a6e32ce3d9527a002d2e294affe9eea90b4f27a9397b1",
+      "bytes": 2297,
+      "role": "marks"
+    },
+    {
+      "path": "captures/2.2-2.png",
+      "sha256": "07950bbf16d31b9667e1ab9d2eb87dd93310b340cf4546c998c4076dab4b8bf5",
+      "bytes": 62931,
+      "role": "capture"
+    },
+    {
+      "path": "captures/2.2-2.marks.json",
+      "sha256": "2f60c84d3c34d3a5cf2525e10109a69dc1aa377339a374dbfb63a19ebf694891",
+      "bytes": 1171,
+      "role": "marks"
+    },
+    {
+      "path": "captures/2.2-3.png",
+      "sha256": "c7f949b28e019bd9745059db14a6d3afb64231042962063070184e32ba074997",
+      "bytes": 65265,
+      "role": "capture"
+    },
+    {
+      "path": "captures/2.2-3.marks.json",
+      "sha256": "f24c484e72b30752de51b8ff98b5e51d9b80455146d6ec45bdad1d5f8cbb4ae3",
+      "bytes": 1352,
+      "role": "marks"
+    }
+  ]
+}

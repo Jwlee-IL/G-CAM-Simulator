@@ -1,0 +1,240 @@
+{
+  "schema": "gcam.manual-run",
+  "schemaVersion": 1,
+  "runId": "20261014-202118-3646b1",
+  "scenario": "manual.measurements",
+  "chapter": {
+    "number": "3.1",
+    "title": "Imaging measurements"
+  },
+  "registrySha256": "67a5caf676b4ce9aa0fe9a4f668eaa461a370352be12a2003f852439b26f50c3",
+  "noticesSha256": "3259dc4074c7978bdf276f0155fbcd87115d5d56898331db5bc36364e11cbe4d",
+  "startedAt": "2026-10-14T20:21:18.398+09:00",
+  "finishedAt": "2026-10-14T20:21:33.901+09:00",
+  "status": "passed",
+  "execution": {
+    "status": "completed",
+    "uiRunStatus": "completed",
+    "abortReason": null
+  },
+  "subject": {
+    "deploymentSha256": "03742d883dbd3991517f70dd0ac6c9f6b116f29224c294e6e0105f36b28dcc48",
+    "files": {
+      "CommunityToolkit.Mvvm.dll": "7d7eb5c066cfe883b439b1200bf5dcb387b1e5319dd2edbdaa9e23adfe416452",
+      "Gcam.Configuration.dll": "29a9583b0b3a354d38b1ab63b322a3b365437d4fdc6ed081ccc8135f01cece89",
+      "Gcam.Core.dll": "df7b5eaab4825fdb3f9aa44d5c14a6ddbb51772cf6ea5268f5a0dac39921a4ea",
+      "Gcam.Decoding.dll": "08c357f2b2cbe405e534cbf208437cb505ecd213110076acb36cc50cf003fa26",
+      "Gcam.Detector.dll": "a0e147817db52fcfaf501faece12696d211c900a223d4c39b03252350c3579fd",
+      "Gcam.Masks.dll": "ece836c6e130030ae51916c85471ff5be377d76c2918395ce6d07f51b8691555",
+      "Gcam.Simulation.dll": "5a195eff18bf29e21ecaa69c9c00faa4e64cabee2dfb8dd0546d5fb6e78528db",
+      "Gcam.Studio.Core.dll": "cddf7dc61739c76d73e09aadad6840b80fb902b5e080ab30ec60da3da4ffca7a",
+      "Gcam.Studio.Services.dll": "bba1021d955515f8d4b99c700275c2f085700e6cb33fe095c44339e60afe5928",
+      "Gcam.Studio.deps.json": "c0788e904cc56d7536666b829af0e74890b4ed2cdc18541e0e2427bfe2840a9d",
+      "Gcam.Studio.dll": "6908420ceb7738c01ad4d9527d8e28f83dbc297a450072411e4d55ef66f5d907",
+      "Gcam.Studio.exe": "c4b705938847afd4c1e74f6c75bb82559a691ace0042b9dd5d9d01e0ec1e3ab8",
+      "Gcam.Studio.runtimeconfig.json": "f1105b6b9a1edbeb3b8ebf90f94c4a3a554e1de005e60fcd9a20978501dc2d54",
+      "Microsoft.Extensions.DependencyInjection.Abstractions.dll": "99a08f73aa1568c8a614ac4d76fe1cf9a27e10f7c02f9afd65da2c6e25d6ff04",
+      "Microsoft.Extensions.DependencyInjection.dll": "09c80cce213152ced75d791fc4fd57b34f79a2026c69d133b0380f10128096ce",
+      "ambient/terrestrial-unscear2000-v1.json": "4d48bc4272ce4c25ff6ae9b13ed7583e3c8f467afffdb0225956a70cc435b3f4"
+    },
+    "unchanged": true
+  },
+  "tool": {
+    "commit": "663eb771d334c59f309c4e5af7ec5aac54999eb2",
+    "dirtyFiles": 0,
+    "assemblySha256": "49293371cc344c96215dee40d59b389c1d227c32cbb5ebdc3c04d631416d5ab6"
+  },
+  "environment": {
+    "frameWidthPx": 1440,
+    "frameHeightPx": 900,
+    "dpi": 96,
+    "perMonitorAware": true,
+    "themeAtStart": "dark",
+    "os": "Microsoft Windows NT 10.0.26200.0",
+    "uiLocale": "en",
+    "formattingCulture": "ko-KR",
+    "runtime": "9.0.13"
+  },
+  "links": {
+    "uiManifest": {
+      "sha256": "70cd4da0dd526fd9b2ec59af75b8a265ae1c857bf352f785cfc7a7dec477fe04",
+      "retained": false,
+      "reason": "the UI manifest names local paths; its hash is the lineage"
+    }
+  },
+  "steps": [
+    {
+      "n": 1,
+      "text": "Click **Continue** and wait until the acquisition completes: the flood map and the reconstruction fill in.",
+      "labels": {
+        "StartAcquisition": "Continue"
+      },
+      "notices": [
+        "N-SIM"
+      ],
+      "checks": [
+        {
+          "id": "measure.acquired",
+          "result": "pass",
+          "detail": "expected Completed, actual Completed"
+        }
+      ],
+      "figures": [],
+      "missingFigures": [],
+      "verdict": "passed",
+      "error": null
+    },
+    {
+      "n": 2,
+      "text": "Hold the pointer over a cell of the flood map: the line under the image reads **x 6.3 mm, y -4.5 mm · 10 counts** — the cell's centre in millimetres (x to the right, y up, 0 on the axis) and its counts.",
+      "labels": {
+        "FloodReadout": "x 6.3 mm, y -4.5 mm · 10 counts"
+      },
+      "notices": [],
+      "checks": [
+        {
+          "id": "measure.readout-position",
+          "result": "pass",
+          "detail": "read (6.3, -4.5) mm, expected (6.30, -4.50) mm"
+        }
+      ],
+      "figures": [
+        {
+          "id": "3.1-1",
+          "capture": "captures/3.1-1.png",
+          "marks": "captures/3.1-1.marks.json",
+          "caption": "The readout under the flood map."
+        }
+      ],
+      "missingFigures": [],
+      "verdict": "passed",
+      "error": null
+    },
+    {
+      "n": 3,
+      "text": "Choose the distance tool (accessible name **Distance tool**) above the measurement table and drag across the flood map: the table gains a row with the length in millimetres.",
+      "labels": {
+        "ToolDistance": "Distance tool"
+      },
+      "notices": [],
+      "checks": [
+        {
+          "id": "measure.distance",
+          "result": "pass",
+          "detail": "MeasurementRow { Name = M1, Kind = Distance, Pane = Flood, Value = 13.4 mm } against 13.400 mm ± 0.204"
+        }
+      ],
+      "figures": [],
+      "missingFigures": [],
+      "verdict": "passed",
+      "error": null
+    },
+    {
+      "n": 4,
+      "text": "Choose the angle tool (**Angle tool**) and click three points on the reconstruction — the end of the first arm, the vertex, the end of the second arm: the table gains the angle in degrees.",
+      "labels": {
+        "ToolAngle": "Angle tool"
+      },
+      "notices": [],
+      "checks": [
+        {
+          "id": "measure.angle",
+          "result": "pass",
+          "detail": "MeasurementRow { Name = M2, Kind = Angle, Pane = Recon, Value = 69.9° } against 70.02°"
+        }
+      ],
+      "figures": [],
+      "missingFigures": [],
+      "verdict": "passed",
+      "error": null
+    },
+    {
+      "n": 5,
+      "text": "Choose the ROI tool (**ROI tool (region of interest)**) and drag a rectangle on the flood map: the table gains the sum over the whole pixels whose centres lie inside, and the line under the table gives its size and pixel count.",
+      "labels": {
+        "ToolRoi": "ROI tool (region of interest)"
+      },
+      "notices": [],
+      "checks": [
+        {
+          "id": "measure.roi-pixels",
+          "result": "pass",
+          "detail": "MeasurementRow { Name = M3, Kind = ROI, Pane = Flood, Value = Σ 229 }; detail '3.6 × 4.2 mm · 42 px · mean 5.45 · max 13'; expected 42 px"
+        }
+      ],
+      "figures": [
+        {
+          "id": "3.1-2",
+          "capture": "captures/3.1-2.png",
+          "marks": "captures/3.1-2.marks.json",
+          "caption": "Three measurements in the table; the selected one is described under it."
+        }
+      ],
+      "missingFigures": [],
+      "verdict": "passed",
+      "error": null
+    },
+    {
+      "n": 6,
+      "text": "Press Delete with the flood map focused: the selected measurement (the ROI) is removed.",
+      "labels": {},
+      "notices": [],
+      "checks": [
+        {
+          "id": "measure.delete-selected",
+          "result": "pass",
+          "detail": "expected M1 M2, actual M1 M2"
+        }
+      ],
+      "figures": [],
+      "missingFigures": [],
+      "verdict": "passed",
+      "error": null
+    },
+    {
+      "n": 7,
+      "text": "Click the icon button whose tooltip reads **Clear all measurements**: the table is emptied.",
+      "labels": {
+        "ClearMeasurements": "Clear all measurements"
+      },
+      "notices": [],
+      "checks": [
+        {
+          "id": "measure.clear-all",
+          "result": "pass",
+          "detail": "expected 0, actual 0"
+        }
+      ],
+      "figures": [],
+      "missingFigures": [],
+      "verdict": "passed",
+      "error": null
+    }
+  ],
+  "evidence": [
+    {
+      "path": "captures/3.1-1.png",
+      "sha256": "ad109d40bd95aca892c352c9d74e06a725a036ca50769d24cf5599e0439aa084",
+      "bytes": 106726,
+      "role": "capture"
+    },
+    {
+      "path": "captures/3.1-1.marks.json",
+      "sha256": "2f4b167d75ec6882160d8681599f727acb1ad067a1862c1855a4bdc86f357147",
+      "bytes": 892,
+      "role": "marks"
+    },
+    {
+      "path": "captures/3.1-2.png",
+      "sha256": "377b9f4391a907f92d9c3c256e271cceb76ddd58effaf888aeeceedc341e3ff7",
+      "bytes": 115812,
+      "role": "capture"
+    },
+    {
+      "path": "captures/3.1-2.marks.json",
+      "sha256": "e2ffb298faf6041643fe9fbd97284866b5b34469063d3ec0a9b4bcb93bdaa92d",
+      "bytes": 1688,
+      "role": "marks"
+    }
+  ]
+}
