@@ -1,14 +1,14 @@
 {
  "budgetBytes": 10485760,
- "bytesExcludingRecord": 2009631,
+ "bytesExcludingRecord": 2025175,
  "chapterOutputSha256": {
   "1.1": "139af52524d0092f48789c91d61f4cce314fe4256125246dbedacc12f39dc4e9",
-  "1.2": "102294d4f6b344e2084f13416cf06b5abed7fb7fdf83ddc346feb23ae6bb69c7",
-  "2.1": "388b0bd2f6d5a5d01b58af7145bcef1319377b7431edfd123a08d7db19854592",
-  "2.2": "fb954893b541416e0365da001e9c54f9ec51ba50f320a34327d9508d6ed4edde",
-  "2.4": "e6fc95fe05eb745213b44558d310762b73a949b198967b76dece4dde1e4c1d23",
-  "3.1": "4ac477deac52fe237d2d2133bda3be933458ac408b3a2a4117f7d10e0e8b97d8",
-  "3.4": "9b9ebbd260e40870fac7a2547f512174afabf9337db2d0040ef0e8c8c8e8e06e",
+  "1.2": "b16762bea54d102efac2b92805d3e837fef8a771a27900cc47442111428a7cb9",
+  "2.1": "3b0d93be6acc2095d0e85ad0e75dcf390a5df7216511d113a4d390832e381b78",
+  "2.2": "ff1175da178dfdd70943eb3333d6ed056b1ddca35fca8685f5f128fe05979876",
+  "2.4": "f744c3966a165fce1f0e6a3acd69f02ffbc03aafb3fae5a69bf57da783f9092e",
+  "3.1": "21b22b114aad01c96e76423eaed0a87ab104868c643d8cf2a538b22d71280b15",
+  "3.4": "2c9198625798a52393a7ad94df26f86037ee2e23adba5dc6582e3fbc2f65291d",
   "5.2": "1396bc5c1bea3d3aa3d62d13ef07528e9e2a0d7c3a1105a4fa5d70ae8acdd25c"
  },
  "chapters": [
@@ -184,11 +184,142 @@
      900
     ],
     "cropRule": "full",
-    "overlay": "rectangles+numbered-badges-v2"
+    "legend": {
+     "box": [
+      0,
+      900,
+      1440,
+      35
+     ],
+     "colours": {
+      "background": [
+       18,
+       22,
+       25
+      ],
+      "separator": [
+       72,
+       75,
+       77
+      ],
+      "tag": [
+       200,
+       30,
+       30
+      ],
+      "text": [
+       235,
+       235,
+       235
+      ]
+     },
+     "entries": [
+      {
+       "lines": [
+        [
+         8,
+         909,
+         "[1] Imaging"
+        ]
+       ],
+       "n": 1,
+       "text": "[1] Imaging"
+      },
+      {
+       "lines": [
+        [
+         164,
+         909,
+         "[2] Spectrum"
+        ]
+       ],
+       "n": 2,
+       "text": "[2] Spectrum"
+      },
+      {
+       "lines": [
+        [
+         332,
+         909,
+         "[3] Waveform"
+        ]
+       ],
+       "n": 3,
+       "text": "[3] Waveform"
+      },
+      {
+       "lines": [
+        [
+         500,
+         909,
+         "[4] Detector"
+        ]
+       ],
+       "n": 4,
+       "text": "[4] Detector"
+      },
+      {
+       "lines": [
+        [
+         668,
+         909,
+         "[5] Start"
+        ]
+       ],
+       "n": 5,
+       "text": "[5] Start"
+      },
+      {
+       "lines": [
+        [
+         800,
+         909,
+         "[6] Scene"
+        ]
+       ],
+       "n": 6,
+       "text": "[6] Scene"
+      },
+      {
+       "lines": [
+        [
+         932,
+         909,
+         "[7] Optics"
+        ]
+       ],
+       "n": 7,
+       "text": "[7] Optics"
+      },
+      {
+       "lines": [
+        [
+         1076,
+         909,
+         "[8] Detector"
+        ]
+       ],
+       "n": 8,
+       "text": "[8] Detector"
+      }
+     ],
+     "font": "5x7+descenders@2",
+     "separator": [
+      0,
+      900,
+      1440,
+      1
+     ]
+    },
+    "overlay": "rectangles+numbered-badges+legend-v3",
+    "size": [
+     1440,
+     935
+    ]
    },
    "path": "figures/1.2-1.png",
-   "pixelSha256": "a17241cbe37f217cee64dc727c30d9a05b2bd0631fe51705aaa61503194982f6",
-   "resultSha256": "51c7f4cf7e8c2d8b0262fd80e7650fb733788dde02748f5215aac9be93afdbae",
+   "pixelSha256": "acce38d411edee39634f170926acbc608b987f4e26829241df1e05b3846e019e",
+   "resultSha256": "4da14be063daf9a7196100b128b2f0e949ffd56b28a41411ab6a4a1d52fda777",
    "runId": "20261014-202044-2dbf58",
    "source": "captures/1.2-1.png",
    "sourceSha256": "b3b4edcb227cd0c616c8999ae6b7d54be96dd0a0f290077ebdcced7e6a5bb2d3",
@@ -225,11 +356,76 @@
      813
     ],
     "cropRule": "panel-edges",
-    "overlay": "rectangles+numbered-badges-v2"
+    "legend": {
+     "box": [
+      0,
+      813,
+      314,
+      35
+     ],
+     "colours": {
+      "background": [
+       18,
+       22,
+       25
+      ],
+      "separator": [
+       72,
+       75,
+       77
+      ],
+      "tag": [
+       200,
+       30,
+       30
+      ],
+      "text": [
+       235,
+       235,
+       235
+      ]
+     },
+     "entries": [
+      {
+       "lines": [
+        [
+         8,
+         822,
+         "[1] Optics"
+        ]
+       ],
+       "n": 1,
+       "text": "[1] Optics"
+      },
+      {
+       "lines": [
+        [
+         152,
+         822,
+         "[2] Preset"
+        ]
+       ],
+       "n": 2,
+       "text": "[2] Preset"
+      }
+     ],
+     "font": "5x7+descenders@2",
+     "separator": [
+      0,
+      813,
+      314,
+      1
+     ]
+    },
+    "overlay": "rectangles+numbered-badges+legend-v3",
+    "size": [
+     314,
+     848
+    ]
    },
    "path": "figures/1.2-2.png",
-   "pixelSha256": "4e905221ce14633a83b8bd32440f8e4e2a387b76ed7af799cedf0ecb41d27e37",
-   "resultSha256": "3d5832faf0825c3a005e1bce522837830f495be9116df53255d87c9d82e9cb66",
+   "pixelSha256": "1a10c5a6a9dbc6bd4aff3e237868bdf1780ffa9d445203e0d035f0a418ccae26",
+   "resultSha256": "959f3e47081bb1b438d4de138ebbccf1002d35694f6797707aa267d8b0b33704",
    "runId": "20261014-202044-2dbf58",
    "source": "captures/1.2-2.png",
    "sourceSha256": "f654c2c5f216af953d1f224a92adec73e04a6c11df6c77aae15b341b85ed9b47",
@@ -274,11 +470,87 @@
      813
     ],
     "cropRule": "panel-edges",
-    "overlay": "rectangles+numbered-badges-v2"
+    "legend": {
+     "box": [
+      0,
+      813,
+      806,
+      79
+     ],
+     "colours": {
+      "background": [
+       18,
+       22,
+       25
+      ],
+      "separator": [
+       72,
+       75,
+       77
+      ],
+      "tag": [
+       200,
+       30,
+       30
+      ],
+      "text": [
+       235,
+       235,
+       235
+      ]
+     },
+     "entries": [
+      {
+       "lines": [
+        [
+         8,
+         822,
+         "[1] Four outputs (A–D)"
+        ]
+       ],
+       "n": 1,
+       "text": "[1] Four outputs (A–D)"
+      },
+      {
+       "lines": [
+        [
+         8,
+         844,
+         "[2] Available with the experimental physical readout"
+        ]
+       ],
+       "n": 2,
+       "text": "[2] Available with the experimental physical readout"
+      },
+      {
+       "lines": [
+        [
+         8,
+         866,
+         "[3] Choose readout…"
+        ]
+       ],
+       "n": 3,
+       "text": "[3] Choose readout…"
+      }
+     ],
+     "font": "5x7+descenders@2",
+     "separator": [
+      0,
+      813,
+      806,
+      1
+     ]
+    },
+    "overlay": "rectangles+numbered-badges+legend-v3",
+    "size": [
+     806,
+     892
+    ]
    },
    "path": "figures/1.2-3.png",
-   "pixelSha256": "2c592ec36c3392da0830134338f22dc460f74acd5dea0dd05d806176160c5cac",
-   "resultSha256": "f1a1ac543882ffc516004cbd3d4bb0c9003679b186ae16bc7eef8c159eb0954b",
+   "pixelSha256": "495a3f362d20f98a66d60f89662c738e72d937db505bd66a2e7aff88decafca9",
+   "resultSha256": "c7f010432aab0469c4ea63c8fd198fb905de85ab99c3889c187d79db51df5836",
    "runId": "20261014-202044-2dbf58",
    "source": "captures/1.2-3.png",
    "sourceSha256": "ffa7a04a6b92a02fd51ca699dd9708d1441416f24265f8ff36ca8a2a9d254c8c",
@@ -323,11 +595,87 @@
      813
     ],
     "cropRule": "panel-edges",
-    "overlay": "rectangles+numbered-badges-v2"
+    "legend": {
+     "box": [
+      0,
+      813,
+      806,
+      57
+     ],
+     "colours": {
+      "background": [
+       18,
+       22,
+       25
+      ],
+      "separator": [
+       72,
+       75,
+       77
+      ],
+      "tag": [
+       200,
+       30,
+       30
+      ],
+      "text": [
+       235,
+       235,
+       235
+      ]
+     },
+     "entries": [
+      {
+       "lines": [
+        [
+         8,
+         822,
+         "[1] SiPM"
+        ]
+       ],
+       "n": 1,
+       "text": "[1] SiPM"
+      },
+      {
+       "lines": [
+        [
+         128,
+         822,
+         "[2] Available with the experimental physical readout"
+        ]
+       ],
+       "n": 2,
+       "text": "[2] Available with the experimental physical readout"
+      },
+      {
+       "lines": [
+        [
+         8,
+         844,
+         "[3] Choose readout…"
+        ]
+       ],
+       "n": 3,
+       "text": "[3] Choose readout…"
+      }
+     ],
+     "font": "5x7+descenders@2",
+     "separator": [
+      0,
+      813,
+      806,
+      1
+     ]
+    },
+    "overlay": "rectangles+numbered-badges+legend-v3",
+    "size": [
+     806,
+     870
+    ]
    },
    "path": "figures/1.2-4.png",
-   "pixelSha256": "fb0c47d0b3abc4cad0e5c494a9a5182e7604f052b7fb064417560a116da6474e",
-   "resultSha256": "e32982a4f67f8607f2c0ddc55ce336cc19c99c2df1b0d61afe7e3c7195ed8aef",
+   "pixelSha256": "c218902ec97ad86b318055d784f8915f1333fb71a719bf840e0e6b6c51797c65",
+   "resultSha256": "995af226118e4b5c16b2eb0f733263e94be94e5f8d7d89a26db124e1ebb02cd6",
    "runId": "20261014-202044-2dbf58",
    "source": "captures/1.2-4.png",
    "sourceSha256": "ca15b38bc336c744820fb24a23fccd3c3319b7c2cd1eabc0314948c9c5f72a17",
@@ -356,11 +704,65 @@
      813
     ],
     "cropRule": "panel-edges",
-    "overlay": "rectangles+numbered-badges-v2"
+    "legend": {
+     "box": [
+      0,
+      813,
+      314,
+      35
+     ],
+     "colours": {
+      "background": [
+       18,
+       22,
+       25
+      ],
+      "separator": [
+       72,
+       75,
+       77
+      ],
+      "tag": [
+       200,
+       30,
+       30
+      ],
+      "text": [
+       235,
+       235,
+       235
+      ]
+     },
+     "entries": [
+      {
+       "lines": [
+        [
+         8,
+         822,
+         "[1] Detector"
+        ]
+       ],
+       "n": 1,
+       "text": "[1] Detector"
+      }
+     ],
+     "font": "5x7+descenders@2",
+     "separator": [
+      0,
+      813,
+      314,
+      1
+     ]
+    },
+    "overlay": "rectangles+numbered-badges+legend-v3",
+    "size": [
+     314,
+     848
+    ]
    },
    "path": "figures/1.2-5.png",
-   "pixelSha256": "79add990a7632086440cada6f69797426db409ec374205f3684d0bc9ff3d0dd7",
-   "resultSha256": "b7f3ec04b25878ed6f63e4c7316b7144a3ba06852a28cfbbd4b3d004b4f86d8d",
+   "pixelSha256": "55c50afc75be77ee87195fa761a699793da2a53507b114b69fb7622d4d323945",
+   "resultSha256": "d9f6d2e05518992e0665ea31b505acb99b1b2b43960bd3e318abfaf674daa0f6",
    "runId": "20261014-202044-2dbf58",
    "source": "captures/1.2-5.png",
    "sourceSha256": "ca15b38bc336c744820fb24a23fccd3c3319b7c2cd1eabc0314948c9c5f72a17",
@@ -421,11 +823,109 @@
      813
     ],
     "cropRule": "panel-edges",
-    "overlay": "rectangles+numbered-badges-v2"
+    "legend": {
+     "box": [
+      0,
+      813,
+      314,
+      79
+     ],
+     "colours": {
+      "background": [
+       18,
+       22,
+       25
+      ],
+      "separator": [
+       72,
+       75,
+       77
+      ],
+      "tag": [
+       200,
+       30,
+       30
+      ],
+      "text": [
+       235,
+       235,
+       235
+      ]
+     },
+     "entries": [
+      {
+       "lines": [
+        [
+         8,
+         822,
+         "[1] Isotope"
+        ]
+       ],
+       "n": 1,
+       "text": "[1] Isotope"
+      },
+      {
+       "lines": [
+        [
+         164,
+         822,
+         "[2] X"
+        ]
+       ],
+       "n": 2,
+       "text": "[2] X"
+      },
+      {
+       "lines": [
+        [
+         248,
+         822,
+         "[3] Y"
+        ]
+       ],
+       "n": 3,
+       "text": "[3] Y"
+      },
+      {
+       "lines": [
+        [
+         8,
+         844,
+         "[4] Distance"
+        ]
+       ],
+       "n": 4,
+       "text": "[4] Distance"
+      },
+      {
+       "lines": [
+        [
+         8,
+         866,
+         "[5] Activity"
+        ]
+       ],
+       "n": 5,
+       "text": "[5] Activity"
+      }
+     ],
+     "font": "5x7+descenders@2",
+     "separator": [
+      0,
+      813,
+      314,
+      1
+     ]
+    },
+    "overlay": "rectangles+numbered-badges+legend-v3",
+    "size": [
+     314,
+     892
+    ]
    },
    "path": "figures/2.1-1.png",
-   "pixelSha256": "4f42edf4d149d5dfad7df0dfbb63183326c19bf6234fb25214e3bb75fe3f5743",
-   "resultSha256": "b4ec7a7f4803d2a3e4da8e61e5ee9ca97aa1d6bd601a2f30cfbeee82a69e7e57",
+   "pixelSha256": "859abc4d9083467058493b3241dea1b0360eeb42e2ba8add4fa70cbd90cb7312",
+   "resultSha256": "55c6ff04dc6b98b7e5cf612d3467fbdd2bd3196075aaafdb47bfb6a317fa3635",
    "runId": "20261014-202059-544edf",
    "source": "captures/2.1-1.png",
    "sourceSha256": "c24740fd306d2cf979ad0eb19e51e864f1d014d62978c060006eb7c25b16b297",
@@ -470,11 +970,87 @@
      813
     ],
     "cropRule": "panel-edges",
-    "overlay": "rectangles+numbered-badges-v2"
+    "legend": {
+     "box": [
+      0,
+      813,
+      314,
+      57
+     ],
+     "colours": {
+      "background": [
+       18,
+       22,
+       25
+      ],
+      "separator": [
+       72,
+       75,
+       77
+      ],
+      "tag": [
+       200,
+       30,
+       30
+      ],
+      "text": [
+       235,
+       235,
+       235
+      ]
+     },
+     "entries": [
+      {
+       "lines": [
+        [
+         8,
+         822,
+         "[1] Isotope"
+        ]
+       ],
+       "n": 1,
+       "text": "[1] Isotope"
+      },
+      {
+       "lines": [
+        [
+         164,
+         822,
+         "[2] X"
+        ]
+       ],
+       "n": 2,
+       "text": "[2] X"
+      },
+      {
+       "lines": [
+        [
+         8,
+         844,
+         "[3] Activity"
+        ]
+       ],
+       "n": 3,
+       "text": "[3] Activity"
+      }
+     ],
+     "font": "5x7+descenders@2",
+     "separator": [
+      0,
+      813,
+      314,
+      1
+     ]
+    },
+    "overlay": "rectangles+numbered-badges+legend-v3",
+    "size": [
+     314,
+     870
+    ]
    },
    "path": "figures/2.1-2.png",
-   "pixelSha256": "39305b96cab01b4ae420d0b18768c76d7f68999c00900462e48c35d1e6f4a8f5",
-   "resultSha256": "c9e483758d253665838d2b5979821686d9081063461b5d095a93be57c206da63",
+   "pixelSha256": "13f66bb9f63e4d3d50fa407d828f5c78074e145bb6602f20925b9e5410222a29",
+   "resultSha256": "ccc0e66e2de0abf34e24dd6c7fc78adccf648d291e4ee86cfc0a53495ac0c254",
    "runId": "20261014-202059-544edf",
    "source": "captures/2.1-2.png",
    "sourceSha256": "99afd7ee56842130cb4ffbff90fe67def8ea752517e79c01f8c69b46202319fa",
@@ -511,11 +1087,76 @@
      813
     ],
     "cropRule": "panel-edges",
-    "overlay": "rectangles+numbered-badges-v2"
+    "legend": {
+     "box": [
+      0,
+      813,
+      314,
+      35
+     ],
+     "colours": {
+      "background": [
+       18,
+       22,
+       25
+      ],
+      "separator": [
+       72,
+       75,
+       77
+      ],
+      "tag": [
+       200,
+       30,
+       30
+      ],
+      "text": [
+       235,
+       235,
+       235
+      ]
+     },
+     "entries": [
+      {
+       "lines": [
+        [
+         8,
+         822,
+         "[1] X"
+        ]
+       ],
+       "n": 1,
+       "text": "[1] X"
+      },
+      {
+       "lines": [
+        [
+         92,
+         822,
+         "[2] Activity"
+        ]
+       ],
+       "n": 2,
+       "text": "[2] Activity"
+      }
+     ],
+     "font": "5x7+descenders@2",
+     "separator": [
+      0,
+      813,
+      314,
+      1
+     ]
+    },
+    "overlay": "rectangles+numbered-badges+legend-v3",
+    "size": [
+     314,
+     848
+    ]
    },
    "path": "figures/2.1-3.png",
-   "pixelSha256": "f419b30e6971e34aef57ba3f14f0623017996fa50f5f56efd0b8d9bf8908d1ce",
-   "resultSha256": "125e56edcff2827235c64e9d47e1ab783a29d41d2aae27eaf41be3d1539855c3",
+   "pixelSha256": "e48f139676d997acf973d451827df5174f74385d9419c21c8b71e141700acde4",
+   "resultSha256": "26764f2232d7381a145b826bdec89f746a00b55c4796af62a59c7e6ca9900962",
    "runId": "20261014-202059-544edf",
    "source": "captures/2.1-3.png",
    "sourceSha256": "a1770eea6afc2caa291327147c27e1a7276e6a2b962be024e9da033fd2ec3b84",
@@ -584,11 +1225,120 @@
      813
     ],
     "cropRule": "panel-edges",
-    "overlay": "rectangles+numbered-badges-v2"
+    "legend": {
+     "box": [
+      0,
+      813,
+      314,
+      145
+     ],
+     "colours": {
+      "background": [
+       18,
+       22,
+       25
+      ],
+      "separator": [
+       72,
+       75,
+       77
+      ],
+      "tag": [
+       200,
+       30,
+       30
+      ],
+      "text": [
+       235,
+       235,
+       235
+      ]
+     },
+     "entries": [
+      {
+       "lines": [
+        [
+         8,
+         822,
+         "[1] Preset"
+        ]
+       ],
+       "n": 1,
+       "text": "[1] Preset"
+      },
+      {
+       "lines": [
+        [
+         8,
+         844,
+         "[2] Prime rank"
+        ]
+       ],
+       "n": 2,
+       "text": "[2] Prime rank"
+      },
+      {
+       "lines": [
+        [
+         8,
+         866,
+         "[3] Cell pitch"
+        ]
+       ],
+       "n": 3,
+       "text": "[3] Cell pitch"
+      },
+      {
+       "lines": [
+        [
+         8,
+         888,
+         "[4] Mask–detector"
+        ]
+       ],
+       "n": 4,
+       "text": "[4] Mask–detector"
+      },
+      {
+       "lines": [
+        [
+         8,
+         910,
+         "[5] Pixels / side"
+        ]
+       ],
+       "n": 5,
+       "text": "[5] Pixels / side"
+      },
+      {
+       "lines": [
+        [
+         8,
+         932,
+         "[6] Pixel pitch"
+        ]
+       ],
+       "n": 6,
+       "text": "[6] Pixel pitch"
+      }
+     ],
+     "font": "5x7+descenders@2",
+     "separator": [
+      0,
+      813,
+      314,
+      1
+     ]
+    },
+    "overlay": "rectangles+numbered-badges+legend-v3",
+    "size": [
+     314,
+     958
+    ]
    },
    "path": "figures/2.2-1.png",
-   "pixelSha256": "1b1a0ff78ac542c8ae2ef07cb872bba981a44934e8fd1c2a4d69880812dd2f1c",
-   "resultSha256": "147fb5f26e125b381399454be9ff75d60a37f6573ffd5af1c92d075dc8a24f5e",
+   "pixelSha256": "bb4159c4b866b9e2e2254b41cc98f8c75564a0165449b57b21aa528c0ae1d5f2",
+   "resultSha256": "1e8ac4e37a8be832fdec9598c57bfda2aaa8e6ab3434e76d8ad5e3cf0ebaa636",
    "runId": "20261014-202201-b1fbf6",
    "source": "captures/2.2-1.png",
    "sourceSha256": "7016e80a5deac5efcc01584425a8c9c27ec52f436cc99023c049d3c86e5ccfff",
@@ -625,11 +1375,76 @@
      813
     ],
     "cropRule": "panel-edges",
-    "overlay": "rectangles+numbered-badges-v2"
+    "legend": {
+     "box": [
+      0,
+      813,
+      1122,
+      35
+     ],
+     "colours": {
+      "background": [
+       18,
+       22,
+       25
+      ],
+      "separator": [
+       72,
+       75,
+       77
+      ],
+      "tag": [
+       200,
+       30,
+       30
+      ],
+      "text": [
+       235,
+       235,
+       235
+      ]
+     },
+     "entries": [
+      {
+       "lines": [
+        [
+         8,
+         822,
+         "[1] Face"
+        ]
+       ],
+       "n": 1,
+       "text": "[1] Face"
+      },
+      {
+       "lines": [
+        [
+         128,
+         822,
+         "[2] Settings for the next acquisition"
+        ]
+       ],
+       "n": 2,
+       "text": "[2] Settings for the next acquisition"
+      }
+     ],
+     "font": "5x7+descenders@2",
+     "separator": [
+      0,
+      813,
+      1122,
+      1
+     ]
+    },
+    "overlay": "rectangles+numbered-badges+legend-v3",
+    "size": [
+     1122,
+     848
+    ]
    },
    "path": "figures/2.2-2.png",
-   "pixelSha256": "70bc0697aecf19e5d6c233fec20b939786cf4d4f83848c8ed28b58531f9f11a4",
-   "resultSha256": "e976e24b86d2577571b41dfca119a9f82faa1c52fa9834507d8b355b79930b15",
+   "pixelSha256": "b0dee4a05e8e36bdd98bf0f3c66e1909d9aa8cc383283f91fdf2220e0e5ed628",
+   "resultSha256": "0853341418756d86888b645494c4bd594fbbcd078af10e38767a40730dd51d78",
    "runId": "20261014-202201-b1fbf6",
    "source": "captures/2.2-2.png",
    "sourceSha256": "07950bbf16d31b9667e1ab9d2eb87dd93310b340cf4546c998c4076dab4b8bf5",
@@ -674,11 +1489,87 @@
      847
     ],
     "cropRule": "panel-edges",
-    "overlay": "rectangles+numbered-badges-v2"
+    "legend": {
+     "box": [
+      0,
+      847,
+      1440,
+      57
+     ],
+     "colours": {
+      "background": [
+       18,
+       22,
+       25
+      ],
+      "separator": [
+       72,
+       75,
+       77
+      ],
+      "tag": [
+       200,
+       30,
+       30
+      ],
+      "text": [
+       235,
+       235,
+       235
+      ]
+     },
+     "entries": [
+      {
+       "lines": [
+        [
+         8,
+         856,
+         "[1] Pixels / side"
+        ]
+       ],
+       "n": 1,
+       "text": "[1] Pixels / side"
+      },
+      {
+       "lines": [
+        [
+         236,
+         856,
+         "[2] Detector pixels must be an integer from 4 to 64."
+        ]
+       ],
+       "n": 2,
+       "text": "[2] Detector pixels must be an integer from 4 to 64."
+      },
+      {
+       "lines": [
+        [
+         8,
+         878,
+         "[3] Start refused: Detector pixels must be an integer from 4 to 64."
+        ]
+       ],
+       "n": 3,
+       "text": "[3] Start refused: Detector pixels must be an integer from 4 to 64."
+      }
+     ],
+     "font": "5x7+descenders@2",
+     "separator": [
+      0,
+      847,
+      1440,
+      1
+     ]
+    },
+    "overlay": "rectangles+numbered-badges+legend-v3",
+    "size": [
+     1440,
+     904
+    ]
    },
    "path": "figures/2.2-3.png",
-   "pixelSha256": "2396589961fe9de75ff9a16c9a36eba996f3b2161dcd3dfb640ead3b46fb61bd",
-   "resultSha256": "0266fc95f17134d2695e9cb6860fbd43da30fe8d25ca606b2a4c01c38acfb095",
+   "pixelSha256": "e54988dbc7b12e844c41d1293cefb2185a3689eb8939e065aa2a13e417d23083",
+   "resultSha256": "cb73b37d26731446c17632a82b17b29f30e63011da8462bdaf43c4c83beb14b7",
    "runId": "20261014-202201-b1fbf6",
    "source": "captures/2.2-3.png",
    "sourceSha256": "c7f949b28e019bd9745059db14a6d3afb64231042962063070184e32ba074997",
@@ -707,11 +1598,65 @@
      55
     ],
     "cropRule": "panel-edges",
-    "overlay": "rectangles+numbered-badges-v2"
+    "legend": {
+     "box": [
+      0,
+      55,
+      1440,
+      35
+     ],
+     "colours": {
+      "background": [
+       18,
+       22,
+       25
+      ],
+      "separator": [
+       72,
+       75,
+       77
+      ],
+      "tag": [
+       200,
+       30,
+       30
+      ],
+      "text": [
+       235,
+       235,
+       235
+      ]
+     },
+     "entries": [
+      {
+       "lines": [
+        [
+         8,
+         64,
+         "[1] Stop"
+        ]
+       ],
+       "n": 1,
+       "text": "[1] Stop"
+      }
+     ],
+     "font": "5x7+descenders@2",
+     "separator": [
+      0,
+      55,
+      1440,
+      1
+     ]
+    },
+    "overlay": "rectangles+numbered-badges+legend-v3",
+    "size": [
+     1440,
+     90
+    ]
    },
    "path": "figures/2.4-1.png",
-   "pixelSha256": "174726b9d6282c261fa46491373abf62dd85ec9ccea376d27fcaf7b520c9b07a",
-   "resultSha256": "06110f63afdd558cedb7ac8348f3e2dcb6ff46750374338a0b503adf5585b38e",
+   "pixelSha256": "2bc56dbc16376adb06386bf617db54481baeac0011dc30d230606d8892da0523",
+   "resultSha256": "7cee1e0ebf16385632bab7ad1a889008cb49cfa47d1acb100c20f1b9cebcf689",
    "runId": "20261014-202133-886f72",
    "source": "captures/2.4-1.png",
    "sourceSha256": "83fa3ead146fcca598c00c02170f23d20bb130154773bead6548433aee950497",
@@ -748,11 +1693,76 @@
      900
     ],
     "cropRule": "full",
-    "overlay": "rectangles+numbered-badges-v2"
+    "legend": {
+     "box": [
+      0,
+      900,
+      1440,
+      35
+     ],
+     "colours": {
+      "background": [
+       18,
+       22,
+       25
+      ],
+      "separator": [
+       72,
+       75,
+       77
+      ],
+      "tag": [
+       200,
+       30,
+       30
+      ],
+      "text": [
+       235,
+       235,
+       235
+      ]
+     },
+     "entries": [
+      {
+       "lines": [
+        [
+         8,
+         909,
+         "[1] Continue"
+        ]
+       ],
+       "n": 1,
+       "text": "[1] Continue"
+      },
+      {
+       "lines": [
+        [
+         176,
+         909,
+         "[2] Stopped · t = 1.8 s of 600 s · 116 counts · 66 cps · seed 12345"
+        ]
+       ],
+       "n": 2,
+       "text": "[2] Stopped · t = 1.8 s of 600 s · 116 counts · 66 cps · seed 12345"
+      }
+     ],
+     "font": "5x7+descenders@2",
+     "separator": [
+      0,
+      900,
+      1440,
+      1
+     ]
+    },
+    "overlay": "rectangles+numbered-badges+legend-v3",
+    "size": [
+     1440,
+     935
+    ]
    },
    "path": "figures/2.4-2.png",
-   "pixelSha256": "49956cea0f9dde34eda854bbe314343d7009448d0029c7dc72a9d4c4759e743a",
-   "resultSha256": "1a74b2b83bda7348227f0843bbd972db5fbc53908209cde09376826d5d466c8b",
+   "pixelSha256": "b9aae86d08096d59e6ada2a8aa76927c68e3c0fdfaa2504ebc4fc5ac5d7836ad",
+   "resultSha256": "83e896adc7ae85eb71d6c77b0a9a2f0f2bb34b649a34f59c63e9eb9109f7b264",
    "runId": "20261014-202133-886f72",
    "source": "captures/2.4-2.png",
    "sourceSha256": "d4ab8ec380e51276d56bc7562fdbf25db89a2fb19ba8cf9cd96c7ea49c954e38",
@@ -797,11 +1807,92 @@
      480
     ],
     "cropRule": "panel-edges",
-    "overlay": "rectangles+numbered-badges-v2"
+    "legend": {
+     "box": [
+      0,
+      480,
+      806,
+      79
+     ],
+     "colours": {
+      "background": [
+       7,
+       9,
+       10
+      ],
+      "separator": [
+       64,
+       65,
+       66
+      ],
+      "tag": [
+       200,
+       30,
+       30
+      ],
+      "text": [
+       235,
+       235,
+       235
+      ]
+     },
+     "entries": [
+      {
+       "lines": [
+        [
+         8,
+         489,
+         "[1] Discard the acquired data (2.0 live s, 127 counts)? Inputs"
+        ],
+        [
+         56,
+         511,
+         "unlock for the next acquisition."
+        ]
+       ],
+       "n": 1,
+       "text": "[1] Discard the acquired data (2.0 live s, 127 counts)? Inputs unlock for the next acquisition."
+      },
+      {
+       "lines": [
+        [
+         8,
+         533,
+         "[2] Cancel"
+        ]
+       ],
+       "n": 2,
+       "text": "[2] Cancel"
+      },
+      {
+       "lines": [
+        [
+         152,
+         533,
+         "[3] Discard"
+        ]
+       ],
+       "n": 3,
+       "text": "[3] Discard"
+      }
+     ],
+     "font": "5x7+descenders@2",
+     "separator": [
+      0,
+      480,
+      806,
+      1
+     ]
+    },
+    "overlay": "rectangles+numbered-badges+legend-v3",
+    "size": [
+     806,
+     559
+    ]
    },
    "path": "figures/2.4-3.png",
-   "pixelSha256": "a7d888f23b2156fbdc559379e2c0d2a3244571c84f7442cc77351f1c6b34cb0a",
-   "resultSha256": "aad4d5d8da1c3a91b80e8744438e8ab50d6f9a6dffbd4513a42367212f8600df",
+   "pixelSha256": "8180e75802672ef4e9e3bae49f2e2cfdc160d160721b445b5c6b692e725c2205",
+   "resultSha256": "627a28f889ea53616ecaa07b0fd6d9bcbbeeb551eaa8a6550d95871a36f64d71",
    "runId": "20261014-202133-886f72",
    "source": "captures/2.4-3.png",
    "sourceSha256": "d5dc354ca5fd173657e3e69fb2e0312b9d49097cc0ff54b87fb29436c295d5e6",
@@ -838,11 +1929,76 @@
      900
     ],
     "cropRule": "full",
-    "overlay": "rectangles+numbered-badges-v2"
+    "legend": {
+     "box": [
+      0,
+      900,
+      1440,
+      35
+     ],
+     "colours": {
+      "background": [
+       18,
+       22,
+       25
+      ],
+      "separator": [
+       72,
+       75,
+       77
+      ],
+      "tag": [
+       200,
+       30,
+       30
+      ],
+      "text": [
+       235,
+       235,
+       235
+      ]
+     },
+     "entries": [
+      {
+       "lines": [
+        [
+         8,
+         909,
+         "[1] Start"
+        ]
+       ],
+       "n": 1,
+       "text": "[1] Start"
+      },
+      {
+       "lines": [
+        [
+         140,
+         909,
+         "[2] Ready"
+        ]
+       ],
+       "n": 2,
+       "text": "[2] Ready"
+      }
+     ],
+     "font": "5x7+descenders@2",
+     "separator": [
+      0,
+      900,
+      1440,
+      1
+     ]
+    },
+    "overlay": "rectangles+numbered-badges+legend-v3",
+    "size": [
+     1440,
+     935
+    ]
    },
    "path": "figures/2.4-4.png",
-   "pixelSha256": "5bdc715222510655f2c280145022bd063744e77cead1fee1a3e6d8937380e174",
-   "resultSha256": "2c919704e78bb9f696ca4a5648762121bc5628ee86fe7eda4699c17fce0fac71",
+   "pixelSha256": "846040b11a3f314d80c061ca901324a08d2d1fb2c4f9161fc448e7d37cf55b4b",
+   "resultSha256": "7175b27812e1056fd0c45593400d72e36b7f5aecbd5d2e5b024801c440960937",
    "runId": "20261014-202133-886f72",
    "source": "captures/2.4-4.png",
    "sourceSha256": "c4866a28e34c7e06c159411b702876654554c9bf940e2b058c7b8af1f69b8442",
@@ -871,11 +2027,70 @@
      480
     ],
     "cropRule": "panel-edges",
-    "overlay": "rectangles+numbered-badges-v2"
+    "legend": {
+     "box": [
+      0,
+      480,
+      404,
+      57
+     ],
+     "colours": {
+      "background": [
+       18,
+       22,
+       25
+      ],
+      "separator": [
+       72,
+       75,
+       77
+      ],
+      "tag": [
+       200,
+       30,
+       30
+      ],
+      "text": [
+       235,
+       235,
+       235
+      ]
+     },
+     "entries": [
+      {
+       "lines": [
+        [
+         8,
+         489,
+         "[1] x 6.3 mm, y -4.5 mm · 10"
+        ],
+        [
+         56,
+         511,
+         "counts"
+        ]
+       ],
+       "n": 1,
+       "text": "[1] x 6.3 mm, y -4.5 mm · 10 counts"
+      }
+     ],
+     "font": "5x7+descenders@2",
+     "separator": [
+      0,
+      480,
+      404,
+      1
+     ]
+    },
+    "overlay": "rectangles+numbered-badges+legend-v3",
+    "size": [
+     404,
+     537
+    ]
    },
    "path": "figures/3.1-1.png",
-   "pixelSha256": "82bd945283106585bad4ffa5d22dcd188f5e92b87128a48687b6037143d17134",
-   "resultSha256": "cb19b95e87a9a93cd663d4bb80c6d6bac236e3ce42b88318ab591377b183e399",
+   "pixelSha256": "699d1ea5afac1263ff526f4c2c25f97792f6b84f315cb1bd299bcb308025db69",
+   "resultSha256": "515693ead7058bcba350a4649d8187bafc592818623ee98ac38ad87013c9a3aa",
    "runId": "20261014-202118-3646b1",
    "source": "captures/3.1-1.png",
    "sourceSha256": "ad109d40bd95aca892c352c9d74e06a725a036ca50769d24cf5599e0439aa084",
@@ -928,11 +2143,98 @@
      335
     ],
     "cropRule": "panel-edges",
-    "overlay": "rectangles+numbered-badges-v2"
+    "legend": {
+     "box": [
+      0,
+      335,
+      811,
+      57
+     ],
+     "colours": {
+      "background": [
+       18,
+       22,
+       25
+      ],
+      "separator": [
+       72,
+       75,
+       77
+      ],
+      "tag": [
+       200,
+       30,
+       30
+      ],
+      "text": [
+       235,
+       235,
+       235
+      ]
+     },
+     "entries": [
+      {
+       "lines": [
+        [
+         8,
+         344,
+         "[1] M1"
+        ]
+       ],
+       "n": 1,
+       "text": "[1] M1"
+      },
+      {
+       "lines": [
+        [
+         104,
+         344,
+         "[2] M2"
+        ]
+       ],
+       "n": 2,
+       "text": "[2] M2"
+      },
+      {
+       "lines": [
+        [
+         200,
+         344,
+         "[3] M3"
+        ]
+       ],
+       "n": 3,
+       "text": "[3] M3"
+      },
+      {
+       "lines": [
+        [
+         8,
+         366,
+         "[4] 3.6 × 4.2 mm · 42 px · mean 5.45 · max 13"
+        ]
+       ],
+       "n": 4,
+       "text": "[4] 3.6 × 4.2 mm · 42 px · mean 5.45 · max 13"
+      }
+     ],
+     "font": "5x7+descenders@2",
+     "separator": [
+      0,
+      335,
+      811,
+      1
+     ]
+    },
+    "overlay": "rectangles+numbered-badges+legend-v3",
+    "size": [
+     811,
+     392
+    ]
    },
    "path": "figures/3.1-2.png",
-   "pixelSha256": "b7355ba5784eb87582f30c59dd1c6cd6d64583aef6f5ae033d580797f4079a2f",
-   "resultSha256": "1a22ea7c7e97ac256a3dab8863d1c316faa46f9188917071a8d6b08ce2e7141a",
+   "pixelSha256": "001788bb1e0d4bdeb13c0540048aacccaab62255fa6bd18d9c808f6301676027",
+   "resultSha256": "a6fbf18658b2edcb5cf9b42a24dd04470ac815d13577722832551d7f3cdcfcff",
    "runId": "20261014-202118-3646b1",
    "source": "captures/3.1-2.png",
    "sourceSha256": "377b9f4391a907f92d9c3c256e271cceb76ddd58effaf888aeeceedc341e3ff7",
@@ -969,11 +2271,76 @@
      813
     ],
     "cropRule": "panel-edges",
-    "overlay": "rectangles+numbered-badges-v2"
+    "legend": {
+     "box": [
+      0,
+      813,
+      1118,
+      35
+     ],
+     "colours": {
+      "background": [
+       18,
+       22,
+       25
+      ],
+      "separator": [
+       72,
+       75,
+       77
+      ],
+      "tag": [
+       200,
+       30,
+       30
+      ],
+      "text": [
+       235,
+       235,
+       235
+      ]
+     },
+     "entries": [
+      {
+       "lines": [
+        [
+         8,
+         822,
+         "[1] Log Y"
+        ]
+       ],
+       "n": 1,
+       "text": "[1] Log Y"
+      },
+      {
+       "lines": [
+        [
+         140,
+         822,
+         "[2] N × FWHM at each line"
+        ]
+       ],
+       "n": 2,
+       "text": "[2] N × FWHM at each line"
+      }
+     ],
+     "font": "5x7+descenders@2",
+     "separator": [
+      0,
+      813,
+      1118,
+      1
+     ]
+    },
+    "overlay": "rectangles+numbered-badges+legend-v3",
+    "size": [
+     1118,
+     848
+    ]
    },
    "path": "figures/3.4-1.png",
-   "pixelSha256": "7c9cd91cce2982ab9bc289d43ad9cdb3524e34b4b7929119896a89aa352e6ab7",
-   "resultSha256": "92df8b10538a358fe585d06dac8bf2a464e74c3fc89afd1fd782e14b518bfbc8",
+   "pixelSha256": "646c73782e134a9d43c2b61870fea0f4fd12d16799212b63146cad8b07b3668b",
+   "resultSha256": "062140a9e450b84379802075a7d54005302281c28bc0ab7cd2e539bba02bab84",
    "runId": "20261014-202148-7b59cc",
    "source": "captures/3.4-1.png",
    "sourceSha256": "5f429379355daf3df55c897e9c099e9ed19b7e0ca68fc386e8c3b301fe0b6bbe",
@@ -1002,11 +2369,65 @@
      813
     ],
     "cropRule": "panel-edges",
-    "overlay": "rectangles+numbered-badges-v2"
+    "legend": {
+     "box": [
+      0,
+      813,
+      1118,
+      35
+     ],
+     "colours": {
+      "background": [
+       18,
+       22,
+       25
+      ],
+      "separator": [
+       72,
+       75,
+       77
+      ],
+      "tag": [
+       200,
+       30,
+       30
+      ],
+      "text": [
+       235,
+       235,
+       235
+      ]
+     },
+     "entries": [
+      {
+       "lines": [
+        [
+         8,
+         822,
+         "[1] N × FWHM at each line"
+        ]
+       ],
+       "n": 1,
+       "text": "[1] N × FWHM at each line"
+      }
+     ],
+     "font": "5x7+descenders@2",
+     "separator": [
+      0,
+      813,
+      1118,
+      1
+     ]
+    },
+    "overlay": "rectangles+numbered-badges+legend-v3",
+    "size": [
+     1118,
+     848
+    ]
    },
    "path": "figures/3.4-2.png",
-   "pixelSha256": "d5ebdf3e9cee129d73a327ba0cd5a264f6b04fd7004b58cce1d7c167b2d6fc92",
-   "resultSha256": "d13f31bc21316a54bd3f7c629112a493fee1dc20d5ae2df7c2d563a42c7e2c09",
+   "pixelSha256": "1ea435fcd57b5c27d6f980188ef4ff215ab9e6eda2877902978f3ccd05d8f34d",
+   "resultSha256": "d5dbb062ad2ab460026a22d3603fcdc946b66aaa74b7879bbeef8d3195fd0e94",
    "runId": "20261014-202148-7b59cc",
    "source": "captures/3.4-2.png",
    "sourceSha256": "e1b957741c141c55cc42cd3eb34037836a3ee3127e86cf2374f28f9b21dec0d9",
@@ -1035,11 +2456,65 @@
      813
     ],
     "cropRule": "panel-edges",
-    "overlay": "rectangles+numbered-badges-v2"
+    "legend": {
+     "box": [
+      0,
+      813,
+      1118,
+      35
+     ],
+     "colours": {
+      "background": [
+       18,
+       22,
+       25
+      ],
+      "separator": [
+       72,
+       75,
+       77
+      ],
+      "tag": [
+       200,
+       30,
+       30
+      ],
+      "text": [
+       235,
+       235,
+       235
+      ]
+     },
+     "entries": [
+      {
+       "lines": [
+        [
+         8,
+         822,
+         "[1] Log Y"
+        ]
+       ],
+       "n": 1,
+       "text": "[1] Log Y"
+      }
+     ],
+     "font": "5x7+descenders@2",
+     "separator": [
+      0,
+      813,
+      1118,
+      1
+     ]
+    },
+    "overlay": "rectangles+numbered-badges+legend-v3",
+    "size": [
+     1118,
+     848
+    ]
    },
    "path": "figures/3.4-3.png",
-   "pixelSha256": "12e7b58f9d99814142d4247de170549a8c1fd26f00113b1a25486642f5baf3db",
-   "resultSha256": "6439c67f818d75524fc4fe1d16afb778a830b1913ecbdb5bd6dcc8a4e5c11387",
+   "pixelSha256": "e6ed5c919175c2e557a66a8f34ca594a399481e8cc7926ab071952da0052eb80",
+   "resultSha256": "2c6051349521105265dece9046b65671af830f25531ae4c09b1a92f18d051d64",
    "runId": "20261014-202148-7b59cc",
    "source": "captures/3.4-3.png",
    "sourceSha256": "6a6203dcd098da045f3f8fee759474ad2d61211001c35e1eb280a3f9eb1a1e59",
@@ -1050,34 +2525,34 @@
  "formal": false,
  "generator": {
   "path": "samples/manual/manual_records.py",
-  "sha256": "258fc3407c7195e2854cc9345cc47197e9159e993bd8942b313b34ae8eff5783"
+  "sha256": "64528d5b2f8db29f1f09a084c39a304528aa20c223217e087426914724b96f31"
  },
  "notices": {
   "sha256": "a736a7c4bcf62c998f63be92bba935eb669b74e6e5e5bfde09eb2b0aa8943cb9",
   "status": "draft"
  },
  "outputs": {
-  "MANUAL.Studio.md": "3118601f7d02f34cf1b4eb589f69085e31b182b7876963c264bc7af6ea5c7b0d",
-  "figures/1.2-1.png": "51c7f4cf7e8c2d8b0262fd80e7650fb733788dde02748f5215aac9be93afdbae",
-  "figures/1.2-2.png": "3d5832faf0825c3a005e1bce522837830f495be9116df53255d87c9d82e9cb66",
-  "figures/1.2-3.png": "f1a1ac543882ffc516004cbd3d4bb0c9003679b186ae16bc7eef8c159eb0954b",
-  "figures/1.2-4.png": "e32982a4f67f8607f2c0ddc55ce336cc19c99c2df1b0d61afe7e3c7195ed8aef",
-  "figures/1.2-5.png": "b7f3ec04b25878ed6f63e4c7316b7144a3ba06852a28cfbbd4b3d004b4f86d8d",
-  "figures/2.1-1.png": "b4ec7a7f4803d2a3e4da8e61e5ee9ca97aa1d6bd601a2f30cfbeee82a69e7e57",
-  "figures/2.1-2.png": "c9e483758d253665838d2b5979821686d9081063461b5d095a93be57c206da63",
-  "figures/2.1-3.png": "125e56edcff2827235c64e9d47e1ab783a29d41d2aae27eaf41be3d1539855c3",
-  "figures/2.2-1.png": "147fb5f26e125b381399454be9ff75d60a37f6573ffd5af1c92d075dc8a24f5e",
-  "figures/2.2-2.png": "e976e24b86d2577571b41dfca119a9f82faa1c52fa9834507d8b355b79930b15",
-  "figures/2.2-3.png": "0266fc95f17134d2695e9cb6860fbd43da30fe8d25ca606b2a4c01c38acfb095",
-  "figures/2.4-1.png": "06110f63afdd558cedb7ac8348f3e2dcb6ff46750374338a0b503adf5585b38e",
-  "figures/2.4-2.png": "1a74b2b83bda7348227f0843bbd972db5fbc53908209cde09376826d5d466c8b",
-  "figures/2.4-3.png": "aad4d5d8da1c3a91b80e8744438e8ab50d6f9a6dffbd4513a42367212f8600df",
-  "figures/2.4-4.png": "2c919704e78bb9f696ca4a5648762121bc5628ee86fe7eda4699c17fce0fac71",
-  "figures/3.1-1.png": "cb19b95e87a9a93cd663d4bb80c6d6bac236e3ce42b88318ab591377b183e399",
-  "figures/3.1-2.png": "1a22ea7c7e97ac256a3dab8863d1c316faa46f9188917071a8d6b08ce2e7141a",
-  "figures/3.4-1.png": "92df8b10538a358fe585d06dac8bf2a464e74c3fc89afd1fd782e14b518bfbc8",
-  "figures/3.4-2.png": "d13f31bc21316a54bd3f7c629112a493fee1dc20d5ae2df7c2d563a42c7e2c09",
-  "figures/3.4-3.png": "6439c67f818d75524fc4fe1d16afb778a830b1913ecbdb5bd6dcc8a4e5c11387",
+  "MANUAL.Studio.md": "d28d1fd40fe1b5647933ea76ccb39e0e915e0fc5f3a053e6b57d9348b8b94fbb",
+  "figures/1.2-1.png": "4da14be063daf9a7196100b128b2f0e949ffd56b28a41411ab6a4a1d52fda777",
+  "figures/1.2-2.png": "959f3e47081bb1b438d4de138ebbccf1002d35694f6797707aa267d8b0b33704",
+  "figures/1.2-3.png": "c7f010432aab0469c4ea63c8fd198fb905de85ab99c3889c187d79db51df5836",
+  "figures/1.2-4.png": "995af226118e4b5c16b2eb0f733263e94be94e5f8d7d89a26db124e1ebb02cd6",
+  "figures/1.2-5.png": "d9f6d2e05518992e0665ea31b505acb99b1b2b43960bd3e318abfaf674daa0f6",
+  "figures/2.1-1.png": "55c6ff04dc6b98b7e5cf612d3467fbdd2bd3196075aaafdb47bfb6a317fa3635",
+  "figures/2.1-2.png": "ccc0e66e2de0abf34e24dd6c7fc78adccf648d291e4ee86cfc0a53495ac0c254",
+  "figures/2.1-3.png": "26764f2232d7381a145b826bdec89f746a00b55c4796af62a59c7e6ca9900962",
+  "figures/2.2-1.png": "1e8ac4e37a8be832fdec9598c57bfda2aaa8e6ab3434e76d8ad5e3cf0ebaa636",
+  "figures/2.2-2.png": "0853341418756d86888b645494c4bd594fbbcd078af10e38767a40730dd51d78",
+  "figures/2.2-3.png": "cb73b37d26731446c17632a82b17b29f30e63011da8462bdaf43c4c83beb14b7",
+  "figures/2.4-1.png": "7cee1e0ebf16385632bab7ad1a889008cb49cfa47d1acb100c20f1b9cebcf689",
+  "figures/2.4-2.png": "83e896adc7ae85eb71d6c77b0a9a2f0f2bb34b649a34f59c63e9eb9109f7b264",
+  "figures/2.4-3.png": "627a28f889ea53616ecaa07b0fd6d9bcbbeeb551eaa8a6550d95871a36f64d71",
+  "figures/2.4-4.png": "7175b27812e1056fd0c45593400d72e36b7f5aecbd5d2e5b024801c440960937",
+  "figures/3.1-1.png": "515693ead7058bcba350a4649d8187bafc592818623ee98ac38ad87013c9a3aa",
+  "figures/3.1-2.png": "a6fbf18658b2edcb5cf9b42a24dd04470ac815d13577722832551d7f3cdcfcff",
+  "figures/3.4-1.png": "062140a9e450b84379802075a7d54005302281c28bc0ab7cd2e539bba02bab84",
+  "figures/3.4-2.png": "d5dbb062ad2ab460026a22d3603fcdc946b66aaa74b7879bbeef8d3195fd0e94",
+  "figures/3.4-3.png": "2c6051349521105265dece9046b65671af830f25531ae4c09b1a92f18d051d64",
   "sources/manual/chapters.json": "67a5caf676b4ce9aa0fe9a4f668eaa461a370352be12a2003f852439b26f50c3",
   "sources/manual/notices.json": "a736a7c4bcf62c998f63be92bba935eb669b74e6e5e5bfde09eb2b0aa8943cb9",
   "sources/manual/static/interpretation-and-limitations.md": "cef06522c61ddbf52b71af1e2b2d802fc53304064b214a51e5887ef0dcadf642",

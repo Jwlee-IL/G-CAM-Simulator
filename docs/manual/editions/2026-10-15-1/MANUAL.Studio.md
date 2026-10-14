@@ -61,37 +61,32 @@ spectrum ([chapter 3.4 (Spectrum)](#34-spectrum)) and how to read the results ([
 
 **Step 1.** GCAM Studio opens with the top bar — the workspace switch **Imaging**, **Spectrum**, **Waveform**, **Detector** and the **Start** button — the left panel with the tabs **Scene**, **Optics** and **Detector**, the workspace in the centre and the status bar at the bottom.
 
-![Figure 1.2-1](figures/1.2-1.png)
-
-*Figure 1.2-1.* The window after start, Imaging workspace. — **1** Imaging · **2** Spectrum · **3** Waveform · **4** Detector · **5** Start · **6** Scene · **7** Optics · **8** Detector
+<p align="center"><img src="figures/1.2-1.png" alt="Figure 1.2-1"></p>
+<p align="center"><em>Figure 1.2-1.</em> The window after start, Imaging workspace.</p>
 
 **Step 2.** Select the **Optics** tab: the engineering geometry replaces the source list in the left panel.
 
-![Figure 1.2-2](figures/1.2-2.png)
-
-*Figure 1.2-2.* The Optics tab. — **1** Optics · **2** Preset
+<p align="center"><img src="figures/1.2-2.png" alt="Figure 1.2-2"></p>
+<p align="center"><em>Figure 1.2-2.</em> The Optics tab.</p>
 
 **Step 3.** Choose **Spectrum** in the workspace switch: the centre shows the spectrum instead of the images.
 
 **Step 4.** Choose **Waveform**, then its view tab **Four outputs (A–D)**. With the default direct crystal assignment there are no four outputs: the view reads **Available with the experimental physical readout** and offers **Choose readout…**.
 
-![Figure 1.2-3](figures/1.2-3.png)
-
-*Figure 1.2-3.* Four outputs under the direct crystal assignment. — **1** Four outputs (A–D) · **2** Available with the experimental physical readout · **3** Choose readout…
+<p align="center"><img src="figures/1.2-3.png" alt="Figure 1.2-3"></p>
+<p align="center"><em>Figure 1.2-3.</em> Four outputs under the direct crystal assignment.</p>
 
 **Step 5.** Choose **Detector**, then its view tab **SiPM**: the physical readout views are empty in the same way.
 
-![Figure 1.2-4](figures/1.2-4.png)
-
-*Figure 1.2-4.* A Detector readout view under the direct crystal assignment. — **1** SiPM · **2** Available with the experimental physical readout · **3** Choose readout…
+<p align="center"><img src="figures/1.2-4.png" alt="Figure 1.2-4"></p>
+<p align="center"><em>Figure 1.2-4.</em> A Detector readout view under the direct crystal assignment.</p>
 
 > **Caution.** The four-output physical readout is an experimental simulation. Its calibration lines are offered or refused from a pinned record; a module that matches no preset is calibrated locally and is unvalidated; positioning deposits at other energies with a source-line calibration is a declared approximation whose accuracy is unvalidated.
 
 **Step 6.** Click **Choose readout…**: the left panel switches to its **Detector** tab with the keyboard focus on the readout choice.
 
-![Figure 1.2-5](figures/1.2-5.png)
-
-*Figure 1.2-5.* The readout choice in the left Detector tab. — **1** Detector
+<p align="center"><img src="figures/1.2-5.png" alt="Figure 1.2-5"></p>
+<p align="center"><em>Figure 1.2-5.</em> The readout choice in the left Detector tab.</p>
 
 **Step 7.** Choose **Imaging** to return to the images.
 
@@ -101,9 +96,8 @@ spectrum ([chapter 3.4 (Spectrum)](#34-spectrum)) and how to read the results ([
 
 **Step 1.** Select the **Scene** tab. The source list holds one source; the selected source is described by **Isotope**, **X**, **Y**, **Distance** and **Activity**.
 
-![Figure 2.1-1](figures/2.1-1.png)
-
-*Figure 2.1-1.* The Scene tab with the default source. — **1** Isotope · **2** X · **3** Y · **4** Distance · **5** Activity
+<p align="center"><img src="figures/2.1-1.png" alt="Figure 2.1-1"></p>
+<p align="center"><em>Figure 2.1-1.</em> The Scene tab with the default source.</p>
 
 **Step 2.** Type -20 in **X** and leave the field (Tab or a click elsewhere): the value is taken when the field loses focus.
 
@@ -111,17 +105,15 @@ spectrum ([chapter 3.4 (Spectrum)](#34-spectrum)) and how to read the results ([
 
 **Step 4.** For the new source choose Co-60 in **Isotope**, type 20 in **X** and 400 in **Activity**.
 
-![Figure 2.1-2](figures/2.1-2.png)
-
-*Figure 2.1-2.* Two sources; the selected one is edited below the list. — **1** Isotope · **2** X · **3** Activity
+<p align="center"><img src="figures/2.1-2.png" alt="Figure 2.1-2"></p>
+<p align="center"><em>Figure 2.1-2.</em> Two sources; the selected one is edited below the list.</p>
 
 **Step 5.** Click the icon button whose tooltip reads **Remove selected source**: the selected source is removed.
 
 **Step 6.** Click **Continue** and wait until the acquisition completes. While acquired data exist the source fields and the add and remove buttons are locked, so the images always belong to the scene shown.
 
-![Figure 2.1-3](figures/2.1-3.png)
-
-*Figure 2.1-3.* Source fields locked while data exist. — **1** X · **2** Activity
+<p align="center"><img src="figures/2.1-3.png" alt="Figure 2.1-3"></p>
+<p align="center"><em>Figure 2.1-3.</em> Source fields locked while data exist.</p>
 
 **Step 7.** Click the icon button whose tooltip reads **Reset acquisition**: a confirmation asks before the data are discarded.
 
@@ -131,25 +123,22 @@ spectrum ([chapter 3.4 (Spectrum)](#34-spectrum)) and how to read the results ([
 
 **Step 1.** Select the **Optics** tab. **Preset** shows Sharp, the default engineering geometry. A preset writes its five values — **Prime rank**, **Cell pitch**, **Mask–detector**, **Pixels / side** and **Pixel pitch** — into the fields and keeps them read-only.
 
-![Figure 2.2-1](figures/2.2-1.png)
-
-*Figure 2.2-1.* The Optics tab with the default preset. — **1** Preset · **2** Prime rank · **3** Cell pitch · **4** Mask–detector · **5** Pixels / side · **6** Pixel pitch
+<p align="center"><img src="figures/2.2-1.png" alt="Figure 2.2-1"></p>
+<p align="center"><em>Figure 2.2-1.</em> The Optics tab with the default preset.</p>
 
 **Step 2.** Choose Baseline in **Preset**: the fields now hold the 12 × 12 pixel, rank-7 reference geometry, still read-only.
 
 **Step 3.** Choose **Detector**: its **Face** view draws the detector face for these settings, captioned **Settings for the next acquisition**.
 
-![Figure 2.2-2](figures/2.2-2.png)
-
-*Figure 2.2-2.* The detector face of the Baseline geometry before an acquisition. — **1** Face · **2** Settings for the next acquisition
+<p align="center"><img src="figures/2.2-2.png" alt="Figure 2.2-2"></p>
+<p align="center"><em>Figure 2.2-2.</em> The detector face of the Baseline geometry before an acquisition.</p>
 
 **Step 4.** Back on the **Optics** tab, choose Custom in **Preset**: the fields keep the Baseline values and become editable.
 
 **Step 5.** Type 3 in **Pixels / side**. The geometry is refused — the tab reads **Detector pixels must be an integer from 4 to 64.** — and **Start** does not start: the status bar gives the reason.
 
-![Figure 2.2-3](figures/2.2-3.png)
-
-*Figure 2.2-3.* A refused geometry: the message under the fields and the refusal in the status bar. — **1** Pixels / side · **2** Detector pixels must be an integer from 4 to 64. · **3** Start refused: Detector pixels must be an integer from 4 to 64.
+<p align="center"><img src="figures/2.2-3.png" alt="Figure 2.2-3"></p>
+<p align="center"><em>Figure 2.2-3.</em> A refused geometry: the message under the fields and the refusal in the status bar.</p>
 
 **Step 6.** Type 12 in **Pixels / side** again: the message clears.
 
@@ -163,31 +152,27 @@ spectrum ([chapter 3.4 (Spectrum)](#34-spectrum)) and how to read the results ([
 
 **Step 3.** Click **Start**. The acquisition runs: counts grow in the status bar, the scene and the live time are locked, and the button becomes **Stop**.
 
-![Figure 2.4-1](figures/2.4-1.png)
-
-*Figure 2.4-1.* Acquiring. — **1** Stop
+<p align="center"><img src="figures/2.4-1.png" alt="Figure 2.4-1"></p>
+<p align="center"><em>Figure 2.4-1.</em> Acquiring.</p>
 
 > **Note.** Live time advances at the chosen speed (live seconds per wall second) and Stop acts when it is clicked, so the counts kept at a Stop differ from run to run even with a fixed seed. A fixed seed reproduces the acquisition itself.
 
 **Step 4.** Click **Stop**: the acquisition stops and keeps its data; the counts no longer change, the inputs stay locked and the button reads **Continue**.
 
-![Figure 2.4-2](figures/2.4-2.png)
-
-*Figure 2.4-2.* Stopped: the data are kept and Continue is offered. — **1** Continue · **2** Stopped · t = 1.8 s of 600 s · 116 counts · 66 cps · seed 12345
+<p align="center"><img src="figures/2.4-2.png" alt="Figure 2.4-2"></p>
+<p align="center"><em>Figure 2.4-2.</em> Stopped: the data are kept and Continue is offered.</p>
 
 **Step 5.** Click **Continue** again: the same acquisition continues and its counts keep growing; stop it again with Stop.
 
 **Step 6.** Click the icon button whose tooltip reads **Reset acquisition**. A confirmation names the acquired live time and counts; **Cancel** keeps the acquisition.
 
-![Figure 2.4-3](figures/2.4-3.png)
-
-*Figure 2.4-3.* The reset confirmation. — **1** Discard the acquired data (2.0 live s, 127 counts)? Inputs unlock for the next acquisition. · **2** Cancel · **3** Discard
+<p align="center"><img src="figures/2.4-3.png" alt="Figure 2.4-3"></p>
+<p align="center"><em>Figure 2.4-3.</em> The reset confirmation.</p>
 
 **Step 7.** Click **Reset acquisition** again and confirm with **Discard**: the data are discarded, the status reads Ready and the inputs unlock; the button reads Start again.
 
-![Figure 2.4-4](figures/2.4-4.png)
-
-*Figure 2.4-4.* Ready for the next acquisition. — **1** Start · **2** Ready
+<p align="center"><img src="figures/2.4-4.png" alt="Figure 2.4-4"></p>
+<p align="center"><em>Figure 2.4-4.</em> Ready for the next acquisition.</p>
 
 ## 3 Inspect retained data
 
@@ -199,9 +184,8 @@ spectrum ([chapter 3.4 (Spectrum)](#34-spectrum)) and how to read the results ([
 
 **Step 2.** Hold the pointer over a cell of the flood map: the line under the image reads **x 6.3 mm, y -4.5 mm · 10 counts** — the cell's centre in millimetres (x to the right, y up, 0 on the axis) and its counts.
 
-![Figure 3.1-1](figures/3.1-1.png)
-
-*Figure 3.1-1.* The readout under the flood map. — **1** x 6.3 mm, y -4.5 mm · 10 counts
+<p align="center"><img src="figures/3.1-1.png" alt="Figure 3.1-1"></p>
+<p align="center"><em>Figure 3.1-1.</em> The readout under the flood map.</p>
 
 **Step 3.** Choose the distance tool (accessible name **Distance tool**) above the measurement table and drag across the flood map: the table gains a row with the length in millimetres.
 
@@ -209,9 +193,8 @@ spectrum ([chapter 3.4 (Spectrum)](#34-spectrum)) and how to read the results ([
 
 **Step 5.** Choose the ROI tool (**ROI tool (region of interest)**) and drag a rectangle on the flood map: the table gains the sum over the whole pixels whose centres lie inside, and the line under the table gives its size and pixel count.
 
-![Figure 3.1-2](figures/3.1-2.png)
-
-*Figure 3.1-2.* Three measurements in the table; the selected one is described under it. — **1** M1 · **2** M2 · **3** M3 · **4** 3.6 × 4.2 mm · 42 px · mean 5.45 · max 13
+<p align="center"><img src="figures/3.1-2.png" alt="Figure 3.1-2"></p>
+<p align="center"><em>Figure 3.1-2.</em> Three measurements in the table; the selected one is described under it.</p>
 
 **Step 6.** Press Delete with the flood map focused: the selected measurement (the ROI) is removed.
 
@@ -225,23 +208,20 @@ spectrum ([chapter 3.4 (Spectrum)](#34-spectrum)) and how to read the results ([
 
 **Step 2.** Choose **Spectrum**: the histogram of measured energies with a band at each emission line, and the line table with the counts inside each band.
 
-![Figure 3.4-1](figures/3.4-1.png)
-
-*Figure 3.4-1.* The spectrum after an acquisition of the default Cs-137 source. — **1** Log Y · **2** N × FWHM at each line
+<p align="center"><img src="figures/3.4-1.png" alt="Figure 3.4-1"></p>
+<p align="center"><em>Figure 3.4-1.</em> The spectrum after an acquisition of the default Cs-137 source.</p>
 
 **Step 3.** Type 2 in **N × FWHM at each line** and leave the field: each band widens to twice the FWHM at its line and the table recounts; the histogram itself does not change.
 
-![Figure 3.4-2](figures/3.4-2.png)
-
-*Figure 3.4-2.* The wider window at 2 × FWHM. — **1** N × FWHM at each line
+<p align="center"><img src="figures/3.4-2.png" alt="Figure 3.4-2"></p>
+<p align="center"><em>Figure 3.4-2.</em> The wider window at 2 × FWHM.</p>
 
 **Step 4.** **Log Y** is checked initially. Untick it to show a linear counts axis; the histogram data are unchanged.
 
 **Step 5.** Tick **Log Y** again: the counts axis becomes logarithmic, so small and large bins can be read together; the data are unchanged.
 
-![Figure 3.4-3](figures/3.4-3.png)
-
-*Figure 3.4-3.* The spectrum with a logarithmic counts axis. — **1** Log Y
+<p align="center"><img src="figures/3.4-3.png" alt="Figure 3.4-3"></p>
+<p align="center"><em>Figure 3.4-3.</em> The spectrum with a logarithmic counts axis.</p>
 
 ## 5 Interpretation and help
 

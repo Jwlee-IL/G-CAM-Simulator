@@ -124,9 +124,58 @@ class ManualRecordsTests(unittest.TestCase):
                             for y in range(text[1], text[1] + text[3]) for x in range(text[0], text[0] + text[2])))
         white = [(x, y) for y in range(h) for x in range(w) if at(x, y) == mr.WHITE]
         self.assertTrue(white and all(45 <= x < 60 and 12 <= y < 33 for x, y in white if x < 70))   # mark 1's digit, above it
+        # The legend is drawn inside the figure, below the image: both entries on one line, "[n]" in the mark colour.
+        legend = operation['legend']
+        self.assertEqual([0, 94, 174, mr.RULE + 2 * mr.MARGIN + mr.INK], legend['box'])
+        self.assertEqual((174, 94 + legend['box'][3]), (w, h))
+        self.assertEqual([[mr.MARGIN, 94 + mr.RULE + mr.MARGIN, '[1] L']], legend['entries'][0]['lines'])
+        self.assertEqual([[mr.MARGIN + 7 * mr.ADVANCE, 94 + mr.RULE + mr.MARGIN, '[2] L']], legend['entries'][1]['lines'])
+        self.assertEqual(legend['colours']['separator'], list(at(0, 94)))
+        strip = {at(x, y) for y in range(94 + mr.RULE, h) for x in range(w)}
+        self.assertEqual({(18, 22, 25), mr.RED, (235, 235, 235)}, strip)   # window background, tag and label colours only
+        self.assertEqual(mr.RED, at(mr.MARGIN + 2 * mr.TEXT, 94 + mr.RULE + mr.MARGIN))   # the "[" of "[1]": top bar, 2nd dot
+
+    def test_legend_wraps_a_long_label_with_a_hanging_indent_and_never_clips(self):
+        label = 'Discard the acquired data (2.0 live s, 127 counts)? Inputs unlock for the next acquisition.'
+        marks = [{'n': 1, 'label': 'Preset'}, {'n': 2, 'label': label}, {'n': 3, 'label': 'Cancel'}, {'n': 4, 'label': 'Discard'}]
+        entries, height = mr.legend_layout(marks, 314)
+        cols = (314 - 2 * mr.MARGIN + mr.TEXT) // mr.ADVANCE
+        self.assertEqual(25, cols)
+        lines = entries[1]['lines']
+        self.assertEqual('[2] Discard the acquired', lines[0][2])
+        self.assertTrue(len(lines) > 1 and all(x == mr.MARGIN + 4 * mr.ADVANCE for x, _, _ in lines[1:]))   # hanging indent
+        self.assertEqual(label, ' '.join([lines[0][2][4:]] + [t for _, _, t in lines[1:]]))   # every word, in order
+        self.assertTrue(all(len(t) <= cols - (0 if k == 0 else 4) for k, (_, _, t) in enumerate(lines)))
+        # a wrapped entry keeps its lines; short entries after it share one line
+        self.assertEqual(lines[-1][1] + mr.LINE, entries[2]['lines'][0][1])
+        self.assertEqual(entries[2]['lines'][0][1], entries[3]['lines'][0][1])
+        self.assertEqual(entries[0]['lines'][0][1] + mr.LINE, lines[0][1])   # "[1] Preset" + "[2] …" exceed one line
+        rows = len({y for e in entries for _, y, _ in e['lines']})
+        self.assertEqual(mr.RULE + 2 * mr.MARGIN + rows * mr.LINE - (mr.LINE - mr.INK), height)
+        mr.check_legend(entries, [0, 0, 314, height])
+        self.assertEqual(['abcdefgh', 'ijkl xy'], mr.wrap_words('abcdefghijkl xy', 8))   # a word longer than a line breaks
+
+    def test_legend_refuses_a_missing_glyph_a_narrow_figure_and_a_clipped_entry(self):
+        with self.assertRaisesRegex(ValueError, r'legend-glyph: mark 1 label has no glyph for U\+2192'):
+            mr.legend_layout([{'n': 1, 'label': 'Start \u2192'}], 314)
+        with self.assertRaisesRegex(ValueError, 'legend-width'):
+            mr.legend_layout([{'n': 1, 'label': 'Start'}], 100)
+        self.assertEqual(([], 0), mr.legend_layout([], 314))
+        for c in '·×–…':
+            self.assertIn(c, mr.FONT)
+        self.assertTrue(all(chr(c) in mr.FONT for c in range(32, 127)))
+        entries, height = mr.legend_layout([{'n': 1, 'label': 'Start'}], 314)
+        for change, code in ((lambda e: e[0]['lines'][0].__setitem__(2, '[1] Sta'), 'legend-clipped'),
+                             (lambda e: e[0]['lines'][0].__setitem__(0, 314 - 20), 'legend-bounds'),
+                             (lambda e: e.append({'n': 2, 'text': '[2] X', 'lines': [list(e[0]['lines'][0][:2]) + ['[2] X']]}),
+                              'legend-overlap')):
+            bad = json.loads(json.dumps(entries))
+            change(bad)
+            with self.assertRaisesRegex(ValueError, code):
+                mr.check_legend(bad, [0, 0, 314, height])
 
     def test_overlay_flags_a_badge_whose_only_free_place_is_on_content(self):
-        width, height = 64, 48
+        width, height = 160, 48
         rgb = b''.join(bytes((255, 255, 255) if x % 2 else (0, 0, 0)) for y in range(height) for x in range(width))
         _, _, _, _, flags, _ = mr.derive_figure(width, height, rgb, self.marks([[24, 20, 10, 8]], crop='full'))
         self.assertEqual(['badge-on-content:1'], flags)
@@ -180,7 +229,7 @@ class ManualRecordsTests(unittest.TestCase):
         results = dict(mr.self_test(scratch() / 'self-test'))
         for name in ('missing-run-formal', 'failed-chapter-formal', 'evidence-hash', 'mark-outside-image', 'mixed-binaries',
                      'budget-exceeded', 'tampered-figure', 'dpi-double-scaling', 'identity-leak', 'badge-no-room',
-                     'badge-over-other-mark', 'badge-over-own-target', 'badge-placement-defect'):
+                     'badge-over-other-mark', 'badge-over-own-target', 'badge-placement-defect', 'legend-label-without-glyph'):
             self.assertIn(name, results)
             self.assertFalse(results[name].startswith('generated'), name)
         self.assertTrue(results['missing-run'].startswith('generated'))
@@ -203,6 +252,26 @@ class ManualRecordsTests(unittest.TestCase):
         (runs / 'run-beta0/manual-run.json').write_bytes(mr.canonical(record))
         with self.assertRaisesRegex(ValueError, 'selection-tie'):
             mr.generate(src, runs, 'e2', '2026-10-14', root / 'e2')
+
+    def test_figures_are_centred_and_the_record_describes_their_legend(self):
+        root = scratch()
+        src, runs = mr.fixture(root)
+        record = json.loads((runs / 'run-alpha/manual-run.json').read_bytes())
+        record['steps'][0]['figures'][0]['caption'] = 'A <b> & c'
+        (runs / 'run-alpha/manual-run.json').write_bytes(mr.canonical(record))
+        outputs = mr.generate(src, runs, 'e1', '2026-10-14', root / 'e1')
+        markdown = outputs['MANUAL.Studio.md'].decode('utf-8')
+        self.assertIn('<p align="center"><img src="figures/1.2-1.png" alt="Figure 1.2-1"></p>\n'
+                      '<p align="center"><em>Figure 1.2-1.</em> A &lt;b&gt; &amp; c</p>\n', markdown)
+        self.assertNotIn('**1** Start', markdown)   # the legend is in the figure, not in the caption
+        generation = json.loads(outputs['generation-record.json'])
+        figure = next(f for f in generation['figures'] if f['figure'] == '1.2-1')
+        operation = figure['operation']
+        self.assertEqual(mr.OVERLAY, operation['overlay'])
+        self.assertEqual(['[1] Start'], [e['text'] for e in operation['legend']['entries']])
+        width, height, _ = mr.png_decode(outputs['figures/1.2-1.png'])
+        self.assertEqual([width, height], operation['size'])
+        self.assertEqual([0, operation['crop'][3], width, height - operation['crop'][3]], operation['legend']['box'])
 
 
 if __name__ == '__main__':

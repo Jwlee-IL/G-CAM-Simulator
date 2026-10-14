@@ -4,8 +4,9 @@ An edition is assembled from the chapter registry, the static chapters, the Stud
 (written by the desktop manual scenarios after cleanup). A generated chapter is printed only when the latest run of its
 scenario on the edition's one Studio build passed; otherwise the edition carries an omission notice. Figures are the
 run's original captures, cropped along panel edges and overlaid with the mark rectangles the runner measured at capture
-time; the generator only adds the numbered badges beside them by a fixed rule (outside every rectangle, off text) and
-places or words no mark. The generator records; it approves nothing.
+time; the generator only adds the numbered badges beside them by a fixed rule (outside every rectangle, off text) and a
+legend strip below the image ("[n] label" in mark order, the labels as measured), and places or words no mark. The
+generator records; it approves nothing.
 
   python -B samples/manual/manual_records.py check-registry
   python -B samples/manual/manual_records.py generate --runs <folder> --edition-id <id> --date <yyyy-mm-dd> --out <new>
@@ -16,6 +17,7 @@ import argparse
 import copy
 import datetime as dt
 import hashlib
+import html
 import json
 import math
 import os
@@ -41,7 +43,7 @@ PAD = 6         # crop padding into the window background beyond a panel's edge
 FRAME = 8       # the window's own outline and rounded corners, ignored when testing a crop edge
 HALO = 3        # text must stay this far from a badge
 QUIET = 40      # largest luminance range under a badge: panel and gutter edges pass, text, icons, plots and field frames do not
-OVERLAY = 'rectangles+numbered-badges-v2'
+OVERLAY = 'rectangles+numbered-badges+legend-v3'
 RED, WHITE = (200, 30, 30), (255, 255, 255)
 TOKEN = re.compile(r'\[\[(chapter|notice):([A-Za-z0-9.\-]+)\]\]')
 PROSE_NOTICE = re.compile(r'^\s*(?:>\s*)?(?:\*\*)?(?:warning|caution|note|important)\b', re.I)
@@ -339,14 +341,120 @@ def crop_rect(doc, width, height, rgb, badges):
     return [l, t, r - l, b - t], 'panel-edges'
 
 
+# Legend text: a classic 5x7 cell font (two extra rows for descenders), one base-32 digit per 5-dot row, top row first,
+# the leftmost dot the highest bit. Printable ASCII plus the non-ASCII characters the Studio labels use (· × – …).
+FONT = {" ": '0000000', "!": '4444404', "\"": 'AAA0000', "#": 'AAVAVAA', "$": '4FKE5U4', "%": 'OP248J3', "&": 'CIK8LID',
+        "'": '4440000', "(": '2488842', ")": '8422248', "*": '04LEL40', "+": '044V440', ",": '00000CC48', "-": '000E000',
+        ".": '00000CC', "/": '01248G0', "0": 'EHJLPHE', "1": '4C4444E', "2": 'EH1248V', "3": 'V2421HE', "4": '26AIV22',
+        "5": 'VGU11HE', "6": '68GUHHE', "7": 'V124888', "8": 'EHHEHHE', "9": 'EHHF12C', ":": '0CC0CC0', ";": '00CC0CC48',
+        "<": '248G842', "=": '00V0V00', ">": '8421248', "?": 'EH12404', "@": 'EH1DLLE', "A": 'EHHVHHH', "B": 'UHHUHHU',
+        "C": 'EHGGGHE', "D": 'SIHHHIS', "E": 'VGGUGGV', "F": 'VGGUGGG', "G": 'EHGNHHF', "H": 'HHHVHHH', "I": 'E44444E',
+        "J": '72222IC', "K": 'HIKOKIH', "L": 'GGGGGGV', "M": 'HRLLHHH', "N": 'HHPLJHH', "O": 'EHHHHHE', "P": 'UHHUGGG',
+        "Q": 'EHHHLID', "R": 'UHHUKIH', "S": 'FGGE11U', "T": 'V444444', "U": 'HHHHHHE', "V": 'HHHHHA4', "W": 'HHHLLLA',
+        "X": 'HHA4AHH', "Y": 'HHHA444', "Z": 'V1248GV', "[": 'E88888E', "\\": '0G84210', "]": 'E22222E', "^": '4AH0000',
+        "_": '0000000V0', "`": '8420000', "a": '00E1FHF', "b": 'GGMPHHU', "c": '00EGGHE', "d": '11DJHHF', "e": '00EHVGE',
+        "f": '698S888', "g": '00FHHHF1E', "h": 'GGMPHHH', "i": '40C444E', "j": '2062222IC', "k": 'GGIKOKI', "l": 'C44444E',
+        "m": '00QLLHH', "n": '00MPHHH', "o": '00EHHHE', "p": '00UHHHUGG', "q": '00FHHHF11', "r": '00MPGGG', "s": '00EGE1U',
+        "t": '88S8896', "u": '00HHHJD', "v": '00HHHA4', "w": '00HHLLA', "x": '00HA4AH', "y": '00HHHHF1E', "z": '00V248V',
+        "{": '2448442', "|": '4444444', "}": '8442448', "~": '008L200', "·": '000CC00', "×": '0HA4AH0', "–": '000V000',
+        "…": '000000L'}
+TEXT = 2             # legend dot size: the 7-row cell is 14 px tall, the height of the window's own text
+ADVANCE = 6 * TEXT   # one character: 5 dots and one dot of spacing
+INK = 9 * TEXT       # one line's ink height, descenders included
+LINE = 11 * TEXT     # line pitch: ink plus two dots of leading
+MARGIN = 8           # legend margin on every side
+RULE = 1             # separator between the image and its legend
+ENTRY_GAP = 2        # characters between two entries on one line
+MIN_COLUMN = 8       # fewest label characters per line a figure must leave beside the hanging indent
+
+
+def wrap_words(text, width):
+    """Greedy word wrap of text into lines of at most width characters; a word longer than a line is broken."""
+    lines, current = [], None
+    for word in text.split(' '):
+        while len(word) > width:
+            if current:
+                lines.append(current)
+            lines.append(word[:width])
+            word, current = word[width:], None
+        if current is None:
+            current = word
+        elif len(current) + 1 + len(word) <= width:
+            current += ' ' + word
+        else:
+            lines.append(current)
+            current = word
+    lines.append(current or '')
+    return lines
+
+
+def legend_layout(marks, width):
+    """Entries "[n] label" in mark order, flowed left to right and wrapped to the figure width. An entry that does not
+    fit beside the previous one starts a new line; one longer than a line wraps at word boundaries with a hanging indent
+    under its label and keeps its lines to itself. Returns (entries, strip height); line positions are relative to the
+    strip's top-left corner."""
+    if not marks:
+        return [], 0
+    cols = (width - 2 * MARGIN + TEXT) // ADVANCE
+    rows, entries, shared = [], [], False   # rows: characters used per line; shared: the last line takes another entry
+    for mark in marks:
+        for ch in mark['label']:
+            require(ch in FONT, f'legend-glyph: mark {mark["n"]} label has no glyph for U+{ord(ch):04X}')
+        tag = f'[{mark["n"]}]'
+        indent = len(tag) + 1
+        require(cols - indent >= MIN_COLUMN, f'legend-width: a {width} px figure is too narrow for its legend')
+        text = tag + ' ' + mark['label']
+        if shared and rows[-1] + ENTRY_GAP + len(text) <= cols:
+            column = rows[-1] + ENTRY_GAP
+            rows[-1] = column + len(text)
+            pieces = [(len(rows) - 1, column, text)]
+        else:
+            label = [piece for piece in wrap_words(mark['label'], cols - indent) if piece.strip()]
+            pieces = []
+            for k, piece in enumerate(label):
+                rows.append(indent + len(piece))
+                pieces.append((len(rows) - 1, 0 if k == 0 else indent, tag + ' ' + piece if k == 0 else piece))
+            shared = len(label) == 1
+        entries.append({'n': mark['n'], 'text': text,
+                        'lines': [[MARGIN + c * ADVANCE, RULE + MARGIN + r * LINE, s] for r, c, s in pieces]})
+    return entries, RULE + 2 * MARGIN + len(rows) * LINE - (LINE - INK)
+
+
+def check_legend(entries, box):
+    """Independent post-condition of the legend: every line's ink inside the strip's margins, no two lines overlapping,
+    and every entry's characters all drawn (wrapping drops only the spaces it breaks at)."""
+    x0, y0, w, h = box
+    inks = []
+    for entry in entries:
+        drawn = ''.join(text for _, _, text in entry['lines'])
+        require(drawn.replace(' ', '') == entry['text'].replace(' ', ''), f'legend-clipped: entry {entry["n"]}')
+        for x, y, text in entry['lines']:
+            ink = [x, y, len(text) * ADVANCE - TEXT, INK]
+            require(ink[0] >= x0 + MARGIN and ink[1] >= y0 + RULE + MARGIN and ink[0] + ink[2] <= x0 + w - MARGIN
+                    and ink[1] + ink[3] <= y0 + h - MARGIN, f'legend-bounds: entry {entry["n"]} outside the legend')
+            require(not any(overlap(ink, other) for other in inks), f'legend-overlap: entry {entry["n"]}')
+            inks.append(ink)
+
+
+def luminance(colour):
+    return (299 * colour[0] + 587 * colour[1] + 114 * colour[2]) // 1000
+
+
 def derive_figure(width, height, rgb, doc):
-    """Badges placed, crop chosen, rectangles and numbered badges drawn. Returns (w, h, rgb, crop, flags, operation)."""
+    """Badges placed, crop chosen, rectangles and numbered badges drawn, the legend appended below the image.
+    Returns (w, h, rgb, crop, flags, operation)."""
     badges, sides, flags = place_badges(width, height, rgb, doc['marks'])
     (cx, cy, cw, ch), rule = crop_rect(doc, width, height, rgb, badges)
+    entries, strip = legend_layout(doc['marks'], cw)
+    fh = ch + strip
+    bg = tuple(background(width, height, rgb))
+    ink = (235, 235, 235) if luminance(bg) < 128 else (20, 20, 20)
+    separator = tuple((3 * b + i) // 4 for b, i in zip(bg, ink))
     stride = width * 3
-    out = bytearray(b''.join(rgb[(cy + y) * stride + cx * 3:(cy + y) * stride + (cx + cw) * 3] for y in range(ch)))
-    def fill(x0, y0, x1, y1, colour):
-        for y in range(max(0, y0), min(ch, y1)):
+    out = bytearray(b''.join(rgb[(cy + y) * stride + cx * 3:(cy + y) * stride + (cx + cw) * 3] for y in range(ch))
+                    + bytes(bg) * (cw * strip))
+    def fill(x0, y0, x1, y1, colour, top=0, bottom=ch):   # overlays stay on the image unless drawn in the legend
+        for y in range(max(top, y0), min(bottom, y1)):
             for x in range(max(0, x0), min(cw, x1)):
                 out[(y * cw + x) * 3:(y * cw + x) * 3 + 3] = bytes(colour)
     local = [[bx - cx, by - cy, bw, bh] for bx, by, bw, bh in badges]
@@ -366,9 +474,28 @@ def derive_figure(width, height, rgb, doc):
                     if GLYPHS[digit][gy * 3 + gx] == '1':
                         x0 = bx + 3 + k * 4 * SCALE + gx * SCALE
                         fill(x0, by + 3 + gy * SCALE, x0 + SCALE, by + 3 + (gy + 1) * SCALE, WHITE)
-    operation = {'crop': [cx, cy, cw, ch], 'cropRule': rule, 'overlay': OVERLAY,
+    operation = {'crop': [cx, cy, cw, ch], 'cropRule': rule, 'overlay': OVERLAY, 'size': [cw, fh],
                  'badges': [{'n': m['n'], 'side': s, 'at': [x, y]} for m, s, (x, y, _, _) in zip(doc['marks'], sides, local)]}
-    return cw, ch, bytes(out), [cx, cy, cw, ch], flags, operation
+    if entries:
+        box = [0, ch, cw, strip]
+        placed = [dict(e, lines=[[x, ch + y, s] for x, y, s in e['lines']]) for e in entries]
+        check_legend(placed, box)
+        fill(0, ch, cw, ch + RULE, separator, ch, fh)
+        for entry in placed:
+            tag = len(f'[{entry["n"]}]')
+            for k, (x, y, text) in enumerate(entry['lines']):
+                for i, char in enumerate(text):
+                    colour = RED if k == 0 and i < tag else ink
+                    for gy, digit in enumerate(FONT[char]):
+                        bits = int(digit, 32)
+                        for gx in range(5):
+                            if bits >> (4 - gx) & 1:
+                                px, py = x + i * ADVANCE + gx * TEXT, y + gy * TEXT
+                                fill(px, py, px + TEXT, py + TEXT, colour, ch, fh)
+        operation['legend'] = {'box': box, 'separator': [0, ch, cw, RULE], 'font': f'5x7+descenders@{TEXT}',
+                               'colours': {'background': list(bg), 'separator': list(separator), 'tag': list(RED), 'text': list(ink)},
+                               'entries': placed}
+    return cw, fh, bytes(out), [cx, cy, cw, ch], flags, operation
 
 
 # ---------------------------------------------------------------- sources
@@ -587,9 +714,9 @@ def assemble(sources, runs, edition_id, date, formal, budget, reuse=None, genera
                         name = f'figures/{figure["id"]}.png'
                         encoded = (reuse(name, fw, fh, frgb) if reuse else None) or png_encode(fw, fh, frgb)
                         outputs[name] = encoded
-                        legend = ' · '.join(f'**{m["n"]}** {escape(m["label"])}' for m in doc['marks'])
-                        text += [f'![Figure {figure["id"]}]({name})', '',
-                                 f'*Figure {figure["id"]}.* {escape(figure["caption"])}' + (f' — {legend}' if legend else ''), '']
+                        label = html.escape(f'Figure {figure["id"]}')
+                        text += [f'<p align="center"><img src="{html.escape(name)}" alt="{label}"></p>',
+                                 f'<p align="center"><em>{label}.</em> {html.escape(figure["caption"], quote=False)}</p>', '']
                         figures_out.append({'figure': figure['id'], 'chapter': number, 'runId': record['runId'], 'step': step['n'],
                                             'source': figure['capture'], 'sourceSha256': sha(png), 'marksSha256': sha(marks_raw),
                                             'operation': operation,
@@ -638,10 +765,6 @@ def assemble(sources, runs, edition_id, date, formal, budget, reuse=None, genera
     total = size + len(outputs['generation-record.json'])
     require(total <= budget, f'budget: edition is {total} bytes, budget {budget}')
     return outputs
-
-
-def escape(text):
-    return re.sub(r'([\\`*_\[\]<>|])', r'\\\1', text)
 
 
 def identity_leak(text):
@@ -720,10 +843,10 @@ def fixture(root):
     (src / 'chapters.json').write_bytes(canonical(registry))
     (src / 'notices.json').write_bytes(canonical(notices))
     (src / 'static/intro.md').write_bytes(b'Intro text, see [[chapter:1.2]].\n\n[[notice:N-SIM]]\n')
-    width, height = 64, 48   # window background with one bordered panel, like the captures
+    width, height = 160, 48   # window background with one bordered panel, like the captures; wide enough for a legend
     def colour(x, y):
-        if 4 <= x < 60 and 4 <= y < 44:
-            return (43, 53, 62) if x in (4, 59) or y in (4, 43) else (25, 31, 37)
+        if 4 <= x < width - 4 and 4 <= y < 44:
+            return (43, 53, 62) if x in (4, width - 5) or y in (4, 43) else (25, 31, 37)
         return (18, 22, 25)
     rgb = b''.join(bytes(colour(x, y)) for y in range(height) for x in range(width))
     png = png_encode(width, height, rgb)
@@ -792,14 +915,17 @@ def self_test(out=None):
         edit_json(run_file(runs, which), lambda r: r['evidence'][1].update(sha256=sha(data), bytes=len(data)))
     def whole_image_mark(src, runs):   # a second mark over the whole capture leaves mark 1's badge no free place
         edit_json(marks_file(runs, 'alpha'), lambda m: m['marks'].append(
-            {'n': 2, 'target': 'Whole', 'label': 'Whole', 'labelSource': 'name', 'screen': [100.0, 50.0, 64.0, 48.0],
-             'image': [0, 0, 64, 48]}))
+            {'n': 2, 'target': 'Whole', 'label': 'Whole', 'labelSource': 'name', 'screen': [100.0, 50.0, 160.0, 48.0],
+             'image': [0, 0, 160, 48]}))
         rehash(runs, 'alpha')
     def mark_outside(src, runs):
-        edit_json(marks_file(runs, 'alpha'), lambda m: m['marks'][0].update(screen=[160.0, 60.0, 8.0, 6.0], image=[60, 10, 8, 6]))
+        edit_json(marks_file(runs, 'alpha'), lambda m: m['marks'][0].update(screen=[256.0, 60.0, 8.0, 6.0], image=[156, 10, 8, 6]))
         rehash(runs, 'alpha')
     def double_scaled(src, runs):
         edit_json(marks_file(runs, 'alpha'), lambda m: m['marks'][0].update(image=[15, 15, 13, 9]))
+        rehash(runs, 'alpha')
+    def label_without_glyph(src, runs):   # the legend draws labels as measured and never substitutes a character
+        edit_json(marks_file(runs, 'alpha'), lambda m: m['marks'][0].update(label='Start \u2192'))
         rehash(runs, 'alpha')
     def failed(src, runs):
         edit_json(run_file(runs, 'beta'), lambda r: (r.update(status='failed'), r['steps'][0].update(verdict='failed')))
@@ -830,10 +956,11 @@ def self_test(out=None):
     case('failed-chapter', failed, 'did not pass (failed)')
     case('failed-chapter-formal', failed, 'refuse:formal-refused', formal=True)
     case('latest-failed-after-pass', later_failure, 'the latest run (run-beta2) did not pass')
-    case('evidence-hash', lambda s, r: (r / 'run-alpha/captures/f1.png').write_bytes(png_encode(64, 48, bytes(64 * 48 * 3))), 'refuse:evidence-hash')
+    case('evidence-hash', lambda s, r: (r / 'run-alpha/captures/f1.png').write_bytes(png_encode(160, 48, bytes(160 * 48 * 3))), 'refuse:evidence-hash')
     case('mark-outside-image', mark_outside, 'refuse:mark-bounds')
     case('dpi-double-scaling', double_scaled, 'refuse:mark-geometry')
     case('badge-no-room', whole_image_mark, 'refuse:badge-overlap')
+    case('legend-label-without-glyph', label_without_glyph, 'refuse:legend-glyph')
     for name, badge, code in (('badge-over-other-mark', [30, 10, 15, 21], 'badge-overlap: badge 1 covers mark 2'),
                               ('badge-over-own-target', [8, 8, 15, 21], 'badge-overlap: badge 1 covers its own target')):
         try:   # the post-condition alone, on a seeded placement
