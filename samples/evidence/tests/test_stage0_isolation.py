@@ -941,6 +941,15 @@ class SnapshotClassificationTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.classify(change, rules=rules)
 
+    def test_change_inside_another_git_working_tree_is_another_actor(self):
+        repo = self.LOCAL + '\\repo'
+        tree = [{'c': 'd', 'p': repo, 't': self.before, 'a': 16}, {'c': 'd', 'p': repo + '\\.git', 't': self.before, 'a': 16}]
+        result = self.classify([{'c': 'f', 'p': repo + '\\out.log', 's': 1, 't': self.inside, 'a': 32}], extra_b=tree)
+        self.assertEqual('other-git-working-tree', self.only(result, 'other-actor')['rule'])
+        # A folder beside the working tree (no `.git` above it) stays a candidate.
+        result = self.classify([{'c': 'f', 'p': self.LOCAL + '\\repo-x\\out.log', 's': 1, 't': self.inside, 'a': 32}], extra_b=tree)
+        self.only(result, 'out-of-declaration')
+
     def test_out_of_declaration_stops_the_run_and_the_table_is_redacted(self):
         result = self.classify([{'c': 'f', 'p': self.LOCAL + '\\app\\settings.json', 's': 2, 't': self.inside, 'a': 32},
                                 {'c': 'v', 'p': 'HKCU\\Software\\S-1-5-21-1-2-3-1001\\x', 'n': self.LOCAL + '\\a.exe', 'k': 3, 'h': 'e' * 64},

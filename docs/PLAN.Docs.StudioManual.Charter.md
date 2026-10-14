@@ -47,8 +47,10 @@ A ── null window (same length as the Studio window, nothing launched) ──
    (`<ProgramData>\NVIDIA Corporation\Drs\nvAppTimestamps`, content change of the existing file) → app effect inside a
    declared surface.
 3. Last-write time outside the Studio window (launch − 1 s … exit + 2 s) → not of this window.
-4. The same path also changed in the null window A→B, or matches a recorded background filter (`classification-rules.json`
-   `backgroundFilters`, each with its reason and the run that evidenced it) → other-actor record.
+4. The same path also changed in the null window A→B, matches a recorded background filter (`classification-rules.json`
+   `backgroundFilters`, each with its reason and the run that evidenced it), or lies inside another git working tree (a
+   folder holding `.git`, other than the one containing the deployment; Studio has no repository code) → other-actor
+   record.
 5. Anything else → out-of-declaration (stops the run as `unsafe_effect`), or, when the evidence cannot decide, unclassified:
    the planner adds evidence (e.g. a repeat with a longer null window, or one diagnostic kernel trace of that path) and, if
    still undecided, asks the author (HUM-08), whose answer becomes a rule.
@@ -128,6 +130,11 @@ outside the Studio window 117, null-window churn 3, out-of-declaration 27. All 2
 telemetry, the cloud-sync client, the shell's window-session record). They became eight recorded `backgroundFilters`
 (evidencedBy run 06; a filter may be limited to one entry kind). Re-classified with them, run 06 has nothing out of
 declaration. That replay is not a G1 basis: the filters are a rule change and need their own approved pilot.
+
+Run 07 (commit `bb920c8`, approved pilot of those filters): controls seen; 10 out-of-declaration, again other tools beside
+the probe (new files in the real TEMP folder and in another repository's working tree). The rules were generalised instead
+of adding one filter per file: the whole real TEMP folder (Studio's TEMP / TMP are the sandbox) and a working-tree rule.
+Re-classified with them, runs 06 and 07 are both `completed`; the next approved pilot runs on that commit.
 
 ## Record of the kernel-trace runs (02–05)
 

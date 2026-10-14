@@ -1287,7 +1287,11 @@ def diff_classify(run_directory, rules=None, extra_redactions=None):
     meta_b, index_b = snapshot_index(run / 'snapshot-B.jsonl.gz')
     meta_a, background, _ = snapshot_changes(index_b, run / 'snapshot-A.jsonl.gz', newer=False)
     meta_c, observed, key_times = snapshot_changes(index_b, run / 'snapshot-C.jsonl.gz')
-    del index_b
+    # Git working trees (a folder holding a `.git` entry) in either snapshot: other repositories' working files.
+    git_paths = [identity[1] for identity in index_b if identity[0] == 'file'] + \
+        [change['identity'][1] for change in observed if change['identity'][0] == 'file' and change['change'] == 'added']
+    git_trees = {path.rsplit('\\', 1)[0] for path in git_paths if path.rsplit('\\', 1)[-1].casefold() == '.git'}
+    del index_b, git_paths
     metas = {'A': meta_a, 'B': meta_b, 'C': meta_c}
     roots = meta_c['header']['roots']
     redact = redactor(roots, extra_redactions)
@@ -1297,6 +1301,7 @@ def diff_classify(run_directory, rules=None, extra_redactions=None):
     harness_files = context['harnessOwned']['files']
     harness_keys = context['harnessOwned']['registry']
     folders = {root['category']: root['path'] for root in roots}
+    deployment = folders.get('Deployment', '\0')
     declared = []
     for surface in rules.get('declaredAppSurfaces', []):
         if surface['channel'] == 'registry' and surface.get('hive') == 'run-user':
@@ -1341,6 +1346,10 @@ def diff_classify(run_directory, rules=None, extra_redactions=None):
                             and re.fullmatch(entry_filter['pattern'], shown, re.IGNORECASE)):
                         category, rule = 'other-actor', 'filter:' + entry_filter['pattern']
                         break
+            if category is None and channel == 'file' and any(
+                    under(path, tree) and not under(deployment, tree) for tree in git_trees):
+                # Studio has no repository code; another repository's working tree is written by developer tools.
+                category, rule = 'other-actor', 'other-git-working-tree'
             if category is None:
                 undecided = change['change'] == 'readability' or any(
                     flip[0] == channel and under(path, flip[1]) for flip in flipped)

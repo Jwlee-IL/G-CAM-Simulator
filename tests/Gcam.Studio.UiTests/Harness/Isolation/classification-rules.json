@@ -6,50 +6,43 @@
       "pattern": ".*\\\\\\.git(\\\\.*)?",
       "channel": "file",
       "reason": "git repository internals: Studio has no git code; concurrent developer tools (other sessions, IDEs) write them",
-      "evidencedBy": "probe-20261014-06"
+      "evidencedBy": "probe-20261014-06, probe-20261014-07"
     },
     {
-      "pattern": "<TEMP>\\\\claude\\\\.*",
+      "pattern": "<TEMP>\\\\.*",
       "channel": "file",
-      "reason": "the real TEMP folder of AI coding sessions running beside the probe; Studio's TEMP is redirected to the sandbox",
-      "evidencedBy": "probe-20261014-06"
+      "reason": "the real TEMP folder, shared scratch of every tool running beside the probe; Studio's TEMP and TMP point to the sandbox, which is classified before any filter",
+      "evidencedBy": "probe-20261014-06, probe-20261014-07"
     },
     {
       "pattern": "<LOCALAPPDATA>\\\\Packages\\\\[^\\\\]+\\\\.*",
       "channel": "file",
       "reason": "per-package containers of packaged (MSIX) apps; Studio is an unpackaged desktop app",
-      "evidencedBy": "probe-20261014-06"
+      "evidencedBy": "probe-20261014-06, probe-20261014-07"
     },
     {
       "pattern": "<LOCALAPPDATA>\\\\Microsoft\\\\Edge\\\\User Data\\\\.*",
       "channel": "file",
       "reason": "browser profile activity",
-      "evidencedBy": "probe-20261014-06"
+      "evidencedBy": "probe-20261014-06, probe-20261014-07"
     },
     {
       "pattern": "HKCU\\\\Software\\\\Microsoft\\\\VSCommon\\\\[^\\\\]+\\\\SQM\\\\.*",
       "channel": "registry",
       "reason": "Visual Studio telemetry heartbeats of running IDE processes",
-      "evidencedBy": "probe-20261014-06"
+      "evidencedBy": "probe-20261014-06, probe-20261014-07"
     },
     {
       "pattern": "HKCU\\\\Software\\\\Microsoft\\\\OneDrive\\\\.*",
       "channel": "registry",
       "reason": "OneDrive client state",
-      "evidencedBy": "probe-20261014-06"
+      "evidencedBy": "probe-20261014-06, probe-20261014-07"
     },
     {
       "pattern": "HKCU\\\\Software\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\Explorer\\\\SessionInfo\\\\.*",
       "channel": "registry",
       "reason": "the shell's window-session record (virtual-desktop view per top-level window): an OS record observing windows, other-actor by the procedure",
-      "evidencedBy": "probe-20261014-06"
-    },
-    {
-      "pattern": "<TEMP>\\\\[^\\\\]+",
-      "channel": "file",
-      "entry": "directory",
-      "reason": "a directory created directly in the real TEMP folder by another tool (Studio's TEMP is redirected to the sandbox); only the directory itself is filtered, files inside it stay candidates",
-      "evidencedBy": "probe-20261014-06"
+      "evidencedBy": "probe-20261014-06, probe-20261014-07"
     }
   ],
   "backgroundFiltersSchema": {
