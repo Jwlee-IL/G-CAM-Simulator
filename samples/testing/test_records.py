@@ -277,7 +277,7 @@ def source_units():
                                'sources': {path.relative_to(REPO).as_posix(): sha(path.read_bytes().replace(b'\r\n', b'\n'))}}
                 if path.stem == 'test_stage0_isolation':
                     isolation = REPO / 'tests/Gcam.Studio.UiTests/Harness/Isolation'
-                    for helper in (isolation / 'stage0.py', isolation / 'classification-rules.json', isolation / 'action-policy.json'):
+                    for helper in (isolation / 'stage0.py', isolation / 'classification-rules.json', isolation / 'action-policy.json', isolation / 'normalisation-rules.json'):
                         units[unit]['sources'][helper.relative_to(REPO).as_posix()] = sha(helper.read_bytes().replace(b'\r\n', b'\n'))
     # The configuration is part of the test identity, not a suffix discarded by aggregation.
     sys.path.insert(0, str(REPO / 'rtl'))

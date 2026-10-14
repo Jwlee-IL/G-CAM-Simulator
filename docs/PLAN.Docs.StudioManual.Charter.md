@@ -32,12 +32,12 @@ Isolation location: `tests/Gcam.Studio.UiTests/Harness/Isolation/`. Its content 
 
 ## First observed run: author instructions (prepared, not executed)
 
-The planner first reviews and commits the concrete stage-0 change on the author's approval. The author’s HUM-04 quote must approve only this limited probe purpose, scope and declared harness writes; it does not approve the eventual P4 manual charter. After inspecting first-run artefacts, the author may approve a separately concrete P4 charter. Run the final headless build/tests and pin **after** that commit; changing isolation files afterward invalidates the package. Choose a new run name such as `probe-20261014-03`. All commands below start from the worktree root. They are future author commands, not permission granted to the implementer.
+The planner first reviews and commits the concrete stage-0 change on the author's approval. The author’s HUM-04 quote must approve only this limited probe purpose, scope and declared harness writes; it does not approve the eventual P4 manual charter. After inspecting first-run artefacts, the author may approve a separately concrete P4 charter. Run the final headless build/tests and pin **after** that commit; changing isolation files afterward invalidates the package. Choose a new run name such as `probe-20261014-04`. All commands below start from the worktree root. They are future author commands, not permission granted to the implementer.
 
 In a **normal, non-administrator PowerShell 7**:
 
 ```powershell
-$runId = 'probe-20261014-03'
+$runId = 'probe-20261014-04'
 $runDir = Join-Path $env:TEMP ('gcam-todo43/' + $runId)
 New-Item -ItemType Directory -Path $runDir
 python -B tests/Gcam.Studio.UiTests/Harness/Isolation/stage0.py pin --out (Join-Path $runDir 'pin.json')
@@ -54,7 +54,7 @@ Proceed only on `Preflight PASS`. It checks the complete approval package, actua
 On the free desktop, in a separate **administrator PowerShell 7** (the author starts it):
 
 ```powershell
-$runDir = Join-Path $env:TEMP 'gcam-todo43/probe-20261014-03'
+$runDir = Join-Path $env:TEMP 'gcam-todo43/probe-20261014-04'
 & tests/Gcam.Studio.UiTests/Harness/Isolation/Trace-Probe.ps1 -RunDirectory $runDir -TimeoutSeconds 120
 ```
 
@@ -65,8 +65,8 @@ Back in the **non-administrator** terminal, after `trace.ready.json` exists:
 ```powershell
 $env:GCAM_UI_TESTS = '1'
 $env:GCAM_UI_PROBE = '1'
-$env:GCAM_UI_PROBE_RUN = 'probe-20261014-03'
-$env:GCAM_UI_PROBE_DIRECTORY = Join-Path $env:TEMP 'gcam-todo43/probe-20261014-03'
+$env:GCAM_UI_PROBE_RUN = 'probe-20261014-04'
+$env:GCAM_UI_PROBE_DIRECTORY = Join-Path $env:TEMP 'gcam-todo43/probe-20261014-04'
 dotnet test tests/Gcam.Studio.UiTests -c Release --no-build --filter FullyQualifiedName~ObservedRunTests --logger "trx;LogFileName=probe.trx" --results-directory $env:GCAM_UI_PROBE_DIRECTORY
 ```
 
@@ -75,8 +75,9 @@ These environment values are confined to that terminal process; close it after t
 When the wrapper has stopped, export **locally** and classify (normal terminal; `tracerpt` may require administrator access to the local ETL on this machine):
 
 ```powershell
-tracerpt (Join-Path $runDir 'probe.etl') -o (Join-Path $runDir 'events.xml') -of XML -summary (Join-Path $runDir 'trace-summary.txt')
-python -B tests/Gcam.Studio.UiTests/Harness/Isolation/stage0.py classify --trace (Join-Path $runDir 'events.xml') --context (Join-Path $runDir 'trace-context.json') --out (Join-Path $runDir 'classified.json')
+tracerpt (Join-Path $runDir 'probe.etl') -o (Join-Path $runDir 'events.xml') -of XML -summary (Join-Path $runDir 'trace-summary.txt') -export (Join-Path $runDir 'schema.man') -lr
+tracerpt (Join-Path $runDir 'probe.etl') -rts -o (Join-Path $runDir 'events-rts.xml') -of XML -lr
+python -B tests/Gcam.Studio.UiTests/Harness/Isolation/stage0.py classify --trace (Join-Path $runDir 'events-rts.xml') --context (Join-Path $runDir 'trace-context.json') --summary (Join-Path $runDir 'trace-summary.txt') --schema (Join-Path $runDir 'schema.man') --out (Join-Path $runDir 'classified.json')
 ```
 
 The parser accepts explicit fixture/metadata labels and leaves unfamiliar provider/opcode data unknown. The first real export may need a reviewed normalisation rule, then its own approved observed pilot; do not guess numeric ETW semantics or suppress unrelated candidates broadly. Check trace loss and channel evidence before any promotion: the context's `traceHealth` starts unproven, and zero lost events/buffers must be supported by the retained trace summary, never filled from an assumption. A2: the probe writes a harness-owned registry control after `trace.ready.json` is validated and before Studio launch: `HKCU\Software\GcamUiaProbe\<run-id>`, one `REG_SZ` value named `RunId` whose data is the run ID. The namespace separates harness evidence from Studio; the key and value both identify the run. Native create disposition refuses an existing run key without overwriting it; choose a new run ID if refused. The key is retained even after a failed/incomplete write, and markers are never deleted by the harness. Each later cleanup needs the author’s explicit approval. The control record contains the harness PID, exact HKCU/native key identities, value declaration and write interval. A successful recognised set-value event at that exact key/name proves the channel; value payload is checked if exported, otherwise the run identity is established by the key path. Missing/unmapped marker evidence remains **instrument-not-proven**. The filtered Kernel-Registry manifest provider retains marker and mutation/name-association events; actual profile/export mapping still requires the observed run. Other registry candidates remain unknown under existing rules; A3 forbids broad actor/provider exclusions.
@@ -110,3 +111,16 @@ The effect profile retains system process/thread and image start/stop/name evide
 Target **20–60 MB for two minutes** on an ordinary desktop, rather than hundreds of MB, because high-frequency read/query and all-I/O streams are removed. This is an unmeasured scheduling/storage target: a busy machine can exceed it. Reject missing required controls or lost events; never broaden an OS/runtime exclusion to shrink the output. New profile/mapping rules require HUM-07 reapproval.
 
 Export locally with tracerpt as above. The classifier streams XML event subtrees (or JSONL), replays the file for owned-descendant discovery, hashes files in chunks and streams every sanitised candidate into a `.candidates.jsonl` sidecar. The summary stores counts and the sidecar/trace/context/rule hashes; it never silently caps unknown candidates. Small JSON arrays remain synthetic-fixture inputs. Raw XML and all identifying export/schema/context files remain local under A4.
+
+
+## Evidence-based normalisation and health
+
+`Harness/Isolation/normalisation-rules.json` versions each GUID/opcode/field mapping and carries Microsoft documentation/schema evidence per row. Classic FileIo and Registry opcodes cannot be reused as manifest Event IDs or assigned to unrelated GUIDs. Process/image payload ProcessId identifies the target; execution headers identify emitters. The reader preserves System provider identity and ExtendedTracingInfo.EventGuid separately from rendered labels, parses hexadecimal IDs, and never decodes ProcessingErrorData or opaque binary blobs by guessing offsets. Thread lifecycles can link a requesting thread to its process; missing/recycled thread evidence remains unresolved. FileObject/FileKey name correlations expire at close. Registry open does not establish write access without access evidence.
+
+Image-identity and volume-mapping metadata GUIDs are not file/registry writes. Recognising a metadata kind does not approve an actor exemption or establish absence of effects. Missing acquisition channels cannot be manufactured by normalisation: require actual file and registry effect providers and their positive controls. The profile’s manifest-event selections need a provider-specific coverage pilot before they establish that requirement. New mappings/classification rules require HUM-07 review/approval; retrospective diagnostic replay is not automatic G1 promotion.
+
+Prefer `tracerpt -rts` when wall-clock offsets are inconsistent. Clock type 1 uses decoded Header.StartTime as UTC FILETIME at the header’s raw QPC timestamp, scaled by Header.PerfFreq; type 2 uses raw FILETIME. This follows Microsoft’s TraceEvent implementation and never shifts times to fit a process ledger. Unsupported/missing clock evidence blocks time attribution. Integer arithmetic preserves 100 ns ticks; the ordinary ISO export’s stated offset is not silently rewritten.
+
+Health reader parses exact unique summary counters and records the summary hash. Processed buffers are not lost buffers. If the summary omits lost buffers, only a decoded TRACE_LOGFILE_HEADER.BuffersLost can supply them; record that separate source and XML hash explicitly. Parsed event count must match the summary. Missing, contradictory or duplicate evidence remains unproven. Zero loss does not prove missing provider/channel coverage.
+
+The classifier records the captured normalisation version/hash, schema hash, source and derived context hashes, clock/health evidence, PID provenance and a redacted owned-tree problem table. Destinations are categories, not user/machine paths. Original ETL, XML, context and UI manifest remain untouched; later replay outputs go to a new scratch folder. Raw payloads and investigation results are not committed.

@@ -1,29 +1,77 @@
 {
   "schemaVersion": 1,
   "allowAppFileWrites": false,
-  "requiredChannels": ["file", "process", "registry"],
+  "requiredChannels": [
+    "file",
+    "process",
+    "registry"
+  ],
   "registryMarker": {
     "keyRoot": "HKCU\\Software\\GcamUiaProbe",
     "valueName": "RunId",
     "proofOperation": "SetValue",
-    "declaredOperations": ["CreateKey", "OpenKey", "QueryKey", "SetValue", "CloseKey"],
+    "declaredOperations": [
+      "CreateKey",
+      "OpenKey",
+      "QueryKey",
+      "SetValue",
+      "CloseKey"
+    ],
     "actor": "harness",
     "retention": "No automatic deletion; author approval required for each cleanup",
     "dataEvidence": "Run ID is encoded in the exact key; verify value payload when the trace export exposes it"
   },
   "readOperations": {
-    "file": ["Read", "ReadFile", "QueryInformation", "OpenRead"],
-    "registry": ["QueryValue", "OpenKey", "QueryKey"],
-    "process": ["ImageLoad"]
+    "file": [
+      "Read",
+      "ReadFile",
+      "QueryInformation",
+      "OpenRead"
+    ],
+    "registry": [
+      "QueryValue",
+      "OpenKey",
+      "QueryKey"
+    ],
+    "process": [
+      "ImageLoad"
+    ]
   },
   "writeOperations": {
-    "file": ["Write", "WriteFile", "Delete", "Rename", "CreateFile"],
-    "registry": ["SetValue", "CreateKey", "DeleteValue", "DeleteKey"],
-    "process": ["ProcessStart"],
-    "network": ["Send", "Connect", "Bind", "Receive"]
+    "file": [
+      "Write",
+      "WriteFile",
+      "Delete",
+      "Rename",
+      "CreateFile",
+      "SetInformation"
+    ],
+    "registry": [
+      "SetValue",
+      "CreateKey",
+      "DeleteValue",
+      "DeleteKey",
+      "SetInformation"
+    ],
+    "process": [
+      "ProcessStart"
+    ],
+    "network": [
+      "Send",
+      "Connect",
+      "Bind",
+      "Receive"
+    ]
   },
-  "harnessChannels": ["file", "process", "network"],
-  "osBookkeepingOperations": ["ProcessAccounting", "WindowSessionAccounting"],
+  "harnessChannels": [
+    "file",
+    "process",
+    "network"
+  ],
+  "osBookkeepingOperations": [
+    "ProcessAccounting",
+    "WindowSessionAccounting"
+  ],
   "unknownOpcodePolicy": "unknown; no blanket provider or PID exclusion",
   "externalConnectionPolicy": "Studio has no authorised network destination; any attributed connection is undeclared"
 }

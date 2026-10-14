@@ -1,0 +1,598 @@
+{
+  "schemaVersion": 1,
+  "normalisationVersion": 1,
+  "default": "unknown; no provider/PID blanket exemptions",
+  "scope": "Decoded classic/WBEM events and explicit metadata identity. No manifest numeric-ID guessing or raw payload reinterpretation.",
+  "unmappedProviders": [
+    {
+      "guid": "9b79ee91-b5fd-41c0-a243-4248e266e9d0",
+      "identity": "volume mapping metadata; opcode payload remains unknown",
+      "evidence": [
+        "https://github.com/microsoft/perfview/blob/main/src/TraceEvent/BPerf/BPerfEventSource.cs"
+      ]
+    }
+  ],
+  "rows": [
+    {
+      "guid": "3d6fa8d0-fe05-11d0-9dda-00c04fd7ba7c",
+      "opcodes": [
+        "1",
+        "Start"
+      ],
+      "channel": "process",
+      "operation": "ProcessStart",
+      "requiredFields": [
+        "ProcessId",
+        "ParentId",
+        "ImageFileName"
+      ],
+      "evidence": [
+        "https://learn.microsoft.com/en-us/windows/win32/etw/process-typegroup1",
+        "Exported WBEM process template and decoded EventData carry target ProcessId, ParentId and image; rundown is not a launch."
+      ]
+    },
+    {
+      "guid": "3d6fa8d0-fe05-11d0-9dda-00c04fd7ba7c",
+      "opcodes": [
+        "2",
+        "End"
+      ],
+      "channel": "process",
+      "operation": "ProcessEnd",
+      "requiredFields": [
+        "ProcessId"
+      ],
+      "evidence": [
+        "https://learn.microsoft.com/en-us/windows/win32/etw/process-typegroup1",
+        "Exported WBEM process template and decoded EventData carry target ProcessId, ParentId and image; rundown is not a launch."
+      ]
+    },
+    {
+      "guid": "3d6fa8d0-fe05-11d0-9dda-00c04fd7ba7c",
+      "opcodes": [
+        "3",
+        "DCStart"
+      ],
+      "channel": "process",
+      "operation": "ProcessRundownStart",
+      "requiredFields": [
+        "ProcessId"
+      ],
+      "evidence": [
+        "https://learn.microsoft.com/en-us/windows/win32/etw/process-typegroup1",
+        "Exported WBEM process template and decoded EventData carry target ProcessId, ParentId and image; rundown is not a launch."
+      ]
+    },
+    {
+      "guid": "3d6fa8d0-fe05-11d0-9dda-00c04fd7ba7c",
+      "opcodes": [
+        "4",
+        "DCEnd"
+      ],
+      "channel": "process",
+      "operation": "ProcessRundownEnd",
+      "requiredFields": [
+        "ProcessId"
+      ],
+      "evidence": [
+        "https://learn.microsoft.com/en-us/windows/win32/etw/process-typegroup1",
+        "Exported WBEM process template and decoded EventData carry target ProcessId, ParentId and image; rundown is not a launch."
+      ]
+    },
+    {
+      "guid": "3d6fa8d1-fe05-11d0-9dda-00c04fd7ba7c",
+      "opcodes": [
+        "1",
+        "Start"
+      ],
+      "channel": "thread",
+      "operation": "ThreadStart",
+      "requiredFields": [
+        "ProcessId",
+        "TThreadId"
+      ],
+      "evidence": [
+        "https://learn.microsoft.com/en-us/windows/win32/etw/thread-typegroup1",
+        "Exported WBEM thread template carries target process/thread IDs. ProcessingErrorData is not decoded."
+      ]
+    },
+    {
+      "guid": "3d6fa8d1-fe05-11d0-9dda-00c04fd7ba7c",
+      "opcodes": [
+        "2",
+        "End"
+      ],
+      "channel": "thread",
+      "operation": "ThreadEnd",
+      "requiredFields": [
+        "ProcessId",
+        "TThreadId"
+      ],
+      "evidence": [
+        "https://learn.microsoft.com/en-us/windows/win32/etw/thread-typegroup1",
+        "Exported WBEM thread template carries target process/thread IDs. ProcessingErrorData is not decoded."
+      ]
+    },
+    {
+      "guid": "3d6fa8d1-fe05-11d0-9dda-00c04fd7ba7c",
+      "opcodes": [
+        "3",
+        "DCStart"
+      ],
+      "channel": "thread",
+      "operation": "ThreadRundownStart",
+      "requiredFields": [
+        "ProcessId",
+        "TThreadId"
+      ],
+      "evidence": [
+        "https://learn.microsoft.com/en-us/windows/win32/etw/thread-typegroup1",
+        "Exported WBEM thread template carries target process/thread IDs. ProcessingErrorData is not decoded."
+      ]
+    },
+    {
+      "guid": "3d6fa8d1-fe05-11d0-9dda-00c04fd7ba7c",
+      "opcodes": [
+        "4",
+        "DCEnd"
+      ],
+      "channel": "thread",
+      "operation": "ThreadRundownEnd",
+      "requiredFields": [
+        "ProcessId",
+        "TThreadId"
+      ],
+      "evidence": [
+        "https://learn.microsoft.com/en-us/windows/win32/etw/thread-typegroup1",
+        "Exported WBEM thread template carries target process/thread IDs. ProcessingErrorData is not decoded."
+      ]
+    },
+    {
+      "guid": "2cb15d1d-5fc1-11d2-abe1-00a0c911f518",
+      "opcodes": [
+        "10",
+        "Load"
+      ],
+      "channel": "process",
+      "operation": "ImageLoad",
+      "requiredFields": [
+        "ProcessId",
+        "FileName"
+      ],
+      "evidence": [
+        "https://learn.microsoft.com/en-us/windows/win32/etw/image-load",
+        "Exported WBEM image template contains target ProcessId and FileName; load/rundown is not a file write."
+      ]
+    },
+    {
+      "guid": "2cb15d1d-5fc1-11d2-abe1-00a0c911f518",
+      "opcodes": [
+        "2",
+        "UnLoad"
+      ],
+      "channel": "process",
+      "operation": "ImageUnload",
+      "requiredFields": [
+        "ProcessId",
+        "FileName"
+      ],
+      "evidence": [
+        "https://learn.microsoft.com/en-us/windows/win32/etw/image-load",
+        "Exported WBEM image template contains target ProcessId and FileName; load/rundown is not a file write."
+      ]
+    },
+    {
+      "guid": "2cb15d1d-5fc1-11d2-abe1-00a0c911f518",
+      "opcodes": [
+        "3",
+        "DCStart"
+      ],
+      "channel": "process",
+      "operation": "ImageRundownStart",
+      "requiredFields": [
+        "ProcessId",
+        "FileName"
+      ],
+      "evidence": [
+        "https://learn.microsoft.com/en-us/windows/win32/etw/image-load",
+        "Exported WBEM image template contains target ProcessId and FileName; load/rundown is not a file write."
+      ]
+    },
+    {
+      "guid": "2cb15d1d-5fc1-11d2-abe1-00a0c911f518",
+      "opcodes": [
+        "4",
+        "DCEnd"
+      ],
+      "channel": "process",
+      "operation": "ImageRundownEnd",
+      "requiredFields": [
+        "ProcessId",
+        "FileName"
+      ],
+      "evidence": [
+        "https://learn.microsoft.com/en-us/windows/win32/etw/image-load",
+        "Exported WBEM image template contains target ProcessId and FileName; load/rundown is not a file write."
+      ]
+    },
+    {
+      "guid": "90cbdc39-4a3e-11d1-84f4-0000f80464e3",
+      "opcodes": [
+        "64",
+        "Create"
+      ],
+      "channel": "file",
+      "operation": "CreateFile",
+      "requiredFields": [
+        "FileObject",
+        "OpenPath",
+        "TTID"
+      ],
+      "evidence": [
+        "https://learn.microsoft.com/en-us/windows/win32/etw/fileio",
+        "Published classic FileIo event type; this GUID is absent from the retained observed export. Pointer/name correlation follows FileIo_Info."
+      ]
+    },
+    {
+      "guid": "90cbdc39-4a3e-11d1-84f4-0000f80464e3",
+      "opcodes": [
+        "68",
+        "Write"
+      ],
+      "channel": "file",
+      "operation": "WriteFile",
+      "requiredFields": [
+        "FileObject",
+        "TTID"
+      ],
+      "evidence": [
+        "https://learn.microsoft.com/en-us/windows/win32/etw/fileio",
+        "Published classic FileIo event type; this GUID is absent from the retained observed export. Pointer/name correlation follows FileIo_Info."
+      ]
+    },
+    {
+      "guid": "90cbdc39-4a3e-11d1-84f4-0000f80464e3",
+      "opcodes": [
+        "69",
+        "SetInfo"
+      ],
+      "channel": "file",
+      "operation": "SetInformation",
+      "requiredFields": [
+        "FileObject",
+        "TTID"
+      ],
+      "evidence": [
+        "https://learn.microsoft.com/en-us/windows/win32/etw/fileio",
+        "Published classic FileIo event type; this GUID is absent from the retained observed export. Pointer/name correlation follows FileIo_Info."
+      ]
+    },
+    {
+      "guid": "90cbdc39-4a3e-11d1-84f4-0000f80464e3",
+      "opcodes": [
+        "70",
+        "Delete"
+      ],
+      "channel": "file",
+      "operation": "Delete",
+      "requiredFields": [
+        "FileObject",
+        "TTID"
+      ],
+      "evidence": [
+        "https://learn.microsoft.com/en-us/windows/win32/etw/fileio",
+        "Published classic FileIo event type; this GUID is absent from the retained observed export. Pointer/name correlation follows FileIo_Info."
+      ]
+    },
+    {
+      "guid": "90cbdc39-4a3e-11d1-84f4-0000f80464e3",
+      "opcodes": [
+        "71",
+        "Rename"
+      ],
+      "channel": "file",
+      "operation": "Rename",
+      "requiredFields": [
+        "FileObject",
+        "TTID"
+      ],
+      "evidence": [
+        "https://learn.microsoft.com/en-us/windows/win32/etw/fileio",
+        "Published classic FileIo event type; this GUID is absent from the retained observed export. Pointer/name correlation follows FileIo_Info."
+      ]
+    },
+    {
+      "guid": "90cbdc39-4a3e-11d1-84f4-0000f80464e3",
+      "opcodes": [
+        "66",
+        "Close"
+      ],
+      "channel": "file",
+      "operation": "CloseFile",
+      "requiredFields": [
+        "FileObject",
+        "TTID"
+      ],
+      "evidence": [
+        "https://learn.microsoft.com/en-us/windows/win32/etw/fileio",
+        "Published classic FileIo event type; this GUID is absent from the retained observed export. Pointer/name correlation follows FileIo_Info."
+      ]
+    },
+    {
+      "guid": "90cbdc39-4a3e-11d1-84f4-0000f80464e3",
+      "opcodes": [
+        "0",
+        "Name"
+      ],
+      "channel": "file",
+      "operation": "FileName",
+      "requiredFields": [
+        "FileObject",
+        "FileName"
+      ],
+      "evidence": [
+        "https://learn.microsoft.com/en-us/windows/win32/etw/fileio-name",
+        "Name association is not proof of a write."
+      ]
+    },
+    {
+      "guid": "90cbdc39-4a3e-11d1-84f4-0000f80464e3",
+      "opcodes": [
+        "32",
+        "FileCreate"
+      ],
+      "channel": "file",
+      "operation": "FileName",
+      "requiredFields": [
+        "FileObject",
+        "FileName"
+      ],
+      "evidence": [
+        "https://learn.microsoft.com/en-us/windows/win32/etw/fileio-name",
+        "Name association is not proof of a write."
+      ]
+    },
+    {
+      "guid": "90cbdc39-4a3e-11d1-84f4-0000f80464e3",
+      "opcodes": [
+        "36",
+        "FileRundown"
+      ],
+      "channel": "file",
+      "operation": "FileName",
+      "requiredFields": [
+        "FileObject",
+        "FileName"
+      ],
+      "evidence": [
+        "https://learn.microsoft.com/en-us/windows/win32/etw/fileio-name",
+        "Name association is not proof of a write."
+      ]
+    },
+    {
+      "guid": "ae53722e-c863-11d2-8659-00c04fa321a1",
+      "opcodes": [
+        "10",
+        "Create"
+      ],
+      "channel": "registry",
+      "operation": "CreateKey",
+      "requiredFields": [
+        "KeyName",
+        "Status"
+      ],
+      "evidence": [
+        "https://learn.microsoft.com/en-us/windows/win32/etw/registry-typegroup1",
+        "Published classic registry event type; this GUID is absent from the retained export. Open alone does not establish requested write access."
+      ]
+    },
+    {
+      "guid": "ae53722e-c863-11d2-8659-00c04fa321a1",
+      "opcodes": [
+        "11",
+        "Open"
+      ],
+      "channel": "registry",
+      "operation": "OpenKey",
+      "requiredFields": [
+        "KeyName",
+        "Status"
+      ],
+      "evidence": [
+        "https://learn.microsoft.com/en-us/windows/win32/etw/registry-typegroup1",
+        "Published classic registry event type; this GUID is absent from the retained export. Open alone does not establish requested write access."
+      ]
+    },
+    {
+      "guid": "ae53722e-c863-11d2-8659-00c04fa321a1",
+      "opcodes": [
+        "12",
+        "Delete"
+      ],
+      "channel": "registry",
+      "operation": "DeleteKey",
+      "requiredFields": [
+        "KeyName",
+        "Status"
+      ],
+      "evidence": [
+        "https://learn.microsoft.com/en-us/windows/win32/etw/registry-typegroup1",
+        "Published classic registry event type; this GUID is absent from the retained export. Open alone does not establish requested write access."
+      ]
+    },
+    {
+      "guid": "ae53722e-c863-11d2-8659-00c04fa321a1",
+      "opcodes": [
+        "14",
+        "SetValue"
+      ],
+      "channel": "registry",
+      "operation": "SetValue",
+      "requiredFields": [
+        "KeyName",
+        "Status"
+      ],
+      "evidence": [
+        "https://learn.microsoft.com/en-us/windows/win32/etw/registry-typegroup1",
+        "Published classic registry event type; this GUID is absent from the retained export. Open alone does not establish requested write access."
+      ]
+    },
+    {
+      "guid": "ae53722e-c863-11d2-8659-00c04fa321a1",
+      "opcodes": [
+        "15",
+        "DeleteValue"
+      ],
+      "channel": "registry",
+      "operation": "DeleteValue",
+      "requiredFields": [
+        "KeyName",
+        "Status"
+      ],
+      "evidence": [
+        "https://learn.microsoft.com/en-us/windows/win32/etw/registry-typegroup1",
+        "Published classic registry event type; this GUID is absent from the retained export. Open alone does not establish requested write access."
+      ]
+    },
+    {
+      "guid": "ae53722e-c863-11d2-8659-00c04fa321a1",
+      "opcodes": [
+        "20",
+        "SetInformation"
+      ],
+      "channel": "registry",
+      "operation": "SetInformation",
+      "requiredFields": [
+        "KeyName",
+        "Status"
+      ],
+      "evidence": [
+        "https://learn.microsoft.com/en-us/windows/win32/etw/registry-typegroup1",
+        "Published classic registry event type; this GUID is absent from the retained export. Open alone does not establish requested write access."
+      ]
+    },
+    {
+      "guid": "ae53722e-c863-11d2-8659-00c04fa321a1",
+      "opcodes": [
+        "27",
+        "Close"
+      ],
+      "channel": "registry",
+      "operation": "CloseKey",
+      "requiredFields": [
+        "KeyName",
+        "Status"
+      ],
+      "evidence": [
+        "https://learn.microsoft.com/en-us/windows/win32/etw/registry-typegroup1",
+        "Published classic registry event type; this GUID is absent from the retained export. Open alone does not establish requested write access."
+      ]
+    },
+    {
+      "guid": "b3e675d7-2554-4f18-830b-2762732560de",
+      "opcodes": [
+        "0"
+      ],
+      "channel": "metadata",
+      "operation": "ImageIdentityInfo",
+      "requiredFields": [],
+      "evidence": [
+        "https://github.com/microsoft/perfview/blob/main/src/TraceEvent/Parsers/SymbolTraceEventParser.cs",
+        "Image-identity metadata, not FileIo. Opaque payload remains unclassified; unmapped opcode semantics are not inferred."
+      ]
+    },
+    {
+      "guid": "b3e675d7-2554-4f18-830b-2762732560de",
+      "opcodes": [
+        "32"
+      ],
+      "channel": "metadata",
+      "operation": "ImageIdentityNone",
+      "requiredFields": [],
+      "evidence": [
+        "https://github.com/microsoft/perfview/blob/main/src/TraceEvent/Parsers/SymbolTraceEventParser.cs",
+        "Image-identity metadata, not FileIo. Opaque payload remains unclassified; unmapped opcode semantics are not inferred."
+      ]
+    },
+    {
+      "guid": "b3e675d7-2554-4f18-830b-2762732560de",
+      "opcodes": [
+        "36"
+      ],
+      "channel": "metadata",
+      "operation": "ImageDebugIdentity",
+      "requiredFields": [],
+      "evidence": [
+        "https://github.com/microsoft/perfview/blob/main/src/TraceEvent/Parsers/SymbolTraceEventParser.cs",
+        "Image-identity metadata, not FileIo. Opaque payload remains unclassified; unmapped opcode semantics are not inferred."
+      ]
+    },
+    {
+      "guid": "b3e675d7-2554-4f18-830b-2762732560de",
+      "opcodes": [
+        "37"
+      ],
+      "channel": "metadata",
+      "operation": "ImageILDebugIdentity",
+      "requiredFields": [],
+      "evidence": [
+        "https://github.com/microsoft/perfview/blob/main/src/TraceEvent/Parsers/SymbolTraceEventParser.cs",
+        "Image-identity metadata, not FileIo. Opaque payload remains unclassified; unmapped opcode semantics are not inferred."
+      ]
+    },
+    {
+      "guid": "b3e675d7-2554-4f18-830b-2762732560de",
+      "opcodes": [
+        "38"
+      ],
+      "channel": "metadata",
+      "operation": "ImagePortableDebugIdentity",
+      "requiredFields": [],
+      "evidence": [
+        "https://github.com/microsoft/perfview/blob/main/src/TraceEvent/Parsers/SymbolTraceEventParser.cs",
+        "Image-identity metadata, not FileIo. Opaque payload remains unclassified; unmapped opcode semantics are not inferred."
+      ]
+    },
+    {
+      "guid": "b3e675d7-2554-4f18-830b-2762732560de",
+      "opcodes": [
+        "40"
+      ],
+      "channel": "metadata",
+      "operation": "ImageDeterministicIdentity",
+      "requiredFields": [],
+      "evidence": [
+        "https://github.com/microsoft/perfview/blob/main/src/TraceEvent/Parsers/SymbolTraceEventParser.cs",
+        "Image-identity metadata, not FileIo. Opaque payload remains unclassified; unmapped opcode semantics are not inferred."
+      ]
+    },
+    {
+      "guid": "b3e675d7-2554-4f18-830b-2762732560de",
+      "opcodes": [
+        "64"
+      ],
+      "channel": "metadata",
+      "operation": "ImageFileVersion",
+      "requiredFields": [],
+      "evidence": [
+        "https://github.com/microsoft/perfview/blob/main/src/TraceEvent/Parsers/SymbolTraceEventParser.cs",
+        "Image-identity metadata, not FileIo. Opaque payload remains unclassified; unmapped opcode semantics are not inferred."
+      ]
+    }
+  ],
+  "timestampNormalisation": {
+    "version": 1,
+    "input": "tracerpt -rts TimeCreated.RawTime, decoded EventTrace Header",
+    "qpc": "UTC FILETIME = Header.StartTime + (RawTime - header RawTime) * 10000000 / Header.PerfFreq; integer floor to 100 ns",
+    "systemTime": "ClockType 2 raw time is FILETIME; no timezone adjustment",
+    "clockTypes": [
+      1,
+      2
+    ],
+    "unsupported": "No guessed clock/offset. Ordinary SystemTime strings retain their stated offset.",
+    "evidence": [
+      "https://github.com/microsoft/perfview/blob/main/src/TraceEvent/ETWTraceEventSource.cs#L494-L580",
+      "https://learn.microsoft.com/en-us/windows/win32/api/evntrace/ns-evntrace-trace_logfile_header"
+    ]
+  }
+}

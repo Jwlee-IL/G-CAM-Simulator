@@ -15,6 +15,120 @@ spec.loader.exec_module(stage0)
 
 class StageZeroIsolationTests(unittest.TestCase):
     @staticmethod
+    def real_event(guid, opcode, fields=None, pid=20, at='2026-10-13T00:00:05Z', error=False):
+        import xml.etree.ElementTree as ET
+        event = ET.Element('Event', xmlns='http://schemas.microsoft.com/win/2004/08/events/event')
+        system = ET.SubElement(event, 'System')
+        ET.SubElement(system, 'Provider', Guid=guid)
+        ET.SubElement(system, 'Opcode').text = str(opcode)
+        ET.SubElement(system, 'Execution', ProcessID=str(pid), ThreadID='100')
+        ET.SubElement(system, 'TimeCreated', SystemTime=at)
+        payload = ET.SubElement(event, 'ProcessingErrorData' if error else 'EventData')
+        if error:
+            ET.SubElement(payload, 'ErrorCode').text = '15003'
+        else:
+            for key, value in (fields or {}).items(): ET.SubElement(payload, 'Data', Name=key).text = str(value)
+        ET.SubElement(ET.SubElement(event, 'ExtendedTracingInfo'), 'EventGuid').text = guid
+        return event
+
+    def test_evidence_rows_map_each_decoded_kind_and_do_not_reinterpret_metadata(self):
+        rules = json.loads((SCRIPT.parent / 'normalisation-rules.json').read_text(encoding='utf-8'))
+        fields = {'ProcessId': ' 0xA ', 'ParentId': '0x14', 'ImageFileName': 'Studio.exe', 'FileName': 'owned/file',
+                  'FileObject': '0x123', 'OpenPath': 'owned/file', 'TTID': '100', 'TThreadId': '100', 'KeyName': 'key', 'Status': '0'}
+        for row in rules['rows']:
+            self.assertTrue(row['evidence'])
+            event = stage0.parse_event(self.real_event('{' + row['guid'] + '}', row['opcodes'][0], fields), rules)
+            self.assertEqual(row['operation'], event['operation'])
+            self.assertEqual(row['channel'], event['channel'])
+        wrong = stage0.parse_event(self.real_event('{b3e675d7-2554-4f18-830b-2762732560de}', '36'))
+        self.assertEqual('metadata', wrong['channel'])
+        self.assertNotIn(wrong['operation'], ('Write', 'WriteFile', 'SetValue'))
+        unmapped = stage0.parse_event(self.real_event('{90cbdc39-4a3e-11d1-84f4-0000f80464e3}', '999', fields))
+        self.assertEqual('unknown', unmapped['operation'])
+        self.assertEqual('unknown', unmapped['channel'])
+
+    def test_real_shape_controls_use_payload_pid_thread_correlation_and_exact_marker(self):
+        marker = self.registry_fixture()
+        control = self.context['positiveControls'][-1]
+        self.context['ownedProcesses'][0]['parentPid'] = 20
+        state = {'threads': {}, 'files': {}}
+        source = [
+            self.real_event('{3d6fa8d0-fe05-11d0-9dda-00c04fd7ba7c}', 'Start',
+                            {'ProcessId': '0xA', 'ParentId': '0x14', 'ImageFileName': 'Studio.exe'}, pid=20),
+            self.real_event('{3d6fa8d1-fe05-11d0-9dda-00c04fd7ba7c}', 'Start', {'ProcessId': '20', 'TThreadId': '100'}),
+            self.real_event('{90cbdc39-4a3e-11d1-84f4-0000f80464e3}', '64',
+                            {'FileObject': '0x123', 'OpenPath': 'owned/marker', 'TTID': '100'}, pid=4),
+            self.real_event('{90cbdc39-4a3e-11d1-84f4-0000f80464e3}', '68', {'FileObject': '0x123', 'TTID': '100'}, pid=4),
+            self.real_event('{ae53722e-c863-11d2-8659-00c04fa321a1}', '14',
+                            {'KeyName': control['traceKeyPath'] + '\\RunId', 'Status': '0'})]
+        events = [stage0.parse_event(event, correlation=state) for event in source]
+        self.assertEqual(10, events[0]['pid']) # target payload overrides emitter header
+        self.assertEqual(20, events[3]['pid']) # requesting thread overrides worker header
+        self.assertEqual('owned/marker', events[3]['destination'])
+        result = stage0.classify(events, self.context, self.rules)
+        self.assertEqual({'file': True, 'process': True, 'registry': True}, result['positiveControls'])
+        state = {'threads': {}, 'files': {}}
+        unresolved = stage0.parse_event(source[3], correlation=state)
+        self.assertIsNone(unresolved['pid'])
+        self.assertEqual('requesting-thread-unresolved', unresolved['pidSource'])
+
+    def test_decoding_error_and_missing_identity_do_not_become_process_proof(self):
+        row = stage0.parse_event(self.real_event('{3d6fa8d1-fe05-11d0-9dda-00c04fd7ba7c}', 'Start', error=True))
+        self.assertTrue(row['decodeError'])
+        self.assertEqual('unknown', row['operation'])
+        row = stage0.parse_event(self.real_event('{3d6fa8d0-fe05-11d0-9dda-00c04fd7ba7c}', '1',
+                                              {'ProcessId': 'not-a-pid', 'ParentId': '20', 'ImageFileName': 'Studio'}))
+        self.assertEqual('unknown', row['operation'])
+
+    def test_health_never_confuses_processed_buffers_with_lost_buffers(self):
+        import xml.etree.ElementTree as ET
+        root = self.scratch(); summary = root / 'summary.txt'; xml = root / 'trace.xml'
+        summary.write_text('Total Buffers Processed 223\nTotal Events  Processed 1\nTotal Events  Lost 0\n')
+        health = stage0.read_trace_health(summary)
+        self.assertIsNone(health['buffersLost'])
+        self.assertFalse(health['complete'])
+        event = self.real_event('{68fdd900-4a3e-11d1-84f4-0000f80464e3}', 'Header', {'EventsLost': '0', 'BuffersLost': '0'})
+        tree = ET.Element('Events'); tree.append(event); ET.ElementTree(tree).write(xml)
+        health = stage0.read_trace_health(summary, xml)
+        self.assertTrue(health['complete']); self.assertEqual(0, health['buffersLost'])
+        self.assertEqual(stage0.file_digest(summary), health['summarySha256'])
+        self.assertIn('TRACE_LOGFILE_HEADER', health['buffersLossSource'])
+        summary.write_text('Total Buffers Processed 223\nTotal Events Processed 2\nTotal Events Lost 0\n')
+        self.assertFalse(stage0.read_trace_health(summary, xml)['complete'])
+        summary.write_text('Total Events Processed 1\nTotal Events Lost 0\nTotal Events Lost 0\n')
+        self.assertIsNone(stage0.read_trace_health(summary, xml)['eventsLost'])
+
+    def test_raw_qpc_clock_uses_header_anchor_not_guessed_timezone_or_ledger_alignment(self):
+        import datetime as dt
+        import xml.etree.ElementTree as ET
+        root = self.scratch(); path = root / 'raw.xml'
+        ticks = (dt.datetime(2026, 10, 13) - dt.datetime(1601, 1, 1)).days * 86400 * 10000000
+        header = self.real_event('{68fdd900-4a3e-11d1-84f4-0000f80464e3}', 'Header',
+                                 {'StartTime': ticks, 'PerfFreq': '10000000', 'ReservedFlags': '0x1', 'EventsLost': '0', 'BuffersLost': '0'})
+        process = self.real_event('{3d6fa8d0-fe05-11d0-9dda-00c04fd7ba7c}', 'Start',
+                                  {'ProcessId': '10', 'ParentId': '20', 'ImageFileName': 'Studio'})
+        for event, raw in ((header, '1000'), (process, '11000')):
+            node = next(node for node in event.iter() if node.tag == 'TimeCreated')
+            node.attrib.clear(); node.set('RawTime', raw)
+        tree = ET.Element('Events'); tree.extend([header, process]); ET.ElementTree(tree).write(path)
+        events = list(stage0.parse_trace(path))
+        self.assertEqual('2026-10-13T00:00:00.0010000Z', events[1]['at'])
+        self.assertEqual(1000, events[1]['clockEvidence']['rawAnchor'])
+        state = {'threads': {}, 'files': {}}
+        for node in header.iter():
+            if node.attrib.get('Name') == 'ReservedFlags': node.text = '3'
+        stage0.parse_event(header, correlation=state)
+        self.assertEqual('', stage0.parse_event(process, correlation=state)['at'])
+
+    def test_owned_problem_summary_redacts_destinations_and_tracks_identity_source(self):
+        event = self.event(10, 'registry', 'SetValue', r'\REGISTRY\USER\synthetic-identity\Software\Fixture')
+        result = stage0.classify(self.controls + [event], self.context, self.rules)
+        problem = result['ownedTreeProblems'][0]
+        self.assertEqual('<REGISTRY>', problem['destinationCategory'])
+        self.assertNotIn('synthetic-identity', json.dumps(problem))
+        self.assertEqual('out-of-declaration', problem['classification'])
+
+    @staticmethod
     def scratch():
         root = Path(tempfile.gettempdir()) / ('gcam-stage0-fixture-' + __import__('uuid').uuid4().hex)
         root.mkdir()

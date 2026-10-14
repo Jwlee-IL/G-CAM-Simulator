@@ -263,7 +263,7 @@ def preflight(run_directory, live_pin=None, identity=None, version=None, scratch
     return issues
 
 
-def parse_trace(path):
+def parse_trace(path, normalisation=None):
     """Stream XML/JSONL. Retain only one Event subtree; array JSON is for small synthetic fixtures."""
     path = Path(path)
     if path.suffix == '.json':
@@ -274,6 +274,8 @@ def parse_trace(path):
             for line in stream:
                 yield json.loads(line)
         return
+    normalisation = normalisation or json.loads((ISOLATION / 'normalisation-rules.json').read_text(encoding='utf-8'))
+    correlation = {'threads': {}, 'files': {}, 'clock': None}
     stack = []
     with path.open('rb') as stream:
         for action, element in ET.iterparse(stream, events=('start', 'end')):
@@ -281,7 +283,7 @@ def parse_trace(path):
                 stack.append(element)
                 continue
             if element.tag.rsplit('}', 1)[-1] == 'Event':
-                row = parse_event(element)
+                row = parse_event(element, normalisation, correlation)
                 if len(stack) > 1:
                     stack[-2].remove(element)
                 element.clear()
@@ -289,40 +291,167 @@ def parse_trace(path):
             stack.pop()
 
 
-def parse_event(event):
-    data = {}
-    provider = ''
-    for node in event.iter():
-        name = node.tag.rsplit('}', 1)[-1]
-        if name == 'Provider':
-            provider = node.attrib.get('Name', node.attrib.get('Guid', ''))
-        if name == 'Data':
-            data[node.attrib.get('Name', '')] = node.text or ''
-        if name == 'Execution':
-            data.setdefault('ProcessId', node.attrib.get('ProcessID', ''))
-        if name in ('Opcode', 'Task', 'EventID', 'TimeCreated'):
-            data[name] = node.attrib.get('SystemTime', node.text or '')
-    raw_pid = data.get('PID', data.get('ProcessId', data.get('ProcessID', '')))
+def numeric(value):
     try:
-        pid = int(raw_pid, 16) if raw_pid.lower().startswith('0x') else int(raw_pid)
-    except ValueError:
+        text = str(value).strip()
+        return int(text, 16 if text.lower().startswith('0x') else 10)
+    except (ValueError, TypeError):
+        return None
+
+
+def parse_event(event, normalisation=None, correlation=None):
+    """System attributes and rendered strings are separate; extended GUID identifies a classic task."""
+    normalisation = normalisation or json.loads((ISOLATION / 'normalisation-rules.json').read_text(encoding='utf-8'))
+    correlation = correlation if correlation is not None else {'threads': {}, 'files': {}, 'clock': None}
+    local = lambda node: node.tag.rsplit('}', 1)[-1]
+    children = {local(node): node for node in event}
+    system = {local(node): node for node in children.get('System', [])}
+    rendered = {local(node): node for node in children.get('RenderingInfo', [])}
+    extended = {local(node): node for node in children.get('ExtendedTracingInfo', [])}
+    provider_node = system.get('Provider')
+    attributes = provider_node.attrib if provider_node is not None else {}
+    guid = (extended.get('EventGuid').text if extended.get('EventGuid') is not None else attributes.get('Guid', '')) or ''
+    provider = guid or attributes.get('Name', '')
+    get_text = lambda nodes, name: (nodes[name].text or '').strip() if name in nodes else ''
+    opcode = get_text(rendered, 'Opcode') or get_text(system, 'Opcode')
+    data = {node.attrib.get('Name', ''): (node.text or '').strip()
+            for node in children.get('EventData', []) if local(node) == 'Data'}
+    execution_node = system.get('Execution')
+    execution = execution_node.attrib if execution_node is not None else {}
+    header_pid = numeric(execution.get('ProcessID'))
+    pid = numeric(data.get('PID', data.get('ProcessId', data.get('ProcessID'))))
+    pid_source = 'payload-ProcessId' if pid is not None else 'header-ProcessID'
+    if pid is None:
+        pid = header_pid
+    if pid is not None and not 0 < pid < 0xFFFFFFFF:
         pid = None
-    text = (provider + ' ' + data.get('Task', '')).lower()
-    channel = next((c for c, hints in {'file': ('file',), 'registry': ('registry', 'reg'),
-                                     'process': ('process', 'image'), 'network': ('network', 'tcp', 'udp')}.items()
-                    if any(h in text for h in hints)), 'unknown')
-    raw_parent = data.get('ParentProcessID', data.get('ParentID', data.get('ParentId', '')))
-    try:
-        parent = int(raw_parent, 16) if raw_parent.lower().startswith('0x') else int(raw_parent)
-    except ValueError:
-        parent = None
-    return {'pid': pid, 'channel': channel, 'operation': data.get('Operation', data.get('Opcode', '')),
-                 'destination': data.get('FileName', data.get('KeyName', data.get('ImageName', data.get('daddr', '')))),
-                 'parentPid': parent,
-                 'valueName': data.get('ValueName', ''),
-                 'valueData': data.get('ValueData'),
-                 'status': data.get('Status'),
-                 'at': data.get('TimeCreated', ''), 'provider': provider, 'fields': data}
+    at_node = system.get('TimeCreated')
+    at = at_node.attrib.get('SystemTime', '') if at_node is not None else ''
+    raw_time = numeric(at_node.attrib.get('RawTime')) if at_node is not None else None
+    if (guid.strip('{}').lower() == '68fdd900-4a3e-11d1-84f4-0000f80464e3' and opcode == 'Header'
+            and raw_time is not None and numeric(data.get('ReservedFlags')) in (1, 2)
+            and (numeric(data.get('PerfFreq')) or 0) > 0 and (numeric(data.get('StartTime')) or 0) > 0):
+        correlation['clock'] = {'clockType': numeric(data['ReservedFlags']), 'rawAnchor': raw_time,
+                                'utcFileTimeAnchor': numeric(data['StartTime']), 'frequency': numeric(data['PerfFreq'])}
+    clock = correlation.get('clock')
+    if raw_time is not None and clock:
+        ticks = (clock['utcFileTimeAnchor'] + (raw_time - clock['rawAnchor']) * 10000000 // clock['frequency']
+                 if clock['clockType'] == 1 else raw_time)
+        utc = dt.datetime(1601, 1, 1, tzinfo=dt.timezone.utc) + dt.timedelta(seconds=ticks // 10000000)
+        at = utc.strftime('%Y-%m-%dT%H:%M:%S') + f'.{ticks % 10000000:07d}Z'
+        data['RawTime'] = str(raw_time)
+    data.update({'RawOpcode': get_text(system, 'Opcode'), 'Opcode': opcode, 'EventID': get_text(system, 'EventID'),
+                 'Task': get_text(system, 'Task'), 'TimeCreated': at})
+    error = 'ProcessingErrorData' in children or ('ProcessId' in data and numeric(data['ProcessId']) is None)
+    opaque = next((children[name] for name in ('BinaryEventData',) if name in children), None)
+    if opaque is not None:
+        data['opaquePayloadSha256'] = digest((opaque.text or '').encode())
+    channel, operation, kind, mapping = 'unknown', 'unknown', opcode or 'Unknown', None
+    key = guid.strip('{}').lower()
+    for index, row in enumerate(normalisation['rows']):
+        if key == row['guid'] and opcode.casefold() in [op.casefold() for op in row['opcodes']]:
+            channel, kind, mapping = row['channel'], row['operation'], index
+            if not error and all(field in data for field in row['requiredFields']):
+                operation = kind
+            break
+    if not guid:
+        # Historical labelled fixture shape remains diagnostic; opaque real GUIDs never use substring guessing.
+        label = (attributes.get('Name', '') + ' ' + data['Task']).lower()
+        channel = next((c for c, hints in {'file': ('file',), 'registry': ('registry', 'reg'),
+                         'process': ('process', 'image'), 'network': ('network', 'tcp', 'udp')}.items()
+                        if any(h in label for h in hints)), 'unknown')
+        operation = data.get('Operation', opcode)
+    destination = data.get('OpenPath', data.get('FileName', data.get('KeyName', data.get('ImageFileName', data.get('ImageName', data.get('daddr', ''))))))
+    thread = numeric(data.get('TTID', data.get('TThreadId', data.get('ThreadId'))))
+    if operation in ('ThreadStart', 'ThreadRundownStart') and thread is not None and pid is not None:
+        correlation['threads'][thread] = {'pid': pid, 'startedAt': at}
+    if channel == 'file' and thread is not None:
+        identity = correlation['threads'].get(thread)
+        owner = None
+        if identity:
+            try:
+                time = lambda value: dt.datetime.fromisoformat(value.replace('Z', '+00:00'))
+                if time(at) >= time(identity['startedAt']):
+                    owner = identity['pid']
+            except (ValueError, TypeError):
+                pass
+        if owner is not None:
+            pid, pid_source = owner, 'thread-lifecycle-payload'
+        elif guid:
+            # A file emitter header can be the servicing worker, not the requesting thread's process.
+            pid, pid_source = None, 'requesting-thread-unresolved'
+    file_object = data.get('FileObject')
+    if channel == 'file':
+        if destination and file_object and operation in ('CreateFile', 'FileName'):
+            correlation['files'][file_object] = destination
+        if not destination:
+            destination = correlation['files'].get(data.get('FileKey'), correlation['files'].get(file_object, ''))
+        if operation == 'CloseFile' and file_object:
+            correlation['files'].pop(file_object, None)
+    if operation in ('ThreadEnd', 'ThreadRundownEnd') and thread is not None:
+        correlation['threads'].pop(thread, None)
+    return {'pid': pid, 'pidSource': pid_source, 'headerPid': header_pid, 'channel': channel, 'operation': operation,
+            'kind': kind, 'mappingRow': mapping, 'decodeError': error, 'destination': destination,
+            'clockEvidence': clock,
+            'parentPid': numeric(data.get('ParentProcessID', data.get('ParentID', data.get('ParentId')))),
+            'valueName': data.get('ValueName', ''), 'valueData': data.get('ValueData'), 'status': data.get('Status'),
+            'at': at, 'provider': provider, 'fields': data}
+
+
+def read_trace_health(summary_path, trace_path=None, normalisation=None):
+    """Processed buffers are not lost buffers. Missing/duplicate/loss/conflicting evidence never becomes zero."""
+    raw = Path(summary_path).read_bytes()
+    text = raw.decode('utf-16' if raw.startswith((b'\xff\xfe', b'\xfe\xff')) else 'utf-8-sig')
+    def field(label):
+        matches = re.findall(r'^\s*' + label + r'\s+([0-9]+)\s*$', text, re.M)
+        return int(matches[0]) if len(matches) == 1 else None
+    lost = field(r'Total\s+Events\s+Lost')
+    buffers_lost = field(r'(?:Total\s+)?Buffers\s+Lost')
+    expected = field(r'Total\s+Events\s+Processed')
+    buffers = field(r'Total\s+Buffers\s+Processed')
+    health = {'complete': False, 'eventsLost': lost, 'buffersLost': buffers_lost, 'eventsProcessed': expected,
+              'buffersProcessed': buffers, 'summarySha256': digest(raw), 'buffersLossSource': 'summary' if buffers_lost is not None else 'not reported'}
+    if trace_path is not None:
+        count, headers = 0, []
+        for event in parse_trace(trace_path, normalisation):
+            count += 1
+            if event.get('provider', '').strip('{}').lower() == '68fdd900-4a3e-11d1-84f4-0000f80464e3' and event['kind'] == 'Header':
+                headers.append({key: numeric(event['fields'].get(key)) for key in ('EventsLost', 'BuffersLost')})
+                if event.get('clockEvidence'):
+                    health['clockEvidence'] = event['clockEvidence']
+        health['parsedEvents'] = count
+        if len(headers) == 1 and headers[0]['EventsLost'] == lost and headers[0]['BuffersLost'] is not None:
+            if buffers_lost is None:
+                health['buffersLost'] = headers[0]['BuffersLost']
+                health['buffersLossSource'] = 'decoded TRACE_LOGFILE_HEADER.BuffersLost; summary omits this field'
+            elif buffers_lost != headers[0]['BuffersLost']:
+                health['buffersLost'] = None
+        health['traceSha256'] = file_digest(trace_path)
+        health['complete'] = (expected is not None and count == expected and lost is not None
+                              and health['buffersLost'] is not None and len(headers) <= 1)
+    else:
+        health['complete'] = expected is not None and lost is not None and buffers_lost is not None
+    return health
+
+
+def destination_category(event, context):
+    path = event.get('destination', '')
+    value = path.replace('\\', '/').casefold()
+    if not path:
+        return '<UNDECODED-IMAGE-METADATA>' if event.get('channel') == 'metadata' else '<NO-DECODED-DESTINATION>'
+    if any(confined(path, root) for root in context.get('ownedRoots', [])):
+        return '<REDIRECTED-SANDBOX>'
+    if '/appdata/local/' in value:
+        return '<LOCALAPPDATA>'
+    if '/users/' in value:
+        return '<USERPROFILE>'
+    if '/windows/' in value:
+        return '<OS-RUNTIME>'
+    if '/software/' in value or value.startswith('\\registry'):
+        return '<REGISTRY>'
+    if 'gcam.studio' in value:
+        return '<STUDIO-DEPLOYMENT>'
+    return '<OTHER>'
 
 
 def registry_marker_match(event, control, rules, harness, proof=False):
@@ -374,6 +503,8 @@ def classify(events, context, rules, candidate_sink=None):
     if not callable(events) and iter(events) is events:
         raise ValueError("Supply a replayable event factory, not a consumed iterator")
     counts = {}
+    owned_problem_counts = {}
+    pid_sources = {}
     candidate_count = 0
     unsafe = unresolved = False
     owned = context.get('ownedProcesses', [])
@@ -401,7 +532,10 @@ def classify(events, context, rules, candidate_sink=None):
         owners = [o for o in tree if o['pid'] == pid and in_lifetime(o, event)]
         positive = any(registry_marker_match(event, c, rules, harness, proof=True) if c.get('channel') == 'registry'
                        else event.get('channel') == c['channel'] and pid == c['pid']
-                       and c['token'] in event.get('destination', '') for c in context.get('positiveControls', []))
+                       and c['token'].casefold() in event.get('destination', '').casefold()
+                       and (c['channel'] == 'file' and event.get('operation') in ('Write', 'WriteFile')
+                            or c['channel'] == 'process' and bool(owners) and event.get('operation') in ('ProcessStart', 'ImageLoad'))
+                       for c in context.get('positiveControls', []))
         if positive:
             controls[event['channel']] = True
         if owners:
@@ -437,7 +571,16 @@ def classify(events, context, rules, candidate_sink=None):
         else:
             # Includes app-requested shell effects without sufficient causal metadata.
             category = 'unknown'
+        kind = event.get('kind', event.get('operation', 'unknown'))
+        destination = destination_category(event, context)
+        if owners and category in ('unknown', 'out-of-declaration'):
+            key = category + '|' + kind + '|' + destination
+            owned_problem_counts[key] = owned_problem_counts.get(key, 0) + 1
+        source = event.get('pidSource', 'fixture-explicit')
+        pid_sources[source] = pid_sources.get(source, 0) + 1
         candidate = {'channel': event.get('channel', 'unknown'), 'pid': pid, 'classification': category,
+                     'kind': kind, 'ownedTree': bool(owners), 'destinationCategory': destination,
+                     'pidSource': source,
                      'eventSha256': digest(canonical(event))}
         if candidate_sink is None:
             candidates.append(candidate)
@@ -453,6 +596,11 @@ def classify(events, context, rules, candidate_sink=None):
                    and health['eventsLost'] == 0 and health['buffersLost'] == 0)
     return {'schemaVersion': 1, 'candidates': candidates, 'candidateCount': candidate_count,
             'classificationCounts': counts, 'positiveControls': controls,
+            'ownedTreeProblems': [{'classification': key.split('|')[0], 'kind': key.split('|')[1],
+                                   'destinationCategory': key.split('|')[2], 'count': count}
+                                  for key, count in sorted(owned_problem_counts.items())],
+            'pidSources': pid_sources,
+            'traceHealth': health,
             'runStatus': 'unsafe_effect' if unsafe else 'blocked' if not proven or not loss_proven or unresolved else 'completed',
             'reason': 'undeclared-app-effect' if unsafe else 'instrument-not-proven' if not proven else 'trace-health-not-proven' if not loss_proven else 'unresolved-candidate' if unresolved else '',
             'g1Eligible': proven and loss_proven and not unsafe and not unresolved,
@@ -475,6 +623,7 @@ def main():
     p = sub.add_parser('fingerprint'); p.add_argument('--directory', required=True); p.add_argument('--kind', choices=('isolation', 'deployment'), default='isolation')
     p = sub.add_parser('preflight'); p.add_argument('--run-directory', required=True)
     p = sub.add_parser('classify'); p.add_argument('--trace', required=True); p.add_argument('--context', required=True); p.add_argument('--out', required=True)
+    p.add_argument('--summary'); p.add_argument('--schema')
     args = parser.parse_args()
     if args.command == 'check-policy':
         check_policy(json.loads((ISOLATION / 'action-policy.json').read_text()), declarations())
@@ -492,17 +641,27 @@ def main():
         if issues:
             raise SystemExit(2)
     else:
-        context = json.loads(Path(args.context).read_text())
+        context = json.loads(Path(args.context).read_text(encoding='utf-8-sig'))
+        original_context_sha = file_digest(args.context)
+        normalisation_bytes = (ISOLATION / 'normalisation-rules.json').read_bytes()
+        normalisation = json.loads(normalisation_bytes)
+        if args.summary:
+            context['traceHealth'] = read_trace_health(args.summary, args.trace, normalisation)
         rules = json.loads((ISOLATION / 'classification-rules.json').read_text())
         candidate_path = Path(args.out).with_suffix('.candidates.jsonl')
         candidate_path.parent.mkdir(parents=True, exist_ok=True)
         with candidate_path.open('w', encoding='utf-8', newline='\n') as stream:
-            result = classify(lambda: parse_trace(args.trace), context, rules,
+            result = classify(lambda: parse_trace(args.trace, normalisation), context, rules,
                               lambda candidate: stream.write(json.dumps(candidate, separators=(',', ':')) + '\n'))
         result['candidateFile'] = candidate_path.name
         result['candidateSha256'] = file_digest(candidate_path)
+        result['normalisationVersion'] = normalisation['normalisationVersion']
+        result['normalisationSha256'] = digest(normalisation_bytes)
+        if args.schema:
+            result['schemaSha256'] = file_digest(args.schema)
         result['traceSha256'] = file_digest(args.trace)
         result['contextSha256'] = digest(canonical(context))
+        result['inputContextSha256'] = original_context_sha
         result['rulesSha256'] = digest(canonical(rules))
         write(args.out, result)
         print(result['runStatus'] + ': ' + result['reason'])
