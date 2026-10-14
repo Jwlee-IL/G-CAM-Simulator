@@ -26,6 +26,9 @@ public sealed class ReportExportScenarioTests(ITestOutputHelper output)
                 string path = Path.Combine(sandbox, "report.html");
                 var before = Directory.GetFiles(sandbox, "*", SearchOption.AllDirectories).ToHashSet();
                 int pid = ui.Element.Current.ProcessId;
+                // Arm before Invoke: even a lookup/cleanup failure must not capture the real Documents listing.
+                // Keep this suppression for the remainder of this scenario, including an unsuccessful cancellation.
+                record.OmitWindowDiagnosticsReason = "Native save dialog may display private folder contents.";
                 // The native dialog runs a nested message loop; keep the UIA caller free to drive it.
                 var invoke = Task.Run(() => ui.Invoke("ExportReport"));
                 AutomationElement? dialog = null;
@@ -33,10 +36,7 @@ public sealed class ReportExportScenarioTests(ITestOutputHelper output)
                 {
                     StudioWindow.WaitUntil(() =>
                     {
-                        var windows = AutomationElement.RootElement.FindAll(TreeScope.Children,
-                            new PropertyCondition(AutomationElement.ProcessIdProperty, pid));
-                        dialog = windows.Cast<AutomationElement>().FirstOrDefault(w =>
-                            w.TryGetCurrentPattern(WindowPattern.Pattern, out var p) && ((WindowPattern)p).Current.IsModal);
+                        dialog = FindOwnedModalDialog(ui.Element, pid);
                         return dialog is not null;
                     }, TimeSpan.FromSeconds(10), "owned native save dialog");
                     var fields = dialog!.FindAll(TreeScope.Descendants, new AndCondition(
@@ -69,11 +69,76 @@ public sealed class ReportExportScenarioTests(ITestOutputHelper output)
                     // A selector/verdict failure must not leave the owned native dialog blocking graceful closure.
                     try
                     {
-                        var cancel = dialog?.FindFirst(TreeScope.Descendants,
-                            new PropertyCondition(AutomationElement.AutomationIdProperty, "2"));
-                        if (cancel is not null) ((InvokePattern)cancel.GetCurrentPattern(InvokePattern.Pattern)).Invoke();
+                        CancelOwnedModalDialog(ui.Element, pid, dialog);
                     }
-                    catch (ElementNotAvailableException) { }
+                    catch (Exception error)
+                    {
+                        // Preserve the original verdict; the harness still checks graceful exit. No dialog contents.
+                        record.Step($"Owned native dialog cleanup failed: {error.GetType().Name}");
+                    }
                 }
             });
+
+    private static AutomationElement? FindOwnedModalDialog(AutomationElement owner, int pid)
+    {
+        var condition = new AndCondition(new PropertyCondition(AutomationElement.ProcessIdProperty, pid),
+            new PropertyCondition(AutomationElement.ControlTypeProperty, ControlType.Window));
+        // Owned WPF dialogs appear beneath their owner in UIA, rather than as desktop children.
+        return Modal(owner.FindAll(TreeScope.Descendants, condition))
+            ?? Modal(AutomationElement.RootElement.FindAll(TreeScope.Children, condition));
+
+        static AutomationElement? Modal(AutomationElementCollection windows)
+        {
+            foreach (AutomationElement window in windows)
+            {
+                try
+                {
+                    if (window.TryGetCurrentPattern(WindowPattern.Pattern, out var pattern)
+                        && ((WindowPattern)pattern).Current.IsModal) return window;
+                }
+                catch (ElementNotAvailableException) { } // a dialog can disappear between enumeration and inspection
+            }
+            return null;
+        }
+    }
+
+    private static void CancelOwnedModalDialog(AutomationElement owner, int pid, AutomationElement? knownDialog)
+    {
+        // Re-find independently of the acquisition lookup, including when it timed out before assigning dialog.
+        AutomationElement? dialog = null;
+        StudioWindow.WaitUntil(() =>
+        {
+            dialog = FindOwnedModalDialog(owner, pid) ?? knownDialog;
+            return true;
+        }, TimeSpan.FromSeconds(5), "owned native dialog cleanup lookup");
+        if (dialog is null) return;
+        try
+        {
+            if (dialog.Current.ProcessId != pid || !dialog.TryGetCurrentPattern(WindowPattern.Pattern, out var pattern)
+                || !((WindowPattern)pattern).Current.IsModal) return;
+            var cancel = dialog.FindFirst(TreeScope.Descendants, new AndCondition(
+                new PropertyCondition(AutomationElement.ProcessIdProperty, pid),
+                new PropertyCondition(AutomationElement.ControlTypeProperty, ControlType.Button),
+                new PropertyCondition(AutomationElement.AutomationIdProperty, "2")));
+            if (cancel is not null && cancel.TryGetCurrentPattern(InvokePattern.Pattern, out var invoke))
+            {
+                try { ((InvokePattern)invoke).Invoke(); }
+                catch (Exception error) when (error is ElementNotAvailableException or InvalidOperationException
+                    or System.Runtime.InteropServices.COMException) { /* Close fallback below re-finds the dialog. */ }
+            }
+        }
+        catch (Exception error) when (error is ElementNotAvailableException or InvalidOperationException
+            or System.Runtime.InteropServices.COMException) { }
+
+        // Missing/unusable Cancel: close only a re-identified owned modal dialog, never Studio or another process.
+        dialog = FindOwnedModalDialog(owner, pid);
+        try
+        {
+            if (dialog is not null && dialog.TryGetCurrentPattern(WindowPattern.Pattern, out var close))
+                ((WindowPattern)close).Close();
+        }
+        catch (ElementNotAvailableException) { }
+        StudioWindow.WaitUntil(() => FindOwnedModalDialog(owner, pid) is null,
+            TimeSpan.FromSeconds(5), "owned native dialog closed before scenario teardown");
+    }
 }

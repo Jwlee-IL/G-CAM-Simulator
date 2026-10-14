@@ -36,6 +36,9 @@ public sealed class RunRecord
     public string RunId { get; }
     public string Directory { get; }
 
+    /// <summary>Skip both screenshots and tree text while a native dialog can expose private folder contents.</summary>
+    public string? OmitWindowDiagnosticsReason { get; set; }
+
     public void Set(string key, object? value) => _fields[key] = value;
 
     public void Step(string text) => _steps.Add($"{DateTime.Now:HH:mm:ss.fff} {text}");
@@ -54,6 +57,11 @@ public sealed class RunRecord
     public void CaptureFailure(Exception error, AutomationElement? window)
     {
         _fields["error"] = error.ToString();
+        if (OmitWindowDiagnosticsReason is { } reason)
+        {
+            _fields["windowDiagnosticsOmitted"] = reason;
+            return;
+        }
         if (window is null) return;
         try
         {
