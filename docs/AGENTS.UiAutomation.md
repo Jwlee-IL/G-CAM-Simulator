@@ -195,6 +195,13 @@ actual values, process ending, sandbox writes, step log. A failed run adds `tree
 resize borders; the first capture used it and picked up another application's text along the window's edge. That
 image was deleted and the capture fixed. Open a failure bundle's image before sharing it.
 
+**Manual captures (TODO-43).** The manual scenarios (`ManualScenarioTests`, `[ManualChapter]`) also write a manual run
+record and captures for the Studio manual. A capture is document evidence for an edition, never a verdict: one that fails
+its quality check (owned, foreground, unoccluded, expected size, stable, no account or machine name in the window text)
+keeps no pixels and becomes a missing figure, not a product failure. Marks are UIA bounding rectangles measured at capture
+time and converted to image pixels; their label is the visible text, their target the AutomationId. The generator
+(`samples/manual/manual_records.py`) prints a chapter only from the latest run on the edition's build.
+
 ## 6. Operation
 
 - `GCAM_UI_TESTS=1 dotnet test tests/Gcam.Studio.UiTests -c Release` — only when the desktop is free.

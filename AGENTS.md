@@ -20,6 +20,7 @@ Guidance for AI agents and contributors working on this repository.
 | `HW.Readout.md` | the simulated four-output readout drawn from its own configuration: generated schematic and SPICE netlist, checked against the engine by an independent solver (illustrative, not a buildable design) |
 | `VV.Tests.md`, `VV.Tests.Results.md` | the test catalog (what each test class, cocotb configuration and checker verifies, its oracle and tolerance, requirement selectors) and the generated test-result report of a committed milestone (`samples/testing/records/`), both maintained through `samples/testing/test_records.py` |
 | `VV.Studio.md`, `VV.Studio.SRS.md`, `VV.Studio.SDS.md`, `VV.Studio.History.md` | GCAM Studio verification & validation (traceability, validation, anomalies), requirements (SRS), design record (SDS) and dated verification records (History), IEC 62304-style |
+| `MANUAL.Studio.md` (in `docs/manual/editions/<id>/`) | the GCAM Studio user manual, generated from desktop runs that drove the app plus static chapters, by `samples/manual/manual_records.py` (`generate`, `check --all` replays committed editions, `self-test`); sources in `docs/manual/` |
 | `PAPER.ko.md` | two-tier (expert / plain) physics write-up, Korean |
 
 Folder maps: `rtl/README.md` (SystemVerilog front-end), `src/Gcam.Studio*/README.md`.

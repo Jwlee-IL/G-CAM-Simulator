@@ -2,9 +2,10 @@
 
 Scope: the safety basis (G1) for the manual's UI-automation runs. Draft for the planner and author.
 
-Status: **draft, revised 2026-10-14 (MR8, MR9); G1 qualified by run 09**. The observation method changed from a machine-wide kernel trace to a scoped
-before/after comparison that runs without elevation. The next observed run is an `approved-pilot` of this change
-(launch–idle–exit). P4 approval (HUM-04) still follows the author's review of run artefacts (MR7).
+Status: **draft for the author's approval (HUM-04), revised 2026-10-15; G1 qualified by run 09, manual runs observed
+(run 04: 6 / 6 chapters, `g1Eligible`)**. The observation method changed from a machine-wide kernel trace to a scoped
+before/after comparison that runs without elevation (MR8). The run artefacts the approval waits for (MR7) now exist: the
+observed manual run 04 and the first edition generated from it (`docs/manual/editions/2026-10-15-1`).
 
 ## Purpose and result use
 
@@ -44,7 +45,10 @@ not applicable, with evidence, and are not built further. Status of the 22 stage
 | S01–S04, C01 | narrow observation, failure taxonomy, operation policy, adapters, prose | later; not blocking | — |
 
 Channels and conditional scopes that are N/A for Studio: network (MR6), external services, accounts, devices, real data
-stores, deletion ownership. A later change that adds a write surface reopens the matching scope.
+stores, deletion ownership. A later change that adds a write surface reopens the matching scope. The report export
+(TODO-46, on its own branch) is such a change: when it merges, M03 and M06 reopen for that one surface — declared in
+`AGENTS.UiAutomation` §1, isolated by the save-dialog path inside the owned sandbox — and the next manual edition needs a
+new observed run on that build.
 
 ## Observation method (MR8)
 
@@ -169,6 +173,13 @@ harness 11, declared 1 (E3), outside the Studio window 26, other-actor 2 (browse
 declaration or unclassified; `runStatus: completed`, `g1Eligible: true`. Later runs reuse this basis while the product build,
 the isolation fingerprint, the path rules and the registered image set are unchanged; a new product build needs one light
 observed run of the G3 pilot scenario (MR8).
+
+**Manual runs 01–04 (2026-10-14).** The six manual scenarios as one observed batch. Runs 01 and 02 failed every scenario at
+"owned window foreground": a Windows firewall prompt, raised by another tool's test host, held the foreground (the harness
+never steals focus). Run 03 passed 3 of 6; the scenario fixes are in `663eb77`. **Run 04 (commit `663eb77`): 6 / 6
+passed**, `runStatus: completed`, `g1Eligible: true` after two background filters evidenced by this run (`65683fc`: the
+WinINet cache under LOCALAPPDATA and the OS HostActivityManager record — both OS activity beside the run). Adding the
+filters is a rule change awaiting HUM-07. The first edition, `2026-10-15-1`, is generated from run 04.
 
 ## Record of the kernel-trace runs (02–05)
 

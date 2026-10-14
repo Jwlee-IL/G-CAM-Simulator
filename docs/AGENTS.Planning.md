@@ -46,7 +46,7 @@ when a plan is wrong, caught every one. Each role checks the other.
 | Item | Rule | Why |
 |---|---|---|
 | Model | `codex exec -m gpt-6.1-sol` | the author's choice |
-| Sandbox | `-s danger-full-access` **with the guard block below** in every prompt (author, 2026-10-02); `-s workspace-write` while another session drives UI automation; desktop UI tests / app launch only after the author says the desktop is free | the Windows sandbox runs each command through `CreateProcessAsUserW` with a restricted token and has repeatedly lost process creation mid-task (error 5, access denied), ending the conversation's usefulness; one level up removes that, and the guard plus the planner's audit replace the sandbox's limits. The command-line flag decides, not the app setting (the log's `sandbox:` line shows what applied) |
+| Sandbox | `-s danger-full-access` **with the guard block below** in every prompt (author, 2026-10-02), also while another session drives UI automation (`workspace-write` hung `dotnet test`, 2026-10-14); desktop UI tests / app launch only after the author says the desktop is free | the Windows sandbox runs each command through `CreateProcessAsUserW` with a restricted token and has repeatedly lost process creation mid-task (error 5, access denied), ending the conversation's usefulness; one level up removes that, and the guard plus the planner's audit replace the sandbox's limits. The command-line flag decides, not the app setting (the log's `sandbox:` line shows what applied) |
 | Prompt | from a file on stdin (`- < prompt.md`), report with `-o report.md`, run in the background; **write the prompt file with the file-write tool or a quoted heredoc (`<<'EOF'`), never an unquoted heredoc** — the shell runs every backtick span in it as a command and substitutes the output | long tasks; the report is the turn's result. 2026-10-07: an unquoted heredoc ran the prompt's `` `dotnet build` `` / `` `dotnet test` `` spans while writing the file and dropped them from the prompt |
 | One conversation per task | start once, read `session id:` from the log, continue with `codex exec -s workspace-write --skip-git-repo-check -C <repo> -o <report> resume <session-id> - < prompt.md` | the implementer keeps its findings across review, discussion and implementation |
 | Check the log head | `model:`, `sandbox:`, `session id:` match what was intended | a silent fallback (new session, other sandbox) is otherwise invisible |
@@ -138,7 +138,8 @@ ran 10–30 commands first. TODO-11 made it blocking:
 **Decision (author, 2026-10-02).** Implementation runs one level up, `-s danger-full-access`: no restricted token, so
 `CreateProcessAsUserW` is never called and the error cannot occur. The sandbox's limits are replaced by the guard
 block above and the planner's audit. `read-only` stays for short cross-verification calls (they finish before the
-failure tends to appear); `workspace-write` returns while another session drives UI automation.
+failure tends to appear). *Revised 2026-10-14:* `workspace-write` no longer returns while another session drives UI
+automation — a turn in it hung `dotnet test` and left orphaned MSBuild nodes; the guard block forbids desktop tests instead.
 
 **If it shows up again** (a sandboxed run): (1) do not retry the same conversation — it stays broken; (2) probe with a
 one-line fresh `codex exec`; (3) continue in a fresh conversation handed the written review, or resume with
@@ -158,6 +159,8 @@ one-line fresh `codex exec`; (3) continue in a fresh conversation handed the wri
 | Physics claims | a precision that has no guarantee is **measured and recorded**, not asserted; assert what is guaranteed (association, conservation, a derived k·σ); a bias found is a finding with a TODO, never tuned away |
 | Inherited evidence | re-measure before building on it — the implementer could not reproduce EV-03's rank-23 headline (TODO-18) |
 | A value chosen after seeing the check seeds | it is no longer validated by them: confirm it on a third, disjoint seed set before it becomes a default, and stop if it fails there (TODO-36: the rule chose 360 iterations, 360 missed on the check seeds, 400 was confirmed on a third set) |
+| A `workspace-write` turn hangs in `dotnet test` (TODO-46, 2026-10-14): no output for a long time, and the stopped turn leaves hundreds of orphaned MSBuild nodes | keep implementation turns on `danger-full-access` with the guard block, also while the planner drives a desktop run (the implementer's own guard forbids desktop tests); clean up orphaned build nodes only with the author's approval |
+| Every desktop scenario fails within a minute at "owned window foreground" (TODO-43, 2026-10-14) | a prompt holds the foreground — a Windows firewall prompt raised by an IDE's test host, or another app's notification window. Before each desktop run, read the foreground window; if it is not the terminal, tell the author and close it only with their OK. The harness never steals focus by force |
 | Desktop UI tests while an implementation is running | the planner runs them in a separate detached `git worktree` (copy the change under test into it), so a concurrent build in the main tree cannot change the binary under test; three runs — full suite, `GCAM_UI_BREAK_VERDICT=1` on the new / changed scenarios (each must fail at its corrupted assertion, not by a timeout), recovery; read the manifests of every failure before re-running, never retry blindly (2026-10-07) |
 
 ## The six plan errors of the first week (examples)

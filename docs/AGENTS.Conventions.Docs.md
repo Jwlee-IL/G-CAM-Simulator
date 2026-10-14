@@ -13,6 +13,7 @@ A document's name says **what kind of document it is** (the upper-case keyword) 
 | `DESIGN` | how GCAM Studio is designed: architecture, UI system, components | anyone changing Studio | `DESIGN.Architecture.md`, `DESIGN.Typography.md`, `DESIGN.Controls.md` |
 | `VV` | verification and validation: user / product / software requirements, the evidence behind them, design record, traceability to tests, validation scenarios, known anomalies | reviewers, anyone changing behaviour | `VV.Gcam.Overview.md`, `VV.Gcam.URS.md`, `VV.Gcam.PRS.md`, `VV.Gcam.Evidence.md`, `VV.Gcam.Limitations.md`, `VV.Gcam.Decisions.md`, `VV.Gcam.Calibration.md`, `VV.Studio.SRS.md`, `VV.Studio.SDS.md`, `VV.Studio.md` |
 | `HW` | hardware design the simulator models: readout electronics, generated schematics and netlists (illustrative, not buildable designs) | anyone changing the detector / readout model | `HW.Readout.md` |
+| `MANUAL` | the GCAM Studio user manual, assembled by `samples/manual/manual_records.py` from desktop runs that drove the app and from hand-written static chapters; an edition is generated, never hand-edited | readers who drive the viewer | `MANUAL.Studio.md` (in `docs/manual/editions/<id>/`) |
 | `PAPER` | write-ups of the physics / results for readers | readers | `PAPER.ko.md` |
 | `PLAN` | implementation plans: goal, the author's decisions with reasons, step-by-step spec and done-criteria, written before the work and handed to whoever implements it (a person or a coding agent) | implementers, reviewers | `PLAN.<Area>.<Name>.md` while open; finished ones in `docs/archive/` |
 
@@ -29,6 +30,7 @@ Rules:
 |---|---|---|
 | `README.md`, `AGENTS.md`, `CLAUDE.md`, `LICENSE` | repository root | names and locations fixed by GitHub / agent tooling |
 | every other keyword document | `docs/` | one flat folder, grouped by name |
+| manual sources and editions | `docs/manual/`: `chapters.json`, `notices.json`, `static/`, `editions/<id>/` | sources the generator reads, and each committed edition with its figures, retained run records and generation record (like `docs/assets/`, a folder of data, not of keyword documents) |
 | `README.md` inside a source folder | next to the code (`src/Gcam.Studio/README.md`, `rtl/README.md`) | a short map of that folder that links to the keyword docs; never the main explanation |
 
 `AGENTS.md` is the index for agents and contributors: it links every `AGENTS.*` and `DESIGN.*` document.
@@ -78,6 +80,11 @@ Rules:
   inputs, never their numbers. Historical records and inspection / manual / compiler judgments stay outside the
   generated blocks. A milestone is replayed from its committed, sanitised runner output (TRX, XML) and catalog; its
   binaries are identified by hash, never rebuilt as a stand-in for the measured subject.
+- **Studio manual.** Chapter titles come only from `docs/manual/chapters.json`, cautions and notes only from the
+  approved `docs/manual/notices.json`. An edition (`docs/manual/editions/<id>/`) is generated from the latest run of each
+  chapter on one Studio build and committed whole; CI replays every committed edition byte for byte
+  (`manual_records.py check --all`). The output is never edited by hand; once an edition is on the main branch it is
+  never changed, and a correction is a new edition id generated from corrected sources or new runs.
 - Every `VV.*` document opens with an **At a glance** list (≤ 6 bullets) below its scope line, and keeps change
   history out of its requirement rows (that belongs in the evidence register's model history or in the decision
   log).

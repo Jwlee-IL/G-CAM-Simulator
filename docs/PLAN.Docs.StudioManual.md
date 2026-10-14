@@ -11,8 +11,11 @@ given the procedure's location in its prompt; it is not named in the repository.
 Status: **stage 0 started 2026-10-13 (headless part)** — turn 1 review by Codex (conversation `01a134cc…`,
 [review](PLAN.Docs.StudioManual.Review.md)), supplemented against the UI-automation procedure v3.0.1 and the document-
 automation procedure v3.0.1; "Decisions after review" below (partial — the edition decisions wait for the author). Next:
-G1 qualified by observed run 09 (2026-10-14, MR8); next the manual work (MR9: chapter registry, M15–M17) after the
-open edition decisions (MR5).
+G1 qualified by observed run 09 (2026-10-14, MR8). Manual work (MR9, MR10) built headless (`e9f368f`), then run on the
+desktop: run 04 passed 6 / 6 (`663eb77`); figure fixes in `0399f80`. The first edition `2026-10-15-1` is generated and
+committed as a **draft** (`51fbdb2`). Waiting for the author: the notice list, static chapters 1.1 and 5.2 and the figures
+(HUM-12, HUM-10), the charter (HUM-04, MR5) and the two background filters (HUM-07). On approval the sources are marked
+approved and the edition is regenerated from the same runs.
 
 ## The model process (what is adopted)
 
