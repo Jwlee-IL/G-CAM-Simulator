@@ -89,7 +89,14 @@ rule-and-approval cycle ("헌장을 고쳐. 지금 너무 보수적으로 행동
 with evidence instead of being built (charter, Applicability); G1 keeps one light observed run per trigger; the remaining work
 is the manual itself (M15–M17, chapter registry). Reason: the stage-0 review applied all 22 items as if Studio had the
 surfaces of a device-driving app (author: "표면이 없는 프로그램에 대해서는 Not Applicable하게 접근하는 게 맞지 않았을까?"). | author |
-| MR5 | Open, decided later: SM-7 (notice register), SM-9 (where an edition lives), figure overlays, first-edition scope, the P4 charter text (HUM-04), qualification scope and observation policy. | — |
+| MR10 | **Edition decisions (2026-10-14):** first edition = **8 core chapters** — 1.1 purpose and scope (static), 1.2 window and
+workspaces, 2.1 sources, 2.2 optics and detector, 2.4 Start / Stop / Continue / Reset, 3.1 Imaging measurements, 3.4 Spectrum
+(generated), 5.2 interpretation and limitations (static); the rest of the review §3 list follows in later editions. SM-9:
+the edition is **committed** per milestone and replayed by hash in CI, within a figure budget (target ≤ 10 MiB per edition,
+crops where a full window is not needed). Figures carry **rectangle marks with numbered badges** (digits from a small bitmap
+glyph set, Python standard library) and a legend. SM-7: a **short Studio notice list** approved by the author is the only
+source of warnings and cautions. | author |
+| MR5 | Open: the P4 charter text (HUM-04, after the first manual runs, MR7). SM-7, SM-9, overlays and the first-edition scope are decided in MR10. | — |
 
 ## Steps
 
