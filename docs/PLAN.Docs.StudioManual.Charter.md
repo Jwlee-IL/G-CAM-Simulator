@@ -23,6 +23,29 @@ apply. Runs 02–05 traced every kernel
 file and registry event and found, after classification, only framework / driver writes now declared (E1, E3), an OS record
 (E2) and metadata-only operations that change no state (E4, E5).
 
+## Applicability (MR9)
+
+The procedure's scopes apply when their condition holds; for a viewer without write surfaces most safety scopes close as
+not applicable, with evidence, and are not built further. Status of the 22 stage-0 review items
+([review §9](PLAN.Docs.StudioManual.Review.md)):
+
+| Items | Subject | Status | Evidence / what remains |
+|---|---|---|---|
+| M03 | write-surface survey | **done: no Studio write surface** besides E1 / E3 (framework, declared) | surface-list.json; runs 05–07 |
+| M04 | fingerprinted isolation boundary | applies, done (built in stage 0); kept as is | `stage0.py pin` / preflight |
+| M05 | observed run | applies (the procedure's G1 verification is mandatory): **one light run per trigger** (MR8) | run 08 closes G1 |
+| M06 | runtime action policy | **N/A**: Studio has no destructive or state-changing action (no save, delete, export, send); the existing target guard stays | surface-list.json `app-*` rows |
+| M07 | process ownership | **existing level suffices**: no child processes; launcher refuses an existing instance and closes gracefully | `app-network-process` row; OwnedStudioProcess |
+| M08 | shared-desktop ownership | **existing level suffices**: single-user machine, xUnit serialisation, desktop lease already built | DesktopLease |
+| M09–M11 | run-record structure, build identity | applies **as far as the manual needs**: final record after cleanup, outcome fields, source / binary identity | — |
+| M14 | pilot mutation, two consecutive passes | **N/A for the manual**: the scenarios are the passing regression set; capture runs are not new oracles | — |
+| M12, M13 | selectors, waits | **existing harness** (27 / 27 desktop scenarios pass) | AGENTS.UiAutomation |
+| M15–M17 | capture definitions and quality, coverage tracking, author figure review | **applies — the manual work itself** | next |
+| S01–S04, C01 | narrow observation, failure taxonomy, operation policy, adapters, prose | later; not blocking | — |
+
+Channels and conditional scopes that are N/A for Studio: network (MR6), external services, accounts, devices, real data
+stores, deletion ownership. A later change that adds a write surface reopens the matching scope.
+
 ## Observation method (MR8)
 
 A **candidate is a state change**: a file or registry value that exists, is gone, or differs after the run. Reads, opens,

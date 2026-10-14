@@ -11,7 +11,7 @@ given the procedure's location in its prompt; it is not named in the repository.
 Status: **stage 0 started 2026-10-13 (headless part)** — turn 1 review by Codex (conversation `01a134cc…`,
 [review](PLAN.Docs.StudioManual.Review.md)), supplemented against the UI-automation procedure v3.0.1 and the document-
 automation procedure v3.0.1; "Decisions after review" below (partial — the edition decisions wait for the author). Next:
-the before/after observation (MR8) is implemented, then its approved-pilot observed run (launch–idle–exit, no elevation).
+close G1 with one approved-pilot observed run (MR8), then the manual work (MR9: chapter registry, M15–M17).
 
 ## The model process (what is adopted)
 
@@ -84,6 +84,10 @@ null window, plus the owned-process ledger, without elevation; a candidate is a 
 allowed (A3 revised). The machine-wide kernel trace becomes an optional diagnostic. Supersedes MR1's elevated-trace
 condition; P4 compliance stays the target. Reason: runs 02–05 showed the exhaustive trace turns every runtime read into a
 rule-and-approval cycle ("헌장을 고쳐. 지금 너무 보수적으로 행동하고 있어."). | author |
+| MR9 | **Applicability first (2026-10-14):** for a viewer without write surfaces the procedure's scopes close as not applicable
+with evidence instead of being built (charter, Applicability); G1 keeps one light observed run per trigger; the remaining work
+is the manual itself (M15–M17, chapter registry). Reason: the stage-0 review applied all 22 items as if Studio had the
+surfaces of a device-driving app (author: "표면이 없는 프로그램에 대해서는 Not Applicable하게 접근하는 게 맞지 않았을까?"). | author |
 | MR5 | Open, decided later: SM-7 (notice register), SM-9 (where an edition lives), figure overlays, first-edition scope, the P4 charter text (HUM-04), qualification scope and observation policy. | — |
 
 ## Steps
