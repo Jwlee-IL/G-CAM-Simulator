@@ -61,6 +61,18 @@
       "channel": "registry",
       "reason": "the shell's taskbar usage record (app switching, jump views): an OS record observing processes or windows, other-actor by the procedure",
       "evidencedBy": "procedure category (window session)"
+    },
+    {
+      "pattern": "<LOCALAPPDATA>\\\\Microsoft\\\\Windows\\\\INetCache\\\\.*",
+      "channel": "file",
+      "reason": "the shared WinINet cache (here the taskbar weather widget's icon): Studio has no network code (AGENTS.UiAutomation section 1, confirmed absent)",
+      "evidencedBy": "manual-20261014-04"
+    },
+    {
+      "pattern": "HKCU\\\\Software\\\\Microsoft\\\\Windows NT\\\\CurrentVersion\\\\HostActivityManager\\\\.*",
+      "channel": "registry",
+      "reason": "the activity history of packaged app hosts (Studio is unpackaged): an OS record observing processes or windows, other-actor by the procedure",
+      "evidencedBy": "manual-20261014-04"
     }
   ],
   "backgroundFiltersSchema": {
