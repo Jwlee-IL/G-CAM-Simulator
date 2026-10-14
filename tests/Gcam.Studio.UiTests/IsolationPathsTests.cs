@@ -21,6 +21,17 @@ public sealed class IsolationPathsTests
         Assert.Throws<InvalidOperationException>(() => OwnedStudioProcess.ValidatePrivilege(true));
     }
     [Fact]
+    public void DeviceForm_MapsDriveLetterRootsToTraceDevicePaths_AndRefusesUnmappedDrives()
+    {
+        Func<string, string?> volumes = drive => drive == "C:" ? @"\Device\HarddiskVolume7" : drive == "S:" ? @"\??\C:\subst" : null;
+        Assert.Equal(@"\Device\HarddiskVolume7\Users\fixture\AppData\Local\Temp\gcam-uia-run",
+            IsolationPaths.DeviceForm(@"C:\Users\fixture\AppData\Local\Temp\gcam-uia-run", volumes));
+        Assert.Equal(@"\Device\HarddiskVolume7\ProgramData", IsolationPaths.DeviceForm(@"c:\ProgramData", volumes));
+        Assert.Null(IsolationPaths.DeviceForm(@"S:\fixture", volumes)); // SUBST target is not a device name
+        Assert.Null(IsolationPaths.DeviceForm(@"D:\fixture", volumes)); // unmapped drive
+        Assert.Null(IsolationPaths.DeviceForm(@"\\server\share\fixture", volumes)); // UNC is not a drive-letter root
+    }
+    [Fact]
     public void Fingerprint_ChangesWithContentsAndNames()
     {
         string root = Scratch(); Directory.CreateDirectory(root);

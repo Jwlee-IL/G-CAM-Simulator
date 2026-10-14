@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -49,4 +50,29 @@ public static partial class IsolationPaths
     }
 
     public static string Hash(byte[] bytes) => Convert.ToHexStringLower(SHA256.HashData(bytes));
+
+    /// <summary>
+    /// NT device form (\Device\HarddiskVolumeN\...) of a drive-letter path, as kernel trace events name files.
+    /// Read-only object-manager lookup of the drive; null when the drive does not map to a \Device\ name (SUBST, network).
+    /// </summary>
+    public static string? DeviceForm(string path, Func<string, string?>? queryDosDevice = null)
+    {
+        string full = Path.GetFullPath(path);
+        if (full.Length < 3 || !char.IsAsciiLetter(full[0]) || full[1] != ':' || full[2] != Path.DirectorySeparatorChar) return null;
+        string? device = (queryDosDevice ?? QueryDosDevice)(full[..2].ToUpperInvariant());
+        if (device is null || !device.StartsWith(@"\Device\", StringComparison.Ordinal) || device.Contains('\0')) return null;
+        return device.TrimEnd(Path.DirectorySeparatorChar) + full[2..];
+    }
+
+    private static string? QueryDosDevice(string drive)
+    {
+        var buffer = new char[1024];
+        uint written = QueryDosDeviceW(drive, buffer, (uint)buffer.Length);
+        if (written == 0) return null;
+        int end = Array.IndexOf(buffer, '\0');
+        return new string(buffer, 0, end < 0 ? (int)written : end);
+    }
+
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    private static extern uint QueryDosDeviceW(string deviceName, [Out] char[] targetPath, uint max);
 }

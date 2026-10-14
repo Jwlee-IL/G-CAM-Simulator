@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "normalisationVersion": 3,
+  "normalisationVersion": 4,
   "default": "unknown; no provider/PID blanket exemptions",
-  "scope": "Decoded classic/WBEM events; narrowly evidenced schema-checked binary prefixes; unknown payloads remain unknown.",
+  "scope": "Decoded classic/WBEM events; narrowly evidenced schema-checked binary prefixes; unknown payloads remain unknown. Manifest providers map by GUID, Event ID and version only where approved (E4 set-information class).",
   "unmappedProviders": [
     {
       "guid": "9b79ee91-b5fd-41c0-a243-4248e266e9d0",
@@ -820,6 +820,29 @@
         "https://learn.microsoft.com/en-us/windows/win32/etw/registry",
         "https://github.com/microsoft/perfview/blob/main/src/TraceEvent/Parsers/KernelTraceEventParser.cs",
         "Emitted WBEM template carries these fields; correlation is required and missing identity remains unresolved."
+      ]
+    },
+    {
+      "guid": "70eb4f03-c1de-4f73-a051-33d13d5413bd",
+      "eventIds": [
+        "11"
+      ],
+      "versions": [
+        "0"
+      ],
+      "opcodes": [],
+      "channel": "registry",
+      "operation": "SetInformationKeyClass",
+      "requiredFields": [
+        "KeyObject",
+        "Status",
+        "InfoClass"
+      ],
+      "evidence": [
+        "https://github.com/repnz/etw-providers-docs/blob/master/Manifests-Win10-18990/Microsoft-Windows-Kernel-Registry.xml",
+        "Microsoft-Windows-Kernel-Registry manifest: event value 11, version 0, symbol task_0SetInformationKey, keyword SetInformationKey (0x40), template task_0QueryKeyArgs = KeyObject (Pointer), Status, InfoClass, DataSize (UInt32), KeyName (UnicodeString), CapturedDataSize (UInt16), CapturedData (Binary). Same event in the 17134 and 18990 manifests.",
+        "https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/ne-wdm-_key_set_information_class",
+        "Rule change RC-05: the event is effect-bearing (writeOperations.registry) and only carries InfoClass for a later rule; no class is exempted here."
       ]
     }
   ],

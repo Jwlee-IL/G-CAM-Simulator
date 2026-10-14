@@ -28,11 +28,19 @@ public sealed class ObservedRunTests(ITestOutputHelper output)
             Assert.Equal(runId, doc.RootElement.GetProperty("runId").GetString());
         var manifest = new UiRunManifest(runId, nameof(LaunchIdleExit_RecordsPendingChannelEvidence_WithoutAutomation));
         manifest.RecordApprovedProbe(package);
+        // Run start: kernel events name files by NT device path, so every owned root is recorded in both forms (RC-08).
+        using var host = Process.GetCurrentProcess();
+        string[] ownedRoots = [IsolationPaths.RunRoot(Path.GetTempPath(), runId), Path.GetFullPath(runDirectory), OwnedStudioProcess.LeasePath(host.SessionId)];
+        string?[] ownedRootDevices = ownedRoots.Select(root => IsolationPaths.DeviceForm(root)).ToArray();
+        string programData = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
+        var knownFolders = new Dictionary<string, object> { ["ProgramData"] = new { path = programData, devicePath = IsolationPaths.DeviceForm(programData) } };
         var issues = new List<UiRunManifest.Issue>();
         OwnedStudioProcess? app = null;
         RegistryMarker.Control? registryControl = null;
         Exception? error = null;
         DateTimeOffset finished = DateTimeOffset.UtcNow;
+        if (ownedRootDevices.Any(device => device is null) || IsolationPaths.DeviceForm(programData) is null)
+            issues.Add(new("blocked", "device-path-unresolved"));
         try
         {
             // trace.ready has been checked; the actor is this test host, before any product launch.
@@ -66,7 +74,8 @@ public sealed class ObservedRunTests(ITestOutputHelper output)
                 var context = new
                 {
                     ownedProcesses = app.Ledger.Owned.Select(p => new { pid = p.Pid, parentPid = p.ParentPid, startedAt = p.StartedAt.ToUniversalTime().ToString("O"), finishedAt = finished.ToString("O") }),
-                    harnessPids = new[] { Environment.ProcessId }, osPids = Array.Empty<int>(), ownedRoots = new[] { app.Sandbox, runDirectory },
+                    harnessPids = new[] { Environment.ProcessId }, osPids = Array.Empty<int>(), ownedRoots,
+                    ownedRootDevicePaths = ownedRootDevices, knownFolders,
                     requiredChannels = new[] { "file", "process", "registry" },
                     channelApplicability = new[] { ProbeChannels.Network },
                     traceHealth = new { complete = false, eventsLost = (int?)null, buffersLost = (int?)null },

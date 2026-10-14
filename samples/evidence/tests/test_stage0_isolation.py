@@ -213,11 +213,15 @@ class StageZeroIsolationTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'normalisation differs'): list(stage0.parse_trace(compact))
 
     @staticmethod
-    def real_event(guid, opcode, fields=None, pid=20, at='2026-10-13T00:00:05Z', error=False):
+    def real_event(guid, opcode, fields=None, pid=20, at='2026-10-13T00:00:05Z', error=False, event_id=None, version=None):
         import xml.etree.ElementTree as ET
         event = ET.Element('Event', xmlns='http://schemas.microsoft.com/win/2004/08/events/event')
         system = ET.SubElement(event, 'System')
         ET.SubElement(system, 'Provider', Guid='{9e814aad-3204-11d2-9a82-006008a86939}')
+        if event_id is not None:
+            ET.SubElement(system, 'EventID').text = str(event_id)
+        if version is not None:
+            ET.SubElement(system, 'Version').text = str(version)
         ET.SubElement(system, 'Opcode').text = str(opcode)
         ET.SubElement(system, 'Execution', ProcessID=str(pid), ThreadID='100')
         ET.SubElement(system, 'TimeCreated', SystemTime=at)
@@ -238,6 +242,8 @@ class StageZeroIsolationTests(unittest.TestCase):
             self.assertTrue(row['evidence'])
             if row['operation'] == 'FileOperationEnd':
                 continue # completion requires an actual preceding request; tested separately
+            if 'eventIds' in row: # manifest rows map by Event ID and version, tested separately
+                continue
             event = stage0.parse_event(self.real_event('{' + row['guid'] + '}', row['opcodes'][0], fields), rules)
             self.assertEqual(row['operation'], event['operation'])
             self.assertEqual(row['channel'], event['channel'])
@@ -593,6 +599,206 @@ class StageZeroIsolationTests(unittest.TestCase):
         events = list(stage0.parse_trace(path))
         self.assertEqual(('file', 10, 'ambient.json'), (events[0]['channel'], events[0]['pid'], events[0]['destination']))
         self.assertEqual('unknown', events[1]['channel'])
+
+    # --- Run-04 decisions and rule changes (E1-E5, RC-05..RC-08); real-shape fixtures, no OS access ---------------------
+
+    PROCESS, THREAD, IMAGE = '3d6fa8d0-fe05-11d0-9dda-00c04fd7ba7c', '3d6fa8d1-fe05-11d0-9dda-00c04fd7ba7c', '2cb15d1d-5fc1-11d2-abe1-00a0c911f518'
+    FILE, REGISTRY, KERNEL_REGISTRY = '90cbdc39-4a3e-11d1-84f4-0000f80464e3', 'ae53722e-c863-11d2-8659-00c04fa321a1', '70eb4f03-c1de-4f73-a051-33d13d5413bd'
+    STUDIO_IMAGE = '\\Device\\HarddiskVolume9\\fixture\\deploy\\Gcam.Studio.exe'
+    SID = 'S-1-5-21-123-456-789-1001'
+
+    def replay(self, sources):
+        """Parse XML fixtures through one correlation state, as the streaming replay does."""
+        state = {'threads': {}, 'files': {}}
+        return [stage0.parse_event(event, correlation=state) for event in sources]
+
+    def at(self, millis):
+        return '2026-10-13T00:00:%02d.%07dZ' % (5 + millis // 1000, (millis % 1000) * 10000)
+
+    def studio_start(self):
+        """Owned Studio (pid 10, parent harness 20): start, its own image and its UI thread 100."""
+        self.registry_fixture()
+        self.context['ownedProcesses'][0]['parentPid'] = 20
+        return [self.real_event(self.PROCESS, '1', {'ProcessId': 10, 'ParentId': 20, 'ImageFileName': 'Gcam.Studio.exe'}, pid=20, at=self.at(0)),
+                self.real_event(self.IMAGE, '10', {'ProcessId': 10, 'FileName': self.STUDIO_IMAGE}, at=self.at(1)),
+                self.real_event(self.THREAD, '1', {'ProcessId': 10, 'TThreadId': 100}, at=self.at(2))]
+
+    def file_sequence(self, path, start, file_object='0xF1', disposition=1, thread=100, between=(), query=True, close_thread=None):
+        ms = iter(range(start, start + 50))
+        fields = lambda **extra: dict({'FileObject': file_object, 'TTID': thread, 'FileKey': '0xA1'}, **extra)
+        events = [self.real_event(self.FILE, '64', dict(fields(), OpenPath=path, CreateOptions=(disposition << 24) | 0x160), pid=4, at=self.at(next(ms))),
+                  self.real_event(self.FILE, '69', fields(InfoClass=4), pid=4, at=self.at(next(ms)))]
+        events += [self.real_event(self.FILE, opcode, fields(), pid=4, at=self.at(next(ms))) for opcode in between]
+        if query:
+            events.append(self.real_event(self.FILE, '74', fields(InfoClass=6), pid=4, at=self.at(next(ms))))
+        events.append(self.real_event(self.FILE, '65', fields(), pid=4, at=self.at(next(ms))))
+        events.append(self.real_event(self.FILE, '66', dict(fields(), TTID=close_thread or thread), pid=4, at=self.at(next(ms))))
+        return events
+
+    def classified(self, rows, change_times=None):
+        result = stage0.classify(self.controls + rows, self.context, self.rules, change_times=change_times)
+        return result, [c for c in result['candidates'] if c['ownedTree'] or c['pid'] == 20][len(self.controls):]
+
+    def test_manifest_set_information_class_maps_by_event_id_and_version_and_stays_effect_bearing(self):
+        fields = {'KeyObject': '0xFFFF1', 'Status': '0', 'InfoClass': '5', 'DataSize': '4', 'KeyName': ''}
+        row = stage0.parse_event(self.real_event(self.KERNEL_REGISTRY, '0', fields, pid=10, event_id=11, version=0))
+        self.assertEqual(('registry', 'SetInformationKeyClass', '5'), (row['channel'], row['operation'], row['fields']['InfoClass']))
+        self.assertIn('SetInformationKeyClass', self.rules['writeOperations']['registry'])
+        for event_id, version in ((11, 1), (5, 0)):
+            self.assertEqual('unknown', stage0.parse_event(self.real_event(self.KERNEL_REGISTRY, '0', fields, pid=10, event_id=event_id, version=version))['operation'])
+        self.assertEqual('unknown', stage0.parse_event(self.real_event(self.KERNEL_REGISTRY, '11', fields, pid=10))['operation'])
+        result = stage0.classify(self.controls + [row], self.context, self.rules)
+        self.assertEqual('out-of-declaration', result['candidates'][-1]['classification']) # E4 is not exempted by the class event
+
+    def test_profile_coverage_requires_exactly_the_approved_set_information_provider(self):
+        import xml.etree.ElementTree as ET
+        profile = SCRIPT.parent / 'Probe.wprp'; fixture = self.scratch() / 'profile.wprp'
+        mutations = {
+            'removed': lambda doc: doc.find('./Profiles/Profile/Collectors').remove(doc.find('./Profiles/Profile/Collectors/EventCollectorId')),
+            'keyword': lambda doc: doc.find('./Profiles/EventProvider/Keywords/Keyword').set('Value', '0x140'),
+            'stack': lambda doc: doc.find('./Profiles/EventProvider').set('Stack', 'true'),
+            'other': lambda doc: doc.find('./Profiles/EventProvider').set('Name', 'Microsoft-Windows-Kernel-File'),
+        }
+        for name, mutate in mutations.items():
+            doc = ET.parse(profile); mutate(doc); doc.write(fixture)
+            self.assertTrue(stage0.profile_coverage(fixture), name)
+        doc = ET.parse(profile)
+        extra = copy.deepcopy(doc.find('./Profiles/EventProvider')); extra.set('Id', 'Extra'); extra.set('Name', 'Microsoft-Windows-Kernel-Process')
+        doc.find('./Profiles').append(extra)
+        ET.SubElement(doc.find('./Profiles/Profile/Collectors/EventCollectorId/EventProviders'), 'EventProviderId', Value='Extra')
+        doc.write(fixture)
+        self.assertTrue(any('unapproved event provider' in issue for issue in stage0.profile_coverage(fixture)))
+
+    def test_e1_composition_window_is_declared_only_for_exact_key_values_hive_and_operation(self):
+        rows = self.replay(self.studio_start())
+        key = '\\REGISTRY\\USER\\' + self.SID + '\\Software\\Microsoft\\CTF\\CUAS\\DefaultCompositionWindow'
+        cases = [(key + '\\Left', 'SetValue', 10, 'app-declared'), (key + '\\Top', 'SetValue', 10, 'app-declared'),
+                 (key + '\\Width', 'SetValue', 10, 'out-of-declaration'),
+                 (key[:-len('DefaultCompositionWindow')] + 'Other\\Left', 'SetValue', 10, 'out-of-declaration'),
+                 (key.replace(self.SID, 'S-1-5-21-9-9-9-1002') + '\\Left', 'SetValue', 10, 'out-of-declaration'),
+                 (key + '\\Left', 'DeleteValue', 10, 'out-of-declaration'), (key + '\\Left', 'SetValue', 20, 'unknown')]
+        for destination, operation, pid, expected in cases:
+            event = self.event(pid, 'registry', operation, destination)
+            result, rows_out = self.classified(rows + [event])
+            self.assertEqual(expected, result['candidates'][-1]['classification'], (destination, operation, pid))
+            self.assertEqual('E1-app-tsf-composition-window' if expected == 'app-declared' else None, result['candidates'][-1]['rule'])
+        event = self.event(10, 'registry', 'SetValue', key + '\\Left'); event['valueName'] = 'Top'
+        self.assertEqual('out-of-declaration', self.classified(rows + [event])[0]['candidates'][-1]['classification'])
+
+    def test_e3_driver_timestamps_are_declared_only_as_writes_into_that_file(self):
+        rows = self.replay(self.studio_start())
+        self.context['knownFolders'] = {'ProgramData': {'path': 'C:\\ProgramData', 'devicePath': '\\Device\\HarddiskVolume9\\ProgramData'}}
+        target = '\\NVIDIA Corporation\\Drs\\nvAppTimestamps'
+        for destination, operation, expected in [('\\Device\\HarddiskVolume9\\ProgramData' + target, 'WriteFile', 'app-declared'),
+                                                 ('C:\\ProgramData' + target, 'WriteFile', 'app-declared'),
+                                                 ('\\Device\\HarddiskVolume9\\ProgramData\\NVIDIA Corporation\\Drs\\nvdrsdb0.bin', 'WriteFile', 'out-of-declaration'),
+                                                 ('\\Device\\HarddiskVolume8\\ProgramData' + target, 'WriteFile', 'out-of-declaration'),
+                                                 ('\\Device\\HarddiskVolume9\\ProgramData' + target, 'SetInformation', 'out-of-declaration'),
+                                                 ('\\Device\\HarddiskVolume9\\ProgramData' + target, 'Delete', 'out-of-declaration')]:
+            result = self.classified(rows + [self.event(10, 'file', operation, destination)])[0]
+            self.assertEqual(expected, result['candidates'][-1]['classification'], (destination, operation))
+        self.assertEqual('<PROGRAMDATA>', result['candidates'][-1]['destinationCategory'])
+        self.context.pop('knownFolders')
+        result = self.classified(rows + [self.event(10, 'file', 'WriteFile', 'C:\\ProgramData' + target)])[0]
+        self.assertEqual('out-of-declaration', result['candidates'][-1]['classification'])
+
+    def test_e2_background_activity_record_needs_owned_image_value_run_user_and_process_end(self):
+        sources = self.studio_start() + [self.real_event(self.PROCESS, '2', {'ProcessId': 10, 'ParentId': 20, 'ImageFileName': 'Gcam.Studio.exe'}, pid=10, at=self.at(4000))]
+        bam = '\\REGISTRY\\MACHINE\\SYSTEM\\ControlSet001\\Services\\bam\\State\\UserSettings\\' + self.SID
+        def record(value, millis, sid_key=bam, handle='0xB1'):
+            return [self.real_event(self.REGISTRY, '14', {'KeyHandle': handle, 'KeyName': value, 'Status': '0'}, pid=10, at=self.at(millis)),
+                    self.real_event(self.REGISTRY, '25', {'KeyHandle': handle, 'KeyName': sid_key}, pid=4, at=self.at(9000))]
+        rows = self.replay(sources + record(self.STUDIO_IMAGE, 4002))
+        result = self.classified(rows)[0]
+        bam_row = [c for c in result['candidates'] if c['channel'] == 'registry' and c['pid'] == 10][-1]
+        self.assertEqual(('os-or-harness-actor', 'E2-bam-process-end-record'), (bam_row['classification'], bam_row['rule']))
+        self.assertEqual(1, result['ruleApplications']['RC-07-forward-kcb-name'])
+        for label, extra in [('other image', record('\\Device\\HarddiskVolume9\\other\\tool.exe', 4002)),
+                             ('mid-life', record(self.STUDIO_IMAGE, 3000)),
+                             ('late', record(self.STUDIO_IMAGE, 4300)),
+                             ('other user', record(self.STUDIO_IMAGE, 4002, bam.replace(self.SID, 'S-1-5-21-9-9-9-1002')))]:
+            result = self.classified(self.replay(sources + extra))[0]
+            row = [c for c in result['candidates'] if c['channel'] == 'registry' and c['pid'] == 10][-1]
+            self.assertEqual('out-of-declaration', row['classification'], label)
+            self.assertIsNone(row['rule'], label)
+
+    def test_forward_kcb_rundown_names_a_handle_only_without_an_intervening_create_or_delete(self):
+        set_info = self.real_event(self.REGISTRY, '20', {'KeyHandle': '0xC1', 'KeyName': '', 'Status': '0'}, pid=10, at=self.at(10))
+        rundown = self.real_event(self.REGISTRY, '25', {'KeyHandle': '0xC1', 'KeyName': '\\REGISTRY\\MACHINE\\SOFTWARE\\Fixture'}, pid=4, at=self.at(90))
+        delete = self.real_event(self.REGISTRY, '23', {'KeyHandle': '0xC1', 'KeyName': ''}, pid=4, at=self.at(50))
+        for sources, expected in (([set_info, rundown], '<REGISTRY>'), ([set_info, delete, rundown], '<NO-DECODED-DESTINATION>')):
+            result = stage0.classify(self.controls + self.replay(sources), self.context, self.rules)
+            row = next(c for c in result['candidates'] if c['pid'] == 10 and c['kind'] == 'SetInformation')
+            self.assertEqual(expected, row['destinationCategory'])
+            self.assertEqual('out-of-declaration', row['classification']) # E4 stays out of declaration
+        # A value name that starts with a backslash is a value, not a key path, when the handle is already named.
+        state = {'threads': {}, 'files': {}}
+        stage0.parse_event(rundown, correlation=state)
+        value = stage0.parse_event(self.real_event(self.REGISTRY, '14', {'KeyHandle': '0xC1', 'KeyName': self.STUDIO_IMAGE, 'Status': '0'}, pid=10), correlation=state)
+        self.assertEqual(('\\REGISTRY\\MACHINE\\SOFTWARE\\Fixture\\' + self.STUDIO_IMAGE, self.STUDIO_IMAGE), (value['destination'], value['valueName']))
+
+    def test_e5_basic_information_sequence_is_non_effect_only_with_sequence_image_clause_and_old_change_time(self):
+        module = '\\Device\\HarddiskVolume9\\fixture\\deploy\\Gcam.Studio.dll'
+        load = self.real_event(self.IMAGE, '10', {'ProcessId': 10, 'FileName': module}, at=self.at(130))
+        launch = stage0.iso_ticks(self.context['ownedProcesses'][0]['startedAt'])
+        def run(sequence, change=None, extra=(load,)):
+            result = self.classified(self.replay(self.studio_start() + sequence + list(extra)), change)[0]
+            rows = [c for c in result['candidates'] if c['ownedTree'] and c['kind'] == 'SetInformation']
+            return result, rows[-1]
+        result, row = run(self.file_sequence(module, 100))
+        self.assertEqual(('out-of-declaration', 'E5-sequence-changetime-not-proven'), (row['classification'], row['rule']))
+        request = result['changeTimeRequest']
+        self.assertEqual([module.casefold()], list(request['destinations']))
+        evidence = lambda ticks: {'launchAt': request['launchAt'], 'records': {module.casefold(): {'changeTimeFileTime': ticks}}}
+        self.assertEqual(('non-effect', 'E5-basic-information-sequence'), (run(self.file_sequence(module, 100), evidence(launch - 1))[1]['classification'],
+                                                                           run(self.file_sequence(module, 100), evidence(launch - 1))[1]['rule']))
+        self.assertEqual('E5-sequence-changetime-newer', run(self.file_sequence(module, 100), evidence(launch + 1))[1]['rule'])
+        self.assertEqual('E5-sequence-changetime-not-proven', run(self.file_sequence(module, 100), {'launchAt': request['launchAt'], 'records': {module.casefold(): {'error': 'FileNotFoundError'}}})[1]['rule'])
+        with self.assertRaisesRegex(ValueError, 'different launch'):
+            run(self.file_sequence(module, 100), dict(evidence(launch - 1), launchAt='2026-10-12T00:00:00Z'))
+        old = evidence(launch - 1)
+        for label, sequence, extra in [('no query', self.file_sequence(module, 100, query=False), (load,)),
+                                       ('open-if disposition', self.file_sequence(module, 100, disposition=3), (load,)),
+                                       ('write in between', self.file_sequence(module, 100, between=('68',)), (load,)),
+                                       ('rename in between', self.file_sequence(module, 100, between=('71',)), (load,)),
+                                       ('other close thread', self.file_sequence(module, 100, close_thread=101), (load,)),
+                                       ('no image load', self.file_sequence(module, 100), ()),
+                                       ('other image next', self.file_sequence(module, 100),
+                                        (self.real_event(self.IMAGE, '10', {'ProcessId': 10, 'FileName': module + '.other.dll'}, at=self.at(120)), load))]:
+            row = run(sequence, old, extra)[1]
+            self.assertEqual('out-of-declaration', row['classification'], label)
+            self.assertIsNone(row['rule'], label)
+        # The process's own image qualifies without a following load; a later-changed file keeps the effect.
+        image = self.STUDIO_IMAGE.lower()
+        own = {'launchAt': request['launchAt'], 'records': {image.casefold(): {'changeTimeFileTime': launch - 1}}}
+        self.assertEqual('non-effect', run(self.file_sequence(image, 100), own, ())[1]['classification'])
+
+    def test_change_time_step_reads_attributes_through_the_device_map_and_reports_unmapped(self):
+        request = {'launchAt': '2026-10-13T00:00:00Z', 'destinations': {'\\device\\harddiskvolume9\\fixture\\a.dll': 1, '\\device\\other\\b.dll': 1}}
+        seen = []
+        result = stage0.change_times(request, devices={'C:': '\\Device\\HarddiskVolume9', 'S:': '\\??\\C:\\subst'},
+                                     reader=lambda path: seen.append(path) or 123)
+        self.assertEqual(['C:\\fixture\\a.dll'], seen)
+        self.assertEqual({'changeTimeFileTime': 123}, result['records']['\\device\\harddiskvolume9\\fixture\\a.dll'])
+        self.assertEqual({'error': 'unmapped-device'}, result['records']['\\device\\other\\b.dll'])
+        self.assertEqual(stage0.iso_ticks('2026-10-13T00:00:00.0000001Z'), stage0.iso_ticks('2026-10-13T00:00:00Z') + 1)
+
+    def test_device_form_roots_classify_harness_sandbox_writes_and_one_create_rule_for_both_actors(self):
+        self.context['ownedRoots'] = ['C:\\Temp\\gcam-uia-fixture']
+        device = '\\Device\\HarddiskVolume9\\Temp\\gcam-uia-fixture'
+        write = self.event(20, 'file', 'WriteFile', device + '\\Roaming\\probe-diagnostic.txt')
+        result = stage0.classify(self.controls + [write], self.context, self.rules)
+        self.assertEqual('out-of-declaration', result['candidates'][-1]['classification']) # drive-letter roots never match device paths
+        self.context['ownedRootDevicePaths'] = [device]
+        result = stage0.classify(self.controls + [write], self.context, self.rules)
+        self.assertEqual(('os-or-harness-actor', '<REDIRECTED-SANDBOX>'), (result['candidates'][-1]['classification'], result['candidates'][-1]['destinationCategory']))
+        for pid, destination, expected in [(20, device + '\\Temp\\x', 'os-or-harness-actor'), (20, device, 'os-or-harness-actor'),
+                                           (20, '\\Device\\HarddiskVolume9\\Windows\\x.dll', 'unknown'),
+                                           (10, device + '\\Temp\\x', 'unknown'), (10, '\\Device\\HarddiskVolume9\\Windows\\x.dll', 'unknown')]:
+            result = stage0.classify(self.controls + [self.event(pid, 'file', 'CreateFile', destination)], self.context, self.rules)
+            self.assertEqual(expected, result['candidates'][-1]['classification'], (pid, destination))
+        sibling = self.event(20, 'file', 'WriteFile', device + '-other\\x')
+        self.assertEqual('out-of-declaration', stage0.classify(self.controls + [sibling], self.context, self.rules)['candidates'][-1]['classification'])
 
 
 if __name__ == '__main__':

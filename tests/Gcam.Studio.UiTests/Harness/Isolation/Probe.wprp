@@ -5,6 +5,10 @@
       <BufferSize Value="128" />
       <Buffers Value="64" />
     </SystemCollector>
+    <EventCollector Id="ProbeClassCollector" Name="GCAM registry set-information class">
+      <BufferSize Value="64" />
+      <Buffers Value="16" />
+    </EventCollector>
     <!-- Classic flags bundle reads/queries with effects; retain them as non-effects.
          Filename supplies names; ProcessThread supplies requesting-thread ownership.
          No stacks, disk-I/O detail, network or sampling. Buffers bound memory, not ETL size.
@@ -19,9 +23,23 @@
         <Keyword Value="Registry" />
       </Keywords>
     </SystemProvider>
+    <!-- E4 (rule change RC-05): the classic Registry SetInformation event omits the KEY_SET_INFORMATION_CLASS.
+         Microsoft-Windows-Kernel-Registry event 11 (SetInformationKey, template KeyObject, Status, InfoClass, DataSize,
+         KeyName, CapturedDataSize, CapturedData) carries it; keyword SetInformationKey = 0x40 enables only that event.
+         Evidence: the provider manifest and the WPR EventProvider schema, cited in the draft charter. -->
+    <EventProvider Id="KernelRegistrySetInformation" Name="70eb4f03-c1de-4f73-a051-33d13d5413bd">
+      <Keywords>
+        <Keyword Value="0x40" />
+      </Keywords>
+    </EventProvider>
     <Profile Id="GcamProbe.Verbose.File" Name="GcamProbe" Description="GCAM classic kernel effect audit" LoggingMode="File" DetailLevel="Verbose">
       <Collectors>
         <SystemCollectorId Value="ProbeCollector"><SystemProviderId Value="ProbeProvider" /></SystemCollectorId>
+        <EventCollectorId Value="ProbeClassCollector">
+          <EventProviders>
+            <EventProviderId Value="KernelRegistrySetInformation" />
+          </EventProviders>
+        </EventCollectorId>
       </Collectors>
     </Profile>
   </Profiles>

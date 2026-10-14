@@ -168,8 +168,9 @@ def pwsh_version():
     return int(result.stdout.strip())
 
 
-def profile_coverage(profile_path=None, required_channels=None):
-    """Follow selected classic collector/provider references; declarations alone are not coverage."""
+def profile_coverage(profile_path=None, required_channels=None, approved_providers=None):
+    """Follow selected collector/provider references; declarations alone are not coverage.
+    Manifest providers are allowed only as approved (GUID + exact keyword set), e.g. the E4 set-information class."""
     required = {'file': {'FileIO', 'FileIOInit', 'Filename', 'ProcessThread'},
                 'registry': {'Registry', 'ProcessThread'}, 'process': {'ProcessThread', 'Loader'}}
     issues, selected = [], set()
@@ -193,8 +194,34 @@ def profile_coverage(profile_path=None, required_channels=None):
             if keywords is None or keywords.get('Operation', 'Set') != 'Set':
                 raise ValueError('expected explicit Set keywords')
             selected.update(node.get('Value') for node in keywords.findall('Keyword'))
-        if profiles[0].findall('./Collectors/EventCollectorId'):
-            issues.append('profile selects unapproved event collectors')
+        rules = json.loads((ISOLATION / 'classification-rules.json').read_text())
+        approved = {entry['guid'].lower(): entry for entry in (approved_providers if approved_providers is not None
+                                                               else rules.get('approvedEventProviders', []))}
+        chosen = set()
+        for ref in profiles[0].findall('./Collectors/EventCollectorId'):
+            if len(doc.findall("./Profiles/EventCollector[@Id='" + ref.get('Value', '') + "']")) != 1:
+                raise ValueError('missing/ambiguous selected EventCollector')
+            if [child.tag for child in ref if child.tag != 'EventProviders']:
+                issues.append('event collector reference carries unapproved options')
+            for provider_ref in ref.findall('./EventProviders/EventProviderId'):
+                providers = doc.findall("./Profiles/EventProvider[@Id='" + provider_ref.get('Value', '') + "']")
+                if len(providers) != 1 or providers[0].get('Base') or list(provider_ref):
+                    raise ValueError('missing/ambiguous/inherited/overridden EventProvider')
+                provider = providers[0]
+                name = provider.get('Name', '').strip('{}').lower()
+                if name not in approved:
+                    issues.append('profile selects unapproved event provider: ' + provider.get('Name', ''))
+                    continue
+                if (provider.get('Stack', 'false').lower() != 'false' or provider.get('CaptureStateOnly', 'false').lower() != 'false'
+                        or [child.tag for child in provider if child.tag != 'Keywords']):
+                    issues.append('event provider selects stacks, filters or capture-state options')
+                values = {numeric(node.get('Value')) for node in provider.findall('Keywords/Keyword')}
+                if values != {numeric(value) for value in approved[name]['keywords']}:
+                    issues.append('event provider keywords differ from the approved set: ' + approved[name]['id'])
+                chosen.add(name)
+        for name, entry in approved.items():
+            if name not in chosen:
+                issues.append('profile missing approved event provider: ' + entry['id'])
         if doc.findall('.//Stacks') or selected - set().union(*required.values()):
             issues.append('profile selects stacks or unapproved system keywords')
         for channel in required_channels if required_channels is not None else json.loads((ISOLATION / 'classification-rules.json').read_text())['requiredChannels']:
@@ -493,8 +520,12 @@ def parse_event(event, normalisation=None, correlation=None):
     key = guid.strip('{}').lower()
     if key == '68fdd900-4a3e-11d1-84f4-0000f80464e3' and identity_opcode in ('0', 'Header'):
         kind = 'Header'
+    event_id, version = get_text(system, 'EventID'), get_text(system, 'Version')
     for index, row in enumerate(normalisation['rows']):
-        if key == row['guid'] and identity_opcode.casefold() in [op.casefold() for op in row['opcodes']]:
+        # Manifest providers are identified by Event ID and version; classic opcodes are never reused as Event IDs.
+        manifest = 'eventIds' in row and event_id in row['eventIds'] and version in row.get('versions', [])
+        if key == row['guid'] and (manifest or 'eventIds' not in row
+                                   and identity_opcode.casefold() in [op.casefold() for op in row['opcodes']]):
             channel, kind, mapping = row['channel'], row['operation'], index
             if not error and all(field in data for field in row['requiredFields']):
                 operation = kind
@@ -546,7 +577,8 @@ def parse_event(event, normalisation=None, correlation=None):
             if destination.casefold().startswith('\\registry\\'):
                 keys[handle] = destination
         if handle and handle in keys:
-            if operation in ('SetValue', 'DeleteValue', 'QueryValue') and destination and not destination.startswith('\\'):
+            # A value name may itself start with a backslash (an image device path); only \REGISTRY\ is a key path.
+            if operation in ('SetValue', 'DeleteValue', 'QueryValue') and destination and not native_key(destination):
                 data['ValueName'] = destination
                 destination = keys[handle] + '\\' + destination
             elif not destination:
@@ -627,7 +659,7 @@ def destination_category(event, context):
     value = path.replace('\\', '/').casefold()
     if not path:
         return '<UNDECODED-IMAGE-METADATA>' if event.get('channel') == 'metadata' else '<NO-DECODED-DESTINATION>'
-    if any(confined(path, root) for root in context.get('ownedRoots', [])):
+    if any(confined(path, root) for root in owned_roots(context)):
         return '<REDIRECTED-SANDBOX>'
     if event.get('channel') == 'registry':
         return '<REGISTRY>'
@@ -635,6 +667,8 @@ def destination_category(event, context):
         return '<NAMED-PIPE>'
     if '/appdata/local/' in value:
         return '<LOCALAPPDATA>'
+    if '/programdata/' in value:
+        return '<PROGRAMDATA>'
     if '/users/' in value:
         return '<USERPROFILE>'
     if '/windows/' in value:
@@ -689,7 +723,205 @@ def registry_marker_match(event, control, rules, harness, proof=False):
     return True
 
 
-def classify(events, context, rules, candidate_sink=None):
+def native_key(path):
+    return str(path).casefold().startswith('\\registry\\')
+
+
+def iso_ticks(value):
+    """UTC ISO-8601 to 100 ns FILETIME ticks, keeping all seven fractional digits."""
+    text = str(value).strip().replace('Z', '+00:00')
+    match = re.fullmatch(r'(\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d)(?:\.(\d{1,7}))?([+-]\d\d:\d\d)', text)
+    if not match:
+        raise ValueError('unsupported timestamp: ' + text)
+    whole = dt.datetime.fromisoformat(match.group(1) + match.group(3))
+    seconds = (whole - dt.datetime(1601, 1, 1, tzinfo=dt.timezone.utc)) // dt.timedelta(seconds=1)
+    return seconds * 10000000 + int((match.group(2) or '').ljust(7, '0'))
+
+
+def owned_roots(context):
+    """Drive-letter roots plus their device forms recorded by the harness at run start."""
+    return [root for root in list(context.get('ownedRoots', [])) + list(context.get('ownedRootDevicePaths', [])) if root]
+
+
+def run_user_sid(context):
+    """The run user's hive is the one the harness registry marker was written to."""
+    for control in context.get('positiveControls', []):
+        match = re.fullmatch(r'\\REGISTRY\\USER\\(S-1-[0-9]+(?:-[0-9]+)+)\\Software\\GcamUiaProbe\\[A-Za-z0-9][A-Za-z0-9_-]{0,70}',
+                             control.get('traceKeyPath', '') if control.get('channel') == 'registry' else '', re.I)
+        if match:
+            return match.group(1)
+    return None
+
+
+def same_path(left, right):
+    return bool(left) and bool(right) and left.replace('/', '\\').casefold() == right.replace('/', '\\').casefold()
+
+
+def basename(path):
+    return str(path).replace('/', '\\').rsplit('\\', 1)[-1].casefold()
+
+
+def trace_facts(read_events, owned_at, harness, rules):
+    """One replay pass: process instances and their own images, forward KCB names and E5 open sequences."""
+    instances, loads = {}, {}
+    kcb_pending, kcb_names = {}, {}
+    open_files, sequences = {}, []
+    sequence_rule = rules.get('basicInformationSequence', {})
+    allowed = set(sequence_rule.get('allowedBetween', []))
+    for index, event in enumerate(read_events()):
+        channel, operation, pid = event.get('channel'), event.get('operation'), event.get('pid')
+        fields = event.get('fields', {})
+        at = event.get('at', '')
+        if channel == 'process' and operation in ('ProcessStart', 'ProcessRundownStart') and pid is not None:
+            instances.setdefault(pid, []).append({'at': at, 'parentPid': event.get('parentPid'), 'end': None,
+                                                  'name': basename(fields.get('ImageFileName', event.get('destination', ''))),
+                                                  'images': set()})
+        elif channel == 'process' and operation == 'ProcessEnd' and instances.get(pid):
+            instances[pid][-1]['end'] = at
+        elif channel == 'process' and operation in ('ImageLoad', 'ImageRundownStart') and pid is not None:
+            path = event.get('destination', '')
+            if instances.get(pid) and instances[pid][-1]['name'] and basename(path) == instances[pid][-1]['name']:
+                instances[pid][-1]['images'].add(path.casefold())
+            if operation == 'ImageLoad':
+                loads.setdefault(pid, []).append((index, at, path))
+        if channel == 'registry' and (handle := numeric(fields.get('KeyHandle'))):
+            # Rule change RC-07: a later rundown names an unresolved handle only when no KCB create/delete intervenes.
+            if operation in ('RegistryKcbCreate', 'RegistryKcbDelete'):
+                kcb_pending.pop(handle, None)
+            elif operation in ('RegistryKcbRundownStart', 'RegistryKcbRundownEnd'):
+                waiting = kcb_pending.pop(handle, [])
+                if native_key(event.get('destination', '')):
+                    kcb_names.update({entry: event['destination'] for entry in waiting})
+            elif not native_key(event.get('destination', '')):
+                kcb_pending.setdefault(handle, []).append(index)
+        if channel != 'file' or not (file_object := numeric(fields.get('FileObject'))):
+            continue
+        thread = numeric(fields.get('TTID'))
+        state = open_files.get(file_object)
+        if operation == 'CreateFile':
+            open_files.pop(file_object, None)
+            if pid is not None and (owned_at(event) or pid in harness):
+                open_files[file_object] = {'pid': pid, 'thread': thread, 'path': event.get('destination', ''),
+                                           'disposition': (numeric(fields.get('CreateOptions')) or 0) >> 24,
+                                           'sets': [], 'queried': False, 'clean': True, 'firstSetAt': None}
+        elif state is None:
+            continue
+        elif pid != state['pid'] or thread is None or thread != state['thread']:
+            state['clean'] = False
+            if operation == 'CloseFile':
+                open_files.pop(file_object, None)
+        elif operation == 'SetInformation' and numeric(fields.get('InfoClass')) == 4:
+            state['sets'].append(index)
+            state['firstSetAt'] = state['firstSetAt'] or at
+            state['queried'] = False
+        elif operation == 'QueryInformation':
+            state['queried'] = True
+        elif operation == 'CloseFile':
+            open_files.pop(file_object, None)
+            if (state['clean'] and state['sets'] and state['queried'] and state['path']
+                    and state['disposition'] == sequence_rule.get('createDisposition')):
+                sequences.append(dict(state, closeIndex=index, closeAt=at))
+        elif operation not in allowed:
+            state['clean'] = False # write, delete, rename, other set-information or unmapped operation
+    return {'instances': instances, 'loads': loads, 'kcbNames': kcb_names, 'sequences': sequences}
+
+
+def instance_at(facts, pid, at):
+    try:
+        moment = iso_ticks(at)
+        found = [entry for entry in facts['instances'].get(pid, []) if iso_ticks(entry['at']) <= moment]
+    except (ValueError, TypeError):
+        return None
+    return found[-1] if found else None
+
+
+def lineage_images(facts, pid, at, depth=32):
+    """The process's own image and its ancestors' images, each resolved at the child's start."""
+    images, seen = set(), set()
+    while pid is not None and pid not in seen and len(seen) < depth:
+        seen.add(pid)
+        entry = instance_at(facts, pid, at)
+        if entry is None:
+            break
+        images |= entry['images']
+        pid, at = entry['parentPid'], entry['at']
+    return images
+
+
+def basic_information_sequences(facts, rules):
+    """E5 sequence rule: event index -> path, first set time and the qualifying clause."""
+    rule = rules.get('basicInformationSequence', {})
+    window = rule.get('imageLoadWithinMs', 0) * 10000
+    qualified = {}
+    for sequence in facts['sequences']:
+        reason = None
+        if sequence['path'].casefold() in lineage_images(facts, sequence['pid'], sequence['closeAt']):
+            reason = 'own-or-ancestor-image'
+        else:
+            later = [load for load in facts['loads'].get(sequence['pid'], []) if load[0] > sequence['closeIndex']]
+            try:
+                if (later and same_path(later[0][2], sequence['path'])
+                        and 0 <= iso_ticks(later[0][1]) - iso_ticks(sequence['closeAt']) <= window):
+                    reason = 'next-image-load'
+            except ValueError:
+                pass
+        if reason:
+            for index in sequence['sets']:
+                qualified[index] = {'path': sequence['path'], 'firstSetAt': sequence['firstSetAt'], 'reason': reason}
+    return qualified
+
+
+def declared_surface(event, context, rules):
+    """E1 / E3: exact confirmed app write surfaces; nothing broader."""
+    destination = event.get('destination', '')
+    for surface in rules.get('declaredAppSurfaces', []):
+        if event.get('channel') != surface['channel'] or event.get('operation') not in surface['operations']:
+            continue
+        if surface['channel'] == 'registry':
+            sid = run_user_sid(context) if surface.get('hive') == 'run-user' else None
+            if not sid:
+                continue
+            key = '\\REGISTRY\\USER\\' + sid + '\\' + surface['keyPath']
+            for value in surface['valueNames']:
+                if (same_path(destination, key + '\\' + value)
+                        and (not event.get('valueName') or event['valueName'].casefold() == value.casefold())):
+                    return surface
+        elif surface['channel'] == 'file':
+            folder = context.get('knownFolders', {}).get(surface.get('knownFolder', ''), {})
+            if any(same_path(destination, base.rstrip('\\') + '\\' + surface['relativePath'])
+                   for base in (folder.get('path'), folder.get('devicePath')) if base):
+                return surface
+    return None
+
+
+def other_actor_record(event, tree, facts, context, rules):
+    """E2: the OS's background-activity record for an owned image, written at that process's end."""
+    sid = run_user_sid(context)
+    if event.get('channel') != 'registry' or not sid:
+        return None
+    for rule in rules.get('otherActorRecords', []):
+        if event.get('operation') not in rule['operations']:
+            continue
+        pattern = rule['keyPattern'].replace('<SID>', re.escape(sid)) + r'\\(?P<value>[^\\].*|\\.+)'
+        match = re.fullmatch(pattern, event.get('destination', ''), re.I | re.S)
+        if not match or event.get('valueName') and event['valueName'] != match.group('value'):
+            continue
+        for owner in tree:
+            if owner['pid'] != event.get('pid'):
+                continue
+            entry = instance_at(facts, owner['pid'], event.get('at', ''))
+            if not entry or not entry['end'] or len(entry['images']) != 1:
+                continue
+            try:
+                delay = iso_ticks(event['at']) - iso_ticks(entry['end'])
+            except (ValueError, KeyError):
+                continue
+            if 0 <= delay <= rule['maxDelayAfterProcessEndMs'] * 10000 and match.group('value').casefold() in entry['images']:
+                return rule
+    return None
+
+
+def classify(events, context, rules, candidate_sink=None, change_times=None):
     """Identity/time is required; PID alone cannot promote recycled process events."""
     required = set(context.get('requiredChannels', [])) | set(rules.get('requiredChannels', []))
     candidates, controls = [], {channel: False for channel in sorted(required)}
@@ -699,11 +931,12 @@ def classify(events, context, rules, candidate_sink=None):
     counts = {}
     owned_problem_counts = {}
     pid_sources = {}
+    applications = {}
     candidate_count = 0
     unsafe = unresolved = False
     owned = context.get('ownedProcesses', [])
     harness = set(context.get('harnessPids', []))
-    roots = context.get('ownedRoots', [])
+    roots = owned_roots(context)
     def in_lifetime(owner, event):
         try:
             time = lambda value: dt.datetime.fromisoformat(value.replace('Z', '+00:00'))
@@ -721,7 +954,36 @@ def classify(events, context, rules, candidate_sink=None):
             if parents and not any(o['pid'] == event.get('pid') and in_lifetime(o, event) for o in tree):
                 tree.append({'pid': event['pid'], 'startedAt': event['at'], 'finishedAt': parents[0]['finishedAt'], 'parentPid': event['parentPid']})
                 grew = True
-    for event in read_events():
+    owned_at = lambda event: any(o['pid'] == event.get('pid') and in_lifetime(o, event) for o in tree)
+    facts = trace_facts(read_events, owned_at, harness, rules)
+    sequences = basic_information_sequences(facts, rules)
+    # Post-run ChangeTime evidence (harness step after the probe): attributes only, compared here, never assumed.
+    launch = min((o['startedAt'] for o in owned), key=iso_ticks) if owned else None
+    if change_times is not None and change_times.get('launchAt') != launch:
+        raise ValueError('ChangeTime evidence was taken for a different launch')
+    change_records = {path.casefold(): record for path, record in (change_times or {}).get('records', {}).items()}
+    request = {}
+    for entry in sequences.values():
+        # The ChangeTime must predate the launch and the destination's first qualified set (harness sets can be earlier).
+        bound = min([iso_ticks(entry['firstSetAt'])] + ([iso_ticks(launch)] if launch else []))
+        key = entry['path'].casefold()
+        request[key] = min(request.get(key, bound), bound)
+    def basic_information(index):
+        entry = sequences[index]
+        record = change_records.get(entry['path'].casefold(), {})
+        if type(record.get('changeTimeFileTime')) is int and record['changeTimeFileTime'] < request[entry['path'].casefold()]:
+            return 'non-effect', 'E5-basic-information-sequence'
+        reason = 'changetime-newer' if type(record.get('changeTimeFileTime')) is int else 'changetime-not-proven'
+        return 'out-of-declaration', 'E5-sequence-' + reason
+    for index, event in enumerate(read_events()):
+        rule = None
+        if index in facts['kcbNames'] and event.get('channel') == 'registry':
+            event = dict(event, fields=dict(event.get('fields', {}), keyNameSource='forward-kcb-rundown'))
+            name, relative = facts['kcbNames'][index], event.get('destination', '')
+            if event.get('operation') in ('SetValue', 'DeleteValue', 'QueryValue') and relative:
+                event['valueName'] = relative
+            event['destination'] = name + ('\\' + relative if relative else '')
+            applications['RC-07-forward-kcb-name'] = applications.get('RC-07-forward-kcb-name', 0) + 1
         pid = event.get('pid')
         owners = [o for o in tree if o['pid'] == pid and in_lifetime(o, event)]
         positive = any(registry_marker_match(event, c, rules, harness, proof=True) if c.get('channel') == 'registry'
@@ -732,13 +994,23 @@ def classify(events, context, rules, candidate_sink=None):
                        for c in context.get('positiveControls', []))
         if positive:
             controls[event['channel']] = True
-        if owners:
+        record_rule = other_actor_record(event, tree, facts, context, rules)
+        if record_rule:
+            # An OS record that observes the owned process, not an effect issued in the process.
+            category, rule = 'os-or-harness-actor', record_rule['id']
+        elif owners:
             # A record channel is not necessarily a write. Unknown opcodes must not be silently ignored.
             operation = event.get('operation', '')
             channel = event.get('channel', 'unknown')
+            surface = declared_surface(event, context, rules)
             if channel == 'process' and operation == 'ProcessStart' and any(o.get('parentPid') == event.get('parentPid')
                     and event.get('parentPid') in harness for o in owners):
                 category = 'os-or-harness-actor'
+            elif channel == 'file' and index in sequences:
+                category, rule = basic_information(index)
+            elif surface:
+                # Effects issued in the Studio process are app effects, whichever layer issues them.
+                category, rule = 'app-declared', surface['id']
             elif operation in ('CreateFile', 'CreateKey'):
                 # Kernel create events can mean opening an existing object; no guessed write classification.
                 category = 'unknown'
@@ -755,8 +1027,14 @@ def classify(events, context, rules, candidate_sink=None):
             category = 'os-or-harness-actor'
         elif pid in harness and event.get('channel') in rules.get('harnessChannels', []):
             category = 'os-or-harness-actor'
-            if (event.get('channel') == 'file' and event.get('operation') in rules.get('writeOperations', {}).get('file', [])
-                    and not any(confined(event.get('destination', ''), r) for r in roots)):
+            inside = any(confined(event.get('destination', ''), r) for r in roots)
+            if event.get('channel') == 'file' and index in sequences:
+                category, rule = basic_information(index)
+            elif event.get('channel') == 'file' and event.get('operation') == 'CreateFile' and not inside:
+                # One create rule for harness and Studio: an open-or-create outside the actor's declared roots is ambiguous.
+                category = 'unknown'
+            elif (event.get('channel') == 'file' and event.get('operation') in rules.get('writeOperations', {}).get('file', [])
+                    and not inside):
                 category = 'out-of-declaration'
             if event.get('channel') == 'network' and event.get('operation') in rules.get('writeOperations', {}).get('network', []):
                 category = 'out-of-declaration'
@@ -765,6 +1043,8 @@ def classify(events, context, rules, candidate_sink=None):
         else:
             # Includes app-requested shell effects without sufficient causal metadata.
             category = 'unknown'
+        if rule:
+            applications[rule] = applications.get(rule, 0) + 1
         kind = event.get('kind', event.get('operation', 'unknown'))
         destination = destination_category(event, context)
         if owners and category in ('unknown', 'out-of-declaration'):
@@ -774,7 +1054,7 @@ def classify(events, context, rules, candidate_sink=None):
         pid_sources[source] = pid_sources.get(source, 0) + 1
         candidate = {'channel': event.get('channel', 'unknown'), 'pid': pid, 'classification': category,
                      'kind': kind, 'ownedTree': bool(owners), 'destinationCategory': destination,
-                     'pidSource': source,
+                     'pidSource': source, 'rule': rule,
                      'eventSha256': digest(canonical(event))}
         if candidate_sink is None:
             candidates.append(candidate)
@@ -794,6 +1074,9 @@ def classify(events, context, rules, candidate_sink=None):
                                    'destinationCategory': key.split('|')[2], 'count': count}
                                   for key, count in sorted(owned_problem_counts.items())],
             'pidSources': pid_sources,
+            'ruleApplications': dict(sorted(applications.items())),
+            # Local-only request for the post-run ChangeTime step; main() moves it to a sidecar (it names paths).
+            'changeTimeRequest': {'launchAt': launch, 'destinations': {path: request[path] for path in sorted(request)}},
             'traceHealth': health,
             'runStatus': 'unsafe_effect' if unsafe else 'blocked' if not proven or not loss_proven or unresolved else 'completed',
             'reason': 'undeclared-app-effect' if unsafe else 'instrument-not-proven' if not proven else 'trace-health-not-proven' if not loss_proven else 'unresolved-candidate' if unresolved else '',
@@ -805,8 +1088,75 @@ def classify(events, context, rules, candidate_sink=None):
 
 def confined(path, root):
     # Trace paths may be Windows paths even on the Linux checker; avoid host Path semantics.
-    value, base = path.replace('\\', '/').casefold(), root.replace('\\', '/').rstrip('/').casefold() + '/'
-    return value.startswith(base) and '..' not in value.split('/')
+    value, base = path.replace('\\', '/').casefold(), root.replace('\\', '/').rstrip('/').casefold()
+    return (value == base or value.startswith(base + '/')) and '..' not in value.split('/')
+
+
+def dos_device_map():
+    """Read-only object-manager query: drive letter -> NT device name (QueryDosDeviceW)."""
+    import ctypes
+    kernel = ctypes.WinDLL('kernel32', use_last_error=True)
+    devices = {}
+    for letter in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ':
+        buffer = ctypes.create_unicode_buffer(1024)
+        if kernel.QueryDosDeviceW(letter + ':', buffer, 1024):
+            devices[letter + ':'] = buffer.value
+    return devices
+
+
+def device_to_dos(path, devices):
+    matches = [(drive, target) for drive, target in devices.items()
+               if target.startswith('\\Device\\') and path.casefold().startswith(target.casefold() + '\\')]
+    if not matches:
+        return None
+    drive, target = max(matches, key=lambda item: len(item[1]))
+    return drive + path[len(target):]
+
+
+def read_change_time(path):
+    """FILE_BASIC_INFO.ChangeTime through a FILE_READ_ATTRIBUTES-only handle; contents are never opened."""
+    import ctypes
+    from ctypes import wintypes
+    kernel = ctypes.WinDLL('kernel32', use_last_error=True)
+    kernel.CreateFileW.restype = wintypes.HANDLE
+    kernel.CreateFileW.argtypes = [wintypes.LPCWSTR, wintypes.DWORD, wintypes.DWORD, wintypes.LPVOID,
+                                   wintypes.DWORD, wintypes.DWORD, wintypes.HANDLE]
+    kernel.GetFileInformationByHandleEx.argtypes = [wintypes.HANDLE, ctypes.c_int, wintypes.LPVOID, wintypes.DWORD]
+    kernel.CloseHandle.argtypes = [wintypes.HANDLE]
+    class BasicInfo(ctypes.Structure):
+        _fields_ = [('CreationTime', ctypes.c_longlong), ('LastAccessTime', ctypes.c_longlong),
+                    ('LastWriteTime', ctypes.c_longlong), ('ChangeTime', ctypes.c_longlong), ('FileAttributes', wintypes.DWORD)]
+    # FILE_READ_ATTRIBUTES, share read/write/delete, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS (directories too).
+    handle = kernel.CreateFileW(path, 0x80, 7, None, 3, 0x02000000, None)
+    if handle is None or handle == ctypes.c_void_p(-1).value:
+        raise ctypes.WinError(ctypes.get_last_error())
+    try:
+        info = BasicInfo()
+        if not kernel.GetFileInformationByHandleEx(handle, 0, ctypes.byref(info), ctypes.sizeof(info)):
+            raise ctypes.WinError(ctypes.get_last_error())
+        return info.ChangeTime
+    finally:
+        kernel.CloseHandle(handle)
+
+
+def change_times(request, devices=None, reader=None, now=None):
+    """Post-run harness step for E5: read each destination's ChangeTime (attributes only, nothing written)."""
+    devices = dos_device_map() if devices is None else devices
+    reader = reader or read_change_time
+    records = {}
+    for path in sorted(request['destinations'], key=ordinal):
+        local = device_to_dos(path, devices)
+        if local is None:
+            records[path] = {'error': 'unmapped-device'}
+            continue
+        try:
+            records[path] = {'changeTimeFileTime': int(reader(local))}
+        except OSError as error:
+            records[path] = {'error': type(error).__name__}
+    return {'schemaVersion': 1, 'launchAt': request['launchAt'],
+            'checkedAt': (now or dt.datetime.now(dt.timezone.utc)).strftime('%Y-%m-%dT%H:%M:%SZ'),
+            'method': 'CreateFileW(FILE_READ_ATTRIBUTES, OPEN_EXISTING) + GetFileInformationByHandleEx(FileBasicInfo); no content access',
+            'records': records}
 
 
 def main():
@@ -819,6 +1169,9 @@ def main():
     p = sub.add_parser('compact'); p.add_argument('--trace', required=True); p.add_argument('--out', required=True); p.add_argument('--schema')
     p = sub.add_parser('classify'); p.add_argument('--trace', required=True); p.add_argument('--context', required=True); p.add_argument('--out', required=True)
     p.add_argument('--summary'); p.add_argument('--schema')
+    p.add_argument('--change-times', help='post-run ChangeTime record from the change-times step (E5)')
+    p = sub.add_parser('change-times', help='E5 post-run step: read destination ChangeTimes (attributes only)')
+    p.add_argument('--request', required=True); p.add_argument('--out', required=True)
     args = parser.parse_args()
     if args.command == 'check-policy':
         check_policy(json.loads((ISOLATION / 'action-policy.json').read_text()), declarations())
@@ -838,6 +1191,14 @@ def main():
         print('Export with tracerpt -rts -export schema.man; classify with --schema schema.man for evidenced payload recovery.')
         if issues:
             raise SystemExit(2)
+    elif args.command == 'change-times':
+        if Path(args.out).exists():
+            raise ValueError('change-times output exists; use a fresh file')
+        request = json.loads(Path(args.request).read_text(encoding='utf-8'))
+        result = change_times(request)
+        write(args.out, result)
+        failed = sum('error' in record for record in result['records'].values())
+        print(f"change-times: {len(result['records'])} destinations, {failed} unreadable (unreadable destinations keep the effect)")
     else:
         context = json.loads(Path(args.context).read_text(encoding='utf-8-sig'))
         original_context_sha = file_digest(args.context)
@@ -848,9 +1209,16 @@ def main():
         rules = json.loads((ISOLATION / 'classification-rules.json').read_text())
         candidate_path = Path(args.out).with_suffix('.candidates.jsonl')
         candidate_path.parent.mkdir(parents=True, exist_ok=True)
+        evidence = json.loads(Path(args.change_times).read_text(encoding='utf-8')) if args.change_times else None
         with candidate_path.open('w', encoding='utf-8', newline='\n') as stream:
             result = classify(lambda: parse_trace(args.trace, normalisation), context, rules,
-                              lambda candidate: stream.write(json.dumps(candidate, separators=(',', ':')) + '\n'))
+                              lambda candidate: stream.write(json.dumps(candidate, separators=(',', ':')) + '\n'), evidence)
+        # The request names local paths; it stays in a local sidecar, never in the redacted summary.
+        request_path = Path(args.out).with_suffix('.changetime-request.json')
+        write(request_path, result.pop('changeTimeRequest'))
+        result['changeTimeRequestSha256'] = file_digest(request_path)
+        if args.change_times:
+            result['changeTimeEvidenceSha256'] = file_digest(args.change_times)
         result['candidateFile'] = candidate_path.name
         result['candidateSha256'] = file_digest(candidate_path)
         result['normalisationVersion'] = normalisation['normalisationVersion']

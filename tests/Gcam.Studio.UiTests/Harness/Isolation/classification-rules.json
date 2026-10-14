@@ -59,7 +59,8 @@
       "CreateKey",
       "DeleteValue",
       "DeleteKey",
-      "SetInformation"
+      "SetInformation",
+      "SetInformationKeyClass"
     ],
     "process": [
       "ProcessStart"
@@ -81,5 +82,142 @@
     "WindowSessionAccounting"
   ],
   "unknownOpcodePolicy": "unknown; no blanket provider or PID exclusion",
-  "externalConnectionPolicy": "Studio has no authorised network destination; any attributed connection is undeclared"
+  "externalConnectionPolicy": "Studio has no authorised network destination; any attributed connection is undeclared",
+  "framing": "An observed run measures what running Studio leaves on the machine, whichever layer does it. Effects issued in the Studio process by the WPF/.NET runtime, the Windows text-input framework or an in-process driver are app effects; only OS records that observe the process itself (prefetch, background-activity, compatibility stores) are other-actor records.",
+  "declaredAppSurfaces": [
+    {
+      "id": "E1-app-tsf-composition-window",
+      "decision": "E1",
+      "surface": "surface-list.json#app-tsf-composition-window",
+      "status": "confirmed",
+      "channel": "registry",
+      "operations": [
+        "SetValue"
+      ],
+      "hive": "run-user",
+      "keyPath": "Software\\Microsoft\\CTF\\CUAS\\DefaultCompositionWindow",
+      "valueNames": [
+        "Left",
+        "Top"
+      ],
+      "residualRisk": "The user's IME composition-window position (HKCU) is updated by the text-input framework on the Studio UI thread."
+    },
+    {
+      "id": "E3-app-gpu-driver-timestamps",
+      "decision": "E3",
+      "surface": "surface-list.json#app-gpu-driver-timestamps",
+      "status": "confirmed",
+      "channel": "file",
+      "operations": [
+        "WriteFile"
+      ],
+      "knownFolder": "ProgramData",
+      "relativePath": "NVIDIA Corporation\\Drs\\nvAppTimestamps",
+      "scope": "write-only-within-file: WriteFile into the existing file; no create, delete, rename or set-information",
+      "residualRisk": "The GPU driver's per-application timestamp store (machine-wide) is updated by the in-process driver."
+    }
+  ],
+  "otherActorRecords": [
+    {
+      "id": "E2-bam-process-end-record",
+      "decision": "E2",
+      "status": "recommended rule change; pending author approval (HUM-07)",
+      "actor": "OS kernel Background Activity Moderator (observes the owned process; not issued by it)",
+      "operations": [
+        "SetValue"
+      ],
+      "keyPattern": "\\\\REGISTRY\\\\MACHINE\\\\SYSTEM\\\\(?:CurrentControlSet|ControlSet[0-9]{3})\\\\Services\\\\bam\\\\State\\\\UserSettings\\\\<SID>",
+      "valueName": "the owned process's own image device path (from its ImageLoad / image rundown)",
+      "timing": "at or after the owned process's ProcessEnd event",
+      "maxDelayAfterProcessEndMs": 100
+    }
+  ],
+  "basicInformationSequence": {
+    "id": "E5-basic-information-sequence",
+    "decision": "E5",
+    "status": "recommended rule change; pending author approval (HUM-07)",
+    "infoClass": 4,
+    "createDisposition": 1,
+    "sequence": "CreateFile(FILE_OPEN) -> SetInformation(FileBasicInformation) -> QueryInformation -> CloseFile on one file object and thread",
+    "allowedBetween": [
+      "QueryInformation",
+      "CleanupFile",
+      "ReadFile",
+      "FilePosition"
+    ],
+    "imageClause": "the file is the image of the issuing process or an ancestor, or the next image load of the process is that file",
+    "imageLoadWithinMs": 50,
+    "changeTime": "stage0.py change-times after the probe: each destination's ChangeTime must predate the launch and its first qualified set; otherwise the effect stands",
+    "evidence": [
+      "https://learn.microsoft.com/en-us/windows/win32/etw/fileio-create",
+      "https://github.com/microsoft/perfview/blob/main/src/TraceEvent/Parsers/KernelTraceEventParser.cs (FileIOCreateTraceData.CreateDisposition = CreateOptions >> 24)",
+      "https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/ns-wdm-_file_basic_information",
+      "https://learn.microsoft.com/en-us/windows/win32/api/winbase/ns-winbase-file_basic_info"
+    ]
+  },
+  "approvedEventProviders": [
+    {
+      "id": "KernelRegistrySetInformation",
+      "decision": "E4",
+      "status": "recommended profile addition; pending author approval (HUM-07)",
+      "guid": "70eb4f03-c1de-4f73-a051-33d13d5413bd",
+      "name": "Microsoft-Windows-Kernel-Registry",
+      "keywords": [
+        "0x40"
+      ],
+      "purpose": "event 11 SetInformationKey carries InfoClass (KEY_SET_INFORMATION_CLASS); E4 stays out-of-declaration until the class is visible",
+      "evidence": [
+        "https://github.com/repnz/etw-providers-docs/blob/master/Manifests-Win10-18990/Microsoft-Windows-Kernel-Registry.xml",
+        "https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/ne-wdm-_key_set_information_class",
+        "https://learn.microsoft.com/en-us/windows-hardware/test/wpt/eventprovider"
+      ]
+    }
+  ],
+  "ruleChanges": [
+    {
+      "id": "RC-01",
+      "decision": "E1",
+      "kind": "declared confirmed app write surface (permission expansion)",
+      "status": "author decision 2026-10-14 (option 2); HUM-07 approval with the next run's approval on the commit"
+    },
+    {
+      "id": "RC-02",
+      "decision": "E3",
+      "kind": "declared confirmed app write surface (permission expansion)",
+      "status": "author decision 2026-10-14 (option 2); HUM-07 approval with the next run's approval on the commit"
+    },
+    {
+      "id": "RC-03",
+      "decision": "E2",
+      "kind": "other-actor OS observation record (narrow)",
+      "status": "recommended rule change; pending author approval (HUM-07)"
+    },
+    {
+      "id": "RC-04",
+      "decision": "E5",
+      "kind": "non-effect sequence rule plus post-run ChangeTime check",
+      "status": "recommended rule change; pending author approval (HUM-07)"
+    },
+    {
+      "id": "RC-05",
+      "decision": "E4",
+      "kind": "profile addition: Microsoft-Windows-Kernel-Registry SetInformationKey (0x40); E4 stays out-of-declaration",
+      "status": "recommended; pending author approval (HUM-07)"
+    },
+    {
+      "id": "RC-06",
+      "kind": "read classes FileOperationEnd, FilePosition (file information class 14) and CloseKey",
+      "status": "recommended rule change; pending author approval (HUM-07)"
+    },
+    {
+      "id": "RC-07",
+      "kind": "forward KCB-rundown key-name resolution (no intervening KCB create/delete); value names starting with a backslash are not key paths",
+      "status": "recommended rule change; pending author approval (HUM-07)"
+    },
+    {
+      "id": "RC-08",
+      "kind": "harness defect fix: device-form owned roots in trace-context; one create rule for harness and Studio CreateFile",
+      "status": "defect fix; no decision needed; proven only on a new run"
+    }
+  ]
 }

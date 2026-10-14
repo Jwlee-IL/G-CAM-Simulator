@@ -37,7 +37,7 @@ public sealed class OwnedStudioProcess : IDisposable
         var values = suppliedValues ?? IsolationPaths.LaunchValues(sandbox, runId);
         IsolationPaths.ValidateLaunchValues(sandbox, runId, values);
         using var self = Process.GetCurrentProcess();
-        string leasePath = Path.Combine(Path.GetTempPath(), "gcam-desktop-lease", $"session-{self.SessionId}.json");
+        string leasePath = LeasePath(self.SessionId);
         var lease = new DesktopLease(leasePath, runId, self.SessionId, DateTimeOffset.UtcNow, TimeSpan.FromHours(3));
         Process? app = null;
         try
@@ -75,6 +75,9 @@ public sealed class OwnedStudioProcess : IDisposable
             throw;
         }
     }
+
+    /// <summary>The declared harness lease file for an interactive session (surface harness-lease).</summary>
+    public static string LeasePath(int sessionId) => Path.Combine(Path.GetTempPath(), "gcam-desktop-lease", $"session-{sessionId}.json");
 
     public static void ValidatePrivilege(bool elevated)
     {
