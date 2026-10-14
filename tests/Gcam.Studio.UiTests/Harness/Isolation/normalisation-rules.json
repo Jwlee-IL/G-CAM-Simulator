@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "normalisationVersion": 2,
+  "normalisationVersion": 3,
   "default": "unknown; no provider/PID blanket exemptions",
-  "scope": "Decoded classic/WBEM events and explicit metadata identity. No manifest numeric-ID guessing or raw payload reinterpretation.",
+  "scope": "Decoded classic/WBEM events; narrowly evidenced schema-checked binary prefixes; unknown payloads remain unknown.",
   "unmappedProviders": [
     {
       "guid": "9b79ee91-b5fd-41c0-a243-4248e266e9d0",
@@ -714,6 +714,113 @@
         "https://learn.microsoft.com/en-us/windows/win32/etw/registry",
         "Classic Registry version 2 export schema carries KeyName and Status; queries and enumeration are non-effects."
       ]
+    },
+    {
+      "guid": "90cbdc39-4a3e-11d1-84f4-0000f80464e3",
+      "opcodes": [
+        "35",
+        "FileDelete"
+      ],
+      "channel": "file",
+      "operation": "FileName",
+      "requiredFields": [
+        "FileObject",
+        "FileName"
+      ],
+      "evidence": [
+        "https://learn.microsoft.com/en-us/windows/win32/etw/fileio",
+        "https://github.com/microsoft/perfview/blob/main/src/TraceEvent/Parsers/KernelTraceEventParser.cs",
+        "Emitted WBEM template carries these fields; correlation is required and missing identity remains unresolved."
+      ]
+    },
+    {
+      "guid": "90cbdc39-4a3e-11d1-84f4-0000f80464e3",
+      "opcodes": [
+        "76",
+        "OperationEnd"
+      ],
+      "channel": "file",
+      "operation": "FileOperationEnd",
+      "requiredFields": [
+        "IrpPtr",
+        "NtStatus"
+      ],
+      "evidence": [
+        "https://learn.microsoft.com/en-us/windows/win32/etw/fileio-opend",
+        "https://github.com/microsoft/perfview/blob/main/src/TraceEvent/Parsers/KernelTraceEventParser.cs",
+        "Emitted WBEM template carries these fields; correlation is required and missing identity remains unresolved."
+      ]
+    },
+    {
+      "guid": "ae53722e-c863-11d2-8659-00c04fa321a1",
+      "opcodes": [
+        "22",
+        "KCBCreate"
+      ],
+      "channel": "registry",
+      "operation": "RegistryKcbCreate",
+      "requiredFields": [
+        "KeyHandle",
+        "KeyName"
+      ],
+      "evidence": [
+        "https://learn.microsoft.com/en-us/windows/win32/etw/registry",
+        "https://github.com/microsoft/perfview/blob/main/src/TraceEvent/Parsers/KernelTraceEventParser.cs",
+        "Emitted WBEM template carries these fields; correlation is required and missing identity remains unresolved."
+      ]
+    },
+    {
+      "guid": "ae53722e-c863-11d2-8659-00c04fa321a1",
+      "opcodes": [
+        "23",
+        "KCBDelete"
+      ],
+      "channel": "registry",
+      "operation": "RegistryKcbDelete",
+      "requiredFields": [
+        "KeyHandle"
+      ],
+      "evidence": [
+        "https://learn.microsoft.com/en-us/windows/win32/etw/registry",
+        "https://github.com/microsoft/perfview/blob/main/src/TraceEvent/Parsers/KernelTraceEventParser.cs",
+        "Emitted WBEM template carries these fields; correlation is required and missing identity remains unresolved."
+      ]
+    },
+    {
+      "guid": "ae53722e-c863-11d2-8659-00c04fa321a1",
+      "opcodes": [
+        "24",
+        "KCBRundownBegin"
+      ],
+      "channel": "registry",
+      "operation": "RegistryKcbRundownStart",
+      "requiredFields": [
+        "KeyHandle",
+        "KeyName"
+      ],
+      "evidence": [
+        "https://learn.microsoft.com/en-us/windows/win32/etw/registry",
+        "https://github.com/microsoft/perfview/blob/main/src/TraceEvent/Parsers/KernelTraceEventParser.cs",
+        "Emitted WBEM template carries these fields; correlation is required and missing identity remains unresolved."
+      ]
+    },
+    {
+      "guid": "ae53722e-c863-11d2-8659-00c04fa321a1",
+      "opcodes": [
+        "25",
+        "KCBRundownEnd"
+      ],
+      "channel": "registry",
+      "operation": "RegistryKcbRundownEnd",
+      "requiredFields": [
+        "KeyHandle",
+        "KeyName"
+      ],
+      "evidence": [
+        "https://learn.microsoft.com/en-us/windows/win32/etw/registry",
+        "https://github.com/microsoft/perfview/blob/main/src/TraceEvent/Parsers/KernelTraceEventParser.cs",
+        "Emitted WBEM template carries these fields; correlation is required and missing identity remains unresolved."
+      ]
     }
   ],
   "timestampNormalisation": {
@@ -730,5 +837,141 @@
       "https://github.com/microsoft/perfview/blob/main/src/TraceEvent/ETWTraceEventSource.cs#L494-L580",
       "https://learn.microsoft.com/en-us/windows/win32/api/evntrace/ns-evntrace-trace_logfile_header"
     ]
+  },
+  "binaryLayouts": [
+    {
+      "id": "classic-thread-v3-identity-prefix",
+      "guid": "3d6fa8d1-fe05-11d0-9dda-00c04fd7ba7c",
+      "opcodes": [
+        "1",
+        "2",
+        "3",
+        "4"
+      ],
+      "version": 3,
+      "pointerSize": 8,
+      "minimumBytes": 72,
+      "decodedPrefixBytes": 8,
+      "schemaPrefix": [
+        [
+          "ProcessId",
+          "win:UInt32"
+        ],
+        [
+          "TThreadId",
+          "win:UInt32"
+        ]
+      ],
+      "fields": [
+        [
+          "ProcessId",
+          0,
+          4
+        ],
+        [
+          "TThreadId",
+          4,
+          4
+        ]
+      ],
+      "evidence": [
+        "https://github.com/microsoft/perfview/blob/main/src/TraceEvent/Parsers/KernelTraceEventParser.cs#L3935",
+        "Exported version-3 WBEM template confirms the identity prefix; Microsoft decoder supports variable trailing thread-name data. Rest is hashed, not interpreted."
+      ]
+    },
+    {
+      "id": "classic-file-readwrite-v3-prefix",
+      "guid": "90cbdc39-4a3e-11d1-84f4-0000f80464e3",
+      "opcodes": [
+        "67",
+        "68"
+      ],
+      "version": 3,
+      "pointerSize": 8,
+      "minimumBytes": 44,
+      "maximumBytes": 48,
+      "decodedPrefixBytes": 44,
+      "schemaPrefix": [
+        [
+          "Offset",
+          "win:UInt64"
+        ],
+        [
+          "IrpPtr",
+          "win:Pointer"
+        ],
+        [
+          "FileObject",
+          "win:Pointer"
+        ],
+        [
+          "FileKey",
+          "win:Pointer"
+        ],
+        [
+          "TTID",
+          "win:UInt32"
+        ],
+        [
+          "IoSize",
+          "win:UInt32"
+        ],
+        [
+          "IoFlags",
+          "win:UInt32"
+        ]
+      ],
+      "fields": [
+        [
+          "Offset",
+          0,
+          8
+        ],
+        [
+          "IrpPtr",
+          8,
+          8
+        ],
+        [
+          "FileObject",
+          16,
+          8
+        ],
+        [
+          "FileKey",
+          24,
+          8
+        ],
+        [
+          "TTID",
+          32,
+          4
+        ],
+        [
+          "IoSize",
+          36,
+          4
+        ],
+        [
+          "IoFlags",
+          40,
+          4
+        ]
+      ],
+      "evidence": [
+        "https://github.com/microsoft/perfview/blob/main/src/TraceEvent/Parsers/KernelTraceEventParser.cs#L5886",
+        "Version-3 emitted schema confirms field sequence. Microsoft decoder explicitly permits the observed 48-byte payload beyond the 44-byte prefix. Tail is hashed, not interpreted."
+      ]
+    }
+  ],
+  "fileInformationClasses": {
+    "14": {
+      "operation": "FilePosition",
+      "effect": "per-open file pointer; does not mutate file contents",
+      "evidence": [
+        "https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/ne-wdm-_file_information_class",
+        "https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-fscc/e3ce4a39-327e-495c-99b6-6b61606b6f16"
+      ]
+    }
   }
 }

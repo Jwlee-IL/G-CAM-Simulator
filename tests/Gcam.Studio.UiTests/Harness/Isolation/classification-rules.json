@@ -28,7 +28,9 @@
       "QueryInformation",
       "OpenRead",
       "CleanupFile",
-      "CloseFile"
+      "CloseFile",
+      "FileOperationEnd",
+      "FilePosition"
     ],
     "registry": [
       "QueryValue",
@@ -36,7 +38,8 @@
       "QueryKey",
       "EnumerateKey",
       "EnumerateValueKey",
-      "QueryMultipleValue"
+      "QueryMultipleValue",
+      "CloseKey"
     ],
     "process": [
       "ImageLoad"

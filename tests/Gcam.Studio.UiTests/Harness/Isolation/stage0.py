@@ -207,12 +207,68 @@ def profile_coverage(profile_path=None, required_channels=None):
     return issues
 
 
-def compact_trace(trace_path, out_path):
+def load_normalisation(schema_path=None):
+    rules = json.loads((ISOLATION / 'normalisation-rules.json').read_text(encoding='utf-8'))
+    if schema_path:
+        doc = ET.parse(schema_path).getroot()
+        local = lambda node: node.tag.rsplit('}', 1)[-1]
+        templates = {}
+        for provider in (node for node in doc.iter() if local(node) == 'provider'):
+            tasks = {node.get('name'): node.get('eventGUID', '').strip('{}').lower()
+                     for node in provider.iter() if local(node) == 'task'}
+            opcodes = {node.get('name'): node.get('mofValue', node.get('value'))
+                       for node in provider.iter() if local(node) == 'opcode'}
+            fields = {node.get('tid'): [(field.get('name'), field.get('inType')) for field in node]
+                      for node in provider.iter() if local(node) == 'template'}
+            for node in (node for node in provider.iter() if local(node) == 'event'):
+                key = (tasks.get(node.get('task')), node.get('version'), opcodes.get(node.get('opcode')))
+                if key[0] not in {layout['guid'] for layout in rules.get('binaryLayouts', [])}:
+                    continue
+                value = fields.get(node.get('template'), [])
+                if key in templates and templates[key] != value:
+                    raise ValueError('conflicting classic schema templates')
+                templates[key] = value
+        rules['_templates'] = templates
+        rules['_schemaSha256'] = file_digest(schema_path)
+    return rules
+
+
+def recover_payload(children, guid, opcode, version, rules, correlation):
+    """Only independently evidenced fixed prefixes; schema/version/width/length must agree."""
+    node = children.get('ProcessingErrorData')
+    if node is None or not rules.get('_templates'):
+        return None
+    payload = {item.tag.rsplit('}', 1)[-1]: item.text or '' for item in node}
+    if numeric(payload.get('ErrorCode')) != 15005:
+        return None
+    for layout in rules.get('binaryLayouts', []):
+        if (guid != layout['guid'] or opcode not in layout['opcodes'] or version != str(layout['version'])
+                or correlation.get('pointerSize') != layout['pointerSize']):
+            continue
+        template = rules['_templates'].get((guid, version, opcode), [])
+        if template[:len(layout['schemaPrefix'])] != [tuple(field) for field in layout['schemaPrefix']]:
+            return None
+        try:
+            raw = bytes.fromhex(payload.get('EventPayload', ''))
+        except ValueError:
+            return None
+        if len(raw) < layout['minimumBytes'] or (layout.get('maximumBytes') and len(raw) > layout['maximumBytes']):
+            return None
+        result = {field: str(int.from_bytes(raw[offset:offset + width], 'little'))
+                  for field, offset, width in layout['fields']}
+        result.update({'sourceDecodeError': '15005', 'rawPayloadSha256': digest(raw),
+                       'uninterpretedPayloadSha256': digest(raw[layout['decodedPrefixBytes']:]),
+                       'payloadRecoverySchemaSha256': rules['_schemaSha256'], 'payloadRecoveryLayout': layout['id']})
+        return result
+    return None
+
+
+def compact_trace(trace_path, out_path, schema_path=None):
     """Preserve every normalised event (including unknowns) in a compressed replayable intermediate."""
     out = Path(out_path)
     if out.suffixes[-2:] != ['.jsonl', '.gz'] or out.resolve() == Path(trace_path).resolve():
         raise ValueError('compact destination must be a separate .jsonl.gz file')
-    normalisation = json.loads((ISOLATION / 'normalisation-rules.json').read_text())
+    normalisation = load_normalisation(schema_path)
     count = 0
     with gzip.open(out, 'xt', encoding='utf-8', newline='\n', compresslevel=6) as stream:
         for event in parse_trace(trace_path, normalisation):
@@ -221,6 +277,7 @@ def compact_trace(trace_path, out_path):
     record = {'events': count, 'sourceBytes': Path(trace_path).stat().st_size,
               'sourceSha256': file_digest(trace_path), 'compactBytes': out.stat().st_size,
               'compactSha256': file_digest(out), 'normalisationSha256': file_digest(ISOLATION / 'normalisation-rules.json'),
+              'schemaSha256': normalisation.get('_schemaSha256'), 'parserSourceSha256': file_digest(__file__),
               'evidenceRetention': 'All normalised events retained; raw trace remains the authoritative payload evidence.'}
     write(str(out) + '.record.json', record)
     return record
@@ -333,6 +390,11 @@ def parse_trace(path, normalisation=None):
             record = json.loads(Path(str(path) + '.record.json').read_text())
             if record['normalisationSha256'] != file_digest(ISOLATION / 'normalisation-rules.json'):
                 raise ValueError('compact intermediate normalisation differs from current approved rules; replay raw trace')
+            if record.get('parserSourceSha256') != file_digest(__file__):
+                # Parse/correlation logic lives in this file; an older parser's rows are not current evidence.
+                raise ValueError('compact intermediate parser source differs from the current classifier; replay raw trace')
+            if record.get('schemaSha256') and record['schemaSha256'] != (normalisation or {}).get('_schemaSha256'):
+                raise ValueError('compact intermediate requires its matching schema')
         opener = gzip.open if path.suffix == '.gz' else open
         with opener(path, 'rt', encoding='utf-8') as stream:
             for line in stream:
@@ -378,8 +440,25 @@ def parse_event(event, normalisation=None, correlation=None):
     provider = guid or attributes.get('Name', '')
     get_text = lambda nodes, name: (nodes[name].text or '').strip() if name in nodes else ''
     opcode = get_text(rendered, 'Opcode') or get_text(system, 'Opcode')
+    raw_opcode = numeric(get_text(system, 'Opcode'))
+    identity_opcode = str(raw_opcode) if raw_opcode is not None else opcode
     data = {node.attrib.get('Name', ''): (node.text or '').strip()
             for node in children.get('EventData', []) if local(node) == 'Data'}
+    if key_pointer := numeric(data.get('PointerSize')):
+        if guid.strip('{}').lower() == '68fdd900-4a3e-11d1-84f4-0000f80464e3' and identity_opcode in ('0', 'Header'):
+            correlation['pointerSize'] = key_pointer
+    recovered = recover_payload(children, guid.strip('{}').lower(), identity_opcode,
+                                get_text(system, 'Version'), normalisation, correlation)
+    if recovered:
+        data.update(recovered)
+    if 'ProcessingErrorData' in children:
+        source_error = {local(item): item.text or '' for item in children['ProcessingErrorData']}
+        data['processingErrorCode'] = source_error.get('ErrorCode', '')
+        payload = source_error.get('EventPayload', '')
+        try:
+            data['processingErrorPayloadSha256'] = digest(bytes.fromhex(payload))
+        except ValueError:
+            data['processingErrorPayloadSha256'] = digest(payload.encode())
     execution_node = system.get('Execution')
     execution = execution_node.attrib if execution_node is not None else {}
     header_pid = numeric(execution.get('ProcessID'))
@@ -392,7 +471,7 @@ def parse_event(event, normalisation=None, correlation=None):
     at_node = system.get('TimeCreated')
     at = at_node.attrib.get('SystemTime', '') if at_node is not None else ''
     raw_time = numeric(at_node.attrib.get('RawTime')) if at_node is not None else None
-    if (guid.strip('{}').lower() == '68fdd900-4a3e-11d1-84f4-0000f80464e3' and opcode == 'Header'
+    if (guid.strip('{}').lower() == '68fdd900-4a3e-11d1-84f4-0000f80464e3' and identity_opcode in ('0', 'Header')
             and raw_time is not None and numeric(data.get('ReservedFlags')) in (1, 2)
             and (numeric(data.get('PerfFreq')) or 0) > 0 and (numeric(data.get('StartTime')) or 0) > 0):
         correlation['clock'] = {'clockType': numeric(data['ReservedFlags']), 'rawAnchor': raw_time,
@@ -406,14 +485,16 @@ def parse_event(event, normalisation=None, correlation=None):
         data['RawTime'] = str(raw_time)
     data.update({'RawOpcode': get_text(system, 'Opcode'), 'Opcode': opcode, 'EventID': get_text(system, 'EventID'),
                  'Task': get_text(system, 'Task'), 'TimeCreated': at})
-    error = 'ProcessingErrorData' in children or ('ProcessId' in data and numeric(data['ProcessId']) is None)
+    error = ('ProcessingErrorData' in children and not recovered) or ('ProcessId' in data and numeric(data['ProcessId']) is None)
     opaque = next((children[name] for name in ('BinaryEventData',) if name in children), None)
     if opaque is not None:
         data['opaquePayloadSha256'] = digest((opaque.text or '').encode())
     channel, operation, kind, mapping = 'unknown', 'unknown', opcode or 'Unknown', None
     key = guid.strip('{}').lower()
+    if key == '68fdd900-4a3e-11d1-84f4-0000f80464e3' and identity_opcode in ('0', 'Header'):
+        kind = 'Header'
     for index, row in enumerate(normalisation['rows']):
-        if key == row['guid'] and opcode.casefold() in [op.casefold() for op in row['opcodes']]:
+        if key == row['guid'] and identity_opcode.casefold() in [op.casefold() for op in row['opcodes']]:
             channel, kind, mapping = row['channel'], row['operation'], index
             if not error and all(field in data for field in row['requiredFields']):
                 operation = kind
@@ -444,14 +525,57 @@ def parse_event(event, normalisation=None, correlation=None):
         elif guid:
             # A file emitter header can be the servicing worker, not the requesting thread's process.
             pid, pid_source = None, 'requesting-thread-unresolved'
-    file_object = data.get('FileObject')
+    if channel == 'file' and operation == 'SetInformation':
+        refinement = normalisation.get('fileInformationClasses', {}).get(str(numeric(data.get('InfoClass'))))
+        if refinement:
+            operation = kind = refinement['operation']
+            data['semanticRefinement'] = 'fileInformationClasses/' + str(numeric(data['InfoClass']))
+    file_object = numeric(data.get('FileObject'))
+    file_key = numeric(data.get('FileKey'))
     if channel == 'file':
         if destination and file_object and operation in ('CreateFile', 'FileName'):
             correlation['files'][file_object] = destination
         if not destination:
-            destination = correlation['files'].get(data.get('FileKey'), correlation['files'].get(file_object, ''))
+            destination = correlation['files'].get(file_key, correlation['files'].get(file_object, ''))
         if operation == 'CloseFile' and file_object:
             correlation['files'].pop(file_object, None)
+    if channel == 'registry':
+        keys = correlation.setdefault('registryKeys', {})
+        handle = numeric(data.get('KeyHandle'))
+        if handle and destination and operation in ('RegistryKcbCreate', 'RegistryKcbRundownStart', 'RegistryKcbRundownEnd', 'CreateKey', 'OpenKey'):
+            if destination.casefold().startswith('\\registry\\'):
+                keys[handle] = destination
+        if handle and handle in keys:
+            if operation in ('SetValue', 'DeleteValue', 'QueryValue') and destination and not destination.startswith('\\'):
+                data['ValueName'] = destination
+                destination = keys[handle] + '\\' + destination
+            elif not destination:
+                destination = keys[handle]
+        if operation == 'RegistryKcbDelete' and handle:
+            keys.pop(handle, None)
+    requests = correlation.setdefault('requests', {})
+    irp = numeric(data.get('IrpPtr'))
+    if key == '90cbdc39-4a3e-11d1-84f4-0000f80464e3' and operation == 'unknown' and irp:
+        requests[irp] = None # an unmapped file event may invalidate an earlier request association
+    if channel == 'file' and irp:
+        if operation == 'FileOperationEnd':
+            request = requests.pop(irp, None)
+            ordered = False
+            if request:
+                try:
+                    ordered = dt.datetime.fromisoformat(request['at'].replace('Z', '+00:00')) <= dt.datetime.fromisoformat(at.replace('Z', '+00:00'))
+                except ValueError:
+                    pass
+            if ordered:
+                pid, pid_source, destination = request['pid'], 'file-request-correlation', request['destination']
+                data['requestOperation'] = request['operation']
+            else:
+                operation = 'unknown'
+        elif thread is not None:
+            if operation == 'unknown' or irp in requests:
+                requests[irp] = None # conflicting or unmapped request cannot lend identity to completion
+            else:
+                requests[irp] = {'pid': pid, 'destination': destination, 'operation': operation, 'at': at}
     if operation in ('ThreadEnd', 'ThreadRundownEnd') and thread is not None:
         correlation['threads'].pop(thread, None)
     return {'pid': pid, 'pidSource': pid_source, 'headerPid': header_pid, 'channel': channel, 'operation': operation,
@@ -505,12 +629,18 @@ def destination_category(event, context):
         return '<UNDECODED-IMAGE-METADATA>' if event.get('channel') == 'metadata' else '<NO-DECODED-DESTINATION>'
     if any(confined(path, root) for root in context.get('ownedRoots', [])):
         return '<REDIRECTED-SANDBOX>'
+    if event.get('channel') == 'registry':
+        return '<REGISTRY>'
+    if '/namedpipe/' in value:
+        return '<NAMED-PIPE>'
     if '/appdata/local/' in value:
         return '<LOCALAPPDATA>'
     if '/users/' in value:
         return '<USERPROFILE>'
     if '/windows/' in value:
-        return '<OS-RUNTIME>'
+        return '<WINDOWS>'
+    if '/program files/' in value or '/program files (x86)/' in value:
+        return '<PROGRAMFILES>'
     if '/software/' in value or value.startswith('\\registry'):
         return '<REGISTRY>'
     if 'gcam.studio' in value:
@@ -548,7 +678,7 @@ def registry_marker_match(event, control, rules, harness, proof=False):
         return False
     if event.get('valueData') is not None and event['valueData'] != run_id:
         return False
-    if event.get('status') not in (None, 0, '0', '0x0', '0x00000000', 'SUCCESS'):
+    if event.get('status') is not None and event['status'] != 'SUCCESS' and numeric(event['status']) != 0:
         return False
     try:
         time = lambda value: dt.datetime.fromisoformat(value.replace('Z', '+00:00'))
@@ -686,7 +816,7 @@ def main():
     p = sub.add_parser('pin'); p.add_argument('--out', required=True)
     p = sub.add_parser('fingerprint'); p.add_argument('--directory', required=True); p.add_argument('--kind', choices=('isolation', 'deployment'), default='isolation')
     p = sub.add_parser('preflight'); p.add_argument('--run-directory', required=True)
-    p = sub.add_parser('compact'); p.add_argument('--trace', required=True); p.add_argument('--out', required=True)
+    p = sub.add_parser('compact'); p.add_argument('--trace', required=True); p.add_argument('--out', required=True); p.add_argument('--schema')
     p = sub.add_parser('classify'); p.add_argument('--trace', required=True); p.add_argument('--context', required=True); p.add_argument('--out', required=True)
     p.add_argument('--summary'); p.add_argument('--schema')
     args = parser.parse_args()
@@ -699,19 +829,20 @@ def main():
         files = fingerprint_files(Path(args.directory), args.kind == 'deployment')
         print(canonical({'files': files, 'sha256': fingerprint_map(files)}).decode(), end='')
     elif args.command == 'compact':
-        print(json.dumps(compact_trace(args.trace, args.out), separators=(',', ':')))
+        print(json.dumps(compact_trace(args.trace, args.out, args.schema), separators=(',', ':')))
     elif args.command == 'preflight':
         issues = preflight(args.run_directory)
         for issue in issues:
             print('FAIL: ' + issue)
         print('Preflight BLOCKED; do not start tracing.' if issues else 'Preflight PASS; author may now prepare the approved tracing window.')
+        print('Export with tracerpt -rts -export schema.man; classify with --schema schema.man for evidenced payload recovery.')
         if issues:
             raise SystemExit(2)
     else:
         context = json.loads(Path(args.context).read_text(encoding='utf-8-sig'))
         original_context_sha = file_digest(args.context)
         normalisation_bytes = (ISOLATION / 'normalisation-rules.json').read_bytes()
-        normalisation = json.loads(normalisation_bytes)
+        normalisation = load_normalisation(args.schema)
         if args.summary:
             context['traceHealth'] = read_trace_health(args.summary, args.trace, normalisation)
         rules = json.loads((ISOLATION / 'classification-rules.json').read_text())
@@ -724,6 +855,7 @@ def main():
         result['candidateSha256'] = file_digest(candidate_path)
         result['normalisationVersion'] = normalisation['normalisationVersion']
         result['normalisationSha256'] = digest(normalisation_bytes)
+        result['classifierSourceSha256'] = file_digest(__file__)
         if args.schema:
             result['schemaSha256'] = file_digest(args.schema)
         result['traceSha256'] = file_digest(args.trace)

@@ -14,6 +14,138 @@ spec.loader.exec_module(stage0)
 
 
 class StageZeroIsolationTests(unittest.TestCase):
+    def test_numeric_opcode_identity_wins_over_wrong_rendering_label(self):
+        import xml.etree.ElementTree as ET
+        event = self.real_event('90cbdc39-4a3e-11d1-84f4-0000f80464e3', '68', {'FileObject': '0x123', 'TTID': 100})
+        ET.SubElement(ET.SubElement(event, 'RenderingInfo'), 'Opcode').text = 'Read'
+        self.assertEqual('WriteFile', stage0.parse_event(event)['operation'])
+        event.find('System/Opcode').text = '999'
+        event.find('RenderingInfo/Opcode').text = 'Write'
+        self.assertEqual('unknown', stage0.parse_event(event)['operation'])
+
+    def payload_fixture(self, guid, opcode, raw, fields, version='3'):
+        import xml.etree.ElementTree as ET
+        root = self.scratch(); schema = root / 'schema.man'
+        manifest = ET.Element('instrumentationManifest'); provider = ET.SubElement(manifest, 'provider')
+        ET.SubElement(ET.SubElement(provider, 'tasks'), 'task', name='task', eventGUID=guid)
+        ET.SubElement(ET.SubElement(provider, 'opcodes'), 'opcode', name='op', mofValue=str(opcode))
+        template = ET.SubElement(ET.SubElement(provider, 'templates'), 'template', tid='template')
+        for name, kind in fields: ET.SubElement(template, 'data', name=name, inType=kind)
+        ET.SubElement(ET.SubElement(provider, 'events'), 'event', task='task', opcode='op', version=version, template='template')
+        ET.ElementTree(manifest).write(schema)
+        event = self.real_event(guid, opcode, error=True)
+        ET.SubElement(event.find('System'), 'Version').text = version
+        error = event.find('ProcessingErrorData'); error.find('ErrorCode').text = '15005'
+        ET.SubElement(error, 'EventPayload').text = raw.hex()
+        return event, stage0.load_normalisation(schema)
+
+    def test_thread_payload_identity_requires_schema_version_pointer_width_and_length(self):
+        raw = (10).to_bytes(4, 'little') + (100).to_bytes(4, 'little') + bytes(64) + 'fixture\0'.encode('utf-16-le')
+        event, rules = self.payload_fixture('3d6fa8d1-fe05-11d0-9dda-00c04fd7ba7c', '1', raw,
+                                          [('ProcessId', 'win:UInt32'), ('TThreadId', 'win:UInt32')])
+        state = {'threads': {}, 'files': {}, 'pointerSize': 8}
+        row = stage0.parse_event(event, rules, state)
+        self.assertFalse(row['decodeError']); self.assertEqual(10, row['pid'])
+        self.assertEqual(10, state['threads'][100]['pid'])
+        self.assertEqual('15005', row['fields']['sourceDecodeError'])
+        self.assertTrue(row['fields']['uninterpretedPayloadSha256'])
+        self.assertEqual('unknown', stage0.parse_event(event, correlation=state)['operation'])
+        self.assertEqual('unknown', stage0.parse_event(event, rules, {'pointerSize': 4, 'threads': {}, 'files': {}})['operation'])
+        short, short_rules = self.payload_fixture('3d6fa8d1-fe05-11d0-9dda-00c04fd7ba7c', '1', raw[:8],
+                                                 [('ProcessId', 'win:UInt32'), ('TThreadId', 'win:UInt32')])
+        self.assertEqual('unknown', stage0.parse_event(short, short_rules, state)['operation'])
+        event.find('System/Version').text = '99'
+        self.assertEqual('unknown', stage0.parse_event(event, rules, state)['operation'])
+
+    def test_file_readwrite_payload_uses_v3_offsets_and_does_not_guess_tail(self):
+        layout = stage0.load_normalisation()['binaryLayouts'][1]
+        raw = bytearray(48)
+        for name, offset, width in layout['fields']:
+            value = {'FileObject': 0x123, 'FileKey': 0x456, 'TTID': 100, 'IoSize': 8}.get(name, 0)
+            raw[offset:offset + width] = value.to_bytes(width, 'little')
+        event, rules = self.payload_fixture(layout['guid'], '68', raw, layout['schemaPrefix'])
+        state = {'threads': {100: {'pid': 20, 'startedAt': '2026-10-13T00:00:00Z'}},
+                 'files': {0x456: 'owned/marker'}, 'pointerSize': 8}
+        row = stage0.parse_event(event, rules, state)
+        self.assertEqual('WriteFile', row['operation']); self.assertEqual(20, row['pid'])
+        self.assertEqual('owned/marker', row['destination'])
+        self.assertTrue(stage0.classify(self.controls + [row], self.context, self.rules)['positiveControls']['file'])
+        wrong, wrong_rules = self.payload_fixture(layout['guid'], '68', raw, [('TTID', 'win:Pointer')])
+        self.assertEqual('unknown', stage0.parse_event(wrong, wrong_rules, state)['operation'])
+        for opcode in ('67', '68'):
+            event.find('System/Opcode').text = opcode
+            event.find('ProcessingErrorData/EventPayload').text = bytes(raw[:12]).hex()
+            self.assertTrue(stage0.parse_event(event, rules, state)['decodeError'])
+
+    def test_file_key_names_thread_retirement_and_completion_are_correlated(self):
+        state = {'threads': {}, 'files': {}}
+        events = [self.real_event('3d6fa8d1-fe05-11d0-9dda-00c04fd7ba7c', '1', {'ProcessId': 10, 'TThreadId': 100}),
+                  self.real_event('90cbdc39-4a3e-11d1-84f4-0000f80464e3', '32', {'FileObject': '0X0000456', 'FileName': 'owned/fixture'}),
+                  self.real_event('90cbdc39-4a3e-11d1-84f4-0000f80464e3', '68', {'FileObject': '0x123', 'FileKey': '0x456', 'TTID': 100, 'IrpPtr': '0x789'}),
+                  self.real_event('90cbdc39-4a3e-11d1-84f4-0000f80464e3', '76', {'IrpPtr': '0x789', 'NtStatus': 0})]
+        rows = [stage0.parse_event(event, correlation=state) for event in events]
+        self.assertEqual('owned/fixture', rows[-1]['destination'])
+        self.assertEqual(10, rows[-1]['pid']); self.assertEqual('file-request-correlation', rows[-1]['pidSource'])
+        self.assertEqual('unknown', stage0.parse_event(events[-1], correlation=state)['operation'])
+        end = self.real_event('3d6fa8d1-fe05-11d0-9dda-00c04fd7ba7c', '2', {'ProcessId': 10, 'TThreadId': 100})
+        stage0.parse_event(end, correlation=state)
+        self.assertIsNone(stage0.parse_event(events[2], correlation=state)['pid'])
+
+    def test_duplicate_file_requests_do_not_lend_identity_to_completion(self):
+        state = {'threads': {100: {'pid': 10, 'startedAt': '2026-10-13T00:00:00Z'}}, 'files': {}}
+        request = self.real_event('90cbdc39-4a3e-11d1-84f4-0000f80464e3', '68',
+                                  {'FileObject': '0x123', 'TTID': 100, 'IrpPtr': '0x789'})
+        for _ in range(2): stage0.parse_event(request, correlation=state)
+        end = self.real_event('90cbdc39-4a3e-11d1-84f4-0000f80464e3', '76', {'IrpPtr': '0x789', 'NtStatus': 0})
+        self.assertEqual('unknown', stage0.parse_event(end, correlation=state)['operation'])
+        state['requests'] = {}
+        stage0.parse_event(request, correlation=state)
+        unknown = self.real_event('90cbdc39-4a3e-11d1-84f4-0000f80464e3', '999', {'IrpPtr': '0x789'})
+        stage0.parse_event(unknown, correlation=state)
+        self.assertEqual('unknown', stage0.parse_event(end, correlation=state)['operation'])
+
+    def test_file_position_is_non_effect_but_basic_and_unknown_information_stay_writes(self):
+        for info, expected in ((14, 'FilePosition'), (4, 'SetInformation'), (999, 'SetInformation')):
+            event = self.real_event('90cbdc39-4a3e-11d1-84f4-0000f80464e3', '69',
+                                    {'FileObject': '0x123', 'TTID': 100, 'InfoClass': info})
+            self.assertEqual(expected, stage0.parse_event(event)['operation'])
+
+    def test_raw_clock_recovers_process_control_without_a_ledger_time_shift(self):
+        import datetime as dt
+        state = {'threads': {}, 'files': {}}
+        ticks = (dt.datetime(2026, 10, 13) - dt.datetime(1601, 1, 1)).days * 86400 * 10000000
+        header = self.real_event('68fdd900-4a3e-11d1-84f4-0000f80464e3', '0',
+                                {'StartTime': ticks, 'PerfFreq': 10000000, 'ReservedFlags': 1})
+        import xml.etree.ElementTree as ET
+        ET.SubElement(ET.SubElement(header, 'RenderingInfo'), 'Opcode').text = 'Header'
+        header.find('System/TimeCreated').attrib = {'RawTime': '1000'}
+        process = self.real_event('3d6fa8d0-fe05-11d0-9dda-00c04fd7ba7c', '1',
+                                 {'ProcessId': 10, 'ParentId': 20, 'ImageFileName': 'Studio'})
+        process.find('System/TimeCreated').attrib = {'SystemTime': '2026-10-13T09:00:05+08:59'}
+        bad = stage0.parse_event(process)
+        self.assertFalse(stage0.classify([bad], self.context, self.rules)['positiveControls']['process'])
+        stage0.parse_event(header, correlation=state)
+        process.find('System/TimeCreated').attrib = {'RawTime': '50001000'}
+        good = stage0.parse_event(process, correlation=state)
+        self.assertEqual('2026-10-13T00:00:05.0000000Z', good['at'])
+        self.assertTrue(stage0.classify([good], self.context, self.rules)['positiveControls']['process'])
+
+    def test_registry_kcb_and_relative_value_prove_only_exact_live_marker(self):
+        control = self.registry_fixture(); marker = self.context['positiveControls'][-1]
+        state = {'threads': {}, 'files': {}}
+        for opcode in ('22', '24', '25'):
+            name = self.real_event('ae53722e-c863-11d2-8659-00c04fa321a1', opcode,
+                                   {'KeyHandle': '0X0000123', 'KeyName': marker['traceKeyPath']})
+            stage0.parse_event(name, correlation=state)
+        value = self.real_event('ae53722e-c863-11d2-8659-00c04fa321a1', '14',
+                               {'KeyHandle': '0x123', 'KeyName': 'RunId', 'Status': '   0'})
+        row = stage0.parse_event(value, correlation=state)
+        self.assertTrue(stage0.classify(self.controls + [row], self.context, self.rules)['positiveControls']['registry'])
+        delete = self.real_event('ae53722e-c863-11d2-8659-00c04fa321a1', '23', {'KeyHandle': '0x123'})
+        stage0.parse_event(delete, correlation=state)
+        row = stage0.parse_event(value, correlation=state)
+        self.assertFalse(stage0.registry_marker_match(row, marker, self.rules, {20}, proof=True))
+
     def test_profile_coverage_rejects_missing_each_keyword_and_inactive_declarations(self):
         import xml.etree.ElementTree as ET
         profile = SCRIPT.parent / 'Probe.wprp'
@@ -72,6 +204,10 @@ class StageZeroIsolationTests(unittest.TestCase):
         self.assertTrue(stage0.read_trace_health(summary, compact)['complete'])
         self.assertEqual(stage0.file_digest(raw), record['sourceSha256'])
         with self.assertRaises(FileExistsError): stage0.compact_trace(raw, compact)
+        for parser in ('stale', None):
+            changed = dict(record, parserSourceSha256=parser)
+            stage0.write(str(compact) + '.record.json', changed)
+            with self.assertRaisesRegex(ValueError, 'parser source differs'): list(stage0.parse_trace(compact))
         record['normalisationSha256'] = 'stale'
         stage0.write(str(compact) + '.record.json', record)
         with self.assertRaisesRegex(ValueError, 'normalisation differs'): list(stage0.parse_trace(compact))
@@ -96,9 +232,12 @@ class StageZeroIsolationTests(unittest.TestCase):
     def test_evidence_rows_map_each_decoded_kind_and_do_not_reinterpret_metadata(self):
         rules = json.loads((SCRIPT.parent / 'normalisation-rules.json').read_text(encoding='utf-8'))
         fields = {'ProcessId': ' 0xA ', 'ParentId': '0x14', 'ImageFileName': 'Studio.exe', 'FileName': 'owned/file',
-                  'FileObject': '0x123', 'OpenPath': 'owned/file', 'TTID': '100', 'TThreadId': '100', 'KeyName': 'key', 'Status': '0'}
+                  'FileObject': '0x123', 'OpenPath': 'owned/file', 'TTID': '100', 'TThreadId': '100', 'KeyName': 'key', 'Status': '0',
+                  'KeyHandle': '0x123', 'IrpPtr': '0x123', 'NtStatus': '0'}
         for row in rules['rows']:
             self.assertTrue(row['evidence'])
+            if row['operation'] == 'FileOperationEnd':
+                continue # completion requires an actual preceding request; tested separately
             event = stage0.parse_event(self.real_event('{' + row['guid'] + '}', row['opcodes'][0], fields), rules)
             self.assertEqual(row['operation'], event['operation'])
             self.assertEqual(row['channel'], event['channel'])
