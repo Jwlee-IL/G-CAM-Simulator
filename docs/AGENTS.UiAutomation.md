@@ -44,7 +44,7 @@ beside it, and nothing else (`ReportFileWriter`).
 
 | Surface | Declared | Resolved in a run | State |
 |---|---|---|---|
-| User / app data, settings, logs, caches | none in code | `TEMP` / `TMP` (and env-var readers of `APPDATA` / `LOCALAPPDATA`) redirected into an owned sandbox folder; **0 files written** in every run so far | confirmed absent; the redirect is a partial boundary — see below |
+| User / app data, settings, logs, caches | none in code | `TEMP` / `TMP` (and env-var readers of `APPDATA` / `LOCALAPPDATA`) redirected into an owned sandbox folder; **0 files written** in every run so far, apart from the export scenario's two declared report files (row below) | confirmed absent; the redirect is a partial boundary — see below |
 | Report export (TODO-46) | the confirmed path and its `.scene.json`, chosen in the save dialog; no remembered folder or setting | `ReportExportScenarioTests` types a path inside the owned sandbox; the run asserts exactly `report.html` and `report.scene.json` there and nothing else in the sandbox | declared and isolated; observed run passed 2026-10-15 |
 | Network | none in code | no TCP connections observed from the app's PID during an audit run | confirmed absent |
 | Child processes | none in code | none observed | confirmed absent |
