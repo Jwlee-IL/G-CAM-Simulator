@@ -5,6 +5,7 @@ Raw machine-wide traces stay local. This tool never starts a trace or launches S
 import argparse
 import datetime as dt
 import hashlib
+import gzip
 import json
 from pathlib import Path
 import re
@@ -167,9 +168,67 @@ def pwsh_version():
     return int(result.stdout.strip())
 
 
-def preflight(run_directory, live_pin=None, identity=None, version=None, scratch_root=None):
+def profile_coverage(profile_path=None, required_channels=None):
+    """Follow selected classic collector/provider references; declarations alone are not coverage."""
+    required = {'file': {'FileIO', 'FileIOInit', 'Filename', 'ProcessThread'},
+                'registry': {'Registry', 'ProcessThread'}, 'process': {'ProcessThread', 'Loader'}}
+    issues, selected = [], set()
+    try:
+        doc = ET.parse(profile_path or ISOLATION / 'Probe.wprp').getroot()
+        profiles = doc.findall("./Profiles/Profile[@Id='GcamProbe.Verbose.File']")
+        if len(profiles) != 1 or profiles[0].get('LoggingMode') != 'File' or profiles[0].get('Base'):
+            raise ValueError('expected one selected file-mode GcamProbe.Verbose.File profile')
+        for ref in profiles[0].findall('./Collectors/SystemCollectorId'):
+            collectors = doc.findall("./Profiles/SystemCollector[@Id='" + ref.get('Value', '') + "']")
+            if len(collectors) != 1:
+                raise ValueError('missing/ambiguous selected SystemCollector')
+            provider_refs = ref.findall('./SystemProviderId')
+            if len(provider_refs) != 1:
+                raise ValueError('expected one selected SystemProviderId')
+            provider_ref = provider_refs[0]
+            providers = doc.findall("./Profiles/SystemProvider[@Id='" + provider_ref.get('Value', '') + "']")
+            if len(providers) != 1 or providers[0].get('Base') or list(provider_ref):
+                raise ValueError('missing/ambiguous/inherited/overridden SystemProvider')
+            keywords = providers[0].find('Keywords')
+            if keywords is None or keywords.get('Operation', 'Set') != 'Set':
+                raise ValueError('expected explicit Set keywords')
+            selected.update(node.get('Value') for node in keywords.findall('Keyword'))
+        if profiles[0].findall('./Collectors/EventCollectorId'):
+            issues.append('profile selects unapproved event collectors')
+        if doc.findall('.//Stacks') or selected - set().union(*required.values()):
+            issues.append('profile selects stacks or unapproved system keywords')
+        for channel in required_channels if required_channels is not None else json.loads((ISOLATION / 'classification-rules.json').read_text())['requiredChannels']:
+            if channel not in required:
+                issues.append('profile required channel has no approved provider: ' + channel)
+            elif required[channel] - selected:
+                issues.append('profile missing required ' + channel + ' keywords: ' + ', '.join(sorted(required[channel] - selected)))
+    except (OSError, ValueError, ET.ParseError, SyntaxError) as error:
+        issues.append('profile coverage invalid: ' + str(error))
+    return issues
+
+
+def compact_trace(trace_path, out_path):
+    """Preserve every normalised event (including unknowns) in a compressed replayable intermediate."""
+    out = Path(out_path)
+    if out.suffixes[-2:] != ['.jsonl', '.gz'] or out.resolve() == Path(trace_path).resolve():
+        raise ValueError('compact destination must be a separate .jsonl.gz file')
+    normalisation = json.loads((ISOLATION / 'normalisation-rules.json').read_text())
+    count = 0
+    with gzip.open(out, 'xt', encoding='utf-8', newline='\n', compresslevel=6) as stream:
+        for event in parse_trace(trace_path, normalisation):
+            stream.write(json.dumps(event, separators=(',', ':')) + '\n')
+            count += 1
+    record = {'events': count, 'sourceBytes': Path(trace_path).stat().st_size,
+              'sourceSha256': file_digest(trace_path), 'compactBytes': out.stat().st_size,
+              'compactSha256': file_digest(out), 'normalisationSha256': file_digest(ISOLATION / 'normalisation-rules.json'),
+              'evidenceRetention': 'All normalised events retained; raw trace remains the authoritative payload evidence.'}
+    write(str(out) + '.record.json', record)
+    return record
+
+
+def preflight(run_directory, live_pin=None, identity=None, version=None, scratch_root=None, profile_path=None):
     """Read-only. Collect all failures before an administrator opens the trace window."""
-    issues = []
+    issues = profile_coverage(profile_path)
     root = Path(scratch_root or Path(tempfile.gettempdir()) / 'gcam-todo43').resolve()
     path = Path(run_directory).absolute()
     try:
@@ -269,8 +328,13 @@ def parse_trace(path, normalisation=None):
     if path.suffix == '.json':
         yield from json.loads(path.read_text(encoding='utf-8'))
         return
-    if path.suffix == '.jsonl':
-        with path.open(encoding='utf-8') as stream:
+    if path.suffix == '.jsonl' or path.suffixes[-2:] == ['.jsonl', '.gz']:
+        if path.suffix == '.gz':
+            record = json.loads(Path(str(path) + '.record.json').read_text())
+            if record['normalisationSha256'] != file_digest(ISOLATION / 'normalisation-rules.json'):
+                raise ValueError('compact intermediate normalisation differs from current approved rules; replay raw trace')
+        opener = gzip.open if path.suffix == '.gz' else open
+        with opener(path, 'rt', encoding='utf-8') as stream:
             for line in stream:
                 yield json.loads(line)
         return
@@ -622,6 +686,7 @@ def main():
     p = sub.add_parser('pin'); p.add_argument('--out', required=True)
     p = sub.add_parser('fingerprint'); p.add_argument('--directory', required=True); p.add_argument('--kind', choices=('isolation', 'deployment'), default='isolation')
     p = sub.add_parser('preflight'); p.add_argument('--run-directory', required=True)
+    p = sub.add_parser('compact'); p.add_argument('--trace', required=True); p.add_argument('--out', required=True)
     p = sub.add_parser('classify'); p.add_argument('--trace', required=True); p.add_argument('--context', required=True); p.add_argument('--out', required=True)
     p.add_argument('--summary'); p.add_argument('--schema')
     args = parser.parse_args()
@@ -633,6 +698,8 @@ def main():
     elif args.command == 'fingerprint':
         files = fingerprint_files(Path(args.directory), args.kind == 'deployment')
         print(canonical({'files': files, 'sha256': fingerprint_map(files)}).decode(), end='')
+    elif args.command == 'compact':
+        print(json.dumps(compact_trace(args.trace, args.out), separators=(',', ':')))
     elif args.command == 'preflight':
         issues = preflight(args.run_directory)
         for issue in issues:
@@ -660,6 +727,13 @@ def main():
         if args.schema:
             result['schemaSha256'] = file_digest(args.schema)
         result['traceSha256'] = file_digest(args.trace)
+        if Path(args.trace).suffix == '.gz':
+            record_path = Path(str(args.trace) + '.record.json')
+            record = json.loads(record_path.read_text())
+            if record['compactSha256'] != result['traceSha256']:
+                raise ValueError('compact intermediate digest differs from its generation record')
+            result['rawTraceSha256'] = record['sourceSha256']
+            result['compactGenerationRecordSha256'] = file_digest(record_path)
         result['contextSha256'] = digest(canonical(context))
         result['inputContextSha256'] = original_context_sha
         result['rulesSha256'] = digest(canonical(rules))

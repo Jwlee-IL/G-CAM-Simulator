@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "normalisationVersion": 1,
+  "normalisationVersion": 2,
   "default": "unknown; no provider/PID blanket exemptions",
   "scope": "Decoded classic/WBEM events and explicit metadata identity. No manifest numeric-ID guessing or raw payload reinterpretation.",
   "unmappedProviders": [
@@ -577,6 +577,142 @@
       "evidence": [
         "https://github.com/microsoft/perfview/blob/main/src/TraceEvent/Parsers/SymbolTraceEventParser.cs",
         "Image-identity metadata, not FileIo. Opaque payload remains unclassified; unmapped opcode semantics are not inferred."
+      ]
+    },
+    {
+      "guid": "90cbdc39-4a3e-11d1-84f4-0000f80464e3",
+      "opcodes": [
+        "67",
+        "Read"
+      ],
+      "channel": "file",
+      "operation": "ReadFile",
+      "requiredFields": [
+        "FileObject",
+        "TTID"
+      ],
+      "evidence": [
+        "https://learn.microsoft.com/en-us/windows/win32/etw/fileio",
+        "Classic FileIo version 3 export schema exposes FileObject and TTID; numeric opcodes are not manifest Event IDs."
+      ]
+    },
+    {
+      "guid": "90cbdc39-4a3e-11d1-84f4-0000f80464e3",
+      "opcodes": [
+        "74",
+        "QueryInfo"
+      ],
+      "channel": "file",
+      "operation": "QueryInformation",
+      "requiredFields": [
+        "FileObject",
+        "TTID"
+      ],
+      "evidence": [
+        "https://learn.microsoft.com/en-us/windows/win32/etw/fileio",
+        "Classic FileIo version 3 export schema exposes FileObject and TTID; numeric opcodes are not manifest Event IDs."
+      ]
+    },
+    {
+      "guid": "90cbdc39-4a3e-11d1-84f4-0000f80464e3",
+      "opcodes": [
+        "65",
+        "Cleanup"
+      ],
+      "channel": "file",
+      "operation": "CleanupFile",
+      "requiredFields": [
+        "FileObject",
+        "TTID"
+      ],
+      "evidence": [
+        "https://learn.microsoft.com/en-us/windows/win32/etw/fileio",
+        "Classic FileIo version 3 export schema exposes FileObject and TTID; numeric opcodes are not manifest Event IDs."
+      ]
+    },
+    {
+      "guid": "ae53722e-c863-11d2-8659-00c04fa321a1",
+      "opcodes": [
+        "13",
+        "Query"
+      ],
+      "channel": "registry",
+      "operation": "QueryKey",
+      "requiredFields": [
+        "KeyName",
+        "Status"
+      ],
+      "evidence": [
+        "https://learn.microsoft.com/en-us/windows/win32/etw/registry",
+        "Classic Registry version 2 export schema carries KeyName and Status; queries and enumeration are non-effects."
+      ]
+    },
+    {
+      "guid": "ae53722e-c863-11d2-8659-00c04fa321a1",
+      "opcodes": [
+        "16",
+        "QueryValue"
+      ],
+      "channel": "registry",
+      "operation": "QueryValue",
+      "requiredFields": [
+        "KeyName",
+        "Status"
+      ],
+      "evidence": [
+        "https://learn.microsoft.com/en-us/windows/win32/etw/registry",
+        "Classic Registry version 2 export schema carries KeyName and Status; queries and enumeration are non-effects."
+      ]
+    },
+    {
+      "guid": "ae53722e-c863-11d2-8659-00c04fa321a1",
+      "opcodes": [
+        "17",
+        "EnumerateKey"
+      ],
+      "channel": "registry",
+      "operation": "EnumerateKey",
+      "requiredFields": [
+        "KeyName",
+        "Status"
+      ],
+      "evidence": [
+        "https://learn.microsoft.com/en-us/windows/win32/etw/registry",
+        "Classic Registry version 2 export schema carries KeyName and Status; queries and enumeration are non-effects."
+      ]
+    },
+    {
+      "guid": "ae53722e-c863-11d2-8659-00c04fa321a1",
+      "opcodes": [
+        "18",
+        "EnumerateValueKey"
+      ],
+      "channel": "registry",
+      "operation": "EnumerateValueKey",
+      "requiredFields": [
+        "KeyName",
+        "Status"
+      ],
+      "evidence": [
+        "https://learn.microsoft.com/en-us/windows/win32/etw/registry",
+        "Classic Registry version 2 export schema carries KeyName and Status; queries and enumeration are non-effects."
+      ]
+    },
+    {
+      "guid": "ae53722e-c863-11d2-8659-00c04fa321a1",
+      "opcodes": [
+        "19",
+        "QueryMultipleValue"
+      ],
+      "channel": "registry",
+      "operation": "QueryMultipleValue",
+      "requiredFields": [
+        "KeyName",
+        "Status"
+      ],
+      "evidence": [
+        "https://learn.microsoft.com/en-us/windows/win32/etw/registry",
+        "Classic Registry version 2 export schema carries KeyName and Status; queries and enumeration are non-effects."
       ]
     }
   ],

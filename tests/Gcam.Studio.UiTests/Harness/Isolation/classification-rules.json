@@ -26,12 +26,17 @@
       "Read",
       "ReadFile",
       "QueryInformation",
-      "OpenRead"
+      "OpenRead",
+      "CleanupFile",
+      "CloseFile"
     ],
     "registry": [
       "QueryValue",
       "OpenKey",
-      "QueryKey"
+      "QueryKey",
+      "EnumerateKey",
+      "EnumerateValueKey",
+      "QueryMultipleValue"
     ],
     "process": [
       "ImageLoad"

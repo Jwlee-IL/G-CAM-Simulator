@@ -14,12 +14,74 @@ spec.loader.exec_module(stage0)
 
 
 class StageZeroIsolationTests(unittest.TestCase):
+    def test_profile_coverage_rejects_missing_each_keyword_and_inactive_declarations(self):
+        import xml.etree.ElementTree as ET
+        profile = SCRIPT.parent / 'Probe.wprp'
+        self.assertEqual([], stage0.profile_coverage(profile))
+        for value in ('FileIO', 'FileIOInit', 'Filename', 'Registry', 'ProcessThread', 'Loader'):
+            doc = ET.parse(profile)
+            keywords = doc.find('./Profiles/SystemProvider/Keywords')
+            keywords.remove(next(node for node in keywords if node.get('Value') == value))
+            fixture = self.scratch() / 'profile.wprp'; doc.write(fixture)
+            self.assertTrue(stage0.profile_coverage(fixture), value)
+        doc = ET.parse(profile)
+        doc.find('./Profiles/Profile/Collectors/SystemCollectorId/SystemProviderId').set('Value', 'unselected')
+        doc.write(fixture)
+        self.assertTrue(stage0.profile_coverage(fixture))
+        doc = ET.parse(profile)
+        provider = doc.find('./Profiles/SystemProvider')
+        inactive = copy.deepcopy(provider); inactive.set('Id', 'Inactive')
+        doc.find('./Profiles').append(inactive)
+        provider.find('Keywords').remove(provider.find("Keywords/Keyword[@Value='Registry']"))
+        doc.write(fixture)
+        self.assertTrue(any('registry' in issue for issue in stage0.profile_coverage(fixture)))
+        self.assertTrue(stage0.profile_coverage(profile, ['new-channel']))
+
+    def test_profile_coverage_is_checked_by_preflight_and_rejects_forbidden_keywords(self):
+        import xml.etree.ElementTree as ET
+        doc = ET.parse(SCRIPT.parent / 'Probe.wprp')
+        ET.SubElement(doc.find('./Profiles/SystemProvider/Keywords'), 'Keyword', Value='NetworkTrace')
+        root = self.scratch(); fixture = root / 'profile.wprp'; doc.write(fixture)
+        issues = stage0.preflight(root / 'probe-fixture', live_pin=lambda: {}, identity=lambda: ('a', '2026-10-14T00:00:00Z'),
+                                 version=lambda: 7, scratch_root=root, profile_path=fixture)
+        self.assertTrue(any('profile selects' in issue for issue in issues))
+
+    def test_bundled_classic_reads_and_queries_are_non_effects_in_real_shape(self):
+        fields = {'FileObject': '0x123', 'TTID': '100', 'FileName': 'owned/fixture', 'KeyName': 'fixture', 'Status': '0'}
+        for guid, opcode in [('90cbdc39-4a3e-11d1-84f4-0000f80464e3', n) for n in ('67', '74')] + [
+                ('ae53722e-c863-11d2-8659-00c04fa321a1', n) for n in ('13', '16', '17', '18', '19')]:
+            state = {'threads': {100: {'pid': 10, 'startedAt': '2026-10-13T00:00:00Z'}}, 'files': {}}
+            event = stage0.parse_event(self.real_event(guid, opcode, fields, pid=10), correlation=state)
+            self.assertIn(event['operation'], self.rules['readOperations'][event['channel']])
+            result = stage0.classify(self.controls + [event], self.context, self.rules)
+            self.assertEqual('app-read', result['candidates'][-1]['classification'])
+
+    def test_compact_replay_preserves_every_event_fields_health_and_verdict(self):
+        import xml.etree.ElementTree as ET
+        root = self.scratch(); raw = root / 'fixture.xml'; compact = root / 'fixture.jsonl.gz'
+        tree = ET.Element('Events')
+        tree.append(self.real_event('90cbdc39-4a3e-11d1-84f4-0000f80464e3', '999', {'FileName': 'synthetic'}))
+        tree.append(self.real_event('68fdd900-4a3e-11d1-84f4-0000f80464e3', 'Header', {'EventsLost': 0, 'BuffersLost': 0}))
+        ET.ElementTree(tree).write(raw)
+        record = stage0.compact_trace(raw, compact)
+        self.assertEqual(2, record['events'])
+        self.assertEqual(list(stage0.parse_trace(raw)), list(stage0.parse_trace(compact)))
+        result = lambda path: stage0.classify(lambda: stage0.parse_trace(path), self.context, self.rules)
+        self.assertEqual(result(raw), result(compact))
+        summary = root / 'summary.txt'; summary.write_text('Total Events Processed 2\nTotal Events Lost 0\n')
+        self.assertTrue(stage0.read_trace_health(summary, compact)['complete'])
+        self.assertEqual(stage0.file_digest(raw), record['sourceSha256'])
+        with self.assertRaises(FileExistsError): stage0.compact_trace(raw, compact)
+        record['normalisationSha256'] = 'stale'
+        stage0.write(str(compact) + '.record.json', record)
+        with self.assertRaisesRegex(ValueError, 'normalisation differs'): list(stage0.parse_trace(compact))
+
     @staticmethod
     def real_event(guid, opcode, fields=None, pid=20, at='2026-10-13T00:00:05Z', error=False):
         import xml.etree.ElementTree as ET
         event = ET.Element('Event', xmlns='http://schemas.microsoft.com/win/2004/08/events/event')
         system = ET.SubElement(event, 'System')
-        ET.SubElement(system, 'Provider', Guid=guid)
+        ET.SubElement(system, 'Provider', Guid='{9e814aad-3204-11d2-9a82-006008a86939}')
         ET.SubElement(system, 'Opcode').text = str(opcode)
         ET.SubElement(system, 'Execution', ProcessID=str(pid), ThreadID='100')
         ET.SubElement(system, 'TimeCreated', SystemTime=at)
