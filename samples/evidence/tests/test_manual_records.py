@@ -96,22 +96,56 @@ class ManualRecordsTests(unittest.TestCase):
     def marks(self, rects, crop='marks'):
         return {'crop': crop, 'marks': [{'n': i + 1, 'label': 'L', 'image': r} for i, r in enumerate(rects)]}
 
-    def test_overlay_crops_around_marks_and_draws_numbered_badges(self):
+    def panel_image(self, width, height, text=None):
+        """Window background, one bordered panel at (20, 20)-(179, 99) and an optional bright 'text' block."""
+        def colour(x, y):
+            if text and text[0] <= x < text[0] + text[2] and text[1] <= y < text[1] + text[3]:
+                return (200, 200, 200)
+            if 20 <= x < 180 and 20 <= y < 100:
+                return (43, 53, 62) if x in (20, 179) or y in (20, 99) else (25, 31, 37)
+            return (18, 22, 25)
+        return b''.join(bytes(colour(x, y)) for y in range(height) for x in range(width))
+
+    def test_overlay_crops_to_the_panel_and_keeps_badges_off_text_and_marks(self):
         width, height = 200, 120
-        rgb = bytes(width * height * 3)
-        w, h, out, crop, flags = mr.derive_figure(width, height, rgb, self.marks([[60, 50, 20, 10], [100, 70, 30, 12]]))
-        self.assertEqual([36, 26, 118, 80], crop)            # union ± 24 px margin
-        self.assertEqual((118, 80, []), (w, h, flags))
+        text = (40, 50, 16, 10)                               # a label just left of mark 1
+        rgb = self.panel_image(width, height, text)
+        w, h, out, crop, flags, operation = mr.derive_figure(width, height, rgb, self.marks([[60, 50, 20, 10], [100, 70, 30, 12]]))
+        self.assertEqual([13, 13, 174, 94], crop)            # the whole panel (border at 20 and 179 / 99) + 6 px of background
+        self.assertEqual(('panel-edges', []), (operation['cropRule'], flags))
+        # Left of mark 1 is the label, so its badge goes above; left of mark 2 sits 3 px from mark 1's frame (reads as mark
+        # 1's), so it goes above too.
+        self.assertEqual([('above', [45, 12]), ('above', [85, 32])], [(b['side'], b['at']) for b in operation['badges']])
         def at(x, y):
             return tuple(out[(y * w + x) * 3:(y * w + x) * 3 + 3])
-        self.assertEqual(mr.RED, at(60 - 36 - 2, 50 - 26 - 2))  # border outside the control's top-left corner
-        self.assertEqual((0, 0, 0), at(60 - 36 + 5, 50 - 26 + 5))   # the control itself is not painted
-        badge = [(x, y) for y in range(h) for x in range(w) if at(x, y) == mr.WHITE]
-        self.assertTrue(badge and all(y < 50 - 26 for x, y in badge[:15]))   # mark 1's digit sits above its rectangle
+        self.assertEqual(mr.RED, at(60 - 13 - 2, 50 - 13 - 2))   # border outside the control's top-left corner
+        self.assertEqual((25, 31, 37), at(60 - 13 + 5, 50 - 13 + 5))   # the control itself is not painted
+        self.assertTrue(all(at(x - 13, y - 13) == (200, 200, 200)
+                            for y in range(text[1], text[1] + text[3]) for x in range(text[0], text[0] + text[2])))
+        white = [(x, y) for y in range(h) for x in range(w) if at(x, y) == mr.WHITE]
+        self.assertTrue(white and all(45 <= x < 60 and 12 <= y < 33 for x, y in white if x < 70))   # mark 1's digit, above it
 
-    def test_overlay_flags_a_badge_without_room(self):
-        _, _, _, _, flags = mr.derive_figure(12, 12, bytes(12 * 12 * 3), self.marks([[2, 2, 8, 8]], crop='full'))
-        self.assertEqual(['badge-placement:1'], flags)
+    def test_overlay_flags_a_badge_whose_only_free_place_is_on_content(self):
+        width, height = 64, 48
+        rgb = b''.join(bytes((255, 255, 255) if x % 2 else (0, 0, 0)) for y in range(height) for x in range(width))
+        _, _, _, _, flags, _ = mr.derive_figure(width, height, rgb, self.marks([[24, 20, 10, 8]], crop='full'))
+        self.assertEqual(['badge-on-content:1'], flags)
+
+    def test_overlay_refuses_a_badge_without_a_free_place(self):
+        with self.assertRaisesRegex(ValueError, 'badge-overlap: mark 1 has no place'):
+            mr.derive_figure(12, 12, bytes(12 * 12 * 3), self.marks([[2, 2, 8, 8]], crop='full'))
+
+    def test_badge_check_refuses_a_badge_on_another_mark_its_target_a_badge_or_the_edge(self):
+        rects = [[10, 10, 9, 6], [36, 20, 9, 6]]
+        mr.check_badges(rects, [[22, 0, 11, 16], [49, 20, 15, 21]], 64, 48)
+        for badges, code in (([[30, 10, 15, 21], [49, 20, 15, 21]], 'badge-overlap: badge 1 covers mark 2'),
+                             ([[8, 8, 15, 21], [49, 20, 15, 21]], 'badge-overlap: badge 1 covers its own target'),
+                             ([[22, 0, 11, 16], [37, 21, 6, 4]], 'badge-overlap: badge 2 covers its own target'),
+                             ([[22, 0, 11, 16], [25, 4, 5, 5]], 'badge-overlap: badge 1 covers badge 2'),
+                             ([[22, 0, 11, 16], [49, 30, 15, 21]], 'badge-bounds: badge 2 outside the figure')):
+            with self.assertRaises(ValueError) as caught:
+                mr.check_badges(rects, badges, 64, 48)
+            self.assertEqual(code, str(caught.exception))
 
     def test_marks_must_be_the_measured_rectangles_inside_the_capture(self):
         png = mr.png_encode(64, 48, bytes(64 * 48 * 3))
@@ -145,7 +179,8 @@ class ManualRecordsTests(unittest.TestCase):
     def test_self_test_refuses_every_seeded_defect(self):
         results = dict(mr.self_test(scratch() / 'self-test'))
         for name in ('missing-run-formal', 'failed-chapter-formal', 'evidence-hash', 'mark-outside-image', 'mixed-binaries',
-                     'budget-exceeded', 'tampered-figure', 'dpi-double-scaling', 'identity-leak'):
+                     'budget-exceeded', 'tampered-figure', 'dpi-double-scaling', 'identity-leak', 'badge-no-room',
+                     'badge-over-other-mark', 'badge-over-own-target', 'badge-placement-defect'):
             self.assertIn(name, results)
             self.assertFalse(results[name].startswith('generated'), name)
         self.assertTrue(results['missing-run'].startswith('generated'))

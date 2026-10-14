@@ -3,8 +3,9 @@
 An edition is assembled from the chapter registry, the static chapters, the Studio notice list and manual run records
 (written by the desktop manual scenarios after cleanup). A generated chapter is printed only when the latest run of its
 scenario on the edition's one Studio build passed; otherwise the edition carries an omission notice. Figures are the
-run's original captures, cropped and overlaid with the marks the runner measured at capture time (rectangles with
-numbered badges); nothing is placed or worded by the generator. The generator records; it approves nothing.
+run's original captures, cropped along panel edges and overlaid with the mark rectangles the runner measured at capture
+time; the generator only adds the numbered badges beside them by a fixed rule (outside every rectangle, off text) and
+places or words no mark. The generator records; it approves nothing.
 
   python -B samples/manual/manual_records.py check-registry
   python -B samples/manual/manual_records.py generate --runs <folder> --edition-id <id> --date <yyyy-mm-dd> --out <new>
@@ -32,7 +33,15 @@ RUN_SCHEMA = ('gcam.manual-run', 1)
 MARK_SCHEMA = ('gcam.figure-marks', 1)
 LEVELS = ('warning', 'caution', 'note')
 DEFAULT_BUDGET = 10 * 1024 * 1024
-MARGIN = 24
+BORDER = 2      # mark border width, drawn outside the control
+GAP = 2         # clearance between a badge and any framed mark rectangle
+CLEAR = 12      # preferred clearance between a badge and every other mark's frame
+SPACING = 10    # clearance between two badges, so neighbours never read as one two-digit number
+PAD = 6         # crop padding into the window background beyond a panel's edge
+FRAME = 8       # the window's own outline and rounded corners, ignored when testing a crop edge
+HALO = 3        # text must stay this far from a badge
+QUIET = 40      # largest luminance range under a badge: panel and gutter edges pass, text, icons, plots and field frames do not
+OVERLAY = 'rectangles+numbered-badges-v2'
 RED, WHITE = (200, 30, 30), (255, 255, 255)
 TOKEN = re.compile(r'\[\[(chapter|notice):([A-Za-z0-9.\-]+)\]\]')
 PROSE_NOTICE = re.compile(r'^\s*(?:>\s*)?(?:\*\*)?(?:warning|caution|note|important)\b', re.I)
@@ -183,56 +192,183 @@ def validate_marks(doc, width, height, capture_sha):
     return marks
 
 
-def crop_rect(doc, width, height):
+def badge_size(n):
+    return len(str(n)) * 4 * SCALE - SCALE + 6, 5 * SCALE + 6
+
+
+def framed(rect):
+    """A mark's rectangle with its border (drawn outside the control)."""
+    x, y, w, h = rect
+    return [x - BORDER, y - BORDER, w + 2 * BORDER, h + 2 * BORDER]
+
+
+def overlap(a, b, gap=0):
+    return not (a[0] + a[2] + gap <= b[0] or b[0] + b[2] + gap <= a[0] or a[1] + a[3] + gap <= b[1] or b[1] + b[3] + gap <= a[1])
+
+
+def check_badges(rects, badges, width, height):
+    """Independent post-condition of the placement: every badge inside the figure, clear of every mark's framed
+    rectangle (its own target included) and of every other badge."""
+    for i, badge in enumerate(badges):
+        n = i + 1
+        require(badge[0] >= 0 and badge[1] >= 0 and badge[0] + badge[2] <= width and badge[1] + badge[3] <= height,
+                f'badge-bounds: badge {n} outside the figure')
+        for j, rect in enumerate(rects):
+            require(not overlap(badge, framed(rect)),
+                    f'badge-overlap: badge {n} covers ' + ('its own target' if j == i else f'mark {j + 1}'))
+        for j, other in enumerate(badges):
+            require(j == i or not overlap(badge, other), f'badge-overlap: badge {n} covers badge {j + 1}')
+
+
+def spread(width, height, rgb, box):
+    """Luminance range (0-255) under a box widened by HALO px; text, icons, plots and field frames read as large."""
+    x0, y0 = max(0, box[0] - HALO), max(0, box[1] - HALO)
+    x1, y1 = min(width, box[0] + box[2] + HALO), min(height, box[1] + box[3] + HALO)
+    lo, hi = 255, 0
+    for y in range(y0, y1):
+        row = rgb[(y * width + x0) * 3:(y * width + x1) * 3]
+        for i in range(0, len(row), 3):
+            value = (299 * row[i] + 587 * row[i + 1] + 114 * row[i + 2]) // 1000
+            lo, hi = min(lo, value), max(hi, value)
+    return hi - lo if hi >= lo else 0
+
+
+def badge_candidates(rect, bw, bh):
+    """Side by side in the fixed order left, above, right, below: the side's home position first, then the same side
+    slid along the rectangle (badge centre kept within the rectangle's span), nearest the home position first."""
+    x, y, w, h = rect
+    off = BORDER + GAP
+    home_y, home_x = y + (h - bh) // 2, x - BORDER
+    along_y = sorted(range(y - bh // 2, y + h - bh // 2 + 1), key=lambda v: (abs(v - home_y), v))
+    along_x = sorted(range(x - bw // 2, x + w - bw // 2 + 1), key=lambda v: (abs(v - home_x), v))
+    for side, fixed, along in (('left', x - off - bw, along_y), ('above', y - off - bh, along_x),
+                               ('right', x + w + off, along_y), ('below', y + h + off, along_x)):
+        for v in along:
+            yield side, ((fixed, v) if side in ('left', 'right') else (v, fixed))
+
+
+def separation(a, b):
+    """Gap between two boxes along the axis that separates them most (0 when they touch or overlap)."""
+    return max(0, a[0] - (b[0] + b[2]), b[0] - (a[0] + a[2]), a[1] - (b[1] + b[3]), b[1] - (a[1] + a[3]))
+
+
+def place_badges(width, height, rgb, marks):
+    """Deterministic badge placement on the whole capture, in mark order. A free place lies outside the badge's own
+    rectangle, inside the capture, at least GAP px from every framed mark rectangle and SPACING px from the badges placed
+    before it. Candidates are tried in badge_candidates order and the first free place of the best tier wins:
+    (0) quiet (no text or content under it) and at least CLEAR px from every other mark, so it reads as its own mark's;
+    (1) quiet; (2) any free place, flagged badge-on-content. Without a free place the figure is refused."""
+    rects = [m['image'] for m in marks]
+    badges, sides, flags = [], [], []
+    for index, mark in enumerate(marks):
+        bw, bh = badge_size(mark['n'])
+        best = {}
+        for side, (bx, by) in badge_candidates(mark['image'], bw, bh):
+            box = [bx, by, bw, bh]
+            if bx < 0 or by < 0 or bx + bw > width or by + bh > height:
+                continue
+            if any(overlap(box, framed(r), GAP) for r in rects) or any(overlap(box, b, SPACING) for b in badges):
+                continue
+            if spread(width, height, rgb, box) > QUIET:
+                best.setdefault(2, (side, box))
+                continue
+            if all(separation(box, framed(r)) >= CLEAR for j, r in enumerate(rects) if j != index):
+                best[0] = (side, box)
+                break
+            best.setdefault(1, (side, box))
+        require(best, f'badge-overlap: mark {mark["n"]} has no place outside every mark')
+        tier = min(best)
+        if tier == 2:
+            flags.append(f'badge-on-content:{mark["n"]}')
+        sides.append(best[tier][0])
+        badges.append(best[tier][1])
+    check_badges(rects, badges, width, height)
+    return badges, sides, flags
+
+
+def background(width, height, rgb):
+    """The window background: the commonest colour of the window's outer columns (the gutters beside the panels)."""
+    counts = {}
+    for x in sorted({min(2, width - 1), max(0, width - 3)}):
+        for y in range(height):
+            colour = rgb[(y * width + x) * 3:(y * width + x) * 3 + 3]
+            counts[colour] = counts.get(colour, 0) + 1
+    return max(sorted(counts), key=lambda c: counts[c])
+
+
+def crop_rect(doc, width, height, rgb, badges):
+    """'full', or the smallest box that holds every framed mark, the region and every badge and whose edges run along
+    the window background (the gutter between panels) or the window's edge, so no panel, heading or word is cut; then
+    padded up to PAD px into the background. Grows to the whole window when no such edge exists."""
     if doc.get('crop') == 'full':
-        return [0, 0, width, height]
-    boxes = [m['image'] for m in doc['marks']] + ([doc['region']['image']] if doc.get('region') else [])
+        return [0, 0, width, height], 'full'
+    boxes = [framed(m['image']) for m in doc['marks']] + [list(b) for b in badges]
+    if doc.get('region'):
+        boxes.append(doc['region']['image'])
     if not boxes:
-        return [0, 0, width, height]
-    left = max(0, min(b[0] for b in boxes) - MARGIN)
-    top = max(0, min(b[1] for b in boxes) - MARGIN)
-    right = min(width, max(b[0] + b[2] for b in boxes) + MARGIN)
-    bottom = min(height, max(b[1] + b[3] for b in boxes) + MARGIN)
-    return [left, top, right - left, bottom - top]
+        return [0, 0, width, height], 'full'
+    bg = background(width, height, rgb)
+    def clean_row(y, l, r):
+        l, r = max(l, FRAME), min(r, width - FRAME)
+        return rgb[(y * width + l) * 3:(y * width + r) * 3] == bg * max(0, r - l)
+    def clean_col(x, t, b):
+        return all(rgb[(y * width + x) * 3:(y * width + x) * 3 + 3] == bg for y in range(max(t, FRAME), min(b, height - FRAME)))
+    l = max(0, min(box[0] for box in boxes))
+    t = max(0, min(box[1] for box in boxes))
+    r = min(width, max(box[0] + box[2] for box in boxes))
+    b = min(height, max(box[1] + box[3] for box in boxes))
+    while True:
+        before = (l, t, r, b)
+        while l > 0 and not clean_col(l, t, b):
+            l -= 1
+        while r < width and not clean_col(r - 1, t, b):
+            r += 1
+        while t > 0 and not clean_row(t, l, r):
+            t -= 1
+        while b < height and not clean_row(b - 1, l, r):
+            b += 1
+        if (l, t, r, b) == before:
+            break
+    for _ in range(PAD):
+        l -= 1 if l > 0 and clean_col(l - 1, t, b) else 0
+        r += 1 if r < width and clean_col(r, t, b) else 0
+        t -= 1 if t > 0 and clean_row(t - 1, l, r) else 0
+        b += 1 if b < height and clean_row(b, l, r) else 0
+    if (l, t, r, b) == (0, 0, width, height):
+        return [0, 0, width, height], 'full'
+    return [l, t, r - l, b - t], 'panel-edges'
 
 
 def derive_figure(width, height, rgb, doc):
-    """Crop + rectangles + numbered badges. Returns (w, h, rgb, crop, flags)."""
-    cx, cy, cw, ch = crop_rect(doc, width, height)
+    """Badges placed, crop chosen, rectangles and numbered badges drawn. Returns (w, h, rgb, crop, flags, operation)."""
+    badges, sides, flags = place_badges(width, height, rgb, doc['marks'])
+    (cx, cy, cw, ch), rule = crop_rect(doc, width, height, rgb, badges)
     stride = width * 3
     out = bytearray(b''.join(rgb[(cy + y) * stride + cx * 3:(cy + y) * stride + (cx + cw) * 3] for y in range(ch)))
     def fill(x0, y0, x1, y1, colour):
         for y in range(max(0, y0), min(ch, y1)):
             for x in range(max(0, x0), min(cw, x1)):
                 out[(y * cw + x) * 3:(y * cw + x) * 3 + 3] = bytes(colour)
-    flags, badges = [], []
-    for mark in doc['marks']:
+    local = [[bx - cx, by - cy, bw, bh] for bx, by, bw, bh in badges]
+    check_badges([[m['image'][0] - cx, m['image'][1] - cy, m['image'][2], m['image'][3]] for m in doc['marks']], local, cw, ch)
+    for mark, (bx, by, bw, bh) in zip(doc['marks'], local):
         left, top, w, h = mark['image']
         left, top = left - cx, top - cy
-        for t in range(2):   # 2 px border, outside the control where room allows
+        for t in range(BORDER):   # border outside the control
             fill(left - 2 + t, top - 2 + t, left + w + 2 - t, top - 1 + t, RED)
             fill(left - 2 + t, top + h + 1 - t, left + w + 2 - t, top + h + 2 - t, RED)
             fill(left - 2 + t, top - 2 + t, left - 1 + t, top + h + 2 - t, RED)
             fill(left + w + 1 - t, top - 2 + t, left + w + 2 - t, top + h + 2 - t, RED)
-        digits = str(mark['n'])
-        bw, bh = len(digits) * 4 * SCALE - SCALE + 6, 5 * SCALE + 6
-        candidates = [(left - 2, top - bh - 3), (left - bw - 3, top - 2), (left - 2, top + h + 3), (left + 1, top + 1)]
-        inside = [c for c in candidates if c[0] >= 0 and c[1] >= 0 and c[0] + bw <= cw and c[1] + bh <= ch]
-        free = [c for c in inside if all(c[0] + bw <= b[0] or b[0] + b[2] <= c[0] or c[1] + bh <= b[1] or b[1] + b[3] <= c[1] for b in badges)]
-        if free:
-            bx, by = free[0]
-        else:
-            bx, by = inside[0] if inside else (min(max(0, left), max(0, cw - bw)), min(max(0, top), max(0, ch - bh)))
-            flags.append(f'badge-placement:{mark["n"]}')
-        badges.append((bx, by, bw, bh))
         fill(bx, by, bx + bw, by + bh, RED)
-        for k, digit in enumerate(digits):
+        for k, digit in enumerate(str(mark['n'])):
             for gy in range(5):
                 for gx in range(3):
                     if GLYPHS[digit][gy * 3 + gx] == '1':
                         x0 = bx + 3 + k * 4 * SCALE + gx * SCALE
                         fill(x0, by + 3 + gy * SCALE, x0 + SCALE, by + 3 + (gy + 1) * SCALE, WHITE)
-    return cw, ch, bytes(out), [cx, cy, cw, ch], flags
+    operation = {'crop': [cx, cy, cw, ch], 'cropRule': rule, 'overlay': OVERLAY,
+                 'badges': [{'n': m['n'], 'side': s, 'at': [x, y]} for m, s, (x, y, _, _) in zip(doc['marks'], sides, local)]}
+    return cw, ch, bytes(out), [cx, cy, cw, ch], flags, operation
 
 
 # ---------------------------------------------------------------- sources
@@ -447,7 +583,7 @@ def assemble(sources, runs, edition_id, date, formal, budget, reuse=None, genera
                     text += [f'**Step {step["n"]}.** ' + resolve_tokens(step['text'], chapters, printed), '']
                     for figure in step['figures']:
                         _, meta, width, height, rgb, doc, png, marks_raw = figure_map[figure['id']]
-                        fw, fh, frgb, crop, fig_flags = derive_figure(width, height, rgb, doc)
+                        fw, fh, frgb, crop, fig_flags, operation = derive_figure(width, height, rgb, doc)
                         name = f'figures/{figure["id"]}.png'
                         encoded = (reuse(name, fw, fh, frgb) if reuse else None) or png_encode(fw, fh, frgb)
                         outputs[name] = encoded
@@ -456,7 +592,7 @@ def assemble(sources, runs, edition_id, date, formal, budget, reuse=None, genera
                                  f'*Figure {figure["id"]}.* {escape(figure["caption"])}' + (f' — {legend}' if legend else ''), '']
                         figures_out.append({'figure': figure['id'], 'chapter': number, 'runId': record['runId'], 'step': step['n'],
                                             'source': figure['capture'], 'sourceSha256': sha(png), 'marksSha256': sha(marks_raw),
-                                            'operation': {'crop': crop, 'overlay': 'rectangles+numbered-badges-v1'},
+                                            'operation': operation,
                                             'path': name, 'resultSha256': sha(encoded),
                                             'pixelSha256': sha(struct.pack('>II', fw, fh) + frgb), 'flags': fig_flags})
                         flags += [f'{figure["id"]}:{f}' for f in fig_flags]
@@ -584,8 +720,12 @@ def fixture(root):
     (src / 'chapters.json').write_bytes(canonical(registry))
     (src / 'notices.json').write_bytes(canonical(notices))
     (src / 'static/intro.md').write_bytes(b'Intro text, see [[chapter:1.2]].\n\n[[notice:N-SIM]]\n')
-    width, height = 64, 48
-    rgb = b''.join(bytes(p) for p in ((x * 6 % 256, y * 8 % 256, (x + y) % 256) for y in range(height) for x in range(width)))
+    width, height = 64, 48   # window background with one bordered panel, like the captures
+    def colour(x, y):
+        if 4 <= x < 60 and 4 <= y < 44:
+            return (43, 53, 62) if x in (4, 59) or y in (4, 43) else (25, 31, 37)
+        return (18, 22, 25)
+    rgb = b''.join(bytes(colour(x, y)) for y in range(height) for x in range(width))
     png = png_encode(width, height, rgb)
     for scenario, number, title, minute, notice in (('manual.alpha', '1.2', 'Alpha', 1, ['N-SIM']), ('manual.beta', '1.3', 'Beta', 2, [])):
         run_id = f'run-{scenario.split(".")[1]}'
@@ -650,6 +790,11 @@ def self_test(out=None):
     def rehash(runs, which):   # keeps evidence hashes true after a deliberate marks edit
         data = marks_file(runs, which).read_bytes()
         edit_json(run_file(runs, which), lambda r: r['evidence'][1].update(sha256=sha(data), bytes=len(data)))
+    def whole_image_mark(src, runs):   # a second mark over the whole capture leaves mark 1's badge no free place
+        edit_json(marks_file(runs, 'alpha'), lambda m: m['marks'].append(
+            {'n': 2, 'target': 'Whole', 'label': 'Whole', 'labelSource': 'name', 'screen': [100.0, 50.0, 64.0, 48.0],
+             'image': [0, 0, 64, 48]}))
+        rehash(runs, 'alpha')
     def mark_outside(src, runs):
         edit_json(marks_file(runs, 'alpha'), lambda m: m['marks'][0].update(screen=[160.0, 60.0, 8.0, 6.0], image=[60, 10, 8, 6]))
         rehash(runs, 'alpha')
@@ -688,6 +833,24 @@ def self_test(out=None):
     case('evidence-hash', lambda s, r: (r / 'run-alpha/captures/f1.png').write_bytes(png_encode(64, 48, bytes(64 * 48 * 3))), 'refuse:evidence-hash')
     case('mark-outside-image', mark_outside, 'refuse:mark-bounds')
     case('dpi-double-scaling', double_scaled, 'refuse:mark-geometry')
+    case('badge-no-room', whole_image_mark, 'refuse:badge-overlap')
+    for name, badge, code in (('badge-over-other-mark', [30, 10, 15, 21], 'badge-overlap: badge 1 covers mark 2'),
+                              ('badge-over-own-target', [8, 8, 15, 21], 'badge-overlap: badge 1 covers its own target')):
+        try:   # the post-condition alone, on a seeded placement
+            check_badges([[10, 10, 9, 6], [36, 20, 9, 6]], [badge, [50, 0, 15, 21]], 64, 48)
+            raise RuntimeError(f'self-test: {name}: defect accepted')
+        except ValueError as error:
+            require(str(error) == code, f'self-test: {name}: wrong refusal {error}')
+            results.append((name, str(error)))
+    global place_badges
+    sound = place_badges
+    def on_target(width, height, rgb, marks):   # a defective placement that skips its own check
+        return [[m['image'][0], m['image'][1], 15, 21] for m in marks], ['left'] * len(marks), []
+    place_badges = on_target
+    try:   # the figure derivation re-checks every badge and refuses the edition
+        case('badge-placement-defect', lambda s, r: None, 'refuse:badge-overlap')
+    finally:
+        place_badges = sound
     case('mixed-binaries', lambda s, r: edit_json(run_file(r, 'beta'), lambda x: x['subject'].update(deploymentSha256='c' * 64)), 'refuse:mixed-binaries')
     case('budget-exceeded', lambda s, r: None, 'refuse:budget', budget=2000)
     case('unknown-notice', lambda s, r: edit_json(run_file(r, 'beta'), lambda x: x['steps'][0].update(notices=['N-NONE'])), 'refuse:notice-unknown')
