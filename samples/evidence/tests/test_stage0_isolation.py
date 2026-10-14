@@ -883,6 +883,27 @@ class SnapshotClassificationTests(unittest.TestCase):
         self.assertEqual(['observation-context.json', 'snapshot-A.jsonl.gz', 'snapshot-B.jsonl.gz', 'snapshot-C.jsonl.gz'],
                          sorted(result['inputSha256']))
 
+    def test_manual_batch_context_owns_every_scenario_folder_and_keeps_the_controls(self):
+        # TODO-43 observed manual batch (ManualObservation): several launches, one window from the first launch to the
+        # last exit, every scenario's sandbox and record folder harness-owned; extra context keys are ignored.
+        second, record = self.TEMP + '\\gcam-uia-run-b', self.TEMP + '\\gcam-uia-record-run-b'
+        extra = [{'c': 'd', 'p': second, 't': self.inside, 'a': 16},
+                 {'c': 'f', 'p': record + '\\manual\\run-b\\manual-run.json', 's': 9, 't': self.inside, 'a': 32}]
+        b = [dict(row) for row in self.base]
+        root = self.run_folder(self.base, b, b + self.controls + extra)
+        context = json.loads((root / 'observation-context.json').read_text(encoding='utf-8'))
+        context.update(mode='observed-run', scenarios=[{'runId': 'run-a'}, {'runId': 'run-b'}],
+                       ownedProcesses=self.processes + [{'pid': 43, 'parentPid': 7, 'image': 'Gcam.Studio.exe'}])
+        context['harnessOwned']['files'] += [second, record]
+        (root / 'observation-context.json').write_text(json.dumps(context), encoding='utf-8')
+        result = stage0.diff_classify(root, self.rules)
+        self.assertEqual(('completed', True), (result['runStatus'], result['g1Eligible']))
+        self.assertEqual({'harness': 6}, result['classificationCounts'])
+        context['harnessOwned']['files'].remove(record)
+        (root / 'observation-context.json').write_text(json.dumps(context), encoding='utf-8')
+        rows = [r for r in stage0.diff_classify(root, self.rules)['candidates'] if r['path'].endswith('manual-run.json')]
+        self.assertNotEqual('harness', rows[0]['classification'])  # an unregistered folder is not harness-owned
+
     def test_harness_owned_sandbox_run_folder_lease_and_marker(self):
         for path in (self.SANDBOX + '\\Roaming\\x.json', self.RUN + '\\probe.trx', self.LEASE):
             result = self.classify([{'c': 'f', 'p': path, 's': 1, 't': self.inside, 'a': 32}])

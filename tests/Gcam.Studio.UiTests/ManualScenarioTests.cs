@@ -14,7 +14,9 @@ namespace Gcam.Studio.UiTests;
 /// Every step's checks are automatic and use the same independent oracles as the regression scenarios; captures are
 /// document evidence, never verdicts. Chapter numbers and titles come from the registry; warnings only as notice IDs.
 /// With GCAM_UI_BREAK_VERDICT=1 each scenario corrupts one expectation, so its chapter must drop out of the edition.
+/// With GCAM_UI_OBSERVE_DIRECTORY set the six run as one MR8 observed batch (<see cref="ManualObservation"/>).
 /// </summary>
+[Collection(ManualObservationCollection.Name)]
 public sealed class ManualScenarioTests(ITestOutputHelper output)
 {
     private static readonly TimeSpan RunTimeout = PilotTests.RunTimeout;
