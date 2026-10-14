@@ -1278,7 +1278,8 @@ def diff_classify(run_directory, rules=None, extra_redactions=None):
     filters = rules.get('backgroundFilters', [])
     for entry in filters:
         if any(not isinstance(entry.get(field), str) or not entry[field].strip() for field in FILTER_FIELDS) \
-                or entry['channel'] not in ('file', 'registry'):
+                or entry['channel'] not in ('file', 'registry') \
+                or entry.get('entry', 'any') not in ('any', 'file', 'directory', 'key', 'value'):
             raise ValueError('background filter needs pattern, channel (file/registry), reason and evidencedBy')
     context_path = run / 'observation-context.json'
     context = json.loads(context_path.read_text(encoding='utf-8-sig'))
@@ -1336,7 +1337,8 @@ def diff_classify(run_directory, rules=None, extra_redactions=None):
             if category is None:
                 shown = redact(target)
                 for entry_filter in filters:
-                    if entry_filter['channel'] == channel and re.fullmatch(entry_filter['pattern'], shown, re.IGNORECASE):
+                    if (entry_filter['channel'] == channel and entry_filter.get('entry', 'any') in ('any', entry)
+                            and re.fullmatch(entry_filter['pattern'], shown, re.IGNORECASE)):
                         category, rule = 'other-actor', 'filter:' + entry_filter['pattern']
                         break
             if category is None:

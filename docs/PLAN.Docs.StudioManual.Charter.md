@@ -119,6 +119,16 @@ under a G1 basis (transition list owner: planner; review deadline 2026-11-13).
 | E4, E5 | Metadata operations with no state change: not candidates under MR8. The trace-classifier rules RC-04 / RC-05 remain for the optional diagnostic | MR8 |
 | MR6 | Network not applicable | author |
 
+## Record of the MR8 runs
+
+Run 06 (2026-10-14, commit `0433c94`, approved pilot, launch–idle–exit, no elevation): three snapshots of ~1.1 M files and
+~140 k HKCU values, about 40 s each; all three positive controls seen; B→C 159 changes: harness 11, declared 1 (E3),
+outside the Studio window 117, null-window churn 3, out-of-declaration 27. All 27 were other tools running beside the probe
+(other repositories' git internals, an AI coding session's TEMP files and scratch folder, a packaged app's cache, IDE
+telemetry, the cloud-sync client, the shell's window-session record). They became eight recorded `backgroundFilters`
+(evidencedBy run 06; a filter may be limited to one entry kind). Re-classified with them, run 06 has nothing out of
+declaration. That replay is not a G1 basis: the filters are a rule change and need their own approved pilot.
+
 ## Record of the kernel-trace runs (02–05)
 
 Runs 02–05 (2026-10-14) used the elevated kernel trace. Run 05 (commit `e5502f3`): all three positive controls, zero events

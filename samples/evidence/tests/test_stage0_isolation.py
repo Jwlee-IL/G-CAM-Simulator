@@ -932,6 +932,9 @@ class SnapshotClassificationTests(unittest.TestCase):
                                        'evidencedBy': 'probe-fixture'}]
         change = [{'c': 'f', 'p': self.LOCAL + '\\cache\\x.bin', 's': 1, 't': self.inside, 'a': 32}]
         self.assertTrue(self.only(self.classify(change, rules=rules), 'other-actor')['rule'].startswith('filter:'))
+        rules['backgroundFilters'][0]['entry'] = 'directory'
+        self.only(self.classify(change, rules=rules), 'out-of-declaration')  # an entry-restricted filter skips files
+        del rules['backgroundFilters'][0]['entry']
         rules['backgroundFilters'][0]['channel'] = 'registry'
         self.only(self.classify(change, rules=rules), 'out-of-declaration')  # the channel must match too
         rules['backgroundFilters'] = [{'pattern': '.*', 'channel': 'file', 'reason': '', 'evidencedBy': 'probe-fixture'}]
