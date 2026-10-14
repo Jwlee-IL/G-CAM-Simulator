@@ -94,8 +94,15 @@ public sealed class ChargeAdjointTests
     [Fact]
     public void NetworkSolve_CancellationDuringFactorization_IsObserved()
     {
-        using var cancellation = new CancellationTokenSource(); cancellation.CancelAfter(10);
-        Assert.Throws<OperationCanceledException>(() => ChargeDivisionNetwork.Dpc(44, 44, 1000, 10,
-            method: ChargeNetworkSolveMethod.Adjoint, cancellationToken: cancellation.Token));
+        using var cancellation = new CancellationTokenSource();
+        // Cancel from a dedicated thread: CancelAfter's timer runs on the thread pool, which a parallel CPU-bound run starves.
+        var canceller = new Thread(() => { Thread.Sleep(10); cancellation.Cancel(); }) { IsBackground = true };
+        canceller.Start();
+        try
+        {
+            Assert.Throws<OperationCanceledException>(() => ChargeDivisionNetwork.Dpc(44, 44, 1000, 10,
+                method: ChargeNetworkSolveMethod.Adjoint, cancellationToken: cancellation.Token));
+        }
+        finally { canceller.Join(); }
     }
 }

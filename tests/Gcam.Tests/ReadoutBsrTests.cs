@@ -67,12 +67,19 @@ public sealed class ReadoutBsrTests
         Assert.Throws<OperationCanceledException>(() => source.AdvanceUntil(100, cancelled.Token));
         Assert.Equal(attempts, source.BackgroundAttempts); Assert.Equal(histories, source.HistoriesEmitted);
         Assert.Equal(observed, source.ArrivalTimeS);
-        using var during = new CancellationTokenSource(TimeSpan.FromMilliseconds(20));
+        using var during = new CancellationTokenSource();
+        // Cancel from a dedicated thread: a timed source's timer runs on the thread pool, which a parallel CPU-bound run starves.
+        var canceller = new Thread(() => { Thread.Sleep(20); during.Cancel(); }) { IsBackground = true };
         var watch = Stopwatch.StartNew();
-        Assert.Throws<OperationCanceledException>((Action)(() =>
+        canceller.Start();
+        try
         {
-            while (true) source.AdvanceUntil(100, during.Token);
-        }));
+            Assert.Throws<OperationCanceledException>((Action)(() =>
+            {
+                while (true) source.AdvanceUntil(100, during.Token);
+            }));
+        }
+        finally { canceller.Join(); }
         Assert.True(source.BackgroundAttempts > attempts);
         Assert.Equal(histories, source.HistoriesEmitted); // source envelope remains pending during retries
         Assert.True(watch.Elapsed < TimeSpan.FromSeconds(5)); // operational responsiveness deadline

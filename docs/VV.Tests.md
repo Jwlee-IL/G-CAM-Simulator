@@ -3666,7 +3666,7 @@ Tolerance: Higham normwise forward bound with k = 2 gamma(3n) kappa_inf(G), plus
 Gates: none.
 
 ```json
-{"id":"Gcam.Tests::Gcam.Tests.ChargeAdjointTests","runner":"dotnet","methods":["Reciprocity_AgreesWithLegacyAndIndependentPivotedSolve_WithinConditioningBound","NetworkSolve_CancellationDuringFactorization_IsObserved"],"sources":{"tests/Gcam.Tests/ChargeAdjointTests.cs":"05ef1e22759fd5e208788acbcc02e484e4ffa3e33b3d11a999b3ba6c85f8f403","tests/Gcam.Tests/Harness/Rigs.cs":"9b89ce04cdcb302fcefc6636d45a0d1640a48c288d1e0a3638b005c44028c3b2","tests/Gcam.Tests/Harness/Stat.cs":"4502dddc6276f9d1de0c41b2ed7246ed7f00c9266daa12a34d6174ae1cb19029"},"trace":[]}
+{"id":"Gcam.Tests::Gcam.Tests.ChargeAdjointTests","runner":"dotnet","methods":["Reciprocity_AgreesWithLegacyAndIndependentPivotedSolve_WithinConditioningBound","NetworkSolve_CancellationDuringFactorization_IsObserved"],"sources":{"tests/Gcam.Tests/ChargeAdjointTests.cs":"3530c4d0122b1634d290c6c0c71c1f040d1dbf98f3f5a6fd5ace3410aa73b40f","tests/Gcam.Tests/Harness/Rigs.cs":"9b89ce04cdcb302fcefc6636d45a0d1640a48c288d1e0a3638b005c44028c3b2","tests/Gcam.Tests/Harness/Stat.cs":"4502dddc6276f9d1de0c41b2ed7246ed7f00c9266daa12a34d6174ae1cb19029"},"trace":[]}
 ```
 
 
@@ -4047,5 +4047,5 @@ Gates: none.
 Source: [tests/Gcam.Tests/ReadoutBsrTests.cs](../tests/Gcam.Tests/ReadoutBsrTests.cs).
 
 ```json
-{"id":"Gcam.Tests::Gcam.Tests.ReadoutBsrTests","runner":"dotnet","methods":["PairedSchedule_EqualsLegacyPretriggerTimes_AndSitesOwnThePixel","ConditionalRetries_CancelDuringLowAcceptance_WithoutConsumingNextAttempt","ZeroSourceRate_ProducesNoBsrInputs"],"sources":{"tests/Gcam.Tests/ReadoutBsrTests.cs":"7c26d52709c7aac033acf94d69d4cf7d27b16c93e4631b09dc828b90cd8d0c98","tests/Gcam.Tests/Harness/Rigs.cs":"9b89ce04cdcb302fcefc6636d45a0d1640a48c288d1e0a3638b005c44028c3b2","tests/Gcam.Tests/Harness/Stat.cs":"4502dddc6276f9d1de0c41b2ed7246ed7f00c9266daa12a34d6174ae1cb19029"},"trace":[{"requirement":"SR-RUN-22","selectors":["PairedSchedule_EqualsLegacyPretriggerTimes_AndSitesOwnThePixel","ZeroSourceRate_ProducesNoBsrInputs"]}]}
+{"id":"Gcam.Tests::Gcam.Tests.ReadoutBsrTests","runner":"dotnet","methods":["PairedSchedule_EqualsLegacyPretriggerTimes_AndSitesOwnThePixel","ConditionalRetries_CancelDuringLowAcceptance_WithoutConsumingNextAttempt","ZeroSourceRate_ProducesNoBsrInputs"],"sources":{"tests/Gcam.Tests/ReadoutBsrTests.cs":"318e3f49160c570259fd2348271f75742229dcb3c85fb46a59cbffe5dc47df1d","tests/Gcam.Tests/Harness/Rigs.cs":"9b89ce04cdcb302fcefc6636d45a0d1640a48c288d1e0a3638b005c44028c3b2","tests/Gcam.Tests/Harness/Stat.cs":"4502dddc6276f9d1de0c41b2ed7246ed7f00c9266daa12a34d6174ae1cb19029"},"trace":[{"requirement":"SR-RUN-22","selectors":["PairedSchedule_EqualsLegacyPretriggerTimes_AndSitesOwnThePixel","ZeroSourceRate_ProducesNoBsrInputs"]}]}
 ```
