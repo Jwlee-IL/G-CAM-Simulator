@@ -159,6 +159,11 @@ the probe (new files in the real TEMP folder and in another repository's working
 of adding one filter per file: the whole real TEMP folder (Studio's TEMP / TMP are the sandbox) and a working-tree rule.
 Re-classified with them, runs 06 and 07 are both `completed`; the next approved pilot runs on that commit.
 
+Run 08 (commit `6332c03`): controls seen; one change out of declaration, the OS app-model lifecycle state of a packaged
+system app. Three registry filters were added for the procedure's category of OS records that observe processes and
+windows: packaged-app app-model state, the compatibility store and the shell's taskbar usage record. Runs 06–08 all
+re-classify `completed`.
+
 ## Record of the kernel-trace runs (02–05)
 
 Runs 02–05 (2026-10-14) used the elevated kernel trace. Run 05 (commit `e5502f3`): all three positive controls, zero events

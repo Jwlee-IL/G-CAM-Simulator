@@ -43,6 +43,24 @@
       "channel": "registry",
       "reason": "the shell's window-session record (virtual-desktop view per top-level window): an OS record observing windows, other-actor by the procedure",
       "evidencedBy": "probe-20261014-06, probe-20261014-07"
+    },
+    {
+      "pattern": "HKCU\\\\Software\\\\Classes\\\\Local Settings\\\\Software\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\AppModel\\\\.*",
+      "channel": "registry",
+      "reason": "the app-model lifecycle state of packaged apps (Studio is unpackaged): an OS record observing processes or windows, other-actor by the procedure",
+      "evidencedBy": "probe-20261014-08"
+    },
+    {
+      "pattern": "HKCU\\\\Software\\\\Microsoft\\\\Windows NT\\\\CurrentVersion\\\\AppCompatFlags\\\\.*",
+      "channel": "registry",
+      "reason": "the compatibility store: an OS record observing processes or windows, other-actor by the procedure",
+      "evidencedBy": "procedure category (compatibility store)"
+    },
+    {
+      "pattern": "HKCU\\\\Software\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\Explorer\\\\FeatureUsage\\\\.*",
+      "channel": "registry",
+      "reason": "the shell's taskbar usage record (app switching, jump views): an OS record observing processes or windows, other-actor by the procedure",
+      "evidencedBy": "procedure category (window session)"
     }
   ],
   "backgroundFiltersSchema": {
