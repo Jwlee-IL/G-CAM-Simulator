@@ -297,7 +297,9 @@ def source_units():
                        ('studio-readout-offer', 'samples/evidence/studio_readout_offer_record.py'),
                        ('test-record-self-test', 'samples/testing/test_records.py'),
                        ('test-catalog', 'samples/testing/test_records.py'),
-                       ('archived-replay', 'samples/testing/test_records.py')]:
+                       ('archived-replay', 'samples/testing/test_records.py'),
+                       ('manual-self-test', 'samples/manual/manual_records.py'),
+                       ('manual-editions', 'samples/manual/manual_records.py')]:
         units['checker::' + name] = {'runner': 'checker', 'methods': [name + '.' + name],
                                     'sources': {path: sha((REPO / path).read_bytes().replace(b'\r\n', b'\n'))}}
     return units
@@ -492,16 +494,19 @@ def collect(bundle, family, no_build=False, include_background=False, checker=No
                           'executionPython': version([*interpreter, '-B', '-c',
                               'import platform; print(platform.python_implementation(), platform.python_version())'])})
         else:
-            require(checker in ('calibration', 'studio-readout-offer', 'test-record-self-test', 'test-catalog', 'archived-replay'), 'checker: unknown')
+            require(checker in ('calibration', 'studio-readout-offer', 'test-record-self-test', 'test-catalog', 'archived-replay',
+                                'manual-self-test', 'manual-editions'), 'checker: unknown')
             args = {'calibration': [sys.executable, '-B', 'samples/evidence/calibration_record.py', '--release'],
                     'studio-readout-offer': [sys.executable, '-B', 'samples/evidence/studio_readout_offer_record.py', '--check'],
                     'test-record-self-test': [sys.executable, '-B', str(Path(__file__)), 'self-test', '--out', str(folder / 'fixtures')],
                     'test-catalog': [sys.executable, '-B', str(Path(__file__)), 'check-catalog'],
-                    'archived-replay': [sys.executable, '-B', str(Path(__file__)), 'check', '--archives']}[checker]
+                    'archived-replay': [sys.executable, '-B', str(Path(__file__)), 'check', '--archives'],
+                    'manual-self-test': [sys.executable, '-B', 'samples/manual/manual_records.py', 'self-test', '--out', str(folder / 'fixtures')],
+                    'manual-editions': [sys.executable, '-B', 'samples/manual/manual_records.py', 'check', '--all']}[checker]
             expected = ['checker::' + checker + '.' + checker]
         # Source/data are the execution subject for interpreted checks and RTL inputs.
         if family != 'dotnet':
-            prefixes = ('rtl/',) if family == 'cocotb' else ('samples/evidence/', 'samples/testing/')
+            prefixes = ('rtl/',) if family == 'cocotb' else ('samples/evidence/', 'samples/testing/', 'samples/manual/')
             subject = {path: value for path, value in before_source['files'].items()
                        if path.startswith(prefixes)}
         post_subject = dict(subject)
