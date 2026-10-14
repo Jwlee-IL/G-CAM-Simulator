@@ -17,7 +17,12 @@ plan, and the planner re-verified it:
 - the build has 0 warnings and 0 errors;
 - the suite has 1,065 passed and 50 skipped (baseline 1,051 / 49);
 - the catalog lists 203 units.
-The desktop export scenario is compiled but not run yet (author's go).
+Desktop export scenario (author's go each run): run 1 searched the desktop's children for the dialog; run 2 found it
+but its Save lookup did not invoke the dialog's own button. Both were fixed (`487dbfd`, `f3798d3`). Run 3 (2026-10-15,
+`f3798d3`) passed in 6 s: the dialog's Save button (IDOK) was invoked, exactly `report.html` and `report.scene.json` were
+written into the owned sandbox, the HTML holds the displayed estimate and the scene file loads.
+Open: the HTML embeds the full configuration (about 3.7 MB, almost all of it the ambient spectrum table), which duplicates
+the scene file beside it.
 
 ## Decisions (planner defaults, 2026-10-14)
 
