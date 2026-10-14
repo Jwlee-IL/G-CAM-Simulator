@@ -11,7 +11,8 @@ given the procedure's location in its prompt; it is not named in the repository.
 Status: **stage 0 started 2026-10-13 (headless part)** — turn 1 review by Codex (conversation `01a134cc…`,
 [review](PLAN.Docs.StudioManual.Review.md)), supplemented against the UI-automation procedure v3.0.1 and the document-
 automation procedure v3.0.1; "Decisions after review" below (partial — the edition decisions wait for the author). Next:
-close G1 with one approved-pilot observed run (MR8), then the manual work (MR9: chapter registry, M15–M17).
+G1 qualified by observed run 09 (2026-10-14, MR8); next the manual work (MR9: chapter registry, M15–M17) after the
+open edition decisions (MR5).
 
 ## The model process (what is adopted)
 

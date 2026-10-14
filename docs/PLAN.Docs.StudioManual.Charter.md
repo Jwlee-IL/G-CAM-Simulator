@@ -2,7 +2,7 @@
 
 Scope: the safety basis (G1) for the manual's UI-automation runs. Draft for the planner and author.
 
-Status: **draft, revised 2026-10-14 (MR8)**. The observation method changed from a machine-wide kernel trace to a scoped
+Status: **draft, revised 2026-10-14 (MR8, MR9); G1 qualified by run 09**. The observation method changed from a machine-wide kernel trace to a scoped
 before/after comparison that runs without elevation. The next observed run is an `approved-pilot` of this change
 (launch–idle–exit). P4 approval (HUM-04) still follows the author's review of run artefacts (MR7).
 
@@ -163,6 +163,12 @@ Run 08 (commit `6332c03`): controls seen; one change out of declaration, the OS 
 system app. Three registry filters were added for the procedure's category of OS records that observe processes and
 windows: packaged-app app-model state, the compatibility store and the shell's taskbar usage record. Runs 06–08 all
 re-classify `completed`.
+
+**Run 09 (2026-10-14, commit `f8ae195`, approved pilot): G1 basis.** All three positive controls seen; B→C 40 changes:
+harness 11, declared 1 (E3), outside the Studio window 26, other-actor 2 (browser profile, null-window churn); nothing out of
+declaration or unclassified; `runStatus: completed`, `g1Eligible: true`. Later runs reuse this basis while the product build,
+the isolation fingerprint, the path rules and the registered image set are unchanged; a new product build needs one light
+observed run of the G3 pilot scenario (MR8).
 
 ## Record of the kernel-trace runs (02–05)
 
