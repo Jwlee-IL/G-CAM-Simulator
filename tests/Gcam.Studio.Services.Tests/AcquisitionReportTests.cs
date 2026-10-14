@@ -1,4 +1,6 @@
+using System.Text;
 using Gcam.Configuration;
+using Gcam.Studio.Core.Reporting;
 using Gcam.Studio.Core.Services;
 
 namespace Gcam.Studio.Services.Tests;
@@ -37,5 +39,41 @@ public sealed class AcquisitionReportTests
         await using var session = new SimulationService().StartAmbient(scene, new(), .05, 10, field, seed: 73);
         await foreach (var snapshot in session.ReadSnapshotsAsync())
             Assert.Equal(ConfigLoader.Serialize(expected), snapshot.ConfigurationJson);
+    }
+    [Fact]
+    public void Report_DefaultAmbientScene_HtmlOmitsSpectrumTables_SceneFileKeepsThem()
+    {
+        // Studio's default scene: one source and the default terrestrial field, resolved as an acquisition resolves it.
+        var defaults = StudioOptionDefaults.Current;
+        var config = SimulationService.BuildConfig([new SceneSource()], new(), new(), defaults.BackgroundToSignalRatio,
+            AmbientPreset.TerrestrialUnscear2000V1.Field(defaults.AmbientDoseMicroSvPerHour, defaults.AmbientGeometry));
+        var spectrum = config.Ambient!.Spectrum;
+        string json = ConfigLoader.Serialize(config);
+        var report = new SimulationReport(new DateTimeOffset(2026, 10, 15, 9, 0, 0, TimeSpan.Zero), "test", json, false,
+            [], [], null, [], [], null, false, [], []);
+        var files = ReportWriter.Write(report);
+        Assert.Equal(files.Html, ReportWriter.Write(report).Html);
+
+        string html = Encoding.UTF8.GetString(files.Html);
+        Assert.True(files.Html.Length < 1_000_000, $"HTML is {files.Html.Length:N0} bytes.");
+        Assert.Contains($"&quot;Id&quot;: &quot;{AmbientPreset.TerrestrialUnscear2000V1.Id}&quot;", html);
+        Assert.Contains($"&quot;ContentHash&quot;: &quot;{spectrum.ContentHash}&quot;", html);
+        Assert.Contains("The ambient spectrum tables (Lines, Continuum, EnergyZenith, NotIncluded)", html);
+        foreach (var (table, count) in new[] { ("Lines", spectrum.Lines.Length), ("Continuum", spectrum.Continuum.Length),
+                     ("EnergyZenith", spectrum.EnergyZenith!.Length), ("NotIncluded", spectrum.NotIncluded!.Length) })
+            Assert.Contains($"&quot;{table}&quot;: &quot;omitted from this report: {count} entries; the full table is in the scene file&quot;", html);
+        Assert.Contains("&quot;DoseRateMicroSvPerHour&quot;: 0.1", html);
+
+        // The scene file is the record: the full configuration, loadable and unchanged by the round trip.
+        Assert.Equal(Encoding.UTF8.GetBytes(json), files.SceneJson);
+        string folder = Path.Combine(Path.GetTempPath(), "gcam-todo46", "impl6", "scene-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(folder);
+        string path = Path.Combine(folder, "report.scene.json");
+        File.WriteAllBytes(path, files.SceneJson);
+        File.WriteAllBytes(Path.Combine(folder, "report.html"), files.Html);
+        var loaded = ConfigLoader.Load(path);
+        Assert.Equal(spectrum.EnergyZenith.Length, loaded.Ambient!.Spectrum.EnergyZenith!.Length);
+        Assert.Equal(spectrum.ContentHash, loaded.Ambient.Spectrum.ComputeContentHash());
+        Assert.Equal(json, ConfigLoader.Serialize(loaded));
     }
 }

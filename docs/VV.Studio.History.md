@@ -341,3 +341,16 @@ existed), fixed by waiting for the layer. Broken-verdict runs of the five change
 after the fixes the re-run (both scenarios plus four regression scenarios for the stricter `Choose`) passed, its
 broken-verdict pair failed on the verdict and the recovery passed. Not covered by a scenario: real Alt-key routing for
 the tool toggles and Enter inside the Options dialog (headless tests only).
+
+## Report export (TODO-46), 2026-10-15
+
+Worktree `C:\gw\w46`, branch `todo46-report-export`. Desktop scenario `ReportExportScenarioTests` (the author's go each
+run): run 1 looked for the save dialog among the desktop's children and run 2 did not invoke the dialog's own Save button
+(both harness defects, fixed in `487dbfd` and `f3798d3`); run 3 (`f3798d3`) passed in 6 s — the dialog's Save (IDOK) was
+invoked, exactly `report.html` and `report.scene.json` appeared in the owned sandbox, the HTML holds the displayed estimate
+and found-peak rows, and the scene file loads. That run's HTML was 4.3 MB, almost all of it the ambient spectrum tables
+repeated from the scene file; the HTML now shows their entry counts only (default scene without figures: 3,869,095 →
+10,831 bytes; scene file unchanged). Offscreen renders of the main window (dark / light, 1280×800 / 1440×900): "Export
+report…" sits beside Reset at the height of the other top-bar buttons, unclipped. Release build 0 warnings; normal suite
+1,066 passed / 50 skipped; catalog 203 units. No broken-verdict or recovery run was made for this exploratory scenario.
+

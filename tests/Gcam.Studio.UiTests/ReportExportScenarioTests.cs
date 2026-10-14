@@ -356,7 +356,7 @@ public sealed class ReportExportScenarioTests(ITestOutputHelper output)
         public static void PostEnter(IntPtr window)
         {
             const long down = 0x001C0001, up = 0xC01C0001;   // repeat 1, scan code 0x1C; key-up sets bits 30 and 31
-            if (!PostMessage(window, WmKeyDown, (IntPtr)VkReturn, (IntPtr)down) || !PostMessage(window, WmKeyUp, (IntPtr)VkReturn, (IntPtr)up))
+            if (!PostMessage(window, WmKeyDown, (IntPtr)VkReturn, (IntPtr)down) || !PostMessage(window, WmKeyUp, (IntPtr)VkReturn, unchecked((IntPtr)up)))
                 throw new InvalidOperationException($"PostMessage failed: {Marshal.GetLastWin32Error()}");
         }
 

@@ -1,6 +1,9 @@
 using System.Globalization;
 using System.Net;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Nodes;
+using Gcam.Configuration;
 using Gcam.Core;
 using Gcam.Studio.Core.Rendering;
 using Gcam.Studio.Core.Services;
@@ -13,6 +16,12 @@ public static class ReportWriter
 {
     private static string E(string text) => WebUtility.HtmlEncode(text);
     private static string N(double value) => value.ToString("0.######", CultureInfo.InvariantCulture);
+
+    /// <summary>The ambient spectrum's table members, by their configuration names. The terrestrial field's tables hold
+    /// about 1.8 × 10⁴ rows (megabytes of JSON), which the scene file beside the report already records.</summary>
+    private static readonly string[] AmbientSpectrumTables =
+        [nameof(IncidentSpectrum.Lines), nameof(IncidentSpectrum.Continuum), nameof(IncidentSpectrum.EnergyZenith), nameof(IncidentSpectrum.NotIncluded)];
+    private static readonly JsonSerializerOptions Indented = new() { WriteIndented = true };
 
     public static ReportFiles Write(SimulationReport report)
     {
@@ -27,8 +36,13 @@ public static class ReportWriter
             html.Append("<p>Physical-readout acquisition depends on a captured calibration bank that the scene file does not hold. The ordinary CLI does not run this mode.</p>");
         html.Append("<h2>Scene</h2>");
         Facts(html, report.Scene);
-        html.Append("<p>The scene file records the acquisition configuration; it does not promise reproduction.</p><details><summary>Acquired configuration (sources, optics, detector, decoder, readout, ambient)</summary><pre>")
-            .Append(E(report.ConfigurationJson)).Append("</pre></details><h2>Acquisition</h2>");
+        string configuration = DisplayedConfiguration(report.ConfigurationJson, out string? spectrumId, out var omitted);
+        html.Append("<p>The scene file records the acquisition configuration; it does not promise reproduction.</p>");
+        if (omitted.Count > 0)
+            html.Append("<p>The ambient spectrum tables (").Append(E(string.Join(", ", omitted))).Append(") of ")
+                .Append(E(spectrumId ?? "the ambient spectrum")).Append(" are in the scene file; the configuration below shows their entry counts only.</p>");
+        html.Append("<details><summary>Acquired configuration (sources, optics, detector, decoder, readout, ambient)</summary><pre>")
+            .Append(E(configuration)).Append("</pre></details><h2>Acquisition</h2>");
         Facts(html, report.Acquisition);
         html.Append("<h2>Imaging</h2>");
         Facts(html, report.Imaging);
@@ -59,6 +73,25 @@ public static class ReportWriter
         if (report.Measurements.Count == 0) html.Append("<p>No Imaging measurements.</p>");
         html.Append("</body></html>\n");
         return new(Encoding.UTF8.GetBytes(html.ToString()), Encoding.UTF8.GetBytes(report.ConfigurationJson));
+    }
+
+    /// <summary>The configuration as the report shows it: the scene file's JSON with each non-empty ambient spectrum table
+    /// replaced by a note of its entry count. Every other member, the spectrum's Id and ContentHash included, is kept.</summary>
+    private static string DisplayedConfiguration(string json, out string? spectrumId, out IReadOnlyList<string> omitted)
+    {
+        var tables = new List<string>();
+        omitted = tables;
+        spectrumId = null;
+        if (JsonNode.Parse(json) is not JsonObject root
+            || root[nameof(SimulationConfig.Ambient)]?[nameof(AmbientFieldConfig.Spectrum)] is not JsonObject spectrum) return json;
+        foreach (string table in AmbientSpectrumTables)
+            if (spectrum[table] is JsonArray { Count: > 0 } rows)
+            {
+                spectrum[table] = $"omitted from this report: {rows.Count.ToString(CultureInfo.InvariantCulture)} entries; the full table is in the scene file";
+                tables.Add(table);
+            }
+        spectrumId = spectrum[nameof(IncidentSpectrum.Id)] is JsonValue id && id.TryGetValue(out string? text) ? text : null;
+        return tables.Count == 0 ? json : root.ToJsonString(Indented);
     }
 
     private static void Facts(StringBuilder html, IReadOnlyList<FactRow> rows)

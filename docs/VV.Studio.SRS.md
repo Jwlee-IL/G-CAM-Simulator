@@ -203,7 +203,7 @@ Structured after IEC 62304 §5.2 (software requirements analysis). As in [VV.Stu
 
 | ID | Requirement |
 |---|---|
-| SR-SEC-01 | Studio opens no network connection and reads or writes no user files; scene, results and measurements live in memory only and are gone when the app closes. |
+| SR-SEC-01 | Studio opens no network connection and reads or writes no user files except the report export (SR-EXPORT-01 … 04), which writes only the two files at the path the user confirms. Scene, results and measurements otherwise live in memory only and are gone when the app closes. Studio keeps no settings. *Revised 2026-10-15 (TODO-46, D-58): the report export is the one declared write surface.* |
 
 ### Architecture constraints (`SR-ARCH`)
 
@@ -297,7 +297,7 @@ The requirements that implement the controls:
 
 Stated so that their absence is not read as a gap in verification:
 
-- Saving or loading scenes, exporting images or measurements (SR-SEC-01 forbids file I/O today).
+- Loading scenes, and saving anything other than the report export (SR-EXPORT-01 … 04): no image files, no measurement files, no remembered folder or setting.
 - Creating measurements from the keyboard — known gap AN-01, planned.
 - High-contrast mode — known gap AN-03, planned.
 - Four-channel Anger position readout, spatial SiPM pitch and optical light sharing, including crosstalk-dependent crystal identification, are excluded from the current direct-crystal readout. Correlated cascades are modelled for Co-60 and Na-22 only; Ir-192's cascades are emitted as independent lines.
@@ -380,3 +380,12 @@ Finite warm-up resets the integer filter locally and is not a claim of acquisiti
 | SR-FOCUS-05 | Optional external surface range is separate from decoder focus and appears as a focus-curve marker. Only the explicit Use as focus action changes decoder focus. No fusion verdict, significance or automatic focus change is supplied. |
 
 The focus tool is descriptive engineering analysis, with no calibrated depth accuracy or confidence interval. Conditions and verification limits are in [VV.Studio.Detector](VV.Studio.Detector.md).
+
+## Report export (TODO-46, 2026-10-15)
+
+| ID | Requirement |
+|---|---|
+| SR-EXPORT-01 | An "Export report…" command (Alt+E) sits in the top bar beside Reset. It is enabled only while a snapshot exists. It opens the standard save dialog titled "Export report", in Documents, with the name `gcam-report-<yyyyMMdd-HHmmss>.html` and the dialog's own overwrite prompt. When the scene file beside the chosen path already exists, Studio asks before replacing it. Cancel writes nothing. No folder or other setting is remembered. |
+| SR-EXPORT-02 | The report is captured when the command runs, before the dialog opens, from the published snapshot and the view models. Nothing is recomputed. The report is one self-contained HTML file with inline CSS and inline SVG figures, and no script or external reference. It holds: a header with the notice "Simulation — not a measurement", the export time and the Studio version; the scene, with the acquired configuration in which the ambient spectrum's tables are replaced by their entry counts (the full tables are in the scene file); the acquisition; the Imaging heat map in Studio's colormap with the estimate and found peaks; the spectrum with its windows and line markers; and the Imaging measurements. The same inputs give identical bytes. |
+| SR-EXPORT-03 | Beside the report, Studio writes `<name>.scene.json`: the configuration the acquisition ran with, including the resolved ambient spectrum, serialised by the engine's configuration loader. It records the inputs and does not promise to reproduce the run. When the readout is not the direct crystal assignment, the report states that the captured calibration bank is not in the file. |
+| SR-EXPORT-04 | Studio writes only the two confirmed paths. Both destinations are opened before either is truncated. A failed write restores the earlier bytes, or removes a file the export created, and shows "Report export failed" with the reason. The acquisition is not changed. |

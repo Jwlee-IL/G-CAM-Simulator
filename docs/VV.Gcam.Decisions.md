@@ -7,7 +7,7 @@ where it was said in Korean), what was rejected, and where it landed. Physics re
 evidence, in [VV.Gcam.Evidence](VV.Gcam.Evidence.md).
 
 **At a glance**
-- 57 decisions (D-01 … D-57), taken with the author on 2026-10-01, 2026-10-02, 2026-10-06 and 2026-10-07, each with the
+- 58 decisions (D-01 … D-58), taken with the author on 2026-10-01, 2026-10-02, 2026-10-06, 2026-10-07 and 2026-10-14, each with the
   author's own words or a note that none was given.
 - The ones that shape the product most: non-cyclic decoding instead of mask rotation (D-17, D-19), no built-in
   radioactive source (D-18), dose rate required at NSS-1 range (D-21), the software path for the narrow field of
@@ -65,7 +65,7 @@ stated reason says so instead of inventing one.
 | D-25 | Search records in the product's **own file format** | "자체형식" | ANSI N42.42 | PR-SW-03 |
 | D-26 | User-interface device: **Windows tablet** | "Windows 태블릿" | Android / iOS | PR-PHY-04 |
 | D-37 | **Dose rate from a separate small counter** (e.g. a GM tube or a small energy-compensated scintillator) outside the tungsten shield, read by the main unit over a **data I/O link**; the imaging head is not the dose channel | "소형 계수기 같은 건 싸니까 이걸 데이터 I/O로 받는 게 더 싸고 직관적일 것 같아" — chosen from the LIM-09 options after the simulation showed the collimated imaging head reads only frontally | side-looking crystals in the shield; a frontal-only label | LIM-09, PR-SAFE-01, PR-SAFE-02, PR-SENS-05 |
-| D-34 | GCAM Studio is **not** grown into the product UI; it stays the simulator's engineering viewer, and SR-SEC-01 (no file I/O) stands | "아직은 키우지 말자. 애시당초 이 리포 시뮬레이터였고 사실 이건 내 포트폴리오용 데모거든" | Studio as the product-UI prototype | PRS SS-4 |
+| D-34 | GCAM Studio is **not** grown into the product UI; it stays the simulator's engineering viewer, and SR-SEC-01 (no file I/O) stands — *narrowed 2026-10-14 by D-58 to one user-confirmed report export* | "아직은 키우지 말자. 애시당초 이 리포 시뮬레이터였고 사실 이건 내 포트폴리오용 데모거든" | Studio as the product-UI prototype | PRS SS-4 |
 
 ### Reference conditions and benchmarks
 
@@ -132,6 +132,7 @@ critical한 부분이니, 명확하게 기록해두는 게 좋겠어."
 | D-55 | **Stage-1 evidence only:** open window, bare bound, edge sources, cyclic and non-cyclic, 32 seeds × 100 acquisitions with 16 parallel workers; the 662 keV window, front-only bound and centre sources wait in the Backlog | chosen (recommended); then, after the serial estimate (90.7 h) exceeded the 12 h limit: 100 repeats instead of 300, in parallel; the planner runs long jobs so no implementer turn stays open | the full matrix now; 300 repeats | EV-35, Backlog |
 | D-56 | **Readout optics default: a specular 0.98 reflector**; the diffuse reflector stays a compared variant whose ≈ 36 % FWHM at 662 keV is a model finding | chosen (recommended) | diffuse 0.96 (the review's prototype) | EV-36, LIM-11 |
 | D-57 | **Readout preset: four outputs, DPC column / row ratio 0.01, sum trigger 50 keV, specular reflector, 1 mm pitch**; the engine default stays the direct crystal assignment; Studio integration is a separate task | the comparison includes one channel per SiPM and count rate ("계수율도 포함"); the pitch was settled on fresh seeds ("피치까지 새 시드로 확정") | per-SiPM channels (better at 122 keV, worse at 662 keV, 144 ADCs); OR / AND triggers; leaving the pitch open | EV-36, LIM-11 |
+| D-58 | **GCAM Studio gains one write surface: a report export** of the current acquisition (self-contained HTML with inline SVG, plus the scene file it ran with), written only to the path the user confirms; Studio still keeps no settings and otherwise stays the engineering viewer of D-34 | "시뮬레이션 보고서 출력을 to-do로 만들고 싶어." / "커밋 한 다음에 Codex 불러와서 만들어 봐" (2026-10-14); format, contents and placement are the planner's defaults, which the author let stand | no export (the D-34 reading of SR-SEC-01); PDF output, Markdown with PNG figures, remembered folders or settings | VV.Studio.SRS SR-SEC-01, SR-EXPORT-01 … 04 |
 
 ## Still open (not yet decided)
 

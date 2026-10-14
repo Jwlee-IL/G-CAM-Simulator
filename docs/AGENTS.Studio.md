@@ -115,3 +115,11 @@ acquisition prefix. Setting/acquisition revisions discard obsolete responses. K 
 by angle and raw half-max endpoints can be censored. External surface range changes focus only through
 Use as focus. Numerical conditions, seed-spread evidence protocol and execution limits are recorded in
 [VV.Studio.Detector](VV.Studio.Detector.md). Crosstalk/SiPM pitch are deferred to the readout model.
+
+## Report export (TODO-46)
+
+"Export report…" (Alt+E, beside Reset) is Studio's only write surface (SR-SEC-01, SR-EXPORT-01 … 04). `SimulationReport`
+captures the displayed state before the save dialog opens; `ReportWriter` (Core, no WPF) turns it into deterministic HTML
+with inline SVG plus the `.scene.json` text; `ReportExportService` / `ReportFileWriter` (shell) choose the path and write
+the two files with rollback. The export recomputes nothing, runs no simulation or projection, and remembers no folder or
+setting. A new write surface, or a change to where this one writes, reopens [AGENTS.UiAutomation §1](AGENTS.UiAutomation.md#1-safety).

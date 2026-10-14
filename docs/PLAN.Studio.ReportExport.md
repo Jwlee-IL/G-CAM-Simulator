@@ -21,8 +21,11 @@ Desktop export scenario (author's go each run): run 1 searched the desktop's chi
 but its Save lookup did not invoke the dialog's own button. Both were fixed (`487dbfd`, `f3798d3`). Run 3 (2026-10-15,
 `f3798d3`) passed in 6 s: the dialog's Save button (IDOK) was invoked, exactly `report.html` and `report.scene.json` were
 written into the owned sandbox, the HTML holds the displayed estimate and the scene file loads.
-Open: the HTML embeds the full configuration (about 3.7 MB, almost all of it the ambient spectrum table), which duplicates
-the scene file beside it.
+Turn 6 (substitute, 2026-10-15): the HTML embedded the full configuration (about 3.7 MB, almost all of it the ambient
+spectrum tables) and duplicated the scene file; it now shows those tables' entry counts only (default scene without
+figures 3,869,095 → 10,831 bytes; the scene file is unchanged). Offscreen title-bar renders show no layout defect. Docs
+applied by the planner: SRS (SR-SEC-01 narrowed, SR-EXPORT-01 … 04), SDS SU-27, V&V trace and History, D-58,
+AGENTS.Studio, AGENTS.UiAutomation §1, folder maps. Build 0 / 0; suite 1,066 passed / 50 skipped; catalog 203.
 
 ## Decisions (planner defaults, 2026-10-14)
 

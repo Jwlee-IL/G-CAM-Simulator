@@ -31,7 +31,7 @@ Run `python samples/testing/test_records.py check-catalog --discover` after a Re
 | `Gcam.Studio.RenderTests::Gcam.Studio.RenderTests.PlotViewRenderTests` | 11 | 11 |
 | `Gcam.Studio.RenderTests::Gcam.Studio.RenderTests.ReadoutRenderTests` | 3 | 3 |
 | `Gcam.Studio.Services.Tests::Gcam.Studio.Services.Tests.AcquisitionContinuationTests` | 4 | 6 |
-| `Gcam.Studio.Services.Tests::Gcam.Studio.Services.Tests.AcquisitionReportTests` | 2 | 2 |
+| `Gcam.Studio.Services.Tests::Gcam.Studio.Services.Tests.AcquisitionReportTests` | 3 | 3 |
 | `Gcam.Studio.Services.Tests::Gcam.Studio.Services.Tests.AcquisitionServiceTests` | 6 | 9 |
 | `Gcam.Studio.Services.Tests::Gcam.Studio.Services.Tests.AmbientAcquisitionTests` | 3 | 4 |
 | `Gcam.Studio.Services.Tests::Gcam.Studio.Services.Tests.AmbientPresetTests` | 4 | 4 |
@@ -4057,18 +4057,18 @@ Source: [tests/Gcam.Tests/ReadoutBsrTests.cs](../tests/Gcam.Tests/ReadoutBsrTest
 
 ## AcquisitionReportTests — Gcam.Studio.Services.Tests
 
-Finalized acquisition configuration, including detector, background, seed and resolved ambient spectrum, shared as one immutable string across snapshots.
+Finalized acquisition configuration, including detector, background, seed and resolved ambient spectrum, shared as one immutable string across snapshots; the report of Studio's default ambient scene stays small (the HTML shows the ambient spectrum tables as entry counts, keeping the dataset id and every scalar) while the scene file keeps the full tables and round-trips through ConfigLoader.
 
-Oracle: SimulationService.BuildConfig with explicit inputs; exact ConfigLoader serialization.
+Oracle: SimulationService.BuildConfig with explicit inputs; exact ConfigLoader serialization; table entry counts of the resolved spectrum.
 
-Tolerance: Exact/structural; no statistical margin.
+Tolerance: Exact/structural; HTML size bound 1,000,000 bytes (measured about 11 kB without figures).
 
 Gates: none.
 
 Source: [tests/Gcam.Studio.Services.Tests/AcquisitionReportTests.cs](../tests/Gcam.Studio.Services.Tests/AcquisitionReportTests.cs).
 
 ```json
-{"id":"Gcam.Studio.Services.Tests::Gcam.Studio.Services.Tests.AcquisitionReportTests","runner":"dotnet","methods":["Snapshot_RecordsFinalDetectorBackgroundAndSeed_OncePerAcquisition","Snapshot_RecordsResolvedAmbientSpectrum_WithoutExternalFileReference"],"sources":{"tests/Gcam.Studio.Services.Tests/AcquisitionReportTests.cs":"510bc8c054cdf657d108a39cd826e33cc4ed2bf704f8fc3f1297f48d76e081cc","tests/Gcam.Studio.Services.Tests/EvidenceFactAttribute.cs":"898301fdfe0438aa4ea3503809ee81dc90b225dff52defb3e2cee6277085cd60"},"trace":[]}
+{"id":"Gcam.Studio.Services.Tests::Gcam.Studio.Services.Tests.AcquisitionReportTests","runner":"dotnet","methods":["Snapshot_RecordsFinalDetectorBackgroundAndSeed_OncePerAcquisition","Snapshot_RecordsResolvedAmbientSpectrum_WithoutExternalFileReference","Report_DefaultAmbientScene_HtmlOmitsSpectrumTables_SceneFileKeepsThem"],"sources":{"tests/Gcam.Studio.Services.Tests/AcquisitionReportTests.cs":"630e7e9dcf9b7e872c4e44f07e12e6605eda7011cf7113e012b9cf45b8e7face","tests/Gcam.Studio.Services.Tests/EvidenceFactAttribute.cs":"898301fdfe0438aa4ea3503809ee81dc90b225dff52defb3e2cee6277085cd60"},"trace":[]}
 ```
 
 ## ReportExportCommandTests — Gcam.Studio.Tests
@@ -4116,7 +4116,7 @@ Gates: GCAM_UI_TESTS=1 and authorized desktop; the first run timed out after Sav
 Source: [tests/Gcam.Studio.UiTests/ReportExportScenarioTests.cs](../tests/Gcam.Studio.UiTests/ReportExportScenarioTests.cs).
 
 ```json
-{"id":"Gcam.Studio.UiTests::Gcam.Studio.UiTests.ReportExportScenarioTests","runner":"dotnet","methods":["ExportReport_SaveDialogWritesIntoOwnedSandbox_AndMatchesDisplayedEstimate"],"sources":{"tests/Gcam.Studio.UiTests/ReportExportScenarioTests.cs":"201e70df53f09b0c165f85a20d4c240a569cb789f21487765779a3428c36c0dd","tests/Gcam.Studio.UiTests/Harness/FloodOracle.cs":"22db35cb2771a0460e437e47308b5792bf1c22d2dc077af54106223a29cd75be","tests/Gcam.Studio.UiTests/Harness/FocusPreparation.cs":"df4b89d3e7789a401583b1ab76b2a3d81dfe7190bbb98ca725802cf97f110d78","tests/Gcam.Studio.UiTests/Harness/Pointer.cs":"e56d09c72e552bf5619c088150a0d6ceba0ec2eb75ee06c2744c4677b9db896c","tests/Gcam.Studio.UiTests/Harness/PollingWait.cs":"9a7363b5886fb6bda28179ded7c4e7bad0c63cf43c010fa52b8e070eaa3622eb","tests/Gcam.Studio.UiTests/Harness/RepoPaths.cs":"2bdc3c25db3c74cfe32ea7f64352f36cc5fb3b8fbf7be92ce03b7184648cc655","tests/Gcam.Studio.UiTests/Harness/RunRecord.cs":"ec1403d581627265f5e93d33417794bbefb3047e00bc8c7cd22e5c4b655fe7bb","tests/Gcam.Studio.UiTests/Harness/Scenario.cs":"9fb80f4566bd735a847901cbe81f14aa5e536a017d35e1393cec1327fe13ec77","tests/Gcam.Studio.UiTests/Harness/SelectorMatchException.cs":"65fd2d3ee54bed05d06ceaad6a4217c12885fd8196927581acaf71f2ba51b445","tests/Gcam.Studio.UiTests/Harness/StudioProcess.cs":"a75602cc3e01d51445daa4e1cc71c130f447a6e66f15166e8909f4472b923365","tests/Gcam.Studio.UiTests/Harness/StudioWindow.cs":"18caf20bb2497e1cdab090f71f97256810e529cf06e7365df409ed0bfda68d3b","tests/Gcam.Studio.UiTests/Harness/WorkspaceOracle.cs":"153e5f5ec778401b877467e405295a940d663d4fea1d32f9101139e9c0b325e5","tests/Gcam.Studio.UiTests/DesktopFactAttribute.cs":"7f52c09af061c7fb6e9c9c12def2640bd3743a7eb6932b6603d7da5d85d1bfc7"},"trace":[]}
+{"id":"Gcam.Studio.UiTests::Gcam.Studio.UiTests.ReportExportScenarioTests","runner":"dotnet","methods":["ExportReport_SaveDialogWritesIntoOwnedSandbox_AndMatchesDisplayedEstimate"],"sources":{"tests/Gcam.Studio.UiTests/ReportExportScenarioTests.cs":"c313cf233788198c893d60f897311ba9d29f2d26e77b22c0cccf54540a779cd1","tests/Gcam.Studio.UiTests/Harness/FloodOracle.cs":"22db35cb2771a0460e437e47308b5792bf1c22d2dc077af54106223a29cd75be","tests/Gcam.Studio.UiTests/Harness/FocusPreparation.cs":"df4b89d3e7789a401583b1ab76b2a3d81dfe7190bbb98ca725802cf97f110d78","tests/Gcam.Studio.UiTests/Harness/Pointer.cs":"e56d09c72e552bf5619c088150a0d6ceba0ec2eb75ee06c2744c4677b9db896c","tests/Gcam.Studio.UiTests/Harness/PollingWait.cs":"9a7363b5886fb6bda28179ded7c4e7bad0c63cf43c010fa52b8e070eaa3622eb","tests/Gcam.Studio.UiTests/Harness/RepoPaths.cs":"2bdc3c25db3c74cfe32ea7f64352f36cc5fb3b8fbf7be92ce03b7184648cc655","tests/Gcam.Studio.UiTests/Harness/RunRecord.cs":"ec1403d581627265f5e93d33417794bbefb3047e00bc8c7cd22e5c4b655fe7bb","tests/Gcam.Studio.UiTests/Harness/Scenario.cs":"9fb80f4566bd735a847901cbe81f14aa5e536a017d35e1393cec1327fe13ec77","tests/Gcam.Studio.UiTests/Harness/SelectorMatchException.cs":"65fd2d3ee54bed05d06ceaad6a4217c12885fd8196927581acaf71f2ba51b445","tests/Gcam.Studio.UiTests/Harness/StudioProcess.cs":"a75602cc3e01d51445daa4e1cc71c130f447a6e66f15166e8909f4472b923365","tests/Gcam.Studio.UiTests/Harness/StudioWindow.cs":"18caf20bb2497e1cdab090f71f97256810e529cf06e7365df409ed0bfda68d3b","tests/Gcam.Studio.UiTests/Harness/WorkspaceOracle.cs":"153e5f5ec778401b877467e405295a940d663d4fea1d32f9101139e9c0b325e5","tests/Gcam.Studio.UiTests/DesktopFactAttribute.cs":"7f52c09af061c7fb6e9c9c12def2640bd3743a7eb6932b6603d7da5d85d1bfc7"},"trace":[]}
 ```
 
 ## ReportFileWriterTests — Gcam.Studio.UiTests
