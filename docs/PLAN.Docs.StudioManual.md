@@ -11,8 +11,7 @@ given the procedure's location in its prompt; it is not named in the repository.
 Status: **stage 0 started 2026-10-13 (headless part)** — turn 1 review by Codex (conversation `01a134cc…`,
 [review](PLAN.Docs.StudioManual.Review.md)), supplemented against the UI-automation procedure v3.0.1 and the document-
 automation procedure v3.0.1; "Decisions after review" below (partial — the edition decisions wait for the author). Next:
-stage 0 headless work in the same conversation; the first G1 observed run (launch–idle–exit) waits for the author's
-elevated tracing session and a free desktop.
+the before/after observation (MR8) is implemented, then its approved-pilot observed run (launch–idle–exit, no elevation).
 
 ## The model process (what is adopted)
 
@@ -80,6 +79,11 @@ network channel is recorded as not applicable with that source evidence, not pro
 | MR7 | **Charter after the first runs:** the draft P4 charter (`PLAN.Docs.StudioManual.Charter.md`) is approved (HUM-04)
 only after the author has seen the artefacts of the first observed runs, which will need several iterations; until
 then it stays a draft and no result is promoted. | author |
+| MR8 | **Proportionate observation (2026-10-14):** G1 is observed by a scoped file-system / HKCU before/after comparison with a
+null window, plus the owned-process ledger, without elevation; a candidate is a state change, recorded background filters are
+allowed (A3 revised). The machine-wide kernel trace becomes an optional diagnostic. Supersedes MR1's elevated-trace
+condition; P4 compliance stays the target. Reason: runs 02–05 showed the exhaustive trace turns every runtime read into a
+rule-and-approval cycle ("헌장을 고쳐. 지금 너무 보수적으로 행동하고 있어."). | author |
 | MR5 | Open, decided later: SM-7 (notice register), SM-9 (where an edition lives), figure overlays, first-edition scope, the P4 charter text (HUM-04), qualification scope and observation policy. | — |
 
 ## Steps

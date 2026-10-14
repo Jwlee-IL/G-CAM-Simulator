@@ -1,182 +1,129 @@
-# PLAN.Docs.StudioManual.Charter — stage-0 probe and proposed P4 charter
+# PLAN.Docs.StudioManual.Charter — stage-0 observed run and proposed P4 charter
 
-Scope: draft for the planner and author; source survey, qualification and later manual use. No desktop/elevation or registry observation has been performed.
+Scope: the safety basis (G1) for the manual's UI-automation runs. Draft for the planner and author.
 
-Status: **draft, not approved**. This file is not a HUM-04 approval. MR1–MR4 establish direction; the concrete charter, permission package and unresolved observation policy still require the author's actual statements on the reviewed commit.
+Status: **draft, revised 2026-10-14 (MR8)**. The observation method changed from a machine-wide kernel trace to a scoped
+before/after comparison that runs without elevation. The next observed run is an `approved-pilot` of this change
+(launch–idle–exit). P4 approval (HUM-04) still follows the author's review of run artefacts (MR7).
 
-## Purpose, readers and result use
+## Purpose and result use
 
-GCAM Studio is the simulator's engineering viewer. The eventual P4 bundle describes procedures actually driven by automation, with automatic checks and safe readable captures, for repository users. It is not a measuring instrument or a regulated clinical product UI. MR7: P4 approval follows the author’s review of the first observed-run artefacts; the first run requires only a limited HUM-04 for the probe charter below. The initial probe is a separate P1 safety investigation: launch–idle–exit, no UIA input/tree dump, no normalisation, no simulation acquisition. Its successful launch alone does not qualify G1 or P4.
+GCAM Studio is the simulator's engineering viewer, not a measuring instrument or product UI. The P4 bundle describes
+procedures that automation actually drove, with automatic checks and readable captures. G1 asks one question: does running
+Studio leave anything on the machine outside its declared, isolated surfaces? The method is chosen in proportion to that
+question, as the procedure allows: "operating-system write tracing, file-system and registry before/after comparison,
+child-process records and external-connection observation, **combined as fits the target**", with filters and blind spots
+recorded.
 
-Scope: the current Studio deployment and the harness's launcher, isolation/policy, process/lease, record, trace classifier and capture contracts. Exclusions: real hardware, publication, external services, installs, OS changes, arbitrary process termination, personal/production data, and all desktop operations while the author is remote. A full P4 charter will also map chapters, requirements, risks and environmental exclusions after SM-7/SM-9/overlay/edition decisions.
+Grounds for proportion: Studio's managed source has no file-writing, network or child-process code
+([surface-list.json](../tests/Gcam.Studio.UiTests/Harness/Isolation/surface-list.json)); launch redirects
+APPDATA / LOCALAPPDATA / TEMP / TMP to a harness-owned sandbox; Studio runs non-elevated as a 64-bit process, so the OS
+refuses machine-wide writes (HKLM, Program Files) and UAC file / registry virtualisation (32-bit processes only) does not
+apply. Runs 02–05 traced every kernel
+file and registry event and found, after classification, only framework / driver writes now declared (E1, E3), an OS record
+(E2) and metadata-only operations that change no state (E4, E5).
 
-Success criteria: source/deployment/isolation identities agree; all resolved effects are declared or remain explicit unknowns; no undeclared product effect or unresolved trace candidate; each required channel has a positive control; cleanup/lease release are recorded independently from product outcomes. Later P4 needs all G0–G6, independent product verdicts and final edition figure review. Empty/filtered traces and missing controls are blocked, never passed.
+## Observation method (MR8)
 
-Roles (proposed): author sets scope, authority, source acceptance, exclusion risk and final figure/edition decisions; planner prepares the concrete commit/package and audits/replays results; implementer builds and tests headless components; non-elevated runner drives Studio; administrator runs only the named tracing wrapper. Raw ETL and identifying event/context details remain local. Public records contain filtered classifications/hashes and role identifiers, not machine paths/accounts.
+A **candidate is a state change**: a file or registry value that exists, is gone, or differs after the run. Reads, opens,
+queries, image loads, thread events and attribute calls that leave the state unchanged are not candidates. Each observed run
+takes three snapshots:
 
-## Existing-harness adoption and transition
+```text
+A ── null window (same length as the Studio window, nothing launched) ── B ── marker write, launch, idle, close ── C
+```
 
-`adoptionMode: existing`. Initial qualification scopes: isolation/launch/path rules, process ledger/monitor, desktop lease, policy/selector inventory, verdict/mutation, manifest finalisation, trace/classification, capture/template. Each manual scenario later depends on the scopes it uses and cannot outrank them. Current status is **blocked/unqualified**, not promoted by historical P1 records.
+| Channel | Scope | Recorded per entry | Positive control |
+|---|---|---|---|
+| file | `%APPDATA%`, `%LOCALAPPDATA%` (incl. real Temp and VirtualStore), `%USERPROFILE%\AppData\LocalLow`, Documents, Desktop, `%ProgramData%`, the Studio deployment folder, the sandbox | path, size, last-write time, attributes | the sandbox diagnostic write appears in B→C |
+| registry | all of HKCU | key last-write time; value name, type and content hash | the harness marker `HKCU\Software\GcamUiaProbe\<run-id>` (A2) appears in B→C |
+| process | the harness's owned-process ledger (launcher, 100 ms monitor) | PID, image, parent, start / end | the owned Studio process |
+| network | not applicable (MR6) | — | — |
 
-Transition list (draft owner role: planner; review deadline 2026-11-13): untouched legacy regression and survey scopes remain historical/diagnostic-only; current source assertions and original raw records remain intact. Their use for P2/P4 requires current source/binary/input/environment linkage, negative controls and an observed safety basis. No blanket rewrite of old evidence and no new coverage count from headless CI.
+**Classification of B→C changes**, in this order:
 
-Human-act plan: HUM-01 for the free desktop/probe go, HUM-04 limited to the launch–idle–exit probe charter (not P4 approval), HUM-05 for policy scopes (initial probe has no accessibility/device interactions; later P4 scope is undecided), HUM-07 for the reviewed isolation/policy/classification commit before using it, HUM-08 only for candidates that improved machinery still cannot classify, HUM-09 for later exclusions, HUM-10 for final figures/new capture definitions, HUM-12 for controlled static-source/edition disposition, HUM-13 for intentional baseline differences or expiry extensions. Device actions, real-world effects and identity disclosure are outside scope. The runner does not ask the author to operate Studio to establish an observed-run gate. The matching document process's source and figure/edition decisions target hashes, with no duplicate figure-approval request.
+1. Harness-owned (sandbox, run folder, lease, marker) → harness record.
+2. A declared surface: E1 (HKCU `Software\Microsoft\CTF\CUAS\DefaultCompositionWindow`, values `Left` / `Top`) and E3
+   (`<ProgramData>\NVIDIA Corporation\Drs\nvAppTimestamps`, content change of the existing file) → app effect inside a
+   declared surface.
+3. Last-write time outside the Studio window (launch − 1 s … exit + 2 s) → not of this window.
+4. The same path also changed in the null window A→B, or matches a recorded background filter (`classification-rules.json`
+   `backgroundFilters`, each with its reason and the run that evidenced it) → other-actor record.
+5. Anything else → out-of-declaration (stops the run as `unsafe_effect`), or, when the evidence cannot decide, unclassified:
+   the planner adds evidence (e.g. a repeat with a longer null window, or one diagnostic kernel trace of that path) and, if
+   still undecided, asks the author (HUM-08), whose answer becomes a rule.
 
-## Survey summary and unresolved boundaries
+G1 passes when every positive control is seen, nothing is out-of-declaration and nothing is unclassified. Blind spots,
+recorded in `writeAudit.blindSpots`: locations outside the scope (other users' profiles, removable and network drives,
+machine-wide locations a non-elevated process cannot write), a content change that restores size and last-write time, and
+a write that is undone before C. HKLM is outside the scope because a non-elevated 64-bit process cannot write it;
+the BAM process record (E2) is an OS record there and is not a candidate.
 
-The structured inventory is [surface-list.json](../tests/Gcam.Studio.UiTests/Harness/Isolation/surface-list.json). Reachable managed Studio state/calibration/theme work is in memory; ambient data are read beside the deployment and offer data are compiled resources. Save/study APIs in engine libraries are not exposed by Studio's current DI entry points. The conservative deployed metadata survey retains all managed/native references, including methods present but not proven reachable. The pin connects the actual Release build/deployment with exact source hashes; it is not a runtime audit.
+The kernel trace (`Trace-Probe.ps1`, `Probe.wprp`, `stage0.py compact / classify`) stays in the isolation location as an
+**optional diagnostic** for a single unexplained change. It is no longer required for G1 and needs no administrator
+session in an ordinary observed run.
 
-The harness writes marked temporary records, lease state and approved trace outputs; old survey scenarios explicitly write repository assets and are excluded from the first probe. Launch redirects APPDATA/LOCALAPPDATA/TEMP/TMP. **Environment redirection does not prove WPF/CLR/native known-folder, registry, crash-reporting or shell effects absent.** These remain unknown until observation/classification. The machine's lack of a disposable environment is not replaced by a static absence claim. Stop on an undeclared app effect or unresolved attribution; revisit scope if containment cannot be established.
+## Running an observed run
 
-Isolation location: `tests/Gcam.Studio.UiTests/Harness/Isolation/`. Its content hash includes launcher/cleanup, path/launch values, guard/policy, ledger/monitor/lease, source linkage, classification/external-connection rules, survey and trace/fallback tools. `stage0.py pin` records this fingerprint plus source/deployment identities. New/renamed/removed targets and unknown bindings fail the static policy check; an unapproved policy never establishes qualified use. A4: raw ETL and run folders remain local until the edition that used them is accepted; no automatic deletion is implemented. A3: introduce candidate rules one at a time, with renewed author approval for each isolation/classification revision; no broad OS/runtime filters.
-
-## First observed run: author instructions (prepared, not executed)
-
-The planner first reviews and commits the concrete stage-0 change on the author's approval. The author’s HUM-04 quote must approve only this limited probe purpose, scope and declared harness writes; it does not approve the eventual P4 manual charter. After inspecting first-run artefacts, the author may approve a separately concrete P4 charter. Run the final headless build/tests and pin **after** that commit; changing isolation files afterward invalidates the package. Choose a new run name such as `probe-20261014-04`. All commands below start from the worktree root. They are future author commands, not permission granted to the implementer.
-
-In a **normal, non-administrator PowerShell 7**:
+All commands run from the worktree root in a **normal (non-administrator) PowerShell 7**, after the change is committed and
+built (`dotnet build Gcam.sln -c Release`). Use a new run name `probe-YYYYMMDD-NN`.
 
 ```powershell
-$runId = 'probe-20261014-04'
+$runId = 'probe-20261014-06'
 $runDir = Join-Path $env:TEMP ('gcam-todo43/' + $runId)
 New-Item -ItemType Directory -Path $runDir
 python -B tests/Gcam.Studio.UiTests/Harness/Isolation/stage0.py pin --out (Join-Path $runDir 'pin.json')
-```
-
-Create `approvals.json` in that run folder using the pin's `isolationSha256` and `deploymentSha256`, the actual full commit and its `git show -s --format=%cI HEAD` date. Fields: `runId`, `commit`, `committedAt`, `isolationSha256`, `deploymentSha256`, `approvals`. Each approval has `id`, `humanActId` (HUM-01, HUM-04 or HUM-07), `targetCommit`, the **author's actual nonempty `quote`**, and offset `quotedAt` not earlier than the approved commit. No example statement is an approval. The package is local; do not commit personal statements or paths. The harness checks the actual HEAD/date and hashes before launching. Use `probe-YYYYMMDD-NN` with a fresh increasing two-digit suffix; a completed or failed attempt is never reused. Before asking the author to open an administrator terminal, the planner runs this **non-elevated preflight**:
-
-```powershell
+# approvals.json: runId, commit, committedAt, isolationSha256, deploymentSha256, approvals[] (HUM-01 / HUM-04 / HUM-07,
+# the author's actual quote, quotedAt not earlier than the commit). Personal statements and paths stay local.
 python -B tests/Gcam.Studio.UiTests/Harness/Isolation/stage0.py preflight --run-directory $runDir
+$env:GCAM_UI_TESTS = '1'; $env:GCAM_UI_PROBE = '1'; $env:GCAM_UI_PROBE_RUN = $runId; $env:GCAM_UI_PROBE_DIRECTORY = $runDir
+dotnet test tests/Gcam.Studio.UiTests -c Release --no-build --filter FullyQualifiedName~ObservedRunTests --logger "trx;LogFileName=probe.trx" --results-directory $runDir
+python -B tests/Gcam.Studio.UiTests/Harness/Isolation/stage0.py diff-classify --run-directory $runDir --out (Join-Path $runDir 'classified.json')
 ```
 
-Proceed only on `Preflight PASS`. It checks the complete approval package, actual HEAD/commit date, clean checkout, pin/live isolation/deployment/source hashes, canonical pin self-consistency, run ID, fresh run-folder state, an executable PowerShell 7 and selected provider/keyword coverage. It collects explicit failures rather than starting a trace to discover them. An old pin has no fingerprint specification version and is refused; regenerate it and approvals against the reviewed change. The probe still independently validates source/package/live fingerprints after trace-ready.
+The desktop part (the `dotnet test` line) needs the author's go for each run (HUM-01). The run takes three snapshots
+(about 80 s each on the original machine: ~1.1 M files, ~140 k HKCU values) plus the 12 s null window and the Studio window —
+about 4.5 minutes; `diff-classify` takes about a minute more. Snapshots name machine paths and stay local with the
+run folder (A4); the repository keeps only categories, counts and hashes.
 
-On the free desktop, in a separate **administrator PowerShell 7** (the author starts it):
+## Isolation location, fingerprint and approvals
 
-```powershell
-$runDir = Join-Path $env:TEMP 'gcam-todo43/probe-20261014-04'
-& tests/Gcam.Studio.UiTests/Harness/Isolation/Trace-Probe.ps1 -RunDirectory $runDir -TimeoutSeconds 120
-```
+Isolation location: `tests/Gcam.Studio.UiTests/Harness/Isolation/` — launcher and cleanup, path and launch values, guard and
+policy, ledger, monitor and lease, source linkage, snapshot and classification rules, survey and the diagnostic trace tools.
+`stage0.py pin` records its fingerprint with the source and deployment identities. Fingerprint specification 1 (shared by
+Python and C#): SHA-256 of raw file bytes; slash-normalised relative paths; path components `bin`, `obj`, `__pycache__`
+excluded; deployment keeps only `.dll`, `.exe`, `.json`; sort by .NET ordinal order; join `path:lowercase-sha256` with LF,
+no final LF, UTF-8, hash. Preflight checks the approval package, HEAD and commit date, clean checkout, pin against the live
+fingerprints, a fresh run folder and the run ID.
 
-`Trace-Probe.ps1` requires PowerShell 7 at parse time; use `pwsh`, never Windows PowerShell 5.1 / `powershell.exe`. This starts only the named instance and writes `trace.ready.json`; it waits for the harness signal. It never launches Studio, changes registry/settings, or cancels another WPR session. Its WPR temporary files and ETL destination are scratch-directed; OS ETW bookkeeping is not asserted to write only scratch. On timeout/abort, finally attempts to stop/save only the instance it started. A completed rerun is a no-op; unresolved prior state is refused. A WPR start/profile failure is a block, not a reason to reuse a global trace. Custom-profile runtime acceptance and loss statistics await this first elevated run.
+A change in the isolation location is a permission change: commit, then the author's HUM-07 on that commit, then an
+`approved-pilot` observed run. One "실행 허락" after a commit records HUM-01, HUM-04 (probe scope) and HUM-07 for it.
 
-Back in the **non-administrator** terminal, after `trace.ready.json` exists:
+Human acts: HUM-01 desktop go per run; HUM-04 the probe charter now, the P4 charter after the run artefacts (MR7); HUM-07
+each isolation or rule change; HUM-08 only for a change the evidence cannot decide; HUM-09 exclusions; HUM-10 final
+figures; HUM-12 static chapters and edition; HUM-13 intentional baseline differences. The runner never asks the author to
+operate Studio.
 
-```powershell
-$env:GCAM_UI_TESTS = '1'
-$env:GCAM_UI_PROBE = '1'
-$env:GCAM_UI_PROBE_RUN = 'probe-20261014-04'
-$env:GCAM_UI_PROBE_DIRECTORY = Join-Path $env:TEMP 'gcam-todo43/probe-20261014-04'
-dotnet test tests/Gcam.Studio.UiTests -c Release --no-build --filter FullyQualifiedName~ObservedRunTests --logger "trx;LogFileName=probe.trx" --results-directory $env:GCAM_UI_PROBE_DIRECTORY
-```
+Adoption: `adoptionMode: existing`. Legacy regression and survey scopes stay historical / diagnostic until they are re-run
+under a G1 basis (transition list owner: planner; review deadline 2026-11-13).
 
-These environment values are confined to that terminal process; close it after the run. Do not set the variables for ordinary headless tests. The probe idles for 5 s; graceful close is bounded at 5 s, wrapper timeout 120 s. Allow about **1–3 minutes** including test-host/trace-start/stop/export overhead; this is a scheduling estimate, not a measured runtime.
+## Decisions carried forward
 
-When the wrapper has stopped, export **locally in a normal terminal** into a fresh replay folder. The retained run folder stays read-only. Both raw timestamps and the emitted schema are required for the recovery path; `--schema` now drives decoding rather than merely recording a hash. On an access refusal, stop and ask the author; do not automatically elevate.
+| ID | Decision | Status |
+|---|---|---|
+| A2 | Registry positive control: harness marker `HKCU\Software\GcamUiaProbe\<run-id>`, value `RunId`; never overwritten, never deleted by the harness | author |
+| A3 (revised 2026-10-14) | Recorded background filters are allowed, each with its reason and evidencing run; adding or changing one is a rule change (HUM-07). Replaces "no broad filters" | author (MR8) |
+| A4 | Raw evidence (snapshots, traces, run folders) stays local until the edition that used it is accepted | author |
+| E1, E3 | Declared confirmed app write surfaces with residual risks (the IME composition-window position; the GPU driver's per-application timestamp store) | author, option 2 |
+| E2 | BAM process record: OS record (outside the HKLM-free scope) | rule RC-03 |
+| E4, E5 | Metadata operations with no state change: not candidates under MR8. The trace-classifier rules RC-04 / RC-05 remain for the optional diagnostic | MR8 |
+| MR6 | Network not applicable | author |
 
-```powershell
-$replayDir = Join-Path $env:TEMP ('gcam-todo43/replay-' + $runId)
-New-Item -ItemType Directory -Path $replayDir
-tracerpt (Join-Path $runDir 'probe.etl') -summary (Join-Path $replayDir 'trace-summary.txt') -export (Join-Path $replayDir 'schema.man')
-tracerpt (Join-Path $runDir 'probe.etl') -rts -o (Join-Path $replayDir 'events-rts.xml') -of XML
-python -B tests/Gcam.Studio.UiTests/Harness/Isolation/stage0.py classify --trace (Join-Path $replayDir 'events-rts.xml') --context (Join-Path $runDir 'trace-context.json') --summary (Join-Path $replayDir 'trace-summary.txt') --schema (Join-Path $replayDir 'schema.man') --out (Join-Path $replayDir 'classified.json')
-```
+## Record of the kernel-trace runs (02–05)
 
-The parser accepts explicit fixture/metadata labels and leaves unfamiliar provider/opcode data unknown. The first real export may need a reviewed normalisation rule, then its own approved observed pilot; do not guess numeric ETW semantics or suppress unrelated candidates broadly. Check trace loss and channel evidence before any promotion: the context's `traceHealth` starts unproven, and zero lost events/buffers must be supported by the retained trace summary, never filled from an assumption. A2: the probe writes a harness-owned registry control after `trace.ready.json` is validated and before Studio launch: `HKCU\Software\GcamUiaProbe\<run-id>`, one `REG_SZ` value named `RunId` whose data is the run ID. The namespace separates harness evidence from Studio; the key and value both identify the run. Native create disposition refuses an existing run key without overwriting it; choose a new run ID if refused. The key is retained even after a failed/incomplete write, and markers are never deleted by the harness. Each later cleanup needs the author’s explicit approval. The control record contains the harness PID, exact HKCU/native key identities, value declaration and write interval. A successful recognised set-value event at that exact key/name proves the channel; value payload is checked if exported, otherwise the run identity is established by the key path. Missing/unmapped marker evidence remains **instrument-not-proven**. The classic Registry flag retains marker operations and key-name/KCB association evidence; actual profile/export mapping still requires the observed run. Other registry candidates remain unknown under existing rules; A3 forbids broad actor/provider exclusions.
-
-MR6: network observation is **not applicable**, rather than a blind spot or a positive control, because current Studio source has no network code or authorised external connection. Source evidence: `src/Gcam.Studio/App.xaml.cs:17`, `src/Gcam.Studio.Services/SimulationService.cs:105` and the `app-network-process` surface. Both trace context and writeAudit record this decision and evidence. Unexpected observed connections are still undeclared effects/unknown candidates; not-applicable does not filter them. A4 retains the raw ETL and run folder locally until the edition using them is accepted, without built-in deletion. Raw traces are never committed; public summaries strip destinations and retain raw/context/rule hashes.
-
-Prepared non-elevated diagnostics, optionally run before/after on the approved desktop:
-
-```powershell
-& tests/Gcam.Studio.UiTests/Harness/Isolation/Fallback-Probe.ps1 -RunDirectory $runDir -Phase Before
-& tests/Gcam.Studio.UiTests/Harness/Isolation/Fallback-Probe.ps1 -RunDirectory $runDir -Phase After
-```
-
-A third normal terminal can run `Fallback-Probe.ps1 -RunDirectory $runDir -Phase Watch -TimeoutSeconds 120` while the probe runs, retaining a bounded process/TCP poll stream. It remains diagnostic; no UDP/transient-event absence is asserted.
-
-The fallback observes selected HKCU keys, owned-file hashes and process/TCP snapshots; the launcher supplies 100 ms process polling. Those measurements retain blind spots and **cannot alone qualify this G1 probe**. No fallback was run during headless implementation.
-
-## Proposed AGENTS.UiAutomation wording (planner applies; protected file untouched)
-
-“The manual bundle uses P4. Common safety/ownership gates and per-bundle qualification are separate from product assertions. Existing scopes qualify through current source/deployment pins, observed-run channel controls and pilot evidence. Schema-1 manifests remain historical diagnostics. Final UI manifests are saved after cleanup and linked separately from manual/verification records. Raw machine-wide traces remain local; classification must preserve unknown candidates. A free desktop and author-approved charter/permission package precede launch. Initial qualification runs launch–idle–exit without UIA input/discovery. Capture definitions and quality checks are machine-reviewed; the author judges final figures on their output hashes.”
-
-Open decisions: approve charter/policy/qualification scopes; review real registry-marker channel/export proof and acceptable unresolved native effects (network is not applicable under MR6); set transition policy (A4 fixes local retention until edition acceptance); SM-7, SM-9, overlays and first-edition scope. No stage-0 headless pass is represented as runtime G1 or P4 qualification.
-
-
-## Fingerprint specification and effect-profile budget
-
-Specification 1 is shared by Python and C#: hash raw file bytes with SHA-256; use slash-normalised relative paths; exclude any relative path component named `bin`, `obj` or `__pycache__`. Isolation includes every other regular file; deployment includes only the case-sensitive suffixes `.dll`, `.exe`, `.json`. Sort the final relative strings by .NET ordinal (UTF-16 code-unit) order, independent of filesystem/path-component/case-insensitive order. Join `path:lowercase-sha256` with LF, without a final LF, encode UTF-8 and hash. The emitted deployment file map has the same canonical order, and its digest is checked against the pin. Cross-language fixtures cover nested punctuation, case, non-BMP names and exclusions. Changes invalidate isolation approval and the observed basis.
-
-The probe selects classic kernel `FileIO`, `FileIOInit`, `Filename`, `Registry`, `ProcessThread` and `Loader`, rather than guessed manifest Event IDs; the one manifest provider is the approved E4 addition below. The installed SDK schema accepts these spellings; `ProcessThread` combines process and thread. The file pair enables operation events, Filename supplies name associations/rundown, Registry supplies key/value operations and key-name/KCB rundown, ProcessThread supplies parent/requesting-thread attribution, and Loader supplies image load/unload evidence. Sources: [WPR keywords](https://learn.microsoft.com/en-us/windows-hardware/test/wpt/keyword--in-systemprovider-), [required file flags](https://learn.microsoft.com/en-us/previous-versions/windows/desktop/xperf/file-io), [FileIo event types](https://learn.microsoft.com/en-us/windows/win32/etw/fileio), [Registry event types](https://learn.microsoft.com/en-us/windows/win32/etw/registry).
-
-The planner accepted bundled reads and queries on 2026-10-14: SystemProvider has no opcode filter. Decoded reads/queries are non-effects, never writes; decoding errors, missing fields, attribution gaps and unmapped opcodes remain unknown. No broad exclusions are added. New individual mappings need HUM-07 approval under A3. No stacks, disk-I/O-detail keywords, sampling or network (MR6) are selected. One collector requests 64 buffers of 128 KiB (8 MiB). This bounds requested buffering, not total file size; never truncate evidence to meet a storage target. Measured channel controls and loss evidence still qualify the next observed run.
-
-Budget about **460 MB per two minutes** until the next observed run measures the new profile. The untrimmed 121-second trace contained 4,009,481 FileIo, 853,931 Registry, 1,776 process, 24,771 thread and 72,856 image events, including 227,948 file reads. Removing network removes only 19,922 events (0.38% of the total), so does not support the old 20–60 MB target. Filename adds required name evidence; machine activity may change the budget. The later 29 MB trace had zero FileIo/Registry events and cannot establish a complete-channel size estimate. Reject missing controls or loss; new profile/mapping rules require HUM-07 reapproval.
-
-Preflight follows the selected profile's collector/provider references and compares explicit effective keywords to the classifier's required channels. Missing file/name/thread, registry or process/image coverage blocks before elevation. Unreferenced declarations cannot satisfy coverage. Unknown channels, inheritance/overrides and unapproved collectors/keywords are refused; an event collector may carry only the approved manifest providers of `classification-rules.json` (`approvedEventProviders`: GUID and exact keyword set, no stacks, filters or capture-state options), and each approved provider must be selected. After commit/build, regenerate the pin and approvals: isolation changes invalidate the old approval basis. This static check does not replace actual channel controls.
-
-Export locally with tracerpt as above. The classifier streams XML event subtrees (or JSONL), replays the file for owned-descendant discovery, hashes files in chunks and streams every sanitised candidate into a `.candidates.jsonl` sidecar. The summary stores counts and the sidecar/trace/context/rule hashes; it never silently caps unknown candidates. Small JSON arrays remain synthetic-fixture inputs. Raw XML and all identifying export/schema/context files remain local under A4.
-
-The installed xperf dumper also supports [provider filtering](https://learn.microsoft.com/en-us/windows-hardware/test/wpt/dumper). A non-elevated, one-second FileIo-only diagnostic export succeeded (1,292,932 bytes). Its ANSI dump is not the classifier's XML/normalised replay contract; that sampled, filtered dump is not qualification evidence. Do not replace full candidate replay with provider filtering that hides unknown events or loses Unicode, clock or attribution evidence. No xperf adapter is claimed here.
-
-The [documented tracerpt options](https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/tracerpt) provide no provider/opcode dump filter. Non-elevated summary/schema-only export (omit `-o`) proves provider counts without creating an event dump, but cannot classify individual candidates. For repeated classification, stream XML once into a gzip-compressed normalised intermediate. Every normalised event, including unknowns, fields, opaque-payload digests, attribution and clock evidence is retained. The raw ETL/XML remains authoritative for data the normaliser cannot interpret. This reduces replay storage and repeated XML parsing; it does not claim direct filtered ETL export or remove raw evidence.
-
-```powershell
-python -B tests/Gcam.Studio.UiTests/Harness/Isolation/stage0.py compact --trace (Join-Path $replayDir 'events-rts.xml') --schema (Join-Path $replayDir 'schema.man') --out (Join-Path $replayDir 'events.jsonl.gz')
-python -B tests/Gcam.Studio.UiTests/Harness/Isolation/stage0.py classify --trace (Join-Path $replayDir 'events.jsonl.gz') --context (Join-Path $runDir 'trace-context.json') --summary (Join-Path $replayDir 'trace-summary.txt') --schema (Join-Path $replayDir 'schema.man') --out (Join-Path $replayDir 'classified.json')
-```
-
-Use a new scratch `$replayDir`; retained run folders stay read-only. The generation record links raw/compact hashes, sizes, event count, normalisation, schema and classifier-source hashes. Replay refuses stale normalisation, a mismatched schema or a different classifier source (the parse and correlation logic lives there); classification verifies the compact digest and links the original trace hash. No deletion is built in. A measured 219,089,757-byte export (215,151 events) produced a 10,826,911-byte compressed intermediate, about 20 times smaller. Reserve the earlier 6.32 GB XML budget for a two-minute complete-channel export, plus compact replay storage; the effect-heavy compression ratio remains unmeasured.
-
-
-## Evidence-based normalisation and health
-
-`Harness/Isolation/normalisation-rules.json` versions each GUID/opcode/field mapping and carries Microsoft documentation/schema evidence per row. Classic FileIo and Registry opcodes cannot be reused as manifest Event IDs or assigned to unrelated GUIDs. Process/image payload ProcessId identifies the target; execution headers identify emitters. The reader preserves System provider identity and ExtendedTracingInfo.EventGuid separately from rendered labels, parses hexadecimal IDs, and never decodes ProcessingErrorData or opaque binary blobs by guessing offsets. Thread lifecycles can link a requesting thread to its process; missing/recycled thread evidence remains unresolved. FileObject/FileKey name correlations expire at close. Registry open does not establish write access without access evidence.
-
-Image-identity and volume-mapping metadata GUIDs are not file/registry writes. Recognising a metadata kind does not approve an actor exemption or establish absence of effects. Missing acquisition channels cannot be manufactured by normalisation: require actual file and registry effect providers and their positive controls. The classic keyword selections need another observed run before they establish that requirement. New mappings/classification rules require HUM-07 review/approval; retrospective diagnostic replay is not automatic G1 promotion.
-
-Use `tracerpt -rts` for qualification replay. The ordinary export has been observed to render an offset one minute away from UTC conversion; do not repair it by fitting the process ledger. Clock type 1 uses decoded Header.StartTime as UTC FILETIME at the header’s raw QPC timestamp, scaled by Header.PerfFreq; type 2 uses raw FILETIME. This follows Microsoft’s TraceEvent implementation and never shifts times to fit a process ledger. Unsupported/missing clock evidence blocks time attribution. Integer arithmetic preserves 100 ns ticks; the ordinary ISO export’s stated offset is not silently rewritten.
-
-Health reader parses exact unique summary counters and records the summary hash. Processed buffers are not lost buffers. If the summary omits lost buffers, only a decoded TRACE_LOGFILE_HEADER.BuffersLost can supply them; record that separate source and XML hash explicitly. Parsed event count must match the summary. Missing, contradictory or duplicate evidence remains unproven. Zero loss does not prove missing provider/channel coverage.
-
-The classifier records the captured normalisation version/hash, schema hash, source and derived context hashes, clock/health evidence, PID provenance and a redacted owned-tree problem table. Destinations are categories, not user/machine paths. Original ETL, XML, context and UI manifest remain untouched; later replay outputs go to a new scratch folder. Raw payloads and investigation results are not committed.
-
-
-## Schema-backed recovery and correlation
-
-Normalisation version 3 permits only individually evidenced binary prefixes for classic version-3 thread identity and FileIo read/write. Recovery needs the emitted schema, matching GUID/opcode/version and schema field order/types, decoded header pointer width 8, error 15005, and validated payload length. Microsoft’s [kernel decoder](https://github.com/microsoft/perfview/blob/main/src/TraceEvent/Parsers/KernelTraceEventParser.cs) documents the identity prefix, variable thread-name tail and extra file read/write word. Only required fixed fields are interpreted; source error, whole payload and uninterpreted tail hashes remain recorded. Unsupported versions, wrong schema/width, truncation and unrelated opaque data remain unknown. Schema hash is carried by recovery evidence and compressed generation records; replay requires the matching schema. Every added layout/rule needs HUM-07 review/reapproval under A3.
-
-FileKey matches the FileObject field of [FileIo_Name evidence](https://learn.microsoft.com/en-us/windows/win32/etw/fileio-readwrite); handle spelling is normalised numerically. Create associations are scoped to their file object and expire at close. File-name metadata can also associate keys. Requesting threads resolve through decoded lifecycle identities; retired or missing identities remain unresolved. Completion records require a preceding unambiguous IRP request, order evidence and [FileIo_OpEnd fields](https://learn.microsoft.com/en-us/windows/win32/etw/fileio-opend). Conflicting/unknown requests cannot lend identity to completion. A correlated completion is a non-effect record; the effect, if any, is classified on the request itself.
-
-[Registry KCB create/delete/rundown](https://learn.microsoft.com/en-us/windows/win32/etw/registry) associates KeyHandle with native key names and retires them at KCB deletion. Relative value names resolve only through an observed native association. Registry marker proof still requires the exact run/key/RunId value, harness PID, success and declared write interval; no PID/provider-wide registry exemption is added. CloseKey is handle release, not a persistent write. File SetInformation remains effect-bearing except the E5 sequence rule below and the explicitly evidenced class 14 [per-open file position](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-fscc/e3ce4a39-327e-495c-99b6-6b61606b6f16); basic information and unknown classes remain undeclared. Registry set-information is not exempted by this file rule.
-
-All controls and zero loss can establish instrumentation without establishing G1 safety. Undeclared effects, ambiguous creates, unsupported native operations, unresolved destinations/actors and missing causal evidence still block. Retrospective replay never automatically promotes a run or approves new runtime surfaces; raw evidence remains local under A4.
-
-
-## Run-04 effects: framing, decisions and rule changes (2026-10-14)
-
-Framing (author, 2026-10-14): an observed run measures what **running Studio** leaves on the machine, whichever layer does it. Effects issued in the Studio process by the WPF / .NET runtime, the Windows text-input framework or an in-process driver **are app effects**; only OS records that observe the process itself (prefetch, background-activity, compatibility stores) are other-actor records. Whether Studio's own source issued a call never decides a class; the issuing process and the declaration do. The classifier carries this as `framing` in `classification-rules.json`.
-
-| ID | Run-04 effect (Studio tree) | Treatment | Exact conditions | Residual risk / status |
-|---|---|---|---|---|
-| E1 | 2 registry SetValue at window close (text-input framework, UI thread) | **declared confirmed app write surface** `app-tsf-composition-window`; class `app-declared` | owned process; SetValue only; key `Software\Microsoft\CTF\CUAS\DefaultCompositionWindow` in the run user's hive (the SID of the harness marker's native key); value `Left` or `Top`. Any other CTF key, value, hive or operation stays out of declaration | the user's IME composition-window position is updated. Author decision (option 2); a permission expansion approved with the next run's HUM-07 |
-| E3 | 2 WriteFile of 8 bytes (in-process GPU driver during hardware-render setup) | **declared confirmed app write surface** `app-gpu-driver-timestamps`; class `app-declared` | owned process; WriteFile only (write-only-within-file); `<ProgramData>\NVIDIA Corporation\Drs\nvAppTimestamps`, matched against the ProgramData known folder that the harness records in drive-letter and device form. Create, delete, rename or set-information on it stays out of declaration | the driver's per-application timestamp store (machine-wide) is updated. Author decision (option 2); approved with the next run's HUM-07 |
-| E2 | 1 registry SetValue after process end (Background Activity Moderator) | rule change RC-03: other-actor OS observation record; class `os-or-harness-actor` | SetValue; key `HKLM\SYSTEM\{CurrentControlSet or ControlSetNNN}\Services\bam\State\UserSettings\<run-user SID>`; value name = the owned process's own image device path (from its own image load); the event at or after that process's ProcessEnd and at most 100 ms later (run 04: 2.1 ms). Another image, another user, a mid-life or a later write stays out of declaration | recommended; pending author approval |
-| E5 | 169 file SetInformation class 4 (FileBasicInformation) by the system file-system filter in Studio threads | rule change RC-04: `non-effect` only under the sequence rule **and** the post-run ChangeTime check | one file object and thread: CreateFile with disposition FILE_OPEN (CreateOptions >> 24 = 1) → SetInformation(4) → at least one QueryInformation → CloseFile, with only queries, reads, cleanup or position between (no write, delete, rename or other set-information); the file is the image of the issuing process or an ancestor, or the process's next image load is that file within 50 ms; and `stage0.py change-times` read a ChangeTime older than both the launch and the destination's first qualified set. Without that evidence, or with a newer ChangeTime, the effect stands. The harness's own sets follow the same rule | recommended; pending author approval |
-| E4 | 22 registry SetInformation (class absent from the classic event) | stays **out of declaration**. Rule change RC-05 adds `Microsoft-Windows-Kernel-Registry` (`70eb4f03-c1de-4f73-a051-33d13d5413bd`), keyword `0x40` = SetInformationKey only, to `Probe.wprp`; its event 11 (version 0; template KeyObject, Status, InfoClass, DataSize, KeyName, CapturedDataSize, CapturedData) maps to `SetInformationKeyClass`, itself effect-bearing | only `KeySetHandleTagsInformation` (class 5) may become a non-effect, in a later rule change once the class is captured. Sources: [provider manifest](https://github.com/repnz/etw-providers-docs/blob/master/Manifests-Win10-18990/Microsoft-Windows-Kernel-Registry.xml) (event 11, keyword mask 0x40; the same in the 17134 manifest), [KEY_SET_INFORMATION_CLASS](https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/ne-wdm-_key_set_information_class), [WPR EventProvider](https://learn.microsoft.com/en-us/windows-hardware/test/wpt/eventprovider) | recommended; pending author approval. The changed profile has not been started (no WPR run in this turn) |
-| RC-06 | read classes | FileOperationEnd (correlated completion), FilePosition (file information class 14) and CloseKey are non-effects | as in "Schema-backed recovery and correlation" | recommended; pending author approval |
-| RC-07 | key names | a registry event whose KeyHandle is not yet named takes the native name of the **next** KCB rundown on that handle when no KCB create or delete intervenes; a value name that starts with a backslash (an image device path) is a value, not a key path | — | recommended; pending author approval |
-| RC-08 | harness defect | the probe records at run start the device form (`\Device\HarddiskVolumeN\…`, QueryDosDevice of the drive) of every owned root (sandbox, run folder, lease file) as `ownedRootDevicePaths`, and the ProgramData known folder in both forms as `knownFolders`; harness and Studio CreateFile follow one rule (an open-or-create is ambiguous outside the actor's declared roots; inside its roots the harness's is declared) | an unresolved device form blocks the run | defect fix, no decision needed; proven only on a new run |
-
-Post-run ChangeTime step (E5), local and non-elevated, after export and before any rebuild of the deployment (a rebuilt file has a newer ChangeTime and keeps its effect):
-
-```powershell
-python -B tests/Gcam.Studio.UiTests/Harness/Isolation/stage0.py classify --trace (Join-Path $replayDir 'events.jsonl.gz') --context (Join-Path $runDir 'trace-context.json') --summary (Join-Path $replayDir 'trace-summary.txt') --schema (Join-Path $replayDir 'schema.man') --out (Join-Path $replayDir 'classified-pass1.json')
-python -B tests/Gcam.Studio.UiTests/Harness/Isolation/stage0.py change-times --request (Join-Path $replayDir 'classified-pass1.changetime-request.json') --out (Join-Path $replayDir 'change-times.json')
-python -B tests/Gcam.Studio.UiTests/Harness/Isolation/stage0.py classify --trace (Join-Path $replayDir 'events.jsonl.gz') --context (Join-Path $runDir 'trace-context.json') --summary (Join-Path $replayDir 'trace-summary.txt') --schema (Join-Path $replayDir 'schema.man') --change-times (Join-Path $replayDir 'change-times.json') --out (Join-Path $replayDir 'classified.json')
-```
-
-The request sidecar and the ChangeTime record name local paths and stay local. The step opens each destination with `FILE_READ_ATTRIBUTES` only and reads `FILE_BASIC_INFO.ChangeTime`; the classifier compares it, records unreadable or unmapped destinations as not proven, and refuses a record taken for a different launch.
-
-Re-classification of run 04 (diagnostic replay, 2026-10-14; the raw export was re-created from the retained ETL with the identical hash; the retained run folder is untouched). Controls: file, process and registry all proven; trace health complete, 0 events and 0 buffers lost. Studio-tree out-of-declaration effects: 196 under the committed rules; **118** with the recorded context; **116** with a diagnostic context whose device forms were resolved after the run (the E3 match needs the known-folder device form, which run 04 did not record). Remaining out of declaration: E4 22 (class not captured) and E5 94 (92 on deployment files rebuilt after the run, so their ChangeTime is newer; 2 sequences without a close before the process ended). Applied: E1 2, E2 1, E3 2 (diagnostic context only), E5 non-effect 75 Studio-tree and 13 harness sets. Studio-tree unknowns: 3,737 (CreateFile 1,295, CreateKey 232, image identity metadata 1,325, image unloads 153, uncorrelated completions 288, FSControl 221, directory enumeration 39, KCB creates 107, unmapped opcodes 28, thread and process lifecycle 42, other 7). With the diagnostic context the harness's own sandbox and lease writes classify as `<REDIRECTED-SANDBOX>`; 38 harness writes remain out of declaration (31 file sets outside the sequence rule or with a newer ChangeTime, 7 writes without a decoded destination). G1 stays blocked: E4 until the new provider is captured, the remaining E5 sets until a run whose ChangeTime step precedes any rebuild, the unknown classes above, and RC-08 until a new run records the device forms.
+Runs 02–05 (2026-10-14) used the elevated kernel trace. Run 05 (commit `e5502f3`): all three positive controls, zero events
+and buffers lost; harness device-form roots proven (602 sandbox writes attributed to the harness); E1 2, E2 1, E3 2 applied;
+30 Studio-tree metadata operations left out of declaration (E4 21, E5 9) and 3,668 events of unmapped kinds (reads, image
+metadata, open-or-create) left unknown. The added `Microsoft-Windows-Kernel-Registry` provider produced no events (the
+collector session is in the ETL, the provider is not); not pursued under MR8. The traces stay local (A4); the decision
+history is in git (this file before MR8).

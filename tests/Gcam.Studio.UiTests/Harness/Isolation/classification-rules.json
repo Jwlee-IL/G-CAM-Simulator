@@ -1,6 +1,13 @@
 {
   "schemaVersion": 1,
   "allowAppFileWrites": false,
+  "backgroundFilters": [],
+  "backgroundFiltersSchema": {
+    "pattern": "Python regular expression, full match, case-insensitive, on the redacted target (<CATEGORY>\\relative path; a registry value as <HKCU>\\key\\value name)",
+    "channel": "file or registry",
+    "reason": "why the change is another actor's background activity",
+    "evidencedBy": "the observed run whose artefacts evidence it; adding or changing a filter is a rule change (HUM-07, A3)"
+  },
   "requiredChannels": [
     "file",
     "process",

@@ -1,5 +1,6 @@
 """Synthetic trace and policy negative controls. No registry, application, network or ETW access."""
 import copy
+import gzip
 import importlib.util
 import json
 from pathlib import Path
@@ -175,7 +176,7 @@ class StageZeroIsolationTests(unittest.TestCase):
         ET.SubElement(doc.find('./Profiles/SystemProvider/Keywords'), 'Keyword', Value='NetworkTrace')
         root = self.scratch(); fixture = root / 'profile.wprp'; doc.write(fixture)
         issues = stage0.preflight(root / 'probe-fixture', live_pin=lambda: {}, identity=lambda: ('a', '2026-10-14T00:00:00Z'),
-                                 version=lambda: 7, scratch_root=root, profile_path=fixture)
+                                 version=lambda: 7, scratch_root=root, profile_path=fixture, trace=True)
         self.assertTrue(any('profile selects' in issue for issue in issues))
 
     def test_bundled_classic_reads_and_queries_are_non_effects_in_real_shape(self):
@@ -799,6 +800,206 @@ class StageZeroIsolationTests(unittest.TestCase):
             self.assertEqual(expected, result['candidates'][-1]['classification'], (pid, destination))
         sibling = self.event(20, 'file', 'WriteFile', device + '-other\\x')
         self.assertEqual('out-of-declaration', stage0.classify(self.controls + [sibling], self.context, self.rules)['candidates'][-1]['classification'])
+
+
+class SnapshotClassificationTests(unittest.TestCase):
+    """MR8 diff-classify on synthetic snapshot triples. No registry, file-system walk, application or trace access."""
+    LOCAL = 'C:\\Users\\fixture\\AppData\\Local'
+    TEMP = LOCAL + '\\Temp'
+    SANDBOX = TEMP + '\\gcam-uia-probe-fixture'
+    RUN = TEMP + '\\gcam-todo43\\probe-fixture'
+    LEASE = TEMP + '\\gcam-desktop-lease\\session-1.json'
+    MARKER = 'HKCU\\Software\\GcamUiaProbe\\probe-fixture'
+    E1 = 'HKCU\\Software\\Microsoft\\CTF\\CUAS\\DefaultCompositionWindow'
+    E3 = 'C:\\ProgramData\\NVIDIA Corporation\\Drs\\nvAppTimestamps'
+
+    def setUp(self):
+        self.rules = json.loads((SCRIPT.parent / 'classification-rules.json').read_text())
+        self.before = stage0.filetime('2026-10-14T00:00:00Z')
+        self.inside = stage0.filetime('2026-10-14T00:00:15Z')
+        self.after = stage0.filetime('2026-10-14T00:00:40Z')
+        self.base = [
+            {'c': 'k', 'p': 'HKCU', 't': self.before},
+            {'c': 'k', 'p': self.E1, 't': self.before},
+            {'c': 'v', 'p': self.E1, 'n': 'Left', 'k': 4, 'h': 'a' * 64},
+            {'c': 'v', 'p': self.E1, 'n': 'Top', 'k': 4, 'h': 'b' * 64},
+            {'c': 'd', 'p': self.LOCAL + '\\app', 't': self.before, 'a': 16},
+            {'c': 'f', 'p': self.LOCAL + '\\app\\settings.json', 's': 1, 't': self.before, 'a': 32},
+            {'c': 'f', 'p': self.E3, 's': 10, 't': self.before, 'a': 32},
+        ]
+        self.controls = [
+            {'c': 'd', 'p': self.SANDBOX, 't': self.inside, 'a': 16},
+            {'c': 'f', 'p': self.SANDBOX + '\\probe-diagnostic.txt', 's': 14, 't': self.inside, 'a': 32},
+            {'c': 'k', 'p': self.MARKER, 't': self.inside},
+            {'c': 'v', 'p': self.MARKER, 'n': 'RunId', 'k': 1, 'h': 'c' * 64},
+        ]
+        self.processes = [{'pid': 42, 'parentPid': 7, 'image': 'Gcam.Studio.exe', 'ending': 'exit 0'}]
+
+    def run_folder(self, a, b, c, complete=True):
+        root = StageZeroIsolationTests.scratch()
+        roots = [{'category': 'LOCALAPPDATA', 'path': self.LOCAL}, {'category': 'TEMP', 'path': self.TEMP},
+                 {'category': 'ProgramData', 'path': 'C:\\ProgramData'}, {'category': 'Sandbox', 'path': self.SANDBOX},
+                 {'category': 'RunDirectory', 'path': self.RUN}]
+        for label, rows in zip('ABC', (a, b, c)):
+            with gzip.open(root / f'snapshot-{label}.jsonl.gz', 'wt', encoding='utf-8') as stream:
+                for row in [{'c': 'header', 'schema': 'gcam.state-snapshot', 'schemaVersion': 1, 'label': label, 'roots': roots}] + rows \
+                        + ([{'c': 'end'}] if complete or label != 'C' else []):
+                    stream.write(json.dumps(row) + '\n')
+        context = {'schemaVersion': 1, 'runId': 'probe-fixture',
+                   'nullWindow': {'seconds': 12.0},
+                   'studioWindow': {'launchAt': '2026-10-14T00:00:10.0000000+00:00', 'exitAt': '2026-10-14T00:00:20.1234567+00:00',
+                                    'seconds': 10.1, 'marginBeforeSeconds': 1, 'marginAfterSeconds': 2},
+                   'ownedProcesses': self.processes,
+                   'harnessOwned': {'files': [self.SANDBOX, self.RUN, self.LEASE], 'registry': [self.MARKER]},
+                   'positiveControls': {'file': self.SANDBOX + '\\probe-diagnostic.txt',
+                                        'registry': {'key': self.MARKER, 'valueName': 'RunId'}, 'process': 'Gcam.Studio.exe'}}
+        (root / 'observation-context.json').write_text(json.dumps(context), encoding='utf-8')
+        return root
+
+    def classify(self, extra_c=(), extra_b=(), replace=None, rules=None, complete=True):
+        def apply(rows, extra):
+            rows = [dict(row) for row in rows]
+            for change in extra:
+                rows = [row for row in rows if (row['p'], row.get('n')) != (change['p'], change.get('n'))]
+                if not change.get('removed'):
+                    rows.append(change)
+            return rows
+        b = apply(self.base, extra_b)
+        c = apply(b + self.controls, extra_c)
+        return stage0.diff_classify(self.run_folder(self.base, b, c, complete), rules or self.rules)
+
+    def only(self, result, classification=None):
+        rows = [row for row in result['candidates'] if row['classification'] != 'harness']
+        self.assertEqual(1, len(rows), rows)
+        if classification:
+            self.assertEqual(classification, rows[0]['classification'], rows[0])
+        return rows[0]
+
+    def test_clean_run_sees_all_controls_and_is_eligible(self):
+        result = self.classify()
+        self.assertEqual(('completed', True), (result['runStatus'], result['g1Eligible']))
+        self.assertEqual({'file': True, 'registry': True, 'process': True}, result['positiveControls'])
+        self.assertEqual({'harness': 4}, result['classificationCounts'])
+        self.assertEqual(['observation-context.json', 'snapshot-A.jsonl.gz', 'snapshot-B.jsonl.gz', 'snapshot-C.jsonl.gz'],
+                         sorted(result['inputSha256']))
+
+    def test_harness_owned_sandbox_run_folder_lease_and_marker(self):
+        for path in (self.SANDBOX + '\\Roaming\\x.json', self.RUN + '\\probe.trx', self.LEASE):
+            result = self.classify([{'c': 'f', 'p': path, 's': 1, 't': self.inside, 'a': 32}])
+            self.assertEqual(0, len([r for r in result['candidates'] if r['classification'] != 'harness']), path)
+        result = self.classify([{'c': 'f', 'p': self.SANDBOX + '-other\\x', 's': 1, 't': self.inside, 'a': 32}])
+        self.only(result, 'out-of-declaration')  # a sibling of the sandbox is not owned
+
+    def test_declared_e1_values_and_e3_content_change_only(self):
+        result = self.classify([{'c': 'v', 'p': self.E1, 'n': 'Left', 'k': 4, 'h': 'd' * 64},
+                                {'c': 'k', 'p': self.E1, 't': self.inside}])
+        self.assertEqual(('declared', 'E1'), (self.only(result)['classification'], self.only(result)['rule']))
+        self.assertTrue(result['g1Eligible'])
+        result = self.classify([{'c': 'v', 'p': self.E1, 'n': 'Width', 'k': 4, 'h': 'd' * 64}, {'c': 'k', 'p': self.E1, 't': self.inside}])
+        self.only(result, 'out-of-declaration')
+        result = self.classify([{'c': 'v', 'p': self.E1, 'n': 'Top', 'removed': True}, {'c': 'k', 'p': self.E1, 't': self.inside}])
+        self.only(result, 'out-of-declaration')  # E1 declares an update, not a deletion
+        result = self.classify([{'c': 'f', 'p': self.E3, 's': 10, 't': self.inside, 'a': 32}])
+        self.assertEqual('E3', self.only(result, 'declared')['rule'])
+        result = self.classify([{'c': 'f', 'p': self.E3 + '.tmp', 's': 1, 't': self.inside, 'a': 32}])
+        self.only(result, 'out-of-declaration')
+        result = self.classify([{'c': 'f', 'p': self.E3, 'removed': True}])
+        self.only(result, 'out-of-declaration')
+
+    def test_change_outside_the_studio_window_is_not_of_this_window(self):
+        for time in (self.before, self.after):
+            result = self.classify([{'c': 'f', 'p': self.LOCAL + '\\other.log', 's': 1, 't': time, 'a': 32}])
+            self.assertEqual('outside-studio-window', self.only(result, 'not-of-this-window')['rule'])
+            self.assertFalse(self.only(result)['inStudioWindow'])
+        margin = stage0.filetime('2026-10-14T00:00:22Z')  # exit + 1.88 s is inside the +2 s margin
+        result = self.classify([{'c': 'f', 'p': self.LOCAL + '\\other.log', 's': 1, 't': margin, 'a': 32}])
+        self.only(result, 'out-of-declaration')
+        # A removed entry has no time of its own: the window rule cannot clear it.
+        result = self.classify([{'c': 'f', 'p': self.LOCAL + '\\app\\settings.json', 'removed': True}])
+        self.assertIsNone(self.only(result, 'out-of-declaration')['inStudioWindow'])
+
+    def test_change_also_seen_in_the_null_window_is_another_actor(self):
+        churn = self.LOCAL + '\\app\\settings.json'
+        result = self.classify([{'c': 'f', 'p': churn, 's': 3, 't': self.inside, 'a': 32}],
+                               extra_b=[{'c': 'f', 'p': churn, 's': 2, 't': self.before, 'a': 32}])
+        self.assertEqual('changed-in-null-window', self.only(result, 'other-actor')['rule'])
+        self.assertEqual(1, result['changeCounts']['A->B'])
+        self.assertTrue(result['g1Eligible'])
+
+    def test_recorded_background_filter_matches_the_redacted_target_and_is_validated(self):
+        rules = copy.deepcopy(self.rules)
+        rules['backgroundFilters'] = [{'pattern': r'<LOCALAPPDATA>\\cache\\.*', 'channel': 'file', 'reason': 'synthetic',
+                                       'evidencedBy': 'probe-fixture'}]
+        change = [{'c': 'f', 'p': self.LOCAL + '\\cache\\x.bin', 's': 1, 't': self.inside, 'a': 32}]
+        self.assertTrue(self.only(self.classify(change, rules=rules), 'other-actor')['rule'].startswith('filter:'))
+        rules['backgroundFilters'][0]['channel'] = 'registry'
+        self.only(self.classify(change, rules=rules), 'out-of-declaration')  # the channel must match too
+        rules['backgroundFilters'] = [{'pattern': '.*', 'channel': 'file', 'reason': '', 'evidencedBy': 'probe-fixture'}]
+        with self.assertRaises(ValueError):
+            self.classify(change, rules=rules)
+
+    def test_out_of_declaration_stops_the_run_and_the_table_is_redacted(self):
+        result = self.classify([{'c': 'f', 'p': self.LOCAL + '\\app\\settings.json', 's': 2, 't': self.inside, 'a': 32},
+                                {'c': 'v', 'p': 'HKCU\\Software\\S-1-5-21-1-2-3-1001\\x', 'n': self.LOCAL + '\\a.exe', 'k': 3, 'h': 'e' * 64},
+                                {'c': 'k', 'p': 'HKCU\\Software\\S-1-5-21-1-2-3-1001\\x', 't': self.inside}],
+                               )
+        self.assertEqual(('unsafe_effect', 'undeclared-app-effect', False), (result['runStatus'], result['reason'], result['g1Eligible']))
+        paths = {(row['path'], row['valueName']) for row in result['candidates'] if row['classification'] == 'out-of-declaration'}
+        self.assertIn(('<LOCALAPPDATA>\\app\\settings.json', None), paths)
+        self.assertIn(('HKCU\\Software\\<SID>\\x', '<LOCALAPPDATA>\\a.exe'), paths)
+        text = json.dumps(result)
+        self.assertNotIn('fixture\\\\AppData', text); self.assertNotIn('S-1-5-21', text)
+        named = stage0.diff_classify(self.run_folder(self.base, self.base, self.base + self.controls + [
+            {'c': 'f', 'p': 'D:\\data\\leonfixture\\x', 's': 1, 't': self.inside, 'a': 32}]), self.rules, {'USER': 'leonfixture'})
+        self.assertEqual('D:\\data\\<USER>\\x', self.only(named)['path'])
+
+    def test_missing_controls_or_incomplete_snapshot_block_the_run(self):
+        controls = self.controls
+        self.controls = [row for row in controls if not row['p'].endswith('probe-diagnostic.txt')]
+        result = self.classify()
+        self.assertEqual(('blocked', 'instrument-not-proven', False), (result['runStatus'], result['reason'], result['g1Eligible']))
+        self.assertFalse(result['positiveControls']['file'])
+        self.controls = [row for row in controls if row['c'] != 'v']
+        self.assertFalse(self.classify()['positiveControls']['registry'])
+        self.controls, self.processes = controls, []
+        self.assertFalse(self.classify()['positiveControls']['process'])
+        self.processes = [{'pid': 42, 'image': 'Gcam.Studio.exe'}]
+        self.assertEqual('snapshot-incomplete', self.classify(complete=False)['reason'])
+
+    def test_metadata_only_directory_and_key_times_are_not_candidates_but_a_readability_flip_is_unclassified(self):
+        result = self.classify([{'c': 'd', 'p': self.LOCAL + '\\app', 't': self.inside, 'a': 16}, {'c': 'k', 'p': self.E1, 't': self.inside}])
+        self.assertEqual({'harness': 4}, result['classificationCounts'])
+        root = self.run_folder(self.base, self.base, self.base + self.controls + [
+            {'c': 'u', 'ch': 'file', 'p': self.LOCAL + '\\locked', 'e': 'UnauthorizedAccessException'}])
+        result = stage0.diff_classify(root, self.rules)
+        self.assertEqual(('blocked', 'unclassified-candidate'), (result['runStatus'], result['reason']))
+        self.assertEqual('unreadable-in-one-snapshot', self.only(result, 'unclassified')['rule'])
+
+    def test_preflight_checks_the_wpr_profile_only_for_the_optional_trace(self):
+        import xml.etree.ElementTree as ET
+        doc = ET.parse(SCRIPT.parent / 'Probe.wprp')
+        ET.SubElement(doc.find('./Profiles/SystemProvider/Keywords'), 'Keyword', Value='NetworkTrace')
+        root = StageZeroIsolationTests.scratch(); fixture = root / 'profile.wprp'; doc.write(fixture)
+        check = lambda **flags: stage0.preflight(root / 'probe-fixture', live_pin=lambda: {}, identity=lambda: ('a', '2026-10-14T00:00:00Z'),
+                                                 version=lambda: 7, scratch_root=root, profile_path=fixture, **flags)
+        self.assertFalse(any('profile' in issue for issue in check()))
+        self.assertTrue(any('profile selects' in issue for issue in check(trace=True)))
+        run = root / 'probe-20261014-06'; run.mkdir()
+        (run / 'snapshot-A.jsonl.gz').write_bytes(b'retained')
+        self.assertTrue(any('snapshot-A' in issue for issue in stage0.preflight(run, live_pin=lambda: {}, identity=lambda: ('a', 'x'),
+                                                                                version=lambda: 7, scratch_root=root)))
+
+    def test_cli_writes_a_fresh_result_and_exits_nonzero_when_not_eligible(self):
+        import subprocess, sys
+        root = self.run_folder(self.base, self.base, self.base + self.controls)
+        out = root / 'classified.json'
+        command = [sys.executable, '-B', str(SCRIPT), 'diff-classify', '--run-directory', str(root), '--out', str(out)]
+        self.assertEqual(0, subprocess.run(command, capture_output=True, text=True).returncode)
+        self.assertTrue(json.loads(out.read_text())['g1Eligible'])
+        self.assertNotEqual(0, subprocess.run(command, capture_output=True, text=True).returncode)  # never overwrites
+        blocked = self.run_folder(self.base, self.base, self.base)
+        self.assertEqual(2, subprocess.run(command[:5] + [str(blocked), '--out', str(blocked / 'classified.json')],
+                                           capture_output=True, text=True).returncode)
 
 
 if __name__ == '__main__':

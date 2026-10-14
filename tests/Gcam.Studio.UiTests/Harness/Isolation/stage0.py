@@ -1,6 +1,6 @@
-"""Headless isolation inventory, deployment pins, and conservative trace attribution.
+"""Headless isolation inventory, deployment pins, snapshot classification (MR8) and the optional trace attribution.
 
-Raw machine-wide traces stay local. This tool never starts a trace or launches Studio.
+Snapshots and raw traces stay local. This tool never takes a snapshot, starts a trace or launches Studio.
 """
 import argparse
 import datetime as dt
@@ -310,9 +310,9 @@ def compact_trace(trace_path, out_path, schema_path=None):
     return record
 
 
-def preflight(run_directory, live_pin=None, identity=None, version=None, scratch_root=None, profile_path=None):
-    """Read-only. Collect all failures before an administrator opens the trace window."""
-    issues = profile_coverage(profile_path)
+def preflight(run_directory, live_pin=None, identity=None, version=None, scratch_root=None, profile_path=None, trace=False):
+    """Read-only. Collect all failures before the observed run; the WPR profile is checked only for the optional trace."""
+    issues = profile_coverage(profile_path) if trace else []
     root = Path(scratch_root or Path(tempfile.gettempdir()) / 'gcam-todo43').resolve()
     path = Path(run_directory).absolute()
     try:
@@ -331,7 +331,8 @@ def preflight(run_directory, live_pin=None, identity=None, version=None, scratch
         issues.append('invalid run ID')
     if not path.is_dir():
         issues.append('run folder does not exist')
-    for name in ('trace.ready.json', 'trace.complete.json', 'harness.complete.json', 'trace.lock'):
+    for name in ('trace.ready.json', 'trace.complete.json', 'harness.complete.json', 'trace.lock', 'observation-context.json',
+                 'snapshot-A.jsonl.gz', 'snapshot-B.jsonl.gz', 'snapshot-C.jsonl.gz'):
         if (path / name).exists():
             issues.append('run folder already contains ' + name + '; choose a fresh run ID')
     if path.exists() and any(path.glob('*.etl')):
@@ -1159,6 +1160,232 @@ def change_times(request, devices=None, reader=None, now=None):
             'records': records}
 
 
+SNAPSHOT_SCHEMA = 'gcam.state-snapshot'
+SNAPSHOT_LABELS = ('A', 'B', 'C')
+FILETIME_EPOCH = dt.datetime(1601, 1, 1, tzinfo=dt.timezone.utc)
+SID = re.compile(r'S-1-[0-9]+(?:-[0-9]+)+')
+FILTER_FIELDS = ('pattern', 'channel', 'reason', 'evidencedBy')
+SNAPSHOT_BLIND_SPOTS = [
+    'locations outside the snapshot scope (other users, removable and network drives, machine-wide locations a '
+    'non-elevated process cannot write; HKLM)',
+    'a content change that restores size and last-write time',
+    'a write undone before snapshot C',
+    'removed entries carry no time of their own (the window rule cannot apply to them)',
+    '100 ms process polling misses short-lived processes',
+]
+
+
+def filetime(value):
+    """ISO-8601 time (as written by .NET "O") -> FILETIME ticks; fractions beyond microseconds are dropped."""
+    text = re.sub(r'(\.\d{6})\d+', r'\1', value.replace('Z', '+00:00'))
+    return int((dt.datetime.fromisoformat(text) - FILETIME_EPOCH) / dt.timedelta(microseconds=1)) * 10
+
+
+def snapshot_rows(path, meta):
+    """Stream the entry rows of one gzip JSON-lines snapshot; `meta` receives its header and completeness."""
+    meta.update(header=None, complete=False, unreadable=0)
+    with gzip.open(path, 'rt', encoding='utf-8') as stream:
+        for line in stream:
+            row = json.loads(line)
+            if row['c'] == 'header':
+                header = row
+                if header.get('schema') != SNAPSHOT_SCHEMA or header.get('schemaVersion') != 1:
+                    raise ValueError('not a version-1 state snapshot: ' + Path(path).name)
+                meta['header'] = header
+            elif row['c'] == 'end':
+                meta['complete'] = True
+            else:
+                meta['unreadable'] += row['c'] == 'u'
+                yield row
+    if meta['header'] is None:
+        raise ValueError('not a version-1 state snapshot: ' + Path(path).name)
+
+
+def snapshot_identity(row):
+    # Paths as the walker read them; a case-only rename therefore shows as a removal and an addition (a real change).
+    if row['c'] == 'u':
+        return ('unreadable', row['ch'], row['p'])
+    if row['c'] == 'v':
+        return ('registry', row['p'] + '\0' + row['n'])
+    return ('file' if row['c'] in ('f', 'd') else 'registry', row['p'])
+
+
+def snapshot_state(row):
+    """What a change is: files by size, last-write and attributes; values by type and content hash; directories, keys
+    and unreadable locations by existence only (their last-write moves with every child, a metadata-only change)."""
+    if row['c'] == 'f':
+        return ('f', row['s'], row['t'], row['a'])
+    if row['c'] == 'v':
+        return ('v', row['k'], row['h'])
+    return (row['c'],)
+
+
+def snapshot_index(path):
+    """One snapshot held compactly (identity -> state); a real profile has well over a million entries."""
+    meta = {}
+    return meta, {snapshot_identity(row): snapshot_state(row) for row in snapshot_rows(path, meta)}
+
+
+def snapshot_changes(index, path, newer=True):
+    """Changes between an indexed snapshot and one streamed from `path` (`newer`: the streamed one is the later).
+    Also returns the streamed snapshot's metadata and key last-write times (a value's time is its key's)."""
+    meta, remaining, changes, key_times = {}, dict(index), [], {}
+    for row in snapshot_rows(path, meta):
+        identity = snapshot_identity(row)
+        if row['c'] == 'k':
+            key_times[row['p']] = row['t']
+        before = remaining.pop(identity, None)
+        if before is None:
+            change = 'added' if newer else 'removed'
+        elif before != snapshot_state(row):
+            change = 'modified'
+        else:
+            continue
+        changes.append({'identity': identity, 'change': change, 'row': row})
+    for identity, state in remaining.items():
+        path_part, _, name = identity[-1].partition('\0')
+        row = {'c': state[0], 'p': path_part, **({'n': name} if state[0] == 'v' else {}),
+               **({'ch': identity[1]} if state[0] == 'u' else {})}
+        changes.append({'identity': identity, 'change': 'removed' if newer else 'added', 'row': row})
+    for change in changes:
+        if change['identity'][0] == 'unreadable':
+            change['change'] = 'readability'
+    return meta, changes, key_times
+
+
+def under(path, root):
+    path, root = path.casefold(), root.casefold().rstrip('\\')
+    return path == root or path.startswith(root + '\\')
+
+
+def redactor(roots, extra=None):
+    """Replace machine paths, the SID and named identities with categories (<LOCALAPPDATA>, <HKCU>, <SID>, ...)."""
+    pairs = [(root['path'], '<' + root['category'] + '>') for root in roots if root.get('path')]
+    pairs += [(value, '<' + name + '>') for name, value in (extra or {}).items() if value and len(value) >= 3]
+    pairs.sort(key=lambda pair: -len(pair[0]))
+
+    def redact(text):
+        for value, token in pairs:
+            text = re.sub(re.escape(value), lambda _: token, text, flags=re.IGNORECASE)
+        return SID.sub('<SID>', text)
+    return redact
+
+
+def diff_classify(run_directory, rules=None, extra_redactions=None):
+    """MR8: classify the B->C state changes of an observed run (charter order) and check the positive controls."""
+    run = Path(run_directory)
+    rules = rules if rules is not None else json.loads((ISOLATION / 'classification-rules.json').read_text())
+    filters = rules.get('backgroundFilters', [])
+    for entry in filters:
+        if any(not isinstance(entry.get(field), str) or not entry[field].strip() for field in FILTER_FIELDS) \
+                or entry['channel'] not in ('file', 'registry'):
+            raise ValueError('background filter needs pattern, channel (file/registry), reason and evidencedBy')
+    context_path = run / 'observation-context.json'
+    context = json.loads(context_path.read_text(encoding='utf-8-sig'))
+    # Only snapshot B is held in memory; A and C are streamed against it.
+    meta_b, index_b = snapshot_index(run / 'snapshot-B.jsonl.gz')
+    meta_a, background, _ = snapshot_changes(index_b, run / 'snapshot-A.jsonl.gz', newer=False)
+    meta_c, observed, key_times = snapshot_changes(index_b, run / 'snapshot-C.jsonl.gz')
+    del index_b
+    metas = {'A': meta_a, 'B': meta_b, 'C': meta_c}
+    roots = meta_c['header']['roots']
+    redact = redactor(roots, extra_redactions)
+    window = context['studioWindow']
+    start = filetime(window['launchAt']) - int(window.get('marginBeforeSeconds', 1) * 1e7)
+    end = filetime(window['exitAt']) + int(window.get('marginAfterSeconds', 2) * 1e7)
+    harness_files = context['harnessOwned']['files']
+    harness_keys = context['harnessOwned']['registry']
+    folders = {root['category']: root['path'] for root in roots}
+    declared = []
+    for surface in rules.get('declaredAppSurfaces', []):
+        if surface['channel'] == 'registry' and surface.get('hive') == 'run-user':
+            declared.append((surface['decision'], 'registry', ('hkcu\\' + surface['keyPath']).casefold(),
+                             {name.casefold() for name in surface['valueNames']}, ('added', 'modified')))
+        elif surface['channel'] == 'file' and surface.get('knownFolder') in folders:
+            declared.append((surface['decision'], 'file', (folders[surface['knownFolder']] + '\\' + surface['relativePath']).casefold(),
+                             None, ('modified',)))
+    null_window = {change['identity'] for change in background}
+    flipped = [change['identity'][1:] for change in background + observed if change['change'] == 'readability']
+    candidates, counts = [], {}
+    for change in observed:
+        row, identity = change['row'], change['identity']
+        channel = identity[1] if identity[0] == 'unreadable' else identity[0]
+        entry = {'f': 'file', 'd': 'directory', 'k': 'key', 'v': 'value', 'u': 'unreadable'}[row['c']]
+        path, name = row['p'], row.get('n')
+        if row['c'] == 'v':
+            time = key_times.get(path)
+        else:
+            time = row.get('t') if change['change'] != 'removed' else None
+        target = path if name is None else path + '\\' + name
+        rule = None
+        if channel == 'file' and any(under(path, root) for root in harness_files):
+            category, rule = 'harness', 'harness-owned'
+        elif channel == 'registry' and any(under(path, root) for root in harness_keys):
+            category, rule = 'harness', 'harness-owned'
+        else:
+            category = None
+            for decision, surface_channel, surface_path, names, allowed in declared:
+                if (surface_channel == channel and path.casefold() == surface_path and change['change'] in allowed
+                        and ((names is None and entry == 'file') or (names is not None and entry == 'value' and name.casefold() in names))):
+                    category, rule = 'declared', decision
+                    break
+            if category is None and time is not None and not start <= time <= end:
+                category, rule = 'not-of-this-window', 'outside-studio-window'
+            if category is None and identity in null_window:
+                category, rule = 'other-actor', 'changed-in-null-window'
+            if category is None:
+                shown = redact(target)
+                for entry_filter in filters:
+                    if entry_filter['channel'] == channel and re.fullmatch(entry_filter['pattern'], shown, re.IGNORECASE):
+                        category, rule = 'other-actor', 'filter:' + entry_filter['pattern']
+                        break
+            if category is None:
+                undecided = change['change'] == 'readability' or any(
+                    flip[0] == channel and under(path, flip[1]) for flip in flipped)
+                category, rule = ('unclassified', 'unreadable-in-one-snapshot') if undecided else ('out-of-declaration', None)
+        counts[category] = counts.get(category, 0) + 1
+        candidates.append({'channel': channel, 'entry': entry, 'change': change['change'], 'path': redact(path),
+                           'valueName': redact(name) if name is not None else None, 'classification': category, 'rule': rule,
+                           'inStudioWindow': None if time is None else start <= time <= end})
+    added = {(change['identity'][0], change['identity'][1].casefold()) for change in observed if change['change'] == 'added'}
+    controls = context['positiveControls']
+    marker = controls['registry']
+    processes = context.get('ownedProcesses', [])
+    seen = {
+        'file': ('file', controls['file'].casefold()) in added,
+        'registry': ('registry', (marker['key'] + '\0' + marker['valueName']).casefold()) in added,
+        'process': any(str(p.get('image', '')).casefold() == controls['process'].casefold() and int(p.get('pid', 0)) > 0
+                       for p in processes),
+    }
+    complete = all(metas[label]['complete'] and metas[label]['header'].get('label') == label for label in SNAPSHOT_LABELS)
+    unsafe, unresolved = counts.get('out-of-declaration', 0) > 0, counts.get('unclassified', 0) > 0
+    proven = complete and all(seen.values())
+    notes = []
+    if context['nullWindow']['seconds'] < window['seconds']:
+        notes.append('null window shorter than the Studio window')
+    inputs = {name: file_digest(run / name) for name in ['observation-context.json'] + [f'snapshot-{label}.jsonl.gz' for label in SNAPSHOT_LABELS]}
+    return {'schemaVersion': 1, 'method': 'MR8 before/after snapshots',
+            'runStatus': 'unsafe_effect' if unsafe else 'blocked' if not proven or unresolved else 'completed',
+            'reason': 'undeclared-app-effect' if unsafe else 'snapshot-incomplete' if not complete else 'instrument-not-proven'
+            if not proven else 'unclassified-candidate' if unresolved else '',
+            'g1Eligible': proven and not unsafe and not unresolved,
+            'positiveControls': seen, 'classificationCounts': dict(sorted(counts.items())),
+            'changeCounts': {'A->B': len(background), 'B->C': len(candidates)},
+            'unreadable': {label: metas[label]['unreadable'] for label in SNAPSHOT_LABELS},
+            'nullWindowSeconds': context['nullWindow']['seconds'], 'studioWindowSeconds': window['seconds'],
+            'notes': notes, 'candidates': candidates,
+            'backgroundFilters': len(filters), 'blindSpots': SNAPSHOT_BLIND_SPOTS,
+            'channelApplicability': context.get('channelApplicability', []),
+            'inputSha256': inputs, 'rulesSha256': digest(canonical(rules)), 'classifierSourceSha256': file_digest(__file__),
+            'warning': 'Paths are categories; snapshots and the observation context name machine paths and stay local (A4).'}
+
+
+def machine_identities():
+    import os
+    return {'USERPROFILE': os.environ.get('USERPROFILE'), 'USER': os.environ.get('USERNAME'),
+            'MACHINE': os.environ.get('COMPUTERNAME')}
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     sub = parser.add_subparsers(dest='command', required=True)
@@ -1166,6 +1393,9 @@ def main():
     p = sub.add_parser('pin'); p.add_argument('--out', required=True)
     p = sub.add_parser('fingerprint'); p.add_argument('--directory', required=True); p.add_argument('--kind', choices=('isolation', 'deployment'), default='isolation')
     p = sub.add_parser('preflight'); p.add_argument('--run-directory', required=True)
+    p.add_argument('--trace', action='store_true', help='optional diagnostic trace: also check the WPR profile coverage')
+    p = sub.add_parser('diff-classify', help='MR8: classify the snapshot changes of an observed run')
+    p.add_argument('--run-directory', required=True); p.add_argument('--out', required=True)
     p = sub.add_parser('compact'); p.add_argument('--trace', required=True); p.add_argument('--out', required=True); p.add_argument('--schema')
     p = sub.add_parser('classify'); p.add_argument('--trace', required=True); p.add_argument('--context', required=True); p.add_argument('--out', required=True)
     p.add_argument('--summary'); p.add_argument('--schema')
@@ -1184,12 +1414,21 @@ def main():
     elif args.command == 'compact':
         print(json.dumps(compact_trace(args.trace, args.out, args.schema), separators=(',', ':')))
     elif args.command == 'preflight':
-        issues = preflight(args.run_directory)
+        issues = preflight(args.run_directory, trace=args.trace)
         for issue in issues:
             print('FAIL: ' + issue)
-        print('Preflight BLOCKED; do not start tracing.' if issues else 'Preflight PASS; author may now prepare the approved tracing window.')
-        print('Export with tracerpt -rts -export schema.man; classify with --schema schema.man for evidenced payload recovery.')
+        print('Preflight BLOCKED; do not start the observed run.' if issues else 'Preflight PASS; the observed run may start on the author\'s go (HUM-01).')
+        if args.trace:
+            print('Export with tracerpt -rts -export schema.man; classify with --schema schema.man for evidenced payload recovery.')
         if issues:
+            raise SystemExit(2)
+    elif args.command == 'diff-classify':
+        if Path(args.out).exists():
+            raise ValueError('diff-classify output exists; use a fresh file')
+        result = diff_classify(args.run_directory, extra_redactions=machine_identities())
+        write(args.out, result)
+        print(result['runStatus'] + ': ' + (result['reason'] or 'all controls seen, nothing out of declaration'))
+        if not result['g1Eligible']:
             raise SystemExit(2)
     elif args.command == 'change-times':
         if Path(args.out).exists():
