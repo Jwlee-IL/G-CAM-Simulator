@@ -33,5 +33,8 @@ public static class ConfigLoader
     }
 
     public static void Save(SimulationConfig config, string path)
-        => File.WriteAllText(path, JsonSerializer.Serialize(config, Options));
+        => File.WriteAllText(path, Serialize(config));
+
+    /// <summary>Serializes a configuration without I/O, using the same options as Save.</summary>
+    public static string Serialize(SimulationConfig config) => JsonSerializer.Serialize(config, Options);
 }

@@ -159,6 +159,9 @@
                                             Style="{StaticResource Button.Icon}"
                                             Margin="{StaticResource Gap.InlineWide}"
                                             AutomationProperties.AutomationId="ResetAcquisition" AutomationProperties.Name="Reset acquisition" />
+                                    <Button shell:WindowChrome.IsHitTestVisibleInChrome="True" Command="{Binding ExportReportCommand}" Content="_Export report…"
+                                            Height="{StaticResource Size.Control}" VerticalAlignment="Center" Margin="{StaticResource Gap.InlineWide}"
+                                            AutomationProperties.AutomationId="ExportReport" />
                                     <Button shell:WindowChrome.IsHitTestVisibleInChrome="True" Command="{Binding ToggleThemeCommand}" ToolTip="{Binding ThemeToggleLabel}"
                                             Style="{StaticResource Button.Theme}"
                                             Margin="{StaticResource Gap.InlineWide}"

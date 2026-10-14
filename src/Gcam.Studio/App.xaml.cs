@@ -26,6 +26,7 @@ public partial class App : Application
             .AddSingleton<ThemeService>()
             .AddSingleton<IThemeService>(sp => sp.GetRequiredService<ThemeService>())
             .AddSingleton<IConfirmationService, ModalService>()
+            .AddSingleton<IReportExportService, ReportExportService>()
             .AddSingleton<MainViewModel>()
             .AddSingleton<MainWindow>()
             .BuildServiceProvider();

@@ -33,8 +33,11 @@ public sealed partial class MainViewModel : ObservableObject
     private bool _reverting;
 
     public MainViewModel(IAcquisitionService acquisition, IThemeService theme, ISpectrumService spectrum, IImagingService? imaging = null,
-        IWaveformService? waveform = null, IDetectorFaceService? detectorFace = null, IFocusSweepService? focusSweep = null, IReadoutPreparationService? readoutPreparation = null, IConfirmationService? confirmation = null)
+        IWaveformService? waveform = null, IDetectorFaceService? detectorFace = null, IFocusSweepService? focusSweep = null, IReadoutPreparationService? readoutPreparation = null, IConfirmationService? confirmation = null,
+        IReportExportService? reportExport = null, TimeProvider? reportClock = null)
     {
+        _reportExport = reportExport;
+        _reportClock = reportClock ?? TimeProvider.System;
         Confirmation = confirmation;
         _readoutPreparation = readoutPreparation;
         if (_readoutPreparation is not null) _readoutPreparation.CacheChanged += ReadoutCacheChanged;
@@ -126,6 +129,7 @@ public sealed partial class MainViewModel : ObservableObject
         StartCommand.NotifyCanExecuteChanged();
         StopCommand.NotifyCanExecuteChanged();
         ResetCommand.NotifyCanExecuteChanged();
+        ExportReportCommand.NotifyCanExecuteChanged();
         AddSourceCommand.NotifyCanExecuteChanged();
         RemoveSourceCommand.NotifyCanExecuteChanged();
         PrepareReadoutCommand.NotifyCanExecuteChanged();

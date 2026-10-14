@@ -179,7 +179,8 @@
                         Margin="{StaticResource Gap.Tight}" />
                 <TextBlock Text="○ Truth / ◇ Found (read-only)" Style="{StaticResource Text.Label}"
                         Margin="{StaticResource Gap.Field}" />
-                <ItemsControl ItemsSource="{Binding Peaks}" Focusable="False">
+                <ItemsControl ItemsSource="{Binding Peaks}" Focusable="False"
+                        AutomationProperties.AutomationId="Imaging.Peaks">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
                             <TextBlock Text="{Binding Description}" TextWrapping="Wrap" Style="{StaticResource Text.MonoCaption}"

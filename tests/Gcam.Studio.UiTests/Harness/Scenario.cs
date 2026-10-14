@@ -14,6 +14,14 @@ public static class Scenario
     public const int WindowWidth = 1440, WindowHeight = 900;
 
     public static void Run(string name, ITestOutputHelper output, Action<StudioWindow, RunRecord> body)
+        => RunCore(name, output, (ui, record, _) => body(ui, record), []);
+
+    /// <summary>The report scenario alone declares two writes at fixed names in its owned sandbox.</summary>
+    public static void RunReportExport(string name, ITestOutputHelper output, Action<StudioWindow, RunRecord, string> body)
+        => RunCore(name, output, body, ["report.html", "report.scene.json"]);
+
+    private static void RunCore(string name, ITestOutputHelper output, Action<StudioWindow, RunRecord, string> body,
+        IReadOnlyList<string> expectedWrites)
     {
         var record = new RunRecord(name);
         using var pollingLog = PollingWait.Record(record.Step);
@@ -32,7 +40,7 @@ public static class Scenario
             Assert.Equal("Empty", ui.RunState);   // declared start state
             record.Step("window ready, state Empty");
 
-            body(ui, record);
+            body(ui, record, app.Sandbox);
             result = "passed";
         }
         catch (Exception e)
@@ -51,6 +59,6 @@ public static class Scenario
             output.WriteLine($"manifest: {record.Save(result)}");
         }
         Assert.Equal("exit 0", app!.Ending);
-        Assert.Empty(app.SandboxWrites);
+        Assert.Equal(expectedWrites.Order(), app.SandboxWrites.Order());
     }
 }
