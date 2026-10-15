@@ -7,12 +7,16 @@ namespace Gcam.Studio.UiTests.Harness;
 public static class PythonInterpreter
 {
     public sealed record Result(int ExitCode, string Output, string Error);
+    /// <summary>An explicit override is the only candidate (a broken one fails by name). Otherwise the launcher comes
+    /// first: a Store package's executable (under <c>WindowsApps</c>) passed this probe and then refused the next start
+    /// with "access denied" (2026-10-16), so it is used only when nothing else runs.</summary>
     public static string Resolve(Func<string, string[], Result> execute, string? configured = null)
     {
         var failures = new List<string>();
+        string? packaged = null;
         var candidates = string.IsNullOrWhiteSpace(configured)
-            ? new[] { ("python", Array.Empty<string>()), ("py", new[] { "-3" }) }
-            : new[] { (configured, Array.Empty<string>()), ("python", Array.Empty<string>()), ("py", new[] { "-3" }) };
+            ? new[] { ("py", new[] { "-3" }), ("python", Array.Empty<string>()) }
+            : new[] { (configured, Array.Empty<string>()) };
         foreach (var (command, prefix) in candidates)
         {
             try
@@ -27,12 +31,17 @@ public static class PythonInterpreter
                 // The launcher result must itself run; the fingerprint process will use this exact executable.
                 var validation = execute(path, ["-B", "-c", "import sys; print(sys.version_info.major)"]);
                 if (validation.ExitCode != 0 || validation.Output.Trim() != "3") throw new InvalidDataException("Resolved executable did not run Python 3");
-                return path;
+                if (!IsPackaged(path) || !string.IsNullOrWhiteSpace(configured)) return path;
+                packaged ??= path;
+                failures.Add(command + ": Store package executable, kept as the last resort");
             }
             catch (Exception e) { failures.Add(command + ": " + e.GetType().Name + ": " + e.Message); }
         }
+        if (packaged is not null) return packaged;
         throw new InvalidOperationException("No working Python 3 interpreter. Set GCAM_TEST_PYTHON to an executable. " + string.Join("; ", failures));
     }
+    public static bool IsPackaged(string path) =>
+        path.Replace('/', '\\').Split('\\').Contains("WindowsApps", StringComparer.OrdinalIgnoreCase);
     public static Result Execute(string executable, string[] arguments)
     {
         var start = new ProcessStartInfo(executable) { UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true, RedirectStandardError = true };

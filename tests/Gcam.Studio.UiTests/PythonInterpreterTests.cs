@@ -7,32 +7,56 @@ public sealed class PythonInterpreterTests
 {
     private static string Executable => Path.Combine(Path.GetTempPath(), "gcam-python-fixture", "python.exe");
     private static PythonInterpreter.Result Identity => new(0, JsonSerializer.Serialize(new { executable = Executable, major = 3 }), "");
+    private static string Packaged => Path.Combine(Path.GetTempPath(), "WindowsApps", "PythonSoftwareFoundation.Python.3.11_x", "python.exe");
+    private static PythonInterpreter.Result IdentityOf(string path) => new(0, JsonSerializer.Serialize(new { executable = path, major = 3 }), "");
     [Fact]
-    public void WorkingPath_UsesResolvedExecutable_AndValidatesIt()
-    {
-        var calls = new List<string>();
-        string result = PythonInterpreter.Resolve((cmd, _) => { calls.Add(cmd); return cmd == "python" ? Identity : new(0, "3\n", ""); });
-        Assert.Equal(Executable, result); Assert.Equal(new[] { "python", Executable }, calls);
-    }
-    [Fact]
-    public void FailedAlias_FallsBackToLauncher_WithExplicitVersionPrefix()
+    public void Launcher_ComesFirst_AndItsExecutableIsValidated()
     {
         var calls = new List<string>();
         string result = PythonInterpreter.Resolve((cmd, args) =>
         {
             calls.Add(cmd);
-            if (cmd == "python") throw new UnauthorizedAccessException("alias refused");
             if (cmd == "py") { Assert.Equal("-3", args[0]); return Identity; }
-            return new(0, "3", "");
+            return new(0, "3\n", "");
         });
-        Assert.Equal(Executable, result); Assert.Equal(new[] { "python", "py", Executable }, calls);
+        Assert.Equal(Executable, result); Assert.Equal(new[] { "py", Executable }, calls);
     }
     [Fact]
-    public void ExplicitOverride_HasPriority_WithoutAnInstalledLauncher()
+    public void MissingLauncher_FallsBackToPython()
+    {
+        var calls = new List<string>();
+        string result = PythonInterpreter.Resolve((cmd, _) =>
+        {
+            calls.Add(cmd);
+            if (cmd == "py") throw new System.ComponentModel.Win32Exception("not found");
+            return cmd == "python" ? Identity : new(0, "3", "");
+        });
+        Assert.Equal(Executable, result); Assert.Equal(new[] { "py", "python", Executable }, calls);
+    }
+    [Fact]
+    public void StorePackage_IsTheLastResort()
+    {
+        // Seen 2026-10-16: the Store package executable passed the probe, then refused the next start ("access denied").
+        string first = PythonInterpreter.Resolve((cmd, _) => cmd switch
+        {
+            "py" => IdentityOf(Packaged), "python" => Identity, _ => new(0, "3", "")
+        });
+        Assert.Equal(Executable, first);
+        string only = PythonInterpreter.Resolve((cmd, _) => cmd switch
+        {
+            "py" => throw new System.ComponentModel.Win32Exception("not found"), "python" => IdentityOf(Packaged), _ => new(0, "3", "")
+        });
+        Assert.Equal(Packaged, only);
+    }
+    [Fact]
+    public void ExplicitOverride_IsExclusive_AndFailsByName()
     {
         var calls = new List<string>();
         Assert.Equal(Executable, PythonInterpreter.Resolve((cmd, args) => { calls.Add(cmd); return args.Contains("-c") && args[^1].Contains("json") ? Identity : new(0, "3", ""); }, Executable));
         Assert.All(calls, c => Assert.Equal(Executable, c));
+        calls.Clear();
+        var failure = Assert.Throws<InvalidOperationException>(() => PythonInterpreter.Resolve((cmd, _) => { calls.Add(cmd); return new(9, "", "broken"); }, Executable));
+        Assert.Equal(new[] { Executable }, calls); Assert.Contains("GCAM_TEST_PYTHON", failure.Message);
     }
     [Theory]
     [InlineData("bad-json")]

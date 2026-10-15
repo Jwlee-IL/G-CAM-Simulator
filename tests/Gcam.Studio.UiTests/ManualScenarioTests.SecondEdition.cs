@@ -27,7 +27,9 @@ public sealed partial class ManualScenarioTests
         ui.Invoke("ExportReport");
         StudioWindow.WaitUntil(() => ui.Exists("Export.Confirm"), TimeSpan.FromSeconds(5), "format popup");
         run.Check("export.formats", new[] { "Html", "Pdf", "Word", "Csv" }.All(f => ui.Exists("Export." + f)), "four visible format choices");
-        run.Capture("Report and event-data formats.", [new("Export.Html"), new("Export.Pdf"), new("Export.Word"), new("Export.Csv"), new("Export.Confirm")], full: true);
+        // The four choices sit 54 px apart: marks on all of them leave no room for the labels, so the figure marks the
+        // first report format, the event data and the confirm button; PDF and Word are visible between them.
+        run.Capture("Report and event-data formats.", [new("Export.Html"), new("Export.Csv"), new("Export.Confirm")], full: true);
         ui.Invoke("Modal.Cancel");
         StudioWindow.WaitUntil(() => !ui.Exists("Export.Confirm"), TimeSpan.FromSeconds(5), "format popup closed");
         run.Check("export.cancel-writes-nothing", !Directory.EnumerateFiles(run.Sandbox, "report.*", SearchOption.AllDirectories).Any(), "no report after Cancel");

@@ -67,7 +67,10 @@ public sealed class RunRecord
         var r = VisibleFrame(new IntPtr(window.Current.NativeWindowHandle));
         using var bmp = new System.Drawing.Bitmap(r.Width, r.Height);
         using (var g = System.Drawing.Graphics.FromImage(bmp))
+        {
             g.CopyFromScreen(r.Left, r.Top, 0, 0, bmp.Size);
+            g.FillRectangles(System.Drawing.Brushes.Black, VideoCapture.EdgeRing(bmp.Size));   // the frame bounds can still show one pixel of what lies behind
+        }
         bmp.Save(path);
     }
 
@@ -89,7 +92,10 @@ public sealed class RunRecord
             var r = VisibleFrame(new IntPtr(window.Current.NativeWindowHandle));
             using var bmp = new System.Drawing.Bitmap(r.Width, r.Height);
             using (var g = System.Drawing.Graphics.FromImage(bmp))
+            {
                 g.CopyFromScreen(r.Left, r.Top, 0, 0, bmp.Size);
+                g.FillRectangles(System.Drawing.Brushes.Black, VideoCapture.EdgeRing(bmp.Size));
+            }
             bmp.Save(Path.Combine(Directory, "window.png"));
         }
         catch (Exception e)

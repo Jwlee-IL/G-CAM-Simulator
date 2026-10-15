@@ -61,7 +61,10 @@ public static class ManualCapture
         using (var bmp = new System.Drawing.Bitmap(frame.Width, frame.Height, System.Drawing.Imaging.PixelFormat.Format32bppArgb))
         {
             using (var g = System.Drawing.Graphics.FromImage(bmp))
+            {
                 g.CopyFromScreen(frame.Left, frame.Top, 0, 0, bmp.Size);
+                g.FillRectangles(System.Drawing.Brushes.Black, VideoCapture.EdgeRing(bmp.Size));   // what lies behind shows in the edge
+            }
             rgb = Rgb(bmp);
             using var stream = new MemoryStream();
             bmp.Save(stream, System.Drawing.Imaging.ImageFormat.Png);
