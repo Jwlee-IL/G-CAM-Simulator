@@ -28,6 +28,8 @@ applied by the planner: SRS (SR-SEC-01 narrowed, SR-EXPORT-01 … 04), SDS SU-27
 AGENTS.Studio, AGENTS.UiAutomation §1, folder maps. Build 0 / 0; suite 1,066 passed / 50 skipped; catalog 203.
 Run 4 (2026-10-15, `7caf9ff`, author's go) passed in 9 s: the exported HTML is 450,860 bytes with the reduced
 Scene section (10 KB) and three figures; the scene file is unchanged in size (3,171,006 bytes).
+Stage 2 (author, 2026-10-15): document icon button, an export popup and three more formats — PDF, Word, JSON with the
+four-channel ADC values (decisions X1 … X7 below); implementation by Codex.
 
 ## Decisions (planner defaults, 2026-10-14)
 
@@ -40,6 +42,23 @@ Scene section (10 KB) and three figures; the scene file is unchanged in size (3,
 | R5 | **Layering:** the report model plus the HTML and SVG writer live in `Gcam.Studio.Core` (net9.0, no WPF). Its inputs are the snapshot, the scene and measurement view-model state, the version string and an injected clock, and the same inputs give identical bytes. The file dialog and the file write go behind a small view-layer service in `Gcam.Studio`, so the view model is tested with a fake. | The same rules as the rest of Studio (`AGENTS.Studio.md`, `DESIGN.Architecture.md`). |
 | R6 | **Reopened UI-automation safety scope, kept proportionate:** one declared write surface, at a path only the user (or the harness, acting as the user) types. One desktop scenario exports after a short acquisition. It types a path **inside the run's owned sandbox** into the save dialog. It asserts that the file exists there and nowhere else the scenario can see, and that the HTML holds the estimate the results table shows and the scene file loads. The scenario is written and compiled but **not run**; the planner runs it on the author's go. Documentation wording is proposed to the planner, not edited. | `AGENTS.UiAutomation.md` §1: "If Studio ever gains settings or a cache, isolate them through an explicit path the harness can set, and re-run this stage." The save-dialog path is that explicit path. |
 | R7 | **Manual and notices:** the manual chapter and the N-NOT-SAVED change belong to TODO-43's next edition, on that branch. Nothing here touches them. | TODO-43 is on its own unmerged branch. |
+
+## Stage 2 — export formats (author, 2026-10-15)
+
+The author: "버튼은 서류 아이콘 버튼으로 만들고, 팝업박스로 만들어서 다음을 추가해. 1. json (헤더로 시뮬레이션 환경 작성, 본문은
+4채널 ADC Value 출력) 2. Pdf (지금 출력물 그대로) 3. Word (지금 출력물 그대로). html로 뽑은 건 맘에 들긴 하는데, 선택지를 늘릴 수
+있었으면 하네." Answers the same day: PDF through PDFsharp (MIT); under the direct crystal assignment the JSON choice is
+disabled with its reason. Implementation goes to Codex again (its quota is back).
+
+| # | Decision | Reason |
+|---|---|---|
+| X1 | The title-bar command becomes a **document icon button** in the style of the neighbouring icon buttons, with the tooltip and accessible name "Export report…", the same access key and AutomationId, enabled only with a snapshot. | The author's request; the text button was the only text command in the title bar's right group. |
+| X2 | The button opens an **in-window modal popup** (the same modal layer as Options) titled "Export report". It lists four formats, one choice at a time, each with a one-line description: **HTML** (the default), **PDF**, **Word (.docx)**, **JSON — four-channel ADC values**. Under the direct crystal assignment the JSON choice is disabled and says why, worded like the Waveform empty state ("Available with the experimental physical readout"). "Export…" opens the save dialog with that format's extension and filter; Cancel and Esc close it. | One entry point, more choices; the disabled reason follows SR-DET-06 / SR-WAVE-09. |
+| X3 | HTML, PDF and Word carry the **same content** from the same report model (R2), and each still writes `<name>.scene.json` beside it. The JSON export writes one file: its header holds the configuration, so it needs no scene file. Each export writes only the paths the user confirmed and its declared sidecar, built in memory first, with rollback (R4). | "지금 출력물 그대로"; one model keeps the formats from disagreeing. |
+| X4 | **PDF** through PDFsharp (MIT; MigraDoc from the same project is allowed for tables and flow). Text and tables as in the HTML; the figures drawn as vectors from the same figure data the SVG uses. Fonts resolved on Windows. | The author's choice; vectors keep the figures sharp. |
+| X5 | **Word** written directly as Office Open XML (`System.IO.Compression`, no package): headings, paragraphs, tables, and the figures as PNG images rendered from the same figure data. | A .docx is a zip of XML; no dependency needed. |
+| X6 | **JSON**: a header with the schema name and version, generator (Studio version and commit), export time (local and UTC), the notice "Simulation — not a measurement", the scene summary as the report shows it, the full `SimulationConfig` (the engine's JSON options, as in the scene file), the acquisition summary (run state, simulated time, counts, seed) and the readout description (channel names A–D, ADC bits, units). The body lists the acquisition's events with their four ADC values as integers, in a compact column layout named in the header. Nothing is recomputed: the values are those the acquisition produced; if the snapshot does not retain them per event, expose them from the service's retained data rather than recompute. | The author's specification; R2. |
+| X7 | Tests: per format, unit tests on the bytes (structure, every section present, values equal to the model, escaping, deterministic where the format allows). The desktop export scenario goes through the popup for HTML, PDF and Word (one theory), written and compiled, run by the planner on the author's go; JSON is unit-tested (the physical readout needs a calibration capture). | Proportionate; R6 unchanged. |
 
 ## Premises to verify first (stop and report if one is wrong)
 
