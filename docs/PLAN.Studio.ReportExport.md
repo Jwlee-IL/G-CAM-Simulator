@@ -30,6 +30,10 @@ Run 4 (2026-10-15, `7caf9ff`, author's go) passed in 9 s: the exported HTML is 4
 Scene section (10 KB) and three figures; the scene file is unchanged in size (3,171,006 bytes).
 Stage 2 (author, 2026-10-15): document icon button, an export popup and three more formats — PDF, Word, JSON with the
 four-channel ADC values (decisions X1 … X7 below); implementation by Codex.
+Codex turns 7–9 implemented it (`de86f97`; turn 9 ended when the quota ran out again, and the planner rebuilt and re-ran
+the suite): build 0 / 0; suite 1,079 passed / 51 skipped; catalog 208. Samples read by the planner: PDF 7 pages with the
+configuration as an appendix, Word with heading styles and PNG figures, JSON 38 conversions from a Baseline 661.7 keV
+physical-readout run (3.2 MB, almost all of it the configuration's ambient tables). The desktop theory is not run yet.
 
 ## Decisions (planner defaults, 2026-10-14)
 
