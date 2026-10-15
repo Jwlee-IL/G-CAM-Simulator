@@ -396,3 +396,15 @@ excluded: 107 of 119 passed, 2 were skipped and 10 failed.
   window fix, the remaining six and the whole export theory passed: 8 of 8, including Detector, PDF and Word export
   and the three readout scenarios.
 - The run refreshed the 16 polish-survey PNGs; the title bar now shows the export icon.
+
+## Readout comparison (TODO-47), 2026-10-15
+
+Worktree `C:\gw\w47`, branch `todo47-readout-compare`; review and three implementation turns by Codex. The Compare
+workspace reads one physical-readout acquisition as the ideal direct assignment and as the Anger readout from the same
+retained inputs (SR-CMP-01 … 05). On Studio's Baseline preset (661.7 keV, on-axis Cs-137 at 1 m, seed 47001, 10 s,
+ambient off) the same-crystal share is 71.39 % (257 / 360) with no unknown conversions, both estimates at (0.833, 0.833)
+mm; the review measured 52.6 % on Sharp. Existing DirectCrystal and readout hashes unchanged. Refresh cost p50 / p95:
+Baseline 4.1 / 5.7 ms, Sharp 23.1 / 36.1 ms (All). Offscreen renders inspected at pixel level after two layout turns
+(found labels, flood-only difference toggle, image sizing). Release build 0 warnings; normal suite 1,150 passed / 61
+skipped; catalog 233 units. Desktop scenario compiled, not yet run.
+

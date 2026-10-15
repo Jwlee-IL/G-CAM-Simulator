@@ -4,7 +4,9 @@ Scope: TODO-47. A **Compare** workspace shows one physical-readout acquisition r
 direct crystal assignment and the four-output Anger readout (14-bit ADCs, flood-map LUT, pile-up). The goal is theory
 against a realistic readout, with no second run.
 
-Status: review by Codex done 2026-10-15 (conversation `01a13e2e…`, [review](PLAN.Studio.ReadoutCompare.Review.md));
+Status: implemented 2026-10-15 by Codex (turns 1–3: D1–D10, then render fixes and sizing; `aaf09a0`); docs applied by the
+planner (SR-CMP-01 … 05, SU-28, V&V trace, History, AGENTS / DESIGN / README); desktop scenario pending the author's go.
+Earlier: review by Codex done 2026-10-15 (conversation `01a13e2e…`, [review](PLAN.Studio.ReadoutCompare.Review.md));
 all ten proposals adopted below ("Decisions after review"); implementation next in the same conversation. History:
 reference plan 2026-10-15, written by the planner. The UI decisions come from the author (below). Next: a Codex
 review turn that checks the premises and proposes improvements, then "Decisions after review", then implementation in
