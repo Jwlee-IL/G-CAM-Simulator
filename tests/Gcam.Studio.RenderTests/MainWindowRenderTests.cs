@@ -252,10 +252,10 @@ public sealed partial class PlotViewRenderTests
         }
     }
 
-    private static void VerifyOverlayChips(DependencyObject root)
+    private static void VerifyOverlayChips(DependencyObject root, string name = "Recon", bool checkMarkers = false)
     {
         var adorner = Assert.Single(Descendants(root).OfType<MeasurementAdorner>(),
-            a => a.AdornedElement is HeatmapView { Name: "Recon" });
+            a => a.AdornedElement is HeatmapView view && view.Name == name);
         var view = (HeatmapView)adorner.AdornedElement;
         var extent = view.ExtentMm;
         var visible = new Rect(view.MmToScreen(extent.Min), view.MmToScreen(extent.Max));
@@ -278,6 +278,15 @@ public sealed partial class PlotViewRenderTests
         Assert.All(chips, c => Assert.True(bounds.Contains(c), $"Chip outside visible image: {c}"));
         for (int i = 0; i < chips.Length; i++)
             for (int j = i + 1; j < chips.Length; j++) Assert.True(chips[i].IsSeparatedFrom(chips[j], gap));
+        if (checkMarkers)
+        {
+            var markers = MeasurementOverlay.GetMarkers(view)!.Cast<IPlaneMarker>()
+                .Select(m => view.MmToScreen(new(m.X, m.Y)))
+                .Concat(MeasurementOverlay.GetFoundPeaks(view)!.Cast<ImagingPeak>().Select(p => view.MmToScreen(new(p.Xmm, p.Ymm))));
+            foreach (var point in markers)
+                Assert.All(chips, chip => Assert.True(chip.IsSeparatedFrom(new(point.X - 8, point.Y - 8, 16, 16), 0),
+                    $"Label covers marker at {point}: {chip}"));
+        }
 
         static IEnumerable<Drawing> Drawings(DrawingGroup group)
         {

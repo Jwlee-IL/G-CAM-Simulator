@@ -56,6 +56,32 @@ public sealed class CompareWorkspaceTests
     }
 
     [Fact]
+    public async Task DifferenceToggle_KeepsEstimates_AndNamesFoundPeaksByIsotope()
+    {
+        var service = new Deferred(); var model = Model(service);
+        model.ReadoutMode = ReadoutMode.FourOutputAnger;
+        // The ideal direct channel has no calibration metadata of its own. Both paths name the shared window's line.
+        model.Sources.Add(new() { Isotope = "Co-60" });
+        var snapshot = Snapshot();
+        model.Imaging.View = new([new("All", 0, 0, snapshot.Imaging, []), new("Energy window", 600, 720, snapshot.Imaging, [])],
+            [], TimeSpan.Zero, TimeSpan.Zero, TimeSpan.Zero);
+        model.Imaging.SelectedIsotope = "Energy window";
+        model.SelectedWorkspace = model.Compare; model.Snapshot = snapshot;
+        var call = await service.Next();
+        var result = Result(call);
+        var image = call.Snapshot.Imaging with { Estimate = new(new(1, 2, 1000), .9) };
+        result = result with { Direct = result.Direct with { Image = image }, Anger = result.Anger with { Image = image } };
+        call.Completion.SetResult(result); await model.Compare.WhenUpdated;
+        Assert.Equal("Cs-137", Assert.Single(model.Compare.DirectPeaks).Isotope);
+        Assert.Equal("Cs-137", Assert.Single(model.Compare.AngerPeaks).Isotope);
+        model.Compare.ShowDifference = true;
+        Assert.True(model.Compare.ShowAssignment); Assert.False(model.Compare.ShowPair);
+        Assert.Same(result, model.Compare.Result);
+        Assert.Same(image.Estimate, model.Compare.Result!.Direct.Image.Estimate);
+        Assert.Same(image.Estimate, model.Compare.Result.Anger.Image.Estimate);
+    }
+
+    [Fact]
     public async Task InactiveAndLatestPending_UseOneWorker_AndPublishAtomicPrefixes()
     {
         var service = new Deferred(); var model = Model(service); model.Snapshot = Snapshot();

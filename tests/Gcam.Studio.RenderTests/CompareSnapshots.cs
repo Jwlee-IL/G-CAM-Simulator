@@ -18,6 +18,53 @@ namespace Gcam.Studio.RenderTests;
 
 public sealed partial class PlotViewRenderTests
 {
+    /// <summary>One transported Baseline acquisition, reused across all eight real-data captures.</summary>
+    [RenderSnapshotFact]
+    public async Task Compare_RealBaseline_BothThemesAndSizes_RenderWithoutWindow()
+    {
+        var optics = new OpticsSettings { DetectorPixels = 12, PixelPitchMm = 1, MuraRank = 7, CellPitchMm = 1, MaskDetectorDistanceMm = 60 };
+        var preparation = new ReadoutPreparationService();
+        var prepared = await preparation.PrepareAsync(optics, new());
+        Assert.True(prepared.Succeeded);
+        var detector = new DetectorSettings { ReadoutMode = ReadoutMode.FourOutputAnger, PreparedReadoutId = prepared.Id };
+        AcquisitionSnapshot? snapshot = null;
+        await using (var session = new SimulationService(readoutPreparation: preparation).Start([new()], optics, 10, 1000, detector, seed: 47001))
+            await foreach (var prefix in session.ReadSnapshotsAsync()) snapshot = prefix;
+        Assert.NotNull(snapshot?.Readout);
+        Assert.Equal(426, snapshot.Readout.Hits.Count);
+        Assert.Equal(360, snapshot.Readout.Records.Count);
+        output.WriteLine("Baseline: Cs-137, 661.7 keV calibration, on axis, 1 m, 500 uCi, 10 s, seed 47001; ambient / BSR off.");
+        host.Run(() =>
+        {
+            foreach (string theme in new[] { "Dark", "Light" })
+            {
+                UseTheme(theme);
+                var model = new MainViewModel(new FixtureAcquisition(), new FixtureTheme(Enum.Parse<AppTheme>(theme)), new FixtureSpectrum(),
+                    readoutPreparation: preparation, compare: new ReadoutCompareService());
+                model.Optics = optics; model.ReadoutMode = ReadoutMode.FourOutputAnger;
+                model.Snapshot = snapshot; model.SelectedWorkspace = model.Compare;
+                model.Compare.WhenUpdated.GetAwaiter().GetResult();
+                Assert.Null(model.Compare.Error);
+                Assert.Equal("Cs-137", Assert.Single(model.Compare.DirectPeaks).Isotope);
+                Assert.Equal("Cs-137", Assert.Single(model.Compare.AngerPeaks).Isotope);
+                foreach (bool difference in new[] { false, true })
+                foreach (var size in new[] { new Size(1280, 800), new Size(1440, 900) })
+                {
+                    model.Compare.ShowDifference = difference;
+                    var (root, content) = DetachMainWindow(model, size);
+                    Dispatcher.CurrentDispatcher.Invoke(() => { }, DispatcherPriority.ContextIdle); root.UpdateLayout();
+                    AttachCompareOverlays(root);
+                    VerifyCompareGeometry(root, difference);
+                    VerifyOverlayChips(root, "DirectRecon", checkMarkers: true);
+                    VerifyOverlayChips(root, "AngerRecon", checkMarkers: true);
+                    SaveCompare(root, size, $"real-baseline-{(difference ? "difference" : "pair")}", theme);
+                    content.DataContext = null; root.UpdateLayout();
+                }
+                model.SelectedWorkspace = model.Imaging;
+            }
+        });
+    }
+
     [RenderSnapshotFact]
     public void Compare_AllStates_BothThemesAndSizes_RenderWithoutWindow() => host.Run(() =>
     {
@@ -57,17 +104,18 @@ public sealed partial class PlotViewRenderTests
                 var actions = (FrameworkElement)VisualTreeHelper.GetParent(input);
                 Assert.True(switcher.TranslatePoint(new Point(switcher.ActualWidth, 0), root).X <= actions.TranslatePoint(new Point(), root).X);
                 Assert.Equal(28, Descendants(root).OfType<Button>().Single(e => AutomationProperties.GetAutomationId(e) == "ExportReport").ActualWidth);
+                if (state == "direct")
+                {
+                    Assert.False(IsShown(Descendants(root).OfType<TextBlock>().Single(e => AutomationProperties.GetAutomationId(e) == "Compare.SameShare")));
+                    Assert.False(IsShown(Descendants(root).OfType<HelpMark>().Single(e => AutomationProperties.GetAutomationId(e) == "Compare.CostHelp")));
+                    Assert.True(IsShown(Descendants(root).OfType<TextBlock>().Single(e => AutomationProperties.GetAutomationId(e) == "Compare.Reference")));
+                }
                 if (model.Compare.Result is { } result)
                 {
                     var direct = Descendants(root).OfType<HeatmapView>().Single(e => AutomationProperties.GetAutomationId(e) == "Compare.DirectFlood");
                     Assert.Same(result.Direct.Image.Flood, direct.Image);
-                    foreach (var heatmap in Descendants(root).OfType<HeatmapView>().Where(MeasurementOverlay.GetDisplayOnly))
-                    {
-                        Assert.Null(MeasurementOverlay.GetSession(heatmap)); Assert.False(MeasurementOverlay.GetCanMoveMarkers(heatmap));
-                        typeof(MeasurementOverlay).GetMethod("OnLoaded", BindingFlags.NonPublic | BindingFlags.Static)!
-                            .Invoke(null, [heatmap, new RoutedEventArgs(FrameworkElement.LoadedEvent)]);
-                    }
-                    root.UpdateLayout();
+                    AttachCompareOverlays(root);
+                    VerifyCompareGeometry(root, state == "difference");
                     if (state is "no-held" or "unknown" or "empty-window") Assert.True(result.Direct.Image.EffectiveCounts > 0);
                     if (state == "difference")
                     {
@@ -76,16 +124,58 @@ public sealed partial class PlotViewRenderTests
                         Assert.Contains(result.Assignment.Difference.Raw.ToArray(), double.IsNaN);
                     }
                 }
-                var bitmap = new RenderTargetBitmap((int)size.Width, (int)size.Height, 96, 96, PixelFormats.Pbgra32); bitmap.Render(root);
-                var encoder = new PngBitmapEncoder(); encoder.Frames.Add(BitmapFrame.Create(bitmap));
-                string directory = SnapshotDirectory("compare"); Directory.CreateDirectory(directory);
-                string path = Path.Combine(directory, $"compare-{state}-{theme.ToLowerInvariant()}-{size.Width:0}x{size.Height:0}.png");
-                using (var stream = File.Create(path)) encoder.Save(stream);
-                output.WriteLine(path); content.DataContext = null; root.UpdateLayout();
+                SaveCompare(root, size, state, theme);
+                content.DataContext = null; root.UpdateLayout();
             }
             model.SelectedWorkspace = model.Imaging;
         }
     });
+
+    private static void AttachCompareOverlays(FrameworkElement root)
+    {
+        foreach (var heatmap in Descendants(root).OfType<HeatmapView>().Where(MeasurementOverlay.GetDisplayOnly))
+        {
+            Assert.Null(MeasurementOverlay.GetSession(heatmap)); Assert.False(MeasurementOverlay.GetCanMoveMarkers(heatmap));
+            typeof(MeasurementOverlay).GetMethod("OnLoaded", BindingFlags.NonPublic | BindingFlags.Static)!
+                .Invoke(null, [heatmap, new RoutedEventArgs(FrameworkElement.LoadedEvent)]);
+        }
+        root.UpdateLayout();
+    }
+
+    private static void VerifyCompareGeometry(FrameworkElement root, bool difference)
+    {
+        var maps = Descendants(root).OfType<HeatmapView>().ToArray();
+        var map = maps.Single(e => e.Name == "Difference");
+        Assert.False(MeasurementOverlay.GetDisplayOnly(map));
+        Assert.Null(MeasurementOverlay.GetMarkers(map)); Assert.Null(MeasurementOverlay.GetFoundPeaks(map));
+        Assert.DoesNotContain(Descendants(root).OfType<MeasurementAdorner>(), a => ReferenceEquals(a.AdornedElement, map));
+        foreach (string name in new[] { "DirectRecon", "AngerRecon" })
+        {
+            var recon = maps.Single(e => e.Name == name);
+            Assert.True(IsShown(recon)); Assert.True(recon.ActualHeight > 0);
+            if (difference) Assert.True(recon.TranslatePoint(new(), root).Y >= map.TranslatePoint(new(0, map.ActualHeight), root).Y);
+        }
+        Assert.Equal(difference, IsShown(map));
+        Assert.Equal(!difference, IsShown(maps.Single(e => e.Name == "DirectFlood")));
+    }
+
+    // IsVisible is false for every element of a detached tree, which deliberately has no presentation source.
+    private static bool IsShown(DependencyObject element)
+    {
+        for (DependencyObject? current = element; current is not null; current = VisualTreeHelper.GetParent(current))
+            if (current is UIElement { Visibility: not Visibility.Visible }) return false;
+        return true;
+    }
+
+    private void SaveCompare(FrameworkElement root, Size size, string state, string theme)
+    {
+        var bitmap = new RenderTargetBitmap((int)size.Width, (int)size.Height, 96, 96, PixelFormats.Pbgra32); bitmap.Render(root);
+        var encoder = new PngBitmapEncoder(); encoder.Frames.Add(BitmapFrame.Create(bitmap));
+        string directory = SnapshotDirectory("compare"); Directory.CreateDirectory(directory);
+        string path = Path.Combine(directory, $"compare-{state}-{theme.ToLowerInvariant()}-{size.Width:0}x{size.Height:0}.png");
+        using (var stream = File.Create(path)) encoder.Save(stream);
+        output.WriteLine(path);
+    }
 
     private static AcquisitionSnapshot CompareSnapshot(OpticsSettings optics, string state)
     {

@@ -55,8 +55,15 @@ public sealed partial class CompareWorkspaceViewModel : WorkspaceViewModel
         { Isotope = s.Isotope, X = s.X, Y = s.Y, DistanceMm = s.DistanceMm, IsEditable = false }).ToArray();
     public IReadOnlyList<ImagingPeak> DirectPeaks => Peaks(Result?.Direct);
     public IReadOnlyList<ImagingPeak> AngerPeaks => Peaks(Result?.Anger);
-    private static IReadOnlyList<ImagingPeak> Peaks(ImagingChannel? channel) => channel?.Image.Estimate is { } e
-        ? [new(channel.Isotope, e.Position.X, e.Position.Y, e.Confidence)] : [];
+    private IReadOnlyList<ImagingPeak> Peaks(ImagingChannel? channel)
+    {
+        if (channel?.Image.Estimate is not { } estimate) return [];
+        // Column headings already identify the path. Only name an isotope when the scene/window identifies it.
+        var isotopes = _scene.Where(s => Result?.Settings.Window != true ||
+            (channel.CalibrationLineKeV ?? Result?.Spectrum.CalibrationLineKeV) is not { } line ||
+            Isotopes.Get(s.Isotope).Lines.Any(l => l.EnergyKeV == line)).Select(s => s.Isotope).Distinct().ToArray();
+        return [new(isotopes.Length == 1 ? isotopes[0] : "peak", estimate.Position.X, estimate.Position.Y, estimate.Confidence)];
+    }
     public IReadOnlyList<FactRow> Facts
     {
         get
@@ -103,7 +110,7 @@ public sealed partial class CompareWorkspaceViewModel : WorkspaceViewModel
     }
     public string Reference => Result is { } r ? "Benchmark reference only; not a prediction for this scene.\n" +
         string.Join("\n", new[] { r.Cost.Unavailable }.OfType<string>().Concat(r.Cost.Differences)) : "Reference available after a physical acquisition";
-    public string CostHelp => ReadoutCostHelp.Build(Shared.ReadoutOffers, Result?.Cost.Cell is { } cell && Shared.Snapshot?.Readout is { } readout
+    public string CostHelp => !ShowData ? "" : ReadoutCostHelp.Build(Shared.ReadoutOffers, Result?.Cost.Cell is { } cell && Shared.Snapshot?.Readout is { } readout
         ? readout.Lines.Select(l => l.Preparation.Plan).OfType<ReadoutLinePlan>().Where(p => p.Cell == cell) : []);
     public IReadOnlyList<FactRow> Costs => Result?.Cost.Cell is { } cell ? cell.CostRows.SelectMany(r => new[]
     {

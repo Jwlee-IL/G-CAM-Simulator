@@ -32,13 +32,16 @@
                 <TextBlock Text="{Binding Prefix}" Style="{StaticResource Text.Caption}" AutomationProperties.AutomationId="Compare.Prefix" />
                 <TextBlock Text="{Binding EmptyReason}" Style="{StaticResource Text.CaptionWarning}" TextWrapping="Wrap" AutomationProperties.AutomationId="Compare.EmptyReason" />
             </StackPanel>
-            <Grid Grid.Row="1" Visibility="{Binding ShowPair, Converter={StaticResource BoolToVis}}" Margin="{StaticResource Gap.Row}">
+            <!-- The toggle replaces the detector flood row only. Reconstruction overlays stay in sky coordinates. -->
+            <Grid Grid.Row="1" Margin="{StaticResource Gap.Row}">
+                <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition /><RowDefinition /></Grid.RowDefinitions>
                 <Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition Width="{StaticResource Gutter}" /><ColumnDefinition /></Grid.ColumnDefinitions>
-                <Border Grid.Column="0" Style="{StaticResource Panel.Surface}">
-                    <Grid>
-                        <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition /><RowDefinition /></Grid.RowDefinitions>
-                        <TextBlock Text="Direct crystal · ideal deposit energy" Style="{StaticResource Text.SectionTitle}" TextWrapping="Wrap" Margin="{StaticResource Gap.Field}" />
-                        <c:ImageStackPanel Grid.Row="1" Margin="{StaticResource Gap.Row}">
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="Direct crystal · ideal deposit energy" Style="{StaticResource Text.SectionTitle}" TextWrapping="Wrap" Margin="{StaticResource Gap.Field}" />
+                <TextBlock Grid.Row="0" Grid.Column="2" Text="Four-output Anger" Style="{StaticResource Text.SectionTitle}" TextWrapping="Wrap" Margin="{StaticResource Gap.Field}" />
+                <Border Grid.Row="1" Grid.Column="0" Style="{StaticResource Panel.Surface}" Visibility="{Binding ShowPair, Converter={StaticResource BoolToVis}}" Margin="{StaticResource Gap.Row}">
+                    <DockPanel>
+                        <TextBlock DockPanel.Dock="Top" Text="Detector flood map" Style="{StaticResource Text.SectionTitle}" Margin="{StaticResource Gap.Field}" />
+                        <c:ImageStackPanel>
                             <c:HeatmapView x:Name="DirectFlood" Image="{Binding Result.Direct.Image.Flood}" OriginMm="{Binding Result.Direct.Image.FloodOriginMm}"
                                     ScaleMinimum="0" ScaleMaximum="{Binding FloodMaximum}"
                                     StepMm="{Binding Result.Direct.Image.FloodStepMm}" ValueUnit="counts" EmptyText="No direct inputs"
@@ -46,7 +49,40 @@
                             <c:ColorBar Minimum="{Binding DataMin, ElementName=DirectFlood}" Maximum="{Binding DataMax, ElementName=DirectFlood}" />
                             <TextBlock Text="{Binding Readout, ElementName=DirectFlood}" Style="{StaticResource Text.Readout}" />
                         </c:ImageStackPanel>
-                        <c:ImageStackPanel Grid.Row="2">
+                    </DockPanel>
+                </Border>
+                <Border Grid.Row="1" Grid.Column="2" Style="{StaticResource Panel.Surface}" Visibility="{Binding ShowPair, Converter={StaticResource BoolToVis}}" Margin="{StaticResource Gap.Row}">
+                    <DockPanel>
+                        <TextBlock DockPanel.Dock="Top" Text="Detector flood map" Style="{StaticResource Text.SectionTitle}" Margin="{StaticResource Gap.Field}" />
+                        <c:ImageStackPanel>
+                            <c:HeatmapView x:Name="AngerFlood" Image="{Binding Result.Anger.Image.Flood}" OriginMm="{Binding Result.Anger.Image.FloodOriginMm}"
+                                    ScaleMinimum="0" ScaleMaximum="{Binding FloodMaximum}"
+                                    StepMm="{Binding Result.Anger.Image.FloodStepMm}" ValueUnit="counts / corrected intensity" EmptyText="No assigned conversions"
+                                    AutomationProperties.AutomationId="Compare.AngerFlood" AutomationProperties.Name="Four-output Anger flood map" />
+                            <c:ColorBar Minimum="{Binding DataMin, ElementName=AngerFlood}" Maximum="{Binding DataMax, ElementName=AngerFlood}" />
+                            <TextBlock Text="{Binding Readout, ElementName=AngerFlood}" Style="{StaticResource Text.Readout}" />
+                        </c:ImageStackPanel>
+                    </DockPanel>
+                </Border>
+                <Border Grid.Row="1" Grid.ColumnSpan="3" Style="{StaticResource Panel.Surface}" Margin="{StaticResource Gap.Row}"
+                        Visibility="{Binding ShowAssignment, Converter={StaticResource BoolToVis}}">
+                    <DockPanel>
+                        <TextBlock DockPanel.Dock="Top" Text="Assignment disagreement · different / eligible" Style="{StaticResource Text.SectionTitle}" Margin="{StaticResource Gap.Field}" />
+                        <TextBlock DockPanel.Dock="Bottom" Text="Neutral cells: unavailable (no eligible conversions)" Style="{StaticResource Text.Caption}" />
+                        <c:ImageStackPanel>
+                            <c:HeatmapView x:Name="Difference" Image="{Binding Result.Assignment.Difference}" OriginMm="{Binding Result.Direct.Image.FloodOriginMm}"
+                                    ScaleMinimum="0" ScaleMaximum="1"
+                                    StepMm="{Binding Result.Direct.Image.FloodStepMm}" ValueUnit="different / eligible"
+                                    AutomationProperties.AutomationId="Compare.Difference" AutomationProperties.Name="Crystal assignment disagreement" />
+                            <c:ColorBar Minimum="{Binding DataMin, ElementName=Difference}" Maximum="{Binding DataMax, ElementName=Difference}" />
+                            <TextBlock Text="{Binding Readout, ElementName=Difference}" Style="{StaticResource Text.Readout}" />
+                        </c:ImageStackPanel>
+                    </DockPanel>
+                </Border>
+                <Border Grid.Row="2" Grid.Column="0" Style="{StaticResource Panel.Surface}">
+                    <DockPanel>
+                        <TextBlock DockPanel.Dock="Top" Text="Reconstruction" Style="{StaticResource Text.SectionTitle}" Margin="{StaticResource Gap.Field}" />
+                        <c:ImageStackPanel>
                             <c:HeatmapView x:Name="DirectRecon" Image="{Binding Result.Direct.Image.Reconstruction}" OriginMm="{Binding Result.Direct.Image.ReconOriginMm}"
                                     ScaleMinimum="{Binding ReconMinimum}" ScaleMaximum="{Binding ReconMaximum}" c:MeasurementOverlay.DisplayOnly="True" c:MeasurementOverlay.Pane="Reconstruction" c:MeasurementOverlay.CanMoveMarkers="False"
                                     StepMm="{Binding Result.Direct.Image.ReconStepMm}" EmptyText="Direct estimate unavailable"
@@ -55,21 +91,12 @@
                             <c:ColorBar Minimum="{Binding DataMin, ElementName=DirectRecon}" Maximum="{Binding DataMax, ElementName=DirectRecon}" />
                             <TextBlock Text="{Binding Readout, ElementName=DirectRecon}" Style="{StaticResource Text.Readout}" />
                         </c:ImageStackPanel>
-                    </Grid>
+                    </DockPanel>
                 </Border>
-                <Border Grid.Column="2" Style="{StaticResource Panel.Surface}">
-                    <Grid>
-                        <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition /><RowDefinition /></Grid.RowDefinitions>
-                        <TextBlock Text="Four-output Anger" Style="{StaticResource Text.SectionTitle}" TextWrapping="Wrap" Margin="{StaticResource Gap.Field}" />
-                        <c:ImageStackPanel Grid.Row="1" Margin="{StaticResource Gap.Row}">
-                            <c:HeatmapView x:Name="AngerFlood" Image="{Binding Result.Anger.Image.Flood}" OriginMm="{Binding Result.Anger.Image.FloodOriginMm}"
-                                    ScaleMinimum="0" ScaleMaximum="{Binding FloodMaximum}"
-                                    StepMm="{Binding Result.Anger.Image.FloodStepMm}" ValueUnit="counts / corrected intensity" EmptyText="No assigned conversions"
-                                    AutomationProperties.AutomationId="Compare.AngerFlood" AutomationProperties.Name="Four-output Anger flood map" />
-                            <c:ColorBar Minimum="{Binding DataMin, ElementName=AngerFlood}" Maximum="{Binding DataMax, ElementName=AngerFlood}" />
-                            <TextBlock Text="{Binding Readout, ElementName=AngerFlood}" Style="{StaticResource Text.Readout}" />
-                        </c:ImageStackPanel>
-                        <c:ImageStackPanel Grid.Row="2">
+                <Border Grid.Row="2" Grid.Column="2" Style="{StaticResource Panel.Surface}">
+                    <DockPanel>
+                        <TextBlock DockPanel.Dock="Top" Text="Reconstruction" Style="{StaticResource Text.SectionTitle}" Margin="{StaticResource Gap.Field}" />
+                        <c:ImageStackPanel>
                             <c:HeatmapView x:Name="AngerRecon" Image="{Binding Result.Anger.Image.Reconstruction}" OriginMm="{Binding Result.Anger.Image.ReconOriginMm}"
                                     ScaleMinimum="{Binding ReconMinimum}" ScaleMaximum="{Binding ReconMaximum}" c:MeasurementOverlay.DisplayOnly="True" c:MeasurementOverlay.Pane="Reconstruction" c:MeasurementOverlay.CanMoveMarkers="False"
                                     StepMm="{Binding Result.Anger.Image.ReconStepMm}" EmptyText="Anger estimate unavailable"
@@ -78,24 +105,9 @@
                             <c:ColorBar Minimum="{Binding DataMin, ElementName=AngerRecon}" Maximum="{Binding DataMax, ElementName=AngerRecon}" />
                             <TextBlock Text="{Binding Readout, ElementName=AngerRecon}" Style="{StaticResource Text.Readout}" />
                         </c:ImageStackPanel>
-                    </Grid>
+                    </DockPanel>
                 </Border>
             </Grid>
-            <Border Grid.Row="1" Style="{StaticResource Panel.Surface}" Margin="{StaticResource Gap.Row}"
-                    Visibility="{Binding ShowAssignment, Converter={StaticResource BoolToVis}}">
-                <DockPanel>
-                    <TextBlock DockPanel.Dock="Top" Text="Assignment disagreement · different / eligible" Style="{StaticResource Text.SectionTitle}" Margin="{StaticResource Gap.Field}" />
-                    <TextBlock DockPanel.Dock="Bottom" Text="Neutral cells: unavailable (no eligible conversions)" Style="{StaticResource Text.Caption}" />
-                    <c:ImageStackPanel>
-                        <c:HeatmapView x:Name="Difference" Image="{Binding Result.Assignment.Difference}" OriginMm="{Binding Result.Direct.Image.FloodOriginMm}"
-                                ScaleMinimum="0" ScaleMaximum="1"
-                                StepMm="{Binding Result.Direct.Image.FloodStepMm}" ValueUnit="different / eligible"
-                                AutomationProperties.AutomationId="Compare.Difference" AutomationProperties.Name="Crystal assignment disagreement" />
-                        <c:ColorBar Minimum="{Binding DataMin, ElementName=Difference}" Maximum="{Binding DataMax, ElementName=Difference}" />
-                        <TextBlock Text="{Binding Readout, ElementName=Difference}" Style="{StaticResource Text.Readout}" />
-                    </c:ImageStackPanel>
-                </DockPanel>
-            </Border>
             <Border Grid.Row="2" Style="{StaticResource Panel.Surface}">
                 <DockPanel>
                     <TextBlock DockPanel.Dock="Top" Text="{Binding SpectrumCaption}" Style="{StaticResource Text.Caption}" TextWrapping="Wrap" />
