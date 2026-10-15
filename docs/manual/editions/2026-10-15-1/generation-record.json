@@ -1,14 +1,14 @@
 {
  "budgetBytes": 10485760,
- "bytesExcludingRecord": 2136453,
+ "bytesExcludingRecord": 2158990,
  "chapterOutputSha256": {
-  "1.1": "139af52524d0092f48789c91d61f4cce314fe4256125246dbedacc12f39dc4e9",
-  "1.2": "b16762bea54d102efac2b92805d3e837fef8a771a27900cc47442111428a7cb9",
-  "2.1": "3b0d93be6acc2095d0e85ad0e75dcf390a5df7216511d113a4d390832e381b78",
-  "2.2": "ff1175da178dfdd70943eb3333d6ed056b1ddca35fca8685f5f128fe05979876",
-  "2.4": "f744c3966a165fce1f0e6a3acd69f02ffbc03aafb3fae5a69bf57da783f9092e",
-  "3.1": "21b22b114aad01c96e76423eaed0a87ab104868c643d8cf2a538b22d71280b15",
-  "3.4": "2c9198625798a52393a7ad94df26f86037ee2e23adba5dc6582e3fbc2f65291d",
+  "1.1": "caf224dbe4b9d609d5450850b6969bd15b6fc606f36e4d620f10981bd216f9f2",
+  "1.2": "ddd2c5f6f74024e9f480dce34666093cbdd2ec78290367583d8f30614ce446c9",
+  "2.1": "bb30f7f22cdbecb5d7e67abe8f2ad709265c8a4e7bc9f8e238fec8962802b268",
+  "2.2": "0c251648f9257e2a777f8b677bad359e8edc5fd769f2b271ea14a811570620cd",
+  "2.4": "b82f5152f9c42e37859e52d42b6a84dd1579aa67f96bd986bf40fd5724025fde",
+  "3.1": "f0a7746dac22125a12209b7ec86da8c2c439e92de5f814ae3a4dc9c5826929bb",
+  "3.4": "eb62e09900e8a0fc06b3cb1184e7df3a83e6e0498fa9f2339bc017a12d45c1b5",
   "5.2": "1396bc5c1bea3d3aa3d62d13ef07528e9e2a0d7c3a1105a4fa5d70ae8acdd25c"
  },
  "chapters": [
@@ -101,7 +101,8 @@
  "draftReasons": [
   "static chapter 1.1 is a draft",
   "static chapter 5.2 is a draft",
-  "the notice list is not approved"
+  "the notice list is not approved",
+  "the mark purpose list is not approved"
  ],
  "editionId": "2026-10-15-1",
  "figures": [
@@ -288,6 +289,64 @@
    },
    "path": "figures/1.2-1.png",
    "pixelSha256": "8e22413ae70b9cfba6d45f71993056cac11d42eb1cc2f5d5873eae59bf8edcdf",
+   "purposeList": [
+    {
+     "label": "Imaging",
+     "n": 1,
+     "purpose": true,
+     "shortened": false,
+     "target": "Workspace.Imaging"
+    },
+    {
+     "label": "Spectrum",
+     "n": 2,
+     "purpose": true,
+     "shortened": false,
+     "target": "Workspace.Spectrum"
+    },
+    {
+     "label": "Waveform",
+     "n": 3,
+     "purpose": true,
+     "shortened": false,
+     "target": "Workspace.Waveform"
+    },
+    {
+     "label": "Detector",
+     "n": 4,
+     "purpose": true,
+     "shortened": false,
+     "target": "Workspace.Detector"
+    },
+    {
+     "label": "Start",
+     "n": 5,
+     "purpose": true,
+     "shortened": false,
+     "target": "StartAcquisition"
+    },
+    {
+     "label": "Scene",
+     "n": 6,
+     "purpose": true,
+     "shortened": false,
+     "target": "Left.SceneTab"
+    },
+    {
+     "label": "Optics",
+     "n": 7,
+     "purpose": true,
+     "shortened": false,
+     "target": "Left.OpticsTab"
+    },
+    {
+     "label": "Detector",
+     "n": 8,
+     "purpose": true,
+     "shortened": false,
+     "target": "Left.DetectorTab"
+    }
+   ],
    "resultSha256": "e376a8a5ae8622950a83f313d0b34217fa4d5e235772c92635697cde6dcb9956",
    "runId": "20261014-202044-2dbf58",
    "source": "captures/1.2-1.png",
@@ -375,6 +434,22 @@
    },
    "path": "figures/1.2-2.png",
    "pixelSha256": "d86f19aafee6bd9d5ac2e9e49500650db6794d82efc840e514cf378588862364",
+   "purposeList": [
+    {
+     "label": "Optics",
+     "n": 1,
+     "purpose": true,
+     "shortened": false,
+     "target": "Left.OpticsTab"
+    },
+    {
+     "label": "Preset",
+     "n": 2,
+     "purpose": true,
+     "shortened": false,
+     "target": "Optics.Preset"
+    }
+   ],
    "resultSha256": "73434a56fba85709e744491c66a07922160313c57b05833965019c646c9112cf",
    "runId": "20261014-202044-2dbf58",
    "source": "captures/1.2-2.png",
@@ -471,6 +546,29 @@
    },
    "path": "figures/1.2-3.png",
    "pixelSha256": "8bc830802bed92c06a2be3ce3200f74f4e55aeae20986430897def0abe22dea8",
+   "purposeList": [
+    {
+     "label": "Four outputs (A–D)",
+     "n": 1,
+     "purpose": true,
+     "shortened": false,
+     "target": "Waveform.FourOutputsTab"
+    },
+    {
+     "label": "Available with the experimental physical readout",
+     "n": 2,
+     "purpose": true,
+     "shortened": false,
+     "target": "Readout.EmptyState"
+    },
+    {
+     "label": "Choose readout…",
+     "n": 3,
+     "purpose": true,
+     "shortened": false,
+     "target": "Readout.ChooseReadout"
+    }
+   ],
    "resultSha256": "0f3c2071d6a9751e20c3189fe787172d66f1509b061955f8686e710b145080fe",
    "runId": "20261014-202044-2dbf58",
    "source": "captures/1.2-3.png",
@@ -567,6 +665,29 @@
    },
    "path": "figures/1.2-4.png",
    "pixelSha256": "5688bebbda7d1402f85d2bbf42f90ad072aa2dfb64dea86542de0d77280b11a7",
+   "purposeList": [
+    {
+     "label": "SiPM",
+     "n": 1,
+     "purpose": true,
+     "shortened": false,
+     "target": "Readout.SipmTab"
+    },
+    {
+     "label": "Available with the experimental physical readout",
+     "n": 2,
+     "purpose": true,
+     "shortened": false,
+     "target": "Readout.EmptyState"
+    },
+    {
+     "label": "Choose readout…",
+     "n": 3,
+     "purpose": true,
+     "shortened": false,
+     "target": "Readout.ChooseReadout"
+    }
+   ],
    "resultSha256": "4b62819ae06ae2c8e54090a293f3fcf14313970f7eb289f8d7dccb6a6dcc357f",
    "runId": "20261014-202044-2dbf58",
    "source": "captures/1.2-4.png",
@@ -641,6 +762,15 @@
    },
    "path": "figures/1.2-5.png",
    "pixelSha256": "e3834a36e5f2bf2e632ac2591e1c2417ec6dcfad7abe1b6e631d32197a56bed9",
+   "purposeList": [
+    {
+     "label": "Detector",
+     "n": 1,
+     "purpose": true,
+     "shortened": false,
+     "target": "Left.DetectorTab"
+    }
+   ],
    "resultSha256": "d839054eb051ac36cea43185e99fc3e7bd304f99ae4b59d9a90c15d050e5d2e0",
    "runId": "20261014-202044-2dbf58",
    "source": "captures/1.2-5.png",
@@ -815,6 +945,43 @@
    },
    "path": "figures/2.1-1.png",
    "pixelSha256": "8721e90e12563b5b37a544419a19f2bf19a5aac4b167119ad7d8ef9e7df0ddf2",
+   "purposeList": [
+    {
+     "label": "Isotope",
+     "n": 1,
+     "purpose": true,
+     "shortened": false,
+     "target": "SourceIsotope"
+    },
+    {
+     "label": "X",
+     "n": 2,
+     "purpose": true,
+     "shortened": false,
+     "target": "SourceX"
+    },
+    {
+     "label": "Y",
+     "n": 3,
+     "purpose": true,
+     "shortened": false,
+     "target": "SourceY"
+    },
+    {
+     "label": "Distance",
+     "n": 4,
+     "purpose": true,
+     "shortened": false,
+     "target": "SourceDistance"
+    },
+    {
+     "label": "Activity",
+     "n": 5,
+     "purpose": true,
+     "shortened": false,
+     "target": "SourceActivity"
+    }
+   ],
    "resultSha256": "cb49c14fca8f2dff208b9c1282865b46ae66fa2282fe0caabe41b7b3b86973a1",
    "runId": "20261014-202059-544edf",
    "source": "captures/2.1-1.png",
@@ -910,6 +1077,29 @@
    },
    "path": "figures/2.1-2.png",
    "pixelSha256": "aad2fe6a511b31c178e7be7e882ce0e63c02cb5828dd2c0dc80fc558fe52b0d0",
+   "purposeList": [
+    {
+     "label": "Isotope",
+     "n": 1,
+     "purpose": true,
+     "shortened": false,
+     "target": "SourceIsotope"
+    },
+    {
+     "label": "X",
+     "n": 2,
+     "purpose": true,
+     "shortened": false,
+     "target": "SourceX"
+    },
+    {
+     "label": "Activity",
+     "n": 3,
+     "purpose": true,
+     "shortened": false,
+     "target": "SourceActivity"
+    }
+   ],
    "resultSha256": "0bfcecac37675bcdfb51085fb81262a19d831c74725d77fd0ec9ae8223c31a01",
    "runId": "20261014-202059-544edf",
    "source": "captures/2.1-2.png",
@@ -988,6 +1178,22 @@
    },
    "path": "figures/2.1-3.png",
    "pixelSha256": "40d5a3848ff249b76ab4507619a2698639395bd047ac2d62bcacfa94b6e26c3a",
+   "purposeList": [
+    {
+     "label": "X",
+     "n": 1,
+     "purpose": true,
+     "shortened": false,
+     "target": "SourceX"
+    },
+    {
+     "label": "Activity",
+     "n": 2,
+     "purpose": true,
+     "shortened": false,
+     "target": "SourceActivity"
+    }
+   ],
    "resultSha256": "8eca17edb1b866aa9f47d83cb6c30d777f193a7a87a8097ccced93d12cca624c",
    "runId": "20261014-202059-544edf",
    "source": "captures/2.1-3.png",
@@ -1188,6 +1394,50 @@
    },
    "path": "figures/2.2-1.png",
    "pixelSha256": "12455ee8553d13f3afb7284f7dd3eb2e77e1429e9c2168b57179a51df7f4143a",
+   "purposeList": [
+    {
+     "label": "Preset",
+     "n": 1,
+     "purpose": true,
+     "shortened": false,
+     "target": "Optics.Preset"
+    },
+    {
+     "label": "Prime rank",
+     "n": 2,
+     "purpose": true,
+     "shortened": false,
+     "target": "Optics.Rank"
+    },
+    {
+     "label": "Cell pitch",
+     "n": 3,
+     "purpose": true,
+     "shortened": false,
+     "target": "Optics.CellPitch"
+    },
+    {
+     "label": "Mask–detector",
+     "n": 4,
+     "purpose": true,
+     "shortened": false,
+     "target": "Optics.Distance"
+    },
+    {
+     "label": "Pixels / side",
+     "n": 5,
+     "purpose": true,
+     "shortened": false,
+     "target": "Optics.Pixels"
+    },
+    {
+     "label": "Pixel pitch",
+     "n": 6,
+     "purpose": true,
+     "shortened": false,
+     "target": "Optics.PixelPitch"
+    }
+   ],
    "resultSha256": "0e0984df80182719ff2948fe375d6233d764b29cd3e1698a589d4c69dc2c5a2f",
    "runId": "20261014-202201-b1fbf6",
    "source": "captures/2.2-1.png",
@@ -1289,6 +1539,22 @@
    },
    "path": "figures/2.2-2.png",
    "pixelSha256": "6d24f235c01cc2125b9676b6c6ffdd9819dfe3eb42bca3336ec6dea7bee024ac",
+   "purposeList": [
+    {
+     "label": "Face",
+     "n": 1,
+     "purpose": true,
+     "shortened": false,
+     "target": "Detector.FaceTab"
+    },
+    {
+     "label": "Settings for the next acquisition",
+     "n": 2,
+     "purpose": true,
+     "shortened": false,
+     "target": "Detector.Identity"
+    }
+   ],
    "resultSha256": "93c3ce89860866701a7a17fab7ed80f85a8abb0342e45a6603f327f713711dea",
    "runId": "20261014-202201-b1fbf6",
    "source": "captures/2.2-2.png",
@@ -1396,6 +1662,29 @@
    },
    "path": "figures/2.2-3.png",
    "pixelSha256": "8bd358ed491e32afc18d1b8905188b4c7810ea2e9135be26382477b8ccf2d6ce",
+   "purposeList": [
+    {
+     "label": "Pixels / side",
+     "n": 1,
+     "purpose": true,
+     "shortened": false,
+     "target": "Optics.Pixels"
+    },
+    {
+     "label": "Detector pixels must be an integer from 4 to 64.",
+     "n": 2,
+     "purpose": true,
+     "shortened": false,
+     "target": "Optics.Error"
+    },
+    {
+     "label": "Start refused: Detector pixels must be…",
+     "n": 3,
+     "purpose": true,
+     "shortened": true,
+     "target": "StatusText"
+    }
+   ],
    "resultSha256": "42a891cc57fa927f5a0455063015bc5323746d6827e18c2b556e2f8fd042e530",
    "runId": "20261014-202201-b1fbf6",
    "source": "captures/2.2-3.png",
@@ -1466,6 +1755,15 @@
    },
    "path": "figures/2.4-1.png",
    "pixelSha256": "c6c751249a92f4da09359f090b3cd775021ca2719cb576edebba7a5630d04741",
+   "purposeList": [
+    {
+     "label": "Stop",
+     "n": 1,
+     "purpose": true,
+     "shortened": false,
+     "target": "StopAcquisition"
+    }
+   ],
    "resultSha256": "fb45a3383f19ba71fb0b3bc1345eb2429f0fd6e84693f0c8e59278a3c34d74c3",
    "runId": "20261014-202133-886f72",
    "source": "captures/2.4-1.png",
@@ -1545,6 +1843,22 @@
    },
    "path": "figures/2.4-2.png",
    "pixelSha256": "60ebe3f8fc4fdacc12ee3790ba37141487226a8b8b859bcbe1dde2273d2e2120",
+   "purposeList": [
+    {
+     "label": "Continue",
+     "n": 1,
+     "purpose": true,
+     "shortened": false,
+     "target": "StartAcquisition"
+    },
+    {
+     "label": "Stopped · t = 1.8 s of 600 s…",
+     "n": 2,
+     "purpose": true,
+     "shortened": true,
+     "target": "StatusText"
+    }
+   ],
    "resultSha256": "cd205720adc1ea6f30b14a148ba28e5e6d8ec11d58a603f3869fa893e97d7ca3",
    "runId": "20261014-202133-886f72",
    "source": "captures/2.4-2.png",
@@ -1642,6 +1956,29 @@
    },
    "path": "figures/2.4-3.png",
    "pixelSha256": "398fb421fdbbab3c18d1a9f81a32446db43ab962b687f3de445a26d59eb82d8f",
+   "purposeList": [
+    {
+     "label": "Discard the acquired data…",
+     "n": 1,
+     "purpose": true,
+     "shortened": true,
+     "target": "Reset.Message"
+    },
+    {
+     "label": "Cancel",
+     "n": 2,
+     "purpose": true,
+     "shortened": false,
+     "target": "Modal.Cancel"
+    },
+    {
+     "label": "Discard",
+     "n": 3,
+     "purpose": true,
+     "shortened": false,
+     "target": "Reset.Discard"
+    }
+   ],
    "resultSha256": "34793e0f94706384655e6c97da5d90a6495f5dd4db459defe932a401cf4aac2e",
    "runId": "20261014-202133-886f72",
    "source": "captures/2.4-3.png",
@@ -1720,6 +2057,22 @@
    },
    "path": "figures/2.4-4.png",
    "pixelSha256": "356a48df39dac47599ea6a3087c405d51fb688b0cce06c59dc182afa42fb25a4",
+   "purposeList": [
+    {
+     "label": "Start",
+     "n": 1,
+     "purpose": true,
+     "shortened": false,
+     "target": "StartAcquisition"
+    },
+    {
+     "label": "Ready",
+     "n": 2,
+     "purpose": true,
+     "shortened": false,
+     "target": "StatusText"
+    }
+   ],
    "resultSha256": "bfba215004811c1367e8091809d780094a34f94feaae8516f662b78355ea897f",
    "runId": "20261014-202133-886f72",
    "source": "captures/2.4-4.png",
@@ -1781,6 +2134,15 @@
    },
    "path": "figures/3.1-1.png",
    "pixelSha256": "6590078d470c3693d197036d05c321a0eedf4d6d2263293440f0538df37cd162",
+   "purposeList": [
+    {
+     "label": "x 6.3 mm, y -4.5 mm · 10 counts",
+     "n": 1,
+     "purpose": true,
+     "shortened": false,
+     "target": "FloodReadout"
+    }
+   ],
    "resultSha256": "02770e1f657c6bc63f27001647a086ac6489d908c03254478941e6ed6f219a0f",
    "runId": "20261014-202118-3646b1",
    "source": "captures/3.1-1.png",
@@ -1894,6 +2256,36 @@
    },
    "path": "figures/3.1-2.png",
    "pixelSha256": "524af4548687191e820d09dbf0e830fc0f0de2e40d7ea95f2da5707cf5b5362f",
+   "purposeList": [
+    {
+     "label": "M1",
+     "n": 1,
+     "purpose": true,
+     "shortened": false,
+     "target": "M1"
+    },
+    {
+     "label": "M2",
+     "n": 2,
+     "purpose": true,
+     "shortened": false,
+     "target": "M2"
+    },
+    {
+     "label": "M3",
+     "n": 3,
+     "purpose": true,
+     "shortened": false,
+     "target": "M3"
+    },
+    {
+     "label": "3.6 × 4.2 mm · 42 px · mean 5.45 · max 13",
+     "n": 4,
+     "purpose": true,
+     "shortened": false,
+     "target": "MeasurementDetail"
+    }
+   ],
    "resultSha256": "fcc839c8cfecdae6f182fb56b2523a4b8f05d3a7cc58e8ae26c9e37f5afa071e",
    "runId": "20261014-202118-3646b1",
    "source": "captures/3.1-2.png",
@@ -1972,6 +2364,22 @@
    },
    "path": "figures/3.4-1.png",
    "pixelSha256": "80c7b1e319885bd284ed3701baf8a55c739eefe7fd2e13f33521b8e8ecdfb12d",
+   "purposeList": [
+    {
+     "label": "Log Y",
+     "n": 1,
+     "purpose": true,
+     "shortened": false,
+     "target": "Spectrum.LogY"
+    },
+    {
+     "label": "N × FWHM at each line",
+     "n": 2,
+     "purpose": true,
+     "shortened": false,
+     "target": "Spectrum.Window"
+    }
+   ],
    "resultSha256": "e013d3dc94fa6cd651a183fb0eabdbcceb4736e1ffce00b949008855fadb41b8",
    "runId": "20261014-202148-7b59cc",
    "source": "captures/3.4-1.png",
@@ -2033,6 +2441,15 @@
    },
    "path": "figures/3.4-2.png",
    "pixelSha256": "3ee07b4e86eeb0a0653b14f194f0c3b5e26d94b564679fc09a7f9b6d3562dfff",
+   "purposeList": [
+    {
+     "label": "N × FWHM at each line",
+     "n": 1,
+     "purpose": true,
+     "shortened": false,
+     "target": "Spectrum.Window"
+    }
+   ],
    "resultSha256": "7ee254ed7702400ca811e9567af01628afe52350636bc214f4b9ef142e284d2f",
    "runId": "20261014-202148-7b59cc",
    "source": "captures/3.4-2.png",
@@ -2094,6 +2511,15 @@
    },
    "path": "figures/3.4-3.png",
    "pixelSha256": "7411f6671a569639a1ba34077391069f1cea89935b2882a23125fbac33ff0197",
+   "purposeList": [
+    {
+     "label": "Log Y",
+     "n": 1,
+     "purpose": true,
+     "shortened": false,
+     "target": "Spectrum.LogY"
+    }
+   ],
    "resultSha256": "17a230b2e5d210f6a7cd6e5ab58a0feca88f5b5868bcb5b42e9d1c3032a6d09f",
    "runId": "20261014-202148-7b59cc",
    "source": "captures/3.4-3.png",
@@ -2105,7 +2531,7 @@
  "formal": false,
  "generator": {
   "path": "samples/manual/manual_records.py",
-  "sha256": "f2edde967feca13132f191e5100fb90e45f692a144030b5f37877c2900225e79"
+  "sha256": "f7b69041318f7aaf7e726d83739dc7b32318f27ee4ba854acc5dda29cf393012"
  },
  "labelFont": {
   "font": "M PLUS Rounded 1c Bold",
@@ -2117,7 +2543,7 @@
   "status": "draft"
  },
  "outputs": {
-  "MANUAL.Studio.md": "d28d1fd40fe1b5647933ea76ccb39e0e915e0fc5f3a053e6b57d9348b8b94fbb",
+  "MANUAL.Studio.md": "0c31eafcb4f378368fbafaaa4cae4f6b31cd6d8a065e3150ee54dea8546ba00e",
   "figures/1.2-1.png": "e376a8a5ae8622950a83f313d0b34217fa4d5e235772c92635697cde6dcb9956",
   "figures/1.2-2.png": "73434a56fba85709e744491c66a07922160313c57b05833965019c646c9112cf",
   "figures/1.2-3.png": "0f3c2071d6a9751e20c3189fe787172d66f1509b061955f8686e710b145080fe",
@@ -2140,8 +2566,9 @@
   "figures/3.4-3.png": "17a230b2e5d210f6a7cd6e5ab58a0feca88f5b5868bcb5b42e9d1c3032a6d09f",
   "sources/manual/chapters.json": "67a5caf676b4ce9aa0fe9a4f668eaa461a370352be12a2003f852439b26f50c3",
   "sources/manual/notices.json": "a736a7c4bcf62c998f63be92bba935eb669b74e6e5e5bfde09eb2b0aa8943cb9",
+  "sources/manual/purposes.json": "dcbac731df76395ddad5d84551c1ed64bdc9ffccfa8e3acb32f5d151638e797d",
   "sources/manual/static/interpretation-and-limitations.md": "cef06522c61ddbf52b71af1e2b2d802fc53304064b214a51e5887ef0dcadf642",
-  "sources/manual/static/purpose-and-scope.md": "44f1388d27f8f224ac2cc32a96c9a18bf669fad6aa63d4923b6cacaffe69ebaa",
+  "sources/manual/static/purpose-and-scope.md": "bbbf86177fc9e17771f5a6095938c6cc8eff952ca5fa2e6c59233b660fb010d7",
   "sources/runs/20261014-202044-2dbf58/captures/1.2-1.marks.json": "a04b9668955dc3cb11d1ccb870dad1ea329f77fd8b37ac7741e25e7883e85169",
   "sources/runs/20261014-202044-2dbf58/captures/1.2-1.png": "b3b4edcb227cd0c616c8999ae6b7d54be96dd0a0f290077ebdcced7e6a5bb2d3",
   "sources/runs/20261014-202044-2dbf58/captures/1.2-2.marks.json": "9b975939782035f50967b61090fbf2bfc08ef08403aa200bda15ad663ee86608",
@@ -2188,6 +2615,12 @@
   "sources/runs/20261014-202201-b1fbf6/captures/2.2-3.marks.json": "f24c484e72b30752de51b8ff98b5e51d9b80455146d6ec45bdad1d5f8cbb4ae3",
   "sources/runs/20261014-202201-b1fbf6/captures/2.2-3.png": "c7f949b28e019bd9745059db14a6d3afb64231042962063070184e32ba074997",
   "sources/runs/20261014-202201-b1fbf6/manual-run.json": "ba86114c56060db9a29c9435343a4d4937998aa7f3b69ffa65b3a52a24dd0d42"
+ },
+ "purposes": {
+  "listLabels": "in the purpose list only, a label over 48 characters is cut to at most 40 characters followed by an ellipsis, at the last \" · \" or \" (\" from the middle on, else at a word; the figure keeps the label as measured",
+  "missingTargets": [],
+  "sha256": "dcbac731df76395ddad5d84551c1ed64bdc9ffccfa8e3acb32f5d151638e797d",
+  "status": "draft"
  },
  "registry": {
   "id": "gcam-studio-manual",
@@ -2240,7 +2673,7 @@
    "chapter": "1.1",
    "draft": true,
    "path": "static/purpose-and-scope.md",
-   "sha256": "44f1388d27f8f224ac2cc32a96c9a18bf669fad6aa63d4923b6cacaffe69ebaa"
+   "sha256": "bbbf86177fc9e17771f5a6095938c6cc8eff952ca5fa2e6c59233b660fb010d7"
   },
   {
    "chapter": "5.2",

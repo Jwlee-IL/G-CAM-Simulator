@@ -232,7 +232,7 @@ Run `python samples/testing/test_records.py check-catalog --discover` after a Re
 | `cocotb::test_trap_shaper@trapezoidal_shaper` | 3 | 3 |
 | `cocotb::test_trap_shaper@trapezoidal_shaper_pl` | 3 | 3 |
 | `unittest::test_background_shape.BackgroundShapeTests` | 10 | 10 |
-| `unittest::test_manual_records.ManualRecordsTests` | 16 | 16 |
+| `unittest::test_manual_records.ManualRecordsTests` | 19 | 19 |
 | `unittest::test_provenance.ProvenanceTests` | 29 | 29 |
 | `unittest::test_readout_netlist.ReadoutNetlistTests` | 4 | 4 |
 | `unittest::test_stage0_isolation.SnapshotClassificationTests` | 13 | 13 |
@@ -4381,9 +4381,9 @@ Source: [tests/Gcam.Studio.UiTests/ManualScenarioTests.cs](../tests/Gcam.Studio.
 
 ## ManualRecordsTests — unittest
 
-The manual generator's PNG codec, mark validation, panel-edge crop and label overlay: each mark's label (a red disc with the number, then the label as measured, wrapped at 32 characters) placed beside its frame by the fixed candidate order and cost tiers inside the marks' own crop, a candidate covering screen text, plots or images (or crossing another mark) refused outright; labels without a place go to a plain margin in the background colour (right, left or bottom, the least added area) joined by lines, never widening the crop; label text rasterised in integer arithmetic from the committed M PLUS Rounded 1c Bold glyph subset (a character without a glyph refused, a multi-line label printed by its first line); the label post-condition; centred figures and captions in the Markdown, latest-run selection and the repository's manual sources.
+The manual generator's PNG codec, mark validation, panel-edge crop and label overlay: each mark's label (a red disc with the number, then the label as measured, wrapped at 32 characters) placed beside its frame by the fixed candidate order and cost tiers inside the marks' own crop, a candidate covering screen text, plots or images (or crossing another mark) refused outright; labels without a place go to a plain margin in the background colour (right, left or bottom, the least added area) joined by lines, never widening the crop; label text rasterised in integer arithmetic from the committed M PLUS Rounded 1c Bold glyph subset (a character without a glyph refused, a multi-line label printed by its first line); the label post-condition; centred figures and captions in the Markdown, the numbered purpose list under each figure (label, then what the marked element is for, from docs/manual/purposes.json; a long label cut only in that list), an edition from before the purpose list replayed without one, latest-run selection and the repository's manual sources.
 
-Oracle: An independent forward PNG filter encoder (types 0–4, RGB and RGBA), rectangle fixtures shared with the C# harness, exact crop and label boxes computed from the layout constants on a panel fixture with a word beside a mark, overlay pixels (frame border, unpainted control, disc, number, white text with a dark outline, anti-aliased edges), the glyph subset's character set and licence line, U+2026 rebuilt from three periods, exact coverage of a square and a half-pixel contour, the number centred on its disc by its ink, deterministic re-rasterisation, the 91-character message wrapped into three exact lines under the disc and no line opening on a separator, a field stack taking a right margin with level straight join lines and a bottom mark taking a bottom margin (exact margin sizes, boxes and lines, the crop unchanged), a walled-in mark refused, seeded label placements (own target, another label, another label's join line, out of bounds, a crossing) for the post-condition, the generator's seeded-defect self-test and the registry / notice / static sources under docs/manual.
+Oracle: An independent forward PNG filter encoder (types 0–4, RGB and RGBA), rectangle fixtures shared with the C# harness, exact crop and label boxes computed from the layout constants on a panel fixture with a word beside a mark, overlay pixels (frame border, unpainted control, disc, number, white text with a dark outline, anti-aliased edges), the glyph subset's character set and licence line, U+2026 rebuilt from three periods, exact coverage of a square and a half-pixel contour, the number centred on its disc by its ink, deterministic re-rasterisation, the 91-character message wrapped into three exact lines under the disc and no line opening on a separator, a field stack taking a right margin with level straight join lines and a bottom mark taking a bottom margin (exact margin sizes, boxes and lines, the crop unchanged), a walled-in mark refused, seeded label placements (own target, another label, another label's join line, out of bounds, a crossing) for the post-condition, exact list labels for the cut rule (48 characters kept whole; a status line and the reset message cut at a phrase, a refusal at a word, an unbroken word at 40) and Markdown escaping, the exact list line under a fixture figure with its record rows and pinned purpose hash, a legacy fixture edition (no purpose file) generated and replayed while a new edition refuses a missing purpose file, every repository purpose entry naming existing source files, the generator's seeded-defect self-test and the registry / notice / purpose / static sources under docs/manual.
 
 Tolerance: exact
 
@@ -4392,13 +4392,13 @@ Gates: none.
 Source: [samples/evidence/tests/test_manual_records.py](../samples/evidence/tests/test_manual_records.py).
 
 ```json
-{"id":"unittest::test_manual_records.ManualRecordsTests","runner":"unittest","methods":["test_decoder_undoes_every_scanline_filter_for_rgb_and_rgba","test_encoder_round_trips_and_is_deterministic","test_decoder_refuses_corruption_and_unsupported_formats","test_image_rect_matches_the_harness_rule","test_labels_sit_beside_their_marks_off_text_and_inside_the_crop","test_text_is_rasterised_from_the_committed_rounded_glyph_subset","test_label_refuses_a_missing_glyph_and_prints_the_first_line","test_long_labels_wrap_into_a_block_under_their_disc","test_labels_without_a_place_go_to_a_plain_margin_and_never_widen_the_crop","test_label_refuses_a_mark_without_a_place_or_a_route_to_a_margin","test_label_check_refuses_overlaps_and_reports_crossings","test_marks_must_be_the_measured_rectangles_inside_the_capture","test_repository_sources_are_valid_and_bind_every_notice","test_self_test_refuses_every_seeded_defect","test_latest_run_wins_and_a_tie_refuses","test_figures_are_centred_and_the_record_describes_their_labels"],"sources":{"samples/evidence/tests/test_manual_records.py":"60d7c53f8127955788aac159b88789d0b19884b922bcd3dfab6b85e32f330dc0"},"trace":[]}
+{"id":"unittest::test_manual_records.ManualRecordsTests","runner":"unittest","methods":["test_decoder_undoes_every_scanline_filter_for_rgb_and_rgba","test_encoder_round_trips_and_is_deterministic","test_decoder_refuses_corruption_and_unsupported_formats","test_image_rect_matches_the_harness_rule","test_labels_sit_beside_their_marks_off_text_and_inside_the_crop","test_text_is_rasterised_from_the_committed_rounded_glyph_subset","test_label_refuses_a_missing_glyph_and_prints_the_first_line","test_long_labels_wrap_into_a_block_under_their_disc","test_labels_without_a_place_go_to_a_plain_margin_and_never_widen_the_crop","test_label_refuses_a_mark_without_a_place_or_a_route_to_a_margin","test_label_check_refuses_overlaps_and_reports_crossings","test_marks_must_be_the_measured_rectangles_inside_the_capture","test_repository_sources_are_valid_and_bind_every_notice","test_self_test_refuses_every_seeded_defect","test_latest_run_wins_and_a_tie_refuses","test_figures_are_centred_and_the_record_describes_their_labels","test_purpose_list_names_each_mark_and_cuts_long_labels_only_there","test_an_edition_from_before_the_purpose_list_replays_without_one","test_repository_purposes_name_existing_sources"],"sources":{"samples/evidence/tests/test_manual_records.py":"ce6929af8b9d9f34afb5f2e7f44f32b08c4ed2f5afcee7abbf50c2a61e13bef7"},"trace":[]}
 ```
 
 
 ## manual-self-test — checker
 
-Seeds one defect at a time into a valid edition fixture and requires the specific refusal or omission notice: missing run, failed chapter (both also with --formal), latest failure after a pass, evidence hash, mark outside the image, DPI double scaling, a mark walled in by other marks (no place and no route to a margin), a label character the glyph subset has no glyph for, a label seeded over another label, over its own target or outside the figure, a defective label placement caught by the figure's own check, mixed binaries, budget, unknown / misplaced / missing notice, warning wording in step prose, path escape, registry collision, identity leak, and a tampered figure on replay; and three placements that must be generated, recorded and replayed: a bottom mark taking a bottom margin, a field stack taking a right margin, and a 91-character label wrapped into three lines.
+Seeds one defect at a time into a valid edition fixture and requires the specific refusal or omission notice: missing run, failed chapter (both also with --formal), latest failure after a pass, evidence hash, mark outside the image, DPI double scaling, a mark walled in by other marks (no place and no route to a margin), a label character the glyph subset has no glyph for, a label seeded over another label, over its own target or outside the figure, a defective label placement caught by the figure's own check, mixed binaries, budget, unknown / misplaced / missing notice, warning wording in step prose, path escape, registry collision, identity leak, a tampered figure on replay, a retained purpose list that is not the pinned one (refused before replay), a mark without a purpose entry (label only, edition draft naming the target; refused with --formal), a draft purpose list, a duplicate purpose target; and three placements that must be generated, recorded and replayed: a bottom mark taking a bottom margin, a field stack taking a right margin, and a 91-character label wrapped into three lines.
 
 Oracle: Exact refusal codes and omission-notice text; for the placement cases the recorded candidates, margins, figure size (crop plus margins only), wrapped lines and byte-for-byte replay; a mutation must change its input before the case counts.
 
@@ -4409,13 +4409,13 @@ Gates: none.
 Source: [samples/manual/manual_records.py](../samples/manual/manual_records.py).
 
 ```json
-{"id":"checker::manual-self-test","runner":"checker","methods":["manual-self-test"],"sources":{"samples/manual/manual_records.py":"f2edde967feca13132f191e5100fb90e45f692a144030b5f37877c2900225e79"},"trace":[]}
+{"id":"checker::manual-self-test","runner":"checker","methods":["manual-self-test"],"sources":{"samples/manual/manual_records.py":"f7b69041318f7aaf7e726d83739dc7b32318f27ee4ba854acc5dda29cf393012"},"trace":[]}
 ```
 
 
 ## manual-editions — checker
 
-Validates the manual sources (docs/manual: registry, notice list, static chapters) and replays every committed edition under docs/manual/editions from its retained sources, byte for byte. Zero editions is reported as zero, not as a passing edition.
+Validates the manual sources (docs/manual: registry, notice list, mark purpose list, static chapters) and replays every committed edition under docs/manual/editions from its retained sources, byte for byte. Zero editions is reported as zero, not as a passing edition.
 
 Oracle: Pinned input hashes in each generation record; regenerated Markdown, generation record and sources compared byte for byte; a derived figure whose PNG encoding differs is accepted only when it decodes to the regenerated pixels.
 
@@ -4426,7 +4426,7 @@ Gates: none.
 Source: [samples/manual/manual_records.py](../samples/manual/manual_records.py).
 
 ```json
-{"id":"checker::manual-editions","runner":"checker","methods":["manual-editions"],"sources":{"samples/manual/manual_records.py":"f2edde967feca13132f191e5100fb90e45f692a144030b5f37877c2900225e79"},"trace":[]}
+{"id":"checker::manual-editions","runner":"checker","methods":["manual-editions"],"sources":{"samples/manual/manual_records.py":"f7b69041318f7aaf7e726d83739dc7b32318f27ee4ba854acc5dda29cf393012"},"trace":[]}
 ```
 
 

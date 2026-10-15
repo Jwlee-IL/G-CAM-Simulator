@@ -6,7 +6,10 @@ scenario on the edition's one Studio build passed; otherwise the edition carries
 run's original captures, cropped along panel edges and overlaid with the mark rectangles the runner measured at capture
 time; the generator only adds each mark's label beside its rectangle, or in a plain margin beside the figure joined by
 a line (a red disc with the number, then the label as measured, wrapped, drawn from a committed glyph subset of a
-rounded open-licence font) by a fixed placement rule, and places or words no mark. The generator records; it approves nothing.
+rounded open-licence font) by a fixed placement rule, and places or words no mark. Under each figure a numbered list
+gives each mark's label and what the marked element is for, from the hand-written, sourced purpose list
+(docs/manual/purposes.json); a mark without an entry prints its label only and keeps the edition a draft. The generator
+records; it approves nothing.
 
   python -B samples/manual/manual_records.py check-registry
   python -B samples/manual/manual_records.py generate --runs <folder> --edition-id <id> --date <yyyy-mm-dd> --out <new>
@@ -61,6 +64,11 @@ INSET, INSET_V = 4, 2   # an inside label's clearance from the control's edges (
 TEXT_INK = 8    # ink pixels near a label box that count as covering screen content (fewer: a stray pixel)
 LINE_INK = 6    # ink pixels along a join line that count as crossing screen content (fewer: a separator)
 SEPARATORS = ('\u00b7', '\u00d7', '\u2013', '|', '-')
+PURPOSES = 'purposes.json'   # what each mark is for, listed under its figure
+LIST_LONG, LIST_CUT = 48, 40   # in the purpose list only, a label over LIST_LONG characters is cut at a word to LIST_CUT and '\u2026'
+LIST_RULE = (f'in the purpose list only, a label over {LIST_LONG} characters is cut to at most {LIST_CUT} characters '
+             'followed by an ellipsis, at the last " · " or " (" from the middle on, else at a word; the figure keeps the '
+             'label as measured')
 WRAPS = (32, 20, 12)   # label line lengths in characters: the label as printed, then narrower variants that may fit
 LINE_PITCH = 20 # label text line pitch, px
 JOIN_GAP = 12   # clearance of a label shifted off its frame's side, so its join line shows
@@ -1037,8 +1045,9 @@ def slug(text):
     return re.sub(r'\s', '-', re.sub(r'[^\w\- ]', '', text.lower()))
 
 
-def load_sources(root):
-    """Registry, notices and static chapters, validated together. Returns a dict with bytes for retention."""
+def load_sources(root, require_purposes=True):
+    """Registry, notices, mark purposes and static chapters, validated together. Returns a dict with bytes for
+    retention. require_purposes=False only replays an edition generated before the purpose list existed."""
     root = Path(root)
     files = {}
     def take(relative, code):
@@ -1086,8 +1095,21 @@ def load_sources(root):
             if kind == 'notice':
                 require(chapter['number'] in by_id[value]['chapters'], f'notice-chapter: {value} not allowed in {chapter["number"]}')
         static[chapter['number']] = {'body': body, 'draft': bool(draft), 'path': chapter['static']}
+    purposes, purpose_status = None, None
+    if require_purposes or confined(root, PURPOSES).is_file():   # an edition from before the purpose list has none
+        document = json.loads(take(PURPOSES, 'purposes'))
+        require((document.get('schema'), document.get('schemaVersion')) == ('gcam.manual-purposes', 1), 'purposes: unknown schema')
+        purposes, purpose_status = {}, document.get('status')
+        for entry in document['purposes']:
+            target = entry.get('target')
+            require(isinstance(target, str) and re.fullmatch(r'[A-Za-z0-9.]+', target) and target not in purposes,
+                    'purposes: duplicate or malformed target ' + str(target))
+            text = entry.get('purpose')
+            require(isinstance(text, str) and text.strip() and '\n' not in text and '\r' not in text and entry.get('sources'),
+                    'purposes: incomplete ' + target)
+            purposes[target] = entry
     return {'registry': registry, 'parts': parts, 'notices': by_id, 'noticeStatus': notices.get('status'),
-            'static': static, 'files': files}
+            'static': static, 'files': files, 'purposes': purposes, 'purposeStatus': purpose_status}
 
 
 # ---------------------------------------------------------------- run records
@@ -1151,6 +1173,44 @@ def render_notice(notice):
     return f'> **{notice["level"].capitalize()}.** {notice["text"]}'
 
 
+def list_label(text):
+    """A figure label as the purpose list prints it: a long label cut at a word (LIST_RULE). Returns (text, cut)."""
+    if len(text) <= LIST_LONG:
+        return text, False
+    kept = ''
+    for word in text.split():
+        if len(kept) + bool(kept) + len(word) > LIST_CUT:
+            break
+        kept += (' ' if kept else '') + word
+    kept = kept[:LIST_CUT] if kept else text[:LIST_CUT]   # a first word longer than the cut is broken
+    phrase = max(text.rfind(' · ', 0, LIST_CUT + 1), text.rfind(' (', 0, LIST_CUT + 1))
+    if phrase >= LIST_CUT // 2:   # rather at the end of a phrase ("Stopped · t = 1.8 s of 600 s…", not "… · 116…")
+        kept = text[:phrase]
+    return kept.rstrip(' ' + ''.join(SEPARATORS) + ',;:') + '…', True
+
+
+def markdown_safe(text):
+    """Literal text for Markdown: HTML special characters as entities, Markdown punctuation escaped."""
+    return re.sub(r'([\\`*_\[\]|#])', r'\\\1', html.escape(text, quote=False))
+
+
+def purpose_list(marks, purposes):
+    """The numbered list under a figure, in mark order: the label, then what the marked element is for. Returns (lines,
+    record rows, targets without a purpose entry)."""
+    lines, rows, missing = [], [], []
+    for mark in marks:
+        label, cut = list_label(label_text(mark))
+        entry = purposes.get(mark['target'])
+        line = f'{mark["n"]}. **{markdown_safe(label)}**'
+        if entry:
+            line += ' — ' + entry['purpose']
+        else:
+            missing.append(mark['target'])
+        lines.append(line)
+        rows.append({'n': mark['n'], 'target': mark['target'], 'label': label, 'shortened': cut, 'purpose': bool(entry)})
+    return lines, rows, missing
+
+
 def resolve_tokens(text, chapters, printed):
     def replace(match):
         kind, value = match.groups()
@@ -1171,7 +1231,7 @@ def assemble(sources, runs, edition_id, date, formal, budget, reuse=None, genera
     for folder, record, raw in runs:
         by_scenario.setdefault(record['scenario'], []).append((folder, record, raw))
     outputs, figures_out, chapter_rows, flags, run_rows, chapter_hashes = {}, [], [], [], [], {}
-    chosen_runs, printed, plans = set(), set(), {}
+    chosen_runs, printed, plans, missing_purposes = set(), set(), {}, set()
     for chapter in registry['chapters']:
         if chapter['source'] == 'static':
             printed.add(chapter['number'])
@@ -1212,6 +1272,8 @@ def assemble(sources, runs, edition_id, date, formal, budget, reuse=None, genera
     draft = [f'static chapter {n} is a draft' for n, s in sorted(sources['static'].items()) if s['draft']]
     if sources['noticeStatus'] != 'approved':
         draft.append('the notice list is not approved')
+    if sources['purposes'] is not None and sources['purposeStatus'] != 'approved':
+        draft.append('the mark purpose list is not approved')
     omitted = [r['number'] for r in chapter_rows if r['omission']]
     if omitted:
         draft.append('chapters omitted: ' + ', '.join(omitted))
@@ -1250,11 +1312,16 @@ def assemble(sources, runs, edition_id, date, formal, budget, reuse=None, genera
                         label = html.escape(f'Figure {figure["id"]}')
                         text += [f'<p align="center"><img src="{html.escape(name)}" alt="{label}"></p>',
                                  f'<p align="center"><em>{label}.</em> {html.escape(figure["caption"], quote=False)}</p>', '']
-                        figures_out.append({'figure': figure['id'], 'chapter': number, 'runId': record['runId'], 'step': step['n'],
-                                            'source': figure['capture'], 'sourceSha256': sha(png), 'marksSha256': sha(marks_raw),
-                                            'operation': operation,
-                                            'path': name, 'resultSha256': sha(encoded),
-                                            'pixelSha256': sha(struct.pack('>II', fw, fh) + frgb), 'flags': fig_flags})
+                        row = {'figure': figure['id'], 'chapter': number, 'runId': record['runId'], 'step': step['n'],
+                               'source': figure['capture'], 'sourceSha256': sha(png), 'marksSha256': sha(marks_raw),
+                               'operation': operation,
+                               'path': name, 'resultSha256': sha(encoded),
+                               'pixelSha256': sha(struct.pack('>II', fw, fh) + frgb), 'flags': fig_flags}
+                        if sources['purposes'] is not None and doc['marks']:
+                            items, row['purposeList'], absent = purpose_list(doc['marks'], sources['purposes'])
+                            text += items + ['']
+                            missing_purposes.update(absent)
+                        figures_out.append(row)
                         flags += [f'{figure["id"]}:{f}' for f in fig_flags]
                     for missing in step.get('missingFigures', []):
                         text += [f'> **Figure omitted.** Figure {missing["id"]} was not retained: the capture was rejected '
@@ -1263,6 +1330,8 @@ def assemble(sources, runs, edition_id, date, formal, budget, reuse=None, genera
             chapter_text = '\n'.join(text)
             chapter_hashes[number] = sha(chapter_text.encode('utf-8'))
             body.append(chapter_text)
+    if missing_purposes:
+        draft.append('marks without a purpose entry: ' + ', '.join(sorted(missing_purposes)))
     if draft:
         lines += ['> **Draft edition.** ' + '; '.join(draft) + '.', '']
     markdown = '\n'.join(lines + contents + [''] + body).rstrip('\n') + '\n'
@@ -1290,6 +1359,9 @@ def assemble(sources, runs, edition_id, date, formal, budget, reuse=None, genera
                             'font': label_font()['font']['family'] + ' ' + label_font()['font']['style']},
               'registry': {'id': registry['id'], 'locale': registry['locale'], 'sha256': sha(sources['files']['chapters.json'])},
               'notices': {'sha256': sha(sources['files']['notices.json']), 'status': sources['noticeStatus']},
+              **({'purposes': {'sha256': sha(sources['files'][PURPOSES]), 'status': sources['purposeStatus'],
+                               'missingTargets': sorted(missing_purposes), 'listLabels': LIST_RULE}}
+                 if sources['purposes'] is not None else {}),
               'static': [{'chapter': n, 'path': s['path'], 'sha256': sha(sources['files'][s['path']]), 'draft': s['draft']}
                          for n, s in sorted(sources['static'].items())],
               'subject': {'deploymentSha256': runs[0][1]['subject']['deploymentSha256'] if runs else None},
@@ -1331,7 +1403,15 @@ def check(edition):
     encoding differs (another zlib build) is accepted only when it decodes to the regenerated pixels."""
     edition = Path(edition)
     record = read_json(edition / 'generation-record.json', 'check: generation record')
-    sources = load_sources(edition / 'sources/manual')
+    retained = edition / 'sources/manual'
+    pinned = [('chapters.json', record['registry']['sha256']), ('notices.json', record['notices']['sha256'])]
+    pinned += [(s['path'], s['sha256']) for s in record['static']]
+    if 'purposes' in record:   # an edition from before the purpose list pins none and is replayed without one
+        pinned.append((PURPOSES, record['purposes']['sha256']))
+    for relative, expected in pinned:   # a retained source must be the one the record pins, before anything is replayed
+        path = confined(retained, relative)
+        require(path.is_file() and sha(path.read_bytes()) == expected, 'source-hash: ' + relative)
+    sources = load_sources(retained, 'purposes' in record)
     runs = load_runs(edition / 'sources/runs', sources)
     def reuse(name, width, height, rgb):
         path = edition / name
@@ -1386,8 +1466,11 @@ def fixture(root):
                              {'number': '1.3', 'title': 'Beta', 'part': '1', 'source': 'generated', 'scenario': 'manual.beta'}]}
     notices = {'schema': 'gcam.manual-notices', 'schemaVersion': 1, 'status': 'approved',
                'notices': [{'id': 'N-SIM', 'level': 'caution', 'text': 'Simulated.', 'chapters': ['1.1', '1.2'], 'sources': ['fixture']}]}
+    purposes = {'schema': 'gcam.manual-purposes', 'schemaVersion': 1, 'status': 'approved',
+                'purposes': [{'target': 'StartAcquisition', 'purpose': 'Starts the acquisition.', 'sources': ['fixture']}]}
     (src / 'chapters.json').write_bytes(canonical(registry))
     (src / 'notices.json').write_bytes(canonical(notices))
+    (src / PURPOSES).write_bytes(canonical(purposes))
     (src / 'static/intro.md').write_bytes(b'Intro text, see [[chapter:1.2]].\n\n[[notice:N-SIM]]\n')
     width, height = 160, 48
     png = fixture_png(width, height)
@@ -1510,6 +1593,29 @@ def self_test(out=None):
         require(str(error).startswith('check-differs'), 'self-test: wrong replay refusal ' + str(error))
         results.append(('tampered-figure', str(error)))
     figure.write_bytes(original)
+    require('1. **Start** — Starts the acquisition.\n' in (valid / 'MANUAL.Studio.md').read_text(encoding='utf-8'),
+            'self-test: valid: no purpose list under the figure')
+    retained = valid / 'sources/manual' / PURPOSES
+    original = retained.read_bytes()
+    edit_json(retained, lambda p: p['purposes'][0].update(purpose='Stops the acquisition.'))
+    try:   # a retained source that is not the one the record pins is refused before anything is replayed
+        check(valid)
+        raise RuntimeError('self-test: altered purpose list accepted')
+    except ValueError as error:
+        require(str(error) == 'source-hash: ' + PURPOSES, 'self-test: wrong replay refusal ' + str(error))
+        results.append(('purpose-hash-mismatch', str(error)))
+    retained.write_bytes(original)
+    def without_purpose(src, runs):
+        edit_json(src / PURPOSES, lambda p: p.update(purposes=[]))
+    edition = case('missing-purpose', without_purpose, 'marks without a purpose entry: StartAcquisition')
+    markdown = (edition / 'MANUAL.Studio.md').read_text(encoding='utf-8')
+    require('\n1. **Start**\n' in markdown and json.loads((edition / 'generation-record.json').read_bytes())['status'] == 'draft',
+            'self-test: missing-purpose: the label alone and a draft edition expected')
+    case('missing-purpose-formal', without_purpose, 'refuse:formal-refused', formal=True)
+    case('purposes-draft', lambda s, r: edit_json(s / PURPOSES, lambda p: p.update(status='draft')),
+         'the mark purpose list is not approved')
+    case('purpose-duplicate', lambda s, r: edit_json(s / PURPOSES, lambda p: p['purposes'].append(dict(p['purposes'][0]))),
+         'refuse:purposes: duplicate or malformed target')
     case('missing-run', lambda s, r: [p.unlink() for p in (r / 'run-beta').rglob('*') if p.is_file()], 'it is not included because no run')
     case('missing-run-formal', lambda s, r: [p.unlink() for p in (r / 'run-beta').rglob('*') if p.is_file()], 'refuse:formal-refused', formal=True)
     case('failed-chapter', failed, 'did not pass (failed)')
@@ -1596,7 +1702,8 @@ def main():
     args = parser.parse_args()
     if args.action == 'check-registry':
         sources = load_sources(args.sources)
-        print(f'registry: {len(sources["registry"]["chapters"])} chapters, {len(sources["notices"])} notices, valid')
+        print(f'registry: {len(sources["registry"]["chapters"])} chapters, {len(sources["notices"])} notices, '
+              f'{len(sources["purposes"])} mark purposes, valid')
     elif args.action == 'generate':
         outputs = generate(args.sources, args.runs, args.edition_id, args.date, args.out, args.formal,
                            int(args.budget_mib * 1024 * 1024))

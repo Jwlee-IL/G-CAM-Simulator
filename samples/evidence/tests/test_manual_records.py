@@ -279,6 +279,7 @@ class ManualRecordsTests(unittest.TestCase):
         self.assertEqual({'1.1', '5.2'}, {n for n, c in chapters.items() if c['source'] == 'static'})
         self.assertTrue(all(s['draft'] for s in sources['static'].values()), 'static chapters stay drafts until approved')
         self.assertEqual('draft', sources['noticeStatus'])
+        self.assertEqual('draft', sources['purposeStatus'], 'the purpose list stays a draft until approved')
         for notice in sources['notices'].values():
             for number in notice['chapters']:
                 if chapters[number]['source'] == 'static':
@@ -289,7 +290,7 @@ class ManualRecordsTests(unittest.TestCase):
         for name in ('missing-run-formal', 'failed-chapter-formal', 'evidence-hash', 'mark-outside-image', 'mixed-binaries',
                      'budget-exceeded', 'tampered-figure', 'dpi-double-scaling', 'identity-leak', 'label-no-room',
                      'label-overlap', 'label-over-own-target', 'label-outside-figure', 'label-placement-defect',
-                     'label-without-glyph'):
+                     'label-without-glyph', 'purpose-hash-mismatch', 'missing-purpose-formal', 'purpose-duplicate'):
             self.assertIn(name, results)
             self.assertFalse(results[name].startswith('generated'), name)
         self.assertTrue(results['missing-run'].startswith('generated'))
@@ -297,6 +298,9 @@ class ManualRecordsTests(unittest.TestCase):
         self.assertTrue(results['label-margin-bottom'].startswith('generated: margin-bottom'))
         self.assertTrue(results['label-margin-right'].startswith('generated: margin-right'))
         self.assertTrue(results['label-wrapped'].startswith('generated'))
+        self.assertEqual('generated: marks without a purpose entry: StartAcquisition', results['missing-purpose'])
+        self.assertEqual('generated: the mark purpose list is not approved', results['purposes-draft'])
+        self.assertEqual('source-hash: purposes.json', results['purpose-hash-mismatch'])
 
     def test_latest_run_wins_and_a_tie_refuses(self):
         root = scratch()
@@ -340,6 +344,67 @@ class ManualRecordsTests(unittest.TestCase):
         width, height, _ = mr.png_decode(outputs['figures/1.2-1.png'])
         self.assertEqual([width, height], operation['size'])
         self.assertEqual(operation['crop'][2:], operation['size'])   # no margin: the labels add no space
+
+    def test_purpose_list_names_each_mark_and_cuts_long_labels_only_there(self):
+        self.assertEqual(('Preset', False), mr.list_label('Preset'))
+        exact = 'Detector pixels must be an integer from 4 to 64.'   # 48 characters: kept whole
+        self.assertEqual((exact, False), mr.list_label(exact))
+        for label, cut in (('Stopped · t = 1.8 s of 600 s · 116 counts · 66 cps · seed 12345',
+                            'Stopped · t = 1.8 s of 600 s…'),
+                           ('Discard the acquired data (2.0 live s, 127 counts)? Inputs unlock for the next acquisition.',
+                            'Discard the acquired data…'),
+                           ('Start refused: Detector pixels must be an integer from 4 to 64.',
+                            'Start refused: Detector pixels must be…'),
+                           ('x' * 60, 'x' * 40 + '…')):
+            self.assertEqual((cut, True), mr.list_label(label))
+            self.assertLessEqual(len(cut), mr.LIST_CUT + 1)
+        self.assertEqual(r'a\*b\_&lt;c&gt; \[d\] &amp; ·', mr.markdown_safe('a*b_<c> [d] & ·'))
+        marks = [{'n': 1, 'target': 'A', 'label': 'Alpha'}, {'n': 2, 'target': 'B', 'label': 'B*'}]
+        lines, rows, missing = mr.purpose_list(marks, {'A': {'purpose': 'Does a.'}})
+        self.assertEqual((['1. **Alpha** — Does a.', r'2. **B\***'], ['B']), (lines, missing))
+        self.assertEqual([{'n': 1, 'target': 'A', 'label': 'Alpha', 'shortened': False, 'purpose': True},
+                          {'n': 2, 'target': 'B', 'label': 'B*', 'shortened': False, 'purpose': False}], rows)
+        root = scratch()
+        src, runs = mr.fixture(root)
+        outputs = mr.generate(src, runs, 'e1', '2026-10-14', root / 'e1')
+        markdown = outputs['MANUAL.Studio.md'].decode('utf-8')
+        self.assertIn('<p align="center"><em>Figure 1.2-1.</em> The top bar.</p>\n\n'
+                      '1. **Start** — Starts the acquisition.\n\n### 1.3 Beta', markdown)   # after the caption, a paragraph of its own
+        generation = json.loads(outputs['generation-record.json'])
+        self.assertEqual({'sha256': mr.sha((src / mr.PURPOSES).read_bytes()), 'status': 'approved', 'missingTargets': [],
+                          'listLabels': mr.LIST_RULE}, generation['purposes'])
+        self.assertEqual(('formal', [{'n': 1, 'target': 'StartAcquisition', 'label': 'Start', 'shortened': False, 'purpose': True}]),
+                         (generation['status'], next(f for f in generation['figures'] if f['figure'] == '1.2-1')['purposeList']))
+        self.assertEqual(outputs['sources/manual/purposes.json'], (src / mr.PURPOSES).read_bytes())
+
+    def test_an_edition_from_before_the_purpose_list_replays_without_one(self):
+        root = scratch()
+        src, runs = mr.fixture(root)
+        legacy = root / 'legacy-sources'
+        (legacy / 'static').mkdir(parents=True)
+        for relative in ('chapters.json', 'notices.json', 'static/intro.md'):
+            (legacy / relative).write_bytes((src / relative).read_bytes())
+        with self.assertRaisesRegex(ValueError, 'purposes: missing purposes.json'):
+            mr.load_sources(legacy)   # a new edition always needs the purpose list
+        sources = mr.load_sources(legacy, require_purposes=False)
+        outputs = mr.assemble(sources, mr.load_runs(runs, sources), 'old', '2026-10-14', False, mr.DEFAULT_BUDGET)
+        edition = root / 'old'
+        for relative, data in outputs.items():
+            (edition / relative).parent.mkdir(parents=True, exist_ok=True)
+            (edition / relative).write_bytes(data)
+        generation = json.loads(outputs['generation-record.json'])
+        self.assertNotIn('purposes', generation)
+        self.assertNotIn('purposeList', generation['figures'][0])
+        self.assertNotIn('1. **Start**', outputs['MANUAL.Studio.md'].decode('utf-8'))
+        self.assertEqual('old', mr.check(edition)['editionId'])
+
+    def test_repository_purposes_name_existing_sources(self):
+        sources = mr.load_sources(mr.SOURCES)
+        self.assertGreaterEqual(len(sources['purposes']), 38)
+        for target, entry in sources['purposes'].items():
+            for source in entry['sources']:
+                self.assertTrue((ROOT / source.split(' ')[0]).is_file(), f'{target}: {source}')
+            self.assertNotEqual(entry['purpose'].rstrip('.'), target, target)
 
 if __name__ == '__main__':
     unittest.main()
