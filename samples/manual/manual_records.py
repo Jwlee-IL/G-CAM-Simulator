@@ -64,15 +64,9 @@ INSET, INSET_V = 4, 2   # an inside label's clearance from the control's edges (
 TEXT_INK = 8    # ink pixels near a label box that count as covering screen content (fewer: a stray pixel)
 LINE_INK = 6    # ink pixels along a join line that count as crossing screen content (fewer: a separator)
 SEPARATORS = ('\u00b7', '\u00d7', '\u2013', '|', '-')
-PURPOSES = 'purposes.json'   # what each mark is for: in its label (schema 2); schema 1 is replayed only
+PURPOSES = 'purposes.json'   # what each mark is for, drawn into its label
 PURPOSE_LABELS = ('each mark is labelled "<screen text or the entry\'s name>: <short purpose>" from the purpose list; a mark '
                   'without an entry keeps its screen text alone')
-# Schema 1 of the purpose list (a numbered list under each figure, long labels cut there) is kept only to replay the
-# editions generated with it; new editions refuse it.
-LIST_LONG, LIST_CUT = 48, 40   # in the purpose list only, a label over LIST_LONG characters is cut at a word to LIST_CUT and '\u2026'
-LIST_RULE = (f'in the purpose list only, a label over {LIST_LONG} characters is cut to at most {LIST_CUT} characters '
-             'followed by an ellipsis, at the last " · " or " (" from the middle on, else at a word; the figure keeps the '
-             'label as measured')
 WRAPS = (32, 20, 12)   # label line lengths in characters: the label as printed, then narrower variants that may fit
 LINE_PITCH = 20 # label text line pitch, px
 JOIN_GAP = 12   # clearance of a label shifted off its frame's side, so its join line shows
@@ -1132,24 +1126,24 @@ def load_sources(root, require_purposes=True):
     purposes, purpose_status = None, None
     if require_purposes or confined(root, PURPOSES).is_file():   # an edition from before the purpose list has none
         document = json.loads(take(PURPOSES, 'purposes'))
-        version = document.get('schemaVersion')
-        require(document.get('schema') == 'gcam.manual-purposes' and version in (1, 2), 'purposes: unknown schema')
+        require(document.get('schema') == 'gcam.manual-purposes', 'purposes: unknown schema')
+        require(document.get('schemaVersion') != 1, 'purposes: schema 1 (a list under each figure) is no longer supported')
+        require(document.get('schemaVersion') == 2, 'purposes: unknown schema')
         purposes, purpose_status = {}, document.get('status')
         glyphs = label_font()['glyphs']
-        def line(text, field):
+        def line(text):
             return (isinstance(text, str) and text and text.strip() == text and '\n' not in text and '\r' not in text
-                    and (field == 'purpose' or all(c in glyphs for c in text)))
+                    and all(c in glyphs for c in text))
         for entry in document['purposes']:
             target = entry.get('target')
             require(isinstance(target, str) and re.fullmatch(r'[A-Za-z0-9.]+', target) and target not in purposes,
                     'purposes: duplicate or malformed target ' + str(target))
-            fields = ('purpose',) if version == 1 else ('short',) + (('name',) if 'name' in entry else ())
-            require(all(line(entry.get(f), f) for f in fields) and entry.get('sources'),
+            fields = ('short',) + (('name',) if 'name' in entry else ())
+            require(all(line(entry.get(f)) for f in fields) and entry.get('sources'),
                     'purposes: incomplete, or a character the label font has no glyph for, in ' + target)
             purposes[target] = entry
     return {'registry': registry, 'parts': parts, 'notices': by_id, 'noticeStatus': notices.get('status'),
-            'static': static, 'files': files, 'purposes': purposes, 'purposeStatus': purpose_status,
-            'purposeVersion': version if purposes is not None else None}
+            'static': static, 'files': files, 'purposes': purposes, 'purposeStatus': purpose_status}
 
 
 # ---------------------------------------------------------------- run records
@@ -1213,27 +1207,6 @@ def render_notice(notice):
     return f'> **{notice["level"].capitalize()}.** {notice["text"]}'
 
 
-def list_label(text):
-    """A figure label as the purpose list prints it: a long label cut at a word (LIST_RULE). Returns (text, cut)."""
-    if len(text) <= LIST_LONG:
-        return text, False
-    kept = ''
-    for word in text.split():
-        if len(kept) + bool(kept) + len(word) > LIST_CUT:
-            break
-        kept += (' ' if kept else '') + word
-    kept = kept[:LIST_CUT] if kept else text[:LIST_CUT]   # a first word longer than the cut is broken
-    phrase = max(text.rfind(' · ', 0, LIST_CUT + 1), text.rfind(' (', 0, LIST_CUT + 1))
-    if phrase >= LIST_CUT // 2:   # rather at the end of a phrase ("Stopped · t = 1.8 s of 600 s…", not "… · 116…")
-        kept = text[:phrase]
-    return kept.rstrip(' ' + ''.join(SEPARATORS) + ',;:') + '…', True
-
-
-def markdown_safe(text):
-    """Literal text for Markdown: HTML special characters as entities, Markdown punctuation escaped."""
-    return re.sub(r'([\\`*_\[\]|#])', r'\\\1', html.escape(text, quote=False))
-
-
 def purpose_marks(marks, purposes):
     """The marks with their labels as drawn: "<screen text or name>: <short>" (PURPOSE_LABELS). Returns (marks, record
     rows, targets without a purpose entry)."""
@@ -1250,23 +1223,6 @@ def purpose_marks(marks, purposes):
         out.append({**mark, 'label': label})
         rows.append({**row, 'label': label})
     return out, rows, missing
-
-
-def purpose_list(marks, purposes):
-    """The numbered list under a figure, in mark order: the label, then what the marked element is for. Returns (lines,
-    record rows, targets without a purpose entry)."""
-    lines, rows, missing = [], [], []
-    for mark in marks:
-        label, cut = list_label(label_text(mark))
-        entry = purposes.get(mark['target'])
-        line = f'{mark["n"]}. **{markdown_safe(label)}**'
-        if entry:
-            line += ' — ' + entry['purpose']
-        else:
-            missing.append(mark['target'])
-        lines.append(line)
-        rows.append({'n': mark['n'], 'target': mark['target'], 'label': label, 'shortened': cut, 'purpose': bool(entry)})
-    return lines, rows, missing
 
 
 def resolve_tokens(text, chapters, printed):
@@ -1364,7 +1320,7 @@ def assemble(sources, runs, edition_id, date, formal, budget, reuse=None, genera
                     for figure in step['figures']:
                         _, meta, width, height, rgb, doc, png, marks_raw = figure_map[figure['id']]
                         labelled = None
-                        if sources['purposeVersion'] == 2 and doc['marks']:   # the purpose drawn into each label
+                        if sources['purposes'] is not None and doc['marks']:   # the purpose drawn into each label
                             marks, labelled, absent = purpose_marks(doc['marks'], sources['purposes'])
                             doc = {**doc, 'marks': marks}
                             missing_purposes.update(absent)
@@ -1382,10 +1338,6 @@ def assemble(sources, runs, edition_id, date, formal, budget, reuse=None, genera
                                'pixelSha256': sha(struct.pack('>II', fw, fh) + frgb), 'flags': fig_flags}
                         if labelled is not None:
                             row['markLabels'] = labelled
-                        if sources['purposeVersion'] == 1 and doc['marks']:   # replay of an edition with the list
-                            items, row['purposeList'], absent = purpose_list(doc['marks'], sources['purposes'])
-                            text += items + ['']
-                            missing_purposes.update(absent)
                         figures_out.append(row)
                         flags += [f'{figure["id"]}:{f}' for f in fig_flags]
                     for missing in step.get('missingFigures', []):
@@ -1425,8 +1377,7 @@ def assemble(sources, runs, edition_id, date, formal, budget, reuse=None, genera
               'registry': {'id': registry['id'], 'locale': registry['locale'], 'sha256': sha(sources['files']['chapters.json'])},
               'notices': {'sha256': sha(sources['files']['notices.json']), 'status': sources['noticeStatus']},
               **({'purposes': {'sha256': sha(sources['files'][PURPOSES]), 'status': sources['purposeStatus'],
-                               'missingTargets': sorted(missing_purposes),
-                               **({'listLabels': LIST_RULE} if sources['purposeVersion'] == 1 else {'labels': PURPOSE_LABELS})}}
+                               'missingTargets': sorted(missing_purposes), 'labels': PURPOSE_LABELS}}
                  if sources['purposes'] is not None else {}),
               'static': [{'chapter': n, 'path': s['path'], 'sha256': sha(sources['files'][s['path']]), 'draft': s['draft']}
                          for n, s in sorted(sources['static'].items())],
@@ -1456,7 +1407,6 @@ def generate(sources_root, runs_root, edition_id, date, out, formal=False, budge
     out = Path(out)
     require(not out.exists(), 'edition: output folder exists (editions are never overwritten)')
     sources = load_sources(sources_root)
-    require(sources['purposeVersion'] == 2, 'purposes: schema 1 (a list under each figure) is replayed only, never generated')
     outputs = assemble(sources, load_runs(runs_root, sources), edition_id, date, formal, budget)
     for relative, data in outputs.items():
         path = out / relative
@@ -1700,8 +1650,8 @@ def self_test(out=None):
          'refuse:purposes: duplicate or malformed target')
     case('purpose-no-glyph', lambda s, r: edit_json(s / PURPOSES, lambda p: p['purposes'][0].update(short='in \u00b5Ci')),
          'refuse:purposes: incomplete, or a character the label font has no glyph for, in StartAcquisition')
-    case('purpose-schema-1', lambda s, r: edit_json(s / PURPOSES, lambda p: (p.update(schemaVersion=1), p['purposes'][0].update(
-         purpose='Starts the acquisition.'))), 'refuse:purposes: schema 1 (a list under each figure) is replayed only')
+    case('purpose-schema-1', lambda s, r: edit_json(s / PURPOSES, lambda p: p.update(schemaVersion=1)),
+         'refuse:purposes: schema 1 (a list under each figure) is no longer supported')
     case('missing-run', lambda s, r: [p.unlink() for p in (r / 'run-beta').rglob('*') if p.is_file()], 'it is not included because no run')
     case('missing-run-formal', lambda s, r: [p.unlink() for p in (r / 'run-beta').rglob('*') if p.is_file()], 'refuse:formal-refused', formal=True)
     case('failed-chapter', failed, 'did not pass (failed)')

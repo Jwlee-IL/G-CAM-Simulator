@@ -403,45 +403,7 @@ class ManualRecordsTests(unittest.TestCase):
         figure = next(f for f in generation['figures'] if f['figure'] == '1.2-1')
         self.assertEqual(('formal', [{'n': 1, 'target': 'StartAcquisition', 'screenText': 'Start', 'short': 'go', 'label': 'Start: go'}],
                           ['Start: go']), (generation['status'], figure['markLabels'], [l['text'] for l in figure['operation']['labels']]))
-        self.assertNotIn('purposeList', figure)
         self.assertEqual(outputs['sources/manual/purposes.json'], (src / mr.PURPOSES).read_bytes())
-
-    def test_an_edition_with_the_schema_1_list_replays_with_its_list(self):
-        root = scratch()
-        src, runs = mr.fixture(root)
-        old = {'schema': 'gcam.manual-purposes', 'schemaVersion': 1, 'status': 'approved',
-               'purposes': [{'target': 'StartAcquisition', 'purpose': 'Starts the acquisition.', 'sources': ['fixture']}]}
-        (src / mr.PURPOSES).write_bytes(mr.canonical(old))
-        with self.assertRaisesRegex(ValueError, r'purposes: schema 1 \(a list under each figure\) is replayed only'):
-            mr.generate(src, runs, 'new', '2026-10-14', root / 'new')
-        sources = mr.load_sources(src)
-        outputs = mr.assemble(sources, mr.load_runs(runs, sources), 'old', '2026-10-14', False, mr.DEFAULT_BUDGET)
-        edition = root / 'old'
-        for relative, data in outputs.items():
-            (edition / relative).parent.mkdir(parents=True, exist_ok=True)
-            (edition / relative).write_bytes(data)
-        markdown = outputs['MANUAL.Studio.md'].decode('utf-8')
-        self.assertIn('<p align="center"><em>Figure 1.2-1.</em> The top bar.</p>\n\n'
-                      '1. **Start** \u2014 Starts the acquisition.\n\n### 1.3 Beta', markdown)   # the list, as generated then
-        generation = json.loads(outputs['generation-record.json'])
-        self.assertEqual(mr.LIST_RULE, generation['purposes']['listLabels'])
-        figure = next(f for f in generation['figures'] if f['figure'] == '1.2-1')
-        self.assertEqual((['Start'], [{'n': 1, 'target': 'StartAcquisition', 'label': 'Start', 'shortened': False, 'purpose': True}]),
-                         ([l['text'] for l in figure['operation']['labels']], figure['purposeList']))
-        self.assertEqual('old', mr.check(edition)['editionId'])
-        # the list's own label rule: a long label cut at a phrase or a word, in the list only
-        self.assertEqual(('Preset', False), mr.list_label('Preset'))
-        exact = 'Detector pixels must be an integer from 4 to 64.'   # 48 characters: kept whole
-        self.assertEqual((exact, False), mr.list_label(exact))
-        for label, cut in (('Stopped \u00b7 t = 1.8 s of 600 s \u00b7 116 counts \u00b7 66 cps \u00b7 seed 12345',
-                            'Stopped \u00b7 t = 1.8 s of 600 s\u2026'),
-                           ('Discard the acquired data (2.0 live s, 127 counts)? Inputs unlock for the next acquisition.',
-                            'Discard the acquired data\u2026'),
-                           ('Start refused: Detector pixels must be an integer from 4 to 64.',
-                            'Start refused: Detector pixels must be\u2026'),
-                           ('x' * 60, 'x' * 40 + '\u2026')):
-            self.assertEqual((cut, True), mr.list_label(label))
-        self.assertEqual(r'a\*b\_&lt;c&gt; \[d\] &amp; ' + '\u00b7', mr.markdown_safe('a*b_<c> [d] & \u00b7'))
 
     def test_an_edition_from_before_the_purpose_list_replays_without_one(self):
         root = scratch()
@@ -460,7 +422,6 @@ class ManualRecordsTests(unittest.TestCase):
             (edition / relative).write_bytes(data)
         generation = json.loads(outputs['generation-record.json'])
         self.assertNotIn('purposes', generation)
-        self.assertNotIn('purposeList', generation['figures'][0])
         self.assertNotIn('1. **Start**', outputs['MANUAL.Studio.md'].decode('utf-8'))
         self.assertEqual('old', mr.check(edition)['editionId'])
 
