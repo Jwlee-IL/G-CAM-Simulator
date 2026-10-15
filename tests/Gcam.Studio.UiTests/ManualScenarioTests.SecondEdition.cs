@@ -37,6 +37,7 @@ public sealed partial class ManualScenarioTests
             run.BeginStep($"Open {{ExportReport}}, choose {format} and click {{Export.Confirm}}. In the save dialog enter a destination, check the filename and Save. Keep the same-name scene sidecar" + (extension == "csv" ? " and metadata sidecar." : "."));
             ui.Invoke("ExportReport");
             StudioWindow.WaitUntil(() => ui.Exists("Export.Confirm"), TimeSpan.FromSeconds(5), "format popup");
+            run.ResolveLabels(); // Export.Confirm exists only while the format popup is open
             string path = Path.Combine(run.Sandbox, extension, "report." + extension);
             ReportExportDialog.Save(ui, run.Record!, run.Sandbox, path, format);
             CheckExport(ui, run, path, extension, estimate, count);
@@ -95,6 +96,7 @@ public sealed partial class ManualScenarioTests
         ui.Invoke("Readout.ChooseReadout");
         run.BeginStep("Choose Baseline in {Optics.Preset:label}, then FourOutputAnger in {Readout.Mode:label}. Set seed 47001, ambient dose 0 and live time 10 s. Click {Readout.Prepare} and wait for Ready.");
         ui.SelectLeftTab("Optics"); ui.Choose("Optics.Preset", "Baseline");
+        run.ResolveLabels(); // the preset's label is visible only on the Optics tab
         ui.SelectLeftTab("Detector"); ui.Choose("Readout.Mode", "FourOutputAnger");
         ui.SetOption("AcquisitionSeed", "47001"); ui.SetOption("Acquisition.AmbientDose", "0");
         ui.SetText("AcquisitionLiveTime", "10", "SourceY"); ui.Invoke("Readout.Prepare");
