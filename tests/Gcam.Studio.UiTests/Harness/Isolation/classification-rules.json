@@ -80,6 +80,24 @@
       "entry": "value",
       "reason": "the shell's display-name cache of launched executables (FriendlyAppName, ApplicationCompany), written once per executable path when the shell first shows it; a new worktree is a new path: an OS record observing processes or windows, other-actor by the procedure",
       "evidencedBy": "probe-20261016-01"
+    },
+    {
+      "pattern": "<LocalLow>\\\\Microsoft\\\\CryptnetUrlCache\\\\.*",
+      "channel": "file",
+      "reason": "the per-user certificate revocation URL cache, shared by every process that builds certificate chains: Studio has no network code and no connection from its process was observed (AGENTS.UiAutomation section 1)",
+      "evidencedBy": "manual-20261016-02"
+    },
+    {
+      "pattern": "<LOCALAPPDATA>\\\\Publishers\\\\[^\\\\]+\\\\.*",
+      "channel": "file",
+      "reason": "the shared folders of packaged apps' publishers (here the Store's installed-app database; Studio is unpackaged): the same category as the Packages filter",
+      "evidencedBy": "manual-20261016-02"
+    },
+    {
+      "pattern": "<LOCALAPPDATA>\\\\Kakao\\\\.*",
+      "channel": "file",
+      "reason": "a desktop messenger's settings and profile data, written by that app running beside the batch: Studio has no messaging or third-party integration",
+      "evidencedBy": "manual-20261016-02"
     }
   ],
   "backgroundFiltersSchema": {
@@ -333,6 +351,11 @@
       "id": "RC-10",
       "kind": "background filter: the shell's MuiCache display-name cache (registry values)",
       "status": "author decision 2026-10-16; HUM-07 approval with the next run's approval on the commit"
+    },
+    {
+      "id": "RC-11",
+      "kind": "background filters: certificate revocation URL cache, packaged-app publisher folders, a desktop messenger's data (files)",
+      "status": "evidenced by manual-20261016-02; HUM-07 pending"
     }
   ]
 }
