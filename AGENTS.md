@@ -112,6 +112,7 @@ GCAM_EVIDENCE_TESTS=1 dotnet test tests/Gcam.Studio.Services.Tests -c Release --
 # Test records (catalog, run records, generated report — docs/VV.Tests.md, docs/VV.Tests.Results.md):
 python -B samples/testing/test_records.py check-catalog --discover          # every test class has a catalog entry
 python -B samples/testing/test_records.py collect --family dotnet --no-build --out <scratch-bundle>
+python -B samples/testing/test_records.py collect --family dotnet --no-build --profile desktop --out <scratch-bundle>  # desktop results; author's go
 python -B samples/testing/test_records.py generate --bundle <scratch-bundle> # report; opt-in suites stay "not executed"
 python -B samples/testing/test_records.py check --archives                  # replay committed milestones byte for byte
 

@@ -17,7 +17,7 @@ One entry describes each xUnit class, unittest class, cocotb module/configuratio
 
 Tolerance statements describe existing assertions; they introduce no acceptance margin. An unexplained margin is an established finding, not an incomplete entry. Operational deadlines and product targets are distinguished from numerical accuracy. A reused production helper limits oracle independence.
 
-Run `python samples/testing/test_records.py check-catalog --discover` after a Release build to check membership, methods, trace selectors, source fingerprints and expanded cases. `--update-discovery` owns the discovery block. Run commands and profile switches are recorded in each execution bundle; archives pin this catalog. Normal collection explicitly disables the three GCAM opt-ins. Level follows runner family: xUnit engine/unit/service or gated desktop/render, Python algorithm/provenance, RTL simulation, and checker replay.
+Run `python samples/testing/test_records.py check-catalog --discover` after a Release build to check membership, methods, trace selectors, source fingerprints and expanded cases. `--update-discovery` owns the discovery block. Run commands and profile switches are recorded in each execution bundle; archives pin this catalog. Normal collection explicitly disables the three GCAM opt-ins; the desktop profile (`collect --family dotnet --profile desktop`, on the author's go) runs the UI test project with the desktop opt-in on and the long run, the observed probe and the polish survey off. Level follows runner family: xUnit engine/unit/service or gated desktop/render, Python algorithm/provenance, RTL simulation, and checker replay.
 
 
 <!-- BEGIN GENERATED: TEST DISCOVERY -->
@@ -2833,7 +2833,7 @@ Gates: none.
 Source: [samples/testing/test_records.py](../samples/testing/test_records.py).
 
 ```json
-{"id":"checker::archived-replay","runner":"checker","methods":["archived-replay"],"sources":{"samples/testing/test_records.py":"92d04c0f4751885046a4b39b7a9e1f9ec05370466ca0851ab6db3c2c07ff9df4"},"trace":[]}
+{"id":"checker::archived-replay","runner":"checker","methods":["archived-replay"],"sources":{"samples/testing/test_records.py":"863d24944bd745deb812441bf2435e7046cbf55ac1837ab54f52b953dc08e689"},"trace":[]}
 ```
 
 
@@ -2867,13 +2867,13 @@ Gates: none.
 Source: [samples/testing/test_records.py](../samples/testing/test_records.py).
 
 ```json
-{"id":"checker::test-catalog","runner":"checker","methods":["test-catalog"],"sources":{"samples/testing/test_records.py":"92d04c0f4751885046a4b39b7a9e1f9ec05370466ca0851ab6db3c2c07ff9df4"},"trace":[]}
+{"id":"checker::test-catalog","runner":"checker","methods":["test-catalog"],"sources":{"samples/testing/test_records.py":"863d24944bd745deb812441bf2435e7046cbf55ac1837ab54f52b953dc08e689"},"trace":[]}
 ```
 
 
 ## test-record-self-test — checker
 
-Verifies precise refusals for isolated record, adapter, sanitizer and archive defects.
+Verifies precise refusals for isolated record, adapter, sanitizer and archive defects, and the desktop profile: a desktop run replaces a skipped normal selection, a desktop record without the desktop opt-in is refused, and the long run keeps its own opt-in as the skip reason.
 
 Oracle: Each named one-defect fixture must raise the specified refusal; synthetic TRX/unittest/cocotb, actual unittest callback/subtest and sanitizer fixtures must normalize to the explicit expected rows.
 
@@ -2884,7 +2884,7 @@ Gates: none.
 Source: [samples/testing/test_records.py](../samples/testing/test_records.py).
 
 ```json
-{"id":"checker::test-record-self-test","runner":"checker","methods":["test-record-self-test"],"sources":{"samples/testing/test_records.py":"92d04c0f4751885046a4b39b7a9e1f9ec05370466ca0851ab6db3c2c07ff9df4"},"trace":[]}
+{"id":"checker::test-record-self-test","runner":"checker","methods":["test-record-self-test"],"sources":{"samples/testing/test_records.py":"863d24944bd745deb812441bf2435e7046cbf55ac1837ab54f52b953dc08e689"},"trace":[]}
 ```
 
 
