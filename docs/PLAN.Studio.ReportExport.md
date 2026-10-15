@@ -26,6 +26,8 @@ spectrum tables) and duplicated the scene file; it now shows those tables' entry
 figures 3,869,095 → 10,831 bytes; the scene file is unchanged). Offscreen title-bar renders show no layout defect. Docs
 applied by the planner: SRS (SR-SEC-01 narrowed, SR-EXPORT-01 … 04), SDS SU-27, V&V trace and History, D-58,
 AGENTS.Studio, AGENTS.UiAutomation §1, folder maps. Build 0 / 0; suite 1,066 passed / 50 skipped; catalog 203.
+Run 4 (2026-10-15, `7caf9ff`, author's go) passed in 9 s: the exported HTML is 450,860 bytes with the reduced
+Scene section (10 KB) and three figures; the scene file is unchanged in size (3,171,006 bytes).
 
 ## Decisions (planner defaults, 2026-10-14)
 
