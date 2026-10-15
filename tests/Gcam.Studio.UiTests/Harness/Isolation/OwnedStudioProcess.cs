@@ -91,7 +91,13 @@ public sealed class OwnedStudioProcess : IDisposable
         {
             if (Process.HasExited) throw new InvalidOperationException($"Studio exited: {Process.ExitCode}");
             Process.Refresh();
-            if (Process.MainWindowHandle != IntPtr.Zero) return AutomationElement.FromHandle(Process.MainWindowHandle);
+            if (Process.MainWindowHandle != IntPtr.Zero)
+            {
+                // An element taken before WPF attaches the window's content stays empty for good (measured 2026-10-15:
+                // 3 of 12 launches); take a fresh one until the window exposes its children.
+                var window = AutomationElement.FromHandle(Process.MainWindowHandle);
+                if (window.FindFirst(TreeScope.Children, Condition.TrueCondition) is not null) return window;
+            }
             Thread.Sleep(100);
         }
         throw new TimeoutException("Studio main window did not appear");
