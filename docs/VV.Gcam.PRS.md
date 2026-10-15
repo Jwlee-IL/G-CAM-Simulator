@@ -72,7 +72,7 @@ field of view, the trust gate, mask / antimask and isotope separation, expected 
 | SS-1 | Imaging head — mask, crystal array, shield | this PRS + the design models of EV-24 … EV-28 |
 | SS-2 | Front-end electronics — SiPM bias, ADC, FPGA shaper / peak detection | this PRS + `rtl/` ([rtl/README](../rtl/README.md)) |
 | SS-3 | Reconstruction — decoding, energy windowing, Compton stripping | this PRS + the engine and its tests |
-| SS-4 | User interface — images, overlay, measurements; runs on a Windows tablet (PR-PHY-04) | **not specified as a product UI.** GCAM Studio ([VV.Studio.SRS](VV.Studio.SRS.md)) stays the simulator's engineering viewer and is **not** grown into the product UI (D-34); its SR-SEC-01 (no file I/O) therefore stands |
+| SS-4 | User interface — images, overlay, measurements; runs on a Windows tablet (PR-PHY-04) | **not specified as a product UI.** GCAM Studio ([VV.Studio.SRS](VV.Studio.SRS.md)) stays the simulator's engineering viewer and is **not** grown into the product UI (D-34); its SR-SEC-01 (no file I/O) therefore stands, narrowed to one user-confirmed report export (D-58) |
 | SS-5 | Auxiliary sensors — scene camera, ToF / LiDAR, IMU | this PRS |
 | SS-6 | Mechanics and power — housing, grip, battery, thermal path | this PRS |
 

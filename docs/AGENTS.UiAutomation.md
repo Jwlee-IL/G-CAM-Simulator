@@ -38,11 +38,14 @@ condition and a record below.
 **Write surfaces.** Searched every project Studio loads (`Gcam.Studio*`, `Gcam.Simulation` and its dependencies)
 for file, directory, registry, environment, process, network, clipboard and mutex APIs. Only
 `ConfigLoader.Save` / `Load` and `Waveform`'s JSON read use the file system, and neither is reachable from Studio
-(CLI paths). Studio keeps no settings: the theme choice is not persisted.
+(CLI paths). Studio keeps no settings: the theme choice is not persisted. Since TODO-46 (2026-10-15) Studio has one
+write surface, the report export: it writes the path the user confirms in the save dialog (HTML, PDF, Word or CSV),
+`<name>.scene.json` beside it and, for event data, `<name>.meta.json`, and nothing else (`ReportFileWriter`).
 
 | Surface | Declared | Resolved in a run | State |
 |---|---|---|---|
-| User / app data, settings, logs, caches | none in code | `TEMP` / `TMP` (and env-var readers of `APPDATA` / `LOCALAPPDATA`) redirected into an owned sandbox folder; **0 files written** in every run so far | confirmed absent; the redirect is a partial boundary — see below |
+| User / app data, settings, logs, caches | none in code | `TEMP` / `TMP` (and env-var readers of `APPDATA` / `LOCALAPPDATA`) redirected into an owned sandbox folder; **0 files written** in every run so far, apart from the export scenario's two declared report files (row below) | confirmed absent; the redirect is a partial boundary — see below |
+| Report export (TODO-46) | the confirmed path and its declared sidecars (`.scene.json`; `.meta.json` for event data), chosen in the save dialog; no remembered folder or setting | `ReportExportScenarioTests` (one case per format) types a path inside the owned sandbox; the run asserts exactly `report.<ext>` and `report.scene.json` there (plus `report.meta.json` for CSV) and nothing else in the sandbox | declared and isolated; observed runs passed 2026-10-15 (all four formats in run 6) |
 | Network | none in code | no TCP connections observed from the app's PID during an audit run | confirmed absent |
 | Child processes | none in code | none observed | confirmed absent |
 | Shared resources | the interactive desktop and the mouse | one run at a time (`DisableTestParallelization`), opt-in | blocked by policy |
@@ -51,7 +54,8 @@ for file, directory, registry, environment, process, network, clipboard and mute
 known-folder lookups resolve through the shell's known-folder registry, not the process environment, so they would
 still reach the real profile. The boundary for those is the source survey (no such call is reachable) plus the
 audit — not the redirect. If Studio ever gains settings or a cache, isolate them through an explicit path the
-harness can set, and re-run this stage.
+harness can set, and re-run this stage. The report export is that case: its explicit path is the one the user (or the
+harness, acting as the user) types into the save dialog.
 
 **Audit run.** Before any automation: the app started (sandboxed) and closed with no UI interaction while
 child processes, TCP connections and the sandbox were watched. Nothing was written, started or connected. A global

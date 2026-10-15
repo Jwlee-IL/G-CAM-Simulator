@@ -63,7 +63,7 @@ one class, or a small group of types that only make sense together. Unit IDs are
 | SU-08 | SI-3 | `SimulationService` | `Services/SimulationService.cs` | validate inputs, build the engine config (resolving the ambient preset reference from the deployed `ambient` folder through the engine loader) and start an acquisition session |
 | SU-09 | SI-4 | `HeatmapView` (+ `HeatmapViewAutomationPeer`) | `Studio/Controls/HeatmapView.cs` | draw a grid with the colormap, zoom / pan input, hover readout, automation peer, exposes data range and mm mapping |
 | SU-10 | SI-4 | `MeasurementAdorner`, `MeasurementOverlay` | `Studio/Controls/Measurement*.cs` | draw measurements and (display-only) source markers over a heatmap; turn gestures into `MeasurementDraft`s |
-| SU-11 | SI-4 | `ColorBar`, `Colormap` | `Studio/Controls/ColorBar.cs`, `Studio/Rendering/Colormap.cs` | viridis lookup table; colour scale with ticks |
+| SU-11 | SI-4 | `ColorBar`, `Colormap` | `Studio/Controls/ColorBar.cs`, `Studio/Rendering/Colormap.cs` (the table itself is `Core/Rendering/Colormap.cs`) | viridis lookup table; colour scale with ticks |
 | SU-12 | SI-4 | `ThemeService` | `Studio/Services/ThemeService.cs` | swap the token dictionary in place; DWM attribute for the remaining native frame |
 | SU-13 | SI-4 | `NullToCollapsedConverter`, `InverseBoolToVisibilityConverter`, `EnumMatchConverter` | `Studio/Converters/*.cs` | value → visibility / radio-button mapping |
 | SU-14 | SI-4 | `MainWindow`, `OptionsView`, `EmptyReadoutState`, theme dictionaries, `ImageStackPanel`, `ImageAreaPanel`, `WindowFrame`, `CaptionBar`, `CaptionButtons`, `SettingsGroup`, `FocusRequest`, `IconToggle` | `Studio/Views/MainWindow.xaml(.cs)`, `Studio/Views/OptionsView.xaml(.cs)`, `Studio/Views/EmptyReadoutState.xaml(.cs)`, `Studio/Themes/*.xaml`, `Studio/Controls/Image*Panel.cs`, `Studio/Controls/{WindowFrame,CaptionBar,CaptionButtons,SettingsGroup,FocusRequest,IconToggle}.cs` | screen layout and bindings (borderless window with a themed caption, left tabs, Options dialog in the modal layer, one-line status bar) (a square image with its legend at the drawn width; the image pair above the measurements, which take the remaining height); tokens, metrics, typography, control styles ([DESIGN.Layout](DESIGN.Layout.md), [DESIGN.Color](DESIGN.Color.md), [DESIGN.Typography](DESIGN.Typography.md), [DESIGN.Controls](DESIGN.Controls.md)) |
@@ -546,7 +546,8 @@ Every SRS requirement maps to at least one unit; every unit carries at least one
 | SR-A11Y-02 | SU-09 |
 | SR-A11Y-04 | SU-14 |
 | SR-A11Y-05 | SU-14 theme dictionaries and disabled TextBox/ComboBox templates; ThemeContrastTests reads production XAML tokens without WPF |
-| SR-SEC-01 | all (no user-file I/O in Studio), SU-08 (engine is called with in-memory config; the only file read is the shipped, hash-pinned ambient spectrum, through the engine loader) |
+| SR-SEC-01 | all (no user-file I/O in Studio except SU-27's confirmed path and its declared sidecars), SU-08 (engine is called with in-memory config; the only file read is the shipped, hash-pinned ambient spectrum, through the engine loader) |
+| SR-EXPORT-01 … 05 | SU-27, SU-01 (`ExportReportCommand`), SU-19 (configuration JSON once per acquisition), SU-20 / SU-21 (`MeasuredEnergies`, for event data) |
 | SR-ARCH-01 … SR-ARCH-04 | project files of SI-1 … SI-4 and `tests/Gcam.Studio.Tests` |
 
 SU-11 (colour bar, colormap) and SU-13 (converters) serve SR-VIEW-01 / SR-A11Y-04 and SR-MEAS-06
@@ -630,3 +631,17 @@ fusion threshold is computed. External range has no effect until Use as focus is
 | SR-FOCUS-03…05 | FocusInterval/Track, ImagingWorkspaceViewModel.Focus, FocusSweepView and ImagingOptionsPanel; existing PlotView |
 
 Execution evidence and known algorithm limits: [VV.Studio.Detector](VV.Studio.Detector.md).
+
+## Report export (TODO-46, 2026-10-15)
+
+| Unit | Item | Type(s) | File(s) | Responsibility |
+|---|---|---|---|---|
+| SU-27 | SI-1, SI-4 | `SimulationReport`, `ReportWriter`, `ReportMarkup`, `ReportFormat`, `ReportFiles`, `ReportMeasurement`, `ReportTextWrapping`, `WordReportWriter`, `EventCsvWriter`, `ExportReportViewModel`, `IReportExportService`; `ReportExportService`, `ReportFileWriter`, `PdfReportWriter`, `ReportFigureRenderer`, `ExportReportView` | `Core/Reporting/*.cs`, `Core/Services/IReportExportService.cs`, `Core/ViewModels/MainViewModel.Report.cs`, `Core/ViewModels/ExportReportViewModel.cs`; `Studio/Services/Report*.cs`, `Studio/Services/PdfReportWriter.cs`, `Studio/Views/ExportReportView.xaml` | capture the displayed state; the format popup; deterministic HTML with inline SVG, Word as hand-written Office Open XML, event data as CSV with its metadata, and the scene JSON (Core); PDF through PDFsharp-WPF 6.2.4 (MIT) and PNG figures (shell); choose the path and write the chosen file and its declared sidecars with rollback (shell) |
+
+`ExportReportCommand` is enabled only while a snapshot exists. It captures the report before the native dialog pumps
+messages, because a live acquisition may publish a newer snapshot while the dialog is open. `AcquisitionSession`
+serialises the finalised configuration (after Studio's detector, ambient and readout settings) once per acquisition,
+with the engine's `ConfigLoader.Serialize`, and every snapshot carries that text; the report never rebuilds a
+configuration. `ReportFileWriter` keeps any existing bytes of both destinations in memory, opens both before
+truncating either, and on failure restores them or deletes a file the export created; a failed rollback is reported
+with both errors. Nothing else on disk is read or written.

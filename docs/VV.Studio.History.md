@@ -359,3 +359,23 @@ and the edition gained PDF and Word renderings, the author approved the notice l
 figures, the mark purposes, the charter and the background filters. The edition was regenerated from run 04 as formal
 (75 files, 3.8 MB; `911d8c2`); generator self-test 41, tests 25, `check --all` byte for byte.
 
+## Report export (TODO-46), 2026-10-15
+
+Worktree `C:\gw\w46`, branch `todo46-report-export`. Desktop scenario `ReportExportScenarioTests` (the author's go each
+run): run 1 looked for the save dialog among the desktop's children and run 2 did not invoke the dialog's own Save button
+(both harness defects, fixed in `487dbfd` and `f3798d3`); run 3 (`f3798d3`) passed in 6 s — the dialog's Save (IDOK) was
+invoked, exactly `report.html` and `report.scene.json` appeared in the owned sandbox, the HTML holds the displayed estimate
+and found-peak rows, and the scene file loads. That run's HTML was 4.3 MB, almost all of it the ambient spectrum tables
+repeated from the scene file; the HTML now shows their entry counts only (default scene without figures: 3,869,095 →
+10,831 bytes; scene file unchanged). Offscreen renders of the main window (dark / light, 1280×800 / 1440×900): "Export
+report…" sits beside Reset at the height of the other top-bar buttons, unclipped. Release build 0 warnings; normal suite
+1,066 passed / 50 skipped; catalog 203 units. No broken-verdict or recovery run was made for this exploratory scenario.
+
+Run 4 (`7caf9ff`) passed on the reduced HTML (450,860 bytes). Stage 2, the same day (decisions X1 … X8): a document icon
+button opens an export popup — HTML, PDF (PDFsharp-WPF), Word and event data (CSV with a metadata file, under every
+readout). Run 5 (`13a6969`) passed the theory for HTML, PDF and Word through the popup; run 6 (`ab34330`) passed all four
+formats (CSV 6 s, the others 5 s each), each writing exactly its declared files into its owned sandbox (three for CSV),
+with no process left. Samples read by the planner: the PDF (7 pages, configuration as an appendix), the Word package, the
+CSV and meta file of a direct and of a physical-readout acquisition. Release build 0 warnings; normal suite 1,093 passed /
+51 skipped; catalog 208 units.
+

@@ -18,6 +18,7 @@ internal sealed class AcquisitionSession : IAcquisitionSession
     private static readonly TimeSpan RefreshInterval = TimeSpan.FromMilliseconds(250);
     private static readonly TimeSpan TransportBudget = TimeSpan.FromMilliseconds(200);
     private readonly SimulationConfig _config;
+    private readonly string _configurationJson;
     private readonly DetectorSettings _detector;
     private readonly TimeProvider _clock;
     private readonly OpticsSettings _optics;
@@ -48,6 +49,7 @@ internal sealed class AcquisitionSession : IAcquisitionSession
         ReadoutBank? prepared = null, Action? release = null)
     {
         _config = config;
+        _configurationJson = ConfigLoader.Serialize(config);
         _prepared = prepared;
         _release = release;
         if (prepared is { } bank)
@@ -214,7 +216,7 @@ internal sealed class AcquisitionSession : IAcquisitionSession
                 double actual = reportInterval > 0 ? (_live - previousLive) / reportInterval : 0;
                 await channel.Writer.WriteAsync(new AcquisitionSnapshot(_live, counts, _physicalSource?.InputRateCps ?? source!.RateCps,
                     actual, limited, imaging, Array.AsReadOnly(_events.ToArray()), decodeWatch.Elapsed, completed)
-                    { Detector = _detector, Optics = _optics, Seed = _config.Seed,
+                    { ConfigurationJson = _configurationJson, Detector = _detector, Optics = _optics, Seed = _config.Seed,
                         Readout = _prepared is { } prepared ? new(prepared.Reference.View, _measured.Publish(), _realised.Publish(), _unknown, _physicalSource!.HasPendingHold)
                         {
                             LiveDensity = _rawDensity.ReadOnlyCopy(), TruthSamples = _truth.Publish(),

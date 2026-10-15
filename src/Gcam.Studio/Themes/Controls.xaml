@@ -166,6 +166,7 @@ re-templated against the colour tokens. Implicit styles = the default look; keye
     <Geometry x:Key="Icon.Reset">
         M2,3 A5,5 0 1 1 1,8 L3,7 A3,3 0 1 0 4,4 L4,6 L0,6 L0,2 Z
     </Geometry>
+    <Geometry x:Key="Icon.Document">F0 M1,0 H8 L12,4 V12 H1 Z M3,2 V10 H10 V5 H7 V2 Z M8,2 V4 H10 Z</Geometry>
     <Geometry x:Key="Icon.Latest">
         M0,0 L8,6 L0,12 Z M9,0 H11 V12 H9 Z
     </Geometry>

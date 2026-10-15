@@ -91,15 +91,8 @@ public sealed partial class SpectrumWorkspaceViewModel : WorkspaceViewModel
         if (Shared.Snapshot is not { } snapshot || _lines.Count == 0 && snapshot.AmbientMaximumEnergyKeV is null) return;
         try
         {
-            var view = await _service.ProcessAsync(_acquisitionId, snapshot.Events, _lines,
-                new SpectrumSettings(WindowFwhm, PileUp)
-                {
-                    Detector = snapshot.Detector,
-                    Readout = snapshot.Readout, WindowLowKeV = Shared.WindowLowKeV, WindowHighKeV = Shared.WindowHighKeV,
-                    PixelsX = snapshot.Detector is null ? 0 : snapshot.Imaging.Flood.Width,
-                    PixelsY = snapshot.Detector is null ? 0 : snapshot.Imaging.Flood.Height,
-                    IncidentMaximumEnergyKeV = snapshot.AmbientMaximumEnergyKeV
-                }, cancellationToken: token);
+            var view = await _service.ProcessAsync(_acquisitionId, snapshot.Events, _lines, Settings(snapshot),
+                cancellationToken: token);
             if (revision != _revision || token.IsCancellationRequested) return;
             var selected = SelectedLine;
             View = view;
@@ -119,6 +112,20 @@ public sealed partial class SpectrumWorkspaceViewModel : WorkspaceViewModel
             if (revision == _revision) Error = $"Spectrum failed: {ex.Message}";
         }
     }
+
+    private SpectrumSettings Settings(AcquisitionSnapshot snapshot) => new(WindowFwhm, PileUp)
+    {
+        Detector = snapshot.Detector,
+        Readout = snapshot.Readout, WindowLowKeV = Shared.WindowLowKeV, WindowHighKeV = Shared.WindowHighKeV,
+        PixelsX = snapshot.Detector is null ? 0 : snapshot.Imaging.Flood.Width,
+        PixelsY = snapshot.Detector is null ? 0 : snapshot.Imaging.Flood.Height,
+        IncidentMaximumEnergyKeV = snapshot.AmbientMaximumEnergyKeV
+    };
+
+    /// <summary>Per event of <paramref name="snapshot"/>, the measured energy this workspace's histogram counts, under its
+    /// current pile-up setting (see <see cref="ISpectrumService.MeasuredEnergies"/>); null when unavailable.</summary>
+    public IReadOnlyList<double>? MeasuredEnergies(AcquisitionSnapshot snapshot)
+        => _service.MeasuredEnergies(snapshot.Events, Settings(snapshot));
 
     private void NotifyReadings()
     {

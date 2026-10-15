@@ -247,7 +247,7 @@ def source_units():
         if not namespace or not cls:
             continue
         methods = []
-        pattern = r'\[((?:Fact|Theory|EvidenceFact|DesktopFact|RenderSnapshotFact)[^\]]*)\]((?:(?!\bpublic\b).)*?)public\s+(?:async\s+)?(?:void|Task)\s+(\w+)\s*\('
+        pattern = r'\[((?:Fact|Theory|EvidenceFact|DesktopFact|DesktopTheory|RenderSnapshotFact)[^\]]*)\]((?:(?!\bpublic\b).)*?)public\s+(?:async\s+)?(?:void|Task)\s+(\w+)\s*\('
         for match in re.finditer(pattern, text, re.S):
             methods.append(match[3])
         assembly = path.relative_to(REPO).parts[1]
@@ -262,7 +262,7 @@ def source_units():
     for unit_id, entry in units.items():
         entry['sources'].update(pieces[unit_id])
         project = REPO / 'tests' / unit_id.split('::')[0]
-        helpers = list((project / 'Harness').rglob('*.cs')) + list(project.glob('*FactAttribute.cs'))
+        helpers = list((project / 'Harness').rglob('*.cs')) + list(project.glob('*FactAttribute.cs')) + list(project.glob('*TheoryAttribute.cs'))
         if project.name == 'Gcam.Studio.UiTests':
             helpers += [p for p in (project / 'Harness/Isolation').glob('*') if p.suffix in ('.py', '.json', '.ps1', '.wprp')]
         for path in helpers:
