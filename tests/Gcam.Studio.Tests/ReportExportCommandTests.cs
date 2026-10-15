@@ -9,6 +9,26 @@ namespace Gcam.Studio.Tests;
 public sealed class ReportExportCommandTests
 {
     [Fact]
+    public async Task ExportReport_PopupCancelWritesNothing_AndConfirmUsesFrozenReport()
+    {
+        var modal = new FakeModal();
+        var export = new FakeExport { Path = "report.html" };
+        var vm = new MainViewModel(new FakeAcquisition(), new FakeTheme(), new FakeSpectrumService(),
+            confirmation: modal, reportExport: export, reportClock: new FixedClock());
+        vm.Snapshot = Snapshot();
+        await vm.ExportReportCommand.ExecuteAsync(null);
+        Assert.IsType<ExportReportViewModel>(modal.ActiveContent);
+        Assert.Null(export.DefaultName);
+        vm.ExportPopup!.CancelCommand.Execute(null);
+        Assert.Null(modal.ActiveContent); Assert.Equal(0, export.Writes);
+        await vm.ExportReportCommand.ExecuteAsync(null);
+        vm.Snapshot = Snapshot() with { Counts = 999 };
+        export.OnDialog = () => Assert.Null(modal.ActiveContent);
+        await vm.ExportPopup!.ExportCommand.ExecuteAsync(null);
+        Assert.Contains("<td>10</td>", System.Text.Encoding.UTF8.GetString(export.Files!.Content));
+        Assert.DoesNotContain("999", System.Text.Encoding.UTF8.GetString(export.Files.Content));
+    }
+    [Fact]
     public void ExportReport_EnabledOnlyWithSnapshot_AndNotifies()
     {
         var vm = Create(new FakeExport());
@@ -103,5 +123,12 @@ public sealed class ReportExportCommandTests
     {
         public AppTheme Current => AppTheme.Dark;
         public void Apply(AppTheme theme) { }
+    }
+    private sealed class FakeModal : IModalService
+    {
+        public object? ActiveContent { get; private set; }
+        public void Show(object content, Action cancel) => ActiveContent = content;
+        public void Dismiss(object content) { if (ReferenceEquals(content, ActiveContent)) ActiveContent = null; }
+        public Task<bool> ConfirmAsync(string message) => Task.FromResult(false);
     }
 }

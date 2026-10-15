@@ -41,6 +41,9 @@
         <DataTemplate DataType="{x:Type vm:OptionsViewModel}">
             <views:OptionsView />
         </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:ExportReportViewModel}">
+            <views:ExportReportView />
+        </DataTemplate>
         <BooleanToVisibilityConverter x:Key="BoolToVis" />
         <!-- Field and fact row styles (FieldLabel, FieldRow, FactRow, FactValue) are shared in Themes/Controls.xaml. -->
         <!-- Image panel parts: the heatmap keeps a gap to its colour bar, the bar a tight gap to the readout -->
@@ -60,6 +63,7 @@
         </Style>
     </Window.Resources>
     <Window.InputBindings>
+        <KeyBinding Modifiers="Alt" Key="E" Command="{Binding ExportReportCommand}" />
         <KeyBinding Modifiers="Control" Key="D1" Command="{Binding SelectWorkspaceCommand}" CommandParameter="0" />
         <KeyBinding Modifiers="Control" Key="D2" Command="{Binding SelectWorkspaceCommand}" CommandParameter="1" />
         <KeyBinding Modifiers="Control" Key="D3" Command="{Binding SelectWorkspaceCommand}" CommandParameter="2" />
@@ -159,9 +163,10 @@
                                             Style="{StaticResource Button.Icon}"
                                             Margin="{StaticResource Gap.InlineWide}"
                                             AutomationProperties.AutomationId="ResetAcquisition" AutomationProperties.Name="Reset acquisition" />
-                                    <Button shell:WindowChrome.IsHitTestVisibleInChrome="True" Command="{Binding ExportReportCommand}" Content="_Export report…"
-                                            Height="{StaticResource Size.Control}" VerticalAlignment="Center" Margin="{StaticResource Gap.InlineWide}"
-                                            AutomationProperties.AutomationId="ExportReport" />
+                                    <Button shell:WindowChrome.IsHitTestVisibleInChrome="True" Command="{Binding ExportReportCommand}" Content="{StaticResource Icon.Document}"
+                                            Style="{StaticResource Button.Icon}" ToolTip="Export report…" Margin="{StaticResource Gap.InlineWide}"
+                                            AutomationProperties.AutomationId="ExportReport" AutomationProperties.Name="Export report…"
+                                            AutomationProperties.AccessKey="Alt+E" />
                                     <Button shell:WindowChrome.IsHitTestVisibleInChrome="True" Command="{Binding ToggleThemeCommand}" ToolTip="{Binding ThemeToggleLabel}"
                                             Style="{StaticResource Button.Theme}"
                                             Margin="{StaticResource Gap.InlineWide}"

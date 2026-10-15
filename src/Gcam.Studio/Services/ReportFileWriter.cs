@@ -13,21 +13,21 @@ public static class ReportFileWriter
         string scenePath = ScenePath(path);
         // Keep existing bytes in memory, so a failed overwrite can restore them without extra write surfaces.
         byte[]? oldHtml = File.Exists(path) ? await File.ReadAllBytesAsync(path) : null;
-        byte[]? oldScene = File.Exists(scenePath) ? await File.ReadAllBytesAsync(scenePath) : null;
+        byte[]? oldScene = files.HasScene && File.Exists(scenePath) ? await File.ReadAllBytesAsync(scenePath) : null;
         bool openedHtml = false, openedScene = false;
         try
         {
             await using var html = new FileStream(path, FileMode.OpenOrCreate, FileAccess.Write, FileShare.None);
             openedHtml = true;
-            await using var scene = new FileStream(scenePath, FileMode.OpenOrCreate, FileAccess.Write, FileShare.None);
-            openedScene = true;
+            await using var scene = files.HasScene ? new FileStream(scenePath, FileMode.OpenOrCreate, FileAccess.Write, FileShare.None) : null;
+            openedScene = scene is not null;
             // Open both destinations before truncating either. Scope disposes both before the rollback below.
             html.SetLength(0);
-            scene.SetLength(0);
+            scene?.SetLength(0);
             await html.WriteAsync(files.Html);
-            await scene.WriteAsync(files.SceneJson);
+            if (scene is not null) await scene.WriteAsync(files.SceneJson);
             await html.FlushAsync();
-            await scene.FlushAsync();
+            if (scene is not null) await scene.FlushAsync();
         }
         catch (Exception writeError)
         {

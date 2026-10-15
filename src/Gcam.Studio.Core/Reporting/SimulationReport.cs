@@ -12,6 +12,8 @@ public sealed record SimulationReport(
     SpectrumView? Spectrum, bool LogY, IReadOnlyList<FactRow> SpectrumSettings,
     IReadOnlyList<ReportMeasurement> Measurements)
 {
+    public IReadOnlyList<MeasuredReadoutRecord> AdcRecords { get; init; } = [];
+    public int AdcBits { get; init; }
     public static SimulationReport Capture(MainViewModel vm, DateTimeOffset exportedAt, string version)
     {
         var snapshot = vm.Snapshot ?? throw new InvalidOperationException("No acquisition to export.");
@@ -42,6 +44,10 @@ public sealed record SimulationReport(
             [new("Summary", vm.Spectrum.Summary), new("Chain", vm.Spectrum.Chain), new("Resolution", vm.Spectrum.Resolution),
                 new("Resolving time", vm.Spectrum.ResolvingTime), new("Log Y", vm.Spectrum.LogY.ToString()),
                 new("Pile-up", vm.Spectrum.PileUp.ToString()), new("Notes", vm.Spectrum.Error ?? "")],
-            vm.Imaging.Measurements.Items.Select(m => new ReportMeasurement(m.Name, m.PaneLabel, m.KindLabel, m.Value, m.Detail)).ToArray());
+            vm.Imaging.Measurements.Items.Select(m => new ReportMeasurement(m.Name, m.PaneLabel, m.KindLabel, m.Value, m.Detail)).ToArray())
+        {
+            AdcRecords = snapshot.Readout?.Records ?? [],
+            AdcBits = System.Text.Json.Nodes.JsonNode.Parse(configuration)?["Detector"]?["Readout"]?["Digitizer"]?["Bits"]?.GetValue<int>() ?? 0
+        };
     }
 }

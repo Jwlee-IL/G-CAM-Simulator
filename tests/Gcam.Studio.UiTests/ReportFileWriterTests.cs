@@ -7,6 +7,17 @@ namespace Gcam.Studio.UiTests;
 public sealed class ReportFileWriterTests
 {
     [Fact]
+    public async Task Write_JsonWritesOneFile_AndDoesNotTouchACompanion()
+    {
+        string folder = Folder(); string path = Path.Combine(folder, "report.json");
+        string companion = ReportFileWriter.ScenePath(path);
+        await File.WriteAllTextAsync(companion, "keep");
+        await ReportFileWriter.WriteAsync(path, new([1, 2, 3], []) { HasScene = false });
+        Assert.Equal(new byte[] { 1, 2, 3 }, await File.ReadAllBytesAsync(path));
+        Assert.Equal("keep", await File.ReadAllTextAsync(companion));
+        Assert.Equal(2, Directory.GetFiles(folder).Length);
+    }
+    [Fact]
     public async Task Write_CreatesOnlyReportAndScene_WithExactBytes()
     {
         string folder = Folder();

@@ -98,7 +98,7 @@ public sealed class ReportWriterTests
         Assert.Contains("Spectrum unavailable", html);
     }
 
-    private static SimulationReport Report()
+    internal static SimulationReport Report()
     {
         var flood = new DetectorImage(2, 2); flood[0, 0] = 10;
         var image = new ImagingResult(flood, -1, 2, flood, -1, 2,

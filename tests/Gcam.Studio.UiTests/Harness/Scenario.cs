@@ -17,8 +17,8 @@ public static class Scenario
         => RunCore(name, output, (ui, record, _) => body(ui, record), []);
 
     /// <summary>The report scenario alone declares two writes at fixed names in its owned sandbox.</summary>
-    public static void RunReportExport(string name, ITestOutputHelper output, Action<StudioWindow, RunRecord, string> body)
-        => RunCore(name, output, body, ["report.html", "report.scene.json"]);
+    public static void RunReportExport(string name, ITestOutputHelper output, Action<StudioWindow, RunRecord, string> body, string extension = "html")
+        => RunCore(name, output, body, [$"report.{extension}", "report.scene.json"]);
 
     private static void RunCore(string name, ITestOutputHelper output, Action<StudioWindow, RunRecord, string> body,
         IReadOnlyList<string> expectedWrites)

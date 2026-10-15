@@ -17,8 +17,11 @@ public sealed class ReportExportScenarioTests(ITestOutputHelper output)
     /// <summary>The common item dialog's OK (Save) and Cancel buttons; "No" of a Yes/No prompt.</summary>
     private const int IdOk = 1, IdCancel = 2, IdNo = 7;
 
-    [DesktopFact]
-    public void ExportReport_SaveDialogWritesIntoOwnedSandbox_AndMatchesDisplayedEstimate()
+    [DesktopTheory]
+    [InlineData("Html", "html")]
+    [InlineData("Pdf", "pdf")]
+    [InlineData("Word", "docx")]
+    public void ExportReport_SaveDialogWritesIntoOwnedSandbox_AndMatchesDisplayedEstimate(string format, string extension)
         => Scenario.RunReportExport(nameof(ExportReport_SaveDialogWritesIntoOwnedSandbox_AndMatchesDisplayedEstimate), output,
             (ui, record, sandbox) =>
             {
@@ -31,7 +34,7 @@ public sealed class ReportExportScenarioTests(ITestOutputHelper output)
                     TimeSpan.FromSeconds(10), "published found-peak rows");
                 string estimate = ui.Text("PeakText");
                 var found = ui.AllText("Imaging.Peaks").Split('\n', StringSplitOptions.RemoveEmptyEntries);
-                string path = Path.Combine(sandbox, "report.html");
+                string path = Path.Combine(sandbox, $"report.{extension}");
                 string scenePath = Path.ChangeExtension(path, ".scene.json");
                 bool FilesExist() => File.Exists(path) && File.Exists(scenePath);
                 // Step text names sandbox paths relative to the sandbox (its full path is already in the record).
@@ -43,7 +46,10 @@ public sealed class ReportExportScenarioTests(ITestOutputHelper output)
                 // Keep this suppression for the remainder of this scenario, including an unsuccessful cancellation.
                 record.OmitWindowDiagnosticsReason = "Native save dialog may display private folder contents.";
                 // The native dialog runs a nested message loop; keep the UIA caller free to drive it.
-                var invoke = Task.Run(() => ui.Invoke("ExportReport"));
+                ui.Invoke("ExportReport");
+                StudioWindow.WaitUntil(() => ui.Exists("Export.Confirm"), TimeSpan.FromSeconds(5), "export popup opened");
+                ui.Select("Export." + format);
+                var invoke = Task.Run(() => ui.Invoke("Export.Confirm"));
                 AutomationElement? dialog = null;
                 try
                 {
@@ -86,15 +92,29 @@ public sealed class ReportExportScenarioTests(ITestOutputHelper output)
                     StudioWindow.WaitUntil(() => ui.IsEnabled("ExportReport") && invoke.IsCompleted,
                         TimeSpan.FromSeconds(10), "export completed and files closed");
                     invoke.GetAwaiter().GetResult();
-                    string html = File.ReadAllText(path);
-                    Assert.Contains(WebUtility.HtmlEncode(estimate), html);
-                    foreach (string peak in found) Assert.Contains(WebUtility.HtmlEncode(peak), html);
+                    if (extension == "html")
+                    {
+                        string html = File.ReadAllText(path);
+                        Assert.Contains(WebUtility.HtmlEncode(estimate), html);
+                        foreach (string peak in found) Assert.Contains(WebUtility.HtmlEncode(peak), html);
+                    }
+                    else if (extension == "pdf")
+                    {
+                        using var document = PdfSharp.Pdf.IO.PdfReader.Open(path, PdfSharp.Pdf.IO.PdfDocumentOpenMode.Import);
+                        Assert.Contains(estimate, ReportDocumentTests.PdfText(document));
+                    }
+                    else
+                    {
+                        using var zip = System.IO.Compression.ZipFile.OpenRead(path);
+                        using var document = zip.GetEntry("word/document.xml")!.Open();
+                        Assert.Contains(estimate, System.Xml.Linq.XDocument.Load(document).Root!.Value);
+                    }
                     var config = ConfigLoader.Load(scenePath);
                     Assert.NotNull(config.Seed);
                     Assert.Equal(new OpticsSettings().DetectorPixels, config.Detector.PixelsX);
                     var created = Directory.GetFiles(sandbox, "*", SearchOption.AllDirectories).Where(f => !before.Contains(f))
                         .Select(f => Path.GetRelativePath(sandbox, f)).Order().ToArray();
-                    Assert.Equal(new[] { "report.html", "report.scene.json" }, created);
+                    Assert.Equal(new[] { $"report.{extension}", "report.scene.json" }.Order(), created);
                     record.Step($"report contains displayed estimate: {estimate}; scene loads; only two declared sandbox writes");
                 }
                 finally
@@ -110,7 +130,7 @@ public sealed class ReportExportScenarioTests(ITestOutputHelper output)
                         record.Step($"Owned native dialog cleanup failed: {error.GetType().Name}");
                     }
                 }
-            });
+            }, extension);
 
     /// <summary>Sets the dialog's file-name edit through ValuePattern and reads it back; one retry with the edit
     /// focused. Already holding the path (the fallback's re-check) is logged and left alone.</summary>
