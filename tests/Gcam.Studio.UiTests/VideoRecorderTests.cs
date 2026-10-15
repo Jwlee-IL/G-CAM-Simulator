@@ -19,6 +19,18 @@ public sealed class VideoRecorderTests
         return new(root, "case", "run", 64, 48, capture, sink, new('a', 40), false, new('b', 64), new('c', 64));
     }
     [Fact]
+    public void EdgeRing_CoversEveryBorderPixel_AndNothingInside()
+    {
+        var size = new System.Drawing.Size(40, 30); var ring = VideoCapture.EdgeRing(size); int e = VideoCapture.NeutralEdgePx;
+        for (int y = 0; y < size.Height; y++)
+            for (int x = 0; x < size.Width; x++)
+            {
+                bool edge = x < e || y < e || x >= size.Width - e || y >= size.Height - e;
+                Assert.Equal(edge, ring.Any(r => r.Contains(x, y)));
+            }
+    }
+
+    [Fact]
     public void SlowEncoder_DropsPendingFrames_PreservesMonotonicGaps_AndStopsWithinBudget()
     {
         var sink = new Sink(() => Thread.Sleep(240)); int captured = 0;

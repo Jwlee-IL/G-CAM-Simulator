@@ -22,7 +22,11 @@ public sealed class VideoCapture(IntPtr hwnd, int pid, int width, int height)
                 {
                     var before = WindowSurvey.Take(hwnd, pid);
                     using var source = new Bitmap(before.Frame.Width, before.Frame.Height, PixelFormat.Format32bppRgb);
-                    using (var g = Graphics.FromImage(source)) g.CopyFromScreen(before.Frame.Location, Point.Empty, source.Size);
+                    using (var g = Graphics.FromImage(source))
+                    {
+                        g.CopyFromScreen(before.Frame.Location, Point.Empty, source.Size);
+                        g.FillRectangles(Brushes.Black, EdgeRing(source.Size));
+                    }
                     var after = WindowSurvey.Take(hwnd, pid);
                     if (before.Frame != after.Frame) throw new InvalidOperationException("Frame moved during capture");
                     DrawCursor(source, before.Frame);
@@ -51,6 +55,16 @@ public sealed class VideoCapture(IntPtr hwnd, int pid, int width, int height)
         }
         finally { canvas.UnlockBits(data); }
     }
+    /// <summary>The DWM frame bounds can exceed the pixels the window paints by a pixel, and whatever lies behind shows
+    /// there (2026-10-16 desktop run: a terminal's glyph tops in row 0 and the outer columns). A neutral ring two pixels
+    /// wide keeps those foreign pixels out of every frame; Studio loses only its own border line.</summary>
+    public const int NeutralEdgePx = 2;
+    public static Rectangle[] EdgeRing(Size size)
+    {
+        int e = Math.Min(NeutralEdgePx, Math.Min(size.Width, size.Height));
+        return [new(0, 0, size.Width, e), new(0, size.Height - e, size.Width, e), new(0, 0, e, size.Height), new(size.Width - e, 0, e, size.Height)];
+    }
+
     private static void DrawCursor(Bitmap bitmap, Rectangle frame)
     {
         var cursor = new CursorInfo { Size = Marshal.SizeOf<CursorInfo>() };
