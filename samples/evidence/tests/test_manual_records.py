@@ -235,6 +235,38 @@ class ManualRecordsTests(unittest.TestCase):
         self.assertEqual([[18, 118], [18, 120 + mr.STRIP_PAD]], first['join'])   # straight down from the frame to the disc
         self.assertTrue(operation['labels'][1]['candidate'].startswith('inside-'))   # the large mark names itself inside
 
+    def test_margin_lines_start_on_their_frames_and_never_share_a_rule(self):
+        # A word left of a field blocks the straight line out of the field's middle: the route turns down a corridor,
+        # and its line starts on the frame it leaves.
+        width, height = 300, 240
+        rgb = self.stack_image(width, height, [(60 + 4 * k, 12, 2, 8) for k in range(8)])   # strokes of a word
+        crop = [0, 0, width, height]
+        ink = mr.ink_counter(width, height, rgb, crop)
+        rect = [100, 10, 40, 12]
+        fl, ft, fw, fh = mr.framed(rect)
+        routes = dict(mr.margin_routes(0, [rect], crop, ink))
+        self.assertEqual([[fl + fw // 2, ft + fh], [fl + fw // 2, ft + fh + 6], [0, ft + fh + 6]], routes['left'])
+        # an earlier mark's route to the same margin is avoided: here straight out of the frame's side above the word
+        taken = {'left': mr.line_boxes(routes['left'], 2)}
+        again = dict(mr.margin_routes(0, [rect], crop, ink, taken))['left']
+        self.assertEqual([[fl, ft + 2], [0, ft + 2]], again)
+        self.assertFalse(any(mr.overlap(a, b) for a in mr.line_boxes(again) for b in taken['left']))
+        # three stacked labels whose lines step down to them: each step gets its own rule, the upper label's farther
+        # out, so no two join lines touch; a single step keeps the shared rule
+        unit = mr.label_unit(1, 'Label')
+        items = [(0, [[100, 20], [100, 30], [0, 30]], unit), (1, [[150, 20], [150, 35], [0, 35]], unit),
+                 (2, [[200, 20], [200, 40], [0, 40]], unit)]
+        size, out = mr.margin_layout('left', items, crop)
+        self.assertEqual(6 + 2 * mr.BUS + unit[0] + mr.MARGIN_PAD, size)
+        self.assertEqual(3, len(out[0][1]))                                   # level with its route: no step
+        buses = [out[i][1][-3][0] for i in (1, 2)]
+        self.assertEqual([-(3 + mr.BUS), -3], buses)                         # the upper step's rule farther out
+        for i in range(3):
+            for j in range(i + 1, 3):
+                self.assertFalse(any(mr.overlap(a, b) for a in mr.line_boxes(out[i][1]) for b in mr.line_boxes(out[j][1])))
+        size, out = mr.margin_layout('left', items[:2], crop)
+        self.assertEqual((mr.MARGIN_GAP + unit[0] + mr.MARGIN_PAD, -mr.MARGIN_GAP // 2), (size, out[1][1][-3][0]))
+
     def test_label_refuses_a_mark_without_a_place_or_a_route_to_a_margin(self):
         doc = self.marks([[40, 10, 20, 10], [0, 0, 36, 48], [64, 0, 96, 48], [40, 26, 20, 22]], crop='full')
         with self.assertRaisesRegex(ValueError, 'label-no-room: mark [12] has no place in the figure or a margin'):
@@ -290,7 +322,8 @@ class ManualRecordsTests(unittest.TestCase):
         for name in ('missing-run-formal', 'failed-chapter-formal', 'evidence-hash', 'mark-outside-image', 'mixed-binaries',
                      'budget-exceeded', 'tampered-figure', 'dpi-double-scaling', 'identity-leak', 'label-no-room',
                      'label-overlap', 'label-over-own-target', 'label-outside-figure', 'label-placement-defect',
-                     'label-without-glyph', 'purpose-hash-mismatch', 'missing-purpose-formal', 'purpose-duplicate'):
+                     'label-without-glyph', 'purpose-hash-mismatch', 'missing-purpose-formal', 'purpose-duplicate',
+                     'purpose-no-glyph', 'purpose-schema-1'):
             self.assertIn(name, results)
             self.assertFalse(results[name].startswith('generated'), name)
         self.assertTrue(results['missing-run'].startswith('generated'))
@@ -301,6 +334,8 @@ class ManualRecordsTests(unittest.TestCase):
         self.assertEqual('generated: marks without a purpose entry: StartAcquisition', results['missing-purpose'])
         self.assertEqual('generated: the mark purpose list is not approved', results['purposes-draft'])
         self.assertEqual('source-hash: purposes.json', results['purpose-hash-mismatch'])
+        self.assertEqual('generated: Start: go', results['purpose-in-label'])
+        self.assertEqual('generated: Run: go', results['purpose-name'])
 
     def test_latest_run_wins_and_a_tie_refuses(self):
         root = scratch()
@@ -339,43 +374,74 @@ class ManualRecordsTests(unittest.TestCase):
         operation = figure['operation']
         self.assertEqual((mr.OVERLAY, {'left': 0, 'right': 0, 'bottom': 0}), (operation['overlay'], operation['margins']))
         self.assertEqual(font['sha256'], operation['font']['sha256'])
-        self.assertEqual([(1, 'Start')], [(l['n'], l['text']) for l in operation['labels']])
+        self.assertEqual([(1, 'Start: go')], [(l['n'], l['text']) for l in operation['labels']])   # screen text: purpose
         self.assertTrue(operation['labels'][0]['candidate'].startswith('right'))
         width, height, _ = mr.png_decode(outputs['figures/1.2-1.png'])
         self.assertEqual([width, height], operation['size'])
         self.assertEqual(operation['crop'][2:], operation['size'])   # no margin: the labels add no space
 
-    def test_purpose_list_names_each_mark_and_cuts_long_labels_only_there(self):
-        self.assertEqual(('Preset', False), mr.list_label('Preset'))
-        exact = 'Detector pixels must be an integer from 4 to 64.'   # 48 characters: kept whole
-        self.assertEqual((exact, False), mr.list_label(exact))
-        for label, cut in (('Stopped · t = 1.8 s of 600 s · 116 counts · 66 cps · seed 12345',
-                            'Stopped · t = 1.8 s of 600 s…'),
-                           ('Discard the acquired data (2.0 live s, 127 counts)? Inputs unlock for the next acquisition.',
-                            'Discard the acquired data…'),
-                           ('Start refused: Detector pixels must be an integer from 4 to 64.',
-                            'Start refused: Detector pixels must be…'),
-                           ('x' * 60, 'x' * 40 + '…')):
-            self.assertEqual((cut, True), mr.list_label(label))
-            self.assertLessEqual(len(cut), mr.LIST_CUT + 1)
-        self.assertEqual(r'a\*b\_&lt;c&gt; \[d\] &amp; ·', mr.markdown_safe('a*b_<c> [d] & ·'))
-        marks = [{'n': 1, 'target': 'A', 'label': 'Alpha'}, {'n': 2, 'target': 'B', 'label': 'B*'}]
-        lines, rows, missing = mr.purpose_list(marks, {'A': {'purpose': 'Does a.'}})
-        self.assertEqual((['1. **Alpha** — Does a.', r'2. **B\***'], ['B']), (lines, missing))
-        self.assertEqual([{'n': 1, 'target': 'A', 'label': 'Alpha', 'shortened': False, 'purpose': True},
-                          {'n': 2, 'target': 'B', 'label': 'B*', 'shortened': False, 'purpose': False}], rows)
+    def test_each_label_pairs_the_screen_text_or_a_name_with_its_purpose(self):
+        marks = [{'n': 1, 'target': 'A', 'label': 'Alpha\nsecond line'}, {'n': 2, 'target': 'B', 'label': 'x 6.3 mm · 10 counts'},
+                 {'n': 3, 'target': 'C', 'label': 'Gamma'}]
+        purposes = {'A': {'short': 'does a'}, 'B': {'name': 'Readout', 'short': 'does b'}}
+        labelled, rows, missing = mr.purpose_marks(marks, purposes)
+        self.assertEqual(['Alpha: does a', 'Readout: does b', 'Gamma'], [m['label'] for m in labelled])
+        self.assertEqual([{'n': 1, 'target': 'A', 'screenText': 'Alpha', 'short': 'does a', 'label': 'Alpha: does a'},
+                          {'n': 2, 'target': 'B', 'screenText': 'x 6.3 mm · 10 counts', 'name': 'Readout', 'short': 'does b',
+                           'label': 'Readout: does b'},
+                          {'n': 3, 'target': 'C', 'screenText': 'Gamma', 'label': 'Gamma'}], rows)
+        self.assertEqual(['C'], missing)
+        self.assertEqual(marks[0]['label'], 'Alpha\nsecond line')   # the measured marks are not changed
         root = scratch()
         src, runs = mr.fixture(root)
         outputs = mr.generate(src, runs, 'e1', '2026-10-14', root / 'e1')
         markdown = outputs['MANUAL.Studio.md'].decode('utf-8')
-        self.assertIn('<p align="center"><em>Figure 1.2-1.</em> The top bar.</p>\n\n'
-                      '1. **Start** — Starts the acquisition.\n\n### 1.3 Beta', markdown)   # after the caption, a paragraph of its own
+        self.assertIn('<p align="center"><em>Figure 1.2-1.</em> The top bar.</p>\n\n### 1.3 Beta', markdown)   # no list under it
         generation = json.loads(outputs['generation-record.json'])
         self.assertEqual({'sha256': mr.sha((src / mr.PURPOSES).read_bytes()), 'status': 'approved', 'missingTargets': [],
-                          'listLabels': mr.LIST_RULE}, generation['purposes'])
-        self.assertEqual(('formal', [{'n': 1, 'target': 'StartAcquisition', 'label': 'Start', 'shortened': False, 'purpose': True}]),
-                         (generation['status'], next(f for f in generation['figures'] if f['figure'] == '1.2-1')['purposeList']))
+                          'labels': mr.PURPOSE_LABELS}, generation['purposes'])
+        figure = next(f for f in generation['figures'] if f['figure'] == '1.2-1')
+        self.assertEqual(('formal', [{'n': 1, 'target': 'StartAcquisition', 'screenText': 'Start', 'short': 'go', 'label': 'Start: go'}],
+                          ['Start: go']), (generation['status'], figure['markLabels'], [l['text'] for l in figure['operation']['labels']]))
+        self.assertNotIn('purposeList', figure)
         self.assertEqual(outputs['sources/manual/purposes.json'], (src / mr.PURPOSES).read_bytes())
+
+    def test_an_edition_with_the_schema_1_list_replays_with_its_list(self):
+        root = scratch()
+        src, runs = mr.fixture(root)
+        old = {'schema': 'gcam.manual-purposes', 'schemaVersion': 1, 'status': 'approved',
+               'purposes': [{'target': 'StartAcquisition', 'purpose': 'Starts the acquisition.', 'sources': ['fixture']}]}
+        (src / mr.PURPOSES).write_bytes(mr.canonical(old))
+        with self.assertRaisesRegex(ValueError, r'purposes: schema 1 \(a list under each figure\) is replayed only'):
+            mr.generate(src, runs, 'new', '2026-10-14', root / 'new')
+        sources = mr.load_sources(src)
+        outputs = mr.assemble(sources, mr.load_runs(runs, sources), 'old', '2026-10-14', False, mr.DEFAULT_BUDGET)
+        edition = root / 'old'
+        for relative, data in outputs.items():
+            (edition / relative).parent.mkdir(parents=True, exist_ok=True)
+            (edition / relative).write_bytes(data)
+        markdown = outputs['MANUAL.Studio.md'].decode('utf-8')
+        self.assertIn('<p align="center"><em>Figure 1.2-1.</em> The top bar.</p>\n\n'
+                      '1. **Start** \u2014 Starts the acquisition.\n\n### 1.3 Beta', markdown)   # the list, as generated then
+        generation = json.loads(outputs['generation-record.json'])
+        self.assertEqual(mr.LIST_RULE, generation['purposes']['listLabels'])
+        figure = next(f for f in generation['figures'] if f['figure'] == '1.2-1')
+        self.assertEqual((['Start'], [{'n': 1, 'target': 'StartAcquisition', 'label': 'Start', 'shortened': False, 'purpose': True}]),
+                         ([l['text'] for l in figure['operation']['labels']], figure['purposeList']))
+        self.assertEqual('old', mr.check(edition)['editionId'])
+        # the list's own label rule: a long label cut at a phrase or a word, in the list only
+        self.assertEqual(('Preset', False), mr.list_label('Preset'))
+        exact = 'Detector pixels must be an integer from 4 to 64.'   # 48 characters: kept whole
+        self.assertEqual((exact, False), mr.list_label(exact))
+        for label, cut in (('Stopped \u00b7 t = 1.8 s of 600 s \u00b7 116 counts \u00b7 66 cps \u00b7 seed 12345',
+                            'Stopped \u00b7 t = 1.8 s of 600 s\u2026'),
+                           ('Discard the acquired data (2.0 live s, 127 counts)? Inputs unlock for the next acquisition.',
+                            'Discard the acquired data\u2026'),
+                           ('Start refused: Detector pixels must be an integer from 4 to 64.',
+                            'Start refused: Detector pixels must be\u2026'),
+                           ('x' * 60, 'x' * 40 + '\u2026')):
+            self.assertEqual((cut, True), mr.list_label(label))
+        self.assertEqual(r'a\*b\_&lt;c&gt; \[d\] &amp; ' + '\u00b7', mr.markdown_safe('a*b_<c> [d] & \u00b7'))
 
     def test_an_edition_from_before_the_purpose_list_replays_without_one(self):
         root = scratch()
@@ -404,7 +470,10 @@ class ManualRecordsTests(unittest.TestCase):
         for target, entry in sources['purposes'].items():
             for source in entry['sources']:
                 self.assertTrue((ROOT / source.split(' ')[0]).is_file(), f'{target}: {source}')
-            self.assertNotEqual(entry['purpose'].rstrip('.'), target, target)
+            short = entry['short']
+            self.assertTrue(len(short) <= 32 and not short.endswith('.') and short != target, f'{target}: {short}')
+            self.assertLessEqual(len(entry.get('name', '')), 20, target)
+            self.assertNotIn('purpose', entry, target)
 
 if __name__ == '__main__':
     unittest.main()

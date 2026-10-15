@@ -44,9 +44,9 @@ Options dialog. Sources: `README.md` (What it demonstrates); `docs/VV.Studio.SRS
 
 Readers of this repository who want to drive the viewer. The chapters of parts 1–3 are generated from automated runs
 that drove one build of Studio: their steps, screen labels and figures come from that run, and a chapter whose run did
-not pass on that build is replaced by a notice. Under each figure a numbered list repeats each mark's label and says
-what the marked element is for; that list is written by hand from the repository's documents (each entry names its
-sources in `docs/manual/purposes.json`). Chapters 1.1 and 5.2 are written by hand from the repository's documents. This edition covers the window ([chapter 1.2 (Window, workspaces and view tabs)](#12-window-workspaces-and-view-tabs)), sources ([chapter 2.1 (Place and edit sources)](#21-place-and-edit-sources)), optics and detector settings
+not pass on that build is replaced by a notice. Each numbered figure label pairs the control's name on
+screen with what it is for ("Preset: choose a geometry"); those purposes are written by hand from the repository's
+documents, each with its sources in `docs/manual/purposes.json`. Chapters 1.1 and 5.2 are written by hand from the repository's documents. This edition covers the window ([chapter 1.2 (Window, workspaces and view tabs)](#12-window-workspaces-and-view-tabs)), sources ([chapter 2.1 (Place and edit sources)](#21-place-and-edit-sources)), optics and detector settings
 ([chapter 2.2 (Choose optics and detector settings)](#22-choose-optics-and-detector-settings)), the acquisition controls ([chapter 2.4 (Start, Stop, Continue and Reset)](#24-start-stop-continue-and-reset)), measurements on the images ([chapter 3.1 (Imaging measurements)](#31-imaging-measurements)), the
 spectrum ([chapter 3.4 (Spectrum)](#34-spectrum)) and how to read the results ([chapter 5.2 (Interpretation and limitations)](#52-interpretation-and-limitations)).
 
@@ -65,22 +65,10 @@ spectrum ([chapter 3.4 (Spectrum)](#34-spectrum)) and how to read the results ([
 <p align="center"><img src="figures/1.2-1.png" alt="Figure 1.2-1"></p>
 <p align="center"><em>Figure 1.2-1.</em> The window after start, Imaging workspace.</p>
 
-1. **Imaging** — Shows the detector flood map and the decoded reconstruction, with distance, angle and ROI measurements in mm. All four workspaces show the same acquisition; switching changes only the view (Ctrl+1 to Ctrl+4).
-2. **Spectrum** — Shows the histogram of measured energies (0–2000 keV) with a band at each emission line and a table of the counts inside each band.
-3. **Waveform** — Shows the simulated ADC and shaped pulse traces of a selected acquired event, or, with the experimental physical readout, its four outputs A–D.
-4. **Detector** — Shows the detector face for the current settings and, with the experimental physical readout, its SiPM, Anger, calibration and diagnostics views.
-5. **Start** — Starts an acquisition over the preset live time. Once data exist it reads Continue and resumes the same acquisition while the acquired live time is below the preset. A refused Start states its reason in the status bar.
-6. **Scene** — Holds the source list and the fields of the selected source. Sources are edited here before an acquisition; while acquired data exist they stay locked until Reset.
-7. **Optics** — Holds the engineering geometry of the mask and the detector: a preset and the five values it sets.
-8. **Detector** — Holds the readout choice — the default direct crystal assignment or the experimental physical readout — with its calibration preparation and energy window.
-
 **Step 2.** Select the **Optics** tab: the engineering geometry replaces the source list in the left panel.
 
 <p align="center"><img src="figures/1.2-2.png" alt="Figure 1.2-2"></p>
 <p align="center"><em>Figure 1.2-2.</em> The Optics tab.</p>
-
-1. **Optics** — Holds the engineering geometry of the mask and the detector: a preset and the five values it sets.
-2. **Preset** — Picks an engineering geometry — Sharp (the default), Baseline, Wide FOV or High-res — that writes all five values and keeps them read-only; Custom makes them editable, starting from the current values. A preset does not move the sources.
 
 **Step 3.** Choose **Spectrum** in the workspace switch: the centre shows the spectrum instead of the images.
 
@@ -89,18 +77,10 @@ spectrum ([chapter 3.4 (Spectrum)](#34-spectrum)) and how to read the results ([
 <p align="center"><img src="figures/1.2-3.png" alt="Figure 1.2-3"></p>
 <p align="center"><em>Figure 1.2-3.</em> Four outputs under the direct crystal assignment.</p>
 
-1. **Four outputs (A–D)** — Shows the four readout outputs A–D and their sum for a selected event of the experimental physical readout.
-2. **Available with the experimental physical readout** — Says why this view is empty: it shows the experimental physical readout, and the default direct crystal assignment has none.
-3. **Choose readout…** — Selects the left Detector tab and puts the keyboard focus on the readout choice, where the experimental physical readout can be chosen.
-
 **Step 5.** Choose **Detector**, then its view tab **SiPM**: the physical readout views are empty in the same way.
 
 <p align="center"><img src="figures/1.2-4.png" alt="Figure 1.2-4"></p>
 <p align="center"><em>Figure 1.2-4.</em> A Detector readout view under the direct crystal assignment.</p>
-
-1. **SiPM** — Shows the SiPM footprints and the illustrative charge-division circuit of the experimental physical readout.
-2. **Available with the experimental physical readout** — Says why this view is empty: it shows the experimental physical readout, and the default direct crystal assignment has none.
-3. **Choose readout…** — Selects the left Detector tab and puts the keyboard focus on the readout choice, where the experimental physical readout can be chosen.
 
 > **Caution.** The four-output physical readout is an experimental simulation. Its calibration lines are offered or refused from a pinned record; a module that matches no preset is calibrated locally and is unvalidated; positioning deposits at other energies with a source-line calibration is a declared approximation whose accuracy is unvalidated.
 
@@ -108,8 +88,6 @@ spectrum ([chapter 3.4 (Spectrum)](#34-spectrum)) and how to read the results ([
 
 <p align="center"><img src="figures/1.2-5.png" alt="Figure 1.2-5"></p>
 <p align="center"><em>Figure 1.2-5.</em> The readout choice in the left Detector tab.</p>
-
-1. **Detector** — Holds the readout choice — the default direct crystal assignment or the experimental physical readout — with its calibration preparation and energy window.
 
 **Step 7.** Choose **Imaging** to return to the images.
 
@@ -122,12 +100,6 @@ spectrum ([chapter 3.4 (Spectrum)](#34-spectrum)) and how to read the results ([
 <p align="center"><img src="figures/2.1-1.png" alt="Figure 2.1-1"></p>
 <p align="center"><em>Figure 2.1-1.</em> The Scene tab with the default source.</p>
 
-1. **Isotope** — The isotope the selected source emits, chosen from the engine's isotope list.
-2. **X** — The lateral offset of the selected source from the camera axis along x, in mm; the offset is what sets the source's off-axis angle.
-3. **Y** — The lateral offset of the selected source from the camera axis along y, in mm; the offset is what sets the source's off-axis angle.
-4. **Distance** — The distance of the selected source from the detector plane, in mm; values outside 200–3000 mm are clamped.
-5. **Activity** — The activity of the selected source, in µCi; a value of 0 or less becomes 1 µCi.
-
 **Step 2.** Type -20 in **X** and leave the field (Tab or a click elsewhere): the value is taken when the field loses focus.
 
 **Step 3.** Click the icon button whose tooltip reads **Add source**: a second source is added to the list and selected.
@@ -137,19 +109,12 @@ spectrum ([chapter 3.4 (Spectrum)](#34-spectrum)) and how to read the results ([
 <p align="center"><img src="figures/2.1-2.png" alt="Figure 2.1-2"></p>
 <p align="center"><em>Figure 2.1-2.</em> Two sources; the selected one is edited below the list.</p>
 
-1. **Isotope** — The isotope the selected source emits, chosen from the engine's isotope list.
-2. **X** — The lateral offset of the selected source from the camera axis along x, in mm; the offset is what sets the source's off-axis angle.
-3. **Activity** — The activity of the selected source, in µCi; a value of 0 or less becomes 1 µCi.
-
 **Step 5.** Click the icon button whose tooltip reads **Remove selected source**: the selected source is removed.
 
 **Step 6.** Click **Continue** and wait until the acquisition completes. While acquired data exist the source fields and the add and remove buttons are locked, so the images always belong to the scene shown.
 
 <p align="center"><img src="figures/2.1-3.png" alt="Figure 2.1-3"></p>
 <p align="center"><em>Figure 2.1-3.</em> Source fields locked while data exist.</p>
-
-1. **X** — The lateral offset of the selected source from the camera axis along x, in mm; the offset is what sets the source's off-axis angle.
-2. **Activity** — The activity of the selected source, in µCi; a value of 0 or less becomes 1 µCi.
 
 **Step 7.** Click the icon button whose tooltip reads **Reset acquisition**: a confirmation asks before the data are discarded.
 
@@ -162,13 +127,6 @@ spectrum ([chapter 3.4 (Spectrum)](#34-spectrum)) and how to read the results ([
 <p align="center"><img src="figures/2.2-1.png" alt="Figure 2.2-1"></p>
 <p align="center"><em>Figure 2.2-1.</em> The Optics tab with the default preset.</p>
 
-1. **Preset** — Picks an engineering geometry — Sharp (the default), Baseline, Wide FOV or High-res — that writes all five values and keeps them read-only; Custom makes them editable, starting from the current values. A preset does not move the sources.
-2. **Prime rank** — The prime rank of the MURA mask pattern: 5, 7, 11, 13, 17, 19 or 23. With the cell pitch and the mask–detector distance it sets the nominal field of view and the resolution element.
-3. **Cell pitch** — The width of one mask cell, in mm (at least 0.05 mm).
-4. **Mask–detector** — The distance between the mask and the detector, in mm (at least 1 mm). Every source must lie beyond the mask's front face.
-5. **Pixels / side** — The number of detector pixels along each side of the square array, an integer from 4 to 64.
-6. **Pixel pitch** — The centre-to-centre spacing of the detector pixels, in mm (at least 0.05 mm, and larger than the reflector gap set in Options).
-
 **Step 2.** Choose Baseline in **Preset**: the fields now hold the 12 × 12 pixel, rank-7 reference geometry, still read-only.
 
 **Step 3.** Choose **Detector**: its **Face** view draws the detector face for these settings, captioned **Settings for the next acquisition**.
@@ -176,19 +134,12 @@ spectrum ([chapter 3.4 (Spectrum)](#34-spectrum)) and how to read the results ([
 <p align="center"><img src="figures/2.2-2.png" alt="Figure 2.2-2"></p>
 <p align="center"><em>Figure 2.2-2.</em> The detector face of the Baseline geometry before an acquisition.</p>
 
-1. **Face** — Draws the detector face for the current settings: the static crystal gain pattern with its colour scale and the dead gaps between the pixels. Its area is geometry only, not the acquired count rate.
-2. **Settings for the next acquisition** — Says whose settings the face and the facts beside it show: the settings for the next acquisition, or, once data exist, the acquired settings, locked until Reset.
-
 **Step 4.** Back on the **Optics** tab, choose Custom in **Preset**: the fields keep the Baseline values and become editable.
 
 **Step 5.** Type 3 in **Pixels / side**. The geometry is refused — the tab reads **Detector pixels must be an integer from 4 to 64.** — and **Start** does not start: the status bar gives the reason.
 
 <p align="center"><img src="figures/2.2-3.png" alt="Figure 2.2-3"></p>
 <p align="center"><em>Figure 2.2-3.</em> A refused geometry: the message under the fields and the refusal in the status bar.</p>
-
-1. **Pixels / side** — The number of detector pixels along each side of the square array, an integer from 4 to 64.
-2. **Detector pixels must be an integer from 4 to 64.** — States why the optics values are refused. While it shows, Start is refused and the status bar gives the same reason.
-3. **Start refused: Detector pixels must be…** — The run status line: Ready, or the state with live time, counts, count rate (counts ÷ live time) and seed. A refused Start is stated here in the warning colour, a failure as Failed with its message.
 
 **Step 6.** Type 12 in **Pixels / side** again: the message clears.
 
@@ -205,17 +156,12 @@ spectrum ([chapter 3.4 (Spectrum)](#34-spectrum)) and how to read the results ([
 <p align="center"><img src="figures/2.4-1.png" alt="Figure 2.4-1"></p>
 <p align="center"><em>Figure 2.4-1.</em> Acquiring.</p>
 
-1. **Stop** — Ends the running acquisition and keeps everything acquired; the inputs stay locked and the button then offers Continue.
-
 > **Note.** Live time advances at the chosen speed (live seconds per wall second) and Stop acts when it is clicked, so the counts kept at a Stop differ from run to run even with a fixed seed. A fixed seed reproduces the acquisition itself.
 
 **Step 4.** Click **Stop**: the acquisition stops and keeps its data; the counts no longer change, the inputs stay locked and the button reads **Continue**.
 
 <p align="center"><img src="figures/2.4-2.png" alt="Figure 2.4-2"></p>
 <p align="center"><em>Figure 2.4-2.</em> Stopped: the data are kept and Continue is offered.</p>
-
-1. **Continue** — Starts an acquisition over the preset live time. Once data exist it reads Continue and resumes the same acquisition while the acquired live time is below the preset. A refused Start states its reason in the status bar.
-2. **Stopped · t = 1.8 s of 600 s…** — The run status line: Ready, or the state with live time, counts, count rate (counts ÷ live time) and seed. A refused Start is stated here in the warning colour, a failure as Failed with its message.
 
 **Step 5.** Click **Continue** again: the same acquisition continues and its counts keep growing; stop it again with Stop.
 
@@ -224,17 +170,10 @@ spectrum ([chapter 3.4 (Spectrum)](#34-spectrum)) and how to read the results ([
 <p align="center"><img src="figures/2.4-3.png" alt="Figure 2.4-3"></p>
 <p align="center"><em>Figure 2.4-3.</em> The reset confirmation.</p>
 
-1. **Discard the acquired data…** — Names the live time and counts a reset would discard and says that the inputs unlock for the next acquisition.
-2. **Cancel** — Closes the dialog without acting: the reset confirmation keeps the acquisition, the Options dialog discards its draft. Escape does the same.
-3. **Discard** — Confirms the reset: the acquired data, images, spectrum and the scene frozen at Start are discarded, the status returns to Ready and the inputs unlock. Measurement shapes are kept.
-
 **Step 7.** Click **Reset acquisition** again and confirm with **Discard**: the data are discarded, the status reads Ready and the inputs unlock; the button reads Start again.
 
 <p align="center"><img src="figures/2.4-4.png" alt="Figure 2.4-4"></p>
 <p align="center"><em>Figure 2.4-4.</em> Ready for the next acquisition.</p>
-
-1. **Start** — Starts an acquisition over the preset live time. Once data exist it reads Continue and resumes the same acquisition while the acquired live time is below the preset. A refused Start states its reason in the status bar.
-2. **Ready** — The run status line: Ready, or the state with live time, counts, count rate (counts ÷ live time) and seed. A refused Start is stated here in the warning colour, a failure as Failed with its message.
 
 ## 3 Inspect retained data
 
@@ -249,8 +188,6 @@ spectrum ([chapter 3.4 (Spectrum)](#34-spectrum)) and how to read the results ([
 <p align="center"><img src="figures/3.1-1.png" alt="Figure 3.1-1"></p>
 <p align="center"><em>Figure 3.1-1.</em> The readout under the flood map.</p>
 
-1. **x 6.3 mm, y -4.5 mm · 10 counts** — Reads out the flood-map pixel under the pointer: its centre in mm and its value, so a position can be read off the image.
-
 **Step 3.** Choose the distance tool (accessible name **Distance tool**) above the measurement table and drag across the flood map: the table gains a row with the length in millimetres.
 
 **Step 4.** Choose the angle tool (**Angle tool**) and click three points on the reconstruction — the end of the first arm, the vertex, the end of the second arm: the table gains the angle in degrees.
@@ -259,11 +196,6 @@ spectrum ([chapter 3.4 (Spectrum)](#34-spectrum)) and how to read the results ([
 
 <p align="center"><img src="figures/3.1-2.png" alt="Figure 3.1-2"></p>
 <p align="center"><em>Figure 3.1-2.</em> Three measurements in the table; the selected one is described under it.</p>
-
-1. **M1** — A row of the measurement table: its number, the image it was drawn on, its kind (distance, angle or ROI) and its value. Selecting a row describes it under the table; Delete or the row's delete button removes it.
-2. **M2** — A row of the measurement table: its number, the image it was drawn on, its kind (distance, angle or ROI) and its value. Selecting a row describes it under the table; Delete or the row's delete button removes it.
-3. **M3** — A row of the measurement table: its number, the image it was drawn on, its kind (distance, angle or ROI) and its value. Selecting a row describes it under the table; Delete or the row's delete button removes it.
-4. **3.6 × 4.2 mm · 42 px · mean 5.45 · max 13** — Describes the selected measurement: its coordinates, size and, for an ROI, its pixel count and pixel statistics.
 
 **Step 6.** Press Delete with the flood map focused: the selected measurement (the ROI) is removed.
 
@@ -280,15 +212,10 @@ spectrum ([chapter 3.4 (Spectrum)](#34-spectrum)) and how to read the results ([
 <p align="center"><img src="figures/3.4-1.png" alt="Figure 3.4-1"></p>
 <p align="center"><em>Figure 3.4-1.</em> The spectrum after an acquisition of the default Cs-137 source.</p>
 
-1. **Log Y** — Switches the counts axis between logarithmic (the default) and linear. It is a view setting: the acquired data do not change.
-2. **N × FWHM at each line** — Sets each line's energy window to N times the FWHM at that line (default 1.5). The bands and the line table recount from the acquired events, and Imaging uses the same N.
-
 **Step 3.** Type 2 in **N × FWHM at each line** and leave the field: each band widens to twice the FWHM at its line and the table recounts; the histogram itself does not change.
 
 <p align="center"><img src="figures/3.4-2.png" alt="Figure 3.4-2"></p>
 <p align="center"><em>Figure 3.4-2.</em> The wider window at 2 × FWHM.</p>
-
-1. **N × FWHM at each line** — Sets each line's energy window to N times the FWHM at that line (default 1.5). The bands and the line table recount from the acquired events, and Imaging uses the same N.
 
 **Step 4.** **Log Y** is checked initially. Untick it to show a linear counts axis; the histogram data are unchanged.
 
@@ -296,8 +223,6 @@ spectrum ([chapter 3.4 (Spectrum)](#34-spectrum)) and how to read the results ([
 
 <p align="center"><img src="figures/3.4-3.png" alt="Figure 3.4-3"></p>
 <p align="center"><em>Figure 3.4-3.</em> The spectrum with a logarithmic counts axis.</p>
-
-1. **Log Y** — Switches the counts axis between logarithmic (the default) and linear. It is a view setting: the acquired data do not change.
 
 ## 5 Interpretation and help
 

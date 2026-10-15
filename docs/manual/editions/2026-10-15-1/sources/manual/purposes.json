@@ -1,81 +1,84 @@
 {
   "schema": "gcam.manual-purposes",
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "status": "draft",
   "approval": "draft for the author's approval; the generator marks every edition draft until status reads approved",
-  "note": "What each marked element is for, listed under each figure by its mark number. One entry per mark target (the control's AutomationId); the figure keeps the control's visible text as its label. Each purpose says only what its sources state.",
+  "note": "What each marked element is for, drawn into its figure label as \"<screen text>: <short>\". One entry per mark target (the control's AutomationId); `name` replaces the screen text where that text is long or changes with the state. Each phrase says only what its sources state.",
   "purposes": [
     {
       "target": "Detector.FaceTab",
-      "purpose": "Draws the detector face for the current settings: the static crystal gain pattern with its colour scale and the dead gaps between the pixels. Its area is geometry only, not the acquired count rate.",
+      "short": "crystal gain and dead gaps",
       "sources": [
-        "docs/VV.Studio.SRS.md SR-DET-02, SR-DET-03, SR-DET-06",
+        "docs/VV.Studio.SRS.md SR-DET-03, SR-DET-06",
         "src/Gcam.Studio/Views/DetectorView.xaml (Detector.Face help text)"
       ]
     },
     {
       "target": "Detector.Identity",
-      "purpose": "Says whose settings the face and the facts beside it show: the settings for the next acquisition, or, once data exist, the acquired settings, locked until Reset.",
+      "name": "Settings note",
+      "short": "whose settings are shown",
       "sources": [
         "docs/VV.Studio.SRS.md SR-DET-02"
       ]
     },
     {
       "target": "FloodReadout",
-      "purpose": "Reads out the flood-map pixel under the pointer: its centre in mm and its value, so a position can be read off the image.",
+      "name": "Pixel readout",
+      "short": "pixel under the pointer",
       "sources": [
         "docs/VV.Studio.SRS.md SR-VIEW-05, SR-VIEW-07"
       ]
     },
     {
       "target": "Left.DetectorTab",
-      "purpose": "Holds the readout choice — the default direct crystal assignment or the experimental physical readout — with its calibration preparation and energy window.",
+      "short": "choose the readout",
       "sources": [
-        "docs/VV.Studio.SRS.md SR-OPT-06, SR-DET-05, SR-DET-07, SR-RUN-33",
+        "docs/VV.Studio.SRS.md SR-OPT-06, SR-DET-05, SR-DET-07",
         "src/Gcam.Studio/README.md (Views: ReadoutPanel)"
       ]
     },
     {
       "target": "Left.OpticsTab",
-      "purpose": "Holds the engineering geometry of the mask and the detector: a preset and the five values it sets.",
+      "short": "mask and detector geometry",
       "sources": [
-        "docs/VV.Studio.SRS.md SR-OPT-01, SR-OPT-02, SR-OPT-06"
+        "docs/VV.Studio.SRS.md SR-OPT-01, SR-OPT-06"
       ]
     },
     {
       "target": "Left.SceneTab",
-      "purpose": "Holds the source list and the fields of the selected source. Sources are edited here before an acquisition; while acquired data exist they stay locked until Reset.",
+      "short": "place and edit sources",
       "sources": [
         "docs/VV.Studio.SRS.md SR-OPT-06, SR-RUN-12"
       ]
     },
     {
       "target": "M1",
-      "purpose": "A row of the measurement table: its number, the image it was drawn on, its kind (distance, angle or ROI) and its value. Selecting a row describes it under the table; Delete or the row's delete button removes it.",
+      "short": "measurement row",
       "sources": [
-        "docs/VV.Studio.SRS.md SR-MEAS-01, SR-MEAS-02, SR-MEAS-03, SR-MEAS-05",
-        "src/Gcam.Studio/Views/MainWindow.xaml (measurement table columns)"
+        "docs/VV.Studio.SRS.md SR-MEAS-05",
+        "src/Gcam.Studio/Views/MainWindow.xaml (measurement table)"
       ]
     },
     {
       "target": "M2",
-      "purpose": "A row of the measurement table: its number, the image it was drawn on, its kind (distance, angle or ROI) and its value. Selecting a row describes it under the table; Delete or the row's delete button removes it.",
+      "short": "measurement row",
       "sources": [
-        "docs/VV.Studio.SRS.md SR-MEAS-01, SR-MEAS-02, SR-MEAS-03, SR-MEAS-05",
-        "src/Gcam.Studio/Views/MainWindow.xaml (measurement table columns)"
+        "docs/VV.Studio.SRS.md SR-MEAS-05",
+        "src/Gcam.Studio/Views/MainWindow.xaml (measurement table)"
       ]
     },
     {
       "target": "M3",
-      "purpose": "A row of the measurement table: its number, the image it was drawn on, its kind (distance, angle or ROI) and its value. Selecting a row describes it under the table; Delete or the row's delete button removes it.",
+      "short": "measurement row",
       "sources": [
-        "docs/VV.Studio.SRS.md SR-MEAS-01, SR-MEAS-02, SR-MEAS-03, SR-MEAS-05",
-        "src/Gcam.Studio/Views/MainWindow.xaml (measurement table columns)"
+        "docs/VV.Studio.SRS.md SR-MEAS-05",
+        "src/Gcam.Studio/Views/MainWindow.xaml (measurement table)"
       ]
     },
     {
       "target": "MeasurementDetail",
-      "purpose": "Describes the selected measurement: its coordinates, size and, for an ROI, its pixel count and pixel statistics.",
+      "name": "Detail line",
+      "short": "the selected measurement",
       "sources": [
         "docs/VV.Studio.SRS.md SR-MEAS-03, SR-OPT-06",
         "src/Gcam.Studio/Views/MainWindow.xaml (selected-measurement line)"
@@ -83,14 +86,14 @@
     },
     {
       "target": "Modal.Cancel",
-      "purpose": "Closes the dialog without acting: the reset confirmation keeps the acquisition, the Options dialog discards its draft. Escape does the same.",
+      "short": "close without acting",
       "sources": [
         "docs/VV.Studio.SRS.md SR-RUN-26, SR-RUN-12"
       ]
     },
     {
       "target": "Optics.CellPitch",
-      "purpose": "The width of one mask cell, in mm (at least 0.05 mm).",
+      "short": "mask cell width (mm)",
       "sources": [
         "docs/VV.Studio.SRS.md SR-OPT-01, §5 (physical optics)",
         "src/Gcam.Configuration/SceneConfigBuilder.cs"
@@ -98,35 +101,36 @@
     },
     {
       "target": "Optics.Distance",
-      "purpose": "The distance between the mask and the detector, in mm (at least 1 mm). Every source must lie beyond the mask's front face.",
+      "short": "gap in mm",
       "sources": [
-        "docs/VV.Studio.SRS.md SR-OPT-01, SR-OPT-03, §5 (physical optics)"
+        "docs/VV.Studio.SRS.md SR-OPT-01, §5 (physical optics)"
       ]
     },
     {
       "target": "Optics.Error",
-      "purpose": "States why the optics values are refused. While it shows, Start is refused and the status bar gives the same reason.",
+      "name": "Error message",
+      "short": "why the values are refused",
       "sources": [
         "docs/VV.Studio.SRS.md SR-OPT-03, SR-RUN-13"
       ]
     },
     {
       "target": "Optics.PixelPitch",
-      "purpose": "The centre-to-centre spacing of the detector pixels, in mm (at least 0.05 mm, and larger than the reflector gap set in Options).",
+      "short": "spacing in mm",
       "sources": [
-        "docs/VV.Studio.SRS.md SR-OPT-01, SR-DET-01, §5 (physical optics)"
+        "docs/VV.Studio.SRS.md SR-OPT-01, §5 (physical optics)"
       ]
     },
     {
       "target": "Optics.Pixels",
-      "purpose": "The number of detector pixels along each side of the square array, an integer from 4 to 64.",
+      "short": "integer, 4–64",
       "sources": [
         "docs/VV.Studio.SRS.md SR-OPT-01, §5 (physical optics)"
       ]
     },
     {
       "target": "Optics.Preset",
-      "purpose": "Picks an engineering geometry — Sharp (the default), Baseline, Wide FOV or High-res — that writes all five values and keeps them read-only; Custom makes them editable, starting from the current values. A preset does not move the sources.",
+      "short": "choose a geometry",
       "sources": [
         "docs/VV.Studio.SRS.md SR-OPT-02",
         "src/Gcam.Studio.Core/Optics/OpticsPreset.cs"
@@ -134,21 +138,23 @@
     },
     {
       "target": "Optics.Rank",
-      "purpose": "The prime rank of the MURA mask pattern: 5, 7, 11, 13, 17, 19 or 23. With the cell pitch and the mask–detector distance it sets the nominal field of view and the resolution element.",
+      "short": "mask pattern size",
       "sources": [
-        "docs/VV.Studio.SRS.md SR-OPT-01, SR-OPT-05, §5 (physical optics)"
+        "docs/VV.Studio.SRS.md SR-OPT-01, SR-OPT-05",
+        "AGENTS.md (Key domain concepts: MURA rank)"
       ]
     },
     {
       "target": "Readout.ChooseReadout",
-      "purpose": "Selects the left Detector tab and puts the keyboard focus on the readout choice, where the experimental physical readout can be chosen.",
+      "short": "go to the readout choice",
       "sources": [
         "docs/VV.Studio.SRS.md SR-WAVE-09, SR-DET-06"
       ]
     },
     {
       "target": "Readout.EmptyState",
-      "purpose": "Says why this view is empty: it shows the experimental physical readout, and the default direct crystal assignment has none.",
+      "name": "Empty-view note",
+      "short": "needs the physical readout",
       "sources": [
         "docs/VV.Studio.SRS.md SR-WAVE-09, SR-DET-06",
         "src/Gcam.Studio/Views/EmptyReadoutState.xaml"
@@ -156,35 +162,36 @@
     },
     {
       "target": "Readout.SipmTab",
-      "purpose": "Shows the SiPM footprints and the illustrative charge-division circuit of the experimental physical readout.",
+      "short": "sensors and circuit",
       "sources": [
         "docs/VV.Studio.SRS.md SR-DET-06"
       ]
     },
     {
       "target": "Reset.Discard",
-      "purpose": "Confirms the reset: the acquired data, images, spectrum and the scene frozen at Start are discarded, the status returns to Ready and the inputs unlock. Measurement shapes are kept.",
+      "short": "clear data, unlock inputs",
       "sources": [
         "docs/VV.Studio.SRS.md SR-RUN-26"
       ]
     },
     {
       "target": "Reset.Message",
-      "purpose": "Names the live time and counts a reset would discard and says that the inputs unlock for the next acquisition.",
+      "name": "Confirmation text",
+      "short": "what Reset would discard",
       "sources": [
         "docs/VV.Studio.SRS.md SR-RUN-26"
       ]
     },
     {
       "target": "SourceActivity",
-      "purpose": "The activity of the selected source, in µCi; a value of 0 or less becomes 1 µCi.",
+      "short": "strength in microcuries",
       "sources": [
         "docs/VV.Studio.SRS.md SR-SCENE-01, §5 (inputs)"
       ]
     },
     {
       "target": "SourceDistance",
-      "purpose": "The distance of the selected source from the detector plane, in mm; values outside 200–3000 mm are clamped.",
+      "short": "from detector, 200–3000 mm",
       "sources": [
         "docs/VV.Studio.SRS.md SR-SCENE-01",
         "src/Gcam.Configuration/Scene.cs (DistanceMm)"
@@ -192,14 +199,14 @@
     },
     {
       "target": "SourceIsotope",
-      "purpose": "The isotope the selected source emits, chosen from the engine's isotope list.",
+      "short": "what the source emits",
       "sources": [
         "docs/VV.Studio.SRS.md SR-SCENE-01, §5 (inputs)"
       ]
     },
     {
       "target": "SourceX",
-      "purpose": "The lateral offset of the selected source from the camera axis along x, in mm; the offset is what sets the source's off-axis angle.",
+      "short": "offset from the axis (mm)",
       "sources": [
         "docs/VV.Studio.SRS.md SR-SCENE-01, §5 (inputs)",
         "AGENTS.md (Pipeline & coordinate frame)"
@@ -207,7 +214,7 @@
     },
     {
       "target": "SourceY",
-      "purpose": "The lateral offset of the selected source from the camera axis along y, in mm; the offset is what sets the source's off-axis angle.",
+      "short": "offset from the axis (mm)",
       "sources": [
         "docs/VV.Studio.SRS.md SR-SCENE-01, §5 (inputs)",
         "AGENTS.md (Pipeline & coordinate frame)"
@@ -215,72 +222,73 @@
     },
     {
       "target": "Spectrum.LogY",
-      "purpose": "Switches the counts axis between logarithmic (the default) and linear. It is a view setting: the acquired data do not change.",
+      "short": "log or linear counts axis",
       "sources": [
         "docs/VV.Studio.SRS.md SR-SPEC-06, §5 (inputs)"
       ]
     },
     {
       "target": "Spectrum.Window",
-      "purpose": "Sets each line's energy window to N times the FWHM at that line (default 1.5). The bands and the line table recount from the acquired events, and Imaging uses the same N.",
+      "short": "energy window width",
       "sources": [
         "docs/VV.Studio.SRS.md SR-SPEC-04, SR-SPEC-06, SR-IMG-01"
       ]
     },
     {
       "target": "StartAcquisition",
-      "purpose": "Starts an acquisition over the preset live time. Once data exist it reads Continue and resumes the same acquisition while the acquired live time is below the preset. A refused Start states its reason in the status bar.",
+      "short": "start or continue the run",
       "sources": [
         "docs/VV.Studio.SRS.md SR-RUN-09, SR-RUN-13, SR-RUN-23"
       ]
     },
     {
       "target": "StatusText",
-      "purpose": "The run status line: Ready, or the state with live time, counts, count rate (counts ÷ live time) and seed. A refused Start is stated here in the warning colour, a failure as Failed with its message.",
+      "name": "Status bar",
+      "short": "run state, counts and seed",
       "sources": [
-        "docs/VV.Studio.SRS.md SR-RUN-03, SR-RUN-13, SR-RUN-25, SR-RUN-28, §5 (status messages)"
+        "docs/VV.Studio.SRS.md SR-RUN-13, SR-RUN-25, SR-RUN-28, §5 (status messages)"
       ]
     },
     {
       "target": "StopAcquisition",
-      "purpose": "Ends the running acquisition and keeps everything acquired; the inputs stay locked and the button then offers Continue.",
+      "short": "stop and keep the data",
       "sources": [
-        "docs/VV.Studio.SRS.md SR-RUN-10, SR-RUN-13"
+        "docs/VV.Studio.SRS.md SR-RUN-10"
       ]
     },
     {
       "target": "Waveform.FourOutputsTab",
-      "purpose": "Shows the four readout outputs A–D and their sum for a selected event of the experimental physical readout.",
+      "short": "pulses of the physical readout",
       "sources": [
         "docs/VV.Studio.SRS.md SR-WAVE-09"
       ]
     },
     {
       "target": "Workspace.Detector",
-      "purpose": "Shows the detector face for the current settings and, with the experimental physical readout, its SiPM, Anger, calibration and diagnostics views.",
+      "short": "face and readout views",
       "sources": [
         "docs/VV.Studio.SRS.md SR-NAV-02, SR-DET-02, SR-DET-06"
       ]
     },
     {
       "target": "Workspace.Imaging",
-      "purpose": "Shows the detector flood map and the decoded reconstruction, with distance, angle and ROI measurements in mm. All four workspaces show the same acquisition; switching changes only the view (Ctrl+1 to Ctrl+4).",
+      "short": "flood map and image",
       "sources": [
-        "docs/VV.Studio.SRS.md SR-NAV-01, SR-NAV-02, §1 (outputs)"
+        "docs/VV.Studio.SRS.md SR-NAV-02, §1 (outputs)"
       ]
     },
     {
       "target": "Workspace.Spectrum",
-      "purpose": "Shows the histogram of measured energies (0–2000 keV) with a band at each emission line and a table of the counts inside each band.",
+      "short": "energy histogram",
       "sources": [
-        "docs/VV.Studio.SRS.md SR-NAV-02, SR-SPEC-01, SR-SPEC-04, SR-SPEC-05"
+        "docs/VV.Studio.SRS.md SR-NAV-02, SR-SPEC-01"
       ]
     },
     {
       "target": "Workspace.Waveform",
-      "purpose": "Shows the simulated ADC and shaped pulse traces of a selected acquired event, or, with the experimental physical readout, its four outputs A–D.",
+      "short": "pulse traces of an event",
       "sources": [
-        "docs/VV.Studio.SRS.md SR-NAV-02, SR-WAVE-01, SR-WAVE-02, SR-WAVE-09"
+        "docs/VV.Studio.SRS.md SR-NAV-02, SR-WAVE-01, SR-WAVE-02"
       ]
     }
   ]

@@ -6,10 +6,10 @@ scenario on the edition's one Studio build passed; otherwise the edition carries
 run's original captures, cropped along panel edges and overlaid with the mark rectangles the runner measured at capture
 time; the generator only adds each mark's label beside its rectangle, or in a plain margin beside the figure joined by
 a line (a red disc with the number, then the label as measured, wrapped, drawn from a committed glyph subset of a
-rounded open-licence font) by a fixed placement rule, and places or words no mark. Under each figure a numbered list
-gives each mark's label and what the marked element is for, from the hand-written, sourced purpose list
-(docs/manual/purposes.json); a mark without an entry prints its label only and keeps the edition a draft. The generator
-records; it approves nothing.
+rounded open-licence font) by a fixed placement rule, and places no mark. A label reads "<screen text>: <purpose>": the
+control's text as measured (or a short element name where that text is long or changes with the state), then what the
+element is for, both from the hand-written, sourced purpose list (docs/manual/purposes.json); a mark without an entry
+keeps its screen text alone and keeps the edition a draft. The generator records; it approves nothing.
 
   python -B samples/manual/manual_records.py check-registry
   python -B samples/manual/manual_records.py generate --runs <folder> --edition-id <id> --date <yyyy-mm-dd> --out <new>
@@ -64,7 +64,11 @@ INSET, INSET_V = 4, 2   # an inside label's clearance from the control's edges (
 TEXT_INK = 8    # ink pixels near a label box that count as covering screen content (fewer: a stray pixel)
 LINE_INK = 6    # ink pixels along a join line that count as crossing screen content (fewer: a separator)
 SEPARATORS = ('\u00b7', '\u00d7', '\u2013', '|', '-')
-PURPOSES = 'purposes.json'   # what each mark is for, listed under its figure
+PURPOSES = 'purposes.json'   # what each mark is for: in its label (schema 2); schema 1 is replayed only
+PURPOSE_LABELS = ('each mark is labelled "<screen text or the entry\'s name>: <short purpose>" from the purpose list; a mark '
+                  'without an entry keeps its screen text alone')
+# Schema 1 of the purpose list (a numbered list under each figure, long labels cut there) is kept only to replay the
+# editions generated with it; new editions refuse it.
 LIST_LONG, LIST_CUT = 48, 40   # in the purpose list only, a label over LIST_LONG characters is cut at a word to LIST_CUT and '\u2026'
 LIST_RULE = (f'in the purpose list only, a label over {LIST_LONG} characters is cut to at most {LIST_CUT} characters '
              'followed by an ellipsis, at the last " · " or " (" from the middle on, else at a word; the figure keeps the '
@@ -73,6 +77,7 @@ WRAPS = (32, 20, 12)   # label line lengths in characters: the label as printed,
 LINE_PITCH = 20 # label text line pitch, px
 JOIN_GAP = 12   # clearance of a label shifted off its frame's side, so its join line shows
 MARGIN_GAP = 10 # a plain margin's clearance between the capture and its labels (the join lines' run)
+BUS = 4         # spacing of the separate rules in a margin whose join lines would otherwise share one
 MARGIN_PAD = 8  # a plain margin's clearance beyond its labels
 LINE_WEIGHT = 200   # figure area (px²) one pixel of margin join line counts as when choosing the margins
 LINE = 2        # join line width, drawn with a 1 px dark halo
@@ -737,30 +742,37 @@ def length(points):
     return sum(abs(x1 - x0) + abs(y1 - y0) for (x0, y0), (x1, y1) in zip(points, points[1:]))
 
 
-def margin_routes(index, rects, crop, ink):
-    """Join-line routes inside the crop from a mark's frame out to each margin, clear of screen content and of the other
-    marks' frames: straight out from the frame's middle, or, when that crosses something, one detour - along the frame's
-    side to the nearest clean corridor, then out along it. Returns [(side, points)], at most one route per side."""
+def margin_routes(index, rects, crop, ink, taken=None):
+    """Join-line routes inside the crop from a mark's frame out to each margin, clear of screen content, of the other
+    marks' frames and of taken[side] (the earlier marks' routes to that margin): straight out from the frame's middle, or, when that
+    crosses something, one detour - along the frame's side to the nearest clean corridor, then out along it. Returns
+    [(side, points)], at most one route per side; a corridor route starts on the frame."""
     frame = framed(rects[index])
     fl, ft, fr, fb = frame[0], frame[1], frame[0] + frame[2], frame[1] + frame[3]
     cl, ct, cr, cb = crop[0], crop[1], crop[0] + crop[2], crop[1] + crop[3]
     others = [r for j, r in enumerate(rects) if j != index]
-    def clean(points):
+    def clean(points, side):
         boxes = line_boxes(points)
         return (all(b[0] >= cl - LINE and b[1] >= ct - LINE and b[0] + b[2] <= cr + LINE and b[1] + b[3] <= cb + LINE for b in boxes)
-                and sum(ink(b, 1) for b in boxes) <= LINE_INK and not any(crosses(b, r) for b in boxes for r in others))
-    def first(candidates):
-        return next((c for c in candidates if clean(c)), None)
+                and sum(ink(b, 1) for b in boxes) <= LINE_INK and not any(crosses(b, r) for b in boxes for r in others)
+                and not any(overlap(b, t) for b in boxes for t in (taken or {}).get(side, ())))
+    def first(candidates, side):
+        return next((c for c in candidates if clean(c, side)), None)
     mx, my, routes = (fl + fr) // 2, (ft + fb) // 2, []
     for side, edge, out in (('right', fr, cr), ('left', fl, cl)):
         def corridor(step, start, stop):
             return [[[mx, start], [mx, y], [out, y]] for y in range(start, stop, step)]
-        route = first([[[edge, my], [out, my]]] + corridor(-2, ft - 6, ct + 2) + corridor(2, fb + 6, cb - 2))
+        # last resort: straight out from another height of the frame's side, nearest its middle first (past a caption
+        # centred beside a field)
+        level = [[[edge, y], [out, y]] for y in sorted(range(ft + 2, fb - 1, 2), key=lambda v: (abs(v - my), v)) if y != my]
+        route = first([[[edge, my], [out, my]]] + corridor(-2, ft - 6, ct + 2) + corridor(2, fb + 6, cb - 2) + level, side)
+        if route and route[0] in ([mx, ft - 6], [mx, fb + 6]):   # a corridor's line runs on to the frame it leaves
+            route = [[mx, ft if route[0][1] < ft else fb]] + route[1:]
         if route:
             routes.append((side, route))
     xs = [fl + DISC // 2 + 1, mx, fr - DISC // 2 - 1]
     route = first([[[x, fb], [x, cb]] for x in xs] + [[[fr, my], [x, my], [x, cb]] for x in range(fr + 6, cr - 2, 2)]
-                  + [[[fl, my], [x, my], [x, cb]] for x in range(fl - 6, cl + 2, -2)])
+                  + [[[fl, my], [x, my], [x, cb]] for x in range(fl - 6, cl + 2, -2)], 'bottom')
     if route:
         routes.append(('bottom', route))
     return routes
@@ -786,14 +798,26 @@ def margin_layout(side, items, crop):
             limit = item[3] - SPACING
         if placed and placed[0][3] < ct + 2:
             return None
+        # Lines that step from their route to their label run down one shared rule beside the crop, unless two such
+        # steps overlap: then each gets its own rule, the upper label's farther out, so no line crosses another.
+        steps = [(item[1][-1][1], item[3] + LABEL_H // 2) for item in placed if item[3] + LABEL_H // 2 != item[1][-1][1]]
+        nested = any(min(a[1], b[1]) + SPACING > max(a[0], b[0]) for k, a in enumerate(steps) for b in steps[k + 1:])
+        gap = max(MARGIN_GAP, 6 + BUS * len(steps)) if nested else MARGIN_GAP
+        rank = 0
         for index, route, unit, y in placed:
-            x = cr + MARGIN_GAP if side == 'right' else cl - MARGIN_GAP - unit[0]
+            x = cr + gap if side == 'right' else cl - gap - unit[0]
             ly, near = y + LABEL_H // 2, x if side == 'right' else x + unit[0]
             xm = cr + MARGIN_GAP // 2 if side == 'right' else cl - MARGIN_GAP // 2
             end = route[-1]
+            if nested and ly != end[1]:
+                offset = 3 + BUS * (len(steps) - 1 - rank)
+                xm, rank = (cr + offset if side == 'right' else cl - offset), rank + 1
             join = route[:-1] + ([[near, ly]] if ly == end[1] else [[xm, end[1]], [xm, ly], [near, ly]])
             out[index] = ([x, y, unit[0], unit[1]], join)
-        return MARGIN_GAP + width + MARGIN_PAD, out
+        if nested and any(overlap(a, b) for i, (_, ja) in out.items() for j, (_, jb) in out.items() if i < j
+                          for a in line_boxes(ja) for b in line_boxes(jb)):
+            return None
+        return gap + width + MARGIN_PAD, out
     rows = []
     row_h = max(unit[1] for _, _, unit in items)
     for index, route, unit in sorted(items, key=lambda it: (it[1][-1][0], it[0])):
@@ -819,7 +843,7 @@ def margin_layout(side, items, crop):
     return 2 * STRIP_PAD + len(rows) * row_h + (len(rows) - 1) * SPACING, out
 
 
-def place_margins(marks, rows, routes, crop):
+def place_margins(marks, rows, routes, crop, printed=None):
     """Margins for the marks the crop has no place for: each such label to the right, left or bottom margin whose route
     is clear of the placed labels, the assignment adding the least figure area (a long join line counting as area too,
     LINE_WEIGHT per pixel); then marks sharing a margin mark's column
@@ -880,11 +904,15 @@ def place_margins(marks, rows, routes, crop):
             same = (other[0], other[2]) == (frame[0], frame[2]) if side != 'bottom' else (other[1], other[3]) == (frame[1], frame[3])
             option = next((o for o in sides_for(i, keep - {i}) if o[0] == side), None) if same and i not in chosen else None
             if option:
-                trial = {**chosen, i: option}
+                trial, placed = {**chosen, i: option}, rows[i]
+                if printed:   # in the margin the label keeps its block as printed, not a narrower fold for the crop
+                    rows[i] = {**placed, 'unit': printed[i]}
                 result = area(trial)
                 if result:
                     chosen, best = trial, result
                     keep.discard(i)
+                else:
+                    rows[i] = placed
     return best[1], best[2]
 
 
@@ -981,9 +1009,15 @@ def derive_figure(width, height, rgb, doc):
     (cx, cy, cw, ch), rule = crop_rect(doc, width, height, rgb, [])
     ink = ink_counter(width, height, rgb, [cx, cy, cw, ch])
     rects = [m['image'] for m in marks]
-    routes = [margin_routes(i, rects, [cx, cy, cw, ch], ink) for i in range(len(marks))]
+    routes, taken = [], {}
+    for i in range(len(marks)):   # each mark's side routes clear of the earlier marks' to that side (else as if alone)
+        found = margin_routes(i, rects, [cx, cy, cw, ch], ink, taken) or margin_routes(i, rects, [cx, cy, cw, ch], ink)
+        routes.append(found)
+        for side, points in found:   # side margins only: a bottom route runs straight down to its own label
+            if side != 'bottom':
+                taken.setdefault(side, []).extend(line_boxes(points, 2))
     rows, complete = place_labels(width, height, rgb, marks, variants, [cx, cy, cw, ch], ink, routes)
-    sizes, margin = place_margins(marks, rows, routes, [cx, cy, cw, ch])
+    sizes, margin = place_margins(marks, rows, routes, [cx, cy, cw, ch], [v[0][1] for v in variants])
     lw, rw, bh = sizes.get('left', 0), sizes.get('right', 0), sizes.get('bottom', 0)
     fw, fh = lw + cw + rw, ch + bh
     bg = bytes(background(width, height, rgb))
@@ -1098,18 +1132,24 @@ def load_sources(root, require_purposes=True):
     purposes, purpose_status = None, None
     if require_purposes or confined(root, PURPOSES).is_file():   # an edition from before the purpose list has none
         document = json.loads(take(PURPOSES, 'purposes'))
-        require((document.get('schema'), document.get('schemaVersion')) == ('gcam.manual-purposes', 1), 'purposes: unknown schema')
+        version = document.get('schemaVersion')
+        require(document.get('schema') == 'gcam.manual-purposes' and version in (1, 2), 'purposes: unknown schema')
         purposes, purpose_status = {}, document.get('status')
+        glyphs = label_font()['glyphs']
+        def line(text, field):
+            return (isinstance(text, str) and text and text.strip() == text and '\n' not in text and '\r' not in text
+                    and (field == 'purpose' or all(c in glyphs for c in text)))
         for entry in document['purposes']:
             target = entry.get('target')
             require(isinstance(target, str) and re.fullmatch(r'[A-Za-z0-9.]+', target) and target not in purposes,
                     'purposes: duplicate or malformed target ' + str(target))
-            text = entry.get('purpose')
-            require(isinstance(text, str) and text.strip() and '\n' not in text and '\r' not in text and entry.get('sources'),
-                    'purposes: incomplete ' + target)
+            fields = ('purpose',) if version == 1 else ('short',) + (('name',) if 'name' in entry else ())
+            require(all(line(entry.get(f), f) for f in fields) and entry.get('sources'),
+                    'purposes: incomplete, or a character the label font has no glyph for, in ' + target)
             purposes[target] = entry
     return {'registry': registry, 'parts': parts, 'notices': by_id, 'noticeStatus': notices.get('status'),
-            'static': static, 'files': files, 'purposes': purposes, 'purposeStatus': purpose_status}
+            'static': static, 'files': files, 'purposes': purposes, 'purposeStatus': purpose_status,
+            'purposeVersion': version if purposes is not None else None}
 
 
 # ---------------------------------------------------------------- run records
@@ -1192,6 +1232,24 @@ def list_label(text):
 def markdown_safe(text):
     """Literal text for Markdown: HTML special characters as entities, Markdown punctuation escaped."""
     return re.sub(r'([\\`*_\[\]|#])', r'\\\1', html.escape(text, quote=False))
+
+
+def purpose_marks(marks, purposes):
+    """The marks with their labels as drawn: "<screen text or name>: <short>" (PURPOSE_LABELS). Returns (marks, record
+    rows, targets without a purpose entry)."""
+    out, rows, missing = [], [], []
+    for mark in marks:
+        screen, entry = label_text(mark), purposes.get(mark['target'])
+        row = {'n': mark['n'], 'target': mark['target'], 'screenText': screen}
+        if entry:
+            row.update({'short': entry['short'], **({'name': entry['name']} if 'name' in entry else {})})
+            label = f'{entry.get("name", screen)}: {entry["short"]}'
+        else:
+            label = screen
+            missing.append(mark['target'])
+        out.append({**mark, 'label': label})
+        rows.append({**row, 'label': label})
+    return out, rows, missing
 
 
 def purpose_list(marks, purposes):
@@ -1305,6 +1363,11 @@ def assemble(sources, runs, edition_id, date, formal, budget, reuse=None, genera
                     text += [f'**Step {step["n"]}.** ' + resolve_tokens(step['text'], chapters, printed), '']
                     for figure in step['figures']:
                         _, meta, width, height, rgb, doc, png, marks_raw = figure_map[figure['id']]
+                        labelled = None
+                        if sources['purposeVersion'] == 2 and doc['marks']:   # the purpose drawn into each label
+                            marks, labelled, absent = purpose_marks(doc['marks'], sources['purposes'])
+                            doc = {**doc, 'marks': marks}
+                            missing_purposes.update(absent)
                         fw, fh, frgb, crop, fig_flags, operation = derive_figure(width, height, rgb, doc)
                         name = f'figures/{figure["id"]}.png'
                         encoded = (reuse(name, fw, fh, frgb) if reuse else None) or png_encode(fw, fh, frgb)
@@ -1317,7 +1380,9 @@ def assemble(sources, runs, edition_id, date, formal, budget, reuse=None, genera
                                'operation': operation,
                                'path': name, 'resultSha256': sha(encoded),
                                'pixelSha256': sha(struct.pack('>II', fw, fh) + frgb), 'flags': fig_flags}
-                        if sources['purposes'] is not None and doc['marks']:
+                        if labelled is not None:
+                            row['markLabels'] = labelled
+                        if sources['purposeVersion'] == 1 and doc['marks']:   # replay of an edition with the list
                             items, row['purposeList'], absent = purpose_list(doc['marks'], sources['purposes'])
                             text += items + ['']
                             missing_purposes.update(absent)
@@ -1360,7 +1425,8 @@ def assemble(sources, runs, edition_id, date, formal, budget, reuse=None, genera
               'registry': {'id': registry['id'], 'locale': registry['locale'], 'sha256': sha(sources['files']['chapters.json'])},
               'notices': {'sha256': sha(sources['files']['notices.json']), 'status': sources['noticeStatus']},
               **({'purposes': {'sha256': sha(sources['files'][PURPOSES]), 'status': sources['purposeStatus'],
-                               'missingTargets': sorted(missing_purposes), 'listLabels': LIST_RULE}}
+                               'missingTargets': sorted(missing_purposes),
+                               **({'listLabels': LIST_RULE} if sources['purposeVersion'] == 1 else {'labels': PURPOSE_LABELS})}}
                  if sources['purposes'] is not None else {}),
               'static': [{'chapter': n, 'path': s['path'], 'sha256': sha(sources['files'][s['path']]), 'draft': s['draft']}
                          for n, s in sorted(sources['static'].items())],
@@ -1390,6 +1456,7 @@ def generate(sources_root, runs_root, edition_id, date, out, formal=False, budge
     out = Path(out)
     require(not out.exists(), 'edition: output folder exists (editions are never overwritten)')
     sources = load_sources(sources_root)
+    require(sources['purposeVersion'] == 2, 'purposes: schema 1 (a list under each figure) is replayed only, never generated')
     outputs = assemble(sources, load_runs(runs_root, sources), edition_id, date, formal, budget)
     for relative, data in outputs.items():
         path = out / relative
@@ -1466,8 +1533,8 @@ def fixture(root):
                              {'number': '1.3', 'title': 'Beta', 'part': '1', 'source': 'generated', 'scenario': 'manual.beta'}]}
     notices = {'schema': 'gcam.manual-notices', 'schemaVersion': 1, 'status': 'approved',
                'notices': [{'id': 'N-SIM', 'level': 'caution', 'text': 'Simulated.', 'chapters': ['1.1', '1.2'], 'sources': ['fixture']}]}
-    purposes = {'schema': 'gcam.manual-purposes', 'schemaVersion': 1, 'status': 'approved',
-                'purposes': [{'target': 'StartAcquisition', 'purpose': 'Starts the acquisition.', 'sources': ['fixture']}]}
+    purposes = {'schema': 'gcam.manual-purposes', 'schemaVersion': 2, 'status': 'approved',
+                'purposes': [{'target': 'StartAcquisition', 'short': 'go', 'sources': ['fixture']}]}
     (src / 'chapters.json').write_bytes(canonical(registry))
     (src / 'notices.json').write_bytes(canonical(notices))
     (src / PURPOSES).write_bytes(canonical(purposes))
@@ -1593,11 +1660,19 @@ def self_test(out=None):
         require(str(error).startswith('check-differs'), 'self-test: wrong replay refusal ' + str(error))
         results.append(('tampered-figure', str(error)))
     figure.write_bytes(original)
-    require('1. **Start** — Starts the acquisition.\n' in (valid / 'MANUAL.Studio.md').read_text(encoding='utf-8'),
-            'self-test: valid: no purpose list under the figure')
+    def mark_labels(edition):
+        record = json.loads((edition / 'generation-record.json').read_bytes())
+        figure = next(f for f in record['figures'] if f['figure'] == '1.2-1')
+        return record, [l['text'] for l in figure['operation']['labels']], figure.get('markLabels')
+    record, drawn, rows = mark_labels(valid)
+    require(drawn == ['Start: go'] and rows == [{'n': 1, 'target': 'StartAcquisition', 'screenText': 'Start', 'short': 'go',
+                                                  'label': 'Start: go'}] and record['status'] == 'formal'
+            and '1. **Start**' not in (valid / 'MANUAL.Studio.md').read_text(encoding='utf-8'),
+            'self-test: valid: the purpose is not drawn into the label')
+    results.append(('purpose-in-label', 'generated: ' + drawn[0]))
     retained = valid / 'sources/manual' / PURPOSES
     original = retained.read_bytes()
-    edit_json(retained, lambda p: p['purposes'][0].update(purpose='Stops the acquisition.'))
+    edit_json(retained, lambda p: p['purposes'][0].update(short='stop'))
     try:   # a retained source that is not the one the record pins is refused before anything is replayed
         check(valid)
         raise RuntimeError('self-test: altered purpose list accepted')
@@ -1608,14 +1683,25 @@ def self_test(out=None):
     def without_purpose(src, runs):
         edit_json(src / PURPOSES, lambda p: p.update(purposes=[]))
     edition = case('missing-purpose', without_purpose, 'marks without a purpose entry: StartAcquisition')
-    markdown = (edition / 'MANUAL.Studio.md').read_text(encoding='utf-8')
-    require('\n1. **Start**\n' in markdown and json.loads((edition / 'generation-record.json').read_bytes())['status'] == 'draft',
-            'self-test: missing-purpose: the label alone and a draft edition expected')
+    record, drawn, rows = mark_labels(edition)
+    require(drawn == ['Start'] and rows[0]['label'] == 'Start' and 'short' not in rows[0] and record['status'] == 'draft'
+            and record['purposes']['missingTargets'] == ['StartAcquisition'],
+            'self-test: missing-purpose: the screen text alone and a draft edition expected')
+    def named(src, runs):
+        edit_json(src / PURPOSES, lambda p: p['purposes'][0].update(name='Run'))
+    record, drawn, rows = mark_labels(case('purpose-name', named, '### 1.2 Alpha'))
+    require(drawn == ['Run: go'] and rows[0]['screenText'] == 'Start' and rows[0]['name'] == 'Run',
+            'self-test: purpose-name: the name replaces the screen text, which the record keeps')
+    results[-1] = ('purpose-name', 'generated: ' + drawn[0])
     case('missing-purpose-formal', without_purpose, 'refuse:formal-refused', formal=True)
     case('purposes-draft', lambda s, r: edit_json(s / PURPOSES, lambda p: p.update(status='draft')),
          'the mark purpose list is not approved')
     case('purpose-duplicate', lambda s, r: edit_json(s / PURPOSES, lambda p: p['purposes'].append(dict(p['purposes'][0]))),
          'refuse:purposes: duplicate or malformed target')
+    case('purpose-no-glyph', lambda s, r: edit_json(s / PURPOSES, lambda p: p['purposes'][0].update(short='in \u00b5Ci')),
+         'refuse:purposes: incomplete, or a character the label font has no glyph for, in StartAcquisition')
+    case('purpose-schema-1', lambda s, r: edit_json(s / PURPOSES, lambda p: (p.update(schemaVersion=1), p['purposes'][0].update(
+         purpose='Starts the acquisition.'))), 'refuse:purposes: schema 1 (a list under each figure) is replayed only')
     case('missing-run', lambda s, r: [p.unlink() for p in (r / 'run-beta').rglob('*') if p.is_file()], 'it is not included because no run')
     case('missing-run-formal', lambda s, r: [p.unlink() for p in (r / 'run-beta').rglob('*') if p.is_file()], 'refuse:formal-refused', formal=True)
     case('failed-chapter', failed, 'did not pass (failed)')
