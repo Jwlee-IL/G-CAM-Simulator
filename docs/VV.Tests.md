@@ -232,7 +232,7 @@ Run `python samples/testing/test_records.py check-catalog --discover` after a Re
 | `cocotb::test_trap_shaper@trapezoidal_shaper` | 3 | 3 |
 | `cocotb::test_trap_shaper@trapezoidal_shaper_pl` | 3 | 3 |
 | `unittest::test_background_shape.BackgroundShapeTests` | 10 | 10 |
-| `unittest::test_manual_records.ManualRecordsTests` | 15 | 15 |
+| `unittest::test_manual_records.ManualRecordsTests` | 16 | 16 |
 | `unittest::test_provenance.ProvenanceTests` | 29 | 29 |
 | `unittest::test_readout_netlist.ReadoutNetlistTests` | 4 | 4 |
 | `unittest::test_stage0_isolation.SnapshotClassificationTests` | 13 | 13 |
@@ -4381,9 +4381,9 @@ Source: [tests/Gcam.Studio.UiTests/ManualScenarioTests.cs](../tests/Gcam.Studio.
 
 ## ManualRecordsTests — unittest
 
-The manual generator's PNG codec, mark validation, panel-edge crop and numbered-badge overlay (badges outside every mark, off text, refused without a free place), the legend drawn inside the figure ("[n] label" entries flowed and wrapped with a hanging indent, never clipped; a label character without a glyph and a figure too narrow for its legend refused), centred figures and captions in the Markdown, latest-run selection and the repository's manual sources.
+The manual generator's PNG codec, mark validation, panel-edge crop and label overlay: each mark's label (a red disc with the number, then the label as measured, wrapped at 32 characters) placed beside its frame by the fixed candidate order and cost tiers inside the marks' own crop, a candidate covering screen text, plots or images (or crossing another mark) refused outright; labels without a place go to a plain margin in the background colour (right, left or bottom, the least added area) joined by lines, never widening the crop; label text rasterised in integer arithmetic from the committed M PLUS Rounded 1c Bold glyph subset (a character without a glyph refused, a multi-line label printed by its first line); the label post-condition; centred figures and captions in the Markdown, latest-run selection and the repository's manual sources.
 
-Oracle: An independent forward PNG filter encoder (types 0–4, RGB and RGBA), rectangle fixtures shared with the C# harness, exact crop, badge positions and overlay pixels on a panel fixture with a text block, legend box, line positions and strip colours computed from the layout constants, the longest real label wrapped in the narrowest real crop width, seeded badge placements and seeded legend lines (clipped, out of bounds, overlapping) for the post-condition checks, the generator's seeded-defect self-test and the registry / notice / static sources under docs/manual.
+Oracle: An independent forward PNG filter encoder (types 0–4, RGB and RGBA), rectangle fixtures shared with the C# harness, exact crop and label boxes computed from the layout constants on a panel fixture with a word beside a mark, overlay pixels (frame border, unpainted control, disc, number, white text with a dark outline, anti-aliased edges), the glyph subset's character set and licence line, U+2026 rebuilt from three periods, exact coverage of a square and a half-pixel contour, the number centred on its disc by its ink, deterministic re-rasterisation, the 91-character message wrapped into three exact lines under the disc and no line opening on a separator, a field stack taking a right margin with level straight join lines and a bottom mark taking a bottom margin (exact margin sizes, boxes and lines, the crop unchanged), a walled-in mark refused, seeded label placements (own target, another label, another label's join line, out of bounds, a crossing) for the post-condition, the generator's seeded-defect self-test and the registry / notice / static sources under docs/manual.
 
 Tolerance: exact
 
@@ -4392,15 +4392,15 @@ Gates: none.
 Source: [samples/evidence/tests/test_manual_records.py](../samples/evidence/tests/test_manual_records.py).
 
 ```json
-{"id":"unittest::test_manual_records.ManualRecordsTests","runner":"unittest","methods":["test_decoder_undoes_every_scanline_filter_for_rgb_and_rgba","test_encoder_round_trips_and_is_deterministic","test_decoder_refuses_corruption_and_unsupported_formats","test_image_rect_matches_the_harness_rule","test_overlay_crops_to_the_panel_and_keeps_badges_off_text_and_marks","test_legend_wraps_a_long_label_with_a_hanging_indent_and_never_clips","test_legend_refuses_a_missing_glyph_a_narrow_figure_and_a_clipped_entry","test_overlay_flags_a_badge_whose_only_free_place_is_on_content","test_overlay_refuses_a_badge_without_a_free_place","test_badge_check_refuses_a_badge_on_another_mark_its_target_a_badge_or_the_edge","test_marks_must_be_the_measured_rectangles_inside_the_capture","test_repository_sources_are_valid_and_bind_every_notice","test_self_test_refuses_every_seeded_defect","test_latest_run_wins_and_a_tie_refuses","test_figures_are_centred_and_the_record_describes_their_legend"],"sources":{"samples/evidence/tests/test_manual_records.py":"6bd406bee0b3431f1a9a93730cee962bab12eab278dacd5b8c48f24018f47f1c"},"trace":[]}
+{"id":"unittest::test_manual_records.ManualRecordsTests","runner":"unittest","methods":["test_decoder_undoes_every_scanline_filter_for_rgb_and_rgba","test_encoder_round_trips_and_is_deterministic","test_decoder_refuses_corruption_and_unsupported_formats","test_image_rect_matches_the_harness_rule","test_labels_sit_beside_their_marks_off_text_and_inside_the_crop","test_text_is_rasterised_from_the_committed_rounded_glyph_subset","test_label_refuses_a_missing_glyph_and_prints_the_first_line","test_long_labels_wrap_into_a_block_under_their_disc","test_labels_without_a_place_go_to_a_plain_margin_and_never_widen_the_crop","test_label_refuses_a_mark_without_a_place_or_a_route_to_a_margin","test_label_check_refuses_overlaps_and_reports_crossings","test_marks_must_be_the_measured_rectangles_inside_the_capture","test_repository_sources_are_valid_and_bind_every_notice","test_self_test_refuses_every_seeded_defect","test_latest_run_wins_and_a_tie_refuses","test_figures_are_centred_and_the_record_describes_their_labels"],"sources":{"samples/evidence/tests/test_manual_records.py":"60d7c53f8127955788aac159b88789d0b19884b922bcd3dfab6b85e32f330dc0"},"trace":[]}
 ```
 
 
 ## manual-self-test — checker
 
-Seeds one defect at a time into a valid edition fixture and requires the specific refusal or omission notice: missing run, failed chapter (both also with --formal), latest failure after a pass, evidence hash, mark outside the image, DPI double scaling, a badge with no free place, a badge seeded over another mark or over its own target, a defective badge placement caught by the figure's own check, a mark label with a character the legend font has no glyph for, mixed binaries, budget, unknown / misplaced / missing notice, warning wording in step prose, path escape, registry collision, identity leak, and a tampered figure on replay.
+Seeds one defect at a time into a valid edition fixture and requires the specific refusal or omission notice: missing run, failed chapter (both also with --formal), latest failure after a pass, evidence hash, mark outside the image, DPI double scaling, a mark walled in by other marks (no place and no route to a margin), a label character the glyph subset has no glyph for, a label seeded over another label, over its own target or outside the figure, a defective label placement caught by the figure's own check, mixed binaries, budget, unknown / misplaced / missing notice, warning wording in step prose, path escape, registry collision, identity leak, and a tampered figure on replay; and three placements that must be generated, recorded and replayed: a bottom mark taking a bottom margin, a field stack taking a right margin, and a 91-character label wrapped into three lines.
 
-Oracle: Exact refusal codes and omission-notice text; a mutation must change its input before the case counts.
+Oracle: Exact refusal codes and omission-notice text; for the placement cases the recorded candidates, margins, figure size (crop plus margins only), wrapped lines and byte-for-byte replay; a mutation must change its input before the case counts.
 
 Tolerance: exact
 
@@ -4409,7 +4409,7 @@ Gates: none.
 Source: [samples/manual/manual_records.py](../samples/manual/manual_records.py).
 
 ```json
-{"id":"checker::manual-self-test","runner":"checker","methods":["manual-self-test"],"sources":{"samples/manual/manual_records.py":"64528d5b2f8db29f1f09a084c39a304528aa20c223217e087426914724b96f31"},"trace":[]}
+{"id":"checker::manual-self-test","runner":"checker","methods":["manual-self-test"],"sources":{"samples/manual/manual_records.py":"f2edde967feca13132f191e5100fb90e45f692a144030b5f37877c2900225e79"},"trace":[]}
 ```
 
 
@@ -4426,7 +4426,7 @@ Gates: none.
 Source: [samples/manual/manual_records.py](../samples/manual/manual_records.py).
 
 ```json
-{"id":"checker::manual-editions","runner":"checker","methods":["manual-editions"],"sources":{"samples/manual/manual_records.py":"64528d5b2f8db29f1f09a084c39a304528aa20c223217e087426914724b96f31"},"trace":[]}
+{"id":"checker::manual-editions","runner":"checker","methods":["manual-editions"],"sources":{"samples/manual/manual_records.py":"f2edde967feca13132f191e5100fb90e45f692a144030b5f37877c2900225e79"},"trace":[]}
 ```
 
 

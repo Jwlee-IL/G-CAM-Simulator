@@ -4,9 +4,9 @@ An edition is assembled from the chapter registry, the static chapters, the Stud
 (written by the desktop manual scenarios after cleanup). A generated chapter is printed only when the latest run of its
 scenario on the edition's one Studio build passed; otherwise the edition carries an omission notice. Figures are the
 run's original captures, cropped along panel edges and overlaid with the mark rectangles the runner measured at capture
-time; the generator only adds the numbered badges beside them by a fixed rule (outside every rectangle, off text) and a
-legend strip below the image ("[n] label" in mark order, the labels as measured), and places or words no mark. The
-generator records; it approves nothing.
+time; the generator only adds each mark's label beside its rectangle, or in a plain margin beside the figure joined by
+a line (a red disc with the number, then the label as measured, wrapped, drawn from a committed glyph subset of a
+rounded open-licence font) by a fixed placement rule, and places or words no mark. The generator records; it approves nothing.
 
   python -B samples/manual/manual_records.py check-registry
   python -B samples/manual/manual_records.py generate --runs <folder> --edition-id <id> --date <yyyy-mm-dd> --out <new>
@@ -36,15 +36,44 @@ MARK_SCHEMA = ('gcam.figure-marks', 1)
 LEVELS = ('warning', 'caution', 'note')
 DEFAULT_BUDGET = 10 * 1024 * 1024
 BORDER = 2      # mark border width, drawn outside the control
-GAP = 2         # clearance between a badge and any framed mark rectangle
-CLEAR = 12      # preferred clearance between a badge and every other mark's frame
-SPACING = 10    # clearance between two badges, so neighbours never read as one two-digit number
 PAD = 6         # crop padding into the window background beyond a panel's edge
 FRAME = 8       # the window's own outline and rounded corners, ignored when testing a crop edge
-HALO = 3        # text must stay this far from a badge
-QUIET = 40      # largest luminance range under a badge: panel and gutter edges pass, text, icons, plots and field frames do not
-OVERLAY = 'rectangles+numbered-badges+legend-v3'
-RED, WHITE = (200, 30, 30), (255, 255, 255)
+HALO = 4        # screen ink is counted this far around a label (its clearance from text)
+QUIET = 15      # colour step that counts as ink: text, icons, plots and control frames do (long straight rules are exempt)
+RULE_DRIFT = 6  # colour drift between neighbours along one rule (anti-aliasing, shading)
+RULE_NEAR = 16  # a pixel this close in shade to an adjoining rule is part of it (rounded corners, fringes)
+RULE_RUN = 200  # a straight run of one grey this long is a panel or dialog border, separator or background, not a control
+SATURATED = 60  # colourfulness (max - min channel) that counts as content: plots and accent buttons, not grey chrome
+LABEL_H = 24    # label box height: the disc plus a pixel above and below
+DISC = 22       # number disc diameter
+TEXT_GAP = 5    # disc to label text
+BASELINE = 18   # label text baseline below the box top: capitals centred on the disc
+EM, DIGIT_EM = 16, 15   # label and disc-number text size, px per em (label text 15.4 px cap to descender)
+SS = 4          # text and disc supersampling per axis
+OUTLINE_KERNEL = [(dx, dy, w) for dy in range(-2, 3) for dx in range(-2, 3)
+                  for w in [{0: 256, 1: 256, 2: 150, 4: 64}.get(dx * dx + dy * dy, 0)] if w]
+LEAD = 3        # clearance between a label and its own mark's frame
+SPACING = 6     # clearance between two labels
+ROW = LABEL_H + 2   # one text row: the step of a shifted candidate
+SLIDE = 6       # step of an above / below label slid along its frame
+NUDGES = (-4, 4, -8, 8)   # px a left / right label may move off a line of text and still touch its frame
+INSET, INSET_V = 4, 2   # an inside label's clearance from the control's edges (sides, top and bottom)
+TEXT_INK = 8    # ink pixels near a label box that count as covering screen content (fewer: a stray pixel)
+LINE_INK = 6    # ink pixels along a join line that count as crossing screen content (fewer: a separator)
+SEPARATORS = ('\u00b7', '\u00d7', '\u2013', '|', '-')
+WRAPS = (32, 20, 12)   # label line lengths in characters: the label as printed, then narrower variants that may fit
+LINE_PITCH = 20 # label text line pitch, px
+JOIN_GAP = 12   # clearance of a label shifted off its frame's side, so its join line shows
+MARGIN_GAP = 10 # a plain margin's clearance between the capture and its labels (the join lines' run)
+MARGIN_PAD = 8  # a plain margin's clearance beyond its labels
+LINE_WEIGHT = 200   # figure area (px²) one pixel of margin join line counts as when choosing the margins
+LINE = 2        # join line width, drawn with a 1 px dark halo
+STRIP_PAD = 6   # bottom margin's clearance above and below its labels
+SEARCH_LIMIT = 200000   # branch-and-bound nodes per figure; past it the best assignment so far wins, flagged
+OVERLAY = 'rectangles+labels-beside-v4'
+FONT_DATA = Path(__file__).resolve().parent / 'font/mplus-rounded-1c-bold.glyphs.json'
+_FONT, _GLYPH_SEGMENTS, _UNITS, _DISCS = {}, {}, {}, {}
+RED, WHITE, BLACK = (200, 30, 30), (255, 255, 255), (0, 0, 0)
 TOKEN = re.compile(r'\[\[(chapter|notice):([A-Za-z0-9.\-]+)\]\]')
 PROSE_NOTICE = re.compile(r'^\s*(?:>\s*)?(?:\*\*)?(?:warning|caution|note|important)\b', re.I)
 LEAK = re.compile(r'(?:\b[A-Za-z]:[\\/]|\\\\[A-Za-z0-9]|/(?:Users|home)/|\\Users\\)')
@@ -152,12 +181,6 @@ def png_encode(width, height, rgb):
 
 # ---------------------------------------------------------------- marks and overlays
 
-GLYPHS = {'0': '111101101101111', '1': '010110010010111', '2': '111001111100111', '3': '111001111001111',
-          '4': '101101111001001', '5': '111100111001111', '6': '111100111101111', '7': '111001001001001',
-          '8': '111101111101111', '9': '111101111001111'}
-SCALE = 3
-
-
 def image_rect(screen, origin):
     """Physical screen rectangle (x, y, w, h) → integer image rectangle; floor the near edge, ceil the far edge."""
     x, y, w, h = screen
@@ -194,10 +217,6 @@ def validate_marks(doc, width, height, capture_sha):
     return marks
 
 
-def badge_size(n):
-    return len(str(n)) * 4 * SCALE - SCALE + 6, 5 * SCALE + 6
-
-
 def framed(rect):
     """A mark's rectangle with its border (drawn outside the control)."""
     x, y, w, h = rect
@@ -208,84 +227,678 @@ def overlap(a, b, gap=0):
     return not (a[0] + a[2] + gap <= b[0] or b[0] + b[2] + gap <= a[0] or a[1] + a[3] + gap <= b[1] or b[1] + b[3] + gap <= a[1])
 
 
-def check_badges(rects, badges, width, height):
-    """Independent post-condition of the placement: every badge inside the figure, clear of every mark's framed
-    rectangle (its own target included) and of every other badge."""
-    for i, badge in enumerate(badges):
-        n = i + 1
-        require(badge[0] >= 0 and badge[1] >= 0 and badge[0] + badge[2] <= width and badge[1] + badge[3] <= height,
-                f'badge-bounds: badge {n} outside the figure')
-        for j, rect in enumerate(rects):
-            require(not overlap(badge, framed(rect)),
-                    f'badge-overlap: badge {n} covers ' + ('its own target' if j == i else f'mark {j + 1}'))
-        for j, other in enumerate(badges):
-            require(j == i or not overlap(badge, other), f'badge-overlap: badge {n} covers badge {j + 1}')
+def inside(a, b):
+    """Box a lies wholly inside box b."""
+    return b[0] <= a[0] and b[1] <= a[1] and a[0] + a[2] <= b[0] + b[2] and a[1] + a[3] <= b[1] + b[3]
 
 
-def spread(width, height, rgb, box):
-    """Luminance range (0-255) under a box widened by HALO px; text, icons, plots and field frames read as large."""
-    x0, y0 = max(0, box[0] - HALO), max(0, box[1] - HALO)
-    x1, y1 = min(width, box[0] + box[2] + HALO), min(height, box[1] + box[3] + HALO)
-    lo, hi = 255, 0
-    for y in range(y0, y1):
-        row = rgb[(y * width + x0) * 3:(y * width + x1) * 3]
-        for i in range(0, len(row), 3):
-            value = (299 * row[i] + 587 * row[i + 1] + 114 * row[i + 2]) // 1000
-            lo, hi = min(lo, value), max(hi, value)
-    return hi - lo if hi >= lo else 0
+def reach(point, box):
+    """Squared distance from a point to a box (0 inside it)."""
+    dx = max(box[0] - point[0], 0, point[0] - (box[0] + box[2]))
+    dy = max(box[1] - point[1], 0, point[1] - (box[1] + box[3]))
+    return dx * dx + dy * dy
 
 
-def badge_candidates(rect, bw, bh):
-    """Side by side in the fixed order left, above, right, below: the side's home position first, then the same side
-    slid along the rectangle (badge centre kept within the rectangle's span), nearest the home position first."""
-    x, y, w, h = rect
-    off = BORDER + GAP
-    home_y, home_x = y + (h - bh) // 2, x - BORDER
-    along_y = sorted(range(y - bh // 2, y + h - bh // 2 + 1), key=lambda v: (abs(v - home_y), v))
-    along_x = sorted(range(x - bw // 2, x + w - bw // 2 + 1), key=lambda v: (abs(v - home_x), v))
-    for side, fixed, along in (('left', x - off - bw, along_y), ('above', y - off - bh, along_x),
-                               ('right', x + w + off, along_y), ('below', y + h + off, along_x)):
-        for v in along:
-            yield side, ((fixed, v) if side in ('left', 'right') else (v, fixed))
+def crosses(box, rect):
+    """A box crosses a mark's frame line: it meets the framed rectangle without lying wholly inside the control."""
+    return overlap(box, framed(rect)) and not inside(box, rect)
 
 
-def separation(a, b):
-    """Gap between two boxes along the axis that separates them most (0 when they touch or overlap)."""
-    return max(0, a[0] - (b[0] + b[2]), b[0] - (a[0] + a[2]), a[1] - (b[1] + b[3]), b[1] - (a[1] + a[3]))
+# Label text: outlines of M PLUS Rounded 1c Bold (SIL OFL 1.1), a committed subset of the characters labels may use,
+# rasterised here (quadratic contours flattened, non-zero winding, SS x SS supersampling) in integer arithmetic so the
+# pixels are the same on every machine. Glyph coordinates run in "fine" units, fine() per pixel.
+
+def label_font():
+    if not _FONT:
+        data = FONT_DATA.read_bytes()
+        _FONT.update(json.loads(data), sha256=sha(data), path=FONT_DATA.relative_to(REPO).as_posix())
+    return _FONT
 
 
-def place_badges(width, height, rgb, marks):
-    """Deterministic badge placement on the whole capture, in mark order. A free place lies outside the badge's own
-    rectangle, inside the capture, at least GAP px from every framed mark rectangle and SPACING px from the badges placed
-    before it. Candidates are tried in badge_candidates order and the first free place of the best tier wins:
-    (0) quiet (no text or content under it) and at least CLEAR px from every other mark, so it reads as its own mark's;
-    (1) quiet; (2) any free place, flagged badge-on-content. Without a free place the figure is refused."""
+def fine():
+    return 2 * SS * label_font()['unitsPerEm']
+
+
+def glyph_segments(char, size):
+    """A glyph's outline as line segments in fine units, origin on the pen position and baseline, y down."""
+    key = (char, size)
+    if key not in _GLYPH_SEGMENTS:
+        k = size * SS   # half font units → fine units
+        segments = []
+        def line(a, b):
+            segments.append((a[0], a[1], b[0], b[1]))
+        for flat in label_font()['glyphs'][char]['contours']:
+            points = [(2 * flat[i], 2 * flat[i + 1], flat[i + 2]) for i in range(0, len(flat), 3)]
+            start = next((i for i, p in enumerate(points) if p[2]), None)
+            if start is None:   # every point off-curve: start on the implied point between the last and the first
+                first = ((points[-1][0] + points[0][0]) // 2, (points[-1][1] + points[0][1]) // 2, 1)
+                sequence = [first] + points
+            else:
+                sequence = points[start:] + points[:start]
+            def scaled(p):
+                return (p[0] * k, -p[1] * k)
+            current, control = sequence[0], None
+            for point in sequence[1:] + [sequence[0]]:
+                if not point[2] and control is not None:   # two off-curve points imply an on-curve one between them
+                    point_on = ((control[0] + point[0]) // 2, (control[1] + point[1]) // 2, 1)
+                    flatten(current, control, point_on, size, line, scaled)
+                    current, control = point_on, point
+                elif not point[2]:
+                    control = point
+                elif control is None:
+                    line(scaled(current), scaled(point))
+                    current = point
+                else:
+                    flatten(current, control, point, size, line, scaled)
+                    current, control = point, None
+        _GLYPH_SEGMENTS[key] = segments
+    return _GLYPH_SEGMENTS[key]
+
+
+def flatten(p0, p1, p2, size, line, scaled):
+    """A quadratic Bezier (half font units) as about one line segment per pixel of its control polygon."""
+    upem = label_font()['unitsPerEm']
+    length = abs(p1[0] - p0[0]) + abs(p1[1] - p0[1]) + abs(p2[0] - p1[0]) + abs(p2[1] - p1[1])
+    n = max(2, min(16, 1 + length * size // (2 * upem)))
+    k, nn = size * SS, n * n
+    previous = scaled(p0)
+    for i in range(1, n + 1):
+        a, b, c = (n - i) * (n - i), 2 * (n - i) * i, i * i
+        point = ((a * p0[0] + b * p1[0] + c * p2[0]) * k // nn, -((a * p0[1] + b * p1[1] + c * p2[1]) * k // nn))
+        line(previous, point)
+        previous = point
+
+
+def text_segments(text, size, pen, base):
+    """Segments of a text run; pen and base are the start point and baseline in fine units. Returns (segments, end pen)."""
+    glyphs, segments = label_font()['glyphs'], []
+    for char in text:
+        segments += [(x0 + pen, y0 + base, x1 + pen, y1 + base) for x0, y0, x1, y1 in glyph_segments(char, size)]
+        pen += glyphs[char]['advance'] * 2 * size * SS
+    return segments, pen
+
+
+def coverage(segments, width, height):
+    """Non-zero winding fill of segments (fine units) sampled SS x SS per pixel: alpha 0-255 per pixel, row by row."""
+    upem, step = label_font()['unitsPerEm'], 2 * label_font()['unitsPerEm']
+    rows = [[] for _ in range(height * SS)]
+    for x0, y0, x1, y1 in segments:
+        if y0 == y1:
+            continue
+        lo, hi = min(y0, y1), max(y0, y1)
+        for j in range(max(0, -((upem - lo) // step)), min(height * SS, -((upem - hi) // step))):
+            y = (2 * j + 1) * upem   # sample row centre
+            rows[j].append((x0 + (y - y0) * (x1 - x0) // (y1 - y0), 1 if y1 > y0 else -1))
+    counts = [0] * (width * height)
+    for j, row in enumerate(rows):
+        if not row:
+            continue
+        row.sort()
+        base, winding = (j // SS) * width, 0
+        for i in range(len(row) - 1):
+            winding += row[i][1]
+            if not winding:
+                continue
+            k, end = max(0, -((upem - row[i][0]) // step)), min(width * SS, -((upem - row[i + 1][0]) // step))
+            while k < end:
+                stop = min(end, (k // SS + 1) * SS)
+                counts[base + k // SS] += stop - k
+                k = stop
+    return [c * 255 // (SS * SS) for c in counts]
+
+
+def disc_coverage(width, height):
+    """A filled disc (a stadium when wider than tall) filling a width x height box, alpha 0-255."""
+    radius, half = height * SS, (width - height) * SS   # doubled sample units
+    out = []
+    for y in range(height):
+        for x in range(width):
+            count = 0
+            for sy in range(SS):
+                dy = 2 * (y * SS + sy) + 1 - height * SS
+                for sx in range(SS):
+                    dx = max(0, abs(2 * (x * SS + sx) + 1 - width * SS) - half)
+                    count += dx * dx + dy * dy <= radius * radius
+            out.append(count * 255 // (SS * SS))
+    return out
+
+
+def dilate(alpha, width, height):
+    """The text outline: coverage spread about 1.5 px (full weight at distance 1, partial on the diagonals and at 2)."""
+    out = [0] * (width * height)
+    for y in range(height):
+        for x in range(width):
+            best = 0
+            for dx, dy, weight in OUTLINE_KERNEL:
+                u, v = x + dx, y + dy
+                if 0 <= u < width and 0 <= v < height:
+                    best = max(best, alpha[v * width + u] * weight // 256)
+            out[y * width + x] = best
+    return out
+
+
+def ink_extent(segments):
+    xs = [v for s in segments for v in (s[0], s[2])]
+    ys = [v for s in segments for v in (s[1], s[3])]
+    return (min(xs), min(ys), max(xs), max(ys)) if xs else None
+
+
+def label_text(mark):
+    """The label as printed: its first non-empty line (labels are drawn as measured, never reworded)."""
+    return next(line.strip() for line in re.split(r'\r\n|\r|\n', mark['label']) if line.strip())
+
+
+def wrap_text(text, width):
+    """Greedy word wrap into lines of at most width characters; a word longer than a line is broken, and a lone
+    separator (· × – |) stays at the end of its line rather than opening the next one."""
+    lines, current = [], ''
+    for word in text.split():
+        if current and word in SEPARATORS:
+            current += ' ' + word
+            continue
+        while len(word) > width:
+            if current:
+                lines.append(current)
+                current = ''
+            lines.append(word[:width])
+            word = word[width:]
+        if not current:
+            current = word
+        elif len(current) + 1 + len(word) <= width:
+            current += ' ' + word
+        else:
+            lines.append(current)
+            current = word
+    return lines + [current] if current else lines
+
+
+def label_unit(n, text, wrap=WRAPS[0]):
+    """One mark's label: a red disc with the white number, then the label text wrapped at wrap characters (the disc on
+    the first line, later lines under the text), white with a black outline. Returns (width, height, disc width,
+    layers, lines); layers are (alpha, colour) in compositing order, relative to the label box."""
+    key = (n, text, wrap)
+    if key in _UNITS:
+        return _UNITS[key]
+    glyphs = label_font()['glyphs']
+    for char in text:
+        require(char in glyphs, f'label-glyph: mark {n} label has no glyph for U+{ord(char):04X}')
+    lines = wrap_text(text, wrap)
+    f, height = fine(), LABEL_H + (len(lines) - 1) * LINE_PITCH
+    digits, _ = text_segments(str(n), DIGIT_EM, 0, 0)
+    x0, y0, x1, y1 = ink_extent(digits)
+    disc = max(DISC, -(-(x1 - x0) // f) + 10)
+    disc += (disc - DISC) % 2
+    cx, cy = disc * f // 2, LABEL_H * f // 2
+    digits = [(a + cx - (x0 + x1) // 2, b + cy - (y0 + y1) // 2, c + cx - (x0 + x1) // 2, d + cy - (y0 + y1) // 2)
+              for a, b, c, d in digits]
+    segments, right = [], 0
+    for k, line in enumerate(lines):
+        piece, pen = text_segments(line, EM, (disc + TEXT_GAP) * f, (BASELINE + k * LINE_PITCH) * f)
+        segments += piece
+        right = max(right, pen)
+    ex0, ey0, ex1, ey1 = ink_extent(segments) or (right, BASELINE * f, right, BASELINE * f)
+    require(ey0 >= 2 * f and ey1 <= (height - 2) * f and ex0 >= (disc + 2) * f, f'label-clipped: mark {n} label text leaves its box')
+    width = -(-max(right, ex1) // f) + 2
+    text_alpha = coverage(segments, width, height)
+    top, shape = (LABEL_H - DISC) // 2, disc_alpha_cache(disc)
+    disc_alpha = [0] * (width * height)
+    for y in range(DISC):
+        disc_alpha[(top + y) * width:(top + y) * width + disc] = shape[y * disc:(y + 1) * disc]
+    digit_alpha = coverage(digits, width, height)
+    unit = (width, height, disc, [(dilate(text_alpha, width, height), BLACK), (text_alpha, WHITE), (disc_alpha, RED),
+                                  (digit_alpha, WHITE)], lines)
+    _UNITS[key] = unit
+    return unit
+
+
+def label_variants(n, text):
+    """The label as printed (WRAPS[0]) and each narrower wrapping that changes its lines without making it taller than
+    two lines or than the label as printed (a short label may fold once to fit beside its mark; a long one keeps its
+    block)."""
+    variants = []
+    for wrap in WRAPS:
+        unit = label_unit(n, text, wrap)
+        if not variants or (unit[4] != variants[-1][1][4] and len(unit[4]) <= max(2, len(variants[0][1][4]))):
+            variants.append((wrap, unit))
+    return variants
+
+
+def disc_alpha_cache(disc):
+    if disc not in _DISCS:
+        _DISCS[disc] = disc_coverage(disc, DISC)
+    return _DISCS[disc]
+
+
+def composite(out, width, height, x0, y0, w, h, alpha, colour):
+    """Blend one layer into an RGB buffer with integer arithmetic (identical bytes on every machine)."""
+    for y in range(max(0, -y0), min(h, height - y0)):
+        row, base = y * w, ((y0 + y) * width + x0) * 3
+        for x in range(max(0, -x0), min(w, width - x0)):
+            a = alpha[row + x]
+            if a:
+                i = base + 3 * x
+                out[i] = (out[i] * (255 - a) + colour[0] * a + 127) // 255
+                out[i + 1] = (out[i + 1] * (255 - a) + colour[1] * a + 127) // 255
+                out[i + 2] = (out[i + 2] * (255 - a) + colour[2] * a + 127) // 255
+
+
+# Placement. The crop is the marks' own (panel edges around the marks and the region); labels never widen it. A label
+# is a box beside its mark's frame inside the crop; candidates come in a fixed order, nearest first (label_candidates),
+# each wrapping of the label in turn. A candidate whose box covers screen content (text, icons, plots, images: more than
+# TEXT_INK ink pixels around it), whose join line crosses content (LINE_INK), or which crosses another mark's frame line
+# is refused outright; panel borders, separators and gutters may be crossed. The rest are costed in tiers: (1) the disc
+# sits nearer another mark's frame than its own, so it would read as that mark's; (2) the label has no place in the crop
+# and goes to a plain margin; (3) remaining ink; (4) rank. The cheapest assignment for all marks together wins (a
+# deterministic branch and bound); labels never overlap each other or another label's join line. Labels without a place
+# go to a plain margin in the window background colour beside the crop (right, left or a bottom strip, the assignment
+# adding the least area, long join lines counted as area), level with their marks and joined by lines; marks sharing a margin mark's column (row, for the
+# bottom strip) join it, so a stack of fields is labelled in one place.
+
+def join_line(box, disc, rect, route='across'):
+    """Right-angled join from a label to its mark's frame, as polyline points; None when the label touches the frame
+    (adjacent along at least half a disc) or lies inside the control. The line leaves the label's side that faces the
+    frame (at the disc where it can), so it never runs under the label's own text. A label off a corner of the frame
+    has two routes: 'across' (along the label's middle, then onto the frame's near edge) or 'down' (out of the label's
+    near end, then into the frame's side at its middle)."""
+    if inside(box, rect):
+        return None
+    bl, bt, br, bb = box[0], box[1], box[0] + box[2], box[1] + box[3]
+    fl, ft, fr, fb = framed(rect)
+    fr, fb = fl + fr, ft + fb
+    ox, oy = min(br, fr) - max(bl, fl), min(bb, fb) - max(bt, ft)
+    gx, gy = max(0, fl - br, bl - fr), max(0, ft - bb, bt - fb)
+    if (ox >= DISC // 2 and gy <= LEAD + 1) or (oy >= DISC // 2 and gx <= LEAD + 1):
+        return None
+    above, before = bt + bb < ft + fb, bl + br < fl + fr
+    if ox > 0:   # one over the other: a vertical line, through the disc when the disc is over the frame
+        x = bl + disc // 2
+        if not max(bl, fl) + 2 <= x < min(br, fr) - 2:
+            x = (max(bl, fl) + min(br, fr)) // 2
+        return [[x, bb if above else bt], [x, ft if above else fb]]
+    y = (bt + bb) // 2
+    if oy > 0:   # side by side: a horizontal line
+        y = (max(bt, ft) + min(bb, fb)) // 2
+        return [[br if before else bl, y], [fl if before else fr, y]]
+    if route == 'down':
+        x = br - 6 if before else bl + disc // 2
+        ty = (ft + fb) // 2
+        return [[x, bb if above else bt], [x, ty], [fl if before else fr, ty]]
+    tx = (fl + 6 if before else fr - 6) if fr - fl > 12 else (fl + fr) // 2   # diagonal: along, then onto the frame
+    return [[br if before else bl, y], [tx, y], [tx, ft if above else fb]]
+
+
+def line_boxes(points, grow=0):
+    """The rectangles a join polyline paints (LINE px wide), widened by grow px on every side."""
+    boxes = []
+    for (x0, y0), (x1, y1) in zip(points, points[1:]):
+        half = LINE // 2
+        if y0 == y1:
+            boxes.append([min(x0, x1) - half - grow, y0 - half - grow, abs(x1 - x0) + LINE + 2 * grow, LINE + 2 * grow])
+        else:
+            boxes.append([x0 - half - grow, min(y0, y1) - half - grow, LINE + 2 * grow, abs(y1 - y0) + LINE + 2 * grow])
+    return boxes
+
+
+def label_candidates(rect, unit, crop):
+    """(name, box) candidates in rank order, nearest first, inside the crop."""
+    w, h, disc = unit[:3]
+    x, y, rw, rh = rect
+    fx, fy, fw, fh = framed(rect)
+    middle = fy + (fh - LABEL_H) // 2   # the first line level with the frame's middle
+    out = []
+    def add(name, bx, by):
+        if crop[0] <= bx and crop[1] <= by and bx + w <= crop[0] + crop[2] and by + h <= crop[1] + crop[3]:
+            out.append((name, [bx, by, w, h]))
+    def spans(bx):   # an above / below label keeps its disc over its own frame
+        return fx <= bx + disc // 2 < fx + fw
+    def above_below(k):
+        for side, by in (('above', fy - LEAD - h - k * ROW), ('below', fy + fh + LEAD + k * ROW)):
+            for align, bx in (('left', fx), ('right', fx + fw - w), ('centre', fx + (fw - w) // 2)):
+                if spans(bx):
+                    add(f'{side}-{align}' + (f'+{k}row' if k else ''), bx, by)
+    add('right', fx + fw + LEAD, middle)
+    add('left', fx - LEAD - w, middle)
+    above_below(0)
+    for nudge in NUDGES:   # beside the frame, nudged off a line of text without losing touch
+        for side, bx in (('right', fx + fw + LEAD), ('left', fx - LEAD - w)):
+            add(f'{side}{nudge:+d}', bx, middle + nudge)
+    for side, by in (('above', fy - LEAD - h), ('below', fy + fh + LEAD)):
+        slides = sorted(range(fx - disc // 2, fx + fw - disc // 2, SLIDE), key=lambda v: (abs(v - fx), v))
+        for bx in slides:
+            if bx not in (fx, fx + fw - w, fx + (fw - w) // 2):
+                add(f'{side}-slide{bx - fx:+d}', bx, by)
+    if rw >= max(2 * w, w + 2 * INSET) and rh >= h + 2 * INSET_V:   # a frame clearly larger than the label: inside it
+        top, bottom, right = y + INSET_V, y + rh - INSET_V - h, x + rw - INSET - w
+        add('inside-top-right', right, top)
+        add('inside-bottom-right', right, bottom)
+        add('inside-bottom-left', x + INSET, bottom)
+        centre = x + (rw - w) // 2
+        for bx in sorted(range(x + INSET, right, SLIDE), key=lambda v: (abs(v - centre), v)):   # then along it, middle first
+            add(f'inside-slide{bx - centre:+d}', bx, y + (rh - h) // 2)
+    for k in (1, 2):   # off the frame's side by a row or two, far enough out for the join line to show
+        for side, bx in (('right', fx + fw + JOIN_GAP), ('left', fx - JOIN_GAP - w)):
+            add(f'{side}-{k}up', bx, middle - k * ROW)
+            add(f'{side}-{k}down', bx, middle + k * ROW)
+        above_below(k)
+    above_below(3)
+    return out
+
+
+def ink_counter(width, height, rgb, area):
+    """Counts screen content in a box (widened by HALO): pixels that are strongly coloured (plots, images, accent
+    buttons) or that step by more than QUIET in any colour channel to the next pixel right or below (text, icons, plot
+    cells) - except grey pixels lying on a straight run of RULE_RUN or more pixels of their own colour, which are panel
+    and dialog borders, separators and the background beside them."""
+    ax0, ay0 = max(0, area[0]), max(0, area[1])
+    ax1, ay1 = min(width, area[0] + area[2]), min(height, area[1] + area[3])
+    w = max(0, ax1 - ax0)
+    def colours(y):
+        row = rgb[(y * width + ax0) * 3:(y * width + ax1) * 3]
+        return [(row[i] << 16) | (row[i + 1] << 8) | row[i + 2] for i in range(0, 3 * w, 3)]
+    grid = [colours(y) for y in range(ay0, min(height, ay1 + 1))]
+    rows = ay1 - ay0
+    def runs(line):   # length of the run each pixel lies on; a run continues while neighbours differ by at most RULE_DRIFT
+        out, start = [0] * len(line), 0
+        for i in range(1, len(line) + 1):
+            if i == len(line) or near(line[i], line[i - 1]) is False:
+                out[start:i] = [i - start] * (i - start)
+                start = i
+        return out
+    def near(a, b):
+        return a == b or (abs((a >> 16) - (b >> 16)) <= RULE_DRIFT and abs((a >> 8 & 255) - (b >> 8 & 255)) <= RULE_DRIFT
+                          and abs((a & 255) - (b & 255)) <= RULE_DRIFT)
+    across = [runs(line) for line in grid[:rows]]
+    down = [[0] * w for _ in range(rows)]
+    for x in range(w):
+        column = runs([grid[y][x] for y in range(rows)])
+        for y in range(rows):
+            down[y][x] = column[y]
+    def step(a, b):
+        return abs((a >> 16) - (b >> 16)) > QUIET or abs((a >> 8 & 255) - (b >> 8 & 255)) > QUIET or abs((a & 255) - (b & 255)) > QUIET
+    def beside_rule(x, y, c):   # a rounded corner or an anti-aliased fringe of a rule: next to a rule pixel of its shade
+        for v in range(max(0, y - 1), min(rows, y + 2)):
+            for u in range(max(0, x - 1), min(w, x + 2)):
+                if (across[v][u] >= RULE_RUN or down[v][u] >= RULE_RUN) and not step_near(c, grid[v][u]):
+                    return True
+        return False
+    def step_near(a, b):
+        return abs((a >> 16) - (b >> 16)) > RULE_NEAR or abs((a >> 8 & 255) - (b >> 8 & 255)) > RULE_NEAR or abs((a & 255) - (b & 255)) > RULE_NEAR
+    table = [[0] * (w + 1)]
+    for y in range(rows):
+        line, below, acc, previous, sums = grid[y], grid[y + 1] if y + 1 < len(grid) else grid[y], 0, table[-1], [0]
+        for x in range(w):
+            c = line[x]
+            r, g, b = c >> 16, c >> 8 & 255, c & 255
+            if max(r, g, b) - min(r, g, b) > SATURATED:
+                acc += 1
+            elif ((step(c, line[x + 1 if x + 1 < w else x]) or step(c, below[x])) and across[y][x] < RULE_RUN
+                    and down[y][x] < RULE_RUN and not beside_rule(x, y, c)):
+                acc += 1
+            sums.append(previous[x + 1] + acc)
+        table.append(sums)
+    def count(box, halo=HALO):
+        x0, y0 = max(ax0, box[0] - halo) - ax0, max(ay0, box[1] - halo) - ay0
+        x1, y1 = min(ax1, box[0] + box[2] + halo) - ax0, min(ay1, box[1] + box[3] + halo) - ay0
+        if x1 <= x0 or y1 <= y0:
+            return 0
+        return table[y1][x1] - table[y0][x1] - table[y1][x0] + table[y0][x0]
+    return count
+
+
+def place_labels(width, height, rgb, marks, variants, crop, ink, routes):
+    """The labels' places inside the crop. Returns one row per mark: a placed candidate (name, box, unit, join line,
+    costs) or a margin row (name 'margin', no box) for a mark the crop has no acceptable place for."""
     rects = [m['image'] for m in marks]
-    badges, sides, flags = [], [], []
-    for index, mark in enumerate(marks):
-        bw, bh = badge_size(mark['n'])
-        best = {}
-        for side, (bx, by) in badge_candidates(mark['image'], bw, bh):
-            box = [bx, by, bw, bh]
-            if bx < 0 or by < 0 or bx + bw > width or by + bh > height:
+    def ink_of(join):
+        return sum(ink(b, 1) for b in line_boxes(join)) if join else 0   # a thin line: crossing a separator is not content
+    costed = []
+    for index, options in enumerate(variants):
+        own, others, rows, rank = framed(rects[index]), [r for j, r in enumerate(rects) if j != index], [], 0
+        for wrap, unit in options:
+            for name, box in label_candidates(rects[index], unit, crop):
+                rank += 1
+                covered = ink(box)
+                if covered > TEXT_INK or any(crosses(box, r) for r in others):
+                    continue
+                route = min((ink_of(join_line(box, unit[2], rects[index], r)), k, r) for k, r in enumerate(('across', 'down')))[2]
+                join = join_line(box, unit[2], rects[index], route)
+                lines = line_boxes(join) if join else []
+                if ink_of(join) > LINE_INK or any(crosses(b, r) for b in lines for r in others):
+                    continue
+                centre = (box[0] + unit[2] // 2, box[1] + LABEL_H // 2)
+                ambiguous = any(reach(centre, framed(r)) < reach(centre, own) for r in others)
+                rows.append({'cost': (int(ambiguous), 0, covered, rank), 'name': name if wrap == WRAPS[0] else f'{name}/wrap{wrap}',
+                             'box': box, 'unit': unit, 'join': join, 'route': route, 'lines': line_boxes(join, 1) if join else [],
+                             'ambiguous': ambiguous, 'ink': covered})
+        if routes[index]:   # a margin needs a clean route out of the crop
+            rows.append({'cost': (0, 1, 0, min(length(r) for _, r in routes[index])), 'name': 'margin', 'box': None, 'unit': options[0][1], 'join': None,
+                         'route': None, 'lines': [], 'routes': [line_boxes(r, 1) for _, r in routes[index]],
+                         'ambiguous': False, 'ink': 0})
+        require(rows, f'label-no-room: mark {marks[index]["n"]} has no place in the figure or a margin beside it')
+        rows.sort(key=lambda r: (r['cost'], r['box'] or []))
+        costed.append(rows)
+    order = sorted(range(len(costed)), key=lambda i: (len(costed[i]), i))   # fewest places first: conflicts surface early
+    costed = [costed[i] for i in order]
+    zero = (0,) * 4
+    def add(a, b):
+        return tuple(u + v for u, v in zip(a, b))
+    lower = [zero] * (len(costed) + 1)
+    for i in range(len(costed) - 1, -1, -1):
+        lower[i] = add(lower[i + 1], costed[i][0]['cost'])
+    best, chosen, nodes = [None, None], [], [0]
+    def clear(row):
+        for other in chosen:
+            if row['box'] is None and other['box'] is None:
                 continue
-            if any(overlap(box, framed(r), GAP) for r in rects) or any(overlap(box, b, SPACING) for b in badges):
+            if row['box'] is None or other['box'] is None:   # a margin mark keeps at least one route clear of the labels
+                margin, placed = (row, other) if row['box'] is None else (other, row)
+                boxes = [placed['box']] + placed['lines']
+                if not any(all(not overlap(a, b) for a in route for b in boxes) for route in margin['routes']):
+                    return False
                 continue
-            if spread(width, height, rgb, box) > QUIET:
-                best.setdefault(2, (side, box))
-                continue
-            if all(separation(box, framed(r)) >= CLEAR for j, r in enumerate(rects) if j != index):
-                best[0] = (side, box)
+            if overlap(row['box'], other['box'], SPACING):
+                return False
+            if any(overlap(row['box'], b) for b in other['lines']) or any(overlap(other['box'], b) for b in row['lines']):
+                return False
+            if any(overlap(a, b) for a in row['lines'] for b in other['lines']):
+                return False
+        return True
+    def search(i, cost):
+        if i == len(costed):
+            best[0], best[1] = cost, list(chosen)
+            return
+        for row in costed[i]:
+            if best[0] is not None and add(add(cost, row['cost']), lower[i + 1]) >= best[0]:
+                return
+            nodes[0] += 1
+            if nodes[0] > SEARCH_LIMIT:
+                return
+            if clear(row):
+                chosen.append(row)
+                search(i + 1, add(cost, row['cost']))
+                chosen.pop()
+    search(0, zero)
+    require(best[1] is not None, 'label-overlap: the labels have no places clear of each other')
+    result = [None] * len(order)
+    for slot, i in enumerate(order):
+        result[i] = best[1][slot]
+    return result, nodes[0] <= SEARCH_LIMIT
+
+
+def length(points):
+    return sum(abs(x1 - x0) + abs(y1 - y0) for (x0, y0), (x1, y1) in zip(points, points[1:]))
+
+
+def margin_routes(index, rects, crop, ink):
+    """Join-line routes inside the crop from a mark's frame out to each margin, clear of screen content and of the other
+    marks' frames: straight out from the frame's middle, or, when that crosses something, one detour - along the frame's
+    side to the nearest clean corridor, then out along it. Returns [(side, points)], at most one route per side."""
+    frame = framed(rects[index])
+    fl, ft, fr, fb = frame[0], frame[1], frame[0] + frame[2], frame[1] + frame[3]
+    cl, ct, cr, cb = crop[0], crop[1], crop[0] + crop[2], crop[1] + crop[3]
+    others = [r for j, r in enumerate(rects) if j != index]
+    def clean(points):
+        boxes = line_boxes(points)
+        return (all(b[0] >= cl - LINE and b[1] >= ct - LINE and b[0] + b[2] <= cr + LINE and b[1] + b[3] <= cb + LINE for b in boxes)
+                and sum(ink(b, 1) for b in boxes) <= LINE_INK and not any(crosses(b, r) for b in boxes for r in others))
+    def first(candidates):
+        return next((c for c in candidates if clean(c)), None)
+    mx, my, routes = (fl + fr) // 2, (ft + fb) // 2, []
+    for side, edge, out in (('right', fr, cr), ('left', fl, cl)):
+        def corridor(step, start, stop):
+            return [[[mx, start], [mx, y], [out, y]] for y in range(start, stop, step)]
+        route = first([[[edge, my], [out, my]]] + corridor(-2, ft - 6, ct + 2) + corridor(2, fb + 6, cb - 2))
+        if route:
+            routes.append((side, route))
+    xs = [fl + DISC // 2 + 1, mx, fr - DISC // 2 - 1]
+    route = first([[[x, fb], [x, cb]] for x in xs] + [[[fr, my], [x, my], [x, cb]] for x in range(fr + 6, cr - 2, 2)]
+                  + [[[fl, my], [x, my], [x, cb]] for x in range(fl - 6, cl + 2, -2)])
+    if route:
+        routes.append(('bottom', route))
+    return routes
+
+
+def margin_layout(side, items, crop):
+    """Positions of the labels in one margin, in capture coordinates (the margin lies outside the crop), with their
+    join lines. items: (index, route, unit), the route ending on the crop's edge. Returns (margin size, {index: (box,
+    join)}) or None when they do not fit. Side margins stack the labels level with their routes; the bottom margin lays
+    them out in rows, shifting a label along its row (the line bends to it) before opening another row."""
+    cl, ct, cr, cb = crop[0], crop[1], crop[0] + crop[2], crop[1] + crop[3]
+    out = {}
+    if side in ('right', 'left'):
+        width = max(unit[0] for _, _, unit in items)
+        placed, bottom = [], ct + 2 - SPACING
+        for index, route, unit in sorted(items, key=lambda it: (it[1][-1][1], it[0])):
+            y = max(route[-1][1] - LABEL_H // 2, bottom + SPACING)
+            placed.append([index, route, unit, y])
+            bottom = y + unit[1]
+        limit = cb - 2
+        for item in reversed(placed):   # pushed back up from the crop's bottom edge when the stack runs over
+            item[3] = min(item[3], limit - item[2][1])
+            limit = item[3] - SPACING
+        if placed and placed[0][3] < ct + 2:
+            return None
+        for index, route, unit, y in placed:
+            x = cr + MARGIN_GAP if side == 'right' else cl - MARGIN_GAP - unit[0]
+            ly, near = y + LABEL_H // 2, x if side == 'right' else x + unit[0]
+            xm = cr + MARGIN_GAP // 2 if side == 'right' else cl - MARGIN_GAP // 2
+            end = route[-1]
+            join = route[:-1] + ([[near, ly]] if ly == end[1] else [[xm, end[1]], [xm, ly], [near, ly]])
+            out[index] = ([x, y, unit[0], unit[1]], join)
+        return MARGIN_GAP + width + MARGIN_PAD, out
+    rows = []
+    row_h = max(unit[1] for _, _, unit in items)
+    for index, route, unit in sorted(items, key=lambda it: (it[1][-1][0], it[0])):
+        xv = route[-1][0]
+        want = min(max(xv - unit[2] // 2, cl + 2), cr - 2 - unit[0])
+        if want < cl + 2:
+            return None
+        for r, row in enumerate(rows + [[]]):
+            x = max([want] + [b[0] + b[2] + SPACING for b in row])
+            if x + unit[0] <= cr - 2 and x - want <= 2 * DISC:
                 break
-            best.setdefault(1, (side, box))
-        require(best, f'badge-overlap: mark {mark["n"]} has no place outside every mark')
-        tier = min(best)
-        if tier == 2:
-            flags.append(f'badge-on-content:{mark["n"]}')
-        sides.append(best[tier][0])
-        badges.append(best[tier][1])
-    check_badges(rects, badges, width, height)
-    return badges, sides, flags
+        if r == len(rows):
+            rows.append([])
+        y = cb + STRIP_PAD + r * (row_h + SPACING)
+        box = [x, y, unit[0], unit[1]]
+        rows[r].append(box)
+        dx = x + unit[2] // 2
+        join = route[:-1] + ([[xv, y]] if dx == xv else [[xv, cb + STRIP_PAD // 2], [dx, cb + STRIP_PAD // 2], [dx, y]])
+        out[index] = (box, join)
+    for index, (box, join) in out.items():   # a lower row's line must pass clear of the labels above it
+        if any(overlap(b, other[0]) for b in line_boxes(join) for j, other in out.items() if j != index):
+            return None
+    return 2 * STRIP_PAD + len(rows) * row_h + (len(rows) - 1) * SPACING, out
+
+
+def place_margins(marks, rows, routes, crop):
+    """Margins for the marks the crop has no place for: each such label to the right, left or bottom margin whose route
+    is clear of the placed labels, the assignment adding the least figure area (a long join line counting as area too,
+    LINE_WEIGHT per pixel); then marks sharing a margin mark's column
+    (bottom: row) join it where their routes are clear too. Returns ({side: size}, {index: (side, box, join)})."""
+    rects = [m['image'] for m in marks]
+    def clear(index, route, keep):
+        boxes = line_boxes(route)
+        return not any(overlap(b, rows[j]['box']) or any(overlap(b, l) for l in rows[j]['lines'])
+                       for b in boxes for j in keep if j != index)
+    def sides_for(index, keep):
+        return [(side, route) for side, route in routes[index] if clear(index, route, keep)]
+    homeless = [i for i, row in enumerate(rows) if row['box'] is None]
+    if not homeless:
+        return {}, {}
+    keep = {i for i, row in enumerate(rows) if row['box'] is not None}
+    options = {}
+    for i in homeless:
+        options[i] = sides_for(i, keep)
+        require(options[i], f'label-no-room: mark {marks[i]["n"]} has no place in the figure or a margin beside it')
+    def area(assign):
+        sizes, layout = {}, {}
+        for side in ('right', 'left', 'bottom'):
+            items = [(i, route, rows[i]['unit']) for i, (s, route) in assign.items() if s == side]
+            if items:
+                result = margin_layout(side, items, crop)
+                if result is None:
+                    return None
+                sizes[side] = result[0]
+                layout.update({i: (side,) + placed for i, placed in result[1].items()})
+        width = crop[2] + sizes.get('right', 0) + sizes.get('left', 0)
+        lines = sum(length(join) for _, _, join in layout.values())
+        return ((sizes.get('right', 0) + sizes.get('left', 0)) * crop[3] + sizes.get('bottom', 0) * width + LINE_WEIGHT * lines,
+                sizes, layout)
+    best, chosen = None, None
+    def walk(k, assign):
+        nonlocal best, chosen
+        if k == len(homeless):
+            result = area(assign)
+            if result and (best is None or result[0] < best[0]):
+                best, chosen = result, dict(assign)
+            return
+        for option in options[homeless[k]]:
+            assign[homeless[k]] = option
+            walk(k + 1, assign)
+            del assign[homeless[k]]
+    if len(homeless) <= 6:
+        walk(0, {})
+    else:   # many marks: each to its own first side, in order
+        chosen = {i: options[i][0] for i in homeless}
+        best = area(chosen)
+    require(best is not None, 'label-no-room: the margin labels do not fit beside the figure')
+    for i, row in enumerate(rows):   # the rest of a margin mark's column (bottom: row) joins it
+        if row['box'] is None or i in chosen:
+            continue
+        frame = framed(rects[i])
+        for j, (side, _) in list(chosen.items()):
+            other = framed(rects[j])
+            same = (other[0], other[2]) == (frame[0], frame[2]) if side != 'bottom' else (other[1], other[3]) == (frame[1], frame[3])
+            option = next((o for o in sides_for(i, keep - {i}) if o[0] == side), None) if same and i not in chosen else None
+            if option:
+                trial = {**chosen, i: option}
+                result = area(trial)
+                if result:
+                    chosen, best = trial, result
+                    keep.discard(i)
+    return best[1], best[2]
+
+
+def check_labels(rects, labels, width, height):
+    """Independent post-condition of the placement, in figure coordinates: every label and join line inside the figure,
+    no label on its own frame (lying wholly inside its control is an inside corner), labels clear of each other and of
+    each other's join lines. Returns the marks whose label or join line crosses another mark's frame line."""
+    crossings = []
+    for i, label in enumerate(labels):
+        n, box = i + 1, label['box']
+        paint = [box] + (line_boxes(label['join'], 1) if label['join'] else [])
+        for b in paint:
+            require(b[0] >= 0 and b[1] >= 0 and b[0] + b[2] <= width and b[1] + b[3] <= height, f'label-bounds: label {n} outside the figure')
+        require(not crosses(box, rects[i]), f'label-overlap: label {n} covers its own target')
+        for j, other in enumerate(labels):
+            if j != i:
+                require(not overlap(box, other['box']), f'label-overlap: label {n} covers label {j + 1}')
+                require(not any(overlap(box, b) for b in (line_boxes(other['join']) if other['join'] else [])),
+                        f'label-overlap: label {n} covers the join line of label {j + 1}')
+        if any(crosses(b, r) for j, r in enumerate(rects) if j != i for b in [box] + (line_boxes(label['join']) if label['join'] else [])):
+            crossings.append(n)
+    return crossings
 
 
 def background(width, height, rgb):
@@ -298,23 +911,34 @@ def background(width, height, rgb):
     return max(sorted(counts), key=lambda c: counts[c])
 
 
-def crop_rect(doc, width, height, rgb, badges):
-    """'full', or the smallest box that holds every framed mark, the region and every badge and whose edges run along
-    the window background (the gutter between panels) or the window's edge, so no panel, heading or word is cut; then
-    padded up to PAD px into the background. Grows to the whole window when no such edge exists."""
+def crop_rect(doc, width, height, rgb, extra, cache=None):
+    """'full', or the smallest box that holds every framed mark, the region and every extra box (the labels) and whose
+    edges run along the window background (the gutter between panels) or the window's edge, so no panel, heading or
+    word is cut; then padded up to PAD px into the background. Grows to the whole window when no such edge exists.
+    cache (a dict) keeps the background and per-column tables between calls on one capture."""
     if doc.get('crop') == 'full':
         return [0, 0, width, height], 'full'
-    boxes = [framed(m['image']) for m in doc['marks']] + [list(b) for b in badges]
+    boxes = [framed(m['image']) for m in doc['marks']] + [list(b) for b in extra]
     if doc.get('region'):
         boxes.append(doc['region']['image'])
     if not boxes:
         return [0, 0, width, height], 'full'
-    bg = background(width, height, rgb)
+    cache = {} if cache is None else cache
+    if 'bg' not in cache:
+        cache['bg'], cache['cols'] = background(width, height, rgb), {}
+    bg, cols = cache['bg'], cache['cols']
     def clean_row(y, l, r):
         l, r = max(l, FRAME), min(r, width - FRAME)
         return rgb[(y * width + l) * 3:(y * width + r) * 3] == bg * max(0, r - l)
     def clean_col(x, t, b):
-        return all(rgb[(y * width + x) * 3:(y * width + x) * 3 + 3] == bg for y in range(max(t, FRAME), min(b, height - FRAME)))
+        t, b = max(t, FRAME), min(b, height - FRAME)
+        if x not in cols:   # running count of pixels that are not window background, down the column
+            counts, total = [0], 0
+            for y in range(height):
+                total += rgb[(y * width + x) * 3:(y * width + x) * 3 + 3] != bg
+                counts.append(total)
+            cols[x] = counts
+        return t >= b or cols[x][b] == cols[x][t]
     l = max(0, min(box[0] for box in boxes))
     t = max(0, min(box[1] for box in boxes))
     r = min(width, max(box[0] + box[2] for box in boxes))
@@ -341,161 +965,70 @@ def crop_rect(doc, width, height, rgb, badges):
     return [l, t, r - l, b - t], 'panel-edges'
 
 
-# Legend text: a classic 5x7 cell font (two extra rows for descenders), one base-32 digit per 5-dot row, top row first,
-# the leftmost dot the highest bit. Printable ASCII plus the non-ASCII characters the Studio labels use (· × – …).
-FONT = {" ": '0000000', "!": '4444404', "\"": 'AAA0000', "#": 'AAVAVAA', "$": '4FKE5U4', "%": 'OP248J3', "&": 'CIK8LID',
-        "'": '4440000', "(": '2488842', ")": '8422248', "*": '04LEL40', "+": '044V440', ",": '00000CC48', "-": '000E000',
-        ".": '00000CC', "/": '01248G0', "0": 'EHJLPHE', "1": '4C4444E', "2": 'EH1248V', "3": 'V2421HE', "4": '26AIV22',
-        "5": 'VGU11HE', "6": '68GUHHE', "7": 'V124888', "8": 'EHHEHHE', "9": 'EHHF12C', ":": '0CC0CC0', ";": '00CC0CC48',
-        "<": '248G842', "=": '00V0V00', ">": '8421248', "?": 'EH12404', "@": 'EH1DLLE', "A": 'EHHVHHH', "B": 'UHHUHHU',
-        "C": 'EHGGGHE', "D": 'SIHHHIS', "E": 'VGGUGGV', "F": 'VGGUGGG', "G": 'EHGNHHF', "H": 'HHHVHHH', "I": 'E44444E',
-        "J": '72222IC', "K": 'HIKOKIH', "L": 'GGGGGGV', "M": 'HRLLHHH', "N": 'HHPLJHH', "O": 'EHHHHHE', "P": 'UHHUGGG',
-        "Q": 'EHHHLID', "R": 'UHHUKIH', "S": 'FGGE11U', "T": 'V444444', "U": 'HHHHHHE', "V": 'HHHHHA4', "W": 'HHHLLLA',
-        "X": 'HHA4AHH', "Y": 'HHHA444', "Z": 'V1248GV', "[": 'E88888E', "\\": '0G84210', "]": 'E22222E', "^": '4AH0000',
-        "_": '0000000V0', "`": '8420000', "a": '00E1FHF', "b": 'GGMPHHU', "c": '00EGGHE', "d": '11DJHHF', "e": '00EHVGE',
-        "f": '698S888', "g": '00FHHHF1E', "h": 'GGMPHHH', "i": '40C444E', "j": '2062222IC', "k": 'GGIKOKI', "l": 'C44444E',
-        "m": '00QLLHH', "n": '00MPHHH', "o": '00EHHHE', "p": '00UHHHUGG', "q": '00FHHHF11', "r": '00MPGGG', "s": '00EGE1U',
-        "t": '88S8896', "u": '00HHHJD', "v": '00HHHA4', "w": '00HHLLA', "x": '00HA4AH', "y": '00HHHHF1E', "z": '00V248V',
-        "{": '2448442', "|": '4444444', "}": '8442448', "~": '008L200', "·": '000CC00', "×": '0HA4AH0', "–": '000V000',
-        "…": '000000L'}
-TEXT = 2             # legend dot size: the 7-row cell is 14 px tall, the height of the window's own text
-ADVANCE = 6 * TEXT   # one character: 5 dots and one dot of spacing
-INK = 9 * TEXT       # one line's ink height, descenders included
-LINE = 11 * TEXT     # line pitch: ink plus two dots of leading
-MARGIN = 8           # legend margin on every side
-RULE = 1             # separator between the image and its legend
-ENTRY_GAP = 2        # characters between two entries on one line
-MIN_COLUMN = 8       # fewest label characters per line a figure must leave beside the hanging indent
-
-
-def wrap_words(text, width):
-    """Greedy word wrap of text into lines of at most width characters; a word longer than a line is broken."""
-    lines, current = [], None
-    for word in text.split(' '):
-        while len(word) > width:
-            if current:
-                lines.append(current)
-            lines.append(word[:width])
-            word, current = word[width:], None
-        if current is None:
-            current = word
-        elif len(current) + 1 + len(word) <= width:
-            current += ' ' + word
-        else:
-            lines.append(current)
-            current = word
-    lines.append(current or '')
-    return lines
-
-
-def legend_layout(marks, width):
-    """Entries "[n] label" in mark order, flowed left to right and wrapped to the figure width. An entry that does not
-    fit beside the previous one starts a new line; one longer than a line wraps at word boundaries with a hanging indent
-    under its label and keeps its lines to itself. Returns (entries, strip height); line positions are relative to the
-    strip's top-left corner."""
-    if not marks:
-        return [], 0
-    cols = (width - 2 * MARGIN + TEXT) // ADVANCE
-    rows, entries, shared = [], [], False   # rows: characters used per line; shared: the last line takes another entry
-    for mark in marks:
-        for ch in mark['label']:
-            require(ch in FONT, f'legend-glyph: mark {mark["n"]} label has no glyph for U+{ord(ch):04X}')
-        tag = f'[{mark["n"]}]'
-        indent = len(tag) + 1
-        require(cols - indent >= MIN_COLUMN, f'legend-width: a {width} px figure is too narrow for its legend')
-        text = tag + ' ' + mark['label']
-        if shared and rows[-1] + ENTRY_GAP + len(text) <= cols:
-            column = rows[-1] + ENTRY_GAP
-            rows[-1] = column + len(text)
-            pieces = [(len(rows) - 1, column, text)]
-        else:
-            label = [piece for piece in wrap_words(mark['label'], cols - indent) if piece.strip()]
-            pieces = []
-            for k, piece in enumerate(label):
-                rows.append(indent + len(piece))
-                pieces.append((len(rows) - 1, 0 if k == 0 else indent, tag + ' ' + piece if k == 0 else piece))
-            shared = len(label) == 1
-        entries.append({'n': mark['n'], 'text': text,
-                        'lines': [[MARGIN + c * ADVANCE, RULE + MARGIN + r * LINE, s] for r, c, s in pieces]})
-    return entries, RULE + 2 * MARGIN + len(rows) * LINE - (LINE - INK)
-
-
-def check_legend(entries, box):
-    """Independent post-condition of the legend: every line's ink inside the strip's margins, no two lines overlapping,
-    and every entry's characters all drawn (wrapping drops only the spaces it breaks at)."""
-    x0, y0, w, h = box
-    inks = []
-    for entry in entries:
-        drawn = ''.join(text for _, _, text in entry['lines'])
-        require(drawn.replace(' ', '') == entry['text'].replace(' ', ''), f'legend-clipped: entry {entry["n"]}')
-        for x, y, text in entry['lines']:
-            ink = [x, y, len(text) * ADVANCE - TEXT, INK]
-            require(ink[0] >= x0 + MARGIN and ink[1] >= y0 + RULE + MARGIN and ink[0] + ink[2] <= x0 + w - MARGIN
-                    and ink[1] + ink[3] <= y0 + h - MARGIN, f'legend-bounds: entry {entry["n"]} outside the legend')
-            require(not any(overlap(ink, other) for other in inks), f'legend-overlap: entry {entry["n"]}')
-            inks.append(ink)
-
-
-def luminance(colour):
-    return (299 * colour[0] + 587 * colour[1] + 114 * colour[2]) // 1000
-
-
 def derive_figure(width, height, rgb, doc):
-    """Badges placed, crop chosen, rectangles and numbered badges drawn, the legend appended below the image.
-    Returns (w, h, rgb, crop, flags, operation)."""
-    badges, sides, flags = place_badges(width, height, rgb, doc['marks'])
-    (cx, cy, cw, ch), rule = crop_rect(doc, width, height, rgb, badges)
-    entries, strip = legend_layout(doc['marks'], cw)
-    fh = ch + strip
-    bg = tuple(background(width, height, rgb))
-    ink = (235, 235, 235) if luminance(bg) < 128 else (20, 20, 20)
-    separator = tuple((3 * b + i) // 4 for b, i in zip(bg, ink))
+    """Crop chosen, labels placed (inside the crop or in a plain margin beside it), mark rectangles, join lines and
+    labels drawn. Returns (w, h, rgb, crop, flags, operation)."""
+    marks = doc['marks']
+    variants = [label_variants(m['n'], label_text(m)) for m in marks]
+    (cx, cy, cw, ch), rule = crop_rect(doc, width, height, rgb, [])
+    ink = ink_counter(width, height, rgb, [cx, cy, cw, ch])
+    rects = [m['image'] for m in marks]
+    routes = [margin_routes(i, rects, [cx, cy, cw, ch], ink) for i in range(len(marks))]
+    rows, complete = place_labels(width, height, rgb, marks, variants, [cx, cy, cw, ch], ink, routes)
+    sizes, margin = place_margins(marks, rows, routes, [cx, cy, cw, ch])
+    lw, rw, bh = sizes.get('left', 0), sizes.get('right', 0), sizes.get('bottom', 0)
+    fw, fh = lw + cw + rw, ch + bh
+    bg = bytes(background(width, height, rgb))
     stride = width * 3
-    out = bytearray(b''.join(rgb[(cy + y) * stride + cx * 3:(cy + y) * stride + (cx + cw) * 3] for y in range(ch))
-                    + bytes(bg) * (cw * strip))
-    def fill(x0, y0, x1, y1, colour, top=0, bottom=ch):   # overlays stay on the image unless drawn in the legend
-        for y in range(max(top, y0), min(bottom, y1)):
-            for x in range(max(0, x0), min(cw, x1)):
-                out[(y * cw + x) * 3:(y * cw + x) * 3 + 3] = bytes(colour)
-    local = [[bx - cx, by - cy, bw, bh] for bx, by, bw, bh in badges]
-    check_badges([[m['image'][0] - cx, m['image'][1] - cy, m['image'][2], m['image'][3]] for m in doc['marks']], local, cw, ch)
-    for mark, (bx, by, bw, bh) in zip(doc['marks'], local):
-        left, top, w, h = mark['image']
-        left, top = left - cx, top - cy
+    out = bytearray(b''.join(bg * lw + rgb[(cy + y) * stride + cx * 3:(cy + y) * stride + (cx + cw) * 3] + bg * rw
+                             for y in range(ch)) + bg * (fw * bh))
+    dx, dy = lw - cx, -cy   # capture → figure coordinates
+    def moved(points):
+        return [[x + dx, y + dy] for x, y in points]
+    rects = [[m['image'][0] + dx, m['image'][1] + dy, m['image'][2], m['image'][3]] for m in marks]
+    placed = []
+    for index, (rect, row) in enumerate(zip(rects, rows)):
+        unit = row['unit']
+        if index in margin:
+            side, box, join = margin[index]
+            placed.append({'box': [box[0] + dx, box[1] + dy, box[2], box[3]], 'join': moved(join), 'name': f'margin-{side}',
+                           'ink': 0, 'ambiguous': False, 'unit': unit})
+        else:
+            box = [row['box'][0] + dx, row['box'][1] + dy, unit[0], unit[1]]
+            placed.append({'box': box, 'join': join_line(box, unit[2], rect, row['route']), 'name': row['name'],
+                           'ink': row['ink'], 'ambiguous': row['ambiguous'], 'unit': unit})
+    crossings = check_labels(rects, placed, fw, fh)
+    def fill(x0, y0, x1, y1, colour):
+        for yy in range(max(0, y0), min(fh, y1)):
+            for xx in range(max(0, x0), min(fw, x1)):
+                out[(yy * fw + xx) * 3:(yy * fw + xx) * 3 + 3] = bytes(colour)
+    for left, top, w, h in rects:
         for t in range(BORDER):   # border outside the control
             fill(left - 2 + t, top - 2 + t, left + w + 2 - t, top - 1 + t, RED)
             fill(left - 2 + t, top + h + 1 - t, left + w + 2 - t, top + h + 2 - t, RED)
             fill(left - 2 + t, top - 2 + t, left - 1 + t, top + h + 2 - t, RED)
             fill(left + w + 1 - t, top - 2 + t, left + w + 2 - t, top + h + 2 - t, RED)
-        fill(bx, by, bx + bw, by + bh, RED)
-        for k, digit in enumerate(str(mark['n'])):
-            for gy in range(5):
-                for gx in range(3):
-                    if GLYPHS[digit][gy * 3 + gx] == '1':
-                        x0 = bx + 3 + k * 4 * SCALE + gx * SCALE
-                        fill(x0, by + 3 + gy * SCALE, x0 + SCALE, by + 3 + (gy + 1) * SCALE, WHITE)
-    operation = {'crop': [cx, cy, cw, ch], 'cropRule': rule, 'overlay': OVERLAY, 'size': [cw, fh],
-                 'badges': [{'n': m['n'], 'side': s, 'at': [x, y]} for m, s, (x, y, _, _) in zip(doc['marks'], sides, local)]}
-    if entries:
-        box = [0, ch, cw, strip]
-        placed = [dict(e, lines=[[x, ch + y, s] for x, y, s in e['lines']]) for e in entries]
-        check_legend(placed, box)
-        fill(0, ch, cw, ch + RULE, separator, ch, fh)
-        for entry in placed:
-            tag = len(f'[{entry["n"]}]')
-            for k, (x, y, text) in enumerate(entry['lines']):
-                for i, char in enumerate(text):
-                    colour = RED if k == 0 and i < tag else ink
-                    for gy, digit in enumerate(FONT[char]):
-                        bits = int(digit, 32)
-                        for gx in range(5):
-                            if bits >> (4 - gx) & 1:
-                                px, py = x + i * ADVANCE + gx * TEXT, y + gy * TEXT
-                                fill(px, py, px + TEXT, py + TEXT, colour, ch, fh)
-        operation['legend'] = {'box': box, 'separator': [0, ch, cw, RULE], 'font': f'5x7+descenders@{TEXT}',
-                               'colours': {'background': list(bg), 'separator': list(separator), 'tag': list(RED), 'text': list(ink)},
-                               'entries': placed}
-    return cw, fh, bytes(out), [cx, cy, cw, ch], flags, operation
+    for label in placed:   # join lines: a 1 px dark halo, then the red line
+        if label['join']:
+            for x0, y0, w, h in line_boxes(label['join'], 1):
+                fill(x0, y0, x0 + w, y0 + h, BLACK)
+    for label in placed:
+        if label['join']:
+            for x0, y0, w, h in line_boxes(label['join']):
+                fill(x0, y0, x0 + w, y0 + h, RED)
+    for label in placed:
+        x0, y0, w, h = label['box']
+        for alpha, colour in label['unit'][3]:
+            composite(out, fw, fh, x0, y0, w, h, alpha, colour)
+    flags = [f'label-crosses-mark:{n}' for n in crossings] + ([] if complete else ['label-search-cut'])
+    font = label_font()
+    operation = {'crop': [cx, cy, cw, ch], 'cropRule': rule, 'overlay': OVERLAY, 'size': [fw, fh],
+                 'font': {'path': font['path'], 'sha256': font['sha256'], 'emPx': EM, 'digitEmPx': DIGIT_EM},
+                 'margins': {'left': lw, 'right': rw, 'bottom': bh}, 'imageAt': [lw, 0],
+                 'labels': [{'n': m['n'], 'text': label_text(m), 'lines': p['unit'][4], 'candidate': p['name'], 'box': p['box'],
+                             'join': p['join'], 'inkUnder': p['ink'], 'nearerAnotherMark': p['ambiguous']}
+                            for m, p in zip(marks, placed)]}
+    return fw, fh, bytes(out), [cx, cy, cw, ch], flags, operation
 
 
 # ---------------------------------------------------------------- sources
@@ -753,6 +1286,8 @@ def assemble(sources, runs, edition_id, date, formal, budget, reuse=None, genera
     record = {'schema': 'gcam.manual-generation', 'schemaVersion': 1, 'editionId': edition_id, 'date': date,
               'formal': formal, 'budgetBytes': budget, 'status': status, 'draftReasons': draft, 'flags': flags,
               'generator': generator or {'path': 'samples/manual/manual_records.py', 'sha256': sha(Path(__file__).read_bytes())},
+              'labelFont': {'path': label_font()['path'], 'sha256': label_font()['sha256'],
+                            'font': label_font()['font']['family'] + ' ' + label_font()['font']['style']},
               'registry': {'id': registry['id'], 'locale': registry['locale'], 'sha256': sha(sources['files']['chapters.json'])},
               'notices': {'sha256': sha(sources['files']['notices.json']), 'status': sources['noticeStatus']},
               'static': [{'chapter': n, 'path': s['path'], 'sha256': sha(sources['files'][s['path']]), 'draft': s['draft']}
@@ -829,6 +1364,17 @@ def check_all():
 
 # ---------------------------------------------------------------- self-test
 
+def fixture_png(width, height, words=()):
+    """A capture like the real ones: window background, one bordered panel 4 px in, and bright 'words' (x, y, w, h)."""
+    def colour(x, y):
+        if any(a <= x < a + w and b <= y < b + h for a, b, w, h in words):
+            return (200, 200, 200)
+        if 4 <= x < width - 4 and 4 <= y < height - 4:
+            return (43, 53, 62) if x in (4, width - 5) or y in (4, height - 5) else (25, 31, 37)
+        return (18, 22, 25)
+    return png_encode(width, height, b''.join(bytes(colour(x, y)) for y in range(height) for x in range(width)))
+
+
 def fixture(root):
     """One valid input set: a static and two generated chapters, notices and two passed runs on one build."""
     src, runs = root / 'sources', root / 'runs'
@@ -843,13 +1389,8 @@ def fixture(root):
     (src / 'chapters.json').write_bytes(canonical(registry))
     (src / 'notices.json').write_bytes(canonical(notices))
     (src / 'static/intro.md').write_bytes(b'Intro text, see [[chapter:1.2]].\n\n[[notice:N-SIM]]\n')
-    width, height = 160, 48   # window background with one bordered panel, like the captures; wide enough for a legend
-    def colour(x, y):
-        if 4 <= x < width - 4 and 4 <= y < 44:
-            return (43, 53, 62) if x in (4, width - 5) or y in (4, 43) else (25, 31, 37)
-        return (18, 22, 25)
-    rgb = b''.join(bytes(colour(x, y)) for y in range(height) for x in range(width))
-    png = png_encode(width, height, rgb)
+    width, height = 160, 48
+    png = fixture_png(width, height)
     for scenario, number, title, minute, notice in (('manual.alpha', '1.2', 'Alpha', 1, ['N-SIM']), ('manual.beta', '1.3', 'Beta', 2, [])):
         run_id = f'run-{scenario.split(".")[1]}'
         folder = runs / run_id / 'captures'
@@ -913,18 +1454,36 @@ def self_test(out=None):
     def rehash(runs, which):   # keeps evidence hashes true after a deliberate marks edit
         data = marks_file(runs, which).read_bytes()
         edit_json(run_file(runs, which), lambda r: r['evidence'][1].update(sha256=sha(data), bytes=len(data)))
-    def whole_image_mark(src, runs):   # a second mark over the whole capture leaves mark 1's badge no free place
-        edit_json(marks_file(runs, 'alpha'), lambda m: m['marks'].append(
-            {'n': 2, 'target': 'Whole', 'label': 'Whole', 'labelSource': 'name', 'screen': [100.0, 50.0, 160.0, 48.0],
-             'image': [0, 0, 160, 48]}))
-        rehash(runs, 'alpha')
+    def capture(runs, which, width, height, words, marks):   # the run's capture replaced, its marks measured on it
+        png = fixture_png(width, height, words)
+        (runs / f'run-{which}' / 'captures/f1.png').write_bytes(png)
+        def change(m):
+            m.update(captureSha256=sha(png), widthPx=width, heightPx=height, marks=[
+                {'n': n, 'target': f'T{n}', 'label': label, 'labelSource': 'name',
+                 'screen': [float(r[0] + 100), float(r[1] + 50), float(r[2]), float(r[3])], 'image': r}
+                for n, (label, r) in enumerate(marks, 1)])
+        edit_json(marks_file(runs, which), change)
+        if sha(png) != json.loads(run_file(runs, which).read_bytes())['evidence'][0]['sha256']:
+            edit_json(run_file(runs, which), lambda r: r['evidence'][0].update(sha256=sha(png), bytes=len(png)))
+        rehash(runs, which)
+    def walled_in(src, runs):   # other marks on every side: no place in the crop and no clean route to a margin
+        capture(runs, 'alpha', 160, 48, [], [('A', [40, 10, 20, 10]), ('L', [0, 0, 36, 48]), ('R', [64, 0, 96, 48]),
+                                            ('B', [40, 26, 20, 22])])
+    def bottom_mark(src, runs):   # a wide mark along the bottom of a tall capture under a larger one: above it its
+        capture(runs, 'alpha', 160, 120, [], [('Start', [8, 108, 144, 8]), ('P', [8, 4, 144, 100])])   # label reads as P's
+    def field_stack(src, runs):   # two fields with their captions, the panel's edge close beside them: a right margin
+        capture(runs, 'alpha', 300, 240, [(150, 12, 40, 8), (150, 42, 40, 8)],
+                [('Alpha', [200, 10, 52, 12]), ('Beta', [200, 40, 52, 12])])
+    def long_label(src, runs):   # a long message wraps into a block of lines of at most WRAPS[0] characters
+        capture(runs, 'alpha', 400, 240, [], [('Discard the acquired data (2.0 live s, 127 counts)? Inputs unlock for the '
+                                               'next acquisition.', [20, 20, 60, 20])])
     def mark_outside(src, runs):
         edit_json(marks_file(runs, 'alpha'), lambda m: m['marks'][0].update(screen=[256.0, 60.0, 8.0, 6.0], image=[156, 10, 8, 6]))
         rehash(runs, 'alpha')
     def double_scaled(src, runs):
         edit_json(marks_file(runs, 'alpha'), lambda m: m['marks'][0].update(image=[15, 15, 13, 9]))
         rehash(runs, 'alpha')
-    def label_without_glyph(src, runs):   # the legend draws labels as measured and never substitutes a character
+    def label_without_glyph(src, runs):   # labels are drawn as measured and never substitute a character
         edit_json(marks_file(runs, 'alpha'), lambda m: m['marks'][0].update(label='Start \u2192'))
         rehash(runs, 'alpha')
     def failed(src, runs):
@@ -959,25 +1518,47 @@ def self_test(out=None):
     case('evidence-hash', lambda s, r: (r / 'run-alpha/captures/f1.png').write_bytes(png_encode(160, 48, bytes(160 * 48 * 3))), 'refuse:evidence-hash')
     case('mark-outside-image', mark_outside, 'refuse:mark-bounds')
     case('dpi-double-scaling', double_scaled, 'refuse:mark-geometry')
-    case('badge-no-room', whole_image_mark, 'refuse:badge-overlap')
-    case('legend-label-without-glyph', label_without_glyph, 'refuse:legend-glyph')
-    for name, badge, code in (('badge-over-other-mark', [30, 10, 15, 21], 'badge-overlap: badge 1 covers mark 2'),
-                              ('badge-over-own-target', [8, 8, 15, 21], 'badge-overlap: badge 1 covers its own target')):
+    case('label-no-room', walled_in, 'refuse:label-no-room')
+    case('label-without-glyph', label_without_glyph, 'refuse:label-glyph')
+    def operation_of(edition):
+        record = json.loads((edition / 'generation-record.json').read_bytes())
+        return next(f['operation'] for f in record['figures'] if f['figure'] == '1.2-1')
+    for name, mutate, side, predicate in (
+            ('label-margin-bottom', bottom_mark, 'bottom', lambda o: o['labels'][0]['candidate'] == 'margin-bottom'),
+            ('label-margin-right', field_stack, 'right',
+             lambda o: [l['candidate'] for l in o['labels']] == ['margin-right'] * 2 and all(l['join'] for l in o['labels'])),
+            ('label-wrapped', long_label, None,
+             lambda o: len(o['labels'][0]['lines']) == 3 and all(len(s) <= WRAPS[0] for s in o['labels'][0]['lines']))):
+        edition = case(name, mutate, '### 1.2 Alpha')
+        operation = operation_of(edition)
+        margins = operation['margins']
+        require(predicate(operation), f'self-test: {name}: unexpected placement {operation["labels"]}')
+        added = {k: v for k, v in margins.items() if v}
+        require(list(added) == ([side] if side else []), f'self-test: {name}: margins {margins}')
+        require(operation['size'] == [operation['crop'][2] + margins['left'] + margins['right'], operation['crop'][3] + margins['bottom']],
+                f'self-test: {name}: the margin is not the only added space')
+        check(edition)
+        results[-1] = (name, f'generated: {operation["labels"][0]["candidate"]}, margins {added or "none"}, replayed')
+    rects = [[10, 10, 9, 6], [36, 20, 9, 6]]
+    for name, box, code in (('label-overlap', [40, 30, 20, 12], 'label-overlap: label 1 covers label 2'),
+                            ('label-over-own-target', [8, 8, 20, 12], 'label-overlap: label 1 covers its own target'),
+                            ('label-outside-figure', [50, 40, 20, 12], 'label-bounds: label 1 outside the figure')):
         try:   # the post-condition alone, on a seeded placement
-            check_badges([[10, 10, 9, 6], [36, 20, 9, 6]], [badge, [50, 0, 15, 21]], 64, 48)
+            check_labels(rects, [{'box': box, 'join': None}, {'box': [44, 34, 18, 12], 'join': None}], 64, 48)
             raise RuntimeError(f'self-test: {name}: defect accepted')
         except ValueError as error:
             require(str(error) == code, f'self-test: {name}: wrong refusal {error}')
             results.append((name, str(error)))
-    global place_badges
-    sound = place_badges
-    def on_target(width, height, rgb, marks):   # a defective placement that skips its own check
-        return [[m['image'][0], m['image'][1], 15, 21] for m in marks], ['left'] * len(marks), []
-    place_badges = on_target
-    try:   # the figure derivation re-checks every badge and refuses the edition
-        case('badge-placement-defect', lambda s, r: None, 'refuse:badge-overlap')
+    global place_labels
+    sound = place_labels
+    def on_target(width, height, rgb, marks, variants, crop, ink, routes):   # a defective placement that skips its rules
+        return [{'box': [m['image'][0], m['image'][1], v[0][1][0], v[0][1][1]], 'unit': v[0][1], 'route': 'across',
+                 'name': 'defect', 'ink': 0, 'ambiguous': False, 'lines': []} for m, v in zip(marks, variants)], True
+    place_labels = on_target
+    try:   # the figure derivation re-checks every label and refuses the edition
+        case('label-placement-defect', lambda s, r: None, 'refuse:label-overlap')
     finally:
-        place_badges = sound
+        place_labels = sound
     case('mixed-binaries', lambda s, r: edit_json(run_file(r, 'beta'), lambda x: x['subject'].update(deploymentSha256='c' * 64)), 'refuse:mixed-binaries')
     case('budget-exceeded', lambda s, r: None, 'refuse:budget', budget=2000)
     case('unknown-notice', lambda s, r: edit_json(run_file(r, 'beta'), lambda x: x['steps'][0].update(notices=['N-NONE'])), 'refuse:notice-unknown')

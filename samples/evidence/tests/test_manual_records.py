@@ -106,94 +106,153 @@ class ManualRecordsTests(unittest.TestCase):
             return (18, 22, 25)
         return b''.join(bytes(colour(x, y)) for y in range(height) for x in range(width))
 
-    def test_overlay_crops_to_the_panel_and_keeps_badges_off_text_and_marks(self):
+    def test_labels_sit_beside_their_marks_off_text_and_inside_the_crop(self):
         width, height = 200, 120
-        text = (40, 50, 16, 10)                               # a label just left of mark 1
+        text = (34, 50, 22, 10)                               # a word just left of mark 1
         rgb = self.panel_image(width, height, text)
-        w, h, out, crop, flags, operation = mr.derive_figure(width, height, rgb, self.marks([[60, 50, 20, 10], [100, 70, 30, 12]]))
+        w, h, out, crop, flags, operation = mr.derive_figure(width, height, rgb, self.marks([[60, 50, 20, 10], [100, 74, 30, 12]]))
         self.assertEqual([13, 13, 174, 94], crop)            # the whole panel (border at 20 and 179 / 99) + 6 px of background
-        self.assertEqual(('panel-edges', []), (operation['cropRule'], flags))
-        # Left of mark 1 is the label, so its badge goes above; left of mark 2 sits 3 px from mark 1's frame (reads as mark
-        # 1's), so it goes above too.
-        self.assertEqual([('above', [45, 12]), ('above', [85, 32])], [(b['side'], b['at']) for b in operation['badges']])
+        self.assertEqual(('panel-edges', [], {'left': 0, 'right': 0, 'bottom': 0}, [174, 94]),
+                         (operation['cropRule'], flags, operation['margins'], [w, h]))
+        labels = operation['labels']
+        # Right of mark 1 is free: its label goes there, beside the frame (no join line). Right of mark 2 too.
+        self.assertEqual([('right', None), ('right', None)], [(l['candidate'], l['join']) for l in labels])
+        unit = mr.label_unit(1, 'L')
+        self.assertEqual([60 + 20 + mr.BORDER + mr.LEAD - 13, 50 - mr.BORDER + (10 + 2 * mr.BORDER - mr.LABEL_H) // 2 - 13,
+                          unit[0], mr.LABEL_H], labels[0]['box'])
+        local = [[60 - 13, 50 - 13, 20, 10], [100 - 13, 74 - 13, 30, 12]]
+        self.assertEqual([], mr.check_labels(local, labels, w, h))
+        for label in labels:
+            box = label['box']
+            self.assertFalse(mr.overlap(box, [text[0] - 13, text[1] - 13, text[2], text[3]]))
+            self.assertTrue(mr.inside(box, [0, 0, w, h]))
         def at(x, y):
             return tuple(out[(y * w + x) * 3:(y * w + x) * 3 + 3])
         self.assertEqual(mr.RED, at(60 - 13 - 2, 50 - 13 - 2))   # border outside the control's top-left corner
         self.assertEqual((25, 31, 37), at(60 - 13 + 5, 50 - 13 + 5))   # the control itself is not painted
         self.assertTrue(all(at(x - 13, y - 13) == (200, 200, 200)
                             for y in range(text[1], text[1] + text[3]) for x in range(text[0], text[0] + text[2])))
-        white = [(x, y) for y in range(h) for x in range(w) if at(x, y) == mr.WHITE]
-        self.assertTrue(white and all(45 <= x < 60 and 12 <= y < 33 for x, y in white if x < 70))   # mark 1's digit, above it
-        # The legend is drawn inside the figure, below the image: both entries on one line, "[n]" in the mark colour.
-        legend = operation['legend']
-        self.assertEqual([0, 94, 174, mr.RULE + 2 * mr.MARGIN + mr.INK], legend['box'])
-        self.assertEqual((174, 94 + legend['box'][3]), (w, h))
-        self.assertEqual([[mr.MARGIN, 94 + mr.RULE + mr.MARGIN, '[1] L']], legend['entries'][0]['lines'])
-        self.assertEqual([[mr.MARGIN + 7 * mr.ADVANCE, 94 + mr.RULE + mr.MARGIN, '[2] L']], legend['entries'][1]['lines'])
-        self.assertEqual(legend['colours']['separator'], list(at(0, 94)))
-        strip = {at(x, y) for y in range(94 + mr.RULE, h) for x in range(w)}
-        self.assertEqual({(18, 22, 25), mr.RED, (235, 235, 235)}, strip)   # window background, tag and label colours only
-        self.assertEqual(mr.RED, at(mr.MARGIN + 2 * mr.TEXT, 94 + mr.RULE + mr.MARGIN))   # the "[" of "[1]": top bar, 2nd dot
+        x0, y0 = labels[0]['box'][:2]
+        self.assertEqual(mr.RED, at(x0 + 3, y0 + mr.LABEL_H // 2))     # the disc, left of the number
+        self.assertIn(mr.WHITE, {at(x, y) for y in range(y0 + 6, y0 + 18) for x in range(x0 + 7, x0 + 15)})   # the number
+        label_pixels = {at(x, y) for y in range(y0, y0 + mr.LABEL_H) for x in range(x0 + mr.DISC + 2, x0 + unit[0])}
+        self.assertIn(mr.WHITE, label_pixels)                 # white text ...
+        self.assertTrue(any(max(c) < 25 for c in label_pixels))   # ... with a dark outline
+        self.assertTrue(len(label_pixels) > 6)                # anti-aliased edges, not a bitmap font
 
-    def test_legend_wraps_a_long_label_with_a_hanging_indent_and_never_clips(self):
+    def test_text_is_rasterised_from_the_committed_rounded_glyph_subset(self):
+        data = mr.FONT_DATA.read_bytes()
+        subset = json.loads(data)
+        self.assertEqual({chr(c) for c in range(32, 127)} | set('·×–…'), set(subset['glyphs']))
+        self.assertEqual(('M PLUS Rounded 1c', 'Bold'), (subset['font']['family'], subset['font']['style']))
+        self.assertTrue((mr.FONT_DATA.parent / 'OFL.txt').read_text(encoding='utf-8').startswith(
+            'Copyright 2016 The Rounded M+ Project Authors.'))
+        dot, ellipsis = subset['glyphs']['.'], subset['glyphs']['…']   # built from three periods on the baseline
+        self.assertEqual(3 * dot['advance'], ellipsis['advance'])
+        self.assertEqual([[v + (k * dot['advance'] if i % 3 == 0 else 0) for i, v in enumerate(c)]
+                          for k in range(3) for c in dot['contours']], ellipsis['contours'])
+        self.assertEqual(mr.sha(data), mr.label_font()['sha256'])
+        # a closed square contour fills exactly its pixels; half a pixel of coverage is half alpha
+        f = mr.fine()
+        square = [(0, 0, 2 * f, 0), (2 * f, 0, 2 * f, 2 * f), (2 * f, 2 * f, 0, 2 * f), (0, 2 * f, 0, 0)]
+        self.assertEqual([255, 255, 0] * 2 + [0] * 3, mr.coverage(square, 3, 3))
+        half = [(0, 0, f // 2, 0), (f // 2, 0, f // 2, f), (f // 2, f, 0, f), (0, f, 0, 0)]
+        self.assertEqual([127], mr.coverage(half, 1, 1))
+        width, height, disc, layers, lines = mr.label_unit(7, 'Mask–detector · 0.7 mm …')
+        self.assertEqual(['Mask–detector · 0.7 mm …'], lines)
+        self.assertEqual((mr.LABEL_H, mr.DISC), (height, disc))
+        text_alpha, digit_alpha = layers[1][0], layers[3][0]
+        self.assertTrue(any(0 < a < 255 for a in text_alpha) and 255 in text_alpha)
+        outline = layers[0][0]
+        self.assertTrue(all(o >= a for o, a in zip(outline, text_alpha)))   # the outline lies under every text pixel
+        ink = [(i % width, i // width) for i, a in enumerate(digit_alpha) if a >= 128]
+        xs, ys = [x for x, _ in ink], [y for _, y in ink]
+        self.assertLessEqual(abs(min(xs) + max(xs) + 1 - disc), 1)     # the number centred on the disc by its ink
+        self.assertLessEqual(abs(min(ys) + max(ys) + 1 - height), 1)
+        mr._UNITS.clear()
+        mr._GLYPH_SEGMENTS.clear()
+        self.assertEqual(layers, mr.label_unit(7, 'Mask–detector · 0.7 mm …')[3])   # deterministic
+
+    def test_label_refuses_a_missing_glyph_and_prints_the_first_line(self):
+        with self.assertRaisesRegex(ValueError, r'label-glyph: mark 1 label has no glyph for U\+2192'):
+            mr.label_unit(1, 'Start →')
+        self.assertEqual('Discard acquired data?', mr.label_text({'label': '\nDiscard acquired data?\r\nInputs unlock.'}))
+
+    def test_long_labels_wrap_into_a_block_under_their_disc(self):
         label = 'Discard the acquired data (2.0 live s, 127 counts)? Inputs unlock for the next acquisition.'
-        marks = [{'n': 1, 'label': 'Preset'}, {'n': 2, 'label': label}, {'n': 3, 'label': 'Cancel'}, {'n': 4, 'label': 'Discard'}]
-        entries, height = mr.legend_layout(marks, 314)
-        cols = (314 - 2 * mr.MARGIN + mr.TEXT) // mr.ADVANCE
-        self.assertEqual(25, cols)
-        lines = entries[1]['lines']
-        self.assertEqual('[2] Discard the acquired', lines[0][2])
-        self.assertTrue(len(lines) > 1 and all(x == mr.MARGIN + 4 * mr.ADVANCE for x, _, _ in lines[1:]))   # hanging indent
-        self.assertEqual(label, ' '.join([lines[0][2][4:]] + [t for _, _, t in lines[1:]]))   # every word, in order
-        self.assertTrue(all(len(t) <= cols - (0 if k == 0 else 4) for k, (_, _, t) in enumerate(lines)))
-        # a wrapped entry keeps its lines; short entries after it share one line
-        self.assertEqual(lines[-1][1] + mr.LINE, entries[2]['lines'][0][1])
-        self.assertEqual(entries[2]['lines'][0][1], entries[3]['lines'][0][1])
-        self.assertEqual(entries[0]['lines'][0][1] + mr.LINE, lines[0][1])   # "[1] Preset" + "[2] …" exceed one line
-        rows = len({y for e in entries for _, y, _ in e['lines']})
-        self.assertEqual(mr.RULE + 2 * mr.MARGIN + rows * mr.LINE - (mr.LINE - mr.INK), height)
-        mr.check_legend(entries, [0, 0, 314, height])
-        self.assertEqual(['abcdefgh', 'ijkl xy'], mr.wrap_words('abcdefghijkl xy', 8))   # a word longer than a line breaks
+        width, height, disc, layers, lines = mr.label_unit(1, label)
+        self.assertEqual(['Discard the acquired data (2.0', 'live s, 127 counts)? Inputs', 'unlock for the next acquisition.'], lines)
+        self.assertEqual(mr.LABEL_H + 2 * mr.LINE_PITCH, height)
+        text = layers[1][0]
+        rows = [y for y in range(height) if any(text[y * width + x] for x in range(width))]
+        self.assertLess(max(rows), height - 1)                # every line drawn inside the box
+        self.assertFalse(any(text[y * width + x] for y in range(height) for x in range(disc + 2)))   # all under the text
+        self.assertEqual(['3.6 × 4.2 mm · 42 px · mean 5.45 ·', 'max 13'],
+                         mr.wrap_text('3.6 × 4.2 mm · 42 px · mean 5.45 · max 13', 32))   # no line opens on a separator
+        self.assertEqual(['abcdefgh', 'ijkl xy'], mr.wrap_text('abcdefghijkl xy', 8))   # a word longer than a line breaks
+        self.assertEqual([(32, ['Pixels / side']), (12, ['Pixels /', 'side'])],   # a short label may fold once to fit
+                         [(w, u[4]) for w, u in mr.label_variants(2, 'Pixels / side')])
+        self.assertEqual([32], [w for w, _ in mr.label_variants(1, label)])   # a long block is never folded taller
 
-    def test_legend_refuses_a_missing_glyph_a_narrow_figure_and_a_clipped_entry(self):
-        with self.assertRaisesRegex(ValueError, r'legend-glyph: mark 1 label has no glyph for U\+2192'):
-            mr.legend_layout([{'n': 1, 'label': 'Start \u2192'}], 314)
-        with self.assertRaisesRegex(ValueError, 'legend-width'):
-            mr.legend_layout([{'n': 1, 'label': 'Start'}], 100)
-        self.assertEqual(([], 0), mr.legend_layout([], 314))
-        for c in '·×–…':
-            self.assertIn(c, mr.FONT)
-        self.assertTrue(all(chr(c) in mr.FONT for c in range(32, 127)))
-        entries, height = mr.legend_layout([{'n': 1, 'label': 'Start'}], 314)
-        for change, code in ((lambda e: e[0]['lines'][0].__setitem__(2, '[1] Sta'), 'legend-clipped'),
-                             (lambda e: e[0]['lines'][0].__setitem__(0, 314 - 20), 'legend-bounds'),
-                             (lambda e: e.append({'n': 2, 'text': '[2] X', 'lines': [list(e[0]['lines'][0][:2]) + ['[2] X']]}),
-                              'legend-overlap')):
-            bad = json.loads(json.dumps(entries))
-            change(bad)
-            with self.assertRaisesRegex(ValueError, code):
-                mr.check_legend(bad, [0, 0, 314, height])
+    def stack_image(self, width, height, words):
+        def colour(x, y):
+            if any(a <= x < a + w and b <= y < b + h for a, b, w, h in words):
+                return (200, 200, 200)
+            if 4 <= x < width - 4 and 4 <= y < height - 4:
+                return (43, 53, 62) if x in (4, width - 5) or y in (4, height - 5) else (25, 31, 37)
+            return (18, 22, 25)
+        return b''.join(bytes(colour(x, y)) for y in range(height) for x in range(width))
 
-    def test_overlay_flags_a_badge_whose_only_free_place_is_on_content(self):
-        width, height = 160, 48
-        rgb = b''.join(bytes((255, 255, 255) if x % 2 else (0, 0, 0)) for y in range(height) for x in range(width))
-        _, _, _, _, flags, _ = mr.derive_figure(width, height, rgb, self.marks([[24, 20, 10, 8]], crop='full'))
-        self.assertEqual(['badge-on-content:1'], flags)
+    def test_labels_without_a_place_go_to_a_plain_margin_and_never_widen_the_crop(self):
+        # A stack of fields with captions on the left and the panel edge close on the right: the crop stays the panel,
+        # a right margin holds both labels level with their fields, joined by straight lines.
+        width, height = 300, 240
+        rgb = self.stack_image(width, height, [(150, 12, 40, 8), (150, 42, 40, 8)])
+        doc = {'crop': 'full', 'marks': [{'n': 1, 'label': 'Alpha', 'image': [200, 10, 52, 12]},
+                                         {'n': 2, 'label': 'Beta', 'image': [200, 40, 52, 12]}]}
+        w, h, out, crop, flags, operation = mr.derive_figure(width, height, rgb, doc)
+        right = mr.MARGIN_GAP + mr.label_unit(1, 'Alpha')[0] + mr.MARGIN_PAD
+        self.assertEqual(([0, 0, 300, 240], {'left': 0, 'right': right, 'bottom': 0}, [300 + right, 240], []),
+                         (crop, operation['margins'], [w, h], flags))
+        first, second = operation['labels']
+        self.assertEqual(('margin-right', 'margin-right'), (first['candidate'], second['candidate']))
+        self.assertEqual([[254, 16], [300 + mr.MARGIN_GAP, 16]], first['join'])   # level with the field's middle
+        self.assertEqual([300 + mr.MARGIN_GAP, 16 - mr.LABEL_H // 2], first['box'][:2])
+        def at(x, y):
+            return tuple(out[(y * w + x) * 3:(y * w + x) * 3 + 3])
+        self.assertEqual(mr.RED, at(280, 16))                 # the join line crosses the panel edge
+        self.assertEqual((18, 22, 25), at(w - 2, h - 2))      # the margin is the window background
+        # A wide mark along the bottom of a tall capture, under a larger mark: above it its label would read as the
+        # other mark's, so it goes to a bottom margin (less area than a side margin).
+        width, height = 160, 120
+        doc = {'crop': 'full', 'marks': [{'n': 1, 'label': 'Start', 'image': [8, 108, 144, 8]},
+                                         {'n': 2, 'label': 'P', 'image': [8, 4, 144, 100]}]}
+        w, h, out, crop, flags, operation = mr.derive_figure(width, height, self.stack_image(width, height, []), doc)
+        bottom = 2 * mr.STRIP_PAD + mr.LABEL_H
+        self.assertEqual(({'left': 0, 'right': 0, 'bottom': bottom}, [160, 120 + bottom]), (operation['margins'], [w, h]))
+        first = operation['labels'][0]
+        self.assertEqual(('margin-bottom', [7, 120 + mr.STRIP_PAD]), (first['candidate'], first['box'][:2]))
+        self.assertEqual([[18, 118], [18, 120 + mr.STRIP_PAD]], first['join'])   # straight down from the frame to the disc
+        self.assertTrue(operation['labels'][1]['candidate'].startswith('inside-'))   # the large mark names itself inside
 
-    def test_overlay_refuses_a_badge_without_a_free_place(self):
-        with self.assertRaisesRegex(ValueError, 'badge-overlap: mark 1 has no place'):
-            mr.derive_figure(12, 12, bytes(12 * 12 * 3), self.marks([[2, 2, 8, 8]], crop='full'))
+    def test_label_refuses_a_mark_without_a_place_or_a_route_to_a_margin(self):
+        doc = self.marks([[40, 10, 20, 10], [0, 0, 36, 48], [64, 0, 96, 48], [40, 26, 20, 22]], crop='full')
+        with self.assertRaisesRegex(ValueError, 'label-no-room: mark [12] has no place in the figure or a margin'):
+            mr.derive_figure(160, 48, self.stack_image(160, 48, []), doc)
 
-    def test_badge_check_refuses_a_badge_on_another_mark_its_target_a_badge_or_the_edge(self):
+    def test_label_check_refuses_overlaps_and_reports_crossings(self):
         rects = [[10, 10, 9, 6], [36, 20, 9, 6]]
-        mr.check_badges(rects, [[22, 0, 11, 16], [49, 20, 15, 21]], 64, 48)
-        for badges, code in (([[30, 10, 15, 21], [49, 20, 15, 21]], 'badge-overlap: badge 1 covers mark 2'),
-                             ([[8, 8, 15, 21], [49, 20, 15, 21]], 'badge-overlap: badge 1 covers its own target'),
-                             ([[22, 0, 11, 16], [37, 21, 6, 4]], 'badge-overlap: badge 2 covers its own target'),
-                             ([[22, 0, 11, 16], [25, 4, 5, 5]], 'badge-overlap: badge 1 covers badge 2'),
-                             ([[22, 0, 11, 16], [49, 30, 15, 21]], 'badge-bounds: badge 2 outside the figure')):
+        def label(box, join=None):
+            return {'box': box, 'join': join}
+        self.assertEqual([], mr.check_labels(rects, [label([22, 7, 12, 12]), label([48, 17, 12, 12])], 64, 48))
+        self.assertEqual([1], mr.check_labels(rects, [label([26, 14, 12, 12]), label([48, 30, 12, 12])], 64, 48))
+        for labels, code in (([label([8, 8, 12, 12]), label([48, 17, 12, 12])], 'label-overlap: label 1 covers its own target'),
+                             ([label([22, 7, 12, 12]), label([30, 10, 12, 12])], 'label-overlap: label 1 covers label 2'),
+                             ([label([22, 30, 12, 12]), label([48, 30, 12, 12], [[48, 36], [24, 36]])],
+                              'label-overlap: label 1 covers the join line of label 2'),
+                             ([label([22, 7, 12, 12]), label([56, 17, 12, 12])], 'label-bounds: label 2 outside the figure')):
             with self.assertRaises(ValueError) as caught:
-                mr.check_badges(rects, badges, 64, 48)
+                mr.check_labels(rects, labels, 64, 48)
             self.assertEqual(code, str(caught.exception))
 
     def test_marks_must_be_the_measured_rectangles_inside_the_capture(self):
@@ -228,12 +287,16 @@ class ManualRecordsTests(unittest.TestCase):
     def test_self_test_refuses_every_seeded_defect(self):
         results = dict(mr.self_test(scratch() / 'self-test'))
         for name in ('missing-run-formal', 'failed-chapter-formal', 'evidence-hash', 'mark-outside-image', 'mixed-binaries',
-                     'budget-exceeded', 'tampered-figure', 'dpi-double-scaling', 'identity-leak', 'badge-no-room',
-                     'badge-over-other-mark', 'badge-over-own-target', 'badge-placement-defect', 'legend-label-without-glyph'):
+                     'budget-exceeded', 'tampered-figure', 'dpi-double-scaling', 'identity-leak', 'label-no-room',
+                     'label-overlap', 'label-over-own-target', 'label-outside-figure', 'label-placement-defect',
+                     'label-without-glyph'):
             self.assertIn(name, results)
             self.assertFalse(results[name].startswith('generated'), name)
         self.assertTrue(results['missing-run'].startswith('generated'))
         self.assertTrue(results['failed-chapter'].startswith('generated'))
+        self.assertTrue(results['label-margin-bottom'].startswith('generated: margin-bottom'))
+        self.assertTrue(results['label-margin-right'].startswith('generated: margin-right'))
+        self.assertTrue(results['label-wrapped'].startswith('generated'))
 
     def test_latest_run_wins_and_a_tie_refuses(self):
         root = scratch()
@@ -253,7 +316,7 @@ class ManualRecordsTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'selection-tie'):
             mr.generate(src, runs, 'e2', '2026-10-14', root / 'e2')
 
-    def test_figures_are_centred_and_the_record_describes_their_legend(self):
+    def test_figures_are_centred_and_the_record_describes_their_labels(self):
         root = scratch()
         src, runs = mr.fixture(root)
         record = json.loads((runs / 'run-alpha/manual-run.json').read_bytes())
@@ -263,16 +326,20 @@ class ManualRecordsTests(unittest.TestCase):
         markdown = outputs['MANUAL.Studio.md'].decode('utf-8')
         self.assertIn('<p align="center"><img src="figures/1.2-1.png" alt="Figure 1.2-1"></p>\n'
                       '<p align="center"><em>Figure 1.2-1.</em> A &lt;b&gt; &amp; c</p>\n', markdown)
-        self.assertNotIn('**1** Start', markdown)   # the legend is in the figure, not in the caption
+        self.assertNotIn('**1** Start', markdown)   # the label is in the figure, not in the caption
         generation = json.loads(outputs['generation-record.json'])
+        font = {'path': 'samples/manual/font/mplus-rounded-1c-bold.glyphs.json', 'sha256': mr.sha(mr.FONT_DATA.read_bytes()),
+                'font': 'M PLUS Rounded 1c Bold'}
+        self.assertEqual(font, generation['labelFont'])
         figure = next(f for f in generation['figures'] if f['figure'] == '1.2-1')
         operation = figure['operation']
-        self.assertEqual(mr.OVERLAY, operation['overlay'])
-        self.assertEqual(['[1] Start'], [e['text'] for e in operation['legend']['entries']])
+        self.assertEqual((mr.OVERLAY, {'left': 0, 'right': 0, 'bottom': 0}), (operation['overlay'], operation['margins']))
+        self.assertEqual(font['sha256'], operation['font']['sha256'])
+        self.assertEqual([(1, 'Start')], [(l['n'], l['text']) for l in operation['labels']])
+        self.assertTrue(operation['labels'][0]['candidate'].startswith('right'))
         width, height, _ = mr.png_decode(outputs['figures/1.2-1.png'])
         self.assertEqual([width, height], operation['size'])
-        self.assertEqual([0, operation['crop'][3], width, height - operation['crop'][3]], operation['legend']['box'])
-
+        self.assertEqual(operation['crop'][2:], operation['size'])   # no margin: the labels add no space
 
 if __name__ == '__main__':
     unittest.main()

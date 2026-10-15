@@ -1,6 +1,6 @@
 {
  "budgetBytes": 10485760,
- "bytesExcludingRecord": 2025175,
+ "bytesExcludingRecord": 2136453,
  "chapterOutputSha256": {
   "1.1": "139af52524d0092f48789c91d61f4cce314fe4256125246dbedacc12f39dc4e9",
   "1.2": "b16762bea54d102efac2b92805d3e837fef8a771a27900cc47442111428a7cb9",
@@ -111,72 +111,6 @@
    "flags": [],
    "marksSha256": "a04b9668955dc3cb11d1ccb870dad1ea329f77fd8b37ac7741e25e7883e85169",
    "operation": {
-    "badges": [
-     {
-      "at": [
-       133,
-       41
-      ],
-      "n": 1,
-      "side": "below"
-     },
-     {
-      "at": [
-       203,
-       41
-      ],
-      "n": 2,
-      "side": "below"
-     },
-     {
-      "at": [
-       312,
-       41
-      ],
-      "n": 3,
-      "side": "below"
-     },
-     {
-      "at": [
-       419,
-       13
-      ],
-      "n": 4,
-      "side": "right"
-     },
-     {
-      "at": [
-       1142,
-       13
-      ],
-      "n": 5,
-      "side": "right"
-     },
-     {
-      "at": [
-       7,
-       77
-      ],
-      "n": 6,
-      "side": "left"
-     },
-     {
-      "at": [
-       131,
-       106
-      ],
-      "n": 7,
-      "side": "below"
-     },
-     {
-      "at": [
-       302,
-       77
-      ],
-      "n": 8,
-      "side": "right"
-     }
-    ],
     "crop": [
      0,
      0,
@@ -184,142 +118,177 @@
      900
     ],
     "cropRule": "full",
-    "legend": {
-     "box": [
-      0,
-      900,
-      1440,
-      35
-     ],
-     "colours": {
-      "background": [
-       18,
-       22,
-       25
-      ],
-      "separator": [
-       72,
-       75,
-       77
-      ],
-      "tag": [
-       200,
-       30,
-       30
-      ],
-      "text": [
-       235,
-       235,
-       235
-      ]
-     },
-     "entries": [
-      {
-       "lines": [
-        [
-         8,
-         909,
-         "[1] Imaging"
-        ]
-       ],
-       "n": 1,
-       "text": "[1] Imaging"
-      },
-      {
-       "lines": [
-        [
-         164,
-         909,
-         "[2] Spectrum"
-        ]
-       ],
-       "n": 2,
-       "text": "[2] Spectrum"
-      },
-      {
-       "lines": [
-        [
-         332,
-         909,
-         "[3] Waveform"
-        ]
-       ],
-       "n": 3,
-       "text": "[3] Waveform"
-      },
-      {
-       "lines": [
-        [
-         500,
-         909,
-         "[4] Detector"
-        ]
-       ],
-       "n": 4,
-       "text": "[4] Detector"
-      },
-      {
-       "lines": [
-        [
-         668,
-         909,
-         "[5] Start"
-        ]
-       ],
-       "n": 5,
-       "text": "[5] Start"
-      },
-      {
-       "lines": [
-        [
-         800,
-         909,
-         "[6] Scene"
-        ]
-       ],
-       "n": 6,
-       "text": "[6] Scene"
-      },
-      {
-       "lines": [
-        [
-         932,
-         909,
-         "[7] Optics"
-        ]
-       ],
-       "n": 7,
-       "text": "[7] Optics"
-      },
-      {
-       "lines": [
-        [
-         1076,
-         909,
-         "[8] Detector"
-        ]
-       ],
-       "n": 8,
-       "text": "[8] Detector"
-      }
-     ],
-     "font": "5x7+descenders@2",
-     "separator": [
-      0,
-      900,
-      1440,
-      1
-     ]
+    "font": {
+     "digitEmPx": 15,
+     "emPx": 16,
+     "path": "samples/manual/font/mplus-rounded-1c-bold.glyphs.json",
+     "sha256": "50f700764a8a99b64e0b2f56822f556552a4f3f3a019c6abaa8ce272ed956d62"
     },
-    "overlay": "rectangles+numbered-badges+legend-v3",
+    "imageAt": [
+     0,
+     0
+    ],
+    "labels": [
+     {
+      "box": [
+       124,
+       42,
+       91,
+       24
+      ],
+      "candidate": "below-centre",
+      "inkUnder": 0,
+      "join": null,
+      "lines": [
+       "Imaging"
+      ],
+      "n": 1,
+      "nearerAnotherMark": false,
+      "text": "Imaging"
+     },
+     {
+      "box": [
+       222,
+       42,
+       104,
+       24
+      ],
+      "candidate": "below-slide+19",
+      "inkUnder": 1,
+      "join": null,
+      "lines": [
+       "Spectrum"
+      ],
+      "n": 2,
+      "nearerAnotherMark": false,
+      "text": "Spectrum"
+     },
+     {
+      "box": [
+       334,
+       42,
+       108,
+       24
+      ],
+      "candidate": "below-slide+61",
+      "inkUnder": 0,
+      "join": null,
+      "lines": [
+       "Waveform"
+      ],
+      "n": 3,
+      "nearerAnotherMark": false,
+      "text": "Waveform"
+     },
+     {
+      "box": [
+       420,
+       12,
+       100,
+       24
+      ],
+      "candidate": "right",
+      "inkUnder": 0,
+      "join": null,
+      "lines": [
+       "Detector"
+      ],
+      "n": 4,
+      "nearerAnotherMark": false,
+      "text": "Detector"
+     },
+     {
+      "box": [
+       1122,
+       43,
+       72,
+       24
+      ],
+      "candidate": "below-slide+67",
+      "inkUnder": 0,
+      "join": null,
+      "lines": [
+       "Start"
+      ],
+      "n": 5,
+      "nearerAnotherMark": false,
+      "text": "Start"
+     },
+     {
+      "box": [
+       24,
+       45,
+       74,
+       24
+      ],
+      "candidate": "above-left",
+      "inkUnder": 0,
+      "join": null,
+      "lines": [
+       "Scene"
+      ],
+      "n": 6,
+      "nearerAnotherMark": false,
+      "text": "Scene"
+     },
+     {
+      "box": [
+       115,
+       107,
+       81,
+       24
+      ],
+      "candidate": "below-left",
+      "inkUnder": 0,
+      "join": null,
+      "lines": [
+       "Optics"
+      ],
+      "n": 7,
+      "nearerAnotherMark": false,
+      "text": "Optics"
+     },
+     {
+      "box": [
+       312,
+       102,
+       100,
+       24
+      ],
+      "candidate": "right-1down",
+      "inkUnder": 0,
+      "join": [
+       [
+        312,
+        103
+       ],
+       [
+        300,
+        103
+       ]
+      ],
+      "lines": [
+       "Detector"
+      ],
+      "n": 8,
+      "nearerAnotherMark": false,
+      "text": "Detector"
+     }
+    ],
+    "margins": {
+     "bottom": 0,
+     "left": 0,
+     "right": 0
+    },
+    "overlay": "rectangles+labels-beside-v4",
     "size": [
      1440,
-     935
+     900
     ]
    },
    "path": "figures/1.2-1.png",
-   "pixelSha256": "acce38d411edee39634f170926acbc608b987f4e26829241df1e05b3846e019e",
-   "resultSha256": "4da14be063daf9a7196100b128b2f0e949ffd56b28a41411ab6a4a1d52fda777",
+   "pixelSha256": "8e22413ae70b9cfba6d45f71993056cac11d42eb1cc2f5d5873eae59bf8edcdf",
+   "resultSha256": "e376a8a5ae8622950a83f313d0b34217fa4d5e235772c92635697cde6dcb9956",
    "runId": "20261014-202044-2dbf58",
    "source": "captures/1.2-1.png",
    "sourceSha256": "b3b4edcb227cd0c616c8999ae6b7d54be96dd0a0f290077ebdcced7e6a5bb2d3",
@@ -331,24 +300,6 @@
    "flags": [],
    "marksSha256": "9b975939782035f50967b61090fbf2bfc08ef08403aa200bda15ad663ee86608",
    "operation": {
-    "badges": [
-     {
-      "at": [
-       93,
-       24
-      ],
-      "n": 1,
-      "side": "left"
-     },
-     {
-      "at": [
-       85,
-       101
-      ],
-      "n": 2,
-      "side": "left"
-     }
-    ],
     "crop": [
      5,
      53,
@@ -356,76 +307,75 @@
      813
     ],
     "cropRule": "panel-edges",
-    "legend": {
-     "box": [
-      0,
-      813,
-      314,
-      35
-     ],
-     "colours": {
-      "background": [
-       18,
-       22,
-       25
-      ],
-      "separator": [
-       72,
-       75,
-       77
-      ],
-      "tag": [
-       200,
-       30,
-       30
-      ],
-      "text": [
-       235,
-       235,
-       235
-      ]
-     },
-     "entries": [
-      {
-       "lines": [
-        [
-         8,
-         822,
-         "[1] Optics"
-        ]
-       ],
-       "n": 1,
-       "text": "[1] Optics"
-      },
-      {
-       "lines": [
-        [
-         152,
-         822,
-         "[2] Preset"
-        ]
-       ],
-       "n": 2,
-       "text": "[2] Preset"
-      }
-     ],
-     "font": "5x7+descenders@2",
-     "separator": [
-      0,
-      813,
-      314,
-      1
-     ]
+    "font": {
+     "digitEmPx": 15,
+     "emPx": 16,
+     "path": "samples/manual/font/mplus-rounded-1c-bold.glyphs.json",
+     "sha256": "50f700764a8a99b64e0b2f56822f556552a4f3f3a019c6abaa8ce272ed956d62"
     },
-    "overlay": "rectangles+numbered-badges+legend-v3",
+    "imageAt": [
+     0,
+     0
+    ],
+    "labels": [
+     {
+      "box": [
+       159,
+       54,
+       81,
+       24
+      ],
+      "candidate": "below-slide+49",
+      "inkUnder": 0,
+      "join": null,
+      "lines": [
+       "Optics"
+      ],
+      "n": 1,
+      "nearerAnotherMark": false,
+      "text": "Optics"
+     },
+     {
+      "box": [
+       324,
+       100,
+       81,
+       24
+      ],
+      "candidate": "margin-right",
+      "inkUnder": 0,
+      "join": [
+       [
+        284,
+        112
+       ],
+       [
+        324,
+        112
+       ]
+      ],
+      "lines": [
+       "Preset"
+      ],
+      "n": 2,
+      "nearerAnotherMark": false,
+      "text": "Preset"
+     }
+    ],
+    "margins": {
+     "bottom": 0,
+     "left": 0,
+     "right": 99
+    },
+    "overlay": "rectangles+labels-beside-v4",
     "size": [
-     314,
-     848
+     413,
+     813
     ]
    },
    "path": "figures/1.2-2.png",
-   "pixelSha256": "1a10c5a6a9dbc6bd4aff3e237868bdf1780ffa9d445203e0d035f0a418ccae26",
-   "resultSha256": "959f3e47081bb1b438d4de138ebbccf1002d35694f6797707aa267d8b0b33704",
+   "pixelSha256": "d86f19aafee6bd9d5ac2e9e49500650db6794d82efc840e514cf378588862364",
+   "resultSha256": "73434a56fba85709e744491c66a07922160313c57b05833965019c646c9112cf",
    "runId": "20261014-202044-2dbf58",
    "source": "captures/1.2-2.png",
    "sourceSha256": "f654c2c5f216af953d1f224a92adec73e04a6c11df6c77aae15b341b85ed9b47",
@@ -437,32 +387,6 @@
    "flags": [],
    "marksSha256": "23efba97cfb06a0fce9a07f8130c8ed683b026add8198870527a8ab21446d63d",
    "operation": {
-    "badges": [
-     {
-      "at": [
-       384,
-       60
-      ],
-      "n": 1,
-      "side": "left"
-     },
-     {
-      "at": [
-       244,
-       415
-      ],
-      "n": 2,
-      "side": "left"
-     },
-     {
-      "at": [
-       319,
-       448
-      ],
-      "n": 3,
-      "side": "left"
-     }
-    ],
     "crop": [
      317,
      53,
@@ -470,87 +394,84 @@
      813
     ],
     "cropRule": "panel-edges",
-    "legend": {
-     "box": [
-      0,
-      813,
-      806,
-      79
-     ],
-     "colours": {
-      "background": [
-       18,
-       22,
-       25
-      ],
-      "separator": [
-       72,
-       75,
-       77
-      ],
-      "tag": [
-       200,
-       30,
-       30
-      ],
-      "text": [
-       235,
-       235,
-       235
-      ]
-     },
-     "entries": [
-      {
-       "lines": [
-        [
-         8,
-         822,
-         "[1] Four outputs (A–D)"
-        ]
-       ],
-       "n": 1,
-       "text": "[1] Four outputs (A–D)"
-      },
-      {
-       "lines": [
-        [
-         8,
-         844,
-         "[2] Available with the experimental physical readout"
-        ]
-       ],
-       "n": 2,
-       "text": "[2] Available with the experimental physical readout"
-      },
-      {
-       "lines": [
-        [
-         8,
-         866,
-         "[3] Choose readout…"
-        ]
-       ],
-       "n": 3,
-       "text": "[3] Choose readout…"
-      }
-     ],
-     "font": "5x7+descenders@2",
-     "separator": [
-      0,
-      813,
-      806,
-      1
-     ]
+    "font": {
+     "digitEmPx": 15,
+     "emPx": 16,
+     "path": "samples/manual/font/mplus-rounded-1c-bold.glyphs.json",
+     "sha256": "50f700764a8a99b64e0b2f56822f556552a4f3f3a019c6abaa8ce272ed956d62"
     },
-    "overlay": "rectangles+numbered-badges+legend-v3",
+    "imageAt": [
+     0,
+     0
+    ],
+    "labels": [
+     {
+      "box": [
+       401,
+       28,
+       179,
+       24
+      ],
+      "candidate": "above-left",
+      "inkUnder": 0,
+      "join": null,
+      "lines": [
+       "Four outputs (A–D)"
+      ],
+      "n": 1,
+      "nearerAnotherMark": false,
+      "text": "Four outputs (A–D)"
+     },
+     {
+      "box": [
+       261,
+       368,
+       280,
+       44
+      ],
+      "candidate": "above-left",
+      "inkUnder": 0,
+      "join": null,
+      "lines": [
+       "Available with the experimental",
+       "physical readout"
+      ],
+      "n": 2,
+      "nearerAnotherMark": false,
+      "text": "Available with the experimental physical readout"
+     },
+     {
+      "box": [
+       473,
+       444,
+       168,
+       24
+      ],
+      "candidate": "right",
+      "inkUnder": 0,
+      "join": null,
+      "lines": [
+       "Choose readout…"
+      ],
+      "n": 3,
+      "nearerAnotherMark": false,
+      "text": "Choose readout…"
+     }
+    ],
+    "margins": {
+     "bottom": 0,
+     "left": 0,
+     "right": 0
+    },
+    "overlay": "rectangles+labels-beside-v4",
     "size": [
      806,
-     892
+     813
     ]
    },
    "path": "figures/1.2-3.png",
-   "pixelSha256": "495a3f362d20f98a66d60f89662c738e72d937db505bd66a2e7aff88decafca9",
-   "resultSha256": "c7f010432aab0469c4ea63c8fd198fb905de85ab99c3889c187d79db51df5836",
+   "pixelSha256": "8bc830802bed92c06a2be3ce3200f74f4e55aeae20986430897def0abe22dea8",
+   "resultSha256": "0f3c2071d6a9751e20c3189fe787172d66f1509b061955f8686e710b145080fe",
    "runId": "20261014-202044-2dbf58",
    "source": "captures/1.2-3.png",
    "sourceSha256": "ffa7a04a6b92a02fd51ca699dd9708d1441416f24265f8ff36ca8a2a9d254c8c",
@@ -562,32 +483,6 @@
    "flags": [],
    "marksSha256": "8f0aec3c8552842d9b294debca3b947386d23940ce66cc3c567df12d3ade2a19",
    "operation": {
-    "badges": [
-     {
-      "at": [
-       155,
-       60
-      ],
-      "n": 1,
-      "side": "left"
-     },
-     {
-      "at": [
-       244,
-       415
-      ],
-      "n": 2,
-      "side": "left"
-     },
-     {
-      "at": [
-       319,
-       448
-      ],
-      "n": 3,
-      "side": "left"
-     }
-    ],
     "crop": [
      317,
      53,
@@ -595,87 +490,84 @@
      813
     ],
     "cropRule": "panel-edges",
-    "legend": {
-     "box": [
-      0,
-      813,
-      806,
-      57
-     ],
-     "colours": {
-      "background": [
-       18,
-       22,
-       25
-      ],
-      "separator": [
-       72,
-       75,
-       77
-      ],
-      "tag": [
-       200,
-       30,
-       30
-      ],
-      "text": [
-       235,
-       235,
-       235
-      ]
-     },
-     "entries": [
-      {
-       "lines": [
-        [
-         8,
-         822,
-         "[1] SiPM"
-        ]
-       ],
-       "n": 1,
-       "text": "[1] SiPM"
-      },
-      {
-       "lines": [
-        [
-         128,
-         822,
-         "[2] Available with the experimental physical readout"
-        ]
-       ],
-       "n": 2,
-       "text": "[2] Available with the experimental physical readout"
-      },
-      {
-       "lines": [
-        [
-         8,
-         844,
-         "[3] Choose readout…"
-        ]
-       ],
-       "n": 3,
-       "text": "[3] Choose readout…"
-      }
-     ],
-     "font": "5x7+descenders@2",
-     "separator": [
-      0,
-      813,
-      806,
-      1
-     ]
+    "font": {
+     "digitEmPx": 15,
+     "emPx": 16,
+     "path": "samples/manual/font/mplus-rounded-1c-bold.glyphs.json",
+     "sha256": "50f700764a8a99b64e0b2f56822f556552a4f3f3a019c6abaa8ce272ed956d62"
     },
-    "overlay": "rectangles+numbered-badges+legend-v3",
+    "imageAt": [
+     0,
+     0
+    ],
+    "labels": [
+     {
+      "box": [
+       172,
+       28,
+       68,
+       24
+      ],
+      "candidate": "above-left",
+      "inkUnder": 0,
+      "join": null,
+      "lines": [
+       "SiPM"
+      ],
+      "n": 1,
+      "nearerAnotherMark": false,
+      "text": "SiPM"
+     },
+     {
+      "box": [
+       261,
+       368,
+       280,
+       44
+      ],
+      "candidate": "above-left",
+      "inkUnder": 0,
+      "join": null,
+      "lines": [
+       "Available with the experimental",
+       "physical readout"
+      ],
+      "n": 2,
+      "nearerAnotherMark": false,
+      "text": "Available with the experimental physical readout"
+     },
+     {
+      "box": [
+       473,
+       444,
+       168,
+       24
+      ],
+      "candidate": "right",
+      "inkUnder": 0,
+      "join": null,
+      "lines": [
+       "Choose readout…"
+      ],
+      "n": 3,
+      "nearerAnotherMark": false,
+      "text": "Choose readout…"
+     }
+    ],
+    "margins": {
+     "bottom": 0,
+     "left": 0,
+     "right": 0
+    },
+    "overlay": "rectangles+labels-beside-v4",
     "size": [
      806,
-     870
+     813
     ]
    },
    "path": "figures/1.2-4.png",
-   "pixelSha256": "c218902ec97ad86b318055d784f8915f1333fb71a719bf840e0e6b6c51797c65",
-   "resultSha256": "995af226118e4b5c16b2eb0f733263e94be94e5f8d7d89a26db124e1ebb02cd6",
+   "pixelSha256": "5688bebbda7d1402f85d2bbf42f90ad072aa2dfb64dea86542de0d77280b11a7",
+   "resultSha256": "4b62819ae06ae2c8e54090a293f3fcf14313970f7eb289f8d7dccb6a6dcc357f",
    "runId": "20261014-202044-2dbf58",
    "source": "captures/1.2-4.png",
    "sourceSha256": "ca15b38bc336c744820fb24a23fccd3c3319b7c2cd1eabc0314948c9c5f72a17",
@@ -687,16 +579,6 @@
    "flags": [],
    "marksSha256": "6bbccb46c92c40ed220c7cdf89b7038c4f4983d75df158d40053169593bb80e3",
    "operation": {
-    "badges": [
-     {
-      "at": [
-       183,
-       24
-      ],
-      "n": 1,
-      "side": "left"
-     }
-    ],
     "crop": [
      5,
      53,
@@ -704,65 +586,62 @@
      813
     ],
     "cropRule": "panel-edges",
-    "legend": {
-     "box": [
-      0,
-      813,
-      314,
-      35
-     ],
-     "colours": {
-      "background": [
-       18,
-       22,
-       25
-      ],
-      "separator": [
-       72,
-       75,
-       77
-      ],
-      "tag": [
-       200,
-       30,
-       30
-      ],
-      "text": [
-       235,
-       235,
-       235
-      ]
-     },
-     "entries": [
-      {
-       "lines": [
-        [
-         8,
-         822,
-         "[1] Detector"
-        ]
-       ],
-       "n": 1,
-       "text": "[1] Detector"
-      }
-     ],
-     "font": "5x7+descenders@2",
-     "separator": [
-      0,
-      813,
-      314,
-      1
-     ]
+    "font": {
+     "digitEmPx": 15,
+     "emPx": 16,
+     "path": "samples/manual/font/mplus-rounded-1c-bold.glyphs.json",
+     "sha256": "50f700764a8a99b64e0b2f56822f556552a4f3f3a019c6abaa8ce272ed956d62"
     },
-    "overlay": "rectangles+numbered-badges+legend-v3",
+    "imageAt": [
+     0,
+     0
+    ],
+    "labels": [
+     {
+      "box": [
+       88,
+       75,
+       100,
+       24
+      ],
+      "candidate": "left-2down",
+      "inkUnder": 0,
+      "join": [
+       [
+        188,
+        87
+       ],
+       [
+        206,
+        87
+       ],
+       [
+        206,
+        51
+       ]
+      ],
+      "lines": [
+       "Detector"
+      ],
+      "n": 1,
+      "nearerAnotherMark": false,
+      "text": "Detector"
+     }
+    ],
+    "margins": {
+     "bottom": 0,
+     "left": 0,
+     "right": 0
+    },
+    "overlay": "rectangles+labels-beside-v4",
     "size": [
      314,
-     848
+     813
     ]
    },
    "path": "figures/1.2-5.png",
-   "pixelSha256": "55c50afc75be77ee87195fa761a699793da2a53507b114b69fb7622d4d323945",
-   "resultSha256": "d9f6d2e05518992e0665ea31b505acb99b1b2b43960bd3e318abfaf674daa0f6",
+   "pixelSha256": "e3834a36e5f2bf2e632ac2591e1c2417ec6dcfad7abe1b6e631d32197a56bed9",
+   "resultSha256": "d839054eb051ac36cea43185e99fc3e7bd304f99ae4b59d9a90c15d050e5d2e0",
    "runId": "20261014-202044-2dbf58",
    "source": "captures/1.2-5.png",
    "sourceSha256": "ca15b38bc336c744820fb24a23fccd3c3319b7c2cd1eabc0314948c9c5f72a17",
@@ -774,48 +653,6 @@
    "flags": [],
    "marksSha256": "001d77cf296539f5a30c4a179ccfb2be6c62e5d4031688575ac21b9bb05e0a15",
    "operation": {
-    "badges": [
-     {
-      "at": [
-       85,
-       188
-      ],
-      "n": 1,
-      "side": "left"
-     },
-     {
-      "at": [
-       85,
-       226
-      ],
-      "n": 2,
-      "side": "left"
-     },
-     {
-      "at": [
-       85,
-       262
-      ],
-      "n": 3,
-      "side": "left"
-     },
-     {
-      "at": [
-       85,
-       298
-      ],
-      "n": 4,
-      "side": "left"
-     },
-     {
-      "at": [
-       85,
-       337
-      ],
-      "n": 5,
-      "side": "left"
-     }
-    ],
     "crop": [
      5,
      53,
@@ -823,109 +660,162 @@
      813
     ],
     "cropRule": "panel-edges",
-    "legend": {
-     "box": [
-      0,
-      813,
-      314,
-      79
-     ],
-     "colours": {
-      "background": [
-       18,
-       22,
-       25
-      ],
-      "separator": [
-       72,
-       75,
-       77
-      ],
-      "tag": [
-       200,
-       30,
-       30
-      ],
-      "text": [
-       235,
-       235,
-       235
-      ]
-     },
-     "entries": [
-      {
-       "lines": [
-        [
-         8,
-         822,
-         "[1] Isotope"
-        ]
-       ],
-       "n": 1,
-       "text": "[1] Isotope"
-      },
-      {
-       "lines": [
-        [
-         164,
-         822,
-         "[2] X"
-        ]
-       ],
-       "n": 2,
-       "text": "[2] X"
-      },
-      {
-       "lines": [
-        [
-         248,
-         822,
-         "[3] Y"
-        ]
-       ],
-       "n": 3,
-       "text": "[3] Y"
-      },
-      {
-       "lines": [
-        [
-         8,
-         844,
-         "[4] Distance"
-        ]
-       ],
-       "n": 4,
-       "text": "[4] Distance"
-      },
-      {
-       "lines": [
-        [
-         8,
-         866,
-         "[5] Activity"
-        ]
-       ],
-       "n": 5,
-       "text": "[5] Activity"
-      }
-     ],
-     "font": "5x7+descenders@2",
-     "separator": [
-      0,
-      813,
-      314,
-      1
-     ]
+    "font": {
+     "digitEmPx": 15,
+     "emPx": 16,
+     "path": "samples/manual/font/mplus-rounded-1c-bold.glyphs.json",
+     "sha256": "50f700764a8a99b64e0b2f56822f556552a4f3f3a019c6abaa8ce272ed956d62"
     },
-    "overlay": "rectangles+numbered-badges+legend-v3",
+    "imageAt": [
+     0,
+     0
+    ],
+    "labels": [
+     {
+      "box": [
+       324,
+       189,
+       89,
+       24
+      ],
+      "candidate": "margin-right",
+      "inkUnder": 0,
+      "join": [
+       [
+        284,
+        201
+       ],
+       [
+        324,
+        201
+       ]
+      ],
+      "lines": [
+       "Isotope"
+      ],
+      "n": 1,
+      "nearerAnotherMark": false,
+      "text": "Isotope"
+     },
+     {
+      "box": [
+       324,
+       225,
+       40,
+       24
+      ],
+      "candidate": "margin-right",
+      "inkUnder": 0,
+      "join": [
+       [
+        284,
+        237
+       ],
+       [
+        324,
+        237
+       ]
+      ],
+      "lines": [
+       "X"
+      ],
+      "n": 2,
+      "nearerAnotherMark": false,
+      "text": "X"
+     },
+     {
+      "box": [
+       324,
+       261,
+       40,
+       24
+      ],
+      "candidate": "margin-right",
+      "inkUnder": 0,
+      "join": [
+       [
+        284,
+        273
+       ],
+       [
+        324,
+        273
+       ]
+      ],
+      "lines": [
+       "Y"
+      ],
+      "n": 3,
+      "nearerAnotherMark": false,
+      "text": "Y"
+     },
+     {
+      "box": [
+       324,
+       297,
+       98,
+       24
+      ],
+      "candidate": "margin-right",
+      "inkUnder": 0,
+      "join": [
+       [
+        284,
+        309
+       ],
+       [
+        324,
+        309
+       ]
+      ],
+      "lines": [
+       "Distance"
+      ],
+      "n": 4,
+      "nearerAnotherMark": false,
+      "text": "Distance"
+     },
+     {
+      "box": [
+       324,
+       333,
+       93,
+       24
+      ],
+      "candidate": "margin-right",
+      "inkUnder": 0,
+      "join": [
+       [
+        284,
+        345
+       ],
+       [
+        324,
+        345
+       ]
+      ],
+      "lines": [
+       "Activity"
+      ],
+      "n": 5,
+      "nearerAnotherMark": false,
+      "text": "Activity"
+     }
+    ],
+    "margins": {
+     "bottom": 0,
+     "left": 0,
+     "right": 116
+    },
+    "overlay": "rectangles+labels-beside-v4",
     "size": [
-     314,
-     892
+     430,
+     813
     ]
    },
    "path": "figures/2.1-1.png",
-   "pixelSha256": "859abc4d9083467058493b3241dea1b0360eeb42e2ba8add4fa70cbd90cb7312",
-   "resultSha256": "55c6ff04dc6b98b7e5cf612d3467fbdd2bd3196075aaafdb47bfb6a317fa3635",
+   "pixelSha256": "8721e90e12563b5b37a544419a19f2bf19a5aac4b167119ad7d8ef9e7df0ddf2",
+   "resultSha256": "cb49c14fca8f2dff208b9c1282865b46ae66fa2282fe0caabe41b7b3b86973a1",
    "runId": "20261014-202059-544edf",
    "source": "captures/2.1-1.png",
    "sourceSha256": "c24740fd306d2cf979ad0eb19e51e864f1d014d62978c060006eb7c25b16b297",
@@ -937,32 +827,6 @@
    "flags": [],
    "marksSha256": "37e32072ffc006ab1f165db583f594c822b86ff259fdfac6583623d53ef9f7ff",
    "operation": {
-    "badges": [
-     {
-      "at": [
-       85,
-       216
-      ],
-      "n": 1,
-      "side": "left"
-     },
-     {
-      "at": [
-       85,
-       257
-      ],
-      "n": 2,
-      "side": "left"
-     },
-     {
-      "at": [
-       85,
-       362
-      ],
-      "n": 3,
-      "side": "left"
-     }
-    ],
     "crop": [
      5,
      53,
@@ -970,87 +834,83 @@
      813
     ],
     "cropRule": "panel-edges",
-    "legend": {
-     "box": [
-      0,
-      813,
-      314,
-      57
-     ],
-     "colours": {
-      "background": [
-       18,
-       22,
-       25
-      ],
-      "separator": [
-       72,
-       75,
-       77
-      ],
-      "tag": [
-       200,
-       30,
-       30
-      ],
-      "text": [
-       235,
-       235,
-       235
-      ]
-     },
-     "entries": [
-      {
-       "lines": [
-        [
-         8,
-         822,
-         "[1] Isotope"
-        ]
-       ],
-       "n": 1,
-       "text": "[1] Isotope"
-      },
-      {
-       "lines": [
-        [
-         164,
-         822,
-         "[2] X"
-        ]
-       ],
-       "n": 2,
-       "text": "[2] X"
-      },
-      {
-       "lines": [
-        [
-         8,
-         844,
-         "[3] Activity"
-        ]
-       ],
-       "n": 3,
-       "text": "[3] Activity"
-      }
-     ],
-     "font": "5x7+descenders@2",
-     "separator": [
-      0,
-      813,
-      314,
-      1
-     ]
+    "font": {
+     "digitEmPx": 15,
+     "emPx": 16,
+     "path": "samples/manual/font/mplus-rounded-1c-bold.glyphs.json",
+     "sha256": "50f700764a8a99b64e0b2f56822f556552a4f3f3a019c6abaa8ce272ed956d62"
     },
-    "overlay": "rectangles+numbered-badges+legend-v3",
+    "imageAt": [
+     0,
+     0
+    ],
+    "labels": [
+     {
+      "box": [
+       195,
+       186,
+       89,
+       24
+      ],
+      "candidate": "above-right",
+      "inkUnder": 0,
+      "join": null,
+      "lines": [
+       "Isotope"
+      ],
+      "n": 1,
+      "nearerAnotherMark": false,
+      "text": "Isotope"
+     },
+     {
+      "box": [
+       59,
+       253,
+       40,
+       24
+      ],
+      "candidate": "left",
+      "inkUnder": 0,
+      "join": null,
+      "lines": [
+       "X"
+      ],
+      "n": 2,
+      "nearerAnotherMark": false,
+      "text": "X"
+     },
+     {
+      "box": [
+       102,
+       392,
+       93,
+       24
+      ],
+      "candidate": "below-left",
+      "inkUnder": 0,
+      "join": null,
+      "lines": [
+       "Activity"
+      ],
+      "n": 3,
+      "nearerAnotherMark": false,
+      "text": "Activity"
+     }
+    ],
+    "margins": {
+     "bottom": 0,
+     "left": 0,
+     "right": 0
+    },
+    "overlay": "rectangles+labels-beside-v4",
     "size": [
      314,
-     870
+     813
     ]
    },
    "path": "figures/2.1-2.png",
-   "pixelSha256": "13f66bb9f63e4d3d50fa407d828f5c78074e145bb6602f20925b9e5410222a29",
-   "resultSha256": "ccc0e66e2de0abf34e24dd6c7fc78adccf648d291e4ee86cfc0a53495ac0c254",
+   "pixelSha256": "aad2fe6a511b31c178e7be7e882ce0e63c02cb5828dd2c0dc80fc558fe52b0d0",
+   "resultSha256": "0bfcecac37675bcdfb51085fb81262a19d831c74725d77fd0ec9ae8223c31a01",
    "runId": "20261014-202059-544edf",
    "source": "captures/2.1-2.png",
    "sourceSha256": "99afd7ee56842130cb4ffbff90fe67def8ea752517e79c01f8c69b46202319fa",
@@ -1062,24 +922,6 @@
    "flags": [],
    "marksSha256": "c8cb49fcdeeb7e573905758d73faa8bbeb9e3e6b40317315de6d098d116d114b",
    "operation": {
-    "badges": [
-     {
-      "at": [
-       85,
-       226
-      ],
-      "n": 1,
-      "side": "left"
-     },
-     {
-      "at": [
-       85,
-       334
-      ],
-      "n": 2,
-      "side": "left"
-     }
-    ],
     "crop": [
      5,
      53,
@@ -1087,76 +929,66 @@
      813
     ],
     "cropRule": "panel-edges",
-    "legend": {
-     "box": [
-      0,
-      813,
-      314,
-      35
-     ],
-     "colours": {
-      "background": [
-       18,
-       22,
-       25
-      ],
-      "separator": [
-       72,
-       75,
-       77
-      ],
-      "tag": [
-       200,
-       30,
-       30
-      ],
-      "text": [
-       235,
-       235,
-       235
-      ]
-     },
-     "entries": [
-      {
-       "lines": [
-        [
-         8,
-         822,
-         "[1] X"
-        ]
-       ],
-       "n": 1,
-       "text": "[1] X"
-      },
-      {
-       "lines": [
-        [
-         92,
-         822,
-         "[2] Activity"
-        ]
-       ],
-       "n": 2,
-       "text": "[2] Activity"
-      }
-     ],
-     "font": "5x7+descenders@2",
-     "separator": [
-      0,
-      813,
-      314,
-      1
-     ]
+    "font": {
+     "digitEmPx": 15,
+     "emPx": 16,
+     "path": "samples/manual/font/mplus-rounded-1c-bold.glyphs.json",
+     "sha256": "50f700764a8a99b64e0b2f56822f556552a4f3f3a019c6abaa8ce272ed956d62"
     },
-    "overlay": "rectangles+numbered-badges+legend-v3",
+    "imageAt": [
+     0,
+     0
+    ],
+    "labels": [
+     {
+      "box": [
+       59,
+       225,
+       40,
+       24
+      ],
+      "candidate": "left",
+      "inkUnder": 0,
+      "join": null,
+      "lines": [
+       "X"
+      ],
+      "n": 1,
+      "nearerAnotherMark": false,
+      "text": "X"
+     },
+     {
+      "box": [
+       102,
+       364,
+       93,
+       24
+      ],
+      "candidate": "below-left",
+      "inkUnder": 0,
+      "join": null,
+      "lines": [
+       "Activity"
+      ],
+      "n": 2,
+      "nearerAnotherMark": false,
+      "text": "Activity"
+     }
+    ],
+    "margins": {
+     "bottom": 0,
+     "left": 0,
+     "right": 0
+    },
+    "overlay": "rectangles+labels-beside-v4",
     "size": [
      314,
-     848
+     813
     ]
    },
    "path": "figures/2.1-3.png",
-   "pixelSha256": "e48f139676d997acf973d451827df5174f74385d9419c21c8b71e141700acde4",
-   "resultSha256": "26764f2232d7381a145b826bdec89f746a00b55c4796af62a59c7e6ca9900962",
+   "pixelSha256": "40d5a3848ff249b76ab4507619a2698639395bd047ac2d62bcacfa94b6e26c3a",
+   "resultSha256": "8eca17edb1b866aa9f47d83cb6c30d777f193a7a87a8097ccced93d12cca624c",
    "runId": "20261014-202059-544edf",
    "source": "captures/2.1-3.png",
    "sourceSha256": "a1770eea6afc2caa291327147c27e1a7276e6a2b962be024e9da033fd2ec3b84",
@@ -1168,56 +1000,6 @@
    "flags": [],
    "marksSha256": "e7bf00f8921863cd8d8a6e32ce3d9527a002d2e294affe9eea90b4f27a9397b1",
    "operation": {
-    "badges": [
-     {
-      "at": [
-       85,
-       99
-      ],
-      "n": 1,
-      "side": "left"
-     },
-     {
-      "at": [
-       85,
-       137
-      ],
-      "n": 2,
-      "side": "left"
-     },
-     {
-      "at": [
-       85,
-       173
-      ],
-      "n": 3,
-      "side": "left"
-     },
-     {
-      "at": [
-       286,
-       209
-      ],
-      "n": 4,
-      "side": "right"
-     },
-     {
-      "at": [
-       85,
-       245
-      ],
-      "n": 5,
-      "side": "left"
-     },
-     {
-      "at": [
-       85,
-       284
-      ],
-      "n": 6,
-      "side": "left"
-     }
-    ],
     "crop": [
      5,
      53,
@@ -1225,120 +1007,188 @@
      813
     ],
     "cropRule": "panel-edges",
-    "legend": {
-     "box": [
-      0,
-      813,
-      314,
-      145
-     ],
-     "colours": {
-      "background": [
-       18,
-       22,
-       25
-      ],
-      "separator": [
-       72,
-       75,
-       77
-      ],
-      "tag": [
-       200,
-       30,
-       30
-      ],
-      "text": [
-       235,
-       235,
-       235
-      ]
-     },
-     "entries": [
-      {
-       "lines": [
-        [
-         8,
-         822,
-         "[1] Preset"
-        ]
-       ],
-       "n": 1,
-       "text": "[1] Preset"
-      },
-      {
-       "lines": [
-        [
-         8,
-         844,
-         "[2] Prime rank"
-        ]
-       ],
-       "n": 2,
-       "text": "[2] Prime rank"
-      },
-      {
-       "lines": [
-        [
-         8,
-         866,
-         "[3] Cell pitch"
-        ]
-       ],
-       "n": 3,
-       "text": "[3] Cell pitch"
-      },
-      {
-       "lines": [
-        [
-         8,
-         888,
-         "[4] Mask–detector"
-        ]
-       ],
-       "n": 4,
-       "text": "[4] Mask–detector"
-      },
-      {
-       "lines": [
-        [
-         8,
-         910,
-         "[5] Pixels / side"
-        ]
-       ],
-       "n": 5,
-       "text": "[5] Pixels / side"
-      },
-      {
-       "lines": [
-        [
-         8,
-         932,
-         "[6] Pixel pitch"
-        ]
-       ],
-       "n": 6,
-       "text": "[6] Pixel pitch"
-      }
-     ],
-     "font": "5x7+descenders@2",
-     "separator": [
-      0,
-      813,
-      314,
-      1
-     ]
+    "font": {
+     "digitEmPx": 15,
+     "emPx": 16,
+     "path": "samples/manual/font/mplus-rounded-1c-bold.glyphs.json",
+     "sha256": "50f700764a8a99b64e0b2f56822f556552a4f3f3a019c6abaa8ce272ed956d62"
     },
-    "overlay": "rectangles+numbered-badges+legend-v3",
+    "imageAt": [
+     0,
+     0
+    ],
+    "labels": [
+     {
+      "box": [
+       324,
+       100,
+       81,
+       24
+      ],
+      "candidate": "margin-right",
+      "inkUnder": 0,
+      "join": [
+       [
+        284,
+        112
+       ],
+       [
+        324,
+        112
+       ]
+      ],
+      "lines": [
+       "Preset"
+      ],
+      "n": 1,
+      "nearerAnotherMark": false,
+      "text": "Preset"
+     },
+     {
+      "box": [
+       324,
+       136,
+       114,
+       24
+      ],
+      "candidate": "margin-right",
+      "inkUnder": 0,
+      "join": [
+       [
+        284,
+        148
+       ],
+       [
+        324,
+        148
+       ]
+      ],
+      "lines": [
+       "Prime rank"
+      ],
+      "n": 2,
+      "nearerAnotherMark": false,
+      "text": "Prime rank"
+     },
+     {
+      "box": [
+       324,
+       172,
+       105,
+       24
+      ],
+      "candidate": "margin-right",
+      "inkUnder": 0,
+      "join": [
+       [
+        284,
+        184
+       ],
+       [
+        324,
+        184
+       ]
+      ],
+      "lines": [
+       "Cell pitch"
+      ],
+      "n": 3,
+      "nearerAnotherMark": false,
+      "text": "Cell pitch"
+     },
+     {
+      "box": [
+       324,
+       208,
+       146,
+       24
+      ],
+      "candidate": "margin-right",
+      "inkUnder": 0,
+      "join": [
+       [
+        284,
+        220
+       ],
+       [
+        324,
+        220
+       ]
+      ],
+      "lines": [
+       "Mask–detector"
+      ],
+      "n": 4,
+      "nearerAnotherMark": false,
+      "text": "Mask–detector"
+     },
+     {
+      "box": [
+       324,
+       244,
+       125,
+       24
+      ],
+      "candidate": "margin-right",
+      "inkUnder": 0,
+      "join": [
+       [
+        284,
+        256
+       ],
+       [
+        324,
+        256
+       ]
+      ],
+      "lines": [
+       "Pixels / side"
+      ],
+      "n": 5,
+      "nearerAnotherMark": false,
+      "text": "Pixels / side"
+     },
+     {
+      "box": [
+       324,
+       280,
+       113,
+       24
+      ],
+      "candidate": "margin-right",
+      "inkUnder": 0,
+      "join": [
+       [
+        284,
+        292
+       ],
+       [
+        324,
+        292
+       ]
+      ],
+      "lines": [
+       "Pixel pitch"
+      ],
+      "n": 6,
+      "nearerAnotherMark": false,
+      "text": "Pixel pitch"
+     }
+    ],
+    "margins": {
+     "bottom": 0,
+     "left": 0,
+     "right": 164
+    },
+    "overlay": "rectangles+labels-beside-v4",
     "size": [
-     314,
-     958
+     478,
+     813
     ]
    },
    "path": "figures/2.2-1.png",
-   "pixelSha256": "bb4159c4b866b9e2e2254b41cc98f8c75564a0165449b57b21aa528c0ae1d5f2",
-   "resultSha256": "1e8ac4e37a8be832fdec9598c57bfda2aaa8e6ab3434e76d8ad5e3cf0ebaa636",
+   "pixelSha256": "12455ee8553d13f3afb7284f7dd3eb2e77e1429e9c2168b57179a51df7f4143a",
+   "resultSha256": "0e0984df80182719ff2948fe375d6233d764b29cd3e1698a589d4c69dc2c5a2f",
    "runId": "20261014-202201-b1fbf6",
    "source": "captures/2.2-1.png",
    "sourceSha256": "7016e80a5deac5efcc01584425a8c9c27ec52f436cc99023c049d3c86e5ccfff",
@@ -1350,101 +1200,96 @@
    "flags": [],
    "marksSha256": "2f60c84d3c34d3a5cf2525e10109a69dc1aa377339a374dbfb63a19ebf694891",
    "operation": {
-    "badges": [
-     {
-      "at": [
-       6,
-       60
-      ],
-      "n": 1,
-      "side": "left"
-     },
-     {
-      "at": [
-       809,
-       53
-      ],
-      "n": 2,
-      "side": "left"
-     }
-    ],
     "crop": [
-     313,
+     317,
      53,
-     1122,
+     1118,
      813
     ],
     "cropRule": "panel-edges",
-    "legend": {
-     "box": [
-      0,
-      813,
-      1122,
-      35
-     ],
-     "colours": {
-      "background": [
-       18,
-       22,
-       25
-      ],
-      "separator": [
-       72,
-       75,
-       77
-      ],
-      "tag": [
-       200,
-       30,
-       30
-      ],
-      "text": [
-       235,
-       235,
-       235
-      ]
-     },
-     "entries": [
-      {
-       "lines": [
-        [
-         8,
-         822,
-         "[1] Face"
-        ]
-       ],
-       "n": 1,
-       "text": "[1] Face"
-      },
-      {
-       "lines": [
-        [
-         128,
-         822,
-         "[2] Settings for the next acquisition"
-        ]
-       ],
-       "n": 2,
-       "text": "[2] Settings for the next acquisition"
-      }
-     ],
-     "font": "5x7+descenders@2",
-     "separator": [
-      0,
-      813,
-      1122,
-      1
-     ]
+    "font": {
+     "digitEmPx": 15,
+     "emPx": 16,
+     "path": "samples/manual/font/mplus-rounded-1c-bold.glyphs.json",
+     "sha256": "50f700764a8a99b64e0b2f56822f556552a4f3f3a019c6abaa8ce272ed956d62"
     },
-    "overlay": "rectangles+numbered-badges+legend-v3",
+    "imageAt": [
+     0,
+     0
+    ],
+    "labels": [
+     {
+      "box": [
+       188,
+       7,
+       65,
+       24
+      ],
+      "candidate": "right-2up",
+      "inkUnder": 1,
+      "join": [
+       [
+        199,
+        31
+       ],
+       [
+        199,
+        71
+       ],
+       [
+        176,
+        71
+       ]
+      ],
+      "lines": [
+       "Face"
+      ],
+      "n": 1,
+      "nearerAnotherMark": false,
+      "text": "Face"
+     },
+     {
+      "box": [
+       1128,
+       51,
+       198,
+       44
+      ],
+      "candidate": "margin-right",
+      "inkUnder": 0,
+      "join": [
+       [
+        1088,
+        63
+       ],
+       [
+        1128,
+        63
+       ]
+      ],
+      "lines": [
+       "Settings for the next",
+       "acquisition"
+      ],
+      "n": 2,
+      "nearerAnotherMark": false,
+      "text": "Settings for the next acquisition"
+     }
+    ],
+    "margins": {
+     "bottom": 0,
+     "left": 0,
+     "right": 216
+    },
+    "overlay": "rectangles+labels-beside-v4",
     "size": [
-     1122,
-     848
+     1334,
+     813
     ]
    },
    "path": "figures/2.2-2.png",
-   "pixelSha256": "b0dee4a05e8e36bdd98bf0f3c66e1909d9aa8cc383283f91fdf2220e0e5ed628",
-   "resultSha256": "0853341418756d86888b645494c4bd594fbbcd078af10e38767a40730dd51d78",
+   "pixelSha256": "6d24f235c01cc2125b9676b6c6ffdd9819dfe3eb42bca3336ec6dea7bee024ac",
+   "resultSha256": "93c3ce89860866701a7a17fab7ed80f85a8abb0342e45a6603f327f713711dea",
    "runId": "20261014-202201-b1fbf6",
    "source": "captures/2.2-2.png",
    "sourceSha256": "07950bbf16d31b9667e1ab9d2eb87dd93310b340cf4546c998c4076dab4b8bf5",
@@ -1456,32 +1301,6 @@
    "flags": [],
    "marksSha256": "f24c484e72b30752de51b8ff98b5e51d9b80455146d6ec45bdad1d5f8cbb4ae3",
    "operation": {
-    "badges": [
-     {
-      "at": [
-       90,
-       245
-      ],
-      "n": 1,
-      "side": "left"
-     },
-     {
-      "at": [
-       6,
-       326
-      ],
-      "n": 2,
-      "side": "left"
-     },
-     {
-      "at": [
-       30,
-       800
-      ],
-      "n": 3,
-      "side": "above"
-     }
-    ],
     "crop": [
      0,
      53,
@@ -1489,87 +1308,95 @@
      847
     ],
     "cropRule": "panel-edges",
-    "legend": {
-     "box": [
-      0,
-      847,
-      1440,
-      57
-     ],
-     "colours": {
-      "background": [
-       18,
-       22,
-       25
-      ],
-      "separator": [
-       72,
-       75,
-       77
-      ],
-      "tag": [
-       200,
-       30,
-       30
-      ],
-      "text": [
-       235,
-       235,
-       235
-      ]
-     },
-     "entries": [
-      {
-       "lines": [
-        [
-         8,
-         856,
-         "[1] Pixels / side"
-        ]
-       ],
-       "n": 1,
-       "text": "[1] Pixels / side"
-      },
-      {
-       "lines": [
-        [
-         236,
-         856,
-         "[2] Detector pixels must be an integer from 4 to 64."
-        ]
-       ],
-       "n": 2,
-       "text": "[2] Detector pixels must be an integer from 4 to 64."
-      },
-      {
-       "lines": [
-        [
-         8,
-         878,
-         "[3] Start refused: Detector pixels must be an integer from 4 to 64."
-        ]
-       ],
-       "n": 3,
-       "text": "[3] Start refused: Detector pixels must be an integer from 4 to 64."
-      }
-     ],
-     "font": "5x7+descenders@2",
-     "separator": [
-      0,
-      847,
-      1440,
-      1
-     ]
+    "font": {
+     "digitEmPx": 15,
+     "emPx": 16,
+     "path": "samples/manual/font/mplus-rounded-1c-bold.glyphs.json",
+     "sha256": "50f700764a8a99b64e0b2f56822f556552a4f3f3a019c6abaa8ce272ed956d62"
     },
-    "overlay": "rectangles+numbered-badges+legend-v3",
+    "imageAt": [
+     0,
+     0
+    ],
+    "labels": [
+     {
+      "box": [
+       292,
+       244,
+       88,
+       44
+      ],
+      "candidate": "right/wrap12",
+      "inkUnder": 0,
+      "join": null,
+      "lines": [
+       "Pixels /",
+       "side"
+      ],
+      "n": 1,
+      "nearerAnotherMark": false,
+      "text": "Pixels / side"
+     },
+     {
+      "box": [
+       23,
+       349,
+       240,
+       44
+      ],
+      "candidate": "below-left",
+      "inkUnder": 0,
+      "join": null,
+      "lines": [
+       "Detector pixels must be an",
+       "integer from 4 to 64."
+      ],
+      "n": 2,
+      "nearerAnotherMark": false,
+      "text": "Detector pixels must be an integer from 4 to 64."
+     },
+     {
+      "box": [
+       856,
+       795,
+       288,
+       44
+      ],
+      "candidate": "right-1up",
+      "inkUnder": 1,
+      "join": [
+       [
+        856,
+        831
+       ],
+       [
+        844,
+        831
+       ]
+      ],
+      "lines": [
+       "Start refused: Detector pixels",
+       "must be an integer from 4 to 64."
+      ],
+      "n": 3,
+      "nearerAnotherMark": false,
+      "text": "Start refused: Detector pixels must be an integer from 4 to 64."
+     }
+    ],
+    "margins": {
+     "bottom": 0,
+     "left": 0,
+     "right": 0
+    },
+    "overlay": "rectangles+labels-beside-v4",
     "size": [
      1440,
-     904
+     847
     ]
    },
    "path": "figures/2.2-3.png",
-   "pixelSha256": "e54988dbc7b12e844c41d1293cefb2185a3689eb8939e065aa2a13e417d23083",
-   "resultSha256": "cb73b37d26731446c17632a82b17b29f30e63011da8462bdaf43c4c83beb14b7",
+   "pixelSha256": "8bd358ed491e32afc18d1b8905188b4c7810ea2e9135be26382477b8ccf2d6ce",
+   "resultSha256": "42a891cc57fa927f5a0455063015bc5323746d6827e18c2b556e2f8fd042e530",
    "runId": "20261014-202201-b1fbf6",
    "source": "captures/2.2-3.png",
    "sourceSha256": "c7f949b28e019bd9745059db14a6d3afb64231042962063070184e32ba074997",
@@ -1581,16 +1408,6 @@
    "flags": [],
    "marksSha256": "72907e3af3d12f4fec7173b047490088e56fcc4b621293309534762d3be0ccc3",
    "operation": {
-    "badges": [
-     {
-      "at": [
-       1039,
-       13
-      ],
-      "n": 1,
-      "side": "left"
-     }
-    ],
     "crop": [
      0,
      0,
@@ -1598,65 +1415,58 @@
      55
     ],
     "cropRule": "panel-edges",
-    "legend": {
-     "box": [
-      0,
-      55,
-      1440,
-      35
-     ],
-     "colours": {
-      "background": [
-       18,
-       22,
-       25
-      ],
-      "separator": [
-       72,
-       75,
-       77
-      ],
-      "tag": [
-       200,
-       30,
-       30
-      ],
-      "text": [
-       235,
-       235,
-       235
-      ]
-     },
-     "entries": [
-      {
-       "lines": [
-        [
-         8,
-         64,
-         "[1] Stop"
-        ]
-       ],
-       "n": 1,
-       "text": "[1] Stop"
-      }
-     ],
-     "font": "5x7+descenders@2",
-     "separator": [
-      0,
-      55,
-      1440,
-      1
-     ]
+    "font": {
+     "digitEmPx": 15,
+     "emPx": 16,
+     "path": "samples/manual/font/mplus-rounded-1c-bold.glyphs.json",
+     "sha256": "50f700764a8a99b64e0b2f56822f556552a4f3f3a019c6abaa8ce272ed956d62"
     },
-    "overlay": "rectangles+numbered-badges+legend-v3",
+    "imageAt": [
+     0,
+     0
+    ],
+    "labels": [
+     {
+      "box": [
+       1057,
+       61,
+       66,
+       24
+      ],
+      "candidate": "margin-bottom",
+      "inkUnder": 0,
+      "join": [
+       [
+        1068,
+        40
+       ],
+       [
+        1068,
+        61
+       ]
+      ],
+      "lines": [
+       "Stop"
+      ],
+      "n": 1,
+      "nearerAnotherMark": false,
+      "text": "Stop"
+     }
+    ],
+    "margins": {
+     "bottom": 36,
+     "left": 0,
+     "right": 0
+    },
+    "overlay": "rectangles+labels-beside-v4",
     "size": [
      1440,
-     90
+     91
     ]
    },
    "path": "figures/2.4-1.png",
-   "pixelSha256": "2bc56dbc16376adb06386bf617db54481baeac0011dc30d230606d8892da0523",
-   "resultSha256": "7cee1e0ebf16385632bab7ad1a889008cb49cfa47d1acb100c20f1b9cebcf689",
+   "pixelSha256": "c6c751249a92f4da09359f090b3cd775021ca2719cb576edebba7a5630d04741",
+   "resultSha256": "fb45a3383f19ba71fb0b3bc1345eb2429f0fd6e84693f0c8e59278a3c34d74c3",
    "runId": "20261014-202133-886f72",
    "source": "captures/2.4-1.png",
    "sourceSha256": "83fa3ead146fcca598c00c02170f23d20bb130154773bead6548433aee950497",
@@ -1668,24 +1478,6 @@
    "flags": [],
    "marksSha256": "23945683af5c849ada4c61038c08de1b127ca83891d63e58edc7f745334ee391",
    "operation": {
-    "badges": [
-     {
-      "at": [
-       1029,
-       42
-      ],
-      "n": 1,
-      "side": "below"
-     },
-     {
-      "at": [
-       30,
-       853
-      ],
-      "n": 2,
-      "side": "above"
-     }
-    ],
     "crop": [
      0,
      0,
@@ -1693,76 +1485,67 @@
      900
     ],
     "cropRule": "full",
-    "legend": {
-     "box": [
-      0,
-      900,
-      1440,
-      35
-     ],
-     "colours": {
-      "background": [
-       18,
-       22,
-       25
-      ],
-      "separator": [
-       72,
-       75,
-       77
-      ],
-      "tag": [
-       200,
-       30,
-       30
-      ],
-      "text": [
-       235,
-       235,
-       235
-      ]
-     },
-     "entries": [
-      {
-       "lines": [
-        [
-         8,
-         909,
-         "[1] Continue"
-        ]
-       ],
-       "n": 1,
-       "text": "[1] Continue"
-      },
-      {
-       "lines": [
-        [
-         176,
-         909,
-         "[2] Stopped · t = 1.8 s of 600 s · 116 counts · 66 cps · seed 12345"
-        ]
-       ],
-       "n": 2,
-       "text": "[2] Stopped · t = 1.8 s of 600 s · 116 counts · 66 cps · seed 12345"
-      }
-     ],
-     "font": "5x7+descenders@2",
-     "separator": [
-      0,
-      900,
-      1440,
-      1
-     ]
+    "font": {
+     "digitEmPx": 15,
+     "emPx": 16,
+     "path": "samples/manual/font/mplus-rounded-1c-bold.glyphs.json",
+     "sha256": "50f700764a8a99b64e0b2f56822f556552a4f3f3a019c6abaa8ce272ed956d62"
     },
-    "overlay": "rectangles+numbered-badges+legend-v3",
+    "imageAt": [
+     0,
+     0
+    ],
+    "labels": [
+     {
+      "box": [
+       1120,
+       43,
+       100,
+       24
+      ],
+      "candidate": "below-slide+91",
+      "inkUnder": 0,
+      "join": null,
+      "lines": [
+       "Continue"
+      ],
+      "n": 1,
+      "nearerAnotherMark": false,
+      "text": "Continue"
+     },
+     {
+      "box": [
+       555,
+       829,
+       289,
+       44
+      ],
+      "candidate": "above-right",
+      "inkUnder": 0,
+      "join": null,
+      "lines": [
+       "Stopped · t = 1.8 s of 600 s ·",
+       "116 counts · 66 cps · seed 12345"
+      ],
+      "n": 2,
+      "nearerAnotherMark": false,
+      "text": "Stopped · t = 1.8 s of 600 s · 116 counts · 66 cps · seed 12345"
+     }
+    ],
+    "margins": {
+     "bottom": 0,
+     "left": 0,
+     "right": 0
+    },
+    "overlay": "rectangles+labels-beside-v4",
     "size": [
      1440,
-     935
+     900
     ]
    },
    "path": "figures/2.4-2.png",
-   "pixelSha256": "b9aae86d08096d59e6ada2a8aa76927c68e3c0fdfaa2504ebc4fc5ac5d7836ad",
-   "resultSha256": "83e896adc7ae85eb71d6c77b0a9a2f0f2bb34b649a34f59c63e9eb9109f7b264",
+   "pixelSha256": "60ebe3f8fc4fdacc12ee3790ba37141487226a8b8b859bcbe1dde2273d2e2120",
+   "resultSha256": "cd205720adc1ea6f30b14a148ba28e5e6d8ec11d58a603f3869fa893e97d7ca3",
    "runId": "20261014-202133-886f72",
    "source": "captures/2.4-2.png",
    "sourceSha256": "d4ab8ec380e51276d56bc7562fdbf25db89a2fb19ba8cf9cd96c7ea49c954e38",
@@ -1774,32 +1557,6 @@
    "flags": [],
    "marksSha256": "94037532b4f6bcff7c0e6cb98061a368258383e264ae0d5d998c4bb5b90d28f5",
    "operation": {
-    "badges": [
-     {
-      "at": [
-       157,
-       377
-      ],
-      "n": 1,
-      "side": "left"
-     },
-     {
-      "at": [
-       469,
-       424
-      ],
-      "n": 2,
-      "side": "left"
-     },
-     {
-      "at": [
-       634,
-       425
-      ],
-      "n": 3,
-      "side": "right"
-     }
-    ],
     "crop": [
      317,
      53,
@@ -1807,92 +1564,85 @@
      480
     ],
     "cropRule": "panel-edges",
-    "legend": {
-     "box": [
-      0,
-      480,
-      806,
-      79
-     ],
-     "colours": {
-      "background": [
-       7,
-       9,
-       10
-      ],
-      "separator": [
-       64,
-       65,
-       66
-      ],
-      "tag": [
-       200,
-       30,
-       30
-      ],
-      "text": [
-       235,
-       235,
-       235
-      ]
-     },
-     "entries": [
-      {
-       "lines": [
-        [
-         8,
-         489,
-         "[1] Discard the acquired data (2.0 live s, 127 counts)? Inputs"
-        ],
-        [
-         56,
-         511,
-         "unlock for the next acquisition."
-        ]
-       ],
-       "n": 1,
-       "text": "[1] Discard the acquired data (2.0 live s, 127 counts)? Inputs unlock for the next acquisition."
-      },
-      {
-       "lines": [
-        [
-         8,
-         533,
-         "[2] Cancel"
-        ]
-       ],
-       "n": 2,
-       "text": "[2] Cancel"
-      },
-      {
-       "lines": [
-        [
-         152,
-         533,
-         "[3] Discard"
-        ]
-       ],
-       "n": 3,
-       "text": "[3] Discard"
-      }
-     ],
-     "font": "5x7+descenders@2",
-     "separator": [
-      0,
-      480,
-      806,
-      1
-     ]
+    "font": {
+     "digitEmPx": 15,
+     "emPx": 16,
+     "path": "samples/manual/font/mplus-rounded-1c-bold.glyphs.json",
+     "sha256": "50f700764a8a99b64e0b2f56822f556552a4f3f3a019c6abaa8ce272ed956d62"
     },
-    "overlay": "rectangles+numbered-badges+legend-v3",
+    "imageAt": [
+     0,
+     0
+    ],
+    "labels": [
+     {
+      "box": [
+       174,
+       410,
+       279,
+       64
+      ],
+      "candidate": "below-left",
+      "inkUnder": 0,
+      "join": null,
+      "lines": [
+       "Discard the acquired data (2.0",
+       "live s, 127 counts)? Inputs",
+       "unlock for the next acquisition."
+      ],
+      "n": 1,
+      "nearerAnotherMark": false,
+      "text": "Discard the acquired data (2.0 live s, 127 counts)? Inputs unlock for the next acquisition."
+     },
+     {
+      "box": [
+       480,
+       454,
+       80,
+       24
+      ],
+      "candidate": "below-centre",
+      "inkUnder": 0,
+      "join": null,
+      "lines": [
+       "Cancel"
+      ],
+      "n": 2,
+      "nearerAnotherMark": false,
+      "text": "Cancel"
+     },
+     {
+      "box": [
+       571,
+       454,
+       89,
+       24
+      ],
+      "candidate": "below-slide+13",
+      "inkUnder": 8,
+      "join": null,
+      "lines": [
+       "Discard"
+      ],
+      "n": 3,
+      "nearerAnotherMark": false,
+      "text": "Discard"
+     }
+    ],
+    "margins": {
+     "bottom": 0,
+     "left": 0,
+     "right": 0
+    },
+    "overlay": "rectangles+labels-beside-v4",
     "size": [
      806,
-     559
+     480
     ]
    },
    "path": "figures/2.4-3.png",
-   "pixelSha256": "8180e75802672ef4e9e3bae49f2e2cfdc160d160721b445b5c6b692e725c2205",
-   "resultSha256": "627a28f889ea53616ecaa07b0fd6d9bcbbeeb551eaa8a6550d95871a36f64d71",
+   "pixelSha256": "398fb421fdbbab3c18d1a9f81a32446db43ab962b687f3de445a26d59eb82d8f",
+   "resultSha256": "34793e0f94706384655e6c97da5d90a6495f5dd4db459defe932a401cf4aac2e",
    "runId": "20261014-202133-886f72",
    "source": "captures/2.4-3.png",
    "sourceSha256": "d5dc354ca5fd173657e3e69fb2e0312b9d49097cc0ff54b87fb29436c295d5e6",
@@ -1904,24 +1654,6 @@
    "flags": [],
    "marksSha256": "e32b90a0f712031aa06b90238944d9d375250a0d3d33d9282e644e052896aca9",
    "operation": {
-    "badges": [
-     {
-      "at": [
-       1142,
-       13
-      ],
-      "n": 1,
-      "side": "right"
-     },
-     {
-      "at": [
-       30,
-       853
-      ],
-      "n": 2,
-      "side": "above"
-     }
-    ],
     "crop": [
      0,
      0,
@@ -1929,76 +1661,66 @@
      900
     ],
     "cropRule": "full",
-    "legend": {
-     "box": [
-      0,
-      900,
-      1440,
-      35
-     ],
-     "colours": {
-      "background": [
-       18,
-       22,
-       25
-      ],
-      "separator": [
-       72,
-       75,
-       77
-      ],
-      "tag": [
-       200,
-       30,
-       30
-      ],
-      "text": [
-       235,
-       235,
-       235
-      ]
-     },
-     "entries": [
-      {
-       "lines": [
-        [
-         8,
-         909,
-         "[1] Start"
-        ]
-       ],
-       "n": 1,
-       "text": "[1] Start"
-      },
-      {
-       "lines": [
-        [
-         140,
-         909,
-         "[2] Ready"
-        ]
-       ],
-       "n": 2,
-       "text": "[2] Ready"
-      }
-     ],
-     "font": "5x7+descenders@2",
-     "separator": [
-      0,
-      900,
-      1440,
-      1
-     ]
+    "font": {
+     "digitEmPx": 15,
+     "emPx": 16,
+     "path": "samples/manual/font/mplus-rounded-1c-bold.glyphs.json",
+     "sha256": "50f700764a8a99b64e0b2f56822f556552a4f3f3a019c6abaa8ce272ed956d62"
     },
-    "overlay": "rectangles+numbered-badges+legend-v3",
+    "imageAt": [
+     0,
+     0
+    ],
+    "labels": [
+     {
+      "box": [
+       1122,
+       43,
+       72,
+       24
+      ],
+      "candidate": "below-slide+67",
+      "inkUnder": 0,
+      "join": null,
+      "lines": [
+       "Start"
+      ],
+      "n": 1,
+      "nearerAnotherMark": false,
+      "text": "Start"
+     },
+     {
+      "box": [
+       30,
+       849,
+       76,
+       24
+      ],
+      "candidate": "above-left",
+      "inkUnder": 0,
+      "join": null,
+      "lines": [
+       "Ready"
+      ],
+      "n": 2,
+      "nearerAnotherMark": false,
+      "text": "Ready"
+     }
+    ],
+    "margins": {
+     "bottom": 0,
+     "left": 0,
+     "right": 0
+    },
+    "overlay": "rectangles+labels-beside-v4",
     "size": [
      1440,
-     935
+     900
     ]
    },
    "path": "figures/2.4-4.png",
-   "pixelSha256": "846040b11a3f314d80c061ca901324a08d2d1fb2c4f9161fc448e7d37cf55b4b",
-   "resultSha256": "7175b27812e1056fd0c45593400d72e36b7f5aecbd5d2e5b024801c440960937",
+   "pixelSha256": "356a48df39dac47599ea6a3087c405d51fb688b0cce06c59dc182afa42fb25a4",
+   "resultSha256": "bfba215004811c1367e8091809d780094a34f94feaae8516f662b78355ea897f",
    "runId": "20261014-202133-886f72",
    "source": "captures/2.4-4.png",
    "sourceSha256": "c4866a28e34c7e06c159411b702876654554c9bf940e2b058c7b8af1f69b8442",
@@ -2010,16 +1732,6 @@
    "flags": [],
    "marksSha256": "2f4b167d75ec6882160d8681599f727acb1ad067a1862c1855a4bdc86f357147",
    "operation": {
-    "badges": [
-     {
-      "at": [
-       18,
-       421
-      ],
-      "n": 1,
-      "side": "left"
-     }
-    ],
     "crop": [
      317,
      53,
@@ -2027,70 +1739,49 @@
      480
     ],
     "cropRule": "panel-edges",
-    "legend": {
-     "box": [
-      0,
-      480,
-      404,
-      57
-     ],
-     "colours": {
-      "background": [
-       18,
-       22,
-       25
-      ],
-      "separator": [
-       72,
-       75,
-       77
-      ],
-      "tag": [
-       200,
-       30,
-       30
-      ],
-      "text": [
-       235,
-       235,
-       235
-      ]
-     },
-     "entries": [
-      {
-       "lines": [
-        [
-         8,
-         489,
-         "[1] x 6.3 mm, y -4.5 mm · 10"
-        ],
-        [
-         56,
-         511,
-         "counts"
-        ]
-       ],
-       "n": 1,
-       "text": "[1] x 6.3 mm, y -4.5 mm · 10 counts"
-      }
-     ],
-     "font": "5x7+descenders@2",
-     "separator": [
-      0,
-      480,
-      404,
-      1
-     ]
+    "font": {
+     "digitEmPx": 15,
+     "emPx": 16,
+     "path": "samples/manual/font/mplus-rounded-1c-bold.glyphs.json",
+     "sha256": "50f700764a8a99b64e0b2f56822f556552a4f3f3a019c6abaa8ce272ed956d62"
     },
-    "overlay": "rectangles+numbered-badges+legend-v3",
+    "imageAt": [
+     0,
+     0
+    ],
+    "labels": [
+     {
+      "box": [
+       35,
+       445,
+       279,
+       24
+      ],
+      "candidate": "below-left",
+      "inkUnder": 0,
+      "join": null,
+      "lines": [
+       "x 6.3 mm, y -4.5 mm · 10 counts"
+      ],
+      "n": 1,
+      "nearerAnotherMark": false,
+      "text": "x 6.3 mm, y -4.5 mm · 10 counts"
+     }
+    ],
+    "margins": {
+     "bottom": 0,
+     "left": 0,
+     "right": 0
+    },
+    "overlay": "rectangles+labels-beside-v4",
     "size": [
      404,
-     537
+     480
     ]
    },
    "path": "figures/3.1-1.png",
-   "pixelSha256": "699d1ea5afac1263ff526f4c2c25f97792f6b84f315cb1bd299bcb308025db69",
-   "resultSha256": "515693ead7058bcba350a4649d8187bafc592818623ee98ac38ad87013c9a3aa",
+   "pixelSha256": "6590078d470c3693d197036d05c321a0eedf4d6d2263293440f0538df37cd162",
+   "resultSha256": "02770e1f657c6bc63f27001647a086ac6489d908c03254478941e6ed6f219a0f",
    "runId": "20261014-202118-3646b1",
    "source": "captures/3.1-1.png",
    "sourceSha256": "ad109d40bd95aca892c352c9d74e06a725a036ca50769d24cf5599e0439aa084",
@@ -2102,139 +1793,108 @@
    "flags": [],
    "marksSha256": "e2ffb298faf6041643fe9fbd97284866b5b34469063d3ec0a9b4bcb93bdaa92d",
    "operation": {
-    "badges": [
-     {
-      "at": [
-       6,
-       87
-      ],
-      "n": 1,
-      "side": "left"
-     },
-     {
-      "at": [
-       6,
-       125
-      ],
-      "n": 2,
-      "side": "left"
-     },
-     {
-      "at": [
-       6,
-       164
-      ],
-      "n": 3,
-      "side": "left"
-     },
-     {
-      "at": [
-       6,
-       298
-      ],
-      "n": 4,
-      "side": "left"
-     }
-    ],
     "crop": [
-     312,
+     317,
      531,
-     811,
+     806,
      335
     ],
     "cropRule": "panel-edges",
-    "legend": {
-     "box": [
-      0,
-      335,
-      811,
-      57
-     ],
-     "colours": {
-      "background": [
-       18,
-       22,
-       25
-      ],
-      "separator": [
-       72,
-       75,
-       77
-      ],
-      "tag": [
-       200,
-       30,
-       30
-      ],
-      "text": [
-       235,
-       235,
-       235
-      ]
-     },
-     "entries": [
-      {
-       "lines": [
-        [
-         8,
-         344,
-         "[1] M1"
-        ]
-       ],
-       "n": 1,
-       "text": "[1] M1"
-      },
-      {
-       "lines": [
-        [
-         104,
-         344,
-         "[2] M2"
-        ]
-       ],
-       "n": 2,
-       "text": "[2] M2"
-      },
-      {
-       "lines": [
-        [
-         200,
-         344,
-         "[3] M3"
-        ]
-       ],
-       "n": 3,
-       "text": "[3] M3"
-      },
-      {
-       "lines": [
-        [
-         8,
-         366,
-         "[4] 3.6 × 4.2 mm · 42 px · mean 5.45 · max 13"
-        ]
-       ],
-       "n": 4,
-       "text": "[4] 3.6 × 4.2 mm · 42 px · mean 5.45 · max 13"
-      }
-     ],
-     "font": "5x7+descenders@2",
-     "separator": [
-      0,
-      335,
-      811,
-      1
-     ]
+    "font": {
+     "digitEmPx": 15,
+     "emPx": 16,
+     "path": "samples/manual/font/mplus-rounded-1c-bold.glyphs.json",
+     "sha256": "50f700764a8a99b64e0b2f56822f556552a4f3f3a019c6abaa8ce272ed956d62"
     },
-    "overlay": "rectangles+numbered-badges+legend-v3",
+    "imageAt": [
+     0,
+     0
+    ],
+    "labels": [
+     {
+      "box": [
+       370,
+       65,
+       53,
+       24
+      ],
+      "candidate": "above-centre",
+      "inkUnder": 0,
+      "join": null,
+      "lines": [
+       "M1"
+      ],
+      "n": 1,
+      "nearerAnotherMark": false,
+      "text": "M1"
+     },
+     {
+      "box": [
+       372,
+       124,
+       53,
+       24
+      ],
+      "candidate": "inside-slide+2",
+      "inkUnder": 0,
+      "join": null,
+      "lines": [
+       "M2"
+      ],
+      "n": 2,
+      "nearerAnotherMark": false,
+      "text": "M2"
+     },
+     {
+      "box": [
+       18,
+       183,
+       53,
+       24
+      ],
+      "candidate": "below-left",
+      "inkUnder": 0,
+      "join": null,
+      "lines": [
+       "M3"
+      ],
+      "n": 3,
+      "nearerAnotherMark": false,
+      "text": "M3"
+     },
+     {
+      "box": [
+       18,
+       253,
+       293,
+       44
+      ],
+      "candidate": "above-left",
+      "inkUnder": 0,
+      "join": null,
+      "lines": [
+       "3.6 × 4.2 mm · 42 px · mean 5.45 ·",
+       "max 13"
+      ],
+      "n": 4,
+      "nearerAnotherMark": false,
+      "text": "3.6 × 4.2 mm · 42 px · mean 5.45 · max 13"
+     }
+    ],
+    "margins": {
+     "bottom": 0,
+     "left": 0,
+     "right": 0
+    },
+    "overlay": "rectangles+labels-beside-v4",
     "size": [
-     811,
-     392
+     806,
+     335
     ]
    },
    "path": "figures/3.1-2.png",
-   "pixelSha256": "001788bb1e0d4bdeb13c0540048aacccaab62255fa6bd18d9c808f6301676027",
-   "resultSha256": "a6fbf18658b2edcb5cf9b42a24dd04470ac815d13577722832551d7f3cdcfcff",
+   "pixelSha256": "524af4548687191e820d09dbf0e830fc0f0de2e40d7ea95f2da5707cf5b5362f",
+   "resultSha256": "fcc839c8cfecdae6f182fb56b2523a4b8f05d3a7cc58e8ae26c9e37f5afa071e",
    "runId": "20261014-202118-3646b1",
    "source": "captures/3.1-2.png",
    "sourceSha256": "377b9f4391a907f92d9c3c256e271cceb76ddd58effaf888aeeceedc341e3ff7",
@@ -2246,24 +1906,6 @@
    "flags": [],
    "marksSha256": "5434ae85536db6708a7724e16e2b97a6dfecc9e483af13763b3fee7b25b82283",
    "operation": {
-    "badges": [
-     {
-      "at": [
-       805,
-       59
-      ],
-      "n": 1,
-      "side": "left"
-     },
-     {
-      "at": [
-       805,
-       159
-      ],
-      "n": 2,
-      "side": "left"
-     }
-    ],
     "crop": [
      317,
      53,
@@ -2271,76 +1913,66 @@
      813
     ],
     "cropRule": "panel-edges",
-    "legend": {
-     "box": [
-      0,
-      813,
-      1118,
-      35
-     ],
-     "colours": {
-      "background": [
-       18,
-       22,
-       25
-      ],
-      "separator": [
-       72,
-       75,
-       77
-      ],
-      "tag": [
-       200,
-       30,
-       30
-      ],
-      "text": [
-       235,
-       235,
-       235
-      ]
-     },
-     "entries": [
-      {
-       "lines": [
-        [
-         8,
-         822,
-         "[1] Log Y"
-        ]
-       ],
-       "n": 1,
-       "text": "[1] Log Y"
-      },
-      {
-       "lines": [
-        [
-         140,
-         822,
-         "[2] N × FWHM at each line"
-        ]
-       ],
-       "n": 2,
-       "text": "[2] N × FWHM at each line"
-      }
-     ],
-     "font": "5x7+descenders@2",
-     "separator": [
-      0,
-      813,
-      1118,
-      1
-     ]
+    "font": {
+     "digitEmPx": 15,
+     "emPx": 16,
+     "path": "samples/manual/font/mplus-rounded-1c-bold.glyphs.json",
+     "sha256": "50f700764a8a99b64e0b2f56822f556552a4f3f3a019c6abaa8ce272ed956d62"
     },
-    "overlay": "rectangles+numbered-badges+legend-v3",
+    "imageAt": [
+     0,
+     0
+    ],
+    "labels": [
+     {
+      "box": [
+       747,
+       58,
+       72,
+       24
+      ],
+      "candidate": "left",
+      "inkUnder": 0,
+      "join": null,
+      "lines": [
+       "Log Y"
+      ],
+      "n": 1,
+      "nearerAnotherMark": false,
+      "text": "Log Y"
+     },
+     {
+      "box": [
+       885,
+       189,
+       203,
+       24
+      ],
+      "candidate": "below-right",
+      "inkUnder": 0,
+      "join": null,
+      "lines": [
+       "N × FWHM at each line"
+      ],
+      "n": 2,
+      "nearerAnotherMark": false,
+      "text": "N × FWHM at each line"
+     }
+    ],
+    "margins": {
+     "bottom": 0,
+     "left": 0,
+     "right": 0
+    },
+    "overlay": "rectangles+labels-beside-v4",
     "size": [
      1118,
-     848
+     813
     ]
    },
    "path": "figures/3.4-1.png",
-   "pixelSha256": "646c73782e134a9d43c2b61870fea0f4fd12d16799212b63146cad8b07b3668b",
-   "resultSha256": "062140a9e450b84379802075a7d54005302281c28bc0ab7cd2e539bba02bab84",
+   "pixelSha256": "80c7b1e319885bd284ed3701baf8a55c739eefe7fd2e13f33521b8e8ecdfb12d",
+   "resultSha256": "e013d3dc94fa6cd651a183fb0eabdbcceb4736e1ffce00b949008855fadb41b8",
    "runId": "20261014-202148-7b59cc",
    "source": "captures/3.4-1.png",
    "sourceSha256": "5f429379355daf3df55c897e9c099e9ed19b7e0ca68fc386e8c3b301fe0b6bbe",
@@ -2352,16 +1984,6 @@
    "flags": [],
    "marksSha256": "d545275d8d1ef394fd6e83595e0134a353fdf7b56c692302b1283e8a83c74363",
    "operation": {
-    "badges": [
-     {
-      "at": [
-       805,
-       159
-      ],
-      "n": 1,
-      "side": "left"
-     }
-    ],
     "crop": [
      317,
      53,
@@ -2369,65 +1991,49 @@
      813
     ],
     "cropRule": "panel-edges",
-    "legend": {
-     "box": [
-      0,
-      813,
-      1118,
-      35
-     ],
-     "colours": {
-      "background": [
-       18,
-       22,
-       25
-      ],
-      "separator": [
-       72,
-       75,
-       77
-      ],
-      "tag": [
-       200,
-       30,
-       30
-      ],
-      "text": [
-       235,
-       235,
-       235
-      ]
-     },
-     "entries": [
-      {
-       "lines": [
-        [
-         8,
-         822,
-         "[1] N × FWHM at each line"
-        ]
-       ],
-       "n": 1,
-       "text": "[1] N × FWHM at each line"
-      }
-     ],
-     "font": "5x7+descenders@2",
-     "separator": [
-      0,
-      813,
-      1118,
-      1
-     ]
+    "font": {
+     "digitEmPx": 15,
+     "emPx": 16,
+     "path": "samples/manual/font/mplus-rounded-1c-bold.glyphs.json",
+     "sha256": "50f700764a8a99b64e0b2f56822f556552a4f3f3a019c6abaa8ce272ed956d62"
     },
-    "overlay": "rectangles+numbered-badges+legend-v3",
+    "imageAt": [
+     0,
+     0
+    ],
+    "labels": [
+     {
+      "box": [
+       885,
+       189,
+       203,
+       24
+      ],
+      "candidate": "below-right",
+      "inkUnder": 0,
+      "join": null,
+      "lines": [
+       "N × FWHM at each line"
+      ],
+      "n": 1,
+      "nearerAnotherMark": false,
+      "text": "N × FWHM at each line"
+     }
+    ],
+    "margins": {
+     "bottom": 0,
+     "left": 0,
+     "right": 0
+    },
+    "overlay": "rectangles+labels-beside-v4",
     "size": [
      1118,
-     848
+     813
     ]
    },
    "path": "figures/3.4-2.png",
-   "pixelSha256": "1ea435fcd57b5c27d6f980188ef4ff215ab9e6eda2877902978f3ccd05d8f34d",
-   "resultSha256": "d5dbb062ad2ab460026a22d3603fcdc946b66aaa74b7879bbeef8d3195fd0e94",
+   "pixelSha256": "3ee07b4e86eeb0a0653b14f194f0c3b5e26d94b564679fc09a7f9b6d3562dfff",
+   "resultSha256": "7ee254ed7702400ca811e9567af01628afe52350636bc214f4b9ef142e284d2f",
    "runId": "20261014-202148-7b59cc",
    "source": "captures/3.4-2.png",
    "sourceSha256": "e1b957741c141c55cc42cd3eb34037836a3ee3127e86cf2374f28f9b21dec0d9",
@@ -2439,16 +2045,6 @@
    "flags": [],
    "marksSha256": "4fb78f3041c023800b7e1dc502844af394258a7a840562d8d4906fe4b551f221",
    "operation": {
-    "badges": [
-     {
-      "at": [
-       805,
-       59
-      ],
-      "n": 1,
-      "side": "left"
-     }
-    ],
     "crop": [
      317,
      53,
@@ -2456,65 +2052,49 @@
      813
     ],
     "cropRule": "panel-edges",
-    "legend": {
-     "box": [
-      0,
-      813,
-      1118,
-      35
-     ],
-     "colours": {
-      "background": [
-       18,
-       22,
-       25
-      ],
-      "separator": [
-       72,
-       75,
-       77
-      ],
-      "tag": [
-       200,
-       30,
-       30
-      ],
-      "text": [
-       235,
-       235,
-       235
-      ]
-     },
-     "entries": [
-      {
-       "lines": [
-        [
-         8,
-         822,
-         "[1] Log Y"
-        ]
-       ],
-       "n": 1,
-       "text": "[1] Log Y"
-      }
-     ],
-     "font": "5x7+descenders@2",
-     "separator": [
-      0,
-      813,
-      1118,
-      1
-     ]
+    "font": {
+     "digitEmPx": 15,
+     "emPx": 16,
+     "path": "samples/manual/font/mplus-rounded-1c-bold.glyphs.json",
+     "sha256": "50f700764a8a99b64e0b2f56822f556552a4f3f3a019c6abaa8ce272ed956d62"
     },
-    "overlay": "rectangles+numbered-badges+legend-v3",
+    "imageAt": [
+     0,
+     0
+    ],
+    "labels": [
+     {
+      "box": [
+       747,
+       58,
+       72,
+       24
+      ],
+      "candidate": "left",
+      "inkUnder": 0,
+      "join": null,
+      "lines": [
+       "Log Y"
+      ],
+      "n": 1,
+      "nearerAnotherMark": false,
+      "text": "Log Y"
+     }
+    ],
+    "margins": {
+     "bottom": 0,
+     "left": 0,
+     "right": 0
+    },
+    "overlay": "rectangles+labels-beside-v4",
     "size": [
      1118,
-     848
+     813
     ]
    },
    "path": "figures/3.4-3.png",
-   "pixelSha256": "e6ed5c919175c2e557a66a8f34ca594a399481e8cc7926ab071952da0052eb80",
-   "resultSha256": "2c6051349521105265dece9046b65671af830f25531ae4c09b1a92f18d051d64",
+   "pixelSha256": "7411f6671a569639a1ba34077391069f1cea89935b2882a23125fbac33ff0197",
+   "resultSha256": "17a230b2e5d210f6a7cd6e5ab58a0feca88f5b5868bcb5b42e9d1c3032a6d09f",
    "runId": "20261014-202148-7b59cc",
    "source": "captures/3.4-3.png",
    "sourceSha256": "6a6203dcd098da045f3f8fee759474ad2d61211001c35e1eb280a3f9eb1a1e59",
@@ -2525,7 +2105,12 @@
  "formal": false,
  "generator": {
   "path": "samples/manual/manual_records.py",
-  "sha256": "64528d5b2f8db29f1f09a084c39a304528aa20c223217e087426914724b96f31"
+  "sha256": "f2edde967feca13132f191e5100fb90e45f692a144030b5f37877c2900225e79"
+ },
+ "labelFont": {
+  "font": "M PLUS Rounded 1c Bold",
+  "path": "samples/manual/font/mplus-rounded-1c-bold.glyphs.json",
+  "sha256": "50f700764a8a99b64e0b2f56822f556552a4f3f3a019c6abaa8ce272ed956d62"
  },
  "notices": {
   "sha256": "a736a7c4bcf62c998f63be92bba935eb669b74e6e5e5bfde09eb2b0aa8943cb9",
@@ -2533,26 +2118,26 @@
  },
  "outputs": {
   "MANUAL.Studio.md": "d28d1fd40fe1b5647933ea76ccb39e0e915e0fc5f3a053e6b57d9348b8b94fbb",
-  "figures/1.2-1.png": "4da14be063daf9a7196100b128b2f0e949ffd56b28a41411ab6a4a1d52fda777",
-  "figures/1.2-2.png": "959f3e47081bb1b438d4de138ebbccf1002d35694f6797707aa267d8b0b33704",
-  "figures/1.2-3.png": "c7f010432aab0469c4ea63c8fd198fb905de85ab99c3889c187d79db51df5836",
-  "figures/1.2-4.png": "995af226118e4b5c16b2eb0f733263e94be94e5f8d7d89a26db124e1ebb02cd6",
-  "figures/1.2-5.png": "d9f6d2e05518992e0665ea31b505acb99b1b2b43960bd3e318abfaf674daa0f6",
-  "figures/2.1-1.png": "55c6ff04dc6b98b7e5cf612d3467fbdd2bd3196075aaafdb47bfb6a317fa3635",
-  "figures/2.1-2.png": "ccc0e66e2de0abf34e24dd6c7fc78adccf648d291e4ee86cfc0a53495ac0c254",
-  "figures/2.1-3.png": "26764f2232d7381a145b826bdec89f746a00b55c4796af62a59c7e6ca9900962",
-  "figures/2.2-1.png": "1e8ac4e37a8be832fdec9598c57bfda2aaa8e6ab3434e76d8ad5e3cf0ebaa636",
-  "figures/2.2-2.png": "0853341418756d86888b645494c4bd594fbbcd078af10e38767a40730dd51d78",
-  "figures/2.2-3.png": "cb73b37d26731446c17632a82b17b29f30e63011da8462bdaf43c4c83beb14b7",
-  "figures/2.4-1.png": "7cee1e0ebf16385632bab7ad1a889008cb49cfa47d1acb100c20f1b9cebcf689",
-  "figures/2.4-2.png": "83e896adc7ae85eb71d6c77b0a9a2f0f2bb34b649a34f59c63e9eb9109f7b264",
-  "figures/2.4-3.png": "627a28f889ea53616ecaa07b0fd6d9bcbbeeb551eaa8a6550d95871a36f64d71",
-  "figures/2.4-4.png": "7175b27812e1056fd0c45593400d72e36b7f5aecbd5d2e5b024801c440960937",
-  "figures/3.1-1.png": "515693ead7058bcba350a4649d8187bafc592818623ee98ac38ad87013c9a3aa",
-  "figures/3.1-2.png": "a6fbf18658b2edcb5cf9b42a24dd04470ac815d13577722832551d7f3cdcfcff",
-  "figures/3.4-1.png": "062140a9e450b84379802075a7d54005302281c28bc0ab7cd2e539bba02bab84",
-  "figures/3.4-2.png": "d5dbb062ad2ab460026a22d3603fcdc946b66aaa74b7879bbeef8d3195fd0e94",
-  "figures/3.4-3.png": "2c6051349521105265dece9046b65671af830f25531ae4c09b1a92f18d051d64",
+  "figures/1.2-1.png": "e376a8a5ae8622950a83f313d0b34217fa4d5e235772c92635697cde6dcb9956",
+  "figures/1.2-2.png": "73434a56fba85709e744491c66a07922160313c57b05833965019c646c9112cf",
+  "figures/1.2-3.png": "0f3c2071d6a9751e20c3189fe787172d66f1509b061955f8686e710b145080fe",
+  "figures/1.2-4.png": "4b62819ae06ae2c8e54090a293f3fcf14313970f7eb289f8d7dccb6a6dcc357f",
+  "figures/1.2-5.png": "d839054eb051ac36cea43185e99fc3e7bd304f99ae4b59d9a90c15d050e5d2e0",
+  "figures/2.1-1.png": "cb49c14fca8f2dff208b9c1282865b46ae66fa2282fe0caabe41b7b3b86973a1",
+  "figures/2.1-2.png": "0bfcecac37675bcdfb51085fb81262a19d831c74725d77fd0ec9ae8223c31a01",
+  "figures/2.1-3.png": "8eca17edb1b866aa9f47d83cb6c30d777f193a7a87a8097ccced93d12cca624c",
+  "figures/2.2-1.png": "0e0984df80182719ff2948fe375d6233d764b29cd3e1698a589d4c69dc2c5a2f",
+  "figures/2.2-2.png": "93c3ce89860866701a7a17fab7ed80f85a8abb0342e45a6603f327f713711dea",
+  "figures/2.2-3.png": "42a891cc57fa927f5a0455063015bc5323746d6827e18c2b556e2f8fd042e530",
+  "figures/2.4-1.png": "fb45a3383f19ba71fb0b3bc1345eb2429f0fd6e84693f0c8e59278a3c34d74c3",
+  "figures/2.4-2.png": "cd205720adc1ea6f30b14a148ba28e5e6d8ec11d58a603f3869fa893e97d7ca3",
+  "figures/2.4-3.png": "34793e0f94706384655e6c97da5d90a6495f5dd4db459defe932a401cf4aac2e",
+  "figures/2.4-4.png": "bfba215004811c1367e8091809d780094a34f94feaae8516f662b78355ea897f",
+  "figures/3.1-1.png": "02770e1f657c6bc63f27001647a086ac6489d908c03254478941e6ed6f219a0f",
+  "figures/3.1-2.png": "fcc839c8cfecdae6f182fb56b2523a4b8f05d3a7cc58e8ae26c9e37f5afa071e",
+  "figures/3.4-1.png": "e013d3dc94fa6cd651a183fb0eabdbcceb4736e1ffce00b949008855fadb41b8",
+  "figures/3.4-2.png": "7ee254ed7702400ca811e9567af01628afe52350636bc214f4b9ef142e284d2f",
+  "figures/3.4-3.png": "17a230b2e5d210f6a7cd6e5ab58a0feca88f5b5868bcb5b42e9d1c3032a6d09f",
   "sources/manual/chapters.json": "67a5caf676b4ce9aa0fe9a4f668eaa461a370352be12a2003f852439b26f50c3",
   "sources/manual/notices.json": "a736a7c4bcf62c998f63be92bba935eb669b74e6e5e5bfde09eb2b0aa8943cb9",
   "sources/manual/static/interpretation-and-limitations.md": "cef06522c61ddbf52b71af1e2b2d802fc53304064b214a51e5887ef0dcadf642",
