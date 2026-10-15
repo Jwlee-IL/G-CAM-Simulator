@@ -354,3 +354,11 @@ repeated from the scene file; the HTML now shows their entry counts only (defaul
 report…" sits beside Reset at the height of the other top-bar buttons, unclipped. Release build 0 warnings; normal suite
 1,066 passed / 50 skipped; catalog 203 units. No broken-verdict or recovery run was made for this exploratory scenario.
 
+Run 4 (`7caf9ff`) passed on the reduced HTML (450,860 bytes). Stage 2, the same day (decisions X1 … X8): a document icon
+button opens an export popup — HTML, PDF (PDFsharp-WPF), Word and event data (CSV with a metadata file, under every
+readout). Run 5 (`13a6969`) passed the theory for HTML, PDF and Word through the popup; run 6 (`ab34330`) passed all four
+formats (CSV 6 s, the others 5 s each), each writing exactly its declared files into its owned sandbox (three for CSV),
+with no process left. Samples read by the planner: the PDF (7 pages, configuration as an appendix), the Word package, the
+CSV and meta file of a direct and of a physical-readout acquisition. Release build 0 warnings; normal suite 1,093 passed /
+51 skipped; catalog 208 units.
+

@@ -546,8 +546,8 @@ Every SRS requirement maps to at least one unit; every unit carries at least one
 | SR-A11Y-02 | SU-09 |
 | SR-A11Y-04 | SU-14 |
 | SR-A11Y-05 | SU-14 theme dictionaries and disabled TextBox/ComboBox templates; ThemeContrastTests reads production XAML tokens without WPF |
-| SR-SEC-01 | all (no user-file I/O in Studio except SU-27's two confirmed paths), SU-08 (engine is called with in-memory config; the only file read is the shipped, hash-pinned ambient spectrum, through the engine loader) |
-| SR-EXPORT-01 … 04 | SU-27, SU-01 (`ExportReportCommand`), SU-19 (configuration JSON once per acquisition) |
+| SR-SEC-01 | all (no user-file I/O in Studio except SU-27's confirmed path and its declared sidecars), SU-08 (engine is called with in-memory config; the only file read is the shipped, hash-pinned ambient spectrum, through the engine loader) |
+| SR-EXPORT-01 … 05 | SU-27, SU-01 (`ExportReportCommand`), SU-19 (configuration JSON once per acquisition), SU-20 / SU-21 (`MeasuredEnergies`, for event data) |
 | SR-ARCH-01 … SR-ARCH-04 | project files of SI-1 … SI-4 and `tests/Gcam.Studio.Tests` |
 
 SU-11 (colour bar, colormap) and SU-13 (converters) serve SR-VIEW-01 / SR-A11Y-04 and SR-MEAS-06
@@ -636,7 +636,7 @@ Execution evidence and known algorithm limits: [VV.Studio.Detector](VV.Studio.De
 
 | Unit | Item | Type(s) | File(s) | Responsibility |
 |---|---|---|---|---|
-| SU-27 | SI-1, SI-4 | `SimulationReport`, `ReportWriter`, `ReportFiles`, `ReportMeasurement`, `IReportExportService`; `ReportExportService`, `ReportFileWriter` | `Core/Reporting/*.cs`, `Core/Services/IReportExportService.cs`, `Core/ViewModels/MainViewModel.Report.cs`; `Studio/Services/Report*.cs` | capture the displayed state, write deterministic HTML with inline SVG and the scene JSON (Core); choose the path and write both files with rollback (shell) |
+| SU-27 | SI-1, SI-4 | `SimulationReport`, `ReportWriter`, `ReportMarkup`, `ReportFormat`, `ReportFiles`, `ReportMeasurement`, `ReportTextWrapping`, `WordReportWriter`, `EventCsvWriter`, `ExportReportViewModel`, `IReportExportService`; `ReportExportService`, `ReportFileWriter`, `PdfReportWriter`, `ReportFigureRenderer`, `ExportReportView` | `Core/Reporting/*.cs`, `Core/Services/IReportExportService.cs`, `Core/ViewModels/MainViewModel.Report.cs`, `Core/ViewModels/ExportReportViewModel.cs`; `Studio/Services/Report*.cs`, `Studio/Services/PdfReportWriter.cs`, `Studio/Views/ExportReportView.xaml` | capture the displayed state; the format popup; deterministic HTML with inline SVG, Word as hand-written Office Open XML, event data as CSV with its metadata, and the scene JSON (Core); PDF through PDFsharp-WPF 6.2.4 (MIT) and PNG figures (shell); choose the path and write the chosen file and its declared sidecars with rollback (shell) |
 
 `ExportReportCommand` is enabled only while a snapshot exists. It captures the report before the native dialog pumps
 messages, because a live acquisition may publish a newer snapshot while the dialog is open. `AcquisitionSession`

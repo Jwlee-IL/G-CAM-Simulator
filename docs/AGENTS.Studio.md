@@ -118,8 +118,10 @@ Use as focus. Numerical conditions, seed-spread evidence protocol and execution 
 
 ## Report export (TODO-46)
 
-"Export report…" (Alt+E, beside Reset) is Studio's only write surface (SR-SEC-01, SR-EXPORT-01 … 04). `SimulationReport`
-captures the displayed state before the save dialog opens; `ReportWriter` (Core, no WPF) turns it into deterministic HTML
-with inline SVG plus the `.scene.json` text; `ReportExportService` / `ReportFileWriter` (shell) choose the path and write
-the two files with rollback. The export recomputes nothing, runs no simulation or projection, and remembers no folder or
+"Export report…" (document icon, Alt+E, beside Reset) is Studio's only write surface (SR-SEC-01, SR-EXPORT-01 … 05). It
+opens a format popup (`ExportReportViewModel`): HTML, PDF, Word or event data (CSV). `SimulationReport` captures the
+displayed state before the popup opens; Core (no WPF) writes the HTML (`ReportWriter`), the Word file (`WordReportWriter`)
+and the event CSV with its `.meta.json` (`EventCsvWriter`), plus the `.scene.json` text; the shell draws the PDF
+(`PdfReportWriter`, PDFsharp-WPF) and PNG figures, and `ReportExportService` / `ReportFileWriter` choose the path and write
+the chosen file and its declared sidecars with rollback. The export recomputes nothing, runs no simulation or projection, and remembers no folder or
 setting. A new write surface, or a change to where this one writes, reopens [AGENTS.UiAutomation §1](AGENTS.UiAutomation.md#1-safety).

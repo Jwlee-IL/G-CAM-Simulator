@@ -11,7 +11,7 @@ Targets plain `net9.0` on purpose: a ViewModel that reaches for a WPF type does 
 | `Imaging/` | `HeatmapViewport` — fit, whole-pixel snapping, zoom about a point, pan limits, screen ↔ image ↔ mm; `MeasurementMath` — distance, angle, ROI stats; `TickFormatter` — colour-scale labels; `IPlaneMarker` — generic overlay marker contract (Studio source markers are display-only); `OverlayLabelLayout` — deterministic chip placement; `FocusSweepMath`; `StudioMlem` — the MLEM iteration count |
 | `Optics/` | `OpticsPreset` (Custom, Sharp, Baseline, Wide FOV, High-res), `OpticsPolicy` (input and allocation limits), `OpticsGeometry` (analytical resolution / field values) |
 | `Detector/` | `DetectorFace` / `FaceRectangle` (exact active and gap regions), `ReadoutDetectorTab` (the Detector workspace's view tabs), `ReadoutSensorLayout` |
-| `Reporting/` | `SimulationReport` (the displayed state captured for a report), `ReportWriter` (deterministic HTML with inline SVG, and the scene JSON), `ReportFiles`, `ReportMeasurement`; the contract `IReportExportService` is in `Services/` |
+| `Reporting/` | `SimulationReport` (the displayed state captured for a report), `ReportWriter` (deterministic HTML with inline SVG, and the scene JSON), `WordReportWriter` (hand-written Office Open XML), `EventCsvWriter` (event data CSV and its metadata), `ReportMarkup`, `ReportFormat`, `ReportFiles`, `ReportMeasurement`; the contract `IReportExportService` is in `Services/` |
 | `Rendering/` | `Colormap` — Studio's viridis table, shared by the heat map and the report |
 | `Plotting/` | `PlotViewport` (linear / log mapping, zoom, pan), `MinMaxPyramid` (exact column extrema), ticks, bands, markers and series records behind `PlotView` |
 

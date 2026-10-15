@@ -4116,7 +4116,7 @@ Oracle: UIA reads displayed values independently of the report; ConfigLoader loa
 
 Tolerance: Exact/structural; no statistical margin.
 
-Gates: GCAM_UI_TESTS=1 and authorized desktop; the first run timed out after Save with no file written, and the revised save step is compiled but not run yet.
+Gates: GCAM_UI_TESTS=1 and authorized desktop; run 6 (2026-10-15) passed all four formats.
 
 Source: [tests/Gcam.Studio.UiTests/ReportExportScenarioTests.cs](../tests/Gcam.Studio.UiTests/ReportExportScenarioTests.cs).
 

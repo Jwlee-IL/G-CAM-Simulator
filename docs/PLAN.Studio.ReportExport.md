@@ -35,7 +35,10 @@ the suite): build 0 / 0; suite 1,079 passed / 51 skipped; catalog 208. Samples r
 configuration as an appendix, Word with heading styles and PNG figures, JSON 38 conversions from a Baseline 661.7 keV
 physical-readout run (3.2 MB, almost all of it the configuration's ambient tables). Desktop run 5 (2026-10-15, `13a6969`,
 author's go): the theory passed for PDF (11 s), Word (8 s) and HTML (7 s) through the popup, each writing exactly the
-report and its scene file into its owned sandbox.
+report and its scene file into its owned sandbox. X8 (event data as CSV) implemented by a substitute implementer
+(`ab34330`; suite 1,093 passed / 51 skipped); desktop run 6 (author's go) passed all four formats, CSV writing exactly its
+three declared files. Stage 2 docs applied by the planner: SRS (SR-SEC-01, SR-EXPORT-01 … 04 revised, SR-EXPORT-05), SDS
+SU-27 and allocation, D-58, V&V trace and History, AGENTS.Studio, AGENTS.UiAutomation §1, folder maps, catalog.
 
 ## Decisions (planner defaults, 2026-10-14)
 
