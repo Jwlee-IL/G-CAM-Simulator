@@ -379,3 +379,20 @@ with no process left. Samples read by the planner: the PDF (7 pages, configurati
 CSV and meta file of a direct and of a physical-readout acquisition. Release build 0 warnings; normal suite 1,093 passed /
 51 skipped; catalog 208 units.
 
+## Desktop verification after merging TODO-43 and TODO-46, 2026-10-15
+
+Main tree at `86ccd3b` (Release). The full desktop suite ran with `GCAM_UI_TESTS=1`, the long High-res cold test
+excluded: 107 of 119 passed, 2 were skipped and 10 failed.
+
+- **CSV export case.** The merged harness flagged every sandbox write as an undeclared effect, including the export
+  theory's declared files. Only writes outside the scenario's declared list are flagged now (`36c73a5`).
+- **The other nine.** These failed when the harness first looked for `ThemeToggle`; one of them, High-res Co, lost the
+  foreground during its preparation instead. The failure dumps showed the main window with names but no AutomationIds.
+  A launch probe outside the harness found the cause: a UI Automation element taken from the main window handle
+  before WPF attaches the window's content stays empty for good. This happened in 3 of 12 launches (window element at
+  about 0.90 s instead of 0.98 s), and a fresh element taken 1 s later found the content at once.
+  `OwnedStudioProcess.MainWindow` now takes a fresh element until the window exposes its children.
+- **Re-runs.** The first re-run, after the CSV fix only, passed 4 of the 10 (CSV, HTML, MLEM, High-res Co). After the
+  window fix, the remaining six and the whole export theory passed: 8 of 8, including Detector, PDF and Word export
+  and the three readout scenarios.
+- The run refreshed the 16 polish-survey PNGs; the title bar now shows the export icon.
