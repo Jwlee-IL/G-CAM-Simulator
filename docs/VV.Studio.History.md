@@ -406,5 +406,8 @@ ambient off) the same-crystal share is 71.39 % (257 / 360) with no unknown conve
 mm; the review measured 52.6 % on Sharp. Existing DirectCrystal and readout hashes unchanged. Refresh cost p50 / p95:
 Baseline 4.1 / 5.7 ms, Sharp 23.1 / 36.1 ms (All). Offscreen renders inspected at pixel level after two layout turns
 (found labels, flood-only difference toggle, image sizing). Release build 0 warnings; normal suite 1,150 passed / 61
-skipped; catalog 233 units. Desktop scenario compiled, not yet run.
+skipped; catalog 233 units. Desktop (author's go, same day, Release build of `7a16d63`): the Compare scenario and the
+scenarios its changes touch (title-bar workspace tabs, physical hit stream) — Compare, the five Workspace scenarios, the
+readout scenarios without the long-running High-res cold run, manual Navigate, chrome and pilot — 20 passed, 1 skipped
+(the opt-in long run) in 8.6 min; no Studio or test host left, no tree changes.
 

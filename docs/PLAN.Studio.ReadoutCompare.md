@@ -5,7 +5,8 @@ direct crystal assignment and the four-output Anger readout (14-bit ADCs, flood-
 against a realistic readout, with no second run.
 
 Status: implemented 2026-10-15 by Codex (turns 1–3: D1–D10, then render fixes and sizing; `aaf09a0`); docs applied by the
-planner (SR-CMP-01 … 05, SU-28, V&V trace, History, AGENTS / DESIGN / README); desktop scenario pending the author's go.
+planner (SR-CMP-01 … 05, SU-28, V&V trace, History, AGENTS / DESIGN / README); desktop: Compare and the affected scenarios passed
+2026-10-15 (20 passed, 1 opt-in skipped).
 Earlier: review by Codex done 2026-10-15 (conversation `01a13e2e…`, [review](PLAN.Studio.ReadoutCompare.Review.md));
 all ten proposals adopted below ("Decisions after review"); implementation next in the same conversation. History:
 reference plan 2026-10-15, written by the planner. The UI decisions come from the author (below). Next: a Codex
