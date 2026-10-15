@@ -359,7 +359,10 @@ public sealed class PlotView : FrameworkElement
             dc.DrawGeometry(brush, null, geometry);
             dc.Pop();
         }
-        dc.DrawGeometry(null, Pen(brush, TraceWidth), geometry);
+        var tracePen = new Pen(brush, TraceWidth);
+        if (series.Dashed) tracePen.DashStyle = DashStyles.Dash;
+        tracePen.Freeze();
+        dc.DrawGeometry(null, tracePen, geometry);
     }
 
     private void DrawAxes(DrawingContext dc, Rect r)

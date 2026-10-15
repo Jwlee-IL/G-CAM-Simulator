@@ -39,6 +39,23 @@ public class ReadoutPulseProcessorTests
     private static double X(ReadOnlySpan<double> c) => (c[1] + c[3] - c[0] - c[2]) / (c[0] + c[1] + c[2] + c[3]);
 
     [Fact]
+    public void Participation_CountsSubFractionTails_AndFinalizesThresholdAndBusyInputsWithoutAFlush()
+    {
+        var (_, p) = Chain(threshold: 100, unit: ThresholdUnit.AdcCode, deadNs: 10000);
+        var stream = p.CreateStream(new DefaultRandom(8));
+        static ReadoutHit Codes(double time, double sum) => new(time, [sum / 4, sum / 4, sum / 4, sum / 4], sum);
+        stream.Append(Codes(0, 1000)); stream.Append(Codes(p.StepNs, .001));
+        var pending = stream.AdvanceTo(p.HoldWindowNs / 2);
+        Assert.Empty(pending); Assert.True(stream.HasPendingHold); Assert.Equal(0, stream.FinalizedHistories);
+        stream.Append(Codes(p.HoldWindowNs + 2 * p.StepNs, 200)); // busy, after the recorded hold
+        double late = 20000 + 4 * p.SupportNs;
+        stream.Append(Codes(late, .001)); // isolated below threshold
+        var held = stream.AdvanceTo(late + 2 * p.SupportNs);
+        Assert.Single(held); Assert.Equal(0, held[0].DominantHit); Assert.Equal(1, held[0].ContributingHits);
+        Assert.Equal(4, stream.FinalizedHistories); Assert.Equal(2, stream.NoRecordedContribution);
+    }
+
+    [Fact]
     public void TriggerTruthTable_WithExplicitUnits()
     {
         var (device, sum) = Chain(TriggerLogic.Sum, 100, ThresholdUnit.AdcCode);

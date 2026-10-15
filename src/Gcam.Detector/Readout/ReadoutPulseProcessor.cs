@@ -119,6 +119,9 @@ public sealed class ReadoutPulseProcessor
         private readonly IRandom _noise;
         private readonly List<ReadoutHit> _hits = [];
         private readonly List<int> _active = [];
+        private readonly List<bool> _participated = [];
+        public int FinalizedHistories { get; private set; }
+        public int NoRecordedContribution { get; private set; }
         private readonly double[] _channels;
         private int _next, _firstHitIndex;
         private double _origin, _busyUntil = double.NegativeInfinity;
@@ -144,6 +147,7 @@ public sealed class ReadoutPulseProcessor
                 !double.IsFinite(hit.Sum) || hit.Channels.Any(c => !double.IsFinite(c)))
                 throw new ArgumentException("A realised hit needs finite ordered time and matching channels.");
             _hits.Add(hit with { Channels = (double[])hit.Channels.Clone() });
+            _participated.Add(false);
         }
 
         /// <summary>Advance only to an observed horizon. Cancellation preserves state and noise progression.</summary>
@@ -169,6 +173,10 @@ public sealed class ReadoutPulseProcessor
                     _step = p.Hold(_hits, _active, ref _next, _origin, _step, _noise, events,
                         (_, held) => analog = (double[])held.Clone());
                     var ev = events[0];
+                    // Diagnostics only: a non-dominant, sub-fraction tail still participates in the held sum.
+                    // These flags never affect pulse arithmetic, state transitions, or random draws.
+                    foreach (int h in _active)
+                        if (_hits[h].Sum * p.Unit(ev.HoldTimeNs - _hits[h].TimeNs) > 0) _participated[h] = true;
                     output.Add(new ObservedReadoutEvent(ev.HoldTimeNs, trigger,
                         Array.AsReadOnly(ev.Codes), Array.AsReadOnly(analog), ev.DominantHit < 0 ? -1 : ev.DominantHit + _firstHitIndex,
                         ev.ContributingHits, ev.DominantShare));
@@ -199,6 +207,9 @@ public sealed class ReadoutPulseProcessor
             while (expired < _next && p.Since(_hits[expired], _origin, _step) > p.SupportNs) expired++;
             if (expired > 0)
             {
+                FinalizedHistories += expired;
+                for (int i = 0; i < expired; i++) if (!_participated[i]) NoRecordedContribution++;
+                _participated.RemoveRange(0, expired);
                 _active.RemoveAll(h => h < expired);
                 for (int i = 0; i < _active.Count; i++) _active[i] -= expired;
                 _hits.RemoveRange(0, expired); _next -= expired; _firstHitIndex += expired;

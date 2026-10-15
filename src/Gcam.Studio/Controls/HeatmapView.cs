@@ -18,6 +18,13 @@ namespace Gcam.Studio.Controls;
 /// <remarks>Geometry (fit, zoom about a point, pan limits, screen↔mm) lives in <see cref="HeatmapViewport"/>.</remarks>
 public sealed class HeatmapView : FrameworkElement
 {
+    /// <summary>Optional common intensity scale; NaN preserves the existing automatic scale.</summary>
+    public static readonly DependencyProperty ScaleMinimumProperty = DependencyProperty.Register(
+        nameof(ScaleMinimum), typeof(double), typeof(HeatmapView), new PropertyMetadata(double.NaN, (d, _) => ((HeatmapView)d).OnImageChanged()));
+    public static readonly DependencyProperty ScaleMaximumProperty = DependencyProperty.Register(
+        nameof(ScaleMaximum), typeof(double), typeof(HeatmapView), new PropertyMetadata(double.NaN, (d, _) => ((HeatmapView)d).OnImageChanged()));
+    public double ScaleMinimum { get => (double)GetValue(ScaleMinimumProperty); set => SetValue(ScaleMinimumProperty, value); }
+    public double ScaleMaximum { get => (double)GetValue(ScaleMaximumProperty); set => SetValue(ScaleMaximumProperty, value); }
     private const double WheelStep = 1.25;
     private const double KeyPanPx = 40;
 
@@ -198,6 +205,9 @@ public sealed class HeatmapView : FrameworkElement
 
         _min = double.MaxValue; _max = double.MinValue;
         foreach (var v in img.Raw) { if (v < _min) _min = v; if (v > _max) _max = v; }
+        if (_min == double.MaxValue) _min = _max = 0;
+        if (double.IsFinite(ScaleMinimum)) _min = ScaleMinimum;
+        if (double.IsFinite(ScaleMaximum)) _max = Math.Max(_min, ScaleMaximum);
         double span = _max > _min ? _max - _min : 1;
         SetValue(DataMinPropertyKey, _min);
         SetValue(DataMaxPropertyKey, _max);
@@ -211,7 +221,8 @@ public sealed class HeatmapView : FrameworkElement
         {
             int row = (img.Height - 1 - y) * img.Width;   // flip: row 0 of the data is the bottom of the screen
             for (int x = 0; x < img.Width; x++)
-                pixels[row + x] = lut[(int)Math.Round((img[x, y] - _min) / span * 255)];
+                // Missing assignment denominators are transparent, revealing the neutral host surface.
+                pixels[row + x] = double.IsFinite(img[x, y]) ? lut[(int)Math.Round(Math.Clamp((img[x, y] - _min) / span, 0, 1) * 255)] : 0;
         }
         _bitmap.WritePixels(new Int32Rect(0, 0, img.Width, img.Height), pixels, img.Width * 4, 0);
         ConfigureViewport();
@@ -455,6 +466,7 @@ public sealed class HeatmapView : FrameworkElement
             var mm = HeatmapViewport.ImageToMm(new Vec2(h.X + 0.5, h.Y + 0.5), OriginMm, StepMm);
             readout = string.Format(CultureInfo.InvariantCulture, "x {0:F1} mm, y {1:F1} mm · {2}", mm.X, mm.Y, NumberFormat.Significant(img[h.X, h.Y]))
                 .Replace("-0.0 mm", "0.0 mm");   // a tiny negative coordinate shouldn't read as "-0.0"
+            if (!double.IsFinite(img[h.X, h.Y])) readout = $"x {mm.X:F1} mm, y {mm.Y:F1} mm · unavailable (no eligible conversions)";
             if (!string.IsNullOrWhiteSpace(ValueUnit)) readout += " " + ValueUnit;
         }
         SetValue(ReadoutPropertyKey, readout);

@@ -34,6 +34,7 @@ internal sealed class AcquisitionSession : IAcquisitionSession
     private readonly ImmutableRecordStore<RealisedReadoutHit> _realised = new();
     private readonly ImmutableRecordStore<ReadoutTruthSample> _truth = new();
     private int _assigned, _unknown;
+    private int _maximumDominantHit = -1;
     private readonly DetectorImage _rawDensity = new(256, 256);
     private IDecoder? _decoder;
     private bool _decoderBuilt;
@@ -158,6 +159,8 @@ internal sealed class AcquisitionSession : IAcquisitionSession
                                 if (double.IsFinite(measured.RawX) && double.IsFinite(measured.RawY) && measured.RawX >= -1 && measured.RawX < 1 && measured.RawY >= -1 && measured.RawY < 1)
                                     _rawDensity.Add((int)((measured.RawX + 1) * 128), (int)((measured.RawY + 1) * 128), 1);
                                 var e = measured.Conversion;
+                                if (e.DominantHit < -1) throw new InvalidOperationException("Invalid physical dominant history index.");
+                                _maximumDominantHit = Math.Max(_maximumDominantHit, e.DominantHit);
                                 static ReadoutCharges Charges(IReadOnlyList<double> c) => new(c[0], c[1], c[2], c[3]);
                                 _measured.Add(new(_measured.Count, e.HoldTimeNs * 1e-9, e.TriggerTimeNs * 1e-9,
                                     Charges(e.Codes), Charges(e.AnalogAtHold), measured.RawX, measured.RawY, measured.Crystal,
@@ -176,7 +179,8 @@ internal sealed class AcquisitionSession : IAcquisitionSession
                             foreach (var h in physical.LastHits)
                             {
                                 var c = h.Channels;
-                                _realised.Add(new(h.TimeNs * 1e-9, new(c[0], c[1], c[2], c[3])));
+                                var direct = physical.LastDirectEvent ?? throw new InvalidOperationException("Consumed physical input has no direct facts.");
+                                _realised.Add(new(h.TimeNs * 1e-9, new(c[0], c[1], c[2], c[3]), direct.PixelX, direct.PixelY, direct.DepositKeV));
                             }
                             while (_truth.Count < physical.TruthSamples.Count)
                             {
@@ -207,6 +211,8 @@ internal sealed class AcquisitionSession : IAcquisitionSession
                 bool completed = _live >= preset;
                 var decodeWatch = Stopwatch.StartNew();
                 int counts = _prepared is null ? _events.Count : _assigned;
+                if (_maximumDominantHit >= _realised.Count)
+                    throw new InvalidOperationException("Dominant history is outside the published physical prefix.");
                 var decoded = counts > 0 ? _decoder?.Decode(_flood) : null;
                 decodeWatch.Stop();
                 var imaging = new ImagingResult(_flood.ReadOnlyCopy(), -(_flood.Width - 1) * _config.Detector.PixelPitchMm / 2,
@@ -219,6 +225,8 @@ internal sealed class AcquisitionSession : IAcquisitionSession
                     { ConfigurationJson = _configurationJson, Detector = _detector, Optics = _optics, Seed = _config.Seed,
                         Readout = _prepared is { } prepared ? new(prepared.Reference.View, _measured.Publish(), _realised.Publish(), _unknown, _physicalSource!.HasPendingHold)
                         {
+                            Participation = new(_physicalSource!.FinalizedHistories, _physicalSource.NoRecordedContribution,
+                                _realised.Count - _physicalSource.FinalizedHistories),
                             LiveDensity = _rawDensity.ReadOnlyCopy(), TruthSamples = _truth.Publish(),
                             Lines = Array.AsReadOnly(prepared.Entries.Select((e, i) => new ReadoutLineView(e.View,
                                 _lineAssignments[i].Publish(), _lineAssigned[i], _lineUnknown[i])).ToArray())

@@ -74,6 +74,7 @@
     <sys:Double x:Key="FontSize.Title">14</sys:Double>
     <!-- Imaging centre: height always left under the image pair for measurements and the focus curve -->
     <sys:Double x:Key="Size.Imaging.Lower">240</sys:Double>
+    <GridLength x:Key="Size.Compare.Spectrum">180</GridLength>
     <sys:Double x:Key="Size.Modal">480</sys:Double>
     <sys:Double x:Key="Size.Caption">47</sys:Double>
     <sys:Double x:Key="Size.Options">520</sys:Double>

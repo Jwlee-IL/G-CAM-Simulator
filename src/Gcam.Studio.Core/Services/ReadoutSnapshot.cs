@@ -6,6 +6,8 @@ namespace Gcam.Studio.Core.Services;
 public sealed record ReadoutSnapshot(ReadoutPreparation Preparation, IReadOnlyList<MeasuredReadoutRecord> Records,
     IReadOnlyList<RealisedReadoutHit> Hits, int Unknown, bool PendingHold)
 {
+    /// <summary>Finalized at pulse-support expiry; unresolved tails are never implicitly flushed at Stop.</summary>
+    public ReadoutParticipation? Participation { get; init; }
     public Gcam.Core.DetectorImage? LiveDensity { get; init; }
     public IReadOnlyList<ReadoutTruthSample> TruthSamples { get; init; } = [];
     public IReadOnlyList<ReadoutLineView> Lines { get; init; } = [];

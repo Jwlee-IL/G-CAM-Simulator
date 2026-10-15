@@ -57,7 +57,8 @@ public sealed class ReadoutBankTests(ITestOutputHelper output)
                     measured.RawX, measured.RawY, measured.Crystal, measured.EnergyKeV, e.DominantHit, e.ContributingHits, e.DominantShare));
                 if (measured.Crystal >= 0) image.Add(measured.Crystal % 12, measured.Crystal / 12, 1);
             }
-            hits.AddRange(source.LastHits.Select(h => new RealisedReadoutHit(h.TimeNs * 1e-9, Charges(h.Channels))));
+            if (source.LastDirectEvent is { } direct)
+                hits.AddRange(source.LastHits.Select(h => new RealisedReadoutHit(h.TimeNs * 1e-9, Charges(h.Channels), direct.PixelX, direct.PixelY, direct.DepositKeV)));
         }
         int assigned = records.Count(r => r.Crystal >= 0);
         return new(2, assigned, source.InputRateCps, 1, false, new(image.ReadOnlyCopy(), -5.5, 1, null, 0, 0, null, assigned, TimeSpan.Zero), [], TimeSpan.Zero, true)

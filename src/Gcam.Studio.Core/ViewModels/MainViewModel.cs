@@ -34,7 +34,7 @@ public sealed partial class MainViewModel : ObservableObject
 
     public MainViewModel(IAcquisitionService acquisition, IThemeService theme, ISpectrumService spectrum, IImagingService? imaging = null,
         IWaveformService? waveform = null, IDetectorFaceService? detectorFace = null, IFocusSweepService? focusSweep = null, IReadoutPreparationService? readoutPreparation = null, IConfirmationService? confirmation = null,
-        IReportExportService? reportExport = null, TimeProvider? reportClock = null)
+        IReportExportService? reportExport = null, TimeProvider? reportClock = null, IReadoutCompareService? compare = null)
     {
         _reportExport = reportExport;
         _reportClock = reportClock ?? TimeProvider.System;
@@ -47,7 +47,8 @@ public sealed partial class MainViewModel : ObservableObject
         Spectrum = new SpectrumWorkspaceViewModel(this, spectrum);
         Waveform = new WaveformWorkspaceViewModel(this, waveform);
         DetectorWorkspace = new DetectorWorkspaceViewModel(this, detectorFace);
-        Workspaces = new ReadOnlyObservableCollection<WorkspaceViewModel>(new ObservableCollection<WorkspaceViewModel> { Imaging, Spectrum, Waveform, DetectorWorkspace });
+        Compare = new CompareWorkspaceViewModel(this, compare);
+        Workspaces = new ReadOnlyObservableCollection<WorkspaceViewModel>(new ObservableCollection<WorkspaceViewModel> { Imaging, Spectrum, Waveform, DetectorWorkspace, Compare });
         foreach (var workspace in Workspaces) workspace.PropertyChanged += OnWorkspaceChanged;
         _selectedWorkspace = Imaging;
         Imaging.IsActive = true;
@@ -67,6 +68,7 @@ public sealed partial class MainViewModel : ObservableObject
     public SpectrumWorkspaceViewModel Spectrum { get; }
     public WaveformWorkspaceViewModel Waveform { get; }
     public DetectorWorkspaceViewModel DetectorWorkspace { get; }
+    public CompareWorkspaceViewModel Compare { get; }
     public ReadOnlyObservableCollection<WorkspaceViewModel> Workspaces { get; }
     public bool HasWorkspaceSwitch => Workspaces.Count >= 2;
     private void OnWorkspaceChanged(object? sender, PropertyChangedEventArgs e)
@@ -447,6 +449,7 @@ public sealed partial class MainViewModel : ObservableObject
         AcquisitionSeed = null;
         Spectrum.Reset();
         Imaging.Reset();
+        Compare.Reset();
         Waveform.Begin();
         Progress = 0;
         State = RunState.Empty;
@@ -511,6 +514,7 @@ public sealed partial class MainViewModel : ObservableObject
         Progress = 0;
         Spectrum.Begin(scene);
         Imaging.Begin(scene, acquisitionOptics);
+        Compare.Begin(scene);
         Waveform.Begin();
         if (IsPhysicalReadout) { Imaging.Strip = false; Spectrum.PileUp = false; Waveform.Ideal = false; Waveform.RateStudy = false; }
         AcquisitionSeed = seed;

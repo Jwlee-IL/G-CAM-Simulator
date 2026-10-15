@@ -1,0 +1,108 @@
+<UserControl x:Class="Gcam.Studio.Views.CompareView"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:c="clr-namespace:Gcam.Studio.Controls"
+        xmlns:views="clr-namespace:Gcam.Studio.Views">
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis" />
+        <Style TargetType="c:HeatmapView">
+            <Setter Property="Foreground" Value="{DynamicResource Brush.Text.Secondary}" />
+            <Setter Property="FrameBrush" Value="{DynamicResource Brush.Line.Control}" />
+            <Setter Property="FocusBrush" Value="{DynamicResource Brush.Focus}" />
+            <Setter Property="ShowReadoutOverlay" Value="False" />
+            <Setter Property="Margin" Value="{StaticResource Gap.Field}" />
+        </Style>
+        <Style TargetType="c:ColorBar">
+            <Setter Property="Foreground" Value="{DynamicResource Brush.Text.Secondary}" />
+            <Setter Property="FontFamily" Value="{StaticResource Font.Mono}" />
+            <Setter Property="BarHeight" Value="{StaticResource Size.ColorBar}" />
+        </Style>
+    </UserControl.Resources>
+    <Grid>
+        <views:EmptyReadoutState Visibility="{Binding ShowDirectMode, Converter={StaticResource BoolToVis}}" />
+        <TextBlock Text="Start an acquisition to compare" Style="{StaticResource Text.Body}" HorizontalAlignment="Center" VerticalAlignment="Center"
+                Visibility="{Binding ShowStart, Converter={StaticResource BoolToVis}}" AutomationProperties.AutomationId="Compare.StartState" />
+        <Grid Visibility="{Binding ShowData, Converter={StaticResource BoolToVis}}">
+            <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="{StaticResource Size.Compare.Spectrum}" /></Grid.RowDefinitions>
+            <StackPanel Grid.Row="0" Margin="{StaticResource Gap.Field}">
+                <DockPanel>
+                    <CheckBox DockPanel.Dock="Left" Content="Assignment difference" IsChecked="{Binding ShowDifference}" Margin="{StaticResource Gap.Inline}"
+                            AutomationProperties.AutomationId="Compare.AssignmentDifference" />
+                    <TextBlock Text="{Binding Updating}" Style="{StaticResource Text.Caption}" AutomationProperties.AutomationId="Compare.Updating" />
+                </DockPanel>
+                <TextBlock Text="{Binding Prefix}" Style="{StaticResource Text.Caption}" AutomationProperties.AutomationId="Compare.Prefix" />
+                <TextBlock Text="{Binding EmptyReason}" Style="{StaticResource Text.CaptionWarning}" TextWrapping="Wrap" AutomationProperties.AutomationId="Compare.EmptyReason" />
+            </StackPanel>
+            <Grid Grid.Row="1" Visibility="{Binding ShowPair, Converter={StaticResource BoolToVis}}" Margin="{StaticResource Gap.Row}">
+                <Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition Width="{StaticResource Gutter}" /><ColumnDefinition /></Grid.ColumnDefinitions>
+                <Border Grid.Column="0" Style="{StaticResource Panel.Surface}">
+                    <Grid>
+                        <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition /><RowDefinition /></Grid.RowDefinitions>
+                        <TextBlock Text="Direct crystal · ideal deposit energy" Style="{StaticResource Text.SectionTitle}" TextWrapping="Wrap" Margin="{StaticResource Gap.Field}" />
+                        <c:ImageStackPanel Grid.Row="1" Margin="{StaticResource Gap.Row}">
+                            <c:HeatmapView x:Name="DirectFlood" Image="{Binding Result.Direct.Image.Flood}" OriginMm="{Binding Result.Direct.Image.FloodOriginMm}"
+                                    ScaleMinimum="0" ScaleMaximum="{Binding FloodMaximum}"
+                                    StepMm="{Binding Result.Direct.Image.FloodStepMm}" ValueUnit="counts" EmptyText="No direct inputs"
+                                    AutomationProperties.AutomationId="Compare.DirectFlood" AutomationProperties.Name="Direct crystal flood map" />
+                            <c:ColorBar Minimum="{Binding DataMin, ElementName=DirectFlood}" Maximum="{Binding DataMax, ElementName=DirectFlood}" />
+                            <TextBlock Text="{Binding Readout, ElementName=DirectFlood}" Style="{StaticResource Text.Readout}" />
+                        </c:ImageStackPanel>
+                        <c:ImageStackPanel Grid.Row="2">
+                            <c:HeatmapView x:Name="DirectRecon" Image="{Binding Result.Direct.Image.Reconstruction}" OriginMm="{Binding Result.Direct.Image.ReconOriginMm}"
+                                    ScaleMinimum="{Binding ReconMinimum}" ScaleMaximum="{Binding ReconMaximum}" c:MeasurementOverlay.DisplayOnly="True" c:MeasurementOverlay.Pane="Reconstruction" c:MeasurementOverlay.CanMoveMarkers="False"
+                                    StepMm="{Binding Result.Direct.Image.ReconStepMm}" EmptyText="Direct estimate unavailable"
+                                    c:MeasurementOverlay.Markers="{Binding TruthMarkers}" c:MeasurementOverlay.FoundPeaks="{Binding DirectPeaks}"
+                                    AutomationProperties.AutomationId="Compare.DirectRecon" AutomationProperties.Name="Direct crystal reconstruction" />
+                            <c:ColorBar Minimum="{Binding DataMin, ElementName=DirectRecon}" Maximum="{Binding DataMax, ElementName=DirectRecon}" />
+                            <TextBlock Text="{Binding Readout, ElementName=DirectRecon}" Style="{StaticResource Text.Readout}" />
+                        </c:ImageStackPanel>
+                    </Grid>
+                </Border>
+                <Border Grid.Column="2" Style="{StaticResource Panel.Surface}">
+                    <Grid>
+                        <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition /><RowDefinition /></Grid.RowDefinitions>
+                        <TextBlock Text="Four-output Anger" Style="{StaticResource Text.SectionTitle}" TextWrapping="Wrap" Margin="{StaticResource Gap.Field}" />
+                        <c:ImageStackPanel Grid.Row="1" Margin="{StaticResource Gap.Row}">
+                            <c:HeatmapView x:Name="AngerFlood" Image="{Binding Result.Anger.Image.Flood}" OriginMm="{Binding Result.Anger.Image.FloodOriginMm}"
+                                    ScaleMinimum="0" ScaleMaximum="{Binding FloodMaximum}"
+                                    StepMm="{Binding Result.Anger.Image.FloodStepMm}" ValueUnit="counts / corrected intensity" EmptyText="No assigned conversions"
+                                    AutomationProperties.AutomationId="Compare.AngerFlood" AutomationProperties.Name="Four-output Anger flood map" />
+                            <c:ColorBar Minimum="{Binding DataMin, ElementName=AngerFlood}" Maximum="{Binding DataMax, ElementName=AngerFlood}" />
+                            <TextBlock Text="{Binding Readout, ElementName=AngerFlood}" Style="{StaticResource Text.Readout}" />
+                        </c:ImageStackPanel>
+                        <c:ImageStackPanel Grid.Row="2">
+                            <c:HeatmapView x:Name="AngerRecon" Image="{Binding Result.Anger.Image.Reconstruction}" OriginMm="{Binding Result.Anger.Image.ReconOriginMm}"
+                                    ScaleMinimum="{Binding ReconMinimum}" ScaleMaximum="{Binding ReconMaximum}" c:MeasurementOverlay.DisplayOnly="True" c:MeasurementOverlay.Pane="Reconstruction" c:MeasurementOverlay.CanMoveMarkers="False"
+                                    StepMm="{Binding Result.Anger.Image.ReconStepMm}" EmptyText="Anger estimate unavailable"
+                                    c:MeasurementOverlay.Markers="{Binding TruthMarkers}" c:MeasurementOverlay.FoundPeaks="{Binding AngerPeaks}"
+                                    AutomationProperties.AutomationId="Compare.AngerRecon" AutomationProperties.Name="Four-output Anger reconstruction" />
+                            <c:ColorBar Minimum="{Binding DataMin, ElementName=AngerRecon}" Maximum="{Binding DataMax, ElementName=AngerRecon}" />
+                            <TextBlock Text="{Binding Readout, ElementName=AngerRecon}" Style="{StaticResource Text.Readout}" />
+                        </c:ImageStackPanel>
+                    </Grid>
+                </Border>
+            </Grid>
+            <Border Grid.Row="1" Style="{StaticResource Panel.Surface}" Margin="{StaticResource Gap.Row}"
+                    Visibility="{Binding ShowAssignment, Converter={StaticResource BoolToVis}}">
+                <DockPanel>
+                    <TextBlock DockPanel.Dock="Top" Text="Assignment disagreement · different / eligible" Style="{StaticResource Text.SectionTitle}" Margin="{StaticResource Gap.Field}" />
+                    <TextBlock DockPanel.Dock="Bottom" Text="Neutral cells: unavailable (no eligible conversions)" Style="{StaticResource Text.Caption}" />
+                    <c:ImageStackPanel>
+                        <c:HeatmapView x:Name="Difference" Image="{Binding Result.Assignment.Difference}" OriginMm="{Binding Result.Direct.Image.FloodOriginMm}"
+                                ScaleMinimum="0" ScaleMaximum="1"
+                                StepMm="{Binding Result.Direct.Image.FloodStepMm}" ValueUnit="different / eligible"
+                                AutomationProperties.AutomationId="Compare.Difference" AutomationProperties.Name="Crystal assignment disagreement" />
+                        <c:ColorBar Minimum="{Binding DataMin, ElementName=Difference}" Maximum="{Binding DataMax, ElementName=Difference}" />
+                        <TextBlock Text="{Binding Readout, ElementName=Difference}" Style="{StaticResource Text.Readout}" />
+                    </c:ImageStackPanel>
+                </DockPanel>
+            </Border>
+            <Border Grid.Row="2" Style="{StaticResource Panel.Surface}">
+                <DockPanel>
+                    <TextBlock DockPanel.Dock="Top" Text="{Binding SpectrumCaption}" Style="{StaticResource Text.Caption}" TextWrapping="Wrap" />
+                    <c:PlotView Series="{Binding Spectrum}" Bands="{Binding Bands}" XLabel="Energy (keV)" YLabel="Raw counts" XUnit="keV" YUnit="counts"
+                            EmptyText="No calibrated spectrum available" AutomationProperties.AutomationId="Compare.Spectrum" AutomationProperties.Name="Direct and Anger spectrum overlay" />
+                </DockPanel>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

@@ -18,6 +18,11 @@ namespace Gcam.Studio.Controls;
 /// </remarks>
 public static class MeasurementOverlay
 {
+    /// <summary>Attach truth/found markers without creating a measurement session or editing surface.</summary>
+    public static readonly DependencyProperty DisplayOnlyProperty = DependencyProperty.RegisterAttached(
+        "DisplayOnly", typeof(bool), typeof(MeasurementOverlay), new PropertyMetadata(false, OnChanged));
+    public static bool GetDisplayOnly(DependencyObject d) => (bool)d.GetValue(DisplayOnlyProperty);
+    public static void SetDisplayOnly(DependencyObject d, bool value) => d.SetValue(DisplayOnlyProperty, value);
     /// <summary>The measurement session (tool, items, selection). Setting it enables the overlay.</summary>
     public static readonly DependencyProperty SessionProperty = DependencyProperty.RegisterAttached(
         "Session", typeof(MeasurementsViewModel), typeof(MeasurementOverlay), new PropertyMetadata(null, OnChanged));
@@ -67,11 +72,11 @@ public static class MeasurementOverlay
     private static void OnChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
         if (d is not HeatmapView view) return;
-        if (e.Property == SessionProperty)
+        if (e.Property == SessionProperty || e.Property == DisplayOnlyProperty)
         {
             view.Loaded -= OnLoaded;
             view.Unloaded -= OnUnloaded;
-            if (e.NewValue is not null)
+            if (GetSession(view) is not null || GetDisplayOnly(view))
             {
                 view.Loaded += OnLoaded;
                 view.Unloaded += OnUnloaded;
