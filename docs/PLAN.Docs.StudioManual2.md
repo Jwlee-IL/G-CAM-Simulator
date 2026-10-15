@@ -6,8 +6,10 @@ passing video per test. The process is the first edition's ([PLAN.Docs.StudioMan
 [charter](archive/PLAN.Docs.StudioManual.Charter.md) and [review](archive/PLAN.Docs.StudioManual.Review.md)); this plan
 lists only what changes.
 
-Status: reference plan 2026-10-16, written by the planner; video decisions V1–V5 are the author's (2026-10-15). Next: a
-Codex review turn (review only, no desktop) in worktree `C:\gw\w48`, branch `todo48-manual-second-edition`.
+Status: decisions after review 2026-10-16 (below); next: implementation turn 2 (headless) in the same Codex conversation
+(`01a1403d…`). History: reference plan 2026-10-16 by the planner, video decisions V1–V4 the author's (2026-10-15); review by
+Codex 2026-10-16 ([review](PLAN.Docs.StudioManual2.Review.md), R1–R19, a measured sink-writer encode); worktree
+`C:\gw\w48`, branch `todo48-manual-second-edition`.
 
 ## Why a second edition
 
@@ -52,6 +54,26 @@ Codex review turn (review only, no desktop) in worktree `C:\gw\w48`, branch `tod
 | P6 | **Edition traceability:** the generation record may cite each chapter run's video SHA-256 from `index.json` (not the file; videos are not committed). **Verify** that `check --all` replays committed editions without the videos present (CI has none) |
 | P7 | **Fingerprint test:** start an interpreter that is not the Store alias (for example `py -3.13` when the launcher exists, else `python`); CI behaviour unchanged |
 | P8 | **Docs:** `AGENTS.UiAutomation` (video, opt-out, folder, overlap masking), `.gitignore`, the manual's sources, VV.Studio trace rows for the new chapters, catalog entries for new test classes, History |
+
+## Decisions after review (2026-10-16)
+
+The review corrected the premises (38 facts + one 4-row theory; `CaptureQuality` has no overlap detector, the traversal is
+`ManualCapture.Occluder`; Options and Reset are in-window layers; `Scenario.Run` marks a pass before its final checks;
+the 1.2 scenario never presses Ctrl+1…4; the Compare scenario checks labels and states only). Its measured encode: 600
+synthetic 1440×900 frames in 1.6–1.7 s, about 7 % of one core at real time, 321 MiB peak, decoded back frame for frame.
+
+| # | Decision | Kind |
+|---|---|---|
+| MD1 | **Edition scope as R1:** ten chapters (eight generated, two static); new 3.7 "Export reports and event data" and 4.4 "Compare direct crystal and physical readout"; part 4 holds only 4.4, with its own Baseline setup | planner (author reviews the edition) |
+| MD2 | **Chapter scripts as R2** — all eight generated chapters re-run on one deployment; 1.2 presses Ctrl+1…5 and checks the workspace that appears; each chapter fails its deliberate verdict mutation and passes recovery. **R3:** a manual export entry with an exact declared-write list, one chapter run with one subfolder per format | planner |
+| MD3 | **Compare oracle (author):** read the displayed population numbers through UI Automation and recompute in the test — same / eligible, assigned + unknown = held, same ≤ eligible, different = eligible − same, empty denominators unavailable. No new evidence branch in Studio | author |
+| MD4 | **Notices and static chapters as R4–R6:** N-NOT-SAVED re-worded, a new N-EXPORT-SCOPE, placements extended; static 1.1 and 5.2 revised and new mark purposes — all drafts until the author approves them with the edition | planner (author approves) |
+| MD5 | **Observed run as R7:** the new build gets an applicable observed batch with the light before/after method; its first pilot uses the export (HTML into its guarded sandbox); one qualified observed manual batch serves both the observation and the chapters. The recorder's own writes are accounted as harness effects | planner |
+| MD6 | **Recorder in the test process (author):** a background capture thread at a 100 ms period and an encoding thread (MTA, Media Foundation sink writer, RGB32 → H.264, 2 Mbit/s), at most one pending and one active frame. Stop waits a bounded time (5 s); on a timeout the recording is abandoned as unavailable — background threads do not keep the process alive. No helper process. Lifecycle, coverage inventory, capture, cursor, sink writer, index, captions and fault rules as R8, R9, R11, R12, R14, R15 | author |
+| MD7 | **Publication (author):** fixed names; each file is copied to a staging name on the destination volume and replaced on its own — MP4, then VTT, then `index.json` last. A run interrupted between them leaves a hash mismatch the next publication repairs; no journal and no lock (desktop runs are already serialised by the desktop lease) | author |
+| MD8 | **Foreign windows (author) as R11:** survey the window stack just before and after each frame, mask every other process's window over the frame, a full neutral frame when the survey fails; the native save dialog is shown as neutral frames although it belongs to Studio; the remaining race (a window that appears and vanishes between the two surveys) is stated in `AGENTS.UiAutomation` | author |
+| MD9 | **Exclusions and faults:** `ObservedRunTests` and `PlotViewTests` record nothing (a stated clarification of V1); a recorder fault never changes a verdict, and a passing test may then show "video unavailable" | planner (from V1–V3) |
+| MD10 | **Provenance, interpreter, docs as R16–R18:** an optional pinned video hash in the manual run record (edition 1 stays byte-identical); the fingerprint test resolves a working interpreter (`GCAM_TEST_PYTHON`, then `python`, then `py -3`) and never skips; `.gitignore` gains `/artifacts/` | planner |
 
 ## Steps
 
