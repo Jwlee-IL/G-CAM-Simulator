@@ -16,6 +16,10 @@ public sealed class ActionPolicyTests
         Assert.Equal("in-memory-scene-delete", policy.Require("RemoveSource", "invoke").Effect);
         Assert.Equal("in-memory-acquisition-reset", policy.Require("Reset.Discard", "invoke").Effect);
         Assert.Equal("in-memory-measurement-delete", policy.Require("M2.Delete", "invoke").Effect);
+        // The one declared write surface (surface-list.json#app-report-export): only the popup's Export… leads to it.
+        Assert.Equal("user-confirmed-report-export", policy.Require("Export.Confirm", "invoke").Effect);
+        Assert.Equal("in-memory-view", policy.Require("ExportReport", "invoke").Effect);
+        Assert.Equal(new[] { "Export.Confirm" }, targets.Keys.Where(k => !policy.Require(k, "read").Effect.StartsWith("in-memory-", StringComparison.Ordinal)));
         policy.VerifyControlType("SourceX", "Edit");
         Assert.Throws<InvalidOperationException>(() => policy.VerifyControlType("SourceX", "Button"));
     }

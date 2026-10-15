@@ -448,6 +448,102 @@
     },
     {
       "controlTypes": [
+        "Button"
+      ],
+      "effect": "user-confirmed-report-export",
+      "operations": [
+        "click",
+        "invoke",
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "report.export-to-confirmed-path",
+      "target": "Export.Confirm"
+    },
+    {
+      "controlTypes": [
+        "RadioButton"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "click",
+        "keys",
+        "pointer",
+        "read",
+        "select"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Export.Csv",
+      "target": "Export.Csv"
+    },
+    {
+      "controlTypes": [
+        "RadioButton"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "click",
+        "keys",
+        "pointer",
+        "read",
+        "select"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Export.Html",
+      "target": "Export.Html"
+    },
+    {
+      "controlTypes": [
+        "RadioButton"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "click",
+        "keys",
+        "pointer",
+        "read",
+        "select"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Export.Pdf",
+      "target": "Export.Pdf"
+    },
+    {
+      "controlTypes": [
+        "RadioButton"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "click",
+        "keys",
+        "pointer",
+        "read",
+        "select"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Export.Word",
+      "target": "Export.Word"
+    },
+    {
+      "controlTypes": [
+        "Button"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "click",
+        "invoke",
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "report.request-export",
+      "target": "ExportReport"
+    },
+    {
+      "controlTypes": [
         "ColorBar"
       ],
       "effect": "in-memory-view",
@@ -709,6 +805,20 @@
       "policy": "allow",
       "semanticAction": "view.Imaging.MlemHelp",
       "target": "Imaging.MlemHelp"
+    },
+    {
+      "controlTypes": [
+        "ItemsControl"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "keys",
+        "pointer",
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Imaging.Peaks",
+      "target": "Imaging.Peaks"
     },
     {
       "controlTypes": [
