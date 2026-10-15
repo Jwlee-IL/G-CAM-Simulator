@@ -4,7 +4,9 @@ Scope: TODO-47. A **Compare** workspace shows one physical-readout acquisition r
 direct crystal assignment and the four-output Anger readout (14-bit ADCs, flood-map LUT, pile-up). The goal is theory
 against a realistic readout, with no second run.
 
-Status: reference plan 2026-10-15, written by the planner. The UI decisions come from the author (below). Next: a Codex
+Status: review by Codex done 2026-10-15 (conversation `01a13e2e…`, [review](PLAN.Studio.ReadoutCompare.Review.md));
+all ten proposals adopted below ("Decisions after review"); implementation next in the same conversation. History:
+reference plan 2026-10-15, written by the planner. The UI decisions come from the author (below). Next: a Codex
 review turn that checks the premises and proposes improvements, then "Decisions after review", then implementation in
 the same conversation.
 
@@ -31,6 +33,25 @@ the same conversation.
 | C6 | **Reference cost table**: the 1 m offer-cost record rows for the current preset and line (F, gross-error share, RMS at 1 k / 4 k counts). The table uses the existing applicability rule from TODO-41: it is marked "reference only" with the differences listed whenever the scene differs from the benchmark. | It shows the measured ensemble cost without pretending one run measures it (Findings 69). |
 | C7 | **Layering and performance.** The view models live in Core and are tested headless. The projection of the direct path from the retained histories lives in Services, behind a contract, and runs on a worker with the existing snapshot cadence. The cost is measured and stated, with a 4 Hz refresh budget. | Same rules as the other workspaces (`AGENTS.Studio.md`, `DESIGN.Architecture.md`). |
 | C8 | **Out of scope for the first cut**: report-export sections for Compare, comparing independent-SiPM readout, multi-seed F inside Studio, and comparing two separate acquisitions. | Keep the first cut small. TODO-48 (manual) picks Compare up afterwards. |
+
+## Decisions after review (planner, 2026-10-15)
+
+The review measured Studio's own numbers on one seed (on-axis Cs-137 at 1 m, 10 s, ambient off). Same-crystal share was
+71.4 % on Baseline and 52.6 % on Sharp (All), and the unknown share was 0 % and 1.2 %. The lab study's 36 % is therefore
+not quoted as a live figure. Every proposal is adopted; the numbers refer to the review.
+
+| # | Decision |
+|---|---|
+| D1 | C1 as proposal 1: the physical hit stream keeps each consumed input's direct facts (`RealisedReadoutHit` gains pixel x / y and deposit, +16 bytes per input), published with the existing chunk store; dominant indices are validated against the same snapshot; `AcquisitionSnapshot.Events` keeps its meaning (empty on the physical path). |
+| D2 | The direct reference is "Direct crystal · ideal deposit energy": the largest summed-deposit pixel and the unsmeared total deposit of the same histories (proposal 2). No measurement stage or legacy chain runs on it, and no equivalence to a separately started DirectCrystal acquisition is promised. |
+| D3 | Accounting uses explicit populations (proposal 3): histories, held, assigned, unknown, multi-contributor, no-dominant, distinct-dominant and never-dominant. Agreement excludes multi-contributor conversions, which are shown as their own count. |
+| D4 | The difference view is the assignment-disagreement map of proposal 4: per direct pixel, different / eligible, with an empty denominator shown as unavailable (never 0 %). The overall share is Σ same / Σ eligible, and unknowns stay a separate count. |
+| D5 | Windows and lines follow Imaging's physical settings (proposal 5): explicit keV edges, the captured calibration line through `ReadoutPolicy.LineForWindow`, and no fallback to another LUT. The spectrum overlay shows the same line, identical bins, raw counts and an overflow count. This replaces C5's per-path N × FWHM. |
+| D6 | Compare gets its own Core contract and view model (`IReadoutCompareService`, `CompareWorkspaceViewModel`) and one atomic result per prefix (proposal 6). |
+| D7 | The comparison runs on its own cancellable worker, only while Compare is active, with one latest pending request; nothing is added to the acquisition loop or the awaited Imaging / Spectrum pair (proposal 7). The refresh cost is measured and reported. |
+| D8 | Layout as chosen, with explicit empty states (proposal 8): (a) direct mode → the physical-readout note and "Choose readout…"; (b) no snapshot → "Start an acquisition to compare"; (c) no held, assigned or window events → the direct image stays and the reason is shown; (d) while updating → keep the last consistent pair and its time. Separate `ImageStackPanel` per image; bounded rows; a scrolling side panel; Ctrl+5. |
+| D9 | The reference cost table reuses the embedded, pin-checked record loader, the captured preparation plan and `ReadoutCostHelp` wording (proposal 9). A small evaluator lists the differences between this scene and the benchmark (isotope / line, distance, position, rate, module), and it is built once and tested. |
+| D10 | Exclusions and verification as proposal 10. The report export notes that Compare is not in the report, and its capture must not read the new physical direct facts as legacy events. Tests use exact retained-input projections and hand-built fixtures, not a second run. |
 
 ## Premises to verify first (stop and report if one is wrong)
 
