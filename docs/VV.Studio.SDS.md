@@ -310,7 +310,7 @@ The shell registers Imaging once and retains its identity on completion, Stop an
 is the acquisition source of truth; publishing it refreshes the imaging measurement session and notifies `PeakText`,
 which names the decoder estimate for one found peak and counts the found peaks when there are two or more.
 The two `ContentControl`s use workspace-type DataTemplates for centre and panel. Only registered indices are
-selected by Ctrl+1…4; switch visibility requires at least two workspaces.
+selected by Ctrl+1…5; switch visibility requires at least two workspaces.
 Setting a registered workspace's `IsActive` true selects it in the shell and clears the other active state.
 This handles SelectionItem activation without relying on a button command (AN-10).
 
@@ -548,6 +548,7 @@ Every SRS requirement maps to at least one unit; every unit carries at least one
 | SR-A11Y-05 | SU-14 theme dictionaries and disabled TextBox/ComboBox templates; ThemeContrastTests reads production XAML tokens without WPF |
 | SR-SEC-01 | all (no user-file I/O in Studio except SU-27's confirmed path and its declared sidecars), SU-08 (engine is called with in-memory config; the only file read is the shipped, hash-pinned ambient spectrum, through the engine loader) |
 | SR-EXPORT-01 … 05 | SU-27, SU-01 (`ExportReportCommand`), SU-19 (configuration JSON once per acquisition), SU-20 / SU-21 (`MeasuredEnergies`, for event data) |
+| SR-CMP-01 … 05 | SU-28, SU-01 (workspace registration, Ctrl+5), SU-19 (retained direct facts in the physical hit stream), SU-27 (export omission note) |
 | SR-ARCH-01 … SR-ARCH-04 | project files of SI-1 … SI-4 and `tests/Gcam.Studio.Tests` |
 
 SU-11 (colour bar, colormap) and SU-13 (converters) serve SR-VIEW-01 / SR-A11Y-04 and SR-MEAS-06
@@ -637,6 +638,7 @@ Execution evidence and known algorithm limits: [VV.Studio.Detector](VV.Studio.De
 | Unit | Item | Type(s) | File(s) | Responsibility |
 |---|---|---|---|---|
 | SU-27 | SI-1, SI-4 | `SimulationReport`, `ReportWriter`, `ReportMarkup`, `ReportFormat`, `ReportFiles`, `ReportMeasurement`, `ReportTextWrapping`, `WordReportWriter`, `EventCsvWriter`, `ExportReportViewModel`, `IReportExportService`; `ReportExportService`, `ReportFileWriter`, `PdfReportWriter`, `ReportFigureRenderer`, `ExportReportView` | `Core/Reporting/*.cs`, `Core/Services/IReportExportService.cs`, `Core/ViewModels/MainViewModel.Report.cs`, `Core/ViewModels/ExportReportViewModel.cs`; `Studio/Services/Report*.cs`, `Studio/Services/PdfReportWriter.cs`, `Studio/Views/ExportReportView.xaml` | capture the displayed state; the format popup; deterministic HTML with inline SVG, Word as hand-written Office Open XML, event data as CSV with its metadata, and the scene JSON (Core); PDF through PDFsharp-WPF 6.2.4 (MIT) and PNG figures (shell); choose the path and write the chosen file and its declared sidecars with rollback (shell) |
+| SU-28 | SI-1, SI-3, SI-4 | `CompareWorkspaceViewModel`, `IReadoutCompareService`, `Compare*` result records, `ReadoutCostApplicability`, `ReadoutParticipation`; `ReadoutCompareService`; `CompareView`, `ComparePanel` | `Core/ViewModels/CompareWorkspaceViewModel.cs`, `Core/Services/Compare*.cs`, `Core/Services/IReadoutCompareService.cs`, `Core/Services/ReadoutCostApplicability.cs`, `Core/Services/ReadoutParticipation.cs`; `Services/ReadoutCompareService.cs`; `Studio/Views/Compare*.xaml` | one atomic comparison result per retained prefix (acquisition / settings identity, prefix length and time) from a separate coalescing worker that reuses the selected-channel physical projection and the decoder cache; the physical hit stream keeps each input's direct pixel and deposit (`RealisedReadoutHit`, +16 bytes per input) |
 
 `ExportReportCommand` is enabled only while a snapshot exists. It captures the report before the native dialog pumps
 messages, because a live acquisition may publish a newer snapshot while the dialog is open. `AcquisitionSession`

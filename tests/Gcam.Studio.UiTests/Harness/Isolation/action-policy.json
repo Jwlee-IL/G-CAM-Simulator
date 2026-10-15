@@ -5,6 +5,232 @@
   "targets": [
     {
       "controlTypes": [
+        "TextBlock"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Compare.StartState",
+      "target": "Compare.StartState"
+    },
+    {
+      "controlTypes": [
+        "CheckBox"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "read",
+        "toggle",
+        "click",
+        "keys",
+        "pointer"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Compare.AssignmentDifference",
+      "target": "Compare.AssignmentDifference"
+    },
+    {
+      "controlTypes": [
+        "TextBlock"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Compare.Updating",
+      "target": "Compare.Updating"
+    },
+    {
+      "controlTypes": [
+        "TextBlock"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Compare.Prefix",
+      "target": "Compare.Prefix"
+    },
+    {
+      "controlTypes": [
+        "TextBlock"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Compare.EmptyReason",
+      "target": "Compare.EmptyReason"
+    },
+    {
+      "controlTypes": [
+        "HeatmapView"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "read",
+        "keys",
+        "pointer"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Compare.DirectFlood",
+      "target": "Compare.DirectFlood"
+    },
+    {
+      "controlTypes": [
+        "HeatmapView"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "read",
+        "keys",
+        "pointer"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Compare.DirectRecon",
+      "target": "Compare.DirectRecon"
+    },
+    {
+      "controlTypes": [
+        "HeatmapView"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "read",
+        "keys",
+        "pointer"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Compare.AngerFlood",
+      "target": "Compare.AngerFlood"
+    },
+    {
+      "controlTypes": [
+        "HeatmapView"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "read",
+        "keys",
+        "pointer"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Compare.AngerRecon",
+      "target": "Compare.AngerRecon"
+    },
+    {
+      "controlTypes": [
+        "HeatmapView"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "read",
+        "keys",
+        "pointer"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Compare.Difference",
+      "target": "Compare.Difference"
+    },
+    {
+      "controlTypes": [
+        "PlotView"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Compare.Spectrum",
+      "target": "Compare.Spectrum"
+    },
+    {
+      "controlTypes": [
+        "TextBlock"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Compare.SameShare",
+      "target": "Compare.SameShare"
+    },
+    {
+      "controlTypes": [
+        "HelpMark"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "read",
+        "keys",
+        "pointer"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Compare.PopulationHelp",
+      "target": "Compare.PopulationHelp"
+    },
+    {
+      "controlTypes": [
+        "TextBlock"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Compare.Reference",
+      "target": "Compare.Reference"
+    },
+    {
+      "controlTypes": [
+        "HelpMark"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "read",
+        "keys",
+        "pointer"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Compare.CostHelp",
+      "target": "Compare.CostHelp"
+    },
+    {
+      "controlTypes": [
+        "RadioButton"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "click",
+        "keys",
+        "pointer",
+        "read",
+        "select"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Workspace.Compare",
+      "target": "Workspace.Compare"
+    },
+    {
+      "controlTypes": [
+        "TextBlock"
+      ],
+      "effect": "in-memory-view",
+      "operations": [
+        "read"
+      ],
+      "policy": "allow",
+      "semanticAction": "view.Export.CompareNote",
+      "target": "Export.CompareNote"
+    },
+    {
+      "controlTypes": [
         "ComboBox"
       ],
       "effect": "in-memory-view",

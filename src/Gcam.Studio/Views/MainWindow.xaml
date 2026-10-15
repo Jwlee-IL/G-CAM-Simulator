@@ -68,6 +68,7 @@
         <KeyBinding Modifiers="Control" Key="D2" Command="{Binding SelectWorkspaceCommand}" CommandParameter="1" />
         <KeyBinding Modifiers="Control" Key="D3" Command="{Binding SelectWorkspaceCommand}" CommandParameter="2" />
         <KeyBinding Modifiers="Control" Key="D4" Command="{Binding SelectWorkspaceCommand}" CommandParameter="3" />
+        <KeyBinding Modifiers="Control" Key="D5" Command="{Binding SelectWorkspaceCommand}" CommandParameter="4" />
         <!-- Measurement tool access keys (SR-A11Y-03): the icon toggles carry no text for an underlined access key, so the
         window binds Alt+P / D / A / R. The command acts only while Imaging is shown and no modal layer is open; a focused
         control that handles the combination keeps it (bindings only see unhandled keys). -->
@@ -377,6 +378,9 @@
                         <ContentControl Grid.Column="2" Content="{Binding SelectedWorkspace}" HorizontalContentAlignment="Stretch"
                                 VerticalContentAlignment="Stretch">
                             <ContentControl.Resources>
+                                <DataTemplate DataType="{x:Type vm:CompareWorkspaceViewModel}">
+                                    <views:CompareView />
+                                </DataTemplate>
                                 <DataTemplate DataType="{x:Type vm:SpectrumWorkspaceViewModel}">
                                     <views:SpectrumView />
                                 </DataTemplate>
@@ -600,6 +604,9 @@
                         <ContentControl Grid.Column="4" Content="{Binding SelectedWorkspace}" HorizontalContentAlignment="Stretch"
                                 VerticalContentAlignment="Stretch">
                             <ContentControl.Resources>
+                                <DataTemplate DataType="{x:Type vm:CompareWorkspaceViewModel}">
+                                    <views:ComparePanel />
+                                </DataTemplate>
                                 <DataTemplate DataType="{x:Type vm:SpectrumWorkspaceViewModel}">
                                     <views:SpectrumPanel />
                                 </DataTemplate>

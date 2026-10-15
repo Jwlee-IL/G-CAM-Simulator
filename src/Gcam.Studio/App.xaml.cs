@@ -20,6 +20,7 @@ public partial class App : Application
             .AddSingleton<IAcquisitionService, SimulationService>()
             .AddSingleton<ISpectrumService, SpectrumService>()
             .AddSingleton<IImagingService, ImagingService>()
+            .AddSingleton<IReadoutCompareService, ReadoutCompareService>()
             .AddSingleton<IWaveformService, WaveformService>()
             .AddSingleton<IDetectorFaceService, DetectorFaceService>()
             .AddSingleton<IFocusSweepService, FocusSweepService>()

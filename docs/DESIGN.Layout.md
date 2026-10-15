@@ -84,8 +84,8 @@ which has room for them.
 The primary action sits at the same place on every screen (top right); the status of the last run is always
 visible at the bottom, full width, regardless of which panel has focus.
 
-Imaging, Spectrum, Waveform and Detector are registered. The switch uses `Segment.Track` /
-`RadioButton.Segment`, workspace titles and `Workspace.*` AutomationIds. Ctrl+1…4 selects a registered workspace;
+Imaging, Spectrum, Waveform, Detector and Compare are registered. The switch uses `Segment.Track` /
+`RadioButton.Segment`, workspace titles and `Workspace.*` AutomationIds. Ctrl+1…5 selects a registered workspace;
 an unavailable index leaves selection unchanged. Acquisition preserves selection. Physical inputs (scene, optics,
 detector, chain, seed) are disabled while acquired data exist and unlock after Reset; workspace view settings stay
 editable in every state and only re-render retained data.

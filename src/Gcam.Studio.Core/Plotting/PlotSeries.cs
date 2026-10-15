@@ -5,6 +5,8 @@ public sealed record PlotSeries(string Name, double[] Y, double[]? X = null,
     double Origin = 0, double Step = 1, PlotKind Kind = PlotKind.Line, PlotColourRole ColourRole = PlotColourRole.Series1,
     double[]? BinEdges = null)
 {
+    /// <summary>Optional line distinction independent of colour, used by the comparison overlay.</summary>
+    public bool Dashed { get; init; }
     public MinMaxPyramid? PreparedPyramid { get; init; }
     public const int MaximumSamples = 10_000_000;
     public double XAt(int index) => X is null ? Origin + index * Step : X[index];

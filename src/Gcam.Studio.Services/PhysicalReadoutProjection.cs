@@ -11,6 +11,21 @@ namespace Gcam.Studio.Services;
 /// only through the calibration of the one line it contains, never through another line's LUT.</summary>
 public static class PhysicalReadoutProjection
 {
+    /// <summary>Compare decodes only its selected channel; existing Imaging projections keep their original path.</summary>
+    internal static ImagingChannel Selected(AcquisitionSnapshot snapshot, SimulationConfig projection,
+        ImagingSettings settings, bool window, MlemDecoderCache cache, CancellationToken token)
+    {
+        ValidateWindow(settings.WindowLowKeV, settings.WindowHighKeV);
+        if (settings.Strip) throw new NotSupportedException("Physical readout stripping needs independent readout-aware calibration.");
+        if (settings.Method == DecoderMethod.Mlem) projection.Decoder.MlemIterations = Gcam.Studio.Core.Imaging.StudioMlem.Iterations;
+        MlemProjection? Mlem(double line) => settings.Method == DecoderMethod.Mlem ? new(cache, line) : null;
+        var readout = snapshot.Readout!;
+        return window ? Window(snapshot, readout, snapshot.Imaging.Flood.Width, snapshot.Imaging.Flood.Height,
+            projection, settings, Mlem, token)
+            : ImagingProjection.Project(snapshot.Imaging.Flood, snapshot.Imaging, projection, "All", 0, double.NaN, double.NaN,
+                Mlem(readout.Preparation.LineKeV)) with { CalibrationLineKeV = readout.Preparation.LineKeV };
+    }
+
     public static void ValidateWindow(double low, double high)
     { if (!double.IsFinite(low) || !double.IsFinite(high) || low < 0 || high <= low) throw new ArgumentException("Energy window needs finite 0 ≤ low < high keV."); }
 

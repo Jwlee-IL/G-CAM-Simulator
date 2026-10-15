@@ -46,7 +46,8 @@ public sealed record SimulationReport(
                 new("Chain", snapshot.Chain.ToString()), new("Readout", vm.ReadoutModeSummary),
                 new("Ambient", $"{vm.AmbientDoseRateMicroSvPerHour:0.###} µSv/h · {vm.AmbientEnvironmentLabel} · {vm.AmbientBsrReadout}"),
                 new("Added background", $"{vm.BackgroundToSignalRatio:G4} × signal"),
-                new("Acquired decoder", "Cross-correlation; acquired focus recorded in configuration")
+                new("Acquired decoder", "Cross-correlation; acquired focus recorded in configuration"),
+                new("Report scope", "Compare workspace is not included.")
             }).ToArray(),
             [new("Run state", vm.State.ToString()), new("Status", vm.Status),
                 new("Simulated time", $"{snapshot.LiveTimeS:0.0} s"), new("Counts", $"{snapshot.Counts:N0}"),

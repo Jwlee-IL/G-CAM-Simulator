@@ -4,6 +4,8 @@
              xmlns:conv="clr-namespace:Gcam.Studio.Converters">
     <StackPanel>
         <TextBlock Text="Export report" Style="{StaticResource Text.PanelTitle}" Margin="{StaticResource Gap.Section}" />
+        <TextBlock Text="The report omits the Compare workspace." Style="{StaticResource Text.Caption}" TextWrapping="Wrap" Margin="{StaticResource Gap.Field}"
+                AutomationProperties.AutomationId="Export.CompareNote" />
         <RadioButton Content="HTML" GroupName="ExportFormat" Foreground="{DynamicResource Brush.Text.Primary}" Margin="{StaticResource Gap.Field}"
                      IsChecked="{Binding Format, Converter={x:Static conv:EnumMatchConverter.Instance}, ConverterParameter=Html}"
                      AutomationProperties.AutomationId="Export.Html" />

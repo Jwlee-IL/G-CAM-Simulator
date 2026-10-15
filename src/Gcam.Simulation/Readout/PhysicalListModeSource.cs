@@ -21,6 +21,8 @@ public sealed class PhysicalListModeSource : IDisposable
     private readonly IReadOnlyList<PhysicalTruthSample> _readOnlyTruth;
     /// <summary>Only this advance's realised input. The consumer retains compact scalars for historical scope.</summary>
     public IReadOnlyList<ReadoutHit> LastHits { get; private set; } = [];
+    /// <summary>This advance's consumed direct event, never an unconsumed look-ahead.</summary>
+    public DetectedEvent? LastDirectEvent { get; private set; }
     public int HitsObserved { get; private set; }
     public IReadOnlyList<PhysicalTruthSample> TruthSamples => _readOnlyTruth;
     public const int MaximumTruthSamples = 256;
@@ -30,6 +32,8 @@ public sealed class PhysicalListModeSource : IDisposable
     public double AmbientRateCps => _source.AmbientRateCps;
     public long BackgroundAttempts => _source.BackgroundAttempts;
     public bool HasPendingHold => _stream.HasPendingHold;
+    public int FinalizedHistories => _stream.FinalizedHistories;
+    public int NoRecordedContribution => _stream.NoRecordedContribution;
 
     public PhysicalListModeSource(SimulationConfig configuration, ReadoutDevice device,
         ReadoutCalibration calibration, int seed)
@@ -68,6 +72,7 @@ public sealed class PhysicalListModeSource : IDisposable
     {
         token.ThrowIfCancellationRequested();
         LastHits = [];
+        LastDirectEvent = null;
         LastInputOrigin = null;
         if (!double.IsFinite(horizonS) || horizonS < ObservedTimeS) throw new ArgumentOutOfRangeException(nameof(horizonS));
         long started = _timing is null ? 0 : Stopwatch.GetTimestamp();
@@ -101,6 +106,7 @@ public sealed class PhysicalListModeSource : IDisposable
             var hit = new ReadoutHit(observed * 1e9, channels, sum);
             if (_truth.Count < MaximumTruthSamples) _truth.Add(new(HitsObserved, input.Sites));
             HitsObserved++; LastHits = Array.AsReadOnly(new[] { hit }); _stream.Append(hit);
+            LastDirectEvent = input.Event;
             LastInputOrigin = input.Origin;
             _pending = null;
         }
