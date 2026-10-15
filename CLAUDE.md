@@ -37,7 +37,7 @@ cocotb RTL front-end path.
   an **energy-window** issue, not a position issue.
 - **Requirement set (2026-10-01, design-only)** — `docs/VV.Gcam.{Overview,URS,PRS,Evidence,Limitations,Decisions}.md`
   (+ `VV.Studio.{SRS,SDS}` for the viewer). Author decisions with reasons are logged in
-  `VV.Gcam.Decisions.md` (D-01…D-57); headlines:
+  `VV.Gcam.Decisions.md` (D-01…D-58); headlines:
   - The product is a **scintillator coded-aperture camera**: compare only with same-class imagers (iPIX),
     never with Compton / HPGe cameras (Polaris-H, GeGI). Use conditions **relaxed to iPIX level**
     (−10…+45 °C, 93 % RH, IP65, 60 cm drop, ≤ 2.5 kg).
@@ -51,7 +51,8 @@ cocotb RTL front-end path.
   - Users: radiation-safety technician + non-specialists. Dockable **Windows tablet** UI; own record
     format; plain category "industrial"; no fixed false-positive target; **Korean law only**.
   - GCAM Studio stays the **simulator's engineering viewer** (the repo is a simulator and a portfolio demo) —
-    not grown into the product UI (D-34).
+    not grown into the product UI (D-34); its one write surface is the user-confirmed report export
+    (HTML / PDF / Word / event CSV, D-58).
 - **Realistic front-end defaults** (themes 30–32): AD9648 14-bit/125 MSPS, `tau_rise=1` sample
   (set by Nyquist), intrinsic ~6 % @662, ~3 keV electronic noise; cusp = best ENC, trapezoid's
   flat-top pays ballistic-deficit; cusp stays a Python benchmark by choice.

@@ -4,7 +4,7 @@ Scope: TODO-46. GCAM Studio gains one command that writes a report of the curren
 chooses: the inputs and settings the acquisition ran with, the image, the spectrum, the estimates and the user's
 measurements. It is Studio's **first write surface**.
 
-Status: planned 2026-10-14. The author asked to build it now ("커밋 한 다음에 Codex 불러와서 만들어 봐"). The first turn is a
+Status: **done 2026-10-15** — merged into MainRoot (`eaa8019`) on the author's word ("둘 다 진행해. 병합하고 푸시까지 해"); formats HTML, PDF, Word and event CSV, desktop run 6 passed all four. History: planned 2026-10-14. The author asked to build it now ("커밋 한 다음에 Codex 불러와서 만들어 봐"). The first turn is a
 short premise check followed by implementation in the same turn (proportionate procedure). The planner chose the scope
 decisions below as defaults, and the author can override them.
 Turn 1 (Codex) stopped at the premise check. The physical readout is not reproducible from the scene file, and Spectrum

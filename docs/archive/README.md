@@ -11,6 +11,14 @@ set the plan's status to done and move the plan and its review / reports into th
 
 ## Closed tasks
 
+- **TODO-46 report export from GCAM Studio** (2026-10-15): Studio's one write surface (D-58, SR-SEC-01 narrowed). A
+  document icon button opens a format popup: a self-contained HTML report (inline SVG; ambient spectrum tables as entry
+  counts), the same content as PDF (PDFsharp-WPF, MIT; vector figures, configuration appendix) and Word (hand-written
+  Office Open XML, PNG figures), and plain event data as CSV with a metadata file under every readout (direct
+  assignment: pixel, deposit and the spectrum's measured energy; physical readout: four 14-bit codes, raw position,
+  crystal, energy); each writes the confirmed path and its declared sidecars (`.scene.json`, `.meta.json`) with
+  rollback (SR-EXPORT-01 … 05). Desktop run 6 passed all four formats into owned sandboxes. Implementation by Codex and
+  substitute Claude implementers — [PLAN.Studio.ReportExport](PLAN.Studio.ReportExport.md).
 - **TODO-43 GCAM Studio manual generated from UI-automation runs** (2026-10-15): chapter registry, run records with
   measured figure marks, a standard-library generator that assembles an edition from the latest passing run per chapter
   on one Studio build, replays it byte for byte in CI and writes Markdown, PDF and Word; figures carry a numbered disc
