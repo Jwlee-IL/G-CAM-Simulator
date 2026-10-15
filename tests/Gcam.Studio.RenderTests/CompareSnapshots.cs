@@ -10,6 +10,7 @@ using System.Windows.Threading;
 using Gcam.Configuration;
 using Gcam.Core;
 using Gcam.Studio.Controls;
+using Gcam.Studio.Core.Imaging;
 using Gcam.Studio.Core.Services;
 using Gcam.Studio.Core.ViewModels;
 using Gcam.Studio.Services;
@@ -157,6 +158,43 @@ public sealed partial class PlotViewRenderTests
         }
         Assert.Equal(difference, IsShown(map));
         Assert.Equal(!difference, IsShown(maps.Single(e => e.Name == "DirectFlood")));
+        var headers = new[] { "Direct crystal · ideal deposit energy", "Four-output Anger" }
+            .Select(text => Descendants(root).OfType<TextBlock>().Single(e => e.Text == text)).ToArray();
+        Assert.Equal(difference ? 3 : 0, Grid.GetRow(headers[0]));
+        Assert.Equal(Grid.GetRow(headers[0]), Grid.GetRow(headers[1]));
+        Assert.Equal(headers[0].TranslatePoint(new(), root).Y, headers[1].TranslatePoint(new(), root).Y, 1);
+        if (difference) Assert.True(headers[0].TranslatePoint(new(), root).Y >= map.TranslatePoint(new(0, map.ActualHeight), root).Y);
+        foreach (string prefix in new[] { "Flood", "Recon" })
+        {
+            var pair = new[] { "Direct", "Anger" }.Select(path => maps.Single(e => e.Name == path + prefix)).ToArray();
+            if (!IsShown(pair[0])) continue;
+            Assert.Equal(pair[0].TranslatePoint(new(), root).Y, pair[1].TranslatePoint(new(), root).Y, 1);
+            Assert.Equal(((FrameworkElement)VisualTreeHelper.GetParent(pair[0])).ActualHeight,
+                ((FrameworkElement)VisualTreeHelper.GetParent(pair[1])).ActualHeight, 1);
+            if (pair.All(e => e.Image is not null)) Assert.Equal(pair[0].ActualHeight, pair[1].ActualHeight, 1);
+        }
+        foreach (var heatmap in maps.Where(IsShown)) VerifyCompareImageFit(heatmap);
+    }
+
+    private static void VerifyCompareImageFit(HeatmapView heatmap)
+    {
+        var stack = Assert.IsType<ImageStackPanel>(VisualTreeHelper.GetParent(heatmap));
+        var legend = stack.Children.Cast<UIElement>().Skip(1).Sum(e => e.DesiredSize.Height);
+        if (heatmap.Image is not { } image) return;
+        double side = Math.Max(0, Math.Min(stack.ActualWidth, stack.ActualHeight - legend));
+        double scale = HeatmapViewport.FitScaleFor(image.Width, image.Height,
+            side - heatmap.Margin.Left - heatmap.Margin.Right, side - heatmap.Margin.Top - heatmap.Margin.Bottom,
+            VisualTreeHelper.GetDpi(heatmap).PixelsPerDip, snapToWholePixels: true);
+        var extent = heatmap.ExtentMm;
+        var drawn = new Rect(heatmap.MmToScreen(extent.Min), heatmap.MmToScreen(extent.Max));
+        Assert.True(Math.Abs(image.Width * scale - drawn.Width) <= 1,
+            $"{heatmap.Name}: drawn {drawn.Width:0.##}, maximum {image.Width * scale:0.##}, stack {stack.ActualWidth:0.##} x {stack.ActualHeight:0.##}, legend {legend:0.##}");
+        var bar = Assert.IsType<ColorBar>(stack.Children[1]);
+        Assert.Equal(drawn.Width, bar.ActualWidth, 1);
+        Assert.Equal(drawn.Width, drawn.Height, 1);
+        var bounds = new Rect(heatmap.RenderSize);
+        bounds.Inflate(1e-6, 1e-6); // mm-to-screen round-off at the outer pixel edge, far below one device pixel
+        Assert.True(bounds.Contains(drawn), $"{heatmap.Name}: image {drawn} outside {bounds}");
     }
 
     // IsVisible is false for every element of a detached tree, which deliberately has no presentation source.
@@ -169,6 +207,14 @@ public sealed partial class PlotViewRenderTests
 
     private void SaveCompare(FrameworkElement root, Size size, string state, string theme)
     {
+        if (state.StartsWith("real-baseline", StringComparison.Ordinal))
+            foreach (var map in Descendants(root).OfType<HeatmapView>().Where(IsShown))
+            {
+                var extent = map.ExtentMm;
+                var drawn = new Rect(map.MmToScreen(extent.Min), map.MmToScreen(extent.Max));
+                var stack = (ImageStackPanel)VisualTreeHelper.GetParent(map);
+                output.WriteLine($"{state} {size.Width:0}x{size.Height:0} {map.Name}: image {drawn.Width:0.##} x {drawn.Height:0.##}; stack {stack.ActualWidth:0.##} x {stack.ActualHeight:0.##}");
+            }
         var bitmap = new RenderTargetBitmap((int)size.Width, (int)size.Height, 96, 96, PixelFormats.Pbgra32); bitmap.Render(root);
         var encoder = new PngBitmapEncoder(); encoder.Frames.Add(BitmapFrame.Create(bitmap));
         string directory = SnapshotDirectory("compare"); Directory.CreateDirectory(directory);
