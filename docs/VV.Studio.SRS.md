@@ -297,7 +297,7 @@ The requirements that implement the controls:
 
 Stated so that their absence is not read as a gap in verification:
 
-- Loading scenes, and saving anything other than the report export (SR-EXPORT-01 … 05): no image files, no measurement files, no remembered folder or setting.
+- Loading scenes, and saving anything other than the report export (SR-EXPORT-01 … 05): no image files, no measurement files, no remembered folder or setting (the Windows save dialog keeps its own recent-file and last-folder history, as for every application that uses it).
 - Creating measurements from the keyboard — known gap AN-01, planned.
 - High-contrast mode — known gap AN-03, planned.
 - Four-channel Anger position readout, spatial SiPM pitch and optical light sharing, including crosstalk-dependent crystal identification, are excluded from the current direct-crystal readout. Correlated cascades are modelled for Co-60 and Na-22 only; Ir-192's cascades are emitted as independent lines.

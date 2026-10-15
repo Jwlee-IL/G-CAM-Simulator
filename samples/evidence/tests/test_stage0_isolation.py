@@ -927,6 +927,32 @@ class SnapshotClassificationTests(unittest.TestCase):
         result = self.classify([{'c': 'f', 'p': self.E3, 'removed': True}])
         self.only(result, 'out-of-declaration')
 
+    def test_declared_e6_save_dialog_history_keys_and_numbered_values_only(self):
+        # Seen in the observed manual batch of 2026-10-16: the save dialog's per-extension list and last folder.
+        mru = 'HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\ComDlg32\\OpenSavePidlMRU'
+        last = 'HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\ComDlg32\\LastVisitedPidlMRU'
+        for row in ({'c': 'v', 'p': mru + '\\html', 'n': '10', 'k': 3, 'h': 'd' * 64},
+                    {'c': 'v', 'p': mru + '\\*', 'n': 'MRUListEx', 'k': 3, 'h': 'd' * 64},
+                    {'c': 'v', 'p': last, 'n': '13', 'k': 3, 'h': 'd' * 64},
+                    {'c': 'k', 'p': mru + '\\pdf', 't': self.inside}):
+            result = self.classify([row])
+            self.assertEqual('E6', self.only(result, 'declared')['rule'], row)
+            self.assertTrue(result['g1Eligible'])
+        result = self.classify([{'c': 'v', 'p': mru + '\\html', 'n': 'Other', 'k': 1, 'h': 'd' * 64}])
+        self.only(result, 'out-of-declaration')  # only MRUListEx and numbered values
+        result = self.classify([{'c': 'v', 'p': mru + '\\html\\deeper', 'n': '1', 'k': 3, 'h': 'd' * 64}])
+        self.only(result, 'out-of-declaration')  # one subkey level
+        self.base.append({'c': 'v', 'p': last, 'n': '13', 'k': 3, 'h': 'd' * 64})
+        result = self.classify([{'c': 'v', 'p': last, 'n': '13', 'removed': True}])
+        self.only(result, 'out-of-declaration')  # E6 declares records, not removals
+
+    def test_shell_muicache_filter_covers_values_only(self):
+        cache = 'HKCU\\Software\\Classes\\Local Settings\\Software\\Microsoft\\Windows\\Shell\\MuiCache'
+        result = self.classify([{'c': 'v', 'p': cache, 'n': 'C:\\gw\\x\\Gcam.Studio.exe.FriendlyAppName', 'k': 1, 'h': 'd' * 64}])
+        self.assertTrue(self.only(result, 'other-actor')['rule'].startswith('filter:'))
+        result = self.classify([{'c': 'k', 'p': cache + '\\sub', 't': self.inside}])
+        self.only(result, 'out-of-declaration')
+
     def test_change_outside_the_studio_window_is_not_of_this_window(self):
         for time in (self.before, self.after):
             result = self.classify([{'c': 'f', 'p': self.LOCAL + '\\other.log', 's': 1, 't': time, 'a': 32}])

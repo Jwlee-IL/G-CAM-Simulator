@@ -882,6 +882,12 @@ def declared_surface(event, context, rules):
             sid = run_user_sid(context) if surface.get('hive') == 'run-user' else None
             if not sid:
                 continue
+            if 'keyPattern' in surface:
+                prefix = '\\REGISTRY\\USER\\' + sid + '\\'
+                if destination.casefold().startswith(prefix.casefold()) and re.fullmatch(
+                        surface['keyPattern'] + r'(?:\\(?:' + surface['valueNamePattern'] + '))?', destination[len(prefix):], re.IGNORECASE):
+                    return surface
+                continue
             key = '\\REGISTRY\\USER\\' + sid + '\\' + surface['keyPath']
             for value in surface['valueNames']:
                 if (same_path(destination, key + '\\' + value)
@@ -1304,7 +1310,11 @@ def diff_classify(run_directory, rules=None, extra_redactions=None):
     deployment = folders.get('Deployment', '\0')
     declared = []
     for surface in rules.get('declaredAppSurfaces', []):
-        if surface['channel'] == 'registry' and surface.get('hive') == 'run-user':
+        if surface['channel'] == 'registry' and surface.get('hive') == 'run-user' and 'keyPattern' in surface:
+            # E6: an OS component's history under per-item subkeys with numbered values; keys and values, never removals.
+            declared.append((surface['decision'], 'registry-pattern', re.compile('hkcu\\\\' + surface['keyPattern'], re.IGNORECASE),
+                             re.compile(surface['valueNamePattern'], re.IGNORECASE), ('added', 'modified')))
+        elif surface['channel'] == 'registry' and surface.get('hive') == 'run-user':
             declared.append((surface['decision'], 'registry', ('hkcu\\' + surface['keyPath']).casefold(),
                              {name.casefold() for name in surface['valueNames']}, ('added', 'modified')))
         elif surface['channel'] == 'file' and surface.get('knownFolder') in folders:
@@ -1331,6 +1341,12 @@ def diff_classify(run_directory, rules=None, extra_redactions=None):
         else:
             category = None
             for decision, surface_channel, surface_path, names, allowed in declared:
+                if surface_channel == 'registry-pattern':
+                    if (channel == 'registry' and change['change'] in allowed and surface_path.fullmatch(path)
+                            and (entry == 'key' or (entry == 'value' and names.fullmatch(name or '')))):
+                        category, rule = 'declared', decision
+                        break
+                    continue
                 if (surface_channel == channel and path.casefold() == surface_path and change['change'] in allowed
                         and ((names is None and entry == 'file') or (names is not None and entry == 'value' and name.casefold() in names))):
                     category, rule = 'declared', decision
