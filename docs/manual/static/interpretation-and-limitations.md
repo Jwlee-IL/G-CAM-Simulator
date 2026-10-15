@@ -1,3 +1,5 @@
+> DRAFT — second edition, awaiting author approval.
+
 [[notice:N-SIM]]
 
 #### Images at the default optics
@@ -39,3 +41,13 @@ detectable Cs-137 source under 10 µSv/h of Co-60 at 1 m is 1.6 MBq in 60 s. Sou
 - End-to-end responsiveness during a window resize is not established. Source: `docs/VV.Studio.md` AN-13.
 - On one machine a render test found a truncated table value in the Spectrum line table; the cause is not established.
   Source: `docs/VV.Studio.md` AN-15.
+
+#### Comparing and exporting retained data
+
+Compare reads the same retained physical acquisition two ways: direct crystal assignment with ideal deposit energy,
+and the acquired four-output Anger path. Its populations distinguish histories from held conversions; the same-crystal
+share uses eligible single-contributor conversions. The disagreement map divides different by eligible per direct
+crystal; an empty denominator is unavailable. The cost table is a benchmark reference, not a time prediction for this
+scene. Source: `docs/VV.Studio.SRS.md` SR-CMP-01 through SR-CMP-05.
+
+[[notice:N-EXPORT-SCOPE]]

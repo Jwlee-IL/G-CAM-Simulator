@@ -6,6 +6,8 @@ namespace Gcam.Studio.UiTests.Harness;
 /// <summary>Pure capture preflight; fixture checks never read the desktop.</summary>
 public static class CaptureQuality
 {
+    public static bool ValidMask(int[] r, int width, int height) => r.Length == 4 && r[0] >= 0 && r[1] >= 0 && r[2] > 0 && r[3] > 0 &&
+        (long)r[0] + r[2] <= width && (long)r[1] + r[3] <= height;
     public sealed record Template(string Screen, string State, int WidthPx, int HeightPx, double Dpi,
         string Theme, string Locale, string[] Targets, string Framing, string QualityRevision)
     {

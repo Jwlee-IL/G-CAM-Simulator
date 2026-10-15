@@ -66,6 +66,9 @@ public sealed partial class ManualRun
     public string RunId { get; }
     public DateTimeOffset StartedAt { get; }
     public IReadOnlyList<Step> Steps => _steps;
+    public RunRecord? Record { get; set; }
+    public string Sandbox { get; set; } = "";
+    public VideoRecorder.Provenance? Video { get; set; }
     public StudioWindow? Ui { get; private set; }
     public ManualCapture.Baseline? Baseline { get; private set; }
 
@@ -96,7 +99,10 @@ public sealed partial class ManualRun
     {
         foreach (string notice in notices) _registry.RequireNotice(notice, Chapter.Number);
         if (_steps.Count > 0) ResolveLabels();
-        _steps.Add(new Step(_steps.Count + 1, text, notices));
+        var current = new Step(_steps.Count + 1, text, notices);
+        _steps.Add(current);
+        // The caption is the resolved reader text, read when the recording stops (labels resolve after the step opens).
+        Record?.Video?.Step(() => (current.Text ?? current.Template).Replace("**", ""));
         // Read action labels before an action can replace its control, without freezing the step's resulting text.
         foreach (Match token in LabelToken().Matches(text)) _ = TryReadLabel(token);
     }
@@ -213,7 +219,10 @@ public sealed partial class ManualRun
             }),
             evidence = _evidence,
         };
-        return JsonSerializer.SerializeToUtf8Bytes(record, Json).Concat("\n"u8.ToArray()).ToArray();
+        // Optional metadata is not required file evidence: retained editions replay without the uncommitted video.
+        var node = System.Text.Json.Nodes.JsonNode.Parse(JsonSerializer.SerializeToUtf8Bytes(record, Json))!;
+        if (Video is not null) node["video"] = JsonSerializer.SerializeToNode(Video, Json);
+        return JsonSerializer.SerializeToUtf8Bytes(node, Json).Concat("\n"u8.ToArray()).ToArray();
     }
 
     /// <summary>Writes <c>manual-run.json</c> after cleanup; returns its path.</summary>
@@ -249,7 +258,7 @@ public sealed partial class ManualRun
         return new(ContentFingerprint.Digest(files), files);
     }
 
-    private static string GitHead()
+    public static string GitHead()
     {
         try
         {

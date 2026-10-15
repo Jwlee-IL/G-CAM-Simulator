@@ -312,12 +312,13 @@ class ManualRecordsTests(unittest.TestCase):
     def test_repository_sources_are_valid_and_bind_every_notice(self):
         sources = mr.load_sources(mr.SOURCES)
         chapters = {c['number']: c for c in sources['registry']['chapters']}
-        self.assertEqual(8, len(chapters))
+        self.assertEqual(10, len(chapters))
         self.assertEqual({'1.1', '5.2'}, {n for n, c in chapters.items() if c['source'] == 'static'})
-        # Approved by the author on 2026-10-15 (static chapters, notice list, mark purposes).
-        self.assertFalse(any(s['draft'] for s in sources['static'].values()), 'the static chapters are approved')
-        self.assertEqual('approved', sources['noticeStatus'])
-        self.assertEqual('approved', sources['purposeStatus'])
+        # Second edition (TODO-48): the revised static chapters, notice list and mark purposes are drafts until the
+        # author approves them with the edition; set these back to approved in the approving change.
+        self.assertTrue(all(s['draft'] for s in sources['static'].values()), 'the static chapters await approval')
+        self.assertEqual('draft', sources['noticeStatus'])
+        self.assertEqual('draft', sources['purposeStatus'])
         for notice in sources['notices'].values():
             for number in notice['chapters']:
                 if chapters[number]['source'] == 'static':
@@ -345,6 +346,8 @@ class ManualRecordsTests(unittest.TestCase):
         self.assertEqual('check-differs: MANUAL.Studio.pdf', results['tampered-pdf'])
         self.assertEqual('check-differs: MANUAL.Studio.docx', results['tampered-docx'])
         self.assertEqual('pdf-glyph: no glyph for U+2192 in Regular text', results['pdf-missing-glyph'])
+        self.assertEqual('check passed without videos', results['video-hash-without-files-replay'])
+        self.assertTrue(results['bad-video-hash'].startswith('video-provenance:'))
 
     def test_latest_run_wins_and_a_tie_refuses(self):
         root = scratch()

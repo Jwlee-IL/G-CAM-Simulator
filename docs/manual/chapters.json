@@ -4,7 +4,7 @@
   "id": "gcam-studio-manual",
   "locale": "en",
   "title": "GCAM Studio user manual",
-  "edition": "first edition scope (MR10): eight core chapters; the other chapters of the review's list follow in later editions",
+  "edition": "second edition draft: ten chapters, including export and Compare",
   "parts": [
     {
       "number": "1",
@@ -17,6 +17,10 @@
     {
       "number": "3",
       "title": "Inspect retained data"
+    },
+    {
+      "number": "4",
+      "title": "Experimental readout"
     },
     {
       "number": "5",
@@ -72,6 +76,20 @@
       "part": "3",
       "source": "generated",
       "scenario": "manual.spectrum"
+    },
+    {
+      "number": "3.7",
+      "title": "Export reports and event data",
+      "part": "3",
+      "source": "generated",
+      "scenario": "manual.export"
+    },
+    {
+      "number": "4.4",
+      "title": "Compare direct crystal and physical readout",
+      "part": "4",
+      "source": "generated",
+      "scenario": "manual.compare"
     },
     {
       "number": "5.2",

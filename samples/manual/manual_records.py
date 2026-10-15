@@ -1161,6 +1161,12 @@ def load_runs(runs_root, sources):
         record = read_json(path, 'run-schema')
         require((record.get('schema'), record.get('schemaVersion')) == RUN_SCHEMA, 'run-schema: ' + path.parent.name)
         require(record.get('runId') == path.parent.name, 'run-id: folder and record differ for ' + path.parent.name)
+        if 'video' in record:
+            video = record['video']
+            require(isinstance(video, dict) and video.get('runId') == record['runId']
+                    and re.fullmatch(r'[A-Za-z0-9._-]+', video.get('testId', '')) is not None
+                    and all(re.fullmatch(r'[a-f0-9]{64}', video.get(k, '')) for k in ('videoSha256', 'captionsSha256')),
+                    'video-provenance: invalid identity or hash')
         runs.append((path.parent, record, path.read_bytes()))
     scenarios = {c['scenario']: c for c in sources['registry']['chapters'] if c['source'] == 'generated'}
     subjects = {r['subject']['deploymentSha256'] for _, r, _ in runs}
@@ -1372,7 +1378,8 @@ def assemble(sources, runs, edition_id, date, formal, budget, reuse=None, genera
         if retained == 'full':
             for item in record['evidence']:
                 outputs[f'sources/runs/{record["runId"]}/{item["path"]}'] = confined(folder, item['path']).read_bytes()
-        run_rows.append({'runId': record['runId'], 'scenario': record['scenario'], 'sha256': sha(raw), 'retained': retained})
+        run_rows.append({'runId': record['runId'], 'scenario': record['scenario'], 'sha256': sha(raw), 'retained': retained,
+                         **({'video': record['video']} if 'video' in record else {})})
     for relative, data in outputs.items():
         if relative.endswith('.json') or relative.endswith('.md'):
             require(not identity_leak(data.decode('utf-8')), 'identity-leak: ' + relative)
@@ -1614,6 +1621,20 @@ def self_test(out=None):
         record.update(runId='run-beta2', startedAt='2026-10-14T11:00:00+00:00', status='failed', evidence=[])
         record['steps'][0].update(verdict='failed', figures=[])
         (target / 'manual-run.json').write_bytes(canonical(record))
+    def pin_video(src, runs):
+        edit_json(run_file(runs, 'alpha'), lambda r: r.update(video={'runId': r['runId'], 'testId': 'manual.fixture',
+                  'videoSha256': 'a' * 64, 'captionsSha256': 'b' * 64}))
+    video_edition = case('video-hash-without-files', pin_video, '### 1.3 Beta')
+    check(video_edition)
+    results.append(('video-hash-without-files-replay', 'check passed without videos'))
+    record_path = video_edition / 'sources/runs/run-alpha/manual-run.json'
+    edit_json(record_path, lambda r: r['video'].update(videoSha256='bad'))
+    try:
+        check(video_edition)
+        raise RuntimeError('self-test: invalid video provenance accepted')
+    except ValueError as error:
+        require(str(error).startswith('video-provenance:'), 'self-test: wrong video hash refusal ' + str(error))
+        results.append(('bad-video-hash', str(error)))
     valid = case('valid', lambda s, r: None, '### 1.3 Beta')
     check(valid)
     results.append(('valid-replay', 'check passed'))
