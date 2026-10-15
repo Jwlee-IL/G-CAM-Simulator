@@ -30,13 +30,21 @@ REPO = Path(__file__).resolve().parents[2]
 CATALOG = REPO / 'docs/VV.Tests.md'
 SWITCHES = ('GCAM_EVIDENCE_TESTS', 'GCAM_RENDER_SNAPSHOTS', 'GCAM_UI_TESTS',
             'GCAM_UI_BREAK_VERDICT', 'GCAM_README_CAPTURE_ONLY', 'GCAM_CRRC_VECTORS',
-            'GCAM_PROVENANCE_GIT_TESTS', 'GCAM_RENDER_OUTPUT')
+            'GCAM_PROVENANCE_GIT_TESTS', 'GCAM_RENDER_OUTPUT', 'GCAM_UI_LONG_TESTS', 'GCAM_UI_PROBE', 'GCAM_UI_VIDEO')
 PROJECTS = tuple(sorted(p.stem for p in (REPO / 'tests').glob('*/*.csproj')))
 SCOPE = ('src/', 'tests/', 'rtl/', 'samples/', '.github/workflows/',
          'Directory.Build.', 'Gcam.sln', 'global.json', 'NuGet.Config', '.gitattributes')
 GAPS = ['background-shape numerical tests require NumPy/SciPy (not in default CI)',
         'RTL C# vector comparison requires an explicitly supplied vector export',
         'desktop, render and numerical-evidence opt-ins are absent in the normal profile']
+# The desktop profile (TODO-49): the UI test project with the desktop opt-in on, run only on the author's go. The long
+# opt-in and the observed probe stay off; the polish survey is not run because it rewrites committed screenshots.
+DESKTOP_PROJECT = 'Gcam.Studio.UiTests'
+DESKTOP_EXCLUDED = ('PolishSurveyTests', 'it rewrites the committed screenshots in docs/assets')
+DESKTOP_GAPS = ['background-shape numerical tests require NumPy/SciPy (not in default CI)',
+                'RTL C# vector comparison requires an explicitly supplied vector export',
+                'render and numerical-evidence opt-ins are absent; desktop results come from the desktop profile, '
+                'without the long opt-in, the observed probe and the polish survey']
 GENERIC_ACCOUNTS = {'runner', 'root', 'user', 'admin', 'administrator'}
 
 
@@ -400,9 +408,12 @@ def append_selection(bundle, record_path, record):
     selection['records'].append({'path': relative, 'sha256': digest_file(record_path), 'runId': record['runId']})
     repeats = 0
     for case in record['cases']:
-        if record['profile'] != 'normal':
+        if record['profile'] not in ('normal', 'desktop'):
             continue
-        if case['id'] in selection['caseSelections']:
+        if (record['profile'] == 'desktop' and case['id'] in selection['caseSelections']
+                and selected_verdict(bundle, selection, case['id']) == 'not_executed'):
+            selection['caseSelections'][case['id']] = record['runId']   # the desktop run executed what the normal one skipped
+        elif case['id'] in selection['caseSelections']:
             repeats += 1
         else:
             selection['caseSelections'][case['id']] = record['runId']
@@ -411,8 +422,14 @@ def append_selection(bundle, record_path, record):
         print(f'selection: {repeats} repeated cases retained; existing selections unchanged (edit manifest to choose)')
 
 
+def selected_verdict(bundle, selection, case_id):
+    run_id = selection['caseSelections'][case_id]
+    entry = next(e for e in selection['records'] if e['runId'] == run_id)
+    return next(c['verdict'] for c in json_read(bundle / entry['path'])['cases'] if c['id'] == case_id)
+
+
 def finish_record(bundle, folder, family, args, env, before_source, before_subject, after_subject,
-                  started, finished, exit_code, cases, expected, artifacts, diagnostics, tools):
+                  started, finished, exit_code, cases, expected, artifacts, diagnostics, tools, profile='normal'):
     require(before_subject == after_subject, 'subject: changed during execution')
     after_source = source_identity()
     require(before_source['snapshotSha256'] == after_source['snapshotSha256'], 'source: changed during execution')
@@ -422,7 +439,7 @@ def finish_record(bundle, folder, family, args, env, before_source, before_subje
         reasons.append('working_tree_dirty')
     if any(v == 'unavailable' for v in tools.values()):
         reasons.append('tool_identity_incomplete')
-    record = {'schemaVersion': 1, 'runId': folder.name, 'family': family, 'profile': 'normal',
+    record = {'schemaVersion': 1, 'runId': folder.name, 'family': family, 'profile': profile,
               'startedUtc': started, 'finishedUtc': finished, 'command': tokens(args), 'exitCode': exit_code,
               'source': before_source, 'subject': {'files': before_subject, 'postFiles': after_subject},
               'tool': tools, 'environment': environment(env), 'cases': sorted(cases, key=lambda c: c['id']),
@@ -444,8 +461,10 @@ def utc():
     return dt.datetime.now(dt.timezone.utc).isoformat()
 
 
-def collect(bundle, family, no_build=False, include_background=False, checker=None, python_command=None):
+def collect(bundle, family, no_build=False, include_background=False, checker=None, python_command=None, profile='normal'):
     bundle = Path(bundle).resolve()
+    require(profile in ('normal', 'desktop'), 'collect: unknown profile')
+    require(profile == 'normal' or family == 'dotnet', 'collect: the desktop profile is a dotnet collection')
     env = os.environ.copy()
     env['PYTHONDONTWRITEBYTECODE'] = '1'
     env['DOTNET_CLI_UI_LANGUAGE'] = 'en'
@@ -453,11 +472,13 @@ def collect(bundle, family, no_build=False, include_background=False, checker=No
         env.update({key: '0' for key in ('GCAM_EVIDENCE_TESTS', 'GCAM_RENDER_SNAPSHOTS', 'GCAM_UI_TESTS',
                                         'GCAM_UI_BREAK_VERDICT', 'GCAM_README_CAPTURE_ONLY')})
         env.pop('GCAM_CRRC_VECTORS', None)
+        if profile == 'desktop':
+            env.update({'GCAM_UI_TESTS': '1', 'GCAM_UI_LONG_TESTS': '0', 'GCAM_UI_PROBE': '0'})
         if not no_build:
             code, output = command(['dotnet', 'build', 'Gcam.sln', '-c', 'Release'], env)
             write(bundle / 'build.log', sanitize_text(output))
             require(code == 0, 'build: failed')
-    names = PROJECTS if family == 'dotnet' else (family,)
+    names = ((DESKTOP_PROJECT,) if profile == 'desktop' else PROJECTS) if family == 'dotnet' else (family,)
     exit_codes = []
     for name in names:
         folder = bundle / family / (name + '-' + uuid.uuid4().hex)
@@ -474,6 +495,11 @@ def collect(bundle, family, no_build=False, include_background=False, checker=No
             expected = [name + '::' + display for display in found]
             args = ['dotnet', 'test', 'tests/' + name, '-c', 'Release', '--no-build',
                     '--logger', 'trx;LogFileName=results.trx', '--results-directory', str(folder)]
+            if profile == 'desktop':
+                excluded = name + '::' + name + '.' + DESKTOP_EXCLUDED[0] + '.'
+                expected = [case for case in expected if not case.startswith(excluded)]
+                args += ['--filter', 'FullyQualifiedName!~' + DESKTOP_EXCLUDED[0]]
+                diagnostics.append(f'{DESKTOP_EXCLUDED[0]} not run in the desktop profile: {DESKTOP_EXCLUDED[1]}')
             tools.update({'sdk': version(['dotnet', '--version']),
                           'runtime': version(['dotnet', '--list-runtimes'])})
         elif family == 'unittest':
@@ -601,7 +627,7 @@ def collect(bundle, family, no_build=False, include_background=False, checker=No
                               'bytes': len(data), 'kind': 'log'})
         record = finish_record(bundle, folder, family, args, env, before_source, subject,
                                binaries(name) if family == 'dotnet' else post_subject, started, utc(), exit_code,
-                               cases, expected, artifacts, diagnostics, tools)
+                               cases, expected, artifacts, diagnostics, tools, profile)
         exit_codes.append(exit_code)
         print(f'{family}/{name}: {dict(collections.Counter(c["verdict"] for c in record["cases"]))}, missing={len(record["missingCases"])}')
     return 1 if any(exit_codes) else 0
@@ -613,6 +639,8 @@ def validate_record(record, folder, archive_root=None):
     require(all(re.fullmatch(r'[0-9a-f]{64}', h) for h in record['source']['files'].values()), 'record: invalid source hash')
     require(sha(canonical(record['source']['files'])) == record['source']['snapshotSha256'], 'record: source hash mismatch')
     require(record['subject']['files'] == record['subject']['postFiles'], 'record: subject changed')
+    require(record.get('profile', 'normal') != 'desktop' or (record['family'] == 'dotnet'
+            and record['environment']['switches'].get('GCAM_UI_TESTS') == '1'), 'record: desktop profile without the desktop opt-in')
     if 'tool' in record:
         require(record['tool'] and record['environment'].get('os'), 'record: missing identification')
     require(record['provenance'] in ('formal', 'draft'), 'record: invalid provenance')
@@ -679,11 +707,11 @@ def load_selection(bundle):
     for case_id, run_id in selection['caseSelections'].items():
         record = next((r for r in records if r['runId'] == run_id), None)
         require(record is not None, 'selection: unknown run')
-        require(record['profile'] == 'normal', 'selection: fault-injection selected')
+        require(record['profile'] in ('normal', 'desktop'), 'selection: fault-injection selected')
         case = next((c for c in record['cases'] if c['id'] == case_id), None)
         require(case is not None, 'selection: unknown case')
         selected.append(case)
-    all_ids = {c['id'] for r in records if r['profile'] == 'normal' for c in r['cases']}
+    all_ids = {c['id'] for r in records if r['profile'] in ('normal', 'desktop') for c in r['cases']}
     require(set(selection['caseSelections']) == all_ids, 'selection: omitted executed case')
     return selection, records, selected
 
@@ -785,15 +813,15 @@ def render(bundle, catalog_path, generation_pin=None):
         inventory,
         table(['Runner family', 'Passed', 'Failed', 'Not executed', 'Missing cases'], family_rows),
         table(['Run', 'Family', 'Started UTC', 'Exit', 'Provenance', 'OS', 'Missing'],
-              [(r['runId'], r['family'], r['startedUtc'], r['exitCode'], r['provenance'], r['environment']['os'],
-                len(r['missingCases'])) for r in records]),
+              [(r['runId'], r['family'] + (' (desktop profile)' if r['profile'] == 'desktop' else ''), r['startedUtc'],
+                r['exitCode'], r['provenance'], r['environment']['os'], len(r['missingCases'])) for r in records]),
         table(['Catalog unit', 'Passed', 'Failed', 'Not executed', 'Missing methods'],
               [(key, unit_results[key]['passed'], unit_results[key]['failed'], unit_results[key]['not_executed'],
                 len(set(entry['methods']) - {c['selector'] for c in selected if c['unit'] == key})) for key, entry in sorted(units.items())]),
         trace,
         '\n\n'.join(attention) or 'No failed, skipped or missing cases.',
         'Run diagnostics:\n\n' + ('\n'.join('- ' + r['runId'] + ': ' + ', '.join(r['diagnostics']) for r in records if r['diagnostics']) or 'none'),
-        'Known profile gaps:\n\n' + '\n'.join('- ' + gap for gap in GAPS),
+        'Known profile gaps:\n\n' + '\n'.join('- ' + gap for gap in (DESKTOP_GAPS if any(r['profile'] == 'desktop' for r in records) else GAPS)),
         'Replay: `python samples/testing/test_records.py check --bundle <record-directory>`; selection and generation manifests identify all inputs. '
         'Sanitised TRX/XML/JSON hashes are rechecked; original raw hashes are collection claims, and historical DLLs are not reopened.']) + '\n'
     private_free(body)
@@ -1006,6 +1034,31 @@ def self_test(out):
     selection['records'].append({'path': 'other/run-record.json', 'sha256': digest_file(bundle / 'other/run-record.json'), 'runId': 'other'})
     write(bundle / 'selection.json', canonical(selection))
     refuses('mixed-source', 'selection: mixed sources', lambda: load_selection(bundle))
+    # Desktop profile (TODO-49): a desktop run replaces a skipped normal selection and must carry the desktop opt-in;
+    # its own skips keep their opt-in (the long run is reported by GCAM_UI_LONG_TESTS, not as an unknown skip).
+    desktop_bundle = out / 'desktop-fixture'
+    write(desktop_bundle / 'normal/sanitized.trx', sanitized)
+    write(desktop_bundle / 'normal/run-record.json', canonical({**run, 'runId': 'normal'}))
+    passed_trx = sanitized.replace(b'NotExecuted', b'Passed')
+    passed_cases, _ = trx_cases(passed_trx, {'GCAM_UI_TESTS': '1'})
+    desktop = {**copy.deepcopy(run), 'runId': 'desktop', 'profile': 'desktop', 'cases': passed_cases,
+               'environment': {'switches': {'GCAM_UI_TESTS': '1'}},
+               'artifacts': [{'path': 'sanitized.trx', 'sha256': sha(passed_trx), 'bytes': len(passed_trx), 'kind': 'dotnet'}]}
+    write(desktop_bundle / 'desktop/sanitized.trx', passed_trx)
+    write(desktop_bundle / 'desktop/run-record.json', canonical(desktop))
+    for name in ('normal', 'desktop'):
+        append_selection(desktop_bundle, desktop_bundle / name / 'run-record.json', json_read(desktop_bundle / name / 'run-record.json'))
+    _, _, chosen = load_selection(desktop_bundle)
+    require([c['verdict'] for c in chosen] == ['passed'], 'self-test: desktop run did not replace the skipped case')
+    unflagged = copy.deepcopy(desktop)
+    unflagged['environment']['switches']['GCAM_UI_TESTS'] = '0'
+    refuses('desktop-without-opt-in', 'record: desktop profile without the desktop opt-in',
+            lambda: validate_record(unflagged, desktop_bundle / 'desktop'))
+    long_trx = sanitized.replace(b'Set GCAM_UI_TESTS=1 to run', b'long desktop UI test: set GCAM_UI_TESTS=1 AND GCAM_UI_LONG_TESTS=1')
+    rows, _ = trx_cases(long_trx, {'GCAM_UI_TESTS': '1', 'GCAM_UI_LONG_TESTS': '0'})
+    require((rows[0]['skipReasonCode'], rows[0]['switch']) == ('opt_in_off', 'GCAM_UI_LONG_TESTS'), 'self-test: long opt-in skip lost')
+    rows, _ = trx_cases(long_trx, {'GCAM_UI_TESTS': '0'})
+    require(rows[0]['switch'] == 'GCAM_UI_TESTS', 'self-test: normal-profile skip changed')
     # Compressed storage is transparent and does not discard normalized fields.
     write(bundle / 'selection.json', canonical(valid_selection))
     write(bundle / 'generation.json', canonical({'generatorSource': source}))
@@ -1081,6 +1134,8 @@ def main():
     collect_parser.add_argument('--checker')
     collect_parser.add_argument('--python', nargs='+', metavar='COMMAND',
                                 help='cocotb interpreter command prefix, e.g. --python py -3.13')
+    collect_parser.add_argument('--profile', choices=('normal', 'desktop'), default='normal',
+                                help="desktop: the UI test project with GCAM_UI_TESTS=1 (author's go; moves the mouse)")
     for action in ('generate', 'check'):
         p = sub.add_parser(action)
         p.add_argument('--bundle', type=Path)
@@ -1097,7 +1152,7 @@ def main():
     args = parser.parse_args()
     if args.action == 'collect':
         require(args.python is None or args.family == 'cocotb', '--python is for the cocotb family')
-        return collect(args.out, args.family, args.no_build, args.include_background, args.checker, args.python)
+        return collect(args.out, args.family, args.no_build, args.include_background, args.checker, args.python, args.profile)
     if args.action == 'check-catalog':
         check_catalog(args.discover or args.update_discovery, args.update_discovery)
     elif args.action == 'self-test':

@@ -8,6 +8,9 @@ GATES = {
     'GCAM_EVIDENCE_TESTS': 'numerical evidence',
     'GCAM_RENDER_SNAPSHOTS': 'offscreen rendering',
     'GCAM_UI_TESTS': 'desktop',
+    # Checked after GCAM_UI_TESTS: in the desktop profile the long run and the observed probe keep their own opt-ins.
+    'GCAM_UI_LONG_TESTS': 'long desktop',
+    'GCAM_UI_PROBE': 'observed probe',
 }
 
 
