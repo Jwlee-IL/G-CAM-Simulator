@@ -1,5 +1,3 @@
-> DRAFT — second edition, awaiting author approval.
-
 #### What GCAM Studio is
 
 GCAM Studio is the engineering viewer of Gcam, a Monte Carlo simulator of a coded-aperture gamma camera: photon

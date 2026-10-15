@@ -1,0 +1,73 @@
+{
+  "schema": "gcam.figure-marks",
+  "schemaVersion": 1,
+  "capture": "captures/2.4-3.png",
+  "captureSha256": "c561ec2fbefdb7ab2f08d4e7b5fb0df46fbc062f641b16caa9b508bd1e79d8bf",
+  "widthPx": 1440,
+  "heightPx": 900,
+  "frameOriginPx": [
+    560,
+    246
+  ],
+  "dpi": 96,
+  "perMonitorAware": true,
+  "templateSha256": "67341cdd23d0ea0196b5a0f2264a45b66a0602fcb8dc92809925172b8bdb50aa",
+  "crop": "marks",
+  "region": null,
+  "marks": [
+    {
+      "n": 1,
+      "target": "Reset.Message",
+      "label": "Discard the acquired data (2.0 live s, 127 counts)? Inputs unlock for the next acquisition.",
+      "labelSource": "name",
+      "screen": [
+        1053,
+        670,
+        454,
+        34
+      ],
+      "image": [
+        493,
+        424,
+        454,
+        34
+      ]
+    },
+    {
+      "n": 2,
+      "target": "Modal.Cancel",
+      "label": "Cancel",
+      "labelSource": "name",
+      "screen": [
+        1365,
+        720,
+        64,
+        28
+      ],
+      "image": [
+        805,
+        474,
+        64,
+        28
+      ]
+    },
+    {
+      "n": 3,
+      "target": "Reset.Discard",
+      "label": "Discard",
+      "labelSource": "name",
+      "screen": [
+        1437,
+        720,
+        70,
+        28
+      ],
+      "image": [
+        877,
+        474,
+        70,
+        28
+      ]
+    }
+  ]
+}

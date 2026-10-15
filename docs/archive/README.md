@@ -11,6 +11,13 @@ set the plan's status to done and move the plan and its review / reports into th
 
 ## Closed tasks
 
+- **TODO-48 GCAM Studio manual, second edition, and a video of every desktop test** (2026-10-16): edition
+  `2026-10-16-1` (formal; ten chapters, new 3.7 report export and 4.4 Compare) generated from one observed manual batch
+  on one build; every desktop test that drives Studio records an MP4 with step captions, and a pass publishes it to
+  the git-ignored `artifacts/ui-videos/` with `index.json`. The desktop turn found the Windows save dialog's own
+  recent-file history (declared as the OS dialog's record, E6) and one pixel of the window behind Studio at every
+  capture's edge (now neutral). Review and headless turn by Codex, finished by a substitute agent. Plan:
+  [PLAN.Docs.StudioManual2](PLAN.Docs.StudioManual2.md), review [PLAN.Docs.StudioManual2.Review](PLAN.Docs.StudioManual2.Review.md).
 - **TODO-47 Direct crystal against four-output Anger in GCAM Studio** (2026-10-15): a fifth workspace, Compare (Ctrl+5),
   reads one physical-readout acquisition two ways from the same retained inputs — the ideal direct crystal assignment
   with its unsmeared deposit, and the four-output Anger readout as acquired — with flood and reconstruction pairs, an

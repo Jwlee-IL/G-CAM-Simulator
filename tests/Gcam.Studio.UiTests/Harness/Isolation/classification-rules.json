@@ -345,17 +345,17 @@
       "id": "RC-09",
       "decision": "E6",
       "kind": "declared confirmed OS surface of the report export (permission expansion; key and value patterns)",
-      "status": "author decision 2026-10-16 (declare as the OS dialog's record); HUM-07 approval with the next run's approval on the commit"
+      "status": "author decision 2026-10-16 (declare as the OS dialog's record); HUM-07 approved by the author on 2026-10-16"
     },
     {
       "id": "RC-10",
       "kind": "background filter: the shell's MuiCache display-name cache (registry values)",
-      "status": "author decision 2026-10-16; HUM-07 approval with the next run's approval on the commit"
+      "status": "author decision 2026-10-16; HUM-07 approved by the author on 2026-10-16"
     },
     {
       "id": "RC-11",
       "kind": "background filters: certificate revocation URL cache, packaged-app publisher folders, a desktop messenger's data (files)",
-      "status": "evidenced by manual-20261016-02; HUM-07 pending"
+      "status": "evidenced by manual-20261016-02; HUM-07 approved by the author on 2026-10-16"
     }
   ]
 }

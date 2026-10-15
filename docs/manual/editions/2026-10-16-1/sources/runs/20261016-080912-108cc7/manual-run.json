@@ -1,0 +1,315 @@
+{
+  "schema": "gcam.manual-run",
+  "schemaVersion": 1,
+  "runId": "20261016-080912-108cc7",
+  "scenario": "manual.acquisition",
+  "chapter": {
+    "number": "2.4",
+    "title": "Start, Stop, Continue and Reset"
+  },
+  "registrySha256": "7ea7b3c2b9dd2e408417cc03a859c059ff6a042cfa9b1636751e848ff8ad6076",
+  "noticesSha256": "6190a831e56cfe6edddd9abba1454e56ced89946e133962a29ef8c29c50aaaa3",
+  "startedAt": "2026-10-16T08:09:12.709+09:00",
+  "finishedAt": "2026-10-16T08:09:28.263+09:00",
+  "status": "passed",
+  "execution": {
+    "status": "completed",
+    "uiRunStatus": "completed",
+    "abortReason": null
+  },
+  "subject": {
+    "deploymentSha256": "fd235e68e4a0036c469f239c3390243b0eae8a14ca9c0e494416ca395da7c653",
+    "files": {
+      "CommunityToolkit.Mvvm.dll": "7d7eb5c066cfe883b439b1200bf5dcb387b1e5319dd2edbdaa9e23adfe416452",
+      "Gcam.Configuration.dll": "65c81c42f33f93ed366be0e3340159b601c8081a86e47ab1f70a1ceb40114478",
+      "Gcam.Core.dll": "d37c1015a909f63da807b614c8ca1a19f789fc767bcd95c5405bf70e465cc386",
+      "Gcam.Decoding.dll": "62a773e9324d601e529ed3ff2dcce78989d989ee1742bb47843f9bba639288ae",
+      "Gcam.Detector.dll": "4c2b2a347f6ea71bd5a019eabe69aa653c12629af87d8d3291bf8e0358321637",
+      "Gcam.Masks.dll": "70dbf5f42701a5acfbec42e355373725767aec27b8543a7c64767be6cfd50aee",
+      "Gcam.Simulation.dll": "88bc1ebf41905832ff97c1eb8bbb1bcc227ff39c154355ee4f468f1d3f628282",
+      "Gcam.Studio.Core.dll": "9d613dbf301ab6e1f5267da3e7cbfd793cfeddfd2cf8b12a86c43a929dc91e27",
+      "Gcam.Studio.Services.dll": "201710de87d20416c7777edecb60e25a5627a89241a6a10c0a9a9dbf35d58f07",
+      "Gcam.Studio.deps.json": "f9ca162dd5b6e82b2000f74ba10280d9aacd28592be3bb630f8a4dbf73c300f9",
+      "Gcam.Studio.dll": "2f3f82e7b18c8149ad3dd89e1b9919fafc100f9c46ffef7e550b54b366b5d4ae",
+      "Gcam.Studio.exe": "867089a1be8c0c9bed839f42dfaa01adeb67c278185cb92dd9b44ed3cf2990a4",
+      "Gcam.Studio.runtimeconfig.json": "f1105b6b9a1edbeb3b8ebf90f94c4a3a554e1de005e60fcd9a20978501dc2d54",
+      "Microsoft.Extensions.DependencyInjection.Abstractions.dll": "99a08f73aa1568c8a614ac4d76fe1cf9a27e10f7c02f9afd65da2c6e25d6ff04",
+      "Microsoft.Extensions.DependencyInjection.dll": "09c80cce213152ced75d791fc4fd57b34f79a2026c69d133b0380f10128096ce",
+      "Microsoft.Extensions.Logging.Abstractions.dll": "bb853130f5afaf335be7858d661f8212ec653835100f5a4e3aa2c66a4d4f685d",
+      "PdfSharp-wpf.dll": "dffe4b53fbed717fa473adfbd99b75f84c3b057c6ae17147257957c2f20612f9",
+      "PdfSharp.BarCodes-wpf.dll": "eb9e4b6463aeb2157b6303bb53bcc03076db4fcf10c9e7427709d4e1333f6d2b",
+      "PdfSharp.Charting-wpf.dll": "d87c9205bd43fbc4cdf5f8ad99310fdbc9798c9cdfe6b14234aa6c3e063d28f6",
+      "PdfSharp.Cryptography.dll": "47d77b624181104b7fd41653380849fb935e08a102a542edac82228d0bb1d749",
+      "PdfSharp.Quality-wpf.dll": "b544a5660041356d1e1582db4ad168fceb4ed7616cb3b996c9f0c2019438dd3e",
+      "PdfSharp.Shared.dll": "ed85998ffc67e96a1a125a349c86181c1444b39c277676e73389874d2e58ebbe",
+      "PdfSharp.Snippets-wpf.dll": "c33d72dc774de9dbe4ae2b99c36ccd202108e6d8dcc8aaf4664d17b3645dcf93",
+      "PdfSharp.System.dll": "8506b85ea33d7780b4709f536813570598fd435c6d468190de660b676716aa1b",
+      "PdfSharp.WPFonts.dll": "89ac7e7b6ddd274d4d1dda929dafd145be495bdc6e543e19abb8ea9fc459c292",
+      "ambient/terrestrial-unscear2000-v1.json": "4d48bc4272ce4c25ff6ae9b13ed7583e3c8f467afffdb0225956a70cc435b3f4"
+    },
+    "unchanged": true
+  },
+  "tool": {
+    "commit": "46c9ada7a4e6c699224ef4c6cfb95a315bb6d9d9",
+    "dirtyFiles": 0,
+    "assemblySha256": "be4cec0723f09a70e955c597f5cd0e92f901df88d2e2809488ad1633744814c8"
+  },
+  "environment": {
+    "frameWidthPx": 1440,
+    "frameHeightPx": 900,
+    "dpi": 96,
+    "perMonitorAware": true,
+    "themeAtStart": "dark",
+    "os": "Microsoft Windows NT 10.0.26200.0",
+    "uiLocale": "en",
+    "formattingCulture": "ko-KR",
+    "runtime": "9.0.13"
+  },
+  "links": {
+    "uiManifest": {
+      "sha256": "5e6aad259a4766172a94bd71293bb8c5697c7e95a368bd86053ddd4e66b27067",
+      "retained": false,
+      "reason": "the UI manifest names local paths; its hash is the lineage"
+    }
+  },
+  "steps": [
+    {
+      "n": 1,
+      "text": "Set **Live time** to 600 (seconds) and **Speed** to 1 (live seconds per wall second) in the top bar.",
+      "labels": {
+        "AcquisitionLiveTime": "Live time",
+        "AcquisitionSpeed": "Speed"
+      },
+      "notices": [],
+      "checks": [
+        {
+          "id": "acquisition.preset",
+          "result": "pass",
+          "detail": "expected (600, 1), actual (600, 1)"
+        }
+      ],
+      "figures": [],
+      "missingFigures": [],
+      "verdict": "passed",
+      "error": null
+    },
+    {
+      "n": 2,
+      "text": "Open the Options dialog with the cog button (accessible name **Options**); on its **Acquisition** tab type 12345 in the seed field and apply with **OK**. A fixed seed makes the acquisition reproducible; the status bar lists it.",
+      "labels": {
+        "OpenOptions": "Options",
+        "Options.AcquisitionTab": "Acquisition",
+        "Options.Apply": "OK"
+      },
+      "notices": [],
+      "checks": [
+        {
+          "id": "acquisition.seed-applied",
+          "result": "pass",
+          "detail": "expected Options: seed 12345, actual Options: seed 12345"
+        }
+      ],
+      "figures": [],
+      "missingFigures": [],
+      "verdict": "passed",
+      "error": null
+    },
+    {
+      "n": 3,
+      "text": "Click **Start**. The acquisition runs: counts grow in the status bar, the scene and the live time are locked, and the button becomes **Stop**.",
+      "labels": {
+        "StartAcquisition": "Start",
+        "StopAcquisition": "Stop"
+      },
+      "notices": [
+        "N-SIM"
+      ],
+      "checks": [
+        {
+          "id": "acquisition.acquiring-locks",
+          "result": "pass",
+          "detail": "Stop offered; Start, scene, live time, speed and Reset locked"
+        }
+      ],
+      "figures": [
+        {
+          "id": "2.4-1",
+          "capture": "captures/2.4-1.png",
+          "marks": "captures/2.4-1.marks.json",
+          "caption": "Acquiring."
+        }
+      ],
+      "missingFigures": [],
+      "verdict": "passed",
+      "error": null
+    },
+    {
+      "n": 4,
+      "text": "Click **Stop**: the acquisition stops and keeps its data; the counts no longer change, the inputs stay locked and the button reads **Continue**.",
+      "labels": {
+        "StopAcquisition": "Stop",
+        "StartAcquisition": "Continue"
+      },
+      "notices": [
+        "N-TIMING"
+      ],
+      "checks": [
+        {
+          "id": "acquisition.stop-freezes",
+          "result": "pass",
+          "detail": "status 'Stopped · t = 1.7 s of 600 s · 115 counts · 66 cps · seed 12345'"
+        },
+        {
+          "id": "acquisition.stopped-locks",
+          "result": "pass",
+          "detail": "scene locked, Reset and Continue offered"
+        }
+      ],
+      "figures": [
+        {
+          "id": "2.4-2",
+          "capture": "captures/2.4-2.png",
+          "marks": "captures/2.4-2.marks.json",
+          "caption": "Stopped: the data are kept and Continue is offered."
+        }
+      ],
+      "missingFigures": [],
+      "verdict": "passed",
+      "error": null
+    },
+    {
+      "n": 5,
+      "text": "Click **Continue** again: the same acquisition continues and its counts keep growing; stop it again with Stop.",
+      "labels": {
+        "StartAcquisition": "Continue"
+      },
+      "notices": [],
+      "checks": [
+        {
+          "id": "acquisition.continue-accumulates",
+          "result": "pass",
+          "detail": "127 counts after 115"
+        }
+      ],
+      "figures": [],
+      "missingFigures": [],
+      "verdict": "passed",
+      "error": null
+    },
+    {
+      "n": 6,
+      "text": "Click the icon button whose tooltip reads **Reset acquisition**. A confirmation names the acquired live time and counts; **Cancel** keeps the acquisition.",
+      "labels": {
+        "ResetAcquisition": "Reset acquisition",
+        "Modal.Cancel": "Cancel"
+      },
+      "notices": [],
+      "checks": [
+        {
+          "id": "acquisition.reset-asks",
+          "result": "pass",
+          "detail": "message 'Discard the acquired data (2.0 live s, 127 counts)? Inputs unlock for the next acquisition.' names 127 counts"
+        },
+        {
+          "id": "acquisition.cancel-keeps",
+          "result": "pass",
+          "detail": "acquisition kept, scene locked"
+        }
+      ],
+      "figures": [
+        {
+          "id": "2.4-3",
+          "capture": "captures/2.4-3.png",
+          "marks": "captures/2.4-3.marks.json",
+          "caption": "The reset confirmation."
+        }
+      ],
+      "missingFigures": [],
+      "verdict": "passed",
+      "error": null
+    },
+    {
+      "n": 7,
+      "text": "Click **Reset acquisition** again and confirm with **Discard**: the data are discarded, the status reads Ready and the inputs unlock; the button reads Start again.",
+      "labels": {
+        "ResetAcquisition": "Reset acquisition",
+        "Reset.Discard": "Discard"
+      },
+      "notices": [],
+      "checks": [
+        {
+          "id": "acquisition.discard-clears",
+          "result": "pass",
+          "detail": "status 'Ready'"
+        }
+      ],
+      "figures": [
+        {
+          "id": "2.4-4",
+          "capture": "captures/2.4-4.png",
+          "marks": "captures/2.4-4.marks.json",
+          "caption": "Ready for the next acquisition."
+        }
+      ],
+      "missingFigures": [],
+      "verdict": "passed",
+      "error": null
+    }
+  ],
+  "evidence": [
+    {
+      "path": "captures/2.4-1.png",
+      "sha256": "0489797b52c093be151106471b8a7636011fc825e937e2731785a9be2096e557",
+      "bytes": 89109,
+      "role": "capture"
+    },
+    {
+      "path": "captures/2.4-1.marks.json",
+      "sha256": "0f5b76213add89138221c27f835005f5117820b5386d240eab62eaff1d9bca7d",
+      "bytes": 866,
+      "role": "marks"
+    },
+    {
+      "path": "captures/2.4-2.png",
+      "sha256": "c83ff6aefdcde8d679fd3110894a5b3e08f94782ce92a1e129dfeb71b44fac62",
+      "bytes": 90032,
+      "role": "capture"
+    },
+    {
+      "path": "captures/2.4-2.marks.json",
+      "sha256": "4f57ca6fbf0161564b578d1648611bc3b0eb4e6c659c1062bce8e05793b462c4",
+      "bytes": 1038,
+      "role": "marks"
+    },
+    {
+      "path": "captures/2.4-3.png",
+      "sha256": "c561ec2fbefdb7ab2f08d4e7b5fb0df46fbc062f641b16caa9b508bd1e79d8bf",
+      "bytes": 85881,
+      "role": "capture"
+    },
+    {
+      "path": "captures/2.4-3.marks.json",
+      "sha256": "fea1fedd1a2b5cacff20b086df81746bdb5dbf0a211c625746716e6598348175",
+      "bytes": 1325,
+      "role": "marks"
+    },
+    {
+      "path": "captures/2.4-4.png",
+      "sha256": "8055e764c10a6c4848dee1a833b35fd7e6542ce7e351e08210b7ed0f97eb8d3d",
+      "bytes": 61091,
+      "role": "capture"
+    },
+    {
+      "path": "captures/2.4-4.marks.json",
+      "sha256": "3289dc59e473a08fb7dd99d3c8563e8fb4c1f451430fa61d8be979e9e7eecd22",
+      "bytes": 1130,
+      "role": "marks"
+    }
+  ],
+  "video": {
+    "runId": "20261016-080912-108cc7",
+    "testId": "ManualScenarioTests.Acquisition_StartStopContinueReset-5caed62996b7",
+    "videoSha256": "24020af7e028b6972c5687c732161ba8576759c55dc83e195007c08929f6f319",
+    "captionsSha256": "7bf3bb06aee49b937147ff009809eacc06d78005c6789afbcc11e1687fa81793"
+  }
+}

@@ -1,8 +1,8 @@
 {
   "schema": "gcam.manual-notices",
   "schemaVersion": 1,
-  "status": "draft",
-  "approval": "Second edition wording awaits author approval with the edition.",
+  "status": "approved",
+  "approval": "Second edition wording approved by the author on 2026-10-16 with the edition.",
   "notices": [
     {
       "id": "N-SIM",

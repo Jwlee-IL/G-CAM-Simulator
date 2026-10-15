@@ -314,11 +314,10 @@ class ManualRecordsTests(unittest.TestCase):
         chapters = {c['number']: c for c in sources['registry']['chapters']}
         self.assertEqual(10, len(chapters))
         self.assertEqual({'1.1', '5.2'}, {n for n, c in chapters.items() if c['source'] == 'static'})
-        # Second edition (TODO-48): the revised static chapters, notice list and mark purposes are drafts until the
-        # author approves them with the edition; set these back to approved in the approving change.
-        self.assertTrue(all(s['draft'] for s in sources['static'].values()), 'the static chapters await approval')
-        self.assertEqual('draft', sources['noticeStatus'])
-        self.assertEqual('draft', sources['purposeStatus'])
+        # Second edition (TODO-48): approved by the author on 2026-10-16 with the edition.
+        self.assertFalse(any(s['draft'] for s in sources['static'].values()), 'the static chapters are approved')
+        self.assertEqual('approved', sources['noticeStatus'])
+        self.assertEqual('approved', sources['purposeStatus'])
         for notice in sources['notices'].values():
             for number in notice['chapters']:
                 if chapters[number]['source'] == 'static':

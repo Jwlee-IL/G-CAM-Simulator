@@ -411,3 +411,31 @@ scenarios its changes touch (title-bar workspace tabs, physical hit stream) — 
 readout scenarios without the long-running High-res cold run, manual Navigate, chrome and pilot — 20 passed, 1 skipped
 (the opt-in long run) in 8.6 min; no Studio or test host left, no tree changes.
 
+
+## Studio manual, second edition, and desktop-test videos (TODO-48), 2026-10-16
+
+Worktree `C:\gw\w48`, branch `todo48-manual-second-edition`; review and headless turn by Codex, finished by a substitute
+agent. Every desktop test that drives Studio now records an MP4 of the owned window (10 fps, H.264 through Media
+Foundation, cursor drawn, `.vtt` step captions); a pass publishes it to `artifacts/ui-videos/` with `index.json`.
+
+Desktop turn (author's go each run). Pilot `probe-20261016-01` on `10b55bf`: controls seen; two out-of-declaration values
+of the shell's MuiCache (a new executable path). Observed manual batch `manual-20261016-01`: 6 of 8 passed; the new
+chapters 3.7 and 4.4 failed at completion (a label read only while its popup or tab is shown; `753b04c`). The batch also
+showed the Windows save dialog recording the exports in the user's per-extension recent list and last folder (HKCU
+`ComDlg32`). Broken verdicts: all eight chapters fail at their own mutated check; recovery passes. Regression with the
+recorder on: 32 recorded scenarios and the eight chapters pass, twice; the long opt-in run skipped. The timing-sensitive
+scenarios (readout cancel, two focus sweeps) take 13 / 17 / 14 s with the recorder on and off. Recorder cost: 40 videos,
+12.2 min, 95 MB (7.7 MB/min), no dropped frame; 138 neutral frames, all during the save dialog; no foreign window masked.
+Found and fixed during the turn: frames and screenshots showed one row and column of the window behind Studio at the
+frame edge (now a neutral two-pixel edge everywhere, `39e4bfa`, `af45c5f`; edition 1's figures keep that row, MD13); the
+export figure's marks left no label room (three marks); the Compare reference lies below the panel's fold (read, not
+pictured, `2765ccf`); the Store `python` passed the interpreter probe and then refused a start (launcher first).
+
+Author decisions: the dialog's history is declared as the OS dialog's record (E6), the MuiCache values are a background
+filter, and the classification-rule changes were approved. Final runs on `46c9ada` (author's go): pilot
+`probe-20261016-02` completed (G1 basis); observed manual batch `manual-20261016-02` passed 8 / 8 and, with three filters
+it evidenced (certificate revocation URL cache, Store publisher folder, a desktop messenger's data; `0e245c2`),
+re-classifies completed. Edition `2026-10-16-1` (ten chapters, 29 figures) generated from that batch; the author approved
+the notices (N-NOT-SAVED re-worded, new N-EXPORT-SCOPE), static chapters 1.1 and 5.2 and the mark purposes; formal (104
+files, 6.2 MB), both editions replay byte for byte. Release build 0 warnings; normal suite 1,171 passed / 63 skipped;
+catalog 238 units; generator self-test 44.

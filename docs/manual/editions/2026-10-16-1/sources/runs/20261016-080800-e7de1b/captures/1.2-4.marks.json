@@ -1,0 +1,87 @@
+{
+  "schema": "gcam.figure-marks",
+  "schemaVersion": 1,
+  "capture": "captures/1.2-4.png",
+  "captureSha256": "71627279e98cfecfd4e6fbfa88bc65fdae9899b67ee6b6fef1e9cabc3c6f3104",
+  "widthPx": 1440,
+  "heightPx": 900,
+  "frameOriginPx": [
+    560,
+    246
+  ],
+  "dpi": 96,
+  "perMonitorAware": true,
+  "templateSha256": "1d6c15743001e5aea2b295df03e583a9cf5edba49f79c6d480beec284c31c463",
+  "crop": "marks",
+  "region": {
+    "target": "Detector.Views",
+    "screen": [
+      897,
+      355,
+      766,
+      30
+    ],
+    "image": [
+      337,
+      109,
+      766,
+      30
+    ]
+  },
+  "marks": [
+    {
+      "n": 1,
+      "target": "Readout.SipmTab",
+      "label": "SiPM",
+      "labelSource": "name",
+      "screen": [
+        1051,
+        356,
+        153,
+        28
+      ],
+      "image": [
+        491,
+        110,
+        153,
+        28
+      ]
+    },
+    {
+      "n": 2,
+      "target": "Readout.EmptyState",
+      "label": "Available with the experimental physical readout",
+      "labelSource": "name",
+      "screen": [
+        1140,
+        716,
+        280,
+        17
+      ],
+      "image": [
+        580,
+        470,
+        280,
+        17
+      ]
+    },
+    {
+      "n": 3,
+      "target": "Readout.ChooseReadout",
+      "label": "Choose readout…",
+      "labelSource": "name",
+      "screen": [
+        1215,
+        741,
+        130,
+        28
+      ],
+      "image": [
+        655,
+        495,
+        130,
+        28
+      ]
+    }
+  ]
+}

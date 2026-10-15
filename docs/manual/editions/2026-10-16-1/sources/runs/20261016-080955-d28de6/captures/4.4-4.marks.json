@@ -1,0 +1,37 @@
+{
+  "schema": "gcam.figure-marks",
+  "schemaVersion": 1,
+  "capture": "captures/4.4-4.png",
+  "captureSha256": "bce0d302a2e8027a2bd9e1ac30782692798443b731a35a169f9b2db8b719f4e6",
+  "widthPx": 1440,
+  "heightPx": 900,
+  "frameOriginPx": [
+    560,
+    246
+  ],
+  "dpi": 96,
+  "perMonitorAware": true,
+  "templateSha256": "789dcb5ff7b7449bc474d409a1cf8c01ba6582a51ffd04dcca068c320e552e08",
+  "crop": "full",
+  "region": null,
+  "marks": [
+    {
+      "n": 1,
+      "target": "Compare.SameShare",
+      "label": "Same crystal 71.39%",
+      "labelSource": "name",
+      "screen": [
+        1701,
+        367,
+        241,
+        17
+      ],
+      "image": [
+        1141,
+        121,
+        241,
+        17
+      ]
+    }
+  ]
+}

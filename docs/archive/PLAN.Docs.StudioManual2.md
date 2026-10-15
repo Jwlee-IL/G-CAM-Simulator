@@ -2,12 +2,13 @@
 
 Scope: TODO-48. Generate the second edition of the GCAM Studio manual on the current build, with new chapters for the
 report export (TODO-46) and the Compare workspace (TODO-47), and record a video of every desktop UI test, keeping the latest
-passing video per test. The process is the first edition's ([PLAN.Docs.StudioManual](archive/PLAN.Docs.StudioManual.md), its
-[charter](archive/PLAN.Docs.StudioManual.Charter.md) and [review](archive/PLAN.Docs.StudioManual.Review.md)); this plan
+passing video per test. The process is the first edition's ([PLAN.Docs.StudioManual](PLAN.Docs.StudioManual.md), its
+[charter](PLAN.Docs.StudioManual.Charter.md) and [review](PLAN.Docs.StudioManual.Review.md)); this plan
 lists only what changes.
 
-Status: decisions after review 2026-10-16 (below); next: implementation turn 2 (headless) in the same Codex conversation
-(`01a1403d…`). History: reference plan 2026-10-16 by the planner, video decisions V1–V4 the author's (2026-10-15); review by
+Status: **done 2026-10-16.** Edition `2026-10-16-1` (formal) generated from the observed manual batch
+`manual-20261016-02` on `46c9ada`; every recorded desktop test has a video (record in VV.Studio.History). Turn 2 by Codex,
+finished by a substitute agent; desktop turn by the planner (MD11–MD13 from it). History: reference plan 2026-10-16 by the planner, video decisions V1–V4 the author's (2026-10-15); review by
 Codex 2026-10-16 ([review](PLAN.Docs.StudioManual2.Review.md), R1–R19, a measured sink-writer encode); worktree
 `C:\gw\w48`, branch `todo48-manual-second-edition`.
 

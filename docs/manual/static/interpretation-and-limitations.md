@@ -1,5 +1,3 @@
-> DRAFT — second edition, awaiting author approval.
-
 [[notice:N-SIM]]
 
 #### Images at the default optics
