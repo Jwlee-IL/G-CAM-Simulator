@@ -1,7 +1,7 @@
 {
   "schema": "gcam.manual-notices",
   "schemaVersion": 1,
-  "status": "draft",
+  "status": "approved",
   "approval": "draft for the author's approval; the generator marks every edition draft until status reads approved",
   "notices": [
     {

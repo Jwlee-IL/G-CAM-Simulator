@@ -1,6 +1,6 @@
 {
  "budgetBytes": 10485760,
- "bytesExcludingRecord": 2259720,
+ "bytesExcludingRecord": 3737398,
  "chapterOutputSha256": {
   "1.1": "1cddf27158be0788c6f48b443e1a86137e11ed36872b7fc20b25a26518008d0b",
   "1.2": "b16762bea54d102efac2b92805d3e837fef8a771a27900cc47442111428a7cb9",
@@ -98,12 +98,7 @@
   }
  ],
  "date": "2026-10-15",
- "draftReasons": [
-  "static chapter 1.1 is a draft",
-  "static chapter 5.2 is a draft",
-  "the notice list is not approved",
-  "the mark purpose list is not approved"
- ],
+ "draftReasons": [],
  "editionId": "2026-10-15-1",
  "figures": [
   {
@@ -181,7 +176,7 @@
      "digitEmPx": 15,
      "emPx": 16,
      "path": "samples/manual/font/mplus-rounded-1c-bold.glyphs.json",
-     "sha256": "50f700764a8a99b64e0b2f56822f556552a4f3f3a019c6abaa8ce272ed956d62"
+     "sha256": "3def83f75ef2c0847879477da66245d07f08eae991119a54250dc10686aaebd0"
     },
     "imageAt": [
      293,
@@ -485,7 +480,7 @@
      "digitEmPx": 15,
      "emPx": 16,
      "path": "samples/manual/font/mplus-rounded-1c-bold.glyphs.json",
-     "sha256": "50f700764a8a99b64e0b2f56822f556552a4f3f3a019c6abaa8ce272ed956d62"
+     "sha256": "3def83f75ef2c0847879477da66245d07f08eae991119a54250dc10686aaebd0"
     },
     "imageAt": [
      0,
@@ -618,7 +613,7 @@
      "digitEmPx": 15,
      "emPx": 16,
      "path": "samples/manual/font/mplus-rounded-1c-bold.glyphs.json",
-     "sha256": "50f700764a8a99b64e0b2f56822f556552a4f3f3a019c6abaa8ce272ed956d62"
+     "sha256": "3def83f75ef2c0847879477da66245d07f08eae991119a54250dc10686aaebd0"
     },
     "imageAt": [
      0,
@@ -740,7 +735,7 @@
      "digitEmPx": 15,
      "emPx": 16,
      "path": "samples/manual/font/mplus-rounded-1c-bold.glyphs.json",
-     "sha256": "50f700764a8a99b64e0b2f56822f556552a4f3f3a019c6abaa8ce272ed956d62"
+     "sha256": "3def83f75ef2c0847879477da66245d07f08eae991119a54250dc10686aaebd0"
     },
     "imageAt": [
      0,
@@ -846,7 +841,7 @@
      "digitEmPx": 15,
      "emPx": 16,
      "path": "samples/manual/font/mplus-rounded-1c-bold.glyphs.json",
-     "sha256": "50f700764a8a99b64e0b2f56822f556552a4f3f3a019c6abaa8ce272ed956d62"
+     "sha256": "3def83f75ef2c0847879477da66245d07f08eae991119a54250dc10686aaebd0"
     },
     "imageAt": [
      0,
@@ -961,7 +956,7 @@
      "digitEmPx": 15,
      "emPx": 16,
      "path": "samples/manual/font/mplus-rounded-1c-bold.glyphs.json",
-     "sha256": "50f700764a8a99b64e0b2f56822f556552a4f3f3a019c6abaa8ce272ed956d62"
+     "sha256": "3def83f75ef2c0847879477da66245d07f08eae991119a54250dc10686aaebd0"
     },
     "imageAt": [
      0,
@@ -1168,7 +1163,7 @@
      "digitEmPx": 15,
      "emPx": 16,
      "path": "samples/manual/font/mplus-rounded-1c-bold.glyphs.json",
-     "sha256": "50f700764a8a99b64e0b2f56822f556552a4f3f3a019c6abaa8ce272ed956d62"
+     "sha256": "3def83f75ef2c0847879477da66245d07f08eae991119a54250dc10686aaebd0"
     },
     "imageAt": [
      0,
@@ -1307,7 +1302,7 @@
      "digitEmPx": 15,
      "emPx": 16,
      "path": "samples/manual/font/mplus-rounded-1c-bold.glyphs.json",
-     "sha256": "50f700764a8a99b64e0b2f56822f556552a4f3f3a019c6abaa8ce272ed956d62"
+     "sha256": "3def83f75ef2c0847879477da66245d07f08eae991119a54250dc10686aaebd0"
     },
     "imageAt": [
      0,
@@ -1448,7 +1443,7 @@
      "digitEmPx": 15,
      "emPx": 16,
      "path": "samples/manual/font/mplus-rounded-1c-bold.glyphs.json",
-     "sha256": "50f700764a8a99b64e0b2f56822f556552a4f3f3a019c6abaa8ce272ed956d62"
+     "sha256": "3def83f75ef2c0847879477da66245d07f08eae991119a54250dc10686aaebd0"
     },
     "imageAt": [
      0,
@@ -1665,7 +1660,7 @@
      "digitEmPx": 15,
      "emPx": 16,
      "path": "samples/manual/font/mplus-rounded-1c-bold.glyphs.json",
-     "sha256": "50f700764a8a99b64e0b2f56822f556552a4f3f3a019c6abaa8ce272ed956d62"
+     "sha256": "3def83f75ef2c0847879477da66245d07f08eae991119a54250dc10686aaebd0"
     },
     "imageAt": [
      0,
@@ -1799,7 +1794,7 @@
      "digitEmPx": 15,
      "emPx": 16,
      "path": "samples/manual/font/mplus-rounded-1c-bold.glyphs.json",
-     "sha256": "50f700764a8a99b64e0b2f56822f556552a4f3f3a019c6abaa8ce272ed956d62"
+     "sha256": "3def83f75ef2c0847879477da66245d07f08eae991119a54250dc10686aaebd0"
     },
     "imageAt": [
      260,
@@ -1923,7 +1918,7 @@
      "digitEmPx": 15,
      "emPx": 16,
      "path": "samples/manual/font/mplus-rounded-1c-bold.glyphs.json",
-     "sha256": "50f700764a8a99b64e0b2f56822f556552a4f3f3a019c6abaa8ce272ed956d62"
+     "sha256": "3def83f75ef2c0847879477da66245d07f08eae991119a54250dc10686aaebd0"
     },
     "imageAt": [
      0,
@@ -2010,7 +2005,7 @@
      "digitEmPx": 15,
      "emPx": 16,
      "path": "samples/manual/font/mplus-rounded-1c-bold.glyphs.json",
-     "sha256": "50f700764a8a99b64e0b2f56822f556552a4f3f3a019c6abaa8ce272ed956d62"
+     "sha256": "3def83f75ef2c0847879477da66245d07f08eae991119a54250dc10686aaebd0"
     },
     "imageAt": [
      0,
@@ -2123,7 +2118,7 @@
      "digitEmPx": 15,
      "emPx": 16,
      "path": "samples/manual/font/mplus-rounded-1c-bold.glyphs.json",
-     "sha256": "50f700764a8a99b64e0b2f56822f556552a4f3f3a019c6abaa8ce272ed956d62"
+     "sha256": "3def83f75ef2c0847879477da66245d07f08eae991119a54250dc10686aaebd0"
     },
     "imageAt": [
      0,
@@ -2267,7 +2262,7 @@
      "digitEmPx": 15,
      "emPx": 16,
      "path": "samples/manual/font/mplus-rounded-1c-bold.glyphs.json",
-     "sha256": "50f700764a8a99b64e0b2f56822f556552a4f3f3a019c6abaa8ce272ed956d62"
+     "sha256": "3def83f75ef2c0847879477da66245d07f08eae991119a54250dc10686aaebd0"
     },
     "imageAt": [
      0,
@@ -2356,7 +2351,7 @@
      "digitEmPx": 15,
      "emPx": 16,
      "path": "samples/manual/font/mplus-rounded-1c-bold.glyphs.json",
-     "sha256": "50f700764a8a99b64e0b2f56822f556552a4f3f3a019c6abaa8ce272ed956d62"
+     "sha256": "3def83f75ef2c0847879477da66245d07f08eae991119a54250dc10686aaebd0"
     },
     "imageAt": [
      0,
@@ -2458,7 +2453,7 @@
      "digitEmPx": 15,
      "emPx": 16,
      "path": "samples/manual/font/mplus-rounded-1c-bold.glyphs.json",
-     "sha256": "50f700764a8a99b64e0b2f56822f556552a4f3f3a019c6abaa8ce272ed956d62"
+     "sha256": "3def83f75ef2c0847879477da66245d07f08eae991119a54250dc10686aaebd0"
     },
     "imageAt": [
      0,
@@ -2587,7 +2582,7 @@
      "digitEmPx": 15,
      "emPx": 16,
      "path": "samples/manual/font/mplus-rounded-1c-bold.glyphs.json",
-     "sha256": "50f700764a8a99b64e0b2f56822f556552a4f3f3a019c6abaa8ce272ed956d62"
+     "sha256": "3def83f75ef2c0847879477da66245d07f08eae991119a54250dc10686aaebd0"
     },
     "imageAt": [
      0,
@@ -2693,7 +2688,7 @@
      "digitEmPx": 15,
      "emPx": 16,
      "path": "samples/manual/font/mplus-rounded-1c-bold.glyphs.json",
-     "sha256": "50f700764a8a99b64e0b2f56822f556552a4f3f3a019c6abaa8ce272ed956d62"
+     "sha256": "3def83f75ef2c0847879477da66245d07f08eae991119a54250dc10686aaebd0"
     },
     "imageAt": [
      0,
@@ -2773,7 +2768,7 @@
      "digitEmPx": 15,
      "emPx": 16,
      "path": "samples/manual/font/mplus-rounded-1c-bold.glyphs.json",
-     "sha256": "50f700764a8a99b64e0b2f56822f556552a4f3f3a019c6abaa8ce272ed956d62"
+     "sha256": "3def83f75ef2c0847879477da66245d07f08eae991119a54250dc10686aaebd0"
     },
     "imageAt": [
      0,
@@ -2820,21 +2815,49 @@
  ],
  "flags": [],
  "formal": false,
+ "formats": {
+  "docx": {
+   "path": "MANUAL.Studio.docx"
+  },
+  "pdf": {
+   "fonts": [
+    {
+     "face": "M PLUS Rounded 1c Bold",
+     "path": "samples/manual/font/mplus-rounded-1c-bold.glyphs.json",
+     "sha256": "3def83f75ef2c0847879477da66245d07f08eae991119a54250dc10686aaebd0"
+    },
+    {
+     "face": "M PLUS Rounded 1c Regular",
+     "path": "samples/manual/font/mplus-rounded-1c-regular.glyphs.json",
+     "sha256": "565a6e9b6f00cf61227df76733862e5a1116cf86064ff1c6b1819e8d414b6d57"
+    }
+   ],
+   "pageSize": "A4",
+   "pages": 18,
+   "path": "MANUAL.Studio.pdf"
+  },
+  "writer": {
+   "path": "samples/manual/manual_formats.py",
+   "sha256": "5fb9c777186b00a4413ff4b5289d4ae4f34a22a62c7f6914f773597b87783b4a"
+  }
+ },
  "generator": {
   "path": "samples/manual/manual_records.py",
-  "sha256": "34fe9805dcdf6cabc5cbd3e5b0dcc954d99e907b95a7020784968ac3e232e497"
+  "sha256": "01d6eaec60cf1c247e85b16c4cbee155b582138e5bb42db1fac905ad889465d0"
  },
  "labelFont": {
   "font": "M PLUS Rounded 1c Bold",
   "path": "samples/manual/font/mplus-rounded-1c-bold.glyphs.json",
-  "sha256": "50f700764a8a99b64e0b2f56822f556552a4f3f3a019c6abaa8ce272ed956d62"
+  "sha256": "3def83f75ef2c0847879477da66245d07f08eae991119a54250dc10686aaebd0"
  },
  "notices": {
-  "sha256": "a736a7c4bcf62c998f63be92bba935eb669b74e6e5e5bfde09eb2b0aa8943cb9",
-  "status": "draft"
+  "sha256": "596e4189cc84aada373e6255400fec708328352b6380d21790a2cc1250168b21",
+  "status": "approved"
  },
  "outputs": {
-  "MANUAL.Studio.md": "18224dadc1e921d66de9d227026eee910596c3434f3f32a2ac4a1a54a95bfa6f",
+  "MANUAL.Studio.docx": "0300646eba2c5b54277d88ff31129c4f9cb9cda7c94abfb9e9d6c9157e38284f",
+  "MANUAL.Studio.md": "2e88fc57422dbf4b08fd3c145a6ca07c96bb8fe798da83df3969ecc67cac4a61",
+  "MANUAL.Studio.pdf": "c1aa7fa485c2a2012ab226dab8ee8555fc80a50a9e4092d402790b34c0b3abb0",
   "figures/1.2-1.png": "63c79087ef34795c6c76d0a7af184af5506f760426b5d3d9893cd4df17dc599a",
   "figures/1.2-2.png": "31c80a1e764c745fafae799f08ab98777b1f25667865b9687659b030f41f3ebe",
   "figures/1.2-3.png": "8c597eab31495807f10a196373d26e81da58abf382bdd4f39f72eea789a0153f",
@@ -2856,10 +2879,10 @@
   "figures/3.4-2.png": "0b99183ea2e94058948b5f250a6b19e567662503110d67a24a6cb394968a6689",
   "figures/3.4-3.png": "81ef4855453f232cd27becd99390fbfa77e3484b83154538b0834479fc2cc158",
   "sources/manual/chapters.json": "67a5caf676b4ce9aa0fe9a4f668eaa461a370352be12a2003f852439b26f50c3",
-  "sources/manual/notices.json": "a736a7c4bcf62c998f63be92bba935eb669b74e6e5e5bfde09eb2b0aa8943cb9",
-  "sources/manual/purposes.json": "42c6c05b110e71ed79f9a8346caa7ed4dd5b164a21a7c46cb6ed944a20175d62",
-  "sources/manual/static/interpretation-and-limitations.md": "cef06522c61ddbf52b71af1e2b2d802fc53304064b214a51e5887ef0dcadf642",
-  "sources/manual/static/purpose-and-scope.md": "b288f1cbb5efbd0e3a294d4a5ba66e5c6340d51bd211cb13fa48cfca88698e01",
+  "sources/manual/notices.json": "596e4189cc84aada373e6255400fec708328352b6380d21790a2cc1250168b21",
+  "sources/manual/purposes.json": "badb1f195223bfc2f91fffb9fd8b3824efb744938da1140605e2118289bfe7af",
+  "sources/manual/static/interpretation-and-limitations.md": "5fc2c9d4494122b54df1af172aed65b36c14bae09476e76d47013f761c6746c5",
+  "sources/manual/static/purpose-and-scope.md": "648592f7f582207a8965cf782d20e94631f47a3339115a7bd10c9f0383ef7c87",
   "sources/runs/20261014-202044-2dbf58/captures/1.2-1.marks.json": "a04b9668955dc3cb11d1ccb870dad1ea329f77fd8b37ac7741e25e7883e85169",
   "sources/runs/20261014-202044-2dbf58/captures/1.2-1.png": "b3b4edcb227cd0c616c8999ae6b7d54be96dd0a0f290077ebdcced7e6a5bb2d3",
   "sources/runs/20261014-202044-2dbf58/captures/1.2-2.marks.json": "9b975939782035f50967b61090fbf2bfc08ef08403aa200bda15ad663ee86608",
@@ -2910,8 +2933,8 @@
  "purposes": {
   "labels": "each mark is labelled \"<screen text or the entry's name>: <short purpose>\" from the purpose list; a mark without an entry keeps its screen text alone",
   "missingTargets": [],
-  "sha256": "42c6c05b110e71ed79f9a8346caa7ed4dd5b164a21a7c46cb6ed944a20175d62",
-  "status": "draft"
+  "sha256": "badb1f195223bfc2f91fffb9fd8b3824efb744938da1140605e2118289bfe7af",
+  "status": "approved"
  },
  "registry": {
   "id": "gcam-studio-manual",
@@ -2962,18 +2985,18 @@
  "static": [
   {
    "chapter": "1.1",
-   "draft": true,
+   "draft": false,
    "path": "static/purpose-and-scope.md",
-   "sha256": "b288f1cbb5efbd0e3a294d4a5ba66e5c6340d51bd211cb13fa48cfca88698e01"
+   "sha256": "648592f7f582207a8965cf782d20e94631f47a3339115a7bd10c9f0383ef7c87"
   },
   {
    "chapter": "5.2",
-   "draft": true,
+   "draft": false,
    "path": "static/interpretation-and-limitations.md",
-   "sha256": "cef06522c61ddbf52b71af1e2b2d802fc53304064b214a51e5887ef0dcadf642"
+   "sha256": "5fc2c9d4494122b54df1af172aed65b36c14bae09476e76d47013f761c6746c5"
   }
  ],
- "status": "draft",
+ "status": "formal",
  "subject": {
   "deploymentSha256": "03742d883dbd3991517f70dd0ac6c9f6b116f29224c294e6e0105f36b28dcc48"
  }

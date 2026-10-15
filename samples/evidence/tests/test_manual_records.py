@@ -1,11 +1,16 @@
 """Manual edition generator: PNG codec, mark geometry, overlays, selection and the repository sources. No desktop."""
 import importlib.util
+import io
 import json
 from pathlib import Path
+import random
+import re
 import struct
 import tempfile
 import unittest
 import uuid
+import xml.etree.ElementTree as ET
+import zipfile
 import zlib
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -143,7 +148,7 @@ class ManualRecordsTests(unittest.TestCase):
     def test_text_is_rasterised_from_the_committed_rounded_glyph_subset(self):
         data = mr.FONT_DATA.read_bytes()
         subset = json.loads(data)
-        self.assertEqual({chr(c) for c in range(32, 127)} | set('·×–…'), set(subset['glyphs']))
+        self.assertEqual({chr(c) for c in range(32, 127)} | set('§±µ·×σ–—…−'), set(subset['glyphs']))
         self.assertEqual(('M PLUS Rounded 1c', 'Bold'), (subset['font']['family'], subset['font']['style']))
         self.assertTrue((mr.FONT_DATA.parent / 'OFL.txt').read_text(encoding='utf-8').startswith(
             'Copyright 2016 The Rounded M+ Project Authors.'))
@@ -309,9 +314,10 @@ class ManualRecordsTests(unittest.TestCase):
         chapters = {c['number']: c for c in sources['registry']['chapters']}
         self.assertEqual(8, len(chapters))
         self.assertEqual({'1.1', '5.2'}, {n for n, c in chapters.items() if c['source'] == 'static'})
-        self.assertTrue(all(s['draft'] for s in sources['static'].values()), 'static chapters stay drafts until approved')
-        self.assertEqual('draft', sources['noticeStatus'])
-        self.assertEqual('draft', sources['purposeStatus'], 'the purpose list stays a draft until approved')
+        # Approved by the author on 2026-10-15 (static chapters, notice list, mark purposes).
+        self.assertFalse(any(s['draft'] for s in sources['static'].values()), 'the static chapters are approved')
+        self.assertEqual('approved', sources['noticeStatus'])
+        self.assertEqual('approved', sources['purposeStatus'])
         for notice in sources['notices'].values():
             for number in notice['chapters']:
                 if chapters[number]['source'] == 'static':
@@ -323,7 +329,7 @@ class ManualRecordsTests(unittest.TestCase):
                      'budget-exceeded', 'tampered-figure', 'dpi-double-scaling', 'identity-leak', 'label-no-room',
                      'label-overlap', 'label-over-own-target', 'label-outside-figure', 'label-placement-defect',
                      'label-without-glyph', 'purpose-hash-mismatch', 'missing-purpose-formal', 'purpose-duplicate',
-                     'purpose-no-glyph', 'purpose-schema-1'):
+                     'purpose-no-glyph', 'purpose-schema-1', 'tampered-pdf', 'tampered-docx', 'pdf-missing-glyph'):
             self.assertIn(name, results)
             self.assertFalse(results[name].startswith('generated'), name)
         self.assertTrue(results['missing-run'].startswith('generated'))
@@ -336,6 +342,9 @@ class ManualRecordsTests(unittest.TestCase):
         self.assertEqual('source-hash: purposes.json', results['purpose-hash-mismatch'])
         self.assertEqual('generated: Start: go', results['purpose-in-label'])
         self.assertEqual('generated: Run: go', results['purpose-name'])
+        self.assertEqual('check-differs: MANUAL.Studio.pdf', results['tampered-pdf'])
+        self.assertEqual('check-differs: MANUAL.Studio.docx', results['tampered-docx'])
+        self.assertEqual('pdf-glyph: no glyph for U+2192 in Regular text', results['pdf-missing-glyph'])
 
     def test_latest_run_wins_and_a_tie_refuses(self):
         root = scratch()
@@ -435,6 +444,160 @@ class ManualRecordsTests(unittest.TestCase):
             self.assertTrue(len(short) <= 32 and not short.endswith('.') and short != target, f'{target}: {short}')
             self.assertLessEqual(len(entry.get('name', '')), 20, target)
             self.assertNotIn('purpose', entry, target)
+
+    def test_deflate_streams_round_trip_and_do_not_depend_on_the_zlib_build(self):
+        fm = mr.formats
+        self.assertEqual(b'\x03\x00', fm.deflate(b''))   # one fixed-Huffman block holding only its end code
+        rng = random.Random(7)
+        samples = [b'a', b'abcabcabcabc' * 50, bytes(rng.randrange(256) for _ in range(5000)),
+                   b''.join(b'BT /FR 9.5 Tf 1 0 0 1 %d 700 Tm (word) Tj ET\n' % k for k in range(400)), bytes(70000)]
+        for data in samples:
+            raw = fm.deflate(data)
+            self.assertEqual(data, zlib.decompress(raw, -15))
+            self.assertEqual(data, zlib.decompress(fm.zlib_stream(data)))
+            self.assertEqual(raw, fm.deflate(data))
+        self.assertLess(len(fm.deflate(samples[3])), len(samples[3]) // 4)   # it compresses, not only stores
+
+    def test_markdown_blocks_cover_the_edition_subset_and_refuse_anything_else(self):
+        fm = mr.formats
+        markdown = ('# Title\n\nEdition `e1` · see [chapter 1.1 (Intro)](#11-intro) and **bold *x* text**.\n\n'
+                    '> **Caution.** Simulated.\n\n- one\n  continued `code`\n  - [1.1 Intro](#11-intro)\n\n'
+                    '### 1.1 Intro\n\nA paragraph\nwrapped.\n\n'
+                    '<p align="center"><img src="figures/1.1-1.png" alt="Figure 1.1-1"></p>\n'
+                    '<p align="center"><em>Figure 1.1-1.</em> A &lt;b&gt; &amp; c</p>\n')
+        blocks = fm.blocks(markdown, mr.slug)
+        self.assertEqual(['heading', 'para', 'notice', 'list', 'heading', 'para', 'figure'], [b[0] for b in blocks])
+        self.assertEqual('11-intro', blocks[4][3])
+        self.assertEqual([('Edition ', frozenset(), None), ('e1', frozenset({'code'}), None), (' · see ', frozenset(), None),
+                          ('chapter 1.1 (Intro)', frozenset(), '11-intro'), (' and ', frozenset(), None),
+                          ('bold ', frozenset({'b'}), None), ('x', frozenset({'b', 'i'}), None), (' text', frozenset({'b'}), None),
+                          ('.', frozenset(), None)], blocks[1][1])
+        self.assertEqual('caution', blocks[2][1])
+        self.assertEqual([0, 1], [depth for depth, _ in blocks[3][1]])
+        self.assertEqual('one continued ', blocks[3][1][0][1][0][0])
+        self.assertEqual([('A paragraph wrapped.', frozenset(), None)], blocks[5][1])
+        self.assertEqual(('figures/1.1-1.png', 'Figure 1.1-1'), blocks[6][1:3])
+        self.assertEqual(['Figure 1.1-1. ', 'A <b> & c'], [r[0] for r in blocks[6][3]])
+        self.assertTrue(all('i' in r[1] for r in blocks[6][3]))   # the caption is italic
+        for bad in ('<div>raw</div>', '| a | b |', '```', 'an **unbalanced emphasis', 'a `code span'):
+            with self.assertRaisesRegex(ValueError, 'formats: '):
+                fm.blocks('# T\n\n' + bad + '\n', mr.slug)
+
+    def fixture_edition(self):
+        root = scratch()
+        src, runs = mr.fixture(root)
+        outputs = mr.generate(src, runs, 'e1', '2026-10-14', root / 'e1')
+        return outputs, json.loads(outputs['generation-record.json'])
+
+    @staticmethod
+    def pdf_objects(data):
+        """Independent reading of the writer's PDF: {number: (dictionary bytes, decoded stream or None)}."""
+        objects = {}
+        for number, body in re.findall(rb'(\d+) 0 obj\n(.*?)\nendobj\n', data, re.S):
+            m = re.match(rb'(<<.*?>>)\nstream\n(.*)\nendstream$', body, re.S)
+            if m:
+                head, payload = m.groups()
+                length = int(re.search(rb'/Length (\d+)', head)[1])
+                assert length == len(payload)
+                stream = zlib.decompress(payload) if b'/FlateDecode' in head and b'/Predictor' not in head else payload
+                objects[int(number)] = (head, stream)
+            else:
+                objects[int(number)] = (body, None)
+        return objects
+
+    def test_pdf_is_well_formed_and_its_text_reads_back_through_tounicode(self):
+        outputs, record = self.fixture_edition()
+        data = outputs['MANUAL.Studio.pdf']
+        self.assertTrue(data.startswith(b'%PDF-1.7\n') and data.endswith(b'%%EOF\n'))
+        start = int(re.search(rb'startxref\n(\d+)\n%%EOF\n$', data)[1])
+        self.assertTrue(data[start:].startswith(b'xref\n0 '))
+        offsets = [int(v) for v in re.findall(rb'(\d{10}) 00000 n ', data[start:])]
+        for number, offset in enumerate(offsets, 1):   # every cross-reference entry points at its object
+            self.assertTrue(data[offset:].startswith(b'%d 0 obj\n' % number), number)
+        objects = self.pdf_objects(data)
+        self.assertEqual(len(offsets), len(objects))
+        pages = [n for n, (head, _) in objects.items() if head.startswith(b'<< /Type /Page ')]
+        self.assertEqual(record['formats']['pdf']['pages'], len(pages))
+        self.assertIn(b'/Count %d' % len(pages), next(h for h, _ in objects.values() if h.startswith(b'<< /Type /Pages')))
+        images = [h for h, _ in objects.values() if b'/Subtype /Image' in h]
+        self.assertEqual(2, len(images))   # one image object per figure of the fixture
+        fonts = {}
+        for head, _ in objects.values():
+            if b'/Subtype /Type3' in head:
+                name = re.search(rb'/Name /(\w+)', head)[1].decode()
+                cmap = objects[int(re.search(rb'/ToUnicode (\d+) 0 R', head)[1])][1].decode('ascii')
+                fonts[name] = {int(a, 16): chr(int(b, 16)) for a, b in re.findall(r'<([0-9A-F]{2})> <([0-9A-F]{4})>', cmap)}
+        self.assertEqual({'FR', 'FB'}, set(fonts))
+        text = []
+        for page in pages:
+            head = objects[page][0]
+            content = objects[int(re.search(rb'/Contents (\d+) 0 R', head)[1])][1].decode('latin-1')
+            for font, string in re.findall(r'/(F[RB]) [\d.]+ Tf [^(]*\(((?:\\.|[^\\)])*)\) Tj', content):
+                raw = re.sub(r'\\([0-7]{3}|.)', lambda m: chr(int(m[1], 8)) if m[1].isdigit() else m[1], string)
+                text.append(''.join(fonts[font][ord(c)] for c in raw))
+        joined = re.sub(r'\s+', '', ''.join(text))
+        markdown = outputs['MANUAL.Studio.md'].decode('utf-8')
+        for block in mr.formats.blocks(markdown, mr.slug):
+            if block[0] in ('heading', 'figure'):
+                runs = block[2] if block[0] == 'heading' else block[3]
+                self.assertIn(re.sub(r'\s+', '', ''.join(r[0] for r in runs)), joined)
+        self.assertIn('Intro text, see chapter 1.2 (Alpha).'.replace(' ', ''), joined)
+        self.assertIn(b'/Subtype /Link', data)   # the contents and chapter links are live
+
+    def test_docx_package_is_complete_and_every_part_resolves(self):
+        outputs, record = self.fixture_edition()
+        package = zipfile.ZipFile(io.BytesIO(outputs['MANUAL.Studio.docx']))
+        names = package.namelist()
+        self.assertEqual(sorted(names), names)
+        self.assertTrue(all(info.date_time == (2026, 10, 14, 0, 0, 0) for info in package.infolist()))
+        parts = {name: package.read(name) for name in names}
+        trees = {name: ET.fromstring(data) for name, data in parts.items() if name.endswith(('.xml', '.rels'))}   # all parse
+        types = trees['[Content_Types].xml']
+        ns_ct = '{http://schemas.openxmlformats.org/package/2006/content-types}'
+        overrides = {e.get('PartName').lstrip('/') for e in types.iter(ns_ct + 'Override')}
+        defaults = {e.get('Extension') for e in types.iter(ns_ct + 'Default')}
+        for name in names:
+            if name != '[Content_Types].xml':
+                self.assertTrue(name in overrides or name.rsplit('.', 1)[1] in defaults, name)
+        self.assertTrue(overrides <= set(names))
+        ns_rel = '{http://schemas.openxmlformats.org/package/2006/relationships}'
+        relations = {}
+        for name, tree in trees.items():
+            if name.endswith('.rels'):
+                base = name.replace('_rels/', '').replace('.rels', '')
+                folder = base.rsplit('/', 1)[0] + '/' if '/' in base else ''
+                for rel in tree.iter(ns_rel + 'Relationship'):
+                    target = folder + rel.get('Target')
+                    self.assertIn(target, names, target)
+                    relations[(name, rel.get('Id'))] = target
+        document = parts['word/document.xml'].decode('utf-8')
+        embeds = set(re.findall(r'r:embed="([^"]+)"', document))
+        media = {n for n in names if n.startswith('word/media/')}
+        self.assertEqual(media, {relations[('word/_rels/document.xml.rels', e)] for e in embeds})   # every image used
+        self.assertEqual({'word/media/1.2-1.png', 'word/media/1.3-1.png'}, media)
+        ns_w = '{http://schemas.openxmlformats.org/wordprocessingml/2006/main}'
+        paragraphs = []
+        for p in trees['word/document.xml'].iter(ns_w + 'p'):
+            style = p.find(f'{ns_w}pPr/{ns_w}pStyle')
+            paragraphs.append((style.get(ns_w + 'val') if style is not None else None, ''.join(t.text or '' for t in p.iter(ns_w + 't'))))
+        self.assertIn(('Title', 'Fixture manual'), paragraphs)
+        self.assertIn(('Heading2', '1.2 Alpha'), paragraphs)
+        self.assertIn(('Caption', 'Figure 1.2-1. The top bar.'), paragraphs)
+        self.assertIn(('Notice', 'Caution. Simulated.'), paragraphs)
+        anchors = set(re.findall(r'w:anchor="([^"]+)"', document))
+        bookmarks = set(re.findall(r'w:bookmarkStart w:id="\d+" w:name="([^"]+)"', document))
+        self.assertTrue(anchors and anchors <= bookmarks)   # every internal link has its heading bookmark
+        self.assertEqual({'MANUAL.Studio.docx': mr.sha(outputs['MANUAL.Studio.docx']), 'MANUAL.Studio.pdf': mr.sha(outputs['MANUAL.Studio.pdf'])},
+                         {k: v for k, v in record['outputs'].items() if k.startswith('MANUAL.Studio.') and not k.endswith('.md')})
+
+    def test_font_subsets_cover_every_character_of_the_manual_sources(self):
+        regular, bold = (json.loads(path.read_bytes()) for path in (mr.formats.FONT_FILES['R'], mr.formats.FONT_FILES['B']))
+        self.assertEqual(set(regular['glyphs']), set(bold['glyphs']))
+        self.assertEqual(('Regular', 'Bold'), (regular['font']['style'], bold['font']['style']))
+        used = set()
+        for path in list((ROOT / 'docs/manual').glob('*.json')) + list((ROOT / 'docs/manual/static').glob('*.md')):
+            used |= set(path.read_text(encoding='utf-8')) - set('\n')
+        self.assertLessEqual(used, set(regular['glyphs']))
 
 if __name__ == '__main__':
     unittest.main()

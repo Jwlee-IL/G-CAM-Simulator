@@ -1,5 +1,3 @@
-> DRAFT — static chapter for the author's review (HUM-12); sourced from the repository documents cited in each paragraph. Remove this line when approved.
-
 [[notice:N-SIM]]
 
 #### Images at the default optics

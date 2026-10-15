@@ -1,14 +1,16 @@
-"""One-off extractor (standard library only): the glyph outlines the manual generator draws labels with.
+"""One-off extractor (standard library only): the glyph outlines the manual generator draws text with.
 
 Reads a TrueType font (cmap format 4, head, hhea, maxp, hmtx, loca, glyf — simple and composite glyphs) and writes the
-outlines of exactly the characters the manual's figure labels may use — printable ASCII plus U+00B7, U+00D7, U+2013 and
-U+2026 — as a compact JSON subset: advance widths and contours of on/off-curve points in font units. Only these outlines
-are included; the font file itself is not part of the repository.
+outlines of exactly the characters the manual may use — printable ASCII plus the non-ASCII characters of the manual
+sources (CHARS) — as a compact JSON subset: advance widths and contours of on/off-curve points in font units. Only these
+outlines are included; the font files themselves are not part of the repository. The Bold subset draws the figure labels
+and the PDF's headings and bold text, the Regular subset the PDF's body text.
 
-The font is M PLUS Rounded 1c Bold (SIL Open Font License 1.1, see OFL.txt beside this file). Its U+2026 is drawn centred
-on the em (Japanese style), so the subset builds U+2026 from three '.' glyphs on the baseline instead and says so.
+The font is M PLUS Rounded 1c (SIL Open Font License 1.1, see OFL.txt beside this file), Bold and Regular, each pinned by
+its SHA-256. Its U+2026 is drawn centred on the em (Japanese style), so the subset builds U+2026 from three '.' glyphs on
+the baseline instead and says so. A character the font has no glyph for is refused.
 
-  python -B samples/manual/font/extract_glyphs.py <MPLUSRounded1c-Bold.ttf> [--out <glyphs.json>]
+  python -B samples/manual/font/extract_glyphs.py <MPLUSRounded1c-Bold.ttf | MPLUSRounded1c-Regular.ttf> [--out <json>]
 """
 import argparse
 import hashlib
@@ -17,9 +19,12 @@ from pathlib import Path
 import struct
 
 HERE = Path(__file__).resolve().parent
-OUT = HERE / 'mplus-rounded-1c-bold.glyphs.json'
-SOURCE_SHA256 = 'c358630584e8e2d8fbd6121d0f4693255ffef6d1e6d4f3441fd6e5a963a11f9e'
-CHARS = [chr(c) for c in range(32, 127)] + ['·', '×', '–', '…']
+SOURCES = {'c358630584e8e2d8fbd6121d0f4693255ffef6d1e6d4f3441fd6e5a963a11f9e': 'Bold',
+           'b75708b53e45b06d17d470aeeca5b766e3d1b3999f03f13ec4eb863ca846c14c': 'Regular'}
+# Printable ASCII and every non-ASCII character the manual sources use (registry, notices, purposes, static chapters,
+# run records); the generator refuses text with a character outside the subset.
+EXTRA = '§±µ·×σ–—…−'   # § ± µ · × σ – — … −
+CHARS = [chr(c) for c in range(32, 127)] + sorted(EXTRA)
 
 
 class Font:
@@ -166,8 +171,9 @@ class Font:
 def extract(path):
     data = Path(path).read_bytes()
     digest = hashlib.sha256(data).hexdigest()
-    if digest != SOURCE_SHA256:
-        raise SystemExit(f'unexpected font file (sha256 {digest}); this subset is pinned to M PLUS Rounded 1c Bold')
+    style = SOURCES.get(digest)
+    if style is None:
+        raise SystemExit(f'unexpected font file (sha256 {digest}); the subsets are pinned to M PLUS Rounded 1c Bold and Regular')
     font = Font(data)
     glyphs, notes = {}, []
     for char in CHARS:
@@ -186,10 +192,11 @@ def extract(path):
                                     for k in range(3) for contour in dot['contours']]}
         notes.append('U+2026 is built from three U+002E glyphs on the baseline (the font centres its own on the em)')
     return {'schema': 'gcam.glyph-subset', 'schemaVersion': 1,
-            'font': {'family': 'M PLUS Rounded 1c', 'style': 'Bold', 'license': 'SIL Open Font License 1.1 (OFL.txt)',
+            'font': {'family': 'M PLUS Rounded 1c', 'style': style, 'license': 'SIL Open Font License 1.1 (OFL.txt)',
                      'copyright': 'Copyright 2016 The Rounded M+ Project Authors.',
-                     'sourceFile': 'MPLUSRounded1c-Bold.ttf', 'sourceSha256': digest},
-            'subset': 'outlines of the listed characters only (printable ASCII, U+00B7, U+00D7, U+2013, U+2026); '
+                     'sourceFile': f'MPLUSRounded1c-{style}.ttf', 'sourceSha256': digest},
+            'subset': 'outlines of the listed characters only (printable ASCII, '
+                      + ', '.join(f'U+{ord(c):04X}' for c in sorted(EXTRA)) + '); '
                       'contours are flat [x, y, onCurve, ...] in font units, y up, quadratic TrueType outlines',
             'notes': notes, 'unitsPerEm': font.units_per_em, 'ascender': font.ascender, 'descender': font.descender,
             'glyphs': glyphs}
@@ -198,9 +205,10 @@ def extract(path):
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('font', type=Path)
-    parser.add_argument('--out', type=Path, default=OUT)
+    parser.add_argument('--out', type=Path)
     args = parser.parse_args()
     subset = extract(args.font)
+    args.out = args.out or HERE / f'mplus-rounded-1c-{subset["font"]["style"].lower()}.glyphs.json'
     glyphs = subset.pop('glyphs')
     head = json.dumps(subset, ensure_ascii=False, sort_keys=True, indent=1)[:-2]   # one glyph per line: reviewable diffs
     rows = [json.dumps(c, ensure_ascii=False) + ':' + json.dumps(g, sort_keys=True, separators=(',', ':'))

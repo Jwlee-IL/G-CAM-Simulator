@@ -298,10 +298,10 @@ def source_units():
                        ('test-record-self-test', 'samples/testing/test_records.py'),
                        ('test-catalog', 'samples/testing/test_records.py'),
                        ('archived-replay', 'samples/testing/test_records.py'),
-                       ('manual-self-test', 'samples/manual/manual_records.py'),
-                       ('manual-editions', 'samples/manual/manual_records.py')]:
+                       ('manual-self-test', 'samples/manual/manual_records.py samples/manual/manual_formats.py'),
+                       ('manual-editions', 'samples/manual/manual_records.py samples/manual/manual_formats.py')]:
         units['checker::' + name] = {'runner': 'checker', 'methods': [name + '.' + name],
-                                    'sources': {path: sha((REPO / path).read_bytes().replace(b'\r\n', b'\n'))}}
+                                    'sources': {p: sha((REPO / p).read_bytes().replace(b'\r\n', b'\n')) for p in path.split()}}
     return units
 
 

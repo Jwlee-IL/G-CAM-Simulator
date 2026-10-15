@@ -1,5 +1,3 @@
-> DRAFT — static chapter for the author's review (HUM-12); sourced from the repository documents cited in each paragraph. Remove this line when approved.
-
 #### What GCAM Studio is
 
 GCAM Studio is the engineering viewer of Gcam, a Monte Carlo simulator of a coded-aperture gamma camera: photon

@@ -1,8 +1,6 @@
 # GCAM Studio user manual
 
-Edition `2026-10-15-1` · 2026-10-15 · English · generated from UI-automation runs of one GCAM Studio build (deployment `03742d883dbd`). How each chapter was produced: `generation-record.json` beside this file.
-
-> **Draft edition.** static chapter 1.1 is a draft; static chapter 5.2 is a draft; the notice list is not approved; the mark purpose list is not approved.
+Edition `2026-10-15-1` · 2026-10-15 · English · generated from UI-automation runs of one GCAM Studio build (deployment `03742d883dbd`). The same edition as PDF and Word: `MANUAL.Studio.pdf`, `MANUAL.Studio.docx`. How each chapter was produced: `generation-record.json` beside this file.
 
 ## Contents
 
