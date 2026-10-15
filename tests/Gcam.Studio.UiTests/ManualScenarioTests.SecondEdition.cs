@@ -111,13 +111,16 @@ public sealed partial class ManualScenarioTests
         StudioWindow.WaitUntil(() => ui.Text("Compare.Prefix").Contains("10 s"), TimeSpan.FromSeconds(20), "10 s pair");
         run.Check("compare.prefix", ui.Text("Compare.Prefix").Contains(Broken ? "11 s" : "10 s"), "both paths at completed prefix");
         run.Capture("Direct crystal and physical readout, same acquired prefix.", [new("Workspace.Compare"), new("Compare.Prefix")], full: true);
-        run.BeginStep("Read the population rows and the same-crystal share beneath them. Histories and held conversions are different populations; the reference cost is a benchmark, not a prediction for this scene.");
+        run.BeginStep("Read the population rows and the same-crystal share beneath them. Histories and held conversions are different populations. "
+            + "Further down the panel (scroll), Reference cost · 1 m is a benchmark, not a prediction for this scene.");
         string[] text = ui.Element.FindAll(TreeScope.Descendants, new PropertyCondition(AutomationElement.ControlTypeProperty, ControlType.Text))
             .Cast<AutomationElement>().Select(e => e.Current.Name).ToArray();
         var population = ComparePopulationOracle.Read(text);
         run.Check("compare.population-arithmetic", ComparePopulationOracle.Consistent(population, ui.Text("Compare.SameShare")), "assigned + unknown = held; same/eligible agrees with rounded share; different = eligible - same");
         run.Check("compare.reference", ui.Text("Compare.Reference").Contains("reference only"), "benchmark not a scene prediction");
-        run.Capture("Population share and benchmark reference.", [new("Compare.SameShare"), new("Compare.Reference")], full: true);
+        // The reference sits below the population rows, outside the panel's view at the normalised window size; the
+        // harness may not scroll it (no policy entry), so the figure shows the share and the check reads the reference.
+        run.Capture("Population share and the rows beneath it.", [new("Compare.SameShare")], full: true);
         run.BeginStep("Turn on {Compare.AssignmentDifference}: the flood row becomes different / eligible per direct crystal. Reconstructions remain below it.");
         ui.Toggle("Compare.AssignmentDifference");
         run.Check("compare.difference", Visible(ui, "Compare.Difference") && Visible(ui, "Compare.DirectRecon") && Visible(ui, "Compare.AngerRecon"), "difference and retained reconstructions");
