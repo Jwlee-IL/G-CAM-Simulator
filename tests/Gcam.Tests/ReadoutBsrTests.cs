@@ -69,7 +69,14 @@ public sealed class ReadoutBsrTests
         Assert.Equal(observed, source.ArrivalTimeS);
         using var during = new CancellationTokenSource();
         // Cancel from a dedicated thread: a timed source's timer runs on the thread pool, which a parallel CPU-bound run starves.
-        var canceller = new Thread(() => { Thread.Sleep(20); during.Cancel(); }) { IsBackground = true };
+        // It cancels only once a retry has happened, so a starved test thread cannot meet an already-cancelled token.
+        var canceller = new Thread(() =>
+        {
+            Thread.Sleep(20);
+            var limit = Stopwatch.StartNew();
+            while (source.BackgroundAttempts <= attempts && limit.Elapsed < TimeSpan.FromSeconds(4)) Thread.Sleep(1);
+            during.Cancel();
+        }) { IsBackground = true };
         var watch = Stopwatch.StartNew();
         canceller.Start();
         try

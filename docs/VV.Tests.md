@@ -4086,7 +4086,7 @@ Gates: none.
 Source: [tests/Gcam.Tests/ReadoutBsrTests.cs](../tests/Gcam.Tests/ReadoutBsrTests.cs).
 
 ```json
-{"id":"Gcam.Tests::Gcam.Tests.ReadoutBsrTests","runner":"dotnet","methods":["PairedSchedule_EqualsLegacyPretriggerTimes_AndSitesOwnThePixel","ConditionalRetries_CancelDuringLowAcceptance_WithoutConsumingNextAttempt","ZeroSourceRate_ProducesNoBsrInputs"],"sources":{"tests/Gcam.Tests/ReadoutBsrTests.cs":"318e3f49160c570259fd2348271f75742229dcb3c85fb46a59cbffe5dc47df1d","tests/Gcam.Tests/Harness/Rigs.cs":"9b89ce04cdcb302fcefc6636d45a0d1640a48c288d1e0a3638b005c44028c3b2","tests/Gcam.Tests/Harness/Stat.cs":"4502dddc6276f9d1de0c41b2ed7246ed7f00c9266daa12a34d6174ae1cb19029"},"trace":[{"requirement":"SR-RUN-22","selectors":["PairedSchedule_EqualsLegacyPretriggerTimes_AndSitesOwnThePixel","ZeroSourceRate_ProducesNoBsrInputs"]}]}
+{"id":"Gcam.Tests::Gcam.Tests.ReadoutBsrTests","runner":"dotnet","methods":["PairedSchedule_EqualsLegacyPretriggerTimes_AndSitesOwnThePixel","ConditionalRetries_CancelDuringLowAcceptance_WithoutConsumingNextAttempt","ZeroSourceRate_ProducesNoBsrInputs"],"sources":{"tests/Gcam.Tests/ReadoutBsrTests.cs":"e255388994f0d72f050427db04064e64506a2f9e1eab7c1843dfbed0f754c9cc","tests/Gcam.Tests/Harness/Rigs.cs":"9b89ce04cdcb302fcefc6636d45a0d1640a48c288d1e0a3638b005c44028c3b2","tests/Gcam.Tests/Harness/Stat.cs":"4502dddc6276f9d1de0c41b2ed7246ed7f00c9266daa12a34d6174ae1cb19029"},"trace":[{"requirement":"SR-RUN-22","selectors":["PairedSchedule_EqualsLegacyPretriggerTimes_AndSitesOwnThePixel","ZeroSourceRate_ProducesNoBsrInputs"]}]}
 ```
 
 
@@ -4650,7 +4650,7 @@ Gates: none.
 Source: [tests/Gcam.Studio.Tests/CompareWorkspaceTests.cs](../tests/Gcam.Studio.Tests/CompareWorkspaceTests.cs).
 
 ```json
-{"id":"Gcam.Studio.Tests::Gcam.Studio.Tests.CompareWorkspaceTests","runner":"dotnet","methods":["FifthWorkspace_AndPhysicalEmptyStates_AreExplicit","DifferenceToggle_KeepsEstimates_AndNamesFoundPeaksByIsotope","InactiveAndLatestPending_UseOneWorker_AndPublishAtomicPrefixes","SettingsAndReset_RejectOldResults_EvenWhenServiceIgnoresCancellation","ReportCapture_KeepsPhysicalDirectFactsOutOfLegacyEvents_AndDeclaresCompareOmission","CostApplicability_UsesCapturedModuleAndListsSceneDifferences_WithoutPromotingReferenceToPrediction"],"sources":{"tests/Gcam.Studio.Tests/CompareWorkspaceTests.cs":"d480c089ea2198be09ca4764a5154f22de13909508b5dc49ebcccd20612eccaa"},"trace":[]}
+{"id":"Gcam.Studio.Tests::Gcam.Studio.Tests.CompareWorkspaceTests","runner":"dotnet","methods":["FifthWorkspace_AndPhysicalEmptyStates_AreExplicit","DifferenceToggle_KeepsEstimates_AndNamesFoundPeaksByIsotope","InactiveAndLatestPending_UseOneWorker_AndPublishAtomicPrefixes","SettingsAndReset_RejectOldResults_EvenWhenServiceIgnoresCancellation","ReportCapture_KeepsPhysicalDirectFactsOutOfLegacyEvents_AndDeclaresCompareOmission","CostApplicability_UsesCapturedModuleAndListsSceneDifferences_WithoutPromotingReferenceToPrediction"],"sources":{"tests/Gcam.Studio.Tests/CompareWorkspaceTests.cs":"907676436b205edfb26908d6dc2b0a668c7e439131cb244bb0f96de9ec3fca3a"},"trace":[]}
 ```
 
 

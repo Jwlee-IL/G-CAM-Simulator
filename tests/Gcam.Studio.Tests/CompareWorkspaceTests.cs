@@ -29,6 +29,8 @@ public sealed class CompareWorkspaceTests
         }
         public async Task<Call> Next() => await Calls.Reader.ReadAsync().AsTask().WaitAsync(TimeSpan.FromSeconds(5));
     }
+    // An update the fixture never completes must fail by name, not hang the test host (2026-10-15: two hung in a full run).
+    private static Task Done(Task update) => update.WaitAsync(TimeSpan.FromSeconds(5));
     private static ReadoutPreparation Preparation() => new(Guid.NewGuid(), "fixture", true, null, new(2, 2), [], [], [],
         0, 0, 0, 0, TimeSpan.Zero, 1, 2, 1, 10, 50);
     private static AcquisitionSnapshot Snapshot(double time = 1)
@@ -71,7 +73,7 @@ public sealed class CompareWorkspaceTests
         var result = Result(call);
         var image = call.Snapshot.Imaging with { Estimate = new(new(1, 2, 1000), .9) };
         result = result with { Direct = result.Direct with { Image = image }, Anger = result.Anger with { Image = image } };
-        call.Completion.SetResult(result); await model.Compare.WhenUpdated;
+        call.Completion.SetResult(result); await Done(model.Compare.WhenUpdated);
         Assert.Equal("Cs-137", Assert.Single(model.Compare.DirectPeaks).Isotope);
         Assert.Equal("Cs-137", Assert.Single(model.Compare.AngerPeaks).Isotope);
         model.Compare.ShowDifference = true;
@@ -92,7 +94,7 @@ public sealed class CompareWorkspaceTests
         Assert.False(service.Calls.Reader.TryRead(out _));
         first.Completion.SetResult(Result(first));
         var last = await service.Next(); Assert.Equal(3, last.Key.LiveTimeS);
-        last.Completion.SetResult(Result(last)); await model.Compare.WhenUpdated;
+        last.Completion.SetResult(Result(last)); await Done(model.Compare.WhenUpdated);
         Assert.Equal(last.Key, model.Compare.Result!.Key);
         Assert.False(model.Compare.IsUpdating); Assert.Contains("3 s", model.Compare.Prefix);
         Assert.Contains("No held", model.Compare.EmptyReason); Assert.Null(model.Compare.Result.Accounting.SameShare);
@@ -107,12 +109,12 @@ public sealed class CompareWorkspaceTests
         var old = await service.Next(); var oldTask = model.Compare.WhenUpdated;
         model.WindowLowKeV = 590; var current = await service.Next();
         Assert.True(old.Token.IsCancellationRequested);
-        old.Completion.SetResult(Result(old)); await oldTask; Assert.Null(model.Compare.Result);
-        current.Completion.SetResult(Result(current)); await model.Compare.WhenUpdated;
+        old.Completion.SetResult(Result(old)); await Done(oldTask); Assert.Null(model.Compare.Result);
+        current.Completion.SetResult(Result(current)); await Done(model.Compare.WhenUpdated);
         Assert.Equal(590, model.Compare.Result!.Settings.Imaging.WindowLowKeV);
         var shown = model.Compare.Result;
         model.Snapshot = Snapshot(2); var pending = await service.Next(); var task = model.Compare.WhenUpdated;
-        model.Snapshot = null; pending.Completion.SetResult(Result(pending)); await task;
+        model.Snapshot = null; pending.Completion.SetResult(Result(pending)); await Done(task);
         Assert.Same(shown, model.Compare.Result); Assert.False(model.Compare.ShowData);
         Assert.True(model.Compare.Spectrum[1].Dashed);
         Assert.Equal(590, model.Compare.Bands[0].Lo);

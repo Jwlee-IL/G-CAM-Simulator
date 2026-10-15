@@ -17,6 +17,7 @@ public sealed partial class CompareWorkspaceViewModel : WorkspaceViewModel
     private CompareSettings? _settings;
     private Request? _pending;
     private CancellationTokenSource? _worker;
+    private CompareKey? _running;
     private IReadOnlyList<SceneSource> _scene = [];
     private sealed record Request(CompareKey Key, AcquisitionSnapshot Snapshot, CompareSettings Settings);
 
@@ -144,7 +145,7 @@ public sealed partial class CompareWorkspaceViewModel : WorkspaceViewModel
         if (e.PropertyName == nameof(IsActive)) Refresh();
     }
     partial void OnShowDifferenceChanged(bool value) => Notify();
-    private void Cancel() { _pending = null; _worker?.Cancel(); _worker = null; IsUpdating = false; }
+    private void Cancel() { _pending = null; _running = null; _worker?.Cancel(); _worker = null; IsUpdating = false; }
     public void Refresh()
     {
         Notify();
@@ -155,7 +156,10 @@ public sealed partial class CompareWorkspaceViewModel : WorkspaceViewModel
         var settings = new CompareSettings(new(Shared.WindowFwhm, false, Shared.Imaging.FocalDistanceMm, Shared.Imaging.Reconstruction)
         { WindowLowKeV = Shared.WindowLowKeV, WindowHighKeV = Shared.WindowHighKeV, ApplyFloodCorrection = Shared.ApplyFloodCorrection }, Shared.Imaging.SelectedIsotope != "All");
         if (settings != _settings) { Cancel(); _revision++; _settings = settings; }
-        _pending = new(new(_id, _revision, readout.Hits.Count, readout.Records.Count, Shared.Snapshot.LiveTimeS), Shared.Snapshot, settings);
+        var key = new CompareKey(_id, _revision, readout.Hits.Count, readout.Records.Count, Shared.Snapshot.LiveTimeS);
+        // Imaging and shared-setting notifications repeat without a new prefix; the same key is already running or shown.
+        if (key == _running || (_worker is null && Result?.Key == key)) return;
+        _pending = new(key, Shared.Snapshot, settings);
         if (_worker is not null) return;
         _worker = new(); WhenUpdated = UpdateAsync(_worker);
     }
@@ -167,7 +171,7 @@ public sealed partial class CompareWorkspaceViewModel : WorkspaceViewModel
             await Task.Yield();
             while (_pending is not null)
             {
-                var request = _pending; _pending = null;
+                var request = _pending; _pending = null; _running = request.Key;
                 var started = Stopwatch.StartNew();
                 var result = await _service!.ProcessAsync(request.Key, request.Snapshot, _scene, request.Settings, worker.Token);
                 if (worker.IsCancellationRequested || request.Key.AcquisitionId != _id || request.Key.SettingsRevision != _revision) return;
@@ -181,7 +185,7 @@ public sealed partial class CompareWorkspaceViewModel : WorkspaceViewModel
         catch (Exception ex) { if (!worker.IsCancellationRequested) { Error = $"Comparison failed: {ex.Message}"; Notify(); } }
         finally
         {
-            if (ReferenceEquals(worker, _worker)) { _worker = null; IsUpdating = false; Notify(); }
+            if (ReferenceEquals(worker, _worker)) { _worker = null; _running = null; IsUpdating = false; Notify(); }
             worker.Dispose();
         }
     }
