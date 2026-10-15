@@ -8,7 +8,9 @@ process from); only its **manual process** is adopted (chapter registry, generat
 capture and figure-mark rules, omission notices, generation record), none of its content or names. The implementer is
 given the procedure's location in its prompt; it is not named in the repository.
 
-Status: **stage 0 started 2026-10-13 (headless part)** — turn 1 review by Codex (conversation `01a134cc…`,
+Status: **done 2026-10-15** — the author approved the notice list, static chapters 1.1 and 5.2, the figures, the mark
+purposes, the charter and the two background filters ("승인이야", 2026-10-15); edition `2026-10-15-1` regenerated from
+run 04 as formal with PDF and Word beside the Markdown (`911d8c2`), merged into MainRoot (`feef170`). History: stage 0 started 2026-10-13 (headless part) — turn 1 review by Codex (conversation `01a134cc…`,
 [review](PLAN.Docs.StudioManual.Review.md)), supplemented against the UI-automation procedure v3.0.1 and the document-
 automation procedure v3.0.1; "Decisions after review" below (partial — the edition decisions wait for the author). Next:
 G1 qualified by observed run 09 (2026-10-14, MR8). Manual work (MR9, MR10) built headless (`e9f368f`), then run on the

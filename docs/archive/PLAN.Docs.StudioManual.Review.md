@@ -2,7 +2,7 @@
 
 Scope: TODO-43 turn 1 and supplementary review, against the supplied `d277fbf` baseline. No application, desktop automation, build, or UI test was run. References below are repository-relative file:line observations of the current source, not claims that the proposed manual scenarios passed. The supplementary review reads the author's matching UI and document-automation procedures v3.0.1 as process sources only. Changed recommendations carry **revised after UI v3.0.1**; unchanged chapter/code findings and first-turn measurements remain dated observations.
 
-Status: **review complete; decisions required before implementation** (2026-10-13).
+Status: **review complete; decisions required before implementation** (2026-10-13). Task closed 2026-10-15; archived with its plan.
 
 The plan's goal is sound, but its evidence contract and chapter outline need revision before turn 2. The current UI needs dedicated procedures for Options, readout view tabs and empty states, window presets, and ambient/BSR physical acquisition. A schema-1 UI manifest is diagnostic, not a final verdict. TODO-28 can report the xUnit executions, but cannot presently verify their narrative steps, marks, or capture provenance. Keep a separate manual contract and a shared verdict vocabulary. **Revised after UI v3.0.1:** use P4 for the manual, qualify the existing harness by scope, and include the bounded stage 0 in §9. The supplementary gap assessment finds **17 blocks the manual, 4 should fix, 1 cosmetic**; this counts grouped findings, not individual failing controls or tests.
 

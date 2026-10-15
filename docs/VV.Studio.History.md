@@ -354,3 +354,8 @@ generated from run 04 (2.0 MB, draft until the notice list and static chapters a
 `manual_records.py check --all`. Release build 0 warnings; normal suite 1,095 passed / 56 skipped; catalog 220 units;
 generator self-test 24 / 24.
 
+Approval, same day: after the figure labels became "screen name: purpose" (purposes sourced in `docs/manual/purposes.json`)
+and the edition gained PDF and Word renderings, the author approved the notice list, static chapters 1.1 and 5.2, the
+figures, the mark purposes, the charter and the background filters. The edition was regenerated from run 04 as formal
+(75 files, 3.8 MB; `911d8c2`); generator self-test 41, tests 25, `check --all` byte for byte.
+

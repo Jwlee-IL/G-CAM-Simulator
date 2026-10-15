@@ -2,7 +2,7 @@
 
 Scope: the safety basis (G1) for the manual's UI-automation runs. Draft for the planner and author.
 
-Status: **draft for the author's approval (HUM-04), revised 2026-10-15; G1 qualified by run 09, manual runs observed
+Status: **approved by the author 2026-10-15 (HUM-04; the two background filters of `65683fc`, HUM-07, approved with it); revised 2026-10-15; G1 qualified by run 09, manual runs observed
 (run 04: 6 / 6 chapters, `g1Eligible`)**. The observation method changed from a machine-wide kernel trace to a scoped
 before/after comparison that runs without elevation (MR8). The run artefacts the approval waits for (MR7) now exist: the
 observed manual run 04 and the first edition generated from it (`docs/manual/editions/2026-10-15-1`).
@@ -17,7 +17,7 @@ child-process records and external-connection observation, **combined as fits th
 recorded.
 
 Grounds for proportion: Studio's managed source has no file-writing, network or child-process code
-([surface-list.json](../tests/Gcam.Studio.UiTests/Harness/Isolation/surface-list.json)); launch redirects
+([surface-list.json](../../tests/Gcam.Studio.UiTests/Harness/Isolation/surface-list.json)); launch redirects
 APPDATA / LOCALAPPDATA / TEMP / TMP to a harness-owned sandbox; Studio runs non-elevated as a 64-bit process, so the OS
 refuses machine-wide writes (HKLM, Program Files) and UAC file / registry virtualisation (32-bit processes only) does not
 apply. Runs 02–05 traced every kernel

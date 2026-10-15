@@ -11,6 +11,15 @@ set the plan's status to done and move the plan and its review / reports into th
 
 ## Closed tasks
 
+- **TODO-43 GCAM Studio manual generated from UI-automation runs** (2026-10-15): chapter registry, run records with
+  measured figure marks, a standard-library generator that assembles an edition from the latest passing run per chapter
+  on one Studio build, replays it byte for byte in CI and writes Markdown, PDF and Word; figures carry a numbered disc
+  and a "screen name: purpose" label beside each mark (M PLUS Rounded 1c outline subset, OFL), purposes sourced in
+  `docs/manual/purposes.json`; G1 qualified by an observed run (MR8), most procedure safety scopes closed as not
+  applicable for a viewer without write surfaces (MR9). First edition `2026-10-15-1` (8 chapters, 20 figures, 18 PDF
+  pages) from desktop run 04, approved by the author. Review by Codex, implementation by Codex and substitute Claude
+  implementers — [PLAN.Docs.StudioManual](PLAN.Docs.StudioManual.md) ([charter](PLAN.Docs.StudioManual.Charter.md),
+  [review](PLAN.Docs.StudioManual.Review.md)).
 - **TODO-42 physical readout with the ambient field and BSR** (2026-10-13): owned interaction sites for ambient and BSR
   histories through one physical pulse stream; source scenes run the four-output readout with the terrestrial field (both
   bounds; the physical all-face bound is an unmasked all-face module approximation with an incoming-face entrance /
