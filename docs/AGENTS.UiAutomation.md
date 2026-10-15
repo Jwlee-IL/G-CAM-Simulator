@@ -45,7 +45,7 @@ write surface, the report export: it writes the path the user confirms in the sa
 | Surface | Declared | Resolved in a run | State |
 |---|---|---|---|
 | User / app data, settings, logs, caches | none in code | `TEMP` / `TMP` (and env-var readers of `APPDATA` / `LOCALAPPDATA`) redirected into an owned sandbox folder; **0 files written** in every run so far, apart from the export scenario's two declared report files (row below) | confirmed absent; the redirect is a partial boundary — see below |
-| Report export (TODO-46) | the confirmed path and its declared sidecars (`.scene.json`; `.meta.json` for event data), chosen in the save dialog; no remembered folder or setting | `ReportExportScenarioTests` (one case per format) types a path inside the owned sandbox; the run asserts exactly `report.<ext>` and `report.scene.json` there (plus `report.meta.json` for CSV) and nothing else in the sandbox | declared and isolated; observed runs passed 2026-10-15 (all four formats in run 6) |
+| Report export (TODO-46) | the confirmed path and its declared sidecars (`.scene.json`; `.meta.json` for event data), chosen in the save dialog; Studio remembers no folder or setting, but the Windows save dialog records the file in the user's recent list and the last folder per application (E6, declared OS behaviour, observed 2026-10-16) | `ReportExportScenarioTests` (one case per format) types a path inside the owned sandbox; the run asserts exactly `report.<ext>` and `report.scene.json` there (plus `report.meta.json` for CSV) and nothing else in the sandbox | declared and isolated; observed runs passed 2026-10-15 (all four formats in run 6) |
 | Network | none in code | no TCP connections observed from the app's PID during an audit run | confirmed absent |
 | Child processes | none in code | none observed | confirmed absent |
 | Shared resources | the interactive desktop and the mouse | one run at a time (`DisableTestParallelization`), opt-in | blocked by policy |
@@ -206,10 +206,38 @@ keeps no pixels and becomes a missing figure, not a product failure. Marks are U
 time and converted to image pixels; their label is the visible text, their target the AutomationId. The generator
 (`samples/manual/manual_records.py`) prints a chapter only from the latest run on the edition's build.
 
+**Video of each desktop test (TODO-48).** `Scenario.Run` / `RunReportExport` / `ManualScenario.Run` record the owned
+Studio window while the test drives it (`Harness/VideoRecorder.cs`): a capture thread at a 100 ms period and an encoding
+thread (Media Foundation sink writer, RGB32 → H.264, 2 Mbit/s, built into Windows), at most one pending and one active
+frame, media time from a `Stopwatch` with dropped slots kept as gaps. Recording starts after the window is normalised and
+its start state checked, so a launch failure has no video; pixel capture stops before Studio is closed.
+
+| Item | Rule |
+|---|---|
+| Opt-out | `GCAM_UI_VIDEO=0` creates no thread, file or COM object; pass / fail / skip are unchanged |
+| Not recorded | `ObservedRunTests` (the observation boundary: launch, idle, exit without automation) and `PlotViewTests` (a redraw-timing benchmark the recorder would perturb). `VideoModelTests` fails when a new desktop method neither goes through a recording wrapper nor is one of these two |
+| Picture | the window's visible frame (DWM bounds) copied from the screen into a fixed even-sized canvas set at start; a resized window is letterboxed into it; the cursor is drawn in. The outer two pixels are always neutral: the DWM bounds can exceed the window's painted pixels by one, and the first desktop run (2026-10-16) showed glyph tops of the terminal behind Studio in that edge. A popup of Studio reaching outside the frame is clipped (in-window layers such as Options and Reset are inside it) |
+| Foreign windows | the window stack above Studio is surveyed just before and after each frame; every other process's window over the frame is filled black and counted (`maskedFrames`, `maskRanges`); a failed survey gives a whole black frame |
+| Private dialog | while `RunRecord.OmitWindowDiagnosticsReason` is set (the native save dialog of the export), frames are neutral and step captions are dropped except one generic caption, although the dialog belongs to Studio |
+| Captions | `<case>.vtt` from the scenario's steps (`RunRecord.Step`, the reader text of `ManualRun.BeginStep`), escaped and stripped of paths and identities; polling diagnostics stay in the run record only. Captions are an aid, never a verdict |
+| Promotion | only after the test's final verdict — after cleanup, the exact sandbox writes and, for a manual chapter, its finalised record — and only for a pass: `artifacts/ui-videos/<case>.mp4`, `.vtt`, then `index.json` last (schema `gcam.ui-videos` 1: run id, commit, dirty flag, binary and deployment hashes, file hashes, frames, masked and suppressed frames). Each file is copied to a staging name in that folder and replaced on its own; a run interrupted between them leaves a hash mismatch that the next publication drops from the index |
+| Failure | a failed, skipped or aborted test keeps the previous passing video; its attempt (`attempt.mp4`, `attempt.vtt`, `video-status.json`) stays in the run record folder under `%TEMP%` |
+| Faults | an unavailable encoder, a capture or COM error, a stop that exceeds 5 s (the recording is abandoned; the threads are background threads) or a publication error never changes the verdict: a passing test can show `video unavailable` in its status file, so count videos from `index.json`, not from passes |
+| Case id | class, method and theory arguments, made file-safe with a short hash (`ReportExportScenarioTests.ExportReport_….html-<hash>`) |
+| Manual record | a chapter run pins its own encoded video and captions by hash (`manual-run.json` `video`, optional); replay of an edition never needs the video |
+
+Limits. The two surveys bracket the screen copy but cannot see a window that appears and vanishes between them; only a
+compositor-level capture could exclude that race. `artifacts/` is git-ignored and inside the working tree: `git clean -fdx`
+deletes it, and a run in a worktree writes that worktree's folder and goes with it, so only runs in the main checkout keep
+their videos. The videos are local derived files, never committed and never evidence on their own. An observed batch lists
+`artifacts/ui-videos` among the harness-owned destinations (`surface-list.json#harness-ui-videos`).
+
 ## 6. Operation
 
 - `GCAM_UI_TESTS=1 dotnet test tests/Gcam.Studio.UiTests -c Release` — only when the desktop is free.
   Without the variable the desktop tests are **skipped** and reported as skipped, never as passed.
+- Every recorded desktop test leaves its latest passing video in `artifacts/ui-videos/` (§5); set `GCAM_UI_VIDEO=0` to
+  run without recording.
 - Long scenarios need `GCAM_UI_LONG_TESTS=1` as well: today only `ReadoutScenarioTests.HighResCold_…` (one cold 64 k
   High-res 661.7 keV preparation, ≈ 45 min, ≈ 6 GiB). Ordinary desktop runs skip it; run it alone, on request.
 - Runs are serial. A run that fails is not retried automatically; read its manifest first.

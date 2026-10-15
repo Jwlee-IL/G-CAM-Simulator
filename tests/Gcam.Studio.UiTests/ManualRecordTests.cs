@@ -101,6 +101,21 @@ public sealed class ManualRecordTests
     }
 
     [Fact]
+    public void Record_PinsTheRunLocalVideo_OnlyWhenItWasEncoded()
+    {
+        var run = Fixture();
+        var subject = new ManualRun.Subject(new string('a', 64), new Dictionary<string, string>());
+        byte[] Build() => run.BuildRecord(DateTimeOffset.UnixEpoch, "completed", null, subject, subject, new { }, new { });
+        using (var absent = JsonDocument.Parse(Build())) Assert.False(absent.RootElement.TryGetProperty("video", out _)); // never an older hash
+        run.Video = new(run.RunId, "ManualScenarioTests.Fixture-0123456789ab", new string('d', 64), new string('e', 64));
+        using var pinned = JsonDocument.Parse(Build());
+        var video = pinned.RootElement.GetProperty("video");
+        Assert.Equal((run.RunId, "ManualScenarioTests.Fixture-0123456789ab", new string('d', 64), new string('e', 64)),
+            (video.GetProperty("runId").GetString(), video.GetProperty("testId").GetString(),
+             video.GetProperty("videoSha256").GetString(), video.GetProperty("captionsSha256").GetString()));
+    }
+
+    [Fact]
     public void Labels_AreRequired_AndEscapedForMarkdown_AndErrorsLoseLocalPaths()
     {
         var run = Fixture(new() { ["StartAcquisition"] = "Start *now*", ["Empty"] = "" });

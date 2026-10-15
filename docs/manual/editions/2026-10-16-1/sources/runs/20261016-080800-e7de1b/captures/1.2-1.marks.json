@@ -1,0 +1,181 @@
+{
+  "schema": "gcam.figure-marks",
+  "schemaVersion": 1,
+  "capture": "captures/1.2-1.png",
+  "captureSha256": "8f51f4b7976fa3595d2e88b35b1e88688eb2139a4b042f4baabd491b27725569",
+  "widthPx": 1440,
+  "heightPx": 900,
+  "frameOriginPx": [
+    560,
+    246
+  ],
+  "dpi": 96,
+  "perMonitorAware": true,
+  "templateSha256": "9f0314d34172910a8b2888d40d911458f9cb548b8802a3b9536f662123fcd33c",
+  "crop": "full",
+  "region": null,
+  "marks": [
+    {
+      "n": 1,
+      "target": "Workspace.Imaging",
+      "label": "Imaging",
+      "labelSource": "name",
+      "screen": [
+        695,
+        257,
+        70,
+        26
+      ],
+      "image": [
+        135,
+        11,
+        70,
+        26
+      ]
+    },
+    {
+      "n": 2,
+      "target": "Workspace.Spectrum",
+      "label": "Spectrum",
+      "labelSource": "name",
+      "screen": [
+        765,
+        257,
+        70,
+        26
+      ],
+      "image": [
+        205,
+        11,
+        70,
+        26
+      ]
+    },
+    {
+      "n": 3,
+      "target": "Workspace.Waveform",
+      "label": "Waveform",
+      "labelSource": "name",
+      "screen": [
+        835,
+        257,
+        70,
+        26
+      ],
+      "image": [
+        275,
+        11,
+        70,
+        26
+      ]
+    },
+    {
+      "n": 4,
+      "target": "Workspace.Detector",
+      "label": "Detector",
+      "labelSource": "name",
+      "screen": [
+        905,
+        257,
+        70,
+        26
+      ],
+      "image": [
+        345,
+        11,
+        70,
+        26
+      ]
+    },
+    {
+      "n": 5,
+      "target": "Workspace.Compare",
+      "label": "Compare",
+      "labelSource": "name",
+      "screen": [
+        975,
+        257,
+        70,
+        26
+      ],
+      "image": [
+        415,
+        11,
+        70,
+        26
+      ]
+    },
+    {
+      "n": 6,
+      "target": "StartAcquisition",
+      "label": "Start",
+      "labelSource": "name",
+      "screen": [
+        1573,
+        256,
+        81,
+        28
+      ],
+      "image": [
+        1013,
+        10,
+        81,
+        28
+      ]
+    },
+    {
+      "n": 7,
+      "target": "Left.SceneTab",
+      "label": "Scene",
+      "labelSource": "name",
+      "screen": [
+        586,
+        320,
+        91,
+        28
+      ],
+      "image": [
+        26,
+        74,
+        91,
+        28
+      ]
+    },
+    {
+      "n": 8,
+      "target": "Left.OpticsTab",
+      "label": "Optics",
+      "labelSource": "name",
+      "screen": [
+        677,
+        320,
+        91,
+        28
+      ],
+      "image": [
+        117,
+        74,
+        91,
+        28
+      ]
+    },
+    {
+      "n": 9,
+      "target": "Left.DetectorTab",
+      "label": "Detector",
+      "labelSource": "name",
+      "screen": [
+        767,
+        320,
+        91,
+        28
+      ],
+      "image": [
+        207,
+        74,
+        91,
+        28
+      ]
+    }
+  ]
+}

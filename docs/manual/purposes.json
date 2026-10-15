@@ -2,7 +2,7 @@
   "schema": "gcam.manual-purposes",
   "schemaVersion": 2,
   "status": "approved",
-  "approval": "draft for the author's approval; the generator marks every edition draft until status reads approved",
+  "approval": "Approved by the author with the first edition; the second edition's additions (chapters 3.7 and 4.4) approved on 2026-10-16.",
   "note": "What each marked element is for, drawn into its figure label as \"<screen text>: <short>\". One entry per mark target (the control's AutomationId); `name` replaces the screen text where that text is long or changes with the state. Each phrase says only what its sources state.",
   "purposes": [
     {
@@ -289,6 +289,97 @@
       "short": "pulse traces of an event",
       "sources": [
         "docs/VV.Studio.SRS.md SR-NAV-02, SR-WAVE-01, SR-WAVE-02"
+      ]
+    },
+    {
+      "target": "Workspace.Compare",
+      "short": "same inputs read two ways",
+      "sources": [
+        "docs/VV.Studio.SRS.md SR-CMP-01"
+      ]
+    },
+    {
+      "target": "ExportReport",
+      "short": "choose an export format",
+      "sources": [
+        "docs/VV.Studio.SRS.md SR-EXPORT-01"
+      ]
+    },
+    {
+      "target": "Export.Confirm",
+      "short": "choose a destination",
+      "sources": [
+        "docs/VV.Studio.SRS.md SR-EXPORT-01"
+      ]
+    },
+    {
+      "target": "Export.Html",
+      "short": "self-contained report",
+      "sources": [
+        "docs/VV.Studio.SRS.md SR-EXPORT-02"
+      ]
+    },
+    {
+      "target": "Export.Pdf",
+      "short": "vector report document",
+      "sources": [
+        "docs/VV.Studio.SRS.md SR-EXPORT-02"
+      ]
+    },
+    {
+      "target": "Export.Word",
+      "short": "editable report document",
+      "sources": [
+        "docs/VV.Studio.SRS.md SR-EXPORT-02"
+      ]
+    },
+    {
+      "target": "Export.Csv",
+      "short": "retained event rows",
+      "sources": [
+        "docs/VV.Studio.SRS.md SR-EXPORT-05"
+      ]
+    },
+    {
+      "target": "Compare.AssignmentDifference",
+      "short": "different / eligible per crystal",
+      "sources": [
+        "docs/VV.Studio.SRS.md SR-CMP-02"
+      ]
+    },
+    {
+      "target": "Compare.SameShare",
+      "short": "same crystal per eligible",
+      "sources": [
+        "docs/VV.Studio.SRS.md SR-CMP-03"
+      ]
+    },
+    {
+      "target": "Compare.Prefix",
+      "short": "prefix both paths show",
+      "sources": [
+        "docs/VV.Studio.SRS.md SR-CMP-01"
+      ]
+    },
+    {
+      "target": "Compare.Reference",
+      "short": "benchmark, not a prediction",
+      "sources": [
+        "docs/VV.Studio.SRS.md SR-CMP-04"
+      ]
+    },
+    {
+      "target": "Readout.Prepare",
+      "short": "prepare the physical readout",
+      "sources": [
+        "docs/VV.Studio.SRS.md SR-DET-05"
+      ]
+    },
+    {
+      "target": "Readout.State",
+      "short": "preparation progress or outcome",
+      "sources": [
+        "docs/VV.Studio.SRS.md SR-DET-05"
       ]
     }
   ]

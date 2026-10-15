@@ -1,0 +1,55 @@
+{
+  "schema": "gcam.figure-marks",
+  "schemaVersion": 1,
+  "capture": "captures/4.4-3.png",
+  "captureSha256": "bce0d302a2e8027a2bd9e1ac30782692798443b731a35a169f9b2db8b719f4e6",
+  "widthPx": 1440,
+  "heightPx": 900,
+  "frameOriginPx": [
+    560,
+    246
+  ],
+  "dpi": 96,
+  "perMonitorAware": true,
+  "templateSha256": "18b73195aa0651539f6cc78180178d42a02100649e24e228fb742f6296eb6956",
+  "crop": "full",
+  "region": null,
+  "marks": [
+    {
+      "n": 1,
+      "target": "Workspace.Compare",
+      "label": "Compare",
+      "labelSource": "name",
+      "screen": [
+        975,
+        257,
+        70,
+        26
+      ],
+      "image": [
+        415,
+        11,
+        70,
+        26
+      ]
+    },
+    {
+      "n": 2,
+      "target": "Compare.Prefix",
+      "label": "Shown prefix 10 s · 426 histories · 360 held",
+      "labelSource": "name",
+      "screen": [
+        1472,
+        312,
+        204,
+        15
+      ],
+      "image": [
+        912,
+        66,
+        204,
+        15
+      ]
+    }
+  ]
+}

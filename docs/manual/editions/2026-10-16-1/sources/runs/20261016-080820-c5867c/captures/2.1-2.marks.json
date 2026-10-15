@@ -1,0 +1,87 @@
+{
+  "schema": "gcam.figure-marks",
+  "schemaVersion": 1,
+  "capture": "captures/2.1-2.png",
+  "captureSha256": "3df017c2c847b472c12ee0a085677664eaf3a05ac7c63b9e07d867daa1fd87dc",
+  "widthPx": 1440,
+  "heightPx": 900,
+  "frameOriginPx": [
+    560,
+    246
+  ],
+  "dpi": 96,
+  "perMonitorAware": true,
+  "templateSha256": "e4b0f5d87ee17d49b3499d55a6c5d846fe3ab9bf096de07f4f77f87471b39ee6",
+  "crop": "marks",
+  "region": {
+    "target": "SourceList",
+    "screen": [
+      585,
+      397,
+      262,
+      56
+    ],
+    "image": [
+      25,
+      151,
+      262,
+      56
+    ]
+  },
+  "marks": [
+    {
+      "n": 1,
+      "target": "SourceIsotope",
+      "label": "Isotope",
+      "labelSource": "preceding-text",
+      "screen": [
+        669,
+        514,
+        178,
+        28
+      ],
+      "image": [
+        109,
+        268,
+        178,
+        28
+      ]
+    },
+    {
+      "n": 2,
+      "target": "SourceX",
+      "label": "X",
+      "labelSource": "preceding-text",
+      "screen": [
+        669,
+        550,
+        178,
+        28
+      ],
+      "image": [
+        109,
+        304,
+        178,
+        28
+      ]
+    },
+    {
+      "n": 3,
+      "target": "SourceActivity",
+      "label": "Activity",
+      "labelSource": "preceding-text",
+      "screen": [
+        669,
+        658,
+        178,
+        28
+      ],
+      "image": [
+        109,
+        412,
+        178,
+        28
+      ]
+    }
+  ]
+}

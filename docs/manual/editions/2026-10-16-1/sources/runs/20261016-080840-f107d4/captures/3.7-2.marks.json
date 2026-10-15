@@ -1,0 +1,73 @@
+{
+  "schema": "gcam.figure-marks",
+  "schemaVersion": 1,
+  "capture": "captures/3.7-2.png",
+  "captureSha256": "194f278574006624f667acd97370ebf54fd1bb522ec0d212c2b6c40cd2b56796",
+  "widthPx": 1440,
+  "heightPx": 900,
+  "frameOriginPx": [
+    560,
+    246
+  ],
+  "dpi": 96,
+  "perMonitorAware": true,
+  "templateSha256": "69a6c4fc4fe4f80c28f370e7093a88bdfec29a48990334a43d6aa06977083c0e",
+  "crop": "full",
+  "region": null,
+  "marks": [
+    {
+      "n": 1,
+      "target": "Export.Html",
+      "label": "HTML",
+      "labelSource": "name",
+      "screen": [
+        1053,
+        602,
+        454,
+        15
+      ],
+      "image": [
+        493,
+        356,
+        454,
+        15
+      ]
+    },
+    {
+      "n": 2,
+      "target": "Export.Csv",
+      "label": "Event data (CSV)",
+      "labelSource": "name",
+      "screen": [
+        1053,
+        764,
+        454,
+        15
+      ],
+      "image": [
+        493,
+        518,
+        454,
+        15
+      ]
+    },
+    {
+      "n": 3,
+      "target": "Export.Confirm",
+      "label": "Export…",
+      "labelSource": "name",
+      "screen": [
+        1433,
+        818,
+        74,
+        28
+      ],
+      "image": [
+        873,
+        572,
+        74,
+        28
+      ]
+    }
+  ]
+}

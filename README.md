@@ -54,9 +54,9 @@ Imaging workspace, Cs-137 500 µCi at (−20, 0) mm + Co-60 20 µCi at (20, 0) m
 
 <sub>Captured 2026-10-13 by the polish-survey desktop scenario (`imaging-dark-1440x900.png`).</sub>
 
-User manual: [`MANUAL.Studio.md`](docs/manual/editions/2026-10-15-1/MANUAL.Studio.md), generated from automated desktop
+User manual: [`MANUAL.Studio.md`](docs/manual/editions/2026-10-16-1/MANUAL.Studio.md), generated from automated desktop
 runs that drove one Studio build (steps, labels and marked figures come from those runs), plus two hand-written chapters;
-also as [PDF](docs/manual/editions/2026-10-15-1/MANUAL.Studio.pdf) and [Word](docs/manual/editions/2026-10-15-1/MANUAL.Studio.docx).
+also as [PDF](docs/manual/editions/2026-10-16-1/MANUAL.Studio.pdf) and [Word](docs/manual/editions/2026-10-16-1/MANUAL.Studio.docx).
 
 GCAM Studio includes an experimental four-output GAGG readout. Set ambient and BSR to zero in Options → Environment,
 then in the left Detector tab select FourOutputAnger and Prepare before Start; each calibration line is offered or refused

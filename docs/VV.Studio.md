@@ -142,6 +142,12 @@ desktop scenarios, opt-in), catalog 220 units, manual generator self-test 24 / 2
 passed 6 / 6 and the edition `2026-10-15-1` was generated from it
 ([History](VV.Studio.History.md#studio-manual-first-edition-2026-10-15)).
 
+**Studio manual, second edition, and desktop-test videos (2026-10-16, TODO-48 branch at `46c9ada`; not a milestone
+record).** Release build 0 warnings, normal suite **1,171 passed / 63 skipped**, catalog 238 units, manual generator
+self-test 44. Desktop: the pilot and the observed manual batch on `46c9ada` passed (8 / 8 chapters, including 3.7 export
+and 4.4 Compare) and edition `2026-10-16-1` was generated from that batch; every recorded desktop test passed with a video
+([History](VV.Studio.History.md#studio-manual-second-edition-and-desktop-test-videos-todo-48-2026-10-16)).
+
 ## 1. Scope and intended use
 
 **Intended use.** GCAM Studio is a portfolio demo viewer for Gcam, a Monte Carlo simulator of a coded-aperture

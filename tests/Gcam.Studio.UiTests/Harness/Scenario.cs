@@ -23,16 +23,23 @@ public static class Scenario
     public static void RunReportExport(string name, ITestOutputHelper output, Action<StudioWindow, RunRecord, string> body, string extension = "html")
         => RunCore(name, output, body, extension == "csv"
             ? [$"report.{extension}", "report.scene.json", "report.meta.json"]
-            : [$"report.{extension}", "report.scene.json"]);
+            : [$"report.{extension}", "report.scene.json"], caseArguments: [extension]);
+
+    /// <summary>The manual adapter owns the outer final verdict and exact export destinations.</summary>
+    public static void RunManual(string name, ITestOutputHelper output, Action<StudioWindow, RunRecord, string> body,
+        IReadOnlyList<string> expectedWrites, Action<VideoRecorder?> recorder)
+        => RunCore(name, output, body, expectedWrites, recorder);
 
     private static void RunCore(string name, ITestOutputHelper output, Action<StudioWindow, RunRecord, string> body,
-        IReadOnlyList<string> expectedWrites)
+        IReadOnlyList<string> expectedWrites, Action<VideoRecorder?>? outerRecorder = null, string[]? caseArguments = null)
     {
         var record = new RunRecord(name);
-        using var pollingLog = PollingWait.Record(record.Step);
+        using var pollingLog = PollingWait.Record(record.Diagnostic);
         StudioProcess? app = null;
         AutomationElement? window = null;
         string result = "failed";
+        bool bodyCompleted = false;
+        VideoRecorder? video = null;
         var manifest = new UiRunManifest(record.RunId, name);
         var issues = new List<UiRunManifest.Issue>();
         Exception? failure = null;
@@ -48,10 +55,14 @@ public static class Scenario
             ui.Normalise(WindowWidth, WindowHeight);
             record.Set("window", window.Current.BoundingRectangle.ToString());
             Assert.Equal("Empty", ui.RunState);   // declared start state
+            video = VideoRecorder.TryStart(record, new IntPtr(window.Current.NativeWindowHandle), app.Process.Id,
+                VideoCoverage.CurrentId(name, caseArguments ?? []));
+            record.Video = video;
+            outerRecorder?.Invoke(video);
             record.Step("window ready, state Empty");
 
             body(ui, record, app.Sandbox);
-            result = "passed";
+            bodyCompleted = true;
         }
         catch (Exception e)
         {
@@ -60,6 +71,8 @@ public static class Scenario
         }
         finally
         {
+            // Pixels stop while the handle still belongs to Studio; publication awaits every final assertion.
+            video?.Stop();
             failure = CleanupBoundary.Attempt(failure, () => app?.Dispose(), issues, "cleanup_failed");
             failure = CleanupBoundary.Attempt(failure, () => pointerScope?.Dispose(), issues, "cleanup_failed");
             if (app is not null)
@@ -76,13 +89,18 @@ public static class Scenario
                 if (app.MonitorErrors.Count != 0) issues.Add(new("blocked", "process-monitor-not-proven"));
             }
             if (app is null) issues.Add(new("blocked", "app-not-started"));
+            failure = CleanupBoundary.Attempt(failure, () =>
+            {
+                Assert.Empty(issues);
+                Assert.Equal("exit 0", app!.Ending);
+                Assert.Equal(expectedWrites.Order(), app.SandboxWrites.Order());
+            }, issues, "blocked");
+            result = bodyCompleted && failure is null && issues.Count == 0 ? "passed" : "failed";
             manifest.CleanupCompleted(issues);
             failure = CleanupBoundary.Attempt(failure, () => manifest.Save(record.Directory, manifest.Finalise(result)), issues, "blocked");
             failure = CleanupBoundary.Attempt(failure, () => output.WriteLine($"manifest: {record.Save(issues.Count == 0 ? result : "failed")}"), issues, "blocked");
+            if (outerRecorder is null) video?.Complete(failure is null && result == "passed");
         }
         if (failure is not null) ExceptionDispatchInfo.Capture(failure).Throw();
-        Assert.Empty(issues);
-        Assert.Equal("exit 0", app!.Ending);
-        Assert.Equal(expectedWrites.Order(), app.SandboxWrites.Order());
     }
 }

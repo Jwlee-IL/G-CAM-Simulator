@@ -1,0 +1,141 @@
+{
+  "schema": "gcam.figure-marks",
+  "schemaVersion": 1,
+  "capture": "captures/2.2-1.png",
+  "captureSha256": "8eed22d6625e600ba4e3a4923586601fc087ff27afc847b0ce29d9919f66ed26",
+  "widthPx": 1440,
+  "heightPx": 900,
+  "frameOriginPx": [
+    560,
+    246
+  ],
+  "dpi": 96,
+  "perMonitorAware": true,
+  "templateSha256": "01d98bd3dd2cee1d422b0e93c90131f92b206bd0e6f7a36cfa485601908f6369",
+  "crop": "marks",
+  "region": {
+    "target": "Optics.Section",
+    "screen": [
+      585,
+      361,
+      262,
+      267
+    ],
+    "image": [
+      25,
+      115,
+      262,
+      267
+    ]
+  },
+  "marks": [
+    {
+      "n": 1,
+      "target": "Optics.Preset",
+      "label": "Preset",
+      "labelSource": "preceding-text",
+      "screen": [
+        669,
+        397,
+        178,
+        28
+      ],
+      "image": [
+        109,
+        151,
+        178,
+        28
+      ]
+    },
+    {
+      "n": 2,
+      "target": "Optics.Rank",
+      "label": "Prime rank",
+      "labelSource": "preceding-text",
+      "screen": [
+        669,
+        433,
+        178,
+        28
+      ],
+      "image": [
+        109,
+        187,
+        178,
+        28
+      ]
+    },
+    {
+      "n": 3,
+      "target": "Optics.CellPitch",
+      "label": "Cell pitch",
+      "labelSource": "preceding-text",
+      "screen": [
+        669,
+        469,
+        178,
+        28
+      ],
+      "image": [
+        109,
+        223,
+        178,
+        28
+      ]
+    },
+    {
+      "n": 4,
+      "target": "Optics.Distance",
+      "label": "Mask–detector",
+      "labelSource": "preceding-text",
+      "screen": [
+        669,
+        505,
+        178,
+        28
+      ],
+      "image": [
+        109,
+        259,
+        178,
+        28
+      ]
+    },
+    {
+      "n": 5,
+      "target": "Optics.Pixels",
+      "label": "Pixels / side",
+      "labelSource": "preceding-text",
+      "screen": [
+        669,
+        541,
+        178,
+        28
+      ],
+      "image": [
+        109,
+        295,
+        178,
+        28
+      ]
+    },
+    {
+      "n": 6,
+      "target": "Optics.PixelPitch",
+      "label": "Pixel pitch",
+      "labelSource": "preceding-text",
+      "screen": [
+        669,
+        577,
+        178,
+        28
+      ],
+      "image": [
+        109,
+        331,
+        178,
+        28
+      ]
+    }
+  ]
+}

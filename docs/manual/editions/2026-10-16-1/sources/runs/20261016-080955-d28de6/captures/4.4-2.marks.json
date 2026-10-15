@@ -1,0 +1,55 @@
+{
+  "schema": "gcam.figure-marks",
+  "schemaVersion": 1,
+  "capture": "captures/4.4-2.png",
+  "captureSha256": "c9f4342f7173c008b4d9ed5f9ba08d9aacc214e0281cfffc7f774c92f1a2ec50",
+  "widthPx": 1440,
+  "heightPx": 900,
+  "frameOriginPx": [
+    560,
+    246
+  ],
+  "dpi": 96,
+  "perMonitorAware": true,
+  "templateSha256": "fc58b3e0bdabc56e4eedef2ff2bf3cc6f28898fc39e7056427f65c8fbd8862b5",
+  "crop": "marks",
+  "region": null,
+  "marks": [
+    {
+      "n": 1,
+      "target": "Readout.Prepare",
+      "label": "Prepare",
+      "labelSource": "name",
+      "screen": [
+        712,
+        711,
+        99,
+        28
+      ],
+      "image": [
+        152,
+        465,
+        99,
+        28
+      ]
+    },
+    {
+      "n": 2,
+      "target": "Readout.State",
+      "label": "Ready · 661.7 keV · 8.33 s · 91,037 windowed / 288,000 scored",
+      "labelSource": "name",
+      "screen": [
+        585,
+        747,
+        262,
+        57
+      ],
+      "image": [
+        25,
+        501,
+        262,
+        57
+      ]
+    }
+  ]
+}

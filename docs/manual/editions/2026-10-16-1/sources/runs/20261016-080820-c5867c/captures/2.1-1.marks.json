@@ -1,0 +1,123 @@
+{
+  "schema": "gcam.figure-marks",
+  "schemaVersion": 1,
+  "capture": "captures/2.1-1.png",
+  "captureSha256": "f67f0d3da914bd45aa60981675ae5ecea3a53b67fd5c3856556976c24525eb91",
+  "widthPx": 1440,
+  "heightPx": 900,
+  "frameOriginPx": [
+    560,
+    246
+  ],
+  "dpi": 96,
+  "perMonitorAware": true,
+  "templateSha256": "acb8b92fa0d3ba0e5c146f90b585ae6a6c197fcb10fe2719dbbe6adb7c47607d",
+  "crop": "marks",
+  "region": {
+    "target": "SourceList",
+    "screen": [
+      585,
+      397,
+      262,
+      28
+    ],
+    "image": [
+      25,
+      151,
+      262,
+      28
+    ]
+  },
+  "marks": [
+    {
+      "n": 1,
+      "target": "SourceIsotope",
+      "label": "Isotope",
+      "labelSource": "preceding-text",
+      "screen": [
+        669,
+        486,
+        178,
+        28
+      ],
+      "image": [
+        109,
+        240,
+        178,
+        28
+      ]
+    },
+    {
+      "n": 2,
+      "target": "SourceX",
+      "label": "X",
+      "labelSource": "preceding-text",
+      "screen": [
+        669,
+        522,
+        178,
+        28
+      ],
+      "image": [
+        109,
+        276,
+        178,
+        28
+      ]
+    },
+    {
+      "n": 3,
+      "target": "SourceY",
+      "label": "Y",
+      "labelSource": "preceding-text",
+      "screen": [
+        669,
+        558,
+        178,
+        28
+      ],
+      "image": [
+        109,
+        312,
+        178,
+        28
+      ]
+    },
+    {
+      "n": 4,
+      "target": "SourceDistance",
+      "label": "Distance",
+      "labelSource": "preceding-text",
+      "screen": [
+        669,
+        594,
+        178,
+        28
+      ],
+      "image": [
+        109,
+        348,
+        178,
+        28
+      ]
+    },
+    {
+      "n": 5,
+      "target": "SourceActivity",
+      "label": "Activity",
+      "labelSource": "preceding-text",
+      "screen": [
+        669,
+        630,
+        178,
+        28
+      ],
+      "image": [
+        109,
+        384,
+        178,
+        28
+      ]
+    }
+  ]
+}

@@ -73,6 +73,31 @@
       "channel": "registry",
       "reason": "the activity history of packaged app hosts (Studio is unpackaged): an OS record observing processes or windows, other-actor by the procedure",
       "evidencedBy": "manual-20261014-04"
+    },
+    {
+      "pattern": "HKCU\\\\Software\\\\Classes\\\\Local Settings\\\\Software\\\\Microsoft\\\\Windows\\\\Shell\\\\MuiCache\\\\.*",
+      "channel": "registry",
+      "entry": "value",
+      "reason": "the shell's display-name cache of launched executables (FriendlyAppName, ApplicationCompany), written once per executable path when the shell first shows it; a new worktree is a new path: an OS record observing processes or windows, other-actor by the procedure",
+      "evidencedBy": "probe-20261016-01"
+    },
+    {
+      "pattern": "<LocalLow>\\\\Microsoft\\\\CryptnetUrlCache\\\\.*",
+      "channel": "file",
+      "reason": "the per-user certificate revocation URL cache, shared by every process that builds certificate chains: Studio has no network code and no connection from its process was observed (AGENTS.UiAutomation section 1)",
+      "evidencedBy": "manual-20261016-02"
+    },
+    {
+      "pattern": "<LOCALAPPDATA>\\\\Publishers\\\\[^\\\\]+\\\\.*",
+      "channel": "file",
+      "reason": "the shared folders of packaged apps' publishers (here the Store's installed-app database; Studio is unpackaged): the same category as the Packages filter",
+      "evidencedBy": "manual-20261016-02"
+    },
+    {
+      "pattern": "<LOCALAPPDATA>\\\\Kakao\\\\.*",
+      "channel": "file",
+      "reason": "a desktop messenger's settings and profile data, written by that app running beside the batch: Studio has no messaging or third-party integration",
+      "evidencedBy": "manual-20261016-02"
     }
   ],
   "backgroundFiltersSchema": {
@@ -196,6 +221,22 @@
       "relativePath": "NVIDIA Corporation\\Drs\\nvAppTimestamps",
       "scope": "write-only-within-file: WriteFile into the existing file; no create, delete, rename or set-information",
       "residualRisk": "The GPU driver's per-application timestamp store (machine-wide) is updated by the in-process driver."
+    },
+    {
+      "id": "E6-os-save-dialog-history",
+      "decision": "E6",
+      "surface": "surface-list.json#app-report-export",
+      "status": "confirmed",
+      "channel": "registry",
+      "operations": [
+        "SetValue",
+        "CreateKey"
+      ],
+      "hive": "run-user",
+      "keyPattern": "Software\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\Explorer\\\\ComDlg32\\\\(?:OpenSavePidlMRU(?:\\\\[^\\\\]+)?|LastVisitedPidlMRU)",
+      "valueNamePattern": "MRUListEx|[0-9]+",
+      "scope": "keys and values added or updated during a confirmed export; no removal",
+      "residualRisk": "The Windows common save dialog (comdlg32, in Studio's process) records each confirmed file in the user's per-extension recent list and the last folder per application, as for every application that uses the dialog. Studio itself stores no folder or setting."
     }
   ],
   "otherActorRecords": [
@@ -299,6 +340,22 @@
       "id": "RC-08",
       "kind": "harness defect fix: device-form owned roots in trace-context; one create rule for harness and Studio CreateFile",
       "status": "defect fix; no decision needed; proven only on a new run"
+    },
+    {
+      "id": "RC-09",
+      "decision": "E6",
+      "kind": "declared confirmed OS surface of the report export (permission expansion; key and value patterns)",
+      "status": "author decision 2026-10-16 (declare as the OS dialog's record); HUM-07 approved by the author on 2026-10-16"
+    },
+    {
+      "id": "RC-10",
+      "kind": "background filter: the shell's MuiCache display-name cache (registry values)",
+      "status": "author decision 2026-10-16; HUM-07 approved by the author on 2026-10-16"
+    },
+    {
+      "id": "RC-11",
+      "kind": "background filters: certificate revocation URL cache, packaged-app publisher folders, a desktop messenger's data (files)",
+      "status": "evidenced by manual-20261016-02; HUM-07 approved by the author on 2026-10-16"
     }
   ]
 }

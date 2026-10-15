@@ -247,7 +247,7 @@ def source_units():
         if not namespace or not cls:
             continue
         methods = []
-        pattern = r'\[((?:Fact|Theory|EvidenceFact|DesktopFact|DesktopTheory|RenderSnapshotFact)[^\]]*)\]((?:(?!\bpublic\b).)*?)public\s+(?:async\s+)?(?:void|Task)\s+(\w+)\s*\('
+        pattern = r'\[((?:Fact|Theory|EvidenceFact|DesktopFact|DesktopTheory|MediaFoundationFact|RenderSnapshotFact)[^\]]*)\]((?:(?!\bpublic\b).)*?)public\s+(?:async\s+)?(?:void|Task)\s+(\w+)\s*\('
         for match in re.finditer(pattern, text, re.S):
             methods.append(match[3])
         assembly = path.relative_to(REPO).parts[1]

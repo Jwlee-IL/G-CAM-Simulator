@@ -142,7 +142,9 @@ public sealed class ManualObservation : IDisposable
         try { _snapshots.Add(Snapshot("C")); }
         catch (Exception e) { error = e; }
         using var host = Process.GetCurrentProcess();
-        string[] owned = [RunDirectory, OwnedStudioProcess.LeasePath(host.SessionId), .. OwnedFolders(Path.GetTempPath(), _batchStarted)];
+        // The recorder's latest-video folder is a harness destination too (surface-list.json#harness-ui-videos).
+        string[] owned = [RunDirectory, OwnedStudioProcess.LeasePath(host.SessionId), .. OwnedFolders(Path.GetTempPath(), _batchStarted),
+            .. VideoRecorder.OwnedDestinations()];
         var context = Context(RunId!, _nullStarted, _nullFinished, _snapshots, _launches, owned, _diagnostic, _marker is not null);
         File.WriteAllText(IsolationPaths.Inside(RunDirectory, "observation-context.json"), JsonSerializer.Serialize(context,
             new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase }) + "\n");

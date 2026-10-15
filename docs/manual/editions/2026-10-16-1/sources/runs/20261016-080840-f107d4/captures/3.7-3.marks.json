@@ -1,0 +1,55 @@
+{
+  "schema": "gcam.figure-marks",
+  "schemaVersion": 1,
+  "capture": "captures/3.7-3.png",
+  "captureSha256": "f2406764ede27dfddc67b22ac63e97ada40eceffe504af7e1de4816ae187d320",
+  "widthPx": 1440,
+  "heightPx": 900,
+  "frameOriginPx": [
+    560,
+    246
+  ],
+  "dpi": 96,
+  "perMonitorAware": true,
+  "templateSha256": "7a2bee99a9d6be8c21224f4e3ce3187a4ba114c209e1d538fb9abfde45876a09",
+  "crop": "marks",
+  "region": null,
+  "marks": [
+    {
+      "n": 1,
+      "target": "ExportReport",
+      "label": "Export report…",
+      "labelSource": "name",
+      "screen": [
+        1714,
+        256,
+        28,
+        28
+      ],
+      "image": [
+        1154,
+        10,
+        28,
+        28
+      ]
+    },
+    {
+      "n": 2,
+      "target": "StatusText",
+      "label": "Completed · t = 1.0 s of 1 s · 66 counts · 66 cps · seed 1738245793",
+      "labelSource": "name",
+      "screen": [
+        592,
+        1124,
+        810,
+        16
+      ],
+      "image": [
+        32,
+        878,
+        810,
+        16
+      ]
+    }
+  ]
+}

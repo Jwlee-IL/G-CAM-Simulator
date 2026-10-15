@@ -36,12 +36,30 @@ public sealed class RunRecord
     public string RunId { get; }
     public string Directory { get; }
 
-    /// <summary>Skip both screenshots and tree text while a native dialog can expose private folder contents.</summary>
-    public string? OmitWindowDiagnosticsReason { get; set; }
+    /// <summary>This scenario's recording, or null (opted out, unavailable or not yet started).</summary>
+    public VideoRecorder? Video { get; set; }
+
+    private string? _omitWindowDiagnosticsReason;
+
+    /// <summary>Skip both screenshots and tree text while a native dialog can expose private folder contents; the
+    /// recording shows neutral frames for as long as it is set.</summary>
+    public string? OmitWindowDiagnosticsReason
+    {
+        get => _omitWindowDiagnosticsReason;
+        set { Video?.Privacy(value is not null); _omitWindowDiagnosticsReason = value; }
+    }
 
     public void Set(string key, object? value) => _fields[key] = value;
 
-    public void Step(string text) => _steps.Add($"{DateTime.Now:HH:mm:ss.fff} {text}");
+    /// <summary>A scenario step: the record's step log and a caption of the recording.</summary>
+    public void Step(string text)
+    {
+        Diagnostic(text);
+        Video?.Step(text);
+    }
+
+    /// <summary>The step log only (polling outcomes), so diagnostics do not drown the reader's captions.</summary>
+    public void Diagnostic(string text) => _steps.Add($"{DateTime.Now:HH:mm:ss.fff} {text}");
 
     /// <summary>Diagnostic-only capture of the owned window's visible frame.</summary>
     public static void CaptureWindow(AutomationElement window, string path)
@@ -49,7 +67,10 @@ public sealed class RunRecord
         var r = VisibleFrame(new IntPtr(window.Current.NativeWindowHandle));
         using var bmp = new System.Drawing.Bitmap(r.Width, r.Height);
         using (var g = System.Drawing.Graphics.FromImage(bmp))
+        {
             g.CopyFromScreen(r.Left, r.Top, 0, 0, bmp.Size);
+            g.FillRectangles(System.Drawing.Brushes.Black, VideoCapture.EdgeRing(bmp.Size));   // the frame bounds can still show one pixel of what lies behind
+        }
         bmp.Save(path);
     }
 
@@ -71,7 +92,10 @@ public sealed class RunRecord
             var r = VisibleFrame(new IntPtr(window.Current.NativeWindowHandle));
             using var bmp = new System.Drawing.Bitmap(r.Width, r.Height);
             using (var g = System.Drawing.Graphics.FromImage(bmp))
+            {
                 g.CopyFromScreen(r.Left, r.Top, 0, 0, bmp.Size);
+                g.FillRectangles(System.Drawing.Brushes.Black, VideoCapture.EdgeRing(bmp.Size));
+            }
             bmp.Save(Path.Combine(Directory, "window.png"));
         }
         catch (Exception e)

@@ -61,7 +61,10 @@ public static class ManualCapture
         using (var bmp = new System.Drawing.Bitmap(frame.Width, frame.Height, System.Drawing.Imaging.PixelFormat.Format32bppArgb))
         {
             using (var g = System.Drawing.Graphics.FromImage(bmp))
+            {
                 g.CopyFromScreen(frame.Left, frame.Top, 0, 0, bmp.Size);
+                g.FillRectangles(System.Drawing.Brushes.Black, VideoCapture.EdgeRing(bmp.Size));   // what lies behind shows in the edge
+            }
             rgb = Rgb(bmp);
             using var stream = new MemoryStream();
             bmp.Save(stream, System.Drawing.Imaging.ImageFormat.Png);
@@ -140,23 +143,13 @@ public static class ManualCapture
     /// an owned popup reaching outside the frame. Returns its class name (never its title) or null.</summary>
     private static string? Occluder(IntPtr hwnd, int pid, (int Left, int Top, int Width, int Height) frame)
     {
-        for (IntPtr w = GetWindow(hwnd, 3 /* GW_HWNDPREV */); w != IntPtr.Zero; w = GetWindow(w, 3))
+        try
         {
-            if (!IsWindowVisible(w) || (DwmGetWindowAttribute(w, 14 /* DWMWA_CLOAKED */, out int cloaked, 4) == 0 && cloaked != 0)) continue;
-            var r = Bounds(w);
-            if (r.Width <= 0 || r.Height <= 0) continue;
-            bool overlaps = r.Left < frame.Left + frame.Width && frame.Left < r.Left + r.Width && r.Top < frame.Top + frame.Height && frame.Top < r.Top + r.Height;
-            if (!overlaps) continue;
-            GetWindowThreadProcessId(w, out uint owner);
-            bool inside = r.Left >= frame.Left && r.Top >= frame.Top && r.Left + r.Width <= frame.Left + frame.Width && r.Top + r.Height <= frame.Top + frame.Height;
-            if (owner != (uint)pid || !inside)
-            {
-                var name = new StringBuilder(128);
-                GetClassName(w, name, name.Capacity);
-                return (owner == (uint)pid ? "owned-popup-outside-frame:" : "") + name;
-            }
+            var survey = WindowSurvey.Take(hwnd, pid);
+            if (survey.Frame != new System.Drawing.Rectangle(frame.Left, frame.Top, frame.Width, frame.Height)) return "unstable-frame";
+            return survey.Foreign.Length > 0 ? "foreign-window" : survey.OwnedPopupOutside ? "owned-popup-outside-frame" : null;
         }
-        return null;
+        catch { return "survey-failed"; }
     }
 
     private static byte[] Rgb(System.Drawing.Bitmap bmp)

@@ -1,0 +1,69 @@
+{
+  "schema": "gcam.figure-marks",
+  "schemaVersion": 1,
+  "capture": "captures/2.2-2.png",
+  "captureSha256": "859f8459822644cf4fca0f2c72b098f06da370707e67812100ea95dd91063ece",
+  "widthPx": 1440,
+  "heightPx": 900,
+  "frameOriginPx": [
+    560,
+    246
+  ],
+  "dpi": 96,
+  "perMonitorAware": true,
+  "templateSha256": "0a63645fc1eed6ee30e4fd8ee14c93ae0ad85a88f73ae4affcad2c667bb22e47",
+  "crop": "marks",
+  "region": {
+    "target": "Detector.Face",
+    "screen": [
+      949,
+      393,
+      661,
+      661
+    ],
+    "image": [
+      389,
+      147,
+      661,
+      661
+    ]
+  },
+  "marks": [
+    {
+      "n": 1,
+      "target": "Detector.FaceTab",
+      "label": "Face",
+      "labelSource": "name",
+      "screen": [
+        898,
+        356,
+        153,
+        28
+      ],
+      "image": [
+        338,
+        110,
+        153,
+        28
+      ]
+    },
+    {
+      "n": 2,
+      "target": "Detector.Identity",
+      "label": "Settings for the next acquisition",
+      "labelSource": "name",
+      "screen": [
+        1701,
+        355,
+        262,
+        15
+      ],
+      "image": [
+        1141,
+        109,
+        262,
+        15
+      ]
+    }
+  ]
+}

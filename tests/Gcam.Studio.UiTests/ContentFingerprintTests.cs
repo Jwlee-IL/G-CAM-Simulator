@@ -17,19 +17,14 @@ public sealed class ContentFingerprintTests
             string path = IsolationPaths.Inside(root, name); Directory.CreateDirectory(Path.GetDirectoryName(path)!);
             File.WriteAllBytes(path, [0, 13, 10, 255]);
         }
+        string interpreter = PythonInterpreter.Resolve(PythonInterpreter.Execute, Environment.GetEnvironmentVariable("GCAM_TEST_PYTHON"));
         foreach (bool deployment in new[] { false, true })
         {
             var files = ContentFingerprint.Files(root, deployment);
-            var start = new ProcessStartInfo("python") { UseShellExecute = false, CreateNoWindow = true,
-                RedirectStandardOutput = true, RedirectStandardError = true };
-            foreach (string argument in new[] { "-B", Path.Combine(RepoPaths.Root(), "tests/Gcam.Studio.UiTests/Harness/Isolation/stage0.py"),
-                "fingerprint", "--directory", root, "--kind", deployment ? "deployment" : "isolation" }) start.ArgumentList.Add(argument);
-            using var process = Process.Start(start)!;
-            var stdout = process.StandardOutput.ReadToEndAsync(); var stderr = process.StandardError.ReadToEndAsync();
-            using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(10));
-            await process.WaitForExitAsync(deadline.Token); // Timeout never force-kills a process.
-            Assert.True(process.ExitCode == 0, await stderr);
-            using var json = JsonDocument.Parse(await stdout);
+            var result = await Task.Run(() => PythonInterpreter.Execute(interpreter, ["-B", Path.Combine(RepoPaths.Root(), "tests/Gcam.Studio.UiTests/Harness/Isolation/stage0.py"),
+                "fingerprint", "--directory", root, "--kind", deployment ? "deployment" : "isolation"]));
+            Assert.True(result.ExitCode == 0, result.Error);
+            using var json = JsonDocument.Parse(result.Output);
             Assert.Equal(ContentFingerprint.Digest(files), json.RootElement.GetProperty("sha256").GetString());
             Assert.Equal(files.Keys.ToArray(), json.RootElement.GetProperty("files").EnumerateObject().Select(p => p.Name).ToArray());
             foreach (var file in files) Assert.Equal(file.Value, json.RootElement.GetProperty("files").GetProperty(file.Key).GetString());

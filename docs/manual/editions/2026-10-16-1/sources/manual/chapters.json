@@ -1,0 +1,102 @@
+{
+  "schema": "gcam.manual-registry",
+  "schemaVersion": 1,
+  "id": "gcam-studio-manual",
+  "locale": "en",
+  "title": "GCAM Studio user manual",
+  "edition": "second edition draft: ten chapters, including export and Compare",
+  "parts": [
+    {
+      "number": "1",
+      "title": "Orientation"
+    },
+    {
+      "number": "2",
+      "title": "Configure and acquire"
+    },
+    {
+      "number": "3",
+      "title": "Inspect retained data"
+    },
+    {
+      "number": "4",
+      "title": "Experimental readout"
+    },
+    {
+      "number": "5",
+      "title": "Interpretation and help"
+    }
+  ],
+  "chapters": [
+    {
+      "number": "1.1",
+      "title": "Purpose, scope and prerequisites",
+      "part": "1",
+      "source": "static",
+      "static": "static/purpose-and-scope.md"
+    },
+    {
+      "number": "1.2",
+      "title": "Window, workspaces and view tabs",
+      "part": "1",
+      "source": "generated",
+      "scenario": "manual.navigate"
+    },
+    {
+      "number": "2.1",
+      "title": "Place and edit sources",
+      "part": "2",
+      "source": "generated",
+      "scenario": "manual.sources"
+    },
+    {
+      "number": "2.2",
+      "title": "Choose optics and detector settings",
+      "part": "2",
+      "source": "generated",
+      "scenario": "manual.geometry"
+    },
+    {
+      "number": "2.4",
+      "title": "Start, Stop, Continue and Reset",
+      "part": "2",
+      "source": "generated",
+      "scenario": "manual.acquisition"
+    },
+    {
+      "number": "3.1",
+      "title": "Imaging measurements",
+      "part": "3",
+      "source": "generated",
+      "scenario": "manual.measurements"
+    },
+    {
+      "number": "3.4",
+      "title": "Spectrum",
+      "part": "3",
+      "source": "generated",
+      "scenario": "manual.spectrum"
+    },
+    {
+      "number": "3.7",
+      "title": "Export reports and event data",
+      "part": "3",
+      "source": "generated",
+      "scenario": "manual.export"
+    },
+    {
+      "number": "4.4",
+      "title": "Compare direct crystal and physical readout",
+      "part": "4",
+      "source": "generated",
+      "scenario": "manual.compare"
+    },
+    {
+      "number": "5.2",
+      "title": "Interpretation and limitations",
+      "part": "5",
+      "source": "static",
+      "static": "static/interpretation-and-limitations.md"
+    }
+  ]
+}

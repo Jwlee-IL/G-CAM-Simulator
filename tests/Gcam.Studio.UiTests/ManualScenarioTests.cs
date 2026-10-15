@@ -14,10 +14,10 @@ namespace Gcam.Studio.UiTests;
 /// Every step's checks are automatic and use the same independent oracles as the regression scenarios; captures are
 /// document evidence, never verdicts. Chapter numbers and titles come from the registry; warnings only as notice IDs.
 /// With GCAM_UI_BREAK_VERDICT=1 each scenario corrupts one expectation, so its chapter must drop out of the edition.
-/// With GCAM_UI_OBSERVE_DIRECTORY set the six run as one MR8 observed batch (<see cref="ManualObservation"/>).
+/// With GCAM_UI_OBSERVE_DIRECTORY set the chapters run as one MR8 observed batch (<see cref="ManualObservation"/>).
 /// </summary>
 [Collection(ManualObservationCollection.Name)]
-public sealed class ManualScenarioTests(ITestOutputHelper output)
+public sealed partial class ManualScenarioTests(ITestOutputHelper output)
 {
     private static readonly TimeSpan RunTimeout = PilotTests.RunTimeout;
     private static bool Broken => ManualRun.Broken;
@@ -31,12 +31,12 @@ public sealed class ManualScenarioTests(ITestOutputHelper output)
     public void Navigate_WindowWorkspacesAndViewTabs() => ManualScenario.Run("manual.navigate", output, (ui, run) =>
     {
         run.BeginStep("GCAM Studio opens with the top bar — the workspace switch {Workspace.Imaging}, {Workspace.Spectrum}, "
-            + "{Workspace.Waveform}, {Workspace.Detector} and the {StartAcquisition} button — the left panel with the tabs "
+            + "{Workspace.Waveform}, {Workspace.Detector}, {Workspace.Compare} and the {StartAcquisition} button — the left panel with the tabs "
             + "{Left.SceneTab}, {Left.OpticsTab} and {Left.DetectorTab}, the workspace in the centre and the status bar at the bottom.");
         run.CheckEqual("window.starts-empty", Broken ? "Acquiring" : "Empty", ui.RunState);
         run.Check("window.imaging-first", Visible(ui, "FloodView") && Visible(ui, "ReconView"), "Imaging shows the flood map and the reconstruction");
         run.Capture("The window after start, Imaging workspace.", [new("Workspace.Imaging"), new("Workspace.Spectrum"), new("Workspace.Waveform"),
-            new("Workspace.Detector"), new("StartAcquisition"), new("Left.SceneTab"), new("Left.OpticsTab"), new("Left.DetectorTab")], full: true);
+            new("Workspace.Detector"), new("Workspace.Compare"), new("StartAcquisition"), new("Left.SceneTab"), new("Left.OpticsTab"), new("Left.DetectorTab")], full: true);
 
         run.BeginStep("Select the {Left.OpticsTab} tab: the engineering geometry replaces the source list in the left panel.");
         ui.SelectLeftTab("Optics");
@@ -77,6 +77,19 @@ public sealed class ManualScenarioTests(ITestOutputHelper output)
         run.BeginStep("Choose {Workspace.Imaging} to return to the images.");
         ui.Workspace("Imaging", "FloodView");
         run.Check("navigation.back-to-imaging", Visible(ui, "FloodView"), "flood map shown again");
+        run.BeginStep("Press Ctrl+1 through Ctrl+5 to select Imaging, Spectrum, Waveform, Detector and Compare respectively.");
+        string[] workspaces = ["Imaging", "Spectrum", "Waveform", "Detector", "Compare"];
+        string[] surfaces = ["FloodView", "Spectrum.Plot", "Waveform.Views", "Detector.Views", "Readout.EmptyState"];
+        for (int i = 0; i < workspaces.Length; i++)
+        {
+            ui.Keys("Workspace." + (i == 0 ? "Imaging" : workspaces[i - 1]), "^" + (i + 1));
+            int index = i;
+            StudioWindow.WaitUntil(() => Selected(ui, "Workspace." + workspaces[index]) && Visible(ui, surfaces[index]),
+                TimeSpan.FromSeconds(5), "keyboard workspace destination");
+            run.Check("navigation.ctrl-" + (i + 1), Selected(ui, "Workspace." + workspaces[i]) && Visible(ui, surfaces[i]), "keyboard selected " + workspaces[i]);
+        }
+        run.Capture("Compare under direct crystal assignment.", [new("Workspace.Compare"), new("Readout.EmptyState"), new("Readout.ChooseReadout")], full: true);
+        ui.Workspace("Imaging", "FloodView");
     });
 
     [DesktopFact, ManualChapter("manual.sources")]

@@ -20,6 +20,14 @@ public sealed class ManualChapterAttribute(string scenario) : Attribute
 public static class ManualScenario
 {
     public static void Run(string scenario, ITestOutputHelper output, Action<StudioWindow, ManualRun> body)
+        => RunCore(scenario, output, body, []);
+
+    public static void RunExport(ITestOutputHelper output, Action<StudioWindow, ManualRun> body)
+        => RunCore("manual.export", output, body, new[] { "html", "pdf", "docx", "csv" }.SelectMany(ext => ext == "csv"
+            ? new[] { $"{ext}/report.{ext}", $"{ext}/report.scene.json", $"{ext}/report.meta.json" }
+            : new[] { $"{ext}/report.{ext}", $"{ext}/report.scene.json" }).Select(p => p.Replace('/', Path.DirectorySeparatorChar)).ToArray());
+
+    private static void RunCore(string scenario, ITestOutputHelper output, Action<StudioWindow, ManualRun> body, IReadOnlyList<string> writes)
     {
         var registry = ManualRegistry.Load();
         _ = registry.ForScenario(scenario);
@@ -32,13 +40,15 @@ public static class ManualScenario
         int? pid = null;
         DateTimeOffset? processStarted = null;
         Exception? failure = null;
+        VideoRecorder? video = null;
         try
         {
-            Scenario.Run(scenario, output, (ui, record) =>
+            Scenario.RunManual(scenario, output, (ui, record, sandbox) =>
             {
                 manifest = Path.Combine(record.Directory, "ui-manifest.json");
                 run = new ManualRun(scenario, registry, IsolationPaths.Inside(record.Directory, "manual/" + record.RunId), record.RunId,
                     started, (id, source) => ManualRun.ReadLabel(ui, id, source));
+                run.Record = record; run.Sandbox = sandbox;
                 System.IO.Directory.CreateDirectory(run.Directory);
                 if (observation is not null)
                 {
@@ -57,7 +67,7 @@ public static class ManualScenario
                     run.Fail(e);
                     throw;
                 }
-            });
+            }, writes, recorder => video = recorder);
         }
         catch (Exception e)
         {
@@ -71,8 +81,15 @@ public static class ManualScenario
             System.IO.Directory.CreateDirectory(folder);
             run = new ManualRun(scenario, registry, folder, runId, started, (_, _) => "");
         }
-        output.WriteLine("manual record: " + run.Finalise(manifest, before, ManualRun.ReadSubject()));
-        observation?.Record(new(run.RunId, launchAt, DateTimeOffset.UtcNow, pid, processStarted));
+        try
+        {
+            run.Video = video?.Stop();
+            if (failure is not null) run.Fail(failure);
+            output.WriteLine("manual record: " + run.Finalise(manifest, before, ManualRun.ReadSubject()));
+            observation?.Record(new(run.RunId, launchAt, DateTimeOffset.UtcNow, pid, processStarted));
+        }
+        catch (Exception e) { failure ??= e; }
+        finally { video?.Complete(failure is null); }
         if (failure is not null) ExceptionDispatchInfo.Capture(failure).Throw();
     }
 }
