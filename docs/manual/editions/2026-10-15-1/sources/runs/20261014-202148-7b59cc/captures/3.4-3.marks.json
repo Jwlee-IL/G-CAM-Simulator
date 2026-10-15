@@ -1,0 +1,51 @@
+{
+  "schema": "gcam.figure-marks",
+  "schemaVersion": 1,
+  "capture": "captures/3.4-3.png",
+  "captureSha256": "6a6203dcd098da045f3f8fee759474ad2d61211001c35e1eb280a3f9eb1a1e59",
+  "widthPx": 1440,
+  "heightPx": 900,
+  "frameOriginPx": [
+    560,
+    246
+  ],
+  "dpi": 96,
+  "perMonitorAware": true,
+  "templateSha256": "ff8ed5bdc7335398fb8a8b3383004d0116033756634c8a5866d378959d9a7189",
+  "crop": "marks",
+  "region": {
+    "target": "Spectrum.Plot",
+    "screen": [
+      897,
+      355,
+      766,
+      579
+    ],
+    "image": [
+      337,
+      109,
+      766,
+      579
+    ]
+  },
+  "marks": [
+    {
+      "n": 1,
+      "target": "Spectrum.LogY",
+      "label": "Log Y",
+      "labelSource": "name",
+      "screen": [
+        1701,
+        355,
+        262,
+        28
+      ],
+      "image": [
+        1141,
+        109,
+        262,
+        28
+      ]
+    }
+  ]
+}

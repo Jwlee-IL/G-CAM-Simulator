@@ -1,0 +1,3003 @@
+{
+ "budgetBytes": 10485760,
+ "bytesExcludingRecord": 3737398,
+ "chapterOutputSha256": {
+  "1.1": "1cddf27158be0788c6f48b443e1a86137e11ed36872b7fc20b25a26518008d0b",
+  "1.2": "b16762bea54d102efac2b92805d3e837fef8a771a27900cc47442111428a7cb9",
+  "2.1": "3b0d93be6acc2095d0e85ad0e75dcf390a5df7216511d113a4d390832e381b78",
+  "2.2": "ff1175da178dfdd70943eb3333d6ed056b1ddca35fca8685f5f128fe05979876",
+  "2.4": "f744c3966a165fce1f0e6a3acd69f02ffbc03aafb3fae5a69bf57da783f9092e",
+  "3.1": "21b22b114aad01c96e76423eaed0a87ab104868c643d8cf2a538b22d71280b15",
+  "3.4": "2c9198625798a52393a7ad94df26f86037ee2e23adba5dc6582e3fbc2f65291d",
+  "5.2": "1396bc5c1bea3d3aa3d62d13ef07528e9e2a0d7c3a1105a4fa5d70ae8acdd25c"
+ },
+ "chapters": [
+  {
+   "candidates": [
+    {
+     "execution": "completed",
+     "runId": "20261014-202044-2dbf58",
+     "selection": "latest",
+     "startedAt": "2026-10-14T20:20:44.663+09:00",
+     "status": "passed"
+    }
+   ],
+   "number": "1.2",
+   "omission": null,
+   "scenario": "manual.navigate"
+  },
+  {
+   "candidates": [
+    {
+     "execution": "completed",
+     "runId": "20261014-202059-544edf",
+     "selection": "latest",
+     "startedAt": "2026-10-14T20:20:59.217+09:00",
+     "status": "passed"
+    }
+   ],
+   "number": "2.1",
+   "omission": null,
+   "scenario": "manual.sources"
+  },
+  {
+   "candidates": [
+    {
+     "execution": "completed",
+     "runId": "20261014-202201-b1fbf6",
+     "selection": "latest",
+     "startedAt": "2026-10-14T20:22:01.753+09:00",
+     "status": "passed"
+    }
+   ],
+   "number": "2.2",
+   "omission": null,
+   "scenario": "manual.geometry"
+  },
+  {
+   "candidates": [
+    {
+     "execution": "completed",
+     "runId": "20261014-202133-886f72",
+     "selection": "latest",
+     "startedAt": "2026-10-14T20:21:33.908+09:00",
+     "status": "passed"
+    }
+   ],
+   "number": "2.4",
+   "omission": null,
+   "scenario": "manual.acquisition"
+  },
+  {
+   "candidates": [
+    {
+     "execution": "completed",
+     "runId": "20261014-202118-3646b1",
+     "selection": "latest",
+     "startedAt": "2026-10-14T20:21:18.398+09:00",
+     "status": "passed"
+    }
+   ],
+   "number": "3.1",
+   "omission": null,
+   "scenario": "manual.measurements"
+  },
+  {
+   "candidates": [
+    {
+     "execution": "completed",
+     "runId": "20261014-202148-7b59cc",
+     "selection": "latest",
+     "startedAt": "2026-10-14T20:21:48.977+09:00",
+     "status": "passed"
+    }
+   ],
+   "number": "3.4",
+   "omission": null,
+   "scenario": "manual.spectrum"
+  }
+ ],
+ "date": "2026-10-15",
+ "draftReasons": [],
+ "editionId": "2026-10-15-1",
+ "figures": [
+  {
+   "chapter": "1.2",
+   "figure": "1.2-1",
+   "flags": [],
+   "markLabels": [
+    {
+     "label": "Imaging: flood map and image",
+     "n": 1,
+     "screenText": "Imaging",
+     "short": "flood map and image",
+     "target": "Workspace.Imaging"
+    },
+    {
+     "label": "Spectrum: energy histogram",
+     "n": 2,
+     "screenText": "Spectrum",
+     "short": "energy histogram",
+     "target": "Workspace.Spectrum"
+    },
+    {
+     "label": "Waveform: pulse traces of an event",
+     "n": 3,
+     "screenText": "Waveform",
+     "short": "pulse traces of an event",
+     "target": "Workspace.Waveform"
+    },
+    {
+     "label": "Detector: face and readout views",
+     "n": 4,
+     "screenText": "Detector",
+     "short": "face and readout views",
+     "target": "Workspace.Detector"
+    },
+    {
+     "label": "Start: start or continue the run",
+     "n": 5,
+     "screenText": "Start",
+     "short": "start or continue the run",
+     "target": "StartAcquisition"
+    },
+    {
+     "label": "Scene: place and edit sources",
+     "n": 6,
+     "screenText": "Scene",
+     "short": "place and edit sources",
+     "target": "Left.SceneTab"
+    },
+    {
+     "label": "Optics: mask and detector geometry",
+     "n": 7,
+     "screenText": "Optics",
+     "short": "mask and detector geometry",
+     "target": "Left.OpticsTab"
+    },
+    {
+     "label": "Detector: choose the readout",
+     "n": 8,
+     "screenText": "Detector",
+     "short": "choose the readout",
+     "target": "Left.DetectorTab"
+    }
+   ],
+   "marksSha256": "a04b9668955dc3cb11d1ccb870dad1ea329f77fd8b37ac7741e25e7883e85169",
+   "operation": {
+    "crop": [
+     0,
+     0,
+     1440,
+     900
+    ],
+    "cropRule": "full",
+    "font": {
+     "digitEmPx": 15,
+     "emPx": 16,
+     "path": "samples/manual/font/mplus-rounded-1c-bold.glyphs.json",
+     "sha256": "3def83f75ef2c0847879477da66245d07f08eae991119a54250dc10686aaebd0"
+    },
+    "imageAt": [
+     293,
+     0
+    ],
+    "labels": [
+     {
+      "box": [
+       8,
+       33,
+       263,
+       24
+      ],
+      "candidate": "margin-left",
+      "inkUnder": 0,
+      "join": [
+       [
+        463,
+        39
+       ],
+       [
+        463,
+        45
+       ],
+       [
+        271,
+        45
+       ]
+      ],
+      "lines": [
+       "Imaging: flood map and image"
+      ],
+      "n": 1,
+      "nearerAnotherMark": false,
+      "text": "Imaging: flood map and image"
+     },
+     {
+      "box": [
+       18,
+       63,
+       253,
+       24
+      ],
+      "candidate": "margin-left",
+      "inkUnder": 0,
+      "join": [
+       [
+        533,
+        39
+       ],
+       [
+        533,
+        49
+       ],
+       [
+        278,
+        49
+       ],
+       [
+        278,
+        75
+       ],
+       [
+        271,
+        75
+       ]
+      ],
+      "lines": [
+       "Spectrum: energy histogram"
+      ],
+      "n": 2,
+      "nearerAnotherMark": false,
+      "text": "Spectrum: energy histogram"
+     },
+     {
+      "box": [
+       10,
+       93,
+       261,
+       44
+      ],
+      "candidate": "margin-left",
+      "inkUnder": 0,
+      "join": [
+       [
+        603,
+        39
+       ],
+       [
+        603,
+        53
+       ],
+       [
+        282,
+        53
+       ],
+       [
+        282,
+        105
+       ],
+       [
+        271,
+        105
+       ]
+      ],
+      "lines": [
+       "Waveform: pulse traces of an",
+       "event"
+      ],
+      "n": 3,
+      "nearerAnotherMark": false,
+      "text": "Waveform: pulse traces of an event"
+     },
+     {
+      "box": [
+       713,
+       12,
+       293,
+       24
+      ],
+      "candidate": "right",
+      "inkUnder": 0,
+      "join": null,
+      "lines": [
+       "Detector: face and readout views"
+      ],
+      "n": 4,
+      "nearerAnotherMark": false,
+      "text": "Detector: face and readout views"
+     },
+     {
+      "box": [
+       1415,
+       43,
+       282,
+       24
+      ],
+      "candidate": "below-slide+67",
+      "inkUnder": 0,
+      "join": null,
+      "lines": [
+       "Start: start or continue the run"
+      ],
+      "n": 5,
+      "nearerAnotherMark": false,
+      "text": "Start: start or continue the run"
+     },
+     {
+      "box": [
+       11,
+       143,
+       260,
+       24
+      ],
+      "candidate": "margin-left",
+      "inkUnder": 0,
+      "join": [
+       [
+        364,
+        72
+       ],
+       [
+        364,
+        66
+       ],
+       [
+        286,
+        66
+       ],
+       [
+        286,
+        155
+       ],
+       [
+        271,
+        155
+       ]
+      ],
+      "lines": [
+       "Scene: place and edit sources"
+      ],
+      "n": 6,
+      "nearerAnotherMark": false,
+      "text": "Scene: place and edit sources"
+     },
+     {
+      "box": [
+       33,
+       173,
+       238,
+       44
+      ],
+      "candidate": "margin-left",
+      "inkUnder": 0,
+      "join": [
+       [
+        455,
+        104
+       ],
+       [
+        455,
+        110
+       ],
+       [
+        290,
+        110
+       ],
+       [
+        290,
+        185
+       ],
+       [
+        271,
+        185
+       ]
+      ],
+      "lines": [
+       "Optics: mask and detector",
+       "geometry"
+      ],
+      "n": 7,
+      "nearerAnotherMark": false,
+      "text": "Optics: mask and detector geometry"
+     },
+     {
+      "box": [
+       605,
+       102,
+       262,
+       24
+      ],
+      "candidate": "right-1down",
+      "inkUnder": 0,
+      "join": [
+       [
+        605,
+        103
+       ],
+       [
+        593,
+        103
+       ]
+      ],
+      "lines": [
+       "Detector: choose the readout"
+      ],
+      "n": 8,
+      "nearerAnotherMark": false,
+      "text": "Detector: choose the readout"
+     }
+    ],
+    "margins": {
+     "bottom": 0,
+     "left": 293,
+     "right": 0
+    },
+    "overlay": "rectangles+labels-beside-v4",
+    "size": [
+     1733,
+     900
+    ]
+   },
+   "path": "figures/1.2-1.png",
+   "pixelSha256": "1f707c09ee8441d5adf3cf93b03cd51d9607f8f18b4cfc3f817dc7490446eea4",
+   "resultSha256": "63c79087ef34795c6c76d0a7af184af5506f760426b5d3d9893cd4df17dc599a",
+   "runId": "20261014-202044-2dbf58",
+   "source": "captures/1.2-1.png",
+   "sourceSha256": "b3b4edcb227cd0c616c8999ae6b7d54be96dd0a0f290077ebdcced7e6a5bb2d3",
+   "step": 1
+  },
+  {
+   "chapter": "1.2",
+   "figure": "1.2-2",
+   "flags": [],
+   "markLabels": [
+    {
+     "label": "Optics: mask and detector geometry",
+     "n": 1,
+     "screenText": "Optics",
+     "short": "mask and detector geometry",
+     "target": "Left.OpticsTab"
+    },
+    {
+     "label": "Preset: choose a geometry",
+     "n": 2,
+     "screenText": "Preset",
+     "short": "choose a geometry",
+     "target": "Optics.Preset"
+    }
+   ],
+   "marksSha256": "9b975939782035f50967b61090fbf2bfc08ef08403aa200bda15ad663ee86608",
+   "operation": {
+    "crop": [
+     5,
+     53,
+     314,
+     813
+    ],
+    "cropRule": "panel-edges",
+    "font": {
+     "digitEmPx": 15,
+     "emPx": 16,
+     "path": "samples/manual/font/mplus-rounded-1c-bold.glyphs.json",
+     "sha256": "3def83f75ef2c0847879477da66245d07f08eae991119a54250dc10686aaebd0"
+    },
+    "imageAt": [
+     0,
+     0
+    ],
+    "labels": [
+     {
+      "box": [
+       324,
+       2,
+       238,
+       44
+      ],
+      "candidate": "margin-right",
+      "inkUnder": 0,
+      "join": [
+       [
+        157,
+        19
+       ],
+       [
+        157,
+        13
+       ],
+       [
+        319,
+        13
+       ],
+       [
+        319,
+        14
+       ],
+       [
+        324,
+        14
+       ]
+      ],
+      "lines": [
+       "Optics: mask and detector",
+       "geometry"
+      ],
+      "n": 1,
+      "nearerAnotherMark": false,
+      "text": "Optics: mask and detector geometry"
+     },
+     {
+      "box": [
+       324,
+       100,
+       238,
+       24
+      ],
+      "candidate": "margin-right",
+      "inkUnder": 0,
+      "join": [
+       [
+        284,
+        112
+       ],
+       [
+        324,
+        112
+       ]
+      ],
+      "lines": [
+       "Preset: choose a geometry"
+      ],
+      "n": 2,
+      "nearerAnotherMark": false,
+      "text": "Preset: choose a geometry"
+     }
+    ],
+    "margins": {
+     "bottom": 0,
+     "left": 0,
+     "right": 256
+    },
+    "overlay": "rectangles+labels-beside-v4",
+    "size": [
+     570,
+     813
+    ]
+   },
+   "path": "figures/1.2-2.png",
+   "pixelSha256": "409128cbca2c2a18c7e695364936cac7b67db73709ebb69081fda959b682d9f7",
+   "resultSha256": "31c80a1e764c745fafae799f08ab98777b1f25667865b9687659b030f41f3ebe",
+   "runId": "20261014-202044-2dbf58",
+   "source": "captures/1.2-2.png",
+   "sourceSha256": "f654c2c5f216af953d1f224a92adec73e04a6c11df6c77aae15b341b85ed9b47",
+   "step": 2
+  },
+  {
+   "chapter": "1.2",
+   "figure": "1.2-3",
+   "flags": [],
+   "markLabels": [
+    {
+     "label": "Four outputs (A–D): pulses of the physical readout",
+     "n": 1,
+     "screenText": "Four outputs (A–D)",
+     "short": "pulses of the physical readout",
+     "target": "Waveform.FourOutputsTab"
+    },
+    {
+     "label": "Empty-view note: needs the physical readout",
+     "n": 2,
+     "name": "Empty-view note",
+     "screenText": "Available with the experimental physical readout",
+     "short": "needs the physical readout",
+     "target": "Readout.EmptyState"
+    },
+    {
+     "label": "Choose readout…: go to the readout choice",
+     "n": 3,
+     "screenText": "Choose readout…",
+     "short": "go to the readout choice",
+     "target": "Readout.ChooseReadout"
+    }
+   ],
+   "marksSha256": "23efba97cfb06a0fce9a07f8130c8ed683b026add8198870527a8ab21446d63d",
+   "operation": {
+    "crop": [
+     317,
+     53,
+     806,
+     813
+    ],
+    "cropRule": "panel-edges",
+    "font": {
+     "digitEmPx": 15,
+     "emPx": 16,
+     "path": "samples/manual/font/mplus-rounded-1c-bold.glyphs.json",
+     "sha256": "3def83f75ef2c0847879477da66245d07f08eae991119a54250dc10686aaebd0"
+    },
+    "imageAt": [
+     0,
+     0
+    ],
+    "labels": [
+     {
+      "box": [
+       401,
+       8,
+       262,
+       44
+      ],
+      "candidate": "above-left",
+      "inkUnder": 0,
+      "join": null,
+      "lines": [
+       "Four outputs (A–D): pulses of",
+       "the physical readout"
+      ],
+      "n": 1,
+      "nearerAnotherMark": false,
+      "text": "Four outputs (A–D): pulses of the physical readout"
+     },
+     {
+      "box": [
+       8,
+       413,
+       250,
+       44
+      ],
+      "candidate": "left",
+      "inkUnder": 0,
+      "join": null,
+      "lines": [
+       "Empty-view note: needs the",
+       "physical readout"
+      ],
+      "n": 2,
+      "nearerAnotherMark": false,
+      "text": "Empty-view note: needs the physical readout"
+     },
+     {
+      "box": [
+       473,
+       444,
+       251,
+       44
+      ],
+      "candidate": "right",
+      "inkUnder": 0,
+      "join": null,
+      "lines": [
+       "Choose readout…: go to the",
+       "readout choice"
+      ],
+      "n": 3,
+      "nearerAnotherMark": false,
+      "text": "Choose readout…: go to the readout choice"
+     }
+    ],
+    "margins": {
+     "bottom": 0,
+     "left": 0,
+     "right": 0
+    },
+    "overlay": "rectangles+labels-beside-v4",
+    "size": [
+     806,
+     813
+    ]
+   },
+   "path": "figures/1.2-3.png",
+   "pixelSha256": "f967e41fb6064f3e635c7b53aafb72201adb2413d369d046803ca1ccb6db3062",
+   "resultSha256": "8c597eab31495807f10a196373d26e81da58abf382bdd4f39f72eea789a0153f",
+   "runId": "20261014-202044-2dbf58",
+   "source": "captures/1.2-3.png",
+   "sourceSha256": "ffa7a04a6b92a02fd51ca699dd9708d1441416f24265f8ff36ca8a2a9d254c8c",
+   "step": 4
+  },
+  {
+   "chapter": "1.2",
+   "figure": "1.2-4",
+   "flags": [],
+   "markLabels": [
+    {
+     "label": "SiPM: sensors and circuit",
+     "n": 1,
+     "screenText": "SiPM",
+     "short": "sensors and circuit",
+     "target": "Readout.SipmTab"
+    },
+    {
+     "label": "Empty-view note: needs the physical readout",
+     "n": 2,
+     "name": "Empty-view note",
+     "screenText": "Available with the experimental physical readout",
+     "short": "needs the physical readout",
+     "target": "Readout.EmptyState"
+    },
+    {
+     "label": "Choose readout…: go to the readout choice",
+     "n": 3,
+     "screenText": "Choose readout…",
+     "short": "go to the readout choice",
+     "target": "Readout.ChooseReadout"
+    }
+   ],
+   "marksSha256": "8f0aec3c8552842d9b294debca3b947386d23940ce66cc3c567df12d3ade2a19",
+   "operation": {
+    "crop": [
+     317,
+     53,
+     806,
+     813
+    ],
+    "cropRule": "panel-edges",
+    "font": {
+     "digitEmPx": 15,
+     "emPx": 16,
+     "path": "samples/manual/font/mplus-rounded-1c-bold.glyphs.json",
+     "sha256": "3def83f75ef2c0847879477da66245d07f08eae991119a54250dc10686aaebd0"
+    },
+    "imageAt": [
+     0,
+     0
+    ],
+    "labels": [
+     {
+      "box": [
+       172,
+       28,
+       229,
+       24
+      ],
+      "candidate": "above-left",
+      "inkUnder": 0,
+      "join": null,
+      "lines": [
+       "SiPM: sensors and circuit"
+      ],
+      "n": 1,
+      "nearerAnotherMark": false,
+      "text": "SiPM: sensors and circuit"
+     },
+     {
+      "box": [
+       8,
+       413,
+       250,
+       44
+      ],
+      "candidate": "left",
+      "inkUnder": 0,
+      "join": null,
+      "lines": [
+       "Empty-view note: needs the",
+       "physical readout"
+      ],
+      "n": 2,
+      "nearerAnotherMark": false,
+      "text": "Empty-view note: needs the physical readout"
+     },
+     {
+      "box": [
+       473,
+       444,
+       251,
+       44
+      ],
+      "candidate": "right",
+      "inkUnder": 0,
+      "join": null,
+      "lines": [
+       "Choose readout…: go to the",
+       "readout choice"
+      ],
+      "n": 3,
+      "nearerAnotherMark": false,
+      "text": "Choose readout…: go to the readout choice"
+     }
+    ],
+    "margins": {
+     "bottom": 0,
+     "left": 0,
+     "right": 0
+    },
+    "overlay": "rectangles+labels-beside-v4",
+    "size": [
+     806,
+     813
+    ]
+   },
+   "path": "figures/1.2-4.png",
+   "pixelSha256": "43d1806a60782e114a018c856e9b5bd58d6b0dba714db8a38394526b9b84e33b",
+   "resultSha256": "d5d865895c7d8f149366e234a88eb355d74f634770a681227f82e8f5bd9c786d",
+   "runId": "20261014-202044-2dbf58",
+   "source": "captures/1.2-4.png",
+   "sourceSha256": "ca15b38bc336c744820fb24a23fccd3c3319b7c2cd1eabc0314948c9c5f72a17",
+   "step": 5
+  },
+  {
+   "chapter": "1.2",
+   "figure": "1.2-5",
+   "flags": [],
+   "markLabels": [
+    {
+     "label": "Detector: choose the readout",
+     "n": 1,
+     "screenText": "Detector",
+     "short": "choose the readout",
+     "target": "Left.DetectorTab"
+    }
+   ],
+   "marksSha256": "6bbccb46c92c40ed220c7cdf89b7038c4f4983d75df158d40053169593bb80e3",
+   "operation": {
+    "crop": [
+     5,
+     53,
+     314,
+     813
+    ],
+    "cropRule": "panel-edges",
+    "font": {
+     "digitEmPx": 15,
+     "emPx": 16,
+     "path": "samples/manual/font/mplus-rounded-1c-bold.glyphs.json",
+     "sha256": "3def83f75ef2c0847879477da66245d07f08eae991119a54250dc10686aaebd0"
+    },
+    "imageAt": [
+     0,
+     0
+    ],
+    "labels": [
+     {
+      "box": [
+       50,
+       819,
+       262,
+       24
+      ],
+      "candidate": "margin-bottom",
+      "inkUnder": 0,
+      "join": [
+       [
+        212,
+        51
+       ],
+       [
+        212,
+        816
+       ],
+       [
+        61,
+        816
+       ],
+       [
+        61,
+        819
+       ]
+      ],
+      "lines": [
+       "Detector: choose the readout"
+      ],
+      "n": 1,
+      "nearerAnotherMark": false,
+      "text": "Detector: choose the readout"
+     }
+    ],
+    "margins": {
+     "bottom": 36,
+     "left": 0,
+     "right": 0
+    },
+    "overlay": "rectangles+labels-beside-v4",
+    "size": [
+     314,
+     849
+    ]
+   },
+   "path": "figures/1.2-5.png",
+   "pixelSha256": "b98116625207210cd21389ace44988327762da7b4578b90cf01dde48f95f867d",
+   "resultSha256": "f52f293b53f43d36b0e7f707cac8d391b027244dfc491427e1172a8e63481423",
+   "runId": "20261014-202044-2dbf58",
+   "source": "captures/1.2-5.png",
+   "sourceSha256": "ca15b38bc336c744820fb24a23fccd3c3319b7c2cd1eabc0314948c9c5f72a17",
+   "step": 6
+  },
+  {
+   "chapter": "2.1",
+   "figure": "2.1-1",
+   "flags": [],
+   "markLabels": [
+    {
+     "label": "Isotope: what the source emits",
+     "n": 1,
+     "screenText": "Isotope",
+     "short": "what the source emits",
+     "target": "SourceIsotope"
+    },
+    {
+     "label": "X: offset from the axis (mm)",
+     "n": 2,
+     "screenText": "X",
+     "short": "offset from the axis (mm)",
+     "target": "SourceX"
+    },
+    {
+     "label": "Y: offset from the axis (mm)",
+     "n": 3,
+     "screenText": "Y",
+     "short": "offset from the axis (mm)",
+     "target": "SourceY"
+    },
+    {
+     "label": "Distance: from detector, 200–3000 mm",
+     "n": 4,
+     "screenText": "Distance",
+     "short": "from detector, 200–3000 mm",
+     "target": "SourceDistance"
+    },
+    {
+     "label": "Activity: strength in microcuries",
+     "n": 5,
+     "screenText": "Activity",
+     "short": "strength in microcuries",
+     "target": "SourceActivity"
+    }
+   ],
+   "marksSha256": "001d77cf296539f5a30c4a179ccfb2be6c62e5d4031688575ac21b9bb05e0a15",
+   "operation": {
+    "crop": [
+     5,
+     53,
+     314,
+     813
+    ],
+    "cropRule": "panel-edges",
+    "font": {
+     "digitEmPx": 15,
+     "emPx": 16,
+     "path": "samples/manual/font/mplus-rounded-1c-bold.glyphs.json",
+     "sha256": "3def83f75ef2c0847879477da66245d07f08eae991119a54250dc10686aaebd0"
+    },
+    "imageAt": [
+     0,
+     0
+    ],
+    "labels": [
+     {
+      "box": [
+       324,
+       189,
+       275,
+       24
+      ],
+      "candidate": "margin-right",
+      "inkUnder": 0,
+      "join": [
+       [
+        284,
+        201
+       ],
+       [
+        324,
+        201
+       ]
+      ],
+      "lines": [
+       "Isotope: what the source emits"
+      ],
+      "n": 1,
+      "nearerAnotherMark": false,
+      "text": "Isotope: what the source emits"
+     },
+     {
+      "box": [
+       324,
+       225,
+       256,
+       24
+      ],
+      "candidate": "margin-right",
+      "inkUnder": 0,
+      "join": [
+       [
+        284,
+        237
+       ],
+       [
+        324,
+        237
+       ]
+      ],
+      "lines": [
+       "X: offset from the axis (mm)"
+      ],
+      "n": 2,
+      "nearerAnotherMark": false,
+      "text": "X: offset from the axis (mm)"
+     },
+     {
+      "box": [
+       324,
+       261,
+       256,
+       24
+      ],
+      "candidate": "margin-right",
+      "inkUnder": 0,
+      "join": [
+       [
+        284,
+        273
+       ],
+       [
+        324,
+        273
+       ]
+      ],
+      "lines": [
+       "Y: offset from the axis (mm)"
+      ],
+      "n": 3,
+      "nearerAnotherMark": false,
+      "text": "Y: offset from the axis (mm)"
+     },
+     {
+      "box": [
+       324,
+       297,
+       226,
+       44
+      ],
+      "candidate": "margin-right",
+      "inkUnder": 0,
+      "join": [
+       [
+        284,
+        309
+       ],
+       [
+        324,
+        309
+       ]
+      ],
+      "lines": [
+       "Distance: from detector,",
+       "200–3000 mm"
+      ],
+      "n": 4,
+      "nearerAnotherMark": false,
+      "text": "Distance: from detector, 200–3000 mm"
+     },
+     {
+      "box": [
+       324,
+       347,
+       194,
+       44
+      ],
+      "candidate": "margin-right",
+      "inkUnder": 0,
+      "join": [
+       [
+        284,
+        345
+       ],
+       [
+        319,
+        345
+       ],
+       [
+        319,
+        359
+       ],
+       [
+        324,
+        359
+       ]
+      ],
+      "lines": [
+       "Activity: strength in",
+       "microcuries"
+      ],
+      "n": 5,
+      "nearerAnotherMark": false,
+      "text": "Activity: strength in microcuries"
+     }
+    ],
+    "margins": {
+     "bottom": 0,
+     "left": 0,
+     "right": 293
+    },
+    "overlay": "rectangles+labels-beside-v4",
+    "size": [
+     607,
+     813
+    ]
+   },
+   "path": "figures/2.1-1.png",
+   "pixelSha256": "3ec850fe1788ddfa8661f1c64a584a4ccb566e98b7bb6cbc4911d2ef288e3e1c",
+   "resultSha256": "266003f648877c05613d6d0a68291431d3368ed808c4423f2ef18827df8e572f",
+   "runId": "20261014-202059-544edf",
+   "source": "captures/2.1-1.png",
+   "sourceSha256": "c24740fd306d2cf979ad0eb19e51e864f1d014d62978c060006eb7c25b16b297",
+   "step": 1
+  },
+  {
+   "chapter": "2.1",
+   "figure": "2.1-2",
+   "flags": [],
+   "markLabels": [
+    {
+     "label": "Isotope: what the source emits",
+     "n": 1,
+     "screenText": "Isotope",
+     "short": "what the source emits",
+     "target": "SourceIsotope"
+    },
+    {
+     "label": "X: offset from the axis (mm)",
+     "n": 2,
+     "screenText": "X",
+     "short": "offset from the axis (mm)",
+     "target": "SourceX"
+    },
+    {
+     "label": "Activity: strength in microcuries",
+     "n": 3,
+     "screenText": "Activity",
+     "short": "strength in microcuries",
+     "target": "SourceActivity"
+    }
+   ],
+   "marksSha256": "37e32072ffc006ab1f165db583f594c822b86ff259fdfac6583623d53ef9f7ff",
+   "operation": {
+    "crop": [
+     5,
+     53,
+     314,
+     813
+    ],
+    "cropRule": "panel-edges",
+    "font": {
+     "digitEmPx": 15,
+     "emPx": 16,
+     "path": "samples/manual/font/mplus-rounded-1c-bold.glyphs.json",
+     "sha256": "3def83f75ef2c0847879477da66245d07f08eae991119a54250dc10686aaebd0"
+    },
+    "imageAt": [
+     0,
+     0
+    ],
+    "labels": [
+     {
+      "box": [
+       324,
+       217,
+       275,
+       24
+      ],
+      "candidate": "margin-right",
+      "inkUnder": 0,
+      "join": [
+       [
+        284,
+        229
+       ],
+       [
+        324,
+        229
+       ]
+      ],
+      "lines": [
+       "Isotope: what the source emits"
+      ],
+      "n": 1,
+      "nearerAnotherMark": false,
+      "text": "Isotope: what the source emits"
+     },
+     {
+      "box": [
+       324,
+       253,
+       256,
+       24
+      ],
+      "candidate": "margin-right",
+      "inkUnder": 0,
+      "join": [
+       [
+        284,
+        265
+       ],
+       [
+        324,
+        265
+       ]
+      ],
+      "lines": [
+       "X: offset from the axis (mm)"
+      ],
+      "n": 2,
+      "nearerAnotherMark": false,
+      "text": "X: offset from the axis (mm)"
+     },
+     {
+      "box": [
+       324,
+       361,
+       194,
+       44
+      ],
+      "candidate": "margin-right",
+      "inkUnder": 0,
+      "join": [
+       [
+        284,
+        373
+       ],
+       [
+        324,
+        373
+       ]
+      ],
+      "lines": [
+       "Activity: strength in",
+       "microcuries"
+      ],
+      "n": 3,
+      "nearerAnotherMark": false,
+      "text": "Activity: strength in microcuries"
+     }
+    ],
+    "margins": {
+     "bottom": 0,
+     "left": 0,
+     "right": 293
+    },
+    "overlay": "rectangles+labels-beside-v4",
+    "size": [
+     607,
+     813
+    ]
+   },
+   "path": "figures/2.1-2.png",
+   "pixelSha256": "3bc2967dd9b99cbe9feac42d61a85dcab97bab15538baf75807e86c36142e102",
+   "resultSha256": "63913f64c755def6a884ad884e27798c9c8d69e444bad075d9d486a27a5b2c32",
+   "runId": "20261014-202059-544edf",
+   "source": "captures/2.1-2.png",
+   "sourceSha256": "99afd7ee56842130cb4ffbff90fe67def8ea752517e79c01f8c69b46202319fa",
+   "step": 4
+  },
+  {
+   "chapter": "2.1",
+   "figure": "2.1-3",
+   "flags": [],
+   "markLabels": [
+    {
+     "label": "X: offset from the axis (mm)",
+     "n": 1,
+     "screenText": "X",
+     "short": "offset from the axis (mm)",
+     "target": "SourceX"
+    },
+    {
+     "label": "Activity: strength in microcuries",
+     "n": 2,
+     "screenText": "Activity",
+     "short": "strength in microcuries",
+     "target": "SourceActivity"
+    }
+   ],
+   "marksSha256": "c8cb49fcdeeb7e573905758d73faa8bbeb9e3e6b40317315de6d098d116d114b",
+   "operation": {
+    "crop": [
+     5,
+     53,
+     314,
+     813
+    ],
+    "cropRule": "panel-edges",
+    "font": {
+     "digitEmPx": 15,
+     "emPx": 16,
+     "path": "samples/manual/font/mplus-rounded-1c-bold.glyphs.json",
+     "sha256": "3def83f75ef2c0847879477da66245d07f08eae991119a54250dc10686aaebd0"
+    },
+    "imageAt": [
+     0,
+     0
+    ],
+    "labels": [
+     {
+      "box": [
+       324,
+       225,
+       256,
+       24
+      ],
+      "candidate": "margin-right",
+      "inkUnder": 0,
+      "join": [
+       [
+        284,
+        237
+       ],
+       [
+        324,
+        237
+       ]
+      ],
+      "lines": [
+       "X: offset from the axis (mm)"
+      ],
+      "n": 1,
+      "nearerAnotherMark": false,
+      "text": "X: offset from the axis (mm)"
+     },
+     {
+      "box": [
+       324,
+       333,
+       194,
+       44
+      ],
+      "candidate": "margin-right",
+      "inkUnder": 0,
+      "join": [
+       [
+        284,
+        345
+       ],
+       [
+        324,
+        345
+       ]
+      ],
+      "lines": [
+       "Activity: strength in",
+       "microcuries"
+      ],
+      "n": 2,
+      "nearerAnotherMark": false,
+      "text": "Activity: strength in microcuries"
+     }
+    ],
+    "margins": {
+     "bottom": 0,
+     "left": 0,
+     "right": 274
+    },
+    "overlay": "rectangles+labels-beside-v4",
+    "size": [
+     588,
+     813
+    ]
+   },
+   "path": "figures/2.1-3.png",
+   "pixelSha256": "9343762fb20a25a6d7d2e7f51779b77010fabd621c886d81218e6e986a1ba562",
+   "resultSha256": "dc9025754036d999e538c7ac94535006d7968a9c23cd1cea0ccf343c457108ba",
+   "runId": "20261014-202059-544edf",
+   "source": "captures/2.1-3.png",
+   "sourceSha256": "a1770eea6afc2caa291327147c27e1a7276e6a2b962be024e9da033fd2ec3b84",
+   "step": 6
+  },
+  {
+   "chapter": "2.2",
+   "figure": "2.2-1",
+   "flags": [],
+   "markLabels": [
+    {
+     "label": "Preset: choose a geometry",
+     "n": 1,
+     "screenText": "Preset",
+     "short": "choose a geometry",
+     "target": "Optics.Preset"
+    },
+    {
+     "label": "Prime rank: mask pattern size",
+     "n": 2,
+     "screenText": "Prime rank",
+     "short": "mask pattern size",
+     "target": "Optics.Rank"
+    },
+    {
+     "label": "Cell pitch: mask cell width (mm)",
+     "n": 3,
+     "screenText": "Cell pitch",
+     "short": "mask cell width (mm)",
+     "target": "Optics.CellPitch"
+    },
+    {
+     "label": "Mask–detector: gap in mm",
+     "n": 4,
+     "screenText": "Mask–detector",
+     "short": "gap in mm",
+     "target": "Optics.Distance"
+    },
+    {
+     "label": "Pixels / side: integer, 4–64",
+     "n": 5,
+     "screenText": "Pixels / side",
+     "short": "integer, 4–64",
+     "target": "Optics.Pixels"
+    },
+    {
+     "label": "Pixel pitch: spacing in mm",
+     "n": 6,
+     "screenText": "Pixel pitch",
+     "short": "spacing in mm",
+     "target": "Optics.PixelPitch"
+    }
+   ],
+   "marksSha256": "e7bf00f8921863cd8d8a6e32ce3d9527a002d2e294affe9eea90b4f27a9397b1",
+   "operation": {
+    "crop": [
+     5,
+     53,
+     314,
+     813
+    ],
+    "cropRule": "panel-edges",
+    "font": {
+     "digitEmPx": 15,
+     "emPx": 16,
+     "path": "samples/manual/font/mplus-rounded-1c-bold.glyphs.json",
+     "sha256": "3def83f75ef2c0847879477da66245d07f08eae991119a54250dc10686aaebd0"
+    },
+    "imageAt": [
+     0,
+     0
+    ],
+    "labels": [
+     {
+      "box": [
+       324,
+       100,
+       238,
+       24
+      ],
+      "candidate": "margin-right",
+      "inkUnder": 0,
+      "join": [
+       [
+        284,
+        112
+       ],
+       [
+        324,
+        112
+       ]
+      ],
+      "lines": [
+       "Preset: choose a geometry"
+      ],
+      "n": 1,
+      "nearerAnotherMark": false,
+      "text": "Preset: choose a geometry"
+     },
+     {
+      "box": [
+       324,
+       136,
+       267,
+       24
+      ],
+      "candidate": "margin-right",
+      "inkUnder": 0,
+      "join": [
+       [
+        284,
+        148
+       ],
+       [
+        324,
+        148
+       ]
+      ],
+      "lines": [
+       "Prime rank: mask pattern size"
+      ],
+      "n": 2,
+      "nearerAnotherMark": false,
+      "text": "Prime rank: mask pattern size"
+     },
+     {
+      "box": [
+       324,
+       172,
+       281,
+       24
+      ],
+      "candidate": "margin-right",
+      "inkUnder": 0,
+      "join": [
+       [
+        284,
+        184
+       ],
+       [
+        324,
+        184
+       ]
+      ],
+      "lines": [
+       "Cell pitch: mask cell width (mm)"
+      ],
+      "n": 3,
+      "nearerAnotherMark": false,
+      "text": "Cell pitch: mask cell width (mm)"
+     },
+     {
+      "box": [
+       324,
+       208,
+       235,
+       24
+      ],
+      "candidate": "margin-right",
+      "inkUnder": 0,
+      "join": [
+       [
+        284,
+        220
+       ],
+       [
+        324,
+        220
+       ]
+      ],
+      "lines": [
+       "Mask–detector: gap in mm"
+      ],
+      "n": 4,
+      "nearerAnotherMark": false,
+      "text": "Mask–detector: gap in mm"
+     },
+     {
+      "box": [
+       324,
+       244,
+       242,
+       24
+      ],
+      "candidate": "margin-right",
+      "inkUnder": 0,
+      "join": [
+       [
+        284,
+        256
+       ],
+       [
+        324,
+        256
+       ]
+      ],
+      "lines": [
+       "Pixels / side: integer, 4–64"
+      ],
+      "n": 5,
+      "nearerAnotherMark": false,
+      "text": "Pixels / side: integer, 4–64"
+     },
+     {
+      "box": [
+       324,
+       280,
+       234,
+       24
+      ],
+      "candidate": "margin-right",
+      "inkUnder": 0,
+      "join": [
+       [
+        284,
+        292
+       ],
+       [
+        324,
+        292
+       ]
+      ],
+      "lines": [
+       "Pixel pitch: spacing in mm"
+      ],
+      "n": 6,
+      "nearerAnotherMark": false,
+      "text": "Pixel pitch: spacing in mm"
+     }
+    ],
+    "margins": {
+     "bottom": 0,
+     "left": 0,
+     "right": 299
+    },
+    "overlay": "rectangles+labels-beside-v4",
+    "size": [
+     613,
+     813
+    ]
+   },
+   "path": "figures/2.2-1.png",
+   "pixelSha256": "4f9608f8a4dcdf947d2d093526c5537a7e0437951e47728fba8bb9ceeef6254e",
+   "resultSha256": "530bb3fb95fb5be532127b8c94a253d1f694da2d2e36c3460b1f8ab32dbb89b7",
+   "runId": "20261014-202201-b1fbf6",
+   "source": "captures/2.2-1.png",
+   "sourceSha256": "7016e80a5deac5efcc01584425a8c9c27ec52f436cc99023c049d3c86e5ccfff",
+   "step": 1
+  },
+  {
+   "chapter": "2.2",
+   "figure": "2.2-2",
+   "flags": [],
+   "markLabels": [
+    {
+     "label": "Face: crystal gain and dead gaps",
+     "n": 1,
+     "screenText": "Face",
+     "short": "crystal gain and dead gaps",
+     "target": "Detector.FaceTab"
+    },
+    {
+     "label": "Settings note: whose settings are shown",
+     "n": 2,
+     "name": "Settings note",
+     "screenText": "Settings for the next acquisition",
+     "short": "whose settings are shown",
+     "target": "Detector.Identity"
+    }
+   ],
+   "marksSha256": "2f60c84d3c34d3a5cf2525e10109a69dc1aa377339a374dbfb63a19ebf694891",
+   "operation": {
+    "crop": [
+     317,
+     53,
+     1118,
+     813
+    ],
+    "cropRule": "panel-edges",
+    "font": {
+     "digitEmPx": 15,
+     "emPx": 16,
+     "path": "samples/manual/font/mplus-rounded-1c-bold.glyphs.json",
+     "sha256": "3def83f75ef2c0847879477da66245d07f08eae991119a54250dc10686aaebd0"
+    },
+    "imageAt": [
+     0,
+     0
+    ],
+    "labels": [
+     {
+      "box": [
+       188,
+       7,
+       285,
+       24
+      ],
+      "candidate": "right-2up",
+      "inkUnder": 1,
+      "join": [
+       [
+        199,
+        31
+       ],
+       [
+        199,
+        71
+       ],
+       [
+        176,
+        71
+       ]
+      ],
+      "lines": [
+       "Face: crystal gain and dead gaps"
+      ],
+      "n": 1,
+      "nearerAnotherMark": false,
+      "text": "Face: crystal gain and dead gaps"
+     },
+     {
+      "box": [
+       848,
+       819,
+       268,
+       44
+      ],
+      "candidate": "margin-bottom",
+      "inkUnder": 0,
+      "join": [
+       [
+        955,
+        73
+       ],
+       [
+        955,
+        816
+       ],
+       [
+        859,
+        816
+       ],
+       [
+        859,
+        819
+       ]
+      ],
+      "lines": [
+       "Settings note: whose settings",
+       "are shown"
+      ],
+      "n": 2,
+      "nearerAnotherMark": false,
+      "text": "Settings note: whose settings are shown"
+     }
+    ],
+    "margins": {
+     "bottom": 56,
+     "left": 0,
+     "right": 0
+    },
+    "overlay": "rectangles+labels-beside-v4",
+    "size": [
+     1118,
+     869
+    ]
+   },
+   "path": "figures/2.2-2.png",
+   "pixelSha256": "3f5fb2e1fcc54598101c276c38537a7095cf26e06d49b88b0ad75151ec4dad74",
+   "resultSha256": "bc8c5704cdbec38544ea9f2cfc39036ec869e10ef9a667559fc3fba091f55c47",
+   "runId": "20261014-202201-b1fbf6",
+   "source": "captures/2.2-2.png",
+   "sourceSha256": "07950bbf16d31b9667e1ab9d2eb87dd93310b340cf4546c998c4076dab4b8bf5",
+   "step": 3
+  },
+  {
+   "chapter": "2.2",
+   "figure": "2.2-3",
+   "flags": [],
+   "markLabels": [
+    {
+     "label": "Pixels / side: integer, 4–64",
+     "n": 1,
+     "screenText": "Pixels / side",
+     "short": "integer, 4–64",
+     "target": "Optics.Pixels"
+    },
+    {
+     "label": "Error message: why the values are refused",
+     "n": 2,
+     "name": "Error message",
+     "screenText": "Detector pixels must be an integer from 4 to 64.",
+     "short": "why the values are refused",
+     "target": "Optics.Error"
+    },
+    {
+     "label": "Status bar: run state, counts and seed",
+     "n": 3,
+     "name": "Status bar",
+     "screenText": "Start refused: Detector pixels must be an integer from 4 to 64.",
+     "short": "run state, counts and seed",
+     "target": "StatusText"
+    }
+   ],
+   "marksSha256": "f24c484e72b30752de51b8ff98b5e51d9b80455146d6ec45bdad1d5f8cbb4ae3",
+   "operation": {
+    "crop": [
+     0,
+     53,
+     1440,
+     847
+    ],
+    "cropRule": "panel-edges",
+    "font": {
+     "digitEmPx": 15,
+     "emPx": 16,
+     "path": "samples/manual/font/mplus-rounded-1c-bold.glyphs.json",
+     "sha256": "3def83f75ef2c0847879477da66245d07f08eae991119a54250dc10686aaebd0"
+    },
+    "imageAt": [
+     260,
+     0
+    ],
+    "labels": [
+     {
+      "box": [
+       8,
+       236,
+       242,
+       24
+      ],
+      "candidate": "margin-left",
+      "inkUnder": 0,
+      "join": [
+       [
+        367,
+        248
+       ],
+       [
+        250,
+        248
+       ]
+      ],
+      "lines": [
+       "Pixels / side: integer, 4–64"
+      ],
+      "n": 1,
+      "nearerAnotherMark": false,
+      "text": "Pixels / side: integer, 4–64"
+     },
+     {
+      "box": [
+       283,
+       349,
+       269,
+       44
+      ],
+      "candidate": "below-left",
+      "inkUnder": 0,
+      "join": null,
+      "lines": [
+       "Error message: why the values",
+       "are refused"
+      ],
+      "n": 2,
+      "nearerAnotherMark": false,
+      "text": "Error message: why the values are refused"
+     },
+     {
+      "box": [
+       1116,
+       795,
+       261,
+       44
+      ],
+      "candidate": "right-1up",
+      "inkUnder": 1,
+      "join": [
+       [
+        1116,
+        831
+       ],
+       [
+        1104,
+        831
+       ]
+      ],
+      "lines": [
+       "Status bar: run state, counts",
+       "and seed"
+      ],
+      "n": 3,
+      "nearerAnotherMark": false,
+      "text": "Status bar: run state, counts and seed"
+     }
+    ],
+    "margins": {
+     "bottom": 0,
+     "left": 260,
+     "right": 0
+    },
+    "overlay": "rectangles+labels-beside-v4",
+    "size": [
+     1700,
+     847
+    ]
+   },
+   "path": "figures/2.2-3.png",
+   "pixelSha256": "aa579057b1a03fa50eb92ba46df2032f2fbbac417c46250253a16477ec2d7a0d",
+   "resultSha256": "60229328dc2558175b5306254fd6028132b11dd970b1e15669a485f7d27979e0",
+   "runId": "20261014-202201-b1fbf6",
+   "source": "captures/2.2-3.png",
+   "sourceSha256": "c7f949b28e019bd9745059db14a6d3afb64231042962063070184e32ba074997",
+   "step": 5
+  },
+  {
+   "chapter": "2.4",
+   "figure": "2.4-1",
+   "flags": [],
+   "markLabels": [
+    {
+     "label": "Stop: stop and keep the data",
+     "n": 1,
+     "screenText": "Stop",
+     "short": "stop and keep the data",
+     "target": "StopAcquisition"
+    }
+   ],
+   "marksSha256": "72907e3af3d12f4fec7173b047490088e56fcc4b621293309534762d3be0ccc3",
+   "operation": {
+    "crop": [
+     0,
+     0,
+     1440,
+     55
+    ],
+    "cropRule": "panel-edges",
+    "font": {
+     "digitEmPx": 15,
+     "emPx": 16,
+     "path": "samples/manual/font/mplus-rounded-1c-bold.glyphs.json",
+     "sha256": "3def83f75ef2c0847879477da66245d07f08eae991119a54250dc10686aaebd0"
+    },
+    "imageAt": [
+     0,
+     0
+    ],
+    "labels": [
+     {
+      "box": [
+       1057,
+       61,
+       258,
+       24
+      ],
+      "candidate": "margin-bottom",
+      "inkUnder": 0,
+      "join": [
+       [
+        1068,
+        40
+       ],
+       [
+        1068,
+        61
+       ]
+      ],
+      "lines": [
+       "Stop: stop and keep the data"
+      ],
+      "n": 1,
+      "nearerAnotherMark": false,
+      "text": "Stop: stop and keep the data"
+     }
+    ],
+    "margins": {
+     "bottom": 36,
+     "left": 0,
+     "right": 0
+    },
+    "overlay": "rectangles+labels-beside-v4",
+    "size": [
+     1440,
+     91
+    ]
+   },
+   "path": "figures/2.4-1.png",
+   "pixelSha256": "59be3f510c9b9d42b9a63f122e27407525fa0e3dac0d2135bf966f86ac194111",
+   "resultSha256": "47ad199a262c89485ce9eeccb225fa0cebeb570ec6602ea74c63f8450a0ff8d5",
+   "runId": "20261014-202133-886f72",
+   "source": "captures/2.4-1.png",
+   "sourceSha256": "83fa3ead146fcca598c00c02170f23d20bb130154773bead6548433aee950497",
+   "step": 3
+  },
+  {
+   "chapter": "2.4",
+   "figure": "2.4-2",
+   "flags": [],
+   "markLabels": [
+    {
+     "label": "Continue: start or continue the run",
+     "n": 1,
+     "screenText": "Continue",
+     "short": "start or continue the run",
+     "target": "StartAcquisition"
+    },
+    {
+     "label": "Status bar: run state, counts and seed",
+     "n": 2,
+     "name": "Status bar",
+     "screenText": "Stopped · t = 1.8 s of 600 s · 116 counts · 66 cps · seed 12345",
+     "short": "run state, counts and seed",
+     "target": "StatusText"
+    }
+   ],
+   "marksSha256": "23945683af5c849ada4c61038c08de1b127ca83891d63e58edc7f745334ee391",
+   "operation": {
+    "crop": [
+     0,
+     0,
+     1440,
+     900
+    ],
+    "cropRule": "full",
+    "font": {
+     "digitEmPx": 15,
+     "emPx": 16,
+     "path": "samples/manual/font/mplus-rounded-1c-bold.glyphs.json",
+     "sha256": "3def83f75ef2c0847879477da66245d07f08eae991119a54250dc10686aaebd0"
+    },
+    "imageAt": [
+     0,
+     0
+    ],
+    "labels": [
+     {
+      "box": [
+       1117,
+       906,
+       279,
+       44
+      ],
+      "candidate": "margin-bottom",
+      "inkUnder": 0,
+      "join": [
+       [
+        1128,
+        40
+       ],
+       [
+        1128,
+        906
+       ]
+      ],
+      "lines": [
+       "Continue: start or continue the",
+       "run"
+      ],
+      "n": 1,
+      "nearerAnotherMark": false,
+      "text": "Continue: start or continue the run"
+     },
+     {
+      "box": [
+       30,
+       829,
+       261,
+       44
+      ],
+      "candidate": "above-left",
+      "inkUnder": 0,
+      "join": null,
+      "lines": [
+       "Status bar: run state, counts",
+       "and seed"
+      ],
+      "n": 2,
+      "nearerAnotherMark": false,
+      "text": "Status bar: run state, counts and seed"
+     }
+    ],
+    "margins": {
+     "bottom": 56,
+     "left": 0,
+     "right": 0
+    },
+    "overlay": "rectangles+labels-beside-v4",
+    "size": [
+     1440,
+     956
+    ]
+   },
+   "path": "figures/2.4-2.png",
+   "pixelSha256": "94c48c61fdda3efac334a26797ea6d9efc5e873dd3d104dab512e0034b17c93f",
+   "resultSha256": "143c5b4e4f5156397d4c94460c423f52d997d77131369c266e037823d42d3b53",
+   "runId": "20261014-202133-886f72",
+   "source": "captures/2.4-2.png",
+   "sourceSha256": "d4ab8ec380e51276d56bc7562fdbf25db89a2fb19ba8cf9cd96c7ea49c954e38",
+   "step": 4
+  },
+  {
+   "chapter": "2.4",
+   "figure": "2.4-3",
+   "flags": [],
+   "markLabels": [
+    {
+     "label": "Confirmation text: what Reset would discard",
+     "n": 1,
+     "name": "Confirmation text",
+     "screenText": "Discard the acquired data (2.0 live s, 127 counts)? Inputs unlock for the next acquisition.",
+     "short": "what Reset would discard",
+     "target": "Reset.Message"
+    },
+    {
+     "label": "Cancel: close without acting",
+     "n": 2,
+     "screenText": "Cancel",
+     "short": "close without acting",
+     "target": "Modal.Cancel"
+    },
+    {
+     "label": "Discard: clear data, unlock inputs",
+     "n": 3,
+     "screenText": "Discard",
+     "short": "clear data, unlock inputs",
+     "target": "Reset.Discard"
+    }
+   ],
+   "marksSha256": "94037532b4f6bcff7c0e6cb98061a368258383e264ae0d5d998c4bb5b90d28f5",
+   "operation": {
+    "crop": [
+     317,
+     53,
+     806,
+     480
+    ],
+    "cropRule": "panel-edges",
+    "font": {
+     "digitEmPx": 15,
+     "emPx": 16,
+     "path": "samples/manual/font/mplus-rounded-1c-bold.glyphs.json",
+     "sha256": "3def83f75ef2c0847879477da66245d07f08eae991119a54250dc10686aaebd0"
+    },
+    "imageAt": [
+     0,
+     0
+    ],
+    "labels": [
+     {
+      "box": [
+       174,
+       410,
+       273,
+       44
+      ],
+      "candidate": "below-left",
+      "inkUnder": 0,
+      "join": null,
+      "lines": [
+       "Confirmation text: what Reset",
+       "would discard"
+      ],
+      "n": 1,
+      "nearerAnotherMark": false,
+      "text": "Confirmation text: what Reset would discard"
+     },
+     {
+      "box": [
+       487,
+       486,
+       253,
+       24
+      ],
+      "candidate": "margin-bottom",
+      "inkUnder": 0,
+      "join": [
+       [
+        498,
+        451
+       ],
+       [
+        498,
+        486
+       ]
+      ],
+      "lines": [
+       "Cancel: close without acting"
+      ],
+      "n": 2,
+      "nearerAnotherMark": false,
+      "text": "Cancel: close without acting"
+     },
+     {
+      "box": [
+       816,
+       434,
+       240,
+       44
+      ],
+      "candidate": "margin-right",
+      "inkUnder": 0,
+      "join": [
+       [
+        595,
+        451
+       ],
+       [
+        595,
+        457
+       ],
+       [
+        811,
+        457
+       ],
+       [
+        811,
+        446
+       ],
+       [
+        816,
+        446
+       ]
+      ],
+      "lines": [
+       "Discard: clear data, unlock",
+       "inputs"
+      ],
+      "n": 3,
+      "nearerAnotherMark": false,
+      "text": "Discard: clear data, unlock inputs"
+     }
+    ],
+    "margins": {
+     "bottom": 36,
+     "left": 0,
+     "right": 258
+    },
+    "overlay": "rectangles+labels-beside-v4",
+    "size": [
+     1064,
+     516
+    ]
+   },
+   "path": "figures/2.4-3.png",
+   "pixelSha256": "731c39970ca48460f2fe192590ebf6be5c98e6821c7f915583eb315425fd382e",
+   "resultSha256": "a339add03b208f37316cc4ab76d8818b69bfbf07fd1fa1ebb8fc7d796adbeb67",
+   "runId": "20261014-202133-886f72",
+   "source": "captures/2.4-3.png",
+   "sourceSha256": "d5dc354ca5fd173657e3e69fb2e0312b9d49097cc0ff54b87fb29436c295d5e6",
+   "step": 6
+  },
+  {
+   "chapter": "2.4",
+   "figure": "2.4-4",
+   "flags": [],
+   "markLabels": [
+    {
+     "label": "Start: start or continue the run",
+     "n": 1,
+     "screenText": "Start",
+     "short": "start or continue the run",
+     "target": "StartAcquisition"
+    },
+    {
+     "label": "Status bar: run state, counts and seed",
+     "n": 2,
+     "name": "Status bar",
+     "screenText": "Ready",
+     "short": "run state, counts and seed",
+     "target": "StatusText"
+    }
+   ],
+   "marksSha256": "e32b90a0f712031aa06b90238944d9d375250a0d3d33d9282e644e052896aca9",
+   "operation": {
+    "crop": [
+     0,
+     0,
+     1440,
+     900
+    ],
+    "cropRule": "full",
+    "font": {
+     "digitEmPx": 15,
+     "emPx": 16,
+     "path": "samples/manual/font/mplus-rounded-1c-bold.glyphs.json",
+     "sha256": "3def83f75ef2c0847879477da66245d07f08eae991119a54250dc10686aaebd0"
+    },
+    "imageAt": [
+     0,
+     0
+    ],
+    "labels": [
+     {
+      "box": [
+       1122,
+       43,
+       282,
+       24
+      ],
+      "candidate": "below-slide+67",
+      "inkUnder": 0,
+      "join": null,
+      "lines": [
+       "Start: start or continue the run"
+      ],
+      "n": 1,
+      "nearerAnotherMark": false,
+      "text": "Start: start or continue the run"
+     },
+     {
+      "box": [
+       30,
+       829,
+       261,
+       44
+      ],
+      "candidate": "above-left",
+      "inkUnder": 0,
+      "join": null,
+      "lines": [
+       "Status bar: run state, counts",
+       "and seed"
+      ],
+      "n": 2,
+      "nearerAnotherMark": false,
+      "text": "Status bar: run state, counts and seed"
+     }
+    ],
+    "margins": {
+     "bottom": 0,
+     "left": 0,
+     "right": 0
+    },
+    "overlay": "rectangles+labels-beside-v4",
+    "size": [
+     1440,
+     900
+    ]
+   },
+   "path": "figures/2.4-4.png",
+   "pixelSha256": "d0fa1330342b2d9eebbd9c5804dd57e922e7fd1761b3ef46df567276a969fda3",
+   "resultSha256": "7448f69e558d93a328bede18c0d38d1322b216c5f0122030a3b4c9439716feb9",
+   "runId": "20261014-202133-886f72",
+   "source": "captures/2.4-4.png",
+   "sourceSha256": "c4866a28e34c7e06c159411b702876654554c9bf940e2b058c7b8af1f69b8442",
+   "step": 7
+  },
+  {
+   "chapter": "3.1",
+   "figure": "3.1-1",
+   "flags": [],
+   "markLabels": [
+    {
+     "label": "Pixel readout: pixel under the pointer",
+     "n": 1,
+     "name": "Pixel readout",
+     "screenText": "x 6.3 mm, y -4.5 mm · 10 counts",
+     "short": "pixel under the pointer",
+     "target": "FloodReadout"
+    }
+   ],
+   "marksSha256": "2f4b167d75ec6882160d8681599f727acb1ad067a1862c1855a4bdc86f357147",
+   "operation": {
+    "crop": [
+     317,
+     53,
+     404,
+     480
+    ],
+    "cropRule": "panel-edges",
+    "font": {
+     "digitEmPx": 15,
+     "emPx": 16,
+     "path": "samples/manual/font/mplus-rounded-1c-bold.glyphs.json",
+     "sha256": "3def83f75ef2c0847879477da66245d07f08eae991119a54250dc10686aaebd0"
+    },
+    "imageAt": [
+     0,
+     0
+    ],
+    "labels": [
+     {
+      "box": [
+       36,
+       486,
+       264,
+       44
+      ],
+      "candidate": "margin-bottom",
+      "inkUnder": 0,
+      "join": [
+       [
+        47,
+        442
+       ],
+       [
+        47,
+        486
+       ]
+      ],
+      "lines": [
+       "Pixel readout: pixel under the",
+       "pointer"
+      ],
+      "n": 1,
+      "nearerAnotherMark": false,
+      "text": "Pixel readout: pixel under the pointer"
+     }
+    ],
+    "margins": {
+     "bottom": 56,
+     "left": 0,
+     "right": 0
+    },
+    "overlay": "rectangles+labels-beside-v4",
+    "size": [
+     404,
+     536
+    ]
+   },
+   "path": "figures/3.1-1.png",
+   "pixelSha256": "f4eef77fa5922e780f82236c23ce0391c7bcc517c28c135b7d15bfe5473ab74c",
+   "resultSha256": "2c5f05cede789f1fcd272031360c095aa8ada579caa219fd84055c40765e9911",
+   "runId": "20261014-202118-3646b1",
+   "source": "captures/3.1-1.png",
+   "sourceSha256": "ad109d40bd95aca892c352c9d74e06a725a036ca50769d24cf5599e0439aa084",
+   "step": 2
+  },
+  {
+   "chapter": "3.1",
+   "figure": "3.1-2",
+   "flags": [],
+   "markLabels": [
+    {
+     "label": "M1: measurement row",
+     "n": 1,
+     "screenText": "M1",
+     "short": "measurement row",
+     "target": "M1"
+    },
+    {
+     "label": "M2: measurement row",
+     "n": 2,
+     "screenText": "M2",
+     "short": "measurement row",
+     "target": "M2"
+    },
+    {
+     "label": "M3: measurement row",
+     "n": 3,
+     "screenText": "M3",
+     "short": "measurement row",
+     "target": "M3"
+    },
+    {
+     "label": "Detail line: the selected measurement",
+     "n": 4,
+     "name": "Detail line",
+     "screenText": "3.6 × 4.2 mm · 42 px · mean 5.45 · max 13",
+     "short": "the selected measurement",
+     "target": "MeasurementDetail"
+    }
+   ],
+   "marksSha256": "e2ffb298faf6041643fe9fbd97284866b5b34469063d3ec0a9b4bcb93bdaa92d",
+   "operation": {
+    "crop": [
+     317,
+     531,
+     806,
+     335
+    ],
+    "cropRule": "panel-edges",
+    "font": {
+     "digitEmPx": 15,
+     "emPx": 16,
+     "path": "samples/manual/font/mplus-rounded-1c-bold.glyphs.json",
+     "sha256": "3def83f75ef2c0847879477da66245d07f08eae991119a54250dc10686aaebd0"
+    },
+    "imageAt": [
+     0,
+     0
+    ],
+    "labels": [
+     {
+      "box": [
+       313,
+       65,
+       203,
+       24
+      ],
+      "candidate": "above-slide+295",
+      "inkUnder": 0,
+      "join": null,
+      "lines": [
+       "M1: measurement row"
+      ],
+      "n": 1,
+      "nearerAnotherMark": false,
+      "text": "M1: measurement row"
+     },
+     {
+      "box": [
+       294,
+       124,
+       203,
+       24
+      ],
+      "candidate": "inside-slide-1",
+      "inkUnder": 0,
+      "join": null,
+      "lines": [
+       "M2: measurement row"
+      ],
+      "n": 2,
+      "nearerAnotherMark": false,
+      "text": "M2: measurement row"
+     },
+     {
+      "box": [
+       18,
+       183,
+       203,
+       24
+      ],
+      "candidate": "below-left",
+      "inkUnder": 0,
+      "join": null,
+      "lines": [
+       "M3: measurement row"
+      ],
+      "n": 3,
+      "nearerAnotherMark": false,
+      "text": "M3: measurement row"
+     },
+     {
+      "box": [
+       18,
+       253,
+       220,
+       44
+      ],
+      "candidate": "above-left",
+      "inkUnder": 0,
+      "join": null,
+      "lines": [
+       "Detail line: the selected",
+       "measurement"
+      ],
+      "n": 4,
+      "nearerAnotherMark": false,
+      "text": "Detail line: the selected measurement"
+     }
+    ],
+    "margins": {
+     "bottom": 0,
+     "left": 0,
+     "right": 0
+    },
+    "overlay": "rectangles+labels-beside-v4",
+    "size": [
+     806,
+     335
+    ]
+   },
+   "path": "figures/3.1-2.png",
+   "pixelSha256": "e05abac121a08b03b6003836acbf7f0370a8b8344494f379c05e430473f6eda4",
+   "resultSha256": "8e48d8c02d8be1d5a247f137cfbff4ac489c3c8625ffc1be094063734ae376fc",
+   "runId": "20261014-202118-3646b1",
+   "source": "captures/3.1-2.png",
+   "sourceSha256": "377b9f4391a907f92d9c3c256e271cceb76ddd58effaf888aeeceedc341e3ff7",
+   "step": 5
+  },
+  {
+   "chapter": "3.4",
+   "figure": "3.4-1",
+   "flags": [],
+   "markLabels": [
+    {
+     "label": "Log Y: log or linear counts axis",
+     "n": 1,
+     "screenText": "Log Y",
+     "short": "log or linear counts axis",
+     "target": "Spectrum.LogY"
+    },
+    {
+     "label": "N × FWHM at each line: energy window width",
+     "n": 2,
+     "screenText": "N × FWHM at each line",
+     "short": "energy window width",
+     "target": "Spectrum.Window"
+    }
+   ],
+   "marksSha256": "5434ae85536db6708a7724e16e2b97a6dfecc9e483af13763b3fee7b25b82283",
+   "operation": {
+    "crop": [
+     317,
+     53,
+     1118,
+     813
+    ],
+    "cropRule": "panel-edges",
+    "font": {
+     "digitEmPx": 15,
+     "emPx": 16,
+     "path": "samples/manual/font/mplus-rounded-1c-bold.glyphs.json",
+     "sha256": "3def83f75ef2c0847879477da66245d07f08eae991119a54250dc10686aaebd0"
+    },
+    "imageAt": [
+     0,
+     0
+    ],
+    "labels": [
+     {
+      "box": [
+       1128,
+       58,
+       273,
+       24
+      ],
+      "candidate": "margin-right",
+      "inkUnder": 0,
+      "join": [
+       [
+        1088,
+        70
+       ],
+       [
+        1128,
+        70
+       ]
+      ],
+      "lines": [
+       "Log Y: log or linear counts axis"
+      ],
+      "n": 1,
+      "nearerAnotherMark": false,
+      "text": "Log Y: log or linear counts axis"
+     },
+     {
+      "box": [
+       1128,
+       158,
+       267,
+       44
+      ],
+      "candidate": "margin-right",
+      "inkUnder": 0,
+      "join": [
+       [
+        1088,
+        170
+       ],
+       [
+        1128,
+        170
+       ]
+      ],
+      "lines": [
+       "N × FWHM at each line: energy",
+       "window width"
+      ],
+      "n": 2,
+      "nearerAnotherMark": false,
+      "text": "N × FWHM at each line: energy window width"
+     }
+    ],
+    "margins": {
+     "bottom": 0,
+     "left": 0,
+     "right": 291
+    },
+    "overlay": "rectangles+labels-beside-v4",
+    "size": [
+     1409,
+     813
+    ]
+   },
+   "path": "figures/3.4-1.png",
+   "pixelSha256": "ccb66221d4400f0a5c9381efa1704ad397c0d18fafb92d78ed2b247817b629ca",
+   "resultSha256": "35881f991176027e396764a8d5a92bd13ed030fe82a77365ea22c880ccc2502e",
+   "runId": "20261014-202148-7b59cc",
+   "source": "captures/3.4-1.png",
+   "sourceSha256": "5f429379355daf3df55c897e9c099e9ed19b7e0ca68fc386e8c3b301fe0b6bbe",
+   "step": 2
+  },
+  {
+   "chapter": "3.4",
+   "figure": "3.4-2",
+   "flags": [],
+   "markLabels": [
+    {
+     "label": "N × FWHM at each line: energy window width",
+     "n": 1,
+     "screenText": "N × FWHM at each line",
+     "short": "energy window width",
+     "target": "Spectrum.Window"
+    }
+   ],
+   "marksSha256": "d545275d8d1ef394fd6e83595e0134a353fdf7b56c692302b1283e8a83c74363",
+   "operation": {
+    "crop": [
+     317,
+     53,
+     1118,
+     813
+    ],
+    "cropRule": "panel-edges",
+    "font": {
+     "digitEmPx": 15,
+     "emPx": 16,
+     "path": "samples/manual/font/mplus-rounded-1c-bold.glyphs.json",
+     "sha256": "3def83f75ef2c0847879477da66245d07f08eae991119a54250dc10686aaebd0"
+    },
+    "imageAt": [
+     0,
+     0
+    ],
+    "labels": [
+     {
+      "box": [
+       1128,
+       158,
+       267,
+       44
+      ],
+      "candidate": "margin-right",
+      "inkUnder": 0,
+      "join": [
+       [
+        1088,
+        170
+       ],
+       [
+        1128,
+        170
+       ]
+      ],
+      "lines": [
+       "N × FWHM at each line: energy",
+       "window width"
+      ],
+      "n": 1,
+      "nearerAnotherMark": false,
+      "text": "N × FWHM at each line: energy window width"
+     }
+    ],
+    "margins": {
+     "bottom": 0,
+     "left": 0,
+     "right": 285
+    },
+    "overlay": "rectangles+labels-beside-v4",
+    "size": [
+     1403,
+     813
+    ]
+   },
+   "path": "figures/3.4-2.png",
+   "pixelSha256": "bab011b44afa63dbd12eeb6a88d0a9aefe0c872150fae805a8c4f9eb158090b8",
+   "resultSha256": "0b99183ea2e94058948b5f250a6b19e567662503110d67a24a6cb394968a6689",
+   "runId": "20261014-202148-7b59cc",
+   "source": "captures/3.4-2.png",
+   "sourceSha256": "e1b957741c141c55cc42cd3eb34037836a3ee3127e86cf2374f28f9b21dec0d9",
+   "step": 3
+  },
+  {
+   "chapter": "3.4",
+   "figure": "3.4-3",
+   "flags": [],
+   "markLabels": [
+    {
+     "label": "Log Y: log or linear counts axis",
+     "n": 1,
+     "screenText": "Log Y",
+     "short": "log or linear counts axis",
+     "target": "Spectrum.LogY"
+    }
+   ],
+   "marksSha256": "4fb78f3041c023800b7e1dc502844af394258a7a840562d8d4906fe4b551f221",
+   "operation": {
+    "crop": [
+     317,
+     53,
+     1118,
+     813
+    ],
+    "cropRule": "panel-edges",
+    "font": {
+     "digitEmPx": 15,
+     "emPx": 16,
+     "path": "samples/manual/font/mplus-rounded-1c-bold.glyphs.json",
+     "sha256": "3def83f75ef2c0847879477da66245d07f08eae991119a54250dc10686aaebd0"
+    },
+    "imageAt": [
+     0,
+     0
+    ],
+    "labels": [
+     {
+      "box": [
+       546,
+       58,
+       273,
+       24
+      ],
+      "candidate": "left",
+      "inkUnder": 0,
+      "join": null,
+      "lines": [
+       "Log Y: log or linear counts axis"
+      ],
+      "n": 1,
+      "nearerAnotherMark": false,
+      "text": "Log Y: log or linear counts axis"
+     }
+    ],
+    "margins": {
+     "bottom": 0,
+     "left": 0,
+     "right": 0
+    },
+    "overlay": "rectangles+labels-beside-v4",
+    "size": [
+     1118,
+     813
+    ]
+   },
+   "path": "figures/3.4-3.png",
+   "pixelSha256": "a1e8b53a165f78d03cf82bbd1db8392eb9c23c5c374d0f15f91380b1e199d36e",
+   "resultSha256": "81ef4855453f232cd27becd99390fbfa77e3484b83154538b0834479fc2cc158",
+   "runId": "20261014-202148-7b59cc",
+   "source": "captures/3.4-3.png",
+   "sourceSha256": "6a6203dcd098da045f3f8fee759474ad2d61211001c35e1eb280a3f9eb1a1e59",
+   "step": 5
+  }
+ ],
+ "flags": [],
+ "formal": false,
+ "formats": {
+  "docx": {
+   "path": "MANUAL.Studio.docx"
+  },
+  "pdf": {
+   "fonts": [
+    {
+     "face": "M PLUS Rounded 1c Bold",
+     "path": "samples/manual/font/mplus-rounded-1c-bold.glyphs.json",
+     "sha256": "3def83f75ef2c0847879477da66245d07f08eae991119a54250dc10686aaebd0"
+    },
+    {
+     "face": "M PLUS Rounded 1c Regular",
+     "path": "samples/manual/font/mplus-rounded-1c-regular.glyphs.json",
+     "sha256": "565a6e9b6f00cf61227df76733862e5a1116cf86064ff1c6b1819e8d414b6d57"
+    }
+   ],
+   "pageSize": "A4",
+   "pages": 18,
+   "path": "MANUAL.Studio.pdf"
+  },
+  "writer": {
+   "path": "samples/manual/manual_formats.py",
+   "sha256": "5fb9c777186b00a4413ff4b5289d4ae4f34a22a62c7f6914f773597b87783b4a"
+  }
+ },
+ "generator": {
+  "path": "samples/manual/manual_records.py",
+  "sha256": "01d6eaec60cf1c247e85b16c4cbee155b582138e5bb42db1fac905ad889465d0"
+ },
+ "labelFont": {
+  "font": "M PLUS Rounded 1c Bold",
+  "path": "samples/manual/font/mplus-rounded-1c-bold.glyphs.json",
+  "sha256": "3def83f75ef2c0847879477da66245d07f08eae991119a54250dc10686aaebd0"
+ },
+ "notices": {
+  "sha256": "596e4189cc84aada373e6255400fec708328352b6380d21790a2cc1250168b21",
+  "status": "approved"
+ },
+ "outputs": {
+  "MANUAL.Studio.docx": "0300646eba2c5b54277d88ff31129c4f9cb9cda7c94abfb9e9d6c9157e38284f",
+  "MANUAL.Studio.md": "2e88fc57422dbf4b08fd3c145a6ca07c96bb8fe798da83df3969ecc67cac4a61",
+  "MANUAL.Studio.pdf": "c1aa7fa485c2a2012ab226dab8ee8555fc80a50a9e4092d402790b34c0b3abb0",
+  "figures/1.2-1.png": "63c79087ef34795c6c76d0a7af184af5506f760426b5d3d9893cd4df17dc599a",
+  "figures/1.2-2.png": "31c80a1e764c745fafae799f08ab98777b1f25667865b9687659b030f41f3ebe",
+  "figures/1.2-3.png": "8c597eab31495807f10a196373d26e81da58abf382bdd4f39f72eea789a0153f",
+  "figures/1.2-4.png": "d5d865895c7d8f149366e234a88eb355d74f634770a681227f82e8f5bd9c786d",
+  "figures/1.2-5.png": "f52f293b53f43d36b0e7f707cac8d391b027244dfc491427e1172a8e63481423",
+  "figures/2.1-1.png": "266003f648877c05613d6d0a68291431d3368ed808c4423f2ef18827df8e572f",
+  "figures/2.1-2.png": "63913f64c755def6a884ad884e27798c9c8d69e444bad075d9d486a27a5b2c32",
+  "figures/2.1-3.png": "dc9025754036d999e538c7ac94535006d7968a9c23cd1cea0ccf343c457108ba",
+  "figures/2.2-1.png": "530bb3fb95fb5be532127b8c94a253d1f694da2d2e36c3460b1f8ab32dbb89b7",
+  "figures/2.2-2.png": "bc8c5704cdbec38544ea9f2cfc39036ec869e10ef9a667559fc3fba091f55c47",
+  "figures/2.2-3.png": "60229328dc2558175b5306254fd6028132b11dd970b1e15669a485f7d27979e0",
+  "figures/2.4-1.png": "47ad199a262c89485ce9eeccb225fa0cebeb570ec6602ea74c63f8450a0ff8d5",
+  "figures/2.4-2.png": "143c5b4e4f5156397d4c94460c423f52d997d77131369c266e037823d42d3b53",
+  "figures/2.4-3.png": "a339add03b208f37316cc4ab76d8818b69bfbf07fd1fa1ebb8fc7d796adbeb67",
+  "figures/2.4-4.png": "7448f69e558d93a328bede18c0d38d1322b216c5f0122030a3b4c9439716feb9",
+  "figures/3.1-1.png": "2c5f05cede789f1fcd272031360c095aa8ada579caa219fd84055c40765e9911",
+  "figures/3.1-2.png": "8e48d8c02d8be1d5a247f137cfbff4ac489c3c8625ffc1be094063734ae376fc",
+  "figures/3.4-1.png": "35881f991176027e396764a8d5a92bd13ed030fe82a77365ea22c880ccc2502e",
+  "figures/3.4-2.png": "0b99183ea2e94058948b5f250a6b19e567662503110d67a24a6cb394968a6689",
+  "figures/3.4-3.png": "81ef4855453f232cd27becd99390fbfa77e3484b83154538b0834479fc2cc158",
+  "sources/manual/chapters.json": "67a5caf676b4ce9aa0fe9a4f668eaa461a370352be12a2003f852439b26f50c3",
+  "sources/manual/notices.json": "596e4189cc84aada373e6255400fec708328352b6380d21790a2cc1250168b21",
+  "sources/manual/purposes.json": "badb1f195223bfc2f91fffb9fd8b3824efb744938da1140605e2118289bfe7af",
+  "sources/manual/static/interpretation-and-limitations.md": "5fc2c9d4494122b54df1af172aed65b36c14bae09476e76d47013f761c6746c5",
+  "sources/manual/static/purpose-and-scope.md": "648592f7f582207a8965cf782d20e94631f47a3339115a7bd10c9f0383ef7c87",
+  "sources/runs/20261014-202044-2dbf58/captures/1.2-1.marks.json": "a04b9668955dc3cb11d1ccb870dad1ea329f77fd8b37ac7741e25e7883e85169",
+  "sources/runs/20261014-202044-2dbf58/captures/1.2-1.png": "b3b4edcb227cd0c616c8999ae6b7d54be96dd0a0f290077ebdcced7e6a5bb2d3",
+  "sources/runs/20261014-202044-2dbf58/captures/1.2-2.marks.json": "9b975939782035f50967b61090fbf2bfc08ef08403aa200bda15ad663ee86608",
+  "sources/runs/20261014-202044-2dbf58/captures/1.2-2.png": "f654c2c5f216af953d1f224a92adec73e04a6c11df6c77aae15b341b85ed9b47",
+  "sources/runs/20261014-202044-2dbf58/captures/1.2-3.marks.json": "23efba97cfb06a0fce9a07f8130c8ed683b026add8198870527a8ab21446d63d",
+  "sources/runs/20261014-202044-2dbf58/captures/1.2-3.png": "ffa7a04a6b92a02fd51ca699dd9708d1441416f24265f8ff36ca8a2a9d254c8c",
+  "sources/runs/20261014-202044-2dbf58/captures/1.2-4.marks.json": "8f0aec3c8552842d9b294debca3b947386d23940ce66cc3c567df12d3ade2a19",
+  "sources/runs/20261014-202044-2dbf58/captures/1.2-4.png": "ca15b38bc336c744820fb24a23fccd3c3319b7c2cd1eabc0314948c9c5f72a17",
+  "sources/runs/20261014-202044-2dbf58/captures/1.2-5.marks.json": "6bbccb46c92c40ed220c7cdf89b7038c4f4983d75df158d40053169593bb80e3",
+  "sources/runs/20261014-202044-2dbf58/captures/1.2-5.png": "ca15b38bc336c744820fb24a23fccd3c3319b7c2cd1eabc0314948c9c5f72a17",
+  "sources/runs/20261014-202044-2dbf58/manual-run.json": "5470f1b91f14e129d1d09a26f90a8ad02f21527b79fe1e360ff2b04fe8dbf1bb",
+  "sources/runs/20261014-202059-544edf/captures/2.1-1.marks.json": "001d77cf296539f5a30c4a179ccfb2be6c62e5d4031688575ac21b9bb05e0a15",
+  "sources/runs/20261014-202059-544edf/captures/2.1-1.png": "c24740fd306d2cf979ad0eb19e51e864f1d014d62978c060006eb7c25b16b297",
+  "sources/runs/20261014-202059-544edf/captures/2.1-2.marks.json": "37e32072ffc006ab1f165db583f594c822b86ff259fdfac6583623d53ef9f7ff",
+  "sources/runs/20261014-202059-544edf/captures/2.1-2.png": "99afd7ee56842130cb4ffbff90fe67def8ea752517e79c01f8c69b46202319fa",
+  "sources/runs/20261014-202059-544edf/captures/2.1-3.marks.json": "c8cb49fcdeeb7e573905758d73faa8bbeb9e3e6b40317315de6d098d116d114b",
+  "sources/runs/20261014-202059-544edf/captures/2.1-3.png": "a1770eea6afc2caa291327147c27e1a7276e6a2b962be024e9da033fd2ec3b84",
+  "sources/runs/20261014-202059-544edf/manual-run.json": "d0c66602b73d868ccb001cf07e61383fe369bedabef156906b65193e370b61be",
+  "sources/runs/20261014-202118-3646b1/captures/3.1-1.marks.json": "2f4b167d75ec6882160d8681599f727acb1ad067a1862c1855a4bdc86f357147",
+  "sources/runs/20261014-202118-3646b1/captures/3.1-1.png": "ad109d40bd95aca892c352c9d74e06a725a036ca50769d24cf5599e0439aa084",
+  "sources/runs/20261014-202118-3646b1/captures/3.1-2.marks.json": "e2ffb298faf6041643fe9fbd97284866b5b34469063d3ec0a9b4bcb93bdaa92d",
+  "sources/runs/20261014-202118-3646b1/captures/3.1-2.png": "377b9f4391a907f92d9c3c256e271cceb76ddd58effaf888aeeceedc341e3ff7",
+  "sources/runs/20261014-202118-3646b1/manual-run.json": "1c89b9ca9eeae33eac2b3d34307457a8b5322eb93d286c6ab298af88b80a92df",
+  "sources/runs/20261014-202133-886f72/captures/2.4-1.marks.json": "72907e3af3d12f4fec7173b047490088e56fcc4b621293309534762d3be0ccc3",
+  "sources/runs/20261014-202133-886f72/captures/2.4-1.png": "83fa3ead146fcca598c00c02170f23d20bb130154773bead6548433aee950497",
+  "sources/runs/20261014-202133-886f72/captures/2.4-2.marks.json": "23945683af5c849ada4c61038c08de1b127ca83891d63e58edc7f745334ee391",
+  "sources/runs/20261014-202133-886f72/captures/2.4-2.png": "d4ab8ec380e51276d56bc7562fdbf25db89a2fb19ba8cf9cd96c7ea49c954e38",
+  "sources/runs/20261014-202133-886f72/captures/2.4-3.marks.json": "94037532b4f6bcff7c0e6cb98061a368258383e264ae0d5d998c4bb5b90d28f5",
+  "sources/runs/20261014-202133-886f72/captures/2.4-3.png": "d5dc354ca5fd173657e3e69fb2e0312b9d49097cc0ff54b87fb29436c295d5e6",
+  "sources/runs/20261014-202133-886f72/captures/2.4-4.marks.json": "e32b90a0f712031aa06b90238944d9d375250a0d3d33d9282e644e052896aca9",
+  "sources/runs/20261014-202133-886f72/captures/2.4-4.png": "c4866a28e34c7e06c159411b702876654554c9bf940e2b058c7b8af1f69b8442",
+  "sources/runs/20261014-202133-886f72/manual-run.json": "305ee9f98495b47c76631219e96165f5e883997b95b0d9b1474b36a882bda2eb",
+  "sources/runs/20261014-202148-7b59cc/captures/3.4-1.marks.json": "5434ae85536db6708a7724e16e2b97a6dfecc9e483af13763b3fee7b25b82283",
+  "sources/runs/20261014-202148-7b59cc/captures/3.4-1.png": "5f429379355daf3df55c897e9c099e9ed19b7e0ca68fc386e8c3b301fe0b6bbe",
+  "sources/runs/20261014-202148-7b59cc/captures/3.4-2.marks.json": "d545275d8d1ef394fd6e83595e0134a353fdf7b56c692302b1283e8a83c74363",
+  "sources/runs/20261014-202148-7b59cc/captures/3.4-2.png": "e1b957741c141c55cc42cd3eb34037836a3ee3127e86cf2374f28f9b21dec0d9",
+  "sources/runs/20261014-202148-7b59cc/captures/3.4-3.marks.json": "4fb78f3041c023800b7e1dc502844af394258a7a840562d8d4906fe4b551f221",
+  "sources/runs/20261014-202148-7b59cc/captures/3.4-3.png": "6a6203dcd098da045f3f8fee759474ad2d61211001c35e1eb280a3f9eb1a1e59",
+  "sources/runs/20261014-202148-7b59cc/manual-run.json": "de7a791df842de4cc1709c008f7f232354d73febe3e48b6a12a5c34dbc179924",
+  "sources/runs/20261014-202201-b1fbf6/captures/2.2-1.marks.json": "e7bf00f8921863cd8d8a6e32ce3d9527a002d2e294affe9eea90b4f27a9397b1",
+  "sources/runs/20261014-202201-b1fbf6/captures/2.2-1.png": "7016e80a5deac5efcc01584425a8c9c27ec52f436cc99023c049d3c86e5ccfff",
+  "sources/runs/20261014-202201-b1fbf6/captures/2.2-2.marks.json": "2f60c84d3c34d3a5cf2525e10109a69dc1aa377339a374dbfb63a19ebf694891",
+  "sources/runs/20261014-202201-b1fbf6/captures/2.2-2.png": "07950bbf16d31b9667e1ab9d2eb87dd93310b340cf4546c998c4076dab4b8bf5",
+  "sources/runs/20261014-202201-b1fbf6/captures/2.2-3.marks.json": "f24c484e72b30752de51b8ff98b5e51d9b80455146d6ec45bdad1d5f8cbb4ae3",
+  "sources/runs/20261014-202201-b1fbf6/captures/2.2-3.png": "c7f949b28e019bd9745059db14a6d3afb64231042962063070184e32ba074997",
+  "sources/runs/20261014-202201-b1fbf6/manual-run.json": "ba86114c56060db9a29c9435343a4d4937998aa7f3b69ffa65b3a52a24dd0d42"
+ },
+ "purposes": {
+  "labels": "each mark is labelled \"<screen text or the entry's name>: <short purpose>\" from the purpose list; a mark without an entry keeps its screen text alone",
+  "missingTargets": [],
+  "sha256": "badb1f195223bfc2f91fffb9fd8b3824efb744938da1140605e2118289bfe7af",
+  "status": "approved"
+ },
+ "registry": {
+  "id": "gcam-studio-manual",
+  "locale": "en",
+  "sha256": "67a5caf676b4ce9aa0fe9a4f668eaa461a370352be12a2003f852439b26f50c3"
+ },
+ "reviews": "none recorded here: figure, source and edition review are the author's acts outside the generator",
+ "runs": [
+  {
+   "retained": "full",
+   "runId": "20261014-202044-2dbf58",
+   "scenario": "manual.navigate",
+   "sha256": "5470f1b91f14e129d1d09a26f90a8ad02f21527b79fe1e360ff2b04fe8dbf1bb"
+  },
+  {
+   "retained": "full",
+   "runId": "20261014-202059-544edf",
+   "scenario": "manual.sources",
+   "sha256": "d0c66602b73d868ccb001cf07e61383fe369bedabef156906b65193e370b61be"
+  },
+  {
+   "retained": "full",
+   "runId": "20261014-202118-3646b1",
+   "scenario": "manual.measurements",
+   "sha256": "1c89b9ca9eeae33eac2b3d34307457a8b5322eb93d286c6ab298af88b80a92df"
+  },
+  {
+   "retained": "full",
+   "runId": "20261014-202133-886f72",
+   "scenario": "manual.acquisition",
+   "sha256": "305ee9f98495b47c76631219e96165f5e883997b95b0d9b1474b36a882bda2eb"
+  },
+  {
+   "retained": "full",
+   "runId": "20261014-202148-7b59cc",
+   "scenario": "manual.spectrum",
+   "sha256": "de7a791df842de4cc1709c008f7f232354d73febe3e48b6a12a5c34dbc179924"
+  },
+  {
+   "retained": "full",
+   "runId": "20261014-202201-b1fbf6",
+   "scenario": "manual.geometry",
+   "sha256": "ba86114c56060db9a29c9435343a4d4937998aa7f3b69ffa65b3a52a24dd0d42"
+  }
+ ],
+ "schema": "gcam.manual-generation",
+ "schemaVersion": 1,
+ "static": [
+  {
+   "chapter": "1.1",
+   "draft": false,
+   "path": "static/purpose-and-scope.md",
+   "sha256": "648592f7f582207a8965cf782d20e94631f47a3339115a7bd10c9f0383ef7c87"
+  },
+  {
+   "chapter": "5.2",
+   "draft": false,
+   "path": "static/interpretation-and-limitations.md",
+   "sha256": "5fc2c9d4494122b54df1af172aed65b36c14bae09476e76d47013f761c6746c5"
+  }
+ ],
+ "status": "formal",
+ "subject": {
+  "deploymentSha256": "03742d883dbd3991517f70dd0ac6c9f6b116f29224c294e6e0105f36b28dcc48"
+ }
+}

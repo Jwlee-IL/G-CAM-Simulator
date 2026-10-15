@@ -1,4 +1,5 @@
 using System.Globalization;
+using Gcam.Studio.UiTests.Harness.Isolation;
 using System.Text;
 using System.Text.Json;
 using System.Windows.Automation;
@@ -17,8 +18,7 @@ public sealed class RunRecord
     public RunRecord(string scenario)
     {
         RunId = $"{DateTime.Now:yyyyMMdd-HHmmss}-{Guid.NewGuid().ToString("N")[..6]}";
-        Directory = Path.Combine(AppContext.BaseDirectory, "ui-runs", RunId);
-        System.IO.Directory.CreateDirectory(Directory);
+        Directory = OwnedFolder.Create(RunId);
         _fields["schema"] = 1;
         _fields["runId"] = RunId;
         _fields["scenario"] = scenario;

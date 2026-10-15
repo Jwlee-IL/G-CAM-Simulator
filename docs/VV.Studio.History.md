@@ -341,3 +341,16 @@ existed), fixed by waiting for the layer. Broken-verdict runs of the five change
 after the fixes the re-run (both scenarios plus four regression scenarios for the stricter `Choose`) passed, its
 broken-verdict pair failed on the verdict and the recovery passed. Not covered by a scenario: real Alt-key routing for
 the tool toggles and Enter inside the Options dialog (headless tests only).
+
+## Studio manual, first edition, 2026-10-15
+
+Worktree `C:\gw\w43`, branch `todo43-studio-manual`. Six manual desktop scenarios (`ManualScenarioTests`, one per generated
+chapter) as one observed batch, each with the author's go. Runs 01 and 02 failed every scenario at "owned window
+foreground": a Windows firewall prompt held the foreground (closed with the author's OK). Run 03 passed 3 of 6; fixes in
+`663eb77` (labels read again after Start / Stop replace them, an absent empty text counts as cleared, Log Y starts on).
+Run 04 (`663eb77`) passed 6 / 6, observed run completed with two recorded OS background filters (`65683fc`). Figure fixes
+(badges outside their marks, crops that keep whole panels) in `0399f80`; 20 figures inspected. Edition `2026-10-15-1`
+generated from run 04 (2.0 MB, draft until the notice list and static chapters are approved) and replayed by
+`manual_records.py check --all`. Release build 0 warnings; normal suite 1,095 passed / 56 skipped; catalog 220 units;
+generator self-test 24 / 24.
+

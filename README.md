@@ -54,6 +54,9 @@ Imaging workspace, Cs-137 500 µCi at (−20, 0) mm + Co-60 20 µCi at (20, 0) m
 
 <sub>Captured 2026-10-13 by the polish-survey desktop scenario (`imaging-dark-1440x900.png`).</sub>
 
+User manual: [`MANUAL.Studio.md`](docs/manual/editions/2026-10-15-1/MANUAL.Studio.md), generated from automated desktop
+runs that drove one Studio build (steps, labels and marked figures come from those runs), plus two hand-written chapters.
+
 GCAM Studio includes an experimental four-output GAGG readout. Set ambient and BSR to zero in Options → Environment,
 then in the left Detector tab select FourOutputAnger and Prepare before Start; each calibration line is offered or refused
 from an embedded, hash-pinned record (a module matching no preset calibrates locally, unvalidated), and preparation
@@ -178,7 +181,7 @@ reviewer agent cross-check the important claims — several fixes in the history
 | `tests/` | xUnit — engine physics and closed-form invariants (shared rigs and k·σ assertions in `Gcam.Tests/Harness`), Studio ViewModels, the service layer against the real engine, UI-automation oracles and opt-in desktop scenarios |
 | `rtl/` | SystemVerilog front-end, Icarus + cocotb benches ([`rtl/README.md`](rtl/README.md)) |
 | `samples/` | Scenario JSON plus the result CSVs / figures each finding cites |
-| `docs/` | V&V documents (above), viewer design notes (`DESIGN.*`), Korean physics write-up (`PAPER.ko.md`), and the working notes for contributors and AI agents (`AGENTS.*`) |
+| `docs/` | V&V documents (above), viewer design notes (`DESIGN.*`), the Studio manual's sources and editions (`docs/manual/`), Korean physics write-up (`PAPER.ko.md`), and the working notes for contributors and AI agents (`AGENTS.*`) |
 | [`AGENTS.md`](AGENTS.md) | Architecture, pipeline, coordinate frame, full command reference (also the entry point for AI agents) |
 
 ## 한국어 안내

@@ -1,0 +1,163 @@
+{
+  "schema": "gcam.figure-marks",
+  "schemaVersion": 1,
+  "capture": "captures/1.2-1.png",
+  "captureSha256": "b3b4edcb227cd0c616c8999ae6b7d54be96dd0a0f290077ebdcced7e6a5bb2d3",
+  "widthPx": 1440,
+  "heightPx": 900,
+  "frameOriginPx": [
+    560,
+    246
+  ],
+  "dpi": 96,
+  "perMonitorAware": true,
+  "templateSha256": "bc469a0051e604d4cc9d30bf8c933d9a5aa194497759ad80fdce0b54080b817e",
+  "crop": "full",
+  "region": null,
+  "marks": [
+    {
+      "n": 1,
+      "target": "Workspace.Imaging",
+      "label": "Imaging",
+      "labelSource": "name",
+      "screen": [
+        695,
+        257,
+        70,
+        26
+      ],
+      "image": [
+        135,
+        11,
+        70,
+        26
+      ]
+    },
+    {
+      "n": 2,
+      "target": "Workspace.Spectrum",
+      "label": "Spectrum",
+      "labelSource": "name",
+      "screen": [
+        765,
+        257,
+        70,
+        26
+      ],
+      "image": [
+        205,
+        11,
+        70,
+        26
+      ]
+    },
+    {
+      "n": 3,
+      "target": "Workspace.Waveform",
+      "label": "Waveform",
+      "labelSource": "name",
+      "screen": [
+        835,
+        257,
+        70,
+        26
+      ],
+      "image": [
+        275,
+        11,
+        70,
+        26
+      ]
+    },
+    {
+      "n": 4,
+      "target": "Workspace.Detector",
+      "label": "Detector",
+      "labelSource": "name",
+      "screen": [
+        905,
+        257,
+        70,
+        26
+      ],
+      "image": [
+        345,
+        11,
+        70,
+        26
+      ]
+    },
+    {
+      "n": 5,
+      "target": "StartAcquisition",
+      "label": "Start",
+      "labelSource": "name",
+      "screen": [
+        1617,
+        256,
+        81,
+        28
+      ],
+      "image": [
+        1057,
+        10,
+        81,
+        28
+      ]
+    },
+    {
+      "n": 6,
+      "target": "Left.SceneTab",
+      "label": "Scene",
+      "labelSource": "name",
+      "screen": [
+        586,
+        320,
+        91,
+        28
+      ],
+      "image": [
+        26,
+        74,
+        91,
+        28
+      ]
+    },
+    {
+      "n": 7,
+      "target": "Left.OpticsTab",
+      "label": "Optics",
+      "labelSource": "name",
+      "screen": [
+        677,
+        320,
+        91,
+        28
+      ],
+      "image": [
+        117,
+        74,
+        91,
+        28
+      ]
+    },
+    {
+      "n": 8,
+      "target": "Left.DetectorTab",
+      "label": "Detector",
+      "labelSource": "name",
+      "screen": [
+        767,
+        320,
+        91,
+        28
+      ],
+      "image": [
+        207,
+        74,
+        91,
+        28
+      ]
+    }
+  ]
+}

@@ -1,0 +1,69 @@
+{
+  "schema": "gcam.figure-marks",
+  "schemaVersion": 1,
+  "capture": "captures/1.2-2.png",
+  "captureSha256": "f654c2c5f216af953d1f224a92adec73e04a6c11df6c77aae15b341b85ed9b47",
+  "widthPx": 1440,
+  "heightPx": 900,
+  "frameOriginPx": [
+    560,
+    246
+  ],
+  "dpi": 96,
+  "perMonitorAware": true,
+  "templateSha256": "fc4b0020264d1cdee208a5c8e6265eb7e2e33278904c558fe79010b177bfeaf3",
+  "crop": "marks",
+  "region": {
+    "target": "Optics.Section",
+    "screen": [
+      585,
+      361,
+      262,
+      267
+    ],
+    "image": [
+      25,
+      115,
+      262,
+      267
+    ]
+  },
+  "marks": [
+    {
+      "n": 1,
+      "target": "Left.OpticsTab",
+      "label": "Optics",
+      "labelSource": "name",
+      "screen": [
+        677,
+        320,
+        91,
+        28
+      ],
+      "image": [
+        117,
+        74,
+        91,
+        28
+      ]
+    },
+    {
+      "n": 2,
+      "target": "Optics.Preset",
+      "label": "Preset",
+      "labelSource": "preceding-text",
+      "screen": [
+        669,
+        397,
+        178,
+        28
+      ],
+      "image": [
+        109,
+        151,
+        178,
+        28
+      ]
+    }
+  ]
+}

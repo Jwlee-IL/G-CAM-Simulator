@@ -121,6 +121,12 @@ jobs:
       - name: Test-record defect self-test
         if: always()
         run: python -B samples/testing/test_records.py collect --family checker --checker test-record-self-test --out "${{ runner.temp }}/gcam-todo28/python"
+      - name: Manual generator defect self-test
+        if: always()
+        run: python -B samples/testing/test_records.py collect --family checker --checker manual-self-test --out "${{ runner.temp }}/gcam-todo28/python"
+      - name: Manual sources and committed editions (replay)
+        if: always()
+        run: python -B samples/testing/test_records.py collect --family checker --checker manual-editions --out "${{ runner.temp }}/gcam-todo28/python"
       - name: Generate Python/checker report
         if: always()
         run: python -B samples/testing/test_records.py generate --bundle "${{ runner.temp }}/gcam-todo28/python"

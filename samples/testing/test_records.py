@@ -262,7 +262,9 @@ def source_units():
     for unit_id, entry in units.items():
         entry['sources'].update(pieces[unit_id])
         project = REPO / 'tests' / unit_id.split('::')[0]
-        helpers = list((project / 'Harness').glob('*.cs')) + list(project.glob('*FactAttribute.cs'))
+        helpers = list((project / 'Harness').rglob('*.cs')) + list(project.glob('*FactAttribute.cs'))
+        if project.name == 'Gcam.Studio.UiTests':
+            helpers += [p for p in (project / 'Harness/Isolation').glob('*') if p.suffix in ('.py', '.json', '.ps1', '.wprp')]
         for path in helpers:
             entry['sources'][path.relative_to(REPO).as_posix()] = sha(path.read_bytes().replace(b'\r\n', b'\n'))
     for path in sorted((REPO / 'samples/evidence/tests').glob('test_*.py')):
@@ -273,6 +275,10 @@ def source_units():
                 unit = 'unittest::' + path.stem + '.' + cls.name
                 units[unit] = {'runner': 'unittest', 'methods': [path.stem + '.' + cls.name + '.' + m for m in methods],
                                'sources': {path.relative_to(REPO).as_posix(): sha(path.read_bytes().replace(b'\r\n', b'\n'))}}
+                if path.stem == 'test_stage0_isolation':
+                    isolation = REPO / 'tests/Gcam.Studio.UiTests/Harness/Isolation'
+                    for helper in (isolation / 'stage0.py', isolation / 'classification-rules.json', isolation / 'action-policy.json', isolation / 'normalisation-rules.json', isolation / 'Probe.wprp'):
+                        units[unit]['sources'][helper.relative_to(REPO).as_posix()] = sha(helper.read_bytes().replace(b'\r\n', b'\n'))
     # The configuration is part of the test identity, not a suffix discarded by aggregation.
     sys.path.insert(0, str(REPO / 'rtl'))
     from crrc_contract import fixtures
@@ -291,9 +297,11 @@ def source_units():
                        ('studio-readout-offer', 'samples/evidence/studio_readout_offer_record.py'),
                        ('test-record-self-test', 'samples/testing/test_records.py'),
                        ('test-catalog', 'samples/testing/test_records.py'),
-                       ('archived-replay', 'samples/testing/test_records.py')]:
+                       ('archived-replay', 'samples/testing/test_records.py'),
+                       ('manual-self-test', 'samples/manual/manual_records.py samples/manual/manual_formats.py'),
+                       ('manual-editions', 'samples/manual/manual_records.py samples/manual/manual_formats.py')]:
         units['checker::' + name] = {'runner': 'checker', 'methods': [name + '.' + name],
-                                    'sources': {path: sha((REPO / path).read_bytes().replace(b'\r\n', b'\n'))}}
+                                    'sources': {p: sha((REPO / p).read_bytes().replace(b'\r\n', b'\n')) for p in path.split()}}
     return units
 
 
@@ -486,16 +494,19 @@ def collect(bundle, family, no_build=False, include_background=False, checker=No
                           'executionPython': version([*interpreter, '-B', '-c',
                               'import platform; print(platform.python_implementation(), platform.python_version())'])})
         else:
-            require(checker in ('calibration', 'studio-readout-offer', 'test-record-self-test', 'test-catalog', 'archived-replay'), 'checker: unknown')
+            require(checker in ('calibration', 'studio-readout-offer', 'test-record-self-test', 'test-catalog', 'archived-replay',
+                                'manual-self-test', 'manual-editions'), 'checker: unknown')
             args = {'calibration': [sys.executable, '-B', 'samples/evidence/calibration_record.py', '--release'],
                     'studio-readout-offer': [sys.executable, '-B', 'samples/evidence/studio_readout_offer_record.py', '--check'],
                     'test-record-self-test': [sys.executable, '-B', str(Path(__file__)), 'self-test', '--out', str(folder / 'fixtures')],
                     'test-catalog': [sys.executable, '-B', str(Path(__file__)), 'check-catalog'],
-                    'archived-replay': [sys.executable, '-B', str(Path(__file__)), 'check', '--archives']}[checker]
+                    'archived-replay': [sys.executable, '-B', str(Path(__file__)), 'check', '--archives'],
+                    'manual-self-test': [sys.executable, '-B', 'samples/manual/manual_records.py', 'self-test', '--out', str(folder / 'fixtures')],
+                    'manual-editions': [sys.executable, '-B', 'samples/manual/manual_records.py', 'check', '--all']}[checker]
             expected = ['checker::' + checker + '.' + checker]
         # Source/data are the execution subject for interpreted checks and RTL inputs.
         if family != 'dotnet':
-            prefixes = ('rtl/',) if family == 'cocotb' else ('samples/evidence/', 'samples/testing/')
+            prefixes = ('rtl/',) if family == 'cocotb' else ('samples/evidence/', 'samples/testing/', 'samples/manual/')
             subject = {path: value for path, value in before_source['files'].items()
                        if path.startswith(prefixes)}
         post_subject = dict(subject)

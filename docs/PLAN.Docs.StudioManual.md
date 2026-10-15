@@ -8,8 +8,14 @@ process from); only its **manual process** is adopted (chapter registry, generat
 capture and figure-mark rules, omission notices, generation record), none of its content or names. The implementer is
 given the procedure's location in its prompt; it is not named in the repository.
 
-Status: **planned — written only** (author, 2026-10-12: write the plan now, run it later). Next: turn 1 (implementer
-review) when the author starts it. Generated chapters need desktop runs, which happen only on the author's go.
+Status: **stage 0 started 2026-10-13 (headless part)** — turn 1 review by Codex (conversation `01a134cc…`,
+[review](PLAN.Docs.StudioManual.Review.md)), supplemented against the UI-automation procedure v3.0.1 and the document-
+automation procedure v3.0.1; "Decisions after review" below (partial — the edition decisions wait for the author). Next:
+G1 qualified by observed run 09 (2026-10-14, MR8). Manual work (MR9, MR10) built headless (`e9f368f`), then run on the
+desktop: run 04 passed 6 / 6 (`663eb77`); figure fixes in `0399f80`. The first edition `2026-10-15-1` is generated and
+committed as a **draft** (`51fbdb2`). Waiting for the author: the notice list, static chapters 1.1 and 5.2 and the figures
+(HUM-12, HUM-10), the charter (HUM-04, MR5) and the two background filters (HUM-07). On approval the sources are marked
+approved and the edition is regenerated from the same runs.
 
 ## The model process (what is adopted)
 
@@ -63,6 +69,37 @@ Not adopted (no counterpart here, to be confirmed in the review): patient-data h
 | SM-9 | **Where an edition lives (author decision):** (a) generated on demand, nothing committed; (b) a committed edition per milestone (Markdown + figures + generation record + reduced run records), `--check`-ed in CI like the test-record milestones; (c) published as a page. Recommendation to verify: (b), with the figure budget measured (PNG size per edition) |
 | SM-10 | **Confidentiality and hygiene:** captures contain only the Studio window (no other apps, notifications, local paths, account names); the run checks the window title and visible text for local identifiers before saving; committed files scanned as in TODO-28 |
 | SM-11 | **Docs:** the manual's own location and naming (`AGENTS.Conventions.Docs`), `AGENTS.UiAutomation` charter line (captures as document evidence, not verdicts), `AGENTS.md` / README pointer, `AGENTS.Rationale` rows — proposed by the implementer, applied by the planner |
+
+## Decisions after review (2026-10-13, partial)
+
+| # | Decision | Kind |
+|---|---|---|
+| MR1 | **Target full P4 compliance** with the author's UI-automation procedure v3.0.1 (manual result bundle: G0–G6, the closed list of human acts), after a feasibility check: no blocking item found on this machine; conditions are an elevated ETW tracing session for observed runs (Studio and the harness stay non-elevated), isolation by redirected paths (no disposable environment on this edition of Windows), and the effort (≈ 9–14 days headless, 2–3 days desktop). | author |
+| MR2 | **Stage 0 inside TODO-43** brings the harness and `AGENTS.UiAutomation` to v3.0.1 for the scopes the manual uses (review §9: M01–M17, S01–S04, C01); untouched regression scopes go to a dated transition list. | author (review §9) |
+| MR3 | **Probe first:** the first G1 qualification (launch–idle–exit observed run) is run as soon as the author can start the elevated tracing session; its result decides whether the rest of P4 proceeds or the scope is revisited. Until then only headless stage-0 work (no desktop, no elevation). | author |
+| MR4 | **Raw traces stay local:** ETL files hold machine-wide activity and are never committed; the repository keeps only the filtered, Studio-attributed summary and hashes. | planner |
+| MR6 | **Network channel: not applicable.** Studio has no network function (no client, server, socket or HTTP code); the
+network channel is recorded as not applicable with that source evidence, not proven by a positive control. | author |
+| MR7 | **Charter after the first runs:** the draft P4 charter (`PLAN.Docs.StudioManual.Charter.md`) is approved (HUM-04)
+only after the author has seen the artefacts of the first observed runs, which will need several iterations; until
+then it stays a draft and no result is promoted. | author |
+| MR8 | **Proportionate observation (2026-10-14):** G1 is observed by a scoped file-system / HKCU before/after comparison with a
+null window, plus the owned-process ledger, without elevation; a candidate is a state change, recorded background filters are
+allowed (A3 revised). The machine-wide kernel trace becomes an optional diagnostic. Supersedes MR1's elevated-trace
+condition; P4 compliance stays the target. Reason: runs 02–05 showed the exhaustive trace turns every runtime read into a
+rule-and-approval cycle ("헌장을 고쳐. 지금 너무 보수적으로 행동하고 있어."). | author |
+| MR9 | **Applicability first (2026-10-14):** for a viewer without write surfaces the procedure's scopes close as not applicable
+with evidence instead of being built (charter, Applicability); G1 keeps one light observed run per trigger; the remaining work
+is the manual itself (M15–M17, chapter registry). Reason: the stage-0 review applied all 22 items as if Studio had the
+surfaces of a device-driving app (author: "표면이 없는 프로그램에 대해서는 Not Applicable하게 접근하는 게 맞지 않았을까?"). | author |
+| MR10 | **Edition decisions (2026-10-14):** first edition = **8 core chapters** — 1.1 purpose and scope (static), 1.2 window and
+workspaces, 2.1 sources, 2.2 optics and detector, 2.4 Start / Stop / Continue / Reset, 3.1 Imaging measurements, 3.4 Spectrum
+(generated), 5.2 interpretation and limitations (static); the rest of the review §3 list follows in later editions. SM-9:
+the edition is **committed** per milestone and replayed by hash in CI, within a figure budget (target ≤ 10 MiB per edition,
+crops where a full window is not needed). Figures carry **rectangle marks with numbered badges** (digits from a small bitmap
+glyph set, Python standard library) and a legend. SM-7: a **short Studio notice list** approved by the author is the only
+source of warnings and cautions. | author |
+| MR5 | Open: the P4 charter text (HUM-04, after the first manual runs, MR7). SM-7, SM-9, overlays and the first-edition scope are decided in MR10. | — |
 
 ## Steps
 

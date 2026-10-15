@@ -1,0 +1,59 @@
+{
+  "schema": "gcam.manual-notices",
+  "schemaVersion": 1,
+  "status": "approved",
+  "approval": "draft for the author's approval; the generator marks every edition draft until status reads approved",
+  "notices": [
+    {
+      "id": "N-SIM",
+      "level": "caution",
+      "text": "GCAM Studio is the engineering viewer of a Monte Carlo simulator. Every count, image, spectrum and waveform it shows is simulated; it is not a measuring instrument, and nothing it shows is a measurement of a real source.",
+      "chapters": [
+        "1.1",
+        "2.4",
+        "3.1",
+        "3.4",
+        "5.2"
+      ],
+      "sources": [
+        "docs/VV.Gcam.Decisions.md D-34",
+        "docs/VV.Studio.SRS.md SR-RUN-09, SR-RUN-16"
+      ]
+    },
+    {
+      "id": "N-READOUT",
+      "level": "caution",
+      "text": "The four-output physical readout is an experimental simulation. Its calibration lines are offered or refused from a pinned record; a module that matches no preset is calibrated locally and is unvalidated; positioning deposits at other energies with a source-line calibration is a declared approximation whose accuracy is unvalidated.",
+      "chapters": [
+        "1.2",
+        "5.2"
+      ],
+      "sources": [
+        "docs/VV.Studio.SRS.md SR-DET-05"
+      ]
+    },
+    {
+      "id": "N-TIMING",
+      "level": "note",
+      "text": "Live time advances at the chosen speed (live seconds per wall second) and Stop acts when it is clicked, so the counts kept at a Stop differ from run to run even with a fixed seed. A fixed seed reproduces the acquisition itself.",
+      "chapters": [
+        "2.4"
+      ],
+      "sources": [
+        "docs/VV.Studio.SRS.md SR-RUN-23, SR-RUN-25",
+        "src/Gcam.Studio/Views/MainWindow.xaml (speed field)"
+      ]
+    },
+    {
+      "id": "N-NOT-SAVED",
+      "level": "note",
+      "text": "Studio saves nothing on its own and keeps no settings: the scene, the results and the measurements live in memory and are gone when the window closes.",
+      "chapters": [
+        "1.1"
+      ],
+      "sources": [
+        "docs/VV.Studio.SRS.md SR-SEC-01"
+      ]
+    }
+  ]
+}

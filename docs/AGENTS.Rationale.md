@@ -145,6 +145,10 @@ Enforcement: **C** compiler / build · **T** automated test · **R** review agai
 | Provenance (formal / draft) is separate from coverage and from pass / fail. | A clean failing run is a truthful formal record; a dirty passing run is still a draft. | `AGENTS.Conventions.Docs` | T (self-test) |
 | Milestone runs are chosen by an explicit selection manifest; subjects are pinned by source and binary hashes taken before and after the run. | Repeats or other binaries must not silently replace evidence; a hash taken only afterwards cannot prove what ran. | `test_records.py` | T (self-test) |
 | Committed runner output is sanitised deterministically (host, user, absolute paths). | The repository is public; the evidence does not need local identifiers. | `test_records.py` | T (privacy check) |
+| Manual chapter titles come only from `docs/manual/chapters.json`; cautions and notes only from the approved `docs/manual/notices.json`, each in the chapters it lists. | A title or warning written into a scenario or a chapter body drifts from the others and was never reviewed; the notice list is the one reviewed place. | `AGENTS.Conventions.Docs`, `ManualRegistry` | H (`ManualRegistry`, `manual_records.py`) |
+| A generated manual chapter is printed only from the latest run on the edition's Studio build; a failed, aborted or missing latest run prints an omission notice instead. | An older passing run on another build documents a window the reader no longer has. | `manual_records.py` | H, T (`self-test`) |
+| A manual figure is only a crop of a passing capture with overlays of marks measured from UIA bounds at capture time; a capture that fails its quality check keeps no pixels. | A hand-drawn mark or a capture with another window on top shows something the run did not see. | `AGENTS.UiAutomation` §5, `ManualCapture` | H |
+| A committed manual edition is generated, never hand-edited, and CI replays it byte for byte. | The edition is evidence of one build; an edit would break the link between the text and the runs. | `AGENTS.Conventions.Docs` | T (`manual_records.py check --all` in CI) |
 
 ## Documents and process
 

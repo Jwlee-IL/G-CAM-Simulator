@@ -1,0 +1,105 @@
+{
+  "schema": "gcam.figure-marks",
+  "schemaVersion": 1,
+  "capture": "captures/3.1-2.png",
+  "captureSha256": "377b9f4391a907f92d9c3c256e271cceb76ddd58effaf888aeeceedc341e3ff7",
+  "widthPx": 1440,
+  "heightPx": 900,
+  "frameOriginPx": [
+    560,
+    246
+  ],
+  "dpi": 96,
+  "perMonitorAware": true,
+  "templateSha256": "a85a5d491e7c9642e2e36689936be3431448bde50a2f00c5eda700b7e8c68ba5",
+  "crop": "marks",
+  "region": {
+    "target": "MeasurementList",
+    "screen": [
+      897,
+      871,
+      766,
+      204
+    ],
+    "image": [
+      337,
+      625,
+      766,
+      204
+    ]
+  },
+  "marks": [
+    {
+      "n": 1,
+      "target": "M1",
+      "label": "M1",
+      "labelSource": "child-text",
+      "screen": [
+        897,
+        871,
+        754,
+        28
+      ],
+      "image": [
+        337,
+        625,
+        754,
+        28
+      ]
+    },
+    {
+      "n": 2,
+      "target": "M2",
+      "label": "M2",
+      "labelSource": "child-text",
+      "screen": [
+        897,
+        899,
+        754,
+        28
+      ],
+      "image": [
+        337,
+        653,
+        754,
+        28
+      ]
+    },
+    {
+      "n": 3,
+      "target": "M3",
+      "label": "M3",
+      "labelSource": "child-text",
+      "screen": [
+        897,
+        927,
+        754,
+        28
+      ],
+      "image": [
+        337,
+        681,
+        754,
+        28
+      ]
+    },
+    {
+      "n": 4,
+      "target": "MeasurementDetail",
+      "label": "3.6 × 4.2 mm · 42 px · mean 5.45 · max 13",
+      "labelSource": "name",
+      "screen": [
+        897,
+        1079,
+        766,
+        13
+      ],
+      "image": [
+        337,
+        833,
+        766,
+        13
+      ]
+    }
+  ]
+}

@@ -136,6 +136,12 @@ focus boundary (AN-17), fixed and re-run with broken-verdict / recovery pairs
 ([History](VV.Studio.History.md#desktop-verification--declutter-stage-2-and-todo-42-2026-10-13)). The "Desktop pending" note
 above is superseded; real Alt-key routing and Enter in the Options dialog remain headless-only.
 
+**Studio manual, first edition (2026-10-15, TODO-43 branch at `51fbdb2`; not a milestone record).** Release build
+0 warnings, normal suite **1,095 passed / 56 skipped** (new: `ManualRecordTests`, 6 headless; `ManualScenarioTests`, 6
+desktop scenarios, opt-in), catalog 220 units, manual generator self-test 24 / 24, Python tests pass. Desktop: manual run 04
+passed 6 / 6 and the edition `2026-10-15-1` was generated from it
+([History](VV.Studio.History.md#studio-manual-first-edition-2026-10-15)).
+
 ## 1. Scope and intended use
 
 **Intended use.** GCAM Studio is a portfolio demo viewer for Gcam, a Monte Carlo simulator of a coded-aperture
