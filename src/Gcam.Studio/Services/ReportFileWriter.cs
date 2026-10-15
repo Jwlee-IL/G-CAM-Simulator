@@ -1,42 +1,45 @@
 using System.IO;
+using System.Runtime.ExceptionServices;
 using Gcam.Studio.Core.Reporting;
 
 namespace Gcam.Studio.Services;
 
-/// <summary>Writes only the chosen report and its scene sidecar; rolls back both on a failed write.</summary>
+/// <summary>Writes only the chosen file and its declared sidecars; rolls all of them back on a failed write.</summary>
 public static class ReportFileWriter
 {
-    public static string ScenePath(string htmlPath) => Path.ChangeExtension(htmlPath, ".scene.json");
+    public static string ScenePath(string path) => ReportFiles.ScenePath(path);
+    public static string MetaPath(string path) => ReportFiles.MetaPath(path);
 
     public static async Task WriteAsync(string path, ReportFiles files)
     {
-        string scenePath = ScenePath(path);
+        var targets = files.Destinations(path);
         // Keep existing bytes in memory, so a failed overwrite can restore them without extra write surfaces.
-        byte[]? oldHtml = File.Exists(path) ? await File.ReadAllBytesAsync(path) : null;
-        byte[]? oldScene = files.HasScene && File.Exists(scenePath) ? await File.ReadAllBytesAsync(scenePath) : null;
-        bool openedHtml = false, openedScene = false;
+        var previous = new byte[]?[targets.Count];
+        for (int i = 0; i < targets.Count; i++)
+            previous[i] = File.Exists(targets[i].Path) ? await File.ReadAllBytesAsync(targets[i].Path) : null;
+        var opened = new List<FileStream>(targets.Count);
+        Exception? failure = null;
         try
         {
-            await using var html = new FileStream(path, FileMode.OpenOrCreate, FileAccess.Write, FileShare.None);
-            openedHtml = true;
-            await using var scene = files.HasScene ? new FileStream(scenePath, FileMode.OpenOrCreate, FileAccess.Write, FileShare.None) : null;
-            openedScene = scene is not null;
-            // Open both destinations before truncating either. Scope disposes both before the rollback below.
-            html.SetLength(0);
-            scene?.SetLength(0);
-            await html.WriteAsync(files.Html);
-            if (scene is not null) await scene.WriteAsync(files.SceneJson);
-            await html.FlushAsync();
-            if (scene is not null) await scene.FlushAsync();
+            foreach (var target in targets)
+                opened.Add(new FileStream(target.Path, FileMode.OpenOrCreate, FileAccess.Write, FileShare.None));
+            // Open every destination before truncating any.
+            foreach (var stream in opened) stream.SetLength(0);
+            for (int i = 0; i < opened.Count; i++) await opened[i].WriteAsync(targets[i].Bytes);
+            foreach (var stream in opened) await stream.FlushAsync();
         }
-        catch (Exception writeError)
+        catch (Exception error) { failure = error; }
+        // Close every opened destination before any rollback touches it.
+        foreach (var stream in opened)
         {
-            var errors = new List<Exception> { writeError };
-            if (openedHtml) await RestoreAsync(path, oldHtml, errors);
-            if (openedScene) await RestoreAsync(scenePath, oldScene, errors);
-            if (errors.Count > 1) throw new AggregateException("Export failed and rollback failed; check the report and scene destinations.", errors);
-            throw;
+            try { await stream.DisposeAsync(); }
+            catch (Exception error) { failure ??= error; }
         }
+        if (failure is null) return;
+        var errors = new List<Exception> { failure };
+        for (int i = 0; i < opened.Count; i++) await RestoreAsync(targets[i].Path, previous[i], errors);
+        if (errors.Count > 1) throw new AggregateException("Export failed and rollback failed; check the export destinations.", errors);
+        ExceptionDispatchInfo.Capture(failure).Throw();
     }
 
     private static async Task RestoreAsync(string path, byte[]? previous, List<Exception> errors)

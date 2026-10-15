@@ -132,6 +132,43 @@ public sealed class SpectrumService : ISpectrumService
         { BinEdgesKeV = Enumerable.Range(0, BinCount + 1).Select(i => i * width).ToArray() };
     }
 
+    /// <summary>The measured energy each event contributes to <see cref="ProcessAsync"/>'s histogram, by event index. It
+    /// replays the same measurement stage, grouping and index-keyed draws from the first event, so a value equals the one
+    /// the histogram counted (snapshot partitioning does not change a draw).</summary>
+    public IReadOnlyList<double>? MeasuredEnergies(IReadOnlyList<DetectedEvent> events, SpectrumSettings settings, int seed = 909)
+    {
+        ArgumentNullException.ThrowIfNull(events);
+        ArgumentNullException.ThrowIfNull(settings);
+        if (settings.Readout is not null) return null;
+        var measurement = new MeasurementStage(settings.Detector, settings.PixelsX, settings.PixelsY, seed);
+        var measured = new double[events.Count];
+        if (!settings.PileUp)
+        {
+            for (int i = 0; i < events.Count; i++) measured[i] = measurement.Measure(events[i], i);
+            return measured;
+        }
+        var pulse = (settings.Detector ?? new DetectorSettings()).Chain.PulseSamples;
+        double resolvingTimeS = EventStreamStudy.ResolvingSamples(pulse.RiseSamples, pulse.TailSamples) / FrontEndParts.AdcSampleRateHz;
+        Array.Fill(measured, double.NaN);
+        double group = 0, last = 0;
+        int start = 0;
+        // The grouping of Process: each absorbed pulse re-extends the resolving interval.
+        for (int i = 0; i < events.Count; i++)
+        {
+            double amplitude = measurement.Amplitude(events[i]);
+            if (group > 0 && events[i].ArrivalTimeS - last >= resolvingTimeS)
+            {
+                measured[start] = measurement.MeasureAmplitude(group, start);
+                group = 0;
+            }
+            if (group == 0) start = i;
+            group += amplitude;
+            last = events[i].ArrivalTimeS;
+        }
+        if (group > 0) measured[start] = measurement.MeasureAmplitude(group, start);
+        return measured;
+    }
+
     private void AddMeasured(double[] counts, double energy, int index, ref long total, ref long overflow)
     {
         // Index-addressed randomness keeps a pulse stable when an open pile-up group is redrawn,

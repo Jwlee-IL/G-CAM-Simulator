@@ -137,6 +137,40 @@ public sealed class SpectrumServiceTests(ITestOutputHelper output)
         else Assert.Equal(503, first.TotalCounts);
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task MeasuredEnergies_HistogramToThePublishedSpectrum_WithoutNewRandomness(bool pileUp)
+    {
+        var events = Acquire(10_000, new SceneSource { ActivityUCi = 1e6 });
+        int pixels = new OpticsSettings().DetectorPixels;
+        var settings = new SpectrumSettings(PileUp: pileUp)
+        { Detector = new DetectorSettings { GainSigma = .05, GainSeed = 3 }, PixelsX = pixels, PixelsY = pixels };
+        var service = new SpectrumService();
+        var id = Guid.NewGuid();
+        await service.ProcessAsync(id, events.Take(4321).ToArray(), CsLines, settings, seed: 17); // published in two parts
+        var view = await service.ProcessAsync(id, events, CsLines, settings, seed: 17);
+        var measured = service.MeasuredEnergies(events, settings, seed: 17)!;
+        Assert.Equal(events.Length, measured.Count);
+        var counts = new double[SpectrumService.BinCount];
+        long total = 0, overflow = 0;
+        foreach (double energy in measured)
+        {
+            if (double.IsNaN(energy)) continue; // absorbed into a pile-up group
+            total++;
+            int bin = (int)(energy / SpectrumService.AxisMaximumKeV * SpectrumService.BinCount);
+            if (bin >= 0 && bin < counts.Length) counts[bin]++;
+            else overflow++;
+        }
+        Assert.Equal(view.Counts, counts);
+        Assert.Equal(view.TotalCounts, total);
+        Assert.Equal(view.OverflowCounts, overflow);
+        Assert.Equal(measured, new SpectrumService().MeasuredEnergies(events, settings, seed: 17));
+        Assert.Equal(pileUp, measured.Any(double.IsNaN));
+        Assert.Null(service.MeasuredEnergies(events, settings with { Readout = new(null!, [], [], 0, false) }));
+        output.WriteLine($"pile-up {pileUp}: {events.Length} events → {total} measured pulses; histogram of the per-event values equals the published spectrum bin for bin");
+    }
+
     [Fact]
     public async Task Processing_MeasuresFullAndIncrementalWorkAt100000Events()
     {

@@ -76,8 +76,9 @@ public static class ReportWriter
     }
 
     /// <summary>The configuration as the report shows it: the scene file's JSON with each non-empty ambient spectrum table
-    /// replaced by a note of its entry count. Every other member, the spectrum's Id and ContentHash included, is kept.</summary>
-    private static string DisplayedConfiguration(string json, out string? spectrumId, out IReadOnlyList<string> omitted)
+    /// replaced by a note of its entry count. Every other member, the spectrum's Id and ContentHash included, is kept.
+    /// The event-data metadata file shows the same reduced configuration.</summary>
+    internal static string DisplayedConfiguration(string json, out string? spectrumId, out IReadOnlyList<string> omitted)
     {
         var tables = new List<string>();
         omitted = tables;

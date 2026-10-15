@@ -32,8 +32,9 @@ public sealed partial class PlotViewRenderTests
             var (root, content) = DetachMainWindow(model, size);
             root.UpdateLayout();
             var view = Descendants(root).OfType<Gcam.Studio.Views.ExportReportView>().Single();
-            var json = Descendants(view).OfType<RadioButton>().Single(b => AutomationProperties.GetAutomationId(b) == "Export.Json");
-            Assert.False(json.IsEnabled);
+            var csv = Descendants(view).OfType<RadioButton>().Single(b => AutomationProperties.GetAutomationId(b) == "Export.Csv");
+            Assert.True(csv.IsEnabled);
+            Assert.Equal("Event data (CSV)", csv.Content);
             var icon = Descendants(root).OfType<Button>().Single(b => AutomationProperties.GetAutomationId(b) == "ExportReport");
             Assert.IsAssignableFrom<Geometry>(icon.Content);
             Assert.Equal("Alt+E", AutomationProperties.GetAccessKey(icon));

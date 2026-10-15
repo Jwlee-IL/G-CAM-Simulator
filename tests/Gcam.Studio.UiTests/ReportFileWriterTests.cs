@@ -7,16 +7,39 @@ namespace Gcam.Studio.UiTests;
 public sealed class ReportFileWriterTests
 {
     [Fact]
-    public async Task Write_JsonWritesOneFile_AndDoesNotTouchACompanion()
+    public async Task Write_CsvCreatesOnlyDataSceneAndMeta_WithExactBytes()
     {
-        string folder = Folder(); string path = Path.Combine(folder, "report.json");
-        string companion = ReportFileWriter.ScenePath(path);
-        await File.WriteAllTextAsync(companion, "keep");
-        await ReportFileWriter.WriteAsync(path, new([1, 2, 3], []) { HasScene = false });
-        Assert.Equal(new byte[] { 1, 2, 3 }, await File.ReadAllBytesAsync(path));
-        Assert.Equal("keep", await File.ReadAllTextAsync(companion));
-        Assert.Equal(2, Directory.GetFiles(folder).Length);
+        string folder = Folder(); string path = Path.Combine(folder, "events.csv");
+        var files = new ReportFiles([1, 2, 3], [4, 5]) { MetaJson = [6] };
+        await ReportFileWriter.WriteAsync(path, files);
+        Assert.Equal(files.Content, await File.ReadAllBytesAsync(path));
+        Assert.Equal(files.SceneJson, await File.ReadAllBytesAsync(Path.Combine(folder, "events.scene.json")));
+        Assert.Equal(files.MetaJson, await File.ReadAllBytesAsync(Path.Combine(folder, "events.meta.json")));
+        Assert.Equal(new[] { "events.csv", "events.meta.json", "events.scene.json" }, Directory.GetFiles(folder).Select(Path.GetFileName).Order());
+        Assert.Equal(ReportFileWriter.MetaPath(path), ReportFiles.SidecarPaths(path, withMeta: true)[1]);
+        Assert.Equal([ReportFileWriter.ScenePath(path)], ReportFiles.SidecarPaths(path, withMeta: false));
     }
+
+    [Fact]
+    public async Task Write_FailedMetaOpen_RemovesNewDataAndScene_AndRestoresAnExistingScene()
+    {
+        string folder = Folder(); string path = Path.Combine(folder, "events.csv");
+        await File.WriteAllTextAsync(ReportFileWriter.ScenePath(path), "previous scene");
+        Directory.CreateDirectory(ReportFileWriter.MetaPath(path)); // a directory cannot be opened as a file
+        var error = await Record.ExceptionAsync(() => ReportFileWriter.WriteAsync(path, new([1], [2]) { MetaJson = [3] }));
+        Assert.True(error is IOException or UnauthorizedAccessException, error?.ToString() ?? "Expected a failed write");
+        Assert.False(File.Exists(path));
+        Assert.Equal("previous scene", await File.ReadAllTextAsync(ReportFileWriter.ScenePath(path)));
+        Assert.Equal(new[] { "events.scene.json" }, Directory.GetFiles(folder).Select(Path.GetFileName));
+    }
+
+    [Theory]
+    [InlineData(".csv", "CSV event data (*.csv)|*.csv")]
+    [InlineData(".html", "HTML report (*.html)|*.html")]
+    [InlineData(".docx", "DOCX report (*.docx)|*.docx")]
+    public void SaveFilter_NamesTheFormat(string extension, string filter)
+        => Assert.Equal(filter, ReportExportService.Filter(extension));
+
     [Fact]
     public async Task Write_CreatesOnlyReportAndScene_WithExactBytes()
     {

@@ -76,4 +76,47 @@ public sealed class AcquisitionReportTests
         Assert.Equal(spectrum.ContentHash, loaded.Ambient.Spectrum.ComputeContentHash());
         Assert.Equal(json, ConfigLoader.Serialize(loaded));
     }
+
+    [Fact]
+    public async Task EventCsv_DirectAcquisition_RowsAreTheSnapshotsEvents_MetaShowsAmbientTableCounts()
+    {
+        var defaults = StudioOptionDefaults.Current;
+        var field = AmbientPreset.TerrestrialUnscear2000V1.Field(defaults.AmbientDoseMicroSvPerHour, defaults.AmbientGeometry);
+        await using var session = new SimulationService().StartAmbient([new SceneSource()], new(), .2, 10, field, seed: 73);
+        AcquisitionSnapshot? last = null;
+        await foreach (var snapshot in session.ReadSnapshotsAsync()) last = snapshot;
+        Assert.NotNull(last);
+        Assert.NotEmpty(last.Events);
+        var settings = new SpectrumSettings
+        { Detector = last.Detector, PixelsX = last.Imaging.Flood.Width, PixelsY = last.Imaging.Flood.Height };
+        var service = new SpectrumService();
+        await service.ProcessAsync(Guid.NewGuid(), last.Events, [new("Cs-137", 661.7)], settings);
+        var report = new SimulationReport(new DateTimeOffset(2026, 10, 15, 9, 0, 0, TimeSpan.Zero), "test", last.ConfigurationJson!, false,
+            [], [], null, [], [], null, false, [], [])
+        { Events = last.Events, MeasuredKeV = service.MeasuredEnergies(last.Events, settings) };
+        var files = EventCsvWriter.Write(report, "events.csv");
+
+        var lines = Encoding.UTF8.GetString(files.Content).Split("\r\n");
+        Assert.Equal("", lines[^1]);
+        Assert.Equal(last.Events.Count + 1, lines.Length - 1);
+        for (int i = 0; i < last.Events.Count; i++)
+        {
+            var cells = lines[i + 1].Split(',');
+            var e = last.Events[i];
+            Assert.Equal(e.ArrivalTimeS, double.Parse(cells[1], System.Globalization.CultureInfo.InvariantCulture));
+            Assert.Equal($"{e.PixelX},{e.PixelY}", $"{cells[2]},{cells[3]}");
+            Assert.Equal(e.DepositKeV, double.Parse(cells[4], System.Globalization.CultureInfo.InvariantCulture));
+            Assert.Equal(report.MeasuredKeV![i], double.Parse(cells[5], System.Globalization.CultureInfo.InvariantCulture));
+        }
+
+        using var meta = System.Text.Json.JsonDocument.Parse(files.MetaJson!);
+        var spectrum = meta.RootElement.GetProperty("configuration").GetProperty("Ambient").GetProperty("Spectrum");
+        using var scene = System.Text.Json.JsonDocument.Parse(last.ConfigurationJson!);
+        var resolved = scene.RootElement.GetProperty("Ambient").GetProperty("Spectrum");
+        Assert.Equal($"omitted from this report: {resolved.GetProperty("Continuum").GetArrayLength()} entries; the full table is in the scene file",
+            spectrum.GetProperty("Continuum").GetString());
+        Assert.Equal(resolved.GetProperty("ContentHash").GetString(), spectrum.GetProperty("ContentHash").GetString());
+        Assert.True(files.MetaJson!.Length < 64_000, $"meta.json is {files.MetaJson.Length:N0} bytes.");
+        Assert.Equal(Encoding.UTF8.GetBytes(last.ConfigurationJson!), files.SceneJson);
+    }
 }

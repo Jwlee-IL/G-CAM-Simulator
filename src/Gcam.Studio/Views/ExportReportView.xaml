@@ -16,11 +16,10 @@
                      IsChecked="{Binding Format, Converter={x:Static conv:EnumMatchConverter.Instance}, ConverterParameter=Word}"
                      AutomationProperties.AutomationId="Export.Word" />
         <TextBlock Text="Editable document with PNG figures." Style="{StaticResource Text.Caption}" Margin="{StaticResource Gap.Section}" />
-        <RadioButton Content="JSON — four-channel ADC values" GroupName="ExportFormat" Foreground="{DynamicResource Brush.Text.Primary}" IsEnabled="{Binding HasAdc}" Margin="{StaticResource Gap.Field}"
-                     IsChecked="{Binding Format, Converter={x:Static conv:EnumMatchConverter.Instance}, ConverterParameter=Json}"
-                     AutomationProperties.AutomationId="Export.Json" />
-        <TextBlock Text="{Binding JsonReason}" TextWrapping="Wrap" Style="{StaticResource Text.Caption}" Margin="{StaticResource Gap.Section}"
-                   AutomationProperties.AutomationId="Export.JsonReason" />
+        <RadioButton Content="Event data (CSV)" GroupName="ExportFormat" Foreground="{DynamicResource Brush.Text.Primary}" Margin="{StaticResource Gap.Field}"
+                     IsChecked="{Binding Format, Converter={x:Static conv:EnumMatchConverter.Instance}, ConverterParameter=Csv}"
+                     AutomationProperties.AutomationId="Export.Csv" />
+        <TextBlock Text="Plain per-event data for other programs (CSV + metadata)." Style="{StaticResource Text.Caption}" Margin="{StaticResource Gap.Section}" />
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
             <Button Content="Cancel" Command="{Binding CancelCommand}" Margin="{StaticResource Gap.Inline}" AutomationProperties.AutomationId="Modal.Cancel" />
             <Button Content="Export…" Command="{Binding ExportCommand}" IsDefault="True" AutomationProperties.AutomationId="Export.Confirm" />

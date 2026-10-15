@@ -82,6 +82,47 @@ public sealed class ReportExportCommandTests
         Assert.Equal(ConfigLoader.Serialize(new SimulationConfig { Seed = 73 }), System.Text.Encoding.UTF8.GetString(export.Files.SceneJson));
     }
 
+    [Fact]
+    public async Task ExportReport_Csv_ChoosesPathThenWritesEventsWithTheSpectrumsMeasurement()
+    {
+        var modal = new FakeModal();
+        var export = new FakeExport { Path = "run.csv" };
+        var spectrum = new MeasuringSpectrum();
+        var vm = new MainViewModel(new FakeAcquisition(), new FakeTheme(), spectrum,
+            confirmation: modal, reportExport: export, reportClock: new FixedClock());
+        vm.Spectrum.PileUp = true;
+        vm.Snapshot = Snapshot() with { Events = [new(0, 1, 661.7, .1), new(1, 0, 300, .2)] };
+        await vm.ExportReportCommand.ExecuteAsync(null);
+        vm.ExportPopup!.Format = ReportFormat.Csv;
+        await vm.ExportPopup.ExportCommand.ExecuteAsync(null);
+        Assert.Equal("gcam-events-20261014-120000.csv", export.DefaultName);
+        Assert.Equal(1, export.Writes);
+        var rows = EventCsvWriterTests.Parse(export.Files!.Content);
+        Assert.Equal(["0,0.1,0,1,661.7,662.7", "1,0.2,1,0,300,301"], rows.Skip(1).Select(r => string.Join(",", r)));
+        // The measurement is asked with the spectrum's own settings for the frozen snapshot's events.
+        Assert.True(spectrum.Measured!.PileUp);
+        Assert.Same(vm.Snapshot.Detector, spectrum.Measured.Detector);
+        using var meta = System.Text.Json.JsonDocument.Parse(export.Files.MetaJson!);
+        Assert.Equal("run.csv", meta.RootElement.GetProperty("files").GetProperty("events").GetString());
+        Assert.Equal(ConfigLoader.Serialize(new SimulationConfig { Seed = 73 }), System.Text.Encoding.UTF8.GetString(export.Files.SceneJson));
+    }
+
+    private sealed class MeasuringSpectrum : ISpectrumService
+    {
+        private readonly FakeSpectrumService _inner = new();
+        public SpectrumSettings? Measured { get; private set; }
+        public double Resolution662 => _inner.Resolution662;
+        public double ResolvingTimeS => _inner.ResolvingTimeS;
+        public Task<SpectrumView> ProcessAsync(Guid acquisitionId, IReadOnlyList<DetectedEvent> events, IReadOnlyList<SpectrumLine> lines,
+            SpectrumSettings settings, int seed = 909, CancellationToken cancellationToken = default)
+            => _inner.ProcessAsync(acquisitionId, events, lines, settings, seed, cancellationToken);
+        public IReadOnlyList<double>? MeasuredEnergies(IReadOnlyList<DetectedEvent> events, SpectrumSettings settings, int seed = 909)
+        {
+            Measured = settings;
+            return events.Select(e => e.DepositKeV + 1).ToArray();
+        }
+    }
+
     private static MainViewModel Create(FakeExport export) => new(new FakeAcquisition(), new FakeTheme(), new FakeSpectrumService(),
         reportExport: export, reportClock: new FixedClock());
 

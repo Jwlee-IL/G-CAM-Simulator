@@ -20,7 +20,7 @@ public sealed partial class MainViewModel
         try { report = SimulationReport.Capture(this, _reportClock.GetLocalNow(), _reportExport.Version); }
         catch (Exception ex) { _reportExport.ShowError($"Report export failed: {ex.Message}"); return Task.CompletedTask; }
         if (Modal is null) return SaveReportAsync(report, ReportFormat.Html); // UI-free callers without a modal host
-        ExportPopup = new(report.AdcRecords.Count > 0, format => SaveReportAsync(report, format), () =>
+        ExportPopup = new(format => SaveReportAsync(report, format), () =>
         {
             if (ExportPopup is { } current) Modal.Dismiss(current);
             ExportPopup = null;
@@ -34,10 +34,13 @@ public sealed partial class MainViewModel
         if (_reportExport is null) return;
         try
         {
-            var files = _reportExport.Render(report, format);
-            string extension = format switch { ReportFormat.Pdf => "pdf", ReportFormat.Word => "docx", ReportFormat.Json => "json", _ => "html" };
-            string? path = _reportExport.ChoosePath($"gcam-report-{report.ExportedAt:yyyyMMdd-HHmmss}.{extension}");
+            string extension = format switch { ReportFormat.Pdf => "pdf", ReportFormat.Word => "docx", ReportFormat.Csv => "csv", _ => "html" };
+            string name = format == ReportFormat.Csv ? "gcam-events" : "gcam-report";
+            string? path = _reportExport.ChoosePath($"{name}-{report.ExportedAt:yyyyMMdd-HHmmss}.{extension}");
             if (path is null) return;
+            // Rendered from the frozen capture after the path is known (the event metadata names its sibling files),
+            // and fully in memory before anything is written.
+            var files = _reportExport.Render(report, format, path);
             await _reportExport.WriteAsync(path, files);
         }
         catch (Exception ex) { _reportExport.ShowError($"Report export failed: {ex.Message}"); }

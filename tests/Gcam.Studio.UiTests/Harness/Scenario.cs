@@ -16,9 +16,12 @@ public static class Scenario
     public static void Run(string name, ITestOutputHelper output, Action<StudioWindow, RunRecord> body)
         => RunCore(name, output, (ui, record, _) => body(ui, record), []);
 
-    /// <summary>The report scenario alone declares two writes at fixed names in its owned sandbox.</summary>
+    /// <summary>The report scenario alone declares writes at fixed names in its owned sandbox: the export and its scene
+    /// record, plus the metadata file for event data (CSV).</summary>
     public static void RunReportExport(string name, ITestOutputHelper output, Action<StudioWindow, RunRecord, string> body, string extension = "html")
-        => RunCore(name, output, body, [$"report.{extension}", "report.scene.json"]);
+        => RunCore(name, output, body, extension == "csv"
+            ? [$"report.{extension}", "report.scene.json", "report.meta.json"]
+            : [$"report.{extension}", "report.scene.json"]);
 
     private static void RunCore(string name, ITestOutputHelper output, Action<StudioWindow, RunRecord, string> body,
         IReadOnlyList<string> expectedWrites)
