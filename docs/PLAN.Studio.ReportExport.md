@@ -66,6 +66,17 @@ disabled with its reason. Implementation goes to Codex again (its quota is back)
 | X6 | **JSON**: a header with the schema name and version, generator (Studio version and commit), export time (local and UTC), the notice "Simulation — not a measurement", the scene summary as the report shows it, the full `SimulationConfig` (the engine's JSON options, as in the scene file), the acquisition summary (run state, simulated time, counts, seed) and the readout description (channel names A–D, ADC bits, units). The body lists the acquisition's events with their four ADC values as integers, in a compact column layout named in the header. Nothing is recomputed: the values are those the acquisition produced; if the snapshot does not retain them per event, expose them from the service's retained data rather than recompute. | The author's specification; R2. |
 | X7 | Tests: per format, unit tests on the bytes (structure, every section present, values equal to the model, escaping, deterministic where the format allows). The desktop export scenario goes through the popup for HTML, PDF and Word (one theory), written and compiled, run by the planner on the author's go; JSON is unit-tested (the physical readout needs a calibration capture). | Proportionate; R6 unchanged. |
 
+### Stage 2 revision — event data as CSV (author, 2026-10-15)
+
+The author: "JSON으로 ADC 출력을 가져가라는 이유는 다른 프로그램에서 이걸 보기 좋게 가공하기 위해 Plain한 출력도 제공해주기
+위함이였어. 더 좋은 방법이 있나?" — then, on the planner's CSV proposal: "물리 판독일 때도 그냥 출력하는 게 좋겠어. 다만 헤더등에
+명시해두는 게 좋겠지. 왜냐면 얻는 데이터만 필요하고 가공하는 쪽은 다른 프로그램을 쓸 수도 있으니까." The planner reads this as: export
+the acquired event data under every readout, and state in the header which readout produced it.
+
+| # | Decision | Reason |
+|---|---|---|
+| X8 | The JSON choice becomes **"Event data (CSV)"**, enabled whenever a snapshot exists. It writes `<name>.csv` — one row per retained event, a header row of column names, invariant culture — plus `<name>.meta.json` (a few KB: generator, export time, the notice, the readout mode, a sentence on what that readout means, each column's meaning and unit, the scene and acquisition summaries, the configuration with the ambient tables as entry counts) and `<name>.scene.json` (the full configuration, as for the other formats). Columns: **direct crystal assignment** — index, arrival_time_s, pixel_x, pixel_y, deposit_keV, measured_keV (the energy the spectrum shows), and the meta file states that this readout has no ADC stage; **physical four-output readout** — index, hold_time_s, trigger_time_s, A, B, C, D (14-bit codes), raw_x, raw_y, crystal (−1 when unassigned), energy_keV. Values are the retained ones, as Studio shows them; nothing new is computed. Replaces X6's JSON body and X2's disabled state. | Plain data for other programs; CSV opens in spreadsheets and every analysis tool; the header says what the numbers are. |
+
 ## Premises to verify first (stop and report if one is wrong)
 
 - Studio has no file write today (`AGENTS.UiAutomation.md` §1).
