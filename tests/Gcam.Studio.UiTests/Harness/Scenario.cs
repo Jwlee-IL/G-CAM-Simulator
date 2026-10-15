@@ -71,7 +71,7 @@ public static class Scenario
                 manifest.Evidence["processMonitor"] = new { methods = new[] { "polling-100ms" }, errors = app.MonitorErrors,
                     blindSpots = new[] { "processes shorter than a polling interval; use ETW for qualification" } };
                 if (app.Ending != "exit 0") issues.Add(new("cleanup_failed", app.Ending));
-                if (app.SandboxWrites.Count != 0) issues.Add(new("unsafe_effect", "Undeclared sandbox writes"));
+                if (app.SandboxWrites.Except(expectedWrites).Any()) issues.Add(new("unsafe_effect", "Undeclared sandbox writes"));
                 foreach (string issue in app.Ledger.Issues) issues.Add(new("unsafe_effect", issue));
                 if (app.MonitorErrors.Count != 0) issues.Add(new("blocked", "process-monitor-not-proven"));
             }
