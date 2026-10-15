@@ -33,7 +33,9 @@ four-channel ADC values (decisions X1 … X7 below); implementation by Codex.
 Codex turns 7–9 implemented it (`de86f97`; turn 9 ended when the quota ran out again, and the planner rebuilt and re-ran
 the suite): build 0 / 0; suite 1,079 passed / 51 skipped; catalog 208. Samples read by the planner: PDF 7 pages with the
 configuration as an appendix, Word with heading styles and PNG figures, JSON 38 conversions from a Baseline 661.7 keV
-physical-readout run (3.2 MB, almost all of it the configuration's ambient tables). The desktop theory is not run yet.
+physical-readout run (3.2 MB, almost all of it the configuration's ambient tables). Desktop run 5 (2026-10-15, `13a6969`,
+author's go): the theory passed for PDF (11 s), Word (8 s) and HTML (7 s) through the popup, each writing exactly the
+report and its scene file into its owned sandbox.
 
 ## Decisions (planner defaults, 2026-10-14)
 
