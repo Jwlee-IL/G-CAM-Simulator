@@ -18,7 +18,7 @@ Status: changes to C1, C4–C7 are needed before implementation. C1 is feasible 
 | Pile-up identity | `ContributingHits` counts contributions above the configured fraction of the noiseless total (`:319`), not all nonzero contributors. `DominantShare` reports the largest fraction. Several histories may feed one conversion, and a nondominant history can still have contributed. A conversion with one significant contributor is not proof of a mathematically isolated pulse. No complete contributor membership is published. |
 | Histories without conversions | Below-threshold inputs are retained as hits, and the processor has Busy/WaitRearm states (`ReadoutPulseProcessor.cs:175`, `:187`). `input count − conversion count` is not a general lost-history count. Even `input count − distinct DominantHit` means only **never named dominant**. Existing snapshots cannot determine exact unique participation, split threshold/dead-time losses, or finalize the fate of pending tails. Proposal 3 defines the additional accounting. |
 
-Here and below source paths without a directory are under `src/Gcam.Simulation`, `src/Gcam.Detector/Readout`, or the named Studio layer. In particular, [PhysicalListModeSource](../src/Gcam.Simulation/Readout/PhysicalListModeSource.cs), [AcquisitionSession](../src/Gcam.Studio.Services/AcquisitionSession.cs), and [ReadoutPulseProcessor](../src/Gcam.Detector/Readout/ReadoutPulseProcessor.cs) are the retention and indexing authorities.
+Here and below source paths without a directory are under `src/Gcam.Simulation`, `src/Gcam.Detector/Readout`, or the named Studio layer. In particular, [PhysicalListModeSource](../../src/Gcam.Simulation/Readout/PhysicalListModeSource.cs), [AcquisitionSession](../../src/Gcam.Studio.Services/AcquisitionSession.cs), and [ReadoutPulseProcessor](../../src/Gcam.Detector/Readout/ReadoutPulseProcessor.cs) are the retention and indexing authorities.
 
 ### Studio preset pilot
 
@@ -41,7 +41,7 @@ In both pilots: conversions with several significant contributors **0**; missing
 | Sharp / All | −0.328125, 0.807112 | −0.984375, 0.398897 | 0.871261 / 1.062127; 0.049920° / 0.060855° | 0.772854 |
 | Sharp / Window | −0.437500, 0.109375 | −0.729167, 0.048611 | 0.450965 / 0.730785; 0.025838° / 0.041871° | 0.297929 |
 
-Degrees above are `atan(radial error / 1000) × 180/π` for this on-axis scene. A general scene needs angular separation between direction vectors, not this formula applied to an off-axis lateral difference. These are one-seed observations, not precision, bias or F estimates. The lab's **36% different-crystal** claim ([EV-36](VV.Gcam.Evidence.md#ev-36--four-output-anger-readout-against-direct-crystal-assignment), `AGENTS.Findings.Part2.md:1170`) cannot substitute for any of these denominators. The pilot's window disagreement is **32.00% Baseline / 47.21% Sharp**, with the stated measured-energy conditioning.
+Degrees above are `atan(radial error / 1000) × 180/π` for this on-axis scene. A general scene needs angular separation between direction vectors, not this formula applied to an off-axis lateral difference. These are one-seed observations, not precision, bias or F estimates. The lab's **36% different-crystal** claim ([EV-36](../VV.Gcam.Evidence.md#ev-36--four-output-anger-readout-against-direct-crystal-assignment), `AGENTS.Findings.Part2.md:1170`) cannot substitute for any of these denominators. The pilot's window disagreement is **32.00% Baseline / 47.21% Sharp**, with the stated measured-energy conditioning.
 
 | Work measured | Baseline | Sharp |
 |---|---:|---:|

@@ -1245,3 +1245,25 @@ Evidence: `samples/evidence/results/readout-field-v1-{family,assessment}.json` (
 - **Not here:** positioning accuracy of off-energy field deposits with a source-line calibration (a declared,
   unvalidated approximation); field-only physical acquisition; electronic dark triggers; side housing or explicit
   passive volumes; any new localisation claim. Desktop scenarios compiled, not run (desktop unavailable).
+
+## 71. Direct crystal against four-output Anger from one acquisition — the same-crystal share in Studio (TODO-47, 2026-10-15)
+
+TODO-47 — [PLAN.Studio.ReadoutCompare](archive/PLAN.Studio.ReadoutCompare.md) (decisions D1 … D10), review
+[PLAN.Studio.ReadoutCompare.Review](archive/PLAN.Studio.ReadoutCompare.Review.md) (the pilot tables).
+
+- **Result.** GCAM Studio's Compare workspace reads one physical-readout acquisition as the ideal direct crystal assignment
+  (largest summed-deposit pixel, unsmeared deposit) and as the four-output Anger readout, from the same retained inputs.
+  On one seed (47001; on-axis Cs-137 at 1 m, 10 s, ambient off) the share of single-significant-contributor conversions
+  the Anger readout assigns to the same crystal as the direct assignment is **71.4 %** (257 / 360) on Baseline and
+  **52.6 %** (357 / 679) on Sharp, all energies; in a 600–720 keV window 68.0 % and 52.8 %. Unknown assignments: 0 % and
+  1.2 %. Both readouts put Baseline's estimate at the same point, (0.833, 0.833) mm.
+- **Reading.** Theme 68's 36 % is the lab head's 662 keV photopeak figure; Studio's window rows (32 % and 47 % in another
+  crystal) come from its own presets and are conditional on the Anger measured energy, so neither replaces the other. A
+  third to a half of conversions land in another crystal, yet on this seed Baseline's decoded estimate does not move —
+  the coded image tolerates the crystal shuffle better than the per-event assignment suggests. One seed, no ensemble: a description of the pilot,
+  not an evidence-register entry.
+- **Cost.** Refresh p50 / p95: Baseline 4.1 / 5.7 ms, Sharp 23.1 / 36.1 ms; the physical hit stream grows by 16 bytes per
+  input. Existing DirectCrystal and readout hashes unchanged.
+- **Not here:** a multi-seed F or gross-error share inside Studio; the never-dominant inputs as a conversion-loss
+  estimate; the Anger FWHM; Compare in the report export.
+

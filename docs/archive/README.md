@@ -11,6 +11,15 @@ set the plan's status to done and move the plan and its review / reports into th
 
 ## Closed tasks
 
+- **TODO-47 Direct crystal against four-output Anger in GCAM Studio** (2026-10-15): a fifth workspace, Compare (Ctrl+5),
+  reads one physical-readout acquisition two ways from the same retained inputs — the ideal direct crystal assignment
+  with its unsmeared deposit, and the four-output Anger readout as acquired — with flood and reconstruction pairs, an
+  assignment-disagreement map, a spectrum overlay, explicit input populations and the 1 m reference cost rows
+  (SR-CMP-01 … 05, SU-28). The physical hit stream keeps each input's direct pixel and deposit; existing DirectCrystal and
+  readout hashes are unchanged. Same-crystal share on one seed: 71.4 % Baseline, 52.6 % Sharp (Findings 71). Review and
+  three implementation turns by Codex; desktop: Compare and the affected scenarios, 20 passed. Plan:
+  [PLAN.Studio.ReadoutCompare](PLAN.Studio.ReadoutCompare.md), review
+  [PLAN.Studio.ReadoutCompare.Review](PLAN.Studio.ReadoutCompare.Review.md).
 - **TODO-46 report export from GCAM Studio** (2026-10-15): Studio's one write surface (D-58, SR-SEC-01 narrowed). A
   document icon button opens a format popup: a self-contained HTML report (inline SVG; ambient spectrum tables as entry
   counts), the same content as PDF (PDFsharp-WPF, MIT; vector figures, configuration appendix) and Word (hand-written

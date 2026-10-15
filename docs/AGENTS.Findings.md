@@ -24,7 +24,7 @@ theme below changes, update its EV entries in the same commit (`AGENTS.Conventio
 | 10 | EV-21 | 52 | EV-09, EV-14, EV-15, EV-19, EV-20; model history | 54 | EV-23 |
 | 14 | EV-16 | 15 | EV-14, EV-15 | 63 | every MC entry; model history |
 | 64 | EV-34; ambient items of EV-01, -02, -07, -09, -12, -15; Evidence §1; model history | 67 | EV-35 | 68 | EV-36 |
-| 69 | EV-36 (readout presets), LIM-11 (scope) | 70 | — (Studio engineering; EV-34 scope unchanged) | | |
+| 69 | EV-36 (readout presets), LIM-11 (scope) | 70 | — (Studio engineering; EV-34 scope unchanged) | 71 | — (Studio engineering; one seed) |
 
 ## Index
 
@@ -103,3 +103,4 @@ The themes are split over two files; this table is the entry point (one row per 
 | 68 | [A physical four-output readout — light, network, trigger, pile-up (TODO-19 stage 1, 2026-10-08)](AGENTS.Findings.Part2.md#68-a-physical-four-output-readout--light-network-trigger-pile-up-todo-19-stage-1-2026-10-08) |
 | 69 | [Physical readout on every Studio preset — per-line calibration offers apart from measured cost (TODO-41, 2026-10-12)](AGENTS.Findings.Part2.md#69-physical-readout-on-every-studio-preset--per-line-calibration-offers-apart-from-measured-cost-todo-41-2026-10-12) |
 | 70 | [Physical readout with the ambient field and BSR on — owned interaction sites through one pulse stream (TODO-42, 2026-10-13)](AGENTS.Findings.Part2.md#70-physical-readout-with-the-ambient-field-and-bsr-on--owned-interaction-sites-through-one-pulse-stream-todo-42-2026-10-13) |
+| 71 | [Direct crystal against four-output Anger from one acquisition — the same-crystal share in Studio (TODO-47, 2026-10-15)](AGENTS.Findings.Part2.md#71-direct-crystal-against-four-output-anger-from-one-acquisition--the-same-crystal-share-in-studio-todo-47-2026-10-15) |
