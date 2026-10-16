@@ -1,111 +1,200 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "allowAppFileWrites": false,
-  "backgroundFilters": [
+  "candidateDefinition": {
+    "source": "the author's UI-automation procedure v3.3, safety section 3 (TODO-52 D1, approved 2026-10-16)",
+    "candidate": [
+      "inside the observation scope: every write surface's declared defaults and this run's resolved values, their isolation locations (surface-list.json scope entries), harness-owned locations (observation context) and the shell record locations (shellRecordLocations); a shared location enters only by the surface's own name pattern, else the surface is a blind spot",
+      "carries a harness marker (a run ID of the observation context) in its name, or in registry value data (snapshot flag m; files by name only)",
+      "a process of the registered image or its descendants (owned-process ledger)"
+    ],
+    "notCandidate": "everything else: not classified, not unknown, never blocking; counted and listed locally as unattributed",
+    "perProcessRecord": "not used (TODO-52 D2): no per-process write record; residual risk stated in surface-list.json (framework rows, status blind-spot)",
+    "osRunRecords": "records the OS keeps about a process's own run and windows stay other-actor even with a marker (osRunRecords)"
+  },
+  "backgroundFilters": [],
+  "backgroundFiltersSchema": {
+    "pattern": "Python regular expression, full match, case-insensitive, on the redacted target (<CATEGORY>\\relative path; a registry value as <HKCU>\\key\\value name)",
+    "channel": "file or registry",
+    "reason": "why the change is another actor's background activity",
+    "evidencedBy": "the observed run whose artefacts evidence it; adding or changing a filter is a rule change (HUM-07, A3)",
+    "entry": "optional: any (default), file, directory, key or value; restricts the filter to that entry kind",
+    "scope": "a filter may not cover an observation-scope location, a shell record location, a marker item or an owned-process item: stage0.py refuses an overlapping filter at rule load (literal prefixes compared, conservatively) and never applies a filter to a marker item"
+  },
+  "backgroundFilterHistory": [
     {
       "pattern": ".*\\\\\\.git(\\\\.*)?",
       "channel": "file",
       "reason": "git repository internals: Studio has no git code; concurrent developer tools (other sessions, IDEs) write them",
-      "evidencedBy": "probe-20261014-06, probe-20261014-07"
+      "evidencedBy": "probe-20261014-06, probe-20261014-07",
+      "active": false,
+      "retiredBy": "RC-14 (TODO-52 D3, 2026-10-16): outside the v3.3 observation scope; a change there without a harness marker is unattributed, not a candidate"
     },
     {
       "pattern": "<TEMP>\\\\.*",
       "channel": "file",
       "reason": "the real TEMP folder, shared scratch of every tool running beside the probe; Studio's TEMP and TMP point to the sandbox, which is classified before any filter",
-      "evidencedBy": "probe-20261014-06, probe-20261014-07"
+      "evidencedBy": "probe-20261014-06, probe-20261014-07",
+      "active": false,
+      "retiredBy": "RC-14 (TODO-52 D3, 2026-10-16): outside the v3.3 observation scope; a change there without a harness marker is unattributed, not a candidate"
     },
     {
       "pattern": "<LOCALAPPDATA>\\\\Packages\\\\[^\\\\]+\\\\.*",
       "channel": "file",
       "reason": "per-package containers of packaged (MSIX) apps; Studio is an unpackaged desktop app",
-      "evidencedBy": "probe-20261014-06, probe-20261014-07"
+      "evidencedBy": "probe-20261014-06, probe-20261014-07",
+      "active": false,
+      "retiredBy": "RC-14 (TODO-52 D3, 2026-10-16): outside the v3.3 observation scope; a change there without a harness marker is unattributed, not a candidate"
     },
     {
       "pattern": "<LOCALAPPDATA>\\\\Microsoft\\\\Edge\\\\User Data\\\\.*",
       "channel": "file",
       "reason": "browser profile activity",
-      "evidencedBy": "probe-20261014-06, probe-20261014-07"
+      "evidencedBy": "probe-20261014-06, probe-20261014-07",
+      "active": false,
+      "retiredBy": "RC-14 (TODO-52 D3, 2026-10-16): outside the v3.3 observation scope; a change there without a harness marker is unattributed, not a candidate"
     },
     {
       "pattern": "HKCU\\\\Software\\\\Microsoft\\\\VSCommon\\\\[^\\\\]+\\\\SQM\\\\.*",
       "channel": "registry",
       "reason": "Visual Studio telemetry heartbeats of running IDE processes",
-      "evidencedBy": "probe-20261014-06, probe-20261014-07"
+      "evidencedBy": "probe-20261014-06, probe-20261014-07",
+      "active": false,
+      "retiredBy": "RC-14 (TODO-52 D3, 2026-10-16): outside the v3.3 observation scope; a change there without a harness marker is unattributed, not a candidate"
     },
     {
       "pattern": "HKCU\\\\Software\\\\Microsoft\\\\OneDrive\\\\.*",
       "channel": "registry",
       "reason": "OneDrive client state",
-      "evidencedBy": "probe-20261014-06, probe-20261014-07"
+      "evidencedBy": "probe-20261014-06, probe-20261014-07",
+      "active": false,
+      "retiredBy": "RC-14 (TODO-52 D3, 2026-10-16): outside the v3.3 observation scope; a change there without a harness marker is unattributed, not a candidate"
     },
     {
       "pattern": "HKCU\\\\Software\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\Explorer\\\\SessionInfo\\\\.*",
       "channel": "registry",
       "reason": "the shell's window-session record (virtual-desktop view per top-level window): an OS record observing windows, other-actor by the procedure",
-      "evidencedBy": "probe-20261014-06, probe-20261014-07"
+      "evidencedBy": "probe-20261014-06, probe-20261014-07",
+      "active": false,
+      "retiredBy": "RC-14 (TODO-52 D3, 2026-10-16): outside the v3.3 observation scope; a change there without a harness marker is unattributed, not a candidate",
+      "replacedBy": "osRunRecords#window-session"
     },
     {
       "pattern": "HKCU\\\\Software\\\\Classes\\\\Local Settings\\\\Software\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\AppModel\\\\.*",
       "channel": "registry",
       "reason": "the app-model lifecycle state of packaged apps (Studio is unpackaged): an OS record observing processes or windows, other-actor by the procedure",
-      "evidencedBy": "probe-20261014-08"
+      "evidencedBy": "probe-20261014-08",
+      "active": false,
+      "retiredBy": "RC-14 (TODO-52 D3, 2026-10-16): outside the v3.3 observation scope; a change there without a harness marker is unattributed, not a candidate"
     },
     {
       "pattern": "HKCU\\\\Software\\\\Microsoft\\\\Windows NT\\\\CurrentVersion\\\\AppCompatFlags\\\\.*",
       "channel": "registry",
       "reason": "the compatibility store: an OS record observing processes or windows, other-actor by the procedure",
-      "evidencedBy": "procedure category (compatibility store)"
+      "evidencedBy": "procedure category (compatibility store)",
+      "active": false,
+      "retiredBy": "RC-14 (TODO-52 D3, 2026-10-16): outside the v3.3 observation scope; a change there without a harness marker is unattributed, not a candidate",
+      "replacedBy": "osRunRecords#compatibility-store"
     },
     {
       "pattern": "HKCU\\\\Software\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\Explorer\\\\FeatureUsage\\\\.*",
       "channel": "registry",
       "reason": "the shell's taskbar usage record (app switching, jump views): an OS record observing processes or windows, other-actor by the procedure",
-      "evidencedBy": "procedure category (window session)"
+      "evidencedBy": "procedure category (window session)",
+      "active": false,
+      "retiredBy": "RC-14 (TODO-52 D3, 2026-10-16): outside the v3.3 observation scope; a change there without a harness marker is unattributed, not a candidate",
+      "replacedBy": "osRunRecords#taskbar-usage"
     },
     {
       "pattern": "<LOCALAPPDATA>\\\\Microsoft\\\\Windows\\\\INetCache\\\\.*",
       "channel": "file",
       "reason": "the shared WinINet cache (here the taskbar weather widget's icon): Studio has no network code (AGENTS.UiAutomation section 1, confirmed absent)",
-      "evidencedBy": "manual-20261014-04"
+      "evidencedBy": "manual-20261014-04",
+      "active": false,
+      "retiredBy": "RC-14 (TODO-52 D3, 2026-10-16): outside the v3.3 observation scope; a change there without a harness marker is unattributed, not a candidate"
     },
     {
       "pattern": "HKCU\\\\Software\\\\Microsoft\\\\Windows NT\\\\CurrentVersion\\\\HostActivityManager\\\\.*",
       "channel": "registry",
       "reason": "the activity history of packaged app hosts (Studio is unpackaged): an OS record observing processes or windows, other-actor by the procedure",
-      "evidencedBy": "manual-20261014-04"
+      "evidencedBy": "manual-20261014-04",
+      "active": false,
+      "retiredBy": "RC-14 (TODO-52 D3, 2026-10-16): outside the v3.3 observation scope; a change there without a harness marker is unattributed, not a candidate"
     },
     {
       "pattern": "HKCU\\\\Software\\\\Classes\\\\Local Settings\\\\Software\\\\Microsoft\\\\Windows\\\\Shell\\\\MuiCache\\\\.*",
       "channel": "registry",
       "entry": "value",
       "reason": "the shell's display-name cache of launched executables (FriendlyAppName, ApplicationCompany), written once per executable path when the shell first shows it; a new worktree is a new path: an OS record observing processes or windows, other-actor by the procedure",
-      "evidencedBy": "probe-20261016-01"
+      "evidencedBy": "probe-20261016-01",
+      "active": false,
+      "retiredBy": "RC-14 (TODO-52 D3, 2026-10-16): outside the v3.3 observation scope; a change there without a harness marker is unattributed, not a candidate",
+      "replacedBy": "osRunRecords#display-name-cache"
     },
     {
       "pattern": "<LocalLow>\\\\Microsoft\\\\CryptnetUrlCache\\\\.*",
       "channel": "file",
       "reason": "the per-user certificate revocation URL cache, shared by every process that builds certificate chains: Studio has no network code and no connection from its process was observed (AGENTS.UiAutomation section 1)",
-      "evidencedBy": "manual-20261016-02"
+      "evidencedBy": "manual-20261016-02",
+      "active": false,
+      "retiredBy": "RC-14 (TODO-52 D3, 2026-10-16): outside the v3.3 observation scope; a change there without a harness marker is unattributed, not a candidate"
     },
     {
       "pattern": "<LOCALAPPDATA>\\\\Publishers\\\\[^\\\\]+\\\\.*",
       "channel": "file",
       "reason": "the shared folders of packaged apps' publishers (here the Store's installed-app database; Studio is unpackaged): the same category as the Packages filter",
-      "evidencedBy": "manual-20261016-02"
+      "evidencedBy": "manual-20261016-02",
+      "active": false,
+      "retiredBy": "RC-14 (TODO-52 D3, 2026-10-16): outside the v3.3 observation scope; a change there without a harness marker is unattributed, not a candidate"
     },
     {
       "pattern": "<LOCALAPPDATA>\\\\Kakao\\\\.*",
       "channel": "file",
       "reason": "a desktop messenger's settings and profile data, written by that app running beside the batch: Studio has no messaging or third-party integration",
-      "evidencedBy": "manual-20261016-02"
+      "evidencedBy": "manual-20261016-02",
+      "active": false,
+      "retiredBy": "RC-14 (TODO-52 D3, 2026-10-16): outside the v3.3 observation scope; a change there without a harness marker is unattributed, not a candidate"
     }
   ],
-  "backgroundFiltersSchema": {
-    "pattern": "Python regular expression, full match, case-insensitive, on the redacted target (<CATEGORY>\\relative path; a registry value as <HKCU>\\key\\value name)",
+  "osRunRecords": [
+    {
+      "id": "window-session",
+      "pattern": "HKCU\\\\Software\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\Explorer\\\\SessionInfo\\\\.*",
+      "channel": "registry",
+      "reason": "the shell's window-session record (virtual-desktop view per top-level window): an OS record observing windows, other-actor by the procedure",
+      "evidencedBy": "probe-20261014-06, probe-20261014-07"
+    },
+    {
+      "id": "compatibility-store",
+      "pattern": "HKCU\\\\Software\\\\Microsoft\\\\Windows NT\\\\CurrentVersion\\\\AppCompatFlags\\\\.*",
+      "channel": "registry",
+      "reason": "the compatibility store: an OS record observing processes or windows, other-actor by the procedure",
+      "evidencedBy": "procedure category (compatibility store)"
+    },
+    {
+      "id": "taskbar-usage",
+      "pattern": "HKCU\\\\Software\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\Explorer\\\\FeatureUsage\\\\.*",
+      "channel": "registry",
+      "reason": "the shell's taskbar usage record (app switching, jump views): an OS record observing processes or windows, other-actor by the procedure",
+      "evidencedBy": "procedure category (window session)"
+    },
+    {
+      "id": "display-name-cache",
+      "pattern": "HKCU\\\\Software\\\\Classes\\\\Local Settings\\\\Software\\\\Microsoft\\\\Windows\\\\Shell\\\\MuiCache\\\\.*",
+      "channel": "registry",
+      "entry": "value",
+      "reason": "the shell's display-name cache of launched executables (FriendlyAppName, ApplicationCompany), written once per executable path when the shell first shows it; a new worktree is a new path: an OS record observing processes or windows, other-actor by the procedure",
+      "evidencedBy": "probe-20261016-01"
+    }
+  ],
+  "osRunRecordsSchema": {
+    "id": "record name",
+    "pattern": "Python regular expression, full match, case-insensitive, on the redacted target (as backgroundFilters)",
     "channel": "file or registry",
-    "reason": "why the change is another actor's background activity",
-    "evidencedBy": "the observed run whose artefacts evidence it; adding or changing a filter is a rule change (HUM-07, A3)",
-    "entry": "optional: any (default), file, directory, key or value; restricts the filter to that entry kind"
+    "entry": "optional: any (default), file, directory, key or value",
+    "reason": "which OS record of a process's own run or windows it is (prefetch, window session, compatibility store, display-name cache, background activity)",
+    "evidencedBy": "the observed run or procedure category that evidences it",
+    "use": "applies to candidates only (scope or marker items); classified other-actor even with a marker; may not cover a scope location (refused at load)"
   },
   "requiredChannels": [
     "file",
@@ -221,7 +310,9 @@
       "relativePath": "NVIDIA Corporation\\Drs\\nvAppTimestamps",
       "scope": "write-only-within-file: WriteFile into the existing file; no create, delete, rename or set-information",
       "residualRisk": "The GPU driver's per-application timestamp store (machine-wide) is updated by the in-process driver."
-    },
+    }
+  ],
+  "shellRecordLocations": [
     {
       "id": "E6-os-save-dialog-history",
       "decision": "E6",
@@ -236,9 +327,43 @@
       "keyPattern": "Software\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\Explorer\\\\ComDlg32\\\\(?:OpenSavePidlMRU(?:\\\\[^\\\\]+)?|LastVisitedPidlMRU)",
       "valueNamePattern": "MRUListEx|[0-9]+",
       "scope": "keys and values added or updated during a confirmed export; no removal",
-      "residualRisk": "The Windows common save dialog (comdlg32, in Studio's process) records each confirmed file in the user's per-extension recent list and the last folder per application, as for every application that uses the dialog. Studio itself stores no folder or setting."
+      "residualRisk": "The Windows common save dialog (comdlg32, in Studio's process) records each confirmed file in the user's per-extension recent list and the last folder per application, as for every application that uses the dialog. Studio itself stores no folder or setting.",
+      "kind": "save / open dialog history (shell record location: data the app handed the shell)",
+      "movedFrom": "declaredAppSurfaces (RC-09); TODO-52 W2"
+    },
+    {
+      "id": "recent-document-links",
+      "kind": "recent documents (shell links)",
+      "surface": "surface-list.json#app-report-export",
+      "decision": "E6",
+      "status": "confirmed (declared with E6; not yet observed)",
+      "channel": "file",
+      "operations": ["CreateFile", "WriteFile"],
+      "root": "APPDATA",
+      "relativePattern": "Microsoft\\\\Windows\\\\Recent\\\\(?:gcam-(?:report|events)-[0-9]{8}-[0-9]{6}|report-[0-9]{8}-[0-9]{6}-[0-9a-f]{6})\\.(?:html|pdf|docx|csv)\\.lnk",
+      "residualRisk": "The shell may add a recent-document link for a file the user confirms in the save dialog, as for every application that uses the dialog: the same record family as the dialog's history (E6, author 2026-10-16).",
+      "note": "Studio's default export names and the harness-typed names report-<run-id>.<ext> (D4); other links (folders) are outside the scope and only counted as unattributed"
+    },
+    {
+      "id": "recent-documents-registry",
+      "kind": "recent documents (per-extension lists)",
+      "surface": "surface-list.json#app-report-export",
+      "channel": "registry",
+      "blindSpot": "HKCU ...\\Explorer\\RecentDocs: per-extension lists shared with every application, numbered values, no name pattern of Studio's own; an entry naming a harness-typed export carries the run ID in its value data (D4) and is a candidate by its marker; the MRUListEx order value carries none"
+    },
+    {
+      "id": "jump-lists",
+      "kind": "jump lists",
+      "surface": "surface-list.json#app-report-export",
+      "channel": "file",
+      "blindSpot": "<APPDATA>\\Microsoft\\Windows\\Recent\\AutomaticDestinations and CustomDestinations: file names derive from the application ID, not from a name pattern of Studio's own, and file content is not scanned for markers"
     }
   ],
+  "shellRecordLocationsSchema": {
+    "scope": "registry: hive run-user, keyPattern (regular expression relative to HKCU) and valueNamePattern; file: root (snapshot root category) with relativePattern or relativePath",
+    "decision": "present when the location is also a declared surface (E6): its changes classify as declared; otherwise a change there is a candidate classified as any other",
+    "blindSpot": "present instead of a scope entry when the location has no name pattern of the surface's own"
+  },
   "otherActorRecords": [
     {
       "id": "E2-bam-process-end-record",
@@ -356,6 +481,30 @@
       "id": "RC-11",
       "kind": "background filters: certificate revocation URL cache, packaged-app publisher folders, a desktop messenger's data (files)",
       "status": "evidenced by manual-20261016-02; HUM-07 approved by the author on 2026-10-16"
+    },
+    {
+      "id": "RC-12",
+      "decision": "TODO-52 D1",
+      "kind": "candidate definition of the UI-automation procedure v3.3 (scope, harness marker, owned process); everything else unattributed (permission expansion)",
+      "status": "author decision 2026-10-16; HUM-07 with the approved pilot, HUM-04 for the charter's observation method"
+    },
+    {
+      "id": "RC-13",
+      "decision": "TODO-52 D2",
+      "kind": "framework-registry, framework-cache-shell and framework-crash closed as blind spots with stated residual risk; no per-process write record",
+      "status": "author decision 2026-10-16; HUM-04 for the charter's observation method"
+    },
+    {
+      "id": "RC-14",
+      "decision": "TODO-52 D3",
+      "kind": "background filters outside the new scope retired (backgroundFilterHistory, inactive); the OS records of a process's own run and windows kept as osRunRecords; filters may not cover scope locations",
+      "status": "author decision 2026-10-16; HUM-07 with the approved pilot"
+    },
+    {
+      "id": "RC-15",
+      "decision": "TODO-52 D4",
+      "kind": "run-ID marker in the export file names the harness types (report-<run-id>.<ext>); snapshot value-data marker flag; E6 moved to shellRecordLocations",
+      "status": "author decision 2026-10-16; HUM-07 with the approved pilot"
     }
   ]
 }

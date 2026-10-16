@@ -12,6 +12,9 @@ public sealed class UiRunManifest(string runId, string scenario)
     public sealed record Bundle(string Id, string Profile, string Status, string Reason, Gate[] Gates, ReviewPlan ReviewPlan, string[] ReviewIds);
     public sealed record ScenarioResult(string Id, string Status, string Reason, string? SkipConditionId);
     public sealed record Conditional(string Id, string Activation, string EvaluationLevel, string BundleId, string Status, string Basis);
+    /// <summary>3 (TODO-52): an observed run's <c>writeAudit</c> adds <c>observationScope</c>, <c>unattributed</c> and
+    /// <c>controlWindow</c> (UI-automation procedure v3.3). Records written earlier keep their version.</summary>
+    public const int SchemaVersion = 3;
     public string RunId { get; } = runId;
     public string ManifestPhase { get; private set; } = "in_progress";
     public string RunStatus { get; private set; } = "blocked";
@@ -64,7 +67,7 @@ public sealed class UiRunManifest(string runId, string scenario)
         }).ToArray();
         return new
         {
-            schema = "gcam.ui-run", schemaVersion = 2, RunId, ManifestPhase, RunStatus, runIssues = RunIssues.ToArray(),
+            schema = "gcam.ui-run", schemaVersion = SchemaVersion, RunId, ManifestPhase, RunStatus, runIssues = RunIssues.ToArray(),
             startedAt = _startedAt, finishedAt = DateTimeOffset.UtcNow,
             purpose = profile switch { "P4" => "manual", "P3" => "evidence", "P2" => "regression", _ => "exploratory" },
             product = new { name = "GCAM Studio", revision = _package?.Commit ?? "unknown", workingTree = _package is null ? "unknown" : "clean",

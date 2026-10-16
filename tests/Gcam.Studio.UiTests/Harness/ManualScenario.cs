@@ -20,14 +20,15 @@ public sealed class ManualChapterAttribute(string scenario) : Attribute
 public static class ManualScenario
 {
     public static void Run(string scenario, ITestOutputHelper output, Action<StudioWindow, ManualRun> body)
-        => RunCore(scenario, output, body, []);
+        => RunCore(scenario, output, body, _ => []);
 
+    /// <summary>The export chapter: one folder per format in the owned sandbox, each holding the export and its sidecars
+    /// under the run-ID name the harness types (D4).</summary>
     public static void RunExport(ITestOutputHelper output, Action<StudioWindow, ManualRun> body)
-        => RunCore("manual.export", output, body, new[] { "html", "pdf", "docx", "csv" }.SelectMany(ext => ext == "csv"
-            ? new[] { $"{ext}/report.{ext}", $"{ext}/report.scene.json", $"{ext}/report.meta.json" }
-            : new[] { $"{ext}/report.{ext}", $"{ext}/report.scene.json" }).Select(p => p.Replace('/', Path.DirectorySeparatorChar)).ToArray());
+        => RunCore("manual.export", output, body, runId => new[] { "html", "pdf", "docx", "csv" }
+            .SelectMany(ext => ReportExportDialog.DeclaredFiles(runId, ext).Select(name => Path.Combine(ext, name))).ToArray());
 
-    private static void RunCore(string scenario, ITestOutputHelper output, Action<StudioWindow, ManualRun> body, IReadOnlyList<string> writes)
+    private static void RunCore(string scenario, ITestOutputHelper output, Action<StudioWindow, ManualRun> body, Func<string, IReadOnlyList<string>> writes)
     {
         var registry = ManualRegistry.Load();
         _ = registry.ForScenario(scenario);

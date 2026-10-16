@@ -37,12 +37,11 @@ public sealed class ReportExportScenarioTests(ITestOutputHelper output)
                     TimeSpan.FromSeconds(10), "published found-peak rows");
                 string estimate = ui.Text("PeakText");
                 var found = ui.AllText("Imaging.Peaks").Split('\n', StringSplitOptions.RemoveEmptyEntries);
-                string path = Path.Combine(sandbox, $"report.{extension}");
+                // The typed name carries the run ID (D4): the save dialog's records of it carry a harness marker.
+                string path = Path.Combine(sandbox, ReportExportDialog.FileName(record.RunId, extension));
                 string scenePath = Path.ChangeExtension(path, ".scene.json");
                 string metaPath = Path.ChangeExtension(path, ".meta.json");
-                string[] declared = extension == "csv"
-                    ? [$"report.{extension}", "report.scene.json", "report.meta.json"]
-                    : [$"report.{extension}", "report.scene.json"];
+                string[] declared = ReportExportDialog.DeclaredFiles(record.RunId, extension);
                 bool FilesExist() => declared.All(name => File.Exists(Path.Combine(sandbox, name)));
                 // Step text names sandbox paths relative to the sandbox (its full path is already in the record).
                 string Shown(string value) => value.StartsWith(sandbox, StringComparison.OrdinalIgnoreCase)
@@ -121,7 +120,7 @@ public sealed class ReportExportScenarioTests(ITestOutputHelper output)
                         using var meta = System.Text.Json.JsonDocument.Parse(File.ReadAllBytes(metaPath));
                         Assert.Equal("gcam.studio.events", meta.RootElement.GetProperty("schema").GetString());
                         Assert.Equal("DirectCrystal", meta.RootElement.GetProperty("readout").GetProperty("mode").GetString());
-                        Assert.Equal("report.csv", meta.RootElement.GetProperty("files").GetProperty("events").GetString());
+                        Assert.Equal(Path.GetFileName(path), meta.RootElement.GetProperty("files").GetProperty("events").GetString());
                         Assert.Equal(lines.Length - 1, meta.RootElement.GetProperty("eventCount").GetInt32());
                     }
                     else

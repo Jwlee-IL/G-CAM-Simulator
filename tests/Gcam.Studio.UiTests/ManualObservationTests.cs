@@ -50,6 +50,23 @@ public sealed class ManualObservationTests
     }
 
     [Fact]
+    public void ExportNames_CarryTheRunId_ForTheFileAndEverySidecar()
+    {
+        // D4 (TODO-52): what the save dialog records about a typed export then carries a harness marker.
+        const string run = "20261016-080840-f107d4";
+        Assert.Equal("report-" + run + ".html", ReportExportDialog.FileName(run, "html"));
+        Assert.Equal(new[] { "report-" + run + ".csv", "report-" + run + ".scene.json", "report-" + run + ".meta.json" }, ReportExportDialog.DeclaredFiles(run, "csv"));
+        Assert.Equal(2, ReportExportDialog.DeclaredFiles(run, "pdf").Length);
+        foreach (string ext in new[] { "html", "pdf", "docx", "csv" })
+        {
+            string file = ReportExportDialog.FileName(run, ext);
+            // ReportFileWriter derives the sidecars from the chosen path; the declared names must be exactly those.
+            Assert.Equal(Path.ChangeExtension(file, ".scene.json"), ReportExportDialog.DeclaredFiles(run, ext)[1]);
+            Assert.All(ReportExportDialog.DeclaredFiles(run, ext), name => Assert.Contains(run, name));
+        }
+    }
+
+    [Fact]
     public void OwnedFolders_AreTheBatchFoldersWithAHarnessOwnerMarker()
     {
         string root = IsolationPathsTests.Scratch();

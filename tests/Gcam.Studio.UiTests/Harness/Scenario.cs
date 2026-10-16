@@ -16,24 +16,24 @@ public static class Scenario
     public const int WindowWidth = 1440, WindowHeight = 900;
 
     public static void Run(string name, ITestOutputHelper output, Action<StudioWindow, RunRecord> body)
-        => RunCore(name, output, (ui, record, _) => body(ui, record), []);
+        => RunCore(name, output, (ui, record, _) => body(ui, record), _ => []);
 
     /// <summary>The report scenario alone declares writes at fixed names in its owned sandbox: the export and its scene
-    /// record, plus the metadata file for event data (CSV).</summary>
+    /// record, plus the metadata file for event data (CSV); the names carry the run ID (D4).</summary>
     public static void RunReportExport(string name, ITestOutputHelper output, Action<StudioWindow, RunRecord, string> body, string extension = "html")
-        => RunCore(name, output, body, extension == "csv"
-            ? [$"report.{extension}", "report.scene.json", "report.meta.json"]
-            : [$"report.{extension}", "report.scene.json"], caseArguments: [extension]);
+        => RunCore(name, output, body, runId => ReportExportDialog.DeclaredFiles(runId, extension), caseArguments: [extension]);
 
-    /// <summary>The manual adapter owns the outer final verdict and exact export destinations.</summary>
+    /// <summary>The manual adapter owns the outer final verdict and exact export destinations (a function of the run ID,
+    /// which the typed export names carry).</summary>
     public static void RunManual(string name, ITestOutputHelper output, Action<StudioWindow, RunRecord, string> body,
-        IReadOnlyList<string> expectedWrites, Action<VideoRecorder?> recorder)
+        Func<string, IReadOnlyList<string>> expectedWrites, Action<VideoRecorder?> recorder)
         => RunCore(name, output, body, expectedWrites, recorder);
 
     private static void RunCore(string name, ITestOutputHelper output, Action<StudioWindow, RunRecord, string> body,
-        IReadOnlyList<string> expectedWrites, Action<VideoRecorder?>? outerRecorder = null, string[]? caseArguments = null)
+        Func<string, IReadOnlyList<string>> declaredWrites, Action<VideoRecorder?>? outerRecorder = null, string[]? caseArguments = null)
     {
         var record = new RunRecord(name);
+        IReadOnlyList<string> expectedWrites = declaredWrites(record.RunId);
         using var pollingLog = PollingWait.Record(record.Diagnostic);
         StudioProcess? app = null;
         AutomationElement? window = null;

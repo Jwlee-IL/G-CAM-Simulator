@@ -39,8 +39,9 @@ public sealed class ObservedRunTests(ITestOutputHelper output)
         var roots = StateSnapshot.ObservedRoots(Path.GetDirectoryName(RepoPaths.StudioExe())!, sandbox, runFolder);
         var registry = new WindowsRegistrySource();
         var snapshots = new List<StateSnapshot.Counts>();
+        // The run ID is the harness marker: a registry value whose data carries it is flagged at snapshot time (TODO-52).
         StateSnapshot.Counts Snapshot(string label) =>
-            StateSnapshot.Take(label, IsolationPaths.Inside(runDirectory, $"snapshot-{label}.jsonl.gz"), roots, registry);
+            StateSnapshot.Take(label, IsolationPaths.Inside(runDirectory, $"snapshot-{label}.jsonl.gz"), roots, registry, [runId]);
         var issues = new List<UiRunManifest.Issue>();
         OwnedStudioProcess? app = null;
         RegistryMarker.Control? registryControl = null;
@@ -130,8 +131,14 @@ public sealed class ObservedRunTests(ITestOutputHelper output)
                     new { channel = "registry", seen = false, written = registryControl is not null, declaration = registryControl, actor = "harness" } },
                 channelApplicability = new[] { ProbeChannels.Network },
                 reason = "stage0.py diff-classify of the snapshots required before any G1 promotion",
-                blindSpots = new[] { "locations outside the snapshot scope", "a content change that restores size and last-write time",
-                    "a write undone before snapshot C", "100 ms process polling misses short-lived processes" },
+                // v3.3 (TODO-52): candidates are changes in this scope, marker items and owned processes; the rest is unattributed.
+                observationScope = ObservationScope.Describe(isolation, ownedRoots, [markerKey], ["Gcam.Studio.exe"]),
+                unattributed = ObservationScope.PendingUnattributed(),
+                controlWindow = ObservationScope.ControlWindow(nullFinished - nullStarted, finished - launchAt),
+                blindSpots = new[] { "locations outside the observation scope: an app effect there without a harness marker is unattributed (no per-process write record, D2)",
+                    "locations outside the snapshot roots", "a harness marker inside file content (files are matched by name only)",
+                    "a content change that restores size and last-write time", "a write undone before snapshot C",
+                    "100 ms process polling misses short-lived processes" }.Concat(ObservationScope.BlindSpots(isolation)).ToArray(),
                 validFor = new { productBuild = package.DeploymentSha256, isolationContent = package.IsolationSha256,
                     pathRules = IsolationPaths.Hash(File.ReadAllBytes(Path.Combine(isolation, "surface-list.json"))),
                     registeredImages = new[] { "Gcam.Studio.exe" } } };

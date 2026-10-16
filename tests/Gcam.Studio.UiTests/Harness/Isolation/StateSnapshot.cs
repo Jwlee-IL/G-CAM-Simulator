@@ -12,12 +12,17 @@ namespace Gcam.Studio.UiTests.Harness.Isolation;
 /// lines into the run folder (local only; it names machine paths). Files carry size, last-write and attributes;
 /// directories their existence and last-write; keys their last-write; values their type and the SHA-256 of the raw
 /// bytes. An entry that cannot be read is recorded as unreadable, never as an error of the snapshot.
+/// Version 2 (TODO-52): the run's harness markers (run IDs) are known at snapshot time, so a value whose raw data
+/// carries one is flagged (<c>m</c>) — the hash alone cannot show it afterwards. Files are matched by name only, by the
+/// classifier; their content is never read.
 /// </summary>
 public static class StateSnapshot
 {
     public const string Schema = "gcam.state-snapshot";
+    public const int SchemaVersion = 2;
     // Registry keys nest at most 512 levels; the guard stops a link loop from walking forever.
     private const int MaxKeyDepth = 512;
+    public const int MarkerMinLength = 8;
 
     /// <summary>A file scope root and the category that stands for it in redacted output.</summary>
     public sealed record Root(string Category, string Path);
@@ -46,11 +51,31 @@ public static class StateSnapshot
         ];
     }
 
-    /// <summary>Writes one snapshot to a new file (never overwrites) and returns its counts and hash.</summary>
-    public static Counts Take(string label, string output, IReadOnlyList<Root> roots, IRegistrySource registry)
+    /// <summary>True when raw registry value data carries one of the markers, case-insensitively, as UTF-16LE text (at
+    /// either byte alignment, as shell item lists embed it) or as single-byte text (ASCII / UTF-8 run IDs).</summary>
+    public static bool CarriesMarker(byte[] data, IReadOnlyList<string> markers)
+    {
+        ArgumentNullException.ThrowIfNull(data);
+        ArgumentNullException.ThrowIfNull(markers);
+        if (data.Length == 0 || markers.Count == 0) return false;
+        string[] views =
+        [
+            Encoding.Unicode.GetString(data, 0, data.Length & ~1),
+            data.Length > 2 ? Encoding.Unicode.GetString(data, 1, (data.Length - 1) & ~1) : "",
+            Encoding.Latin1.GetString(data),
+        ];
+        return markers.Any(marker => views.Any(view => view.Contains(marker, StringComparison.OrdinalIgnoreCase)));
+    }
+
+    /// <summary>Writes one snapshot to a new file (never overwrites) and returns its counts and hash. <paramref name="markers"/>:
+    /// the run's harness markers (run IDs); a value whose data carries one is flagged.</summary>
+    public static Counts Take(string label, string output, IReadOnlyList<Root> roots, IRegistrySource registry, IReadOnlyList<string>? markers = null)
     {
         ArgumentNullException.ThrowIfNull(roots);
         ArgumentNullException.ThrowIfNull(registry);
+        // A marker must be specific enough not to occur by chance (stage0.py uses the same minimum).
+        string[] marks = (markers ?? []).Where(m => !string.IsNullOrWhiteSpace(m) && m.Length >= MarkerMinLength)
+            .Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
         var started = DateTimeOffset.UtcNow;
         var full = roots.Where(r => !string.IsNullOrWhiteSpace(r.Path))
             .Select(r => r with { Path = Path.GetFullPath(r.Path).TrimEnd(Path.DirectorySeparatorChar) }).ToArray();
@@ -64,9 +89,10 @@ public static class StateSnapshot
         using (var writer = new StreamWriter(gzip, new UTF8Encoding(false)) { NewLine = "\n" })
         {
             void Line(object value) => writer.WriteLine(JsonSerializer.Serialize(value));
-            Line(new { c = "header", schema = Schema, schemaVersion = 1, label, startedAt = started.ToString("O"),
+            Line(new { c = "header", schema = Schema, schemaVersion = SchemaVersion, label, startedAt = started.ToString("O"),
                 roots = full.Select(r => new { category = r.Category, path = r.Path, exists = Directory.Exists(r.Path), walked = walked.Contains(r) }),
-                registryRoot = "HKCU" });
+                registryRoot = "HKCU",
+                valueMarkers = new { markers = marks, encodings = new[] { "utf-16le", "single-byte" }, caseInsensitive = true } });
             foreach (var root in walked.Where(r => Directory.Exists(r.Path)))
             {
                 var pending = new Stack<string>([root.Path]);
@@ -123,7 +149,10 @@ public static class StateSnapshot
                 keys++;
                 foreach (var value in key.Values)
                 {
-                    Line(new { c = "v", p = shown, n = value.Name, k = value.Kind, h = IsolationPaths.Hash(value.Data) });
+                    if (CarriesMarker(value.Data, marks))
+                        Line(new { c = "v", p = shown, n = value.Name, k = value.Kind, h = IsolationPaths.Hash(value.Data), m = 1 });
+                    else
+                        Line(new { c = "v", p = shown, n = value.Name, k = value.Kind, h = IsolationPaths.Hash(value.Data) });
                     values++;
                 }
                 foreach (string sub in key.SubKeys) keysPending.Push(path.Length == 0 ? sub : path + "\\" + sub);
