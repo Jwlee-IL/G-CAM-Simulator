@@ -4,5 +4,10 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <Product>Gcam</Product>
+    <!-- The SDK appends the git commit to the informational version ("1.0.0+<sha>"), so every commit, even one that
+         changes only docs or tests, gave every assembly new bytes and invalidated the observed-run basis and the manual
+         runs keyed on the deployment fingerprint (TODO-51). Provenance is the run records' commit beside that
+         fingerprint, not a string inside the binary. -->
+    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
   </PropertyGroup>
 </Project>
