@@ -94,18 +94,18 @@ Build: zero errors, zero warnings; the two existing xUnit analyzer warnings (`Im
 execution:
 
 <!-- BEGIN GENERATED: TEST INVENTORY -->
-Subject `9778a5c857ef7e8fba47bb870834909ad29ec8e0`; formal; source snapshot `935eb57e12707cb0582e902718e5bd7e8fc2408052400770226c2dc53c1af7f7`.
+Subject `f029b3bc973c93e0fc2b26fc86467ffea97e1a28`; formal; source snapshot `13b0d6e76636529794596bb9f408a1b2c2fb66b7464455fa478359d5fb3f6a31`.
 
 | Assembly / family | Passed | Failed | Not executed | Missing cases |
 | --- | --- | --- | --- | --- |
-| Gcam.Studio.RenderTests | 0 | 0 | 1 | 0 |
-| Gcam.Studio.Services.Tests | 108 | 0 | 7 | 0 |
-| Gcam.Studio.Tests | 211 | 0 | 0 | 0 |
-| Gcam.Studio.UiTests | 15 | 0 | 20 | 0 |
-| Gcam.Tests | 481 | 0 | 0 | 0 |
-| checker | 4 | 0 | 0 | 0 |
+| Gcam.Studio.RenderTests | 16 | 0 | 15 | 0 |
+| Gcam.Studio.Services.Tests | 152 | 0 | 7 | 0 |
+| Gcam.Studio.Tests | 309 | 0 | 0 | 0 |
+| Gcam.Studio.UiTests | 140 | 0 | 4 | 0 |
+| Gcam.Tests | 595 | 0 | 0 | 0 |
+| checker | 7 | 0 | 0 | 0 |
 | cocotb | 111 | 0 | 26 | 0 |
-| unittest | 38 | 0 | 1 | 0 |
+| unittest | 188 | 0 | 1 | 0 |
 <!-- END GENERATED: TEST INVENTORY -->
 
 No desktop, render or long-evidence opt-in was enabled for this run. The retained final desktop record
@@ -360,34 +360,46 @@ Automated execution only; inspection/compiler/manual verdicts in the matrix rema
 | EV-33 | 10 | 0 | 0 | 0 |
 | EV-34 | 87 | 0 | 0 | 0 |
 | EV-35 | 16 | 0 | 0 | 0 |
+| SR-CHAIN-02 | 1 | 0 | 0 | 0 |
+| SR-CMP-01 | 1 | 0 | 0 | 0 |
+| SR-CMP-02 | 1 | 0 | 0 | 0 |
+| SR-CMP-03 | 1 | 0 | 0 | 0 |
+| SR-CMP-05 | 1 | 0 | 0 | 0 |
+| SR-DET-01 | 1 | 0 | 0 | 0 |
+| SR-DET-10 | 1 | 0 | 0 | 0 |
+| SR-DET-11 | 1 | 0 | 0 | 0 |
+| SR-EXPORT-01 | 1 | 0 | 0 | 0 |
+| SR-EXPORT-02 | 1 | 0 | 0 | 0 |
+| SR-EXPORT-03 | 1 | 0 | 0 | 0 |
+| SR-EXPORT-05 | 1 | 0 | 0 | 0 |
 | SR-IMG-01 | 2 | 0 | 0 | 0 |
-| SR-IMG-02 | 10 | 0 | 2 | 0 |
+| SR-IMG-02 | 11 | 0 | 1 | 0 |
 | SR-IMG-03 | 1 | 0 | 0 | 0 |
 | SR-IMG-04 | 7 | 0 | 1 | 0 |
 | SR-IMG-05 | 15 | 0 | 0 | 0 |
 | SR-IMG-06 | 1 | 0 | 0 | 0 |
 | SR-IMG-07 | 24 | 0 | 0 | 0 |
-| SR-MEAS-01 | 2 | 0 | 1 | 0 |
-| SR-MEAS-02 | 2 | 0 | 1 | 0 |
-| SR-MEAS-03 | 2 | 0 | 2 | 0 |
+| SR-MEAS-01 | 3 | 0 | 0 | 0 |
+| SR-MEAS-02 | 4 | 0 | 0 | 0 |
+| SR-MEAS-03 | 5 | 0 | 0 | 0 |
 | SR-MEAS-04 | 4 | 0 | 0 | 0 |
-| SR-MEAS-05 | 3 | 0 | 0 | 0 |
-| SR-MEAS-06 | 1 | 0 | 0 | 0 |
-| SR-MEAS-07 | 0 | 0 | 1 | 0 |
+| SR-MEAS-05 | 4 | 0 | 0 | 0 |
+| SR-MEAS-06 | 2 | 0 | 0 | 0 |
+| SR-MEAS-07 | 1 | 0 | 0 | 0 |
 | SR-NAV-01 | 1 | 0 | 0 | 0 |
-| SR-NAV-02 | 2 | 0 | 0 | 0 |
+| SR-NAV-02 | 3 | 0 | 0 | 0 |
 | SR-NAV-03 | 2 | 0 | 0 | 0 |
 | SR-OPT-01 | 2 | 0 | 0 | 0 |
-| SR-OPT-02 | 2 | 0 | 0 | 0 |
-| SR-OPT-03 | 13 | 0 | 0 | 0 |
+| SR-OPT-02 | 3 | 0 | 0 | 0 |
+| SR-OPT-03 | 17 | 0 | 0 | 0 |
 | SR-OPT-04 | 7 | 0 | 0 | 0 |
 | SR-OPT-05 | 3 | 0 | 0 | 0 |
-| SR-OPT-06 | 0 | 0 | 1 | 0 |
+| SR-OPT-06 | 0 | 0 | 4 | 0 |
 | SR-PLOT-01 | 1 | 0 | 0 | 0 |
 | SR-PLOT-02 | 5 | 0 | 0 | 0 |
 | SR-PLOT-03 | 10 | 0 | 0 | 0 |
-| SR-PLOT-04 | 1 | 0 | 1 | 0 |
-| SR-PLOT-05 | 0 | 0 | 1 | 0 |
+| SR-PLOT-04 | 2 | 0 | 0 | 0 |
+| SR-PLOT-05 | 1 | 0 | 0 | 0 |
 | SR-PLOT-06 | 2 | 0 | 1 | 0 |
 | SR-PLOT-07 | 1 | 0 | 0 | 0 |
 | SR-PLOT-08 | 1 | 0 | 0 | 0 |
@@ -395,46 +407,49 @@ Automated execution only; inspection/compiler/manual verdicts in the matrix rema
 | SR-PLOT-10 | 1 | 0 | 0 | 0 |
 | SR-PLOT-11 | 0 | 0 | 1 | 0 |
 | SR-RUN-03 | 2 | 0 | 0 | 0 |
-| SR-RUN-09 | 2 | 0 | 1 | 0 |
-| SR-RUN-10 | 2 | 0 | 1 | 0 |
+| SR-RUN-09 | 3 | 0 | 0 | 0 |
+| SR-RUN-10 | 3 | 0 | 0 | 0 |
 | SR-RUN-11 | 2 | 0 | 0 | 0 |
-| SR-RUN-12 | 3 | 0 | 2 | 0 |
-| SR-RUN-13 | 3 | 0 | 1 | 0 |
+| SR-RUN-12 | 17 | 0 | 0 | 0 |
+| SR-RUN-13 | 16 | 0 | 0 | 0 |
 | SR-RUN-15 | 4 | 0 | 0 | 0 |
 | SR-RUN-16 | 20 | 0 | 0 | 0 |
-| SR-RUN-20 | 2 | 0 | 0 | 0 |
+| SR-RUN-20 | 10 | 0 | 0 | 0 |
 | SR-RUN-21 | 3 | 0 | 0 | 0 |
-| SR-RUN-22 | 3 | 0 | 0 | 0 |
-| SR-RUN-23 | 6 | 0 | 1 | 0 |
+| SR-RUN-22 | 6 | 0 | 0 | 0 |
+| SR-RUN-23 | 8 | 0 | 0 | 0 |
 | SR-RUN-24 | 2 | 0 | 0 | 0 |
 | SR-RUN-25 | 2 | 0 | 0 | 0 |
-| SR-RUN-26 | 8 | 0 | 2 | 0 |
+| SR-RUN-26 | 12 | 0 | 0 | 0 |
 | SR-RUN-27 | 2 | 0 | 0 | 0 |
 | SR-RUN-28 | 1 | 0 | 0 | 0 |
-| SR-RUN-29 | 32 | 0 | 1 | 0 |
+| SR-RUN-29 | 41 | 0 | 2 | 0 |
+| SR-RUN-31 | 9 | 0 | 0 | 0 |
+| SR-RUN-34 | 4 | 0 | 0 | 0 |
 | SR-SCENE-01 | 2 | 0 | 0 | 0 |
 | SR-SCENE-02 | 2 | 0 | 0 | 0 |
 | SR-SPEC-01 | 3 | 0 | 0 | 0 |
 | SR-SPEC-02 | 3 | 0 | 0 | 0 |
 | SR-SPEC-03 | 1 | 0 | 0 | 0 |
-| SR-SPEC-04 | 4 | 0 | 0 | 0 |
+| SR-SPEC-04 | 5 | 0 | 0 | 0 |
 | SR-SPEC-05 | 5 | 0 | 0 | 0 |
 | SR-SPEC-06 | 1 | 0 | 0 | 0 |
 | SR-SPEC-07 | 3 | 0 | 0 | 0 |
-| SR-THEME-01 | 1 | 0 | 1 | 0 |
+| SR-THEME-01 | 2 | 0 | 0 | 0 |
+| SR-THEME-02 | 4 | 0 | 0 | 0 |
 | SR-VIEW-01 | 1 | 0 | 0 | 0 |
 | SR-VIEW-02 | 3 | 0 | 0 | 0 |
 | SR-VIEW-03 | 2 | 0 | 0 | 0 |
 | SR-VIEW-04 | 1 | 0 | 0 | 0 |
-| SR-VIEW-05 | 4 | 0 | 1 | 0 |
+| SR-VIEW-05 | 5 | 0 | 0 | 0 |
 | SR-VIEW-06 | 1 | 0 | 0 | 0 |
-| SR-VIEW-07 | 7 | 0 | 1 | 0 |
-| SR-VIEW-08 | 2 | 0 | 1 | 0 |
-| VAL-01 | 0 | 0 | 1 | 0 |
-| VAL-02 | 0 | 0 | 1 | 0 |
-| VAL-03 | 6 | 0 | 3 | 0 |
-| VAL-04 | 0 | 0 | 1 | 0 |
-| VAL-05 | 0 | 0 | 1 | 0 |
+| SR-VIEW-07 | 8 | 0 | 0 | 0 |
+| SR-VIEW-08 | 3 | 0 | 0 | 0 |
+| VAL-01 | 1 | 0 | 0 | 0 |
+| VAL-02 | 1 | 0 | 0 | 0 |
+| VAL-03 | 9 | 0 | 0 | 0 |
+| VAL-04 | 1 | 0 | 0 | 0 |
+| VAL-05 | 1 | 0 | 0 | 0 |
 <!-- END GENERATED: AUTOMATED TRACE RESULTS -->
 
 ### Coverage summary

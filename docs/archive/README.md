@@ -11,6 +11,10 @@ set the plan's status to done and move the plan and its review / reports into th
 
 ## Closed tasks
 
+- **TODO-49 Test records: a desktop profile and milestone M2** (2026-10-16): `collect --family dotnet --profile desktop`
+  runs the UI test project with the desktop opt-in on (long run, observed probe and polish survey off); a desktop case
+  replaces a skipped normal selection. Milestone M2 (`samples/testing/records/M2`, report `docs/VV.Tests.Results.md`):
+  1,518 passed, 53 not executed, none failed, desktop results included. No plan document (one-turn task, planner).
 - **TODO-48 GCAM Studio manual, second edition, and a video of every desktop test** (2026-10-16): edition
   `2026-10-16-1` (formal; ten chapters, new 3.7 report export and 4.4 Compare) generated from one observed manual batch
   on one build; every desktop test that drives Studio records an MP4 with step captions, and a pass publishes it to

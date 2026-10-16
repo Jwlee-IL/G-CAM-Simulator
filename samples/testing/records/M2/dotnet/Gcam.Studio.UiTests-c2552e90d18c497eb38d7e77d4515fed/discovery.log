@@ -1,0 +1,149 @@
+Test run for <repo>\tests\Gcam.Studio.UiTests\bin\Release\net9.0-windows\Gcam.Studio.UiTests.dll (.NETCoreApp,Version=v9.0)
+VSTest version 17.14.1 (x64)
+
+The following Tests are available:
+    Gcam.Studio.UiTests.ActionPolicyTests.CurrentPolicy_MatchesBothDirectionsIncludingDynamicAndCodeCreatedTargets
+    Gcam.Studio.UiTests.ActionPolicyTests.UnknownRemovedRenamedWrongTypeOrUnapprovedTargets_FailClosed
+    Gcam.Studio.UiTests.ApprovalRecordTests.Approval_RequiresActualStatementActTargetAndNonOlderDate
+    Gcam.Studio.UiTests.ApprovalRecordTests.ProbePackage_RequiresAllThreeActsAndExactFingerprints
+    Gcam.Studio.UiTests.CaptureQualityTests.BadFrames_RejectEachReason_WithoutDesktopAccess
+    Gcam.Studio.UiTests.CaptureQualityTests.TemplateFingerprint_ChangesWithDefinition_AndRejectsMalformedPixels
+    Gcam.Studio.UiTests.ChromeScenarioTests.BorderlessCaption_HasNoNativeTitleBar_AndStartsAtWindowTop
+    Gcam.Studio.UiTests.ComparePopulationOracleTests.DisplayedRows_RecomputeHeldEligibleAndRoundedShare
+    Gcam.Studio.UiTests.ComparePopulationOracleTests.EmptyDenominator_IsUnavailable_AndMalformedOrNegativeRowsAreRefused
+    Gcam.Studio.UiTests.CompareScenarioTests.PhysicalPrefix_ComparisonDifferenceAndReset_KeepTheirPopulationLabels
+    Gcam.Studio.UiTests.ContentFingerprintTests.CanonicalFixture_AgreesAcrossLanguages_WithCaseNestedUnicodeAndExcludedPaths
+    Gcam.Studio.UiTests.DesktopLeaseTests.LiveLease_RefusesAnotherRunnerEvenAfterExpiry_AndReleasesFinally
+    Gcam.Studio.UiTests.DesktopLeaseTests.RetainedUnexpiredLease_RefusesLaunch_ExpiredRetainedLeaseMayRecover
+    Gcam.Studio.UiTests.FloodOracleTests.ImageBounds_UseWholePixelsPerCell_Centred
+    Gcam.Studio.UiTests.FloodOracleTests.ScreenToMm_MapsImageCornersToDetectorEdges_YUp
+    Gcam.Studio.UiTests.FloodOracleTests.DistanceMm_FullDiagonal_IsSpanTimesRootTwo
+    Gcam.Studio.UiTests.FloodOracleTests.Verdict_RejectsAValueOutsideTheTolerance
+    Gcam.Studio.UiTests.FloodOracleTests.PixelsInside_CountsCentres_RobustToAPixelAtTheCorners
+    Gcam.Studio.UiTests.FloodOracleTests.AngleDeg_IsTheVertexAngle_ToleranceShrinksWithLongerArms
+    Gcam.Studio.UiTests.FloodOracleTests.Parsers_ReadPeakAndRoiDetail_RejectOtherText
+    Gcam.Studio.UiTests.FloodOracleTests.CellCentreMm_IsAbsolute_WithYUp
+    Gcam.Studio.UiTests.FloodOracleTests.ReadoutAndSumParsers_ReadTheAppsFormats
+    Gcam.Studio.UiTests.FloodOracleTests.ReadoutUnit_NamesTheImageKind_IncludingMlem
+    Gcam.Studio.UiTests.FloodOracleTests.NetCountParser_ReadsSignedUncertainty_AndRejectsMissingOrWrongUnits
+    Gcam.Studio.UiTests.FloodOracleTests.MeasurementRow_ParsesTheAutomationName
+    Gcam.Studio.UiTests.FocusPreparationTests.Focus_TransientRefusalRetries_AndPersistentRefusalFailsWithCause
+    Gcam.Studio.UiTests.IsolationPathsTests.LaunchValues_RefuseExtraWrongOrEscapingValues
+    Gcam.Studio.UiTests.IsolationPathsTests.DeviceForm_MapsDriveLetterRootsToTraceDevicePaths_AndRefusesUnmappedDrives
+    Gcam.Studio.UiTests.IsolationPathsTests.Fingerprint_ChangesWithContentsAndNames
+    Gcam.Studio.UiTests.ManualObservationTests.WithoutTheVariable_TheFixtureDoesNothing
+    Gcam.Studio.UiTests.ManualObservationTests.Context_HasTheFieldsDiffClassifyReads_WithTheWindowFromFirstLaunchToLastExit
+    Gcam.Studio.UiTests.ManualObservationTests.OwnedFolders_AreTheBatchFoldersWithAHarnessOwnerMarker
+    Gcam.Studio.UiTests.ManualRecordTests.ImageRect_FloorsTheNearEdgeAndCeilsTheFarEdge_AtFractionalAndNegativeOrigins
+    Gcam.Studio.UiTests.ManualRecordTests.Registry_EveryGeneratedChapter_HasExactlyOneDesktopScenario
+    Gcam.Studio.UiTests.ManualRecordTests.Notices_OnlyListedIdsInTheirChapters_AreAccepted
+    Gcam.Studio.UiTests.ManualRecordTests.Record_ResolvesScreenLabels_AggregatesTheWorstStep_AndWritesTheGeneratorSchema
+    Gcam.Studio.UiTests.ManualRecordTests.Record_NonCompletedUiRun_IsAborted_AndAnEmptyRunIsNotExecuted
+    Gcam.Studio.UiTests.ManualRecordTests.Record_PinsTheRunLocalVideo_OnlyWhenItWasEncoded
+    Gcam.Studio.UiTests.ManualRecordTests.Labels_AreRequired_AndEscapedForMarkdown_AndErrorsLoseLocalPaths
+    Gcam.Studio.UiTests.ManualRecordTests.Labels_ReplacedButtons_KeepTheActionLabelAndRefreshContinue
+    Gcam.Studio.UiTests.ManualRecordTests.Labels_DeferUntilReadable_AndKeepAlreadyReadWords
+    Gcam.Studio.UiTests.ManualRecordTests.Labels_NeverReadable_RefuseCompletion
+    Gcam.Studio.UiTests.ManualRecordTests.Labels_AmbiguousSelectorAndOtherReadFailures_AreNotCachedAway
+    Gcam.Studio.UiTests.ManualRecordTests.OptionalText_OnlyAbsenceCountsAsCleared_OtherErrorsPropagate
+    Gcam.Studio.UiTests.ManualScenarioTests.Navigate_WindowWorkspacesAndViewTabs
+    Gcam.Studio.UiTests.ManualScenarioTests.Sources_PlaceEditAddRemove_LockedUntilReset
+    Gcam.Studio.UiTests.ManualScenarioTests.Geometry_PresetCustomAndRefusal_DetectorFaceFollows
+    Gcam.Studio.UiTests.ManualScenarioTests.Acquisition_StartStopContinueReset
+    Gcam.Studio.UiTests.ManualScenarioTests.Measurements_ReadoutDistanceAngleRoi_DeleteAndClear
+    Gcam.Studio.UiTests.ManualScenarioTests.Spectrum_LinesWindowAndLogY_MatchRetainedHistogram
+    Gcam.Studio.UiTests.ManualScenarioTests.Export_ReportsAndEvents_WriteOnlyDeclaredFiles
+    Gcam.Studio.UiTests.ManualScenarioTests.Compare_PhysicalPrefix_DisplaysConsistentPopulations
+    Gcam.Studio.UiTests.MediaFoundationWriterTests.SyntheticRgb32Sequence_WritesFinalizedH264Container_WithoutScreenAccess
+    Gcam.Studio.UiTests.MlemScenarioTests.Mlem_SelectedDuringAcquisition_NonNegativeWithUnitNoteAndAdvancingStatus
+    Gcam.Studio.UiTests.MlemScenarioTests.Mlem_WithStrip_ReportsNetCountsAndFindsCsOnItsSide
+    Gcam.Studio.UiTests.MlemScenarioTests.Mlem_FocalPlane1500_FlagsTheUnmeasuredIterationCount
+    Gcam.Studio.UiTests.MlemScenarioTests.MethodSwitch_KeepsMeasurementsOnTheSameGrid
+    Gcam.Studio.UiTests.MlemScenarioTests.FocusSweep_UnderMlem_IsTheCrossCorrelationSweep
+    Gcam.Studio.UiTests.MlemScenarioTests.MlemSelection_SurvivesStopContinueAndReset_WithoutAStaleImage
+    Gcam.Studio.UiTests.ObservedRunTests.LaunchIdleExit_RecordsPendingChannelEvidence_WithoutAutomation
+    Gcam.Studio.UiTests.PilotTests.Pilot_SimulateThenMeasureDistance_AddsRowWithExpectedLength
+    Gcam.Studio.UiTests.PlotViewTests.TenMillionSamples_ZoomAndResizeRedraw_Within16Milliseconds
+    Gcam.Studio.UiTests.PolishSurveyTests.AllWorkspaces_BothThemesAndWindowSizes_CapturesPolishSurvey
+    Gcam.Studio.UiTests.PollingWaitTests.TransientThenSuccess_Returns_AndRecordsAllThreeKinds
+    Gcam.Studio.UiTests.PollingWaitTests.PersistentTransient_TimesOut_WithLastExceptionAndExactCount
+    Gcam.Studio.UiTests.PollingWaitTests.NonTransient_PropagatesImmediately_IncludingAssertionsAndDuplicateSelectors
+    Gcam.Studio.UiTests.PollingWaitTests.FalseCondition_TimesOut_WithZeroTransientsAndNoInnerException
+    Gcam.Studio.UiTests.PollingWaitTests.RunRecordScope_RestoresPreviousLogger_AndDoesNotLeakBetweenRuns
+    Gcam.Studio.UiTests.ProcessLedgerTests.Ownership_RejectsReusedPidWrongImageAndWrongMarker
+    Gcam.Studio.UiTests.ProcessLedgerTests.Snapshot_FlagsDescendantsGrandchildrenAndUnownedImage_WithoutAdopting
+    Gcam.Studio.UiTests.ProcessLedgerTests.Monitor_ProvesInjectedSampler_AndRefusesBrokenSampler
+    Gcam.Studio.UiTests.PythonInterpreterTests.Launcher_ComesFirst_AndItsExecutableIsValidated
+    Gcam.Studio.UiTests.PythonInterpreterTests.MissingLauncher_FallsBackToPython
+    Gcam.Studio.UiTests.PythonInterpreterTests.StorePackage_IsTheLastResort
+    Gcam.Studio.UiTests.PythonInterpreterTests.ExplicitOverride_IsExclusive_AndFailsByName
+    Gcam.Studio.UiTests.PythonInterpreterTests.UnusableCandidates_FailActionably_WithoutSkippingFingerprint(fault: "bad-json")
+    Gcam.Studio.UiTests.PythonInterpreterTests.UnusableCandidates_FailActionably_WithoutSkippingFingerprint(fault: "exit")
+    Gcam.Studio.UiTests.PythonInterpreterTests.UnusableCandidates_FailActionably_WithoutSkippingFingerprint(fault: "timeout")
+    Gcam.Studio.UiTests.ReadoutScenarioTests.CountOracle_RefusesNonConservationAndMissingIdentity
+    Gcam.Studio.UiTests.ReadoutScenarioTests.ModuleOracle_ReadsTheCapturedGeometry_AndWaitsFollowTheMeasuredCost
+    Gcam.Studio.UiTests.ReadoutScenarioTests.DesktopGate_LongPreparationRequiresBothExplicitOptIns
+    Gcam.Studio.UiTests.ReadoutScenarioTests.RefusedLineAndMissingPreparation_ExplainWithoutZeroing
+    Gcam.Studio.UiTests.ReadoutScenarioTests.PhysicalBsrAndAmbient_ContinuationConservesMeasuredCounts
+    Gcam.Studio.UiTests.ReadoutScenarioTests.PreparationCancelRetryAndTabs_AreExplicit
+    Gcam.Studio.UiTests.ReadoutScenarioTests.FixedSeedRepeatAndContinuation_ConserveCountsAndExposeFourLanes
+    Gcam.Studio.UiTests.ReadoutScenarioTests.SharpTwoLineBank_SwitchesWindowAndLineWithoutTruthDispatch
+    Gcam.Studio.UiTests.ReadoutScenarioTests.WideLocalisationHelp_ShowsRecordScopeAndDirectBias
+    Gcam.Studio.UiTests.ReadoutScenarioTests.HighResCold_ProgressTabsCornersAndSessionHit_Bundled
+    Gcam.Studio.UiTests.ReadoutScenarioTests.HighResCoLine_ProgressTabsSensitivityAndSessionHit
+    Gcam.Studio.UiTests.ReadoutScenarioTests.CustomModules_InheritByModuleNotCost_UnknownCalibratesLocally
+    Gcam.Studio.UiTests.RegistryMarkerTests.Write_UsesRunScopedKeyAndSingleRunIdValue_WithFakeOnly
+    Gcam.Studio.UiTests.RegistryMarkerTests.Write_RefusesExistingRunWithoutOverwriteOrDeletion
+    Gcam.Studio.UiTests.RegistryMarkerTests.Write_RejectsInvalidRunBeforeStoreAccess
+    Gcam.Studio.UiTests.RegistryMarkerTests.Network_IsNotApplicable_WithDecisionAndSourceEvidence
+    Gcam.Studio.UiTests.ReportDocumentTests.Pdf_HasPagesTextAndVectorFigures_WithoutImageObjects
+    Gcam.Studio.UiTests.ReportDocumentTests.Word_ContainsRealPngFigures_FromTheSharedSvgData
+    Gcam.Studio.UiTests.ReportExportScenarioTests.ExportReport_SaveDialogWritesIntoOwnedSandbox_AndMatchesDisplayedEstimate(format: "Html", extension: "html")
+    Gcam.Studio.UiTests.ReportExportScenarioTests.ExportReport_SaveDialogWritesIntoOwnedSandbox_AndMatchesDisplayedEstimate(format: "Pdf", extension: "pdf")
+    Gcam.Studio.UiTests.ReportExportScenarioTests.ExportReport_SaveDialogWritesIntoOwnedSandbox_AndMatchesDisplayedEstimate(format: "Word", extension: "docx")
+    Gcam.Studio.UiTests.ReportExportScenarioTests.ExportReport_SaveDialogWritesIntoOwnedSandbox_AndMatchesDisplayedEstimate(format: "Csv", extension: "csv")
+    Gcam.Studio.UiTests.ReportFileWriterTests.Write_CsvCreatesOnlyDataSceneAndMeta_WithExactBytes
+    Gcam.Studio.UiTests.ReportFileWriterTests.Write_FailedMetaOpen_RemovesNewDataAndScene_AndRestoresAnExistingScene
+    Gcam.Studio.UiTests.ReportFileWriterTests.SaveFilter_NamesTheFormat(extension: ".csv", filter: "CSV event data (*.csv)|*.csv")
+    Gcam.Studio.UiTests.ReportFileWriterTests.SaveFilter_NamesTheFormat(extension: ".html", filter: "HTML report (*.html)|*.html")
+    Gcam.Studio.UiTests.ReportFileWriterTests.SaveFilter_NamesTheFormat(extension: ".docx", filter: "DOCX report (*.docx)|*.docx")
+    Gcam.Studio.UiTests.ReportFileWriterTests.Write_CreatesOnlyReportAndScene_WithExactBytes
+    Gcam.Studio.UiTests.ReportFileWriterTests.Write_FailedSidecarOpen_RemovesNewReport
+    Gcam.Studio.UiTests.ReportFileWriterTests.Write_FailedSidecarOpen_KeepsExistingReportAndScene
+    Gcam.Studio.UiTests.ScenarioTests.StopContinueReset_KeepsAccumulatesAndDiscards
+    Gcam.Studio.UiTests.ScenarioTests.Roi_OnFloodMap_CountsWholePixelsByCentre
+    Gcam.Studio.UiTests.ScenarioTests.Readout_AndOneCellRoi_MatchAbsolutePositionAndValue
+    Gcam.Studio.UiTests.ScenarioTests.Angle_EscAbandonsDraft_DeleteRemovesSelected
+    Gcam.Studio.UiTests.ScenarioTests.MoveSource_ResetEditStart_PutsPeakOnTheSource
+    Gcam.Studio.UiTests.ScenarioTests.ThemeToggle_RelabelsAndSwitchesBack
+    Gcam.Studio.UiTests.StateSnapshotTests.Take_TempFolder_RecordsFilesDirectoriesOnceAndKeysWithRawValueHashes
+    Gcam.Studio.UiTests.StateSnapshotTests.ObservedRoots_CoverTheCharterScope_WithSandboxAndRunFolderNamed
+    Gcam.Studio.UiTests.SurfaceSurveyTests.DeployedMetadata_RecordsManagedAndNativeReferences_WithoutExecutingProduct
+    Gcam.Studio.UiTests.TracingToolingTests.PreparedProfile_ReferencesDeclaredCollectorsAndRequiredChannels
+    Gcam.Studio.UiTests.UiRunManifestTests.ProbeApproval_DoesNotApproveTheP4Charter
+    Gcam.Studio.UiTests.UiRunManifestTests.CleanupAndRecordFailure_DoNotMaskTheBodyFailure
+    Gcam.Studio.UiTests.UiRunManifestTests.Finalisation_RequiresCleanup_AndDoesNotConfuseProductFailureWithUnsafeRun
+    Gcam.Studio.UiTests.UiRunManifestTests.StatusPrecedence_PreservesEveryIssue_AndNeverPromotesDraftGates
+    Gcam.Studio.UiTests.UiRunManifestTests.SkippedScenario_RequiresAndRetainsTheExactConditionId
+    Gcam.Studio.UiTests.VerdictMutationTests.Mutation_ProvesApplicationAndExpectedFailure_WithoutWeakeningTolerance
+    Gcam.Studio.UiTests.VerdictMutationTests.SkipConditions_IdentifyTheIndependentClosedGate
+    Gcam.Studio.UiTests.VideoModelTests.Timeline_KeepsGaps_AndCaptionsEscapeAndCoalesce
+    Gcam.Studio.UiTests.VideoModelTests.LetterboxAndMask_UseSameTransform_ClipAndRoundConservatively
+    Gcam.Studio.UiTests.VideoModelTests.Coverage_EveryDesktopMethodIsWrappedOrExplicitlyExcluded_AndTheoryRowsHaveDistinctIds
+    Gcam.Studio.UiTests.VideoModelTests.Publication_ReplacesMp4ThenVttThenIndex_AndRepairsInterruptedHashes
+    Gcam.Studio.UiTests.VideoModelTests.InterruptedPublication_KeepsOldIndex_AndNextPublicationRemovesOtherStaleEntries
+    Gcam.Studio.UiTests.VideoModelTests.Index_RejectsUnsafePathsBadHashesVersionsAndMaskBounds
+    Gcam.Studio.UiTests.VideoRecorderTests.EdgeRing_CoversEveryBorderPixel_AndNothingInside
+    Gcam.Studio.UiTests.VideoRecorderTests.SlowEncoder_DropsPendingFrames_PreservesMonotonicGaps_AndStopsWithinBudget
+    Gcam.Studio.UiTests.VideoRecorderTests.HungCapture_StopIsBounded_AndWorkerCanLaterExit
+    Gcam.Studio.UiTests.VideoRecorderTests.EncoderExceptionAndPrivacyPause_NeverEscapeTheTestBoundary
+    Gcam.Studio.UiTests.WorkspaceOracleTests.BandCount_IncludesBoundaryCentres
+    Gcam.Studio.UiTests.WorkspaceOracleTests.EventsInWindow_IncludesStartExcludesEnd
+    Gcam.Studio.UiTests.WorkspaceOracleTests.HalfMax_InterpolatesAndCensors
+    Gcam.Studio.UiTests.WorkspaceScenarioTests.Spectrum_BandCountAndWindowChange_MatchRetainedHistogram
+    Gcam.Studio.UiTests.WorkspaceScenarioTests.Waveform_SelectedEventListAndMarkers_MatchArrivalWindow
+    Gcam.Studio.UiTests.WorkspaceScenarioTests.Detector_FaceBeforeStart_LockedUntilReset
+    Gcam.Studio.UiTests.WorkspaceScenarioTests.Imaging_ChannelAndStrip_MatchRetainedFloodAndFoundPeaks
+    Gcam.Studio.UiTests.WorkspaceScenarioTests.Imaging_RefocusAndSweep_MatchProjectionAndHalfMaxInterval
+
+Workload updates are available. Run `dotnet workload list` for more information.

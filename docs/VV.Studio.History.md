@@ -439,3 +439,15 @@ re-classifies completed. Edition `2026-10-16-1` (ten chapters, 29 figures) gener
 the notices (N-NOT-SAVED re-worded, new N-EXPORT-SCOPE), static chapters 1.1 and 5.2 and the mark purposes; formal (104
 files, 6.2 MB), both editions replay byte for byte. Release build 0 warnings; normal suite 1,171 passed / 63 skipped;
 catalog 238 units; generator self-test 44.
+
+## Test-record milestone M2 with a desktop profile (TODO-49), 2026-10-16
+
+The test-record collector gained a desktop profile (`collect --family dotnet --profile desktop`, author's go): the UI
+test project with the desktop opt-in on, the long run and the observed probe off, the polish survey not run (it rewrites
+committed screenshots); a desktop case replaces a normal-profile selection that was not executed, and M1 still replays
+byte for byte. Milestone M2 was collected on the clean `f029b3b` checkout: .NET (normal), Python with the numerical
+tests, cocotb (Python 3.13) and seven checkers, then the desktop profile (140 passed, the long run and the probe not
+executed). Report `docs/VV.Tests.Results.md` formal: 1,518 cases passed, 53 not executed, none failed; export
+`samples/testing/records/M2`; bundle, export and both archived milestones replay. Two earlier collection attempts were
+discarded (a desktop lease left by a stopped run; a scratch generation that wrote into this repository's VV.Studio);
+the collection scripts now keep scratch output out of the repository.
