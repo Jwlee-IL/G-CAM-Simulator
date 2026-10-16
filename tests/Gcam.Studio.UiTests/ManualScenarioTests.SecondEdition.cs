@@ -32,7 +32,7 @@ public sealed partial class ManualScenarioTests
         run.Capture("Report and event-data formats.", [new("Export.Html"), new("Export.Csv"), new("Export.Confirm")], full: true);
         ui.Invoke("Modal.Cancel");
         StudioWindow.WaitUntil(() => !ui.Exists("Export.Confirm"), TimeSpan.FromSeconds(5), "format popup closed");
-        run.Check("export.cancel-writes-nothing", !Directory.EnumerateFiles(run.Sandbox, "report.*", SearchOption.AllDirectories).Any(), "no report after Cancel");
+        run.Check("export.cancel-writes-nothing", !Directory.EnumerateFiles(run.Sandbox, "report*", SearchOption.AllDirectories).Any(), "no report after Cancel");
 
         foreach (var (format, extension) in new[] { ("Html", "html"), ("Pdf", "pdf"), ("Word", "docx"), ("Csv", "csv") })
         {
@@ -40,7 +40,8 @@ public sealed partial class ManualScenarioTests
             ui.Invoke("ExportReport");
             StudioWindow.WaitUntil(() => ui.Exists("Export.Confirm"), TimeSpan.FromSeconds(5), "format popup");
             run.ResolveLabels(); // Export.Confirm exists only while the format popup is open
-            string path = Path.Combine(run.Sandbox, extension, "report." + extension);
+            // The typed name carries the run ID (D4); the step text and figures never show it.
+            string path = Path.Combine(run.Sandbox, extension, ReportExportDialog.FileName(run.RunId, extension));
             ReportExportDialog.Save(ui, run.Record!, run.Sandbox, path, format);
             CheckExport(ui, run, path, extension, estimate, count);
         }
@@ -80,10 +81,10 @@ public sealed partial class ManualScenarioTests
             }
             using var meta = JsonDocument.Parse(File.ReadAllBytes(Path.ChangeExtension(path, ".meta.json")));
             run.CheckEqual("export.csv-meta-count", count, meta.RootElement.GetProperty("eventCount").GetInt64());
-            run.CheckEqual("export.csv-meta-file", "report.csv", meta.RootElement.GetProperty("files").GetProperty("events").GetString());
+            run.CheckEqual("export.csv-meta-file", Path.GetFileName(path), meta.RootElement.GetProperty("files").GetProperty("events").GetString());
         }
         var files = Directory.GetFiles(Path.GetDirectoryName(path)!).Select(Path.GetFileName).Order().ToArray();
-        string[] expected = extension == "csv" ? ["report.csv", "report.meta.json", "report.scene.json"] : ["report." + extension, "report.scene.json"];
+        string[] expected = ReportExportDialog.DeclaredFiles(run.RunId, extension);
         run.CheckEqual("export.file-set-" + extension, string.Join('|', expected.Order()), string.Join('|', files));
         run.CheckEqual("export.keeps-count-" + extension, count, ui.Counts);
     }

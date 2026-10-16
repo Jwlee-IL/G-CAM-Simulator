@@ -86,6 +86,43 @@ public sealed class StateSnapshotTests
     }
 
     [Fact]
+    public void Take_WithRunIdMarkers_FlagsValuesWhoseDataCarriesOne_AndRecordsTheMarkersInTheHeader()
+    {
+        // TODO-52 (v3.3 candidate 2): the hash hides value data afterwards, so the marker is looked for at snapshot time.
+        const string run = "probe-20261016-07";
+        var written = new DateTime(2026, 10, 16, 1, 2, 3, DateTimeKind.Utc);
+        byte[] shellItem = [0x14, 0x00, .. Encoding.Unicode.GetBytes(@"C:\x\gcam-uia-" + run.ToUpperInvariant() + @"\report.html"), 0x00];
+        var registry = new FakeRegistry(new()
+        {
+            [""] = new(written, [], ["Software"]),
+            ["Software"] = new(written, [
+                new("Unicode", 1, Encoding.Unicode.GetBytes("report-" + run + ".csv\0")),
+                new("OddAligned", 3, [0x01, .. Encoding.Unicode.GetBytes(run)]),
+                new("Ascii", 3, Encoding.ASCII.GetBytes("x" + run + "y")),
+                new("ShellItem", 3, shellItem),
+                new("Other", 3, Encoding.Unicode.GetBytes("probe-20261016-08")),
+                new("Empty", 3, []),
+            ], []),
+        });
+        string outputs = IsolationPathsTests.Scratch(); Directory.CreateDirectory(outputs);
+        string output = Path.Combine(outputs, "snapshot-C.jsonl.gz");
+        StateSnapshot.Take("C", output, [], registry, [run, "short", ""]);
+        var lines = Lines(output);
+        var header = lines[0];
+        Assert.Equal(2, header.GetProperty("schemaVersion").GetInt32());
+        Assert.Equal(new[] { run }, header.GetProperty("valueMarkers").GetProperty("markers").EnumerateArray().Select(m => m.GetString()));
+        var flagged = lines.Where(l => l.GetProperty("c").GetString() == "v")
+            .ToDictionary(l => l.GetProperty("n").GetString()!, l => l.TryGetProperty("m", out var m) && m.GetInt32() == 1);
+        Assert.Equal(new Dictionary<string, bool> { ["Unicode"] = true, ["OddAligned"] = true, ["Ascii"] = true, ["ShellItem"] = true,
+            ["Other"] = false, ["Empty"] = false }, flagged);
+        // Without markers nothing is flagged and the header says so.
+        string plain = Path.Combine(outputs, "snapshot-A.jsonl.gz");
+        StateSnapshot.Take("A", plain, [], registry);
+        Assert.Empty(Lines(plain)[0].GetProperty("valueMarkers").GetProperty("markers").EnumerateArray());
+        Assert.DoesNotContain(Lines(plain), l => l.TryGetProperty("m", out _));
+    }
+
+    [Fact]
     public void ObservedRoots_CoverTheCharterScope_WithSandboxAndRunFolderNamed()
     {
         var roots = StateSnapshot.ObservedRoots(@"C:\fixture\deploy", @"C:\fixture\sandbox", @"C:\fixture\run");

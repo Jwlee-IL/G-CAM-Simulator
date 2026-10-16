@@ -9,6 +9,18 @@ namespace Gcam.Studio.UiTests.Harness;
 public static class ReportExportDialog
 {
     private const int IdOk = 1, IdCancel = 2, IdNo = 7;
+
+    /// <summary>The export file name the harness types: it carries the run ID (D4, TODO-52), so whatever the save dialog
+    /// records about it (its history, recent lists) carries a harness marker. Never shown in a manual figure: the native
+    /// dialog is not captured and Studio displays no export path.</summary>
+    public static string FileName(string runId, string extension) => $"report-{runId}.{extension}";
+
+    /// <summary>The files one export writes beside each other: the chosen file, its scene record and, for event data,
+    /// its metadata file (ReportFileWriter's sidecar names).</summary>
+    public static string[] DeclaredFiles(string runId, string extension) => extension == "csv"
+        ? [FileName(runId, extension), $"report-{runId}.scene.json", $"report-{runId}.meta.json"]
+        : [FileName(runId, extension), $"report-{runId}.scene.json"];
+
     public static void Save(StudioWindow ui, RunRecord record, string sandbox, string path, string format)
     {
         if (!Path.GetFullPath(path).StartsWith(Path.GetFullPath(sandbox) + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))

@@ -9,7 +9,7 @@ moves to the archive, marked done.
 
 | ID | Task | Origin | Owner | State |
 |---|---|---|---|---|
-| TODO-52 | **[Attributable-change observation (UI automation guide v3.3)](PLAN.Testing.ObserveV33.md)**: a candidate is only a change the run can attribute to Studio (observation scope from the write-surface list, harness markers, owned processes); other changes are counted as `unattributed` and never block. Then the approved pilot, together with TODO-51's desktop cache check | author 2026-10-16 (guide v3.3) | planner → implementer | D1–D4 approved; implementation turn |
+| TODO-52 | **[Attributable-change observation (UI automation guide v3.3)](PLAN.Testing.ObserveV33.md)**: a candidate is only a change the run can attribute to Studio (observation scope from the write-surface list, harness markers, owned processes); other changes are counted as `unattributed` and never block. Then the approved pilot, together with TODO-51's desktop cache check | author 2026-10-16 (guide v3.3) | planner → implementer | implemented; desktop session (pilot + cache check) next |
 | TODO-51 | **[Source-determined binaries and cached desktop results](PLAN.Testing.ResultCache.md)**: a build of the same source gives the same bytes (no commit in the informational version or the PDBs), so observed runs and manual runs are reused across docs- and test-only commits; then reuse a desktop test's latest pass while its key (deployment fingerprint, its catalog source hashes, isolation fingerprint, environment) is unchanged, reported as reuse | author 2026-10-16 | planner → implementer | steps 1–2 done; desktop check of the cache open |
 
 Next free ID: TODO-53. The `Gcam.Wpf` → Studio migration (TODO-06 … TODO-24) is complete — `Gcam.Wpf` was deleted in

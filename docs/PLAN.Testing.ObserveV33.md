@@ -5,8 +5,13 @@ Scope: TODO-52. Bring the observed run's classification in line with the author'
 observation scope, with no harness marker and no process attribution, are counted as `unattributed` and never block a
 run. Then run the approved pilot this needs together with TODO-51's open desktop check.
 
-Status: D1–D4 approved by the author 2026-10-16 ("넷 다 승인. 진행해."); next: one implementer turn, then one desktop
-session on the author's go.
+Status: D1–D4 approved by the author 2026-10-16 ("넷 다 승인. 진행해."); W1–W7 implemented the same day by a substitute
+agent and audited by the planner (normal suite 1,185 passed / 63 skipped; stage0 tests 71; catalog 239; both editions and
+milestones replay). The four 2026-10-16 observed runs re-classify `completed` under the new rules with 7 / 8 / 30 / 33
+unattributed changes. Audit additions: recent-document links for exports are declared with E6 (same record family as the
+dialog history; a harness-typed name carries the run ID and would otherwise have blocked a run). The run manifest is G-CAM's
+own schema (`gcam.ui-run` 3); it carries the procedure's schema-10 fields `observationScope`, `unattributed`,
+`controlWindow`. Next: one desktop session on the author's go (approved pilot, TODO-51 cache check).
 
 ## Why (2026-10-16)
 

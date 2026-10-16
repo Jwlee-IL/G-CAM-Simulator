@@ -83,8 +83,11 @@ public sealed class ManualObservation : IDisposable
         go.Validate("HUM-01", source.Commit, source.CommittedAt);
     }
 
+    /// <summary>The harness markers known when a snapshot is taken: the batch run ID and every scenario run ID so far (the
+    /// sandboxes and the typed export names carry them); a registry value whose data carries one is flagged (TODO-52).</summary>
     private StateSnapshot.Counts Snapshot(string label) =>
-        StateSnapshot.Take(label, IsolationPaths.Inside(RunDirectory!, $"snapshot-{label}.jsonl.gz"), _roots, _registry);
+        StateSnapshot.Take(label, IsolationPaths.Inside(RunDirectory!, $"snapshot-{label}.jsonl.gz"), _roots, _registry,
+            [RunId!, .. _launches.Select(l => l.RunId)]);
 
     /// <summary>The file positive control: one harness write into the first scenario's sandbox while Studio runs.</summary>
     public void SandboxReady(string sandbox)

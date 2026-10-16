@@ -803,8 +803,11 @@ class StageZeroIsolationTests(unittest.TestCase):
 
 
 class SnapshotClassificationTests(unittest.TestCase):
-    """MR8 diff-classify on synthetic snapshot triples. No registry, file-system walk, application or trace access."""
+    """MR8 diff-classify on synthetic snapshot triples, with the v3.3 candidate definition (TODO-52). No registry,
+    file-system walk, application or trace access."""
     LOCAL = 'C:\\Users\\fixture\\AppData\\Local'
+    ROAMING = 'C:\\Users\\fixture\\AppData\\Roaming'
+    DOCS = 'C:\\Users\\fixture\\Documents'
     TEMP = LOCAL + '\\Temp'
     SANDBOX = TEMP + '\\gcam-uia-probe-fixture'
     RUN = TEMP + '\\gcam-todo43\\probe-fixture'
@@ -812,9 +815,13 @@ class SnapshotClassificationTests(unittest.TestCase):
     MARKER = 'HKCU\\Software\\GcamUiaProbe\\probe-fixture'
     E1 = 'HKCU\\Software\\Microsoft\\CTF\\CUAS\\DefaultCompositionWindow'
     E3 = 'C:\\ProgramData\\NVIDIA Corporation\\Drs\\nvAppTimestamps'
+    # Studio's default export name in its default folder: a scope location (declared default of app-report-export).
+    EXPORT = DOCS + '\\gcam-report-20261014-000010.html'
+    EXPORT_OLD = DOCS + '\\gcam-report-20261013-000000.html'
 
     def setUp(self):
         self.rules = json.loads((SCRIPT.parent / 'classification-rules.json').read_text())
+        self.surfaces = json.loads((SCRIPT.parent / 'surface-list.json').read_text(encoding='utf-8'))
         self.before = stage0.filetime('2026-10-14T00:00:00Z')
         self.inside = stage0.filetime('2026-10-14T00:00:15Z')
         self.after = stage0.filetime('2026-10-14T00:00:40Z')
@@ -826,6 +833,7 @@ class SnapshotClassificationTests(unittest.TestCase):
             {'c': 'd', 'p': self.LOCAL + '\\app', 't': self.before, 'a': 16},
             {'c': 'f', 'p': self.LOCAL + '\\app\\settings.json', 's': 1, 't': self.before, 'a': 32},
             {'c': 'f', 'p': self.E3, 's': 10, 't': self.before, 'a': 32},
+            {'c': 'f', 'p': self.EXPORT_OLD, 's': 10, 't': self.before, 'a': 32},
         ]
         self.controls = [
             {'c': 'd', 'p': self.SANDBOX, 't': self.inside, 'a': 16},
@@ -834,16 +842,20 @@ class SnapshotClassificationTests(unittest.TestCase):
             {'c': 'v', 'p': self.MARKER, 'n': 'RunId', 'k': 1, 'h': 'c' * 64},
         ]
         self.processes = [{'pid': 42, 'parentPid': 7, 'image': 'Gcam.Studio.exe', 'ending': 'exit 0'}]
+        self.version = 2
 
     def run_folder(self, a, b, c, complete=True):
         root = StageZeroIsolationTests.scratch()
-        roots = [{'category': 'LOCALAPPDATA', 'path': self.LOCAL}, {'category': 'TEMP', 'path': self.TEMP},
+        roots = [{'category': 'LOCALAPPDATA', 'path': self.LOCAL}, {'category': 'APPDATA', 'path': self.ROAMING},
+                 {'category': 'TEMP', 'path': self.TEMP}, {'category': 'Documents', 'path': self.DOCS},
                  {'category': 'ProgramData', 'path': 'C:\\ProgramData'}, {'category': 'Sandbox', 'path': self.SANDBOX},
                  {'category': 'RunDirectory', 'path': self.RUN}]
         for label, rows in zip('ABC', (a, b, c)):
+            header = {'c': 'header', 'schema': 'gcam.state-snapshot', 'schemaVersion': self.version, 'label': label, 'roots': roots}
+            if self.version >= 2:
+                header['valueMarkers'] = {'markers': ['probe-fixture'], 'encodings': ['utf-16le', 'single-byte'], 'caseInsensitive': True}
             with gzip.open(root / f'snapshot-{label}.jsonl.gz', 'wt', encoding='utf-8') as stream:
-                for row in [{'c': 'header', 'schema': 'gcam.state-snapshot', 'schemaVersion': 1, 'label': label, 'roots': roots}] + rows \
-                        + ([{'c': 'end'}] if complete or label != 'C' else []):
+                for row in [header] + rows + ([{'c': 'end'}] if complete or label != 'C' else []):
                     stream.write(json.dumps(row) + '\n')
         context = {'schemaVersion': 1, 'runId': 'probe-fixture',
                    'nullWindow': {'seconds': 12.0},
@@ -856,7 +868,7 @@ class SnapshotClassificationTests(unittest.TestCase):
         (root / 'observation-context.json').write_text(json.dumps(context), encoding='utf-8')
         return root
 
-    def classify(self, extra_c=(), extra_b=(), replace=None, rules=None, complete=True):
+    def classify(self, extra_c=(), extra_b=(), rules=None, complete=True, sink=None):
         def apply(rows, extra):
             rows = [dict(row) for row in rows]
             for change in extra:
@@ -866,7 +878,8 @@ class SnapshotClassificationTests(unittest.TestCase):
             return rows
         b = apply(self.base, extra_b)
         c = apply(b + self.controls, extra_c)
-        return stage0.diff_classify(self.run_folder(self.base, b, c, complete), rules or self.rules)
+        return stage0.diff_classify(self.run_folder(self.base, b, c, complete), rules or self.rules, surfaces=self.surfaces,
+                                    unattributed_sink=sink)
 
     def only(self, result, classification=None):
         rows = [row for row in result['candidates'] if row['classification'] != 'harness']
@@ -875,6 +888,12 @@ class SnapshotClassificationTests(unittest.TestCase):
             self.assertEqual(classification, rows[0]['classification'], rows[0])
         return rows[0]
 
+    def none(self, result, unattributed=1):
+        """Nothing but the harness records is a candidate; the change is counted as unattributed and does not block."""
+        self.assertEqual([], [row for row in result['candidates'] if row['classification'] != 'harness'])
+        self.assertEqual(unattributed, result['unattributed']['count'])
+        self.assertEqual(('completed', True), (result['runStatus'], result['g1Eligible']))
+
     def test_clean_run_sees_all_controls_and_is_eligible(self):
         result = self.classify()
         self.assertEqual(('completed', True), (result['runStatus'], result['g1Eligible']))
@@ -882,135 +901,219 @@ class SnapshotClassificationTests(unittest.TestCase):
         self.assertEqual({'harness': 4}, result['classificationCounts'])
         self.assertEqual(['observation-context.json', 'snapshot-A.jsonl.gz', 'snapshot-B.jsonl.gz', 'snapshot-C.jsonl.gz'],
                          sorted(result['inputSha256']))
+        # v3.3 fields: the scope with its bases, the control window and the blind spots of D2 and the shell records.
+        scope = {(row['id'], row['basis'].split(' (')[0]) for row in result['observationScope']}
+        for expected in (('app-report-export', 'declared default'), ('app-report-export', 'resolved value'),
+                         ('app-tsf-composition-window', 'declared default'), ('app-gpu-driver-timestamps', 'declared default'),
+                         ('app-logs-cache-temp', 'isolation location'), ('E6-os-save-dialog-history', 'shell record location'),
+                         ('recent-document-links', 'shell record location'), ('harness-owned', 'harness-owned'),
+                         ('owned-processes', 'registered image and its descendants')):
+            self.assertIn(expected, scope)
+        self.assertIn({'id': 'app-report-export', 'location': '<Sandbox>'}, [{'id': r['id'], 'location': r['location']}
+                                                                             for r in result['observationScope']])
+        self.assertEqual({'rule': 'changed-in-null-window', 'aToBSeconds': 12.0, 'appWindowSeconds': 10.1, 'shorterThanAppWindow': False,
+                          'aToBChanges': 0, 'classifiedByRule': 0}, result['controlWindow'])
+        self.assertEqual(0, result['unattributed']['count'])
+        blind = ' '.join(result['blindSpots'])
+        for name in ('framework-registry', 'framework-cache-shell', 'framework-crash', 'jump-lists', 'recent-documents-registry'):
+            self.assertIn(name, blind)
+        self.assertEqual({'A': True, 'B': True, 'C': True}, result['markers']['valueDataFlags'])
+        self.assertEqual(0, result['backgroundFilters'])
+        self.assertTrue(all(not entry['active'] for entry in self.rules['backgroundFilterHistory']))
+
+    def test_out_of_scope_change_is_unattributed_and_the_run_completes(self):
+        # Another program's settings, cache and registry state: outside every scope location, no marker -> not a candidate.
+        listed = []
+        result = self.classify([{'c': 'f', 'p': self.LOCAL + '\\app\\settings.json', 's': 2, 't': self.inside, 'a': 32},
+                                {'c': 'f', 'p': self.LOCAL + '\\Packages\\Other\\cache.bin', 's': 1, 't': self.inside, 'a': 32},
+                                {'c': 'v', 'p': 'HKCU\\Software\\Other', 'n': 'LastUpdate', 'k': 4, 'h': 'd' * 64}], sink=listed.append)
+        self.none(result, 3)
+        self.assertEqual({'file': 2, 'registry': 1}, result['unattributed']['byChannel'])
+        self.assertEqual(3 + 4, result['changeCounts']['B->C'])
+        self.assertIn({'channel': 'file', 'entry': 'file', 'change': 'modified', 'path': '<LOCALAPPDATA>\\app\\settings.json',
+                       'valueName': None, 'inStudioWindow': True}, listed)
+        self.assertNotIn('fixture\\\\AppData', json.dumps(listed))
+
+    def test_out_of_scope_change_with_a_marker_in_its_name_or_value_is_a_candidate(self):
+        row = self.only(self.classify([{'c': 'f', 'p': self.LOCAL + '\\Other\\probe-fixture.log', 's': 1, 't': self.inside, 'a': 32}]),
+                        'out-of-declaration')
+        self.assertEqual(('marker:name', 'name'), (row['basis'], row['marker']))
+        value = {'c': 'v', 'p': 'HKCU\\Software\\Other\\History', 'n': '7', 'k': 3, 'h': 'd' * 64}
+        row = self.only(self.classify([dict(value, m=1)]), 'out-of-declaration')
+        self.assertEqual('marker:value', row['basis'])  # the snapshot flagged the run ID inside the value data
+        self.none(self.classify([value]))                # the same change without the flag is unattributed
+        # A removed value keeps the flag of the snapshot that still held it.
+        self.base.append(dict(value, m=1))
+        self.assertEqual('marker:value', self.only(self.classify([dict(value, removed=True)]), 'out-of-declaration')['basis'])
+        # An old (version-1) snapshot has no flags: names are still matched, value data is a stated blind spot.
+        self.base.pop()
+        self.version = 1
+        result = self.classify([dict(value, m=0)])
+        self.none(result)
+        self.assertEqual({'A': False, 'B': False, 'C': False}, result['markers']['valueDataFlags'])
+        self.assertTrue(any('no value-data marker flags' in spot for spot in result['blindSpots']))
+        self.assertEqual('marker:name', self.only(self.classify(
+            [{'c': 'f', 'p': self.LOCAL + '\\Other\\probe-fixture.log', 's': 1, 't': self.inside, 'a': 32}]))['basis'])
+
+    def test_os_run_record_with_a_marker_stays_other_actor(self):
+        cache = 'HKCU\\Software\\Classes\\Local Settings\\Software\\Microsoft\\Windows\\Shell\\MuiCache'
+        marked = {'c': 'v', 'p': cache, 'n': self.SANDBOX + '\\x.exe.FriendlyAppName', 'k': 1, 'h': 'd' * 64}
+        row = self.only(self.classify([marked]), 'other-actor')
+        self.assertEqual(('os-run-record:display-name-cache', 'marker:name'), (row['rule'], row['basis']))
+        session = {'c': 'k', 'p': 'HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\SessionInfo\\1\\probe-fixture', 't': self.inside}
+        self.assertEqual('os-run-record:window-session', self.only(self.classify([session]), 'other-actor')['rule'])
+        # Without a marker the same OS record is outside the scope: unattributed.
+        self.none(self.classify([dict(marked, n='C:\\gw\\x\\Gcam.Studio.exe.FriendlyAppName')]))
 
     def test_manual_batch_context_owns_every_scenario_folder_and_keeps_the_controls(self):
         # TODO-43 observed manual batch (ManualObservation): several launches, one window from the first launch to the
         # last exit, every scenario's sandbox and record folder harness-owned; extra context keys are ignored.
-        second, record = self.TEMP + '\\gcam-uia-run-b', self.TEMP + '\\gcam-uia-record-run-b'
+        second, record = self.TEMP + '\\gcam-uia-scenario-b1', self.TEMP + '\\gcam-uia-record-scenario-b1'
         extra = [{'c': 'd', 'p': second, 't': self.inside, 'a': 16},
-                 {'c': 'f', 'p': record + '\\manual\\run-b\\manual-run.json', 's': 9, 't': self.inside, 'a': 32}]
+                 {'c': 'f', 'p': record + '\\manual\\scenario-b1\\manual-run.json', 's': 9, 't': self.inside, 'a': 32}]
         b = [dict(row) for row in self.base]
         root = self.run_folder(self.base, b, b + self.controls + extra)
         context = json.loads((root / 'observation-context.json').read_text(encoding='utf-8'))
-        context.update(mode='observed-run', scenarios=[{'runId': 'run-a'}, {'runId': 'run-b'}],
+        context.update(mode='observed-run', scenarios=[{'runId': 'scenario-a1'}, {'runId': 'scenario-b1'}],
                        ownedProcesses=self.processes + [{'pid': 43, 'parentPid': 7, 'image': 'Gcam.Studio.exe'}])
         context['harnessOwned']['files'] += [second, record]
         (root / 'observation-context.json').write_text(json.dumps(context), encoding='utf-8')
-        result = stage0.diff_classify(root, self.rules)
+        result = stage0.diff_classify(root, self.rules, surfaces=self.surfaces)
         self.assertEqual(('completed', True), (result['runStatus'], result['g1Eligible']))
         self.assertEqual({'harness': 6}, result['classificationCounts'])
+        self.assertEqual(3, result['markers']['count'])  # the batch run ID and both scenario run IDs
         context['harnessOwned']['files'].remove(record)
         (root / 'observation-context.json').write_text(json.dumps(context), encoding='utf-8')
-        rows = [r for r in stage0.diff_classify(root, self.rules)['candidates'] if r['path'].endswith('manual-run.json')]
-        self.assertNotEqual('harness', rows[0]['classification'])  # an unregistered folder is not harness-owned
+        rows = [r for r in stage0.diff_classify(root, self.rules, surfaces=self.surfaces)['candidates'] if r['path'].endswith('manual-run.json')]
+        self.assertNotEqual('harness', rows[0]['classification'])  # an unregistered folder is not harness-owned ...
+        self.assertEqual('marker:name', rows[0]['basis'])           # ... but its scenario run ID makes it a candidate
 
     def test_harness_owned_sandbox_run_folder_lease_and_marker(self):
         for path in (self.SANDBOX + '\\Roaming\\x.json', self.RUN + '\\probe.trx', self.LEASE):
             result = self.classify([{'c': 'f', 'p': path, 's': 1, 't': self.inside, 'a': 32}])
             self.assertEqual(0, len([r for r in result['candidates'] if r['classification'] != 'harness']), path)
         result = self.classify([{'c': 'f', 'p': self.SANDBOX + '-other\\x', 's': 1, 't': self.inside, 'a': 32}])
-        self.only(result, 'out-of-declaration')  # a sibling of the sandbox is not owned
+        self.only(result, 'out-of-declaration')  # a sibling of the sandbox is not owned (its name still carries the run ID)
 
     def test_declared_e1_values_and_e3_content_change_only(self):
         result = self.classify([{'c': 'v', 'p': self.E1, 'n': 'Left', 'k': 4, 'h': 'd' * 64},
                                 {'c': 'k', 'p': self.E1, 't': self.inside}])
-        self.assertEqual(('declared', 'E1'), (self.only(result)['classification'], self.only(result)['rule']))
+        row = self.only(result)
+        self.assertEqual(('declared', 'E1', 'scope:app-tsf-composition-window'), (row['classification'], row['rule'], row['basis']))
         self.assertTrue(result['g1Eligible'])
-        result = self.classify([{'c': 'v', 'p': self.E1, 'n': 'Width', 'k': 4, 'h': 'd' * 64}, {'c': 'k', 'p': self.E1, 't': self.inside}])
-        self.only(result, 'out-of-declaration')
+        # Another value of the shared key is outside the surface's name pattern: unattributed (v3.3), no longer blocking.
+        self.none(self.classify([{'c': 'v', 'p': self.E1, 'n': 'Width', 'k': 4, 'h': 'd' * 64}, {'c': 'k', 'p': self.E1, 't': self.inside}]))
         result = self.classify([{'c': 'v', 'p': self.E1, 'n': 'Top', 'removed': True}, {'c': 'k', 'p': self.E1, 't': self.inside}])
         self.only(result, 'out-of-declaration')  # E1 declares an update, not a deletion
         result = self.classify([{'c': 'f', 'p': self.E3, 's': 10, 't': self.inside, 'a': 32}])
         self.assertEqual('E3', self.only(result, 'declared')['rule'])
-        result = self.classify([{'c': 'f', 'p': self.E3 + '.tmp', 's': 1, 't': self.inside, 'a': 32}])
-        self.only(result, 'out-of-declaration')
+        self.none(self.classify([{'c': 'f', 'p': self.E3 + '.tmp', 's': 1, 't': self.inside, 'a': 32}]))
         result = self.classify([{'c': 'f', 'p': self.E3, 'removed': True}])
         self.only(result, 'out-of-declaration')
 
     def test_declared_e6_save_dialog_history_keys_and_numbered_values_only(self):
-        # Seen in the observed manual batch of 2026-10-16: the save dialog's per-extension list and last folder.
+        # Seen in the observed manual batch of 2026-10-16: the save dialog's per-extension list and last folder; since
+        # TODO-52 a shell record location (classification-rules.json shellRecordLocations), classified as before.
         mru = 'HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\ComDlg32\\OpenSavePidlMRU'
         last = 'HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\ComDlg32\\LastVisitedPidlMRU'
         for row in ({'c': 'v', 'p': mru + '\\html', 'n': '10', 'k': 3, 'h': 'd' * 64},
                     {'c': 'v', 'p': mru + '\\*', 'n': 'MRUListEx', 'k': 3, 'h': 'd' * 64},
-                    {'c': 'v', 'p': last, 'n': '13', 'k': 3, 'h': 'd' * 64},
+                    {'c': 'v', 'p': last, 'n': '13', 'k': 3, 'h': 'd' * 64, 'm': 1},
                     {'c': 'k', 'p': mru + '\\pdf', 't': self.inside}):
             result = self.classify([row])
-            self.assertEqual('E6', self.only(result, 'declared')['rule'], row)
+            found = self.only(result, 'declared')
+            self.assertEqual(('E6', 'shell-record:E6-os-save-dialog-history'), (found['rule'], found['basis']), row)
             self.assertTrue(result['g1Eligible'])
-        result = self.classify([{'c': 'v', 'p': mru + '\\html', 'n': 'Other', 'k': 1, 'h': 'd' * 64}])
-        self.only(result, 'out-of-declaration')  # only MRUListEx and numbered values
-        result = self.classify([{'c': 'v', 'p': mru + '\\html\\deeper', 'n': '1', 'k': 3, 'h': 'd' * 64}])
-        self.only(result, 'out-of-declaration')  # one subkey level
+        self.none(self.classify([{'c': 'v', 'p': mru + '\\html', 'n': 'Other', 'k': 1, 'h': 'd' * 64}]))  # only MRUListEx and numbers
+        self.none(self.classify([{'c': 'v', 'p': mru + '\\html\\deeper', 'n': '1', 'k': 3, 'h': 'd' * 64}]))  # one subkey level
+        # The same value outside the pattern but naming a harness-typed export carries the run ID: a candidate, undeclared.
+        self.only(self.classify([{'c': 'v', 'p': mru + '\\html\\deeper', 'n': '1', 'k': 3, 'h': 'd' * 64, 'm': 1}]), 'out-of-declaration')
         self.base.append({'c': 'v', 'p': last, 'n': '13', 'k': 3, 'h': 'd' * 64})
         result = self.classify([{'c': 'v', 'p': last, 'n': '13', 'removed': True}])
         self.only(result, 'out-of-declaration')  # E6 declares records, not removals
 
-    def test_shell_muicache_filter_covers_values_only(self):
-        cache = 'HKCU\\Software\\Classes\\Local Settings\\Software\\Microsoft\\Windows\\Shell\\MuiCache'
-        result = self.classify([{'c': 'v', 'p': cache, 'n': 'C:\\gw\\x\\Gcam.Studio.exe.FriendlyAppName', 'k': 1, 'h': 'd' * 64}])
-        self.assertTrue(self.only(result, 'other-actor')['rule'].startswith('filter:'))
-        result = self.classify([{'c': 'k', 'p': cache + '\\sub', 't': self.inside}])
-        self.only(result, 'out-of-declaration')
+    def test_shell_record_and_declared_default_locations_are_candidates_without_a_marker(self):
+        # A recent-document link for an export is declared with E6 (the save dialog's record family, author 2026-10-16),
+        # by Studio's default name and by the harness-typed name that carries the run ID (D4).
+        for name in ('gcam-events-20261014-000010.csv.lnk', 'report-20261014-000010-abcdef.html.lnk'):
+            link = self.ROAMING + '\\Microsoft\\Windows\\Recent\\' + name
+            row = self.only(self.classify([{'c': 'f', 'p': link, 's': 1, 't': self.inside, 'a': 32}]), 'declared')
+            self.assertEqual('E6', row['rule'], name)
+        # A folder link in the same place is outside the name pattern: counted, not a candidate.
+        self.none(self.classify([{'c': 'f', 'p': self.ROAMING + '\\Microsoft\\Windows\\Recent\\html.lnk', 's': 1,
+                                  't': self.inside, 'a': 32}]))
+        row = self.only(self.classify([{'c': 'f', 'p': self.DOCS + '\\sub\\gcam-report-20261014-000010.scene.json', 's': 1,
+                                        't': self.inside, 'a': 32}]), 'out-of-declaration')
+        self.assertEqual('scope:app-report-export', row['basis'])
+        # Another file in the shared Documents folder does not enter by Studio's name pattern.
+        self.none(self.classify([{'c': 'f', 'p': self.DOCS + '\\letter.docx', 's': 1, 't': self.inside, 'a': 32}]))
 
     def test_change_outside_the_studio_window_is_not_of_this_window(self):
         for time in (self.before, self.after):
-            result = self.classify([{'c': 'f', 'p': self.LOCAL + '\\other.log', 's': 1, 't': time, 'a': 32}])
+            result = self.classify([{'c': 'f', 'p': self.EXPORT, 's': 1, 't': time, 'a': 32}])
             self.assertEqual('outside-studio-window', self.only(result, 'not-of-this-window')['rule'])
             self.assertFalse(self.only(result)['inStudioWindow'])
         margin = stage0.filetime('2026-10-14T00:00:22Z')  # exit + 1.88 s is inside the +2 s margin
-        result = self.classify([{'c': 'f', 'p': self.LOCAL + '\\other.log', 's': 1, 't': margin, 'a': 32}])
+        result = self.classify([{'c': 'f', 'p': self.EXPORT, 's': 1, 't': margin, 'a': 32}])
         self.only(result, 'out-of-declaration')
         # A removed entry has no time of its own: the window rule cannot clear it.
-        result = self.classify([{'c': 'f', 'p': self.LOCAL + '\\app\\settings.json', 'removed': True}])
+        result = self.classify([{'c': 'f', 'p': self.EXPORT_OLD, 'removed': True}])
         self.assertIsNone(self.only(result, 'out-of-declaration')['inStudioWindow'])
 
     def test_change_also_seen_in_the_null_window_is_another_actor(self):
-        churn = self.LOCAL + '\\app\\settings.json'
-        result = self.classify([{'c': 'f', 'p': churn, 's': 3, 't': self.inside, 'a': 32}],
-                               extra_b=[{'c': 'f', 'p': churn, 's': 2, 't': self.before, 'a': 32}])
+        result = self.classify([{'c': 'f', 'p': self.EXPORT_OLD, 's': 3, 't': self.inside, 'a': 32}],
+                               extra_b=[{'c': 'f', 'p': self.EXPORT_OLD, 's': 2, 't': self.before, 'a': 32}])
         self.assertEqual('changed-in-null-window', self.only(result, 'other-actor')['rule'])
         self.assertEqual(1, result['changeCounts']['A->B'])
+        self.assertEqual((1, 1), (result['controlWindow']['aToBChanges'], result['controlWindow']['classifiedByRule']))
         self.assertTrue(result['g1Eligible'])
 
-    def test_recorded_background_filter_matches_the_redacted_target_and_is_validated(self):
+    def test_background_filter_is_validated_refused_over_scope_and_never_covers_a_marker_item(self):
         rules = copy.deepcopy(self.rules)
         rules['backgroundFilters'] = [{'pattern': r'<LOCALAPPDATA>\\cache\\.*', 'channel': 'file', 'reason': 'synthetic',
                                        'evidencedBy': 'probe-fixture'}]
-        change = [{'c': 'f', 'p': self.LOCAL + '\\cache\\x.bin', 's': 1, 't': self.inside, 'a': 32}]
-        self.assertTrue(self.only(self.classify(change, rules=rules), 'other-actor')['rule'].startswith('filter:'))
-        rules['backgroundFilters'][0]['entry'] = 'directory'
-        self.only(self.classify(change, rules=rules), 'out-of-declaration')  # an entry-restricted filter skips files
-        del rules['backgroundFilters'][0]['entry']
-        rules['backgroundFilters'][0]['channel'] = 'registry'
-        self.only(self.classify(change, rules=rules), 'out-of-declaration')  # the channel must match too
-        rules['backgroundFilters'] = [{'pattern': '.*', 'channel': 'file', 'reason': '', 'evidencedBy': 'probe-fixture'}]
+        self.none(self.classify([{'c': 'f', 'p': self.LOCAL + '\\cache\\x.bin', 's': 1, 't': self.inside, 'a': 32}], rules=rules))
+        marked = [{'c': 'f', 'p': self.LOCAL + '\\cache\\probe-fixture.bin', 's': 1, 't': self.inside, 'a': 32}]
+        self.only(self.classify(marked, rules=rules), 'out-of-declaration')  # a filter never covers a marker item
+        for pattern, channel in ((r'<Documents>\\.*', 'file'), (r'<Sandbox>\\Temp\\.*', 'file'), (r'<TEMP>\\.*', 'file'),
+                                 (r'HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\ComDlg32\\.*', 'registry'),
+                                 (r'HKCU\\Software\\Microsoft\\CTF\\.*', 'registry'), (r'.*\\\.git(\\.*)?', 'file')):
+            rules['backgroundFilters'] = [{'pattern': pattern, 'channel': channel, 'reason': 'synthetic', 'evidencedBy': 'probe-fixture'}]
+            with self.assertRaises(ValueError, msg=pattern):
+                self.classify(rules=rules)  # covers a scope, shell record or harness-owned location: refused at load
+        rules['backgroundFilters'] = [{'pattern': r'<LOCALAPPDATA>\\cache\\.*', 'channel': 'file', 'reason': '', 'evidencedBy': 'probe-fixture'}]
         with self.assertRaises(ValueError):
-            self.classify(change, rules=rules)
+            self.classify(rules=rules)
+        rules['backgroundFilters'] = []
+        rules['osRunRecords'] = [{'id': 'x', 'pattern': r'<Documents>\\.*', 'channel': 'file', 'reason': 'synthetic', 'evidencedBy': 'probe-fixture'}]
+        with self.assertRaises(ValueError):
+            self.classify(rules=rules)
 
     def test_change_inside_another_git_working_tree_is_another_actor(self):
-        repo = self.LOCAL + '\\repo'
+        repo = self.DOCS + '\\repo'
         tree = [{'c': 'd', 'p': repo, 't': self.before, 'a': 16}, {'c': 'd', 'p': repo + '\\.git', 't': self.before, 'a': 16}]
-        result = self.classify([{'c': 'f', 'p': repo + '\\out.log', 's': 1, 't': self.inside, 'a': 32}], extra_b=tree)
+        name = '\\gcam-report-20261014-000010.html'
+        result = self.classify([{'c': 'f', 'p': repo + name, 's': 1, 't': self.inside, 'a': 32}], extra_b=tree)
         self.assertEqual('other-git-working-tree', self.only(result, 'other-actor')['rule'])
         # A folder beside the working tree (no `.git` above it) stays a candidate.
-        result = self.classify([{'c': 'f', 'p': self.LOCAL + '\\repo-x\\out.log', 's': 1, 't': self.inside, 'a': 32}], extra_b=tree)
+        result = self.classify([{'c': 'f', 'p': self.DOCS + '\\repo-x' + name, 's': 1, 't': self.inside, 'a': 32}], extra_b=tree)
         self.only(result, 'out-of-declaration')
 
     def test_out_of_declaration_stops_the_run_and_the_table_is_redacted(self):
-        result = self.classify([{'c': 'f', 'p': self.LOCAL + '\\app\\settings.json', 's': 2, 't': self.inside, 'a': 32},
-                                {'c': 'v', 'p': 'HKCU\\Software\\S-1-5-21-1-2-3-1001\\x', 'n': self.LOCAL + '\\a.exe', 'k': 3, 'h': 'e' * 64},
+        result = self.classify([{'c': 'f', 'p': self.EXPORT, 's': 2, 't': self.inside, 'a': 32},
+                                {'c': 'v', 'p': 'HKCU\\Software\\S-1-5-21-1-2-3-1001\\x', 'n': self.LOCAL + '\\probe-fixture\\a.exe', 'k': 3, 'h': 'e' * 64},
                                 {'c': 'k', 'p': 'HKCU\\Software\\S-1-5-21-1-2-3-1001\\x', 't': self.inside}],
                                )
         self.assertEqual(('unsafe_effect', 'undeclared-app-effect', False), (result['runStatus'], result['reason'], result['g1Eligible']))
         paths = {(row['path'], row['valueName']) for row in result['candidates'] if row['classification'] == 'out-of-declaration'}
-        self.assertIn(('<LOCALAPPDATA>\\app\\settings.json', None), paths)
-        self.assertIn(('HKCU\\Software\\<SID>\\x', '<LOCALAPPDATA>\\a.exe'), paths)
+        self.assertIn(('<Documents>\\gcam-report-20261014-000010.html', None), paths)
+        self.assertIn(('HKCU\\Software\\<SID>\\x', '<LOCALAPPDATA>\\probe-fixture\\a.exe'), paths)
         text = json.dumps(result)
         self.assertNotIn('fixture\\\\AppData', text); self.assertNotIn('S-1-5-21', text)
         named = stage0.diff_classify(self.run_folder(self.base, self.base, self.base + self.controls + [
-            {'c': 'f', 'p': 'D:\\data\\leonfixture\\x', 's': 1, 't': self.inside, 'a': 32}]), self.rules, {'USER': 'leonfixture'})
-        self.assertEqual('D:\\data\\<USER>\\x', self.only(named)['path'])
+            {'c': 'f', 'p': 'D:\\data\\leonfixture\\probe-fixture.log', 's': 1, 't': self.inside, 'a': 32}]), self.rules,
+            {'USER': 'leonfixture'}, surfaces=self.surfaces)
+        self.assertEqual('D:\\data\\<USER>\\probe-fixture.log', self.only(named)['path'])
 
     def test_missing_controls_or_incomplete_snapshot_block_the_run(self):
         controls = self.controls
@@ -1028,11 +1131,15 @@ class SnapshotClassificationTests(unittest.TestCase):
     def test_metadata_only_directory_and_key_times_are_not_candidates_but_a_readability_flip_is_unclassified(self):
         result = self.classify([{'c': 'd', 'p': self.LOCAL + '\\app', 't': self.inside, 'a': 16}, {'c': 'k', 'p': self.E1, 't': self.inside}])
         self.assertEqual({'harness': 4}, result['classificationCounts'])
+        for locked in (self.DOCS + '\\locked', self.TEMP):  # may hide a scope location / contains a harness-owned one
+            root = self.run_folder(self.base, self.base, self.base + self.controls + [
+                {'c': 'u', 'ch': 'file', 'p': locked, 'e': 'UnauthorizedAccessException'}])
+            result = stage0.diff_classify(root, self.rules, surfaces=self.surfaces)
+            self.assertEqual(('blocked', 'unclassified-candidate'), (result['runStatus'], result['reason']), locked)
+            self.assertEqual('unreadable-in-one-snapshot', self.only(result, 'unclassified')['rule'])
         root = self.run_folder(self.base, self.base, self.base + self.controls + [
             {'c': 'u', 'ch': 'file', 'p': self.LOCAL + '\\locked', 'e': 'UnauthorizedAccessException'}])
-        result = stage0.diff_classify(root, self.rules)
-        self.assertEqual(('blocked', 'unclassified-candidate'), (result['runStatus'], result['reason']))
-        self.assertEqual('unreadable-in-one-snapshot', self.only(result, 'unclassified')['rule'])
+        self.none(stage0.diff_classify(root, self.rules, surfaces=self.surfaces))  # no scope location in or under it
 
     def test_preflight_checks_the_wpr_profile_only_for_the_optional_trace(self):
         import xml.etree.ElementTree as ET
@@ -1054,7 +1161,11 @@ class SnapshotClassificationTests(unittest.TestCase):
         out = root / 'classified.json'
         command = [sys.executable, '-B', str(SCRIPT), 'diff-classify', '--run-directory', str(root), '--out', str(out)]
         self.assertEqual(0, subprocess.run(command, capture_output=True, text=True).returncode)
-        self.assertTrue(json.loads(out.read_text())['g1Eligible'])
+        result = json.loads(out.read_text())
+        self.assertTrue(result['g1Eligible'])
+        # The unattributed list stays local beside the result, named and hashed in it.
+        listed = root / 'classified.unattributed.jsonl'
+        self.assertEqual((listed.name, stage0.file_digest(listed)), (result['unattributed']['list'], result['unattributed']['listSha256']))
         self.assertNotEqual(0, subprocess.run(command, capture_output=True, text=True).returncode)  # never overwrites
         blocked = self.run_folder(self.base, self.base, self.base)
         self.assertEqual(2, subprocess.run(command[:5] + [str(blocked), '--out', str(blocked / 'classified.json')],

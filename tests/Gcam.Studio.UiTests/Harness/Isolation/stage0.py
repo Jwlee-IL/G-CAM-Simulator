@@ -1,4 +1,4 @@
-"""Headless isolation inventory, deployment pins, snapshot classification (MR8) and the optional trace attribution.
+"""Headless isolation inventory, deployment pins, snapshot classification (MR8, v3.3 candidates) and the optional trace attribution.
 
 Snapshots and raw traces stay local. This tool never takes a snapshot, starts a trace or launches Studio.
 """
@@ -872,10 +872,15 @@ def basic_information_sequences(facts, rules):
     return qualified
 
 
+def declared_entries(rules):
+    """Declared surfaces: the app's own (E1, E3) and the declared shell record locations (E6, TODO-52)."""
+    return rules.get('declaredAppSurfaces', []) + [entry for entry in rules.get('shellRecordLocations', []) if entry.get('decision')]
+
+
 def declared_surface(event, context, rules):
-    """E1 / E3: exact confirmed app write surfaces; nothing broader."""
+    """E1 / E3 / E6: exact confirmed write surfaces; nothing broader."""
     destination = event.get('destination', '')
-    for surface in rules.get('declaredAppSurfaces', []):
+    for surface in declared_entries(rules):
         if event.get('channel') != surface['channel'] or event.get('operation') not in surface['operations']:
             continue
         if surface['channel'] == 'registry':
@@ -893,7 +898,7 @@ def declared_surface(event, context, rules):
                 if (same_path(destination, key + '\\' + value)
                         and (not event.get('valueName') or event['valueName'].casefold() == value.casefold())):
                     return surface
-        elif surface['channel'] == 'file':
+        elif surface['channel'] == 'file' and 'relativePath' in surface:   # name-pattern shell records: snapshot method only
             folder = context.get('knownFolders', {}).get(surface.get('knownFolder', ''), {})
             if any(same_path(destination, base.rstrip('\\') + '\\' + surface['relativePath'])
                    for base in (folder.get('path'), folder.get('devicePath')) if base):
@@ -1167,18 +1172,30 @@ def change_times(request, devices=None, reader=None, now=None):
 
 
 SNAPSHOT_SCHEMA = 'gcam.state-snapshot'
+# Version 2 (TODO-52) adds the header's `valueMarkers` and a per-value flag `m` (the value data carries a harness marker).
+SNAPSHOT_VERSIONS = (1, 2)
 SNAPSHOT_LABELS = ('A', 'B', 'C')
 FILETIME_EPOCH = dt.datetime(1601, 1, 1, tzinfo=dt.timezone.utc)
 SID = re.compile(r'S-1-[0-9]+(?:-[0-9]+)+')
 FILTER_FIELDS = ('pattern', 'channel', 'reason', 'evidencedBy')
+OS_RECORD_FIELDS = ('id', 'pattern', 'channel', 'reason', 'evidencedBy')
+MARKER_MIN_LENGTH = 8
 SNAPSHOT_BLIND_SPOTS = [
-    'locations outside the snapshot scope (other users, removable and network drives, machine-wide locations a '
+    'locations outside the observation scope: an app effect there that carries no harness marker is counted as '
+    'unattributed, not seen as the app\'s (no per-process write record, TODO-52 D2)',
+    'locations outside the snapshot roots (other users, removable and network drives, machine-wide locations a '
     'non-elevated process cannot write; HKLM)',
+    'a harness marker inside file content (files are matched by name only)',
     'a content change that restores size and last-write time',
     'a write undone before snapshot C',
     'removed entries carry no time of their own (the window rule cannot apply to them)',
     '100 ms process polling misses short-lived processes',
 ]
+CANDIDATE_DEFINITION = ('A B->C change is a candidate when it lies in the observation scope (write surfaces\' declared '
+                        'defaults, resolved values and isolation locations, harness-owned locations, shell record '
+                        'locations), carries a harness marker (a run ID) in its name or registry value data, or belongs to '
+                        'an owned process; everything else is unattributed: counted, listed locally, never blocking '
+                        '(UI-automation procedure v3.3, safety section 3; TODO-52 D1)')
 
 
 def filetime(value):
@@ -1195,8 +1212,8 @@ def snapshot_rows(path, meta):
             row = json.loads(line)
             if row['c'] == 'header':
                 header = row
-                if header.get('schema') != SNAPSHOT_SCHEMA or header.get('schemaVersion') != 1:
-                    raise ValueError('not a version-1 state snapshot: ' + Path(path).name)
+                if header.get('schema') != SNAPSHOT_SCHEMA or header.get('schemaVersion') not in SNAPSHOT_VERSIONS:
+                    raise ValueError('not a version-1 or version-2 state snapshot: ' + Path(path).name)
                 meta['header'] = header
             elif row['c'] == 'end':
                 meta['complete'] = True
@@ -1204,7 +1221,7 @@ def snapshot_rows(path, meta):
                 meta['unreadable'] += row['c'] == 'u'
                 yield row
     if meta['header'] is None:
-        raise ValueError('not a version-1 state snapshot: ' + Path(path).name)
+        raise ValueError('not a version-1 or version-2 state snapshot: ' + Path(path).name)
 
 
 def snapshot_identity(row):
@@ -1218,7 +1235,8 @@ def snapshot_identity(row):
 
 def snapshot_state(row):
     """What a change is: files by size, last-write and attributes; values by type and content hash; directories, keys
-    and unreadable locations by existence only (their last-write moves with every child, a metadata-only change)."""
+    and unreadable locations by existence only (their last-write moves with every child, a metadata-only change).
+    The value-data marker flag is derived from the hashed data and is not part of the state."""
     if row['c'] == 'f':
         return ('f', row['s'], row['t'], row['a'])
     if row['c'] == 'v':
@@ -1227,14 +1245,22 @@ def snapshot_state(row):
 
 
 def snapshot_index(path):
-    """One snapshot held compactly (identity -> state); a real profile has well over a million entries."""
-    meta = {}
-    return meta, {snapshot_identity(row): snapshot_state(row) for row in snapshot_rows(path, meta)}
+    """One snapshot held compactly (identity -> state); a real profile has well over a million entries. The identities
+    of values whose data carried a harness marker go to meta['marked'] (an old snapshot has none)."""
+    meta, index, marked = {}, {}, set()
+    for row in snapshot_rows(path, meta):
+        identity = snapshot_identity(row)
+        index[identity] = snapshot_state(row)
+        if row.get('m'):
+            marked.add(identity)
+    meta['marked'] = marked
+    return meta, index
 
 
-def snapshot_changes(index, path, newer=True):
+def snapshot_changes(index, path, newer=True, marked=frozenset()):
     """Changes between an indexed snapshot and one streamed from `path` (`newer`: the streamed one is the later).
-    Also returns the streamed snapshot's metadata and key last-write times (a value's time is its key's)."""
+    Also returns the streamed snapshot's metadata and key last-write times (a value's time is its key's). An entry only
+    in the indexed snapshot keeps that snapshot's value-data marker flag (`marked`)."""
     meta, remaining, changes, key_times = {}, dict(index), [], {}
     for row in snapshot_rows(path, meta):
         identity = snapshot_identity(row)
@@ -1251,7 +1277,7 @@ def snapshot_changes(index, path, newer=True):
     for identity, state in remaining.items():
         path_part, _, name = identity[-1].partition('\0')
         row = {'c': state[0], 'p': path_part, **({'n': name} if state[0] == 'v' else {}),
-               **({'ch': identity[1]} if state[0] == 'u' else {})}
+               **({'ch': identity[1]} if state[0] == 'u' else {}), **({'m': 1} if identity in marked else {})}
         changes.append({'identity': identity, 'change': 'removed' if newer else 'added', 'row': row})
     for change in changes:
         if change['identity'][0] == 'unreadable':
@@ -1277,22 +1303,178 @@ def redactor(roots, extra=None):
     return redact
 
 
-def diff_classify(run_directory, rules=None, extra_redactions=None):
-    """MR8: classify the B->C state changes of an observed run (charter order) and check the positive controls."""
-    run = Path(run_directory)
-    rules = rules if rules is not None else json.loads((ISOLATION / 'classification-rules.json').read_text())
-    filters = rules.get('backgroundFilters', [])
+def literal_prefix(pattern):
+    """The literal text every full match of `pattern` starts with ('' when the pattern alternates at its top level).
+    Conservative: a quantified last character is dropped; any class, group or escape class ends the prefix."""
+    depth, index = 0, 0
+    while index < len(pattern):
+        char = pattern[index]
+        if char == '\\':
+            index += 2
+            continue
+        if char == '[':
+            close = pattern.find(']', index + 2)
+            index = close + 1 if close > 0 else len(pattern)
+            continue
+        depth += char == '('
+        depth -= char == ')'
+        if char == '|' and depth == 0:
+            return ''
+        index += 1
+    prefix, index = [], 0
+    while index < len(pattern):
+        char = pattern[index]
+        if char == '\\' and index + 1 < len(pattern):
+            following = pattern[index + 1]
+            if following.isalnum():
+                break  # \d, \w, \s, \b ...: not a literal
+            prefix.append(following)
+            index += 2
+            continue
+        if char in '?*{':
+            if prefix:
+                prefix.pop()
+            break
+        if char in '.^$+[]()|':
+            break
+        prefix.append(char)
+        index += 1
+    return ''.join(prefix)
+
+
+def prefixes_overlap(left, right):
+    left, right = left.casefold(), right.casefold()
+    return left.startswith(right) or right.startswith(left)
+
+
+def harness_markers(context):
+    """Harness markers of a run: its run ID and every scenario run ID (the sandbox `gcam-uia-<run>` and the export file
+    names carry them, D4). IDs shorter than eight characters are not used as markers."""
+    ids = [context.get('runId')] + [scenario.get('runId') for scenario in context.get('scenarios', [])]
+    return sorted({str(value) for value in ids if value and len(str(value)) >= MARKER_MIN_LENGTH}, key=str.casefold)
+
+
+def observation_scope(rules, surfaces, context, folders):
+    """The run's observation scope (v3.3): every scope entry of the surface list, the shell record locations and the
+    harness-owned locations, each with its basis; plus the blind spots of surfaces and shell records without a scope.
+    Locations are machine-resolved here (local); the result shows them redacted."""
+    locations, blind = [], []
+    harness_files = context['harnessOwned']['files']
+    sandboxes = [root for root in harness_files
+                 if root.rstrip('\\').rsplit('\\', 1)[-1].casefold().startswith('gcam-uia-')
+                 and not root.rstrip('\\').rsplit('\\', 1)[-1].casefold().startswith('gcam-uia-record-')]
+
+    def add(entry, owner, basis, source):
+        location = {'id': entry.get('id', owner), 'surface': owner, 'basis': basis, 'source': source, 'channel': entry['channel']}
+        if entry['channel'] == 'file':
+            if entry.get('location') == 'sandbox':
+                for sandbox in sandboxes:
+                    locations.append(dict(location, kind='root', root=sandbox, prefix=sandbox))
+                return
+            root = folders.get(entry.get('root', ''))
+            if not root:
+                blind.append(f"{owner}: scope root {entry.get('root')} is not a snapshot root")
+                return
+            if 'relativePath' in entry:
+                path = root + '\\' + entry['relativePath']
+                locations.append(dict(location, kind='file', path=path, prefix=path))
+            else:
+                locations.append(dict(location, kind='pattern', root=root, pattern=re.compile(entry['relativePattern'], re.IGNORECASE),
+                                      shownPattern=entry['relativePattern'],
+                                      prefix=root + '\\' + literal_prefix(entry['relativePattern'])))
+        else:
+            key_pattern = 'HKCU\\\\' + entry['keyPattern']
+            locations.append(dict(location, kind='registry', pattern=re.compile(key_pattern, re.IGNORECASE),
+                                  names=re.compile(entry['valueNamePattern'], re.IGNORECASE) if entry.get('valueNamePattern') else None,
+                                  shownPattern=entry['keyPattern'] + (' / ' + entry['valueNamePattern'] if entry.get('valueNamePattern') else ''),
+                                  prefix=literal_prefix(key_pattern)))
+
+    # Harness-owned locations first: the charter classifies them before anything else.
+    for root in harness_files:
+        locations.append({'id': 'harness-owned', 'surface': 'harness', 'basis': 'harness-owned (owner marker)', 'source': 'observation-context.json',
+                          'channel': 'file', 'kind': 'root', 'root': root, 'prefix': root})
+    for key in context['harnessOwned']['registry']:
+        locations.append({'id': 'harness-owned', 'surface': 'harness', 'basis': 'harness-owned (registry marker)', 'source': 'observation-context.json',
+                          'channel': 'registry', 'kind': 'root', 'root': key, 'prefix': key})
+    for surface in surfaces.get('surfaces', []):
+        for entry in surface.get('scope', []):
+            add(entry, surface['id'], entry['basis'], 'surface-list.json#' + surface['id'])
+        if surface.get('status') == 'blind-spot':
+            blind.append(f"{surface['id']}: {surface.get('residualRisk', surface.get('finding', ''))}")
+    for entry in rules.get('shellRecordLocations', []):
+        if entry.get('blindSpot'):
+            blind.append(f"shell record {entry['id']}: {entry['blindSpot']}")
+            continue
+        add(entry, entry.get('surface', '').split('#')[-1] or entry['id'], 'shell record location', 'classification-rules.json#' + entry['id'])
+    return locations, blind
+
+
+def scope_location(locations, channel, entry, path, name):
+    """The first scope location that holds this change, or None. An unreadable location is held when it lies inside a
+    scope location or contains one (it could hide a scope change)."""
+    for location in locations:
+        if location['channel'] != channel:
+            continue
+        kind = location['kind']
+        if entry == 'unreadable':
+            prefix = location['prefix'].rstrip('\\')
+            if prefix and (under(path, prefix) or under(prefix, path)):
+                return location
+            continue
+        if kind == 'root':
+            if under(path, location['root']):
+                return location
+        elif kind == 'file':
+            if entry == 'file' and path.casefold() == location['path'].casefold():
+                return location
+        elif kind == 'pattern':
+            root = location['root']
+            if entry == 'file' and under(path, root) and path.casefold() != root.casefold() \
+                    and location['pattern'].fullmatch(path[len(root.rstrip('\\')) + 1:]):
+                return location
+        elif location['pattern'].fullmatch(path) and (
+                entry == 'key' or (entry == 'value' and (location['names'] is None or location['names'].fullmatch(name or '')))):
+            return location
+    return None
+
+
+def validate_filters(filters, os_records, locations, redact):
+    """Background filters and OS run-record rules may not cover a scope location (v3.3): refused at rule load when the
+    rule's literal prefix and a location's (redacted) literal prefix overlap - a conservative test (a broad or alternating
+    pattern has an empty prefix and overlaps everything)."""
     for entry in filters:
         if any(not isinstance(entry.get(field), str) or not entry[field].strip() for field in FILTER_FIELDS) \
                 or entry['channel'] not in ('file', 'registry') \
                 or entry.get('entry', 'any') not in ('any', 'file', 'directory', 'key', 'value'):
             raise ValueError('background filter needs pattern, channel (file/registry), reason and evidencedBy')
+    for entry in os_records:
+        if any(not isinstance(entry.get(field), str) or not entry[field].strip() for field in OS_RECORD_FIELDS) \
+                or entry['channel'] not in ('file', 'registry') \
+                or entry.get('entry', 'any') not in ('any', 'file', 'directory', 'key', 'value'):
+            raise ValueError('OS run-record rule needs id, pattern, channel (file/registry), reason and evidencedBy')
+    for kind, rules in (('background filter', filters), ('OS run-record rule', os_records)):
+        for entry in rules:
+            prefix = literal_prefix(entry['pattern'])
+            for location in locations:
+                if location['channel'] == entry['channel'] and prefixes_overlap(prefix, redact(location['prefix'])):
+                    raise ValueError(f"{kind} {entry['pattern']} covers the observation-scope location "
+                                     f"{redact(location['prefix'])} ({location['basis']}); v3.3 forbids it")
+
+
+def diff_classify(run_directory, rules=None, extra_redactions=None, surfaces=None, unattributed_sink=None):
+    """MR8 with the v3.3 candidate definition: classify the B->C changes the run can attribute to the app (charter order),
+    count the rest as unattributed, and check the positive controls."""
+    run = Path(run_directory)
+    rules = rules if rules is not None else json.loads((ISOLATION / 'classification-rules.json').read_text())
+    surfaces = surfaces if surfaces is not None else json.loads((ISOLATION / 'surface-list.json').read_text(encoding='utf-8'))
+    filters = rules.get('backgroundFilters', [])
+    os_records = rules.get('osRunRecords', [])
     context_path = run / 'observation-context.json'
     context = json.loads(context_path.read_text(encoding='utf-8-sig'))
     # Only snapshot B is held in memory; A and C are streamed against it.
     meta_b, index_b = snapshot_index(run / 'snapshot-B.jsonl.gz')
     meta_a, background, _ = snapshot_changes(index_b, run / 'snapshot-A.jsonl.gz', newer=False)
-    meta_c, observed, key_times = snapshot_changes(index_b, run / 'snapshot-C.jsonl.gz')
+    meta_c, observed, key_times = snapshot_changes(index_b, run / 'snapshot-C.jsonl.gz', marked=meta_b['marked'])
     # Git working trees (a folder holding a `.git` entry) in either snapshot: other repositories' working files.
     git_paths = [identity[1] for identity in index_b if identity[0] == 'file'] + \
         [change['identity'][1] for change in observed if change['identity'][0] == 'file' and change['change'] == 'added']
@@ -1304,12 +1486,13 @@ def diff_classify(run_directory, rules=None, extra_redactions=None):
     window = context['studioWindow']
     start = filetime(window['launchAt']) - int(window.get('marginBeforeSeconds', 1) * 1e7)
     end = filetime(window['exitAt']) + int(window.get('marginAfterSeconds', 2) * 1e7)
-    harness_files = context['harnessOwned']['files']
-    harness_keys = context['harnessOwned']['registry']
     folders = {root['category']: root['path'] for root in roots}
     deployment = folders.get('Deployment', '\0')
+    locations, scope_blind = observation_scope(rules, surfaces, context, folders)
+    validate_filters(filters, os_records, locations, redact)
+    markers = [marker.casefold() for marker in harness_markers(context)]
     declared = []
-    for surface in rules.get('declaredAppSurfaces', []):
+    for surface in declared_entries(rules):
         if surface['channel'] == 'registry' and surface.get('hive') == 'run-user' and 'keyPattern' in surface:
             # E6: an OS component's history under per-item subkeys with numbered values; keys and values, never removals.
             declared.append((surface['decision'], 'registry-pattern', re.compile('hkcu\\\\' + surface['keyPattern'], re.IGNORECASE),
@@ -1317,12 +1500,17 @@ def diff_classify(run_directory, rules=None, extra_redactions=None):
         elif surface['channel'] == 'registry' and surface.get('hive') == 'run-user':
             declared.append((surface['decision'], 'registry', ('hkcu\\' + surface['keyPath']).casefold(),
                              {name.casefold() for name in surface['valueNames']}, ('added', 'modified')))
+        elif surface['channel'] == 'file' and surface.get('root') in folders and 'relativePattern' in surface:
+            # A shell record of data the app handed the shell, under a known folder by name pattern (recent-document links).
+            declared.append((surface['decision'], 'file-pattern', folders[surface['root']].rstrip('\\'),
+                             re.compile(surface['relativePattern'], re.IGNORECASE), ('added', 'modified')))
         elif surface['channel'] == 'file' and surface.get('knownFolder') in folders:
             declared.append((surface['decision'], 'file', (folders[surface['knownFolder']] + '\\' + surface['relativePath']).casefold(),
                              None, ('modified',)))
     null_window = {change['identity'] for change in background}
     flipped = [change['identity'][1:] for change in background + observed if change['change'] == 'readability']
-    candidates, counts = [], {}
+    candidates, counts, unattributed = [], {}, {'count': 0, 'byChannel': {}}
+    control_items = 0
     for change in observed:
         row, identity = change['row'], change['identity']
         channel = identity[1] if identity[0] == 'unreadable' else identity[0]
@@ -1333,14 +1521,35 @@ def diff_classify(run_directory, rules=None, extra_redactions=None):
         else:
             time = row.get('t') if change['change'] != 'removed' else None
         target = path if name is None else path + '\\' + name
+        in_window = None if time is None else start <= time <= end
+        # v3.3 candidate test: scope (incl. harness-owned and shell records), harness marker in the name or value data.
+        location = scope_location(locations, channel, entry, path, name)
+        marker = 'name' if any(m in target.casefold() for m in markers) else 'value' if row.get('m') else None
+        if location is None and marker is None:
+            unattributed['count'] += 1
+            unattributed['byChannel'][channel] = unattributed['byChannel'].get(channel, 0) + 1
+            if unattributed_sink is not None:
+                unattributed_sink({'channel': channel, 'entry': entry, 'change': change['change'], 'path': redact(path),
+                                   'valueName': redact(name) if name is not None else None, 'inStudioWindow': in_window})
+            continue
+        if location is not None:
+            basis = 'harness-owned' if location['surface'] == 'harness' else \
+                ('shell-record:' if location['basis'] == 'shell record location' else 'scope:') + location['id']
+        else:
+            basis = 'marker:' + marker
         rule = None
-        if channel == 'file' and any(under(path, root) for root in harness_files):
-            category, rule = 'harness', 'harness-owned'
-        elif channel == 'registry' and any(under(path, root) for root in harness_keys):
+        if location is not None and location['surface'] == 'harness' and under(path, location['root']):
+            # (An unreadable folder that merely contains a harness-owned location is a candidate, not a harness record.)
             category, rule = 'harness', 'harness-owned'
         else:
             category = None
             for decision, surface_channel, surface_path, names, allowed in declared:
+                if surface_channel == 'file-pattern':
+                    if (channel == 'file' and entry == 'file' and change['change'] in allowed and under(path, surface_path)
+                            and names.fullmatch(path[len(surface_path) + 1:])):
+                        category, rule = 'declared', decision
+                        break
+                    continue
                 if surface_channel == 'registry-pattern':
                     if (channel == 'registry' and change['change'] in allowed and surface_path.fullmatch(path)
                             and (entry == 'key' or (entry == 'value' and names.fullmatch(name or '')))):
@@ -1351,18 +1560,27 @@ def diff_classify(run_directory, rules=None, extra_redactions=None):
                         and ((names is None and entry == 'file') or (names is not None and entry == 'value' and name.casefold() in names))):
                     category, rule = 'declared', decision
                     break
+            shown = redact(target)
+            if category is None:
+                # Records the OS keeps about a process's own run and windows stay other-actor, even with a marker.
+                for record in os_records:
+                    if (record['channel'] == channel and record.get('entry', 'any') in ('any', entry)
+                            and re.fullmatch(record['pattern'], shown, re.IGNORECASE)):
+                        category, rule = 'other-actor', 'os-run-record:' + record['id']
+                        break
             if category is None and time is not None and not start <= time <= end:
                 category, rule = 'not-of-this-window', 'outside-studio-window'
             if category is None and identity in null_window:
                 category, rule = 'other-actor', 'changed-in-null-window'
-            if category is None:
-                shown = redact(target)
+                control_items += 1
+            if category is None and marker is None:
+                # A filter may not cover a scope location (refused above) or a marker item (skipped here).
                 for entry_filter in filters:
                     if (entry_filter['channel'] == channel and entry_filter.get('entry', 'any') in ('any', entry)
                             and re.fullmatch(entry_filter['pattern'], shown, re.IGNORECASE)):
                         category, rule = 'other-actor', 'filter:' + entry_filter['pattern']
                         break
-            if category is None and channel == 'file' and any(
+            if category is None and marker is None and channel == 'file' and any(
                     under(path, tree) and not under(deployment, tree) for tree in git_trees):
                 # Studio has no repository code; another repository's working tree is written by developer tools.
                 category, rule = 'other-actor', 'other-git-working-tree'
@@ -1373,14 +1591,14 @@ def diff_classify(run_directory, rules=None, extra_redactions=None):
         counts[category] = counts.get(category, 0) + 1
         candidates.append({'channel': channel, 'entry': entry, 'change': change['change'], 'path': redact(path),
                            'valueName': redact(name) if name is not None else None, 'classification': category, 'rule': rule,
-                           'inStudioWindow': None if time is None else start <= time <= end})
+                           'basis': basis, 'marker': marker, 'inStudioWindow': in_window})
     added = {(change['identity'][0], change['identity'][1].casefold()) for change in observed if change['change'] == 'added'}
     controls = context['positiveControls']
-    marker = controls['registry']
+    registry_marker = controls['registry']
     processes = context.get('ownedProcesses', [])
     seen = {
         'file': ('file', controls['file'].casefold()) in added,
-        'registry': ('registry', (marker['key'] + '\0' + marker['valueName']).casefold()) in added,
+        'registry': ('registry', (registry_marker['key'] + '\0' + registry_marker['valueName']).casefold()) in added,
         'process': any(str(p.get('image', '')).casefold() == controls['process'].casefold() and int(p.get('pid', 0)) > 0
                        for p in processes),
     }
@@ -1390,20 +1608,49 @@ def diff_classify(run_directory, rules=None, extra_redactions=None):
     notes = []
     if context['nullWindow']['seconds'] < window['seconds']:
         notes.append('null window shorter than the Studio window')
+    flags = {label: 'valueMarkers' in metas[label]['header'] for label in SNAPSHOT_LABELS}
+    blind_spots = SNAPSHOT_BLIND_SPOTS + scope_blind
+    if not all(flags.values()):
+        blind_spots = blind_spots + ['snapshots ' + ', '.join(label for label in SNAPSHOT_LABELS if not flags[label]) +
+                                     ' carry no value-data marker flags (written before TODO-52): a harness marker inside '
+                                     'registry value data is not seen there; names are still matched']
+    scope_table = []
+    for location in locations:
+        shown = {'id': location['id'], 'surface': location['surface'], 'basis': location['basis'], 'source': location['source'],
+                 'channel': location['channel'],
+                 'location': redact(location.get('path') or location.get('root') or '') if location['kind'] != 'registry' else None}
+        if 'shownPattern' in location:
+            shown['namePattern'] = location['shownPattern']
+        scope_table.append(shown)
+    scope_table.append({'id': 'owned-processes', 'surface': 'harness', 'basis': 'registered image and its descendants (process ledger)',
+                        'source': 'observation-context.json', 'channel': 'process',
+                        'location': ', '.join(sorted({str(p.get('image', '')) for p in processes})) or controls['process']})
     inputs = {name: file_digest(run / name) for name in ['observation-context.json'] + [f'snapshot-{label}.jsonl.gz' for label in SNAPSHOT_LABELS]}
-    return {'schemaVersion': 1, 'method': 'MR8 before/after snapshots',
+    return {'schemaVersion': 2, 'method': 'MR8 before/after snapshots; candidates per the UI-automation procedure v3.3',
+            'candidateDefinition': CANDIDATE_DEFINITION,
             'runStatus': 'unsafe_effect' if unsafe else 'blocked' if not proven or unresolved else 'completed',
             'reason': 'undeclared-app-effect' if unsafe else 'snapshot-incomplete' if not complete else 'instrument-not-proven'
             if not proven else 'unclassified-candidate' if unresolved else '',
             'g1Eligible': proven and not unsafe and not unresolved,
             'positiveControls': seen, 'classificationCounts': dict(sorted(counts.items())),
-            'changeCounts': {'A->B': len(background), 'B->C': len(candidates)},
+            'changeCounts': {'A->B': len(background), 'B->C': len(candidates) + unattributed['count'],
+                             'B->C candidates': len(candidates)},
+            'unattributed': {'count': unattributed['count'], 'byChannel': dict(sorted(unattributed['byChannel'].items())),
+                             'list': None, 'note': 'not candidates: outside the observation scope, no harness marker, no owned '
+                                                   'process; the list stays local (A4)'},
+            'controlWindow': {'rule': 'changed-in-null-window', 'aToBSeconds': context['nullWindow']['seconds'],
+                              'appWindowSeconds': window['seconds'], 'shorterThanAppWindow': context['nullWindow']['seconds'] < window['seconds'],
+                              'aToBChanges': len(background), 'classifiedByRule': control_items},
+            'observationScope': scope_table,
+            'markers': {'count': len(markers), 'source': 'observation context run ID and scenario run IDs',
+                        'valueDataFlags': flags},
             'unreadable': {label: metas[label]['unreadable'] for label in SNAPSHOT_LABELS},
             'nullWindowSeconds': context['nullWindow']['seconds'], 'studioWindowSeconds': window['seconds'],
             'notes': notes, 'candidates': candidates,
-            'backgroundFilters': len(filters), 'blindSpots': SNAPSHOT_BLIND_SPOTS,
+            'backgroundFilters': len(filters), 'osRunRecords': len(os_records), 'blindSpots': blind_spots,
             'channelApplicability': context.get('channelApplicability', []),
-            'inputSha256': inputs, 'rulesSha256': digest(canonical(rules)), 'classifierSourceSha256': file_digest(__file__),
+            'inputSha256': inputs, 'rulesSha256': digest(canonical(rules)), 'surfacesSha256': digest(canonical(surfaces)),
+            'classifierSourceSha256': file_digest(__file__),
             'warning': 'Paths are categories; snapshots and the observation context name machine paths and stay local (A4).'}
 
 
@@ -1452,9 +1699,19 @@ def main():
     elif args.command == 'diff-classify':
         if Path(args.out).exists():
             raise ValueError('diff-classify output exists; use a fresh file')
-        result = diff_classify(args.run_directory, extra_redactions=machine_identities())
+        # The unattributed list names other programs' locations (redacted); it stays local beside the result (A4).
+        list_path = Path(args.out).with_suffix('.unattributed.jsonl')
+        if list_path.exists():
+            raise ValueError('diff-classify unattributed list exists; use a fresh output name')
+        list_path.parent.mkdir(parents=True, exist_ok=True)
+        with list_path.open('w', encoding='utf-8', newline='\n') as stream:
+            result = diff_classify(args.run_directory, extra_redactions=machine_identities(),
+                                   unattributed_sink=lambda item: stream.write(json.dumps(item, separators=(',', ':')) + '\n'))
+        result['unattributed']['list'] = list_path.name
+        result['unattributed']['listSha256'] = file_digest(list_path)
         write(args.out, result)
-        print(result['runStatus'] + ': ' + (result['reason'] or 'all controls seen, nothing out of declaration'))
+        print(result['runStatus'] + ': ' + (result['reason'] or 'all controls seen, nothing out of declaration')
+              + f"; {len(result['candidates'])} candidates, {result['unattributed']['count']} unattributed")
         if not result['g1Eligible']:
             raise SystemExit(2)
     elif args.command == 'change-times':

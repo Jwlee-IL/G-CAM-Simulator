@@ -45,7 +45,7 @@ write surface, the report export: it writes the path the user confirms in the sa
 | Surface | Declared | Resolved in a run | State |
 |---|---|---|---|
 | User / app data, settings, logs, caches | none in code | `TEMP` / `TMP` (and env-var readers of `APPDATA` / `LOCALAPPDATA`) redirected into an owned sandbox folder; **0 files written** in every run so far, apart from the export scenario's two declared report files (row below) | confirmed absent; the redirect is a partial boundary — see below |
-| Report export (TODO-46) | the confirmed path and its declared sidecars (`.scene.json`; `.meta.json` for event data), chosen in the save dialog; Studio remembers no folder or setting, but the Windows save dialog records the file in the user's recent list and the last folder per application (E6, declared OS behaviour, observed 2026-10-16) | `ReportExportScenarioTests` (one case per format) types a path inside the owned sandbox; the run asserts exactly `report.<ext>` and `report.scene.json` there (plus `report.meta.json` for CSV) and nothing else in the sandbox | declared and isolated; observed runs passed 2026-10-15 (all four formats in run 6) |
+| Report export (TODO-46) | the confirmed path and its declared sidecars (`.scene.json`; `.meta.json` for event data), chosen in the save dialog; Studio remembers no folder or setting, but the Windows save dialog records the file in the user's recent list and the last folder per application (E6, declared OS behaviour, observed 2026-10-16) | `ReportExportScenarioTests` (one case per format) types a path inside the owned sandbox; the run asserts exactly `report-<run-id>.<ext>` and `report-<run-id>.scene.json` there (plus `report-<run-id>.meta.json` for CSV) and nothing else in the sandbox; the run ID in the typed name is a harness marker (TODO-52 D4) and is never shown in a manual figure | declared and isolated; observed runs passed 2026-10-15 (all four formats in run 6) |
 | Network | none in code | no TCP connections observed from the app's PID during an audit run | confirmed absent |
 | Child processes | none in code | none observed | confirmed absent |
 | Shared resources | the interactive desktop and the mouse | one run at a time (`DisableTestParallelization`), opt-in | blocked by policy |
@@ -61,6 +61,43 @@ harness, acting as the user) types into the save dialog.
 child processes, TCP connections and the sandbox were watched. Nothing was written, started or connected. A global
 before/after file diff was tried first and rejected: other processes on the machine write to the same folders, so it
 cannot attribute writes. The owned sandbox can.
+
+**Observed runs: which changes are candidates** (the author's UI-automation procedure v3.3, safety §3; TODO-52,
+decisions D1–D4 of 2026-10-16). An observed run (`ObservedRunTests`, the observed manual batch) compares snapshots A, B
+and C (`StateSnapshot`) and `stage0.py diff-classify` classifies the B→C changes. A change is a **candidate** only when
+the run can attribute it to Studio:
+
+1. it lies in the **observation scope**: the scope entries of every write surface in `Harness/Isolation/surface-list.json`
+   (declared default, this run's resolved value, isolation location), the run's harness-owned locations (sandboxes, run
+   folder, lease, registry marker), and the **shell record locations** in `classification-rules.json`
+   (`shellRecordLocations`: data Studio hands the shell — the save dialog's history E6, recent-document links). A shared
+   location (Documents, a key other programs also write) enters only by the surface's own name pattern; a surface or shell
+   record without one is listed as a blind spot;
+2. it carries a **harness marker** — a run ID of the observation context — in its path or name, or in registry value data
+   (the snapshot flags such a value as it is read, because the stored hash hides the data afterwards; files are matched by
+   name only). The export names the harness types carry the run ID (`report-<run-id>.<ext>`, D4), so whatever the save
+   dialog records about them carries it too;
+3. it belongs to an **owned process** (the registered image `Gcam.Studio.exe` and its descendants, from the process ledger).
+
+There is no fourth basis: no per-process write record is taken (D2). Everything else is **unattributed**: not classified,
+not unknown, never blocking; `diff-classify` counts it per channel and lists it, redacted, in a local file beside its result
+(`<out>.unattributed.jsonl`, A4). Candidates are then classified in the charter's order (harness-owned, declared surface,
+OS record of the process's own run, outside the Studio window, changed in the control window A→B, recorded filter, another
+git working tree, else out-of-declaration or unclassified). Records the OS keeps about a process's own run and windows (window
+session, compatibility store, taskbar usage, display-name cache; `osRunRecords`) stay other-actor even when they carry a
+marker. A background filter may not cover a scope location, a shell record location, a marker item or an owned-process
+item: `diff-classify` refuses an overlapping filter when it loads the rules and never applies one to a marker item. The
+filters recorded on 2026-10-14 … 16 all lie outside the new scope and are retired (`backgroundFilterHistory`, inactive,
+each with its evidencing run; D3). The result and the run manifest (`writeAudit`, manifest schema 3) carry
+`observationScope` (each location with its basis), `unattributed` (count and list) and `controlWindow` (the A→B and Studio
+window lengths and the items the control-window rule classified).
+
+| Blind spot | Residual risk |
+|---|---|
+| A Studio effect outside the scope without a marker (`framework-registry`, `framework-cache-shell`, `framework-crash`, now `blind-spot` with D2) | a framework or driver write there is counted as unattributed, not seen as Studio's. Studio's managed code has no write except the export, no network and no child process (`SurfaceSurveyTests` checks the deployed IL); what remains is native framework and driver behaviour, of the kind seen as E1 and E3 in the 2026-10-14 kernel traces |
+| Jump lists; the per-extension recent-documents lists | no name pattern of Studio's own (application-ID file names; lists shared with every program); covered only by a marker in a name or in registry value data |
+| A marker inside file content | files are matched by name only (content scanning is out: cost) |
+| Snapshots taken before TODO-52 | no value-data marker flags; names are still matched (the 2026-10-16 runs re-classified as a check, not as G1 evidence) |
 
 **Ownership** (`Harness/StudioProcess.cs`).
 
