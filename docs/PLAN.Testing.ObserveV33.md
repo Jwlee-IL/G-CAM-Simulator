@@ -5,8 +5,8 @@ Scope: TODO-52. Bring the observed run's classification in line with the author'
 observation scope, with no harness marker and no process attribution, are counted as `unattributed` and never block a
 run. Then run the approved pilot this needs together with TODO-51's open desktop check.
 
-Status: reference plan 2026-10-16 by the planner; next: the author's decisions below (D1–D4), then one implementer
-turn, then one desktop session on the author's go.
+Status: D1–D4 approved by the author 2026-10-16 ("넷 다 승인. 진행해."); next: one implementer turn, then one desktop
+session on the author's go.
 
 ## Why (2026-10-16)
 
@@ -48,7 +48,7 @@ and `controlWindow`.
 | The run manifest writes `writeAudit` without `observationScope`, `unattributed` or `controlWindow` | `tests/Gcam.Studio.UiTests/Harness/UiRunManifest.cs:93` | add the three fields; existing records keep their schema |
 | Every Studio launch path passes the run ID (`GCAM_UIA_RUN`) and the sandbox name holds it (`gcam-uia-<run>`) | `IsolationPaths.cs:17`, `OwnedStudioProcess.cs` | paths the app hands the shell (export paths) already carry a marker; the export file names can carry one too (procedure recommends markers in non-displayed inputs) |
 
-## Decisions for the author (planner's recommendation first)
+## Decisions (author, 2026-10-16: all four recommendations approved)
 
 | # | Question | Recommendation |
 |---|---|---|
