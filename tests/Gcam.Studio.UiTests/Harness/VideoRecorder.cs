@@ -41,8 +41,10 @@ public sealed class VideoRecorder
     public static bool Enabled(string? value) => value != "0";
     /// <summary>The latest passing videos: repository-local, git-ignored, removed by <c>git clean -fdx</c>.</summary>
     public static string LatestRoot => Path.Combine(RepoPaths.Root(), "artifacts", "ui-videos");
-    /// <summary>Folders the recorder may write outside the run record, for an observed batch's harness accounting.</summary>
-    public static string[] OwnedDestinations() => Enabled(Environment.GetEnvironmentVariable("GCAM_UI_VIDEO")) ? [LatestRoot] : [];
+    /// <summary>Folders the recorder and the result cache (<c>cache.json</c>, also without video) may write outside the
+    /// run record, for an observed batch's harness accounting.</summary>
+    public static string[] OwnedDestinations() => Enabled(Environment.GetEnvironmentVariable("GCAM_UI_VIDEO"))
+        || ResultCache.RecordsPasses(ResultCache.Mode.Current()) ? [LatestRoot] : [];
     public static VideoRecorder? TryStart(RunRecord record, IntPtr hwnd, int pid, string id)
     {
         if (!Enabled(Environment.GetEnvironmentVariable("GCAM_UI_VIDEO"))) { record.Set("video", "disabled"); return null; }

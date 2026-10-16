@@ -4,8 +4,13 @@ Scope: TODO-51. Make a build of the same source give the same bytes (step 1), th
 while nothing that can change its outcome has changed (step 2), so regression and observed runs stop repeating work that
 a docs- or test-only commit cannot affect.
 
-Status: step 1 implemented and verified 2026-10-16 by the planner (branch `todo51-build-identity`, worktree `C:\gw\w51`);
-step 2 next (implementer turn).
+Status: steps 1 and 2 implemented 2026-10-16 (branch `todo51-build-identity`): step 1 by the planner, step 2 by a substitute
+agent and audited by the planner (normal suite 1,182 passed / 63 skipped, catalog 239, test-record self-test 28, M1 replay
+byte-identical). Step 2 decisions taken in the audit: a failed run removes the case's entry (a later cache run must not
+reuse a pass the latest run contradicted); `surface-list.json` names `cache.json` (an isolation change, folded into the
+new pilot the step-1 binaries need anyway); `PolishSurveyTests` is never reused. Open: one desktop run on the author's go
+showing a normal run writing `cache.json`, a `GCAM_UI_CACHE=1` run with `[cache-reused]` skips, and a desktop-profile
+collection still running everything.
 History: proposed by the author on 2026-10-16 ("파일럿 결과를 캐싱하면 회귀 테스트를 좀 더 빠르게 할 수 있지 않을까?",
 then "그렇게 해").
 

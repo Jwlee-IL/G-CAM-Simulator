@@ -1,10 +1,14 @@
+using Xunit.Sdk;
+
 namespace Gcam.Studio.UiTests;
 
 /// <summary>
 /// A test that drives the real app on the interactive desktop. Skipped unless <c>GCAM_UI_TESTS=1</c>: it moves the
 /// mouse and takes focus, so it must be an explicit choice by whoever is at the machine, never a side effect of
-/// <c>dotnet test Gcam.sln</c>.
+/// <c>dotnet test Gcam.sln</c>. Discovered as a <see cref="Harness.CachedDesktopTestCase"/>: with <c>GCAM_UI_CACHE=1</c> a
+/// recent matching pass is reused as a skip (<see cref="Harness.ResultCache"/>).
 /// </summary>
+[XunitTestCaseDiscoverer("Gcam.Studio.UiTests.Harness.CachedFactDiscoverer", "Gcam.Studio.UiTests")]
 public sealed class DesktopFactAttribute : FactAttribute
 {
     public const string OptInVariable = "GCAM_UI_TESTS";
