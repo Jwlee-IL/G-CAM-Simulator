@@ -30,7 +30,8 @@ REPO = Path(__file__).resolve().parents[2]
 CATALOG = REPO / 'docs/VV.Tests.md'
 SWITCHES = ('GCAM_EVIDENCE_TESTS', 'GCAM_RENDER_SNAPSHOTS', 'GCAM_UI_TESTS',
             'GCAM_UI_BREAK_VERDICT', 'GCAM_README_CAPTURE_ONLY', 'GCAM_CRRC_VECTORS',
-            'GCAM_PROVENANCE_GIT_TESTS', 'GCAM_RENDER_OUTPUT', 'GCAM_UI_LONG_TESTS', 'GCAM_UI_PROBE', 'GCAM_UI_VIDEO')
+            'GCAM_PROVENANCE_GIT_TESTS', 'GCAM_RENDER_OUTPUT', 'GCAM_UI_LONG_TESTS', 'GCAM_UI_PROBE', 'GCAM_UI_VIDEO',
+            'GCAM_UI_CACHE')
 PROJECTS = tuple(sorted(p.stem for p in (REPO / 'tests').glob('*/*.csproj')))
 SCOPE = ('src/', 'tests/', 'rtl/', 'samples/', '.github/workflows/',
          'Directory.Build.', 'Gcam.sln', 'global.json', 'NuGet.Config', '.gitattributes')
@@ -469,8 +470,9 @@ def collect(bundle, family, no_build=False, include_background=False, checker=No
     env['PYTHONDONTWRITEBYTECODE'] = '1'
     env['DOTNET_CLI_UI_LANGUAGE'] = 'en'
     if family == 'dotnet':
+        # GCAM_UI_CACHE=0: a collection executes every desktop case; it never reuses an earlier pass.
         env.update({key: '0' for key in ('GCAM_EVIDENCE_TESTS', 'GCAM_RENDER_SNAPSHOTS', 'GCAM_UI_TESTS',
-                                        'GCAM_UI_BREAK_VERDICT', 'GCAM_README_CAPTURE_ONLY')})
+                                        'GCAM_UI_BREAK_VERDICT', 'GCAM_README_CAPTURE_ONLY', 'GCAM_UI_CACHE')})
         env.pop('GCAM_CRRC_VECTORS', None)
         if profile == 'desktop':
             env.update({'GCAM_UI_TESTS': '1', 'GCAM_UI_LONG_TESTS': '0', 'GCAM_UI_PROBE': '0'})
@@ -641,6 +643,7 @@ def validate_record(record, folder, archive_root=None):
     require(record['subject']['files'] == record['subject']['postFiles'], 'record: subject changed')
     require(record.get('profile', 'normal') != 'desktop' or (record['family'] == 'dotnet'
             and record['environment']['switches'].get('GCAM_UI_TESTS') == '1'), 'record: desktop profile without the desktop opt-in')
+    require(record['environment']['switches'].get('GCAM_UI_CACHE') != '1', 'record: result cache on during a collection')
     if 'tool' in record:
         require(record['tool'] and record['environment'].get('os'), 'record: missing identification')
     require(record['provenance'] in ('formal', 'draft'), 'record: invalid provenance')
@@ -679,8 +682,8 @@ def validate_record(record, folder, archive_root=None):
         if case['verdict'] == 'failed':
             require(case['failureKind'] in ('assertion', 'error', 'unknown'), 'record: invalid failure kind')
         if case['verdict'] == 'not_executed':
-            require(case.get('skipReasonCode') in ('opt_in_off', 'optional_vectors_off', 'missing_fixture',
-                                                  'desktop_unavailable', 'platform_unsupported', 'runner_skip_unknown'), 'record: invalid skip code')
+            require(case.get('skipReasonCode') in ('opt_in_off', 'optional_vectors_off', 'missing_fixture', 'desktop_unavailable',
+                                                  'platform_unsupported', 'cache_reused', 'runner_skip_unknown'), 'record: invalid skip code')
 
 
 def load_selection(bundle):
@@ -1059,6 +1062,22 @@ def self_test(out):
     require((rows[0]['skipReasonCode'], rows[0]['switch']) == ('opt_in_off', 'GCAM_UI_LONG_TESTS'), 'self-test: long opt-in skip lost')
     rows, _ = trx_cases(long_trx, {'GCAM_UI_TESTS': '0'})
     require(rows[0]['switch'] == 'GCAM_UI_TESTS', 'self-test: normal-profile skip changed')
+    # Result cache (TODO-51): a reused desktop case is its own reason code with its source run, never a pass or an
+    # unknown skip; a record collected with the cache on is refused.
+    reused_trx = sanitized.replace(b'Set GCAM_UI_TESTS=1 to run', b'[cache-reused] reused from run 20261016-120000-abcdef (key 0123456789ab)')
+    require(reused_trx != sanitized, 'self-test: cache-reuse fixture not applied')
+    rows, _ = trx_cases(reused_trx, {'GCAM_UI_TESTS': '1'})
+    require((rows[0]['verdict'], rows[0]['skipReasonCode'], rows[0]['switch'], rows[0]['sourceRunId'], rows[0]['cacheKey'])
+            == ('not_executed', 'cache_reused', 'GCAM_UI_CACHE', '20261016-120000-abcdef', '0123456789ab'), 'self-test: cache reuse not reported')
+    write(desktop_bundle / 'reused/sanitized.trx', reused_trx)
+    reused = {**copy.deepcopy(desktop), 'runId': 'reused', 'cases': rows,
+              'artifacts': [{'path': 'sanitized.trx', 'sha256': sha(reused_trx), 'bytes': len(reused_trx), 'kind': 'dotnet'}]}
+    validate_record(reused, desktop_bundle / 'reused')
+    cached = copy.deepcopy(reused)
+    cached['environment']['switches']['GCAM_UI_CACHE'] = '1'
+    refuses('collection-with-cache', 'record: result cache on during a collection', lambda: validate_record(cached, desktop_bundle / 'reused'))
+    rows, _ = trx_cases(reused_trx.replace(b'[cache-reused]', b'[cache-reuse]'), {'GCAM_UI_TESTS': '1'})
+    require(rows[0]['skipReasonCode'] == 'runner_skip_unknown', 'self-test: malformed reuse reason accepted')
     # Compressed storage is transparent and does not discard normalized fields.
     write(bundle / 'selection.json', canonical(valid_selection))
     write(bundle / 'generation.json', canonical({'generatorSource': source}))

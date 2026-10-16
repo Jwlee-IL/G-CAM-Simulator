@@ -70,8 +70,11 @@ cannot attribute writes. The owned sandbox can.
 - The sandbox carries an owner marker and is retained under `%TEMP%/gcam-uia-*` for audit. Deletion needs author approval.
 - `GCAM_UIA_RUN=<runId>` is passed to the app so a later restart could be tied to the run.
 
-**Build identity.** The SDK stamps the commit into the binary (`ProductVersion` = `1.0.0+<sha>`). That stamp does
-not cover uncommitted changes, so each manifest also records the number of dirty files in the working tree.
+**Build identity.** A build is determined by its source (TODO-51 step 1): the informational version is `1.0.0`
+without the commit and the PDBs carry no source-control data, so a docs- or test-only commit leaves the deployment
+fingerprint unchanged. The fingerprint is the same per checkout folder, not across worktrees (the PDB path is embedded).
+Each manifest records the source commit and the number of dirty files in the working tree; a binary maps to its source
+by a rebuild with the same deployment fingerprint.
 
 ## 2. Measurement
 
@@ -232,12 +235,40 @@ deletes it, and a run in a worktree writes that worktree's folder and goes with 
 their videos. The videos are local derived files, never committed and never evidence on their own. An observed batch lists
 `artifacts/ui-videos` among the harness-owned destinations (`surface-list.json#harness-ui-videos`).
 
+**Result cache (TODO-51).** A desktop case can reuse its latest pass instead of driving Studio while nothing that can
+change its outcome has changed (`Harness/ResultCache.cs`). Every desktop case is discovered as a cache-aware xUnit case
+(`DesktopFact` / `DesktopTheory` → `CachedDesktopTestCase`, one entry per theory row); the decision is taken before the
+case starts, so a reused case never launches Studio.
+
+| Item | Rule |
+|---|---|
+| Opt-in | `GCAM_UI_CACHE=1` enables reuse. Unset (the default) runs every case as before; the test-record collector sets `GCAM_UI_CACHE=0` and refuses a record collected with the cache on |
+| Key | the deployment fingerprint of the Studio folder; the live hashes of the sources the class's catalog entry lists in [VV.Tests](VV.Tests.md) (for a UI test class that includes every harness file and the isolation folder's rules; no entry, no reuse; a listed hash that differs from the catalog, no reuse), plus the own files of every other test class those own files name, transitively (`ManualScenarioTests` calls `WorkspaceScenarioTests` helpers, which use `PilotTests`); the isolation-folder fingerprint; the OS build (with the update revision), the normalised window size, the harness's per-monitor-v2 DPI awareness and the display scaling, the formatting and UI culture; the desktop opt-in switches (`GCAM_UI_TESTS`, `GCAM_UI_LONG_TESTS`, `GCAM_UI_PROBE`, `GCAM_README_CAPTURE_ONLY`, each "1" or "off"). `GCAM_UI_VIDEO` is not part of it: recording never changes a verdict |
+| Record | after the case's final xUnit outcome (every cleanup assertion, the exact sandbox writes and, for a manual chapter, its finalised record): a pass records or refreshes `artifacts/ui-videos/cache.json` (schema `gcam.ui-cache` 1: case id → source run id, pass time, key, OS build, key components), also with `GCAM_UI_VIDEO=0`; a failure removes the case's entry, so an older pass never stands for a newer failure. A skipped or aborted case writes nothing; a run with `GCAM_UI_BREAK_VERDICT=1` leaves the file untouched. Written like the video index: a staging copy in the same folder, then a replace. A sibling file rather than a field of `index.json`, because index entries exist only with a published video |
+| Reuse | a key equal to a pass younger than 7 days on the same OS build: the case ends as an xUnit **skip** with the fixed reason `[cache-reused] reused from run <runId> (key <first 12 hex>)` — reported as not executed (test records: reason code `cache_reused` with `sourceRunId` and `cacheKey`), never as a pass. An unreadable cache file reuses nothing |
+| Never reused | `ObservedRunTests` (the observation itself) and `PolishSurveyTests` (it exists to rewrite the committed screenshots) — neither reused nor recorded; any case while `GCAM_UI_BREAK_VERDICT=1` or while `GCAM_UI_OBSERVE_DIRECTORY` is set (the observed manual batch). `ManualScenarioTests` outside an observed batch may reuse; `PlotViewTests` and other cases without a run record are never recorded, so never reused |
+| What would run | `dotnet test tests/Gcam.Studio.UiTests -c Release --filter "FullyQualifiedName~ResultCacheTests.Plan_" --logger "console;verbosity=detailed"` lists every desktop case with what `GCAM_UI_CACHE=1` would do: `reuse` with the reason, or `run` with why (no recorded pass, expired, or the key components that changed — values for OS, display, culture and switches, names for the hashed ones). Headless and read-only; a C# test so that it computes the key with the harness's own code |
+
+Limits. The cache trusts the key: an outcome that depends on something outside it (machine load, another window, a
+flaky timing) is reused as it last passed for up to seven days. A test-project file outside the class's catalog sources
+(the project file, `AssemblyInfo.cs`) is not in the key. Like the videos, the file is repository-local and git-ignored,
+and a worktree has its own.
+
 ## 6. Operation
 
 - `GCAM_UI_TESTS=1 dotnet test tests/Gcam.Studio.UiTests -c Release` — only when the desktop is free.
   Without the variable the desktop tests are **skipped** and reported as skipped, never as passed.
 - Every recorded desktop test leaves its latest passing video in `artifacts/ui-videos/` (§5); set `GCAM_UI_VIDEO=0` to
   run without recording.
+- A regression run after a commit that touched no product source can add `GCAM_UI_CACHE=1`: cases whose key is unchanged
+  are reported as `[cache-reused]` skips and only the rest drive Studio (§5, "Result cache"); list them first with the
+  `ResultCacheTests.Plan_` case. A run for evidence (a test-record collection, an observed batch, a broken-verdict check)
+  never reuses.
+- An observed run (the launch-idle-exit probe, an observed manual batch) is reused while its `validFor` holds. With
+  source-determined binaries a new one is needed only when the deployment fingerprint changes (product source, build
+  settings or package versions — or a different checkout folder, since the PDB path is embedded), the isolation folder
+  `Harness/Isolation` changes (rules, surface list, action policy, scripts), or the registered images change; a docs- or
+  test-only commit does not need one.
 - Long scenarios need `GCAM_UI_LONG_TESTS=1` as well: today only `ReadoutScenarioTests.HighResCold_…` (one cold 64 k
   High-res 661.7 keV preparation, ≈ 45 min, ≈ 6 GiB). Ordinary desktop runs skip it; run it alone, on request.
 - Runs are serial. A run that fails is not retried automatically; read its manifest first.

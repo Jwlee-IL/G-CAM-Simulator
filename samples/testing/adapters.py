@@ -14,7 +14,18 @@ GATES = {
 }
 
 
+# A desktop case reused from its latest pass (GCAM_UI_CACHE=1, TODO-51) is a skip with this fixed reason, never a pass.
+CACHE_REUSE = re.compile(r'\[cache-reused\] reused from run ([0-9]{8}-[0-9]{6}-[0-9a-f]{6}) \(key ([0-9a-f]{12})\)')
+
+
+def cache_reuse(text):
+    match = CACHE_REUSE.search(text)
+    return {'sourceRunId': match[1], 'cacheKey': match[2]} if match else None
+
+
 def skip_reason(text, switches):
+    if cache_reuse(text):
+        return 'cache_reused', 'GCAM_UI_CACHE'
     for switch in GATES:
         if switch in text and switches.get(switch) != '1':
             return 'opt_in_off', switch
@@ -58,6 +69,8 @@ def trx_cases(data, switches):
         }
         if verdict == 'not_executed':
             case['skipReasonCode'], case['switch'] = skip_reason(text, switches)
+            if case['skipReasonCode'] == 'cache_reused':
+                case.update(cache_reuse(text))
         cases.append(case)
     if not cases:
         raise ValueError('trx: empty results')

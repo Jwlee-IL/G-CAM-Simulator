@@ -19,6 +19,7 @@ public sealed class RunRecord
     {
         RunId = $"{DateTime.Now:yyyyMMdd-HHmmss}-{Guid.NewGuid().ToString("N")[..6]}";
         Directory = OwnedFolder.Create(RunId);
+        ResultCache.Ran(RunId);   // the case's source run if it passes
         _fields["schema"] = 1;
         _fields["runId"] = RunId;
         _fields["scenario"] = scenario;
