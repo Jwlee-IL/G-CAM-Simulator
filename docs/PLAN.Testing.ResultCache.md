@@ -4,7 +4,8 @@ Scope: TODO-51. Make a build of the same source give the same bytes (step 1), th
 while nothing that can change its outcome has changed (step 2), so regression and observed runs stop repeating work that
 a docs- or test-only commit cannot affect.
 
-Status: step 1 implemented 2026-10-16 by the planner (branch `todo51-build-identity`); step 2 next (implementer turn).
+Status: step 1 implemented and verified 2026-10-16 by the planner (branch `todo51-build-identity`, worktree `C:\gw\w51`);
+step 2 next (implementer turn).
 History: proposed by the author on 2026-10-16 ("파일럿 결과를 캐싱하면 회귀 테스트를 좀 더 빠르게 할 수 있지 않을까?",
 then "그렇게 해").
 
@@ -21,13 +22,16 @@ then "그렇게 해").
 
 ## Step 1 — source-determined binaries (done)
 
-`Directory.Build.props`: `IncludeSourceRevisionInInformationalVersion=false`. The binary's informational version is now
-`1.0.0`; deterministic compilation was already the default.
+`Directory.Build.props`: `IncludeSourceRevisionInInformationalVersion=false` and `EnableSourceControlManagerQueries=false`.
+The first removes the commit from the informational version; the second stops SourceLink writing it into each PDB (the DLL
+records its PDB's content identity, so with the first alone every DLL except the apphost still followed the commit).
+Deterministic compilation was already the default.
 
 | Check | Result |
 |---|---|
 | The commit string is gone from `Gcam.Studio.dll` | `1.0.0` only |
-| Two builds of commits that differ only in docs give the same deployment fingerprint | see the commit record of this step |
+| Two builds of commits that differ only in docs give the same deployment fingerprint | with the first setting alone: 9 of 10 DLLs differed; with both: `120f2085…` on both commits, no file differs |
+| Normal suite | 1,171 passed / 63 skipped, 0 failed; catalog 238 units |
 | Provenance | unchanged in substance: run records, `pin.json` and the video index record the source commit beside the deployment fingerprint; a binary maps to its source by a rebuild with the same fingerprint |
 
 Trade-off: the report export's header ("Studio version") and the event-data metadata (`generator`) show `1.0.0` instead
