@@ -71,17 +71,24 @@ Task state lives in **`docs/AGENTS.Todo.md`** (each row links its plan; the plan
 copy it here, it goes stale. Only what the Todo does not hold:
 - **Ambient background (TODO-30, done 2026-10-04):** the evidence register now quotes an absolute terrestrial field next to
   every ideal value it re-measured (EV-34); results not re-measured are still ideal-environment best cases.
-- Desktop (author's go each run): the whole desktop suite passed on 2026-10-13 after TODO-42 / 44 / 45
-  (`docs/VV.Studio.History.md`), and the README screenshot is now the refreshed polish-survey capture. PR-SENS-02's count
-  gate is settled (measured gate, EV-34). Still open: a hands-on check of the tool Alt keys and Enter in the Options dialog.
+- Desktop (author's go each run): every recorded desktop test passed on 2026-10-16 with a video each (TODO-48), and the
+  milestone M2 desktop profile passed 140 / 140 runnable cases (`docs/VV.Studio.History.md`). PR-SENS-02's count gate is
+  settled (measured gate, EV-34). Still open: a hands-on check of the tool Alt keys and Enter in the Options dialog.
+- Observed runs follow the author's UI-automation procedure v3.3 since TODO-52 (2026-10-16): only changes attributable to
+  Studio are candidates; other programs' changes are counted as `unattributed` and never block. Builds are
+  source-determined (TODO-51): docs- or test-only commits keep the deployment fingerprint, so they need no new observed run.
+- Other automation sessions share this PC's desktop: announce G-CAM desktop runs and heavy batches with start / end times,
+  and pause when they announce an audit run.
 - TODO-25 (depth likelihood) closed 2026-10-08 after a current-tree screening (Findings 62); its gate validation (≈ 190 h,
   resumable per condition) is parked in the Backlog; probe, recipes and summary in `samples/evidence/depthlik/`.
 - Codex conversations, worktrees (`C:\gw\…`) and probe outputs (`%TEMP%\gcam-*`) are machine-local: start new
   implementer turns from the plan Status and the review / turn-report files. While Codex is unavailable, turns run as
   substitute Claude subagents (`docs/AGENTS.Planning.md`).
 - Test records (TODO-28, done 2026-10-08): catalog `docs/VV.Tests.md`, generated `docs/VV.Tests.Results.md`, milestones in
-  `samples/testing/records/<Mn>/`. A new milestone is collected by the planner on a clean tree (commands in the archived
-  plan's turn 4 report; cocotb needs `--python py -3.13` on the original machine).
+  `samples/testing/records/<Mn>/` (M1 2026-10-08; M2 2026-10-16 with desktop results via `--profile desktop`). A new
+  milestone is collected by the planner on a clean tree (commands in the archived plan's turn 4 report plus the desktop
+  profile; cocotb needs `--python py -3.13` on the original machine). Never point a scratch `generate --studio` at the
+  repository's `docs/VV.Studio.md` — it writes its block there and leaves the tree dirty.
 
 ## Working style
 Design-first discussion before coding; give options with a recommendation, then build one clean
