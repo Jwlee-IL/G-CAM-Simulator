@@ -11,6 +11,16 @@ set the plan's status to done and move the plan and its review / reports into th
 
 ## Closed tasks
 
+- **TODO-52 Attributable-change observation (UI automation procedure v3.3)** (2026-10-16): an observed run's candidate
+  is only a change it can attribute to Studio (observation scope from the write-surface list, a harness marker, an
+  owned process); other changes are counted as `unattributed` and never block. Framework rows closed as blind spots,
+  background filters retired to history, export names `report-<run-id>.<ext>`. Approved pilot `probe-20261016-03`
+  completed (new G1 basis: 12 candidates, 2 unattributed). Implemented by a substitute agent, audited by the planner.
+  Plan: [PLAN.Testing.ObserveV33](PLAN.Testing.ObserveV33.md).
+- **TODO-51 Source-determined binaries and cached desktop results** (2026-10-16): no commit in the informational
+  version or the PDBs, so docs- and test-only commits keep the deployment fingerprint; with `GCAM_UI_CACHE=1` a desktop
+  case whose key is unchanged reuses its latest pass, reported as a `[cache-reused]` skip (never a pass; a collection
+  never reuses). Desktop check passed on `a927311`. Plan: [PLAN.Testing.ResultCache](PLAN.Testing.ResultCache.md).
 - **TODO-49 Test records: a desktop profile and milestone M2** (2026-10-16): `collect --family dotnet --profile desktop`
   runs the UI test project with the desktop opt-in on (long run, observed probe and polish survey off); a desktop case
   replaces a skipped normal selection. Milestone M2 (`samples/testing/records/M2`, report `docs/VV.Tests.Results.md`):

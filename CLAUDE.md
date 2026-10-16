@@ -77,6 +77,8 @@ copy it here, it goes stale. Only what the Todo does not hold:
 - Observed runs follow the author's UI-automation procedure v3.3 since TODO-52 (2026-10-16): only changes attributable to
   Studio are candidates; other programs' changes are counted as `unattributed` and never block. Builds are
   source-determined (TODO-51): docs- or test-only commits keep the deployment fingerprint, so they need no new observed run.
+  G1 basis: approved pilot `probe-20261016-03` (completed). `GCAM_UI_CACHE=1` reuses an unchanged desktop case's latest
+  pass (`[cache-reused]` skip; collections never reuse).
 - Other automation sessions share this PC's desktop: announce G-CAM desktop runs and heavy batches with start / end times,
   and pause when they announce an audit run.
 - TODO-25 (depth likelihood) closed 2026-10-08 after a current-tree screening (Findings 62); its gate validation (≈ 190 h,

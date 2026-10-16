@@ -8,9 +8,11 @@ Status: steps 1 and 2 implemented 2026-10-16 (branch `todo51-build-identity`): s
 agent and audited by the planner (normal suite 1,182 passed / 63 skipped, catalog 239, test-record self-test 28, M1 replay
 byte-identical). Step 2 decisions taken in the audit: a failed run removes the case's entry (a later cache run must not
 reuse a pass the latest run contradicted); `surface-list.json` names `cache.json` (an isolation change, folded into the
-new pilot the step-1 binaries need anyway); `PolishSurveyTests` is never reused. Open: one desktop run on the author's go
-showing a normal run writing `cache.json`, a `GCAM_UI_CACHE=1` run with `[cache-reused]` skips, and a desktop-profile
-collection still running everything.
+new pilot the step-1 binaries need anyway); `PolishSurveyTests` is never reused. **Done 2026-10-16** (desktop session on
+`a927311`, author's go): a normal run of the four report-export cases and the chrome case (5 passed) wrote `cache.json`
+with one entry each; the same selection with `GCAM_UI_CACHE=1` skipped all five as `[cache-reused]` (0.7 s). The same
+session's approved pilot `probe-20261016-03` completed on the step-1 binaries. A desktop-profile collection never reuses:
+the collector sets `GCAM_UI_CACHE=0` and refuses a record with the cache on (test-record self-test), so it was not re-run.
 History: proposed by the author on 2026-10-16 ("파일럿 결과를 캐싱하면 회귀 테스트를 좀 더 빠르게 할 수 있지 않을까?",
 then "그렇게 해").
 

@@ -11,7 +11,10 @@ milestones replay). The four 2026-10-16 observed runs re-classify `completed` un
 unattributed changes. Audit additions: recent-document links for exports are declared with E6 (same record family as the
 dialog history; a harness-typed name carries the run ID and would otherwise have blocked a run). The run manifest is G-CAM's
 own schema (`gcam.ui-run` 3); it carries the procedure's schema-10 fields `observationScope`, `unattributed`,
-`controlWindow`. Next: one desktop session on the author's go (approved pilot, TODO-51 cache check).
+`controlWindow`. **Done 2026-10-16**: approved pilot `probe-20261016-03` on `a927311` (author's go "지워도 돼. 푸시는 데스크톱
+런이 끝난 다음 산출물 생성하고 커밋하고 진행해.", recorded as HUM-01 / 04 / 07) completed and is the new G1 basis: all three
+positive controls seen, nothing out of declaration, 12 candidates (11 harness, 1 declared), 2 unattributed, 4 OS run
+records, no background filter applied; preflight passed on the pinned isolation and deployment fingerprints.
 
 ## Why (2026-10-16)
 

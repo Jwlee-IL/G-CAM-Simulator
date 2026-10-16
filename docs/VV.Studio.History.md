@@ -451,3 +451,14 @@ executed). Report `docs/VV.Tests.Results.md` formal: 1,518 cases passed, 53 not 
 `samples/testing/records/M2`; bundle, export and both archived milestones replay. Two earlier collection attempts were
 discarded (a desktop lease left by a stopped run; a scratch generation that wrote into this repository's VV.Studio);
 the collection scripts now keep scratch output out of the repository.
+
+## Approved pilot under the procedure v3.3 and the desktop result cache (TODO-51, TODO-52), 2026-10-16
+
+One desktop session on `a927311` (author's go, recorded as HUM-01 / 04 / 07; the deployment fingerprint is the one every
+commit since the source-determined build keeps). Approved pilot `probe-20261016-03`: preflight passed on the pinned isolation
+and deployment fingerprints; the observed run passed (2 min) and classifies **completed** under the procedure v3.3 — all
+three positive controls seen, nothing out of declaration, 12 candidates (11 harness-owned, 1 declared), 2 unattributed
+changes (counted, kept locally), 4 OS run records, no background filter. It replaces `probe-20261016-02` as the G1 basis.
+Result cache: the four report-export cases (first desktop run of the `report-<run-id>.<ext>` export names) and the chrome
+case passed (5 / 5, 30 s) and wrote `artifacts/ui-videos/cache.json`; the same selection with `GCAM_UI_CACHE=1` skipped all
+five as `[cache-reused]` from those runs (0.7 s).
