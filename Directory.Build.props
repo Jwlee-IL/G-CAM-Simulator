@@ -9,5 +9,8 @@
          runs keyed on the deployment fingerprint (TODO-51). Provenance is the run records' commit beside that
          fingerprint, not a string inside the binary. -->
     <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
+    <!-- SourceLink also wrote the commit into each PDB, and the DLL records its PDB's content identity, so the DLL bytes
+         still followed the commit. No source-control queries at build time. -->
+    <EnableSourceControlManagerQueries>false</EnableSourceControlManagerQueries>
   </PropertyGroup>
 </Project>
