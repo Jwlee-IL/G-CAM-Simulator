@@ -99,6 +99,28 @@ window lengths and the items the control-window rule classified).
 | A marker inside file content | files are matched by name only (content scanning is out: cost) |
 | Snapshots taken before TODO-52 | no value-data marker flags; names are still matched (the 2026-10-16 runs re-classified as a check, not as G1 evidence) |
 
+**Candidates no rule decides** (the procedure v3.4, 2026-10-16; the candidate definition above is unchanged). Such a
+candidate is *unknown*, and it is closed first from the run's own records (snapshots, control window, process ledger, run
+log): when they hold the grounds, the grounds are extracted and shown and the author classifies the candidate (HUM-08,
+recorded with the run ID and the items it classifies); the run is re-classified and its results are promoted without a
+rerun. The run is repeated with better observation only when its records cannot answer. The procedure's three
+re-classification grounds, as they apply here: a background-filter-only change (unused, no active filter since D3); an
+HUM-08 answer naming the run's items (adopted); a classification-only change (unused: `stage0.py` also derives the
+observation scope, so a classifier change stays HUM-07 with an approved pilot). A re-classification is written as a new
+result beside the earlier one, never over it, with its commit, time, grounds, the approval IDs, the count per ground and
+the SHA-256 of the earlier result. A run that ended with an out-of-declaration effect, an unseen positive control or a
+failed cleanup does not become a G1 basis by re-classification.
+
+**Recorded difference, stricter than the procedure.** `diff-classify` has no unknown class for an in-scope candidate that
+no rule decides: it reports it out-of-declaration (`unsafe_effect`), so the records-first path above is closed for it; only
+a readability flip is `unclassified`. Trigger: the first such candidate. The author then classifies it from that run's
+records (HUM-08), and the classifier gains the unknown path (an isolation change: HUM-07 and an approved pilot). It is not
+built before: no such candidate has occurred, and building it costs an approved pilot. History, kept as it happened:
+`manual-20261016-02` (the basis of edition `2026-10-16-1`) first ended with five out-of-declaration items that were other
+programs' writes (a certificate revocation cache, a Store publisher folder, a messenger's data) and became `completed` by
+filter re-classification (RC-11). Under the procedure those five were unknown, which a filter re-classification may close;
+the run was not repeated.
+
 **Ownership** (`Harness/StudioProcess.cs`).
 
 - A `Gcam.Studio` process that the run did not start is a conflict: the run fails and never attaches to or kills it.

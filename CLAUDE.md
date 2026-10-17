@@ -77,7 +77,9 @@ copy it here, it goes stale. Only what the Todo does not hold:
 - Observed runs follow the author's UI-automation procedure v3.3 since TODO-52 (2026-10-16): only changes attributable to
   Studio are candidates; other programs' changes are counted as `unattributed` and never block. Builds are
   source-determined (TODO-51): docs- or test-only commits keep the deployment fingerprint, so they need no new observed run.
-  G1 basis: approved pilot `probe-20261016-03` (completed). `GCAM_UI_CACHE=1` reuses an unchanged desktop case's latest
+  Procedure v3.4 (2026-10-17 check): an undecided candidate is closed from the run's records (HUM-08) before any rerun;
+  `diff-classify` still reports one in scope as out-of-declaration, a recorded stricter difference whose first occurrence
+  triggers the classifier change (`docs/AGENTS.UiAutomation.md`). G1 basis: approved pilot `probe-20261016-03` (completed). `GCAM_UI_CACHE=1` reuses an unchanged desktop case's latest
   pass (`[cache-reused]` skip; collections never reuse).
 - Other automation sessions share this PC's desktop: announce G-CAM desktop runs and heavy batches with start / end times,
   and pause when they announce an audit run.
