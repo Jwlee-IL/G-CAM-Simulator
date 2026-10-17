@@ -1,0 +1,37 @@
+Test run for <repo>\tests\Gcam.Studio.RenderTests\bin\Release\net9.0-windows\Gcam.Studio.RenderTests.dll (.NETCoreApp,Version=v9.0)
+VSTest version 17.14.1 (x64)
+
+The following Tests are available:
+    Gcam.Studio.RenderTests.PlotViewRenderTests.Compare_RealBaseline_BothThemesAndSizes_RenderWithoutWindow
+    Gcam.Studio.RenderTests.PlotViewRenderTests.Compare_AllStates_BothThemesAndSizes_RenderWithoutWindow
+    Gcam.Studio.RenderTests.PlotViewRenderTests.Export_TitleBarAndPopup_BothThemes_RenderWithoutWindow
+    Gcam.Studio.RenderTests.PlotViewRenderTests.Spectrum_BothThemesFullAndZoom_RenderWithoutWindow
+    Gcam.Studio.RenderTests.PlotViewRenderTests.MainWindow_Workspaces_Dark_RenderWithoutWindow
+    Gcam.Studio.RenderTests.PlotViewRenderTests.MainWindow_Workspaces_Light_RenderWithoutWindow
+    Gcam.Studio.RenderTests.PlotViewRenderTests.MainWindow_MixedField_Dark_RenderWithoutWindow
+    Gcam.Studio.RenderTests.PlotViewRenderTests.MainWindow_MixedField_Light_RenderWithoutWindow
+    Gcam.Studio.RenderTests.PlotViewRenderTests.MainWindow_FocalPlaneAndMlem_Dark_RenderWithoutWindow
+    Gcam.Studio.RenderTests.PlotViewRenderTests.MainWindow_FocalPlaneAndMlem_Light_RenderWithoutWindow
+    Gcam.Studio.RenderTests.PlotViewRenderTests.Workspaces_WaveformDetectorMeasurements_Dark_RenderWithoutWindow
+    Gcam.Studio.RenderTests.PlotViewRenderTests.Workspaces_WaveformDetectorMeasurements_Light_RenderWithoutWindow
+    Gcam.Studio.RenderTests.PlotViewRenderTests.Shell_OptionsCaptionStatusLeftTabs_Dark_RenderWithoutWindow
+    Gcam.Studio.RenderTests.PlotViewRenderTests.Shell_OptionsCaptionStatusLeftTabs_Light_RenderWithoutWindow
+    Gcam.Studio.RenderTests.CaptionRenderTests.MaximizedWorkArea_UsesMonitorRelativePixels_AtEveryDpi(dpi: 1)
+    Gcam.Studio.RenderTests.CaptionRenderTests.MaximizedWorkArea_UsesMonitorRelativePixels_AtEveryDpi(dpi: 1.25)
+    Gcam.Studio.RenderTests.CaptionRenderTests.MaximizedWorkArea_UsesMonitorRelativePixels_AtEveryDpi(dpi: 1.5)
+    Gcam.Studio.RenderTests.CaptionRenderTests.CaptionGlyphs_AreUnclipped_AndCaptionStatesUseThemeTokens
+    Gcam.Studio.RenderTests.CaptionRenderTests.TopBarLine_RunsUnderTheCaptionButtons_WhichRestOnTheBarSurface
+    Gcam.Studio.RenderTests.CaptionRenderTests.ClearGlyph_IsOneConnectedTrashCan_WithSlotCutOuts
+    Gcam.Studio.RenderTests.DeclutterRenderTests.HelpMarks_ContainMovedText_AndInlineLabelsAndPhysicalChannelRemain
+    Gcam.Studio.RenderTests.DeclutterRenderTests.ModalLayer_UsesSingleTree_CancelDefault_EscapeCancels_AndIconsAreNamed
+    Gcam.Studio.RenderTests.DeclutterRenderTests.ToolAccessKeys_AreWindowKeyBindings_SelectTheTool_OnlyInImagingWithoutModal
+    Gcam.Studio.RenderTests.DeclutterRenderTests.HelpMarks_HaveNamedRows_AndIconFramesShareEnabledDisabledAndFocusStyles
+    Gcam.Studio.RenderTests.HelpMarkTooltipTests.TooltipContent_ResolvesItsWidthTokenAsADouble_UnderTheRealThemes
+    Gcam.Studio.RenderTests.ModalFocusRenderTests.OptionsComboDropDown_KeepsFocusInsideTheDialog_FocusOutsideIsPulledBack
+    Gcam.Studio.RenderTests.OptionsRenderTests.OptionsTabs_MovedIdsAndLocks_UseTheDraft_AndCloseOnlyWhenLocked
+    Gcam.Studio.RenderTests.OptionsRenderTests.OptionsDialog_HasNoDefaultButton_EnterInAFieldKeepsTheDraftOpen
+    Gcam.Studio.RenderTests.ReadoutRenderTests.BoundReadoutControls_RejectedEditsShowAcceptedSourceValues
+    Gcam.Studio.RenderTests.ReadoutRenderTests.LineRows_ExposeTheirDetailsToAutomation_AcrossRowRebuilds
+    Gcam.Studio.RenderTests.ReadoutRenderTests.ExperimentalDetectorAndFourLanes_BothThemesAndSizes
+
+Workload updates are available. Run `dotnet workload list` for more information.

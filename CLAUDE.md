@@ -72,7 +72,9 @@ copy it here, it goes stale. Only what the Todo does not hold:
 - **Ambient background (TODO-30, done 2026-10-04):** the evidence register now quotes an absolute terrestrial field next to
   every ideal value it re-measured (EV-34); results not re-measured are still ideal-environment best cases.
 - Desktop (author's go each run): every recorded desktop test passed on 2026-10-16 with a video each (TODO-48), and the
-  milestone M2 desktop profile passed 140 / 140 runnable cases (`docs/VV.Studio.History.md`). PR-SENS-02's count gate is
+  milestone M2 desktop profile passed 140 / 140 runnable cases (`docs/VV.Studio.History.md`). On 2026-10-17 the observed
+  manual batch `manual-20261017-01` (completed) gave manual edition `2026-10-17-1`, and milestone M3 (desktop 154 passed)
+  records one failed unit test, a fixture-only race kept as anomaly AN-18 (VV.Studio). PR-SENS-02's count gate is
   settled (measured gate, EV-34). Still open: a hands-on check of the tool Alt keys and Enter in the Options dialog.
 - Observed runs follow the author's UI-automation procedure v3.3 since TODO-52 (2026-10-16): only changes attributable to
   Studio are candidates; other programs' changes are counted as `unattributed` and never block. Builds are

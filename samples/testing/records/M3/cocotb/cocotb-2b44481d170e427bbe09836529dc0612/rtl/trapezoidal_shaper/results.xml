@@ -1,0 +1,8 @@
+<testsuites name="&lt;run-name>">
+  <testsuite name="all" package="all">
+    <property name="random_seed" value="20261002"></property>
+    <testcase classname="test_trap_shaper" file="&lt;repo>\rtl\test_trap_shaper.py" lineno="55" name="single_pulse_matches_reference" ratio_time="152960.69394163828" sim_time_ns="1231.0" time="0.008047819137573242"></testcase>
+    <testcase classname="test_trap_shaper" file="&lt;repo>\rtl\test_trap_shaper.py" lineno="62" name="piled_pulses_match_reference" ratio_time="177315.4253033465" sim_time_ns="1641.0000000000002" time="0.009254693984985352"></testcase>
+    <testcase classname="test_trap_shaper" file="&lt;repo>\rtl\test_trap_shaper.py" lineno="78" name="mc_event_stream_matches_reference" ratio_time="168597.23995727458" sim_time_ns="298991.0" time="1.7734038829803467"></testcase>
+  </testsuite>
+</testsuites>

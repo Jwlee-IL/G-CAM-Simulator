@@ -94,18 +94,18 @@ Build: zero errors, zero warnings; the two existing xUnit analyzer warnings (`Im
 execution:
 
 <!-- BEGIN GENERATED: TEST INVENTORY -->
-Subject `f029b3bc973c93e0fc2b26fc86467ffea97e1a28`; formal; source snapshot `13b0d6e76636529794596bb9f408a1b2c2fb66b7464455fa478359d5fb3f6a31`.
+Subject `161e74e770312aef37f16fa43ec396d76f1d0285`; formal; source snapshot `3f03955ca90f2231c74cff8f6b4b0c5317b294094fa71976c5e0cc0bb952173b`.
 
 | Assembly / family | Passed | Failed | Not executed | Missing cases |
 | --- | --- | --- | --- | --- |
 | Gcam.Studio.RenderTests | 16 | 0 | 15 | 0 |
 | Gcam.Studio.Services.Tests | 152 | 0 | 7 | 0 |
-| Gcam.Studio.Tests | 309 | 0 | 0 | 0 |
-| Gcam.Studio.UiTests | 140 | 0 | 4 | 0 |
+| Gcam.Studio.Tests | 308 | 1 | 0 | 0 |
+| Gcam.Studio.UiTests | 154 | 0 | 4 | 0 |
 | Gcam.Tests | 595 | 0 | 0 | 0 |
 | checker | 7 | 0 | 0 | 0 |
 | cocotb | 111 | 0 | 26 | 0 |
-| unittest | 188 | 0 | 1 | 0 |
+| unittest | 191 | 0 | 1 | 0 |
 <!-- END GENERATED: TEST INVENTORY -->
 
 No desktop, render or long-evidence opt-in was enabled for this run. The retained final desktop record
@@ -599,6 +599,7 @@ folder was left behind. UIA Select on the workspace switch does not change the w
 | AN-15 | The opt-in offscreen render test (then the single `PlotViewRenderTests.Spectrum_BothThemesFullAndZoom_RenderWithoutWindow`; since the 2026-10-13 split the emission-table check runs in `MainWindow_Workspaces_*`, `MainWindow_MixedField_*` and `MainWindow_FocalPlaneAndMlem_*`) fails on one machine (2026-10-04) in its emission-table check ("Truncated table value: Window (keV)") before it reaches the later renders; it fails the same way at a commit before the ambient default and fixed axis, so it predates them (likely a font or display difference on that machine — not established) | on that machine the repository test does not complete SR-SPEC-05's table check or produce the renders after it; the ambient-panel PNGs (SR-RUN-29) came from a scratch copy that logged that assertion instead | find why the window column truncates there, then re-run the opt-in render test unchanged |
 | AN-16 | Closed (2026-10-13): SR-A11Y-03 named tool access keys (Alt+P / D / A / R) and "Enter runs (default button)" after the access keys were lost with the icon toggles and Start had stopped being the default button (SR-RUN-13) | the access keys are restored as window key bindings (tooltips name them, the toggles expose them as their accessible access key) and SR-A11Y-03 states the shipped Enter behaviour | key routing on the real window is verified with the next desktop run |
 | AN-17 | Closed (2026-10-13): the desktop run found that the modal focus boundary walked only the visual tree and refused the focus an opening combo gives its drop-down item (a popup root has no visual parent), so the Options dialog's combos (ambient bound, detection chain) could not be chosen through their drop-down and a UI scenario failed ("No FrontOnlyThroughMask in Acquisition.AmbientBound") | Options inputs set through a combo were unusable | `ModalHost` follows the logical parent and popup placement target; `ModalFocusRenderTests` checks it windowlessly (fails on the old boundary); `Choose` requires an open drop-down; desktop re-run passes |
+| AN-18 | `CompareWorkspaceTests.SettingsAndReset_RejectOldResults_EvenWhenServiceIgnoresCancellation` failed once in milestone M3 (2026-10-17, its 5 s wait on `WhenUpdated` timed out) and passed in 20 / 20 repeats of the whole assembly. Likely cause, from the code: setting `WindowLowKeV` raises two property changes, so `Refresh` runs twice; the tests have no synchronisation context, so `UpdateAsync` continues on the thread pool and can take `_pending` before it records `_running`, letting the second `Refresh` queue the same key again — a second request the fixture never completes | a rare red result in a test run; in Studio both run on the UI thread, so the duplicate cannot occur there | run the Compare view-model tests under a single-threaded synchronisation context like the UI thread (test-only), or record `_running` before clearing `_pending`; then re-run the assembly repeatedly |
 
 No screen-reader (Narrator / NVDA) session has been run. Not verified.
 

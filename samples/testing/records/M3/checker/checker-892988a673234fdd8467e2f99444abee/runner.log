@@ -1,0 +1,45 @@
+video-hash-without-files: generated: ### 1.3 Beta
+video-hash-without-files-replay: check passed without videos
+bad-video-hash: video-provenance: invalid identity or hash
+valid: generated: ### 1.3 Beta
+valid-replay: check passed
+tampered-figure: check-differs: figures/1.2-1.png
+tampered-pdf: check-differs: MANUAL.Studio.pdf
+tampered-docx: check-differs: MANUAL.Studio.docx
+purpose-in-label: generated: Start: go
+purpose-hash-mismatch: source-hash: purposes.json
+missing-purpose: generated: marks without a purpose entry: StartAcquisition
+purpose-name: generated: Run: go
+missing-purpose-formal: formal-refused: marks without a purpose entry: StartAcquisition
+purposes-draft: generated: the mark purpose list is not approved
+purpose-duplicate: purposes: duplicate or malformed target StartAcquisition
+purpose-no-glyph: purposes: incomplete, or a character the label font has no glyph for, in StartAcquisition
+purpose-schema-1: purposes: schema 1 (a list under each figure) is no longer supported
+missing-run: generated: it is not included because no run
+missing-run-formal: formal-refused: chapters omitted: 1.3
+failed-chapter: generated: did not pass (failed)
+failed-chapter-formal: formal-refused: chapters omitted: 1.3
+latest-failed-after-pass: generated: the latest run (run-beta2) did not pass
+evidence-hash: evidence-hash: captures/f1.png
+mark-outside-image: mark-bounds: rectangle outside the image
+dpi-double-scaling: mark-geometry: image rectangle is not the measured screen rectangle
+label-no-room: label-no-room: mark 2 has no place in the figure or a margin beside it
+label-without-glyph: label-glyph: mark 1 label has no glyph for U+2192
+label-margin-bottom: generated: margin-bottom, margins {'bottom': 36}, replayed
+label-margin-right: generated: margin-right, margins {'right': 92}, replayed
+label-wrapped: generated: right, margins none, replayed
+label-overlap: label-overlap: label 1 covers label 2
+label-over-own-target: label-overlap: label 1 covers its own target
+label-outside-figure: label-bounds: label 1 outside the figure
+label-placement-defect: label-overlap: label 1 covers its own target
+mixed-binaries: mixed-binaries: run records come from more than one Studio build
+budget-exceeded: budget: edition is 81437 bytes, budget 2000
+unknown-notice: notice-unknown: N-NONE
+notice-wrong-chapter: notice-chapter: N-SIM not allowed in 1.3
+notice-missing: notice-missing: N-SIM has no placement in 1.2
+pdf-missing-glyph: pdf-glyph: no glyph for U+2192 in Regular text
+warning-in-prose: prose-notice: warning wording or path in step text
+path-escape: path-escape: ../x.png
+registry-collision: registry: generated/static collision 1.2
+identity-leak: identity-leak: sources/runs/run-beta/manual-run.json
+manual self-test: 44 cases passed

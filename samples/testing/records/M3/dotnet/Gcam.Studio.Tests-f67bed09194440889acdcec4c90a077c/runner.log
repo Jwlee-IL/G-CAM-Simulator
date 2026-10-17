@@ -1,0 +1,17 @@
+Test run for <repo>\tests\Gcam.Studio.Tests\bin\Release\net9.0\Gcam.Studio.Tests.dll (.NETCoreApp,Version=v9.0)
+VSTest version 17.14.1 (x64)
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:05.41]     Gcam.Studio.Tests.CompareWorkspaceTests.SettingsAndReset_RejectOldResults_EvenWhenServiceIgnoresCancellation [FAIL]
+  Failed Gcam.Studio.Tests.CompareWorkspaceTests.SettingsAndReset_RejectOldResults_EvenWhenServiceIgnoresCancellation [5 s]
+  Error Message:
+   System.TimeoutException : The operation has timed out.
+  Stack Trace:
+     at Gcam.Studio.Tests.CompareWorkspaceTests.SettingsAndReset_RejectOldResults_EvenWhenServiceIgnoresCancellation() in <repo>\tests\Gcam.Studio.Tests\CompareWorkspaceTests.cs:line 113
+--- End of stack trace from previous location ---
+Results File: %TEMP%\gcam-todo53\m3-bundle\dotnet\Gcam.Studio.Tests-f67bed09194440889acdcec4c90a077c\results.trx
+
+Failed!  - Failed:     1, Passed:   308, Skipped:     0, Total:   309, Duration: 5 s - Gcam.Studio.Tests.dll (net9.0)
+
+Workload updates are available. Run `dotnet workload list` for more information.

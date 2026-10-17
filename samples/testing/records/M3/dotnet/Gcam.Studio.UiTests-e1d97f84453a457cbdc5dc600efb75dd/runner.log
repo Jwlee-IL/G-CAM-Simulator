@@ -1,0 +1,14 @@
+Test run for <repo>\tests\Gcam.Studio.UiTests\bin\Release\net9.0-windows\Gcam.Studio.UiTests.dll (.NETCoreApp,Version=v9.0)
+VSTest version 17.14.1 (x64)
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:10:01.78]     Gcam.Studio.UiTests.ReadoutScenarioTests.HighResCold_ProgressTabsCornersAndSessionHit_Bundled [SKIP]
+  Skipped Gcam.Studio.UiTests.ReadoutScenarioTests.HighResCold_ProgressTabsCornersAndSessionHit_Bundled [1 ms]
+[xUnit.net 00:12:45.66]     Gcam.Studio.UiTests.ObservedRunTests.LaunchIdleExit_RecordsPendingChannelEvidence_WithoutAutomation [SKIP]
+  Skipped Gcam.Studio.UiTests.ObservedRunTests.LaunchIdleExit_RecordsPendingChannelEvidence_WithoutAutomation [1 ms]
+Results File: %TEMP%\gcam-todo53\m3-bundle\dotnet\Gcam.Studio.UiTests-e1d97f84453a457cbdc5dc600efb75dd\results.trx
+
+Passed!  - Failed:     0, Passed:   154, Skipped:     2, Total:   156, Duration: 13 m 51 s - Gcam.Studio.UiTests.dll (net9.0)
+
+Workload updates are available. Run `dotnet workload list` for more information.

@@ -4,7 +4,7 @@ Scope: selected runner invocations for one source snapshot; no human approval or
 
 **At a glance**
 - Provenance: formal.
-- Cases: not_executed=53, passed=1518.
+- Cases: failed=1, not_executed=53, passed=1534.
 - Catalog units without results: 0.
 - Archived replay revalidates sanitised runner evidence; binaries are hash-only.
 
@@ -12,43 +12,43 @@ Draft reasons: none
 
 Catalog review: all descriptions marked established.
 
-Subject `f029b3bc973c93e0fc2b26fc86467ffea97e1a28`; formal; source snapshot `13b0d6e76636529794596bb9f408a1b2c2fb66b7464455fa478359d5fb3f6a31`.
+Subject `161e74e770312aef37f16fa43ec396d76f1d0285`; formal; source snapshot `3f03955ca90f2231c74cff8f6b4b0c5317b294094fa71976c5e0cc0bb952173b`.
 
 | Assembly / family | Passed | Failed | Not executed | Missing cases |
 | --- | --- | --- | --- | --- |
 | Gcam.Studio.RenderTests | 16 | 0 | 15 | 0 |
 | Gcam.Studio.Services.Tests | 152 | 0 | 7 | 0 |
-| Gcam.Studio.Tests | 309 | 0 | 0 | 0 |
-| Gcam.Studio.UiTests | 140 | 0 | 4 | 0 |
+| Gcam.Studio.Tests | 308 | 1 | 0 | 0 |
+| Gcam.Studio.UiTests | 154 | 0 | 4 | 0 |
 | Gcam.Tests | 595 | 0 | 0 | 0 |
 | checker | 7 | 0 | 0 | 0 |
 | cocotb | 111 | 0 | 26 | 0 |
-| unittest | 188 | 0 | 1 | 0 |
+| unittest | 191 | 0 | 1 | 0 |
 
 | Runner family | Passed | Failed | Not executed | Missing cases |
 | --- | --- | --- | --- | --- |
 | checker | 7 | 0 | 0 | 0 |
 | cocotb | 111 | 0 | 26 | 0 |
-| dotnet | 1212 | 0 | 26 | 0 |
-| unittest | 188 | 0 | 1 | 0 |
+| dotnet | 1225 | 1 | 26 | 0 |
+| unittest | 191 | 0 | 1 | 0 |
 
 | Run | Family | Started UTC | Exit | Provenance | OS | Missing |
 | --- | --- | --- | --- | --- | --- | --- |
-| Gcam.Studio.RenderTests-e6151f71c3de442eb10cc0c94995c724 | dotnet | 2026-10-16T00:23:26.870390+00:00 | 0 | formal | Windows | 0 |
-| Gcam.Studio.Services.Tests-683b9c6e0ac842cd846d6d6a2ddec6cb | dotnet | 2026-10-16T00:23:46.161167+00:00 | 0 | formal | Windows | 0 |
-| Gcam.Studio.Tests-8811d77493ce4f78a35bfa7d005563e7 | dotnet | 2026-10-16T00:24:32.634514+00:00 | 0 | formal | Windows | 0 |
-| Gcam.Studio.UiTests-fbc1a763a135494c853756760c54e7b0 | dotnet | 2026-10-16T00:24:50.055216+00:00 | 0 | formal | Windows | 0 |
-| Gcam.Tests-98aaabd1dda141b4bf00fe8006c992a6 | dotnet | 2026-10-16T00:25:20.402614+00:00 | 0 | formal | Windows | 0 |
-| unittest-8dce989dee2340788ee6905a849ed1ef | unittest | 2026-10-16T00:26:05.803553+00:00 | 0 | formal | Windows | 0 |
-| cocotb-e3bd5a6f45054a79853672b9f65c7542 | cocotb | 2026-10-16T00:27:26.749292+00:00 | 0 | formal | Windows | 0 |
-| checker-e4ca2da3ff394c33acec1081d422aba8 | checker | 2026-10-16T00:32:28.653186+00:00 | 0 | formal | Windows | 0 |
-| checker-b6650b6607bf4a9c86806a22dbffb8da | checker | 2026-10-16T00:32:48.381248+00:00 | 0 | formal | Windows | 0 |
-| checker-4de9c152d6e143ad86fb921f9102a69b | checker | 2026-10-16T00:33:02.759318+00:00 | 0 | formal | Windows | 0 |
-| checker-299db85bfdf440da9261642b1b69dd5e | checker | 2026-10-16T00:33:22.227962+00:00 | 0 | formal | Windows | 0 |
-| checker-70ed16c955634f1ba9b4e355d31141b2 | checker | 2026-10-16T00:33:40.457385+00:00 | 0 | formal | Windows | 0 |
-| checker-1eebc962ed7f4e2292dfd8e029b814e5 | checker | 2026-10-16T00:34:03.601065+00:00 | 0 | formal | Windows | 0 |
-| checker-d3dca0a9274b429f87f0890a78762abf | checker | 2026-10-16T00:34:11.201389+00:00 | 0 | formal | Windows | 0 |
-| Gcam.Studio.UiTests-c2552e90d18c497eb38d7e77d4515fed | dotnet (desktop profile) | 2026-10-16T04:03:19.401720+00:00 | 0 | formal | Windows | 0 |
+| Gcam.Studio.RenderTests-6428e431e49944f5a16877296c338df2 | dotnet | 2026-10-17T10:51:40.876741+00:00 | 0 | formal | Windows | 0 |
+| Gcam.Studio.Services.Tests-eaf891d18f0f47f9be38489ffdd256a9 | dotnet | 2026-10-17T10:51:44.560068+00:00 | 0 | formal | Windows | 0 |
+| Gcam.Studio.Tests-f67bed09194440889acdcec4c90a077c | dotnet | 2026-10-17T10:52:15.406926+00:00 | 1 | formal | Windows | 0 |
+| Gcam.Studio.UiTests-c220f17796024bfa953ad3f584e339f1 | dotnet | 2026-10-17T10:52:23.949889+00:00 | 0 | formal | Windows | 0 |
+| Gcam.Tests-0c13690d113649a1886c93ba5b9e0c2e | dotnet | 2026-10-17T10:52:31.829528+00:00 | 0 | formal | Windows | 0 |
+| Gcam.Studio.UiTests-e1d97f84453a457cbdc5dc600efb75dd | dotnet (desktop profile) | 2026-10-17T10:52:58.140111+00:00 | 0 | formal | Windows | 0 |
+| unittest-139bff7caa0f475ca504b29abdee96a3 | unittest | 2026-10-17T11:06:53.998055+00:00 | 0 | formal | Windows | 0 |
+| cocotb-2b44481d170e427bbe09836529dc0612 | cocotb | 2026-10-17T11:07:15.074423+00:00 | 0 | formal | Windows | 0 |
+| checker-90d18d48aa9441c490ffdfe5b4dde486 | checker | 2026-10-17T11:08:49.462587+00:00 | 0 | formal | Windows | 0 |
+| checker-44142f5a7d0a41cf9ec73cc71a67c916 | checker | 2026-10-17T11:08:50.785834+00:00 | 0 | formal | Windows | 0 |
+| checker-17a575a00a604a42b60f7d613836a845 | checker | 2026-10-17T11:08:52.102727+00:00 | 0 | formal | Windows | 0 |
+| checker-d21eb84f0fda42a9b767e43e9edb2eff | checker | 2026-10-17T11:08:53.803403+00:00 | 0 | formal | Windows | 0 |
+| checker-7d3cb096954a484a81f74ba4823f34d7 | checker | 2026-10-17T11:08:59.236629+00:00 | 0 | formal | Windows | 0 |
+| checker-892988a673234fdd8467e2f99444abee | checker | 2026-10-17T11:09:02.187947+00:00 | 0 | formal | Windows | 0 |
+| checker-3492a336178f4e399f541cc73999fce6 | checker | 2026-10-17T11:09:06.996380+00:00 | 0 | formal | Windows | 0 |
 
 | Catalog unit | Passed | Failed | Not executed | Missing methods |
 | --- | --- | --- | --- | --- |
@@ -82,7 +82,7 @@ Subject `f029b3bc973c93e0fc2b26fc86467ffea97e1a28`; formal; source snapshot `13b
 | Gcam.Studio.Services.Tests::Gcam.Studio.Services.Tests.WaveformServiceTests | 29 | 0 | 3 | 0 |
 | Gcam.Studio.Tests::Gcam.Studio.Tests.AcquisitionViewModelTests | 8 | 0 | 0 | 0 |
 | Gcam.Studio.Tests::Gcam.Studio.Tests.AmbientViewModelTests | 25 | 0 | 0 | 0 |
-| Gcam.Studio.Tests::Gcam.Studio.Tests.CompareWorkspaceTests | 6 | 0 | 0 | 0 |
+| Gcam.Studio.Tests::Gcam.Studio.Tests.CompareWorkspaceTests | 5 | 1 | 0 | 0 |
 | Gcam.Studio.Tests::Gcam.Studio.Tests.DeclutterTests | 6 | 0 | 0 | 0 |
 | Gcam.Studio.Tests::Gcam.Studio.Tests.DetectorFaceTests | 7 | 0 | 0 | 0 |
 | Gcam.Studio.Tests::Gcam.Studio.Tests.DetectorWorkspaceTests | 8 | 0 | 0 | 0 |
@@ -125,7 +125,7 @@ Subject `f029b3bc973c93e0fc2b26fc86467ffea97e1a28`; formal; source snapshot `13b
 | Gcam.Studio.UiTests::Gcam.Studio.UiTests.FloodOracleTests | 12 | 0 | 0 | 0 |
 | Gcam.Studio.UiTests::Gcam.Studio.UiTests.FocusPreparationTests | 1 | 0 | 0 | 0 |
 | Gcam.Studio.UiTests::Gcam.Studio.UiTests.IsolationPathsTests | 3 | 0 | 0 | 0 |
-| Gcam.Studio.UiTests::Gcam.Studio.UiTests.ManualObservationTests | 3 | 0 | 0 | 0 |
+| Gcam.Studio.UiTests::Gcam.Studio.UiTests.ManualObservationTests | 4 | 0 | 0 | 0 |
 | Gcam.Studio.UiTests::Gcam.Studio.UiTests.ManualRecordTests | 12 | 0 | 0 | 0 |
 | Gcam.Studio.UiTests::Gcam.Studio.UiTests.ManualScenarioTests | 8 | 0 | 0 | 0 |
 | Gcam.Studio.UiTests::Gcam.Studio.UiTests.MediaFoundationWriterTests | 1 | 0 | 0 | 0 |
@@ -142,11 +142,12 @@ Subject `f029b3bc973c93e0fc2b26fc86467ffea97e1a28`; formal; source snapshot `13b
 | Gcam.Studio.UiTests::Gcam.Studio.UiTests.ReportDocumentTests | 2 | 0 | 0 | 0 |
 | Gcam.Studio.UiTests::Gcam.Studio.UiTests.ReportExportScenarioTests | 4 | 0 | 1 | 0 |
 | Gcam.Studio.UiTests::Gcam.Studio.UiTests.ReportFileWriterTests | 8 | 0 | 0 | 0 |
+| Gcam.Studio.UiTests::Gcam.Studio.UiTests.ResultCacheTests | 11 | 0 | 0 | 0 |
 | Gcam.Studio.UiTests::Gcam.Studio.UiTests.ScenarioTests | 6 | 0 | 0 | 0 |
-| Gcam.Studio.UiTests::Gcam.Studio.UiTests.StateSnapshotTests | 2 | 0 | 0 | 0 |
+| Gcam.Studio.UiTests::Gcam.Studio.UiTests.StateSnapshotTests | 3 | 0 | 0 | 0 |
 | Gcam.Studio.UiTests::Gcam.Studio.UiTests.SurfaceSurveyTests | 1 | 0 | 0 | 0 |
 | Gcam.Studio.UiTests::Gcam.Studio.UiTests.TracingToolingTests | 1 | 0 | 0 | 0 |
-| Gcam.Studio.UiTests::Gcam.Studio.UiTests.UiRunManifestTests | 5 | 0 | 0 | 0 |
+| Gcam.Studio.UiTests::Gcam.Studio.UiTests.UiRunManifestTests | 6 | 0 | 0 | 0 |
 | Gcam.Studio.UiTests::Gcam.Studio.UiTests.VerdictMutationTests | 2 | 0 | 0 | 0 |
 | Gcam.Studio.UiTests::Gcam.Studio.UiTests.VideoModelTests | 6 | 0 | 0 | 0 |
 | Gcam.Studio.UiTests::Gcam.Studio.UiTests.VideoRecorderTests | 4 | 0 | 0 | 0 |
@@ -282,7 +283,7 @@ Subject `f029b3bc973c93e0fc2b26fc86467ffea97e1a28`; formal; source snapshot `13b
 | unittest::test_manual_records.ManualRecordsTests | 25 | 0 | 0 | 0 |
 | unittest::test_provenance.ProvenanceTests | 28 | 0 | 1 | 0 |
 | unittest::test_readout_netlist.ReadoutNetlistTests | 4 | 0 | 0 | 0 |
-| unittest::test_stage0_isolation.SnapshotClassificationTests | 15 | 0 | 0 | 0 |
+| unittest::test_stage0_isolation.SnapshotClassificationTests | 18 | 0 | 0 | 0 |
 | unittest::test_stage0_isolation.StageZeroIsolationTests | 53 | 0 | 0 | 0 |
 | unittest::test_studio_readout.StudioReadoutRuleV2Tests | 6 | 0 | 0 | 0 |
 | unittest::test_studio_readout.StudioReadoutRuleV3Tests | 8 | 0 | 0 | 0 |
@@ -412,6 +413,12 @@ Automated execution only; inspection/compiler/manual verdicts in the matrix rema
 | VAL-04 | 1 | 0 | 0 | 0 |
 | VAL-05 | 1 | 0 | 0 | 0 |
 
+Failed cases (all retained invocations):
+
+| Run | Case | Kind | Reason |
+| --- | --- | --- | --- |
+| Gcam.Studio.Tests-f67bed09194440889acdcec4c90a077c | Gcam.Studio.Tests::Gcam.Studio.Tests.CompareWorkspaceTests.SettingsAndReset_RejectOldResults_EvenWhenServiceIgnoresCancellation | unknown | System.TimeoutException : The operation has timed out. |
+
 Not executed — opt_in_off: Set GCAM_EVIDENCE_TESTS=1 to run numerical evidence measurements.
 
 - `Gcam.Studio.Services.Tests::Gcam.Studio.Services.Tests.DetectorGapEvidenceTests.RateRatio_MatchesGeometricArea_WithinMeasuredSeedSpread`
@@ -492,10 +499,11 @@ Not executed — optional_vectors_off: <skipped />
 
 Run diagnostics:
 
-- Gcam.Studio.RenderTests-e6151f71c3de442eb10cc0c94995c724: TRX summary notExecuted differs; case outcomes are authoritative
-- Gcam.Studio.Services.Tests-683b9c6e0ac842cd846d6d6a2ddec6cb: TRX summary notExecuted differs; case outcomes are authoritative
-- Gcam.Studio.UiTests-fbc1a763a135494c853756760c54e7b0: TRX summary notExecuted differs; case outcomes are authoritative
-- Gcam.Studio.UiTests-c2552e90d18c497eb38d7e77d4515fed: PolishSurveyTests not run in the desktop profile: it rewrites the committed screenshots in docs/assets, TRX summary notExecuted differs; case outcomes are authoritative
+- Gcam.Studio.RenderTests-6428e431e49944f5a16877296c338df2: TRX summary notExecuted differs; case outcomes are authoritative
+- Gcam.Studio.Services.Tests-eaf891d18f0f47f9be38489ffdd256a9: TRX summary notExecuted differs; case outcomes are authoritative
+- Gcam.Studio.Tests-f67bed09194440889acdcec4c90a077c: runner exit 1
+- Gcam.Studio.UiTests-c220f17796024bfa953ad3f584e339f1: TRX summary notExecuted differs; case outcomes are authoritative
+- Gcam.Studio.UiTests-e1d97f84453a457cbdc5dc600efb75dd: PolishSurveyTests not run in the desktop profile: it rewrites the committed screenshots in docs/assets, TRX summary notExecuted differs; case outcomes are authoritative
 
 Known profile gaps:
 

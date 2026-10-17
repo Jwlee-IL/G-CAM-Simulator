@@ -473,3 +473,13 @@ declared), 24 unattributed changes (counted, kept locally), 4 OS run records, no
 (formal, ten chapters, 29 figures) was generated from that batch on deployment `2e7e30ec32af`; against `2026-10-16-1` its
 text differs only in the deployment and one live count read in chapter 3.1 (12 → 11 counts under the pointer). All three
 committed editions replay; the README links the new one.
+
+## Test-record milestone M3, 2026-10-17
+
+Collected on the clean `161e74e` checkout right after the observed manual batch (same deployment fingerprint), with the
+commands of M2: .NET (normal), the desktop profile (154 desktop-project cases passed with a video each; the long run and
+the observed probe not executed), Python with the numerical tests, cocotb (Python 3.13) and seven checkers. Report
+`docs/VV.Tests.Results.md` formal: 1,534 passed, 53 not executed, **1 failed** — `CompareWorkspaceTests.SettingsAndReset_…`
+timed out once in the normal run; 20 repeats of its assembly all passed. The failure stays the selected result (a repeat is
+retained, never swapped in) and is anomaly AN-18 in VV.Studio with its likely cause, a thread race that only the
+test fixture can hit. Export `samples/testing/records/M3`; bundle, export and the three archived milestones replay.
