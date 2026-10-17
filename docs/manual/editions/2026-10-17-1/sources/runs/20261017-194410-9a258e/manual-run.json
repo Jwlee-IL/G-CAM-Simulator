@@ -1,0 +1,389 @@
+{
+  "schema": "gcam.manual-run",
+  "schemaVersion": 1,
+  "runId": "20261017-194410-9a258e",
+  "scenario": "manual.navigate",
+  "chapter": {
+    "number": "1.2",
+    "title": "Window, workspaces and view tabs"
+  },
+  "registrySha256": "7ea7b3c2b9dd2e408417cc03a859c059ff6a042cfa9b1636751e848ff8ad6076",
+  "noticesSha256": "9a761dababe8ac63b29d201f921dc20bbf367a0124b19677b4ee8f7dbdbb395f",
+  "startedAt": "2026-10-17T19:44:10.196+09:00",
+  "finishedAt": "2026-10-17T19:44:30.167+09:00",
+  "status": "passed",
+  "execution": {
+    "status": "completed",
+    "uiRunStatus": "completed",
+    "abortReason": null
+  },
+  "subject": {
+    "deploymentSha256": "2e7e30ec32aff40a619d92ddd625eeb0c6d6e776e2892ef3360e7b3f4b7359bb",
+    "files": {
+      "CommunityToolkit.Mvvm.dll": "7d7eb5c066cfe883b439b1200bf5dcb387b1e5319dd2edbdaa9e23adfe416452",
+      "Gcam.Configuration.dll": "0ee098e77e1ba04d4fc345691069ca419c792106bf94ff9f0758c5d3b5d5fab3",
+      "Gcam.Core.dll": "da680a1840d23e8e02a70dfc057d0ba2aa58cd4de5326e017dede3dec257185a",
+      "Gcam.Decoding.dll": "0fe72f9b1cd367fb4d6cc6fa6885b04a58b5a82107b556430022730374798f7b",
+      "Gcam.Detector.dll": "a155c10ded4a937807404a1c11fc045599d272833c00686bb216abbfaf077dfe",
+      "Gcam.Masks.dll": "5ad96651a40646bd112c559166643eb014d0b5f243a205a8c6129ad5c1e35949",
+      "Gcam.Simulation.dll": "aa8e44eb1f2ce3db5ef20b6d656698a2cd2ee4a0a4e1639103280ad9e4f67931",
+      "Gcam.Studio.Core.dll": "85a1d9316c3a8a4b266cba719d5e485e923190974cb91f5095e01d94da9a4c99",
+      "Gcam.Studio.Services.dll": "b54f9e4c60972f50e693455167121fcff0beb65a993982bb7a7ff07201af7110",
+      "Gcam.Studio.deps.json": "f9ca162dd5b6e82b2000f74ba10280d9aacd28592be3bb630f8a4dbf73c300f9",
+      "Gcam.Studio.dll": "97497175a7f0a77471de8c1e312e62342eeb96e7204214ecd5c01ddca6fdfe21",
+      "Gcam.Studio.exe": "60942109d6cbc32f0e2ed8e23a4dcfc0cc4708b1644a50c45c03d8c8fff73719",
+      "Gcam.Studio.runtimeconfig.json": "f1105b6b9a1edbeb3b8ebf90f94c4a3a554e1de005e60fcd9a20978501dc2d54",
+      "Microsoft.Extensions.DependencyInjection.Abstractions.dll": "99a08f73aa1568c8a614ac4d76fe1cf9a27e10f7c02f9afd65da2c6e25d6ff04",
+      "Microsoft.Extensions.DependencyInjection.dll": "09c80cce213152ced75d791fc4fd57b34f79a2026c69d133b0380f10128096ce",
+      "Microsoft.Extensions.Logging.Abstractions.dll": "bb853130f5afaf335be7858d661f8212ec653835100f5a4e3aa2c66a4d4f685d",
+      "PdfSharp-wpf.dll": "dffe4b53fbed717fa473adfbd99b75f84c3b057c6ae17147257957c2f20612f9",
+      "PdfSharp.BarCodes-wpf.dll": "eb9e4b6463aeb2157b6303bb53bcc03076db4fcf10c9e7427709d4e1333f6d2b",
+      "PdfSharp.Charting-wpf.dll": "d87c9205bd43fbc4cdf5f8ad99310fdbc9798c9cdfe6b14234aa6c3e063d28f6",
+      "PdfSharp.Cryptography.dll": "47d77b624181104b7fd41653380849fb935e08a102a542edac82228d0bb1d749",
+      "PdfSharp.Quality-wpf.dll": "b544a5660041356d1e1582db4ad168fceb4ed7616cb3b996c9f0c2019438dd3e",
+      "PdfSharp.Shared.dll": "ed85998ffc67e96a1a125a349c86181c1444b39c277676e73389874d2e58ebbe",
+      "PdfSharp.Snippets-wpf.dll": "c33d72dc774de9dbe4ae2b99c36ccd202108e6d8dcc8aaf4664d17b3645dcf93",
+      "PdfSharp.System.dll": "8506b85ea33d7780b4709f536813570598fd435c6d468190de660b676716aa1b",
+      "PdfSharp.WPFonts.dll": "89ac7e7b6ddd274d4d1dda929dafd145be495bdc6e543e19abb8ea9fc459c292",
+      "ambient/terrestrial-unscear2000-v1.json": "4d48bc4272ce4c25ff6ae9b13ed7583e3c8f467afffdb0225956a70cc435b3f4"
+    },
+    "unchanged": true
+  },
+  "tool": {
+    "commit": "fc7a6411fb95870af82abbef6b20b455b011079e",
+    "dirtyFiles": 0,
+    "assemblySha256": "f747f8aeaf8d94054f690f21bd0e4fe03afea472e1af4b6a638b0401ece8c2c6"
+  },
+  "environment": {
+    "frameWidthPx": 1440,
+    "frameHeightPx": 900,
+    "dpi": 96,
+    "perMonitorAware": true,
+    "themeAtStart": "dark",
+    "os": "Microsoft Windows NT 10.0.26200.0",
+    "uiLocale": "en",
+    "formattingCulture": "ko-KR",
+    "runtime": "9.0.13"
+  },
+  "links": {
+    "uiManifest": {
+      "sha256": "6197eef55eb075d7e1c455ae67afbe985b43b4948d1c5221ae05760da9f133ec",
+      "retained": false,
+      "reason": "the UI manifest names local paths; its hash is the lineage"
+    }
+  },
+  "steps": [
+    {
+      "n": 1,
+      "text": "GCAM Studio opens with the top bar — the workspace switch **Imaging**, **Spectrum**, **Waveform**, **Detector**, **Compare** and the **Start** button — the left panel with the tabs **Scene**, **Optics** and **Detector**, the workspace in the centre and the status bar at the bottom.",
+      "labels": {
+        "Workspace.Imaging": "Imaging",
+        "Workspace.Spectrum": "Spectrum",
+        "Workspace.Waveform": "Waveform",
+        "Workspace.Detector": "Detector",
+        "Workspace.Compare": "Compare",
+        "StartAcquisition": "Start",
+        "Left.SceneTab": "Scene",
+        "Left.OpticsTab": "Optics",
+        "Left.DetectorTab": "Detector"
+      },
+      "notices": [],
+      "checks": [
+        {
+          "id": "window.starts-empty",
+          "result": "pass",
+          "detail": "expected Empty, actual Empty"
+        },
+        {
+          "id": "window.imaging-first",
+          "result": "pass",
+          "detail": "Imaging shows the flood map and the reconstruction"
+        }
+      ],
+      "figures": [
+        {
+          "id": "1.2-1",
+          "capture": "captures/1.2-1.png",
+          "marks": "captures/1.2-1.marks.json",
+          "caption": "The window after start, Imaging workspace."
+        }
+      ],
+      "missingFigures": [],
+      "verdict": "passed",
+      "error": null
+    },
+    {
+      "n": 2,
+      "text": "Select the **Optics** tab: the engineering geometry replaces the source list in the left panel.",
+      "labels": {
+        "Left.OpticsTab": "Optics"
+      },
+      "notices": [],
+      "checks": [
+        {
+          "id": "navigation.left-tab",
+          "result": "pass",
+          "detail": "Optics tab selected, its preset visible"
+        }
+      ],
+      "figures": [
+        {
+          "id": "1.2-2",
+          "capture": "captures/1.2-2.png",
+          "marks": "captures/1.2-2.marks.json",
+          "caption": "The Optics tab."
+        }
+      ],
+      "missingFigures": [],
+      "verdict": "passed",
+      "error": null
+    },
+    {
+      "n": 3,
+      "text": "Choose **Spectrum** in the workspace switch: the centre shows the spectrum instead of the images.",
+      "labels": {
+        "Workspace.Spectrum": "Spectrum"
+      },
+      "notices": [],
+      "checks": [
+        {
+          "id": "navigation.workspace-surface",
+          "result": "pass",
+          "detail": "Spectrum plot shown, flood map gone"
+        }
+      ],
+      "figures": [],
+      "missingFigures": [],
+      "verdict": "passed",
+      "error": null
+    },
+    {
+      "n": 4,
+      "text": "Choose **Waveform**, then its view tab **Four outputs (A–D)**. With the default direct crystal assignment there are no four outputs: the view reads **Available with the experimental physical readout** and offers **Choose readout…**.",
+      "labels": {
+        "Workspace.Waveform": "Waveform",
+        "Waveform.FourOutputsTab": "Four outputs (A–D)",
+        "Readout.EmptyState": "Available with the experimental physical readout",
+        "Readout.ChooseReadout": "Choose readout…"
+      },
+      "notices": [],
+      "checks": [
+        {
+          "id": "navigation.waveform-empty-state",
+          "result": "pass",
+          "detail": "expected Available with the experimental physical readout, actual Available with the experimental physical readout"
+        }
+      ],
+      "figures": [
+        {
+          "id": "1.2-3",
+          "capture": "captures/1.2-3.png",
+          "marks": "captures/1.2-3.marks.json",
+          "caption": "Four outputs under the direct crystal assignment."
+        }
+      ],
+      "missingFigures": [],
+      "verdict": "passed",
+      "error": null
+    },
+    {
+      "n": 5,
+      "text": "Choose **Detector**, then its view tab **SiPM**: the physical readout views are empty in the same way.",
+      "labels": {
+        "Workspace.Detector": "Detector",
+        "Readout.SipmTab": "SiPM"
+      },
+      "notices": [],
+      "checks": [
+        {
+          "id": "navigation.detector-empty-state",
+          "result": "pass",
+          "detail": "SiPM tab selected, readout choice offered"
+        }
+      ],
+      "figures": [
+        {
+          "id": "1.2-4",
+          "capture": "captures/1.2-4.png",
+          "marks": "captures/1.2-4.marks.json",
+          "caption": "A Detector readout view under the direct crystal assignment."
+        }
+      ],
+      "missingFigures": [],
+      "verdict": "passed",
+      "error": null
+    },
+    {
+      "n": 6,
+      "text": "Click **Choose readout…**: the left panel switches to its **Detector** tab with the keyboard focus on the readout choice.",
+      "labels": {
+        "Readout.ChooseReadout": "Choose readout…",
+        "Left.DetectorTab": "Detector"
+      },
+      "notices": [
+        "N-READOUT"
+      ],
+      "checks": [
+        {
+          "id": "navigation.choose-readout",
+          "result": "pass",
+          "detail": "left Detector tab selected and the readout mode focused"
+        }
+      ],
+      "figures": [
+        {
+          "id": "1.2-5",
+          "capture": "captures/1.2-5.png",
+          "marks": "captures/1.2-5.marks.json",
+          "caption": "The readout choice in the left Detector tab."
+        }
+      ],
+      "missingFigures": [],
+      "verdict": "passed",
+      "error": null
+    },
+    {
+      "n": 7,
+      "text": "Choose **Imaging** to return to the images.",
+      "labels": {
+        "Workspace.Imaging": "Imaging"
+      },
+      "notices": [],
+      "checks": [
+        {
+          "id": "navigation.back-to-imaging",
+          "result": "pass",
+          "detail": "flood map shown again"
+        }
+      ],
+      "figures": [],
+      "missingFigures": [],
+      "verdict": "passed",
+      "error": null
+    },
+    {
+      "n": 8,
+      "text": "Press Ctrl+1 through Ctrl+5 to select Imaging, Spectrum, Waveform, Detector and Compare respectively.",
+      "labels": {},
+      "notices": [],
+      "checks": [
+        {
+          "id": "navigation.ctrl-1",
+          "result": "pass",
+          "detail": "keyboard selected Imaging"
+        },
+        {
+          "id": "navigation.ctrl-2",
+          "result": "pass",
+          "detail": "keyboard selected Spectrum"
+        },
+        {
+          "id": "navigation.ctrl-3",
+          "result": "pass",
+          "detail": "keyboard selected Waveform"
+        },
+        {
+          "id": "navigation.ctrl-4",
+          "result": "pass",
+          "detail": "keyboard selected Detector"
+        },
+        {
+          "id": "navigation.ctrl-5",
+          "result": "pass",
+          "detail": "keyboard selected Compare"
+        }
+      ],
+      "figures": [
+        {
+          "id": "1.2-6",
+          "capture": "captures/1.2-6.png",
+          "marks": "captures/1.2-6.marks.json",
+          "caption": "Compare under direct crystal assignment."
+        }
+      ],
+      "missingFigures": [],
+      "verdict": "passed",
+      "error": null
+    }
+  ],
+  "evidence": [
+    {
+      "path": "captures/1.2-1.png",
+      "sha256": "3767d3bafea2550eec8f9201b7b06d49ca50f40b59f604b4993f3cc0079e0a7f",
+      "bytes": 60043,
+      "role": "capture"
+    },
+    {
+      "path": "captures/1.2-1.marks.json",
+      "sha256": "452a571c8d104bd37c1a93a219b11fafed3f9c19938cb4f42e4eb562a30da4dd",
+      "bytes": 2848,
+      "role": "marks"
+    },
+    {
+      "path": "captures/1.2-2.png",
+      "sha256": "33a6f4901e2eceb639ed7eba4c29519f5f5621ea0809093fc6eabe75132f8d1d",
+      "bytes": 61152,
+      "role": "capture"
+    },
+    {
+      "path": "captures/1.2-2.marks.json",
+      "sha256": "46fb9f75776ee79d34d1585927efffadc7974b6a801f19ae3d0b2a8649bc3814",
+      "bytes": 1145,
+      "role": "marks"
+    },
+    {
+      "path": "captures/1.2-3.png",
+      "sha256": "ce5c2c2841999e599fbbbfc5af9c6df8e7aae6fd50846d5022f8256736af5385",
+      "bytes": 38127,
+      "role": "capture"
+    },
+    {
+      "path": "captures/1.2-3.marks.json",
+      "sha256": "11b612c0fcd74732f02c260a1504045b73e1886dcaeed05972e2dd2c7e115495",
+      "bytes": 1495,
+      "role": "marks"
+    },
+    {
+      "path": "captures/1.2-4.png",
+      "sha256": "e44c31123db51d42f6b7e0546aaed05656493abbd5efcad499e7568b68de3052",
+      "bytes": 38041,
+      "role": "capture"
+    },
+    {
+      "path": "captures/1.2-4.marks.json",
+      "sha256": "dfa86d53e7f8d2ecc28f98c4eba8310deca274bf710e329126273d7a96bc9551",
+      "bytes": 1471,
+      "role": "marks"
+    },
+    {
+      "path": "captures/1.2-5.png",
+      "sha256": "e44c31123db51d42f6b7e0546aaed05656493abbd5efcad499e7568b68de3052",
+      "bytes": 38041,
+      "role": "capture"
+    },
+    {
+      "path": "captures/1.2-5.marks.json",
+      "sha256": "7dfa309fa0e664525f008cdbb0df397edcdf3d02ec7fce572fec7fee5b84fbf5",
+      "bytes": 869,
+      "role": "marks"
+    },
+    {
+      "path": "captures/1.2-6.png",
+      "sha256": "f25badb54eed21a1fb2225f94f740cea7b222247e464418ade58dff048377952",
+      "bytes": 29947,
+      "role": "capture"
+    },
+    {
+      "path": "captures/1.2-6.marks.json",
+      "sha256": "68533545299a7ff34227d2db7be18adabdd5c08fd192b708772f2884c77f4527",
+      "bytes": 1310,
+      "role": "marks"
+    }
+  ],
+  "video": {
+    "runId": "20261017-194410-9a258e",
+    "testId": "ManualScenarioTests.Navigate_WindowWorkspacesAndViewTabs-544fd991096c",
+    "videoSha256": "e0d258879dc7255f17b19561b5a7e96f94a977247a95138ffa83b953cc985167",
+    "captionsSha256": "8e054bbc9bd407754f4020bc7a818a1e9f9feaddb73a94a6d1cf76709a059e51"
+  }
+}

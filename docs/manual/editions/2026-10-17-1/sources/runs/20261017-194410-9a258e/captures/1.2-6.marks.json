@@ -1,0 +1,73 @@
+{
+  "schema": "gcam.figure-marks",
+  "schemaVersion": 1,
+  "capture": "captures/1.2-6.png",
+  "captureSha256": "f25badb54eed21a1fb2225f94f740cea7b222247e464418ade58dff048377952",
+  "widthPx": 1440,
+  "heightPx": 900,
+  "frameOriginPx": [
+    560,
+    246
+  ],
+  "dpi": 96,
+  "perMonitorAware": true,
+  "templateSha256": "ce2ec4eee2fbde7a235e93a3e7c9b69f4dd30a88749dbaa3ecf0b34a7ce4ec0a",
+  "crop": "full",
+  "region": null,
+  "marks": [
+    {
+      "n": 1,
+      "target": "Workspace.Compare",
+      "label": "Compare",
+      "labelSource": "name",
+      "screen": [
+        975,
+        257,
+        70,
+        26
+      ],
+      "image": [
+        415,
+        11,
+        70,
+        26
+      ]
+    },
+    {
+      "n": 2,
+      "target": "Readout.EmptyState",
+      "label": "Available with the experimental physical readout",
+      "labelSource": "name",
+      "screen": [
+        1140,
+        679,
+        280,
+        17
+      ],
+      "image": [
+        580,
+        433,
+        280,
+        17
+      ]
+    },
+    {
+      "n": 3,
+      "target": "Readout.ChooseReadout",
+      "label": "Choose readout…",
+      "labelSource": "name",
+      "screen": [
+        1215,
+        704,
+        130,
+        28
+      ],
+      "image": [
+        655,
+        458,
+        130,
+        28
+      ]
+    }
+  ]
+}

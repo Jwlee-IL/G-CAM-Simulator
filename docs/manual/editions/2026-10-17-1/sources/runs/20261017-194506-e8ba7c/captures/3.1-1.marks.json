@@ -1,0 +1,51 @@
+{
+  "schema": "gcam.figure-marks",
+  "schemaVersion": 1,
+  "capture": "captures/3.1-1.png",
+  "captureSha256": "c94a35f76d82125e4414b9c85a632ffc7812f6cbd5c5b593f1935bb77ff4c530",
+  "widthPx": 1440,
+  "heightPx": 900,
+  "frameOriginPx": [
+    560,
+    246
+  ],
+  "dpi": 96,
+  "perMonitorAware": true,
+  "templateSha256": "4fdae365e04abb986fa2d7e1975f610a1b44a1a251e873b0415b6867fe47af5a",
+  "crop": "marks",
+  "region": {
+    "target": "FloodView",
+    "screen": [
+      914,
+      355,
+      330,
+      330
+    ],
+    "image": [
+      354,
+      109,
+      330,
+      330
+    ]
+  },
+  "marks": [
+    {
+      "n": 1,
+      "target": "FloodReadout",
+      "label": "x 6.3 mm, y -4.5 mm · 11 counts",
+      "labelSource": "name",
+      "screen": [
+        914,
+        723,
+        330,
+        16
+      ],
+      "image": [
+        354,
+        477,
+        330,
+        16
+      ]
+    }
+  ]
+}

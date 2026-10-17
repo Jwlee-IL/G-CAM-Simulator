@@ -1,0 +1,386 @@
+{
+  "schema": "gcam.manual-purposes",
+  "schemaVersion": 2,
+  "status": "approved",
+  "approval": "Approved by the author with the first edition; the second edition's additions (chapters 3.7 and 4.4) approved on 2026-10-16.",
+  "note": "What each marked element is for, drawn into its figure label as \"<screen text>: <short>\". One entry per mark target (the control's AutomationId); `name` replaces the screen text where that text is long or changes with the state. Each phrase says only what its sources state.",
+  "purposes": [
+    {
+      "target": "Detector.FaceTab",
+      "short": "crystal gain and dead gaps",
+      "sources": [
+        "docs/VV.Studio.SRS.md SR-DET-03, SR-DET-06",
+        "src/Gcam.Studio/Views/DetectorView.xaml (Detector.Face help text)"
+      ]
+    },
+    {
+      "target": "Detector.Identity",
+      "name": "Settings note",
+      "short": "whose settings are shown",
+      "sources": [
+        "docs/VV.Studio.SRS.md SR-DET-02"
+      ]
+    },
+    {
+      "target": "FloodReadout",
+      "name": "Pixel readout",
+      "short": "pixel under the pointer",
+      "sources": [
+        "docs/VV.Studio.SRS.md SR-VIEW-05, SR-VIEW-07"
+      ]
+    },
+    {
+      "target": "Left.DetectorTab",
+      "short": "choose the readout",
+      "sources": [
+        "docs/VV.Studio.SRS.md SR-OPT-06, SR-DET-05, SR-DET-07",
+        "src/Gcam.Studio/README.md (Views: ReadoutPanel)"
+      ]
+    },
+    {
+      "target": "Left.OpticsTab",
+      "short": "mask and detector geometry",
+      "sources": [
+        "docs/VV.Studio.SRS.md SR-OPT-01, SR-OPT-06"
+      ]
+    },
+    {
+      "target": "Left.SceneTab",
+      "short": "place and edit sources",
+      "sources": [
+        "docs/VV.Studio.SRS.md SR-OPT-06, SR-RUN-12"
+      ]
+    },
+    {
+      "target": "M1",
+      "short": "measurement row",
+      "sources": [
+        "docs/VV.Studio.SRS.md SR-MEAS-05",
+        "src/Gcam.Studio/Views/MainWindow.xaml (measurement table)"
+      ]
+    },
+    {
+      "target": "M2",
+      "short": "measurement row",
+      "sources": [
+        "docs/VV.Studio.SRS.md SR-MEAS-05",
+        "src/Gcam.Studio/Views/MainWindow.xaml (measurement table)"
+      ]
+    },
+    {
+      "target": "M3",
+      "short": "measurement row",
+      "sources": [
+        "docs/VV.Studio.SRS.md SR-MEAS-05",
+        "src/Gcam.Studio/Views/MainWindow.xaml (measurement table)"
+      ]
+    },
+    {
+      "target": "MeasurementDetail",
+      "name": "Detail line",
+      "short": "the selected measurement",
+      "sources": [
+        "docs/VV.Studio.SRS.md SR-MEAS-03, SR-OPT-06",
+        "src/Gcam.Studio/Views/MainWindow.xaml (selected-measurement line)"
+      ]
+    },
+    {
+      "target": "Modal.Cancel",
+      "short": "close without acting",
+      "sources": [
+        "docs/VV.Studio.SRS.md SR-RUN-26, SR-RUN-12"
+      ]
+    },
+    {
+      "target": "Optics.CellPitch",
+      "short": "mask cell width (mm)",
+      "sources": [
+        "docs/VV.Studio.SRS.md SR-OPT-01, §5 (physical optics)",
+        "src/Gcam.Configuration/SceneConfigBuilder.cs"
+      ]
+    },
+    {
+      "target": "Optics.Distance",
+      "short": "gap in mm",
+      "sources": [
+        "docs/VV.Studio.SRS.md SR-OPT-01, §5 (physical optics)"
+      ]
+    },
+    {
+      "target": "Optics.Error",
+      "name": "Error message",
+      "short": "why the values are refused",
+      "sources": [
+        "docs/VV.Studio.SRS.md SR-OPT-03, SR-RUN-13"
+      ]
+    },
+    {
+      "target": "Optics.PixelPitch",
+      "short": "spacing in mm",
+      "sources": [
+        "docs/VV.Studio.SRS.md SR-OPT-01, §5 (physical optics)"
+      ]
+    },
+    {
+      "target": "Optics.Pixels",
+      "short": "integer, 4–64",
+      "sources": [
+        "docs/VV.Studio.SRS.md SR-OPT-01, §5 (physical optics)"
+      ]
+    },
+    {
+      "target": "Optics.Preset",
+      "short": "choose a geometry",
+      "sources": [
+        "docs/VV.Studio.SRS.md SR-OPT-02",
+        "src/Gcam.Studio.Core/Optics/OpticsPreset.cs"
+      ]
+    },
+    {
+      "target": "Optics.Rank",
+      "short": "mask pattern size",
+      "sources": [
+        "docs/VV.Studio.SRS.md SR-OPT-01, SR-OPT-05",
+        "AGENTS.md (Key domain concepts: MURA rank)"
+      ]
+    },
+    {
+      "target": "Readout.ChooseReadout",
+      "short": "go to the readout choice",
+      "sources": [
+        "docs/VV.Studio.SRS.md SR-WAVE-09, SR-DET-06"
+      ]
+    },
+    {
+      "target": "Readout.EmptyState",
+      "name": "Empty-view note",
+      "short": "needs the physical readout",
+      "sources": [
+        "docs/VV.Studio.SRS.md SR-WAVE-09, SR-DET-06",
+        "src/Gcam.Studio/Views/EmptyReadoutState.xaml"
+      ]
+    },
+    {
+      "target": "Readout.SipmTab",
+      "short": "sensors and circuit",
+      "sources": [
+        "docs/VV.Studio.SRS.md SR-DET-06"
+      ]
+    },
+    {
+      "target": "Reset.Discard",
+      "short": "clear data, unlock inputs",
+      "sources": [
+        "docs/VV.Studio.SRS.md SR-RUN-26"
+      ]
+    },
+    {
+      "target": "Reset.Message",
+      "name": "Confirmation text",
+      "short": "what Reset would discard",
+      "sources": [
+        "docs/VV.Studio.SRS.md SR-RUN-26"
+      ]
+    },
+    {
+      "target": "SourceActivity",
+      "short": "strength in microcuries",
+      "sources": [
+        "docs/VV.Studio.SRS.md SR-SCENE-01, §5 (inputs)"
+      ]
+    },
+    {
+      "target": "SourceDistance",
+      "short": "from detector, 200–3000 mm",
+      "sources": [
+        "docs/VV.Studio.SRS.md SR-SCENE-01",
+        "src/Gcam.Configuration/Scene.cs (DistanceMm)"
+      ]
+    },
+    {
+      "target": "SourceIsotope",
+      "short": "what the source emits",
+      "sources": [
+        "docs/VV.Studio.SRS.md SR-SCENE-01, §5 (inputs)"
+      ]
+    },
+    {
+      "target": "SourceX",
+      "short": "offset from the axis (mm)",
+      "sources": [
+        "docs/VV.Studio.SRS.md SR-SCENE-01, §5 (inputs)",
+        "AGENTS.md (Pipeline & coordinate frame)"
+      ]
+    },
+    {
+      "target": "SourceY",
+      "short": "offset from the axis (mm)",
+      "sources": [
+        "docs/VV.Studio.SRS.md SR-SCENE-01, §5 (inputs)",
+        "AGENTS.md (Pipeline & coordinate frame)"
+      ]
+    },
+    {
+      "target": "Spectrum.LogY",
+      "short": "log or linear counts axis",
+      "sources": [
+        "docs/VV.Studio.SRS.md SR-SPEC-06, §5 (inputs)"
+      ]
+    },
+    {
+      "target": "Spectrum.Window",
+      "short": "energy window width",
+      "sources": [
+        "docs/VV.Studio.SRS.md SR-SPEC-04, SR-SPEC-06, SR-IMG-01"
+      ]
+    },
+    {
+      "target": "StartAcquisition",
+      "short": "start or continue the run",
+      "sources": [
+        "docs/VV.Studio.SRS.md SR-RUN-09, SR-RUN-13, SR-RUN-23"
+      ]
+    },
+    {
+      "target": "StatusText",
+      "name": "Status bar",
+      "short": "run state, counts and seed",
+      "sources": [
+        "docs/VV.Studio.SRS.md SR-RUN-13, SR-RUN-25, SR-RUN-28, §5 (status messages)"
+      ]
+    },
+    {
+      "target": "StopAcquisition",
+      "short": "stop and keep the data",
+      "sources": [
+        "docs/VV.Studio.SRS.md SR-RUN-10"
+      ]
+    },
+    {
+      "target": "Waveform.FourOutputsTab",
+      "short": "pulses of the physical readout",
+      "sources": [
+        "docs/VV.Studio.SRS.md SR-WAVE-09"
+      ]
+    },
+    {
+      "target": "Workspace.Detector",
+      "short": "face and readout views",
+      "sources": [
+        "docs/VV.Studio.SRS.md SR-NAV-02, SR-DET-02, SR-DET-06"
+      ]
+    },
+    {
+      "target": "Workspace.Imaging",
+      "short": "flood map and image",
+      "sources": [
+        "docs/VV.Studio.SRS.md SR-NAV-02, §1 (outputs)"
+      ]
+    },
+    {
+      "target": "Workspace.Spectrum",
+      "short": "energy histogram",
+      "sources": [
+        "docs/VV.Studio.SRS.md SR-NAV-02, SR-SPEC-01"
+      ]
+    },
+    {
+      "target": "Workspace.Waveform",
+      "short": "pulse traces of an event",
+      "sources": [
+        "docs/VV.Studio.SRS.md SR-NAV-02, SR-WAVE-01, SR-WAVE-02"
+      ]
+    },
+    {
+      "target": "Workspace.Compare",
+      "short": "same inputs read two ways",
+      "sources": [
+        "docs/VV.Studio.SRS.md SR-CMP-01"
+      ]
+    },
+    {
+      "target": "ExportReport",
+      "short": "choose an export format",
+      "sources": [
+        "docs/VV.Studio.SRS.md SR-EXPORT-01"
+      ]
+    },
+    {
+      "target": "Export.Confirm",
+      "short": "choose a destination",
+      "sources": [
+        "docs/VV.Studio.SRS.md SR-EXPORT-01"
+      ]
+    },
+    {
+      "target": "Export.Html",
+      "short": "self-contained report",
+      "sources": [
+        "docs/VV.Studio.SRS.md SR-EXPORT-02"
+      ]
+    },
+    {
+      "target": "Export.Pdf",
+      "short": "vector report document",
+      "sources": [
+        "docs/VV.Studio.SRS.md SR-EXPORT-02"
+      ]
+    },
+    {
+      "target": "Export.Word",
+      "short": "editable report document",
+      "sources": [
+        "docs/VV.Studio.SRS.md SR-EXPORT-02"
+      ]
+    },
+    {
+      "target": "Export.Csv",
+      "short": "retained event rows",
+      "sources": [
+        "docs/VV.Studio.SRS.md SR-EXPORT-05"
+      ]
+    },
+    {
+      "target": "Compare.AssignmentDifference",
+      "short": "different / eligible per crystal",
+      "sources": [
+        "docs/VV.Studio.SRS.md SR-CMP-02"
+      ]
+    },
+    {
+      "target": "Compare.SameShare",
+      "short": "same crystal per eligible",
+      "sources": [
+        "docs/VV.Studio.SRS.md SR-CMP-03"
+      ]
+    },
+    {
+      "target": "Compare.Prefix",
+      "short": "prefix both paths show",
+      "sources": [
+        "docs/VV.Studio.SRS.md SR-CMP-01"
+      ]
+    },
+    {
+      "target": "Compare.Reference",
+      "short": "benchmark, not a prediction",
+      "sources": [
+        "docs/VV.Studio.SRS.md SR-CMP-04"
+      ]
+    },
+    {
+      "target": "Readout.Prepare",
+      "short": "prepare the physical readout",
+      "sources": [
+        "docs/VV.Studio.SRS.md SR-DET-05"
+      ]
+    },
+    {
+      "target": "Readout.State",
+      "short": "preparation progress or outcome",
+      "sources": [
+        "docs/VV.Studio.SRS.md SR-DET-05"
+      ]
+    }
+  ]
+}

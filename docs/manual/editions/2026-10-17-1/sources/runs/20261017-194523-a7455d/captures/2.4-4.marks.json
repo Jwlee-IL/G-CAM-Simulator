@@ -1,0 +1,69 @@
+{
+  "schema": "gcam.figure-marks",
+  "schemaVersion": 1,
+  "capture": "captures/2.4-4.png",
+  "captureSha256": "953d7433dd655589a3707ce4ad4d99576acf99cae0d726f4453218ed691ce893",
+  "widthPx": 1440,
+  "heightPx": 900,
+  "frameOriginPx": [
+    560,
+    246
+  ],
+  "dpi": 96,
+  "perMonitorAware": true,
+  "templateSha256": "0cd4e178aca732a9c9b7c54ee6ac6c5e710e875ccd17ed45ddf4b1dfd042a462",
+  "crop": "marks",
+  "region": {
+    "target": "Window.TopBar",
+    "screen": [
+      560,
+      246,
+      1440,
+      48
+    ],
+    "image": [
+      0,
+      0,
+      1440,
+      48
+    ]
+  },
+  "marks": [
+    {
+      "n": 1,
+      "target": "StartAcquisition",
+      "label": "Start",
+      "labelSource": "name",
+      "screen": [
+        1573,
+        256,
+        81,
+        28
+      ],
+      "image": [
+        1013,
+        10,
+        81,
+        28
+      ]
+    },
+    {
+      "n": 2,
+      "target": "StatusText",
+      "label": "Ready",
+      "labelSource": "name",
+      "screen": [
+        592,
+        1124,
+        810,
+        16
+      ],
+      "image": [
+        32,
+        878,
+        810,
+        16
+      ]
+    }
+  ]
+}

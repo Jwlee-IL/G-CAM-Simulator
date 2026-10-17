@@ -462,3 +462,14 @@ changes (counted, kept locally), 4 OS run records, no background filter. It repl
 Result cache: the four report-export cases (first desktop run of the `report-<run-id>.<ext>` export names) and the chrome
 case passed (5 / 5, 30 s) and wrote `artifacts/ui-videos/cache.json`; the same selection with `GCAM_UI_CACHE=1` skipped all
 five as `[cache-reused]` from those runs (0.7 s).
+
+## Observed manual batch and the manual's third edition, 2026-10-17
+
+After the charter check against the procedure v3.4 (`fc7a641`, docs only), one observed manual batch on that commit
+(author's go, recorded as HUM-01 / 04; the G1 basis `probe-20261016-03` still holds: the pin's isolation and deployment
+fingerprints equal it). `manual-20261017-01`: the eight chapter scenarios passed (8 / 8, 4 min) and the batch classifies
+**completed** — all positive controls seen, nothing out of declaration or undecided, 223 candidates (208 harness-owned, 15
+declared), 24 unattributed changes (counted, kept locally), 4 OS run records, no background filter. Edition `2026-10-17-1`
+(formal, ten chapters, 29 figures) was generated from that batch on deployment `2e7e30ec32af`; against `2026-10-16-1` its
+text differs only in the deployment and one live count read in chapter 3.1 (12 → 11 counts under the pointer). All three
+committed editions replay; the README links the new one.

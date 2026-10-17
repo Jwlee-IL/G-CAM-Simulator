@@ -1,0 +1,51 @@
+{
+  "schema": "gcam.figure-marks",
+  "schemaVersion": 1,
+  "capture": "captures/2.4-1.png",
+  "captureSha256": "835db15be8286a837a3a29a3d48e09fbc60527684dee5409600aa8d0516cc2b6",
+  "widthPx": 1440,
+  "heightPx": 900,
+  "frameOriginPx": [
+    560,
+    246
+  ],
+  "dpi": 96,
+  "perMonitorAware": true,
+  "templateSha256": "7ff579ae6f043e5111a501b460eaffb532c6499bc423b8b632309f5bea84bf43",
+  "crop": "marks",
+  "region": {
+    "target": "Window.TopBar",
+    "screen": [
+      560,
+      246,
+      1440,
+      48
+    ],
+    "image": [
+      0,
+      0,
+      1440,
+      48
+    ]
+  },
+  "marks": [
+    {
+      "n": 1,
+      "target": "StopAcquisition",
+      "label": "Stop",
+      "labelSource": "name",
+      "screen": [
+        1574,
+        256,
+        80,
+        28
+      ],
+      "image": [
+        1014,
+        10,
+        80,
+        28
+      ]
+    }
+  ]
+}

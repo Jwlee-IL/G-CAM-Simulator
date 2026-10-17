@@ -1,0 +1,55 @@
+{
+  "schema": "gcam.figure-marks",
+  "schemaVersion": 1,
+  "capture": "captures/4.4-1.png",
+  "captureSha256": "9edaa043740c36c55cf1e8cf219487ab106d0159870689fdef9729026b2d626c",
+  "widthPx": 1440,
+  "heightPx": 900,
+  "frameOriginPx": [
+    560,
+    246
+  ],
+  "dpi": 96,
+  "perMonitorAware": true,
+  "templateSha256": "cf9f10783296e365cb6615d93c24cf76229d521869b91575a16c713766f36630",
+  "crop": "full",
+  "region": null,
+  "marks": [
+    {
+      "n": 1,
+      "target": "Workspace.Compare",
+      "label": "Compare",
+      "labelSource": "name",
+      "screen": [
+        975,
+        257,
+        70,
+        26
+      ],
+      "image": [
+        415,
+        11,
+        70,
+        26
+      ]
+    },
+    {
+      "n": 2,
+      "target": "Readout.ChooseReadout",
+      "label": "Choose readout…",
+      "labelSource": "name",
+      "screen": [
+        1215,
+        704,
+        130,
+        28
+      ],
+      "image": [
+        655,
+        458,
+        130,
+        28
+      ]
+    }
+  ]
+}

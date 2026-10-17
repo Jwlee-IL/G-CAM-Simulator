@@ -1,0 +1,55 @@
+{
+  "schema": "gcam.figure-marks",
+  "schemaVersion": 1,
+  "capture": "captures/2.4-2.png",
+  "captureSha256": "ab86135cd2228ee987b2101c1597fd2f42146aa53f591955f0ce7deae00d4a38",
+  "widthPx": 1440,
+  "heightPx": 900,
+  "frameOriginPx": [
+    560,
+    246
+  ],
+  "dpi": 96,
+  "perMonitorAware": true,
+  "templateSha256": "835d4bffe74b30788e0e563d0df4bb374ff0f6edf1e57d141bd4525bb8f2d570",
+  "crop": "marks",
+  "region": null,
+  "marks": [
+    {
+      "n": 1,
+      "target": "StartAcquisition",
+      "label": "Continue",
+      "labelSource": "name",
+      "screen": [
+        1547,
+        256,
+        107,
+        28
+      ],
+      "image": [
+        987,
+        10,
+        107,
+        28
+      ]
+    },
+    {
+      "n": 2,
+      "target": "StatusText",
+      "label": "Stopped · t = 2.0 s of 600 s · 127 counts · 63 cps · seed 12345",
+      "labelSource": "name",
+      "screen": [
+        592,
+        1124,
+        810,
+        16
+      ],
+      "image": [
+        32,
+        878,
+        810,
+        16
+      ]
+    }
+  ]
+}
