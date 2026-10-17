@@ -291,7 +291,9 @@ its start state checked, so a launch failure has no video; pixel capture stops b
 Limits. The two surveys bracket the screen copy but cannot see a window that appears and vanishes between them; only a
 compositor-level capture could exclude that race. `artifacts/` is git-ignored and inside the working tree: `git clean -fdx`
 deletes it, and a run in a worktree writes that worktree's folder and goes with it, so only runs in the main checkout keep
-their videos. The videos are local derived files, never committed and never evidence on their own. An observed batch lists
+their videos. The videos are local derived files, never committed and never evidence on their own. One exception, as documentation:
+three clips converted to GIF for the README demo (`docs/assets/studio-demo/`, with their test case, run and build), replaced
+only when the screens they show change. An observed batch lists
 `artifacts/ui-videos` among the harness-owned destinations (`surface-list.json#harness-ui-videos`).
 
 **Result cache (TODO-51).** A desktop case can reuse its latest pass instead of driving Studio while nothing that can

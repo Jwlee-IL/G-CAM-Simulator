@@ -54,6 +54,21 @@ Imaging workspace, Cs-137 500 µCi at (−20, 0) mm + Co-60 20 µCi at (20, 0) m
 
 <sub>Captured 2026-10-13 by the polish-survey desktop scenario (`imaging-dark-1440x900.png`).</sub>
 
+Demo clips, recorded by the desktop UI tests while they drove Studio (10 fps, scaled to 960 px, not edited;
+[provenance](docs/assets/studio-demo/README.md)):
+
+Workspaces and view tabs:
+
+![Navigating the GCAM Studio workspaces and view tabs](docs/assets/studio-demo/navigate.gif)
+
+Start, Stop, Continue and a confirmed Reset of a live acquisition:
+
+![Start, Stop, Continue and Reset of an acquisition](docs/assets/studio-demo/acquisition.gif)
+
+Cs-137 and Co-60 one metre away: both are found as the image fills in; then the Cs-137 channel with the Compton strip, and an ROI on the flood map:
+
+![Imaging a Cs-137 and a Co-60 source with isotope channels and the Compton strip](docs/assets/studio-demo/imaging.gif)
+
 User manual: [`MANUAL.Studio.md`](docs/manual/editions/2026-10-17-1/MANUAL.Studio.md), generated from automated desktop
 runs that drove one Studio build (steps, labels and marked figures come from those runs), plus two hand-written chapters;
 also as [PDF](docs/manual/editions/2026-10-17-1/MANUAL.Studio.pdf) and [Word](docs/manual/editions/2026-10-17-1/MANUAL.Studio.docx).
