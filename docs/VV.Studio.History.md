@@ -477,7 +477,7 @@ committed editions replay; the README links the new one.
 ## Test-record milestone M3, 2026-10-17
 
 Collected on the clean `161e74e` checkout right after the observed manual batch (same deployment fingerprint), with the
-commands of M2: .NET (normal), the desktop profile (154 desktop-project cases passed with a video each; the long run and
+commands of M2: .NET (normal), the desktop profile (154 UI-test-project cases passed, of them 40 recorded desktop cases with a video each; the long run and
 the observed probe not executed), Python with the numerical tests, cocotb (Python 3.13) and seven checkers. Report
 `docs/VV.Tests.Results.md` formal: 1,534 passed, 53 not executed, **1 failed** — `CompareWorkspaceTests.SettingsAndReset_…`
 timed out once in the normal run; 20 repeats of its assembly all passed. The failure stays the selected result (a repeat is
