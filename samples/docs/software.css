@@ -1,0 +1,49 @@
+@page {
+  size: A4;
+  margin: 20mm;
+  @top-center { font: 8pt Arial, sans-serif; color: #476074; }
+  @bottom-center { content: "page " counter(page) " of " counter(pages); font: 9pt Arial, sans-serif; color: #476074; }
+}
+* { box-sizing: border-box; }
+body { margin: 0; color: #182b39; font: 10pt/1.25 Arial, sans-serif; }
+h1 { font-size: 20pt; color: #23495f; }
+h2 { font-size: 14pt; color: #23495f; }
+h3 { font-size: 11.5pt; }
+h4 { font-size: 10.5pt; }
+h1, h2, h3, h4 { break-after: avoid; margin: 14pt 0 8pt; }
+.block.heading { break-after: avoid; }
+.block.heading:has(h1) { break-before: page; }
+p { margin: 5pt 0 8pt; }
+a { color: #235c78; text-decoration: none; }
+.cover { break-after: page; padding-top: 20mm; }
+.eyebrow { text-transform: uppercase; letter-spacing: 2px; color: #476074; }
+.banner { border-left: 4px solid #47748a; padding: 12pt; background: #edf3f6; margin: 20pt 0; }
+.draft { font-size: 16pt; font-weight: bold; color: #8b4025; letter-spacing: 2px; }
+.front { break-after: page; }
+.control th { width: 30%; }
+.control { font-size: 10pt; }
+.toc { margin: 3pt 0; }
+.toc.level2 { padding-left: 12pt; font-size: 9pt; }
+table { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 9pt; margin: 7pt 0 12pt; }
+th, td { border: 0.5pt solid #a0acb4; padding: 4pt; vertical-align: top; overflow-wrap: anywhere; }
+th { background: #eaf0f4; font-weight: bold; }
+.result-table th:not(:first-child), .result-table td:not(:first-child) {
+  white-space: nowrap; overflow-wrap: normal; word-break: normal;
+}
+thead { display: table-header-group; }
+tr { break-inside: avoid; }
+tr.splittable { break-inside: auto; }
+code { font: 0.92em Consolas, monospace; overflow-wrap: anywhere; }
+pre { font: 8pt/1.2 Consolas, monospace; white-space: pre-wrap; overflow-wrap: anywhere; background: #f2f4f6; padding: 8pt; }
+pre code { font: inherit; }
+ul { padding-left: 16pt; }
+li { margin: 4pt 0; }
+figure { margin: 12pt 0; break-inside: avoid; }
+figure img { display: block; width: 100%; height: auto; max-height: 120mm; object-fit: contain; margin: auto; }
+figcaption, .source-label { font-size: 8pt; color: #476074; margin: 5pt 0; }
+hr { border: 0; border-top: 1px solid #a0acb4; margin: 12pt 0; }
+@media screen {
+  body { max-width: 900px; margin: 32px auto; padding: 24px; background: white; }
+  html { background: #e8edf0; }
+  .cover { min-height: 900px; }
+}
