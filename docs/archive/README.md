@@ -11,6 +11,12 @@ set the plan's status to done and move the plan and its review / reports into th
 
 ## Closed tasks
 
+- **TODO-53 GCAM Studio software documents as a demonstration set** (2026-10-22): a standard-library generator
+  (`samples/docs/software_set.py`, `generate` / `check`) turns the Studio verification Markdown into Word and PDF
+  documents — SRS, SDS, V&V report and a software test report covering Studio and the simulation engine — with the
+  manual beside them; every cover says it is a demonstration, not a submission. Edition `2026-10-20-1`
+  (`docs/deliverables/software/`, SRS 23 / SDS 21 / VVR 55 / STR 95 PDF pages), approved by the author after a look.
+  Plan: [PLAN.Docs.SoftwareSet](PLAN.Docs.SoftwareSet.md).
 - **TODO-52 Attributable-change observation (UI automation procedure v3.3)** (2026-10-16): an observed run's candidate
   is only a change it can attribute to Studio (observation scope from the write-surface list, a harness marker, an
   owned process); other changes are counted as `unattributed` and never block. Framework rows closed as blind spots,

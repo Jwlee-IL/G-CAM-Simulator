@@ -6,7 +6,7 @@ as documents. Purpose (author, 2026-10-20): **a credible-looking demo — not a 
 없어. 그냥 그럴싸한 데모용이야"). Every document says so on its cover.
 
 Status: edition `2026-10-20-1` generated from the clean tree and committed (`docs/deliverables/software/2026-10-20-1/`, SRS 23 / SDS 21 / VVR 55 / STR 95 PDF pages; `check` passed); reviewed 2026-10-20 ([review](PLAN.Docs.SoftwareSet.Review.md)), "Decisions after review" at the end supersede the
-reference text above where they differ. PDF pages reviewed by the planner (real-page rasterisation); the Word files are not yet looked at in Word. Next: the author's look, then close.
+reference text above where they differ. PDF pages reviewed by the planner (real-page rasterisation); **Done 2026-10-22:** the author looked at the set and approved it ("53 문서 세트는 괜찮아보여. 승인해도 되겠어."); task closed, plan archived.
 
 ## Author's decisions (2026-10-20)
 | Question | Decision | Reason |

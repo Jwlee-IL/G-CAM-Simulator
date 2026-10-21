@@ -9,7 +9,6 @@ moves to the archive, marked done.
 
 | ID | Task | Origin | Owner | State |
 |---|---|---|---|---|
-| TODO-53 | GCAM Studio software documents as a demonstration set (Word + PDF): SRS, SDS, V&V report, a software test report covering Studio and the simulation engine, the manual — [PLAN.Docs.SoftwareSet](PLAN.Docs.SoftwareSet.md) | author, 2026-10-20 | Claude plans, Codex implements | planned; implementer review next |
 | TODO-54 | GCAM Studio UI automation under the author's UI-automation procedure v4.0: charter and gates, four people's acts, crash / hang failures, a machine-checked video per desktop test, test-data list, pre-launch checks — [PLAN.Testing.UiAutomationV4](PLAN.Testing.UiAutomationV4.md) | author, 2026-10-21 | Claude plans, Codex implements | planned; author decision D4, then implementer review |
 
 Next free ID: TODO-55. The `Gcam.Wpf` → Studio migration (TODO-06 … TODO-24) is complete — `Gcam.Wpf` was deleted in
