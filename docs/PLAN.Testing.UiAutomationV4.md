@@ -9,7 +9,12 @@ check for every test that drives the app, and crashes / unhandled exceptions / h
 
 Status: reference plan written 2026-10-21; D4 decided by the author the same day (option a: "a가 맞겠네. a로 안 되면 지침은
 나중에 수정하자."). Turn 1 review done the same day ([review](PLAN.Testing.UiAutomationV4.Review.md); D3 and D14 premises
-wrong, fact 4 corrected); **Decisions after review** below. Next: turn 2 (implementation part A) on the author's word.
+wrong, fact 4 corrected); **Decisions after review** below. **Parked at the review stage (author, 2026-10-21):** the
+current harness still works under v3.4 and the migration is not urgent; the CZT batch (TODO-50) goes first. When resumed, the
+planner proposes a lighter cut first: drop the Application-log correlation (R4, diagnostic), reduce R5 to decode-to-end,
+interval match and step coverage, an index hash instead of a new per-attempt record (R7), and a minimal version branch that
+keeps committed records replaying (R11) — about 25–30 files in two turns; the v4.0 core items stay. A natural trigger is the
+next desktop run that is actually needed.
 
 ## Why (2026-10-21)
 
