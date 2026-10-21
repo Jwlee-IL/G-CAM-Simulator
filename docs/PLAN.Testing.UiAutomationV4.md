@@ -9,12 +9,9 @@ check for every test that drives the app, and crashes / unhandled exceptions / h
 
 Status: reference plan written 2026-10-21; D4 decided by the author the same day (option a: "a가 맞겠네. a로 안 되면 지침은
 나중에 수정하자."). Turn 1 review done the same day ([review](PLAN.Testing.UiAutomationV4.Review.md); D3 and D14 premises
-wrong, fact 4 corrected); **Decisions after review** below. **Parked at the review stage (author, 2026-10-21):** the
-current harness still works under v3.4 and the migration is not urgent; the CZT batch (TODO-50) goes first. When resumed, the
-planner proposes a lighter cut first: drop the Application-log correlation (R4, diagnostic), reduce R5 to decode-to-end,
-interval match and step coverage, an index hash instead of a new per-attempt record (R7), and a minimal version branch that
-keeps committed records replaying (R11) — about 25–30 files in two turns; the v4.0 core items stay. A natural trigger is the
-next desktop run that is actually needed.
+wrong, fact 4 corrected); **Decisions after review** below. Parked the same day (TODO-50 first) and **resumed 2026-10-22 by the
+author with the lighter cut and two parallel implementation turns** ("좋아. 셋 다 수용."): see **Resumed: lighter cut and
+parallel turns** below, which supersedes R7, R11 and R12 where they differ. Next: turns A and B in parallel, then turn C.
 
 ## Why (2026-10-21)
 
@@ -112,6 +109,31 @@ without elevation, and replayed the three milestones and three editions. Adopted
 | R12 (split) | Three implementation turns in the same conversation: **A** acts / preflight / manifest and context versions, R1, R2, R3, R8, R9; **B** crash / exit / liveness (R4) and the recording interval, step timeline and decoder checks (R5, R6); **C** production gates, final-review lists, versioned replay and full headless verification (R7, R11). Then the planner's charter rewrite for the author's approval, then the desktop session. No intermediate turn is called v4-qualified |
 
 Cost (review's estimate): 35–45 code / data / test files, 60–90 new or changed headless cases, then the desktop session.
+
+## Resumed: lighter cut and parallel turns (author, 2026-10-22)
+
+The v4.0 core items stay (attribution-first classifier, real-world-effect permission, crash / exit / hang failures, a
+machine-checked video, pre-launch checks with the test-data list, the peer exception, the Documents watcher). Lighter:
+
+| # | Change |
+|---|---|
+| L1 (R4) | No Application-log correlation: liveness, early exit (also with code 0) and abnormal exit only |
+| L2 (R5) | Checks: decode to the end with no error; decoded duration against the recorded interval within 0.2 s; undeclared single-colour frames ≤ 0.2 s continuous and ≤ 1 % of frames; no decoded timestamp gap > 0.3 s; 100 % of executed step IDs mapped to a timed cue or a declared privacy interval (R6 unchanged). The separate overwrite-counter share and extra sample statistics go. Challenged with corrupted, truncated and blank clips |
+| L3 (R7) | Generators read the video status (checked video's SHA-256 and check result) of the exact run record they consume; no separate per-attempt record store. Failed / aborted attempts stay reportable and go to the final-review list |
+| L4 (R11) | One `contract` field (`v4`) on new run records, video status and classification output; a record without it is the old contract and is read and replayed as today. No derived re-judgement records |
+
+**Parallel turns.** A and B run at the same time in separate worktrees and touch disjoint files; C runs after B is merged
+into A's branch.
+
+| Turn | Worktree / conversation | Content | Owns (only these may change) |
+|---|---|---|---|
+| A | `todo54-uia-v4`, the review conversation (resume) | D2 / R10 act names (readers keep HUM-xx), P1 / P4 / HUM-10 out of live emission (D12), D11 / R10 one preflight before `Process.Start` with the five checks and the policy loaded before launch, D9 / R8 test-data list, R9's charter-exception state, R1 attribution-first classifier with the two negative probes, R2 `realWorldEffects` permission, E1 / E3 as references, L4 on run records and classification | `Harness/Isolation/**` (existing files), `Harness/{Scenario,StudioWindow,StudioProcess,ManualObservation,ManualRun,ManualScenario,UiRunManifest,RunRecord,ResultCache}.cs`, the csproj, `samples/evidence/tests/test_stage0_isolation.py`, and their tests |
+| B | `todo54-b` (from A's base), new conversation | New standalone parts with tests, not yet wired: liveness observer (R4 / L1), Documents watcher (R3) with its positive control, owned-instance connection sampler (R9) with its positive control, video checker (L2 / R6); recorder changes: independent recording interval, step timeline with stable step IDs, the dropped-final-caption fix, video status with `contract` | new files under `Harness/Observation/` and `Harness/Video/`; `Harness/{VideoRecorder,VideoTimeline,VideoEntry,VideoCapture,VideoPublisher,VideoCoverage,MediaFoundationWriter,CaptureQuality}.cs`; new test files and the existing video / capture tests |
+| C | A's branch after merging B, A's conversation | Wiring B's parts into the launch, scenario and observed run (product-failure manifest axis, live file / process / network channels), D7 production gates with L3, final-review lists, L4 replay, full headless verification | any |
+
+Heavy commands (build, test) go through one lock shared by both turns
+(`python -B %TEMP%\gcam-todo54\heavy.py -- <command>`: waits for the other turn, runs under memguard, waits and retries when
+memguard refuses for low memory), so only one build or test runs at a time while the CZT batch keeps running.
 
 ## Steps
 
