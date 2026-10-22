@@ -198,7 +198,7 @@ public sealed partial class ManualRun
         bool completed = uiRunStatus == "completed";
         var record = new
         {
-            schema = "gcam.manual-run", schemaVersion = 1, runId = RunId, scenario = Scenario,
+            schema = "gcam.manual-run", schemaVersion = 1, contract = "v4", runId = RunId, scenario = Scenario,
             chapter = new { number = Chapter.Number, title = Chapter.Title },
             registrySha256 = _registry.RegistrySha256, noticesSha256 = _registry.NoticesSha256,
             startedAt = StartedAt.ToString("yyyy-MM-ddTHH:mm:ss.fffzzz", CultureInfo.InvariantCulture),

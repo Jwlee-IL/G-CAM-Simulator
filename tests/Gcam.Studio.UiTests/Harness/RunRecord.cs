@@ -8,7 +8,7 @@ namespace Gcam.Studio.UiTests.Harness;
 
 /// <summary>
 /// Run manifest + failure bundle for one scenario run, written under the test output folder
-/// (<c>ui-runs/&lt;runId&gt;/</c>, ignored by git). Profile P1: exploratory, never promoted to evidence.
+/// Retained in an owned temporary folder. Result use is exploratory until qualification is established.
 /// </summary>
 public sealed class RunRecord
 {
@@ -21,9 +21,9 @@ public sealed class RunRecord
         Directory = OwnedFolder.Create(RunId);
         ResultCache.Ran(RunId);   // the case's source run if it passes
         _fields["schema"] = 1;
+        _fields["contract"] = "v4";
         _fields["runId"] = RunId;
         _fields["scenario"] = scenario;
-        _fields["profile"] = "P1";
         _fields["purpose"] = "exploratory";
         _fields["machine"] = new
         {

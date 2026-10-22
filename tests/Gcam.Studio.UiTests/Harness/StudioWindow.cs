@@ -13,12 +13,11 @@ namespace Gcam.Studio.UiTests.Harness;
 /// Names are not used as selectors: several are shared on purpose (a panel title and its heatmap are both
 /// "Detector flood map"), and they are display text. AutomationIds are set in MainWindow.xaml for that reason.
 /// </remarks>
-public sealed class StudioWindow(AutomationElement window)
+public sealed class StudioWindow(AutomationElement window, ActionPolicy policy, Action requireInputSafe)
 {
     public AutomationElement Element { get; } = window;
-    private static readonly Lazy<ActionPolicy> Policy = new(() => ActionPolicy.Load(Path.Combine(RepoPaths.Root(),
-        "tests/Gcam.Studio.UiTests/Harness/Isolation/action-policy.json")));
-    private static void Guard(string id, string operation) => Policy.Value.Require(id, operation);
+    public void RequireInputSafe() => requireInputSafe();
+    private void Guard(string id, string operation) { requireInputSafe(); policy.Require(id, operation); }
 
     public AutomationElement ById(string automationId, AutomationElement? scope = null)
     {
@@ -28,7 +27,7 @@ public sealed class StudioWindow(AutomationElement window)
             new PropertyCondition(AutomationElement.AutomationIdProperty, automationId));
         if (matches.Count != 1) throw new SelectorMatchException(automationId, matches.Count);
         var match = matches[0];
-        Policy.Value.VerifyControlType(automationId, match.Current.ControlType.ProgrammaticName.Replace("ControlType.", ""));
+        policy.VerifyControlType(automationId, match.Current.ControlType.ProgrammaticName.Replace("ControlType.", ""));
         return match;
     }
 
@@ -137,6 +136,7 @@ public sealed class StudioWindow(AutomationElement window)
     /// the owned process — and never on any other window. True when the owned window is foreground afterwards.</summary>
     public bool EnsureForeground()
     {
+        requireInputSafe();
         var handle = new IntPtr(Element.Current.NativeWindowHandle);
         int pid = Element.Current.ProcessId;
         GetWindowThreadProcessId(handle, out uint owner);
@@ -377,6 +377,7 @@ public sealed class StudioWindow(AutomationElement window)
     /// <summary>Puts the window in front at a fixed size, so pointer positions are reproducible.</summary>
     public void Normalise(int width, int height)
     {
+        requireInputSafe();
         if (Visible("Modal.Layer"))
             throw new InvalidOperationException("Normalise requires a closed modal layer; the scenario left a dialog open.");
         if (Element.TryGetCurrentPattern(WindowPattern.Pattern, out var w) && w is WindowPattern window
@@ -392,16 +393,20 @@ public sealed class StudioWindow(AutomationElement window)
             return focusTarget.Current.IsEnabled && !focusTarget.Current.IsOffscreen && focusTarget.Current.IsKeyboardFocusable;
         }, () =>
         {
+            requireInputSafe();
             focusTarget!.SetFocus();
             return focusTarget.Current.HasKeyboardFocus;
         }, TimeSpan.FromSeconds(5), Log);
         Thread.Sleep(300);   // let layout settle after the resize; the verdict re-reads every bound it uses
     }
 
-    public static T Pattern<T>(AutomationElement element, AutomationPattern pattern) where T : BasePattern =>
-        element.TryGetCurrentPattern(pattern, out var p) && p is T typed
+    public static T Pattern<T>(AutomationElement element, AutomationPattern pattern) where T : BasePattern
+    {
+        PointerBoundary.RequireInputSafe();
+        return element.TryGetCurrentPattern(pattern, out var p) && p is T typed
             ? typed
             : throw new InvalidOperationException($"'{element.Current.AutomationId}' ({element.Current.ControlType.ProgrammaticName}) does not support {pattern.ProgrammaticName}");
+    }
 
     public static void WaitUntil(Func<bool> condition, TimeSpan timeout, string what)
         => PollingWait.WaitUntil(condition, timeout, what);

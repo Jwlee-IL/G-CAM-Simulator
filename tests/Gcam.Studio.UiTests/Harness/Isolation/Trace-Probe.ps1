@@ -6,6 +6,28 @@ param(
 )
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
+function Assert-ProbeApprovals($Approval, [string]$ExpectedRunId) {
+    if ($Approval.runId -ne $ExpectedRunId) { throw 'Approval package targets another run.' }
+    $contract = if ($Approval.PSObject.Properties['contract']) { $Approval.contract } else { $null }
+    if ($null -ne $contract -and $contract -ne 'v4') { throw 'Unsupported approval contract.' }
+    $acts = @('charter', 'real-world-effect', 'final-review', 'physical', 'desktop-go')
+    if ($contract -eq 'v4' -and @($Approval.approvals | Where-Object { $_.humanActId -notin $acts }).Count) {
+        throw 'New approval records require named acts.'
+    }
+    foreach ($act in @('desktop-go', 'charter')) {
+        $legacy = if ($act -eq 'desktop-go') { 'HUM-01' } else { 'HUM-04' }
+        $exactLegacy = $null -eq $contract -and @($Approval.approvals | Where-Object { $_.humanActId -eq $legacy }).Count -gt 0
+        $records = @($Approval.approvals | Where-Object {
+            if ($exactLegacy) { $_.humanActId -eq $legacy } else { $_.humanActId -eq $act }
+        })
+        if ($records.Count -ne 1 -or [string]::IsNullOrWhiteSpace($records[0].id) -or
+            [string]::IsNullOrWhiteSpace($records[0].quote) -or $records[0].targetCommit -notmatch '^[0-9a-f]{40}$' -or
+            $records[0].targetCommit -ne $Approval.commit -or
+            [DateTimeOffset]::Parse($records[0].quotedAt) -lt [DateTimeOffset]::Parse($Approval.committedAt)) {
+            throw "Approval act/change/date is incomplete: $act"
+        }
+    }
+}
 $identity = [Security.Principal.WindowsIdentity]::GetCurrent()
 if (-not ([Security.Principal.WindowsPrincipal]::new($identity)).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
     throw 'An administrator must run only the tracing wrapper; the harness stays non-elevated.'
@@ -25,12 +47,7 @@ while ($null -ne $cursor -and $cursor.FullName.Length -ge $root.Length) {
 }
 if ((Get-Item -LiteralPath (Join-Path $destination 'approvals.json')).Attributes -band [IO.FileAttributes]::ReparsePoint) { throw 'Reparse approval source.' }
 $approval = Get-Content -LiteralPath (Join-Path $destination 'approvals.json') -Raw | ConvertFrom-Json
-if ($approval.runId -ne $runId) { throw 'Approval package targets another run.' }
-foreach ($act in @('HUM-01','HUM-04','HUM-07')) {
-    $records = @($approval.approvals | Where-Object { $_.humanActId -eq $act })
-    if ($records.Count -ne 1 -or [string]::IsNullOrWhiteSpace($records[0].quote) -or $records[0].targetCommit -ne $approval.commit -or
-        [DateTimeOffset]::Parse($records[0].quotedAt) -lt [DateTimeOffset]::Parse($approval.committedAt)) { throw 'Approval act/change/date is incomplete.' }
-}
+Assert-ProbeApprovals $approval $runId
 $toolNumber = 0
 function Invoke-OwnedWpr([string[]]$WprArguments, [int]$DeadlineSeconds = 60) {
     $script:toolNumber++

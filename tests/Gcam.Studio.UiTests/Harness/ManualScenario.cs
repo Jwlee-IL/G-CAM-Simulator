@@ -42,11 +42,14 @@ public static class ManualScenario
         DateTimeOffset? processStarted = null;
         Exception? failure = null;
         VideoRecorder? video = null;
+        ProbePackage.EffectGrant[] effects = [];
         try
         {
             Scenario.RunManual(scenario, output, (ui, record, sandbox) =>
             {
                 manifest = Path.Combine(record.Directory, "ui-manifest.json");
+                // The preflight record is set before any input; the exact grants also enter the scenario UI manifest.
+                // Reading them after cleanup below avoids coupling this adapter to the video implementation.
                 run = new ManualRun(scenario, registry, IsolationPaths.Inside(record.Directory, "manual/" + record.RunId), record.RunId,
                     started, (id, source) => ManualRun.ReadLabel(ui, id, source));
                 run.Record = record; run.Sandbox = sandbox;
@@ -85,9 +88,15 @@ public static class ManualScenario
         try
         {
             run.Video = video?.Stop();
+            if (manifest is not null && File.Exists(manifest))
+            {
+                using var doc = System.Text.Json.JsonDocument.Parse(File.ReadAllBytes(manifest));
+                effects = System.Text.Json.JsonSerializer.Deserialize<ProbePackage.EffectGrant[]>(doc.RootElement.GetProperty("realWorldEffects"),
+                    new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? [];
+            }
             if (failure is not null) run.Fail(failure);
             output.WriteLine("manual record: " + run.Finalise(manifest, before, ManualRun.ReadSubject()));
-            observation?.Record(new(run.RunId, launchAt, DateTimeOffset.UtcNow, pid, processStarted));
+            observation?.Record(new(run.RunId, launchAt, DateTimeOffset.UtcNow, pid, processStarted, scenario, manifest, effects));
         }
         catch (Exception e) { failure ??= e; }
         finally { video?.Complete(failure is null); }

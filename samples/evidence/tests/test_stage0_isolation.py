@@ -360,7 +360,7 @@ class StageZeroIsolationTests(unittest.TestCase):
         approval = {'runId': run.name, 'commit': commit, 'committedAt': '2026-10-14T00:00:00Z',
                     'isolationSha256': live['isolationSha256'], 'deploymentSha256': live['deploymentSha256'],
                     'approvals': [{'id': act + '-fixture', 'humanActId': act, 'quote': 'synthetic approval fixture', 'targetCommit': commit,
-                                   'quotedAt': '2026-10-14T00:01:00Z'} for act in ('HUM-01', 'HUM-04', 'HUM-07')]}
+                                   'quotedAt': '2026-10-14T00:01:00Z'} for act in ('desktop-go', 'charter')]}
         stage0.write(run / 'pin.json', live); stage0.write(run / 'approvals.json', approval)
         check = lambda version=7: stage0.preflight(run, lambda: live, lambda: (commit, approval['committedAt']),
                                                  lambda: version, root)
@@ -843,6 +843,7 @@ class SnapshotClassificationTests(unittest.TestCase):
         ]
         self.processes = [{'pid': 42, 'parentPid': 7, 'image': 'Gcam.Studio.exe', 'ending': 'exit 0'}]
         self.version = 2
+        self.context_updates = {}
 
     def run_folder(self, a, b, c, complete=True):
         root = StageZeroIsolationTests.scratch()
@@ -865,7 +866,15 @@ class SnapshotClassificationTests(unittest.TestCase):
                    'harnessOwned': {'files': [self.SANDBOX, self.RUN, self.LEASE], 'registry': [self.MARKER]},
                    'positiveControls': {'file': self.SANDBOX + '\\probe-diagnostic.txt',
                                         'registry': {'key': self.MARKER, 'valueName': 'RunId'}, 'process': 'Gcam.Studio.exe'}}
+        context.update(self.context_updates)
+        if context.get('contract') == 'v4' and 'uiManifests' not in context:
+            manifest = {'contract': 'v4', 'runId': context['runId'], 'manifestPhase': 'final', 'runStatus': 'completed',
+                        'processIssues': [], 'processMonitor': {'errors': []}, 'runIssues': []}
+            (root / 'ui-manifest.json').write_text(json.dumps(manifest), encoding='utf-8')
+            context['uiManifests'] = [{'runId': context['runId'], 'path': 'ui-manifest.json'}]
         (root / 'observation-context.json').write_text(json.dumps(context), encoding='utf-8')
+        if getattr(self, 'approval_source', None) is not None:
+            stage0.write(root / 'approvals.json', self.approval_source)
         return root
 
     def classify(self, extra_c=(), extra_b=(), rules=None, complete=True, sink=None):
@@ -1170,6 +1179,379 @@ class SnapshotClassificationTests(unittest.TestCase):
         blocked = self.run_folder(self.base, self.base, self.base)
         self.assertEqual(2, subprocess.run(command[:5] + [str(blocked), '--out', str(blocked / 'classified.json')],
                                            capture_output=True, text=True).returncode)
+
+
+class ApprovalPreflightTests(unittest.TestCase):
+    def fixture(self):
+        root = StageZeroIsolationTests.scratch()
+        run = root / 'approval-fixture'; run.mkdir()
+        commit, at = 'a' * 40, '2026-10-14T00:00:00Z'
+        files = {'app.dll': 'b' * 64}
+        live = {'workingTree': 'clean', 'sourceCommit': commit, 'fingerprintSpecVersion': 1, 'isolationSha256': 'i',
+                'deploymentFiles': files, 'deploymentSha256': stage0.fingerprint_map(files), 'sourceSha256': 's', 'runnerSourceSha256': 'r'}
+        approval = {'contract': 'v4', 'runId': run.name, 'commit': commit, 'committedAt': at, 'isolationSha256': 'i',
+                    'deploymentSha256': live['deploymentSha256'], 'approvals': [
+                        {'id': act, 'humanActId': act, 'quote': 'Synthetic fixture statement', 'targetCommit': commit, 'quotedAt': at}
+                        for act in ('charter', 'desktop-go', 'real-world-effect')]}
+        stage0.write(run / 'pin.json', live)
+        def check():
+            stage0.write(run / 'approvals.json', approval)
+            return stage0.preflight(run, lambda: live, lambda: (commit, at), lambda: 7, root)
+        return approval, check
+
+    def test_named_acts_require_no_hum07_and_legacy_aliases_still_read(self):
+        approval, check = self.fixture()
+        self.assertEqual([], check())
+        approval.pop('contract')
+        for act in approval['approvals']:
+            act['humanActId'] = {'charter': 'HUM-04', 'desktop-go': 'HUM-01'}.get(act['humanActId'], act['humanActId'])
+        approval['approvals'].append({**approval['approvals'][0], 'id': 'additional-charter', 'humanActId': 'HUM-09'})
+        self.assertEqual([], check())
+        approval['contract'] = 'v4'
+        self.assertTrue(any('named acts' in issue for issue in check()))
+
+    def test_legacy_exclusions_cannot_replace_charter_and_hum02_cannot_back_e6(self):
+        approval, check = self.fixture()
+        approval.pop('contract')
+        for record in approval['approvals']:
+            record['humanActId'] = {'charter': 'HUM-09', 'desktop-go': 'HUM-01', 'real-world-effect': 'HUM-02'}[record['humanActId']]
+        self.assertTrue(any('charter requires' in issue for issue in check()))
+        approval['approvals'][0]['humanActId'] = 'HUM-04'
+        self.assertEqual([], check())  # Unknown historical acts can still be read.
+        approval['realWorldEffects'] = [{'effectId': 'E6', 'approvalId': 'real-world-effect', 'runId': approval['runId'],
+            'targetCommit': approval['commit'], 'deploymentSha256': approval['deploymentSha256'], 'scenarioIds': ['export'],
+            'typedNameTemplates': ['report-{runId}.html'], 'recordFamilies': ['save-dialog-history']}]
+        self.assertTrue(any('real-world-effect' in issue for issue in check()))
+        approval['approvals'][2]['humanActId'] = 'real-world-effect'
+        self.assertEqual([], check())  # The same scope backed by the named act passes.
+
+    def test_trace_wrapper_checks_only_named_required_acts_or_documented_legacy_aliases(self):
+        # Load only the pure approval function from the AST. Never execute the elevated tracing wrapper.
+        import subprocess
+        approval, check = self.fixture()
+        check()
+        source = SCRIPT.parent / 'Trace-Probe.ps1'
+        root = StageZeroIsolationTests.scratch()
+        runner = root / 'approval-check.ps1'
+        runner.write_text('''param($Source, $Package)
+$ErrorActionPreference = 'Stop'
+Set-StrictMode -Version Latest
+$ast = [System.Management.Automation.Language.Parser]::ParseFile($Source, [ref]$null, [ref]$null)
+$fn = $ast.Find({param($n) $n -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $n.Name -eq 'Assert-ProbeApprovals'}, $true)
+. ([scriptblock]::Create($fn.Extent.Text))
+Assert-ProbeApprovals (Get-Content -LiteralPath $Package -Raw | ConvertFrom-Json) 'approval-fixture'
+''', encoding='utf-8')
+        def run(expected):
+            path = root / 'package.json'
+            stage0.write(path, approval)
+            result = subprocess.run(['pwsh', '-NoProfile', '-File', str(runner), str(source), str(path)], capture_output=True, text=True)
+            self.assertEqual(expected, result.returncode == 0, result.stderr)
+        run(True)
+        approval.pop('contract')
+        for record in approval['approvals']:
+            record['humanActId'] = {'charter': 'HUM-04', 'desktop-go': 'HUM-01'}.get(record['humanActId'], record['humanActId'])
+        run(True)  # No HUM-07.
+        approval['approvals'][0]['humanActId'] = 'HUM-09'
+        run(False)
+        approval['approvals'][0]['humanActId'] = 'HUM-04'
+        approval['contract'] = 'v4'
+        run(False)  # A v4 package must use names.
+
+    def test_missing_or_duplicate_required_act_and_unknown_contract_refuse(self):
+        approval, check = self.fixture()
+        original = copy.deepcopy(approval)
+        approval['approvals'] = [a for a in approval['approvals'] if a['humanActId'] != 'charter']
+        self.assertTrue(any('charter requires' in issue for issue in check()))
+        approval.update(copy.deepcopy(original)); approval['approvals'].append(approval['approvals'][0])
+        self.assertTrue(any('charter requires' in issue for issue in check()))
+        approval.update(copy.deepcopy(original)); approval['contract'] = 'v5'
+        self.assertTrue(any('unsupported approval contract' in issue for issue in check()))
+
+    def test_e6_scope_and_statement_are_checked_before_probe(self):
+        approval, check = self.fixture()
+        effect = {'effectId': 'E6', 'approvalId': 'real-world-effect', 'runId': approval['runId'], 'targetCommit': approval['commit'],
+                  'deploymentSha256': approval['deploymentSha256'], 'scenarioIds': ['export'],
+                  'typedNameTemplates': ['report-{runId}.html'], 'recordFamilies': ['save-dialog-history']}
+        approval['realWorldEffects'] = [effect]
+        self.assertEqual([], check())
+        for defect in ({'runId': 'other'}, {'approvalId': 'desktop-go'}, {'typedNameTemplates': ['*']},
+                       {'recordFamilies': ['all']}, {'targetCommit': 'c' * 40}, {'scenarioIds': []}):
+            with self.subTest(defect=defect):
+                approval['realWorldEffects'] = [{**effect, **defect}]
+                self.assertTrue(any('real-world-effect' in issue for issue in check()))
+
+
+class V4SnapshotClassificationTests(unittest.TestCase):
+    """New observations never use background explanations to clear an attributed effect; legacy cases above replay."""
+
+    def setUp(self):
+        self.f = SnapshotClassificationTests()
+        self.f.setUp()
+        self.f.context_updates = {'contract': 'v4', 'targetCommit': 'a' * 40,
+                                  'committedAt': '2026-10-14T00:00:00Z', 'deploymentSha256': 'b' * 64}
+
+    def effect(self, **updates):
+        row = {'c': 'f', 'p': self.f.DOCS + '\\probe-fixture.bin', 's': 1, 't': self.f.inside, 'a': 32}
+        row.update(updates)
+        return row
+
+    def test_clean_new_run_names_contract_and_pins_the_finalized_manifest(self):
+        result = self.f.classify()
+        self.assertEqual(('v4', 'completed', True), (result['contract'], result['runStatus'], result['g1Eligible']))
+        self.assertIn('ui-manifest:probe-fixture', result['inputSha256'])
+        ids = {r['surface'] for r in result['observationScope']}
+        self.assertNotIn('app-tsf-composition-window', ids)
+        self.assertNotIn('app-gpu-driver-timestamps', ids)
+
+    def test_marker_outside_time_window_is_unsafe_not_another_actor(self):
+        for stamp in (self.f.before, self.f.after):
+            with self.subTest(stamp=stamp):
+                result = self.f.classify([self.effect(t=stamp)])
+                self.f.only(result, 'out-of-declaration')
+                self.assertEqual(('unsafe_effect', False), (result['runStatus'], result['g1Eligible']))
+
+    def test_marker_changed_in_both_windows_is_unsafe(self):
+        result = self.f.classify([self.effect(s=3)], extra_b=[self.effect(s=2, t=self.f.before)])
+        self.f.only(result, 'out-of-declaration')
+        self.assertEqual('unsafe_effect', result['runStatus'])
+        self.assertEqual(0, result['controlWindow']['classifiedByRule'])
+
+    def test_declared_product_pattern_cannot_be_cleared_by_time_null_window_or_git_tree(self):
+        for path, before, time in ((self.f.EXPORT, [], self.f.before),
+                                   (self.f.EXPORT_OLD, [self.effect(p=self.f.EXPORT_OLD, s=2, t=self.f.before)], self.f.inside),
+                                   (self.f.DOCS + '\\repo\\gcam-report-20261014-000010.html',
+                                    [{'c': 'd', 'p': self.f.DOCS + '\\repo\\.git', 't': self.f.before, 'a': 16}], self.f.inside)):
+            with self.subTest(path=path):
+                result = self.f.classify([self.effect(p=path, s=3, t=time)], extra_b=before)
+                self.f.only(result, 'out-of-declaration')
+                self.assertEqual('unsafe_effect', result['runStatus'])
+
+    def test_os_record_rule_never_clears_a_marker(self):
+        cache = 'HKCU\\Software\\Classes\\Local Settings\\Software\\Microsoft\\Windows\\Shell\\MuiCache'
+        result = self.f.classify([{'c': 'v', 'p': cache, 'n': self.f.SANDBOX + '\\x.exe.FriendlyAppName', 'k': 1, 'h': 'd' * 64}])
+        self.f.only(result, 'out-of-declaration')
+        self.assertEqual('unsafe_effect', result['runStatus'])
+
+    def test_shared_e1_e3_and_unmarked_dialog_history_are_references(self):
+        for row in ({'c': 'v', 'p': self.f.E1, 'n': 'Left', 'k': 4, 'h': 'd' * 64}, self.effect(p=self.f.E3),
+                    {'c': 'v', 'p': 'HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\ComDlg32\\LastVisitedPidlMRU',
+                     'n': '13', 'k': 3, 'h': 'e' * 64}):
+            with self.subTest(row=row):
+                self.f.none(self.f.classify([row]))
+        result = self.f.classify([{'c': 'v', 'p': self.f.E1, 'n': 'Left', 'k': 4, 'h': 'd' * 64, 'm': 1}])
+        self.f.only(result, 'out-of-declaration')
+
+    def permission(self):
+        run = '20261014-000010-abcdef'
+        grant = {'effectId': 'E6', 'runId': 'probe-fixture', 'targetCommit': 'a' * 40, 'deploymentSha256': 'b' * 64,
+                 'committedAt': '2026-10-14T00:00:00Z', 'scenarioId': 'export', 'scenarioRunId': run,
+                 'typedNames': ['report-' + run + '.html'], 'recordFamilies': list(stage0.SHELL_FAMILIES),
+                 'approval': {'id': 'effect-fixture', 'humanActId': 'real-world-effect', 'targetCommit': 'a' * 40,
+                              'quote': 'Synthetic statement explicitly permitting export shell records this run',
+                              'quotedAt': '2026-10-14T00:01:00Z'}}
+        self.f.context_updates.update(realWorldEffects=[grant], scenarios=[{'runId': run, 'scenarioId': 'export'}])
+        # Both scenarios share this synthetic finalized manifest for the fixture; the real adapter links one per run.
+        self.f.context_updates['scenarios'].append({'runId': 'probe-fixture', 'scenarioId': 'probe'})
+        self.f.approval_source = {'contract': 'v4', 'runId': grant['runId'], 'commit': grant['targetCommit'],
+            'committedAt': grant['committedAt'], 'deploymentSha256': grant['deploymentSha256'],
+            'approvals': [copy.deepcopy(grant['approval'])], 'realWorldEffects': [
+                {'effectId': 'E6', 'approvalId': grant['approval']['id'], 'runId': grant['runId'],
+                 'targetCommit': grant['targetCommit'], 'deploymentSha256': grant['deploymentSha256'],
+                 'scenarioIds': ['export'], 'typedNameTemplates': ['report-{runId}.html'], 'recordFamilies': list(stage0.SHELL_FAMILIES)}]}
+        return grant
+
+    def run_with_grant(self, row):
+        root = self.f.run_folder(self.f.base, self.f.base, self.f.base + self.f.controls + [row])
+        context = json.loads((root / 'observation-context.json').read_text())
+        scenario = '20261014-000010-abcdef'
+        manifest = {'contract': 'v4', 'runId': scenario, 'manifestPhase': 'final', 'runStatus': 'completed', 'processIssues': [],
+                    'runIssues': [], 'processMonitor': {'errors': []}}
+        (root / 'export-manifest.json').write_text(json.dumps(manifest), encoding='utf-8')
+        context['uiManifests'].append({'runId': scenario, 'path': 'export-manifest.json'})
+        (root / 'observation-context.json').write_text(json.dumps(context), encoding='utf-8')
+        return stage0.diff_classify(root, self.f.rules, surfaces=self.f.surfaces)
+
+    def shell_row(self, family):
+        name = 'report-20261014-000010-abcdef.html'
+        if family == 'recent-document-links':
+            return self.effect(p=self.f.ROAMING + '\\Microsoft\\Windows\\Recent\\' + name + '.lnk')
+        path = 'HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\'
+        path += 'RecentDocs\\html' if family == 'recent-documents-registry' else 'ComDlg32\\OpenSavePidlMRU\\html'
+        return {'c': 'v', 'p': path, 'n': '13', 'k': 3, 'h': 'd' * 64, 'm': 1, 'names': [name]}
+
+    def test_named_e6_permission_authorizes_only_a_matching_marked_shell_record(self):
+        self.permission()
+        for family in stage0.SHELL_FAMILIES:
+            with self.subTest(family=family):
+                result = self.run_with_grant(self.shell_row(family))
+                row = self.f.only(result, 'authorized-real-world-effect')
+                self.assertIn('effect-fixture', row['rule'])
+                self.assertEqual(('completed', True), (result['runStatus'], result['g1Eligible']))
+
+    def test_optional_trace_uses_the_same_exact_name_grant_and_emits_new_contract(self):
+        self.permission()
+        context = {**self.f.context_updates, 'runId': 'probe-fixture'}
+        name = 'report-20261014-000010-abcdef.html'
+        destination = self.shell_row('save-dialog-history')['p'] + '\\13'
+        event = {'channel': 'registry', 'operation': 'SetValue', 'destination': destination, 'valueName': '13', 'valueData': name}
+        self.assertIn('E6:effect-fixture:', stage0.trace_shell_permission(event, context, self.f.rules, self.f.approval_source))
+        self.assertIsNone(stage0.trace_shell_permission({**event, 'valueData': 'other-name'}, context, self.f.rules, self.f.approval_source))
+        trace = StageZeroIsolationTests(); trace.setUp()
+        trace.context.update(context)
+        trace.context['realWorldEffects'] = []
+        result = stage0.classify(trace.controls + [trace.event(10, 'registry', 'SetValue', destination)], trace.context, trace.rules)
+        self.assertEqual(('v4', 'unsafe_effect'), (result['contract'], result['runStatus']))
+
+    def test_e6_requires_the_actual_run_package_with_same_statement_and_scope_on_both_paths(self):
+        self.permission()
+        original = copy.deepcopy(self.f.approval_source)
+        row = self.shell_row('save-dialog-history')
+        event = {'channel': 'registry', 'operation': 'SetValue', 'destination': row['p'] + '\\13',
+                 'valueName': '13', 'valueData': row['names'][0]}
+        context = {**self.f.context_updates, 'runId': 'probe-fixture'}
+        variants = [None, {**original, 'runId': 'other'}, {**original, 'commit': 'c' * 40},
+            {**original, 'approvals': []},
+            {**original, 'approvals': [{**original['approvals'][0], 'quote': 'different author statement'}]},
+            {**original, 'approvals': [{**original['approvals'][0], 'humanActId': 'HUM-02'}]},
+            {**original, 'realWorldEffects': []},
+            {**original, 'realWorldEffects': [{**original['realWorldEffects'][0], 'scenarioIds': ['other']}]}]
+        for source in variants:
+            with self.subTest(source=source):
+                self.f.approval_source = source
+                self.f.only(self.run_with_grant(row), 'out-of-declaration')
+                self.assertIsNone(stage0.trace_shell_permission(event, context, self.f.rules, source))
+        # The same package with .NET's date spelling and an extra author field still backs the grant on both paths.
+        spelled = copy.deepcopy(original)
+        spelled['committedAt'] = '2026-10-14T00:00:00+00:00'
+        spelled['approvals'][0].update(quotedAt='2026-10-14T00:01:00.000000+00:00', note='additional author field')
+        self.f.approval_source = spelled
+        self.f.only(self.run_with_grant(row), 'authorized-real-world-effect')
+        self.assertIn('E6:effect-fixture:', stage0.trace_shell_permission(event, context, self.f.rules, spelled))
+
+    def test_v4_trace_respects_the_rules_file_app_write_switch(self):
+        trace = StageZeroIsolationTests(); trace.setUp()
+        trace.context['contract'] = 'v4'
+        destination = trace.context['ownedRoots'][0] + 'report-fixture.html'
+        for allowed, expected in ((False, 'out-of-declaration'), (True, 'app-declared')):
+            rules = {**trace.rules, 'allowAppFileWrites': allowed}
+            result = stage0.classify(trace.controls + [trace.event(10, 'file', 'WriteFile', destination)], trace.context, rules)
+            self.assertEqual(expected, result['candidates'][-1]['classification'])
+
+    def test_v4_shared_location_references_match_snapshot_and_trace_and_markers_remain_unsafe(self):
+        trace = StageZeroIsolationTests(); trace.setUp()
+        trace.controls.append(trace.registry_fixture())  # the run user's hive comes from the registry positive control
+        trace.context.update(contract='v4', runId='probe-fixture-run', knownFolders={'ProgramData': {'path': 'C:\\ProgramData'}})
+        for row, destination, channel in (
+                ({'c': 'v', 'p': self.f.E1, 'n': 'Left', 'k': 4, 'h': 'd' * 64},
+                 '\\REGISTRY\\USER\\' + trace.SID + self.f.E1[4:] + '\\Left', 'registry'),
+                (self.effect(p=self.f.E3), self.f.E3, 'file')):
+            with self.subTest(destination=destination):
+                references = []
+                self.f.classify([row], sink=references.append)
+                event = trace.event(10, channel, 'SetValue' if channel == 'registry' else 'WriteFile', destination)
+                result = stage0.classify(trace.controls + [event], trace.context, trace.rules)
+                self.assertEqual('shared-location-reference', result['candidates'][-1]['classification'])
+                self.assertIn('shared-location-reference', [r.get('classification') for r in references])
+                event['valueData'] = trace.context['runId']
+                result = stage0.classify(trace.controls + [event], trace.context, trace.rules)
+                self.assertEqual('out-of-declaration', result['candidates'][-1]['classification'])
+                # An owned process's undeclared operation on the same location stays judged.
+                removal = trace.event(10, channel, 'DeleteValue' if channel == 'registry' else 'Delete', destination)
+                result = stage0.classify(trace.controls + [removal], trace.context, trace.rules)
+                self.assertEqual('out-of-declaration', result['candidates'][-1]['classification'])
+
+    def test_v4_trace_missing_run_directory_blocks_without_reading_cwd_manifests(self):
+        from unittest.mock import patch
+        trace = StageZeroIsolationTests(); trace.setUp()
+        trace.context['contract'] = 'v4'
+        for absent in (None, '', '   ', 'relative-run-folder'):
+            with self.subTest(directory=absent), patch.object(stage0, 'process_manifest_verdict', side_effect=AssertionError('must not read cwd')):
+                trace.context['runDirectory'] = absent
+                result = stage0.classify(trace.controls, trace.context, trace.rules)
+                self.assertEqual(('blocked', 'missing-run-directory', False), (result['runStatus'], result['reason'], result['g1Eligible']))
+
+    def test_last_visited_folder_requires_the_exact_approved_scenario_marker(self):
+        self.permission()
+        row = {**self.shell_row('save-dialog-history'), 'p': 'HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\ComDlg32\\LastVisitedPidlMRU',
+               'names': [], 'runMarkers': ['20261014-000010-abcdef']}
+        result = self.run_with_grant(row)
+        self.assertTrue(self.f.only(result, 'authorized-real-world-effect')['rule'].endswith(':scenario-folder'))
+        self.assertTrue(result['g1Eligible'])
+        for markers in ([], ['probe-fixture'], ['other-run']):
+            with self.subTest(markers=markers):
+                self.f.only(self.run_with_grant({**row, 'runMarkers': markers}), 'out-of-declaration')
+
+    def test_missing_wrong_run_build_action_name_family_or_statement_never_authorizes(self):
+        baseline = copy.deepcopy(self.permission())
+        variants = [{}, {'runId': 'wrong'}, {'targetCommit': 'c' * 40}, {'deploymentSha256': 'c' * 64},
+                    {'scenarioId': 'other'}, {'scenarioRunId': 'other-run'}, {'typedNames': ['other.html']},
+                    {'recordFamilies': ['recent-document-links']}, {'approval': {**baseline['approval'], 'quote': ''}},
+                    {'approval': {**baseline['approval'], 'humanActId': 'desktop-go'}},
+                    {'approval': {**baseline['approval'], 'quotedAt': '2026-10-13T00:00:00Z'}}]
+        for variant in variants:
+            with self.subTest(variant=variant):
+                self.f.context_updates['realWorldEffects'] = [{**baseline, **variant}] if variant else []
+                result = self.run_with_grant(self.shell_row('save-dialog-history'))
+                self.f.only(result, 'out-of-declaration')
+                self.assertEqual('unsafe_effect', result['runStatus'])
+
+    def test_permission_does_not_authorize_product_exports_elsewhere_or_unidentified_registry_data(self):
+        self.permission()
+        for row in (self.effect(p=self.f.DOCS + '\\report-20261014-000010-abcdef.html'),
+                    {**self.shell_row('save-dialog-history'), 'names': []},
+                    {**self.shell_row('save-dialog-history'), 'n': 'MRUListEx'},
+                    {**self.shell_row('save-dialog-history'), 'names': ['report-20261014-000010-abcdef.csv']}):
+            with self.subTest(row=row):
+                result = self.run_with_grant(row)
+                self.f.only(result, 'out-of-declaration')
+
+    def test_new_eligibility_combines_process_issues_and_monitor_errors(self):
+        for issues, errors, status in ((['unowned-process'], [], 'unsafe_effect'), ([], ['sampler-failed'], 'blocked')):
+            with self.subTest(status=status):
+                self.f.context_updates.update(processIssues=issues, processMonitorErrors=errors)
+                result = self.f.classify()
+                self.assertEqual((status, False), (result['runStatus'], result['g1Eligible']))
+        self.f.context_updates.update(processIssues=[], processMonitorErrors=[], uiManifests=[])
+        self.assertFalse(self.f.classify()['g1Eligible'])
+
+    def test_finalized_manifest_errors_and_missing_or_wrong_manifest_refuse(self):
+        for defect in ('process-issue', 'monitor-error', 'cleanup-failed', 'non-final', 'wrong-run', 'missing', 'unknown-contract'):
+            with self.subTest(defect=defect):
+                root = self.f.run_folder(self.f.base, self.f.base, self.f.base + self.f.controls)
+                path = root / 'ui-manifest.json'
+                doc = json.loads(path.read_text())
+                if defect == 'process-issue': doc['processIssues'] = ['unowned-process']
+                if defect == 'monitor-error': doc['processMonitor']['errors'] = ['not-proven']
+                if defect == 'cleanup-failed': doc['runStatus'] = 'cleanup_failed'
+                if defect == 'non-final': doc['manifestPhase'] = 'in_progress'
+                if defect == 'wrong-run': doc['runId'] = 'other'
+                if defect == 'unknown-contract': doc['contract'] = 'v5'
+                path.write_text(json.dumps(doc), encoding='utf-8')
+                if defect == 'missing':
+                    context = json.loads((root / 'observation-context.json').read_text())
+                    context['uiManifests'][0]['path'] = 'absent.json'
+                    (root / 'observation-context.json').write_text(json.dumps(context), encoding='utf-8')
+                result = stage0.diff_classify(root, self.f.rules, surfaces=self.f.surfaces)
+                self.assertFalse(result['g1Eligible'])
+
+    def test_legacy_observation_keeps_its_contract_and_old_time_window_judgment(self):
+        self.f.context_updates = {}
+        result = self.f.classify([self.effect(t=self.f.before)])
+        self.f.only(result, 'not-of-this-window')
+        self.assertNotIn('contract', result)
+        self.assertTrue(result['g1Eligible'])
+
+    def test_unattributed_annotations_are_references_not_candidates(self):
+        listed = []
+        result = self.f.classify([self.effect(p=self.f.LOCAL + '\\Other\\data.bin', t=self.f.before)], sink=listed.append)
+        self.f.none(result)
+        self.assertEqual(['outside-studio-window'], listed[0]['annotations'])
+        self.assertEqual('reference-only', result['controlWindow']['rule'])
+
+    def test_unknown_observation_contract_is_not_interpreted_as_legacy(self):
+        self.f.context_updates['contract'] = 'v5'
+        with self.assertRaisesRegex(ValueError, 'unsupported observation contract'):
+            self.f.classify()
 
 
 if __name__ == '__main__':

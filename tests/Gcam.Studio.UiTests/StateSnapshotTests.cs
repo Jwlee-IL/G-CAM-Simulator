@@ -8,6 +8,27 @@ namespace Gcam.Studio.UiTests;
 
 public sealed class StateSnapshotTests
 {
+    [Fact]
+    public void ExportNameEvidence_IdentifiesTheExactTypedName_WithoutKeepingPrivateValueData()
+    {
+        const string run = "20261022-100000-abcdef";
+        const string export = "report-" + run + ".html";
+        var registry = new FakeRegistry(new()
+        {
+            [""] = new(DateTime.UtcNow, [new("13", 3, Encoding.Unicode.GetBytes(@"C:\private-folder\" + export)),
+                new("14", 3, Encoding.Unicode.GetBytes("different-name-" + run))], []),
+        });
+        string root = IsolationPathsTests.Scratch(); Directory.CreateDirectory(root);
+        string path = Path.Combine(root, "snapshot-C.jsonl.gz");
+        StateSnapshot.Take("C", path, [], registry, [run], [export, "report-" + run + ".csv"]);
+        var rows = Lines(path).Where(r => r.GetProperty("c").GetString() == "v").ToArray();
+        Assert.Equal(new[] { export }, rows[0].GetProperty("names").EnumerateArray().Select(n => n.GetString()));
+        Assert.Equal(1, rows[1].GetProperty("m").GetInt32());
+        Assert.Equal(new[] { run }, rows[1].GetProperty("runMarkers").EnumerateArray().Select(m => m.GetString()));
+        Assert.False(rows[1].TryGetProperty("names", out _));
+        Assert.DoesNotContain("private-folder", string.Join("\n", rows.Select(r => r.GetRawText())));
+    }
+
     private sealed class FakeRegistry(Dictionary<string, IRegistrySource.Key> keys) : IRegistrySource
     {
         public HashSet<string> Denied { get; } = [];

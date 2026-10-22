@@ -57,7 +57,8 @@ public sealed class ObservedRunTests(ITestOutputHelper output)
             // The actor is this test host, before any product launch.
             registryControl = new RegistryMarker(new WindowsRegistryMarkerStore()).Write(runId, Environment.ProcessId);
             launchAt = DateTimeOffset.UtcNow;
-            app = OwnedStudioProcess.Start(runId);
+            app = OwnedStudioProcess.Start(runId, scenario: nameof(LaunchIdleExit_RecordsPendingChannelEvidence_WithoutAutomation), package: package);
+            manifest.RecordPreflight(app.Preflight);
             File.WriteAllText(IsolationPaths.Inside(app.Sandbox, "probe-diagnostic.txt"), runId + "\n");
             // Idle observation is time-bounded and deliberately does not ask UI Automation for a tree/window.
             var watch = Stopwatch.StartNew();
@@ -81,6 +82,7 @@ public sealed class ObservedRunTests(ITestOutputHelper output)
                 foreach (string issue in app.Ledger.Issues) issues.Add(new("unsafe_effect", issue));
                 if (app.MonitorErrors.Count != 0) issues.Add(new("blocked", "process-monitor-not-proven"));
                 manifest.Evidence["ownedProcesses"] = app.Ledger.Owned;
+                manifest.Evidence["processIssues"] = app.Ledger.Issues;
                 manifest.Evidence["sharedResources"] = new[] { app.LeaseState };
                 manifest.Evidence["processMonitor"] = new { methods = new[] { "polling-100ms" }, errors = app.MonitorErrors };
                 manifest.Evidence["ownedRoot"] = app.Sandbox;
@@ -89,10 +91,20 @@ public sealed class ObservedRunTests(ITestOutputHelper output)
                 string programData = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
                 var traceContext = new
                 {
+                    contract = "v4", runId, runDirectory = runFolder,
+                    targetCommit = package.Commit, committedAt = package.CommittedAt, deploymentSha256 = package.DeploymentSha256,
+                    realWorldEffects = app.Preflight.RealWorldEffects,
+                    scenarios = new[] { new { runId, scenarioId = nameof(LaunchIdleExit_RecordsPendingChannelEvidence_WithoutAutomation) } },
+                    uiManifests = new[] { new { runId, path = "ui-manifest.json" } },
                     ownedProcesses = app.Ledger.Owned.Select(p => new { pid = p.Pid, parentPid = p.ParentPid, startedAt = p.StartedAt.ToUniversalTime().ToString("O"), finishedAt = finished.ToString("O") }),
                     harnessPids = new[] { Environment.ProcessId }, osPids = Array.Empty<int>(), ownedRoots,
                     ownedRootDevicePaths = ownedRoots.Select(root => IsolationPaths.DeviceForm(root)).ToArray(),
-                    knownFolders = new Dictionary<string, object> { ["ProgramData"] = new { path = programData, devicePath = IsolationPaths.DeviceForm(programData) } },
+                    knownFolders = new Dictionary<string, object>
+                    {
+                        ["ProgramData"] = new { path = programData, devicePath = IsolationPaths.DeviceForm(programData) },
+                        ["APPDATA"] = new { path = roots.Single(r => r.Category == "APPDATA").Path,
+                            devicePath = IsolationPaths.DeviceForm(roots.Single(r => r.Category == "APPDATA").Path) },
+                    },
                     requiredChannels = new[] { "file", "process", "registry" },
                     channelApplicability = new[] { ProbeChannels.Network },
                     traceHealth = new { complete = false, eventsLost = (int?)null, buffersLost = (int?)null },
@@ -106,7 +118,11 @@ public sealed class ObservedRunTests(ITestOutputHelper output)
             // Input of stage0.py diff-classify; it names machine paths and stays local with the run folder (A4).
             var observation = new
             {
-                schemaVersion = 1, runId, method = "MR8 before/after snapshots",
+                schemaVersion = 1, contract = "v4", runId, method = "MR8 before/after snapshots",
+                targetCommit = package.Commit, committedAt = package.CommittedAt, deploymentSha256 = package.DeploymentSha256,
+                realWorldEffects = app?.Preflight.RealWorldEffects ?? [],
+                scenarios = new[] { new { runId, scenarioId = nameof(LaunchIdleExit_RecordsPendingChannelEvidence_WithoutAutomation) } },
+                uiManifests = new[] { new { runId, path = "ui-manifest.json" } },
                 nullWindow = new { startedAt = nullStarted.ToString("O"), finishedAt = nullFinished.ToString("O"), seconds = (nullFinished - nullStarted).TotalSeconds },
                 studioWindow = new { launched = app is not null, launchAt = launchAt.ToString("O"), exitAt = finished.ToString("O"),
                     seconds = (finished - launchAt).TotalSeconds, marginBeforeSeconds = 1, marginAfterSeconds = 2 },

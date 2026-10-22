@@ -34,7 +34,8 @@ public sealed class ProcessLedger(string runId, string registeredImage)
         foreach (var p in instances)
         {
             bool successor = descendants.Contains(p.Pid);
-            if (!Owns(p.Pid, p.StartedAt) && (successor || string.Equals(p.ImagePath, registeredImage, StringComparison.OrdinalIgnoreCase)))
+            if (!Owns(p.Pid, p.StartedAt) && (successor || string.Equals(p.ImagePath, registeredImage, StringComparison.OrdinalIgnoreCase)
+                || string.Equals(Path.GetFileName(p.ImagePath), Path.GetFileName(registeredImage), StringComparison.OrdinalIgnoreCase)))
             {
                 string issue = $"unowned-process:{p.Pid}:{p.StartedAt:O}";
                 if (!Issues.Contains(issue)) Issues.Add(issue);

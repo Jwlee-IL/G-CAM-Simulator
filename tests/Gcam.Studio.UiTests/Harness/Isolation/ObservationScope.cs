@@ -3,9 +3,8 @@ using System.Text.Json;
 namespace Gcam.Studio.UiTests.Harness.Isolation;
 
 /// <summary>
-/// The observation scope of an observed run as the UI-automation procedure v3.3 defines it (TODO-52): every write
-/// surface's scope entries (declared default, resolved value, isolation location; <c>surface-list.json</c>), the shell
-/// record locations (<c>classification-rules.json</c>), the run's harness-owned locations and the registered images.
+/// New observations use product-specific defaults, isolation roots, marked effects and the registered instances.
+/// Shared IME/driver/dialog locations stay in the inventory but do not establish attribution by themselves.
 /// A change outside it that carries no harness marker is unattributed, not a candidate. <c>stage0.py diff-classify</c>
 /// resolves the same entries against the snapshots; this copy is what the run manifest's <c>writeAudit</c> records
 /// before classification.
@@ -14,7 +13,7 @@ public static class ObservationScope
 {
     public sealed record Location(string Id, string Surface, string Channel, string Where, string Basis, string Source);
 
-    public const string ControlWindowRule = "changed-in-null-window";
+    public const string ControlWindowRule = "reference-only";
 
     public static IReadOnlyList<Location> Describe(string isolationFolder, IReadOnlyList<string> harnessFiles,
         IReadOnlyList<string> harnessKeys, IReadOnlyList<string> registeredImages)
@@ -26,6 +25,7 @@ public static class ObservationScope
             foreach (var surface in surfaces.RootElement.GetProperty("surfaces").EnumerateArray())
             {
                 string id = surface.GetProperty("id").GetString()!;
+                if (id is "app-tsf-composition-window" or "app-gpu-driver-timestamps") continue;
                 if (!surface.TryGetProperty("scope", out var scope)) continue;
                 foreach (var entry in scope.EnumerateArray())
                     locations.Add(new(id, id, entry.GetProperty("channel").GetString()!, Where(entry), entry.GetProperty("basis").GetString()!,
@@ -35,6 +35,7 @@ public static class ObservationScope
             foreach (var entry in rules.RootElement.GetProperty("shellRecordLocations").EnumerateArray())
             {
                 if (entry.TryGetProperty("blindSpot", out _)) continue;
+                if (entry.GetProperty("channel").GetString() == "registry") continue;
                 string id = entry.GetProperty("id").GetString()!;
                 string surface = entry.GetProperty("surface").GetString()!.Split('#')[^1];
                 locations.Add(new(id, surface, entry.GetProperty("channel").GetString()!, Where(entry), "shell record location",
@@ -51,7 +52,9 @@ public static class ObservationScope
         var spots = new List<string>();
         using (var surfaces = JsonDocument.Parse(File.ReadAllBytes(Path.Combine(isolationFolder, "surface-list.json"))))
             foreach (var surface in surfaces.RootElement.GetProperty("surfaces").EnumerateArray())
-                if (surface.GetProperty("status").GetString() == "blind-spot")
+                if (surface.GetProperty("id").GetString() is "app-tsf-composition-window" or "app-gpu-driver-timestamps")
+                    spots.Add(surface.GetProperty("id").GetString() + ": shared-location reference; current attribution requires process or marker evidence");
+                else if (surface.GetProperty("status").GetString() == "blind-spot")
                     spots.Add(surface.GetProperty("id").GetString() + ": " + surface.GetProperty("residualRisk").GetString());
         using (var rules = JsonDocument.Parse(File.ReadAllBytes(Path.Combine(isolationFolder, "classification-rules.json"))))
             foreach (var entry in rules.RootElement.GetProperty("shellRecordLocations").EnumerateArray())
@@ -72,7 +75,7 @@ public static class ObservationScope
     {
         rule = ControlWindowRule, aToBSeconds = nullWindow.TotalSeconds, appWindowSeconds = appWindow.TotalSeconds,
         shorterThanAppWindow = nullWindow < appWindow, classifiedByRule = (int?)null,
-        status = "items classified by the control-window rule are counted by stage0.py diff-classify",
+        status = "background activity annotates references only; it never clears an attributed effect",
     };
 
     private static string Where(JsonElement entry)

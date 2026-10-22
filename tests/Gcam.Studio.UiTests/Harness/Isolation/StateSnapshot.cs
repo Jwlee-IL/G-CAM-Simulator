@@ -69,7 +69,8 @@ public static class StateSnapshot
 
     /// <summary>Writes one snapshot to a new file (never overwrites) and returns its counts and hash. <paramref name="markers"/>:
     /// the run's harness markers (run IDs); a value whose data carries one is flagged.</summary>
-    public static Counts Take(string label, string output, IReadOnlyList<Root> roots, IRegistrySource registry, IReadOnlyList<string>? markers = null)
+    public static Counts Take(string label, string output, IReadOnlyList<Root> roots, IRegistrySource registry, IReadOnlyList<string>? markers = null,
+        IReadOnlyList<string>? exportNames = null)
     {
         ArgumentNullException.ThrowIfNull(roots);
         ArgumentNullException.ThrowIfNull(registry);
@@ -150,7 +151,14 @@ public static class StateSnapshot
                 foreach (var value in key.Values)
                 {
                     if (CarriesMarker(value.Data, marks))
-                        Line(new { c = "v", p = shown, n = value.Name, k = value.Kind, h = IsolationPaths.Hash(value.Data), m = 1 });
+                    {
+                        string[] runMarkers = marks.Where(marker => CarriesMarker(value.Data, [marker])).ToArray();
+                        string[] names = (exportNames ?? []).Where(name => CarriesMarker(value.Data, [name])).Distinct().Order().ToArray();
+                        if (names.Length == 0)
+                            Line(new { c = "v", p = shown, n = value.Name, k = value.Kind, h = IsolationPaths.Hash(value.Data), m = 1, runMarkers });
+                        else
+                            Line(new { c = "v", p = shown, n = value.Name, k = value.Kind, h = IsolationPaths.Hash(value.Data), m = 1, names, runMarkers });
+                    }
                     else
                         Line(new { c = "v", p = shown, n = value.Name, k = value.Kind, h = IsolationPaths.Hash(value.Data) });
                     values++;

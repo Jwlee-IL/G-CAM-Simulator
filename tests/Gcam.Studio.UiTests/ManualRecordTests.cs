@@ -74,6 +74,7 @@ public sealed class ManualRecordTests
         using var doc = JsonDocument.Parse(bytes);
         var root = doc.RootElement;
         Assert.Equal("gcam.manual-run", root.GetProperty("schema").GetString());
+        Assert.Equal("v4", root.GetProperty("contract").GetString());
         Assert.Equal("2.4", root.GetProperty("chapter").GetProperty("number").GetString());
         Assert.Equal("2026-10-14T12:00:00.000+09:00", root.GetProperty("startedAt").GetString());
         Assert.Equal("failed", root.GetProperty("status").GetString());

@@ -27,12 +27,14 @@ public static class Scenario
     /// which the typed export names carry).</summary>
     public static void RunManual(string name, ITestOutputHelper output, Action<StudioWindow, RunRecord, string> body,
         Func<string, IReadOnlyList<string>> expectedWrites, Action<VideoRecorder?> recorder)
-        => RunCore(name, output, body, expectedWrites, recorder);
+        => RunCore(name, output, body, expectedWrites, recorder, resultUse: "manual");
 
     private static void RunCore(string name, ITestOutputHelper output, Action<StudioWindow, RunRecord, string> body,
-        Func<string, IReadOnlyList<string>> declaredWrites, Action<VideoRecorder?>? outerRecorder = null, string[]? caseArguments = null)
+        Func<string, IReadOnlyList<string>> declaredWrites, Action<VideoRecorder?>? outerRecorder = null, string[]? caseArguments = null,
+        string resultUse = "exploratory")
     {
         var record = new RunRecord(name);
+        record.Set("purpose", resultUse);
         IReadOnlyList<string> expectedWrites = declaredWrites(record.RunId);
         using var pollingLog = PollingWait.Record(record.Diagnostic);
         StudioProcess? app = null;
@@ -46,12 +48,15 @@ public static class Scenario
         IDisposable? pointerScope = null;
         try
         {
-            app = StudioProcess.Start(record.RunId);
+            app = StudioProcess.Start(record.RunId, name, expectedWrites);
+            manifest.RecordPreflight(app.Preflight);
+            record.Set("preflight", app.Preflight);
+            record.Set("realWorldEffects", app.Preflight.RealWorldEffects);
             record.Set("build", new { exe = app.ExePath, productVersion = app.ProductVersion, exeWritten = File.GetLastWriteTime(app.ExePath) });
             record.Set("process", new { pid = app.Process.Id, started = app.StartedAt, sandbox = app.Sandbox });
             window = app.MainWindow(TimeSpan.FromSeconds(15));
-            pointerScope = PointerBoundary.Enter(window, ActionPolicy.Load(Path.Combine(RepoPaths.Root(), "tests/Gcam.Studio.UiTests/Harness/Isolation/action-policy.json")));
-            var ui = new StudioWindow(window) { Log = record.Step };
+            pointerScope = PointerBoundary.Enter(window, app.Policy, app.RequireInputSafe);
+            var ui = new StudioWindow(window, app.Policy, app.RequireInputSafe) { Log = record.Step };
             ui.Normalise(WindowWidth, WindowHeight);
             record.Set("window", window.Current.BoundingRectangle.ToString());
             Assert.Equal("Empty", ui.RunState);   // declared start state
@@ -81,6 +86,7 @@ public static class Scenario
                 record.Set("sandboxWrites", app.SandboxWrites);
                 manifest.Evidence["ownedProcesses"] = app.Ledger.Owned;
                 manifest.Evidence["sharedResources"] = new[] { app.LeaseState };
+                manifest.Evidence["processIssues"] = app.Ledger.Issues;
                 manifest.Evidence["processMonitor"] = new { methods = new[] { "polling-100ms" }, errors = app.MonitorErrors,
                     blindSpots = new[] { "processes shorter than a polling interval; use ETW for qualification" } };
                 if (app.Ending != "exit 0") issues.Add(new("cleanup_failed", app.Ending));
@@ -97,7 +103,7 @@ public static class Scenario
             }, issues, "blocked");
             result = bodyCompleted && failure is null && issues.Count == 0 ? "passed" : "failed";
             manifest.CleanupCompleted(issues);
-            failure = CleanupBoundary.Attempt(failure, () => manifest.Save(record.Directory, manifest.Finalise(result)), issues, "blocked");
+            failure = CleanupBoundary.Attempt(failure, () => manifest.Save(record.Directory, manifest.Finalise(result, resultUse)), issues, "blocked");
             failure = CleanupBoundary.Attempt(failure, () => output.WriteLine($"manifest: {record.Save(issues.Count == 0 ? result : "failed")}"), issues, "blocked");
             if (outerRecorder is null) video?.Complete(failure is null && result == "passed");
         }

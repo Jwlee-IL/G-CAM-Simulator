@@ -310,6 +310,10 @@ def compact_trace(trace_path, out_path, schema_path=None):
     return record
 
 
+def approval_act(value):
+    return {'HUM-01': 'desktop-go', 'HUM-04': 'charter', 'HUM-10': 'final-review'}.get(value, value)
+
+
 def preflight(run_directory, live_pin=None, identity=None, version=None, scratch_root=None, profile_path=None, trace=False):
     """Read-only. Collect all failures before the observed run; the WPR profile is checked only for the optional trace."""
     issues = profile_coverage(profile_path) if trace else []
@@ -360,6 +364,8 @@ def preflight(run_directory, live_pin=None, identity=None, version=None, scratch
         if live.get('workingTree') != 'clean':
             issues.append('current HEAD worktree is dirty; review/commit and regenerate pin/approvals')
         approval = documents.get('approvals.json', {})
+        if approval.get('contract') not in (None, 'v4'):
+            issues.append('unsupported approval contract')
         recorded = documents.get('pin.json', {})
         if approval.get('runId') != run_id:
             issues.append('approvals runId differs from run folder')
@@ -386,8 +392,14 @@ def preflight(run_directory, live_pin=None, identity=None, version=None, scratch
             if recorded.get(field) != live.get(field):
                 issues.append('stale pin: ' + field + ' differs from live sources')
         records = approval.get('approvals', [])
-        for act in ('HUM-01', 'HUM-04', 'HUM-07'):
-            matches = [record for record in records if isinstance(record, dict) and record.get('humanActId') == act]
+        if approval.get('contract') == 'v4' and any(record.get('humanActId') not in
+                ('charter', 'desktop-go', 'real-world-effect', 'final-review', 'physical') for record in records if isinstance(record, dict)):
+            issues.append('new approval records require named acts')
+        for act in ('desktop-go', 'charter'):
+            legacy = {'desktop-go': 'HUM-01', 'charter': 'HUM-04'}[act]
+            exact_legacy = approval.get('contract') is None and any(isinstance(a, dict) and a.get('humanActId') == legacy for a in records)
+            matches = [record for record in records if isinstance(record, dict)
+                       and (record.get('humanActId') == legacy if exact_legacy else approval_act(record.get('humanActId')) == act)]
             if len(matches) != 1:
                 issues.append(act + ' requires exactly one approval')
                 continue
@@ -402,6 +414,23 @@ def preflight(run_directory, live_pin=None, identity=None, version=None, scratch
                     issues.append(act + ' approval predates the approved commit')
             except (ValueError, TypeError, AttributeError):
                 issues.append(act + ' approval date is missing/invalid')
+        for effect in approval.get('realWorldEffects', []):
+            matches = [a for a in records if a.get('id') == effect.get('approvalId')
+                       and approval_act(a.get('humanActId')) == 'real-world-effect']
+            if (effect.get('effectId') != 'E6' or effect.get('runId') != run_id or effect.get('targetCommit') != commit
+                    or effect.get('deploymentSha256') != live.get('deploymentSha256') or not effect.get('scenarioIds')
+                    or not effect.get('typedNameTemplates') or not effect.get('recordFamilies')
+                    or any(n not in EXPORT_TEMPLATES for n in effect.get('typedNameTemplates', []))
+                    or any(f not in SHELL_FAMILIES for f in effect.get('recordFamilies', [])) or len(matches) != 1):
+                issues.append('invalid real-world-effect scope/approval')
+                continue
+            a = matches[0]
+            try:
+                if (not a.get('quote', '').strip() or a.get('targetCommit') != commit
+                        or parse_date(a.get('quotedAt', '')) < parse_date(committed_at)):
+                    issues.append('invalid real-world-effect statement/date')
+            except (ValueError, TypeError, AttributeError):
+                issues.append('invalid real-world-effect date')
     except (OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError) as error:
         issues.append('live source/deployment validation failed: ' + str(error))
     return issues
@@ -906,6 +935,31 @@ def declared_surface(event, context, rules):
     return None
 
 
+def shared_location_reference(channel, path, name, context, rules, operation=None):
+    """E1/E3 describe shared framework locations, not product write permission. With an operation (an owned process on
+    the trace path), only the surface's declared operations are references; anything else there stays judged."""
+    if channel == 'registry' and path.casefold().startswith('\\registry\\user\\'):
+        # Trace paths name the hive natively; only the run user's hive maps to HKCU (snapshot paths are HKCU already).
+        sid = run_user_sid(context)
+        native = '\\REGISTRY\\USER\\' + (sid or '') + '\\'
+        if not sid or not path.casefold().startswith(native.casefold()):
+            return None
+        path = 'HKCU\\' + path[len(native):]
+    for surface in rules.get('declaredAppSurfaces', []):
+        if operation is not None and operation not in surface.get('operations', []):
+            continue
+        if surface.get('decision') == 'E1' and channel == 'registry':
+            if same_path(path, 'HKCU\\' + surface['keyPath']) and any(
+                    isinstance(name, str) and name.casefold() == value.casefold() for value in surface['valueNames']):
+                return 'E1'
+        if surface.get('decision') == 'E3' and channel == 'file':
+            folder = context.get('knownFolders', {}).get(surface.get('knownFolder'), {})
+            if any(same_path(path, base.rstrip('\\') + '\\' + surface['relativePath'])
+                   for base in (folder.get('path'), folder.get('devicePath')) if base):
+                return 'E3'
+    return None
+
+
 def other_actor_record(event, tree, facts, context, rules):
     """E2: the OS's background-activity record for an owned image, written at that process's end."""
     sid = run_user_sid(context)
@@ -935,6 +989,14 @@ def other_actor_record(event, tree, facts, context, rules):
 
 def classify(events, context, rules, candidate_sink=None, change_times=None):
     """Identity/time is required; PID alone cannot promote recycled process events."""
+    if context.get('contract') not in (None, 'v4'):
+        raise ValueError('unsupported observation contract')
+    v4 = context.get('contract') == 'v4'
+    run_directory = context.get('runDirectory')
+    # Never resolved against the current directory: a missing or relative run folder blocks the verdict.
+    missing_run_directory = v4 and (not isinstance(run_directory, str) or not run_directory.strip()
+                                    or not Path(run_directory).is_absolute())
+    approval_source = load_effect_approval_source(Path(run_directory)) if v4 and not missing_run_directory else None
     required = set(context.get('requiredChannels', [])) | set(rules.get('requiredChannels', []))
     candidates, controls = [], {channel: False for channel in sorted(required)}
     read_events = events if callable(events) else lambda: iter(events)
@@ -1007,19 +1069,34 @@ def classify(events, context, rules, candidate_sink=None, change_times=None):
         if positive:
             controls[event['channel']] = True
         record_rule = other_actor_record(event, tree, facts, context, rules)
-        if record_rule:
+        marker = v4 and any(m.casefold() in str(event.get(key, '')).casefold()
+                            for m in harness_markers(context) for key in ('destination', 'valueData'))
+        destination = event.get('destination', '')
+        value_name = event.get('valueName') or destination.rsplit('\\', 1)[-1]
+        # A registry destination may or may not end with its value name; the snapshot path compares the key and the name.
+        key_path = (destination[:-(len(value_name) + 1)] if destination.casefold().endswith(('\\' + value_name).casefold())
+                    else destination)
+        shared = shared_location_reference(event.get('channel'),
+            key_path if event.get('channel') == 'registry' else destination,
+            value_name, context, rules, event.get('operation', '') if owners else None) if v4 and not marker else None
+        if shared:
+            category, rule = 'shared-location-reference', shared
+        elif record_rule and not marker:
             # An OS record that observes the owned process, not an effect issued in the process.
             category, rule = 'os-or-harness-actor', record_rule['id']
         elif owners:
             # A record channel is not necessarily a write. Unknown opcodes must not be silently ignored.
             operation = event.get('operation', '')
             channel = event.get('channel', 'unknown')
-            surface = declared_surface(event, context, rules)
+            surface = None if v4 else declared_surface(event, context, rules)
+            permission = trace_shell_permission(event, context, rules, approval_source) if v4 else None
             if channel == 'process' and operation == 'ProcessStart' and any(o.get('parentPid') == event.get('parentPid')
                     and event.get('parentPid') in harness for o in owners):
                 category = 'os-or-harness-actor'
             elif channel == 'file' and index in sequences:
                 category, rule = basic_information(index)
+            elif permission:
+                category, rule = 'authorized-real-world-effect', permission
             elif surface:
                 # Effects issued in the Studio process are app effects, whichever layer issues them.
                 category, rule = 'app-declared', surface['id']
@@ -1054,7 +1131,8 @@ def classify(events, context, rules, candidate_sink=None, change_times=None):
             category = 'os-or-harness-actor'
         else:
             # Includes app-requested shell effects without sufficient causal metadata.
-            category = 'unknown'
+            permission = trace_shell_permission(event, context, rules, approval_source) if marker else None
+            category, rule = ('authorized-real-world-effect', permission) if permission else ('out-of-declaration' if marker else 'unknown', None)
         if rule:
             applications[rule] = applications.get(rule, 0) + 1
         kind = event.get('kind', event.get('operation', 'unknown'))
@@ -1080,7 +1158,11 @@ def classify(events, context, rules, candidate_sink=None, change_times=None):
     health = context.get('traceHealth', {})
     loss_proven = (health.get('complete') is True and type(health.get('eventsLost')) is int and type(health.get('buffersLost')) is int
                    and health['eventsLost'] == 0 and health['buffersLost'] == 0)
-    return {'schemaVersion': 1, 'candidates': candidates, 'candidateCount': candidate_count,
+    if v4:
+        process_unsafe, process_blocked, _ = (False, True, {}) if missing_run_directory else process_manifest_verdict(Path(run_directory), context)
+        unsafe |= process_unsafe
+        unresolved |= process_blocked
+    return {**({'contract': 'v4'} if v4 else {}), 'schemaVersion': 1, 'candidates': candidates, 'candidateCount': candidate_count,
             'classificationCounts': counts, 'positiveControls': controls,
             'ownedTreeProblems': [{'classification': key.split('|')[0], 'kind': key.split('|')[1],
                                    'destinationCategory': key.split('|')[2], 'count': count}
@@ -1091,7 +1173,7 @@ def classify(events, context, rules, candidate_sink=None, change_times=None):
             'changeTimeRequest': {'launchAt': launch, 'destinations': {path: request[path] for path in sorted(request)}},
             'traceHealth': health,
             'runStatus': 'unsafe_effect' if unsafe else 'blocked' if not proven or not loss_proven or unresolved else 'completed',
-            'reason': 'undeclared-app-effect' if unsafe else 'instrument-not-proven' if not proven else 'trace-health-not-proven' if not loss_proven else 'unresolved-candidate' if unresolved else '',
+            'reason': 'undeclared-app-effect' if unsafe else 'missing-run-directory' if missing_run_directory else 'instrument-not-proven' if not proven else 'trace-health-not-proven' if not loss_proven else 'unresolved-candidate' if unresolved else '',
             'g1Eligible': proven and loss_proven and not unsafe and not unresolved,
             'blindSpots': context.get('blindSpots', []),
             'channelApplicability': context.get('channelApplicability', []),
@@ -1397,11 +1479,17 @@ def observation_scope(rules, surfaces, context, folders):
         locations.append({'id': 'harness-owned', 'surface': 'harness', 'basis': 'harness-owned (registry marker)', 'source': 'observation-context.json',
                           'channel': 'registry', 'kind': 'root', 'root': key, 'prefix': key})
     for surface in surfaces.get('surfaces', []):
+        if context.get('contract') == 'v4' and surface['id'] in ('app-tsf-composition-window', 'app-gpu-driver-timestamps'):
+            blind.append(surface['id'] + ': shared location, references only without process or marker evidence')
+            continue
         for entry in surface.get('scope', []):
             add(entry, surface['id'], entry['basis'], 'surface-list.json#' + surface['id'])
         if surface.get('status') == 'blind-spot':
             blind.append(f"{surface['id']}: {surface.get('residualRisk', surface.get('finding', ''))}")
     for entry in rules.get('shellRecordLocations', []):
+        if context.get('contract') == 'v4' and entry['channel'] == 'registry':
+            blind.append('shell record ' + entry['id'] + ': shared location, attributed only by process or marker evidence')
+            continue
         if entry.get('blindSpot'):
             blind.append(f"shell record {entry['id']}: {entry['blindSpot']}")
             continue
@@ -1461,9 +1549,170 @@ def validate_filters(filters, os_records, locations, redact):
                                      f"{redact(location['prefix'])} ({location['basis']}); v3.3 forbids it")
 
 
+SHELL_FAMILIES = ('save-dialog-history', 'recent-document-links', 'recent-documents-registry')
+EXPORT_TEMPLATES = tuple('report-{runId}.' + ext for ext in ('html', 'pdf', 'docx', 'csv'))
+
+
+def trace_shell_permission(event, context, rules, approval_source=None):
+    """The optional trace path uses the same grant matcher and requires actual exported-name evidence."""
+    if event.get('operation') not in ('SetValue', 'WriteFile', 'Write'):
+        return None
+    destination = event.get('destination', '')
+    folders = {name: entry['path'] for name, entry in context.get('knownFolders', {}).items() if entry.get('path')}
+    channel = event.get('channel')
+    if channel == 'registry':
+        sid = run_user_sid(context)
+        native = '\\REGISTRY\\USER\\' + (sid or '') + '\\'
+        if destination.casefold().startswith(native.casefold()):
+            destination = 'HKCU\\' + destination[len(native):]
+        name = event.get('valueName') or destination.rsplit('\\', 1)[-1]
+        path = destination[:-(len(name) + 1)] if destination.casefold().endswith(('\\' + name).casefold()) else destination
+        payload = str(event.get('valueData', ''))
+        names = sorted({n for g in context.get('realWorldEffects', []) for n in g.get('typedNames', []) if n.casefold() in payload.casefold()})
+        row, entry = {'n': name, 'names': names, 'runMarkers': [m for m in harness_markers(context) if m.casefold() in payload.casefold()]}, 'value'
+    elif channel == 'file':
+        path, row, entry = destination, {}, 'file'
+        for folder in context.get('knownFolders', {}).values():
+            device, local = folder.get('devicePath'), folder.get('path')
+            if device and local and under(path, device):
+                path = local.rstrip('\\') + path[len(device.rstrip('\\')):]
+                break
+    else:
+        return None
+    marked = any(m.casefold() in (destination + ' ' + str(event.get('valueData', ''))).casefold() for m in harness_markers(context))
+    return covering_shell_permission(context, row, 'modified', channel, entry, path, 'trace-marker' if marked else None, folders, rules, approval_source)
+
+
+def load_effect_approval_source(run):
+    try:
+        return json.loads((run / 'approvals.json').read_text(encoding='utf-8-sig'))
+    except (OSError, ValueError):
+        return None
+
+
+def effect_grant_matches_source(grant, source):
+    """A context is derived evidence; only the run's actual author package can back its grant."""
+    if not isinstance(source, dict) or source.get('contract') not in (None, 'v4') or not isinstance(grant, dict):
+        return False
+
+    def same_instant(left, right):
+        # The context carries .NET's serialization of the package's dates; compare instants, not spellings.
+        try:
+            return dt.datetime.fromisoformat(left.replace('Z', '+00:00')) == dt.datetime.fromisoformat(right.replace('Z', '+00:00'))
+        except (ValueError, TypeError, AttributeError):
+            return False
+
+    if (not source.get('runId') or source.get('runId') != grant.get('runId') or source.get('commit') != grant.get('targetCommit')
+            or source.get('deploymentSha256') != grant.get('deploymentSha256')
+            or not same_instant(source.get('committedAt'), grant.get('committedAt'))):
+        return False
+    approval = grant.get('approval') if isinstance(grant.get('approval'), dict) else {}
+    records = [a for a in source.get('approvals', []) if isinstance(a, dict) and approval.get('id') and a.get('id') == approval.get('id')]
+    if len(records) != 1:
+        return False
+    record = records[0]
+    if (approval_act(record.get('humanActId')) != 'real-world-effect' or approval.get('humanActId') != 'real-world-effect'
+            or not isinstance(record.get('quote'), str) or not record['quote'].strip() or record.get('quote') != approval.get('quote')
+            or record.get('targetCommit') != approval.get('targetCommit') or record.get('targetCommit') != source.get('commit')
+            or not same_instant(record.get('quotedAt'), approval.get('quotedAt'))):
+        return False
+    for effect in source.get('realWorldEffects', []):
+        if (effect.get('effectId') == 'E6' and effect.get('approvalId') == approval.get('id')
+                and effect.get('runId') == grant.get('runId') and effect.get('targetCommit') == grant.get('targetCommit')
+                and effect.get('deploymentSha256') == grant.get('deploymentSha256')
+                and grant.get('scenarioId') in effect.get('scenarioIds', [])
+                and set(grant.get('recordFamilies', [])).issubset(effect.get('recordFamilies', []))
+                and set(grant.get('typedNames', [])).issubset({t.replace('{runId}', grant.get('scenarioRunId', ''))
+                    for t in effect.get('typedNameTemplates', []) if t in EXPORT_TEMPLATES})):
+            return True
+    return False
+
+
+def covering_shell_permission(context, row, change, channel, entry, path, marker, folders, rules, approval_source=None):
+    """A marker proves attribution; permission additionally needs the exact exported name and current author scope."""
+    if marker is None or change not in ('added', 'modified'):
+        return None
+    names, family = [], None
+    if channel == 'file' and entry == 'file':
+        for location in rules.get('shellRecordLocations', []):
+            root = folders.get(location.get('root'))
+            if (location['id'] == 'recent-document-links' and root and under(path, root)
+                    and re.fullmatch(location['relativePattern'], path[len(root.rstrip('\\')) + 1:], re.I)):
+                family = 'recent-document-links'
+                names = [path.rsplit('\\', 1)[-1][:-4]]  # remove only .lnk
+    elif channel == 'registry' and entry == 'value' and re.fullmatch(r'[0-9]+', row.get('n', '')):
+        if re.fullmatch(r'HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\ComDlg32\\(?:OpenSavePidlMRU(?:\\[^\\]+)?|LastVisitedPidlMRU)', path, re.I):
+            family = 'save-dialog-history'
+        elif re.fullmatch(r'HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\RecentDocs(?:\\[^\\]+)?', path, re.I):
+            family = 'recent-documents-registry'
+        names = row.get('names', [])
+    last_folder = family == 'save-dialog-history' and path.casefold().endswith('\\lastvisitedpidlmru')
+    if family is None or (not names and not last_folder):
+        return None
+    for grant in context.get('realWorldEffects', []):
+        if not effect_grant_matches_source(grant, approval_source):
+            continue
+        approval = grant.get('approval', {})
+        run_id = grant.get('scenarioRunId', '')
+        try:
+            committed = dt.datetime.fromisoformat(grant.get('committedAt', '').replace('Z', '+00:00'))
+            quoted = dt.datetime.fromisoformat(approval.get('quotedAt', '').replace('Z', '+00:00'))
+            date_ok = quoted >= committed and committed == dt.datetime.fromisoformat(context.get('committedAt', '').replace('Z', '+00:00'))
+        except (ValueError, TypeError, AttributeError):
+            date_ok = False
+        if (grant.get('effectId') != 'E6' or grant.get('runId') != context.get('runId')
+                or not re.fullmatch('[a-f0-9]{40}', str(grant.get('targetCommit', '')))
+                or grant.get('targetCommit') != context.get('targetCommit')
+                or not re.fullmatch('[a-f0-9]{64}', str(grant.get('deploymentSha256', '')))
+                or grant.get('deploymentSha256') != context.get('deploymentSha256')
+                or family not in grant.get('recordFamilies', []) or len(run_id) < MARKER_MIN_LENGTH
+                or not any(s.get('runId') == run_id and s.get('scenarioId') == grant.get('scenarioId') for s in context.get('scenarios', []))
+                or approval_act(approval.get('humanActId')) != 'real-world-effect' or not approval.get('id')
+                or approval.get('targetCommit') != context.get('targetCommit') or not approval.get('quote', '').strip() or not date_ok):
+            continue
+        exact = {t.replace('{runId}', run_id).casefold() for t in EXPORT_TEMPLATES} & {n.casefold() for n in grant.get('typedNames', [])}
+        # LastVisited records the application/folder, not necessarily the file basename. Its exact scenario marker
+        # binds it to the approved export; a generic m flag (or the batch marker alone) is insufficient.
+        folder_match = last_folder and not names and run_id.casefold() in {m.casefold() for m in row.get('runMarkers', [])}
+        if exact and ((names and {n.casefold() for n in names}.issubset(exact)) or folder_match):
+            return 'E6:' + approval['id'] + ':' + run_id + (':scenario-folder' if folder_match else '')
+    return None
+
+
+def process_manifest_verdict(run, context):
+    """A new snapshot verdict also consumes the finalized scenario manifests; missing evidence never qualifies."""
+    unsafe = bool(context.get('processIssues'))
+    blocked = bool(context.get('processMonitorErrors'))
+    inputs, seen = {}, set()
+    for link in context.get('uiManifests', []):
+        path = (run / link.get('path', '')).resolve()
+        roots = [run.resolve()] + [Path(p).resolve() for p in context.get('harnessOwned', {}).get('files', [])]
+        if not any(path.is_relative_to(root) for root in roots) or not path.is_file():
+            blocked = True
+            continue
+        try:
+            manifest = json.loads(path.read_text(encoding='utf-8-sig'))
+            if (manifest.get('contract') != 'v4' or manifest.get('runId') != link.get('runId')
+                    or manifest.get('manifestPhase') != 'final'):
+                blocked = True
+                continue
+            seen.add(manifest['runId'])
+            inputs['ui-manifest:' + manifest['runId']] = file_digest(path)
+            unsafe |= (bool(manifest.get('processIssues')) or manifest.get('runStatus') == 'unsafe_effect'
+                       or any(i.get('type') == 'unsafe_effect' for i in manifest.get('runIssues', [])))
+            monitor = manifest.get('processMonitor', {})
+            blocked |= not isinstance(monitor.get('errors'), list) or bool(monitor.get('errors')) or manifest.get('runStatus') != 'completed'
+        except (OSError, ValueError, TypeError, KeyError, AttributeError):
+            blocked = True
+    expected = {s['runId'] for s in context.get('scenarios', [])}
+    if not expected:
+        expected = {context.get('runId')}
+    blocked |= not expected.issubset(seen)
+    return unsafe, blocked, inputs
+
+
 def diff_classify(run_directory, rules=None, extra_redactions=None, surfaces=None, unattributed_sink=None):
-    """MR8 with the v3.3 candidate definition: classify the B->C changes the run can attribute to the app (charter order),
-    count the rest as unattributed, and check the positive controls."""
+    """Attribution-first for contract v4; a context without contract preserves the historical snapshot judgment."""
     run = Path(run_directory)
     rules = rules if rules is not None else json.loads((ISOLATION / 'classification-rules.json').read_text())
     surfaces = surfaces if surfaces is not None else json.loads((ISOLATION / 'surface-list.json').read_text(encoding='utf-8'))
@@ -1471,7 +1720,11 @@ def diff_classify(run_directory, rules=None, extra_redactions=None, surfaces=Non
     os_records = rules.get('osRunRecords', [])
     context_path = run / 'observation-context.json'
     context = json.loads(context_path.read_text(encoding='utf-8-sig'))
+    if context.get('contract') not in (None, 'v4'):
+        raise ValueError('unsupported observation contract')
+    v4 = context.get('contract') == 'v4'
     # Only snapshot B is held in memory; A and C are streamed against it.
+    approval_source = load_effect_approval_source(run) if v4 else None
     meta_b, index_b = snapshot_index(run / 'snapshot-B.jsonl.gz')
     meta_a, background, _ = snapshot_changes(index_b, run / 'snapshot-A.jsonl.gz', newer=False)
     meta_c, observed, key_times = snapshot_changes(index_b, run / 'snapshot-C.jsonl.gz', marked=meta_b['marked'])
@@ -1493,6 +1746,8 @@ def diff_classify(run_directory, rules=None, extra_redactions=None, surfaces=Non
     markers = [marker.casefold() for marker in harness_markers(context)]
     declared = []
     for surface in declared_entries(rules):
+        if v4:
+            continue  # Outside writes are never permitted merely by declaration in a new run.
         if surface['channel'] == 'registry' and surface.get('hive') == 'run-user' and 'keyPattern' in surface:
             # E6: an OS component's history under per-item subkeys with numbered values; keys and values, never removals.
             declared.append((surface['decision'], 'registry-pattern', re.compile('hkcu\\\\' + surface['keyPattern'], re.IGNORECASE),
@@ -1529,8 +1784,25 @@ def diff_classify(run_directory, rules=None, extra_redactions=None, surfaces=Non
             unattributed['count'] += 1
             unattributed['byChannel'][channel] = unattributed['byChannel'].get(channel, 0) + 1
             if unattributed_sink is not None:
-                unattributed_sink({'channel': channel, 'entry': entry, 'change': change['change'], 'path': redact(path),
-                                   'valueName': redact(name) if name is not None else None, 'inStudioWindow': in_window})
+                reference = {'channel': channel, 'entry': entry, 'change': change['change'], 'path': redact(path),
+                             'valueName': redact(name) if name is not None else None, 'inStudioWindow': in_window}
+                if v4:
+                    shown = redact(target)
+                    reference['classification'] = 'shared-location-reference' if shared_location_reference(
+                        channel, path, name, {**context, 'knownFolders': {k: {'path': v} for k, v in folders.items()}}, rules) else 'unattributed-reference'
+                    annotations = []
+                    if in_window is False:
+                        annotations.append('outside-studio-window')
+                    if identity in null_window:
+                        annotations.append('changed-in-null-window')
+                    if channel == 'file' and any(under(path, tree) and not under(deployment, tree) for tree in git_trees):
+                        annotations.append('other-git-working-tree')
+                    annotations += ['filter:' + f['pattern'] for f in filters if f['channel'] == channel
+                                    and f.get('entry', 'any') in ('any', entry) and re.fullmatch(f['pattern'], shown, re.I)]
+                    annotations += ['os-run-record:' + f['id'] for f in os_records if f['channel'] == channel
+                                    and f.get('entry', 'any') in ('any', entry) and re.fullmatch(f['pattern'], shown, re.I)]
+                    reference['annotations'] = annotations
+                unattributed_sink(reference)
             continue
         if location is not None:
             basis = 'harness-owned' if location['surface'] == 'harness' else \
@@ -1561,26 +1833,31 @@ def diff_classify(run_directory, rules=None, extra_redactions=None, surfaces=Non
                     category, rule = 'declared', decision
                     break
             shown = redact(target)
-            if category is None:
+            if v4 and category is None:
+                permission = covering_shell_permission(context, row, change['change'], channel, entry, path, marker, folders, rules,
+                                                      approval_source)
+                if permission is not None:
+                    category, rule = 'authorized-real-world-effect', permission
+            if not v4 and category is None:
                 # Records the OS keeps about a process's own run and windows stay other-actor, even with a marker.
                 for record in os_records:
                     if (record['channel'] == channel and record.get('entry', 'any') in ('any', entry)
                             and re.fullmatch(record['pattern'], shown, re.IGNORECASE)):
                         category, rule = 'other-actor', 'os-run-record:' + record['id']
                         break
-            if category is None and time is not None and not start <= time <= end:
+            if not v4 and category is None and time is not None and not start <= time <= end:
                 category, rule = 'not-of-this-window', 'outside-studio-window'
-            if category is None and identity in null_window:
+            if not v4 and category is None and identity in null_window:
                 category, rule = 'other-actor', 'changed-in-null-window'
                 control_items += 1
-            if category is None and marker is None:
+            if not v4 and category is None and marker is None:
                 # A filter may not cover a scope location (refused above) or a marker item (skipped here).
                 for entry_filter in filters:
                     if (entry_filter['channel'] == channel and entry_filter.get('entry', 'any') in ('any', entry)
                             and re.fullmatch(entry_filter['pattern'], shown, re.IGNORECASE)):
                         category, rule = 'other-actor', 'filter:' + entry_filter['pattern']
                         break
-            if category is None and marker is None and channel == 'file' and any(
+            if not v4 and category is None and marker is None and channel == 'file' and any(
                     under(path, tree) and not under(deployment, tree) for tree in git_trees):
                 # Studio has no repository code; another repository's working tree is written by developer tools.
                 category, rule = 'other-actor', 'other-git-working-tree'
@@ -1603,7 +1880,9 @@ def diff_classify(run_directory, rules=None, extra_redactions=None, surfaces=Non
                        for p in processes),
     }
     complete = all(metas[label]['complete'] and metas[label]['header'].get('label') == label for label in SNAPSHOT_LABELS)
-    unsafe, unresolved = counts.get('out-of-declaration', 0) > 0, counts.get('unclassified', 0) > 0
+    process_unsafe, process_blocked, manifest_inputs = process_manifest_verdict(run, context) if v4 else (False, False, {})
+    unsafe = counts.get('out-of-declaration', 0) > 0 or process_unsafe
+    unresolved = counts.get('unclassified', 0) > 0 or process_blocked
     proven = complete and all(seen.values())
     notes = []
     if context['nullWindow']['seconds'] < window['seconds']:
@@ -1626,11 +1905,14 @@ def diff_classify(run_directory, rules=None, extra_redactions=None, surfaces=Non
                         'source': 'observation-context.json', 'channel': 'process',
                         'location': ', '.join(sorted({str(p.get('image', '')) for p in processes})) or controls['process']})
     inputs = {name: file_digest(run / name) for name in ['observation-context.json'] + [f'snapshot-{label}.jsonl.gz' for label in SNAPSHOT_LABELS]}
-    return {'schemaVersion': 2, 'method': 'MR8 before/after snapshots; candidates per the UI-automation procedure v3.3',
+    inputs.update(manifest_inputs)
+    if v4 and approval_source is not None:
+        inputs['approvals.json'] = digest(canonical(approval_source))
+    return {**({'contract': 'v4'} if v4 else {}), 'schemaVersion': 2, 'method': 'MR8 before/after snapshots; attribution first' if v4 else 'MR8 before/after snapshots; candidates per the UI-automation procedure v3.3',
             'candidateDefinition': CANDIDATE_DEFINITION,
             'runStatus': 'unsafe_effect' if unsafe else 'blocked' if not proven or unresolved else 'completed',
             'reason': 'undeclared-app-effect' if unsafe else 'snapshot-incomplete' if not complete else 'instrument-not-proven'
-            if not proven else 'unclassified-candidate' if unresolved else '',
+            if not proven else 'process-monitor-or-manifest-not-proven' if process_blocked else 'unclassified-candidate' if unresolved else '',
             'g1Eligible': proven and not unsafe and not unresolved,
             'positiveControls': seen, 'classificationCounts': dict(sorted(counts.items())),
             'changeCounts': {'A->B': len(background), 'B->C': len(candidates) + unattributed['count'],
@@ -1638,7 +1920,7 @@ def diff_classify(run_directory, rules=None, extra_redactions=None, surfaces=Non
             'unattributed': {'count': unattributed['count'], 'byChannel': dict(sorted(unattributed['byChannel'].items())),
                              'list': None, 'note': 'not candidates: outside the observation scope, no harness marker, no owned '
                                                    'process; the list stays local (A4)'},
-            'controlWindow': {'rule': 'changed-in-null-window', 'aToBSeconds': context['nullWindow']['seconds'],
+            'controlWindow': {'rule': 'reference-only' if v4 else 'changed-in-null-window', 'aToBSeconds': context['nullWindow']['seconds'],
                               'appWindowSeconds': window['seconds'], 'shorterThanAppWindow': context['nullWindow']['seconds'] < window['seconds'],
                               'aToBChanges': len(background), 'classifiedByRule': control_items},
             'observationScope': scope_table,
@@ -1691,7 +1973,7 @@ def main():
         issues = preflight(args.run_directory, trace=args.trace)
         for issue in issues:
             print('FAIL: ' + issue)
-        print('Preflight BLOCKED; do not start the observed run.' if issues else 'Preflight PASS; the observed run may start on the author\'s go (HUM-01).')
+        print('Preflight BLOCKED; do not start the observed run.' if issues else 'Preflight PASS; the observed run may start on the desktop-go approval.')
         if args.trace:
             print('Export with tracerpt -rts -export schema.man; classify with --schema schema.man for evidenced payload recovery.')
         if issues:

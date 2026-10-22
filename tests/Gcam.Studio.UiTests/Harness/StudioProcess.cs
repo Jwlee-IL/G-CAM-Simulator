@@ -20,7 +20,11 @@ public sealed class StudioProcess : IDisposable
     public ProcessLedger Ledger => _owned.Ledger;
     public IReadOnlyList<string> MonitorErrors => _owned.MonitorErrors;
     public DesktopLease.State LeaseState => _owned.LeaseState;
-    public static StudioProcess Start(string runId) => new(OwnedStudioProcess.Start(runId));
+    public OwnedStudioProcess.PreflightResult Preflight => _owned.Preflight;
+    public ActionPolicy Policy => _owned.Policy;
+    public void RequireInputSafe() => _owned.RequireInputSafe();
+    public static StudioProcess Start(string runId, string scenario = "scenario", IReadOnlyList<string>? declaredWrites = null)
+        => new(OwnedStudioProcess.Start(runId, scenario: scenario, declaredWrites: declaredWrites));
     public AutomationElement MainWindow(TimeSpan timeout) => _owned.MainWindow(timeout);
     public void Dispose() => _owned.Dispose();
 }
