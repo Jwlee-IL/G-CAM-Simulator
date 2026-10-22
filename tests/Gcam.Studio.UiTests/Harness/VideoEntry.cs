@@ -1,6 +1,7 @@
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using Gcam.Studio.UiTests.Harness.Isolation;
+using Gcam.Studio.UiTests.Harness.Video;
 
 namespace Gcam.Studio.UiTests.Harness;
 
@@ -10,6 +11,14 @@ public sealed record VideoEntry(string RunId, DateTimeOffset PassedAtUtc, string
     long Duration100ns, int WidthPx, int HeightPx, int Frames, int CapturedFrames, int DroppedSlots,
     int MaskedFrames, int PrivacySuppressedFrames, VideoEntry.MaskRange[] MaskRanges, int NominalFps = 10)
 {
+    // Omitted when absent, so re-publishing the index keeps old-contract entries in their original shape.
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public VideoEvidence? Evidence { get; init; }
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public VideoCheckResult? Check { get; init; }
+    /// <summary>"v4" for an entry carrying a machine check; null for a metadata-only entry of the old contract, which is
+    /// read and replayed as before (never re-judged as a v4 pass or failure).</summary>
+    [System.Text.Json.Serialization.JsonIgnore] public string? Contract => Check?.Contract;
     public sealed record FileRecord(string Path, string Sha256, long Bytes);
     public sealed record MaskRange(int FirstFrame, int LastFrame, string[] Reasons, int[][] RectsPx)
     {
