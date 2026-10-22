@@ -60,8 +60,18 @@ records none. **Desktop session 2026-10-22** on `061f14a` (charter approved on t
 set): G1 observed run `gcam-probe-20261022-01` completed; G3 pilot passed (broken verdict failed at its assertion); the full
 desktop set 37 / 38 with every video check passed, one transient UI Automation failure (no AutomationIds exposed in that
 launch) passed on its rerun, and one headless test that assumed no desktop opt-in, fixed in Codex turn E (environment
-injected; isolation and deployment fingerprints unchanged, so the G1 basis holds). Recorded in VV.Studio.History. Next: the
-STR evidence annex (frame export turn, M4 desktop collection on the merged commit, the new software-set edition).
+injected; isolation and deployment fingerprints unchanged, so the G1 basis holds). Recorded in VV.Studio.History. **Codex turn F**
+(2026-10-22, headless): the frame export (`VideoFrameExport`, reusing the video checker's decoder; first visible step, up
+to three steps nearest equally spaced media times, terminal step; the last visible decoded sample in each cue outside
+privacy intervals; at most 960 px wide, JPEG quality 70, at most 160 KiB each; recorder masks re-applied; manifest written
+last; opt-in entry `GCAM_STR_FRAME_EXPORT`) and the generator (`software_set.py generate --milestone`, default M3; the annex
+"UI automation evidence" in STR Part A from `samples/testing/records/<Mn>/frames/`, with every refusal of S2 / S3 and
+checks over HTML, Word and PDF). The run record's video status now carries the recording canvas. Correction: some
+scenarios log only their window-ready step, so a case's captions may repeat one real step at separate media times; no
+caption is invented. UiTests 244 / 41, solution 1,316 / 63, Python 284 (one opt-in skip), replays unchanged, catalog 252
+units. Codex's workspace ran out of credits as the turn ended (report complete); further implementer turns run as
+substitute Claude subagents until it is refilled. Next: merge, the M4 collection with the desktop profile on the merged
+commit (author's go), the frame export over its videos, the new software-set edition.
 
 ## Why (2026-10-21)
 

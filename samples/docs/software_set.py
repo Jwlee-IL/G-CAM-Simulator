@@ -24,13 +24,13 @@ def git(*args):
     return result.stdout.decode('utf-8').strip()
 
 
-def history(documents):
+def history(documents, milestone="M3"):
     cache, result = {}, {}
     for key, blocks in documents.items():
         rows = []
         for path in sorted({b['source'] for b in blocks}):
             # Catalog narrative is the archived M3 input, not today's growing catalog.
-            path = 'samples/testing/records/M3/catalog.md' if path == 'docs/VV.Tests.md' else path
+            path = f'samples/testing/records/{milestone}/catalog.md' if path == 'docs/VV.Tests.md' else path
             if path not in cache:
                 logs = git('log', '--format=%h %cs', '--', path).splitlines()
                 require(logs, 'history: source has no commits: ' + path)
@@ -56,10 +56,14 @@ def write(path, data):
 
 def index(meta, counts, out):
     import os
+    milestone = meta.get("milestone", "M3")
+    totals = meta["totals"]
+    subject_line = (milestone + " selected test subject: `" + meta["testSubject"] + "` (" +
+                    f"{totals.get('passed', 0):,} passed, {totals.get('failed', 0):,} failed, {totals.get('not_executed', 0):,} not executed).")
     lines = ['# GCAM software demonstration set', '', ('**DRAFT**' if meta['draft'] else 'Final edition'), '', BANNER, '',
              'Edition: `' + meta['edition'] + '`. Source tree: ' + meta['treeStatus'] + '.', '',
              'Documentation source commit: `' + meta['sourceCommit'] + '`. Exact inputs are hashed in `generation-record.json`.',
-             'M3 selected test subject: `' + meta['testSubject'] + '` (1,534 passed, 1 failed, 53 not executed).',
+             subject_line,
              'Manual deployment fingerprint: `' + meta['manual']['deploymentSha256'] + '`.', '',
              'Approval: not applicable (demonstration). PDF page counts below do not imply Word pagination.', '',
              '| ID | Title | Revision | Date | PDF pages | Word / PDF |', '|---|---|---|---|---:|---|']
@@ -75,7 +79,7 @@ def index(meta, counts, out):
               'The manual keeps its original edition, cover and page furniture; the demonstration designation applies '
               'through this index. No cover was added and no manual was re-rendered.', '',
               'The set preserves the existing documentation baseline, including historical failures and pending checks. '
-              'The STR History annex is dated evidence and is never added to selected M3 totals.', '',
+              'The STR History annex is dated evidence and is never added to selected ' + milestone + ' totals.', '',
               'Privacy: 11 local filesystem paths in the History source are replaced with “[local path omitted]”. '
               'The source files are unchanged; original source hashes and redaction counts are retained.', '',
               '## Unchanged companion hashes', '']
@@ -97,7 +101,7 @@ def edition_files():
     return {f'GCAM-SW-{key}.{extension}' for key in TITLES for extension in ('html', 'docx', 'pdf')} | {'INDEX.md'}
 
 
-def generate(out, edition_id, draft=False, date=None):
+def generate(out, edition_id, draft=False, date=None, milestone="M3"):
     # Capture the source state before creating any output, including an edition inside the repository.
     dirty_files = git('status', '--porcelain', '--untracked-files=all').splitlines()
     identity = generation_identity(edition_id, draft, git('rev-parse', 'HEAD'), dirty_files)
@@ -108,8 +112,8 @@ def generate(out, edition_id, draft=False, date=None):
             'generate: output must be empty or an owned software-set edition')
     out.mkdir(parents=True, exist_ok=True)
     write(record_path, canonical({'schema': 'gcam.software-set', 'schemaVersion': 2, 'state': 'incomplete', 'metadata': identity}))
-    documents, provenance, paths = assemble()
-    meta = dict(provenance, **identity, date=date or edition_id.rsplit('-', 1)[0], history=history(documents))
+    documents, provenance, paths = assemble(milestone)
+    meta = dict(provenance, **identity, date=date or edition_id.rsplit('-', 1)[0], history=history(documents, milestone))
     require(re.fullmatch(r'\d{4}-\d{2}-\d{2}', meta['date']), 'generate: invalid date')
     inputs = semantic_inputs(paths)
     browser = Edge()
@@ -126,7 +130,9 @@ def generate(out, edition_id, draft=False, date=None):
         write(out / (stem + '.html'), page)
         write(out / (stem + '.docx'), word)
         browser.print_pdf(out / (stem + '.html'), out / (stem + '.pdf'))
-        counts[key] = EdgePdf((out / (stem + '.pdf')).read_bytes()).check(BANNER, stem)
+        pdf = EdgePdf((out / (stem + '.pdf')).read_bytes())
+        counts[key] = pdf.check(BANNER, stem)
+        pdf.check_evidence(doc)
         print(stem + ': ' + str(counts[key]) + ' PDF pages; HTML/DOCX coverage passed', flush=True)
     write(out / 'INDEX.md', index(meta, counts, out))
     outputs = {p.relative_to(out).as_posix(): sha(p.read_bytes()) for p in sorted(out.rglob('*'))
@@ -136,7 +142,7 @@ def generate(out, edition_id, draft=False, date=None):
               'outputs': outputs, 'pdfPages': counts, 'edgeVersion': version,
               'printSettings': {'paper': 'A4', 'marginMm': 20, 'defaultHeaders': False, 'headless': 'new'},
               'pdfReader': 'traditional-xref / direct Flate / ToUnicode, Edge output only',
-              'verification': 'block/cell/code coverage; structural PDF and cover text; selected M3 outcomes',
+              'verification': 'block/cell/code coverage; structural PDF and cover text; selected ' + milestone + ' outcomes',
               'dirtyFiles': dirty_files}
     privacy(canonical(record).decode())
     write(out / 'generation-record.json', canonical(record))
@@ -162,7 +168,7 @@ def check(edition):
     for path, digest in record['outputs'].items():
         target = (edition / path).resolve()
         require(target.is_relative_to(edition) and sha(target.read_bytes()) == digest, 'check: output hash differs: ' + path)
-    documents, provenance, paths = assemble()
+    documents, provenance, paths = assemble(meta.get("milestone", "M3"))
     require(record['inputs'] == semantic_inputs(paths), 'stale edition: input membership differs')
     for key, value in provenance.items():
         require(record['metadata'][key] == value, 'check: provenance differs: ' + key)
@@ -172,10 +178,12 @@ def check(edition):
         stem = 'GCAM-SW-' + key
         check_html((edition / (stem + '.html')).read_text(encoding='utf-8'), doc)
         check_docx((edition / (stem + '.docx')).read_bytes(), doc)
-        count = EdgePdf((edition / (stem + '.pdf')).read_bytes()).check(BANNER, stem)
+        pdf = EdgePdf((edition / (stem + '.pdf')).read_bytes())
+        count = pdf.check(BANNER, stem)
+        pdf.check_evidence(doc)
         require(count == record['pdfPages'][key], 'check: PDF count differs')
         verify_furniture(edition, stem, meta)
-    print('software set: 4 documents checked; M3 1534 passed / 1 failed / 53 not executed; 239 catalog units', flush=True)
+    print('software set: 4 documents checked; ' + meta.get('milestone', 'M3') + '; ' + str(provenance['totals']) + '; ' + str(provenance['unitCount']) + ' catalog units', flush=True)
     return record
 
 
@@ -280,13 +288,13 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     subs = parser.add_subparsers(dest='action', required=True)
     gen = subs.add_parser('generate'); gen.add_argument('--out', type=Path, required=True)
-    gen.add_argument('--edition-id', required=True); gen.add_argument('--draft', action='store_true'); gen.add_argument('--date')
+    gen.add_argument('--milestone', default='M3'); gen.add_argument('--edition-id', required=True); gen.add_argument('--draft', action='store_true'); gen.add_argument('--date')
     chk = subs.add_parser('check'); chk.add_argument('--edition', type=Path, required=True)
     rev = subs.add_parser('review'); rev.add_argument('--edition', type=Path, required=True); rev.add_argument('--out', type=Path, required=True)
     args = parser.parse_args()
     try:
         if args.action == 'generate':
-            generate(args.out, args.edition_id, args.draft, args.date)
+            generate(args.out, args.edition_id, args.draft, args.date, args.milestone)
         elif args.action == 'check':
             check(args.edition)
         else:

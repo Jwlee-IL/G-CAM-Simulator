@@ -38,13 +38,15 @@ def edge_path():
 
 
 class Edge:
-    def __init__(self, scratch=None):
+    def __init__(self, scratch=None, executable=None):
+        scratch = scratch or os.environ.get('GCAM_EDGE_SCRATCH')
+        executable = executable or os.environ.get('GCAM_EDGE_EXECUTABLE')
         self.scratch = Path(scratch) if scratch else Path(tempfile.gettempdir()) / 'gcam-todo53' / ('browser-' + uuid.uuid4().hex)
         allowed = Path(tempfile.gettempdir()).resolve()
         require(self.scratch.resolve().is_relative_to(allowed) and
                 self.scratch.resolve().relative_to(allowed).parts[0].startswith('gcam-'), 'edge: scratch must be TEMP/gcam-*')
         self.scratch.mkdir(parents=True, exist_ok=True)
-        self.exe = edge_path()
+        self.exe = Path(executable) if executable is not None else edge_path()
         self.profile = self.scratch / 'profile'
         self.jobs = 0
 
@@ -68,19 +70,16 @@ class Edge:
         return stdout.read_text(encoding='utf-8', errors='replace')
 
     def version(self):
-        # VS_FIXEDFILEINFO from the allowed Edge executable: no registry, shell or GUI lookup.
-        data = self.exe.read_bytes()
-        versions = []
-        marker = 'VS_VERSION_INFO\0'.encode('utf-16-le')
-        for match in re.finditer(re.escape(marker), data):
-            if match.start() < 6:
-                continue
-            _, size, kind = struct.unpack_from('<3H', data, match.start() - 6)
-            fixed = (match.end() + 3) & ~3
-            signature, structure, _, _, high, low = struct.unpack_from('<6I', data, fixed)
-            if size == 52 and kind == 0 and signature == 0xFEEF04BD and structure == 0x00010000:
-                versions.append(f'{high >> 16}.{high & 65535}.{low >> 16}.{low & 65535}')
-        require(len(set(versions)) == 1, 'edge: absent/ambiguous executable version metadata')
+        # Query the browser we actually execute, without reading Program Files metadata or the registry.
+        page = self.scratch / 'version.html'
+        page.write_text("""<!doctype html><meta charset="utf-8"><script>
+        navigator.userAgentData.getHighEntropyValues(['fullVersionList']).then(data => {
+          const edge = data.fullVersionList.find(item => item.brand === 'Microsoft Edge');
+          if (edge) document.documentElement.setAttribute('data-edge-version', edge.version);
+        });</script>""", encoding='utf-8')
+        output = self.run(['--virtual-time-budget=1000', '--dump-dom', page.resolve().as_uri()])
+        versions = re.findall(r'data-edge-version="(\d+\.\d+\.\d+\.\d+)"', output)
+        require(len(versions) == 1, 'edge: absent/ambiguous runtime version')
         return versions[0]
 
     def print_pdf(self, page, destination):
@@ -198,8 +197,14 @@ class EdgePdf:
                     stream = data[start + len(data[start:end]) - len(data[start:end].lstrip()) + marker.end():]
                     stream = stream[:int(length[1])]
                     filters = re.findall(rb'/Filter\s*/(\w+)', head)
-                    require(filters in ([], [b'FlateDecode']), 'pdf: unsupported filter')
-                    if filters:
+                    require(filters in ([], [b'FlateDecode'], [b'DCTDecode']), 'pdf: unsupported filter')
+                    require(b'/Filter' not in head or filters, 'pdf: unsupported filter form')
+                    if filters == [b'DCTDecode']:
+                        from ui_annex import jpeg_size
+                        require(re.search(rb'/Subtype\s*/Image\b', head), 'pdf: DCT outside image')
+                        width, height = jpeg_size(stream)
+                        require(re.search(rb'/Width\s+' + str(width).encode() + rb'\b', head) and re.search(rb'/Height\s+' + str(height).encode() + rb'\b', head), 'pdf: JPEG canvas differs')
+                    if filters == [b'FlateDecode']:
                         try:
                             stream = zlib.decompress(stream)
                         except zlib.error as error:
@@ -303,6 +308,37 @@ class EdgePdf:
 
     def texts(self):
         return [self.page_text(head) for _, head in self.pages]
+
+    def check_evidence(self, doc):
+        """Exact JPEG streams and every annex caption, including repeated placements of a deduplicated image."""
+        from collections import Counter
+        from software_model import plain
+        frames = [b for b in doc if b['kind'] == 'image']
+        if not any(b['source'].endswith('/frames/manifest.json') for b in doc):
+            return
+        compact = lambda value: re.sub(r'\s+', '', value)
+        text = compact(' '.join(self.texts()))
+        for block in doc:
+            if block['source'].endswith('/frames/manifest.json'):
+                caption = block['caption'] if block['kind'] == 'image' else plain(block['runs']) if 'runs' in block else ''
+                require(compact(caption) in text, 'pdf: evidence caption/case missing')
+        placements = Counter()
+        for _, head in self.pages:
+            resource = re.search(rb'/Resources (\d+) 0 R', head)
+            resources = self.objects[int(resource[1])][0] if resource else head
+            references = {name: int(ref) for name, ref in re.findall(rb'/(\w+) (\d+) 0 R', resources)}
+            contents = re.search(rb'/Contents\s*(?:(\d+) 0 R|\[([^]]*)\])', head)
+            refs = [int(contents[1])] if contents[1] else [int(n) for n in re.findall(rb'(\d+) 0 R', contents[2])]
+            content = b'\n'.join(self.objects[n][1] for n in refs)
+            for name in re.findall(rb'/(\w+)\s+Do\b', content):
+                reference = references.get(name)
+                if reference is None:
+                    continue
+                image_head, data = self.objects[reference]
+                if re.search(rb'/Subtype\s*/Image\b', image_head) and b'/DCTDecode' in image_head:
+                    placements[sha(data)] += 1
+        expected = Counter(b['sha256'] for b in frames)
+        require(all(placements[digest] == count for digest, count in expected.items()), 'pdf: evidence JPEG hash/count differs')
 
     def check(self, banner, document_id):
         texts = self.texts()

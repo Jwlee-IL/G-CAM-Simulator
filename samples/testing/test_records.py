@@ -452,6 +452,7 @@ def finish_record(bundle, folder, family, args, env, before_source, before_subje
                                'rawSha256Retained': True}, 'binaryVerification': 'before-and-after collection; hash-only on replay'}
     if desktop_evidence is not None:
         record['desktopEvidence'] = desktop_evidence
+        record['desktopAllCaseIds'] = sorted(c['id'] for c in cases if c['selector'] in desktop_selectors())
         record['desktopCaseIds'] = sorted(c['id'] for c in cases if c['selector'] in desktop_selectors() and c['verdict'] != 'not_executed')
         record['productionStatus'] = 'refused' if production_refusal else 'eligible'
         record['productionRefusal'] = production_refusal

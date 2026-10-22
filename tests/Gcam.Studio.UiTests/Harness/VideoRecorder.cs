@@ -310,12 +310,13 @@ public sealed class VideoRecorder
     /// <c>failed-test-retained</c>, <c>video-check-failed</c>, <c>encoded</c>, <c>unavailable</c>).</summary>
     public JsonElement StatusRecord() => JsonSerializer.SerializeToElement(new { contract = "v4", runId = _run, testId = _id,
         status = _entry?.Check?.Passed == true ? "passed" : "failed", videoSha256 = _entry?.Video.Sha256,
+        canvas = new { widthPx = _width, heightPx = _height },
         check = _entry?.Check, evidence = _entry?.Evidence }, VideoEntry.Json);
     private void SaveStatus(string status)
     {
         _status = status;
         File.WriteAllBytes(Path.Combine(_folder, "video-status.json"),
         JsonSerializer.SerializeToUtf8Bytes(new { contract = "v4", status, error = _error, testId = _id, runId = _run,
-            videoSha256 = _entry?.Check?.VideoSha256, check = _entry?.Check, evidence = _entry?.Evidence }, VideoEntry.Json));
+            videoSha256 = _entry?.Check?.VideoSha256, canvas = new { widthPx = _width, heightPx = _height }, check = _entry?.Check, evidence = _entry?.Evidence }, VideoEntry.Json));
     }
 }
