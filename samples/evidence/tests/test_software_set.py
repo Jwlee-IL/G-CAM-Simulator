@@ -274,6 +274,12 @@ class SoftwareSetTests(unittest.TestCase):
         css = (ROOT / 'samples/docs/software.css').read_text(encoding='utf-8')
         self.assertRegex(css, r'figure img \{[^}]*width: 100%')
         self.assertIn('max-height: 120mm', css)
+        # Print never clips a long unbreakable token (case ID, SHA-256) in any text block, while the result tables'
+        # numeric columns keep their nowrap override.
+        wrapping = {s.strip() for selectors, body in re.findall(r'([^{}]+)\{([^}]*)\}', re.sub(r'/\*.*?\*/', '', css, flags=re.S))
+                    if re.search(r'overflow-wrap:\s*anywhere', body) for s in selectors.split(',')}
+        self.assertLessEqual({'h1', 'h2', 'h3', 'h4', 'p', 'li', 'figcaption', 'th', 'td', 'code', 'pre'}, wrapping)
+        self.assertRegex(css, r'\.result-table td:not\(:first-child\) \{\s*white-space: nowrap; overflow-wrap: normal;')
         with self.assertRaisesRegex(ValueError, 'diagram'):
             formats.check_html(page.replace('data-diagram=', 'data-missing='), doc)
 

@@ -14,6 +14,9 @@ h1, h2, h3, h4 { break-after: avoid; margin: 14pt 0 8pt; }
 .block.heading { break-after: avoid; }
 .block.heading:has(h1) { break-before: page; }
 p { margin: 5pt 0 8pt; }
+/* Long unbreakable tokens (case IDs, hashes) wrap at the margin instead of being clipped in print;
+   ordinary word wrapping is unchanged. Table cells and code carry their own rule below. */
+h1, h2, h3, h4, p, li, figcaption, .eyebrow, .source-label { overflow-wrap: anywhere; }
 a { color: #235c78; text-decoration: none; }
 .cover { break-after: page; padding-top: 20mm; }
 .eyebrow { text-transform: uppercase; letter-spacing: 2px; color: #476074; }

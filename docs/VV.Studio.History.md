@@ -529,3 +529,6 @@ recorder's own launch / window-transition steps, which are not steps the run exe
 headless) made the export pick frames only on non-private executed steps and check each row against the annex's rules; the
 re-export from the same checked videos replaced the committed frames (182 JPEGs: the `borderless-caption` case keeps 4, one
 report-export frame moved from the launch step to the first action; every other frame byte-identical).
+The generation after that was refused by its own PDF check (`pdf: evidence caption/case missing`): long case IDs and
+hashes were clipped at the right margin. Turn I made the print stylesheet wrap long tokens in every text block and added a
+check that every long token of the model appears in each PDF at least as often.

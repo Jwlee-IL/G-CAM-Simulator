@@ -84,7 +84,10 @@ production eligible), committed with its frames as `6516cb7`. **Turn H** (substi
 edition generation refused two frames on recorder-owned steps, so the export now picks frames only on non-private executed
 steps and checks every row against the annex's rules before writing; turn H2 replaced the M3-only results-report pin by one
 on the newest archived milestone (older milestones never consult docs). UiTests 257 / 41, solution 1,329 / 63, Python 288
-(one opt-in skip); frames re-exported (182). Next: the new software-set edition from M4, the author's look.
+(one opt-in skip); frames re-exported (182). **Turn I**: the next generation refused `pdf: evidence caption/case missing`
+— long unbroken case IDs and hashes were clipped at the PDF margin; the print stylesheet now wraps them in every text block,
+and every generate / check compares each long token's occurrences in the PDF text with the model (Python 289). Next: the
+new software-set edition from M4, the author's look.
 
 ## Why (2026-10-21)
 

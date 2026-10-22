@@ -190,6 +190,20 @@ class SoftwareEvidenceTests(ScratchTestCase):
         with self.assertRaisesRegex(ValueError, 'caption/case missing'):
             EdgePdf(pdf_fixture(text='omitted', jpeg_image=jpeg())).check_evidence(blocks)
 
+    def test_pdf_refuses_a_long_token_clipped_at_the_margin(self):
+        from test_software_set import pdf_fixture, marked
+        from edge_output import EdgePdf
+        case = 'Gcam.Studio.UiTests::Gcam.Studio.UiTests.CompareScenarioTests.PhysicalPrefix_KeepTheirPopulationLabels'
+        blocks = marked('# Fixture\n\n### ' + case + '\n\nRun: gcam-run; checked video SHA-256: ' + 'a' * 64 + '.\n\n'
+                        'Repeated: ' + case + '\n')
+        whole = ' '.join(t for b in blocks for _, t, _ in formats.segments(b))
+        EdgePdf(pdf_fixture(text=whole)).check_tokens(blocks)
+        clipped = whole.replace(case + ' Run:', case[:-12] + ' Run:', 1)  # the heading stops at the right margin
+        with self.assertRaisesRegex(ValueError, 'pdf: long token clipped or missing'):
+            EdgePdf(pdf_fixture(text=clipped)).check_tokens(blocks)  # refused although the token occurs once elsewhere
+        with self.assertRaisesRegex(ValueError, 'pdf: long token clipped or missing'):
+            EdgePdf(pdf_fixture(text=whole.replace('a' * 64, 'a' * 57))).check_tokens(blocks)
+
     def test_m4_assembly_uses_its_selected_subject_catalog_and_evidence_in_part_a(self):
         import shutil
         tr = model.testing_module()
