@@ -133,6 +133,7 @@ def generate(out, edition_id, draft=False, date=None, milestone="M3"):
         pdf = EdgePdf((out / (stem + '.pdf')).read_bytes())
         counts[key] = pdf.check(BANNER, stem)
         pdf.check_evidence(doc)
+        pdf.check_tokens(doc)
         print(stem + ': ' + str(counts[key]) + ' PDF pages; HTML/DOCX coverage passed', flush=True)
     write(out / 'INDEX.md', index(meta, counts, out))
     outputs = {p.relative_to(out).as_posix(): sha(p.read_bytes()) for p in sorted(out.rglob('*'))
@@ -181,6 +182,7 @@ def check(edition):
         pdf = EdgePdf((edition / (stem + '.pdf')).read_bytes())
         count = pdf.check(BANNER, stem)
         pdf.check_evidence(doc)
+        pdf.check_tokens(doc)
         require(count == record['pdfPages'][key], 'check: PDF count differs')
         verify_furniture(edition, stem, meta)
     print('software set: 4 documents checked; ' + meta.get('milestone', 'M3') + '; ' + str(provenance['totals']) + '; ' + str(provenance['unitCount']) + ' catalog units', flush=True)
@@ -210,7 +212,7 @@ def review(edition, out):
     edition, out = edition.resolve(), out.resolve(); out.mkdir(parents=True, exist_ok=True)
     require(out.is_relative_to(Path(__import__('tempfile').gettempdir()).resolve()), 'review: use TEMP/gcam-* output')
     record = check(edition)
-    docs, _, _ = assemble()
+    docs, _, _ = assemble(record['metadata'].get('milestone', 'M3'))
     browser = Edge()
     items = []
     for key, blocks in docs.items():

@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using Gcam.Studio.UiTests.Harness;
+using Gcam.Studio.UiTests.Harness.Video;
 
 namespace Gcam.Studio.UiTests;
 
@@ -195,5 +196,101 @@ public sealed class VideoRecorderTests : IDisposable
         Assert.Contains(late, File.ReadAllText(Path.Combine(scratch, "video-status.json")));
         recorder.Complete(false); // the exact re-check on the evidence with the late steps agrees
         Assert.Contains("step-coverage", recorder.Check!.FailedCriteria); Assert.Contains(late, recorder.Check.UnmappedStepIds);
+    }
+
+    /// <summary>A capture script: the first <see cref="ForeignAtStart"/> captures are wholly covered by foreign windows, the
+    /// next <see cref="BlackRemaining"/> ones (or all while <see cref="BlackForever"/>) fail their survey; the rest show the
+    /// owned window. The recorder decides transitions from these capture records only, never from pixels.</summary>
+    private sealed class Script { public int ForeignAtStart, BlackRemaining, Painted, Unpainted; public volatile bool BlackForever; }
+    private static VideoRecorder Scripted(string root, Script script) => new(root, "case", "run", 64, 48, privacy =>
+    {
+        var bytes = new byte[64 * 48 * 4];
+        if (Interlocked.Decrement(ref script.ForeignAtStart) >= 0)
+        {
+            Interlocked.Increment(ref script.Unpainted);
+            return new(bytes, [[0, 0, 40, 48], [30, 0, 34, 48]], ["foreign-window"], false);
+        }
+        if (script.BlackForever || Interlocked.Decrement(ref script.BlackRemaining) >= 0)
+        {
+            Interlocked.Increment(ref script.Unpainted);
+            return new(bytes, [[0, 0, 64, 48]], ["survey-failed"], false);
+        }
+        for (int y = 10; y < 35; y++) for (int x = 10; x < 35; x++) bytes[(y * 64 + x) * 4 + 1] = 220;
+        Interlocked.Increment(ref script.Painted);
+        return new(bytes, [], [], privacy);
+    }, () => new RealSink(Path.Combine(root, "attempt.mp4")), new('a', 40), false, new('b', 64), new('c', 64));
+    private static void Until(Func<bool> condition) => Assert.True(SpinWait.SpinUntil(condition, 5000));
+
+    [MediaFoundationFact]
+    public void HarnessStateChangeAndClose_AreDeclaredTransitions_TheStateChangeEndedByThePaintedCapture()
+    {
+        using var scratch = ObservationFixtures.Scratch(); var script = new Script();
+        var recorder = Scripted(scratch, script);
+        try
+        {
+            recorder.RecordStep("start", "start");
+            Until(() => Volatile.Read(ref script.Painted) >= 3);
+            string maximise;
+            using (var change = recorder.BeginTransition("maximise"))
+            {
+                maximise = change.StepId;
+                Volatile.Write(ref script.BlackRemaining, 1); // the frame moves under one capture
+                Until(() => Volatile.Read(ref script.Unpainted) >= 1);
+            } // the window reports its new state: the next painted capture ends the transition
+            int painted = Volatile.Read(ref script.Painted);
+            Until(() => Volatile.Read(ref script.Painted) >= painted + 3);
+            recorder.RecordStep("assertion", "assertion");
+            Until(() => Volatile.Read(ref script.Painted) >= painted + 5);
+            int unpainted = Volatile.Read(ref script.Unpainted);
+            var close = recorder.BeginTransition("close"); // never reported: it ends with the recording
+            script.BlackForever = true;
+            Until(() => Volatile.Read(ref script.Unpainted) >= unpainted + 2);
+            Assert.NotNull(recorder.Stop());
+            var evidence = recorder.Entry!.Evidence!; var check = recorder.Check!;
+            Assert.Equal(new[] { "maximise", "close" }, evidence.TransitionIntervals!.Select(t => t.Reason));
+            Assert.Equal(new[] { maximise, close.StepId }, evidence.TransitionIntervals!.Select(t => t.StepIds.Single()));
+            Assert.Contains(evidence.Steps, s => s.Id == maximise && s.Text == "Window transition: maximise");
+            Assert.All(evidence.TransitionIntervals!, t => Assert.InRange(t.End100ns - t.Start100ns, VideoTimeline.Period100ns, VideoChecker.MaximumTransition100ns));
+            Assert.True(check.Passed, string.Join(", ", check.FailedCriteria) + ": " + ObservationFixtures.ExplainVideo(recorder.Mp4));
+            Assert.Equal(0, check.UndeclaredSingleColourShare); Assert.True(check.TransitionShare > 0);
+            Assert.Contains("transitionIntervals", File.ReadAllText(Path.Combine(scratch, "video-status.json")));
+        }
+        finally { recorder.Stop(); }
+    }
+
+    [MediaFoundationFact]
+    public void Launch_IsDeclaredUntilTheFirstPaintedCapture_WithTheRecordersOwnStep()
+    {
+        using var scratch = ObservationFixtures.Scratch(); var script = new Script { ForeignAtStart = 2 };
+        var recorder = Scripted(scratch, script);
+        try
+        {
+            Until(() => Volatile.Read(ref script.Painted) >= 4);
+            recorder.RecordStep("ready", "ready");
+            Until(() => Volatile.Read(ref script.Painted) >= 6);
+            Assert.NotNull(recorder.Stop());
+            var evidence = recorder.Entry!.Evidence!;
+            var launch = Assert.Single(evidence.TransitionIntervals!);
+            Assert.Equal(VideoRecorder.LaunchReason, launch.Reason);
+            // The two covered captures (one when the encoder dropped a slot; a late capture can leave a slot gap inside).
+            Assert.InRange(launch.End100ns - launch.Start100ns, VideoTimeline.Period100ns, VideoChecker.MaximumTransition100ns);
+            Assert.Contains(evidence.Steps, s => s.Id == launch.StepIds.Single() && s.Text.StartsWith("Launch transition", StringComparison.Ordinal));
+            Assert.True(recorder.Check!.Passed, string.Join(", ", recorder.Check.FailedCriteria) + ": " + ObservationFixtures.ExplainVideo(recorder.Mp4));
+            Assert.Equal(0, recorder.Check.UndeclaredSingleColourShare);
+        }
+        finally { recorder.Stop(); }
+    }
+
+    [Fact]
+    public void PaintedCapture_IsDecidedFromTheCaptureRecord_TheUnionOfMasksCoveringTheCanvas()
+    {
+        Assert.True(VideoRecorder.CoversCanvas([[0, 0, 40, 48], [30, 0, 34, 48]], 64, 48)); // two windows together
+        Assert.False(VideoRecorder.CoversCanvas([[0, 0, 40, 48], [41, 0, 23, 48]], 64, 48)); // one column of Studio shows
+        Assert.True(VideoRecorder.CoversCanvas([[-10, -10, 100, 100]], 64, 48));
+        Assert.False(VideoRecorder.CoversCanvas([], 64, 48));
+        var pixels = new byte[64 * 48 * 4];
+        Assert.True(VideoRecorder.Painted(new(pixels, [[0, 0, 32, 48]], ["foreign-window"], false), 64, 48)); // black pixels, still painted
+        Assert.False(VideoRecorder.Painted(new(pixels, [[0, 0, 64, 48]], ["survey-failed"], false), 64, 48));
+        Assert.False(VideoRecorder.Painted(new(pixels, [[0, 0, 64, 48]], ["privacy-pause"], true), 64, 48));
     }
 }

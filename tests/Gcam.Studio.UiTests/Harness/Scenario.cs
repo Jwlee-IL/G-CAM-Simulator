@@ -89,6 +89,7 @@ public static class Scenario
         using var pollingLog = PollingWait.Record(record.Diagnostic);
         StudioProcess? app = null;
         AutomationElement? window = null;
+        StudioWindow? ui = null;
         string result = "failed";
         bool bodyCompleted = false;
         VideoRecorder? video = null;
@@ -116,9 +117,12 @@ public static class Scenario
                 using var pointerScope = PointerBoundary.Enter(window!, app.Policy, app.RequireInputSafe,
                     Observation.OwnedProcessIdentity.From(app.Process), new IntPtr(window!.Current.NativeWindowHandle),
                     outcome => record.RecordPointerRelease(manifest, outcome));
-                var ui = new StudioWindow(window!, app.Policy, app.RequireInputSafe) { Log = record.Step };
+                ui = new StudioWindow(window!, app.Policy, app.RequireInputSafe)
+                    { Log = record.Step, Diagnostic = record.Diagnostic, Transition = record.WindowTransition };
                 ui.Normalise(WindowWidth, WindowHeight);
-                record.Set("window", window!.Current.BoundingRectangle.ToString());
+                // Normalise may have re-acquired the root (same window handle); diagnostics read the one it holds.
+                window = ui.Element;
+                record.Set("window", window.Current.BoundingRectangle.ToString());
                 Assert.Equal("Empty", ui.RunState);
                 record.Step("window ready, state Empty");
                 body(ui, record, app.Sandbox);
@@ -130,7 +134,7 @@ public static class Scenario
             failure = e;
             if (app?.Observation.HasFailure == true) record.AbortSteps();
             failure = Attempt(failure,
-                () => CaptureFailureBounded(app?.Observation, record, e, () => record.CaptureFailure(e, window)), issues, "blocked", app?.Observation);
+                () => CaptureFailureBounded(app?.Observation, record, e, () => record.CaptureFailure(e, ui?.Element ?? window)), issues, "blocked", app?.Observation);
         }
         finally
         {

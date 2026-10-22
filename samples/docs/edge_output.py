@@ -340,6 +340,16 @@ class EdgePdf:
         expected = Counter(b['sha256'] for b in frames)
         require(all(placements[digest] == count for digest, count in expected.items()), 'pdf: evidence JPEG hash/count differs')
 
+    def check_tokens(self, doc, minimum=30):
+        """Every long unbreakable token (case ID, hash) of the model's segments appears in the PDF text, whitespace removed,
+        at least as often as in the model: a token clipped at the margin is caught even when it also occurs elsewhere."""
+        from collections import Counter
+        from software_formats import segments
+        text = re.sub(r'\s+', '', ' '.join(self.texts()))
+        counts = Counter(t for block in doc for _, value, _ in segments(block) for t in value.split() if len(t) >= minimum)
+        for token, count in sorted(counts.items()):
+            require(text.count(token) >= count, 'pdf: long token clipped or missing: ' + token[:80])
+
     def check(self, banner, document_id):
         texts = self.texts()
         flatten = lambda s: re.sub(r'\s+', '', s)

@@ -239,6 +239,113 @@ public sealed class VideoCheckerTests
         Assert.True(decoded.EndOfStream, decoded.Error);
         Assert.All(centres, c => Assert.True(Math.Abs(c.R - 60) <= 8 && Math.Abs(c.G - 180) <= 8 && Math.Abs(c.B - 60) <= 8, $"decoded {c}"));
     }
+    /// <summary>A 4 s clip (40 samples at 10 fps) whose listed samples are black, with the given steps and transitions.</summary>
+    private static Clip Transitions(int[] black, VideoTimeline.Step[] steps, VideoEvidence.TransitionInterval[]? transitions,
+        VideoEvidence.PrivacyInterval[]? privacy = null)
+    {
+        var folder = ObservationFixtures.Scratch(); string mp4 = Path.Combine(folder, "clip.mp4"), vtt = Path.Combine(folder, "clip.vtt");
+        Encode(mp4, 64, 48, Enumerable.Range(0, 40).Select(n =>
+        {
+            byte[] pixels = new byte[64 * 48 * 4];
+            if (!black.Contains(n))
+                for (int y = 10; y < 35; y++) for (int x = 10; x < 35; x++) { int at = (y * 64 + x) * 4; pixels[at] = 40; pixels[at + 1] = 200; pixels[at + 2] = 240; }
+            return (n * VideoTimeline.Period100ns, pixels);
+        }));
+        var cues = VideoTimeline.Cues(steps, 40_000_000);
+        File.WriteAllText(vtt, VideoTimeline.Captions(cues));
+        var masks = (privacy ?? []).SelectMany(p => Enumerable.Range((int)(p.Start100ns / VideoTimeline.Period100ns),
+            (int)((p.End100ns - p.Start100ns) / VideoTimeline.Period100ns))).Select(n => new VideoEvidence.MaskSample(n,
+            n * VideoTimeline.Period100ns, (n + 1) * VideoTimeline.Period100ns, true, ["privacy-pause"], [[0, 0, 64, 48]])).ToArray();
+        return new(mp4, vtt, new(new(DateTimeOffset.UtcNow, 0, 40_000_000, TimeSpan.TicksPerSecond), steps, cues, privacy ?? [], masks)
+            { TransitionIntervals = transitions }, folder);
+    }
+    private static readonly VideoTimeline.Step[] StateChangeSteps =
+        [new(0, "start", "start"), new(10_000_000, "Window transition: maximise", "maximise"), new(35_000_000, "assertion", "assertion"), new(40_000_000, "terminal", "terminal")];
+
+    [MediaFoundationFact]
+    public void BlackSamplesInsideADeclaredStateChange_AreExcused_AndCountedAsTransitionShare()
+    {
+        // Two black samples (1.0-1.2 s) are 5 % of the clip, far over the 1 % rule unless the harness declared them.
+        using var declared = Transitions([10, 11], StateChangeSteps, [new(10_000_000, 12_000_000, "maximise", ["maximise"])]);
+        var check = VideoChecker.Check(declared.Mp4, declared.Vtt, declared.Evidence);
+        Assert.True(check.Passed, string.Join(", ", check.FailedCriteria) + ": " + ObservationFixtures.ExplainVideo(declared.Mp4));
+        Assert.Equal(0, check.UndeclaredSingleColourShare); Assert.Equal(0, check.LongestUndeclaredSingleColourSeconds);
+        Assert.Equal(0.05, check.TransitionShare!.Value, 6);
+        // The same samples outside every declared interval fail exactly as before: none declared, or one elsewhere.
+        var none = VideoChecker.Check(declared.Mp4, declared.Vtt, declared.Evidence with { TransitionIntervals = [] });
+        Assert.Equal(new[] { "single-colour-share" }, none.FailedCriteria); Assert.Equal(0.05, none.UndeclaredSingleColourShare, 6);
+        Assert.Equal(0, none.TransitionShare);
+        VideoTimeline.Step[] later = [.. StateChangeSteps.Where(s => s.Id != "maximise"), new(20_000_000, "Window transition: restore", "restore")];
+        using var elsewhere = Transitions([10, 11], later, [new(20_000_000, 22_000_000, "restore", ["restore"])]);
+        var outside = VideoChecker.Check(elsewhere.Mp4, elsewhere.Vtt, elsewhere.Evidence);
+        Assert.Equal(new[] { "single-colour-share" }, outside.FailedCriteria); Assert.Equal(0.05, outside.TransitionShare!.Value, 6);
+    }
+
+    [MediaFoundationFact]
+    public void LaunchAndCloseTransitions_AtTheClipEdges_Pass()
+    {
+        // Launch: black until the first painted capture; close: black after the harness closed the window, until the stop.
+        VideoTimeline.Step[] steps = [new(500_000, "Launch transition: owned window not yet painted", "launch"), new(5_000_000, "ready", "ready"),
+            new(38_000_000, "Window transition: close", "close")];
+        using var clip = Transitions([0, 1, 38, 39], steps,
+            [new(0, 2_000_000, VideoRecorder.LaunchReason, ["launch"]), new(38_000_000, 40_000_000, "close", ["close"])]);
+        var check = VideoChecker.Check(clip.Mp4, clip.Vtt, clip.Evidence);
+        Assert.True(check.Passed, string.Join(", ", check.FailedCriteria) + ": " + ObservationFixtures.ExplainVideo(clip.Mp4));
+        Assert.Equal(0.1, check.TransitionShare!.Value, 6);
+    }
+
+    [MediaFoundationFact]
+    public void TransitionLongerThanHalfASecond_FailsEvenThoughItExcusesItsSamples()
+    {
+        using var clip = Transitions([10, 11, 12, 13, 14, 15], StateChangeSteps, [new(10_000_000, 16_000_000, "maximise", ["maximise"])]);
+        var check = VideoChecker.Check(clip.Mp4, clip.Vtt, clip.Evidence);
+        Assert.False(check.Passed); Assert.Equal(new[] { "transition-length" }, check.FailedCriteria);
+        Assert.Equal(0, check.UndeclaredSingleColourShare);
+        // Exactly 0.5 s is the limit itself and passes.
+        using var limit = Transitions([10, 11, 12, 13, 14], StateChangeSteps, [new(10_000_000, 15_000_000, "maximise", ["maximise"])]);
+        Assert.True(VideoChecker.Check(limit.Mp4, limit.Vtt, limit.Evidence).Passed);
+    }
+
+    [MediaFoundationFact]
+    public void MalformedTransitions_AreRefused()
+    {
+        using var clip = Transitions([10, 11], StateChangeSteps, [new(10_000_000, 12_000_000, "maximise", ["maximise"])]);
+        var t = clip.Evidence.TransitionIntervals![0];
+        string[] Failed(VideoEvidence.TransitionInterval[] transitions)
+            => VideoChecker.Check(clip.Mp4, clip.Vtt, clip.Evidence with { TransitionIntervals = transitions }).FailedCriteria;
+        Assert.Contains("transition-step-identities", Failed([t with { StepIds = ["unknown"] }]));
+        Assert.Contains("transition-step-identities", Failed([t with { StepIds = ["assertion"] }])); // a step far from the interval cannot have begun it
+        Assert.Contains("transition-declaration", Failed([t with { Reason = " " }]));
+        Assert.Contains("transition-declaration", Failed([t with { Start100ns = 9_500_000 }])); // not sample-aligned
+        Assert.Contains("transition-declaration", Failed([t, t with { Start100ns = 11_000_000 }])); // overlapping
+        // A transition never overlaps a privacy interval: the recorder never marks a privacy sample as a transition.
+        VideoTimeline.Step[] steps = [new(0, "start", "start"), new(10_000_000, "Window transition: maximise", "maximise"),
+            new(15_000_000, "Private dialog step — picture suppressed", "private", true), new(35_000_000, "after", "after")];
+        using var both = Transitions([.. Enumerable.Range(10, 10)], steps.Where(s => !s.Privacy).ToArray(),
+            [new(10_000_000, 12_000_000, "maximise", ["maximise"])], [new(10_000_000, 20_000_000, "Synthetic privacy control", ["private"])]);
+        var overlap = VideoChecker.Check(both.Mp4, both.Vtt, both.Evidence with { Steps = steps });
+        Assert.Contains("transition-declaration", overlap.FailedCriteria);
+    }
+
+    [MediaFoundationFact]
+    public void OldEvidenceWithoutTransitions_KeepsItsVerdictAndItsShape()
+    {
+        using var good = Make();
+        Assert.Null(good.Evidence.TransitionIntervals);
+        var passed = VideoChecker.Check(good.Mp4, good.Vtt, good.Evidence);
+        Assert.True(passed.Passed); Assert.Null(passed.TransitionShare);
+        string evidenceJson = System.Text.Json.JsonSerializer.Serialize(good.Evidence, VideoEntry.Json);
+        string checkJson = System.Text.Json.JsonSerializer.Serialize(passed, VideoEntry.Json);
+        Assert.DoesNotContain("transition", evidenceJson, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("transition", checkJson, StringComparison.OrdinalIgnoreCase);
+        // An old record read back has no transitions and is judged as before: its black samples still fail.
+        using var black = Transitions([10, 11], StateChangeSteps, null);
+        var read = System.Text.Json.JsonSerializer.Deserialize<VideoEvidence>(
+            System.Text.Json.JsonSerializer.Serialize(black.Evidence, VideoEntry.Json), VideoEntry.Json)!;
+        Assert.Null(read.TransitionIntervals);
+        var failed = VideoChecker.Check(black.Mp4, black.Vtt, read);
+        Assert.Equal(new[] { "single-colour-share" }, failed.FailedCriteria); Assert.Null(failed.TransitionShare);
+    }
     [Fact]
     public void TerminalSteps_KeepStableIdsInPositiveTimedCue_WithoutOverlappingPreviousCue()
     {

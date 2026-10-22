@@ -274,6 +274,12 @@ class SoftwareSetTests(unittest.TestCase):
         css = (ROOT / 'samples/docs/software.css').read_text(encoding='utf-8')
         self.assertRegex(css, r'figure img \{[^}]*width: 100%')
         self.assertIn('max-height: 120mm', css)
+        # Print never clips a long unbreakable token (case ID, SHA-256) in any text block, while the result tables'
+        # numeric columns keep their nowrap override.
+        wrapping = {s.strip() for selectors, body in re.findall(r'([^{}]+)\{([^}]*)\}', re.sub(r'/\*.*?\*/', '', css, flags=re.S))
+                    if re.search(r'overflow-wrap:\s*anywhere', body) for s in selectors.split(',')}
+        self.assertLessEqual({'h1', 'h2', 'h3', 'h4', 'p', 'li', 'figcaption', 'th', 'td', 'code', 'pre'}, wrapping)
+        self.assertRegex(css, r'\.result-table td:not\(:first-child\) \{\s*white-space: nowrap; overflow-wrap: normal;')
         with self.assertRaisesRegex(ValueError, 'diagram'):
             formats.check_html(page.replace('data-diagram=', 'data-missing='), doc)
 
@@ -345,6 +351,34 @@ class SoftwareSetTests(unittest.TestCase):
         privacy(text)
         self.assertIn('samples/testing/records/M3/catalog.md', inputs)
         self.assertNotIn('docs/VV.Tests.md', inputs)
+
+    def test_newest_milestone_is_the_highest_numbered_archive_folder(self):
+        import tempfile
+        with tempfile.TemporaryDirectory(prefix='gcam-') as folder:
+            records = Path(folder)
+            for name in ('M2', 'M9', 'M10', 'M0', 'Mx'):
+                (records / name).mkdir()
+            (records / 'M11').write_text('not a folder', encoding='utf-8')
+            self.assertEqual('M10', model.newest_milestone(records))
+
+    def test_published_milestone_requires_the_docs_report_to_equal_its_archive(self):
+        newest = model.newest_milestone()
+        archived = (ROOT / 'samples/testing/records' / newest / 'report.md').read_bytes()
+        model.require_published_report(newest, archived)  # the repository's docs report as it stands
+        changed = patch.object(model, 'published_report', return_value=archived + b'changed\n')
+        with changed, self.assertRaisesRegex(ValueError, 'no longer equals the archived ' + newest + ' report'):
+            model.require_published_report(newest, archived)
+        same = patch.object(model, 'published_report', return_value=archived)
+        with same, self.assertRaisesRegex(ValueError, 'no longer equals the archived ' + newest + ' report'):
+            model.require_published_report(newest, archived.replace(b'\n', b'\r\n'))  # bytes, not text
+
+    def test_older_milestone_never_consults_the_docs_report(self):
+        self.assertNotEqual('M3', model.newest_milestone())
+        with patch.object(model, 'published_report', side_effect=AssertionError('docs report consulted')):
+            model.require_published_report('M3', b'anything')
+            _, provenance, inputs = model.assemble('M3')
+        self.assertEqual('M3', provenance['milestone'])
+        self.assertIn('docs/VV.Tests.Results.md', inputs)
 
     def test_catalog_narrative_preserves_combined_oracle_tolerance_and_gates(self):
         catalog = (ROOT / 'samples/testing/records/M3/catalog.md').read_text(encoding='utf-8')

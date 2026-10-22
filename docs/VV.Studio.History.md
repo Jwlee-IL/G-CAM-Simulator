@@ -500,3 +500,35 @@ export scenarios' shell records, `real-world-effect` E6). New run IDs carry the 
 The CZT evidence batch started no new chunk from 19:37 (the running one, two workers, finished at 20:30) and resumed at 20:35. Videos of this session are in
 the worktree's `artifacts/ui-videos` (local, not evidence on their own); the test-record milestone M4 with the desktop
 profile follows on the merged commit.
+
+**M4, first collection (refused), 2026-10-22 23:01–23:27.** The merged commit `b5f4b98`, built in the worktree that ran G1
+(deployment and isolation fingerprints equal to the G1 basis; a build in another checkout path gives other binary hashes,
+because the PDB path and generated-file names embed the path). Author's go: "M4 데스크톱 수집 go + E6 허용 (Recommended)".
+The headless families passed (.NET 1,316, unittest 283, cocotb 111, the seven checkers). The desktop profile gave 35 of 38
+cases passed and 3 failed, and the collection was refused for production: two passing cases' videos failed
+`single-colour-share` on two black samples each (2 / 193 = 1.04 % at launch while other windows still covered Studio;
+2 / 59 = 3.4 % around a caption maximise / restore), and the three failures held a UI Automation root without any
+AutomationId for the whole 5 s focus wait (the same signature as `manual.navigate` in the G4 run; four of 85 launches that
+day). No product failure. Both causes were fixed in the harness (TODO-54 turn G: declared window-transition intervals of at
+most 0.5 s; root re-acquisition within a 10 s launch budget), and M4 is collected again on the fix commit; the refused
+bundle is not a milestone.
+
+**M4, collected 2026-10-23 01:38–02:04** on the turn G commit `84c6ee2` (same worktree; deployment `a53b1d6b476c`, isolation
+`b0d5f6fee533`). First a desktop check of the new harness paths (author: "헌장 개정 승인 + 점검 런 go, 통과 시 M4 재수집 go +
+E6 (Recommended)", which also approved the amended Video criteria row): the pilot, `borderless-caption`, the Compare
+`PhysicalPrefix` case and `PreparationCancelRetryAndTabs` passed with passing video checks; every root reported FrameworkId
+`WPF`; the caption maximise was declared as a 0.1 s window transition. Then the milestone: 1,771 passed, 0 failed, 53 not
+executed; the desktop profile 297 passed, 2 not executed (the long `HighResCold` opt-in and the observed run), every desktop
+video check passed, production eligible. One launch (`RefusedLineAndMissingPreparation_ExplainWithoutZeroing`) held an
+ID-less root again, re-acquired it and passed; three window transitions were declared (launch 0.2 s, maximise 0.1 s,
+restore 0.1 s). The STR frames (183 JPEGs from 40 cases, 8.3 MiB, at most 960 px, quality 70) were exported from the exact
+checked videos and committed with their manifest under `samples/testing/records/M4/frames/`; a look over all of them showed
+only Studio's own window (no other window, desktop or native dialog) and no path or account name in the manifest.
+The first software-set generation from these frames was refused ("frames: unknown or private step"): two frames sat on the
+recorder's own launch / window-transition steps, which are not steps the run executed. Turn H (substitute Claude subagent,
+headless) made the export pick frames only on non-private executed steps and check each row against the annex's rules; the
+re-export from the same checked videos replaced the committed frames (182 JPEGs: the `borderless-caption` case keeps 4, one
+report-export frame moved from the launch step to the first action; every other frame byte-identical).
+The generation after that was refused by its own PDF check (`pdf: evidence caption/case missing`): long case IDs and
+hashes were clipped at the right margin. Turn I made the print stylesheet wrap long tokens in every text block and added a
+check that every long token of the model appears in each PDF at least as often.

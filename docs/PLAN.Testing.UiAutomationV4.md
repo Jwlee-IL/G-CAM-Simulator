@@ -70,8 +70,24 @@ checks over HTML, Word and PDF). The run record's video status now carries the r
 scenarios log only their window-ready step, so a case's captions may repeat one real step at separate media times; no
 caption is invented. UiTests 244 / 41, solution 1,316 / 63, Python 284 (one opt-in skip), replays unchanged, catalog 252
 units. Codex's workspace ran out of credits as the turn ended (report complete); further implementer turns run as
-substitute Claude subagents until it is refilled. Next: merge, the M4 collection with the desktop profile on the merged
-commit (author's go), the frame export over its videos, the new software-set edition.
+substitute Claude subagents until it is refilled. Merged into MainRoot as `b5f4b98`. **M4 first collection** (2026-10-22
+23:01–23:27, author's go, from `C:\gw\w54` so the fingerprints equal the G1 basis): headless families passed; the desktop
+profile 35 / 38 and refused for production (two black samples at harness window changes in two short videos; three launches
+with an ID-less UI Automation root) — recorded in VV.Studio.History. **Turn G** (substitute Claude subagent, headless; author:
+"하네스 수정 후 M4 재수집"): declared window-transition intervals (launch, harness-issued state changes, close; ≤ 0.5 s; judged
+from capture masks, never pixels) and UI Automation root re-acquisition within a 10 s launch budget; the frame export and
+the annex never pick a transition frame; isolation and deployment fingerprints unchanged. UiTests 256 / 41, solution
+1,328 / 63, Python 285, replays unchanged, catalog 252 units. The §0 Video criteria row changed, so the charter needs the
+author's approval on the new commit. **M4** collected 2026-10-23 01:38–02:04 on `84c6ee2` after the author's approval and a
+passing desktop check of the new paths (1,771 passed, 0 failed, 53 not executed; every desktop video check passed;
+production eligible), committed with its frames as `6516cb7`. **Turn H** (substitute Claude subagent, headless): the first
+edition generation refused two frames on recorder-owned steps, so the export now picks frames only on non-private executed
+steps and checks every row against the annex's rules before writing; turn H2 replaced the M3-only results-report pin by one
+on the newest archived milestone (older milestones never consult docs). UiTests 257 / 41, solution 1,329 / 63, Python 288
+(one opt-in skip); frames re-exported (182). **Turn I**: the next generation refused `pdf: evidence caption/case missing`
+— long unbroken case IDs and hashes were clipped at the PDF margin; the print stylesheet now wraps them in every text block,
+and every generate / check compares each long token's occurrences in the PDF text with the model (Python 289). Next: the
+new software-set edition from M4, the author's look.
 
 ## Why (2026-10-21)
 

@@ -15,7 +15,21 @@ namespace Gcam.Studio.UiTests.Harness;
 /// </remarks>
 public sealed class StudioWindow(AutomationElement window, ActionPolicy policy, Action requireInputSafe)
 {
-    public AutomationElement Element { get; } = window;
+    /// <summary>The owned window's UI Automation root. Replaced only by <see cref="Normalise"/> when the root it holds exposes
+    /// no AutomationIds or is not the WPF provider (<see cref="FocusPreparation"/>); it always belongs to the same window
+    /// handle.</summary>
+    public AutomationElement Element { get; private set; } = window;
+
+    /// <summary>Declares a window-state change this harness issues (maximise, restore, minimise, resize, close) to the
+    /// recording; null when nothing is recorded. Disposing the returned scope reports the window's new state.</summary>
+    public Func<string, IDisposable?>? Transition { get; set; }
+
+    /// <summary>Run-record diagnostics that are not reader steps (set by <see cref="Scenario"/>).</summary>
+    public Action<string>? Diagnostic { get; set; }
+
+    /// <summary>The bound for a harness-issued window-state change to show in the window's reported state; the transition
+    /// ends after it either way, and the scenario's own assertions judge a state that never came.</summary>
+    public static readonly TimeSpan StateReportLimit = TimeSpan.FromSeconds(5);
     public void RequireInputSafe() => requireInputSafe();
     private void Guard(string id, string operation) { requireInputSafe(); policy.Require(id, operation); }
 
@@ -128,7 +142,38 @@ public sealed class StudioWindow(AutomationElement window, ActionPolicy policy, 
 
     private bool Visible(string id) => Exists(id) && !ById(id).Current.IsOffscreen;
 
-    public void Invoke(string id) { Guard(id, "invoke"); Act(() => Pattern<InvokePattern>(ById(id), InvokePattern.Pattern), p => p.Invoke()); }
+    public void Invoke(string id)
+    {
+        Guard(id, "invoke");
+        if (id is "Window.Maximize" or "Window.Minimize" or "Window.Close") { InvokeCaption(id); return; }
+        Act(() => Pattern<InvokePattern>(ById(id), InvokePattern.Pattern), p => p.Invoke());
+    }
+
+    /// <summary>A caption button changes the window's state: the change is declared to the recording as a window transition
+    /// from the input until the window reports its new visual state (a close is never reported: it ends with the recording).
+    /// The button's own Invoke is asynchronous in WPF, so the state is polled.</summary>
+    private void InvokeCaption(string id)
+    {
+        var invoke = Pattern<InvokePattern>(ById(id), InvokePattern.Pattern);
+        var window = Pattern<WindowPattern>(Element, WindowPattern.Pattern);
+        var before = window.Current.WindowVisualState;
+        string reason = id == "Window.Close" ? "close" : id == "Window.Minimize" ? "minimise"
+            : before == WindowVisualState.Maximized ? "restore" : "maximise";
+        if (id == "Window.Close") { _ = Transition?.Invoke(reason); Send(invoke.Invoke); return; }
+        using (Transition?.Invoke(reason))
+        {
+            Send(invoke.Invoke);
+            AwaitState(() => window.Current.WindowVisualState != before, reason);
+        }
+    }
+
+    /// <summary>Polls a harness-issued state change without failing: the transition is reported when it shows or the limit
+    /// passes, and the caller's assertions decide.</summary>
+    private void AwaitState(Func<bool> changed, string reason)
+    {
+        try { WaitUntil(changed, StateReportLimit, "window reports its new state after " + reason); }
+        catch (TimeoutException) { Log?.Invoke($"window did not report its new state within {StateReportLimit.TotalSeconds:0} s after {reason}"); }
+    }
 
     public void Click(string id)
     {
@@ -158,7 +203,11 @@ public sealed class StudioWindow(AutomationElement window, ActionPolicy policy, 
         Log?.Invoke("foreground lost to another window; restoring and activating the owned Studio window (own handle only)");
         if (Element.TryGetCurrentPattern(WindowPattern.Pattern, out var w) && w is WindowPattern window
             && window.Current.WindowVisualState == WindowVisualState.Minimized)
-            Send(() => window.SetWindowVisualState(WindowVisualState.Normal));
+            using (Transition?.Invoke("restore"))
+            {
+                Send(() => window.SetWindowVisualState(WindowVisualState.Normal));
+                AwaitState(() => window.Current.WindowVisualState != WindowVisualState.Minimized, "restore");
+            }
         Send(() => SetForegroundWindow(handle));
         var watch = Stopwatch.StartNew();
         while (GetForegroundWindow() != handle && watch.Elapsed < TimeSpan.FromSeconds(3)) Thread.Sleep(50);
@@ -394,6 +443,10 @@ public sealed class StudioWindow(AutomationElement window, ActionPolicy policy, 
     public Rect Bounds(string id) => ById(id).Current.BoundingRectangle;
 
     /// <summary>Puts the window in front at a fixed size, so pointer positions are reproducible.</summary>
+    /// <remarks>The focus wait first makes sure the held root is the window's WPF provider with its AutomationIds: a root
+    /// taken while WPF did not yet answer UI Automation is a fallback (MSAA) tree with names but no AutomationIds, and stays
+    /// one for good, so it is re-acquired from the window handle within <see cref="FocusPreparation.RootBudget"/>
+    /// (four launches on 2026-10-22).</remarks>
     public void Normalise(int width, int height)
     {
         requireInputSafe();
@@ -401,10 +454,21 @@ public sealed class StudioWindow(AutomationElement window, ActionPolicy policy, 
             throw new InvalidOperationException("Normalise requires a closed modal layer; the scenario left a dialog open.");
         if (Element.TryGetCurrentPattern(WindowPattern.Pattern, out var w) && w is WindowPattern window
             && window.Current.WindowVisualState != WindowVisualState.Normal)
-            Send(() => window.SetWindowVisualState(WindowVisualState.Normal));
+            using (Transition?.Invoke("restore"))
+            {
+                Send(() => window.SetWindowVisualState(WindowVisualState.Normal));
+                AwaitState(() => window.Current.WindowVisualState == WindowVisualState.Normal, "restore");
+            }
         if (Element.TryGetCurrentPattern(TransformPattern.Pattern, out var t) && t is TransformPattern transform && transform.Current.CanResize)
-            Send(() => transform.Resize(width, height));
+        {
+            // A resize that changes the visible frame moves it under the recorder's capture; Resize returns once the window
+            // has its new size, which is the reported state.
+            var frame = WindowSurvey.Bounds(new IntPtr(Element.Current.NativeWindowHandle));
+            using (frame.Width != width || frame.Height != height ? Transition?.Invoke("resize") : null)
+                Send(() => transform.Resize(width, height));
+        }
         AutomationElement? focusTarget = null;
+        var root = new AutomationRoot(this);
         FocusPreparation.Wait(() =>
         {
             if (!EnsureForeground()) return false;
@@ -414,8 +478,27 @@ public sealed class StudioWindow(AutomationElement window, ActionPolicy policy, 
         {
             Send(focusTarget!.SetFocus);
             return focusTarget.Current.HasKeyboardFocus;
-        }, TimeSpan.FromSeconds(5), Log);
+        }, TimeSpan.FromSeconds(5), Log, root: root);
+        if (root.Last is { } state)
+            Diagnostic?.Invoke($"UI Automation root: FrameworkId '{state.FrameworkId}', provider '{state.ProviderDescription}'");
         Thread.Sleep(300);   // let layout settle after the resize; the verdict re-reads every bound it uses
+    }
+
+    /// <summary>The held root as <see cref="FocusPreparation"/> sees it: inspected through the managed client that the
+    /// scenario uses, re-acquired from the same window handle after checking that the handle belongs to the owned process.</summary>
+    private sealed class AutomationRoot(StudioWindow owner) : FocusPreparation.IRoot
+    {
+        public FocusPreparation.RootState? Last { get; private set; }
+        public FocusPreparation.RootState Inspect() => Last = UiaRoot.Describe(owner.Element);
+        public void Reacquire()
+        {
+            var handle = new IntPtr(owner.Element.Current.NativeWindowHandle);
+            int pid = owner.Element.Current.ProcessId;
+            GetWindowThreadProcessId(handle, out uint process);
+            if (handle == IntPtr.Zero || process != (uint)pid)
+                throw new InvalidOperationException("The automation element is not the owned Studio window.");
+            owner.Element = AutomationElement.FromHandle(handle);
+        }
     }
 
     public static T Pattern<T>(AutomationElement element, AutomationPattern pattern) where T : BasePattern

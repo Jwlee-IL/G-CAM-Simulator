@@ -1,0 +1,24 @@
+Test run for <repo>\tests\Gcam.Studio.Services.Tests\bin\Release\net9.0\Gcam.Studio.Services.Tests.dll (.NETCoreApp,Version=v9.0)
+VSTest version 17.14.1 (x64)
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.13]     Gcam.Studio.Services.Tests.DetectorGapEvidenceTests.RateRatio_MatchesGeometricArea_WithinMeasuredSeedSpread [SKIP]
+  Skipped Gcam.Studio.Services.Tests.DetectorGapEvidenceTests.RateRatio_MatchesGeometricArea_WithinMeasuredSeedSpread [1 ms]
+[xUnit.net 00:00:00.53]     Gcam.Studio.Services.Tests.WaveformServiceTests.RetainedMonteCarlo_IsolatedPulseReadoutsAcrossParts [SKIP]
+  Skipped Gcam.Studio.Services.Tests.WaveformServiceTests.RetainedMonteCarlo_IsolatedPulseReadoutsAcrossParts [1 ms]
+[xUnit.net 00:00:00.56]     Gcam.Studio.Services.Tests.WaveformServiceTests.MaximumWindow_ReportsWorkerCostAndBoundedPlotSamples [SKIP]
+[xUnit.net 00:00:00.56]     Gcam.Studio.Services.Tests.WaveformServiceTests.MixedFieldCalibration_UsesAcquiredChainAndInvalidatesRatios [SKIP]
+  Skipped Gcam.Studio.Services.Tests.WaveformServiceTests.MaximumWindow_ReportsWorkerCostAndBoundedPlotSamples [1 ms]
+  Skipped Gcam.Studio.Services.Tests.WaveformServiceTests.MixedFieldCalibration_UsesAcquiredChainAndInvalidatesRatios [1 ms]
+[xUnit.net 00:00:07.85]     Gcam.Studio.Services.Tests.ImagingServiceTests.Precision_TwentySeeds_MeasuresMixedIsotopesAndCoOnlyControl [SKIP]
+  Skipped Gcam.Studio.Services.Tests.ImagingServiceTests.Precision_TwentySeeds_MeasuresMixedIsotopesAndCoOnlyControl [1 ms]
+[xUnit.net 00:00:12.86]     Gcam.Studio.Services.Tests.OpticsProjectionTests.Sampling_SmallBudgetSeedSpread_ReportsRegressionMargin [SKIP]
+[xUnit.net 00:00:12.86]     Gcam.Studio.Services.Tests.OpticsProjectionTests.Sampling_PositionSweepAtConstantDetectorSize_FinerPixelsReduceLocalizationError [SKIP]
+  Skipped Gcam.Studio.Services.Tests.OpticsProjectionTests.Sampling_SmallBudgetSeedSpread_ReportsRegressionMargin [1 ms]
+  Skipped Gcam.Studio.Services.Tests.OpticsProjectionTests.Sampling_PositionSweepAtConstantDetectorSize_FinerPixelsReduceLocalizationError [1 ms]
+Results File: %TEMP%\gcam-todo54\m4b-bundle\dotnet\gcam-Gcam.Studio.Services.Tests-cb3fc08cd8884f3f9780890ee1b4fffe\results.trx
+
+Passed!  - Failed:     0, Passed:   152, Skipped:     7, Total:   159, Duration: 27 s - Gcam.Studio.Services.Tests.dll (net9.0)
+
+Workload updates are available. Run `dotnet workload list` for more information.
