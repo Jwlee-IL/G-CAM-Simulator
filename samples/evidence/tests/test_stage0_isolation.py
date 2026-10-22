@@ -6,6 +6,10 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
+import sys as _sys
+if str(Path(__file__).resolve().parent) not in _sys.path:  # the helper beside this file, under any runner
+    _sys.path.insert(0, str(Path(__file__).resolve().parent))
+from scratch_fixtures import ScratchTestCase, scratch as owned_scratch
 
 ROOT = Path(__file__).resolve().parents[3]
 SCRIPT = ROOT / 'tests/Gcam.Studio.UiTests/Harness/Isolation/stage0.py'
@@ -14,7 +18,13 @@ stage0 = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(stage0)
 
 
-class StageZeroIsolationTests(unittest.TestCase):
+def healthy_live_channels():
+    return {'file': {'passed': True, 'events': [], 'errors': []},
+            'network': {'sampleCount': 1, 'positiveControlPassed': True, 'findings': [], 'errors': []},
+            'process': {'passed': True, 'errors': []}, 'errors': []}
+
+
+class StageZeroIsolationTests(ScratchTestCase):
     def test_numeric_opcode_identity_wins_over_wrong_rendering_label(self):
         import xml.etree.ElementTree as ET
         event = self.real_event('90cbdc39-4a3e-11d1-84f4-0000f80464e3', '68', {'FileObject': '0x123', 'TTID': 100})
@@ -338,9 +348,7 @@ class StageZeroIsolationTests(unittest.TestCase):
 
     @staticmethod
     def scratch():
-        root = Path(tempfile.gettempdir()) / ('gcam-stage0-fixture-' + __import__('uuid').uuid4().hex)
-        root.mkdir()
-        return root
+        return owned_scratch('gcam-stage0-fixture-')
 
     def test_pin_deployment_hash_is_the_digest_of_its_serialised_file_list(self):
         path = self.scratch() / 'pin.json'
@@ -546,8 +554,7 @@ class StageZeroIsolationTests(unittest.TestCase):
 
     def test_tracerpt_registry_marker_fixture_uses_exact_value_fields(self):
         marker = self.registry_fixture()
-        root = Path(tempfile.gettempdir()) / ('gcam-stage0-fixture-' + __import__('uuid').uuid4().hex)
-        root.mkdir()
+        root = self.scratch()
         path = root / 'registry.xml'
         path.write_text('<Events><Event><System><Provider Name="Registry"/><Execution ProcessID="20"/>'
                         '<TimeCreated SystemTime="2026-10-13T00:00:05Z"/><Opcode>SetValue</Opcode></System><EventData>'
@@ -592,9 +599,8 @@ class StageZeroIsolationTests(unittest.TestCase):
         self.assertFalse(stage0.confined('owned/../a', 'owned'))
 
     def test_tracerpt_xml_fixture_preserves_unknown_provider(self):
-        # Retain fixtures in owned scratch; no recursive cleanup or system trace parsing.
-        root = Path(tempfile.gettempdir()) / ('gcam-stage0-fixture-' + __import__('uuid').uuid4().hex)
-        root.mkdir()
+        # Test-owned scratch (removed when the test passes); no system trace parsing.
+        root = self.scratch()
         path = root / 'events.xml'
         path.write_text('<Events><Event><System><Provider Name="FileIo"/><Execution ProcessID="10"/><TimeCreated SystemTime="2026-10-13T00:00:05Z"/><Opcode>Read</Opcode></System><EventData><Data Name="FileName">ambient.json</Data></EventData></Event><Event><System><Provider Name="Unmapped"/><Execution ProcessID="20"/></System></Event></Events>')
         events = list(stage0.parse_trace(path))
@@ -802,7 +808,7 @@ class StageZeroIsolationTests(unittest.TestCase):
         self.assertEqual('out-of-declaration', stage0.classify(self.controls + [sibling], self.context, self.rules)['candidates'][-1]['classification'])
 
 
-class SnapshotClassificationTests(unittest.TestCase):
+class SnapshotClassificationTests(ScratchTestCase):
     """MR8 diff-classify on synthetic snapshot triples, with the v3.3 candidate definition (TODO-52). No registry,
     file-system walk, application or trace access."""
     LOCAL = 'C:\\Users\\fixture\\AppData\\Local'
@@ -869,7 +875,7 @@ class SnapshotClassificationTests(unittest.TestCase):
         context.update(self.context_updates)
         if context.get('contract') == 'v4' and 'uiManifests' not in context:
             manifest = {'contract': 'v4', 'runId': context['runId'], 'manifestPhase': 'final', 'runStatus': 'completed',
-                        'processIssues': [], 'processMonitor': {'errors': []}, 'runIssues': []}
+                        'processIssues': [], 'processMonitor': {'errors': []}, 'runIssues': [], 'liveChannels': healthy_live_channels()}
             (root / 'ui-manifest.json').write_text(json.dumps(manifest), encoding='utf-8')
             context['uiManifests'] = [{'runId': context['runId'], 'path': 'ui-manifest.json'}]
         (root / 'observation-context.json').write_text(json.dumps(context), encoding='utf-8')
@@ -1181,7 +1187,7 @@ class SnapshotClassificationTests(unittest.TestCase):
                                            capture_output=True, text=True).returncode)
 
 
-class ApprovalPreflightTests(unittest.TestCase):
+class ApprovalPreflightTests(ScratchTestCase):
     def fixture(self):
         root = StageZeroIsolationTests.scratch()
         run = root / 'approval-fixture'; run.mkdir()
@@ -1244,7 +1250,8 @@ Assert-ProbeApprovals (Get-Content -LiteralPath $Package -Raw | ConvertFrom-Json
         def run(expected):
             path = root / 'package.json'
             stage0.write(path, approval)
-            result = subprocess.run(['pwsh', '-NoProfile', '-File', str(runner), str(source), str(path)], capture_output=True, text=True)
+            result = subprocess.run(['pwsh', '-NoProfile', '-File', str(runner), str(source), str(path)],
+                                    capture_output=True, text=True, encoding='utf-8')
             self.assertEqual(expected, result.returncode == 0, result.stderr)
         run(True)
         approval.pop('contract')
@@ -1281,7 +1288,7 @@ Assert-ProbeApprovals (Get-Content -LiteralPath $Package -Raw | ConvertFrom-Json
                 self.assertTrue(any('real-world-effect' in issue for issue in check()))
 
 
-class V4SnapshotClassificationTests(unittest.TestCase):
+class V4SnapshotClassificationTests(ScratchTestCase):
     """New observations never use background explanations to clear an attributed effect; legacy cases above replay."""
 
     def setUp(self):
@@ -1365,7 +1372,7 @@ class V4SnapshotClassificationTests(unittest.TestCase):
         context = json.loads((root / 'observation-context.json').read_text())
         scenario = '20261014-000010-abcdef'
         manifest = {'contract': 'v4', 'runId': scenario, 'manifestPhase': 'final', 'runStatus': 'completed', 'processIssues': [],
-                    'runIssues': [], 'processMonitor': {'errors': []}}
+                    'runIssues': [], 'processMonitor': {'errors': []}, 'liveChannels': healthy_live_channels()}
         (root / 'export-manifest.json').write_text(json.dumps(manifest), encoding='utf-8')
         context['uiManifests'].append({'runId': scenario, 'path': 'export-manifest.json'})
         (root / 'observation-context.json').write_text(json.dumps(context), encoding='utf-8')
@@ -1513,6 +1520,21 @@ class V4SnapshotClassificationTests(unittest.TestCase):
                 self.assertEqual((status, False), (result['runStatus'], result['g1Eligible']))
         self.f.context_updates.update(processIssues=[], processMonitorErrors=[], uiManifests=[])
         self.assertFalse(self.f.classify()['g1Eligible'])
+
+    def test_live_channel_gaps_product_failures_and_transient_effects_affect_eligibility(self):
+        for defect, status in (('missing', 'blocked'), ('network-gap', 'blocked'), ('product', 'blocked'),
+                               ('network-peer', 'unsafe_effect'), ('transient-file', 'unsafe_effect')):
+            with self.subTest(defect=defect):
+                root = self.f.run_folder(self.f.base, self.f.base, self.f.base + self.f.controls)
+                path = root / 'ui-manifest.json'; doc = json.loads(path.read_text())
+                if defect == 'missing': doc.pop('liveChannels')
+                if defect == 'network-gap': doc['liveChannels']['network']['positiveControlPassed'] = False
+                if defect == 'product': doc['productIssues'] = [{'type': 'app_exited', 'reason': 'exit 0 before close'}]
+                if defect == 'network-peer': doc['liveChannels']['network']['findings'] = [{'protocol': 'udp4'}]
+                if defect == 'transient-file': doc['liveChannels']['file']['events'] = [{'operation': 'delete', 'harnessControl': False}]
+                path.write_text(json.dumps(doc), encoding='utf-8')
+                result = stage0.diff_classify(root, self.f.rules, surfaces=self.f.surfaces)
+                self.assertEqual(status, result['runStatus']); self.assertFalse(result['g1Eligible'])
 
     def test_finalized_manifest_errors_and_missing_or_wrong_manifest_refuse(self):
         for defect in ('process-issue', 'monitor-error', 'cleanup-failed', 'non-final', 'wrong-run', 'missing', 'unknown-contract'):

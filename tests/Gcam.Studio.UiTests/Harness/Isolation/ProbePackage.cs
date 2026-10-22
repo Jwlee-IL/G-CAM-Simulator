@@ -9,6 +9,33 @@ public sealed record ProbePackage(string RunId, string Commit, DateTimeOffset Co
 {
     public string? Contract { get; init; }
     public RealWorldEffect[] RealWorldEffects { get; init; } = [];
+    public CharterQualification? Charter { get; init; }
+    public sealed record CharterQualification(string ApprovalId, string Scope, string[] ScenarioIds, CharterGate[] Gates, string Status);
+    public sealed record CharterGate(string Id, string Status, string Reason);
+    public CharterQualification RequireScenario(string scenario)
+    {
+        var charter = Charter;
+        if (Contract != "v4" || charter is null || charter.Status != "approved" || string.IsNullOrWhiteSpace(charter.Scope)
+            || !charter.ScenarioIds.Contains(scenario) || charter.ApprovalId != RequireApproval("charter").Id
+            || charter.Gates.Select(g => g.Id).Distinct().Count() != charter.Gates.Length
+            || !charter.Gates.Select(g => g.Id).ToHashSet().SetEquals(["G0", "G1"])
+            || !charter.Gates.Any(g => g.Id == "G0" && g.Status == "passed")
+            || charter.Gates.Any(g => g.Id is not ("G0" or "G1") || g.Status is not ("passed" or "blocked") || string.IsNullOrWhiteSpace(g.Reason)))
+            throw new InvalidDataException("No applicable v4 charter package for scenario: " + scenario);
+        return charter;
+    }
+
+    /// <summary>Production (D7, gate G5) builds on the safety gates: a launch may run while G1 is still blocked (the
+    /// observed run that establishes G1 is such a launch), but a producing batch needs the charter's G0 and G1 passed.
+    /// The same rule as the desktop collector's package check.</summary>
+    public void RequireProductionGates()
+    {
+        var charter = Charter;
+        if (Contract != "v4" || charter is null || charter.Status != "approved" || charter.ApprovalId != RequireApproval("charter").Id
+            || !charter.Gates.Select(g => g.Id).ToHashSet().SetEquals(["G0", "G1"]) || charter.Gates.Length != 2
+            || charter.Gates.Any(g => g.Status != "passed" || string.IsNullOrWhiteSpace(g.Reason)))
+            throw new InvalidDataException("Production requires the charter's G0 and G1 passed");
+    }
 
     /// <summary>Author scope before launch; only these fixed templates can be bound to a fresh scenario run ID.</summary>
     public sealed record RealWorldEffect(string EffectId, string ApprovalId, string RunId, string TargetCommit,

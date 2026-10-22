@@ -65,7 +65,8 @@ public sealed class LivenessObserverTests
         Thread.Sleep(100); Assert.True(observer.Snapshot().Passed); Assert.False(observer.Failure.IsCompleted);
     }
 
-    private sealed class MessageWindow : IDisposable
+    /// <summary>A message-only window on its own thread that can stop answering on request (also the teardown helper).</summary>
+    internal sealed class MessageWindow : IDisposable
     {
         private readonly Thread _thread;
         private readonly ManualResetEventSlim _ready = new();

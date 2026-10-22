@@ -16,12 +16,13 @@ public sealed class StudioProcess : IDisposable
     public DateTime StartedAt => _owned.StartedAt;
     public string ProductVersion => _owned.ProductVersion;
     public string Ending => _owned.Ending;
-    public IReadOnlyList<string> SandboxWrites => _owned.SandboxWrites;
+    public IReadOnlyList<string>? SandboxWrites => _owned.SandboxWrites;
     public ProcessLedger Ledger => _owned.Ledger;
     public IReadOnlyList<string> MonitorErrors => _owned.MonitorErrors;
     public DesktopLease.State LeaseState => _owned.LeaseState;
     public OwnedStudioProcess.PreflightResult Preflight => _owned.Preflight;
     public ActionPolicy Policy => _owned.Policy;
+    public Observation.RunObservation Observation => _owned.Observation;
     public void RequireInputSafe() => _owned.RequireInputSafe();
     public static StudioProcess Start(string runId, string scenario = "scenario", IReadOnlyList<string>? declaredWrites = null)
         => new(OwnedStudioProcess.Start(runId, scenario: scenario, declaredWrites: declaredWrites));

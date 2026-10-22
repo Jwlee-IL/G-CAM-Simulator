@@ -21,11 +21,18 @@ public static class PointerBoundary
     {
         if (!foreground || !owned || !declared) throw new InvalidOperationException("coordinate-input-boundary-refused");
     }
-    public static void RequireInputSafe() => Current.Value?.RequireInputSafe?.Invoke();
+    /// <summary>Every input into Studio passes here. No scope (or a scope without a guard) refuses: the desktop path
+    /// always enters one with the owned instance's guard; headless tests enter an explicit test scope.</summary>
+    public static void RequireInputSafe()
+    {
+        var context = Current.Value ?? throw new InvalidOperationException("No owned input scope; input refused");
+        (context.RequireInputSafe ?? throw new InvalidOperationException("No input guard; input refused"))();
+    }
+    public static void Input(Action input) { RequireInputSafe(); input(); }
     public static void Require(Point point)
     {
         var context = Current.Value ?? throw new InvalidOperationException("No owned coordinate-input scope");
-        context.RequireInputSafe?.Invoke();
+        RequireInputSafe();
         var window = context.Window.Current;
         var native = new NativePoint { X = (int)Math.Round(point.X), Y = (int)Math.Round(point.Y) };
         IntPtr hit = WindowFromPoint(native);

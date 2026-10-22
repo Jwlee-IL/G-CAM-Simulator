@@ -35,6 +35,7 @@ public static class ReportExportDialog
         record.OmitWindowDiagnosticsReason = "Private native save dialog";
         var invoke = Task.Run(() => ui.Invoke("Export.Confirm"));
         AutomationElement? dialog = null;
+        bool completed = false;
         try
         {
             StudioWindow.WaitUntil(() => (dialog = FindOwnedModalDialog(ui.Element, pid)) is not null, TimeSpan.FromSeconds(10), "owned save dialog");
@@ -46,21 +47,69 @@ public static class ReportExportDialog
             var filename = Assert.Single(fields.Cast<AutomationElement>());
             SetFileName(filename, path, record.Step, Shown);
             var save = FindSaveButton(dialog, handle, pid, record.Step);
-            StudioWindow.Pattern<InvokePattern>(save, InvokePattern.Pattern).Invoke();
+            var savePattern = StudioWindow.Pattern<InvokePattern>(save, InvokePattern.Pattern);
+            PointerBoundary.Input(savePattern.Invoke);
             if (AwaitSaveOutcome(ui.Element, pid, dialog, handle, FilesExist, record.Step, "after Save"))
             {
                 SetFileName(filename, path, record.Step, Shown); PostEnter(filename, handle, pid, record.Step);
                 AwaitSaveOutcome(ui.Element, pid, dialog, handle, FilesExist, record.Step, "after Enter");
             }
-            StudioWindow.WaitUntil(() => FilesExist() && invoke.IsCompleted, TimeSpan.FromSeconds(10), "declared export files closed");
+            AwaitDialogClosed(ui.Element, pid, dialog, handle, invoke, FilesExist, record);
+            StudioWindow.WaitUntil(() => FilesExist(), TimeSpan.FromSeconds(10), "declared export files closed");
             invoke.GetAwaiter().GetResult();
+            completed = true;
         }
         finally
         {
-            CancelOwnedModalDialogs(ui.Element, pid, dialog, record.Step);
-            // Resume only after all owned modals and any path-bearing prompts have gone.
-            record.OmitWindowDiagnosticsReason = null;
+            try { CancelOwnedModalDialogs(ui.Element, pid, dialog, record.Step); }
+            catch (Exception cleanup) when (!completed)
+            {
+                // The original failure stands (an exception from this finally would replace it). No dialog contents.
+                record.Diagnostic($"Owned native dialog cleanup failed: {cleanup.GetType().Name}");
+            }
+            finally { ResumeAfterPrivateDialog(ui.Element, pid, record); } // only once no owned modal window remains
         }
+    }
+
+    /// <summary>The dialog's closing is confirmed when no owned modal window remains (the dialog and any prompt above it)
+    /// and Studio's export command has returned (a Studio message box would keep it running). Privacy ends there: the
+    /// steps after the dialog are visible (R6). A timeout records the dialog state (titles only) and throws.</summary>
+    internal static void AwaitDialogClosed(AutomationElement owner, int pid, AutomationElement dialog, IntPtr handle, Task invoke,
+        Func<bool> filesExist, RunRecord record)
+    {
+        try
+        {
+            StudioWindow.WaitUntil(() => invoke.IsCompleted && FindOwnedModalDialog(owner, pid) is null, TimeSpan.FromSeconds(10),
+                "owned save dialog closed and export command returned");
+        }
+        catch (TimeoutException)
+        {
+            RecordState(owner, pid, dialog, handle, filesExist, record.Step, "dialog closure timed out");
+            throw;
+        }
+        if (!ResumeAfterPrivateDialog(owner, pid, record))
+            throw new InvalidOperationException("Owned dialog closure must be proven before visible export steps");
+    }
+    /// <summary>Lifts the privacy suppression once no owned modal window remains, then records one visible boundary step.
+    /// Idempotent (already visible: true, no second step). Never throws, so a caller's finally cannot hide the original
+    /// failure; when closure is not proven the suppression stays.</summary>
+    internal static bool ResumeAfterPrivateDialog(AutomationElement owner, int pid, RunRecord record)
+    {
+        if (record.OmitWindowDiagnosticsReason is null) return true;
+        try { if (OwnedModalWindows(owner, pid).Count != 0) return false; }
+        catch (Exception e)
+        {
+            record.Diagnostic("Privacy remains suppressed: owned dialog closure was not proven (" + e.GetType().Name + ")");
+            return false;
+        }
+        try
+        {
+            record.OmitWindowDiagnosticsReason = null;
+            record.Step("Native dialog closed; export outcome visible in Studio");
+        }
+        catch (Exception e) { record.Diagnostic("Visible boundary caption unavailable: " + e.GetType().Name); return false; }
+        Thread.Sleep(200); // Two capture slots for the visible boundary, with no privacy-share quota.
+        return true;
     }
     /// <summary>Sets the dialog's file-name edit through ValuePattern and reads it back; one retry with the edit
     /// focused. Already holding the path (the fallback's re-check) is logged and left alone.</summary>
@@ -72,12 +121,12 @@ public static class ReportExportDialog
             log($"file-name edit (Edit, AutomationId \"1001\") still reads back \"{shown(value.Current.Value)}\"");
             return;
         }
-        value.SetValue(path);
+        PointerBoundary.Input(() => value.SetValue(path));
         string back = value.Current.Value;
         log($"file-name edit (Edit, AutomationId \"1001\") read back: \"{shown(back)}\"; equals the requested path: {SamePath(back, path)}");
         if (SamePath(back, path)) return;
-        edit.SetFocus();
-        value.SetValue(path);
+        PointerBoundary.Input(edit.SetFocus);
+        PointerBoundary.Input(() => value.SetValue(path));
         back = value.Current.Value;
         log($"file-name edit retry with focus, read back: \"{shown(back)}\"; equals the requested path: {SamePath(back, path)}");
         if (!SamePath(back, path))
@@ -177,9 +226,10 @@ public static class ReportExportDialog
     /// of its own). Posted messages reach only that window; no input goes to whatever window is in the foreground.</summary>
     internal static void PostEnter(AutomationElement edit, IntPtr dialogHandle, int pid, Action<string> log)
     {
+        PointerBoundary.RequireInputSafe();
         if (!Native.BelongsTo(dialogHandle, pid))
             throw new InvalidOperationException("The save dialog's window handle is no longer an owned Studio window.");
-        edit.SetFocus();
+        PointerBoundary.Input(edit.SetFocus);
         var target = new IntPtr(edit.Current.NativeWindowHandle);
         bool toEdit = target != IntPtr.Zero && Native.BelongsTo(target, pid)
             && Native.GetAncestor(target, Native.RootAncestor) == dialogHandle;
@@ -264,6 +314,7 @@ public static class ReportExportDialog
                 new PropertyCondition(AutomationElement.AutomationIdProperty, id.ToString()));
             var button = window.FindFirst(TreeScope.Children, condition) ?? window.FindFirst(TreeScope.Descendants, condition);
             if (button is null || !button.TryGetCurrentPattern(InvokePattern.Pattern, out var invoke)) continue;
+            PointerBoundary.RequireInputSafe(); // outside the try: a refusal is never swallowed
             try
             {
                 ((InvokePattern)invoke).Invoke();
@@ -274,7 +325,7 @@ public static class ReportExportDialog
         // Missing/unusable Cancel and No: close only this re-identified owned modal window.
         if (window.TryGetCurrentPattern(WindowPattern.Pattern, out var close))
         {
-            ((WindowPattern)close).Close();
+            PointerBoundary.Input(((WindowPattern)close).Close);
             return "Close";
         }
         return "nothing (no Cancel, No or Close)";
@@ -306,7 +357,11 @@ public static class ReportExportDialog
         public static void PostEnter(IntPtr window)
         {
             const long down = 0x001C0001, up = 0xC01C0001;   // repeat 1, scan code 0x1C; key-up sets bits 30 and 31
-            if (!PostMessage(window, WmKeyDown, (IntPtr)VkReturn, (IntPtr)down) || !PostMessage(window, WmKeyUp, (IntPtr)VkReturn, unchecked((IntPtr)up)))
+            PointerBoundary.RequireInputSafe();
+            if (!PostMessage(window, WmKeyDown, (IntPtr)VkReturn, (IntPtr)down))
+                throw new InvalidOperationException($"PostMessage failed: {Marshal.GetLastWin32Error()}");
+            PointerBoundary.RequireInputSafe();
+            if (!PostMessage(window, WmKeyUp, (IntPtr)VkReturn, unchecked((IntPtr)up)))
                 throw new InvalidOperationException($"PostMessage failed: {Marshal.GetLastWin32Error()}");
         }
 

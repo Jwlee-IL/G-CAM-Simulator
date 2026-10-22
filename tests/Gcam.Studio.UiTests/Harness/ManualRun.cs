@@ -34,6 +34,7 @@ public sealed partial class ManualRun
     public sealed class Step(int n, string template, string[] notices)
     {
         public int N { get; } = n;
+        public string? VideoStepId { get; set; }
         public string Template { get; } = template;
         public string? Text { get; set; }
         public Dictionary<string, string> Labels { get; } = new(StringComparer.Ordinal);
@@ -69,6 +70,7 @@ public sealed partial class ManualRun
     public RunRecord? Record { get; set; }
     public string Sandbox { get; set; } = "";
     public VideoRecorder.Provenance? Video { get; set; }
+    public string? ScenarioSourceSha256 { get; set; }
     public StudioWindow? Ui { get; private set; }
     public ManualCapture.Baseline? Baseline { get; private set; }
 
@@ -97,12 +99,14 @@ public sealed partial class ManualRun
     /// The scenario requires all labels before completing.</summary>
     public void BeginStep(string text, params string[] notices)
     {
+        Record?.RequireStepsOpen();
         foreach (string notice in notices) _registry.RequireNotice(notice, Chapter.Number);
         if (_steps.Count > 0) ResolveLabels();
+        Record?.RequireStepsOpen();
         var current = new Step(_steps.Count + 1, text, notices);
         _steps.Add(current);
         // The caption is the resolved reader text, read when the recording stops (labels resolve after the step opens).
-        Record?.Video?.Step(() => (current.Text ?? current.Template).Replace("**", ""));
+        current.VideoStepId = Record?.RecordStep(() => (current.Text ?? current.Template).Replace("**", ""));
         // Read action labels before an action can replace its control, without freezing the step's resulting text.
         foreach (Match token in LabelToken().Matches(text)) _ = TryReadLabel(token);
     }
@@ -122,6 +126,7 @@ public sealed partial class ManualRun
                     complete = false;
                     return m.Value;
                 }
+                Record?.RequireStepsOpen();
                 step.Labels[id] = label;
                 return "**" + EscapeMarkdown(label) + "**";
             });
@@ -136,6 +141,7 @@ public sealed partial class ManualRun
         string? label = null;
         try { label = _label(key.Item1, source); }
         catch (SelectorMatchException e) when (e.Matches == 0) { } // replacement/empty controls only; ambiguous selectors still fail
+        Record?.RequireStepsOpen();
         if (!string.IsNullOrWhiteSpace(label)) _labelsRead[key] = label;
         return _labelsRead.GetValueOrDefault(key);
     }
@@ -145,8 +151,10 @@ public sealed partial class ManualRun
     /// <summary>Records an automatic check under its stable ID; a failed check fails the step and stops the scenario.</summary>
     public void Check(string id, bool ok, string detail)
     {
+        Record?.RequireStepsOpen();
         var step = Current;
         if (step.Text is null && ok) ResolveLabels();
+        Record?.RequireStepsOpen();
         step.Checks.Add(new(id, ok ? "pass" : "fail", detail));
         if (ok) return;
         step.Verdict = "failed";
@@ -173,6 +181,7 @@ public sealed partial class ManualRun
         string id = $"{Chapter.Number}-{++_figures}";
         var outcome = ManualCapture.Take(Ui ?? throw new InvalidOperationException("No window attached"), Baseline!, Directory,
             id, Scenario, marks, region, full);
+        Record?.RequireStepsOpen();
         if (outcome.Reasons.Length != 0)
         {
             step.MissingFigures.Add(new(id, outcome.Reasons));
@@ -195,16 +204,20 @@ public sealed partial class ManualRun
     public byte[] BuildRecord(DateTimeOffset finishedAt, string uiRunStatus, string? uiManifestSha256, Subject before, Subject after,
         object tool, object environment)
     {
-        bool completed = uiRunStatus == "completed";
+        bool completed = uiRunStatus == "completed" && Status != "not_executed";
         var record = new
         {
             schema = "gcam.manual-run", schemaVersion = 1, contract = "v4", runId = RunId, scenario = Scenario,
+            scenarioSourceSha256 = ScenarioSourceSha256,
             chapter = new { number = Chapter.Number, title = Chapter.Title },
             registrySha256 = _registry.RegistrySha256, noticesSha256 = _registry.NoticesSha256,
             startedAt = StartedAt.ToString("yyyy-MM-ddTHH:mm:ss.fffzzz", CultureInfo.InvariantCulture),
             finishedAt = finishedAt.ToString("yyyy-MM-ddTHH:mm:ss.fffzzz", CultureInfo.InvariantCulture),
             status = Status,
-            execution = new { status = completed ? "completed" : "aborted", uiRunStatus, abortReason = completed ? null : "ui-run-status: " + uiRunStatus },
+            execution = new { status = completed ? "completed" : "aborted", uiRunStatus,
+                abortReason = completed ? null : Status == "not_executed" && uiRunStatus == "completed" ? "scenario-not-executed" : "ui-run-status: " + uiRunStatus },
+            videoStatus = Record?.Video?.StatusRecord(),
+            executedStepIds = Record?.ExecutedStepIds ?? [],
             subject = new
             {
                 deploymentSha256 = before.DeploymentSha256, files = before.Files,
@@ -214,7 +227,7 @@ public sealed partial class ManualRun
             links = new { uiManifest = new { sha256 = uiManifestSha256, retained = false, reason = "the UI manifest names local paths; its hash is the lineage" } },
             steps = _steps.Select(s => new
             {
-                n = s.N, text = s.Text ?? s.Template, labels = s.Labels, notices = s.Notices, checks = s.Checks, figures = s.Figures,
+                n = s.N, videoStepId = s.VideoStepId, text = s.Text ?? s.Template, labels = s.Labels, notices = s.Notices, checks = s.Checks, figures = s.Figures,
                 missingFigures = s.MissingFigures, verdict = s.Verdict, error = s.Error,
             }),
             evidence = _evidence,
@@ -246,6 +259,10 @@ public sealed partial class ManualRun
             commit = GitHead(), dirtyFiles = RepoPaths.DirtyFileCount(),
             assemblySha256 = IsolationPaths.Hash(File.ReadAllBytes(typeof(ManualRun).Assembly.Location)),
         };
+        var catalog = ResultCache.ReadCatalog(Path.Combine(RepoPaths.Root(), "docs/VV.Tests.md"));
+        string unit = "Gcam.Studio.UiTests::Gcam.Studio.UiTests.ManualScenarioTests";
+        if (catalog.TryGetValue(unit, out var sources))
+            ScenarioSourceSha256 = ContentFingerprint.Digest(sources.Keys.ToDictionary(p => p, p => ResultCache.SourceHash(RepoPaths.Root(), p)));
         string path = IsolationPaths.Inside(Directory, "manual-run.json");
         File.WriteAllBytes(path, BuildRecord(DateTimeOffset.Now, status, manifestSha, before, after, tool, environment));
         return path;

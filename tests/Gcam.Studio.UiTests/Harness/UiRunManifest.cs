@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Gcam.Studio.UiTests.Harness.Isolation;
+using Gcam.Studio.UiTests.Harness.Observation;
 
 namespace Gcam.Studio.UiTests.Harness;
 
@@ -19,6 +20,19 @@ public sealed class UiRunManifest(string runId, string scenario)
     public string ManifestPhase { get; private set; } = "in_progress";
     public string RunStatus { get; private set; } = "blocked";
     public List<Issue> RunIssues { get; } = [];
+    public List<Issue> ProductIssues { get; } = [];
+    public static Issue[] LivenessIssues(LivenessResult? result)
+    {
+        if (result is null) return [];
+        var issues = new List<Issue>();
+        if (result.LaunchFailed) issues.Add(new("launch_window_timeout", (result.WindowSeen ? "main window not ready" : "main window absent")
+            + "; startup seconds=" + result.StartupSeconds.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture)));
+        if (result.Breached) issues.Add(new("not_responding", "continuous non-response limit breached; phase=" + result.Phase));
+        if (result.EarlyExit) issues.Add(new("app_exited", "exit before intentional close; code=" + result.ExitCode));
+        if (result.AbnormalExit) issues.Add(new("abnormal_exit", "exit code=" + result.ExitCode));
+        return issues.ToArray();
+    }
+    public void RecordLiveness(LivenessResult? result) => ProductIssues.AddRange(LivenessIssues(result));
     public Dictionary<string, object?> Evidence { get; } = [];
     public object? WriteAudit { get; set; }
     private ProbePackage? _package;
@@ -52,10 +66,12 @@ public sealed class UiRunManifest(string runId, string scenario)
         if (resultUse is not ("exploratory" or "regression" or "evidence" or "manual")) throw new ArgumentException("Unknown result use");
         if (RunIssues.Any(i => i.Type is not ("unsafe_effect" or "cleanup_failed" or "blocked"))) throw new InvalidDataException("Unknown run issue type");
         RunStatus = new[] { "unsafe_effect", "cleanup_failed", "blocked" }.FirstOrDefault(s => RunIssues.Any(i => i.Type == s)) ?? "completed";
+        if (ProductIssues.Count != 0) productOutcome = "failed";
         if (RunStatus != "completed" && productOutcome == "passed") productOutcome = "blocked";
         ManifestPhase = "final";
         string basis = observed ? "g1-observed-run" : "qualification-not-established";
         var charterPackage = _probeCharter;
+        var qualification = _package?.Charter?.ScenarioIds.Contains(scenario) == true ? _package.RequireScenario(scenario) : null;
         var conditionals = new[] { "SOURCE-AVAILABLE", "BINARY-TRACEABLE", "SOURCELESS-BINARY", "SEL-LOCALE", "SEL-A11Y",
             "INPUT-COORDINATE", "RUN-RESTART", "SESSION-REUSE", "DEVICE-SIMULATED", "SHARED-RESOURCE", "VERDICT-PIXEL",
             "VERDICT-ARTIFACT", "VERDICT-SUMMARY", "GATE-SKIP", "CAPTURE-OUTPUT", "IMAGE-GATE", "BASELINE", "CI-NO-RUNTIME",
@@ -79,7 +95,8 @@ public sealed class UiRunManifest(string runId, string scenario)
         return new
         {
             schema = "gcam.ui-run", schemaVersion = SchemaVersion, contract = "v4", RunId, ManifestPhase, RunStatus, runIssues = RunIssues.ToArray(),
-            startedAt = _startedAt, finishedAt = DateTimeOffset.UtcNow,
+            startedAt = _startedAt, finishedAt = DateTimeOffset.UtcNow, productIssues = ProductIssues.ToArray(),
+            productStatus = ProductIssues.Count == 0 ? productOutcome : "failed",
             purpose = resultUse,
             preflight = _preflight,
             realWorldEffects = _preflight?.RealWorldEffects ?? [],
@@ -91,16 +108,17 @@ public sealed class UiRunManifest(string runId, string scenario)
             environment = new { os = Environment.OSVersion.VersionString, locale = "en", formattingCulture = System.Globalization.CultureInfo.CurrentCulture.Name,
                 display = new { measured = false, reason = "initial qualification does not inspect presentation" } },
             inputs = Array.Empty<object>(),
-            executionGates = new[] { charterPackage is null ? new Gate("G0", "blocked", "no-applicable-charter-package")
+            executionGates = qualification?.Gates.Select(g => new Gate(g.Id, g.Status, g.Reason)).ToArray()
+                ?? new[] { charterPackage is null ? new Gate("G0", "blocked", "no-applicable-charter-package")
                 : new Gate("G0", "passed-lite", "approved-probe-charter"), new Gate("G1", "blocked", basis) },
             recommendedPractices = new[] { new Gate("G2", "recommended", "measurement"), new Gate("G6", "recommended", "operation") },
             resultBundles = new[] { new Bundle("runtime", resultUse, "blocked", basis,
                 new[] { "G3", "G4", "G5" }.Select(id => new Gate(id, "blocked", basis)).ToArray(),
                 new(false, resultUse == "manual" ? new[] { "final-render", "new-or-changed-capture-template" } : [],
                     "final review follows production and does not block it", []), [] ) },
-            charter = new { status = charterPackage is null ? "draft" : "approved",
-                scope = charterPackage is null ? null : "launch-idle-exit-probe-only",
-                manualStatus = "draft-not-approved", approvals = charterPackage?.LiveApprovals ?? [] },
+            charter = new { status = qualification?.Status ?? (charterPackage is not null ? "approved" : "draft"),
+                scope = qualification?.Scope ?? (charterPackage is null ? null : "launch-idle-exit-probe-only"),
+                manualStatus = "draft-not-approved", approvals = qualification is null ? charterPackage?.LiveApprovals ?? [] : _package!.LiveApprovals },
             adoption = new { mode = "existing", qualificationScopes = new[] { "isolation", "process-monitor", "probe-launch" }.Select(id => new
             {
                 id, status = "blocked", allowedUses = Array.Empty<string>(),
@@ -115,6 +133,7 @@ public sealed class UiRunManifest(string runId, string scenario)
             ownedProcesses = Evidence.GetValueOrDefault("ownedProcesses", Array.Empty<object>()),
             processIssues = Evidence.GetValueOrDefault("processIssues", Array.Empty<string>()),
             processMonitor = Evidence.GetValueOrDefault("processMonitor", new { methods = Array.Empty<string>(), reason = "not performed" }),
+            liveChannels = Evidence.GetValueOrDefault("liveChannels"),
             sharedResources = Evidence.GetValueOrDefault("sharedResources", Array.Empty<object>()),
             presentation = Evidence.GetValueOrDefault("presentation", new { fixedValues = new { }, unfixedValues = new[] { "not measured in headless qualification" } }),
             captureOmissions = Array.Empty<object>(),

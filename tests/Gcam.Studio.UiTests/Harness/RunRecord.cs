@@ -14,6 +14,16 @@ public sealed class RunRecord
 {
     private readonly Dictionary<string, object?> _fields = new();
     private readonly List<string> _steps = [];
+    private readonly List<string> _executedStepIds = [];
+    private readonly object _stepGate = new();
+    private readonly object _fieldGate = new();
+    private bool _abortedSteps;
+    public void AbortSteps() { lock (_stepGate) _abortedSteps = true; }
+    public void RequireStepsOpen()
+    {
+        lock (_stepGate) if (_abortedSteps) throw new InvalidOperationException("Run aborted; further steps refused");
+    }
+    public IReadOnlyList<string> ExecutedStepIds => _executedStepIds;
 
     public RunRecord(string scenario)
     {
@@ -50,17 +60,28 @@ public sealed class RunRecord
         set { Video?.Privacy(value is not null); _omitWindowDiagnosticsReason = value; }
     }
 
-    public void Set(string key, object? value) => _fields[key] = value;
+    public void Set(string key, object? value) { lock (_fieldGate) _fields[key] = value; }
 
     /// <summary>A scenario step: the record's step log and a caption of the recording.</summary>
     public void Step(string text)
     {
         Diagnostic(text);
-        Video?.Step(text);
+        RecordStep(() => text);
+    }
+    public string RecordStep(Func<string> text)
+    {
+        lock (_stepGate)
+        {
+            RequireStepsOpen();
+            string id = "action-" + (_executedStepIds.Count + 1).ToString("D4");
+            id = Video?.RecordStep(text, id) ?? id;
+            _executedStepIds.Add(id);
+            return id;
+        }
     }
 
     /// <summary>The step log only (polling outcomes), so diagnostics do not drown the reader's captions.</summary>
-    public void Diagnostic(string text) => _steps.Add($"{DateTime.Now:HH:mm:ss.fff} {text}");
+    public void Diagnostic(string text) { lock (_stepGate) _steps.Add($"{DateTime.Now:HH:mm:ss.fff} {text}"); }
 
     /// <summary>Diagnostic-only capture of the owned window's visible frame.</summary>
     public static void CaptureWindow(AutomationElement window, string path)
@@ -78,10 +99,10 @@ public sealed class RunRecord
     /// <summary>Tree dump + window capture + last steps, for a run that failed.</summary>
     public void CaptureFailure(Exception error, AutomationElement? window)
     {
-        _fields["error"] = error.ToString();
+        Set("error", error.ToString());
         if (OmitWindowDiagnosticsReason is { } reason)
         {
-            _fields["windowDiagnosticsOmitted"] = reason;
+            Set("windowDiagnosticsOmitted", reason);
             return;
         }
         if (window is null) return;
@@ -101,16 +122,21 @@ public sealed class RunRecord
         }
         catch (Exception e)
         {
-            _fields["diagnosticsError"] = e.Message;   // a broken bundle must not hide the original failure
+            Set("diagnosticsError", e.Message);   // a broken bundle must not hide the original failure
         }
     }
 
     public string Save(string result)
     {
-        _fields["result"] = result;
-        _fields["steps"] = _steps;
+        Set("result", result);
+        lock (_stepGate) { Set("steps", _steps.ToArray()); Set("executedStepIds", _executedStepIds.ToArray()); }
+        if (Video is not null) Set("videoStatus", Video.StatusRecord());
         string path = Path.Combine(Directory, "manifest.json");
-        File.WriteAllText(path, JsonSerializer.Serialize(_fields, new JsonSerializerOptions { WriteIndented = true }));
+        Dictionary<string, object?> fields;
+        lock (_fieldGate) fields = new(_fields);
+        // The record keeps its historical options (values such as the preflight, oracle or process ending stay PascalCase
+        // for existing readers); the v4 video status arrives pre-serialised in the video-status.json shape.
+        File.WriteAllText(path, JsonSerializer.Serialize(fields, new JsonSerializerOptions { WriteIndented = true }));
         return path;
     }
 

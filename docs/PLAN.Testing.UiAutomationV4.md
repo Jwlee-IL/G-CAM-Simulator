@@ -26,7 +26,30 @@ interval, step IDs and privacy declarations); the four report-export clips stop 
 a scenario fix for turn C. Plan corrections from the turns: the turn-1 decode measurement ignored the H.264 media-type
 change (900 → 912 coded rows; the checker analyses the display aperture); under v4 `allowAppFileWrites` would be true
 (an isolation change, not made); E1 / E3 on the trace path are references although the PID is known — both for the charter.
-Next: turn C.
+**Turn C done 2026-10-22** (Codex 13:48–14:46, then three fix rounds after independent readings: C2 begun by Codex, which
+ran out of allowance again at 15:04, finished by a substitute Claude implementer, as were C3 and C4). Wired: liveness from
+launch to exit with the intentional-close mark before the close request and bounded close / failure-capture phases;
+product failures (`not_responding`, `app_exited` also with code 0, `abnormal_exit`, `launch_window_timeout`) on the product
+axis only, never a run issue; Documents watcher with a per-run control created and removed by its own run (recorded, also on a
+launch failure) and the connection sampler as live channels; recording stop → app exit → decode check, shared step IDs, no
+step after `Complete()`; report-export privacy ends when the dialog's closing is confirmed; every raw input rechecks the guard
+immediately before it, so no input follows a product failure; an unread sandbox is a run issue, never "no writes"; the real
+v4 approval package required by desktop collection and the manual batch, production only with G0 and G1 passed; the
+generators check the exact run's video status (L3), refused and superseded attempts stay listed for final review, new
+editions refuse old-contract runs, committed records replay unchanged (L4). Defects found by the readings and fixed: the run
+record's nested video status in the wrong case (every real desktop pass refused), a headless test selected as a desktop case,
+teardown hangs unbounded, the manual generator checking superseded runs, the Documents control left in the real Documents
+folder, unguarded input paths, privacy running past the dialog, startup counted as non-response, G1 `blocked` allowed for
+production, machine-local scratch paths in tests, product failures recorded as `blocked`, and isolation failures swallowed
+after a product failure. Result: UiTests 225 passed / 41 skipped, solution 1,297 / 63, Python 140 OK, 3 milestones and 3
+editions replay, catalog entries for the nine new test classes. Plan corrections (for the charter): **Done when**'s "unhandled
+exception diagnosed separately" no longer holds after L1 (hang / early / abnormal exit only); the package carries only G0 /
+G1, so G3 / G4 are not machine-checked; privacy ends when no owned modal remains and the export command returned; time before
+the main window exists is outside the 10 s limit; the Documents control is per run, not retained; refusing the button release
+after a product failure mid-drag leaves the button down on a shared desktop — the implementer proposes a narrow exception
+(only the up matching the harness's own down, checked by Win32 against the owned window), for the author; harness markers are
+bare run IDs without a product-unique prefix (the procedure's marker-uniqueness rule). Next: the charter rewrite for the
+author's approval, then the desktop session.
 
 ## Why (2026-10-21)
 

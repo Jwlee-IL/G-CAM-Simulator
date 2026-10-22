@@ -21,7 +21,7 @@ public sealed class ManualObservation : IDisposable
 
     /// <summary>One scenario's launch: its window bounds (before launch, after cleanup) and the owned Studio process.</summary>
     public sealed record Launch(string RunId, DateTimeOffset LaunchAt, DateTimeOffset ExitAt, int? Pid, DateTimeOffset? ProcessStartedAt,
-        string ScenarioId = "", string? UiManifestPath = null, ProbePackage.EffectGrant[]? RealWorldEffects = null);
+        string ScenarioId = "", string? UiManifestPath = null, ProbePackage.EffectGrant[]? RealWorldEffects = null, string[]? LiveControlFiles = null);
 
     private static ManualObservation? _active;
     public static ManualObservation? Active => _active;
@@ -42,10 +42,27 @@ public sealed class ManualObservation : IDisposable
     public ManualObservation()
     {
         string? directory = Environment.GetEnvironmentVariable(DirectoryVariable);
-        if (string.IsNullOrEmpty(directory) || Environment.GetEnvironmentVariable(DesktopFactAttribute.OptInVariable) != "1") return;
+        if (Environment.GetEnvironmentVariable(DesktopFactAttribute.OptInVariable) != "1") return;
+        if (Environment.GetEnvironmentVariable("GCAM_UI_CACHE") == "1") throw new InvalidDataException("Manual production requires fresh attempts (GCAM_UI_CACHE=0)");
+        if (string.IsNullOrEmpty(directory))
+        {
+            string? path = Environment.GetEnvironmentVariable("GCAM_UI_APPROVALS");
+            if (string.IsNullOrWhiteSpace(path)) throw new InvalidDataException("Manual batch requires GCAM_UI_APPROVALS or an observed batch approvals.json");
+            Package = ProbePackage.Load(path);
+            if (Package.Contract != "v4") throw new InvalidDataException("Manual batch requires a v4 author approval package");
+            var source = SourceIdentity.Read(RepoPaths.Root());
+            Package.ValidateSource(source.Commit, source.CommittedAt);
+            Package.Validate(Package.RunId, IsolationPaths.Fingerprint(Path.Combine(RepoPaths.Root(), "tests/Gcam.Studio.UiTests/Harness/Isolation")),
+                ProbePackage.DeploymentFingerprint(RepoPaths.StudioExe()));
+            Package.RequireProductionGates(); // a manual batch produces an edition's inputs (D7)
+            _active = this;
+            return;
+        }
         RunDirectory = Path.GetFullPath(directory);
         RunId = Path.GetFileName(RunDirectory);
         Package = Preflight(RunDirectory, RunId);
+        if (Package.Contract != "v4") throw new InvalidDataException("Manual batch requires a v4 author approval package");
+        Package.RequireProductionGates();
         _roots = StateSnapshot.ObservedRoots(Path.GetDirectoryName(RepoPaths.StudioExe())!, Path.GetTempPath(), RunDirectory);
         _snapshots.Add(Snapshot("A"));
         _nullStarted = DateTimeOffset.UtcNow;
@@ -94,6 +111,7 @@ public sealed class ManualObservation : IDisposable
     /// <summary>The file positive control: one harness write into the first scenario's sandbox while Studio runs.</summary>
     public void SandboxReady(string sandbox)
     {
+        if (RunDirectory is null) return;
         if (_diagnostic is not null) return;
         _diagnostic = IsolationPaths.Inside(sandbox, DiagnosticFile);
         File.WriteAllText(_diagnostic, RunId + "\n");
@@ -130,19 +148,20 @@ public sealed class ManualObservation : IDisposable
             scenarios = launches.Select(l => new { runId = l.RunId, scenarioId = l.ScenarioId, launchAt = l.LaunchAt.ToString("O"), exitAt = l.ExitAt.ToString("O") }).ToArray(),
             ownedProcesses = launches.Where(l => l.Pid is not null).Select(l => new { pid = l.Pid, parentPid = Environment.ProcessId, image = "Gcam.Studio.exe",
                 startedAt = l.ProcessStartedAt?.ToString("O"), finishedAt = l.ExitAt.ToString("O"), ending = "see the scenario's UI manifest" }).ToArray(),
-            harnessOwned = new { files = ownedFiles, registry = new[] { markerKey } },
+            harnessOwned = new { files = ownedFiles.Concat(launches.SelectMany(l => l.LiveControlFiles ?? [])).ToArray(), registry = new[] { markerKey } },
             positiveControls = new
             {
                 file = diagnosticFile ?? "",
                 registry = new { key = markerKey, valueName = RegistryMarker.ValueName, written = markerWritten },
                 process = "Gcam.Studio.exe",
             },
-            channelApplicability = new[] { ProbeChannels.Network },
+            channelApplicability = new[] { new { channel = "network", applicable = true, reason = "see each scenario manifest liveChannels" } },
         };
     }
 
     public void Dispose()
     {
+        if (ReferenceEquals(_active, this)) _active = null;
         if (RunDirectory is null) return;
         _active = null;
         var finished = DateTimeOffset.UtcNow;

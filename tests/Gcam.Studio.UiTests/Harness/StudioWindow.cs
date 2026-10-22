@@ -19,6 +19,18 @@ public sealed class StudioWindow(AutomationElement window, ActionPolicy policy, 
     public void RequireInputSafe() => requireInputSafe();
     private void Guard(string id, string operation) { requireInputSafe(); policy.Require(id, operation); }
 
+    /// <summary>Every raw input into Studio: resolve its target (UIA calls, which can block past the liveness limit), then
+    /// check the guard immediately before the input itself. A worker abandoned after a product failure therefore sends
+    /// nothing, wherever the failure fell between the method's entry and the input. Also a headless test seam.</summary>
+    internal static void Act<T>(Action guard, Func<T> resolve, Action<T> input)
+    {
+        var target = resolve();
+        guard();
+        input(target);
+    }
+    private void Act<T>(Func<T> resolve, Action<T> input) => Act(requireInputSafe, resolve, input);
+    private void Send(Action input) { requireInputSafe(); input(); }
+
     public AutomationElement ById(string automationId, AutomationElement? scope = null)
     {
         Guard(automationId, "read");
@@ -39,7 +51,7 @@ public sealed class StudioWindow(AutomationElement window, ActionPolicy policy, 
             ?? throw new SelectorMatchException("Left." + tab + "Tab", 0);
         var selection = Pattern<SelectionItemPattern>(element, SelectionItemPattern.Pattern);
         if (selection.Current.IsSelected) return;
-        selection.Select();
+        Send(selection.Select);
         WaitUntil(() => selection.Current.IsSelected, TimeSpan.FromSeconds(2), "left " + tab + " tab selected");
     }
 
@@ -116,7 +128,7 @@ public sealed class StudioWindow(AutomationElement window, ActionPolicy policy, 
 
     private bool Visible(string id) => Exists(id) && !ById(id).Current.IsOffscreen;
 
-    public void Invoke(string id) { Guard(id, "invoke"); Pattern<InvokePattern>(ById(id), InvokePattern.Pattern).Invoke(); }
+    public void Invoke(string id) { Guard(id, "invoke"); Act(() => Pattern<InvokePattern>(ById(id), InvokePattern.Pattern), p => p.Invoke()); }
 
     public void Click(string id)
     {
@@ -146,8 +158,8 @@ public sealed class StudioWindow(AutomationElement window, ActionPolicy policy, 
         Log?.Invoke("foreground lost to another window; restoring and activating the owned Studio window (own handle only)");
         if (Element.TryGetCurrentPattern(WindowPattern.Pattern, out var w) && w is WindowPattern window
             && window.Current.WindowVisualState == WindowVisualState.Minimized)
-            window.SetWindowVisualState(WindowVisualState.Normal);
-        SetForegroundWindow(handle);
+            Send(() => window.SetWindowVisualState(WindowVisualState.Normal));
+        Send(() => SetForegroundWindow(handle));
         var watch = Stopwatch.StartNew();
         while (GetForegroundWindow() != handle && watch.Elapsed < TimeSpan.FromSeconds(3)) Thread.Sleep(50);
         bool restored = GetForegroundWindow() == handle;
@@ -160,14 +172,14 @@ public sealed class StudioWindow(AutomationElement window, ActionPolicy policy, 
     [System.Runtime.InteropServices.DllImport("user32.dll")] private static extern bool SetForegroundWindow(IntPtr window);
     [System.Runtime.InteropServices.DllImport("user32.dll")] private static extern uint GetWindowThreadProcessId(IntPtr window, out uint processId);
 
-    public void Toggle(string id) { Guard(id, "toggle"); Pattern<TogglePattern>(ById(id), TogglePattern.Pattern).Toggle(); }
+    public void Toggle(string id) { Guard(id, "toggle"); Act(() => Pattern<TogglePattern>(ById(id), TogglePattern.Pattern), p => p.Toggle()); }
 
     public void Expand(string id)
     {
         Guard(id, "expand");
         if (id == "Optics.Section") SelectLeftTab("Optics");
         else if (id == "Detector.Section") SelectLeftTab("Detector");
-        else Pattern<ExpandCollapsePattern>(ById(id), ExpandCollapsePattern.Pattern).Expand();
+        else Act(() => Pattern<ExpandCollapsePattern>(ById(id), ExpandCollapsePattern.Pattern), p => p.Expand());
     }
 
     /// <summary>Selects a combo box item by name through its opened drop-down and reads the selection back. Throws
@@ -188,7 +200,7 @@ public sealed class StudioWindow(AutomationElement window, ActionPolicy policy, 
         var combo = ById(id);
         if (SelectedName(combo) == name) return;
         var expand = Pattern<ExpandCollapsePattern>(combo, ExpandCollapsePattern.Pattern);
-        expand.Expand();
+        Send(expand.Expand);
         AutomationElement? item = null;
         try
         {
@@ -202,7 +214,7 @@ public sealed class StudioWindow(AutomationElement window, ActionPolicy policy, 
         }
         if (!IsOpen(expand))
             throw new InvalidOperationException($"The drop-down of {id} closed before {name} was selected");
-        Pattern<SelectionItemPattern>(item!, SelectionItemPattern.Pattern).Select();
+        Act(() => Pattern<SelectionItemPattern>(item!, SelectionItemPattern.Pattern), p => p.Select());
         Collapse(expand);
         try
         {
@@ -228,9 +240,9 @@ public sealed class StudioWindow(AutomationElement window, ActionPolicy policy, 
         return item is not null && item.Current.ControlType == ControlType.ListItem ? item : null;
     }
 
-    private static void Collapse(ExpandCollapsePattern expand)
+    private void Collapse(ExpandCollapsePattern expand)
     {
-        if (expand.Current.ExpandCollapseState != ExpandCollapseState.Collapsed) expand.Collapse();
+        if (expand.Current.ExpandCollapseState != ExpandCollapseState.Collapsed) Send(expand.Collapse);
         WaitUntil(() => expand.Current.ExpandCollapseState == ExpandCollapseState.Collapsed, TimeSpan.FromSeconds(2), "drop-down closed");
     }
 
@@ -261,7 +273,7 @@ public sealed class StudioWindow(AutomationElement window, ActionPolicy policy, 
     {
         Guard(id, "select");
         var item = Pattern<SelectionItemPattern>(ById(id), SelectionItemPattern.Pattern);
-        item.Select();
+        Send(item.Select);
         WaitUntil(() => item.Current.IsSelected, TimeSpan.FromSeconds(2), $"{id} selected");
     }
 
@@ -273,9 +285,9 @@ public sealed class StudioWindow(AutomationElement window, ActionPolicy policy, 
     {
         Guard(id, "set");
         var value = Pattern<ValuePattern>(ById(id), ValuePattern.Pattern);
-        value.SetValue(text);
-        ById(id).SetFocus();
-        ById(commitBy).SetFocus();
+        Send(() => value.SetValue(text));
+        Act(() => ById(id), e => e.SetFocus());
+        Act(() => ById(commitBy), e => e.SetFocus());
         Thread.Sleep(150);
         // Rejected/canonicalised edits are intentional regression inputs; their scenario judges the handler.
         Log?.Invoke($"input read-back {id}: requested '{text}', displayed '{Value(id)}'");
@@ -290,9 +302,16 @@ public sealed class StudioWindow(AutomationElement window, ActionPolicy policy, 
     {
         Guard(id, "keys");
         if (!EnsureForeground()) throw new InvalidOperationException("Owned window lost foreground before keyboard input");
-        ById(id).SetFocus();
+        Act(() => ById(id), e => e.SetFocus());
         Thread.Sleep(100);
-        System.Windows.Forms.SendKeys.SendWait(keys);
+        // SendKeys goes to whatever window is in the foreground: the owned handle is read first (UIA), then the guard and
+        // the foreground are checked with no UIA call between them and the keys.
+        var handle = new IntPtr(Element.Current.NativeWindowHandle);
+        Send(() =>
+        {
+            if (GetForegroundWindow() != handle) throw new InvalidOperationException("Owned window lost foreground before keyboard input");
+            System.Windows.Forms.SendKeys.SendWait(keys);
+        });
         Thread.Sleep(150);
     }
 
@@ -382,9 +401,9 @@ public sealed class StudioWindow(AutomationElement window, ActionPolicy policy, 
             throw new InvalidOperationException("Normalise requires a closed modal layer; the scenario left a dialog open.");
         if (Element.TryGetCurrentPattern(WindowPattern.Pattern, out var w) && w is WindowPattern window
             && window.Current.WindowVisualState != WindowVisualState.Normal)
-            window.SetWindowVisualState(WindowVisualState.Normal);
+            Send(() => window.SetWindowVisualState(WindowVisualState.Normal));
         if (Element.TryGetCurrentPattern(TransformPattern.Pattern, out var t) && t is TransformPattern transform && transform.Current.CanResize)
-            transform.Resize(width, height);
+            Send(() => transform.Resize(width, height));
         AutomationElement? focusTarget = null;
         FocusPreparation.Wait(() =>
         {
@@ -393,8 +412,7 @@ public sealed class StudioWindow(AutomationElement window, ActionPolicy policy, 
             return focusTarget.Current.IsEnabled && !focusTarget.Current.IsOffscreen && focusTarget.Current.IsKeyboardFocusable;
         }, () =>
         {
-            requireInputSafe();
-            focusTarget!.SetFocus();
+            Send(focusTarget!.SetFocus);
             return focusTarget.Current.HasKeyboardFocus;
         }, TimeSpan.FromSeconds(5), Log);
         Thread.Sleep(300);   // let layout settle after the resize; the verdict re-reads every bound it uses

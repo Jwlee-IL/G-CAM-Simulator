@@ -24,39 +24,67 @@ public static class Pointer
     /// <summary>True when cursor coordinates and UIA rectangles are both physical pixels.</summary>
     public static bool IsPerMonitorAware => AreDpiAwarenessContextsEqual(GetThreadDpiAwarenessContext(), new IntPtr(-4));
 
-    public static void MoveTo(Point p)
+    /// <summary>The raw operations under the pointer sequences (a headless test seam). <see cref="Check"/> is the boundary
+    /// check (guard, foreground, ownership, declared target): it reads UIA and can block past the liveness limit.</summary>
+    internal interface IRawInput
     {
-        PointerBoundary.Require(p);
-        if (!SetCursorPos((int)Math.Round(p.X), (int)Math.Round(p.Y))) throw new InvalidOperationException("SetCursorPos failed");
+        void Check(Point p);
+        void SetCursor(int x, int y);
+        void Button(uint flags);
+    }
+    private sealed class Win32Input : IRawInput
+    {
+        public void Check(Point p) => PointerBoundary.Require(p);
+        public void SetCursor(int x, int y) { if (!SetCursorPos(x, y)) throw new InvalidOperationException("SetCursorPos failed"); }
+        public void Button(uint flags)
+        {
+            var input = new Input { Type = 0, Mouse = new MouseInput { Flags = flags } };
+            if (SendInput(1, [input], Marshal.SizeOf<Input>()) != 1) throw new InvalidOperationException("SendInput was blocked (UIPI or a locked desktop?)");
+        }
+    }
+    private static readonly IRawInput Native = new Win32Input();
+
+    public static void MoveTo(Point p) => MoveTo(p, Native);
+    /// <summary>The guard is checked again after the boundary check's UIA reads, immediately before the cursor moves.</summary>
+    internal static void MoveTo(Point p, IRawInput raw)
+    {
+        raw.Check(p);
+        PointerBoundary.RequireInputSafe();
+        raw.SetCursor((int)Math.Round(p.X), (int)Math.Round(p.Y));
         Thread.Sleep(StepDelayMs);
     }
 
-    public static void Click(Point p)
+    public static void Click(Point p) => Click(p, Native);
+    internal static void Click(Point p, IRawInput raw)
     {
-        MoveTo(p);
-        Button(LeftDown);
-        Button(LeftUp);
+        MoveTo(p, raw);
+        Button(LeftDown, raw);
+        Button(LeftUp, raw);
         Thread.Sleep(100);
     }
 
     /// <summary>Press at <paramref name="from"/>, move in steps (well past any drag threshold), release at <paramref name="to"/>.</summary>
-    public static void Drag(Point from, Point to, int steps = 12)
+    /// <remarks>A product failure in the middle refuses every further event, the release included: the injected press then
+    /// stays down until the next physical click (residual risk recorded for the charter; no input is ever sent after a
+    /// recorded product failure).</remarks>
+    public static void Drag(Point from, Point to, int steps = 12) => Drag(from, to, steps, Native);
+    internal static void Drag(Point from, Point to, int steps, IRawInput raw)
     {
-        MoveTo(from);
-        Button(LeftDown);
+        MoveTo(from, raw);
+        Button(LeftDown, raw);
         for (int i = 1; i <= steps; i++)
-            MoveTo(new Point(from.X + (to.X - from.X) * i / steps, from.Y + (to.Y - from.Y) * i / steps));
-        Button(LeftUp);
+            MoveTo(new Point(from.X + (to.X - from.X) * i / steps, from.Y + (to.Y - from.Y) * i / steps), raw);
+        Button(LeftUp, raw);
         Thread.Sleep(100);
     }
 
     /// <summary>Where the cursor actually is (to confirm the input landed where intended).</summary>
     public static Point Position() => GetCursorPos(out var p) ? new Point(p.X, p.Y) : throw new InvalidOperationException("GetCursorPos failed");
 
-    private static void Button(uint flags)
+    private static void Button(uint flags, IRawInput raw)
     {
-        var input = new Input { Type = 0, Mouse = new MouseInput { Flags = flags } };
-        if (SendInput(1, [input], Marshal.SizeOf<Input>()) != 1) throw new InvalidOperationException("SendInput was blocked (UIPI or a locked desktop?)");
+        PointerBoundary.RequireInputSafe(); // immediately before the button event, never only at the sequence's start
+        raw.Button(flags);
         Thread.Sleep(StepDelayMs);
     }
 

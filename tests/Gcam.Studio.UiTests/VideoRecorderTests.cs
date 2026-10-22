@@ -27,6 +27,18 @@ public sealed class VideoRecorderTests : IDisposable
         return new(root, "case", "run", 64, 48, capture, sink, new('a', 40), false, new('b', 64), new('c', 64));
     }
     [Fact]
+    public void CaptureStopsBeforeChecking_AndCompleteRefusesFurtherSteps()
+    {
+        var recorder = Start(privacy => new(new byte[64 * 48 * 4], [], [], privacy), () => new Sink());
+        recorder.RecordStep("initial", "action-0001");
+        recorder.StopCapture();
+        Assert.Null(recorder.Entry);
+        recorder.Stop();
+        recorder.Complete(false);
+        Assert.Throws<InvalidOperationException>(() => recorder.RecordStep("after completion", "action-0002"));
+        Assert.Throws<InvalidOperationException>(() => recorder.RecordStep(() => "deferred after completion", "action-0003"));
+    }
+    [Fact]
     public void EdgeRing_CoversEveryBorderPixel_AndNothingInside()
     {
         var size = new System.Drawing.Size(40, 30); var ring = VideoCapture.EdgeRing(size); int e = VideoCapture.NeutralEdgePx;

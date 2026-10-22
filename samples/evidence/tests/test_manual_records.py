@@ -8,6 +8,10 @@ import re
 import struct
 import tempfile
 import unittest
+import sys as _sys
+if str(Path(__file__).resolve().parent) not in _sys.path:  # the helper beside this file, under any runner
+    _sys.path.insert(0, str(Path(__file__).resolve().parent))
+from scratch_fixtures import ScratchTestCase, scratch as owned_scratch
 import uuid
 import xml.etree.ElementTree as ET
 import zipfile
@@ -20,10 +24,7 @@ spec.loader.exec_module(mr)
 
 
 def scratch():
-    # Retained for audit under the temporary folder; no cleanup or deletion.
-    root = Path(tempfile.gettempdir()) / ('gcam-manual-fixture-' + uuid.uuid4().hex)
-    root.mkdir()
-    return root
+    return owned_scratch('gcam-fixture-')
 
 
 def filtered_png(width, height, pixels, channels, filters):
@@ -60,7 +61,7 @@ def filtered_png(width, height, pixels, channels, filters):
             + chunk(b'IEND', b''))
 
 
-class ManualRecordsTests(unittest.TestCase):
+class ManualRecordsTests(ScratchTestCase):
     def pixels(self, width, height, channels):
         return bytes((x * 37 + y * 11 + k * 101) % 256 for y in range(height) for x in range(width) for k in range(channels))
 
@@ -355,7 +356,7 @@ class ManualRecordsTests(unittest.TestCase):
         record.update(runId='run-beta0', startedAt='2026-10-14T09:00:00+00:00')
         (runs / 'run-beta0').mkdir()
         (runs / 'run-beta0/manual-run.json').write_bytes(mr.canonical(record))
-        outputs = mr.generate(src, runs, 'e1', '2026-10-14', root / 'e1')
+        outputs = mr.generate(src, runs, 'e1', '2026-10-14', root / 'e1', previous='none')
         generation = json.loads(outputs['generation-record.json'])
         beta = next(c for c in generation['chapters'] if c['number'] == '1.3')
         self.assertEqual(['superseded', 'latest'], [c['selection'] for c in beta['candidates']])
@@ -364,7 +365,7 @@ class ManualRecordsTests(unittest.TestCase):
         record.update(startedAt=json.loads((runs / 'run-beta/manual-run.json').read_bytes())['startedAt'])
         (runs / 'run-beta0/manual-run.json').write_bytes(mr.canonical(record))
         with self.assertRaisesRegex(ValueError, 'selection-tie'):
-            mr.generate(src, runs, 'e2', '2026-10-14', root / 'e2')
+            mr.generate(src, runs, 'e2', '2026-10-14', root / 'e2', previous='none')
 
     def test_figures_are_centred_and_the_record_describes_their_labels(self):
         root = scratch()
@@ -372,7 +373,7 @@ class ManualRecordsTests(unittest.TestCase):
         record = json.loads((runs / 'run-alpha/manual-run.json').read_bytes())
         record['steps'][0]['figures'][0]['caption'] = 'A <b> & c'
         (runs / 'run-alpha/manual-run.json').write_bytes(mr.canonical(record))
-        outputs = mr.generate(src, runs, 'e1', '2026-10-14', root / 'e1')
+        outputs = mr.generate(src, runs, 'e1', '2026-10-14', root / 'e1', previous='none')
         markdown = outputs['MANUAL.Studio.md'].decode('utf-8')
         self.assertIn('<p align="center"><img src="figures/1.2-1.png" alt="Figure 1.2-1"></p>\n'
                       '<p align="center"><em>Figure 1.2-1.</em> A &lt;b&gt; &amp; c</p>\n', markdown)
@@ -405,7 +406,7 @@ class ManualRecordsTests(unittest.TestCase):
         self.assertEqual(marks[0]['label'], 'Alpha\nsecond line')   # the measured marks are not changed
         root = scratch()
         src, runs = mr.fixture(root)
-        outputs = mr.generate(src, runs, 'e1', '2026-10-14', root / 'e1')
+        outputs = mr.generate(src, runs, 'e1', '2026-10-14', root / 'e1', previous='none')
         markdown = outputs['MANUAL.Studio.md'].decode('utf-8')
         self.assertIn('<p align="center"><em>Figure 1.2-1.</em> The top bar.</p>\n\n### 1.3 Beta', markdown)   # no list under it
         generation = json.loads(outputs['generation-record.json'])
@@ -418,7 +419,7 @@ class ManualRecordsTests(unittest.TestCase):
 
     def test_an_edition_from_before_the_purpose_list_replays_without_one(self):
         root = scratch()
-        src, runs = mr.fixture(root)
+        src, runs = mr.fixture(root, legacy=True)   # such an edition predates the v4 run contract
         legacy = root / 'legacy-sources'
         (legacy / 'static').mkdir(parents=True)
         for relative in ('chapters.json', 'notices.json', 'static/intro.md'):
@@ -426,7 +427,7 @@ class ManualRecordsTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'purposes: missing purposes.json'):
             mr.load_sources(legacy)   # a new edition always needs the purpose list
         sources = mr.load_sources(legacy, require_purposes=False)
-        outputs = mr.assemble(sources, mr.load_runs(runs, sources), 'old', '2026-10-14', False, mr.DEFAULT_BUDGET)
+        outputs = mr.assemble(sources, mr.load_runs(runs, sources), 'old', '2026-10-14', False, mr.DEFAULT_BUDGET, replay=True)
         edition = root / 'old'
         for relative, data in outputs.items():
             (edition / relative).parent.mkdir(parents=True, exist_ok=True)
@@ -488,7 +489,7 @@ class ManualRecordsTests(unittest.TestCase):
     def fixture_edition(self):
         root = scratch()
         src, runs = mr.fixture(root)
-        outputs = mr.generate(src, runs, 'e1', '2026-10-14', root / 'e1')
+        outputs = mr.generate(src, runs, 'e1', '2026-10-14', root / 'e1', previous='none')
         return outputs, json.loads(outputs['generation-record.json'])
 
     @staticmethod

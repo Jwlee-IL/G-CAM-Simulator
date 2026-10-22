@@ -10,7 +10,14 @@ public sealed class LivenessObserver : IDisposable
     private readonly object _gate = new();
     private readonly Process _process;
     private readonly OwnedProcessIdentity _identity;
-    private readonly IntPtr _hwnd;
+    private IntPtr _hwnd;
+    private readonly bool _borrowedProcess;
+    private double? _windowAt;
+    private bool _launchFailed;
+    private string _phase = "launch", _failurePhase = "";
+    public void SetPhase(string phase) { lock (_gate) _phase = phase; }
+    public void LaunchFailed() { lock (_gate) { _launchFailed = true; _failurePhase = "launch"; } PublishFailure(); }
+    private readonly Func<IntPtr>? _window;
     private readonly TimeSpan _limit, _period, _timeout;
     private readonly Stopwatch _clock = Stopwatch.StartNew();
     private readonly DateTimeOffset _anchorUtc = DateTimeOffset.UtcNow;
@@ -31,14 +38,33 @@ public sealed class LivenessObserver : IDisposable
 
     public LivenessObserver(IntPtr hwnd, OwnedProcessIdentity identity, TimeSpan? limit = null,
         TimeSpan? samplePeriod = null, TimeSpan? probeTimeout = null)
+        : this(hwnd, identity, null, null, limit, samplePeriod, probeTimeout) { }
+
+    /// <summary>The launcher's retained handle also covers exit before the observer attaches. HWND discovery uses no UIA:
+    /// by default the observer's own process handle (never the launcher's object, which the controlling thread uses).
+    /// <paramref name="window"/> and <paramref name="limit"/> are headless test seams.</summary>
+    public LivenessObserver(Process launched, OwnedProcessIdentity identity, Func<IntPtr>? window = null, TimeSpan? limit = null)
+        : this(IntPtr.Zero, identity, launched, window, limit, null, null) { }
+
+    private LivenessObserver(IntPtr hwnd, OwnedProcessIdentity identity, Process? launched, Func<IntPtr>? window,
+        TimeSpan? limit, TimeSpan? samplePeriod, TimeSpan? probeTimeout)
     {
         _hwnd = hwnd; _identity = identity;
+        if (hwnd != IntPtr.Zero) _windowAt = 0;
         _limit = limit ?? TimeSpan.FromSeconds(10); _period = samplePeriod ?? TimeSpan.FromMilliseconds(100);
         _timeout = probeTimeout ?? TimeSpan.FromMilliseconds(100);
         if (_limit <= TimeSpan.Zero || _period <= TimeSpan.Zero || _timeout <= TimeSpan.Zero || _timeout > TimeSpan.FromSeconds(1))
             throw new ArgumentOutOfRangeException(nameof(limit));
-        _process = Process.GetProcessById(identity.Pid);
-        if (!identity.Matches(_process)) { _process.Dispose(); throw new InvalidOperationException("Owned process identity mismatch"); }
+        // Only the already-exited launcher handle is borrowed; it is never refreshed.
+        if (launched?.HasExited == true) { _process = launched; _borrowedProcess = true; }
+        else
+        {
+            try { _process = Process.GetProcessById(identity.Pid); }
+            catch (ArgumentException) when (launched?.HasExited == true) { _process = launched; _borrowedProcess = true; }
+        }
+        _window = window ?? (launched is null ? null : () => { _process.Refresh(); return _process.MainWindowHandle; });
+        if (!_process.HasExited && !identity.Matches(_process))
+        { if (!_borrowedProcess) _process.Dispose(); throw new InvalidOperationException("Owned process identity mismatch"); }
         _ = _process.SafeHandle; // Retain the instance through exit, even after its PID leaves the process table.
         _worker = new(Observe) { IsBackground = true, Name = "GCAM liveness observer" }; _worker.Start();
     }
@@ -52,6 +78,8 @@ public sealed class LivenessObserver : IDisposable
             EndNonResponse(_clock.Elapsed.TotalSeconds);
         }
     }
+    /// <summary>True once the owned main window has been found; non-response is counted only from then on.</summary>
+    public bool WindowSeen { get { lock (_gate) return _windowAt is not null; } }
     public LivenessResult Snapshot()
     {
         lock (_gate)
@@ -64,7 +92,8 @@ public sealed class LivenessObserver : IDisposable
             double longest = Math.Max(_longest, _unresponsive is double s ? end - s : 0);
             return new(_identity, _hwnd.ToInt64(), _anchorUtc, _limit.TotalSeconds, _period.TotalSeconds, _timeout.TotalSeconds,
                 _samples, longest, longest >= _limit.TotalSeconds, _unresponsive is not null,
-                _early, _exit, _exit is not null and not 0, _close, intervals.ToArray(), _errors.ToArray());
+                _early, _exit, _exit is not null and not 0, _close, intervals.ToArray(), _errors.ToArray()) { StartupSeconds = _windowAt ?? end, WindowSeen = _windowAt is not null, LaunchFailed = _launchFailed,
+                    Phase = _failurePhase.Length == 0 ? _phase : _failurePhase };
         }
     }
     private bool CheckExit()
@@ -99,6 +128,24 @@ public sealed class LivenessObserver : IDisposable
             // the caller's separate cleanup deadline bounds a process that does not finish closing.
             if (closing) { _stop.Token.WaitHandle.WaitOne(_period); continue; }
             double start = _clock.Elapsed.TotalSeconds;
+            if (_window is not null && !WindowSeen)
+            {
+                // Startup is governed by the launch wait, not the running-window response limit: the non-response clock
+                // starts when the main window exists. Once found, that HWND is kept; a window that later disappears or is
+                // replaced is a recorded error, not a fresh discovery.
+                IntPtr found = IntPtr.Zero;
+                try { found = _window(); }
+                catch (Exception e)
+                {
+                    // A process that exits between the exit check and the lookup makes the lookup throw: that is the
+                    // exit (early or abnormal, classified as usual), not a channel gap.
+                    bool gone; lock (_gate) gone = CheckExit();
+                    if (gone) { PublishFailure(); return; }
+                    lock (_gate) _errors.Add("window: " + e.Message);
+                }
+                if (found == IntPtr.Zero) { PublishFailure(); _stop.Token.WaitHandle.WaitOne(_period); continue; }
+                lock (_gate) { _hwnd = found; _windowAt = _clock.Elapsed.TotalSeconds; }
+            }
             GetWindowThreadProcessId(_hwnd, out uint pid);
             if (pid != _identity.Pid)
             {
@@ -128,7 +175,11 @@ public sealed class LivenessObserver : IDisposable
     private void PublishFailure()
     {
         var result = Snapshot();
-        if (!result.Passed) _failure.TrySetResult(result);
+        if (!result.Passed)
+        {
+            lock (_gate) if (_failurePhase.Length == 0) _failurePhase = _phase;
+            _failure.TrySetResult(result with { Phase = _failurePhase });
+        }
     }
     public LivenessResult Stop()
     {
@@ -136,7 +187,8 @@ public sealed class LivenessObserver : IDisposable
         _stop.Cancel(); _worker.Join();
         lock (_gate) _final = Snapshot();
         if (!_final.Passed) _failure.TrySetResult(_final);
-        _process.Dispose(); _stop.Dispose();
+        if (!_borrowedProcess) _process.Dispose();
+        _stop.Dispose();
         return _final;
     }
     public void Dispose() => Stop();

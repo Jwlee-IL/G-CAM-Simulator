@@ -71,7 +71,9 @@ public sealed class LaunchPreflightTests
     [InlineData("hash")] [InlineData("deployment-pin")] [InlineData("user-import")]
     public void DataDrift_RefusesBeforeTheStartDelegate(string defect)
     {
-        string root = Path.Combine(Path.GetTempPath(), "gcam-todo54", "data-fixture-" + Guid.NewGuid().ToString("N"));
+        // A test-owned folder in the system temporary folder, removed with everything in it when the test ends.
+        using var scratch = ObservationFixtures.Scratch();
+        string root = scratch;
         string deployment = Directory.CreateDirectory(Path.Combine(root, "app")).FullName;
         byte[] bytes = "synthetic"u8.ToArray();
         File.WriteAllBytes(Path.Combine(deployment, "model.json"), bytes);

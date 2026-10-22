@@ -111,10 +111,18 @@ public sealed class ProcessLedgerTests
     [Fact]
     public void PatternAndPointerScope_GuardsRefuseInput_AndRestoreThePreviousScope()
     {
-        PointerBoundary.RequireInputSafe();
+        // No scope is a refusal (the desktop path always enters one); tests use an explicit test scope.
+        Assert.Contains("No owned input scope", Assert.Throws<InvalidOperationException>(PointerBoundary.RequireInputSafe).Message);
         var policy = new ActionPolicy(new(1, "draft", []));
-        using (PointerBoundary.Enter(null!, policy, () => throw new InvalidOperationException("unproven instance")))
-            Assert.Throws<InvalidOperationException>(PointerBoundary.RequireInputSafe);
-        PointerBoundary.RequireInputSafe();
+        using (PointerBoundary.Enter(null!, policy, () => { }))
+        {
+            PointerBoundary.RequireInputSafe();
+            using (PointerBoundary.Enter(null!, policy, () => throw new InvalidOperationException("unproven instance")))
+                Assert.Throws<InvalidOperationException>(PointerBoundary.RequireInputSafe);
+            PointerBoundary.RequireInputSafe(); // the previous (passing) scope is restored
+        }
+        using (PointerBoundary.Enter(null!, policy))
+            Assert.Contains("No input guard", Assert.Throws<InvalidOperationException>(PointerBoundary.RequireInputSafe).Message);
+        Assert.Throws<InvalidOperationException>(PointerBoundary.RequireInputSafe);
     }
 }

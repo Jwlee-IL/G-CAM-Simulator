@@ -7,5 +7,11 @@ public sealed record LivenessResult(OwnedProcessIdentity Process, long Hwnd, Dat
     bool AbnormalExit, DateTimeOffset? IntentionalCloseAtUtc, LivenessResult.Interval[] Intervals, string[] Errors)
 {
     public sealed record Interval(double StartSeconds, double EndSeconds);
-    public bool Passed => !Breached && !EarlyExit && !AbnormalExit && Errors.Length == 0;
+    /// <summary>Seconds from attachment to the main window, or, while no window was found, the seconds observed so far.</summary>
+    public double StartupSeconds { get; init; }
+    public bool WindowSeen { get; init; }
+    /// <summary>The launch produced no usable main window within the launch wait (its own product issue code).</summary>
+    public bool LaunchFailed { get; init; }
+    public string Phase { get; init; } = "running";
+    public bool Passed => !LaunchFailed && !Breached && !EarlyExit && !AbnormalExit && Errors.Length == 0;
 }

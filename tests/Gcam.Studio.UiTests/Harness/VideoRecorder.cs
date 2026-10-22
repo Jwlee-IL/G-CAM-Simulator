@@ -56,6 +56,7 @@ public sealed class VideoRecorder
     public VideoEntry? Entry => _entry;
     public VideoCheckResult? Check => _entry?.Check;
     private bool _stopped;
+    private bool _completed;
     public string Mp4 => Path.Combine(_folder, "attempt.mp4");
     public string Vtt => Path.Combine(_folder, "attempt.vtt");
     public static bool Enabled(string? value) => value != "0";
@@ -110,6 +111,7 @@ public sealed class VideoRecorder
     {
         lock (_gate)
         {
+            if (_completed) throw new InvalidOperationException("Recording is complete; no further executed steps are accepted");
             if (id is null) do id = $"step-{++_generated:0000}"; while (_ids.Contains(id));
             else if (!System.Text.RegularExpressions.Regex.IsMatch(id, @"\A[A-Za-z0-9_-]+\z") || GeneratedId().IsMatch(id) || _ids.Contains(id))
                 throw new ArgumentException("Step IDs must be unique safe identifiers outside the generated step-N form", nameof(id));
@@ -137,13 +139,16 @@ public sealed class VideoRecorder
         try { SaveStatus(_status); } catch { }
     }
     public void Step(Func<string> resolvedText)
+        => RecordStep(resolvedText);
+    public string RecordStep(Func<string> resolvedText, string? id = null)
     {
         lock (_gate)
         {
-            if (_stopped) { RecordStep(_privacy ? "" : resolvedText()); return; }
+            if (_stopped) return RecordStep(_privacy ? "" : resolvedText(), id);
             int i = _steps.Count;
-            RecordStep("");
+            string actual = RecordStep("", id);
             if (!_privacy) _resolvedSteps[i] = resolvedText;
+            return actual;
         }
     }
     public void Privacy(bool suppressed)
@@ -227,13 +232,19 @@ public sealed class VideoRecorder
         _error = e.GetType().Name; _stopping = true; _end = Now; _monotonicEnd = Stopwatch.GetTimestamp();
         lock (_gate) Monitor.PulseAll(_gate);
     }
-    public Provenance? Stop(TimeSpan? budget = null)
+    /// <summary>Stop pixels before closing the HWND; defer decoding until the owned process is closed.</summary>
+    public void StopCapture(TimeSpan? budget = null)
     {
-        if (_stopped) return ProvenanceOfEntry();
+        if (_stopped) return;
         lock (_gate) { _stopped = true; _end = Now; _monotonicEnd = Stopwatch.GetTimestamp(); _stopping = true; Monitor.PulseAll(_gate); }
         var wait = Stopwatch.StartNew(); TimeSpan limit = budget ?? TimeSpan.FromSeconds(5);
         if (!_captureThread.Join(limit) || !_encodeThread.Join(TimeSpan.FromTicks(Math.Max(0, (limit - wait.Elapsed).Ticks))))
         { _abandoned = true; _error = "stop-timeout"; }
+    }
+    public Provenance? Stop(TimeSpan? budget = null)
+    {
+        if (_entryFinal) return ProvenanceOfEntry();
+        StopCapture(budget);
         try
         {
             if (_error is null && _frames > 0)
@@ -273,6 +284,7 @@ public sealed class VideoRecorder
     private Provenance? ProvenanceOfEntry() => _entry is null ? null : new(_run, _id, _entry.Video.Sha256, _entry.Captions.Sha256);
     public void Complete(bool passed)
     {
+        lock (_gate) { if (_completed) return; _completed = true; }
         try
         {
             Stop();
@@ -287,7 +299,18 @@ public sealed class VideoRecorder
             SaveStatus(_entry is null ? "unavailable" : !passed ? "failed-test-retained" : _entry.Check?.Passed == true ? "published" : "video-check-failed");
         }
         catch (Exception e) { _error = e.GetType().Name; try { SaveStatus("unavailable"); } catch { } }
+        finally { lock (_gate) _completed = true; }
     }
+    /// <summary>The run record's copy of this attempt's video status, serialised with the same camelCase property shape as
+    /// <c>video-status.json</c> (contract, runId, testId, videoSha256, check, evidence), so a record written with other options
+    /// (the run record keeps its historical PascalCase values, the UI manifest's evidence its defaults) still embeds exactly
+    /// what the production gate reads. One field differs on purpose: <c>status</c> here is the check verdict at the time the
+    /// record is saved (<c>passed</c> / <c>failed</c>, what the gate requires), while <c>video-status.json</c>'s
+    /// <c>status</c> is the publication outcome written later by <see cref="Complete"/> (<c>published</c>,
+    /// <c>failed-test-retained</c>, <c>video-check-failed</c>, <c>encoded</c>, <c>unavailable</c>).</summary>
+    public JsonElement StatusRecord() => JsonSerializer.SerializeToElement(new { contract = "v4", runId = _run, testId = _id,
+        status = _entry?.Check?.Passed == true ? "passed" : "failed", videoSha256 = _entry?.Video.Sha256,
+        check = _entry?.Check, evidence = _entry?.Evidence }, VideoEntry.Json);
     private void SaveStatus(string status)
     {
         _status = status;

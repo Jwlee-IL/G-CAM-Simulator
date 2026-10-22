@@ -1702,6 +1702,12 @@ def process_manifest_verdict(run, context):
                        or any(i.get('type') == 'unsafe_effect' for i in manifest.get('runIssues', [])))
             monitor = manifest.get('processMonitor', {})
             blocked |= not isinstance(monitor.get('errors'), list) or bool(monitor.get('errors')) or manifest.get('runStatus') != 'completed'
+            live = manifest.get('liveChannels') or {}
+            file_channel, network, process = (live.get(k) or {} for k in ('file', 'network', 'process'))
+            blocked |= (file_channel.get('passed') is not True or network.get('sampleCount', 0) < 1
+                        or network.get('positiveControlPassed') is not True or bool(network.get('errors'))
+                        or process.get('passed') is not True or bool(live.get('errors')) or bool(manifest.get('productIssues')))
+            unsafe |= bool(network.get('findings')) or any(not event.get('harnessControl') for event in file_channel.get('events', []))
         except (OSError, ValueError, TypeError, KeyError, AttributeError):
             blocked = True
     expected = {s['runId'] for s in context.get('scenarios', [])}

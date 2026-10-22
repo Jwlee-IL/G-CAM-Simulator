@@ -59,6 +59,34 @@ public sealed class ManualRecordTests
     }
 
     [Fact]
+    public void ReaderStepsAndActionLog_UseTheRecordingsExactIds()
+    {
+        var record = new RunRecord("synthetic-id-contract");
+        using var scratch = ObservationFixtures.Scratch();
+        var video = new VideoRecorder(scratch, "synthetic", record.RunId, 64, 48,
+            privacy => new(new byte[64 * 48 * 4], [], [], privacy), () => new IdSink(),
+            new('a', 40), false, new('b', 64), new('c', 64));
+        try
+        {
+            record.Video = video;
+            record.Step("action");
+            var run = Fixture(); run.Record = record;
+            run.BeginStep("Click {StartAcquisition}.");
+            Assert.Equal(new[] { "action-0001", "action-0002" }, record.ExecutedStepIds);
+            Assert.Equal(record.ExecutedStepIds[1], run.Steps[0].VideoStepId);
+            foreach (string id in record.ExecutedStepIds)
+                Assert.Throws<ArgumentException>(() => video.RecordStep("duplicate", id));
+        }
+        finally { video.Complete(false); Directory.Delete(record.Directory, recursive: true); }
+    }
+    private sealed class IdSink : VideoRecorder.ISink
+    {
+        public void Write(byte[] pixels, long time100ns, long duration100ns) { }
+        public void Finish() { }
+        public void Dispose() { }
+    }
+
+    [Fact]
     public void Record_ResolvesScreenLabels_AggregatesTheWorstStep_AndWritesTheGeneratorSchema()
     {
         var run = Fixture();

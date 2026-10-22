@@ -46,7 +46,8 @@ public sealed class ManualObservationTests
         Assert.Equal((key, RegistryMarker.ValueName, true), (controls.GetProperty("registry").GetProperty("key").GetString(),
             controls.GetProperty("registry").GetProperty("valueName").GetString(), controls.GetProperty("registry").GetProperty("written").GetBoolean()));
         Assert.Equal("Gcam.Studio.exe", controls.GetProperty("process").GetString());
-        Assert.Equal(("network", "not_applicable"), (context.GetProperty("channelApplicability")[0].GetProperty("channel").GetString(), context.GetProperty("channelApplicability")[0].GetProperty("status").GetString()));
+        Assert.Equal("network", context.GetProperty("channelApplicability")[0].GetProperty("channel").GetString());
+        Assert.True(context.GetProperty("channelApplicability")[0].GetProperty("applicable").GetBoolean());
     }
 
     [Fact]

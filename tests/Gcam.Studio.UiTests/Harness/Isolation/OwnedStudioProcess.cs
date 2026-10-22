@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Windows.Automation;
 using System.Text.Json.Serialization;
+using Gcam.Studio.UiTests.Harness.Observation;
 
 namespace Gcam.Studio.UiTests.Harness.Isolation;
 
@@ -49,19 +50,24 @@ public sealed class OwnedStudioProcess : IDisposable
     public DateTime StartedAt { get; }
     public string ProductVersion { get; }
     public string Ending { get; private set; } = "running";
-    public IReadOnlyList<string> SandboxWrites { get; private set; } = [];
+    /// <summary>The files found in the sandbox after close; null while unread (an unread sandbox never equals "no writes").</summary>
+    public IReadOnlyList<string>? SandboxWrites { get; private set; }
     public ProcessLedger Ledger { get; }
     public IReadOnlyList<string> MonitorErrors => _monitor.Errors;
     public DesktopLease.State LeaseState => _lease.Current;
+    public RunObservation Observation { get; }
 
-    private OwnedStudioProcess(Process process, string sandbox, string exe, string runId, DesktopLease lease, PreflightResult preflight)
+    private readonly int _pid;
+    private OwnedStudioProcess(Process process, string sandbox, string exe, string runId, DesktopLease lease, PreflightResult preflight, RunObservation observation)
     {
-        Process = process; Sandbox = sandbox; ExePath = exe; _lease = lease;
+        Process = process; Sandbox = sandbox; ExePath = exe; _lease = lease; _pid = process.Id;
         Preflight = preflight;
+        Observation = observation;
         StartedAt = process.StartTime; ProductVersion = FileVersionInfo.GetVersionInfo(exe).ProductVersion ?? "unknown";
         Ledger = new(runId, exe);
         Ledger.RegisterDirect(new(process.Id, Environment.ProcessId, StartedAt, exe, runId));
         _monitor = new ProcessMonitor(Ledger);
+        Observation.ProveConnectionChannel();
     }
 
     public static OwnedStudioProcess Start(string runId, IReadOnlyDictionary<string, string>? suppliedValues = null,
@@ -77,6 +83,8 @@ public sealed class OwnedStudioProcess : IDisposable
         var source = SourceIdentity.Read(RepoPaths.Root());
         package.ValidateSource(source.Commit, source.CommittedAt);
         package.Validate(package.RunId, IsolationPaths.Fingerprint(isolation), ProbePackage.DeploymentFingerprint(exe));
+        if (package.Contract != "v4") throw new InvalidDataException("Desktop launch requires a v4 author approval package");
+        package.RequireScenario(scenario);
         var effects = package.BindEffects(runId, scenario, declaredWrites ?? []);
         (ContentFingerprint.DataCheck Data, PeerBoundary Peers)? data = null;
         var checks = new PreflightChecks(
@@ -88,6 +96,7 @@ public sealed class OwnedStudioProcess : IDisposable
         string leasePath = LeasePath(self.SessionId);
         var lease = new DesktopLease(leasePath, runId, self.SessionId, DateTimeOffset.UtcNow, TimeSpan.FromHours(3));
         Process? app = null;
+        RunObservation? observation = null;
         try
         {
             var existing = Process.GetProcessesByName("Gcam.Studio");
@@ -103,9 +112,12 @@ public sealed class OwnedStudioProcess : IDisposable
             app = StartAfterPreflight(checks, passed =>
             {
                 preflight = passed;
-                return Process.Start(psi) ?? throw new InvalidOperationException("Studio launch failed");
+                observation = new(runId, Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), Path.Combine(isolation, "surface-list.json"));
+                var launched = app = Process.Start(psi) ?? throw new InvalidOperationException("Studio launch failed");
+                observation.Attach(launched, OwnedProcessIdentity.From(launched), sandbox);
+                return launched;
             }, effects, package, values, (declaredWrites ?? []).Select(p => IsolationPaths.Inside(sandbox, p)).ToArray());
-            return new(app, sandbox, exe, runId, lease, preflight!);
+            return new(app, sandbox, exe, runId, lease, preflight!, observation!);
         }
         catch (Exception failure)
         {
@@ -113,13 +125,15 @@ public sealed class OwnedStudioProcess : IDisposable
             {
                 if (app is not null)
                 {
-                    try { if (!app.HasExited) { app.CloseMainWindow(); app.WaitForExit(5000); } }
+                    try { if (!app.HasExited) { observation?.MarkIntentionalClose(); app.CloseMainWindow(); app.WaitForExit(5000); } }
                     finally { app.Dispose(); }
                 }
             }
             catch (Exception cleanup) { failure.Data["launchCleanupFailure"] = cleanup.ToString(); }
             finally
             {
+                observation?.Dispose();
+                observation?.AttachTo(failure);
                 try { lease.Dispose(); }
                 catch (Exception cleanup) { failure.Data["leaseCleanupFailure"] = cleanup.ToString(); }
             }
@@ -148,7 +162,7 @@ public sealed class OwnedStudioProcess : IDisposable
         foreach (string file in exports) _ = IsolationPaths.Inside(sandbox, file);
     }
 
-    public void RequireInputSafe() => _monitor.RequireInputSafe();
+    public void RequireInputSafe() { Observation.RequireResponsive(); _monitor.RequireInputSafe(); }
 
     /// <summary>The declared harness lease file for an interactive session (surface harness-lease).</summary>
     public static string LeasePath(int sessionId) => Path.Combine(Path.GetTempPath(), "gcam-desktop-lease", $"session-{sessionId}.json");
@@ -158,23 +172,77 @@ public sealed class OwnedStudioProcess : IDisposable
         if (elevated) throw new InvalidOperationException("Studio and its harness must remain non-elevated");
     }
 
-    public AutomationElement MainWindow(TimeSpan timeout)
+    /// <param name="launch">True for the launch wait: a timeout there is the run's launch failure. Later look-ups (the
+    /// close sequence) only throw.</param>
+    /// <remarks>Runs on a UIA worker that a product failure can abandon, so it uses its own process handle (opened here,
+    /// identity-checked, disposed here), never the launcher's <see cref="Process"/>, which the controlling thread disposes
+    /// at close.</remarks>
+    public AutomationElement MainWindow(TimeSpan timeout, bool launch = true)
     {
-        var watch = Stopwatch.StartNew();
-        while (watch.Elapsed < timeout)
+        Process own;
+        try { own = Process.GetProcessById(_pid); }
+        catch (ArgumentException) { throw new InvalidOperationException("Studio exited before its main window was found"); }
+        using (own)
         {
-            if (Process.HasExited) throw new InvalidOperationException($"Studio exited: {Process.ExitCode}");
-            Process.Refresh();
-            if (Process.MainWindowHandle != IntPtr.Zero)
+            if (!own.HasExited && !Ledger.Owns(own.Id, own.StartTime)) throw new InvalidOperationException("Process instance ownership changed");
+            var watch = Stopwatch.StartNew();
+            while (watch.Elapsed < timeout)
             {
-                // An element taken before WPF attaches the window's content stays empty for good (measured 2026-10-15:
-                // 3 of 12 launches); take a fresh one until the window exposes its children.
-                var window = AutomationElement.FromHandle(Process.MainWindowHandle);
-                if (window.FindFirst(TreeScope.Children, Condition.TrueCondition) is not null) return window;
+                if (own.HasExited) throw new InvalidOperationException($"Studio exited: {own.ExitCode}");
+                own.Refresh();
+                if (own.MainWindowHandle != IntPtr.Zero)
+                {
+                    // An element taken before WPF attaches the window's content stays empty for good (measured 2026-10-15:
+                    // 3 of 12 launches); take a fresh one until the window exposes its children.
+                    var window = AutomationElement.FromHandle(own.MainWindowHandle);
+                    if (window.FindFirst(TreeScope.Children, Condition.TrueCondition) is not null) return window;
+                }
+                Thread.Sleep(100);
             }
-            Thread.Sleep(100);
         }
+        if (launch) Observation.LaunchFailed();
         throw new TimeoutException("Studio main window did not appear");
+    }
+
+    private bool HasMainWindow()
+    {
+        try { Process.Refresh(); return Process.MainWindowHandle != IntPtr.Zero; }
+        catch (InvalidOperationException) { return false; } // exited meanwhile: the observer records the exit
+    }
+
+    public const string StillRunningAfterClose = "still running after graceful close (force-stop requires approval)";
+
+    /// <summary>The close sequence (also a headless test seam); returns the owned process's ending. Modal-layer closing runs
+    /// under the same bounded runner as every UI step, so a hang there is a recorded product failure (<c>not_responding</c>,
+    /// phase <c>close-modal-layer</c>, the product axis only) and control returns within the limit; it does not end the close.
+    /// The intentional-close mark is set only after it, immediately before the close request itself, so the hang is never
+    /// excused as closing. The ending is always read from the process: <c>exit N</c>, or still running after the wait.
+    /// A harness error (not a product failure) still propagates, after the close request and the ending.</summary>
+    internal static string CloseOwned(RunObservation observation, Process process, bool closeModal, Action closeModalLayer, Action requestClose,
+        Action<string>? onEnding = null)
+    {
+        string? ending = null;
+        try
+        {
+            try
+            {
+                if (closeModal && !observation.HasFailure) observation.RunUi(closeModalLayer, "close-modal-layer");
+            }
+            catch (ProductLivenessException) when (observation.HasProductFailure) { } // recorded by the observer; the close goes on
+            finally
+            {
+                observation.MarkIntentionalClose();
+                requestClose();
+                if (!process.WaitForExit(5000)) ending = StillRunningAfterClose;
+            }
+        }
+        finally
+        {
+            try { ending ??= process.HasExited ? $"exit {process.ExitCode}" : "still running"; }
+            catch (InvalidOperationException) { ending ??= "unknown (process handle unavailable)"; }
+            onEnding?.Invoke(ending); // also when a harness error propagates
+        }
+        return ending;
     }
 
     /// <summary>The first observed run closes without UIA discovery or input.</summary>
@@ -188,24 +256,30 @@ public sealed class OwnedStudioProcess : IDisposable
             if (!Process.HasExited)
             {
                 if (!Ledger.Owns(Process.Id, Process.StartTime)) throw new InvalidOperationException("Process instance ownership changed before close");
-                if (closeModal && Ledger.Issues.Count == 0 && MonitorErrors.Count == 0)
-                    new StudioWindow(MainWindow(TimeSpan.FromSeconds(5)), Policy, RequireInputSafe).CloseModalLayer();
-                Process.CloseMainWindow();
-                if (!Process.WaitForExit(5000)) Ending = "still running after graceful close (force-stop requires approval)";
+                // A launch that never produced a main window (the observed probe has no launch wait of its own) is a launch
+                // failure, not a later hang or exit. The controlling thread's own handle confirms the observer's view.
+                if (!Observation.WindowSeen && !HasMainWindow()) Observation.LaunchFailed();
+                CloseOwned(Observation, Process, closeModal && Ledger.Issues.Count == 0 && MonitorErrors.Count == 0, () =>
+                {
+                    var window = MainWindow(TimeSpan.FromSeconds(5), launch: false);
+                    using var scope = PointerBoundary.Enter(window, Policy, RequireInputSafe);
+                    new StudioWindow(window, Policy, RequireInputSafe).CloseModalLayer();
+                }, () => Process.CloseMainWindow(), ending => Ending = ending);
             }
-            if (Ending == "running") Ending = Process.HasExited ? $"exit {Process.ExitCode}" : "still running";
         }
         finally
         {
+            try { if (Ending == "running") Ending = Process.HasExited ? $"exit {Process.ExitCode}" : "still running"; }
+            catch (InvalidOperationException) { Ending = "unknown (process handle unavailable)"; }
             try
             {
                 try
                 {
                     SandboxWrites = Directory.EnumerateFiles(Sandbox, "*", SearchOption.AllDirectories)
-                        .Where(f => Path.GetFileName(f) is not (".gcam-uia-owner" or "probe-diagnostic.txt"))
-                        .Select(f => Path.GetRelativePath(Sandbox, f)).ToArray();
+                        .Select(f => Path.GetRelativePath(Sandbox, f))
+                        .Where(f => f is not (".gcam-uia-owner" or "probe-diagnostic.txt" or ".gcam-liveness-failure.json")).ToArray();
                 }
-                finally { _monitor.Dispose(); }
+                finally { try { Observation.Dispose(); } finally { _monitor.Dispose(); } }
             }
             finally { try { _lease.Dispose(); } finally { Process.Dispose(); _disposed = true; } }
         }
