@@ -19,6 +19,7 @@
 
 # Binary — never normalize or diff as text
 *.png     binary
+*.jpg     binary
 *.dat     binary
 *.zip     binary
 *.vcd     binary

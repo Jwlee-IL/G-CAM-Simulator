@@ -512,3 +512,15 @@ AutomationId for the whole 5 s focus wait (the same signature as `manual.navigat
 day). No product failure. Both causes were fixed in the harness (TODO-54 turn G: declared window-transition intervals of at
 most 0.5 s; root re-acquisition within a 10 s launch budget), and M4 is collected again on the fix commit; the refused
 bundle is not a milestone.
+
+**M4, collected 2026-10-23 01:38–02:04** on the turn G commit `84c6ee2` (same worktree; deployment `a53b1d6b476c`, isolation
+`b0d5f6fee533`). First a desktop check of the new harness paths (author: "헌장 개정 승인 + 점검 런 go, 통과 시 M4 재수집 go +
+E6 (Recommended)", which also approved the amended Video criteria row): the pilot, `borderless-caption`, the Compare
+`PhysicalPrefix` case and `PreparationCancelRetryAndTabs` passed with passing video checks; every root reported FrameworkId
+`WPF`; the caption maximise was declared as a 0.1 s window transition. Then the milestone: 1,771 passed, 0 failed, 53 not
+executed; the desktop profile 297 passed, 2 not executed (the long `HighResCold` opt-in and the observed run), every desktop
+video check passed, production eligible. One launch (`RefusedLineAndMissingPreparation_ExplainWithoutZeroing`) held an
+ID-less root again, re-acquired it and passed; three window transitions were declared (launch 0.2 s, maximise 0.1 s,
+restore 0.1 s). The STR frames (183 JPEGs from 40 cases, 8.3 MiB, at most 960 px, quality 70) were exported from the exact
+checked videos and committed with their manifest under `samples/testing/records/M4/frames/`; a look over all of them showed
+only Studio's own window (no other window, desktop or native dialog) and no path or account name in the manifest.

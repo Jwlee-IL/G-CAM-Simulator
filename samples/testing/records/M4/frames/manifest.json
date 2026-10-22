@@ -1,0 +1,2398 @@
+{
+  "schema": "gcam.str-frames",
+  "schemaVersion": 1,
+  "contract": "v4",
+  "selectionRule": "First visible step, up to three visible key steps nearest equally spaced media-time targets, terminal visible step; last non-private non-transition non-neutral decoded sample overlapping each cue. Sparse timelines retain real step IDs and use visible start/midpoint/end samples of their existing cues.",
+  "maximumWidthPx": 960,
+  "jpegQuality": 70,
+  "maximumJpegBytes": 163840,
+  "captureScope": "recorded owned-window canvas; recorder masks reapplied; no screen access",
+  "cases": [
+    {
+      "caseId": "Gcam.Studio.UiTests::Gcam.Studio.UiTests.ChromeScenarioTests.BorderlessCaption_HasNoNativeTitleBar_AndStartsAtWindowTop",
+      "runId": "gcam-20261023-015726-ab3463",
+      "verdict": "passed",
+      "videoSha256": "32682299d1772a4bd54069845b01312eccfd3e8027acc599057bd76ea6532b72",
+      "checkContract": "v4",
+      "videoStatus": "passed",
+      "reason": null,
+      "canvasWidthPx": 1440,
+      "canvasHeightPx": 900,
+      "frames": [
+        {
+          "stepId": "action-0001",
+          "cueText": "focus preparation last refusal: none",
+          "mediaTime100ns": 7000000,
+          "mediaEnd100ns": 8000000,
+          "file": "case-001-01.jpg",
+          "sha256": "9bcb304cedb87bbb7f9fa39ee1d7e6e995e14a028eccae791ebe7f82a1586494",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0002",
+          "cueText": "window ready, state Empty",
+          "mediaTime100ns": 31000000,
+          "mediaEnd100ns": 32000000,
+          "file": "case-001-02.jpg",
+          "sha256": "320935d400e107439c054b69fcd0b8dd6be67bed0585448740a86d0259d8f68c",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0003",
+          "cueText": "input read-back AcquisitionSeed: requested \u002742\u0027, displayed \u002742\u0027",
+          "mediaTime100ns": 49000000,
+          "mediaEnd100ns": 50000000,
+          "file": "case-001-03.jpg",
+          "sha256": "b3d9af18a0c4ffea3ca44a863b93c46daf4dbeaa322e3eb342c9cbe802f3765a",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0004",
+          "cueText": "input read-back AcquisitionSeed: requested \u002743\u0027, displayed \u002743\u0027",
+          "mediaTime100ns": 55000000,
+          "mediaEnd100ns": 56000000,
+          "file": "case-001-04.jpg",
+          "sha256": "740c0b834ddd8dfefb959750ae943ae715dddf5be795c6e41af7101869090766",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "step-0001",
+          "cueText": "Window transition: maximise",
+          "mediaTime100ns": 58000000,
+          "mediaEnd100ns": 59000000,
+          "file": "case-001-05.jpg",
+          "sha256": "52d3cbcc4537f96853602157c3346672a9d64c8eec1ef2c267246319816c6d70",
+          "widthPx": 960,
+          "heightPx": 600
+        }
+      ]
+    },
+    {
+      "caseId": "Gcam.Studio.UiTests::Gcam.Studio.UiTests.CompareScenarioTests.PhysicalPrefix_ComparisonDifferenceAndReset_KeepTheirPopulationLabels",
+      "runId": "gcam-20261023-015649-1f53b4",
+      "verdict": "passed",
+      "videoSha256": "cd213b6c78632c070f409044bb9f9e52d3885a7b6fef073e0400a6db94bb3384",
+      "checkContract": "v4",
+      "videoStatus": "passed",
+      "reason": null,
+      "canvasWidthPx": 1440,
+      "canvasHeightPx": 900,
+      "frames": [
+        {
+          "stepId": "action-0001",
+          "cueText": "focus preparation last refusal: none",
+          "mediaTime100ns": 8000000,
+          "mediaEnd100ns": 9000000,
+          "file": "case-002-01.jpg",
+          "sha256": "72345108b61d8709ee68eff1854e6cab5c12e59ca6e2e1a4769be5e57a3206e3",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0003",
+          "cueText": "input read-back AcquisitionSeed: requested \u002747001\u0027, displayed \u002747001\u0027",
+          "mediaTime100ns": 61000000,
+          "mediaEnd100ns": 62000000,
+          "file": "case-002-02.jpg",
+          "sha256": "d313994140571ca9e605efef93ffe7eff42c740b59f1572e949b12db3f1325fe",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0004",
+          "cueText": "input read-back Acquisition.AmbientDose: requested \u00270\u0027, displayed \u00270\u0027",
+          "mediaTime100ns": 71000000,
+          "mediaEnd100ns": 72000000,
+          "file": "case-002-03.jpg",
+          "sha256": "d344a17e0c33ffbb127a6849bda5fe81a72b7f8f7a540cd62a8b5d6ec59b6579",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0005",
+          "cueText": "input read-back AcquisitionLiveTime: requested \u002710\u0027, displayed \u002710\u0027",
+          "mediaTime100ns": 184000000,
+          "mediaEnd100ns": 185000000,
+          "file": "case-002-04.jpg",
+          "sha256": "56ad1aa278c43737f5cf9906b9b799bf26223671add3953b7f4cb95950248169",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0006",
+          "cueText": "Same transported prefix shown as direct and Anger images, then assignment disagreement; benchmark stays reference only.",
+          "mediaTime100ns": 192000000,
+          "mediaEnd100ns": 193000000,
+          "file": "case-002-05.jpg",
+          "sha256": "43d6f506f2eb212923189fe6c97215da095aeb8d4ff51867ac2ded993fab2c1e",
+          "widthPx": 960,
+          "heightPx": 600
+        }
+      ]
+    },
+    {
+      "caseId": "Gcam.Studio.UiTests::Gcam.Studio.UiTests.ManualScenarioTests.Acquisition_StartStopContinueReset",
+      "runId": "gcam-20261023-014206-702cda",
+      "verdict": "passed",
+      "videoSha256": "a80eae12f29fb5ccaf531c884454e4ff447e32025bf39f7d7e3e9ecc3de9282a",
+      "checkContract": "v4",
+      "videoStatus": "passed",
+      "reason": null,
+      "canvasWidthPx": 1440,
+      "canvasHeightPx": 900,
+      "frames": [
+        {
+          "stepId": "action-0001",
+          "cueText": "focus preparation last refusal: none",
+          "mediaTime100ns": 7000000,
+          "mediaEnd100ns": 8000000,
+          "file": "case-003-01.jpg",
+          "sha256": "5e43da71f1ecc5b3fceb29119b9a40570f889604dd69e94a8ccf205f926a8954",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0007",
+          "cueText": "input read-back AcquisitionSeed: requested \u002712345\u0027, displayed \u002712345\u0027",
+          "mediaTime100ns": 55000000,
+          "mediaEnd100ns": 56000000,
+          "file": "case-003-02.jpg",
+          "sha256": "18b16bc95817513e7a78e4a91556f6520c792a8acc4256557134e41636240816",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0009",
+          "cueText": "Click Stop: the acquisition stops and keeps its data; the counts no longer change, the inputs stay locked and the button reads Continue.",
+          "mediaTime100ns": 119000000,
+          "mediaEnd100ns": 120000000,
+          "file": "case-003-03.jpg",
+          "sha256": "bb08737f0c11c9fb79943d1a2a1d0844632376480f1b8fd758bdc4b643de21de",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0010",
+          "cueText": "Click Continue again: the same acquisition continues and its counts keep growing; stop it again with Stop.",
+          "mediaTime100ns": 130000000,
+          "mediaEnd100ns": 131000000,
+          "file": "case-003-04.jpg",
+          "sha256": "6ca2ae2c4b527562b836fcaff5fb1b42879cd5cced858793be8399fa9ea179ad",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0012",
+          "cueText": "Click Reset acquisition again and confirm with Discard: the data are discarded, the status reads Ready and the inputs unlock; the button reads Start again.",
+          "mediaTime100ns": 196000000,
+          "mediaEnd100ns": 197000000,
+          "file": "case-003-05.jpg",
+          "sha256": "d175aff86dde0104724e1850b69a0001fe54cde45d6e5aad0e66370ae5f6c08c",
+          "widthPx": 960,
+          "heightPx": 600
+        }
+      ]
+    },
+    {
+      "caseId": "Gcam.Studio.UiTests::Gcam.Studio.UiTests.ManualScenarioTests.Compare_PhysicalPrefix_DisplaysConsistentPopulations",
+      "runId": "gcam-20261023-014320-a139a6",
+      "verdict": "passed",
+      "videoSha256": "16614d44cb01b8f363e7ef380e54077fd268c825d5134ee8b6ab8c1770ddf639",
+      "checkContract": "v4",
+      "videoStatus": "passed",
+      "reason": null,
+      "canvasWidthPx": 1440,
+      "canvasHeightPx": 900,
+      "frames": [
+        {
+          "stepId": "action-0001",
+          "cueText": "focus preparation last refusal: none",
+          "mediaTime100ns": 7000000,
+          "mediaEnd100ns": 8000000,
+          "file": "case-004-01.jpg",
+          "sha256": "c232c50c63f5ce53eacefadc9b82764ae6220875ba4b2710061029b3c318d487",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0005",
+          "cueText": "input read-back AcquisitionSeed: requested \u002747001\u0027, displayed \u002747001\u0027",
+          "mediaTime100ns": 78000000,
+          "mediaEnd100ns": 79000000,
+          "file": "case-004-02.jpg",
+          "sha256": "abd4cb5d8ef8991d338ee3ad6794a9ab1239b7b7496a546973721ca67affaaa3",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0007",
+          "cueText": "input read-back AcquisitionLiveTime: requested \u002710\u0027, displayed \u002710\u0027",
+          "mediaTime100ns": 184000000,
+          "mediaEnd100ns": 185000000,
+          "file": "case-004-03.jpg",
+          "sha256": "bac6ef495fe8048d814af0986d5c76d869391e938bbd79edec7e8be207f68caf",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0008",
+          "cueText": "Click Continue; after completion choose Compare. Both paths show the same retained prefix, with direct ideal deposit energy beside the acquired Anger path.",
+          "mediaTime100ns": 224000000,
+          "mediaEnd100ns": 225000000,
+          "file": "case-004-04.jpg",
+          "sha256": "5df4704d67847ac740b4870c1d3331562e7eb081c82824ca159dbec8784849cc",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0011",
+          "cueText": "Click Reset acquisition and confirm with Discard. Compare returns to its start state.",
+          "mediaTime100ns": 271000000,
+          "mediaEnd100ns": 272000000,
+          "file": "case-004-05.jpg",
+          "sha256": "8b3e80517e26710199eced1c38789301c6588d87bb6cd27e9362923bc9410070",
+          "widthPx": 960,
+          "heightPx": 600
+        }
+      ]
+    },
+    {
+      "caseId": "Gcam.Studio.UiTests::Gcam.Studio.UiTests.ManualScenarioTests.Export_ReportsAndEvents_WriteOnlyDeclaredFiles",
+      "runId": "gcam-20261023-014111-82e7fe",
+      "verdict": "passed",
+      "videoSha256": "2c510a49049923086e8552368f3f51a67ce057fe3fc61c6c5060e204df66ef4e",
+      "checkContract": "v4",
+      "videoStatus": "passed",
+      "reason": null,
+      "canvasWidthPx": 1440,
+      "canvasHeightPx": 900,
+      "frames": [
+        {
+          "stepId": "action-0001",
+          "cueText": "focus preparation last refusal: none",
+          "mediaTime100ns": 7000000,
+          "mediaEnd100ns": 8000000,
+          "file": "case-005-01.jpg",
+          "sha256": "2e63dc31c706bce92cc9545189ace0c27da7298d2f8e9f3f5833483614d33d9f",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0005",
+          "cueText": "Open Export report\u2026. Choose HTML, PDF, Word or Event data. Cancel closes the format popup without writing.",
+          "mediaTime100ns": 73000000,
+          "mediaEnd100ns": 74000000,
+          "file": "case-005-02.jpg",
+          "sha256": "7f6e638483151f4bab2a3b2eaa2ee9e876e5e6ccbb81c3cab14b19bcf1e0b38a",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0010",
+          "cueText": "Private dialog step \u2014 picture suppressed \u00B7 Native dialog closed; export outcome visible in Studio",
+          "mediaTime100ns": 104000000,
+          "mediaEnd100ns": 105000000,
+          "file": "case-005-03.jpg",
+          "sha256": "579ec8b7191bce5e764dbd5c9fc0317532bd8e5fe18af75cd13f5cedb0b1106e",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0016",
+          "cueText": "Open Export report\u2026, choose Word and click Export\u2026. In the save dialog enter a destination, check the filename and Save. Keep the same-name scene sidecar.",
+          "mediaTime100ns": 140000000,
+          "mediaEnd100ns": 141000000,
+          "file": "case-005-04.jpg",
+          "sha256": "6f107468293f1cea1d07e485f1a90b5cdc55cb05987fa3d7e218ec10de5c061a",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0025",
+          "cueText": "Private dialog step \u2014 picture suppressed \u00B7 Native dialog closed; export outcome visible in Studio",
+          "mediaTime100ns": 200000000,
+          "mediaEnd100ns": 201000000,
+          "file": "case-005-05.jpg",
+          "sha256": "6fb5713e98afa7d7bf1eecfeb40a0dcdc72a98c3a07cdaa76d0258dd33806da4",
+          "widthPx": 960,
+          "heightPx": 600
+        }
+      ]
+    },
+    {
+      "caseId": "Gcam.Studio.UiTests::Gcam.Studio.UiTests.ManualScenarioTests.Geometry_PresetCustomAndRefusal_DetectorFaceFollows",
+      "runId": "gcam-20261023-014254-568c4e",
+      "verdict": "passed",
+      "videoSha256": "3f7c87591f3a9b8c299555946373161abdb7f0d7c2121bd0b65a565cfd57f096",
+      "checkContract": "v4",
+      "videoStatus": "passed",
+      "reason": null,
+      "canvasWidthPx": 1440,
+      "canvasHeightPx": 900,
+      "frames": [
+        {
+          "stepId": "action-0001",
+          "cueText": "focus preparation last refusal: none",
+          "mediaTime100ns": 7000000,
+          "mediaEnd100ns": 8000000,
+          "file": "case-006-01.jpg",
+          "sha256": "d16142490dcce03210dda4ff51488727a83e4142634ef72028bef32fc103be45",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0004",
+          "cueText": "Choose Baseline in Preset: the fields now hold the 12 \u00D7 12 pixel, rank-7 reference geometry, still read-only.",
+          "mediaTime100ns": 84000000,
+          "mediaEnd100ns": 85000000,
+          "file": "case-006-02.jpg",
+          "sha256": "610bb843a09aed44b12b69a8a200e4a32f1600edc90deacdb5ec8614d03020b0",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0005",
+          "cueText": "Choose Detector: its Face view draws the detector face for these settings, captioned Settings for the next acquisition.",
+          "mediaTime100ns": 116000000,
+          "mediaEnd100ns": 117000000,
+          "file": "case-006-03.jpg",
+          "sha256": "5e3b1a873eeea812bf65049411a635e6cc32250c8432fe046214f3647ae5c193",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0007",
+          "cueText": "Type 3 in Pixels / side. The geometry is refused \u2014 the tab reads Detector pixels must be an integer from 4 to 64. \u2014 and Start does not start: the status bar gives the reason.",
+          "mediaTime100ns": 148000000,
+          "mediaEnd100ns": 149000000,
+          "file": "case-006-04.jpg",
+          "sha256": "54b50e765aedce4530400ec3f98933128ceccdf39f95e1e739d6f3df3fa45c00",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0010",
+          "cueText": "input read-back Optics.Pixels: requested \u002712\u0027, displayed \u002712\u0027",
+          "mediaTime100ns": 190000000,
+          "mediaEnd100ns": 191000000,
+          "file": "case-006-05.jpg",
+          "sha256": "31575ac3d6a2fc1dfd5e75b24701be79d7e93dc2d065f3648f1ac90194c5adf9",
+          "widthPx": 960,
+          "heightPx": 600
+        }
+      ]
+    },
+    {
+      "caseId": "Gcam.Studio.UiTests::Gcam.Studio.UiTests.ManualScenarioTests.Measurements_ReadoutDistanceAngleRoi_DeleteAndClear",
+      "runId": "gcam-20261023-014139-d7d410",
+      "verdict": "passed",
+      "videoSha256": "699b79f1b3cf6449ec811a453e24069e99a98cb7483a06b0c768d745fe07bb23",
+      "checkContract": "v4",
+      "videoStatus": "passed",
+      "reason": null,
+      "canvasWidthPx": 1440,
+      "canvasHeightPx": 900,
+      "frames": [
+        {
+          "stepId": "action-0001",
+          "cueText": "focus preparation last refusal: none",
+          "mediaTime100ns": 7000000,
+          "mediaEnd100ns": 8000000,
+          "file": "case-007-01.jpg",
+          "sha256": "2e63dc31c706bce92cc9545189ace0c27da7298d2f8e9f3f5833483614d33d9f",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0004",
+          "cueText": "Hold the pointer over a cell of the flood map: the line under the image reads x 6.3 mm, y -4.5 mm \u00B7 10 counts \u2014 the cell\u0027s centre in millimetres (x to the right, y up, 0 on the axis) and its counts.",
+          "mediaTime100ns": 96000000,
+          "mediaEnd100ns": 97000000,
+          "file": "case-007-02.jpg",
+          "sha256": "6bc4b0c401c7ce7b2b8ce43b7544df8a72b1f0754d09561e9d4f3c9c25e73e24",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0005",
+          "cueText": "Choose the distance tool (accessible name Distance tool) above the measurement table and drag across the flood map: the table gains a row with the length in millimetres.",
+          "mediaTime100ns": 115000000,
+          "mediaEnd100ns": 116000000,
+          "file": "case-007-03.jpg",
+          "sha256": "51e52c6a0571dde65f7b414c38e393bc08b1807e32e863c3b4ba5d177e2b4325",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0007",
+          "cueText": "Choose the ROI tool (ROI tool (region of interest)) and drag a rectangle on the flood map: the table gains the sum over the whole pixels whose centres lie inside, and the line under the table gives its size and pixel count.",
+          "mediaTime100ns": 174000000,
+          "mediaEnd100ns": 175000000,
+          "file": "case-007-04.jpg",
+          "sha256": "7828a6f1ccd760b0561b4a32b71e6fd230fc6af85c146cbaeec41d61c694ebb4",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0009",
+          "cueText": "Click the icon button whose tooltip reads Clear all measurements: the table is emptied.",
+          "mediaTime100ns": 186000000,
+          "mediaEnd100ns": 187000000,
+          "file": "case-007-05.jpg",
+          "sha256": "f2c27ecd5a63d3c1265d578a929366ff1d64617893c2d18a9747be03d395578b",
+          "widthPx": 960,
+          "heightPx": 600
+        }
+      ]
+    },
+    {
+      "caseId": "Gcam.Studio.UiTests::Gcam.Studio.UiTests.ManualScenarioTests.Navigate_WindowWorkspacesAndViewTabs",
+      "runId": "gcam-20261023-014006-ff2927",
+      "verdict": "passed",
+      "videoSha256": "ff71000ffc2f8bdaafeef9bb103eb8e2f354329afa7a8ddf06ae73a01b3ab77b",
+      "checkContract": "v4",
+      "videoStatus": "passed",
+      "reason": null,
+      "canvasWidthPx": 1440,
+      "canvasHeightPx": 900,
+      "frames": [
+        {
+          "stepId": "action-0001",
+          "cueText": "focus preparation last refusal: none",
+          "mediaTime100ns": 7000000,
+          "mediaEnd100ns": 8000000,
+          "file": "case-008-01.jpg",
+          "sha256": "46e56964e78225812e328f63951672cab5d5101525abe93ad4716e7ce9f31e7a",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0004",
+          "cueText": "Select the Optics tab: the engineering geometry replaces the source list in the left panel.",
+          "mediaTime100ns": 88000000,
+          "mediaEnd100ns": 89000000,
+          "file": "case-008-02.jpg",
+          "sha256": "41a0c2670a76a6d767c58c5ba6b1417182c7e1bdb61a8555211e3da10937d811",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0006",
+          "cueText": "Choose Waveform, then its view tab Four outputs (A\u2013D). With the default direct crystal assignment there are no four outputs: the view reads Available with the experimental physical readout and offers Choose readout\u2026.",
+          "mediaTime100ns": 127000000,
+          "mediaEnd100ns": 128000000,
+          "file": "case-008-03.jpg",
+          "sha256": "00fde5f584e370d300946fac03445c9f68de17d80fc662d6db3a3ca411eace41",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0007",
+          "cueText": "Choose Detector, then its view tab SiPM: the physical readout views are empty in the same way.",
+          "mediaTime100ns": 158000000,
+          "mediaEnd100ns": 159000000,
+          "file": "case-008-04.jpg",
+          "sha256": "9ebb3caf9876afebd147db33121c3e38e99463c5e81520c2685ab48707759424",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0010",
+          "cueText": "Press Ctrl\u002B1 through Ctrl\u002B5 to select Imaging, Spectrum, Waveform, Detector and Compare respectively.",
+          "mediaTime100ns": 255000000,
+          "mediaEnd100ns": 256000000,
+          "file": "case-008-05.jpg",
+          "sha256": "8ad9ef3fbad8e235baba1a60ad207e4cbf422fa2c8e166a5d42fe10f69b93d3e",
+          "widthPx": 960,
+          "heightPx": 600
+        }
+      ]
+    },
+    {
+      "caseId": "Gcam.Studio.UiTests::Gcam.Studio.UiTests.ManualScenarioTests.Sources_PlaceEditAddRemove_LockedUntilReset",
+      "runId": "gcam-20261023-014039-d164ff",
+      "verdict": "passed",
+      "videoSha256": "841f6ad1794a457abf64421c392d06c48a65798ec189ac57642fe740134aae6b",
+      "checkContract": "v4",
+      "videoStatus": "passed",
+      "reason": null,
+      "canvasWidthPx": 1440,
+      "canvasHeightPx": 900,
+      "frames": [
+        {
+          "stepId": "action-0001",
+          "cueText": "focus preparation last refusal: none",
+          "mediaTime100ns": 10000000,
+          "mediaEnd100ns": 11000000,
+          "file": "case-009-01.jpg",
+          "sha256": "7d6d385a5965fd2adc650ba916ae0d19cb72d13c849645ec133166deed516d10",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0005",
+          "cueText": "input read-back SourceX: requested \u0027-20\u0027, displayed \u0027-20\u0027",
+          "mediaTime100ns": 70000000,
+          "mediaEnd100ns": 71000000,
+          "file": "case-009-02.jpg",
+          "sha256": "302782f15ac746e0a39c75c78e5e41a7d5d642a9111586ffdedd3617854481df",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0010",
+          "cueText": "Click the icon button whose tooltip reads Remove selected source: the selected source is removed.",
+          "mediaTime100ns": 144000000,
+          "mediaEnd100ns": 145000000,
+          "file": "case-009-03.jpg",
+          "sha256": "9781c1dff9b6341c3bbeb1f8193a3402daf9b2f5b50e35f05e721acb7c6f37fc",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0011",
+          "cueText": "Click Continue and wait until the acquisition completes. While acquired data exist the source fields and the add and remove buttons are locked, so the images always belong to the scene shown.",
+          "mediaTime100ns": 234000000,
+          "mediaEnd100ns": 235000000,
+          "file": "case-009-04.jpg",
+          "sha256": "ed706440196bfec6e4625277def05f2269b78365291629084eb459f1d7934001",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0013",
+          "cueText": "Confirm with Discard: the acquisition is discarded and the source fields unlock for the next acquisition.",
+          "mediaTime100ns": 248000000,
+          "mediaEnd100ns": 249000000,
+          "file": "case-009-05.jpg",
+          "sha256": "e6e292dfe93370db8b1ee7fdcf9270e56277ee514004eeeae2effa400d12426f",
+          "widthPx": 960,
+          "heightPx": 600
+        }
+      ]
+    },
+    {
+      "caseId": "Gcam.Studio.UiTests::Gcam.Studio.UiTests.ManualScenarioTests.Spectrum_LinesWindowAndLogY_MatchRetainedHistogram",
+      "runId": "gcam-20261023-014232-6aff03",
+      "verdict": "passed",
+      "videoSha256": "fb45540a1e0e9624986dc94ba9b810bd1dcd0aa80fa10816a8b65bbecef97164",
+      "checkContract": "v4",
+      "videoStatus": "passed",
+      "reason": null,
+      "canvasWidthPx": 1440,
+      "canvasHeightPx": 900,
+      "frames": [
+        {
+          "stepId": "action-0001",
+          "cueText": "focus preparation last refusal: none",
+          "mediaTime100ns": 7000000,
+          "mediaEnd100ns": 8000000,
+          "file": "case-010-01.jpg",
+          "sha256": "5e43da71f1ecc5b3fceb29119b9a40570f889604dd69e94a8ccf205f926a8954",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0003",
+          "cueText": "Click Continue and wait until the acquisition completes.",
+          "mediaTime100ns": 78000000,
+          "mediaEnd100ns": 79000000,
+          "file": "case-010-02.jpg",
+          "sha256": "f8720fc60b5a530a584e539ae269a1ff027206d8984f26be8bce0fc5768ed9b6",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0004",
+          "cueText": "Choose Spectrum: the histogram of measured energies with a band at each emission line, and the line table with the counts inside each band.",
+          "mediaTime100ns": 99000000,
+          "mediaEnd100ns": 100000000,
+          "file": "case-010-03.jpg",
+          "sha256": "e831560a3146a2801dc66a317d234b3afa70db0487a787c1ee46eb6edc2de475",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0005",
+          "cueText": "Type 2 in N \u00D7 FWHM at each line and leave the field: each band widens to twice the FWHM at its line and the table recounts; the histogram itself does not change.",
+          "mediaTime100ns": 106000000,
+          "mediaEnd100ns": 107000000,
+          "file": "case-010-04.jpg",
+          "sha256": "fcb3a5d2306f87be67fbe53979416fe37d6f0664b0bf56bbef50889efe8b39da",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0008",
+          "cueText": "Tick Log Y again: the counts axis becomes logarithmic, so small and large bins can be read together; the data are unchanged.",
+          "mediaTime100ns": 139000000,
+          "mediaEnd100ns": 140000000,
+          "file": "case-010-05.jpg",
+          "sha256": "8e01315e483321fd4f51511893b02097bdeb3b803c58ae1ac91579998c011b24",
+          "widthPx": 960,
+          "heightPx": 600
+        }
+      ]
+    },
+    {
+      "caseId": "Gcam.Studio.UiTests::Gcam.Studio.UiTests.MlemScenarioTests.FocusSweep_UnderMlem_IsTheCrossCorrelationSweep",
+      "runId": "gcam-20261023-015853-b4ad6f",
+      "verdict": "passed",
+      "videoSha256": "1651b507d51c4da8569359603c361b9ba4e403627f228d48fd144c65fd102e33",
+      "checkContract": "v4",
+      "videoStatus": "passed",
+      "reason": null,
+      "canvasWidthPx": 1440,
+      "canvasHeightPx": 900,
+      "frames": [
+        {
+          "stepId": "action-0001",
+          "cueText": "focus preparation last refusal: none",
+          "mediaTime100ns": 8000000,
+          "mediaEnd100ns": 9000000,
+          "file": "case-011-01.jpg",
+          "sha256": "6aa85913f34bf0aa97ef752c6e542ca9239c560edb2a98bd8eb3b8b621b7eec5",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0002",
+          "cueText": "window ready, state Empty",
+          "mediaTime100ns": 23000000,
+          "mediaEnd100ns": 24000000,
+          "file": "case-011-02.jpg",
+          "sha256": "c3b45b703e79099b644e49f7c0d3fce37feea4027f1bff20c2834564db9f2b29",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0003",
+          "cueText": "input read-back AcquisitionSeed: requested \u002712345\u0027, displayed \u002712345\u0027",
+          "mediaTime100ns": 145000000,
+          "mediaEnd100ns": 146000000,
+          "file": "case-011-03.jpg",
+          "sha256": "3611fbf9e427bba9763762b23d0e89251881ed99187339fda77d358c3078a5f9",
+          "widthPx": 960,
+          "heightPx": 600
+        }
+      ]
+    },
+    {
+      "caseId": "Gcam.Studio.UiTests::Gcam.Studio.UiTests.MlemScenarioTests.MethodSwitch_KeepsMeasurementsOnTheSameGrid",
+      "runId": "gcam-20261023-015807-60c37c",
+      "verdict": "passed",
+      "videoSha256": "4e8b989a08e8fce3b321e6c3c217c36fb44e73cc7e13d4575c46322f703b6c91",
+      "checkContract": "v4",
+      "videoStatus": "passed",
+      "reason": null,
+      "canvasWidthPx": 1440,
+      "canvasHeightPx": 900,
+      "frames": [
+        {
+          "stepId": "action-0001",
+          "cueText": "focus preparation last refusal: none",
+          "mediaTime100ns": 7000000,
+          "mediaEnd100ns": 8000000,
+          "file": "case-012-01.jpg",
+          "sha256": "f58b202bcbbfc46d74edeba14187d8aff242c616cc0278b3e2db19d1f6ea03a6",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0002",
+          "cueText": "window ready, state Empty",
+          "mediaTime100ns": 23000000,
+          "mediaEnd100ns": 24000000,
+          "file": "case-012-02.jpg",
+          "sha256": "af592e4047d15c80aff756e7fa2c3379e2159d41bf45098ec7d7fb49668553c3",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0003",
+          "cueText": "input read-back AcquisitionSeed: requested \u002712345\u0027, displayed \u002712345\u0027",
+          "mediaTime100ns": 138000000,
+          "mediaEnd100ns": 139000000,
+          "file": "case-012-03.jpg",
+          "sha256": "a6218670f20d590cf6faff2b2782d1487f47a139847ac1913c06d6d093184f95",
+          "widthPx": 960,
+          "heightPx": 600
+        }
+      ]
+    },
+    {
+      "caseId": "Gcam.Studio.UiTests::Gcam.Studio.UiTests.MlemScenarioTests.MlemSelection_SurvivesStopContinueAndReset_WithoutAStaleImage",
+      "runId": "gcam-20261023-015738-2b323b",
+      "verdict": "passed",
+      "videoSha256": "68962ea4873d224dfb0c2972874327e2235f092e1810c51a29a5ba7c010764c4",
+      "checkContract": "v4",
+      "videoStatus": "passed",
+      "reason": null,
+      "canvasWidthPx": 1440,
+      "canvasHeightPx": 900,
+      "frames": [
+        {
+          "stepId": "action-0001",
+          "cueText": "focus preparation last refusal: none",
+          "mediaTime100ns": 7000000,
+          "mediaEnd100ns": 8000000,
+          "file": "case-013-01.jpg",
+          "sha256": "9bcb304cedb87bbb7f9fa39ee1d7e6e995e14a028eccae791ebe7f82a1586494",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0004",
+          "cueText": "input read-back AcquisitionSpeed: requested \u00271\u0027, displayed \u00271\u0027",
+          "mediaTime100ns": 39000000,
+          "mediaEnd100ns": 40000000,
+          "file": "case-013-02.jpg",
+          "sha256": "bb8e145b8776dc65de4230fdf951b4c4967de06cbf75490ff4c0a628ea3757df",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0005",
+          "cueText": "input read-back AcquisitionSeed: requested \u002712345\u0027, displayed \u002712345\u0027",
+          "mediaTime100ns": 127000000,
+          "mediaEnd100ns": 128000000,
+          "file": "case-013-03.jpg",
+          "sha256": "f6614c7a7f4664219a59cfb0bbaa9f1f2c5061701cfaab519cad5537ad58ede7",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0006",
+          "cueText": "input read-back AcquisitionLiveTime: requested \u002760\u0027, displayed \u002760\u0027",
+          "mediaTime100ns": 135000000,
+          "mediaEnd100ns": 136000000,
+          "file": "case-013-04.jpg",
+          "sha256": "6d0ea674e4fa76c57415dcd90a5b454ffbc563ec4da9050d5692087d16598b6f",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0007",
+          "cueText": "input read-back AcquisitionSpeed: requested \u002710\u0027, displayed \u002710\u0027",
+          "mediaTime100ns": 209000000,
+          "mediaEnd100ns": 210000000,
+          "file": "case-013-05.jpg",
+          "sha256": "870489e8091743943bdb3c9a0c1be1239022dc2a60949efd2053cea04b992b7c",
+          "widthPx": 960,
+          "heightPx": 600
+        }
+      ]
+    },
+    {
+      "caseId": "Gcam.Studio.UiTests::Gcam.Studio.UiTests.MlemScenarioTests.Mlem_FocalPlane1500_FlagsTheUnmeasuredIterationCount",
+      "runId": "gcam-20261023-015933-1e239f",
+      "verdict": "passed",
+      "videoSha256": "21f6385d0775dddd7e509ecfd2463240d584030836240c6490b4a12875611591",
+      "checkContract": "v4",
+      "videoStatus": "passed",
+      "reason": null,
+      "canvasWidthPx": 1440,
+      "canvasHeightPx": 900,
+      "frames": [
+        {
+          "stepId": "action-0001",
+          "cueText": "focus preparation last refusal: none",
+          "mediaTime100ns": 7000000,
+          "mediaEnd100ns": 8000000,
+          "file": "case-014-01.jpg",
+          "sha256": "2c27e04a4608c8ec3a7e7c1503b8aab5d7ddfc2b9dd928eb107fbbd900c88f60",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0002",
+          "cueText": "window ready, state Empty",
+          "mediaTime100ns": 23000000,
+          "mediaEnd100ns": 24000000,
+          "file": "case-014-02.jpg",
+          "sha256": "115caf60ae2d3e95d57120b9a0480ae03617ead31a704ff69cb6ecb0f903d928",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0003",
+          "cueText": "input read-back AcquisitionSeed: requested \u002712345\u0027, displayed \u002712345\u0027",
+          "mediaTime100ns": 113000000,
+          "mediaEnd100ns": 114000000,
+          "file": "case-014-03.jpg",
+          "sha256": "149b2feb894b0f03589736b482f8520c3ec1e462381cd7116bbf91682adce122",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0004",
+          "cueText": "input read-back Imaging.FocalPlane: requested \u00271500\u0027, displayed \u00271500\u0027",
+          "mediaTime100ns": 125000000,
+          "mediaEnd100ns": 126000000,
+          "file": "case-014-04.jpg",
+          "sha256": "5266500c4318c5ee651ddfd6e9c0fc8725bbc89299145c8087906c92b3f1d6f3",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0005",
+          "cueText": "input read-back Imaging.FocalPlane: requested \u00271000\u0027, displayed \u00271000\u0027",
+          "mediaTime100ns": 132000000,
+          "mediaEnd100ns": 133000000,
+          "file": "case-014-05.jpg",
+          "sha256": "d4c9dce1471c9d6c289b5c82ef925e5be10014b6992996f38961678bda8611a2",
+          "widthPx": 960,
+          "heightPx": 600
+        }
+      ]
+    },
+    {
+      "caseId": "Gcam.Studio.UiTests::Gcam.Studio.UiTests.MlemScenarioTests.Mlem_SelectedDuringAcquisition_NonNegativeWithUnitNoteAndAdvancingStatus",
+      "runId": "gcam-20261023-015914-d2c288",
+      "verdict": "passed",
+      "videoSha256": "bacf1f2e71cd38242bfa4529fd23dfeaac49ba51a48284458abc110818614b27",
+      "checkContract": "v4",
+      "videoStatus": "passed",
+      "reason": null,
+      "canvasWidthPx": 1440,
+      "canvasHeightPx": 900,
+      "frames": [
+        {
+          "stepId": "action-0001",
+          "cueText": "focus preparation last refusal: none",
+          "mediaTime100ns": 7000000,
+          "mediaEnd100ns": 8000000,
+          "file": "case-015-01.jpg",
+          "sha256": "6aa85913f34bf0aa97ef752c6e542ca9239c560edb2a98bd8eb3b8b621b7eec5",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0002",
+          "cueText": "window ready, state Empty",
+          "mediaTime100ns": 18000000,
+          "mediaEnd100ns": 19000000,
+          "file": "case-015-02.jpg",
+          "sha256": "b181ef4ec1b3306bca1fa56dc278c905ce9470566c29ed8c688a3cbc31a8d510",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0003",
+          "cueText": "input read-back AcquisitionLiveTime: requested \u0027600\u0027, displayed \u0027600\u0027",
+          "mediaTime100ns": 27000000,
+          "mediaEnd100ns": 28000000,
+          "file": "case-015-03.jpg",
+          "sha256": "5637a0e904eadf2816925c240212588977e15e7a471b6f996bc2c093d6ae2a16",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0004",
+          "cueText": "input read-back AcquisitionSpeed: requested \u00271\u0027, displayed \u00271\u0027",
+          "mediaTime100ns": 41000000,
+          "mediaEnd100ns": 42000000,
+          "file": "case-015-04.jpg",
+          "sha256": "93d36e16f45b7786685c8f0f5880916bffce52cfc7a59141f9d0efe08c4496bf",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0005",
+          "cueText": "input read-back AcquisitionSeed: requested \u002712345\u0027, displayed \u002712345\u0027",
+          "mediaTime100ns": 121000000,
+          "mediaEnd100ns": 122000000,
+          "file": "case-015-05.jpg",
+          "sha256": "e87301ac83bafeed452d02806600f259610a40e5fbdea496a39ba008f3eb778d",
+          "widthPx": 960,
+          "heightPx": 600
+        }
+      ]
+    },
+    {
+      "caseId": "Gcam.Studio.UiTests::Gcam.Studio.UiTests.MlemScenarioTests.Mlem_WithStrip_ReportsNetCountsAndFindsCsOnItsSide",
+      "runId": "gcam-20261023-015827-cf898e",
+      "verdict": "passed",
+      "videoSha256": "7adce5aa8e74bf0d74d7377eade94d12e56bba475efb9871be5abfa3e98f371d",
+      "checkContract": "v4",
+      "videoStatus": "passed",
+      "reason": null,
+      "canvasWidthPx": 1440,
+      "canvasHeightPx": 900,
+      "frames": [
+        {
+          "stepId": "action-0001",
+          "cueText": "focus preparation last refusal: none",
+          "mediaTime100ns": 7000000,
+          "mediaEnd100ns": 8000000,
+          "file": "case-016-01.jpg",
+          "sha256": "143f40408b2c2ca84eb583684fc6af0c90afbfaefe2b697e22799a9bf9ba8f12",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0003",
+          "cueText": "input read-back SourceX: requested \u0027-20\u0027, displayed \u0027-20\u0027",
+          "mediaTime100ns": 37000000,
+          "mediaEnd100ns": 38000000,
+          "file": "case-016-02.jpg",
+          "sha256": "09dee34c5cddc0abf9feaf8661a79a5904f512ea1d4abb896ab7f7c6046e4091",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0004",
+          "cueText": "input read-back SourceX: requested \u002720\u0027, displayed \u002720\u0027",
+          "mediaTime100ns": 48000000,
+          "mediaEnd100ns": 49000000,
+          "file": "case-016-03.jpg",
+          "sha256": "1f289f937d52b900c1908bc4727be0d7861a6a68b02294068edf17c9815388f4",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0005",
+          "cueText": "input read-back SourceActivity: requested \u0027400\u0027, displayed \u0027400\u0027",
+          "mediaTime100ns": 62000000,
+          "mediaEnd100ns": 63000000,
+          "file": "case-016-04.jpg",
+          "sha256": "22e54d860e534e3c3dc302ce2d83b93c1e6f9272120f1d70ab19e4af16a57681",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0006",
+          "cueText": "input read-back AcquisitionSeed: requested \u002712345\u0027, displayed \u002712345\u0027",
+          "mediaTime100ns": 188000000,
+          "mediaEnd100ns": 189000000,
+          "file": "case-016-05.jpg",
+          "sha256": "8a8a89b3ba3760cda629dd56065f676561d09fcd05bb534003c753569cae0f43",
+          "widthPx": 960,
+          "heightPx": 600
+        }
+      ]
+    },
+    {
+      "caseId": "Gcam.Studio.UiTests::Gcam.Studio.UiTests.ObservedRunTests.LaunchIdleExit_RecordsPendingChannelEvidence_WithoutAutomation",
+      "runId": null,
+      "verdict": "not_executed",
+      "videoSha256": null,
+      "checkContract": null,
+      "videoStatus": "unavailable",
+      "reason": "video-gate: missing v4 run record",
+      "canvasWidthPx": 0,
+      "canvasHeightPx": 0,
+      "frames": []
+    },
+    {
+      "caseId": "Gcam.Studio.UiTests::Gcam.Studio.UiTests.PilotTests.Pilot_SimulateThenMeasureDistance_AddsRowWithExpectedLength",
+      "runId": "gcam-20261023-014405-7121c9",
+      "verdict": "passed",
+      "videoSha256": "52f4e3ea82916c4698042e51b09d7f20728786d75a8256a37dacce60fa54f1c9",
+      "checkContract": "v4",
+      "videoStatus": "passed",
+      "reason": null,
+      "canvasWidthPx": 1440,
+      "canvasHeightPx": 900,
+      "frames": [
+        {
+          "stepId": "action-0001",
+          "cueText": "focus preparation last refusal: none",
+          "mediaTime100ns": 7000000,
+          "mediaEnd100ns": 8000000,
+          "file": "case-017-01.jpg",
+          "sha256": "f58b202bcbbfc46d74edeba14187d8aff242c616cc0278b3e2db19d1f6ea03a6",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0002",
+          "cueText": "window ready, state Empty",
+          "mediaTime100ns": 86000000,
+          "mediaEnd100ns": 87000000,
+          "file": "case-017-02.jpg",
+          "sha256": "5a9f114072f6c8616f547b0169dcc695bee098765d3627090c0bf9153e90d0e2",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0003",
+          "cueText": "simulated: Completed \u00B7 t = 60.0 s of 60 s \u00B7 4,268 counts \u00B7 71 cps \u00B7 seed 1269601450",
+          "mediaTime100ns": 107000000,
+          "mediaEnd100ns": 108000000,
+          "file": "case-017-03.jpg",
+          "sha256": "6ed0e35d4f7e2441e2a1e3b16708ab78fc1365fc18ee9b4a4a4bb98904c012b3",
+          "widthPx": 960,
+          "heightPx": 600
+        }
+      ]
+    },
+    {
+      "caseId": "Gcam.Studio.UiTests::Gcam.Studio.UiTests.PlotViewTests.TenMillionSamples_ZoomAndResizeRedraw_Within16Milliseconds",
+      "runId": null,
+      "verdict": "passed",
+      "videoSha256": null,
+      "checkContract": null,
+      "videoStatus": "unavailable",
+      "reason": "video-gate: missing v4 run record",
+      "canvasWidthPx": 0,
+      "canvasHeightPx": 0,
+      "frames": []
+    },
+    {
+      "caseId": "Gcam.Studio.UiTests::Gcam.Studio.UiTests.ReadoutScenarioTests.CustomModules_InheritByModuleNotCost_UnknownCalibratesLocally",
+      "runId": "gcam-20261023-015238-f5cc84",
+      "verdict": "passed",
+      "videoSha256": "b4bbeb07e6a5583efe1279ac247ec3ea11722b1c0beecdd6860e742cf1fcebee",
+      "checkContract": "v4",
+      "videoStatus": "passed",
+      "reason": null,
+      "canvasWidthPx": 1440,
+      "canvasHeightPx": 900,
+      "frames": [
+        {
+          "stepId": "action-0001",
+          "cueText": "focus preparation last refusal: none",
+          "mediaTime100ns": 7000000,
+          "mediaEnd100ns": 8000000,
+          "file": "case-018-01.jpg",
+          "sha256": "d0e594f0f9178de5360d2986d62aafa2bf00a27fe4c94e98c0e3209704e830a7",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0005",
+          "cueText": "input read-back Optics.Distance: requested \u002760\u0027, displayed \u002760\u0027",
+          "mediaTime100ns": 108000000,
+          "mediaEnd100ns": 109000000,
+          "file": "case-018-02.jpg",
+          "sha256": "e7ca664b82893bfc0354d3fdd3d2be852bfbe02402766d497587c9817c543ca9",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0006",
+          "cueText": "input read-back Optics.Pixels: requested \u002720\u0027, displayed \u002720\u0027",
+          "mediaTime100ns": 120000000,
+          "mediaEnd100ns": 121000000,
+          "file": "case-018-03.jpg",
+          "sha256": "9e2688075cab8156bcdd0352d9cb0ac3d15b34ec7f84785165f1c0d0af2632a5",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0007",
+          "cueText": "input read-back Optics.PixelPitch: requested \u00270.5\u0027, displayed \u00270.5\u0027",
+          "mediaTime100ns": 349000000,
+          "mediaEnd100ns": 350000000,
+          "file": "case-018-04.jpg",
+          "sha256": "51893aaea3fc8be40c50083a79c21eb3b29dba994972e312f27c46986bc86118",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0008",
+          "cueText": "Custom: High module inherits the 64 k offer but not the cost; unknown 20 \u00D7 20 calibrates locally: Ready \u00B7 661.7 keV \u00B7 22.02 s \u00B7 239,476 windowed / 800,000 scored",
+          "mediaTime100ns": 349000000,
+          "mediaEnd100ns": 350000000,
+          "file": "case-018-05.jpg",
+          "sha256": "51893aaea3fc8be40c50083a79c21eb3b29dba994972e312f27c46986bc86118",
+          "widthPx": 960,
+          "heightPx": 600
+        }
+      ]
+    },
+    {
+      "caseId": "Gcam.Studio.UiTests::Gcam.Studio.UiTests.ReadoutScenarioTests.FixedSeedRepeatAndContinuation_ConserveCountsAndExposeFourLanes",
+      "runId": "gcam-20261023-014854-69fd32",
+      "verdict": "passed",
+      "videoSha256": "1828a05f62f16fb99210a7f56a14488e09aad9f8c5d6e705556b072d86ee6af0",
+      "checkContract": "v4",
+      "videoStatus": "passed",
+      "reason": null,
+      "canvasWidthPx": 1440,
+      "canvasHeightPx": 900,
+      "frames": [
+        {
+          "stepId": "action-0001",
+          "cueText": "focus preparation last refusal: none",
+          "mediaTime100ns": 7000000,
+          "mediaEnd100ns": 8000000,
+          "file": "case-019-01.jpg",
+          "sha256": "c232c50c63f5ce53eacefadc9b82764ae6220875ba4b2710061029b3c318d487",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0004",
+          "cueText": "input read-back Acquisition.AmbientDose: requested \u00270\u0027, displayed \u00270\u0027",
+          "mediaTime100ns": 69000000,
+          "mediaEnd100ns": 70000000,
+          "file": "case-019-02.jpg",
+          "sha256": "04766585f47f3f0445ffeb78acb8de1b63199b5771c9a9f97497df554f2a6ab3",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0005",
+          "cueText": "input read-back AcquisitionLiveTime: requested \u00274\u0027, displayed \u00274\u0027",
+          "mediaTime100ns": 77000000,
+          "mediaEnd100ns": 78000000,
+          "file": "case-019-03.jpg",
+          "sha256": "32c3ef48a4bba4bc6e0f3c01eb297dc7270afc9cf7f8ef20fa680f4143424a4d",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0006",
+          "cueText": "input read-back AcquisitionSpeed: requested \u00271\u0027, displayed \u00271\u0027",
+          "mediaTime100ns": 302000000,
+          "mediaEnd100ns": 303000000,
+          "file": "case-019-04.jpg",
+          "sha256": "2e3bce57b35e0d3aa059b8c49499107ad6723f57ff560caf223ba3c440c14781",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0007",
+          "cueText": "Fixed seed Stop / Continue equals uninterrupted assigned/unknown/triggered counts; four lanes and sum visible; replay disabled.",
+          "mediaTime100ns": 302000000,
+          "mediaEnd100ns": 303000000,
+          "file": "case-019-05.jpg",
+          "sha256": "2e3bce57b35e0d3aa059b8c49499107ad6723f57ff560caf223ba3c440c14781",
+          "widthPx": 960,
+          "heightPx": 600
+        }
+      ]
+    },
+    {
+      "caseId": "Gcam.Studio.UiTests::Gcam.Studio.UiTests.ReadoutScenarioTests.HighResCoLine_ProgressTabsSensitivityAndSessionHit",
+      "runId": "gcam-20261023-015340-f9239e",
+      "verdict": "passed",
+      "videoSha256": "e8856def20fee4adced09908c21c124e18665af14f338972973e82954b5590fb",
+      "checkContract": "v4",
+      "videoStatus": "passed",
+      "reason": null,
+      "canvasWidthPx": 1440,
+      "canvasHeightPx": 900,
+      "frames": [
+        {
+          "stepId": "action-0001",
+          "cueText": "focus preparation last refusal: none",
+          "mediaTime100ns": 7000000,
+          "mediaEnd100ns": 8000000,
+          "file": "case-020-01.jpg",
+          "sha256": "2e63dc31c706bce92cc9545189ace0c27da7298d2f8e9f3f5833483614d33d9f",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0005",
+          "cueText": "input read-back Readout.WindowHigh: requested \u00271532.375\u0027, displayed \u00271532.375\u0027",
+          "mediaTime100ns": 89000000,
+          "mediaEnd100ns": 90000000,
+          "file": "case-020-02.jpg",
+          "sha256": "340769732191fccd58cd402585075b487da96115b26119db95fe5f27ec69c62b",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0006",
+          "cueText": "input read-back Readout.WindowLow: requested \u00271132.625\u0027, displayed \u00271132.625\u0027",
+          "mediaTime100ns": 1691000000,
+          "mediaEnd100ns": 1692000000,
+          "file": "case-020-03.jpg",
+          "sha256": "89489245a1fc9a69228de81f874da6e9467fa97f3dcf35358328cb22df27d68a",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0007",
+          "cueText": "input read-back AcquisitionLiveTime: requested \u00272\u0027, displayed \u00272\u0027",
+          "mediaTime100ns": 1720000000,
+          "mediaEnd100ns": 1721000000,
+          "file": "case-020-04.jpg",
+          "sha256": "5049f131458d1bba625c48d9c4821573c1c6d613588586a35b870474d3961fb6",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0008",
+          "cueText": "High-res 1332.5 keV only, pinned 2 k budget: history progress, tabs, mean sensitivity map and help, captured 44 \u00D7 44 module and 1936 peaks, conserved acquisition; session hit in 0.6 s.",
+          "mediaTime100ns": 1720000000,
+          "mediaEnd100ns": 1721000000,
+          "file": "case-020-05.jpg",
+          "sha256": "5049f131458d1bba625c48d9c4821573c1c6d613588586a35b870474d3961fb6",
+          "widthPx": 960,
+          "heightPx": 600
+        }
+      ]
+    },
+    {
+      "caseId": "Gcam.Studio.UiTests::Gcam.Studio.UiTests.ReadoutScenarioTests.HighResCold_ProgressTabsCornersAndSessionHit_Bundled",
+      "runId": null,
+      "verdict": "not_executed",
+      "videoSha256": null,
+      "checkContract": null,
+      "videoStatus": "unavailable",
+      "reason": "video-gate: missing v4 run record",
+      "canvasWidthPx": 0,
+      "canvasHeightPx": 0,
+      "frames": []
+    },
+    {
+      "caseId": "Gcam.Studio.UiTests::Gcam.Studio.UiTests.ReadoutScenarioTests.PhysicalBsrAndAmbient_ContinuationConservesMeasuredCounts",
+      "runId": "gcam-20261023-014932-01d22d",
+      "verdict": "passed",
+      "videoSha256": "0f921e573f38a5ecef7543ed2b3313887741a8399e6bedfd6ea9f5b7a56b1f51",
+      "checkContract": "v4",
+      "videoStatus": "passed",
+      "reason": null,
+      "canvasWidthPx": 1440,
+      "canvasHeightPx": 900,
+      "frames": [
+        {
+          "stepId": "action-0001",
+          "cueText": "focus preparation last refusal: none",
+          "mediaTime100ns": 7000000,
+          "mediaEnd100ns": 8000000,
+          "file": "case-021-01.jpg",
+          "sha256": "cd7d20296bd07b8af909c6b37c8a9c438e28148860d36aa2ddde5e9d63436ff7",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0007",
+          "cueText": "input read-back Acquisition.AmbientDose: requested \u00270\u0027, displayed \u00270\u0027",
+          "mediaTime100ns": 336000000,
+          "mediaEnd100ns": 337000000,
+          "file": "case-021-02.jpg",
+          "sha256": "c000ee8a7e24f4af2fd65ba68cd35c1df28ddfafd2176c6745aaddb7f8d7fabe",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0009",
+          "cueText": "input read-back Acquisition.AmbientDose: requested \u00271\u0027, displayed \u00271\u0027",
+          "mediaTime100ns": 529000000,
+          "mediaEnd100ns": 530000000,
+          "file": "case-021-03.jpg",
+          "sha256": "09b809c86d644d91e924882cddaa158ce6d7f124cb02eb7cb6243c04cc46c41b",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0011",
+          "cueText": "input read-back Acquisition.AmbientDose: requested \u00271\u0027, displayed \u00271\u0027",
+          "mediaTime100ns": 723000000,
+          "mediaEnd100ns": 724000000,
+          "file": "case-021-04.jpg",
+          "sha256": "523c4a281c71db7dc23f75a3aa51c43c678c0353255ac2d755a23350e4c1397a",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0012",
+          "cueText": "BSR 1, ambient 1, BareCrystalAllFaces: continued physical counts conserved; entered inputs retained.",
+          "mediaTime100ns": 731000000,
+          "mediaEnd100ns": 732000000,
+          "file": "case-021-05.jpg",
+          "sha256": "5f4ccc69aae9067b9ed39ced665cf8f3afa19db44fa4cddb52cbfab5b80d59eb",
+          "widthPx": 960,
+          "heightPx": 600
+        }
+      ]
+    },
+    {
+      "caseId": "Gcam.Studio.UiTests::Gcam.Studio.UiTests.ReadoutScenarioTests.PreparationCancelRetryAndTabs_AreExplicit",
+      "runId": "gcam-20261023-014817-f48d7f",
+      "verdict": "passed",
+      "videoSha256": "51aade913d26d8b9a81dbde4f4af599997e846c3da87c96d6cce31aac58300fb",
+      "checkContract": "v4",
+      "videoStatus": "passed",
+      "reason": null,
+      "canvasWidthPx": 1440,
+      "canvasHeightPx": 900,
+      "frames": [
+        {
+          "stepId": "action-0001",
+          "cueText": "focus preparation last refusal: none",
+          "mediaTime100ns": 7000000,
+          "mediaEnd100ns": 8000000,
+          "file": "case-022-01.jpg",
+          "sha256": "2ecf11da9772e1010a6b3b89441f078b974fcf61eabef46f260a40a6c12f2b21",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0003",
+          "cueText": "input read-back AcquisitionSeed: requested \u002712345\u0027, displayed \u002712345\u0027",
+          "mediaTime100ns": 141000000,
+          "mediaEnd100ns": 142000000,
+          "file": "case-022-02.jpg",
+          "sha256": "3a1c1955577c737934a566d9761bba30676c535497649df5eefaf6d97f1b5ca5",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0004",
+          "cueText": "Second Prepare returned in 0.5 s (session cache).",
+          "mediaTime100ns": 188000000,
+          "mediaEnd100ns": 189000000,
+          "file": "case-022-03.jpg",
+          "sha256": "4dd10d577638021d46030754744b764141ac758ae0c65d8c6d818c2d1e5cb44c",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0005",
+          "cueText": "input read-back Detector.Gap: requested \u002790\u0027, displayed \u002790\u0027",
+          "mediaTime100ns": 193000000,
+          "mediaEnd100ns": 194000000,
+          "file": "case-022-04.jpg",
+          "sha256": "08827830a8258a784e169128a6bc98cbf6db46796b6a7e244cec02c34a338d41",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0006",
+          "cueText": "Cancelled preparation is retryable; same-session hit; tabs and per-crystal diagnostics; module edit makes the bank stale.",
+          "mediaTime100ns": 193000000,
+          "mediaEnd100ns": 194000000,
+          "file": "case-022-05.jpg",
+          "sha256": "08827830a8258a784e169128a6bc98cbf6db46796b6a7e244cec02c34a338d41",
+          "widthPx": 960,
+          "heightPx": 600
+        }
+      ]
+    },
+    {
+      "caseId": "Gcam.Studio.UiTests::Gcam.Studio.UiTests.ReadoutScenarioTests.RefusedLineAndMissingPreparation_ExplainWithoutZeroing",
+      "runId": "gcam-20261023-015321-7dab6b",
+      "verdict": "passed",
+      "videoSha256": "88264d02a6925620a39a0381b7399d531bc9369569636fbcb6f9dc5536c3b09e",
+      "checkContract": "v4",
+      "videoStatus": "passed",
+      "reason": null,
+      "canvasWidthPx": 1440,
+      "canvasHeightPx": 900,
+      "frames": [
+        {
+          "stepId": "action-0001",
+          "cueText": "UI Automation root re-acquisition 1: held root FrameworkId \u0027Win32\u0027, AutomationIds none, window provider \u0027[pid:20208,providerId:0x1AF1562 Main:Nested [pid:37104,providerId:0x1AF1562 Main(parent link):Unidentified Provider (unmanaged:coreclr.dll)]; Hwnd(parent link):Unidentified Provider (unmanaged:coreclr.dll)]\u0027",
+          "mediaTime100ns": 15000000,
+          "mediaEnd100ns": 16000000,
+          "file": "case-023-01.jpg",
+          "sha256": "29058b8dca67130858abe46079d9e21bfd650b1182a5c7f585a09a10730a54be",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0004",
+          "cueText": "window ready, state Empty",
+          "mediaTime100ns": 44000000,
+          "mediaEnd100ns": 45000000,
+          "file": "case-023-02.jpg",
+          "sha256": "b81dd46d53c13bfd33b12a0e313e9de7f2a0128b29e452c7007f1904453f4870",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0005",
+          "cueText": "input read-back Readout.WindowLow: requested \u0027100\u0027, displayed \u0027100\u0027",
+          "mediaTime100ns": 56000000,
+          "mediaEnd100ns": 57000000,
+          "file": "case-023-03.jpg",
+          "sha256": "cf168d25fceb2a2f2e9ca4e778b8d1b6b93a0377f61769bdbf40926b5e11b79b",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0006",
+          "cueText": "input read-back Readout.WindowHigh: requested \u0027140\u0027, displayed \u0027140\u0027",
+          "mediaTime100ns": 111000000,
+          "mediaEnd100ns": 112000000,
+          "file": "case-023-04.jpg",
+          "sha256": "76e47dfe55ab710a75cc467a6c3eed8ad2c3ef088c22babbac36bfe1d6c2954d",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0007",
+          "cueText": "Sharp physical selection; 122.06 keV refused with population and literal reason; missing preparation refusal preserves the nonzero field input.",
+          "mediaTime100ns": 111000000,
+          "mediaEnd100ns": 112000000,
+          "file": "case-023-05.jpg",
+          "sha256": "76e47dfe55ab710a75cc467a6c3eed8ad2c3ef088c22babbac36bfe1d6c2954d",
+          "widthPx": 960,
+          "heightPx": 600
+        }
+      ]
+    },
+    {
+      "caseId": "Gcam.Studio.UiTests::Gcam.Studio.UiTests.ReadoutScenarioTests.SharpTwoLineBank_SwitchesWindowAndLineWithoutTruthDispatch",
+      "runId": "gcam-20261023-015056-274b57",
+      "verdict": "passed",
+      "videoSha256": "c51d43c2b7167a86644b22569c39f07217916cb8dca2670a6100c98b09450306",
+      "checkContract": "v4",
+      "videoStatus": "passed",
+      "reason": null,
+      "canvasWidthPx": 1440,
+      "canvasHeightPx": 900,
+      "frames": [
+        {
+          "stepId": "action-0001",
+          "cueText": "focus preparation last refusal: none",
+          "mediaTime100ns": 7000000,
+          "mediaEnd100ns": 8000000,
+          "file": "case-024-01.jpg",
+          "sha256": "c232c50c63f5ce53eacefadc9b82764ae6220875ba4b2710061029b3c318d487",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0004",
+          "cueText": "input read-back Acquisition.AmbientDose: requested \u00270\u0027, displayed \u00270\u0027",
+          "mediaTime100ns": 829000000,
+          "mediaEnd100ns": 830000000,
+          "file": "case-024-02.jpg",
+          "sha256": "712db266cfdc0abd1b4fa7ce00c5df10ec68fbbe7bd6e4c7102bd6b007b76719",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0005",
+          "cueText": "input read-back AcquisitionLiveTime: requested \u00274\u0027, displayed \u00274\u0027",
+          "mediaTime100ns": 874000000,
+          "mediaEnd100ns": 875000000,
+          "file": "case-024-03.jpg",
+          "sha256": "60fc7670e2ac339ec17fcd9d07df9771c4b7f2fcd3fc6df90522d1c26883243a",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0006",
+          "cueText": "input read-back Readout.WindowHigh: requested \u00271532.375\u0027, displayed \u00271532.375\u0027",
+          "mediaTime100ns": 885000000,
+          "mediaEnd100ns": 886000000,
+          "file": "case-024-04.jpg",
+          "sha256": "97f014071c5a5d2e5d457b7dc1e108eec903c75bff2218629c4c2caa357356a2",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0008",
+          "cueText": "Sharp 661.7 \u002B 1332.5 keV bank: held facts once, per-line counts, map and Imaging follow the selected line.",
+          "mediaTime100ns": 900000000,
+          "mediaEnd100ns": 901000000,
+          "file": "case-024-05.jpg",
+          "sha256": "d816672c8283efcd0cb29f47c5b4e92e2a38dafdebb129625c5f1eb1f3d8d67d",
+          "widthPx": 960,
+          "heightPx": 600
+        }
+      ]
+    },
+    {
+      "caseId": "Gcam.Studio.UiTests::Gcam.Studio.UiTests.ReadoutScenarioTests.WideLocalisationHelp_ShowsRecordScopeAndDirectBias",
+      "runId": "gcam-20261023-014843-a320a4",
+      "verdict": "passed",
+      "videoSha256": "89f9127fb65a4bb3c058ec2e5cede856b9a42696b6dc1d52deba46ec0d22a3e0",
+      "checkContract": "v4",
+      "videoStatus": "passed",
+      "reason": null,
+      "canvasWidthPx": 1440,
+      "canvasHeightPx": 900,
+      "frames": [
+        {
+          "stepId": "action-0001",
+          "cueText": "focus preparation last refusal: none",
+          "mediaTime100ns": 7000000,
+          "mediaEnd100ns": 8000000,
+          "file": "case-025-01.jpg",
+          "sha256": "90c8de6adf2ac858e942c824714a50e4dba5040e6932000e5bbe8c33d1b837a8",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0002",
+          "cueText": "window ready, state Empty",
+          "mediaTime100ns": 39000000,
+          "mediaEnd100ns": 40000000,
+          "file": "case-025-02.jpg",
+          "sha256": "e7a8f6a29f4d44c2f3d97e32ba3c938e753d83419528a58eac61d9f09b12aee1",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0003",
+          "cueText": "input read-back AcquisitionSeed: requested \u002712345\u0027, displayed \u002712345\u0027",
+          "mediaTime100ns": 45000000,
+          "mediaEnd100ns": 46000000,
+          "file": "case-025-03.jpg",
+          "sha256": "4afd0d18fb3e0b079a6622026db45fb5163b1b34d99b2342439d139d4d94ec7c",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0004",
+          "cueText": "Experimental localisation help carries the record scope, module F range and direct-bias explanation.",
+          "mediaTime100ns": 45000000,
+          "mediaEnd100ns": 46000000,
+          "file": "case-025-04.jpg",
+          "sha256": "4afd0d18fb3e0b079a6622026db45fb5163b1b34d99b2342439d139d4d94ec7c",
+          "widthPx": 960,
+          "heightPx": 600
+        }
+      ]
+    },
+    {
+      "caseId": "Gcam.Studio.UiTests::Gcam.Studio.UiTests.ReportExportScenarioTests.ExportReport_SaveDialogWritesIntoOwnedSandbox_AndMatchesDisplayedEstimate(format: \u0022Csv\u0022, extension: \u0022csv\u0022)",
+      "runId": "gcam-20261023-013916-4bb444",
+      "verdict": "passed",
+      "videoSha256": "fca5a3aa345ae321e5be531c2c6595f6b37be603e5f2b2ae5d4bd019690ca8cb",
+      "checkContract": "v4",
+      "videoStatus": "passed",
+      "reason": null,
+      "canvasWidthPx": 1440,
+      "canvasHeightPx": 900,
+      "frames": [
+        {
+          "stepId": "step-0001",
+          "cueText": "Launch transition: owned window not yet painted",
+          "mediaTime100ns": 4000000,
+          "mediaEnd100ns": 5000000,
+          "file": "case-026-01.jpg",
+          "sha256": "b108b56147b5fd773602108226f1d99424bed2c2c7bee032c6c6907916232c19",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0002",
+          "cueText": "window ready, state Empty",
+          "mediaTime100ns": 16000000,
+          "mediaEnd100ns": 17000000,
+          "file": "case-026-02.jpg",
+          "sha256": "a23e3c88de2e85aa5ffed3aae43800de7ed059cc1d65c9167d3200054f7b91fc",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0003",
+          "cueText": "input read-back AcquisitionLiveTime: requested \u00271\u0027, displayed \u00271\u0027",
+          "mediaTime100ns": 30000000,
+          "mediaEnd100ns": 31000000,
+          "file": "case-026-03.jpg",
+          "sha256": "9031e23feca0eb27ed25c7066067f4adb67f4132e61a974b6ed082ca0394b4c0",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0009",
+          "cueText": "Private dialog step \u2014 picture suppressed \u00B7 Native dialog closed; export outcome visible in Studio",
+          "mediaTime100ns": 58000000,
+          "mediaEnd100ns": 59000000,
+          "file": "case-026-04.jpg",
+          "sha256": "6af53407e6f2dcb9767538de6cb8d96271afcf3981935e55e53faf8e72690bca",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0010",
+          "cueText": "event data, meta and scene written; scene loads; only 3 declared sandbox writes",
+          "mediaTime100ns": 60000000,
+          "mediaEnd100ns": 61000000,
+          "file": "case-026-05.jpg",
+          "sha256": "d58da0afd619e40db3609ca718c0bf8f10120376d691c8c984073f564393c673",
+          "widthPx": 960,
+          "heightPx": 600
+        }
+      ]
+    },
+    {
+      "caseId": "Gcam.Studio.UiTests::Gcam.Studio.UiTests.ReportExportScenarioTests.ExportReport_SaveDialogWritesIntoOwnedSandbox_AndMatchesDisplayedEstimate(format: \u0022Html\u0022, extension: \u0022html\u0022)",
+      "runId": "gcam-20261023-013953-e2aacf",
+      "verdict": "passed",
+      "videoSha256": "a68cbf47b6c7b68a202758c87d33efd87e4075db54d3d4cb88688bcd60af97a7",
+      "checkContract": "v4",
+      "videoStatus": "passed",
+      "reason": null,
+      "canvasWidthPx": 1440,
+      "canvasHeightPx": 900,
+      "frames": [
+        {
+          "stepId": "action-0001",
+          "cueText": "focus preparation last refusal: none",
+          "mediaTime100ns": 7000000,
+          "mediaEnd100ns": 8000000,
+          "file": "case-027-01.jpg",
+          "sha256": "b684c5082ecc76c7888d8d8a0135ba751f81511786856fedecb0578e757571c7",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0002",
+          "cueText": "window ready, state Empty",
+          "mediaTime100ns": 16000000,
+          "mediaEnd100ns": 17000000,
+          "file": "case-027-02.jpg",
+          "sha256": "8d4bfbfb75506f917dfbd84a78ddf0c35fcab3b7d92a702bccb364105d78741e",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0003",
+          "cueText": "input read-back AcquisitionLiveTime: requested \u00271\u0027, displayed \u00271\u0027",
+          "mediaTime100ns": 30000000,
+          "mediaEnd100ns": 31000000,
+          "file": "case-027-03.jpg",
+          "sha256": "86aab1be70a7fa06cae909da82158e53062ed51500403d50821e37decc80fd8f",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0009",
+          "cueText": "Private dialog step \u2014 picture suppressed \u00B7 Native dialog closed; export outcome visible in Studio",
+          "mediaTime100ns": 56000000,
+          "mediaEnd100ns": 57000000,
+          "file": "case-027-04.jpg",
+          "sha256": "6bb3e106df4b16651e3cf9c612e2528356df96255bd9a87d8e1b92385422aed5",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0010",
+          "cueText": "report contains displayed estimate: peak (-1.5, 0.1) mm; scene loads; only 2 declared sandbox writes",
+          "mediaTime100ns": 58000000,
+          "mediaEnd100ns": 59000000,
+          "file": "case-027-05.jpg",
+          "sha256": "28953548c9ab4365cce0a7576d9d060013d946f994bd0d75b3bfb137aa51f294",
+          "widthPx": 960,
+          "heightPx": 600
+        }
+      ]
+    },
+    {
+      "caseId": "Gcam.Studio.UiTests::Gcam.Studio.UiTests.ReportExportScenarioTests.ExportReport_SaveDialogWritesIntoOwnedSandbox_AndMatchesDisplayedEstimate(format: \u0022Pdf\u0022, extension: \u0022pdf\u0022)",
+      "runId": "gcam-20261023-013929-c12ba8",
+      "verdict": "passed",
+      "videoSha256": "e03ff5b2b2d81da60e84b829dd94ea0b69e70ad08f3ebbaa5ec8d09bf11c5bf7",
+      "checkContract": "v4",
+      "videoStatus": "passed",
+      "reason": null,
+      "canvasWidthPx": 1440,
+      "canvasHeightPx": 900,
+      "frames": [
+        {
+          "stepId": "action-0001",
+          "cueText": "focus preparation last refusal: none",
+          "mediaTime100ns": 7000000,
+          "mediaEnd100ns": 8000000,
+          "file": "case-028-01.jpg",
+          "sha256": "4530bc8830c8ff586265f138af2ccf6018fb5155c964e56d6471b60d0c9a35be",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0002",
+          "cueText": "window ready, state Empty",
+          "mediaTime100ns": 16000000,
+          "mediaEnd100ns": 17000000,
+          "file": "case-028-02.jpg",
+          "sha256": "5c24837de71137a177e1ad4ef23196d336d71da8df923d90afea1ed27a50057b",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0003",
+          "cueText": "input read-back AcquisitionLiveTime: requested \u00271\u0027, displayed \u00271\u0027",
+          "mediaTime100ns": 30000000,
+          "mediaEnd100ns": 31000000,
+          "file": "case-028-03.jpg",
+          "sha256": "921b119432eb0dd572417b4c33659b46afe161114f41695ba00336e1a9775015",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0009",
+          "cueText": "Private dialog step \u2014 picture suppressed \u00B7 Native dialog closed; export outcome visible in Studio",
+          "mediaTime100ns": 58000000,
+          "mediaEnd100ns": 59000000,
+          "file": "case-028-04.jpg",
+          "sha256": "41821d7245afd1f989fb2203009caae94096cb95606921601d7822f2163e902b",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0010",
+          "cueText": "report contains displayed estimate: peak (1.3, -0.4) mm; scene loads; only 2 declared sandbox writes",
+          "mediaTime100ns": 60000000,
+          "mediaEnd100ns": 61000000,
+          "file": "case-028-05.jpg",
+          "sha256": "0873b005264059908cda4191a9b9e1c3d249797915477de5d2387ff5a03a4568",
+          "widthPx": 960,
+          "heightPx": 600
+        }
+      ]
+    },
+    {
+      "caseId": "Gcam.Studio.UiTests::Gcam.Studio.UiTests.ReportExportScenarioTests.ExportReport_SaveDialogWritesIntoOwnedSandbox_AndMatchesDisplayedEstimate(format: \u0022Word\u0022, extension: \u0022docx\u0022)",
+      "runId": "gcam-20261023-013941-a7ab24",
+      "verdict": "passed",
+      "videoSha256": "9223dc1993e6ece163f6f5419aee5b162cb92e36f3051cfec1ecd55da8b56185",
+      "checkContract": "v4",
+      "videoStatus": "passed",
+      "reason": null,
+      "canvasWidthPx": 1440,
+      "canvasHeightPx": 900,
+      "frames": [
+        {
+          "stepId": "action-0001",
+          "cueText": "focus preparation last refusal: none",
+          "mediaTime100ns": 7000000,
+          "mediaEnd100ns": 8000000,
+          "file": "case-029-01.jpg",
+          "sha256": "4530bc8830c8ff586265f138af2ccf6018fb5155c964e56d6471b60d0c9a35be",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0002",
+          "cueText": "window ready, state Empty",
+          "mediaTime100ns": 16000000,
+          "mediaEnd100ns": 17000000,
+          "file": "case-029-02.jpg",
+          "sha256": "5c24837de71137a177e1ad4ef23196d336d71da8df923d90afea1ed27a50057b",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0003",
+          "cueText": "input read-back AcquisitionLiveTime: requested \u00271\u0027, displayed \u00271\u0027",
+          "mediaTime100ns": 31000000,
+          "mediaEnd100ns": 32000000,
+          "file": "case-029-03.jpg",
+          "sha256": "f67b08623fc8dc04b791f4ffbbe9dd0999474e9b3c3ecb7dc2ffa416d7a427bb",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0009",
+          "cueText": "Private dialog step \u2014 picture suppressed \u00B7 Native dialog closed; export outcome visible in Studio",
+          "mediaTime100ns": 57000000,
+          "mediaEnd100ns": 58000000,
+          "file": "case-029-04.jpg",
+          "sha256": "4593eca4c48faea67b3d2e177e4c777b20159a5e1459b4d8db5c841a364524e5",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0010",
+          "cueText": "report contains displayed estimate: peak (0.1, -0.3) mm; scene loads; only 2 declared sandbox writes",
+          "mediaTime100ns": 58000000,
+          "mediaEnd100ns": 59000000,
+          "file": "case-029-05.jpg",
+          "sha256": "d3bfb613fe7393c8553cfe38256b22ea73702562330e58b6307666a3983b81d4",
+          "widthPx": 960,
+          "heightPx": 600
+        }
+      ]
+    },
+    {
+      "caseId": "Gcam.Studio.UiTests::Gcam.Studio.UiTests.ScenarioTests.Angle_EscAbandonsDraft_DeleteRemovesSelected",
+      "runId": "gcam-20261023-014715-50d7a3",
+      "verdict": "passed",
+      "videoSha256": "ea56066c3d2bc29178373f8361da0feea358370bb540cdfbe0a496fd6e6e3197",
+      "checkContract": "v4",
+      "videoStatus": "passed",
+      "reason": null,
+      "canvasWidthPx": 1440,
+      "canvasHeightPx": 900,
+      "frames": [
+        {
+          "stepId": "action-0001",
+          "cueText": "focus preparation last refusal: none",
+          "mediaTime100ns": 7000000,
+          "mediaEnd100ns": 8000000,
+          "file": "case-030-01.jpg",
+          "sha256": "7ebf9da2873b38fccbbda9ec8657b3abea7fd7957293f36c17cc98b3ee07171b",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0002",
+          "cueText": "window ready, state Empty",
+          "mediaTime100ns": 56000000,
+          "mediaEnd100ns": 57000000,
+          "file": "case-030-02.jpg",
+          "sha256": "0471d3fbdce5fa0d67b145119b69ed1d0340cf6b2a3f5e565fad49a5ec1e718b",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0002",
+          "cueText": "window ready, state Empty",
+          "mediaTime100ns": 105000000,
+          "mediaEnd100ns": 106000000,
+          "file": "case-030-03.jpg",
+          "sha256": "85e502dd9c5719ea601147607b7348e238285fede772c3105730a6fd59891cdd",
+          "widthPx": 960,
+          "heightPx": 600
+        }
+      ]
+    },
+    {
+      "caseId": "Gcam.Studio.UiTests::Gcam.Studio.UiTests.ScenarioTests.MoveSource_ResetEditStart_PutsPeakOnTheSource",
+      "runId": "gcam-20261023-014733-5c6fe2",
+      "verdict": "passed",
+      "videoSha256": "4fdc74192fbdb3e87030a7de8fca5e5ed1cd0692ff2fa2939603804197c6a44a",
+      "checkContract": "v4",
+      "videoStatus": "passed",
+      "reason": null,
+      "canvasWidthPx": 1440,
+      "canvasHeightPx": 900,
+      "frames": [
+        {
+          "stepId": "action-0001",
+          "cueText": "focus preparation last refusal: none",
+          "mediaTime100ns": 7000000,
+          "mediaEnd100ns": 8000000,
+          "file": "case-031-01.jpg",
+          "sha256": "3de20c942e3beed081cf27b36b864f5e00e584e7afdde9d9a78aa3990bf1bf3c",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0002",
+          "cueText": "window ready, state Empty",
+          "mediaTime100ns": 23000000,
+          "mediaEnd100ns": 24000000,
+          "file": "case-031-02.jpg",
+          "sha256": "4462fc43dd5c19433a906c62425f5db542878d7def8297ac16bc8708199e68eb",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0003",
+          "cueText": "input read-back AcquisitionSeed: requested \u002712345\u0027, displayed \u002712345\u0027",
+          "mediaTime100ns": 134000000,
+          "mediaEnd100ns": 135000000,
+          "file": "case-031-03.jpg",
+          "sha256": "7df3fe58d8f9cee8899c806ace2f53819466d73a0d5b00e9f1f81f9d1a8dea1f",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0004",
+          "cueText": "input read-back SourceX: requested \u002721.4\u0027, displayed \u002721.4\u0027",
+          "mediaTime100ns": 144000000,
+          "mediaEnd100ns": 145000000,
+          "file": "case-031-04.jpg",
+          "sha256": "1c53b154bda2cffd7ca55cbf453883486a66c614f8724d21e1519baae584e173",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0005",
+          "cueText": "input read-back SourceY: requested \u002716\u0027, displayed \u002716\u0027",
+          "mediaTime100ns": 212000000,
+          "mediaEnd100ns": 213000000,
+          "file": "case-031-05.jpg",
+          "sha256": "8d11e6d00804bbf84b64669cb0256024bc9e83c9d2a6b69f029ae7b61fb8e681",
+          "widthPx": 960,
+          "heightPx": 600
+        }
+      ]
+    },
+    {
+      "caseId": "Gcam.Studio.UiTests::Gcam.Studio.UiTests.ScenarioTests.Readout_AndOneCellRoi_MatchAbsolutePositionAndValue",
+      "runId": "gcam-20261023-014623-f46cb0",
+      "verdict": "passed",
+      "videoSha256": "54593db57b3b5ee7ec8b608435404dfc44a42ce227633e0dff6e2df4141a571b",
+      "checkContract": "v4",
+      "videoStatus": "passed",
+      "reason": null,
+      "canvasWidthPx": 1440,
+      "canvasHeightPx": 900,
+      "frames": [
+        {
+          "stepId": "action-0001",
+          "cueText": "focus preparation last refusal: none",
+          "mediaTime100ns": 7000000,
+          "mediaEnd100ns": 8000000,
+          "file": "case-032-01.jpg",
+          "sha256": "6aa85913f34bf0aa97ef752c6e542ca9239c560edb2a98bd8eb3b8b621b7eec5",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0002",
+          "cueText": "window ready, state Empty",
+          "mediaTime100ns": 78000000,
+          "mediaEnd100ns": 79000000,
+          "file": "case-032-02.jpg",
+          "sha256": "ffa5b09ef62271bce97d27b5e6bac5038c1dc70d425aa4cea5c16a5005de95f7",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0003",
+          "cueText": "cell (4,6): readout (-6.3, 5.1) value 1; expected (-6.30, 5.10)",
+          "mediaTime100ns": 81000000,
+          "mediaEnd100ns": 82000000,
+          "file": "case-032-03.jpg",
+          "sha256": "bc1587bfe539f0dd0d5db6495ab4ca758fd180af45255761288a5ce6a74c4234",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0004",
+          "cueText": "cell (25,22): readout (6.3, -4.5) value 6; expected (6.30, -4.50)",
+          "mediaTime100ns": 99000000,
+          "mediaEnd100ns": 100000000,
+          "file": "case-032-04.jpg",
+          "sha256": "56c0e4cc48ea60bfca4adb765bbe857b3f87e5d2004f65c13b6c9e3f4149b0de",
+          "widthPx": 960,
+          "heightPx": 600
+        }
+      ]
+    },
+    {
+      "caseId": "Gcam.Studio.UiTests::Gcam.Studio.UiTests.ScenarioTests.Roi_OnFloodMap_CountsWholePixelsByCentre",
+      "runId": "gcam-20261023-014640-f77565",
+      "verdict": "passed",
+      "videoSha256": "8bbe7418d4a6d55e99d901de42d5dc34d28ac537291c0c85d3e2a0981a52ddd2",
+      "checkContract": "v4",
+      "videoStatus": "passed",
+      "reason": null,
+      "canvasWidthPx": 1440,
+      "canvasHeightPx": 900,
+      "frames": [
+        {
+          "stepId": "action-0001",
+          "cueText": "focus preparation last refusal: none",
+          "mediaTime100ns": 7000000,
+          "mediaEnd100ns": 8000000,
+          "file": "case-033-01.jpg",
+          "sha256": "c4bd1f5c9621b20cc33adeb20775a010c7c21e85129b5369b21f2c079a3a3fdc",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0002",
+          "cueText": "window ready, state Empty",
+          "mediaTime100ns": 50000000,
+          "mediaEnd100ns": 51000000,
+          "file": "case-033-02.jpg",
+          "sha256": "a853482a198dddca81136f8d3e8130535150b2473e413b7b9c1e300e760c5137",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0002",
+          "cueText": "window ready, state Empty",
+          "mediaTime100ns": 93000000,
+          "mediaEnd100ns": 94000000,
+          "file": "case-033-03.jpg",
+          "sha256": "29332d455d95d966b882a0bb504067b134f8a5e9186c36e114eba478cd8e1797",
+          "widthPx": 960,
+          "heightPx": 600
+        }
+      ]
+    },
+    {
+      "caseId": "Gcam.Studio.UiTests::Gcam.Studio.UiTests.ScenarioTests.StopContinueReset_KeepsAccumulatesAndDiscards",
+      "runId": "gcam-20261023-014657-d629d9",
+      "verdict": "passed",
+      "videoSha256": "5e6ecb2154f2f57018df6c636b655e85e9e577301d8116dfbfd9eb0ce09654da",
+      "checkContract": "v4",
+      "videoStatus": "passed",
+      "reason": null,
+      "canvasWidthPx": 1440,
+      "canvasHeightPx": 900,
+      "frames": [
+        {
+          "stepId": "action-0001",
+          "cueText": "focus preparation last refusal: none",
+          "mediaTime100ns": 7000000,
+          "mediaEnd100ns": 8000000,
+          "file": "case-034-01.jpg",
+          "sha256": "7ebf9da2873b38fccbbda9ec8657b3abea7fd7957293f36c17cc98b3ee07171b",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0003",
+          "cueText": "input read-back AcquisitionLiveTime: requested \u0027600\u0027, displayed \u0027600\u0027",
+          "mediaTime100ns": 25000000,
+          "mediaEnd100ns": 26000000,
+          "file": "case-034-02.jpg",
+          "sha256": "4d4e773bd6e6d79228b58a2667003b7a14a5dbc4320a0c854a11c9499f2b3511",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0004",
+          "cueText": "input read-back AcquisitionSpeed: requested \u00271\u0027, displayed \u00271\u0027",
+          "mediaTime100ns": 39000000,
+          "mediaEnd100ns": 40000000,
+          "file": "case-034-03.jpg",
+          "sha256": "3a3dc4766c8a717dd0ac922ea55373b2f6806e5c543168df7229a468ac1b6026",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0005",
+          "cueText": "input read-back AcquisitionSeed: requested \u002712345\u0027, displayed \u002712345\u0027",
+          "mediaTime100ns": 59000000,
+          "mediaEnd100ns": 60000000,
+          "file": "case-034-04.jpg",
+          "sha256": "a6d8b15ea87dccec0103ffc042fd2d155cf372b73ca54f68760666e25f8f0aca",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0006",
+          "cueText": "acquiring, scene locked, 57 counts",
+          "mediaTime100ns": 114000000,
+          "mediaEnd100ns": 115000000,
+          "file": "case-034-05.jpg",
+          "sha256": "0235ba3049358929a6aee6880c5c65d1994bc719b8b8f2c594cce8d1a957839d",
+          "widthPx": 960,
+          "heightPx": 600
+        }
+      ]
+    },
+    {
+      "caseId": "Gcam.Studio.UiTests::Gcam.Studio.UiTests.ScenarioTests.ThemeToggle_RelabelsAndSwitchesBack",
+      "runId": "gcam-20261023-014801-6ef154",
+      "verdict": "passed",
+      "videoSha256": "7a03aaded34aaef271d6100b7b583ead7ecdb3f42e7923024c5e27ac2b3a4df7",
+      "checkContract": "v4",
+      "videoStatus": "passed",
+      "reason": null,
+      "canvasWidthPx": 1440,
+      "canvasHeightPx": 900,
+      "frames": [
+        {
+          "stepId": "action-0001",
+          "cueText": "focus preparation last refusal: none",
+          "mediaTime100ns": 7000000,
+          "mediaEnd100ns": 8000000,
+          "file": "case-035-01.jpg",
+          "sha256": "fc9b022e504d49cee435746fc09e31cb66db3309eb9422f9c7280a00291f3732",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0002",
+          "cueText": "window ready, state Empty",
+          "mediaTime100ns": 44000000,
+          "mediaEnd100ns": 45000000,
+          "file": "case-035-02.jpg",
+          "sha256": "4b7ecddd0eacdadd266a30a8ffd88b4f040570e7bf43c3b86990392e534007f8",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0002",
+          "cueText": "window ready, state Empty",
+          "mediaTime100ns": 82000000,
+          "mediaEnd100ns": 83000000,
+          "file": "case-035-03.jpg",
+          "sha256": "785909a5c0564b0a2a3e5c21130f839fc074b35d47e644061daaf0ac85c9d444",
+          "widthPx": 960,
+          "heightPx": 600
+        }
+      ]
+    },
+    {
+      "caseId": "Gcam.Studio.UiTests::Gcam.Studio.UiTests.WorkspaceScenarioTests.Detector_FaceBeforeStart_LockedUntilReset",
+      "runId": "gcam-20261023-014520-e1594a",
+      "verdict": "passed",
+      "videoSha256": "9e0b2830a1f5252abdc6a9dd8e9998a21847a9ad2b183e33a895a5ab42fb8f75",
+      "checkContract": "v4",
+      "videoStatus": "passed",
+      "reason": null,
+      "canvasWidthPx": 1440,
+      "canvasHeightPx": 900,
+      "frames": [
+        {
+          "stepId": "action-0001",
+          "cueText": "focus preparation last refusal: none",
+          "mediaTime100ns": 7000000,
+          "mediaEnd100ns": 8000000,
+          "file": "case-036-01.jpg",
+          "sha256": "d16142490dcce03210dda4ff51488727a83e4142634ef72028bef32fc103be45",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0002",
+          "cueText": "window ready, state Empty",
+          "mediaTime100ns": 44000000,
+          "mediaEnd100ns": 45000000,
+          "file": "case-036-02.jpg",
+          "sha256": "ccc7c2f0394bfa419943c21b0795033d582dd7050dda1b05e7c317c8beea5689",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0003",
+          "cueText": "input read-back AcquisitionSeed: requested \u002712345\u0027, displayed \u002712345\u0027",
+          "mediaTime100ns": 158000000,
+          "mediaEnd100ns": 159000000,
+          "file": "case-036-03.jpg",
+          "sha256": "b346f0c49d96d2607672bd6864a81ce70f24b1d7441b3c5629e08d58e9f3b0b5",
+          "widthPx": 960,
+          "heightPx": 600
+        }
+      ]
+    },
+    {
+      "caseId": "Gcam.Studio.UiTests::Gcam.Studio.UiTests.WorkspaceScenarioTests.Imaging_ChannelAndStrip_MatchRetainedFloodAndFoundPeaks",
+      "runId": "gcam-20261023-014543-ac0360",
+      "verdict": "passed",
+      "videoSha256": "e5aebfa7ae0c2a57a759c9762cb7625c37ba6642e53c80a484e913437110b8f2",
+      "checkContract": "v4",
+      "videoStatus": "passed",
+      "reason": null,
+      "canvasWidthPx": 1440,
+      "canvasHeightPx": 900,
+      "frames": [
+        {
+          "stepId": "action-0001",
+          "cueText": "focus preparation last refusal: none",
+          "mediaTime100ns": 7000000,
+          "mediaEnd100ns": 8000000,
+          "file": "case-037-01.jpg",
+          "sha256": "c232c50c63f5ce53eacefadc9b82764ae6220875ba4b2710061029b3c318d487",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0003",
+          "cueText": "input read-back SourceX: requested \u0027-20\u0027, displayed \u0027-20\u0027",
+          "mediaTime100ns": 37000000,
+          "mediaEnd100ns": 38000000,
+          "file": "case-037-02.jpg",
+          "sha256": "b38bddcf5ebc9afbe35f2a40ac602dd0c5455d6046c294cae9a49aff23a6368c",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0004",
+          "cueText": "input read-back SourceX: requested \u002720\u0027, displayed \u002720\u0027",
+          "mediaTime100ns": 48000000,
+          "mediaEnd100ns": 49000000,
+          "file": "case-037-03.jpg",
+          "sha256": "3c1ed83249bb1d0c64902c66143ac2bd90163234d499d88a3dc43c618333d83e",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0005",
+          "cueText": "input read-back SourceActivity: requested \u0027400\u0027, displayed \u0027400\u0027",
+          "mediaTime100ns": 62000000,
+          "mediaEnd100ns": 63000000,
+          "file": "case-037-04.jpg",
+          "sha256": "2015eba551c8ba2a538f114ae5362e626df7b545298ac9a1a0ff5ead7daa78d8",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0006",
+          "cueText": "input read-back AcquisitionSeed: requested \u002712345\u0027, displayed \u002712345\u0027",
+          "mediaTime100ns": 181000000,
+          "mediaEnd100ns": 182000000,
+          "file": "case-037-05.jpg",
+          "sha256": "97e1eedc7f5461295e1e1fc9962e926ee79af9b2ae8f1f8cb3795284f47fd109",
+          "widthPx": 960,
+          "heightPx": 600
+        }
+      ]
+    },
+    {
+      "caseId": "Gcam.Studio.UiTests::Gcam.Studio.UiTests.WorkspaceScenarioTests.Imaging_RefocusAndSweep_MatchProjectionAndHalfMaxInterval",
+      "runId": "gcam-20261023-014423-a9aeb3",
+      "verdict": "passed",
+      "videoSha256": "d5394d95b6f5cc3782fde3c4fd76cb9af7a5c2e9c1a6c3ca232ff68415207689",
+      "checkContract": "v4",
+      "videoStatus": "passed",
+      "reason": null,
+      "canvasWidthPx": 1440,
+      "canvasHeightPx": 900,
+      "frames": [
+        {
+          "stepId": "action-0001",
+          "cueText": "focus preparation last refusal: none",
+          "mediaTime100ns": 7000000,
+          "mediaEnd100ns": 8000000,
+          "file": "case-038-01.jpg",
+          "sha256": "b684c5082ecc76c7888d8d8a0135ba751f81511786856fedecb0578e757571c7",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0002",
+          "cueText": "window ready, state Empty",
+          "mediaTime100ns": 23000000,
+          "mediaEnd100ns": 24000000,
+          "file": "case-038-02.jpg",
+          "sha256": "64599a320e59581629d776ed76ce6f4d304e0a3ee57881e3ff58de0b0b6e688c",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0003",
+          "cueText": "input read-back AcquisitionSeed: requested \u002712345\u0027, displayed \u002712345\u0027",
+          "mediaTime100ns": 110000000,
+          "mediaEnd100ns": 111000000,
+          "file": "case-038-03.jpg",
+          "sha256": "6b143a7f72145a9a067c1662ca4bc4deb6d8b8fd9bc28819b1fc447856f4ec8c",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0004",
+          "cueText": "input read-back Imaging.FocalPlane: requested \u0027500\u0027, displayed \u0027500\u0027",
+          "mediaTime100ns": 135000000,
+          "mediaEnd100ns": 136000000,
+          "file": "case-038-04.jpg",
+          "sha256": "20325ecac431afb812c74157fc2e5548719beb5f131ae38d7f01073a3c4f655c",
+          "widthPx": 960,
+          "heightPx": 600
+        }
+      ]
+    },
+    {
+      "caseId": "Gcam.Studio.UiTests::Gcam.Studio.UiTests.WorkspaceScenarioTests.Spectrum_BandCountAndWindowChange_MatchRetainedHistogram",
+      "runId": "gcam-20261023-014501-ae5503",
+      "verdict": "passed",
+      "videoSha256": "1db639ab05de684b3733f17c4d9f6211dfa02d2b840ea7fecb73d007808f4306",
+      "checkContract": "v4",
+      "videoStatus": "passed",
+      "reason": null,
+      "canvasWidthPx": 1440,
+      "canvasHeightPx": 900,
+      "frames": [
+        {
+          "stepId": "action-0001",
+          "cueText": "focus preparation last refusal: none",
+          "mediaTime100ns": 7000000,
+          "mediaEnd100ns": 8000000,
+          "file": "case-039-01.jpg",
+          "sha256": "8967c8ffd6a5d2e89013ab5572b471c2301af144865f1909dceb00004730f56e",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0002",
+          "cueText": "window ready, state Empty",
+          "mediaTime100ns": 23000000,
+          "mediaEnd100ns": 24000000,
+          "file": "case-039-02.jpg",
+          "sha256": "1a581a42e56a80341296335304c50db02147ab00afb8ab6a6cd32b70da44f7d2",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0003",
+          "cueText": "input read-back AcquisitionSeed: requested \u002712345\u0027, displayed \u002712345\u0027",
+          "mediaTime100ns": 107000000,
+          "mediaEnd100ns": 108000000,
+          "file": "case-039-03.jpg",
+          "sha256": "b08830208b7348932402a4f0a35e32c80a6442ff79c7e5a6b3111fec948afe2c",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0004",
+          "cueText": "input read-back Spectrum.Window: requested \u00271\u0027, displayed \u00271\u0027",
+          "mediaTime100ns": 116000000,
+          "mediaEnd100ns": 117000000,
+          "file": "case-039-04.jpg",
+          "sha256": "7eb4b7cb5aa983b6eb2a59a815fbf64a69ce2ac0be0dc75e6db5ac25cf13c910",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0005",
+          "cueText": "input read-back Spectrum.Window: requested \u00272\u0027, displayed \u00272\u0027",
+          "mediaTime100ns": 119000000,
+          "mediaEnd100ns": 120000000,
+          "file": "case-039-05.jpg",
+          "sha256": "ad692b723a85156f39f9c6136d8dcecc40cd9fdfb23753c0fbe416b61c4c2aac",
+          "widthPx": 960,
+          "heightPx": 600
+        }
+      ]
+    },
+    {
+      "caseId": "Gcam.Studio.UiTests::Gcam.Studio.UiTests.WorkspaceScenarioTests.Waveform_SelectedEventListAndMarkers_MatchArrivalWindow",
+      "runId": "gcam-20261023-014443-8ca9a2",
+      "verdict": "passed",
+      "videoSha256": "d02cbb14e9dcb5d34f092183a672c571e1dbbd2c3020f6213092853f7befc38d",
+      "checkContract": "v4",
+      "videoStatus": "passed",
+      "reason": null,
+      "canvasWidthPx": 1440,
+      "canvasHeightPx": 900,
+      "frames": [
+        {
+          "stepId": "action-0001",
+          "cueText": "focus preparation last refusal: none",
+          "mediaTime100ns": 7000000,
+          "mediaEnd100ns": 8000000,
+          "file": "case-040-01.jpg",
+          "sha256": "b684c5082ecc76c7888d8d8a0135ba751f81511786856fedecb0578e757571c7",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0002",
+          "cueText": "window ready, state Empty",
+          "mediaTime100ns": 21000000,
+          "mediaEnd100ns": 22000000,
+          "file": "case-040-02.jpg",
+          "sha256": "55b67a847dd03fc2b3d348c27aaaddfe6587a37b476d6377655b2df887517041",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0003",
+          "cueText": "input read-back AcquisitionSeed: requested \u002712345\u0027, displayed \u002712345\u0027",
+          "mediaTime100ns": 102000000,
+          "mediaEnd100ns": 103000000,
+          "file": "case-040-03.jpg",
+          "sha256": "20278dbf6e706b5f2bcb471c802667dcff0681ea8ab625e0999fa170382c7c72",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0004",
+          "cueText": "input read-back Waveform.Index: requested \u002710\u0027, displayed \u002710\u0027",
+          "mediaTime100ns": 113000000,
+          "mediaEnd100ns": 114000000,
+          "file": "case-040-04.jpg",
+          "sha256": "6d4a8b730f5fffe3866bb1072b8d9b2bd2384d3b2c91db4ee705d35c5533dad8",
+          "widthPx": 960,
+          "heightPx": 600
+        },
+        {
+          "stepId": "action-0005",
+          "cueText": "Rate study: arrivals re-spaced at 50 kcps \u2014 not the measured rate. ADC simulation: shaped heights \u2260 analytic MCA.",
+          "mediaTime100ns": 113000000,
+          "mediaEnd100ns": 114000000,
+          "file": "case-040-05.jpg",
+          "sha256": "6d4a8b730f5fffe3866bb1072b8d9b2bd2384d3b2c91db4ee705d35c5533dad8",
+          "widthPx": 960,
+          "heightPx": 600
+        }
+      ]
+    }
+  ]
+}
