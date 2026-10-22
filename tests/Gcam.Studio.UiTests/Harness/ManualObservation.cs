@@ -39,14 +39,16 @@ public sealed class ManualObservation : IDisposable
     public string? RunId { get; }
     public ProbePackage? Package { get; }
 
-    public ManualObservation()
+    public ManualObservation() : this(Environment.GetEnvironmentVariable) { }
+
+    internal ManualObservation(Func<string, string?> environment)
     {
-        string? directory = Environment.GetEnvironmentVariable(DirectoryVariable);
-        if (Environment.GetEnvironmentVariable(DesktopFactAttribute.OptInVariable) != "1") return;
-        if (Environment.GetEnvironmentVariable("GCAM_UI_CACHE") == "1") throw new InvalidDataException("Manual production requires fresh attempts (GCAM_UI_CACHE=0)");
+        string? directory = environment(DirectoryVariable);
+        if (environment(DesktopFactAttribute.OptInVariable) != "1") return;
+        if (environment("GCAM_UI_CACHE") == "1") throw new InvalidDataException("Manual production requires fresh attempts (GCAM_UI_CACHE=0)");
         if (string.IsNullOrEmpty(directory))
         {
-            string? path = Environment.GetEnvironmentVariable("GCAM_UI_APPROVALS");
+            string? path = environment("GCAM_UI_APPROVALS");
             if (string.IsNullOrWhiteSpace(path)) throw new InvalidDataException("Manual batch requires GCAM_UI_APPROVALS or an observed batch approvals.json");
             Package = ProbePackage.Load(path);
             if (Package.Contract != "v4") throw new InvalidDataException("Manual batch requires a v4 author approval package");

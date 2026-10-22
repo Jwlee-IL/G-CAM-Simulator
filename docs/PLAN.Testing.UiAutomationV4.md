@@ -56,8 +56,12 @@ records keep theirs). UiTests 236 / 41, solution 1,308 / 63, Python 143, replays
 rewrote AGENTS.UiAutomation as the v4.0 charter (gates G0 / G1 / G3 / G4 / G5, §0 items, attribution-first §1, the v4
 desktop session in §6), AGENTS.Rationale and the CLAUDE.md line, and corrected **Done when**. Residual (pre-existing, not
 the approved exception): a coordinate-boundary refusal mid-drag while the product still answers sends no release and
-records none. Next: the author's `charter` and `desktop-go` statements on that commit, then G1 (observed run), G3 and the
-affected scenarios.
+records none. **Desktop session 2026-10-22** on `061f14a` (charter approved on that commit; a go per run, E6 for the full
+set): G1 observed run `gcam-probe-20261022-01` completed; G3 pilot passed (broken verdict failed at its assertion); the full
+desktop set 37 / 38 with every video check passed, one transient UI Automation failure (no AutomationIds exposed in that
+launch) passed on its rerun, and one headless test that assumed no desktop opt-in, fixed in Codex turn E (environment
+injected; isolation and deployment fingerprints unchanged, so the G1 basis holds). Recorded in VV.Studio.History. Next: the
+STR evidence annex (frame export turn, M4 desktop collection on the merged commit, the new software-set edition).
 
 ## Why (2026-10-21)
 

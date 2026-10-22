@@ -483,3 +483,20 @@ the observed probe not executed), Python with the numerical tests, cocotb (Pytho
 timed out once in the normal run; 20 repeats of its assembly all passed. The failure stays the selected result (a repeat is
 retained, never swapped in) and is anomaly AN-18 in VV.Studio with its likely cause, a thread race that only the
 test fixture can hit. Export `samples/testing/records/M3`; bundle, export and the three archived milestones replay.
+
+## First desktop session under the procedure v4.0 (TODO-54), 2026-10-22
+
+One desktop session on `061f14a` (deployment `a53b1d6b476c`, isolation `b0d5f6fee533`), after the author approved the v4.0
+charter on that commit (act `charter`) together with the desktop go for each run (`desktop-go`; for the full set also the
+export scenarios' shell records, `real-world-effect` E6). New run IDs carry the `gcam-` prefix.
+
+| Run | Gate | Result |
+|---|---|---|
+| `gcam-probe-20261022-01` (observed launch-idle-exit, 5 min 36 s) | G1 | **completed**, G1 eligible: all three positive controls seen, nothing out of declaration, 11 candidates (all harness operations), 9 references (other programs' changes, counted and kept locally); product passed (no hang, early or abnormal exit); the Documents control created and removed by its own run; 48 connection samples, none with an endpoint. Replaces `probe-20261016-03` as the G1 basis |
+| pilot ×2, broken verdict, recovery (18 s each) | G3 | passed 13.4 mm vs 13.400 ± 0.204 twice; the broken run failed at its corrupted assertion (expected 14.400 mm); recovery passed; all four videos passed the machine check |
+| full desktop set (21 min) | G4 | 38 desktop cases: 37 passed, each with a passing video check (the four report-export formats and the manual export under the E6 permission); the long `HighResCold` case not executed (opt-in). Two failures, neither a product failure: `ManualObservationTests.WithoutTheVariable_TheFixtureDoesNothing`, a headless test that assumed no desktop opt-in (fixed in turn E); `ManualScenarioTests.Navigate_…` timed out in its first step because UI Automation returned no AutomationId for any element of that window (0 of 136 in the failure tree; 64 in another failure tree of the session) while the window was fully drawn and Studio exited with 0 |
+| `manual.navigate` rerun (38 s) | G4 | passed with a passing video check; the first attempt stays recorded as a transient UI Automation failure (no third attempt was needed) |
+
+The CZT evidence batch started no new chunk from 19:37 (the running one, two workers, finished at 20:30) and resumed at 20:35. Videos of this session are in
+the worktree's `artifacts/ui-videos` (local, not evidence on their own); the test-record milestone M4 with the desktop
+profile follows on the merged commit.

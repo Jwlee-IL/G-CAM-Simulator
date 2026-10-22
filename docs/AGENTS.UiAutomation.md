@@ -12,10 +12,10 @@ those stages' records as history.
 
 | Gate | Question | Passes when | State (2026-10-22) |
 |---|---|---|---|
-| G0 Charter | what is automated, for whom, with what permission | this charter (§0) approved by the author on the target commit (act `charter`) | rewritten for v4.0 on 2026-10-22; approval on its commit pending |
-| G1 Safety | what can a run write, start or reach | an observed launch-idle-exit run on the current isolation folder and deployment: every positive control seen, the file, process and network channels live, no `unsafe_effect`, no product failure, cleanup complete | to re-establish: TODO-54 changed the isolation folder (previous basis `probe-20261016-03`, procedure v3.3) |
-| G3 Pilot | does one complete flow work end to end | on the v4 harness: the pilot passes twice in a row, a deliberately broken verdict fails at its assertion, a recovery run passes, each with a passing video check | to run after G1 |
-| G4 Scale-out | is every target requirement automated, manual or excluded with a reason | the coverage table (§4) holds, and each automated case has passed on the v4 harness with a passing video | after G3 |
+| G0 Charter | what is automated, for whom, with what permission | this charter (§0) approved by the author on the target commit (act `charter`) | approved by the author on `061f14a`, 2026-10-22 |
+| G1 Safety | what can a run write, start or reach | an observed launch-idle-exit run on the current isolation folder and deployment: every positive control seen, the file, process and network channels live, no `unsafe_effect`, no product failure, cleanup complete | **passed** 2026-10-22: `gcam-probe-20261022-01` completed on `061f14a` (replaces `probe-20261016-03`) |
+| G3 Pilot | does one complete flow work end to end | on the v4 harness: the pilot passes twice in a row, a deliberately broken verdict fails at its assertion, a recovery run passes, each with a passing video check | **passed** 2026-10-22 on `061f14a` (VV.Studio.History) |
+| G4 Scale-out | is every target requirement automated, manual or excluded with a reason | the coverage table (§4) holds, and each automated case has passed on the v4 harness with a passing video | **passed** 2026-10-22 on `061f14a`: 38 desktop cases with passing videos (one transient UI Automation failure, passed on its rerun); the long case is opt-in |
 | G5 Production | may a desktop result enter a test record or a manual edition | machine-checked: the approval package names G0 and G1 `passed`; the exact run's video status is `passed` under contract `v4`; otherwise the generators refuse, and failed or superseded attempts go to the final-review list | in code (TODO-54 turn C) |
 
 G2 (measurement, §2) and G6 (operation, §6) are recommended practice, not gates. The planner judges G3 and G4 from the run
