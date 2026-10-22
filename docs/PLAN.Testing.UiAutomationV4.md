@@ -11,7 +11,8 @@ Status: reference plan written 2026-10-21; D4 decided by the author the same day
 나중에 수정하자."). Turn 1 review done the same day ([review](PLAN.Testing.UiAutomationV4.Review.md); D3 and D14 premises
 wrong, fact 4 corrected); **Decisions after review** below. Parked the same day (TODO-50 first) and **resumed 2026-10-22 by the
 author with the lighter cut and two parallel implementation turns** ("좋아. 셋 다 수용."): see **Resumed: lighter cut and
-parallel turns** below, which supersedes R7, R11 and R12 where they differ. Next: turns A and B in parallel, then turn C.
+parallel turns** below, which supersedes R7, R11 and R12 where they differ. The same day the author added the **STR evidence annex** (below;
+"1번으로 해줘."). Next: turns A and B in parallel, then turn C.
 
 ## Why (2026-10-21)
 
@@ -135,6 +136,24 @@ Heavy commands (build, test) go through one lock shared by both turns
 (`python -B %TEMP%\gcam-todo54\heavy.py -- <command>`: waits for the other turn, runs under memguard, waits and retries when
 memguard refuses for low memory), so only one build or test runs at a time while the CZT batch keeps running.
 
+## STR evidence annex (author, 2026-10-22)
+
+The software test report of the TODO-53 set (`GCAM-SW-STR`, edition `2026-10-20-1`) holds no image: its UI part is case
+names, counts and catalog text, and the 41 recorded videos stay machine-local (`artifacts/` is ignored). A reader cannot
+see from the report that the app was driven. The author chose to add the evidence after this task, from videos that
+passed the v4 check, rather than from today's unchecked videos (known defects: nine terminal captions missing).
+
+| # | Decision |
+|---|---|
+| S1 | The STR gains an annex **UI automation evidence**: per desktop case of the milestone the report selects — run ID, verdict, the checked video's SHA-256 and video status (L3), and 3–5 frames (start, key steps, end), each with its step ID, cue text and media time |
+| S2 | Frames come only from videos whose video status is `passed` under `contract: "v4"`; a case without one is listed with the reason, never illustrated from another attempt. Privacy intervals give no frame |
+| S3 | Frame export is part of the C# video checker (turn B's decoder): it writes the frames and a manifest (video SHA-256, step ID, media time, frame SHA-256); the document generator stays standard-library Python and reads only the manifest and the images, refusing a frame whose video hash differs from the run record |
+| S4 | Frames are committed downscaled (JPEG; the whole annex in the tens of MB at most), under the milestone's record folder; videos stay machine-local. Capture region and paths are checked so no local path or other window appears (verify) |
+| S5 | A new STR edition needs a milestone whose desktop profile ran on the v4 harness (M4, author's go for the desktop collection); the other documents of the set are regenerated unchanged in content |
+
+Heavy steps — frame export over the videos, the desktop collection, document generation (PDF rendering) — run under
+memguard through the shared lock, one at a time, like the builds.
+
 ## Steps
 
 1. **Author:** D4 — decided 2026-10-21, option (a).
@@ -151,6 +170,8 @@ memguard refuses for low memory), so only one build or test runs at a time while
    folder changes, so a new observed launch-idle-exit run re-establishes G1; the pilot with its broken-verdict and recovery
    runs (G3); the scenarios touched by D5 / D6 with videos, including one export scenario under D4. Record in
    VV.Studio History.
+7. **STR evidence annex** (S1–S5), after the desktop session: frame export and the generator change (Codex turn), the M4
+   desktop collection (author's go), then the new software-set edition with the annex for the author's look.
 
 ## Done when
 
@@ -163,10 +184,13 @@ memguard refuses for low memory), so only one build or test runs at a time while
 - Pre-launch preflight runs the five checks before launch; test-data list and peer exception exist.
 - All verification commands green; committed milestones and editions replay; one observed run, pilot, broken verdict and
   recovery pass on the new harness.
+- The STR edition after M4 carries the UI automation evidence annex: every desktop case either illustrated from its
+  v4-checked video or listed with the reason it is not.
 
 ## Not here
 
-- A new manual edition, test-record milestone or software-document edition (TODO-53): later, on the author's word.
+- A new manual edition: later, on the author's word. (The M4 milestone and the software-set edition are in scope only for
+  the STR evidence annex, step 7.)
 - Any wording or content of the procedure's source project in this repository (procedure only; it is named "the author's
   UI-automation procedure").
 - A disposable environment (VM or separate account) — recommended by §4.1, not required while the source survey closes the
