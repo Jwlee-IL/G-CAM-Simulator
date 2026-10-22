@@ -20,10 +20,10 @@ public sealed class RegistryMarkerTests
     public void Write_UsesRunScopedKeyAndSingleRunIdValue_WithFakeOnly()
     {
         var store = new FakeStore();
-        var control = new RegistryMarker(store).Write("probe-01", 20);
-        Assert.Equal(@"HKCU\Software\GcamUiaProbe\probe-01", control.KeyPath);
-        Assert.Equal(store.NativeUserHive + @"\Software\GcamUiaProbe\probe-01", control.TraceKeyPath);
-        Assert.Equal(("RunId", "probe-01"), store.Values[@"Software\GcamUiaProbe\probe-01"]);
+        var control = new RegistryMarker(store).Write("gcam-probe-01", 20);
+        Assert.Equal(@"HKCU\Software\GcamUiaProbe\gcam-probe-01", control.KeyPath);
+        Assert.Equal(store.NativeUserHive + @"\Software\GcamUiaProbe\gcam-probe-01", control.TraceKeyPath);
+        Assert.Equal(("RunId", "gcam-probe-01"), store.Values[@"Software\GcamUiaProbe\gcam-probe-01"]);
         Assert.Equal(20, control.Pid);
         Assert.Equal("registry", control.Channel);
         Assert.True(control.FinishedAt >= control.StartedAt);
@@ -35,10 +35,10 @@ public sealed class RegistryMarkerTests
     {
         var store = new FakeStore();
         var writer = new RegistryMarker(store);
-        writer.Write("probe-01", 20);
-        Assert.Throws<IOException>(() => writer.Write("probe-01", 20));
+        writer.Write("gcam-probe-01", 20);
+        Assert.Throws<IOException>(() => writer.Write("gcam-probe-01", 20));
         Assert.Single(store.Values);
-        Assert.Equal(("RunId", "probe-01"), store.Values.Values.Single());
+        Assert.Equal(("RunId", "gcam-probe-01"), store.Values.Values.Single());
     }
 
     [Fact]

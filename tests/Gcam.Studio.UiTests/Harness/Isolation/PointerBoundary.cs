@@ -1,4 +1,5 @@
 using System.Runtime.InteropServices;
+using Gcam.Studio.UiTests.Harness.Observation;
 using System.Windows;
 using System.Windows.Automation;
 
@@ -7,16 +8,20 @@ namespace Gcam.Studio.UiTests.Harness.Isolation;
 /// <summary>Coordinate input must land in the owned foreground frame on a declared target.</summary>
 public static class PointerBoundary
 {
-    private sealed record Context(AutomationElement Window, ActionPolicy Policy, Action? RequireInputSafe);
+    private sealed record Context(AutomationElement Window, ActionPolicy Policy, Action? RequireInputSafe, OwnedProcessIdentity? Identity, IntPtr MainWindow, Action<Pointer.ReleaseOutcome>? RecordRelease);
     private static readonly AsyncLocal<Context?> Current = new();
     private sealed class Scope(Context? previous) : IDisposable
     {
         public void Dispose() => Current.Value = previous;
     }
-    public static IDisposable Enter(AutomationElement window, ActionPolicy policy, Action? requireInputSafe = null)
+    public static IDisposable Enter(AutomationElement window, ActionPolicy policy, Action? requireInputSafe = null,
+        OwnedProcessIdentity? identity = null, IntPtr mainWindow = default, Action<Pointer.ReleaseOutcome>? recordRelease = null)
     {
-        var prior = Current.Value; Current.Value = new(window, policy, requireInputSafe); return new Scope(prior);
+        var prior = Current.Value; Current.Value = new(window, policy, requireInputSafe, identity, mainWindow, recordRelease); return new Scope(prior);
     }
+    internal static (OwnedProcessIdentity? Identity, IntPtr MainWindow, Action<Pointer.ReleaseOutcome>? Record) ReleaseContext
+        => (Current.Value?.Identity, Current.Value?.MainWindow ?? IntPtr.Zero, Current.Value?.RecordRelease);
+
     public static void Validate(bool foreground, bool owned, bool declared)
     {
         if (!foreground || !owned || !declared) throw new InvalidOperationException("coordinate-input-boundary-refused");

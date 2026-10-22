@@ -69,6 +69,7 @@ def validate_approval(path, live, source):
     date = lambda s: dt.datetime.fromisoformat(s.replace('Z', '+00:00'))
     require(date(package['committedAt']) == date(source[1]), 'approval-package: commit date differs')
     require(re.fullmatch('[A-Za-z0-9][A-Za-z0-9_-]{0,70}', package.get('runId', '')), 'approval-package: invalid run ID')
+    require(package['runId'].startswith('gcam-'), 'approval-package: new v4 run ID must begin with gcam-')
     records = package.get('approvals', [])
     acts = {'charter', 'desktop-go', 'real-world-effect', 'physical', 'final-review'}
     require(all(a.get('humanActId') in acts for a in records), 'approval-package: named acts required')

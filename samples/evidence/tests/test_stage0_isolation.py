@@ -1190,7 +1190,7 @@ class SnapshotClassificationTests(ScratchTestCase):
 class ApprovalPreflightTests(ScratchTestCase):
     def fixture(self):
         root = StageZeroIsolationTests.scratch()
-        run = root / 'approval-fixture'; run.mkdir()
+        run = root / 'gcam-approval-fixture'; run.mkdir()
         commit, at = 'a' * 40, '2026-10-14T00:00:00Z'
         files = {'app.dll': 'b' * 64}
         live = {'workingTree': 'clean', 'sourceCommit': commit, 'fingerprintSpecVersion': 1, 'isolationSha256': 'i',
@@ -1204,6 +1204,30 @@ class ApprovalPreflightTests(ScratchTestCase):
             stage0.write(run / 'approvals.json', approval)
             return stage0.preflight(run, lambda: live, lambda: (commit, at), lambda: 7, root)
         return approval, check
+
+    def test_v4_unprefixed_run_is_refused_but_legacy_run_keeps_its_id(self):
+        approval, check = self.fixture()
+        self.assertEqual([], check())
+        # The closure uses the run folder too: use a fresh unprefixed fixture, never rename a retained run.
+        root = StageZeroIsolationTests.scratch(); run = root / 'probe-20261022-01'; run.mkdir()
+        commit, at = approval['commit'], approval['committedAt']
+        files = {'app.dll': 'b' * 64}
+        live = {'workingTree': 'clean', 'sourceCommit': commit, 'fingerprintSpecVersion': 1, 'isolationSha256': 'i',
+                'deploymentFiles': files, 'deploymentSha256': stage0.fingerprint_map(files), 'sourceSha256': 's', 'runnerSourceSha256': 'r'}
+        approval['runId'] = run.name
+        stage0.write(run / 'pin.json', live); stage0.write(run / 'approvals.json', approval)
+        validate = lambda: stage0.preflight(run, lambda: live, lambda: (commit, at), lambda: 7, root)
+        self.assertIn('new v4 run ID must begin with gcam-', validate())
+        approval.pop('contract'); stage0.write(run / 'approvals.json', approval)
+        self.assertEqual([], validate())
+
+    def test_product_prefix_prevents_another_tools_bare_words_becoming_run_markers(self):
+        context = {'contract': 'v4', 'runId': 'gcam-probe-20261022-01', 'scenarios': []}
+        markers = stage0.harness_markers(context)
+        self.assertEqual(['gcam-probe-20261022-01'], markers)
+        for target in (r'C:\scratch\probe-20261022-01', r'HKCU\Software\OtherTool\probe-20261022-01'):
+            self.assertFalse(any(marker.casefold() in target.casefold() for marker in markers))
+        self.assertEqual(['probe-20261016-03'], stage0.harness_markers({'runId': 'probe-20261016-03'}))
 
     def test_named_acts_require_no_hum07_and_legacy_aliases_still_read(self):
         approval, check = self.fixture()
@@ -1245,7 +1269,7 @@ Set-StrictMode -Version Latest
 $ast = [System.Management.Automation.Language.Parser]::ParseFile($Source, [ref]$null, [ref]$null)
 $fn = $ast.Find({param($n) $n -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $n.Name -eq 'Assert-ProbeApprovals'}, $true)
 . ([scriptblock]::Create($fn.Extent.Text))
-Assert-ProbeApprovals (Get-Content -LiteralPath $Package -Raw | ConvertFrom-Json) 'approval-fixture'
+Assert-ProbeApprovals (Get-Content -LiteralPath $Package -Raw | ConvertFrom-Json) 'gcam-approval-fixture'
 ''', encoding='utf-8')
         def run(expected):
             path = root / 'package.json'
@@ -1296,6 +1320,16 @@ class V4SnapshotClassificationTests(ScratchTestCase):
         self.f.setUp()
         self.f.context_updates = {'contract': 'v4', 'targetCommit': 'a' * 40,
                                   'committedAt': '2026-10-14T00:00:00Z', 'deploymentSha256': 'b' * 64}
+
+    def test_prefixed_run_does_not_attribute_another_tools_bare_folder_or_registry_key(self):
+        self.f.context_updates['runId'] = 'gcam-probe-20261022-01'
+        rows = [{'c': 'd', 'p': self.f.TEMP + r'\OtherTool\probe-20261022-01', 't': self.f.inside, 'a': 16},
+                {'c': 'k', 'p': r'HKCU\Software\OtherTool\probe-20261022-01', 't': self.f.inside}]
+        self.f.none(self.f.classify(rows), unattributed=2)
+        # The same unrelated locations carrying our complete product marker are attributed.
+        for row in rows:
+            marked = {**row, 'p': row['p'].replace('probe-20261022-01', 'gcam-probe-20261022-01')}
+            self.f.only(self.f.classify([marked]), 'out-of-declaration')
 
     def effect(self, **updates):
         row = {'c': 'f', 'p': self.f.DOCS + '\\probe-fixture.bin', 's': 1, 't': self.f.inside, 'a': 32}

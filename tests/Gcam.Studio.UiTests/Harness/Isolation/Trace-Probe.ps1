@@ -10,6 +10,9 @@ function Assert-ProbeApprovals($Approval, [string]$ExpectedRunId) {
     if ($Approval.runId -ne $ExpectedRunId) { throw 'Approval package targets another run.' }
     $contract = if ($Approval.PSObject.Properties['contract']) { $Approval.contract } else { $null }
     if ($null -ne $contract -and $contract -ne 'v4') { throw 'Unsupported approval contract.' }
+    if ($contract -eq 'v4' -and -not $ExpectedRunId.StartsWith('gcam-', [StringComparison]::Ordinal)) {
+        throw 'New v4 run ID must begin with gcam-.'
+    }
     $acts = @('charter', 'real-world-effect', 'final-review', 'physical', 'desktop-go')
     if ($contract -eq 'v4' -and @($Approval.approvals | Where-Object { $_.humanActId -notin $acts }).Count) {
         throw 'New approval records require named acts.'

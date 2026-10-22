@@ -67,6 +67,8 @@ public sealed record ProbePackage(string RunId, string Commit, DateTimeOffset Co
         if (RunId != runId || IsolationSha256 != isolationHash || DeploymentSha256 != deploymentHash)
             throw new InvalidDataException("Probe package does not identify this run/isolation/deployment");
         if (Contract is not (null or "v4")) throw new InvalidDataException("Unknown approval contract");
+        try { IsolationPaths.ValidateRunId(runId, v4: Contract == "v4"); }
+        catch (ArgumentException e) { throw new InvalidDataException(e.Message, e); }
         if (Contract == "v4" && Approvals.Any(a => !ApprovalRecord.Acts.Contains(a.HumanActId)))
             throw new InvalidDataException("New approval records require named acts");
         foreach (string act in new[] { "charter", "desktop-go" }) RequireApproval(act);
@@ -87,7 +89,7 @@ public sealed record ProbePackage(string RunId, string Commit, DateTimeOffset Co
     public EffectGrant[] BindEffects(string scenarioRunId, string scenarioId, IReadOnlyList<string> declaredWrites)
     {
         Validate(RunId, IsolationSha256, DeploymentSha256);
-        _ = IsolationPaths.RunRoot("scratch", scenarioRunId);
+        _ = IsolationPaths.RunRoot("scratch", scenarioRunId, v4: Contract == "v4");
         string[] names = declaredWrites.Select(Path.GetFileName).OfType<string>()
             .Where(n => new[] { ".html", ".pdf", ".docx", ".csv" }.Contains(Path.GetExtension(n))).Distinct().Order().ToArray();
         if (names.Length == 0) return [];

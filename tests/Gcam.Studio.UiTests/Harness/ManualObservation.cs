@@ -81,7 +81,7 @@ public sealed class ManualObservation : IDisposable
         string scratch = Path.Combine(Path.GetTempPath(), "gcam-todo43");
         if (!directory.StartsWith(Path.GetFullPath(scratch) + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
             throw new InvalidOperationException("Observation output must be under the declared scratch root");
-        _ = IsolationPaths.RunRoot("scratch", runId);   // run ID rule shared with the launcher
+        _ = IsolationPaths.RunRoot("scratch", runId, v4: true);   // run ID rule shared with the launcher
         foreach (string name in new[] { "snapshot-A.jsonl.gz", "snapshot-B.jsonl.gz", "snapshot-C.jsonl.gz", "observation-context.json", "harness.complete.json" })
             if (File.Exists(Path.Combine(directory, name))) throw new InvalidOperationException("Run folder already holds " + name + "; use a fresh run ID");
         var source = SourceIdentity.Read(RepoPaths.Root());   // throws on a dirty tree

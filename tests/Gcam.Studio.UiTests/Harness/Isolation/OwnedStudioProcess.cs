@@ -75,7 +75,7 @@ public sealed class OwnedStudioProcess : IDisposable
     {
         using (var identity = System.Security.Principal.WindowsIdentity.GetCurrent())
             ValidatePrivilege(new System.Security.Principal.WindowsPrincipal(identity).IsInRole(System.Security.Principal.WindowsBuiltInRole.Administrator));
-        string sandbox = IsolationPaths.RunRoot(Path.GetTempPath(), runId);
+        string sandbox = IsolationPaths.RunRoot(Path.GetTempPath(), runId, v4: true);
         var values = (suppliedValues ?? IsolationPaths.LaunchValues(sandbox, runId)).ToDictionary(v => v.Key, v => v.Value);
         string isolation = Path.Combine(RepoPaths.Root(), "tests/Gcam.Studio.UiTests/Harness/Isolation");
         string exe = RepoPaths.StudioExe();

@@ -67,7 +67,7 @@ class UiProductionTests(ScratchTestCase):
     def test_author_package_targets_the_live_build_and_charter(self):
         live = {'workingTree': 'clean', 'sourceCommit': 'a' * 40, 'isolationSha256': 'i', 'deploymentSha256': 'd'}
         at = '2026-10-22T00:00:00Z'
-        package = {'contract': 'v4', 'runId': 'batch-fixture', 'commit': 'a' * 40, 'committedAt': at,
+        package = {'contract': 'v4', 'runId': 'gcam-batch-fixture', 'commit': 'a' * 40, 'committedAt': at,
             'isolationSha256': 'i', 'deploymentSha256': 'd', 'approvals': [
                 {'id': a, 'humanActId': a, 'quote': 'Synthetic statement', 'targetCommit': 'a' * 40, 'quotedAt': at}
                 for a in ('charter', 'desktop-go')],
@@ -77,7 +77,7 @@ class UiProductionTests(ScratchTestCase):
         path = scratch() / 'approvals.json'
         path.write_text(json.dumps(package), encoding='utf-8')
         self.assertEqual(path, uc.validate_approval(path, live, ('a' * 40, at)))
-        for defect in ({'commit': 'c' * 40}, {'approvals': []}, {'charter': None}, {'contract': None}):
+        for defect in ({'runId': 'batch-fixture'}, {'commit': 'c' * 40}, {'approvals': []}, {'charter': None}, {'contract': None}):
             with self.subTest(defect=defect):
                 path.write_text(json.dumps({**package, **defect}), encoding='utf-8')
                 with self.assertRaises(ValueError): uc.validate_approval(path, live, ('a' * 40, at))
@@ -136,6 +136,7 @@ class UiProductionTests(ScratchTestCase):
             self.assertEqual(1, tr.collect(root / 'bundle', 'dotnet', no_build=True, profile='desktop', approvals=root / 'author-package.json', previous='none'))
         record_path = next((root / 'bundle').glob('dotnet/*/run-record.json'))
         record = json.loads(record_path.read_text())
+        self.assertTrue(record['runId'].startswith('gcam-'))
         self.assertEqual('refused', record['productionStatus'])
         self.assertEqual('passed', record['cases'][0]['verdict'])  # Product truth is never rewritten to make a video pass.
         review = json.loads((record_path.parent / 'final-review.json').read_text())
@@ -204,7 +205,7 @@ public sealed class AlphaTests
     def test_production_refuses_a_package_whose_g1_is_blocked(self):
         live = {'workingTree': 'clean', 'sourceCommit': 'a' * 40, 'isolationSha256': 'i', 'deploymentSha256': 'd'}
         at = '2026-10-22T00:00:00Z'
-        package = {'contract': 'v4', 'runId': 'batch-fixture', 'commit': 'a' * 40, 'committedAt': at,
+        package = {'contract': 'v4', 'runId': 'gcam-batch-fixture', 'commit': 'a' * 40, 'committedAt': at,
             'isolationSha256': 'i', 'deploymentSha256': 'd', 'approvals': [
                 {'id': a, 'humanActId': a, 'quote': 'Synthetic statement', 'targetCommit': 'a' * 40, 'quotedAt': at}
                 for a in ('charter', 'desktop-go')],

@@ -76,13 +76,14 @@ copy it here, it goes stale. Only what the Todo does not hold:
   manual batch `manual-20261017-01` (completed) gave manual edition `2026-10-17-1`, and milestone M3 (UI test project 154 passed, 40 videos)
   records one failed unit test, a fixture-only race kept as anomaly AN-18 (VV.Studio). PR-SENS-02's count gate is
   settled (measured gate, EV-34). Still open: a hands-on check of the tool Alt keys and Enter in the Options dialog.
-- Observed runs follow the author's UI-automation procedure v3.3 since TODO-52 (2026-10-16): only changes attributable to
-  Studio are candidates; other programs' changes are counted as `unattributed` and never block. Builds are
-  source-determined (TODO-51): docs- or test-only commits keep the deployment fingerprint, so they need no new observed run.
-  Procedure v3.4 (2026-10-17 check): an undecided candidate is closed from the run's records (HUM-08) before any rerun;
-  `diff-classify` still reports one in scope as out-of-declaration, a recorded stricter difference whose first occurrence
-  triggers the classifier change (`docs/AGENTS.UiAutomation.md`). G1 basis: approved pilot `probe-20261016-03` (completed). `GCAM_UI_CACHE=1` reuses an unchanged desktop case's latest
-  pass (`[cache-reused]` skip; collections never reuse).
+- UI automation follows the author's UI-automation procedure **v4.0** since TODO-54 (2026-10-22; charter in
+  `docs/AGENTS.UiAutomation.md` §0, gates G0 / G1 / G3 / G4 / G5): observed runs classify attribution first (other programs'
+  changes are references and never block); crashes, early exits and hangs (10 s) are product failures; every app-driving
+  desktop test's video is machine-checked and production refuses a passed result without a passing video; every desktop
+  run needs a v4 approval package with the author's `charter` and `desktop-go` statements quoted after the target commit;
+  new run IDs begin with `gcam-`. Builds are source-determined (TODO-51): docs- or test-only commits keep the deployment
+  fingerprint. Earlier records (procedure v3.3 / v3.4, HUM-xx acts; G1 basis `probe-20261016-03`) replay unchanged.
+  `GCAM_UI_CACHE=1` reuses an unchanged desktop case's latest pass (`[cache-reused]` skip; collections never reuse).
 - Other automation sessions share this PC's desktop: announce G-CAM desktop runs and heavy batches with start / end times,
   and pause when they announce an audit run.
 - TODO-25 (depth likelihood) closed 2026-10-08 after a current-tree screening (Findings 62); its gate validation (≈ 190 h,

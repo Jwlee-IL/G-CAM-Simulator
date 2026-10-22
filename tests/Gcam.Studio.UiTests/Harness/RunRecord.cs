@@ -27,7 +27,7 @@ public sealed class RunRecord
 
     public RunRecord(string scenario)
     {
-        RunId = $"{DateTime.Now:yyyyMMdd-HHmmss}-{Guid.NewGuid().ToString("N")[..6]}";
+        RunId = $"gcam-{DateTime.Now:yyyyMMdd-HHmmss}-{Guid.NewGuid().ToString("N")[..6]}";
         Directory = OwnedFolder.Create(RunId);
         ResultCache.Ran(RunId);   // the case's source run if it passes
         _fields["schema"] = 1;
@@ -42,6 +42,13 @@ public sealed class RunRecord
             perMonitorDpiAware = Pointer.IsPerMonitorAware,
         };
         _fields["workingTreeDirtyFiles"] = RepoPaths.DirtyFileCount();
+    }
+
+    public void RecordPointerRelease(UiRunManifest manifest, Pointer.ReleaseOutcome outcome)
+    {
+        var value = JsonSerializer.SerializeToElement(outcome, VideoEntry.Json);
+        Set("pointerRelease", value);
+        manifest.Evidence["pointerRelease"] = value;
     }
 
     public string RunId { get; }

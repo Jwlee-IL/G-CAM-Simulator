@@ -48,8 +48,16 @@ G1, so G3 / G4 are not machine-checked; privacy ends when no owned modal remains
 the main window exists is outside the 10 s limit; the Documents control is per run, not retained; refusing the button release
 after a product failure mid-drag leaves the button down on a shared desktop — the implementer proposes a narrow exception
 (only the up matching the harness's own down, checked by Win32 against the owned window), for the author; harness markers are
-bare run IDs without a product-unique prefix (the procedure's marker-uniqueness rule). Next: the charter rewrite for the
-author's approval, then the desktop session.
+bare run IDs without a product-unique prefix (the procedure's marker-uniqueness rule). **Charter items approved and turn D
+done 2026-10-22** (author: "승인, 데스크톱 런 해봐."): Codex turn D added the drag-release exception (one matching button-up
+after a guard refusal, only with the owned instance in the foreground and the cursor inside its main window; outcome and
+residual risk in the run record and the manifest; `PointerReleaseTests`) and the `gcam-` prefix for new v4 run IDs (old
+records keep theirs). UiTests 236 / 41, solution 1,308 / 63, Python 143, replays unchanged, catalog 250 units. The planner
+rewrote AGENTS.UiAutomation as the v4.0 charter (gates G0 / G1 / G3 / G4 / G5, §0 items, attribution-first §1, the v4
+desktop session in §6), AGENTS.Rationale and the CLAUDE.md line, and corrected **Done when**. Residual (pre-existing, not
+the approved exception): a coordinate-boundary refusal mid-drag while the product still answers sends no release and
+records none. Next: the author's `charter` and `desktop-go` statements on that commit, then G1 (observed run), G3 and the
+affected scenarios.
 
 ## Why (2026-10-21)
 
@@ -214,8 +222,9 @@ memguard through the shared lock, one at a time, like the builds.
 
 - AGENTS.UiAutomation reads as the v4.0 charter with gates G0 / G1 / G3 / G4 / G5 and the four people's acts plus the
   desktop-go rule; no HUM-08 path, no profile labels.
-- A crash, an unhandled exception and a hang each fail a scenario with their own issue code (shown by a test, without the
-  desktop where possible).
+- An early exit (also with code 0), an abnormal exit, a hang and a main window that never appears each fail a scenario with
+  their own issue code (shown by a test, without the desktop where possible); an unhandled exception shows as one of these
+  endings (L1, no event-log correlation; corrected 2026-10-22).
 - Every app-driving desktop test's video is machine-checked; a generator refuses a passed result without a passing video
   and writes the final-review list.
 - Pre-launch preflight runs the five checks before launch; test-data list and peer exception exist.

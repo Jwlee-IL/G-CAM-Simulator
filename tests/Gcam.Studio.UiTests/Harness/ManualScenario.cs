@@ -86,7 +86,7 @@ public static class ManualScenario
         if (run is null)
         {
             // Not reached the body (launch or normalisation failed): still a record, so this attempt supersedes older passes.
-            string runId = originalRecord?.RunId ?? $"{DateTime.Now:yyyyMMdd-HHmmss}-{Guid.NewGuid().ToString("N")[..6]}";
+            string runId = originalRecord?.RunId ?? $"gcam-{DateTime.Now:yyyyMMdd-HHmmss}-{Guid.NewGuid().ToString("N")[..6]}";
             string folder = IsolationPaths.Inside(originalRecord?.Directory ?? OwnedFolder.Create(runId), "manual/" + runId);
             System.IO.Directory.CreateDirectory(folder);
             run = new ManualRun(scenario, registry, folder, runId, started, (_, _) => "");

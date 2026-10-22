@@ -113,7 +113,9 @@ public static class Scenario
             outerRecorder?.Invoke(video);
             app.Observation.RunUi(() =>
             {
-                using var pointerScope = PointerBoundary.Enter(window!, app.Policy, app.RequireInputSafe);
+                using var pointerScope = PointerBoundary.Enter(window!, app.Policy, app.RequireInputSafe,
+                    Observation.OwnedProcessIdentity.From(app.Process), new IntPtr(window!.Current.NativeWindowHandle),
+                    outcome => record.RecordPointerRelease(manifest, outcome));
                 var ui = new StudioWindow(window!, app.Policy, app.RequireInputSafe) { Log = record.Step };
                 ui.Normalise(WindowWidth, WindowHeight);
                 record.Set("window", window!.Current.BoundingRectangle.ToString());

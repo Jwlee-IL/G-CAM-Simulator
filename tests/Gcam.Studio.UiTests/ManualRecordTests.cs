@@ -20,9 +20,16 @@ public sealed class ManualRecordTests
         """);
 
     private static ManualRun Fixture(Dictionary<string, string>? labels = null) =>
-        new("manual.fixture", new ManualRegistry(Registry, Notices), "unused", "20261014-120000-abcdef",
+        new("manual.fixture", new ManualRegistry(Registry, Notices), "unused", "gcam-20261014-120000-abcdef",
             new DateTimeOffset(2026, 10, 14, 12, 0, 0, TimeSpan.FromHours(9)),
             (id, _) => (labels ?? new() { ["StartAcquisition"] = "Start" }).GetValueOrDefault(id, ""));
+
+    [Fact]
+    public void NewManualRun_RefusesAnUnprefixedRunIdBeforeRecording()
+    {
+        Assert.Throws<ArgumentException>(() => new ManualRun("manual.fixture", new ManualRegistry(Registry, Notices),
+            "unused", "manual-20261022-01", DateTimeOffset.UnixEpoch, (_, _) => ""));
+    }
 
     [Fact]
     public void ImageRect_FloorsTheNearEdgeAndCeilsTheFarEdge_AtFractionalAndNegativeOrigins()
@@ -161,7 +168,7 @@ public sealed class ManualRecordTests
     public void Labels_ReplacedButtons_KeepTheActionLabelAndRefreshContinue()
     {
         var visible = new Dictionary<string, string> { ["StartAcquisition"] = "Start" };
-        var run = new ManualRun("manual.fixture", new ManualRegistry(Registry, Notices), "unused", "fixture", DateTimeOffset.UnixEpoch,
+        var run = new ManualRun("manual.fixture", new ManualRegistry(Registry, Notices), "unused", "gcam-fixture", DateTimeOffset.UnixEpoch,
             (id, _) => visible.TryGetValue(id, out var text) ? text : throw new SelectorMatchException(id, 0));
         run.BeginStep("Click {StartAcquisition}; it becomes {StopAcquisition}.");
         visible.Clear(); visible["StopAcquisition"] = "Stop";
@@ -201,10 +208,10 @@ public sealed class ManualRecordTests
     [Fact]
     public void Labels_AmbiguousSelectorAndOtherReadFailures_AreNotCachedAway()
     {
-        var run = new ManualRun("manual.fixture", new ManualRegistry(Registry, Notices), "unused", "fixture", DateTimeOffset.UnixEpoch,
+        var run = new ManualRun("manual.fixture", new ManualRegistry(Registry, Notices), "unused", "gcam-fixture", DateTimeOffset.UnixEpoch,
             (id, _) => throw new SelectorMatchException(id, 2));
         Assert.Throws<SelectorMatchException>(() => run.BeginStep("Click {StartAcquisition}."));
-        var broken = new ManualRun("manual.fixture", new ManualRegistry(Registry, Notices), "unused", "fixture", DateTimeOffset.UnixEpoch,
+        var broken = new ManualRun("manual.fixture", new ManualRegistry(Registry, Notices), "unused", "gcam-fixture", DateTimeOffset.UnixEpoch,
             (_, _) => throw new IOException("reader failed"));
         Assert.Throws<IOException>(() => broken.BeginStep("Click {StartAcquisition}."));
     }

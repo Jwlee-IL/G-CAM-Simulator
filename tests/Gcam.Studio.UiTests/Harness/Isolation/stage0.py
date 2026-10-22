@@ -366,6 +366,8 @@ def preflight(run_directory, live_pin=None, identity=None, version=None, scratch
         approval = documents.get('approvals.json', {})
         if approval.get('contract') not in (None, 'v4'):
             issues.append('unsupported approval contract')
+        if approval.get('contract') == 'v4' and not run_id.startswith('gcam-'):
+            issues.append('new v4 run ID must begin with gcam-')
         recorded = documents.get('pin.json', {})
         if approval.get('runId') != run_id:
             issues.append('approvals runId differs from run folder')

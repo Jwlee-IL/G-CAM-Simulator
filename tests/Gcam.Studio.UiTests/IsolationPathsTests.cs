@@ -4,7 +4,18 @@ namespace Gcam.Studio.UiTests;
 
 public sealed class IsolationPathsTests
 {
-    internal static string Scratch() => IsolationPaths.RunRoot(Path.GetTempPath(), "fixture-" + Guid.NewGuid().ToString("N"));
+    internal static string Scratch() => IsolationPaths.RunRoot(Path.GetTempPath(), "gcam-fixture-" + Guid.NewGuid().ToString("N"));
+    [Fact]
+    public void V4RunIds_RequireProductPrefix_WhileLegacyPathsKeepTheirIdsAndLengthLimits()
+    {
+        const string old = "probe-20261016-03", current = "gcam-probe-20261022-01";
+        IsolationPaths.ValidateRunId(current);
+        Assert.Throws<ArgumentException>(() => IsolationPaths.RunRoot("scratch", old, v4: true));
+        Assert.EndsWith("gcam-uia-" + old, IsolationPaths.RunRoot("scratch", old, v4: false));
+        IsolationPaths.ValidateRunId("gcam-" + new string('a', 91));
+        Assert.Throws<ArgumentException>(() => IsolationPaths.ValidateRunId("gcam-" + new string('a', 92)));
+    }
+
     [Fact]
     public void LaunchValues_RefuseExtraWrongOrEscapingValues()
     {

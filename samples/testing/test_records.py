@@ -565,7 +565,7 @@ def collect(bundle, family, no_build=False, include_background=False, checker=No
     names = ((DESKTOP_PROJECT,) if profile == 'desktop' else PROJECTS) if family == 'dotnet' else (family,)
     exit_codes = []
     for name in names:
-        folder = bundle / family / (name + '-' + uuid.uuid4().hex)
+        folder = bundle / family / ('gcam-' + name + '-' + uuid.uuid4().hex)
         folder.mkdir(parents=True, exist_ok=False)
         started = utc()
         before_source = source_identity()

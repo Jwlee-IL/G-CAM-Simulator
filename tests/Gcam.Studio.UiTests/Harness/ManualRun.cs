@@ -57,6 +57,7 @@ public sealed partial class ManualRun
     public ManualRun(string scenario, ManualRegistry registry, string directory, string runId, DateTimeOffset startedAt,
         Func<string, LabelSource, string> label)
     {
+        IsolationPaths.ValidateRunId(runId);
         Scenario = scenario; _registry = registry; Chapter = registry.ForScenario(scenario);
         Directory = directory; RunId = runId; StartedAt = startedAt; _label = label;
     }

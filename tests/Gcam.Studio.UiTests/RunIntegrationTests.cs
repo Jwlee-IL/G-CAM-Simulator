@@ -134,7 +134,7 @@ public sealed class RunIntegrationTests
     // ---------------------------------------------------------------- turn C2: teardown, startup, Documents control
 
     private static string SurfaceList => Path.Combine(RepoPaths.Root(), "tests/Gcam.Studio.UiTests/Harness/Isolation/surface-list.json");
-    private static string FreshRunId() => "20261022-000000-" + Guid.NewGuid().ToString("N")[..6];
+    private static string FreshRunId() => "gcam-20261022-000000-" + Guid.NewGuid().ToString("N")[..6];
 
     /// <summary>An observation attached to a message-only window of this test process (never Studio) with a short limit.</summary>
     private static RunObservation Observe(string documents, LivenessObserverTests.MessageWindow window, Process current, double limitSeconds)
@@ -499,6 +499,8 @@ public sealed class RunIntegrationTests
     private sealed class RecordingInput(Action<string> onCall) : Pointer.IRawInput
     {
         public readonly List<string> Sent = [];
+        public Pointer.ReleaseState State = new(null, false);
+        public Pointer.ReleaseState ReadReleaseState(IntPtr ownedMainWindow) => State;
         public void Check(Point p) => onCall("check");
         public void SetCursor(int x, int y) { onCall("cursor"); Sent.Add("cursor"); }
         public void Button(uint flags) { onCall("button"); Sent.Add("button-" + flags); }

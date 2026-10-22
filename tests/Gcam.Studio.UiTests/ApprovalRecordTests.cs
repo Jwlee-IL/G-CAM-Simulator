@@ -50,18 +50,18 @@ public sealed class ApprovalRecordTests
     public void E6_BindsOnlyApprovedScenariosNamesAndFamilies_AndRejectsMissingOrStaleScope()
     {
         string commit = new('a', 40); var at = DateTimeOffset.Parse("2026-10-13T00:00:00Z");
-        var package = new ProbePackage("batch-fixture", commit, at, "i", new string('b', 64),
+        var package = new ProbePackage("gcam-batch-fixture", commit, at, "i", new string('b', 64),
             [new("go", "desktop-go", commit, "Synthetic go", at), new("charter", "charter", commit, "Synthetic charter", at),
              new("effect", "real-world-effect", commit, "Synthetic permission naming this run's export shell records", at)])
         {
             Contract = "v4",
-            RealWorldEffects = [new("E6", "effect", "batch-fixture", commit, new string('b', 64), ["export"],
+            RealWorldEffects = [new("E6", "effect", "gcam-batch-fixture", commit, new string('b', 64), ["export"],
                 ["report-{runId}.html"], ProbePackage.ShellFamilies)],
         };
-        const string run = "20261022-100000-abcdef";
+        const string run = "gcam-20261022-100000-abcdef";
         var grant = Assert.Single(package.BindEffects(run, "export", [$"report-{run}.html", $"report-{run}.scene.json"]));
         Assert.Equal(new[] { $"report-{run}.html" }, grant.TypedNames);
-        Assert.Equal(("batch-fixture", run, "export", "effect"), (grant.RunId, grant.ScenarioRunId, grant.ScenarioId, grant.Approval.Id));
+        Assert.Equal(("gcam-batch-fixture", run, "export", "effect"), (grant.RunId, grant.ScenarioRunId, grant.ScenarioId, grant.Approval.Id));
         Assert.Empty(package.BindEffects(run, "idle", []));
         var invented = package with { Contract = null, Approvals = package.Approvals.Select(a =>
             a.Id == "effect" ? a with { HumanActId = "HUM-02" } : a).ToArray() };
@@ -74,6 +74,19 @@ public sealed class ApprovalRecordTests
                      package.RealWorldEffects[0] with { TypedNameTemplates = ["*"] },
                      package.RealWorldEffects[0] with { ApprovalId = "missing" } })
             Assert.Throws<InvalidDataException>(() => (package with { RealWorldEffects = [effect] }).BindEffects(run, "export", [$"report-{run}.html"]));
+    }
+
+    [Fact]
+    public void V4Packages_RequireProductUniqueRunIds_AndLegacyPackagesKeepTheirOriginalIds()
+    {
+        string commit = new('a', 40); var at = DateTimeOffset.Parse("2026-10-22T00:00:00Z");
+        var package = new ProbePackage("probe-20261022-01", commit, at, "i", "d",
+            [new("go", "desktop-go", commit, "Synthetic go", at), new("charter", "charter", commit, "Synthetic charter", at)]);
+        package.Validate(package.RunId, "i", "d");
+        var v4 = package with { Contract = "v4" };
+        Assert.Contains("must begin with gcam-", Assert.Throws<InvalidDataException>(() => v4.Validate(v4.RunId, "i", "d")).Message);
+        v4 = v4 with { RunId = "gcam-probe-20261022-01" };
+        v4.Validate(v4.RunId, "i", "d");
     }
 
     [Theory]
