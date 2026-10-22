@@ -75,6 +75,16 @@ public sealed class VideoModelTests
         Assert.DoesNotContain("case", VideoPublisher.Read(Path.Combine(root, "index.json")).Tests.Keys);
     }
     [Fact]
+    public void MetadataOnlyEntry_StaysReadableAsTheOldContract()
+    {
+        var f = Fixture(); string root = Path.Combine(f.Folder, "latest");
+        VideoPublisher.Publish(root, "case", f.Entry, f.Mp4, f.Vtt);
+        string json = File.ReadAllText(Path.Combine(root, "index.json"));
+        Assert.DoesNotContain("\"evidence\"", json); Assert.DoesNotContain("\"contract\"", json);
+        var read = VideoPublisher.Read(Path.Combine(root, "index.json")).Tests["case"];
+        Assert.Null(read.Evidence); Assert.Null(read.Check); Assert.Null(read.Contract);
+    }
+    [Fact]
     public void Index_RejectsUnsafePathsBadHashesVersionsAndMaskBounds()
     {
         var f = Fixture(); f.Entry.Validate();
