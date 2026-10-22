@@ -131,6 +131,14 @@ class SoftwareEvidenceTests(ScratchTestCase):
         self.row['frames'][0]['cueText'] = 'another attempt'; self.write()
         with self.assertRaisesRegex(ValueError, 'cue differs'): self.assemble()
 
+    def test_window_transition_times_are_refused_and_old_evidence_has_none(self):
+        self.assemble()  # evidence without the field (written before window transitions existed) is accepted as before
+        self.evidence['videoStatus']['evidence']['transitionIntervals'] = []
+        self.assemble()
+        self.evidence['videoStatus']['evidence']['transitionIntervals'] = [
+            {'start100ns': 19_000_000, 'end100ns': 20_000_000, 'reason': 'maximise', 'stepIds': ['1']}]
+        with self.assertRaisesRegex(ValueError, 'transition frame'): self.assemble()
+
     def test_incomplete_case_membership_and_frame_counts_are_refused(self):
         self.row['caseId'] = 'other'; self.write()
         with self.assertRaisesRegex(ValueError, 'case membership'): self.assemble()

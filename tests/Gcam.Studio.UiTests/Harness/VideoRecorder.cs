@@ -24,7 +24,27 @@ public sealed class VideoRecorder
         public string KeyFrameForcing => _writer.KeyFrameForcing;
         public void Dispose() => _writer.Dispose();
     }
-    private sealed record Pending(VideoCapture.Frame Frame, long Time100ns);
+    private sealed record Pending(VideoCapture.Frame Frame, long Time100ns, Transition? Owner);
+    /// <summary>An open window transition: the samples captured while it is open are declared as its interval. It ends at
+    /// the first painted capture that starts after the harness reported the window's new state (the launch is reported from
+    /// the start); a close is never reported, so it stays open until the capture stops.</summary>
+    internal sealed class Transition(string reason, string? stepId, bool reported)
+    {
+        public string Reason { get; } = reason;
+        public string? StepId { get; set; } = stepId;
+        public bool StateReported { get; set; } = reported;
+    }
+    /// <summary>A window transition the harness issued; <see cref="StateReported"/> (or disposing) says the window reports
+    /// its new state, so the next painted capture ends the transition.</summary>
+    public sealed class WindowTransition : IDisposable
+    {
+        private readonly VideoRecorder _owner;
+        private readonly Transition _transition;
+        internal WindowTransition(VideoRecorder owner, Transition transition) { _owner = owner; _transition = transition; }
+        public string StepId => _transition.StepId!;
+        public void StateReported() => _owner.Report(_transition);
+        public void Dispose() => StateReported();
+    }
     private readonly object _gate = new();
     private readonly Stopwatch _clock = new();
     private readonly DateTimeOffset _anchorUtc;
@@ -47,6 +67,9 @@ public sealed class VideoRecorder
     private readonly Dictionary<int, Func<string>> _resolvedSteps = [];
     private readonly List<VideoEntry.MaskRange> _masks = [];
     private readonly List<VideoEvidence.MaskSample> _maskSamples = [];
+    private readonly List<(int Frame, long Start100ns, long End100ns, Transition Owner)> _transitionSamples = [];
+    private Transition? _transition;
+    private int _transitionEpoch;
     private Pending? _pending;
     private volatile bool _stopping, _privacy, _abandoned;
     private int _privacyEpoch, _captured, _dropped, _frames, _masked, _private;
@@ -99,9 +122,72 @@ public sealed class VideoRecorder
         if (_error is not null) throw new IOException("Video encoder startup failed: " + _error);
         // Constructor completion means recording is ready, before callers execute their first step.
         _anchorUtc = DateTimeOffset.UtcNow; _monotonicStart = Stopwatch.GetTimestamp(); _clock.Start();
+        // Launch: from the recording's start until the owned window's first painted capture. Its step is recorded only when
+        // a sample is actually marked, so a launch whose first capture is painted leaves no trace in the evidence.
+        _transition = new(LaunchReason, null, true);
         _captureThread.Start();
     }
     private long Now => _clock.Elapsed.Ticks;
+    public const string LaunchReason = "Launch: recording start until the owned window's first painted capture";
+    /// <summary>Declares a window transition the harness is about to cause (maximise, restore, minimise, close): records its
+    /// beginning step and marks every sample from now on until the harness reports the new state and a painted capture
+    /// follows. A new transition ends an open one. The checker excuses single-colour samples only inside these intervals and
+    /// fails any interval longer than <see cref="VideoChecker.MaximumTransition100ns"/>.</summary>
+    public WindowTransition BeginTransition(string reason)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(reason);
+        lock (_gate)
+        {
+            string id = RecordStep("Window transition: " + reason);
+            var transition = new Transition(VideoTimeline.SafeText(reason), id, false);
+            _transition = transition; Interlocked.Increment(ref _transitionEpoch);
+            return new(this, transition);
+        }
+    }
+    private void Report(Transition transition)
+    {
+        lock (_gate)
+        {
+            if (transition.StateReported) return;
+            transition.StateReported = true; Interlocked.Increment(ref _transitionEpoch);
+        }
+    }
+    /// <summary>A capture shows the owned window: not a privacy frame, not a failed survey, and not wholly covered by masks.
+    /// Decided from the capture's own record, never from its pixels.</summary>
+    internal static bool Painted(VideoCapture.Frame frame, int width, int height) => !frame.Privacy
+        && !frame.Reasons.Contains("survey-failed") && !CoversCanvas(frame.Masks, width, height);
+    /// <summary>Whether the union of the rectangles (x, y, width, height) covers the whole canvas.</summary>
+    internal static bool CoversCanvas(int[][] rects, int width, int height)
+    {
+        var clipped = rects.Where(r => r.Length == 4 && r[2] > 0 && r[3] > 0)
+            .Select(r => (L: Math.Max(0, r[0]), T: Math.Max(0, r[1]), R: Math.Min(width, r[0] + r[2]), B: Math.Min(height, r[1] + r[3])))
+            .Where(r => r.L < r.R && r.T < r.B).ToArray();
+        if (clipped.Length == 0) return false;
+        var xs = clipped.SelectMany(r => new[] { r.L, r.R }).Append(0).Append(width).Distinct().Order().ToArray();
+        var ys = clipped.SelectMany(r => new[] { r.T, r.B }).Append(0).Append(height).Distinct().Order().ToArray();
+        for (int i = 0; i + 1 < xs.Length; i++)
+            for (int j = 0; j + 1 < ys.Length; j++)
+                if (!clipped.Any(r => r.L <= xs[i] && xs[i + 1] <= r.R && r.T <= ys[j] && ys[j + 1] <= r.B)) return false;
+        return true;
+    }
+    /// <summary>The transition a capture belongs to (caller holds the gate). <paramref name="before"/>, <paramref name="epoch"/>
+    /// and <paramref name="reported"/> were read before the capture started, so a transition that began, was reported or was
+    /// replaced during the capture marks the sample. The first painted capture that started after the report ends it unmarked.
+    /// A privacy sample is never marked: privacy intervals have their own evidence, and the two kinds never overlap.</summary>
+    private Transition? Mark(VideoCapture.Frame frame, Transition? before, int epoch, bool reported)
+    {
+        var current = _transition; bool changed = epoch != _transitionEpoch;
+        if (current is null && !changed) return null;
+        if (current is not null && !changed && reported && Painted(frame, _width, _height))
+        {
+            _transition = null; Interlocked.Increment(ref _transitionEpoch);
+            return null;
+        }
+        var owner = current ?? before;
+        if (owner is null || frame.Privacy) return null;
+        owner.StepId ??= RecordStep("Launch transition: owned window not yet painted");
+        return owner;
+    }
     /// <summary>Suppressed steps retain their identity with generic text; native dialog details can name folders.</summary>
     public void Step(string text) => RecordStep(text);
     /// <summary>Records an executed step and returns its stable ID. Explicit IDs are safe identifiers outside the
@@ -171,6 +257,8 @@ public sealed class VideoRecorder
                 long now = Now;
                 if (now < next) { Thread.Sleep((int)Math.Min(20, Math.Max(1, (next - now) / 10_000))); continue; }
                 long time = VideoTimeline.Slot(now); int epoch = Volatile.Read(ref _privacyEpoch);
+                Transition? before; int transitionEpoch; bool reported;
+                lock (_gate) { before = _transition; transitionEpoch = _transitionEpoch; reported = before?.StateReported == true; }
                 var frame = _capture(_privacy);
                 if (epoch != Volatile.Read(ref _privacyEpoch)) frame = new(new byte[_width * _height * 4], [[0, 0, _width, _height]], ["privacy-transition"], true);
                 lock (_gate)
@@ -178,7 +266,7 @@ public sealed class VideoRecorder
                     if (_stopping) break;
                     _captured++;
                     if (_pending is not null) _dropped++;
-                    _pending = new(frame, time); Monitor.PulseAll(_gate);
+                    _pending = new(frame, time, Mark(frame, before, transitionEpoch, reported)); Monitor.PulseAll(_gate);
                 }
                 next = time + VideoTimeline.Period100ns;
             }
@@ -225,6 +313,8 @@ public sealed class VideoRecorder
         if (item.Frame.Masks.Length > 0 || item.Frame.Privacy)
             _maskSamples.Add(new(_frames, item.Time100ns, item.Time100ns + duration, item.Frame.Privacy,
                 item.Frame.Reasons, item.Frame.Masks));
+        if (item.Owner is not null)
+            lock (_gate) _transitionSamples.Add((_frames, item.Time100ns, item.Time100ns + Math.Max(1, duration), item.Owner));
         _frames++; _duration = item.Time100ns + Math.Max(1, duration);
     }
     private void Fault(Exception e)
@@ -263,7 +353,7 @@ public sealed class VideoRecorder
                 privacy = privacy.Select(p => p with { StepIds = steps.Where(s => s.Privacy && s.Time100ns >= p.Start100ns - VideoChecker.IntervalTolerance100ns
                     && s.Time100ns <= p.End100ns + VideoChecker.IntervalTolerance100ns).Select(s => s.Id).ToArray() }).ToList();
                 var evidence = new VideoEvidence(new(_anchorUtc, _monotonicStart, _monotonicEnd, Stopwatch.Frequency), steps, cues,
-                    privacy.ToArray(), _maskSamples.ToArray()) { KeyFrameForcing = _keyFrameForcing };
+                    privacy.ToArray(), _maskSamples.ToArray()) { KeyFrameForcing = _keyFrameForcing, TransitionIntervals = TransitionIntervals() };
                 _entry = new(_run, DateTimeOffset.UtcNow, _commit, _dirty, _binary, _deployment,
                     new(_id + ".mp4", IsolationPaths.Hash(File.ReadAllBytes(Mp4)), new FileInfo(Mp4).Length),
                     new(_id + ".vtt", IsolationPaths.Hash(File.ReadAllBytes(Vtt)), new FileInfo(Vtt).Length),
@@ -280,6 +370,20 @@ public sealed class VideoRecorder
         }
         catch (Exception e) { _entry = null; _error = e.GetType().Name; }
         return ProvenanceOfEntry();
+    }
+    /// <summary>Consecutive written samples of one transition form one interval (a dropped slot inside it does not split it);
+    /// a transition still open when the capture stopped ends with its last sample.</summary>
+    private VideoEvidence.TransitionInterval[] TransitionIntervals()
+    {
+        var intervals = new List<VideoEvidence.TransitionInterval>(); Transition? last = null; int lastFrame = -2;
+        lock (_gate)
+            foreach (var (frame, start, end, owner) in _transitionSamples)
+            {
+                if (ReferenceEquals(owner, last) && frame == lastFrame + 1) intervals[^1] = intervals[^1] with { End100ns = end };
+                else intervals.Add(new(start, end, owner.Reason, owner.StepId is { } id ? [id] : []));
+                last = owner; lastFrame = frame;
+            }
+        return intervals.ToArray();
     }
     private Provenance? ProvenanceOfEntry() => _entry is null ? null : new(_run, _id, _entry.Video.Sha256, _entry.Captions.Sha256);
     public void Complete(bool passed)

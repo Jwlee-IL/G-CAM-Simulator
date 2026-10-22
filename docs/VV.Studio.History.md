@@ -500,3 +500,15 @@ export scenarios' shell records, `real-world-effect` E6). New run IDs carry the 
 The CZT evidence batch started no new chunk from 19:37 (the running one, two workers, finished at 20:30) and resumed at 20:35. Videos of this session are in
 the worktree's `artifacts/ui-videos` (local, not evidence on their own); the test-record milestone M4 with the desktop
 profile follows on the merged commit.
+
+**M4, first collection (refused), 2026-10-22 23:01–23:27.** The merged commit `b5f4b98`, built in the worktree that ran G1
+(deployment and isolation fingerprints equal to the G1 basis; a build in another checkout path gives other binary hashes,
+because the PDB path and generated-file names embed the path). Author's go: "M4 데스크톱 수집 go + E6 허용 (Recommended)".
+The headless families passed (.NET 1,316, unittest 283, cocotb 111, the seven checkers). The desktop profile gave 35 of 38
+cases passed and 3 failed, and the collection was refused for production: two passing cases' videos failed
+`single-colour-share` on two black samples each (2 / 193 = 1.04 % at launch while other windows still covered Studio;
+2 / 59 = 3.4 % around a caption maximise / restore), and the three failures held a UI Automation root without any
+AutomationId for the whole 5 s focus wait (the same signature as `manual.navigate` in the G4 run; four of 85 launches that
+day). No product failure. Both causes were fixed in the harness (TODO-54 turn G: declared window-transition intervals of at
+most 0.5 s; root re-acquisition within a 10 s launch budget), and M4 is collected again on the fix commit; the refused
+bundle is not a milestone.

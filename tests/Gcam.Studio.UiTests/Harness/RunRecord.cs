@@ -87,6 +87,14 @@ public sealed class RunRecord
         }
     }
 
+    /// <summary>A window-state change the harness issues, declared to the recording as a window transition (null when nothing
+    /// is recorded) and noted in the step log. Disposing the scope reports the window's new state.</summary>
+    public IDisposable? WindowTransition(string reason)
+    {
+        Diagnostic("window transition: " + reason);
+        return Video?.BeginTransition(reason);
+    }
+
     /// <summary>The step log only (polling outcomes), so diagnostics do not drown the reader's captions.</summary>
     public void Diagnostic(string text) { lock (_stepGate) _steps.Add($"{DateTime.Now:HH:mm:ss.fff} {text}"); }
 
@@ -164,15 +172,21 @@ public sealed class RunRecord
     [System.Runtime.InteropServices.DllImport("dwmapi.dll")]
     private static extern int DwmGetWindowAttribute(IntPtr hwnd, int attribute, out NativeRect value, int size);
 
-    private static string Dump(AutomationElement root)
+    /// <summary>The control view under the held root. Every element names its FrameworkId; the first line also names the
+    /// provider description UI Automation gives for the window handle now (native client), so a root that is a fallback
+    /// tree (no AutomationIds, FrameworkId not WPF) can be told from a window that lacks them.</summary>
+    internal static string Dump(AutomationElement root)
     {
         var sb = new StringBuilder();
+        sb.Append("# root frameworkId=\"").Append(root.Current.FrameworkId).Append("\" className=\"").Append(root.Current.ClassName)
+          .Append("\" windowProvider=\"").Append(UiaRoot.ProviderDescription(new IntPtr(root.Current.NativeWindowHandle)).Replace("\"", "'"))
+          .Append('"').AppendLine();
         void Walk(AutomationElement e, int depth)
         {
             var c = e.Current;
             sb.Append(' ', depth * 2).Append(c.ControlType.ProgrammaticName.Replace("ControlType.", ""))
               .Append(" id=").Append(c.AutomationId).Append(" name=\"").Append(c.Name).Append("\" status=\"").Append(c.ItemStatus)
-              .Append("\" enabled=").Append(c.IsEnabled).AppendLine();
+              .Append("\" enabled=").Append(c.IsEnabled).Append(" framework=").Append(c.FrameworkId).AppendLine();
             for (var ch = TreeWalker.ControlViewWalker.GetFirstChild(e); ch is not null; ch = TreeWalker.ControlViewWalker.GetNextSibling(ch))
                 Walk(ch, depth + 1);
         }

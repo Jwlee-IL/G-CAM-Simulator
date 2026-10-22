@@ -14,7 +14,7 @@ namespace Gcam.Studio.UiTests.Harness.Video;
 public static class VideoFrameExport
 {
     public const int MaximumWidth = 960, JpegQuality = 70, MaximumJpegBytes = 160 * 1024;
-    public const string SelectionRule = "First visible step, up to three visible key steps nearest equally spaced media-time targets, terminal visible step; last non-private non-neutral decoded sample overlapping each cue. Sparse timelines retain real step IDs and use visible start/midpoint/end samples of their existing cues.";
+    public const string SelectionRule = "First visible step, up to three visible key steps nearest equally spaced media-time targets, terminal visible step; last non-private non-transition non-neutral decoded sample overlapping each cue. Sparse timelines retain real step IDs and use visible start/midpoint/end samples of their existing cues.";
     public sealed record Frame(string StepId, string CueText, long MediaTime100ns, long MediaEnd100ns,
         string File, string Sha256, int WidthPx, int HeightPx);
     public sealed record Case(string CaseId, string? RunId, string Verdict, string? VideoSha256, string? CheckContract,
@@ -73,8 +73,10 @@ public static class VideoFrameExport
         var decoded = MediaFoundationDecoder.Decode(mp4);
         Require(decoded.EndOfStream && decoded.Error is null && decoded.Samples.Length > 0
             && decoded.Samples.All(s => s.WidthPx == canvasWidth && s.HeightPx == canvasHeight), "frames: recorded canvas differs");
+        // A window-transition interval is treated like privacy: its samples are never illustrated (old evidence has none).
         bool Visible(DecodedVideo.Sample s) => !s.SingleColour
             && !evidence.PrivacyIntervals.Any(p => p.Start100ns < s.Time100ns + s.Duration100ns && p.End100ns > s.Time100ns)
+            && !(evidence.TransitionIntervals ?? []).Any(t => t.Start100ns < s.Time100ns + s.Duration100ns && t.End100ns > s.Time100ns)
             && !evidence.MaskSamples.Any(m => m.Start100ns == s.Time100ns && m.RectsPx.Any(r => r.SequenceEqual(new[] { 0, 0, canvasWidth, canvasHeight })));
         var visible = evidence.Steps.Where(s => !s.Privacy).Select(step =>
         {

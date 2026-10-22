@@ -70,8 +70,16 @@ checks over HTML, Word and PDF). The run record's video status now carries the r
 scenarios log only their window-ready step, so a case's captions may repeat one real step at separate media times; no
 caption is invented. UiTests 244 / 41, solution 1,316 / 63, Python 284 (one opt-in skip), replays unchanged, catalog 252
 units. Codex's workspace ran out of credits as the turn ended (report complete); further implementer turns run as
-substitute Claude subagents until it is refilled. Next: merge, the M4 collection with the desktop profile on the merged
-commit (author's go), the frame export over its videos, the new software-set edition.
+substitute Claude subagents until it is refilled. Merged into MainRoot as `b5f4b98`. **M4 first collection** (2026-10-22
+23:01–23:27, author's go, from `C:\gw\w54` so the fingerprints equal the G1 basis): headless families passed; the desktop
+profile 35 / 38 and refused for production (two black samples at harness window changes in two short videos; three launches
+with an ID-less UI Automation root) — recorded in VV.Studio.History. **Turn G** (substitute Claude subagent, headless; author:
+"하네스 수정 후 M4 재수집"): declared window-transition intervals (launch, harness-issued state changes, close; ≤ 0.5 s; judged
+from capture masks, never pixels) and UI Automation root re-acquisition within a 10 s launch budget; the frame export and
+the annex never pick a transition frame; isolation and deployment fingerprints unchanged. UiTests 256 / 41, solution
+1,328 / 63, Python 285, replays unchanged, catalog 252 units. The §0 Video criteria row changed, so the charter needs the
+author's approval on the new commit. Next: that approval, a short desktop check of the new harness paths, the M4
+collection again, frames, new edition.
 
 ## Why (2026-10-21)
 

@@ -3,9 +3,16 @@ using System.Security.Cryptography;
 namespace Gcam.Studio.UiTests.Harness.Video;
 
 /// <summary>Frozen L2/R6 criteria. Historical files may be measured but missing independent inputs cannot qualify.</summary>
+/// <remarks>Window transitions (TODO-54 turn G): a single-colour sample inside a declared transition interval is excused
+/// from the single-colour rules and counted in <see cref="VideoCheckResult.TransitionShare"/> instead. The intervals come from
+/// the harness's own events (the recorder marks samples while a transition it was told about is open), never from frame
+/// content; each must be well formed, name its beginning step and last at most <see cref="MaximumTransition100ns"/>.
+/// Evidence without the field excuses nothing, so an old record keeps its verdict.</remarks>
 public static class VideoChecker
 {
     public const long IntervalTolerance100ns = 2_000_000, MaximumGap100ns = 3_000_000;
+    /// <summary>The longest declared window transition (launch, state change or close), 0.5 s.</summary>
+    public const long MaximumTransition100ns = 5_000_000;
     public static VideoCheckResult Check(string mp4, string vtt, VideoEvidence? evidence, VideoEntry? expected = null)
     {
         string hash = "", captionsHash = ""; var failures = new HashSet<string>();
@@ -35,21 +42,25 @@ public static class VideoChecker
             if (decoded.Samples.Length == 0 || Math.Abs(decoded.Samples[0].Time100ns) > IntervalTolerance100ns || intervalError > 0.2)
                 failures.Add("recording-interval");
         }
-        long gap = 0, longest = 0, runStart = -1, runEnd = 0; int single = 0, privacy = 0;
+        long gap = 0, longest = 0, runStart = -1, runEnd = 0; int single = 0, privacy = 0, transition = 0;
         var declared = evidence?.PrivacyIntervals ?? [];
+        var transitions = evidence?.TransitionIntervals ?? [];
         var masks = evidence?.MaskSamples ?? [];
         if (evidence is null) failures.Add("privacy-evidence-missing");
         bool Privacy(DecodedVideo.Sample sample) => declared.Count(p => p.Start100ns <= sample.Time100ns
             && p.End100ns >= sample.Time100ns + sample.Duration100ns) == 1;
+        bool Transition(DecodedVideo.Sample sample) => transitions.Count(t => t.Start100ns <= sample.Time100ns
+            && t.End100ns >= sample.Time100ns + sample.Duration100ns) == 1;
         for (int i = 0; i < decoded.Samples.Length; i++)
         {
             var sample = decoded.Samples[i];
             if (sample.Time100ns < 0 || sample.Duration100ns <= 0 || i > 0 && sample.Time100ns <= decoded.Samples[i - 1].Time100ns)
                 failures.Add("sample-timestamps");
             if (i > 0) gap = Math.Max(gap, sample.Time100ns - decoded.Samples[i - 1].Time100ns);
-            bool hidden = Privacy(sample);
+            bool hidden = Privacy(sample), changing = !hidden && Transition(sample);
             if (hidden) privacy++;
-            if (sample.SingleColour && !hidden)
+            if (changing) transition++;
+            if (sample.SingleColour && !hidden && !changing)
             {
                 // On-screen time: a frame stays shown until the next sample starts (the last one until the media end),
                 // so dropped slots inside a single-colour stretch cannot split it into short runs.
@@ -80,6 +91,16 @@ public static class VideoChecker
             if (!decoded.Samples.Any(s => s.Time100ns + s.Duration100ns <= p.Start100ns && VisibleCue(s))
                 || !decoded.Samples.Any(s => s.Time100ns >= p.End100ns && VisibleCue(s))) failures.Add("privacy-visible-boundaries");
         }
+        foreach (var t in transitions)
+        {
+            var covered = decoded.Samples.Where(s => s.Time100ns >= t.Start100ns && s.Time100ns < t.End100ns).ToArray();
+            if (t.Start100ns < 0 || t.End100ns <= t.Start100ns || string.IsNullOrWhiteSpace(t.Reason) || t.StepIds.Length == 0
+                || covered.Length == 0 || covered[0].Time100ns != t.Start100ns || covered[^1].Time100ns + covered[^1].Duration100ns != t.End100ns
+                || transitions.Any(other => !ReferenceEquals(other, t) && other.Start100ns < t.End100ns && other.End100ns > t.Start100ns)
+                || declared.Any(p => p.Start100ns < t.End100ns && p.End100ns > t.Start100ns))
+                failures.Add("transition-declaration");
+            if (t.End100ns - t.Start100ns > MaximumTransition100ns) failures.Add("transition-length");
+        }
         if (masks.Any(m => m.Frame < 0 || m.Frame >= decoded.Samples.Length) || masks.Select(m => m.Frame).Distinct().Count() != masks.Length)
             failures.Add("privacy-mask-match");
         var unmapped = new List<string>();
@@ -98,6 +119,12 @@ public static class VideoChecker
                     || evidence.Steps.Any(s => s.Privacy && s.Time100ns >= p.Start100ns - IntervalTolerance100ns
                         && s.Time100ns <= p.End100ns + IntervalTolerance100ns && !p.StepIds.Contains(s.Id)))
                     failures.Add("privacy-step-identities");
+            // A transition names the visible step that began it, recorded when it began (within the interval's tolerance).
+            foreach (var t in transitions)
+                if (t.StepIds.Distinct(StringComparer.Ordinal).Count() != t.StepIds.Length
+                    || t.StepIds.Any(id => !evidence.Steps.Any(s => s.Id == id && !s.Privacy
+                        && s.Time100ns >= t.Start100ns - IntervalTolerance100ns && s.Time100ns <= t.End100ns + IntervalTolerance100ns)))
+                    failures.Add("transition-step-identities");
             foreach (var step in evidence.Steps)
             {
                 bool cue = evidence.Cues.Any(c => c.StepIds.Contains(step.Id) && c.Start100ns >= 0 && c.End100ns > c.Start100ns
@@ -110,7 +137,10 @@ public static class VideoChecker
         }
         return new("v4", hash, captionsHash, failures.Count == 0, failures.Order().ToArray(), decoded.EndOfStream && decoded.Error is null && decoded.Samples.Length > 0,
             decoded.Samples.Length, decoded.End100ns, intervalError, longest / (double)TimeSpan.TicksPerSecond, singleShare,
-            gap / (double)TimeSpan.TicksPerSecond, decoded.Samples.Length == 0 ? 0 : (double)privacy / decoded.Samples.Length, unmapped.ToArray(), decoded.Error);
+            gap / (double)TimeSpan.TicksPerSecond, decoded.Samples.Length == 0 ? 0 : (double)privacy / decoded.Samples.Length, unmapped.ToArray(), decoded.Error)
+        {
+            TransitionShare = evidence?.TransitionIntervals is null ? null : decoded.Samples.Length == 0 ? 0 : (double)transition / decoded.Samples.Length,
+        };
     }
     internal static long ShownUntil(DecodedVideo decoded, int i) => i + 1 < decoded.Samples.Length
         ? Math.Max(decoded.Samples[i + 1].Time100ns, decoded.Samples[i].Time100ns) : decoded.End100ns;

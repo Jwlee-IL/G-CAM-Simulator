@@ -116,6 +116,10 @@ def annex(archive, selection, records, cases):
             require(0 <= start < end and start < cue['end100ns'] and end > cue['start100ns'], 'frames: time outside cue')
             require(not any(p['start100ns'] < end and p['end100ns'] > start
                             for p in status['evidence'].get('privacyIntervals', [])), 'frames: private frame')
+            # Window-transition intervals (launch, harness-issued state change, close) are never illustrated either;
+            # evidence written before the field existed has none.
+            require(not any(t['start100ns'] < end and t['end100ns'] > start
+                            for t in status['evidence'].get('transitionIntervals') or []), 'frames: transition frame')
             path = confined(folder, frame['file']); data = path.read_bytes()
             require(sha(data) == frame['sha256'], 'frames: JPEG hash differs')
             width, height = jpeg_size(data)

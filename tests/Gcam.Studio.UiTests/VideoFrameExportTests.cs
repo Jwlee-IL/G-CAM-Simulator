@@ -23,7 +23,7 @@ public sealed class VideoFrameExportTests
     private sealed record Clip(ObservationFixtures.ScratchFolder Folder, JsonElement Record, string Mp4, string Vtt) : IDisposable
     { public void Dispose() => Folder.Dispose(); }
 
-    private static Clip Make(bool sparse = false)
+    private static Clip Make(bool sparse = false, VideoEvidence.TransitionInterval[]? transitions = null)
     {
         var folder = ObservationFixtures.Scratch(); string root = folder;
         string mp4 = Path.Combine(root, "attempt.mp4"), vtt = Path.Combine(root, "attempt.vtt");
@@ -55,7 +55,7 @@ public sealed class VideoFrameExportTests
         var evidence = new VideoEvidence(new(DateTimeOffset.UtcNow, 0, 40_000_000, TimeSpan.TicksPerSecond), steps, cues,
             [new(16_000_000, 24_000_000, "synthetic privacy", ["private"])],
             Enumerable.Range(16, 8).Select(n => new VideoEvidence.MaskSample(n, n * VideoTimeline.Period100ns,
-                (n + 1) * VideoTimeline.Period100ns, true, ["privacy-pause"], [[0, 0, 64, 48]])).ToArray());
+                (n + 1) * VideoTimeline.Period100ns, true, ["privacy-pause"], [[0, 0, 64, 48]])).ToArray()) { TransitionIntervals = transitions };
         var check = VideoChecker.Check(mp4, vtt, evidence);
         Assert.True(check.Passed, string.Join(",", check.FailedCriteria));
         var record = JsonSerializer.SerializeToElement(new { contract = "v4", runId = "gcam-frame-fixture", result = "passed",
@@ -81,6 +81,18 @@ public sealed class VideoFrameExportTests
             using var image = System.Drawing.Image.FromStream(new MemoryStream(jpeg));
             Assert.Equal((64, 48), (image.Width, image.Height));
         });
+    }
+
+    [MediaFoundationFact]
+    public void Selection_NeverPicksASampleInsideAWindowTransition()
+    {
+        // Samples 28-31 (2.8-3.2 s) are a declared transition, begun by the step at 3.2 s (within the interval's tolerance).
+        // Without it the "two" cue (2.4-3.2 s) is illustrated by its last sample, 31 (see the test above); with it, by 27.
+        using var clip = Make(transitions: [new(28_000_000, 32_000_000, "maximise", ["three"])]); string root = clip.Folder;
+        var result = VideoFrameExport.ExportCase("fixture", "passed", clip.Record, clip.Mp4, clip.Vtt, 64, 48, root, "case");
+        Assert.Equal(new[] { "start", "one", "two", "three", "end" }, result.Frames.Select(f => f.StepId));
+        Assert.Equal(new long[] { 7_000_000, 15_000_000, 27_000_000, 39_000_000, 39_000_000 }, result.Frames.Select(f => f.MediaTime100ns));
+        Assert.All(result.Frames, frame => Assert.False(frame.MediaTime100ns < 32_000_000 && frame.MediaEnd100ns > 28_000_000));
     }
 
     [MediaFoundationFact]
