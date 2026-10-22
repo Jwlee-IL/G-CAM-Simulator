@@ -8,16 +8,17 @@ public sealed class ProcessMonitor : IDisposable
 {
     private readonly Timer _timer;
     private readonly ProcessLedger _ledger;
+    private readonly Func<IReadOnlyList<ProcessLedger.Instance>> _sample;
     private readonly object _sync = new();
     public List<string> Errors { get; } = [];
     public ProcessMonitor(ProcessLedger ledger, Func<IReadOnlyList<ProcessLedger.Instance>>? sample = null)
     {
-        _ledger = ledger; sample ??= Snapshot;
+        _ledger = ledger; _sample = sample ?? (() => Snapshot(ledger));
         void Observe(object? unused)
         {
             lock (_sync)
             {
-                try { _ledger.Observe(sample()); }
+                try { _ledger.Observe(_sample()); }
                 catch (Exception e) { Errors.Add(e.GetType().Name + ":" + e.Message); }
             }
         }
@@ -32,7 +33,33 @@ public sealed class ProcessMonitor : IDisposable
         if (_timer.Dispose(done) && !done.WaitOne(TimeSpan.FromSeconds(5))) throw new TimeoutException("Process monitor did not stop");
     }
 
-    public static IReadOnlyList<ProcessLedger.Instance> Snapshot()
+    /// <summary>Every semantic/coordinate action checks the live process instrument before supplying input.</summary>
+    public void RequireInputSafe()
+    {
+        lock (_sync)
+        {
+            try { _ledger.Observe(_sample()); }
+            catch (Exception e) { Errors.Add(e.GetType().Name + ":" + e.Message); }
+            if (Errors.Count != 0) throw new InvalidOperationException("process-monitor-not-proven");
+            if (_ledger.Issues.Count != 0) throw new InvalidOperationException("unproven-Studio-instance; further input refused");
+        }
+    }
+
+    /// <summary>A module read can race loader/exit (Win32Exception while loading or exiting, InvalidOperationException once
+    /// exited). Only a previously proven PID and birth time may use its registered image; any other instance still fails.</summary>
+    public static string ReadStudioImage(ProcessLedger ledger, int pid, DateTimeOffset startedAt, Func<string> readModule)
+    {
+        var owned = ledger.Owned.SingleOrDefault(p => p.Pid == pid && p.StartedAt == startedAt);
+        try { return readModule(); }
+        catch (Exception e) when (owned is not null && e is System.ComponentModel.Win32Exception or InvalidOperationException)
+        {
+            // One bounded retry in this sample; neither transient failure becomes a permanent monitor error.
+            try { return readModule(); }
+            catch (Exception again) when (again is System.ComponentModel.Win32Exception or InvalidOperationException) { return owned.ImagePath; }
+        }
+    }
+
+    public static IReadOnlyList<ProcessLedger.Instance> Snapshot(ProcessLedger ledger)
     {
         var results = new List<ProcessLedger.Instance>();
         IntPtr handle = CreateToolhelp32Snapshot(2, 0);
@@ -48,11 +75,19 @@ public sealed class ProcessMonitor : IDisposable
                 try
                 {
                     using var p = Process.GetProcessById((int)entry.Pid);
-                    results.Add(new(p.Id, (int)entry.ParentPid, p.StartTime,
-                        entry.Name.Equals("Gcam.Studio.exe", StringComparison.OrdinalIgnoreCase) ? p.MainModule?.FileName ?? entry.Name : entry.Name, ""));
+                    DateTimeOffset startedAt = p.StartTime;
+                    string image = entry.Name.Equals("Gcam.Studio.exe", StringComparison.OrdinalIgnoreCase)
+                        ? ReadStudioImage(ledger, p.Id, startedAt, () => p.MainModule?.FileName
+                            ?? throw new System.ComponentModel.Win32Exception("Module not available")) : entry.Name;
+                    results.Add(new(p.Id, (int)entry.ParentPid, startedAt, image, ""));
                 }
                 catch (ArgumentException) { } // exited between snapshot and read
-                catch (System.ComponentModel.Win32Exception) { } // protected unrelated process; ETW is the complete image source
+                catch (System.ComponentModel.Win32Exception)
+                {
+                    if (entry.Name.Equals("Gcam.Studio.exe", StringComparison.OrdinalIgnoreCase))
+                        throw new InvalidOperationException("Cannot prove the discovered Studio instance");
+                    // Protected unrelated processes are outside the registered-image boundary.
+                }
             } while (Process32Next(handle, ref entry));
         }
         finally { CloseHandle(handle); }

@@ -6,32 +6,48 @@ what the UI runs verify is traced in [VV.Studio](VV.Studio.md).
 
 Current suite (2026-10-13): 24 headless oracle cases plus 29 opt-in desktop cases — 26 regression scenarios (`ScenarioTests` 6, `WorkspaceScenarioTests` 5, `MlemScenarioTests` 6, `ReadoutScenarioTests` 8 of which one is the long opt-in, `ChromeScenarioTests` 1), the pilot, the plot gate and the survey — 53 total. The retained final desktop run (2026-10-02) passed 27/27 of the suite as it then stood (13 oracle, 12 scenarios, plot gate, survey); it is not re-executed by a normal test run. Start / Stop / Continue / Reset and all four workspaces are covered. Source drag and stale-result marking were withdrawn; the initial charter, pilot and coverage tables below are historical records. Current totals: [VV.Studio](VV.Studio.md#current-test-inventory).
 
-The work goes through stages, and a stage is not skipped because a later one looks easy. Each stage has an exit
-condition and a record below.
+The work follows the author's UI-automation procedure **v4.0** (2026-10-21; TODO-54, 2026-10-22). It is gated: a gate is not
+skipped because a later one looks easy. The gates replace the stages 0–6 of the procedure v3.x; the sections below keep
+those stages' records as history.
 
-| Stage | Question | Exit condition | State (2026-10-01) |
+| Gate | Question | Passes when | State (2026-10-22) |
 |---|---|---|---|
-| 0 Charter | what is automated, for whom, with what permission | purpose, scope, non-scope, success criteria written | **done** |
-| 1 Safety | what can a run write, start, or reach | every write surface confirmed absent, isolated or blocked; process ownership rules in code | **done** |
-| 2 Measurement | how is each kind of control found, driven and judged | every interaction contract measured on the running app | **done** for the contracts the pilot uses + run / cancel |
-| 3 Pilot | does one complete flow work end to end | start → act → judge → clean up; 2 passes in a row; a deliberately broken verdict fails; a recovery run passes | **done** |
-| 4 Scale-out | scenarios traced to requirements and risks | each target requirement automated, manual, or excluded with a reason | **done** for the measuring and run flows; coverage gaps listed |
-| 5 Evidence | are results tied to build, script, input, environment | manifest per run; artefacts opened and checked | manifest + failure bundle exist; exploratory only |
-| 6 Operation | who runs it, when, how flakiness and baselines are handled | written run policy | rules below; no CI runner (needs a desktop) |
+| G0 Charter | what is automated, for whom, with what permission | this charter (§0) approved by the author on the target commit (act `charter`) | approved by the author on `061f14a`, 2026-10-22 |
+| G1 Safety | what can a run write, start or reach | an observed launch-idle-exit run on the current isolation folder and deployment: every positive control seen, the file, process and network channels live, no `unsafe_effect`, no product failure, cleanup complete | **passed** 2026-10-22: `gcam-probe-20261022-01` completed on `061f14a` (replaces `probe-20261016-03`) |
+| G3 Pilot | does one complete flow work end to end | on the v4 harness: the pilot passes twice in a row, a deliberately broken verdict fails at its assertion, a recovery run passes, each with a passing video check | **passed** 2026-10-22 on `061f14a` (VV.Studio.History) |
+| G4 Scale-out | is every target requirement automated, manual or excluded with a reason | the coverage table (§4) holds, and each automated case has passed on the v4 harness with a passing video | **passed** 2026-10-22 on `061f14a`: 38 desktop cases with passing videos (one transient UI Automation failure, passed on its rerun); the long case is opt-in |
+| G5 Production | may a desktop result enter a test record or a manual edition | machine-checked: the approval package names G0 and G1 `passed`; the exact run's video status is `passed` under contract `v4`; otherwise the generators refuse, and failed or superseded attempts go to the final-review list | in code (TODO-54 turn C) |
+
+G2 (measurement, §2) and G6 (operation, §6) are recommended practice, not gates. The planner judges G3 and G4 from the run
+records. The approval package carries only G0 and G1, so the generators do not machine-check G3 / G4 (a recorded
+difference, TODO-54).
 
 ## 0. Charter
 
+The author approves this table as a whole, on the commit that carries it (act `charter`). The 2026-10-01 charter
+(exploratory profile P1, stages 0–6) is in git history.
+
 | Item | Decision |
 |---|---|
-| Purpose | Regression checks of Studio's user flows that unit tests cannot reach: the adorner's pointer gestures, hit-testing, the async run as seen from the window, and the automation surface itself |
-| Result use | **Exploratory (profile P1)** until stage 4: results guide development and are not evidence for [VV.Studio](VV.Studio.md) beyond "performed" |
-| Readers | the author and reviewers of this repository |
-| In scope | `Gcam.Studio.exe` built from this working tree; main window; dark theme; default optics |
-| Out of scope (for now) | light theme, display scaling other than the test machine's, keyboard-only flows, screenshots as pass/fail criteria |
-| Allowed changes | test code; **test hooks in the product**: `AutomationProperties.AutomationId` on controls, the run state as `ItemStatus` on the status line |
-| Forbidden effects | none exist to forbid (no data, devices, network or files — stage 1); the runs still never touch processes or folders they did not create |
-| Environment | the developer's interactive desktop. A run moves the real mouse and takes focus, so it is **opt-in** (`GCAM_UI_TESTS=1`) and must not run while someone is using the machine |
-| Success criteria | the product's own result (run state, a results-table row and its value) matches an independently computed expectation |
+| Purpose | Regression checks of the user flows that unit tests cannot reach: the adorner's pointer gestures, hit-testing, the async run as seen from the window, the report export and the automation surface. Also the desktop evidence for the Studio manual and for the software test report |
+| Readers | the author, reviewers of this repository, readers of the software demonstration set |
+| Result use | named per run in its record: **exploratory** (development), **regression** (a desktop `dotnet test` run), **test evidence** (a test-record milestone's desktop profile, `test_records.py collect --profile desktop`), **manual** (an edition of the Studio manual). Only test evidence and manual pass through G5 |
+| Target build | `Gcam.Studio.exe`, Release, built from a clean commit of this repository. It is identified by the source commit, the deployment fingerprint and the isolation-folder fingerprint (`stage0.py pin`). Builds are source-determined (TODO-51) |
+| Environment and launch permission | the author's interactive desktop (Windows 11, ko-KR, 100 % scaling, 1440×900 window), shared with other automation sessions. Desktop tests are opt-in (`GCAM_UI_TESTS=1`). Every desktop run needs the author's go for that run (`desktop-go`, the author's standing rule). Each run is announced to the other sessions with its start and end times, and pauses when another session announces an audit |
+| G1 lists | `tests/Gcam.Studio.UiTests/Harness/Isolation/`: `surface-list.json` (write surfaces and their isolation), `classification-rules.json` (observation scope, shell record locations, OS run records), `action-policy.json` (allowed actions and launch values), `test-data.json` (test data and the peer state). A change there is an isolation change: a new observed run re-establishes G1 |
+| Test data | There is no user import slot. Studio reads two fixed model inputs: the deployed ambient JSON (SHA-256 `4d48bc42…`) and the embedded readout offer resource (`24b3bf67…`). The harness scripts type every scene (`harness-typed-scenes`, synthetic). The pre-launch check refuses a deployment whose file set or data hashes differ from `test-data.json`. The deployment fingerprint covers DLL, EXE and JSON files only |
+| Allowed peers | None. Connections are not blocked technically: a firewall rule needs elevation and changes an OS setting on every run, and an AppContainer launch would change the environment under test. This is a charter exception (`test-data.json` `peers`). Evidence: `SurfaceSurveyTests` finds no network API in the Studio shell assembly, and the owned-instance connection sampler checks the TCP / UDP tables in every launch against a harness positive control. Residual risk: a native framework or driver connection that opens and closes between two samples |
+| Manual or excluded | Manual: keyboard-only and screen-reader flows, and gesture thresholds (inspection). Excluded: the light theme beyond its label, display scalings and cultures other than the test machine's, and screenshots or pixels as pass / fail criteria. Kept in code but unused: the background-filter machinery (no active filter), the conditional scope, and the kernel-trace diagnostic |
+| Observation | Every launch runs the process ledger (the owned image and its descendants), the liveness observer, the Documents watcher on the declared export pattern (with a positive control created and removed by its own run), the connection sampler, and a read-back of the sandbox writes. Observed runs add snapshots A / B / C, classified attribution first (§1). A channel that cannot cover its scope is a run issue (`blocked`), never "no effect" |
+| Crash and hang detection | In the harness (`Harness/Observation/LivenessObserver.cs`, wired through `OwnedStudioProcess` and `Scenario`), from launch to exit. Codes: `not_responding` — the main window does not answer a bounded `WM_NULL` for **10 s continuously** (provisional: about twice the largest simple-UI gap, 4.6 s in 134 passed runs; a breach is reported, the limit is never enlarged; time before the main window exists does not count); `app_exited` — Studio ended before the harness asked it to close, also with exit code 0; `abnormal_exit` — a non-zero exit code; `launch_window_timeout` — the main window never appeared. Each fails the scenario even after correct assertions. Each is a product failure, never a run issue. There is no Application-log correlation (lighter cut L1): an unhandled exception shows as one of these endings |
+| Input after a failure | The guard is checked immediately before every raw input, and no key, click or move follows a recorded product failure. One exception (author, 2026-10-22): when the failure falls between the harness's own button-down and its button-up, exactly one matching button-up is sent. It is sent only when the foreground window belongs to the owned Studio instance (PID and start time) and the cursor is inside its main window. Otherwise nothing is sent, and the record says the button may still be pressed (a `physical` act releases it) |
+| Video criteria | Every app-driving desktop test is recorded. After the app exits, the video is machine-checked (`VideoChecker`): it decodes to the end without error; its decoded duration matches the independently recorded interval within 0.2 s; undeclared single-colour frames last ≤ 0.2 s at a time and make up ≤ 1 % of frames; no decoded timestamp gap exceeds 0.3 s; 100 % of executed step IDs map to a timed caption or a declared privacy interval. A privacy interval covers the native save dialog. It is declared with its start, end, reason and step IDs, it must match the masked samples exactly, and it has no share cap. It ends when no owned modal remains and the export command has returned. The video never changes a scenario's verdict; G5 refuses a passed result whose video did not pass |
+| Video exceptions | `ObservedRunTests`: recording would break the observation boundary. `PlotViewTests` is outside the app-driving scope (an in-process control benchmark) |
+| Real-world effects | E6: an export scenario's typed file name enters the Windows save-dialog history and the recent-document lists. It is allowed only by a named `real-world-effect` permission for that run (D4 (a), 2026-10-21), usually given in the same statement as the desktop go. Any other effect outside isolation ends the run `unsafe_effect` |
+| Harness markers | New v4 run IDs begin with `gcam-`, so the marker is unique to this product (the procedure's marker-uniqueness rule). Old records keep their IDs |
+| People | Four acts, recorded by name in the approval package: `charter` (this charter, per target commit), `real-world-effect` (E6, per run), `final-review` (the generators' final-review list) and `physical` (an act only a person can do, such as a click that releases a pressed button). The author's `desktop-go` per run is added to them. The runner never asks the author to operate Studio. Committed records with HUM-xx acts replay unchanged |
+| Success criteria | The product's own result (run state, rows, values, files) matches an independently computed expectation, there is no product failure, and the run's records and video pass their checks |
+| Artefacts | Run records and manifests: `%TEMP%` run folders (machine-local). Observed runs: `%TEMP%\gcam-todo43\<runId>`; snapshots stay local (A4). Videos: `artifacts/ui-videos/` of the main checkout (git-ignored, with the index and the result cache). Committed: test-record milestones (`samples/testing/records/`), manual editions (`docs/manual/editions/`) and [VV.Studio.History](VV.Studio.History.md) |
 
 ## 1. Safety
 
@@ -45,7 +61,7 @@ write surface, the report export: it writes the path the user confirms in the sa
 | Surface | Declared | Resolved in a run | State |
 |---|---|---|---|
 | User / app data, settings, logs, caches | none in code | `TEMP` / `TMP` (and env-var readers of `APPDATA` / `LOCALAPPDATA`) redirected into an owned sandbox folder; **0 files written** in every run so far, apart from the export scenario's two declared report files (row below) | confirmed absent; the redirect is a partial boundary — see below |
-| Report export (TODO-46) | the confirmed path and its declared sidecars (`.scene.json`; `.meta.json` for event data), chosen in the save dialog; Studio remembers no folder or setting, but the Windows save dialog records the file in the user's recent list and the last folder per application (E6, declared OS behaviour, observed 2026-10-16) | `ReportExportScenarioTests` (one case per format) types a path inside the owned sandbox; the run asserts exactly `report-<run-id>.<ext>` and `report-<run-id>.scene.json` there (plus `report-<run-id>.meta.json` for CSV) and nothing else in the sandbox; the run ID in the typed name is a harness marker (TODO-52 D4) and is never shown in a manual figure | declared and isolated; observed runs passed 2026-10-15 (all four formats in run 6) |
+| Report export (TODO-46) | the confirmed path and its declared sidecars (`.scene.json`; `.meta.json` for event data), chosen in the save dialog; Studio remembers no folder or setting, but the Windows save dialog records the file in the user's recent list and the last folder per application (E6, observed 2026-10-16; under v4.0 a real-world effect allowed per run by a named permission, §0) | `ReportExportScenarioTests` (one case per format) types a path inside the owned sandbox; the run asserts exactly `report-<run-id>.<ext>` and `report-<run-id>.scene.json` there (plus `report-<run-id>.meta.json` for CSV) and nothing else in the sandbox; the run ID in the typed name is a harness marker (TODO-52 D4) and is never shown in a manual figure | declared and isolated; observed runs passed 2026-10-15 (all four formats in run 6) |
 | Network | none in code | no TCP connections observed from the app's PID during an audit run | confirmed absent |
 | Child processes | none in code | none observed | confirmed absent |
 | Shared resources | the interactive desktop and the mouse | one run at a time (`DisableTestParallelization`), opt-in | blocked by policy |
@@ -62,64 +78,46 @@ child processes, TCP connections and the sandbox were watched. Nothing was writt
 before/after file diff was tried first and rejected: other processes on the machine write to the same folders, so it
 cannot attribute writes. The owned sandbox can.
 
-**Observed runs: which changes are candidates** (the author's UI-automation procedure v3.3, safety §3; TODO-52,
-decisions D1–D4 of 2026-10-16). An observed run (`ObservedRunTests`, the observed manual batch) compares snapshots A, B
-and C (`StateSnapshot`) and `stage0.py diff-classify` classifies the B→C changes. A change is a **candidate** only when
-the run can attribute it to Studio:
+**Observed runs: attribution first** (procedure v4.0; TODO-54 R1, R2; contract `v4`). An observed run (`ObservedRunTests`,
+the observed manual batch) compares snapshots A, B and C (`StateSnapshot`). `stage0.py diff-classify` first sorts each B→C
+change into one of three groups:
 
-1. it lies in the **observation scope**: the scope entries of every write surface in `Harness/Isolation/surface-list.json`
-   (declared default, this run's resolved value, isolation location), the run's harness-owned locations (sandboxes, run
-   folder, lease, registry marker), and the **shell record locations** in `classification-rules.json`
-   (`shellRecordLocations`: data Studio hands the shell — the save dialog's history E6, recent-document links). A shared
-   location (Documents, a key other programs also write) enters only by the surface's own name pattern; a surface or shell
-   record without one is listed as a blind spot;
-2. it carries a **harness marker** — a run ID of the observation context — in its path or name, or in registry value data
-   (the snapshot flags such a value as it is read, because the stored hash hides the data afterwards; files are matched by
-   name only). The export names the harness types carry the run ID (`report-<run-id>.<ext>`, D4), so whatever the save
-   dialog records about them carries it too;
-3. it belongs to an **owned process** (the registered image `Gcam.Studio.exe` and its descendants, from the process ledger).
+1. **Harness operations.** The run's harness-owned locations: sandboxes, run folder, lease, registry marker and the
+   Documents control.
+2. **Studio-attributed effects.** Any change that meets one of three conditions:
+   - It lies in Studio's product-specific scope: a write surface's declared default, this run's resolved value or its
+     isolation location (`surface-list.json`), or a shell record location of data Studio hands the shell
+     (`classification-rules.json` `shellRecordLocations`: the save-dialog history and the recent-document links).
+   - It carries a harness marker: the run ID, in a path, a name or registry value data. The snapshot flags a marked value
+     as it reads it, because the stored hash hides the data afterwards.
+   - It belongs to an owned process (from the process ledger).
+3. **References.** Everything else. A change in a shared location such as Documents, or in the E1 / E3 framework locations,
+   is a `shared-location-reference`; any other is an `unattributed-reference`. References are counted per channel and
+   listed, redacted, in a local file beside the result. They never block.
 
-There is no fourth basis: no per-process write record is taken (D2). Everything else is **unattributed**: not classified,
-not unknown, never blocking; `diff-classify` counts it per channel and lists it, redacted, in a local file beside its result
-(`<out>.unattributed.jsonl`, A4). Candidates are then classified in the charter's order (harness-owned, declared surface,
-OS record of the process's own run, outside the Studio window, changed in the control window A→B, recorded filter, another
-git working tree, else out-of-declaration or unclassified). Records the OS keeps about a process's own run and windows (window
-session, compatibility store, taskbar usage, display-name cache; `osRunRecords`) stay other-actor even when they carry a
-marker. A background filter may not cover a scope location, a shell record location, a marker item or an owned-process
-item: `diff-classify` refuses an overlapping filter when it loads the rules and never applies one to a marker item. The
-filters recorded on 2026-10-14 … 16 all lie outside the new scope and are retired (`backgroundFilterHistory`, inactive,
-each with its evidencing run; D3). The result and the run manifest (`writeAudit`, manifest schema 3) carry
-`observationScope` (each location with its basis), `unattributed` (count and list) and `controlWindow` (the A→B and Studio
-window lengths and the items the control-window rule classified).
+An attributed effect is then judged on three grounds: is it inside isolation, does the registered child / peer policy cover
+it, or does an exact `real-world-effect` permission cover it? That permission must match the run's package, the author's
+statement and its scope; a covered effect is `authorized-real-world-effect`, which is compatible with `completed`. Any other
+attributed effect is `unsafe_effect`. In a new run, no outside write is permitted merely because it is declared.
+
+The following only annotate references and can never clear an attributed or marked item: time windows, the A→B control
+window, the null window, git working trees, recorded filters and the OS-run-record rules.
+
+The run's eligibility combines the snapshot verdict with the run manifest's process issues, monitor errors, live-channel gaps,
+product failures, and the transient effects the Documents watcher saw. An item that no rule decides is re-judged from the
+run's own records; a rerun comes only when the records cannot answer, and a run is not attempted a third time: the cause is
+recorded for the author. Observations without a contract (before TODO-54) keep their historical judgement and replay
+unchanged. The v3.3 / v3.4 rules they were judged by — the HUM-08 classification of undecided candidates, the "recorded
+difference" and the filter re-classification of `manual-20261016-02` (RC-11) — are in this document's git history before
+TODO-54.
 
 | Blind spot | Residual risk |
 |---|---|
-| A Studio effect outside the scope without a marker (`framework-registry`, `framework-cache-shell`, `framework-crash`, now `blind-spot` with D2) | a framework or driver write there is counted as unattributed, not seen as Studio's. Studio's managed code has no write except the export, no network and no child process (`SurfaceSurveyTests` checks the deployed IL); what remains is native framework and driver behaviour, of the kind seen as E1 and E3 in the 2026-10-14 kernel traces |
+| A Studio effect outside the scope without a marker (framework registry, shell cache, crash locations; E1 / E3) | a framework or driver write there is a reference, not seen as Studio's. Studio's managed code has no write except the export, no network and no child process (`SurfaceSurveyTests` checks the Studio shell assembly); what remains is native framework and driver behaviour, of the kind seen as E1 and E3 in the 2026-10-14 kernel traces |
 | Jump lists; the per-extension recent-documents lists | no name pattern of Studio's own (application-ID file names; lists shared with every program); covered only by a marker in a name or in registry value data |
 | A marker inside file content | files are matched by name only (content scanning is out: cost) |
-| Snapshots taken before TODO-52 | no value-data marker flags; names are still matched (the 2026-10-16 runs re-classified as a check, not as G1 evidence) |
-
-**Candidates no rule decides** (the procedure v3.4, 2026-10-16; the candidate definition above is unchanged). Such a
-candidate is *unknown*, and it is closed first from the run's own records (snapshots, control window, process ledger, run
-log): when they hold the grounds, the grounds are extracted and shown and the author classifies the candidate (HUM-08,
-recorded with the run ID and the items it classifies); the run is re-classified and its results are promoted without a
-rerun. The run is repeated with better observation only when its records cannot answer. The procedure's three
-re-classification grounds, as they apply here: a background-filter-only change (unused, no active filter since D3); an
-HUM-08 answer naming the run's items (adopted); a classification-only change (unused: `stage0.py` also derives the
-observation scope, so a classifier change stays HUM-07 with an approved pilot). A re-classification is written as a new
-result beside the earlier one, never over it, with its commit, time, grounds, the approval IDs, the count per ground and
-the SHA-256 of the earlier result. A run that ended with an out-of-declaration effect, an unseen positive control or a
-failed cleanup does not become a G1 basis by re-classification.
-
-**Recorded difference, stricter than the procedure.** `diff-classify` has no unknown class for an in-scope candidate that
-no rule decides: it reports it out-of-declaration (`unsafe_effect`), so the records-first path above is closed for it; only
-a readability flip is `unclassified`. Trigger: the first such candidate. The author then classifies it from that run's
-records (HUM-08), and the classifier gains the unknown path (an isolation change: HUM-07 and an approved pilot). It is not
-built before: no such candidate has occurred, and building it costs an approved pilot. History, kept as it happened:
-`manual-20261016-02` (the basis of edition `2026-10-16-1`) first ended with five out-of-declaration items that were other
-programs' writes (a certificate revocation cache, a Store publisher folder, a messenger's data) and became `completed` by
-filter re-classification (RC-11). Under the procedure those five were unknown, which a filter re-classification may close;
-the run was not repeated.
+| The Documents watcher | a junction under the Documents root is a named blind spot; a change made and undone between two watcher events is seen as transient, not missed, unless the watcher's buffer overflows (then the run is `blocked`) |
+| Snapshots taken before TODO-52 | no value-data marker flags; names are still matched |
 
 **Ownership** (`Harness/StudioProcess.cs`).
 
@@ -284,7 +282,7 @@ its start state checked, so a launch failure has no video; pixel capture stops b
 | Captions | `<case>.vtt` from the scenario's steps (`RunRecord.Step`, the reader text of `ManualRun.BeginStep`), escaped and stripped of paths and identities; polling diagnostics stay in the run record only. Captions are an aid, never a verdict |
 | Promotion | only after the test's final verdict — after cleanup, the exact sandbox writes and, for a manual chapter, its finalised record — and only for a pass: `artifacts/ui-videos/<case>.mp4`, `.vtt`, then `index.json` last (schema `gcam.ui-videos` 1: run id, commit, dirty flag, binary and deployment hashes, file hashes, frames, masked and suppressed frames). Each file is copied to a staging name in that folder and replaced on its own; a run interrupted between them leaves a hash mismatch that the next publication drops from the index |
 | Failure | a failed, skipped or aborted test keeps the previous passing video; its attempt (`attempt.mp4`, `attempt.vtt`, `video-status.json`) stays in the run record folder under `%TEMP%` |
-| Faults | an unavailable encoder, a capture or COM error, a stop that exceeds 5 s (the recording is abandoned; the threads are background threads) or a publication error never changes the verdict: a passing test can show `video unavailable` in its status file, so count videos from `index.json`, not from passes |
+| Faults | an unavailable encoder, a capture or COM error, a stop that exceeds 5 s (the recording is abandoned; the threads are background threads) or a publication error never changes the scenario's verdict: a passing test can show `video unavailable` in its status file, so count videos from `index.json`, not from passes. Under v4.0 the generators (G5) refuse to produce a passed desktop result whose video is missing or failed its check, and list the attempt for final review |
 | Case id | class, method and theory arguments, made file-safe with a short hash (`ReportExportScenarioTests.ExportReport_….html-<hash>`) |
 | Manual record | a chapter run pins its own encoded video and captions by hash (`manual-run.json` `video`, optional); replay of an edition never needs the video |
 
@@ -318,6 +316,18 @@ and a worktree has its own.
 ## 6. Operation
 
 - `GCAM_UI_TESTS=1 dotnet test tests/Gcam.Studio.UiTests -c Release` — only when the desktop is free.
+- **Desktop session under v4.0** (each run on the author's go, announced to the other sessions):
+  1. Commit, build (`dotnet build Gcam.sln -c Release`) and make a fresh run folder `%TEMP%\gcam-todo43\<runId>` with a
+     new ID `gcam-<kind>-YYYYMMDD-NN`.
+  2. `stage0.py pin --out <runDir>\pin.json`, then the approval package `<runDir>pprovals.json`: `contract: "v4"`, run ID,
+     commit and commit date, isolation and deployment fingerprints, and the named acts `charter` and `desktop-go` (the
+     author's statements, quoted after the commit; one statement may carry both, and an export run's `real-world-effect`).
+     For production also the charter scope, scenario IDs and gates G0 / G1 with status and reason. Personal statements and
+     paths stay local.
+  3. `stage0.py preflight --run-directory <runDir>` must pass before the launch.
+  4. G1: the observed run (`GCAM_UI_TESTS=1`, `GCAM_UI_PROBE=1`, `GCAM_UI_PROBE_RUN`, `GCAM_UI_PROBE_DIRECTORY`,
+     filter `ObservedRunTests`), then `stage0.py diff-classify`. Then G3 (pilot ×2, broken verdict, recovery), then the
+     affected scenarios with videos; the result goes to [VV.Studio.History](VV.Studio.History.md).
   Without the variable the desktop tests are **skipped** and reported as skipped, never as passed.
 - Every recorded desktop test leaves its latest passing video in `artifacts/ui-videos/` (§5); set `GCAM_UI_VIDEO=0` to
   run without recording.
@@ -335,7 +345,7 @@ and a worktree has its own.
 - Runs are serial. A run that fails is not retried automatically; read its manifest first.
 - CI (`.github/workflows/ci.yml`) runs the oracle tests but not the desktop tests — it has no interactive session. Say so in its
   summary rather than reporting the UI suite green.
-- Re-measure (stage 2) and re-pilot (stage 3) after changing AutomationIds, the window layout, the adorner's input
+- Re-measure (§2) and re-pilot (G3) after changing AutomationIds, the window layout, the adorner's input
   handling, or the test machine's display scaling. Due now: the borderless window, the Options dialog and the left tabs
   (2026-10-13) changed the layout and moved controls; the desktop suite has not been run since.
 
@@ -344,7 +354,7 @@ and a worktree has its own.
 - Heatmap zoom / pan / readout scenarios (SR-VIEW-03, -04, -07) through keys and `ItemStatus`.
 - Controls absent from the final scenario assertions (Remove source, Clear, Delete button, source list selection), plus SelectionItemPattern activation and keyboard-only/screen-reader flows.
 - A keyboard crosshair for creating measurements (AN-01), then a keyboard-only scenario.
-- Promote from exploratory to regression use (profile P2) once the suite has a run policy owner and history.
+- Name regression as a standing result use (§0) once the suite has a run policy owner and history.
 
 Keep screenshots diagnostic-only; judge on product state.
 

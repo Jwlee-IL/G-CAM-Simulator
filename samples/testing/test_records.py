@@ -25,6 +25,7 @@ import zlib
 import xml.etree.ElementTree as ET
 
 from adapters import trx_cases, unittest_cases, cocotb_cases
+from ui_contract import live_approval, video_status, review_list
 
 REPO = Path(__file__).resolve().parents[2]
 CATALOG = REPO / 'docs/VV.Tests.md'
@@ -256,7 +257,7 @@ def source_units():
         if not namespace or not cls:
             continue
         methods = []
-        pattern = r'\[((?:Fact|Theory|EvidenceFact|DesktopFact|DesktopTheory|MediaFoundationFact|RenderSnapshotFact)[^\]]*)\]((?:(?!\bpublic\b).)*?)public\s+(?:async\s+)?(?:void|Task)\s+(\w+)\s*\('
+        pattern = r'\[((?:Fact|Theory|EvidenceFact|DesktopFact|DesktopTheory|MediaFoundationFact|RenderSnapshotFact|PwshFact|PwshTheory)[^\]]*)\]((?:(?!\bpublic\b).)*?)public\s+(?:async\s+)?(?:void|Task)\s+(\w+)\s*\('
         for match in re.finditer(pattern, text, re.S):
             methods.append(match[3])
         assembly = path.relative_to(REPO).parts[1]
@@ -430,7 +431,8 @@ def selected_verdict(bundle, selection, case_id):
 
 
 def finish_record(bundle, folder, family, args, env, before_source, before_subject, after_subject,
-                  started, finished, exit_code, cases, expected, artifacts, diagnostics, tools, profile='normal'):
+                  started, finished, exit_code, cases, expected, artifacts, diagnostics, tools, profile='normal', desktop_evidence=None,
+                  production_refusal=None):
     require(before_subject == after_subject, 'subject: changed during execution')
     after_source = source_identity()
     require(before_source['snapshotSha256'] == after_source['snapshotSha256'], 'source: changed during execution')
@@ -440,7 +442,7 @@ def finish_record(bundle, folder, family, args, env, before_source, before_subje
         reasons.append('working_tree_dirty')
     if any(v == 'unavailable' for v in tools.values()):
         reasons.append('tool_identity_incomplete')
-    record = {'schemaVersion': 1, 'runId': folder.name, 'family': family, 'profile': profile,
+    record = {'schemaVersion': 1, 'contract': 'v4', 'runId': folder.name, 'family': family, 'profile': profile,
               'startedUtc': started, 'finishedUtc': finished, 'command': tokens(args), 'exitCode': exit_code,
               'source': before_source, 'subject': {'files': before_subject, 'postFiles': after_subject},
               'tool': tools, 'environment': environment(env), 'cases': sorted(cases, key=lambda c: c['id']),
@@ -448,6 +450,12 @@ def finish_record(bundle, folder, family, args, env, before_source, before_subje
               'artifacts': artifacts, 'provenance': 'draft' if reasons else 'formal', 'draftReasons': reasons,
               'sanitization': {'version': 1, 'xml': 'canonical XML; LF; identity/path tokens',
                                'rawSha256Retained': True}, 'binaryVerification': 'before-and-after collection; hash-only on replay'}
+    if desktop_evidence is not None:
+        record['desktopEvidence'] = desktop_evidence
+        record['desktopAllCaseIds'] = sorted(c['id'] for c in cases if c['selector'] in desktop_selectors())
+        record['desktopCaseIds'] = sorted(c['id'] for c in cases if c['selector'] in desktop_selectors() and c['verdict'] != 'not_executed')
+        record['productionStatus'] = 'refused' if production_refusal else 'eligible'
+        record['productionRefusal'] = production_refusal
     if env.get('GCAM_UI_BREAK_VERDICT') == '1' or env.get('GCAM_README_CAPTURE_ONLY') == '1':
         record['profile'] = 'fault-injection-or-capture'
     raw = canonical(record)
@@ -462,10 +470,84 @@ def utc():
     return dt.datetime.now(dt.timezone.utc).isoformat()
 
 
-def collect(bundle, family, no_build=False, include_background=False, checker=None, python_command=None, profile='normal'):
+# An attribute section that applies DesktopFact / DesktopTheory (alone, with arguments, or in a combined list), never a
+# member access such as `DesktopFactAttribute.LongOptInVariable` or a longer name. Further attribute sections and line
+# comments may stand between it and the method.
+DESKTOP_METHOD = re.compile(
+    r'\[(?=\s*(?:[^\]]*,\s*)?Desktop(?:Fact|Theory)(?:Attribute)?\s*(?:\(|,|\]))[^\]]*\]'
+    r'(?:\s*(?:\[[^\]]*\]|//[^\n]*))*\s*public\s+(?:async\s+)?(?:void|Task)\s+(\w+)\s*\(')
+
+
+def desktop_selectors(project=None):
+    """Selectors of the desktop scenario methods in the UI test project (the methods carrying the attributes)."""
+    project = Path(project) if project is not None else REPO / 'tests/Gcam.Studio.UiTests'
+    selectors = set()
+    for path in project.glob('*.cs'):
+        text = path.read_text(encoding='utf-8-sig')
+        cls = re.search(r'public\s+(?:(?:sealed|partial)\s+)*class\s+(\w+)', text)
+        if cls:
+            for method in DESKTOP_METHOD.findall(text):
+                selectors.add('Gcam.Studio.UiTests::Gcam.Studio.UiTests.' + cls[1] + '.' + method)
+    return selectors
+
+
+def collect_desktop_evidence(raw_xml, cases, source_hashes, enforce=True):
+    ns = {'t': 'http://microsoft.com/schemas/VisualStudio/TeamTest/2010'}
+    results = {r.get('testId'): r for r in raw_xml.findall('t:Results/t:UnitTestResult', ns)}
+    selectors = desktop_selectors()
+    evidence = {}
+    for case in cases:
+        if case['selector'] not in selectors or case['verdict'] == 'not_executed':
+            continue
+        if case['unit'].rsplit('.', 1)[-1] in ('ObservedRunTests', 'PlotViewTests'):
+            evidence[case['id']] = {'exempt': True, 'reason': 'declared video coverage exclusion', 'scenario': case['selector'],
+                                    'runId': None, 'sourceSha256': source_hashes.get(case['unit'])}
+            continue
+        result = results.get(case.get('adapterId'))
+        stdout = result.find('t:Output/t:StdOut', ns) if result is not None else None
+        matches = re.findall(r'(?m)^\s*manifest:\s*(.+manifest\.json)\s*$', stdout.text or '') if stdout is not None else []
+        if len(matches) > 1:
+            if enforce: raise ValueError('video-gate: ambiguous scenario record for ' + case['id'])
+            matches = []
+        record_path = Path(matches[0].strip()) if matches else None
+        try:
+            record_raw = record_path.read_bytes() if record_path is not None else b'null'
+            record = json.loads(record_raw)
+            if not isinstance(record, dict): record = None
+        except (OSError, ValueError):
+            record = None
+        if case['verdict'] == 'passed' and enforce:
+            require(record is not None and record.get('contract') == 'v4' and record.get('result') == 'passed', 'video-gate: missing exact v4 run record')
+            video_status(record)
+        if record is not None:
+            # Retain the checked hash/result and identity; local UI and process paths stay in the owned run folder.
+            evidence[case['id']] = {'contract': record.get('contract'), 'runId': record.get('runId'),
+                'result': record.get('result'),
+                'scenario': case['selector'], 'videoStatus': record.get('videoStatus'),
+                'executedStepIds': record.get('executedStepIds'),
+                'sourceSha256': source_hashes.get(case['unit']), 'runRecordSha256': sha(record_raw)}
+        else:
+            evidence[case['id']] = {'scenario': case['selector'], 'runId': None, 'videoStatus': None,
+                                    'sourceSha256': source_hashes.get(case['unit'])}
+    return evidence
+
+
+def collect(bundle, family, no_build=False, include_background=False, checker=None, python_command=None, profile='normal', approvals=None, previous=None):
     bundle = Path(bundle).resolve()
     require(profile in ('normal', 'desktop'), 'collect: unknown profile')
     require(profile == 'normal' or family == 'dotnet', 'collect: the desktop profile is a dotnet collection')
+    if profile == 'desktop':
+        require(approvals is not None, 'approval-package: --approvals is required for desktop collection')
+        require(previous is not None, 'final-review: --previous <bundle> or --previous none is required')
+        approval_path = live_approval(approvals, REPO)
+        old = {}
+        predecessor = {'id': 'none'}
+        if str(previous) != 'none':
+            _, old_records, _ = load_selection(Path(previous))
+            predecessor = {'id': Path(previous).name, 'sha256': digest_file(Path(previous) / 'selection.json', Path(previous))}
+            for r in old_records:
+                for e in r.get('desktopEvidence', {}).values():
+                    if not e.get('exempt'): old[e['scenario']] = e.get('sourceSha256')
     env = os.environ.copy()
     env['PYTHONDONTWRITEBYTECODE'] = '1'
     env['DOTNET_CLI_UI_LANGUAGE'] = 'en'
@@ -476,6 +558,7 @@ def collect(bundle, family, no_build=False, include_background=False, checker=No
         env.pop('GCAM_CRRC_VECTORS', None)
         if profile == 'desktop':
             env.update({'GCAM_UI_TESTS': '1', 'GCAM_UI_LONG_TESTS': '0', 'GCAM_UI_PROBE': '0'})
+            env['GCAM_UI_APPROVALS'] = str(approval_path)
         if not no_build:
             code, output = command(['dotnet', 'build', 'Gcam.sln', '-c', 'Release'], env)
             write(bundle / 'build.log', sanitize_text(output))
@@ -483,13 +566,16 @@ def collect(bundle, family, no_build=False, include_background=False, checker=No
     names = ((DESKTOP_PROJECT,) if profile == 'desktop' else PROJECTS) if family == 'dotnet' else (family,)
     exit_codes = []
     for name in names:
-        folder = bundle / family / (name + '-' + uuid.uuid4().hex)
+        folder = bundle / family / ('gcam-' + name + '-' + uuid.uuid4().hex)
         folder.mkdir(parents=True, exist_ok=False)
         started = utc()
         before_source = source_identity()
         subject = binaries(name) if family == 'dotnet' else {}
         cases, expected, diagnostics, artifacts = [], [], [], []
         tools = {'collectorSha256': digest_file(Path(__file__)), 'python': platform.python_version()}
+        desktop_evidence = {} if profile == 'desktop' else None
+        production_refusal = None
+        source_hashes = {unit: sha(canonical(entry['sources'])) for unit, entry in source_units().items()} if profile == 'desktop' else {}
         if family == 'dotnet':
             require(subject, 'subject: no built binaries')
             found, listing = discover(name, env)
@@ -589,11 +675,15 @@ def collect(bundle, family, no_build=False, include_background=False, checker=No
                              unittest_cases(sanitized, environment(env)['switches']) if family == 'unittest' else
                              cocotb_cases(sanitized, artifact['configuration'], artifact['module'], environment(env)['switches']))
                 cases.extend(parsed)
+                if profile == 'desktop':
+                    desktop_evidence.update(sanitize_value(collect_desktop_evidence(original_xml, parsed, source_hashes, enforce=False)))
                 if family == 'dotnet':
                     summary = original_xml.find('t:ResultSummary/t:Counters', {'t': 'http://microsoft.com/schemas/VisualStudio/TeamTest/2010'})
                     if summary is not None and int(summary.get('notExecuted', 0)) != sum(c['verdict'] == 'not_executed' for c in parsed):
                         diagnostics.append('TRX summary notExecuted differs; case outcomes are authoritative')
             except (ValueError, ET.ParseError, KeyError) as error:
+                if profile == 'desktop':
+                    production_refusal = sanitize_text(str(error))
                 diagnostics.append(str(error))
         if family == 'checker':
             case = {'id': expected[0], 'unit': 'checker::' + checker, 'selector': expected[0], 'displayName': checker,
@@ -627,15 +717,49 @@ def collect(bundle, family, no_build=False, include_background=False, checker=No
             private_free(data)
             artifacts.append({'path': path.name, 'sha256': sha(data), 'rawSha256': sha(data),
                               'bytes': len(data), 'kind': 'log'})
+        if profile == 'desktop':
+            for case in cases:
+                if case['selector'] not in desktop_selectors() or case['verdict'] != 'passed': continue
+                evidence = desktop_evidence.get(case['id'])
+                try:
+                    require(evidence is not None, 'video-gate: missing exact run record')
+                    if not evidence.get('exempt'):
+                        require(evidence.get('contract') == 'v4', 'video-gate: missing exact v4 run record')
+                        require(evidence.get('result') == 'passed', 'video-gate: scenario record did not pass')
+                        video_status(evidence)
+                except ValueError as error:
+                    production_refusal = sanitize_text(str(error))
+            attempts = [{**e, 'verdict': next(c['verdict'] for c in cases if c['id'] == case_id),
+                         'execution': 'aborted' if production_refusal else 'completed'}
+                        for case_id, e in desktop_evidence.items() if not e.get('exempt')
+                        or next(c['verdict'] for c in cases if c['id'] == case_id) != 'passed']
+            data = canonical(review_list(attempts, old, predecessor))
+            write(folder / 'final-review.json', data)
+            artifacts.append({'path': 'final-review.json', 'sha256': sha(data), 'bytes': len(data), 'kind': 'configuration'})
         record = finish_record(bundle, folder, family, args, env, before_source, subject,
                                binaries(name) if family == 'dotnet' else post_subject, started, utc(), exit_code,
-                               cases, expected, artifacts, diagnostics, tools, profile)
-        exit_codes.append(exit_code)
+                               cases, expected, artifacts, diagnostics, tools, profile, desktop_evidence, production_refusal)
+        if production_refusal: print('REFUSED: desktop production: ' + production_refusal)
+        exit_codes.append(1 if production_refusal else exit_code)
         print(f'{family}/{name}: {dict(collections.Counter(c["verdict"] for c in record["cases"]))}, missing={len(record["missingCases"])}')
     return 1 if any(exit_codes) else 0
 
 
 def validate_record(record, folder, archive_root=None):
+    require(record.get('contract') in (None, 'v4'), 'record: unsupported contract')
+    if record.get('contract') == 'v4' and record.get('profile') == 'desktop':
+        require(record.get('productionStatus') == 'eligible', 'video-gate: desktop production refused: ' + str(record.get('productionRefusal')))
+        require(isinstance(record.get('desktopCaseIds'), list), 'video-gate: desktop inventory missing')
+        for case in record['cases']:
+            evidence = record.get('desktopEvidence', {}).get(case['id'])
+            if case['id'] in record['desktopCaseIds'] and case['verdict'] == 'passed':
+                require(evidence is not None, 'video-gate: desktop evidence missing')
+                if evidence.get('exempt'):
+                    require(case['unit'].rsplit('.', 1)[-1] in ('ObservedRunTests', 'PlotViewTests'), 'video-gate: undeclared exemption')
+                    continue
+                require(evidence.get('contract') == 'v4', 'video-gate: missing exact v4 run record')
+                require(evidence.get('result') == 'passed', 'video-gate: scenario record did not pass')
+                video_status(evidence)
     require(record.get('schemaVersion') == 1, 'record: unsupported schema')
     require(re.fullmatch(r'[0-9a-f]{40}', record['source']['commit']), 'record: invalid commit')
     require(all(re.fullmatch(r'[0-9a-f]{64}', h) for h in record['source']['files'].values()), 'record: invalid source hash')
@@ -1155,6 +1279,8 @@ def main():
                                 help='cocotb interpreter command prefix, e.g. --python py -3.13')
     collect_parser.add_argument('--profile', choices=('normal', 'desktop'), default='normal',
                                 help="desktop: the UI test project with GCAM_UI_TESTS=1 (author's go; moves the mouse)")
+    collect_parser.add_argument('--approvals', type=Path)
+    collect_parser.add_argument('--previous', help='predecessor bundle, or none for the first desktop milestone')
     for action in ('generate', 'check'):
         p = sub.add_parser(action)
         p.add_argument('--bundle', type=Path)
@@ -1171,7 +1297,7 @@ def main():
     args = parser.parse_args()
     if args.action == 'collect':
         require(args.python is None or args.family == 'cocotb', '--python is for the cocotb family')
-        return collect(args.out, args.family, args.no_build, args.include_background, args.checker, args.python, args.profile)
+        return collect(args.out, args.family, args.no_build, args.include_background, args.checker, args.python, args.profile, args.approvals, args.previous)
     if args.action == 'check-catalog':
         check_catalog(args.discover or args.update_discovery, args.update_discovery)
     elif args.action == 'self-test':

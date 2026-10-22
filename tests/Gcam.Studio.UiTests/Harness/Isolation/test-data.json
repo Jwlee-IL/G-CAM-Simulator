@@ -1,0 +1,23 @@
+{
+  "contract": "v4",
+  "userImportSlot": false,
+  "deploymentFiles": [
+    "CommunityToolkit.Mvvm.dll",
+    "Gcam.Configuration.dll", "Gcam.Core.dll", "Gcam.Decoding.dll", "Gcam.Detector.dll", "Gcam.Masks.dll", "Gcam.Simulation.dll",
+    "Gcam.Studio.Core.dll", "Gcam.Studio.Services.dll", "Gcam.Studio.deps.json", "Gcam.Studio.dll", "Gcam.Studio.exe", "Gcam.Studio.runtimeconfig.json",
+    "Microsoft.Extensions.DependencyInjection.Abstractions.dll", "Microsoft.Extensions.DependencyInjection.dll", "Microsoft.Extensions.Logging.Abstractions.dll",
+    "PdfSharp-wpf.dll", "PdfSharp.BarCodes-wpf.dll", "PdfSharp.Charting-wpf.dll", "PdfSharp.Cryptography.dll", "PdfSharp.Quality-wpf.dll",
+    "PdfSharp.Shared.dll", "PdfSharp.Snippets-wpf.dll", "PdfSharp.System.dll", "PdfSharp.WPFonts.dll",
+    "ambient/terrestrial-unscear2000-v1.json"
+  ],
+  "dataFiles": [{"path": "ambient/terrestrial-unscear2000-v1.json", "sha256": "4d48bc4272ce4c25ff6ae9b13ed7583e3c8f467afffdb0225956a70cc435b3f4"}],
+  "embeddedData": [{"assembly": "Gcam.Studio.Services.dll", "resource": "Gcam.Studio.Services.ReadoutOfferRecord.json", "sha256": "24b3bf6714e9b856a9b8aaac8d95c2bdbd212659808172440716e15fdeda8b6a"}],
+  "typedScenes": {"id": "harness-typed-scenes", "kind": "synthetic", "generator": "Scenario and ManualScenario scripts in the identified UI test assembly; scenarioId identifies the selected script"},
+  "peers": {
+    "status": "charter-exception",
+    "charterReference": "docs/AGENTS.UiAutomation.md#1-safety",
+    "reason": "A firewall rule needs elevated OS policy changes; a restricted-container launch changes the tested environment.",
+    "residualRisk": "Native framework and driver connections are not technically blocked. Managed shell IL inspection does not cover every dependency. Observation is not prevention.",
+    "allowedPeers": []
+  }
+}

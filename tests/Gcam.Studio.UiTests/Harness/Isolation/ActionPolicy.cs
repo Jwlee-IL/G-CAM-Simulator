@@ -9,14 +9,20 @@ public sealed class ActionPolicy
     public sealed record Entry(string Target, string SemanticAction, string Effect, string Policy, string[] Operations, string[] ControlTypes);
     public sealed record Document(int SchemaVersion, string ApprovalStatus, Entry[] Targets);
     private readonly Document _document;
-    public ActionPolicy(Document document)
+    public string? DocumentSha256 { get; }
+    public ActionPolicy(Document document, string? documentSha256 = null)
     {
         if (document.SchemaVersion != 1 || document.Targets.Select(t => t.Target).Distinct().Count() != document.Targets.Length)
             throw new InvalidDataException("Unknown or duplicate action policy");
         _document = document;
+        DocumentSha256 = documentSha256;
     }
-    public static ActionPolicy Load(string path) => new(JsonSerializer.Deserialize<Document>(File.ReadAllText(path),
-        new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? throw new InvalidDataException("Missing policy"));
+    public static ActionPolicy Load(string path)
+    {
+        byte[] bytes = File.ReadAllBytes(path);
+        return new(JsonSerializer.Deserialize<Document>(bytes, new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
+            ?? throw new InvalidDataException("Missing policy"), IsolationPaths.Hash(bytes));
+    }
 
     public Entry Require(string target, string operation, string? controlType = null, bool qualified = false)
     {

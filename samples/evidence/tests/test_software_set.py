@@ -43,7 +43,7 @@ def change_zip(data, transform):
     return output.getvalue()
 
 
-def pdf_fixture(text='GCAM-SW-SRS Demo banner', action=False, cmap_array=False, literal=False, type3=False, actual=False):
+def pdf_fixture(text='GCAM-SW-SRS Demo banner', action=False, cmap_array=False, literal=False, type3=False, actual=False, jpeg_image=None, image_uses=3):
     # Independent minimal PDF oracle with real offsets, indirect resources, compressed streams and a ToUnicode map.
     chars = sorted(set(text)); mapping = {c: i + 1 for i, c in enumerate(chars)}
     pairs = '\n'.join(f'<{n:04X}> <{ord(c):04X}>' for c, n in mapping.items())
@@ -61,6 +61,8 @@ def pdf_fixture(text='GCAM-SW-SRS Demo banner', action=False, cmap_array=False, 
         show = b'(' + encoded + b') Tj'
     else:
         show = b'<' + encoded.hex().encode() + b'> Tj'
+    if jpeg_image is not None:
+        show += b' ET\n' + b'/Photo Do\n' * image_uses + b'BT '
     def stream(data):
         raw = zlib.compress(data)
         return b'<< /Length ' + str(len(raw)).encode() + b' /Filter /FlateDecode >>\nstream\n' + raw + b'\nendstream'
@@ -70,6 +72,9 @@ def pdf_fixture(text='GCAM-SW-SRS Demo banner', action=False, cmap_array=False, 
                b'<< /Type /Page /Parent 2 0 R /Resources 7 0 R /MediaBox [0 0 595 842] /Contents [4 0 R] >>',
                stream(b'BT /F1 10 Tf ' + show + b' ET'), b'<< /Type /Font /Subtype /' + (b'Type3' if type3 else b'Type0') + b' /ToUnicode 6 0 R >>',
                stream(cmap.encode()), b'<< /Font << /F1 5 0 R >> >>']
+    if jpeg_image is not None:
+        objects[6] = b'<< /Font << /F1 5 0 R >> /XObject << /Photo 8 0 R >> >>'
+        objects.append(b'<< /Type /XObject /Subtype /Image /Width 8 /Height 8 /Filter /DCTDecode /Length ' + str(len(jpeg_image)).encode() + b' >>\nstream\n' + jpeg_image + b'\nendstream')
     if action:
         objects.append(b'<< /Type /Action /S /URI /URI (https://example.invalid/) >>')
     result, offsets = bytearray(b'%PDF-1.7\n'), [0]

@@ -298,20 +298,27 @@ def case_unit(case, units):
     return candidates[0]
 
 
-def assemble():
+def assemble(milestone="M3"):
     """Return documents, provenance, and all repository-relative semantic input paths."""
     tr = testing_module()
-    selection, records, cases = tr.load_selection(M3)
-    require({r['source']['commit'] for r in records} == {M3_SUBJECT}, 'assembly: wrong M3 subject')
+    require(re.fullmatch(r"M[1-9][0-9]*", milestone or ""), "assembly: invalid milestone")
+    archive = ROOT / "samples/testing/records" / milestone
+    selection, records, cases = tr.load_selection(archive)
+    subjects = {r["source"]["commit"] for r in records}
+    require(len(subjects) == 1, "assembly: mixed milestone subjects")
+    subject = next(iter(subjects))
+    if milestone == 'M3':
+        require(subject == M3_SUBJECT, 'assembly: wrong M3 subject')
     require(all(r['provenance'] == 'formal' for r in records), 'assembly: M3 provenance changed')
-    archive_report = (M3 / 'report.md').read_text(encoding='utf-8')
-    require((ROOT / 'docs/VV.Tests.Results.md').read_text(encoding='utf-8') == archive_report,
+    archive_report = (archive / 'report.md').read_text(encoding='utf-8')
+    require(milestone != 'M3' or (ROOT / 'docs/VV.Tests.Results.md').read_text(encoding='utf-8') == archive_report,
             'assembly: results report no longer equals pinned M3')
-    catalog = (M3 / 'catalog.md').read_text(encoding='utf-8')
+    catalog = (archive / 'catalog.md').read_text(encoding='utf-8')
     entries = catalog_sections(catalog); units = {e['id']: e for e, _ in entries}
     require(len(units) == len(entries), 'assembly: duplicate unit')
     counts = collections.Counter(c['verdict'] for c in cases)
-    require(dict(counts) == {'passed': 1534, 'failed': 1, 'not_executed': 53}, 'assembly: M3 totals changed')
+    if milestone == 'M3':
+        require(dict(counts) == {'passed': 1534, 'failed': 1, 'not_executed': 53}, 'assembly: M3 totals changed')
     per_unit = {u: collections.Counter() for u in units}
     for case in cases:
         per_unit[case_unit(case, units)][case['verdict']] += 1
@@ -336,7 +343,7 @@ def assemble():
     documents['VVR'] = vvr
     str_source = 'docs/VV.Tests.Results.md'
     inputs.add(str_source)
-    blocks = parse('# Software test report\n\nSelected milestone M3; historical automated execution only. '
+    blocks = parse(f'# Software test report\n\nSelected milestone {milestone}; historical automated execution only. '
                    'Formal is collection provenance, not approval. Inspection, compiler and manual judgments remain separate.\n',
                    str_source)
     # The archived report has a single heading; map its original title to this report's title too.
@@ -344,7 +351,7 @@ def assemble():
     for part, title in [('A', 'GCAM Studio'), ('B', 'Simulation engine and supporting verification tools')]:
         selected = [c for c in cases if owner(c) == part]
         totals = collections.Counter(c['verdict'] for c in selected)
-        intro = f'## Part {part} — {title}\n\nSelected M3 cases: ' + ', '.join(
+        intro = f'## Part {part} — {title}\n\nSelected {milestone} cases: ' + ', '.join(
             f'{k}={totals[k]}' for k in ('passed', 'failed', 'not_executed')) + '.\n\n'
         blocks.extend(parse(intro, str_source))
         part_units = [u for u in units if ('A' if u.startswith('Gcam.Studio.') else 'B') == part]
@@ -373,7 +380,7 @@ def assemble():
                                    'source': str_source})
             if not detail:
                 blocks.append({'kind': 'para', 'runs': inline(c['verdict']), 'source': str_source})
-        if part == 'A':
+        if part == 'A' and milestone == 'M3':
             blocks.extend(parse('The selected Compare timeout remains failed despite 20 passing repeats; '
                                 'see [AN-18](VV.Studio.md#anomalies-and-gaps). Repeats are not substituted.\n', str_source))
         blocks.extend(parse('### Catalog appendix — Part ' + part + '\n', 'docs/VV.Tests.md'))
@@ -386,6 +393,12 @@ def assemble():
                                                           str(sum(per_unit[e['id']].values())) + '.'),
                                'source': 'docs/VV.Tests.md'})
             blocks.extend(section)
+    from ui_annex import annex
+    evidence_blocks, evidence_inputs = annex(archive, selection, records, cases)
+    # Place the evidence within Part A, before Part B.
+    position = next(i for i, b in enumerate(blocks) if b['kind'] == 'heading' and plain(b['runs']).startswith('Part B'))
+    blocks[position:position] = evidence_blocks
+    inputs.update(evidence_inputs)
     # Keep report diagnostics/gaps and run/provenance details verbatim, rather than inventing a summary.
     for label, first, last in [('Selected invocation provenance', '| Run |', '| Catalog unit |'),
                                ('Run diagnostics and known profile gaps', 'Run diagnostics:', None)]:
@@ -394,7 +407,7 @@ def assemble():
         text = first + (text.split(last, 1)[0] if last else text)
         blocks.extend(parse('## ' + label + '\n\n' + text, str_source))
     history = source('VV.Studio.History.md')
-    history[0]['runs'] = inline('History annex — dated verification records (not added to M3 totals)')
+    history[0]['runs'] = inline(f'History annex — dated verification records (not added to {milestone} totals)')
     blocks.extend(history)
     documents['STR'] = blocks
     links = LinkMap(documents); links.rewrite(documents)
@@ -404,12 +417,12 @@ def assemble():
             block['id'] = key.lower() + f'{i:04d}'
             if block['kind'] == 'diagram':
                 block['asset'] = 'diagram-' + sha(block['text'].encode())[:16]
-    inputs.update(p.relative_to(ROOT).as_posix() for p in M3.rglob('*') if p.is_file())
+    inputs.update(p.relative_to(ROOT).as_posix() for p in archive.rglob('*') if p.is_file())
     manual = sorted((ROOT / 'docs/manual/editions').glob('*/generation-record.json'))[-1].parent
     record = json.loads((manual / 'generation-record.json').read_text(encoding='utf-8'))
     manual_paths = [manual / n for n in ('generation-record.json', 'MANUAL.Studio.md', 'MANUAL.Studio.pdf', 'MANUAL.Studio.docx')]
     inputs.update(p.relative_to(ROOT).as_posix() for p in manual_paths)
-    provenance = {'testSubject': M3_SUBJECT, 'milestone': 'M3', 'totals': dict(counts), 'privacyRedactions': redactions,
+    provenance = {'testSubject': subject, 'milestone': milestone, 'totals': dict(counts), 'privacyRedactions': redactions,
                   'unitCount': len(units), 'partUnits': {'A': sum(u.startswith('Gcam.Studio.') for u in units),
                                                        'B': sum(not u.startswith('Gcam.Studio.') for u in units)},
                   'partTotals': {part: dict(collections.Counter(c['verdict'] for c in cases if owner(c) == part))
@@ -419,5 +432,6 @@ def assemble():
                              'pdfPages': record['formats']['pdf']['pages'],
                              'paths': {p.suffix[1:]: p.relative_to(ROOT).as_posix() for p in manual_paths[1:]},
                              'hashes': {p.name: sha(p.read_bytes()) for p in manual_paths}}}
-    require(provenance['partUnits'] == {'A': 101, 'B': 138}, 'assembly: unit inventory changed')
+    if milestone == 'M3':
+        require(provenance['partUnits'] == {'A': 101, 'B': 138}, 'assembly: unit inventory changed')
     return documents, provenance, sorted(inputs)

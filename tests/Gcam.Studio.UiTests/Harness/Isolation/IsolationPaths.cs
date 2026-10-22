@@ -11,9 +11,17 @@ public static partial class IsolationPaths
     [GeneratedRegex("^[A-Za-z0-9][A-Za-z0-9_-]{0,95}$")]
     private static partial Regex RunName();
 
-    public static string RunRoot(string temporaryRoot, string runId)
+    /// <summary>New runs require product-unique markers; historical path readers explicitly select the legacy contract.</summary>
+    public static void ValidateRunId(string runId, bool v4 = true)
     {
         if (!RunName().IsMatch(runId)) throw new ArgumentException("Invalid run ID", nameof(runId));
+        if (v4 && !runId.StartsWith("gcam-", StringComparison.Ordinal))
+            throw new ArgumentException("New v4 run ID must begin with gcam-", nameof(runId));
+    }
+
+    public static string RunRoot(string temporaryRoot, string runId, bool v4 = true)
+    {
+        ValidateRunId(runId, v4);
         return Path.Combine(Path.GetFullPath(temporaryRoot), "gcam-uia-" + runId);
     }
 

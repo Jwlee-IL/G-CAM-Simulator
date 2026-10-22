@@ -20,9 +20,16 @@ public sealed class ManualRecordTests
         """);
 
     private static ManualRun Fixture(Dictionary<string, string>? labels = null) =>
-        new("manual.fixture", new ManualRegistry(Registry, Notices), "unused", "20261014-120000-abcdef",
+        new("manual.fixture", new ManualRegistry(Registry, Notices), "unused", "gcam-20261014-120000-abcdef",
             new DateTimeOffset(2026, 10, 14, 12, 0, 0, TimeSpan.FromHours(9)),
             (id, _) => (labels ?? new() { ["StartAcquisition"] = "Start" }).GetValueOrDefault(id, ""));
+
+    [Fact]
+    public void NewManualRun_RefusesAnUnprefixedRunIdBeforeRecording()
+    {
+        Assert.Throws<ArgumentException>(() => new ManualRun("manual.fixture", new ManualRegistry(Registry, Notices),
+            "unused", "manual-20261022-01", DateTimeOffset.UnixEpoch, (_, _) => ""));
+    }
 
     [Fact]
     public void ImageRect_FloorsTheNearEdgeAndCeilsTheFarEdge_AtFractionalAndNegativeOrigins()
@@ -59,6 +66,34 @@ public sealed class ManualRecordTests
     }
 
     [Fact]
+    public void ReaderStepsAndActionLog_UseTheRecordingsExactIds()
+    {
+        var record = new RunRecord("synthetic-id-contract");
+        using var scratch = ObservationFixtures.Scratch();
+        var video = new VideoRecorder(scratch, "synthetic", record.RunId, 64, 48,
+            privacy => new(new byte[64 * 48 * 4], [], [], privacy), () => new IdSink(),
+            new('a', 40), false, new('b', 64), new('c', 64));
+        try
+        {
+            record.Video = video;
+            record.Step("action");
+            var run = Fixture(); run.Record = record;
+            run.BeginStep("Click {StartAcquisition}.");
+            Assert.Equal(new[] { "action-0001", "action-0002" }, record.ExecutedStepIds);
+            Assert.Equal(record.ExecutedStepIds[1], run.Steps[0].VideoStepId);
+            foreach (string id in record.ExecutedStepIds)
+                Assert.Throws<ArgumentException>(() => video.RecordStep("duplicate", id));
+        }
+        finally { video.Complete(false); Directory.Delete(record.Directory, recursive: true); }
+    }
+    private sealed class IdSink : VideoRecorder.ISink
+    {
+        public void Write(byte[] pixels, long time100ns, long duration100ns) { }
+        public void Finish() { }
+        public void Dispose() { }
+    }
+
+    [Fact]
     public void Record_ResolvesScreenLabels_AggregatesTheWorstStep_AndWritesTheGeneratorSchema()
     {
         var run = Fixture();
@@ -74,6 +109,7 @@ public sealed class ManualRecordTests
         using var doc = JsonDocument.Parse(bytes);
         var root = doc.RootElement;
         Assert.Equal("gcam.manual-run", root.GetProperty("schema").GetString());
+        Assert.Equal("v4", root.GetProperty("contract").GetString());
         Assert.Equal("2.4", root.GetProperty("chapter").GetProperty("number").GetString());
         Assert.Equal("2026-10-14T12:00:00.000+09:00", root.GetProperty("startedAt").GetString());
         Assert.Equal("failed", root.GetProperty("status").GetString());
@@ -132,7 +168,7 @@ public sealed class ManualRecordTests
     public void Labels_ReplacedButtons_KeepTheActionLabelAndRefreshContinue()
     {
         var visible = new Dictionary<string, string> { ["StartAcquisition"] = "Start" };
-        var run = new ManualRun("manual.fixture", new ManualRegistry(Registry, Notices), "unused", "fixture", DateTimeOffset.UnixEpoch,
+        var run = new ManualRun("manual.fixture", new ManualRegistry(Registry, Notices), "unused", "gcam-fixture", DateTimeOffset.UnixEpoch,
             (id, _) => visible.TryGetValue(id, out var text) ? text : throw new SelectorMatchException(id, 0));
         run.BeginStep("Click {StartAcquisition}; it becomes {StopAcquisition}.");
         visible.Clear(); visible["StopAcquisition"] = "Stop";
@@ -172,10 +208,10 @@ public sealed class ManualRecordTests
     [Fact]
     public void Labels_AmbiguousSelectorAndOtherReadFailures_AreNotCachedAway()
     {
-        var run = new ManualRun("manual.fixture", new ManualRegistry(Registry, Notices), "unused", "fixture", DateTimeOffset.UnixEpoch,
+        var run = new ManualRun("manual.fixture", new ManualRegistry(Registry, Notices), "unused", "gcam-fixture", DateTimeOffset.UnixEpoch,
             (id, _) => throw new SelectorMatchException(id, 2));
         Assert.Throws<SelectorMatchException>(() => run.BeginStep("Click {StartAcquisition}."));
-        var broken = new ManualRun("manual.fixture", new ManualRegistry(Registry, Notices), "unused", "fixture", DateTimeOffset.UnixEpoch,
+        var broken = new ManualRun("manual.fixture", new ManualRegistry(Registry, Notices), "unused", "gcam-fixture", DateTimeOffset.UnixEpoch,
             (_, _) => throw new IOException("reader failed"));
         Assert.Throws<IOException>(() => broken.BeginStep("Click {StartAcquisition}."));
     }

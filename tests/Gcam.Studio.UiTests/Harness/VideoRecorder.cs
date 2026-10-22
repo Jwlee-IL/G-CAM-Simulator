@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Text;
 using System.Text.Json;
 using Gcam.Studio.UiTests.Harness.Isolation;
+using Gcam.Studio.UiTests.Harness.Video;
 
 namespace Gcam.Studio.UiTests.Harness;
 
@@ -9,33 +10,53 @@ namespace Gcam.Studio.UiTests.Harness;
 public sealed class VideoRecorder
 {
     public sealed record Provenance(string RunId, string TestId, string VideoSha256, string CaptionsSha256);
-    public interface ISink : IDisposable { void Write(byte[] pixels, long time100ns, long duration100ns); void Finish(); }
+    public interface ISink : IDisposable
+    {
+        void Write(byte[] pixels, long time100ns, long duration100ns); void Finish();
+        /// <summary>See <see cref="MediaFoundationWriter.KeyFrameForcing"/>; a sink without an encoder reports none.</summary>
+        string KeyFrameForcing => "not-reported";
+    }
     private sealed class Sink(string path, int width, int height) : ISink
     {
         private readonly MediaFoundationWriter _writer = new(path, width, height);
         public void Write(byte[] pixels, long time100ns, long duration100ns) => _writer.Write(pixels, time100ns, duration100ns);
         public void Finish() => _writer.Finish();
+        public string KeyFrameForcing => _writer.KeyFrameForcing;
         public void Dispose() => _writer.Dispose();
     }
     private sealed record Pending(VideoCapture.Frame Frame, long Time100ns);
     private readonly object _gate = new();
-    private readonly Stopwatch _clock = Stopwatch.StartNew();
+    private readonly Stopwatch _clock = new();
+    private readonly DateTimeOffset _anchorUtc;
+    private readonly long _monotonicStart;
+    private long _monotonicEnd;
     private readonly Func<bool, VideoCapture.Frame> _capture;
     private readonly Func<ISink> _sink;
     private readonly string _folder, _id, _run, _commit, _binary, _deployment;
     private readonly bool _dirty;
     private readonly int _width, _height;
     private readonly Thread _captureThread, _encodeThread;
+    private readonly ManualResetEventSlim _encoderReady = new();
     private readonly List<VideoTimeline.Step> _steps = [];
+    private readonly List<VideoTimeline.Step> _late = [];
+    private readonly HashSet<string> _ids = new(StringComparer.Ordinal);
+    private int _generated;
+    private bool _entryFinal;
+    private string _status = "recording";
+    private string? _keyFrameForcing;
     private readonly Dictionary<int, Func<string>> _resolvedSteps = [];
     private readonly List<VideoEntry.MaskRange> _masks = [];
+    private readonly List<VideoEvidence.MaskSample> _maskSamples = [];
     private Pending? _pending;
     private volatile bool _stopping, _privacy, _abandoned;
     private int _privacyEpoch, _captured, _dropped, _frames, _masked, _private;
     private long _end, _duration;
     private string? _error;
     private VideoEntry? _entry;
+    public VideoEntry? Entry => _entry;
+    public VideoCheckResult? Check => _entry?.Check;
     private bool _stopped;
+    private bool _completed;
     public string Mp4 => Path.Combine(_folder, "attempt.mp4");
     public string Vtt => Path.Combine(_folder, "attempt.vtt");
     public static bool Enabled(string? value) => value != "0";
@@ -68,20 +89,77 @@ public sealed class VideoRecorder
         _encodeThread = new(Encode) { IsBackground = true, Name = "GCAM video encoder" };
         _encodeThread.SetApartmentState(ApartmentState.MTA);
         _captureThread = new(Capture) { IsBackground = true, Name = "GCAM video capture" };
-        _encodeThread.Start(); _captureThread.Start();
+        _encodeThread.Start();
+        if (!_encoderReady.Wait(TimeSpan.FromSeconds(5)))
+        {
+            _abandoned = true; _stopping = true;
+            lock (_gate) Monitor.PulseAll(_gate);
+            throw new TimeoutException("Video encoder startup timed out");
+        }
+        if (_error is not null) throw new IOException("Video encoder startup failed: " + _error);
+        // Constructor completion means recording is ready, before callers execute their first step.
+        _anchorUtc = DateTimeOffset.UtcNow; _monotonicStart = Stopwatch.GetTimestamp(); _clock.Start();
+        _captureThread.Start();
     }
     private long Now => _clock.Elapsed.Ticks;
-    /// <summary>A caption. While the picture is suppressed only the generic pause caption is kept: dialog steps can
-    /// name folders.</summary>
-    public void Step(string text) { if (!_privacy) lock (_gate) _steps.Add(new(Now, text)); }
-    public void Step(Func<string> resolvedText)
+    /// <summary>Suppressed steps retain their identity with generic text; native dialog details can name folders.</summary>
+    public void Step(string text) => RecordStep(text);
+    /// <summary>Records an executed step and returns its stable ID. Explicit IDs are safe identifiers outside the
+    /// generated <c>step-N</c> form, so generated and explicit IDs never collide. A step after <see cref="Stop"/> never
+    /// throws: it is kept as a late step, which cannot map to a cue, so the video check fails step coverage.</summary>
+    public string RecordStep(string text, string? id = null)
     {
-        if (!_privacy) lock (_gate) { _resolvedSteps[_steps.Count] = resolvedText; _steps.Add(new(Now, "")); }
+        lock (_gate)
+        {
+            if (_completed) throw new InvalidOperationException("Recording is complete; no further executed steps are accepted");
+            if (id is null) do id = $"step-{++_generated:0000}"; while (_ids.Contains(id));
+            else if (!System.Text.RegularExpressions.Regex.IsMatch(id, @"\A[A-Za-z0-9_-]+\z") || GeneratedId().IsMatch(id) || _ids.Contains(id))
+                throw new ArgumentException("Step IDs must be unique safe identifiers outside the generated step-N form", nameof(id));
+            _ids.Add(id);
+            var step = new VideoTimeline.Step(Now, _privacy ? "Private dialog step — picture suppressed" : VideoTimeline.SafeText(text), id, _privacy);
+            if (!_stopped) { _steps.Add(step); return id; }
+            _late.Add(step);
+            if (_entryFinal) ApplyLate([step]);
+            return id;
+        }
+    }
+    private static System.Text.RegularExpressions.Regex GeneratedId() => new(@"\Astep-[0-9]+\z");
+    /// <summary>Marks late steps unmapped in the recorded check at once (no re-decode); <see cref="Complete"/> re-runs the
+    /// full check on the updated evidence. Caller holds the gate.</summary>
+    private void ApplyLate(VideoTimeline.Step[] late)
+    {
+        if (_entry?.Evidence is not { } evidence || _entry.Check is not { } check) return;
+        var ids = late.Select(s => s.Id).ToArray();
+        _entry = _entry with
+        {
+            Evidence = evidence with { Steps = [.. evidence.Steps, .. late], LateStepIds = [.. evidence.LateStepIds, .. ids] },
+            Check = check with { Passed = false, FailedCriteria = check.FailedCriteria.Append("step-coverage").Distinct().Order().ToArray(),
+                UnmappedStepIds = [.. check.UnmappedStepIds, .. ids] },
+        };
+        try { SaveStatus(_status); } catch { }
+    }
+    public void Step(Func<string> resolvedText)
+        => RecordStep(resolvedText);
+    public string RecordStep(Func<string> resolvedText, string? id = null)
+    {
+        lock (_gate)
+        {
+            if (_stopped) return RecordStep(_privacy ? "" : resolvedText(), id);
+            int i = _steps.Count;
+            string actual = RecordStep("", id);
+            if (!_privacy) _resolvedSteps[i] = resolvedText;
+            return actual;
+        }
     }
     public void Privacy(bool suppressed)
     {
-        if (suppressed) Step("Private dialog — picture suppressed");
-        _privacy = suppressed; Interlocked.Increment(ref _privacyEpoch);
+        lock (_gate)
+        {
+            if (suppressed == _privacy) return; // a no-op change makes no transition frame, step or interval
+            if (_privacy && !suppressed) RecordStep("Privacy interval ending");
+            _privacy = suppressed; Interlocked.Increment(ref _privacyEpoch);
+            if (suppressed) RecordStep("Privacy interval beginning");
+        }
     }
     private void Capture()
     {
@@ -112,6 +190,7 @@ public sealed class VideoRecorder
         try
         {
             using var sink = _sink();
+            _encoderReady.Set();
             while (true)
             {
                 Pending? next;
@@ -125,9 +204,10 @@ public sealed class VideoRecorder
                 // Timestamp gaps preserve wall time if slots were dropped; there is no third retained frame.
                 Write(sink, next, VideoTimeline.Period100ns);
             }
+            _keyFrameForcing = sink.KeyFrameForcing;
             if (!_abandoned) sink.Finish();
         }
-        catch (Exception e) { Fault(e); }
+        catch (Exception e) { Fault(e); _encoderReady.Set(); }
     }
     private void Write(ISink sink, Pending item, long duration)
     {
@@ -142,35 +222,61 @@ public sealed class VideoRecorder
             else _masks.Add(range);
         }
         if (item.Frame.Privacy) _private++;
+        if (item.Frame.Masks.Length > 0 || item.Frame.Privacy)
+            _maskSamples.Add(new(_frames, item.Time100ns, item.Time100ns + duration, item.Frame.Privacy,
+                item.Frame.Reasons, item.Frame.Masks));
         _frames++; _duration = item.Time100ns + Math.Max(1, duration);
     }
     private void Fault(Exception e)
     {
-        _error = e.GetType().Name; _stopping = true; _end = Now;
+        _error = e.GetType().Name; _stopping = true; _end = Now; _monotonicEnd = Stopwatch.GetTimestamp();
         lock (_gate) Monitor.PulseAll(_gate);
     }
-    public Provenance? Stop(TimeSpan? budget = null)
+    /// <summary>Stop pixels before closing the HWND; defer decoding until the owned process is closed.</summary>
+    public void StopCapture(TimeSpan? budget = null)
     {
-        if (_stopped) return ProvenanceOfEntry();
-        _stopped = true; _end = Now; _stopping = true;
-        lock (_gate) Monitor.PulseAll(_gate);
+        if (_stopped) return;
+        lock (_gate) { _stopped = true; _end = Now; _monotonicEnd = Stopwatch.GetTimestamp(); _stopping = true; Monitor.PulseAll(_gate); }
         var wait = Stopwatch.StartNew(); TimeSpan limit = budget ?? TimeSpan.FromSeconds(5);
         if (!_captureThread.Join(limit) || !_encodeThread.Join(TimeSpan.FromTicks(Math.Max(0, (limit - wait.Elapsed).Ticks))))
         { _abandoned = true; _error = "stop-timeout"; }
+    }
+    public Provenance? Stop(TimeSpan? budget = null)
+    {
+        if (_entryFinal) return ProvenanceOfEntry();
+        StopCapture(budget);
         try
         {
             if (_error is null && _frames > 0)
             {
                 VideoTimeline.Step[] steps;
-                lock (_gate) steps = _steps.Select((s, i) => _resolvedSteps.TryGetValue(i, out var text) ? s with { Text = text() } : s).ToArray();
-                File.WriteAllText(Vtt, VideoTimeline.Captions(steps, _duration), new UTF8Encoding(false));
+                lock (_gate) steps = _steps.Select((s, i) => _resolvedSteps.TryGetValue(i, out var text) ? s with { Text = VideoTimeline.SafeText(text()) } : s).ToArray();
+                var cues = VideoTimeline.Cues(steps, _duration);
+                File.WriteAllText(Vtt, VideoTimeline.Captions(cues), new UTF8Encoding(false));
+                var privacy = new List<VideoEvidence.PrivacyInterval>();
+                foreach (var mask in _maskSamples.Where(m => m.Privacy))
+                {
+                    if (privacy.Count > 0 && privacy[^1].End100ns == mask.Start100ns)
+                        privacy[^1] = privacy[^1] with { End100ns = mask.End100ns };
+                    else privacy.Add(new(mask.Start100ns, mask.End100ns, "Native dialog privacy suppression", []));
+                }
+                privacy = privacy.Select(p => p with { StepIds = steps.Where(s => s.Privacy && s.Time100ns >= p.Start100ns - VideoChecker.IntervalTolerance100ns
+                    && s.Time100ns <= p.End100ns + VideoChecker.IntervalTolerance100ns).Select(s => s.Id).ToArray() }).ToList();
+                var evidence = new VideoEvidence(new(_anchorUtc, _monotonicStart, _monotonicEnd, Stopwatch.Frequency), steps, cues,
+                    privacy.ToArray(), _maskSamples.ToArray()) { KeyFrameForcing = _keyFrameForcing };
                 _entry = new(_run, DateTimeOffset.UtcNow, _commit, _dirty, _binary, _deployment,
                     new(_id + ".mp4", IsolationPaths.Hash(File.ReadAllBytes(Mp4)), new FileInfo(Mp4).Length),
                     new(_id + ".vtt", IsolationPaths.Hash(File.ReadAllBytes(Vtt)), new FileInfo(Vtt).Length),
-                    _duration, _width, _height, _frames, _captured, _dropped, _masked, _private, _masks.ToArray());
+                    _duration, _width, _height, _frames, _captured, _dropped, _masked, _private, _masks.ToArray()) { Evidence = evidence };
                 _entry.Validate();
+                _entry = _entry with { Check = VideoChecker.Check(Mp4, Vtt, evidence, _entry) };
             }
-            SaveStatus(_entry is null ? "unavailable" : "encoded");
+            lock (_gate)
+            {
+                _entryFinal = true; _status = _entry is null ? "unavailable" : "encoded";
+                if (_late.Count > 0) ApplyLate(_late.ToArray());
+                SaveStatus(_status);
+            }
         }
         catch (Exception e) { _entry = null; _error = e.GetType().Name; }
         return ProvenanceOfEntry();
@@ -178,14 +284,39 @@ public sealed class VideoRecorder
     private Provenance? ProvenanceOfEntry() => _entry is null ? null : new(_run, _id, _entry.Video.Sha256, _entry.Captions.Sha256);
     public void Complete(bool passed)
     {
+        lock (_gate) { if (_completed) return; _completed = true; }
         try
         {
             Stop();
-            if (passed && _entry is not null) VideoPublisher.Publish(LatestRoot, _id, _entry, Mp4, Vtt);
-            SaveStatus(_entry is null ? "unavailable" : passed ? "published" : "failed-test-retained");
+            VideoEntry? withLate;
+            lock (_gate) withLate = _entry?.Evidence is { LateStepIds.Length: > 0 } ? _entry : null;
+            if (withLate is not null) // the exact check on the evidence including late steps, decoded outside the gate
+            {
+                var exact = VideoChecker.Check(Mp4, Vtt, withLate.Evidence, withLate);
+                lock (_gate) if (ReferenceEquals(_entry, withLate)) _entry = _entry with { Check = exact };
+            }
+            if (passed && _entry?.Check?.Passed == true) VideoPublisher.Publish(LatestRoot, _id, _entry, Mp4, Vtt);
+            SaveStatus(_entry is null ? "unavailable" : !passed ? "failed-test-retained" : _entry.Check?.Passed == true ? "published" : "video-check-failed");
         }
         catch (Exception e) { _error = e.GetType().Name; try { SaveStatus("unavailable"); } catch { } }
+        finally { lock (_gate) _completed = true; }
     }
-    private void SaveStatus(string status) => File.WriteAllBytes(Path.Combine(_folder, "video-status.json"),
-        JsonSerializer.SerializeToUtf8Bytes(new { status, error = _error, testId = _id, runId = _run }, VideoEntry.Json));
+    /// <summary>The run record's copy of this attempt's video status, serialised with the same camelCase property shape as
+    /// <c>video-status.json</c> (contract, runId, testId, videoSha256, check, evidence), so a record written with other options
+    /// (the run record keeps its historical PascalCase values, the UI manifest's evidence its defaults) still embeds exactly
+    /// what the production gate reads. One field differs on purpose: <c>status</c> here is the check verdict at the time the
+    /// record is saved (<c>passed</c> / <c>failed</c>, what the gate requires), while <c>video-status.json</c>'s
+    /// <c>status</c> is the publication outcome written later by <see cref="Complete"/> (<c>published</c>,
+    /// <c>failed-test-retained</c>, <c>video-check-failed</c>, <c>encoded</c>, <c>unavailable</c>).</summary>
+    public JsonElement StatusRecord() => JsonSerializer.SerializeToElement(new { contract = "v4", runId = _run, testId = _id,
+        status = _entry?.Check?.Passed == true ? "passed" : "failed", videoSha256 = _entry?.Video.Sha256,
+        canvas = new { widthPx = _width, heightPx = _height },
+        check = _entry?.Check, evidence = _entry?.Evidence }, VideoEntry.Json);
+    private void SaveStatus(string status)
+    {
+        _status = status;
+        File.WriteAllBytes(Path.Combine(_folder, "video-status.json"),
+        JsonSerializer.SerializeToUtf8Bytes(new { contract = "v4", status, error = _error, testId = _id, runId = _run,
+            videoSha256 = _entry?.Check?.VideoSha256, canvas = new { widthPx = _width, heightPx = _height }, check = _entry?.Check, evidence = _entry?.Evidence }, VideoEntry.Json));
+    }
 }

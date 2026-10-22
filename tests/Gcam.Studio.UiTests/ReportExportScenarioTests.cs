@@ -4,6 +4,7 @@ using System.Runtime.InteropServices;
 using System.Windows.Automation;
 using Gcam.Configuration;
 using Gcam.Studio.UiTests.Harness;
+using Gcam.Studio.UiTests.Harness.Isolation;
 using Xunit.Abstractions;
 
 using static Gcam.Studio.UiTests.Harness.ReportExportDialog;
@@ -48,8 +49,9 @@ public sealed class ReportExportScenarioTests(ITestOutputHelper output)
                     ? "<sandbox>" + value[sandbox.Length..] : value;
                 var before = Directory.GetFiles(sandbox, "*", SearchOption.AllDirectories).ToHashSet();
                 int pid = ui.Element.Current.ProcessId;
-                // Arm before Invoke: even a lookup/cleanup failure must not capture the real Documents listing.
-                // Keep this suppression for the remainder of this scenario, including an unsuccessful cancellation.
+                // Arm before Invoke: even a lookup/cleanup failure must not capture the real Documents listing. The
+                // suppression ends as soon as the dialog's closing is confirmed (AwaitDialogClosed); every check after
+                // it is a visible step. If closure is never proven, it stays on.
                 record.OmitWindowDiagnosticsReason = "Native save dialog may display private folder contents.";
                 // The native dialog runs a nested message loop; keep the UIA caller free to drive it.
                 ui.Invoke("ExportReport");
@@ -57,6 +59,7 @@ public sealed class ReportExportScenarioTests(ITestOutputHelper output)
                 ui.Select("Export." + format);
                 var invoke = Task.Run(() => ui.Invoke("Export.Confirm"));
                 AutomationElement? dialog = null;
+                bool completed = false;
                 try
                 {
                     StudioWindow.WaitUntil(() =>
@@ -76,7 +79,8 @@ public sealed class ReportExportScenarioTests(ITestOutputHelper output)
                     SetFileName(filename, path, record.Step, Shown);
 
                     var save = FindSaveButton(dialog, dialogHandle, pid, record.Step);
-                    StudioWindow.Pattern<InvokePattern>(save, InvokePattern.Pattern).Invoke();
+                    var savePattern = StudioWindow.Pattern<InvokePattern>(save, InvokePattern.Pattern);
+                    PointerBoundary.Input(savePattern.Invoke);
                     record.Step("Save invoked");
                     if (AwaitSaveOutcome(ui.Element, pid, dialog, dialogHandle, FilesExist, record.Step, "after Save"))
                     {
@@ -86,6 +90,8 @@ public sealed class ReportExportScenarioTests(ITestOutputHelper output)
                         PostEnter(filename, dialogHandle, pid, record.Step);
                         AwaitSaveOutcome(ui.Element, pid, dialog, dialogHandle, FilesExist, record.Step, "after Enter fallback");
                     }
+                    // Privacy ends here, before the file and content checks below.
+                    AwaitDialogClosed(ui.Element, pid, dialog, dialogHandle, invoke, FilesExist, record);
                     try
                     {
                         StudioWindow.WaitUntil(FilesExist, TimeSpan.FromSeconds(10), $"{declared.Length} export files in owned sandbox");
@@ -138,6 +144,7 @@ public sealed class ReportExportScenarioTests(ITestOutputHelper output)
                     record.Step(extension == "csv"
                         ? $"event data, meta and scene written; scene loads; only {declared.Length} declared sandbox writes"
                         : $"report contains displayed estimate: {estimate}; scene loads; only {declared.Length} declared sandbox writes");
+                    completed = true;
                 }
                 finally
                 {
@@ -146,11 +153,13 @@ public sealed class ReportExportScenarioTests(ITestOutputHelper output)
                     {
                         CancelOwnedModalDialogs(ui.Element, pid, dialog, record.Step);
                     }
-                    catch (Exception error)
+                    catch (Exception error) when (!completed)
                     {
-                        // Preserve the original verdict; the harness still checks graceful exit. No dialog contents.
-                        record.Step($"Owned native dialog cleanup failed: {error.GetType().Name}");
+                        // Preserve the original failure (an exception here would replace it). After a completed body a
+                        // cleanup failure or an input refusal is not swallowed: it fails the scenario. No dialog contents.
+                        record.Diagnostic($"Owned native dialog cleanup failed: {error.GetType().Name}");
                     }
+                    finally { ResumeAfterPrivateDialog(ui.Element, pid, record); } // no-op once already visible
                 }
             }, extension);
 

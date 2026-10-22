@@ -8,12 +8,30 @@ namespace Gcam.Studio.UiTests;
 public sealed class ManualObservationTests
 {
     [Fact]
-    public void WithoutTheVariable_TheFixtureDoesNothing()
+    public void WithoutDesktopOptIn_TheFixtureDoesNothing()
     {
-        if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable(ManualObservation.DirectoryVariable))) return;   // observed runs only
-        using var fixture = new ManualObservation();
-        Assert.Null(fixture.RunDirectory);
-        Assert.Null(ManualObservation.Active);
+        foreach (string? optIn in new string?[] { null, "0" })
+        foreach (string? directory in new string?[] { null, "synthetic-observed-batch" })
+        {
+            var active = ManualObservation.Active; // A desktop collection may already own an active batch.
+            var values = new Dictionary<string, string?>
+            {
+                [DesktopFactAttribute.OptInVariable] = optIn,
+                [ManualObservation.DirectoryVariable] = directory,
+                ["GCAM_UI_APPROVALS"] = "synthetic-missing-approvals.json",
+                ["GCAM_UI_CACHE"] = "1",
+            };
+            var reads = new List<string>();
+            using (var fixture = new ManualObservation(name => { reads.Add(name); return values.GetValueOrDefault(name); }))
+            {
+                Assert.Null(fixture.RunDirectory);
+                Assert.Null(fixture.RunId);
+                Assert.Null(fixture.Package);
+                Assert.Same(active, ManualObservation.Active);
+                Assert.Equal(new[] { ManualObservation.DirectoryVariable, DesktopFactAttribute.OptInVariable }, reads);
+            }
+            Assert.Same(active, ManualObservation.Active);
+        }
     }
 
     [Fact]
@@ -46,7 +64,8 @@ public sealed class ManualObservationTests
         Assert.Equal((key, RegistryMarker.ValueName, true), (controls.GetProperty("registry").GetProperty("key").GetString(),
             controls.GetProperty("registry").GetProperty("valueName").GetString(), controls.GetProperty("registry").GetProperty("written").GetBoolean()));
         Assert.Equal("Gcam.Studio.exe", controls.GetProperty("process").GetString());
-        Assert.Equal(("network", "not_applicable"), (context.GetProperty("channelApplicability")[0].GetProperty("channel").GetString(), context.GetProperty("channelApplicability")[0].GetProperty("status").GetString()));
+        Assert.Equal("network", context.GetProperty("channelApplicability")[0].GetProperty("channel").GetString());
+        Assert.True(context.GetProperty("channelApplicability")[0].GetProperty("applicable").GetBoolean());
     }
 
     [Fact]

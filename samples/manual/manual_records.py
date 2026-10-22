@@ -31,6 +31,9 @@ import struct
 import sys
 import tempfile
 import zlib
+_ui_spec = importlib.util.spec_from_file_location('gcam_ui_contract', Path(__file__).resolve().parents[1] / 'testing/ui_contract.py')
+ui_contract = importlib.util.module_from_spec(_ui_spec)
+_ui_spec.loader.exec_module(ui_contract)
 
 REPO = Path(__file__).resolve().parents[2]
 FORMATS_PATH = Path(__file__).resolve().parent / 'manual_formats.py'
@@ -1249,9 +1252,13 @@ def resolve_tokens(text, chapters, printed):
     return TOKEN.sub(replace, text)
 
 
-def assemble(sources, runs, edition_id, date, formal, budget, reuse=None, generator=None, writer=None):
+def assemble(sources, runs, edition_id, date, formal, budget, reuse=None, generator=None, writer=None, previous=None, replay=False):
     """Returns {relative path: bytes} for the whole edition, generation record included."""
     registry, notices = sources['registry'], sources['notices']
+    v4 = any(r.get('contract') == 'v4' for _, r, _ in runs)
+    require(all(r.get('contract') in (None, 'v4') for _, r, _ in runs), 'run-contract: unsupported contract')
+    if not replay or v4:
+        require(previous is not None, 'final-review: --previous <edition> or --previous none is required')
     chapters = {c['number']: c for c in registry['chapters']}
     by_scenario = {}
     for folder, record, raw in runs:
@@ -1278,6 +1285,10 @@ def assemble(sources, runs, edition_id, date, formal, budget, reuse=None, genera
             elif record['status'] != 'passed':
                 omission = f'the latest run ({record["runId"]}) did not pass ({record["status"]})'
             else:
+                if not replay:
+                    require(record.get('contract') == 'v4', 'video-gate: new editions require v4 chosen runs')
+                if record.get('contract') == 'v4':
+                    ui_contract.video_status(record)
                 plans[chapter['number']] = (folder, record, validate_chosen(folder, record, sources, chapter))
                 printed.add(chapter['number'])
                 chosen_runs.add(record['runId'])
@@ -1380,6 +1391,11 @@ def assemble(sources, runs, edition_id, date, formal, budget, reuse=None, genera
                 outputs[f'sources/runs/{record["runId"]}/{item["path"]}'] = confined(folder, item['path']).read_bytes()
         run_rows.append({'runId': record['runId'], 'scenario': record['scenario'], 'sha256': sha(raw), 'retained': retained,
                          **({'video': record['video']} if 'video' in record else {})})
+    if v4:
+        attempts = [{'runId': r['runId'], 'scenario': r['scenario'], 'verdict': r['status'],
+            'execution': r['execution']['status'], 'sourceSha256': r.get('scenarioSourceSha256'), 'videoStatus': r.get('videoStatus')}
+            for _, r, _ in runs if r.get('contract') == 'v4']
+        outputs['final-review.json'] = canonical(ui_contract.review_list(attempts, previous['sources'], previous['id']))
     for relative, data in outputs.items():
         if relative.endswith('.json') or relative.endswith('.md'):
             require(not identity_leak(data.decode('utf-8')), 'identity-leak: ' + relative)
@@ -1408,6 +1424,9 @@ def assemble(sources, runs, edition_id, date, formal, budget, reuse=None, genera
               'runs': run_rows, 'chapters': chapter_rows, 'chapterOutputSha256': chapter_hashes, 'figures': figures_out,
               'outputs': {k: sha(v) for k, v in sorted(outputs.items())}, 'bytesExcludingRecord': size,
               'reviews': 'none recorded here: figure, source and edition review are the author\'s acts outside the generator'}
+    if v4:
+        record.update(contract='v4', previous=previous,
+            scenarioSources={r['scenario']: r.get('scenarioSourceSha256') for _, r, _ in runs if r.get('contract') == 'v4'})
     outputs['generation-record.json'] = canonical(record)
     total = size + len(outputs['generation-record.json'])
     require(total <= budget, f'budget: edition is {total} bytes, budget {budget}')
@@ -1424,13 +1443,39 @@ def identity_leak(text):
 
 # ---------------------------------------------------------------- commands
 
-def generate(sources_root, runs_root, edition_id, date, out, formal=False, budget=DEFAULT_BUDGET):
+def generate(sources_root, runs_root, edition_id, date, out, formal=False, budget=DEFAULT_BUDGET, previous=None):
     require(re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._-]{0,63}', edition_id or ''), 'edition: id')
     dt.date.fromisoformat(date)
     out = Path(out)
     require(not out.exists(), 'edition: output folder exists (editions are never overwritten)')
     sources = load_sources(sources_root)
-    outputs = assemble(sources, load_runs(runs_root, sources), edition_id, date, formal, budget)
+    predecessor = None
+    if previous is not None:
+        if str(previous) == 'none':
+            predecessor = {'id': 'none', 'sources': {}}
+        else:
+            raw = (Path(previous) / 'generation-record.json').read_bytes()
+            old = json.loads(raw)
+            predecessor = {'id': old['editionId'], 'sha256': sha(raw), 'sources': old.get('scenarioSources', {})}
+    runs = load_runs(runs_root, sources)
+    try:
+        outputs = assemble(sources, runs, edition_id, date, formal, budget, previous=predecessor)
+    except ValueError as error:
+        if str(error).startswith('video-gate:') and predecessor is not None:
+            attempts = [{'runId': r['runId'], 'scenario': r['scenario'], 'verdict': r['status'],
+                'execution': 'aborted', 'sourceSha256': r.get('scenarioSourceSha256'), 'videoStatus': r.get('videoStatus'),
+                'productionRefusal': str(error)} for _, r, _ in runs if r.get('contract') == 'v4']
+            data = canonical(ui_contract.review_list(attempts, predecessor['sources'], predecessor['id']))
+            require(not identity_leak(data.decode('utf-8')), 'identity-leak: final-review.json')
+            # Beside the output, never inside it: a refusal leaves no edition folder, so the edition ID stays free.
+            # An earlier refusal's list is never overwritten; this one is then printed instead.
+            out.parent.mkdir(parents=True, exist_ok=True)
+            try:
+                with out.with_name(out.name + '.final-review.json').open('xb') as review:
+                    review.write(data)
+            except FileExistsError:
+                print('final-review (not written, an earlier list exists beside the output):\n' + data.decode('utf-8'))
+        raise
     for relative, data in outputs.items():
         path = out / relative
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -1464,7 +1509,7 @@ def check(edition):
                 return None
         return None
     outputs = assemble(sources, runs, record['editionId'], record['date'], record['formal'], record['budgetBytes'],
-                       reuse, record['generator'], record.get('formats', {}).get('writer'))
+                       reuse, record['generator'], record.get('formats', {}).get('writer'), record.get('previous'), replay=True)
     actual = {p.relative_to(edition).as_posix() for p in edition.rglob('*') if p.is_file()}
     require(actual == set(outputs), 'check-differs: file set ' + ', '.join(sorted(actual ^ set(outputs))))
     for relative, data in outputs.items():
@@ -1497,7 +1542,7 @@ def fixture_png(width, height, words=()):
     return png_encode(width, height, b''.join(bytes(colour(x, y)) for y in range(height) for x in range(width)))
 
 
-def fixture(root):
+def fixture(root, legacy=False):
     """One valid input set: a static and two generated chapters, notices and two passed runs on one build."""
     src, runs = root / 'sources', root / 'runs'
     (src / 'static').mkdir(parents=True)
@@ -1539,6 +1584,12 @@ def fixture(root):
                              'figures': [{'id': number + '-1', 'capture': 'captures/f1.png', 'marks': 'captures/f1.marks.json',
                                           'caption': 'The top bar.'}], 'missingFigures': [], 'verdict': 'passed'}],
                   'evidence': evidence}
+        if not legacy:
+            record.update(contract='v4', executedStepIds=['action-0001'],
+                videoStatus={'contract': 'v4', 'runId': run_id, 'status': 'passed', 'videoSha256': 'b' * 64,
+                    'check': {'contract': 'v4', 'videoSha256': 'b' * 64, 'passed': True, 'failedCriteria': []},
+                    'evidence': {'steps': [{'id': 'action-0001'}]}})
+            record['steps'][0]['videoStepId'] = 'action-0001'
         (runs / run_id / 'manual-run.json').write_bytes(canonical(record))
     return src, runs
 
@@ -1562,7 +1613,7 @@ def self_test(out=None):
         src, runs = fixture(root)
         mutate(src, runs)
         try:
-            outputs = generate(src, runs, 'fixture-1', '2026-10-14', root / 'edition', formal, budget)
+            outputs = generate(src, runs, 'fixture-1', '2026-10-14', root / 'edition', formal, budget, previous='none')
         except ValueError as error:
             require(expect.startswith('refuse:') and str(error).startswith(expect[7:]), f'self-test: {name}: wrong refusal {error}')
             results.append((name, str(error)))
@@ -1622,8 +1673,9 @@ def self_test(out=None):
         record['steps'][0].update(verdict='failed', figures=[])
         (target / 'manual-run.json').write_bytes(canonical(record))
     def pin_video(src, runs):
+        # A v4 run's provenance names the checked video (its video status hash); the files themselves stay local.
         edit_json(run_file(runs, 'alpha'), lambda r: r.update(video={'runId': r['runId'], 'testId': 'manual.fixture',
-                  'videoSha256': 'a' * 64, 'captionsSha256': 'b' * 64}))
+                  'videoSha256': (r.get('videoStatus') or {}).get('videoSha256', 'a' * 64), 'captionsSha256': 'b' * 64}))
     video_edition = case('video-hash-without-files', pin_video, '### 1.3 Beta')
     check(video_edition)
     results.append(('video-hash-without-files-replay', 'check passed without videos'))
@@ -1781,6 +1833,7 @@ def main():
     p.add_argument('--date', required=True)
     p.add_argument('--out', type=Path, required=True)
     p.add_argument('--formal', action='store_true', help='refuse unless every chapter is printed and every source approved')
+    p.add_argument('--previous', help='predecessor edition folder, or none for the first v4 edition')
     p.add_argument('--budget-mib', type=float, default=DEFAULT_BUDGET / 1024 / 1024)
     p = sub.add_parser('check')
     group = p.add_mutually_exclusive_group(required=True)
@@ -1795,7 +1848,7 @@ def main():
               f'{len(sources["purposes"])} mark purposes, valid')
     elif args.action == 'generate':
         outputs = generate(args.sources, args.runs, args.edition_id, args.date, args.out, args.formal,
-                           int(args.budget_mib * 1024 * 1024))
+                           int(args.budget_mib * 1024 * 1024), args.previous)
         record = json.loads(outputs['generation-record.json'])
         print(f'edition {args.edition_id}: {record["status"]}, {len(outputs)} files, '
               f'{sum(len(v) for v in outputs.values())} bytes')

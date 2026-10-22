@@ -8,7 +8,70 @@ production steps run on machine verdicts only. It also carries two rules added i
 check for every test that drives the app, and crashes / unhandled exceptions / hangs as failures.
 
 Status: reference plan written 2026-10-21; D4 decided by the author the same day (option a: "a가 맞겠네. a로 안 되면 지침은
-나중에 수정하자."); next: turn 1 (implementer review only).
+나중에 수정하자."). Turn 1 review done the same day ([review](PLAN.Testing.UiAutomationV4.Review.md); D3 and D14 premises
+wrong, fact 4 corrected); **Decisions after review** below. Parked the same day (TODO-50 first) and **resumed 2026-10-22 by the
+author with the lighter cut and two parallel implementation turns** ("좋아. 셋 다 수용."): see **Resumed: lighter cut and
+parallel turns** below, which supersedes R7, R11 and R12 where they differ. The same day the author added the **STR evidence annex** (below;
+"1번으로 해줘."). **Turns A and B done 2026-10-22** (started 10:25 on the author's word "그럼 지금 해도 되지 않을까?";
+memguard suspended by the author the same morning): Codex implemented turn A and most of turn B, then its allowance ran out
+(11:19); a substitute Claude implementer finished turn B and the fixes after the planner's audits (A2: seven defects from an
+independent reading — invented legacy act aliases, HUM-07 left on the trace path, owned-instance module read, a rules-file
+switch overridden in code, every manifest claiming the probe charter, unchecked E6 grants, a working-directory fallback; B2:
+ten — reparse folders failing the Documents root, 8.3 TEMP paths in tests, no held handle in the connection sampler,
+continuity split by dropped slots, mid-stream media-type changes, writer colour matrix and key-frame placement, step-ID
+regex, no-op privacy, late steps, test scratch hygiene). Merged (`1eab025`): UiTests 186 passed / 41 skipped, stage0 96 OK,
+3 milestones and 3 editions replay; `check-catalog` waits for the planner's catalog entries (five new test classes). The
+checker on the 40 local videos: all decode to the end with no gap > 0.1 s; none passes as recorded (old records lack the
+interval, step IDs and privacy declarations); the four report-export clips stop recording inside privacy (R6 boundary),
+a scenario fix for turn C. Plan corrections from the turns: the turn-1 decode measurement ignored the H.264 media-type
+change (900 → 912 coded rows; the checker analyses the display aperture); under v4 `allowAppFileWrites` would be true
+(an isolation change, not made); E1 / E3 on the trace path are references although the PID is known — both for the charter.
+**Turn C done 2026-10-22** (Codex 13:48–14:46, then three fix rounds after independent readings: C2 begun by Codex, which
+ran out of allowance again at 15:04, finished by a substitute Claude implementer, as were C3 and C4). Wired: liveness from
+launch to exit with the intentional-close mark before the close request and bounded close / failure-capture phases;
+product failures (`not_responding`, `app_exited` also with code 0, `abnormal_exit`, `launch_window_timeout`) on the product
+axis only, never a run issue; Documents watcher with a per-run control created and removed by its own run (recorded, also on a
+launch failure) and the connection sampler as live channels; recording stop → app exit → decode check, shared step IDs, no
+step after `Complete()`; report-export privacy ends when the dialog's closing is confirmed; every raw input rechecks the guard
+immediately before it, so no input follows a product failure; an unread sandbox is a run issue, never "no writes"; the real
+v4 approval package required by desktop collection and the manual batch, production only with G0 and G1 passed; the
+generators check the exact run's video status (L3), refused and superseded attempts stay listed for final review, new
+editions refuse old-contract runs, committed records replay unchanged (L4). Defects found by the readings and fixed: the run
+record's nested video status in the wrong case (every real desktop pass refused), a headless test selected as a desktop case,
+teardown hangs unbounded, the manual generator checking superseded runs, the Documents control left in the real Documents
+folder, unguarded input paths, privacy running past the dialog, startup counted as non-response, G1 `blocked` allowed for
+production, machine-local scratch paths in tests, product failures recorded as `blocked`, and isolation failures swallowed
+after a product failure. Result: UiTests 225 passed / 41 skipped, solution 1,297 / 63, Python 140 OK, 3 milestones and 3
+editions replay, catalog entries for the nine new test classes. Plan corrections (for the charter): **Done when**'s "unhandled
+exception diagnosed separately" no longer holds after L1 (hang / early / abnormal exit only); the package carries only G0 /
+G1, so G3 / G4 are not machine-checked; privacy ends when no owned modal remains and the export command returned; time before
+the main window exists is outside the 10 s limit; the Documents control is per run, not retained; refusing the button release
+after a product failure mid-drag leaves the button down on a shared desktop — the implementer proposes a narrow exception
+(only the up matching the harness's own down, checked by Win32 against the owned window), for the author; harness markers are
+bare run IDs without a product-unique prefix (the procedure's marker-uniqueness rule). **Charter items approved and turn D
+done 2026-10-22** (author: "승인, 데스크톱 런 해봐."): Codex turn D added the drag-release exception (one matching button-up
+after a guard refusal, only with the owned instance in the foreground and the cursor inside its main window; outcome and
+residual risk in the run record and the manifest; `PointerReleaseTests`) and the `gcam-` prefix for new v4 run IDs (old
+records keep theirs). UiTests 236 / 41, solution 1,308 / 63, Python 143, replays unchanged, catalog 250 units. The planner
+rewrote AGENTS.UiAutomation as the v4.0 charter (gates G0 / G1 / G3 / G4 / G5, §0 items, attribution-first §1, the v4
+desktop session in §6), AGENTS.Rationale and the CLAUDE.md line, and corrected **Done when**. Residual (pre-existing, not
+the approved exception): a coordinate-boundary refusal mid-drag while the product still answers sends no release and
+records none. **Desktop session 2026-10-22** on `061f14a` (charter approved on that commit; a go per run, E6 for the full
+set): G1 observed run `gcam-probe-20261022-01` completed; G3 pilot passed (broken verdict failed at its assertion); the full
+desktop set 37 / 38 with every video check passed, one transient UI Automation failure (no AutomationIds exposed in that
+launch) passed on its rerun, and one headless test that assumed no desktop opt-in, fixed in Codex turn E (environment
+injected; isolation and deployment fingerprints unchanged, so the G1 basis holds). Recorded in VV.Studio.History. **Codex turn F**
+(2026-10-22, headless): the frame export (`VideoFrameExport`, reusing the video checker's decoder; first visible step, up
+to three steps nearest equally spaced media times, terminal step; the last visible decoded sample in each cue outside
+privacy intervals; at most 960 px wide, JPEG quality 70, at most 160 KiB each; recorder masks re-applied; manifest written
+last; opt-in entry `GCAM_STR_FRAME_EXPORT`) and the generator (`software_set.py generate --milestone`, default M3; the annex
+"UI automation evidence" in STR Part A from `samples/testing/records/<Mn>/frames/`, with every refusal of S2 / S3 and
+checks over HTML, Word and PDF). The run record's video status now carries the recording canvas. Correction: some
+scenarios log only their window-ready step, so a case's captions may repeat one real step at separate media times; no
+caption is invented. UiTests 244 / 41, solution 1,316 / 63, Python 284 (one opt-in skip), replays unchanged, catalog 252
+units. Codex's workspace ran out of credits as the turn ended (report complete); further implementer turns run as
+substitute Claude subagents until it is refilled. Next: merge, the M4 collection with the desktop profile on the merged
+commit (author's go), the frame export over its videos, the new software-set edition.
 
 ## Why (2026-10-21)
 
@@ -84,6 +147,72 @@ sessions stays as it is.
 | D14 | App-only locations | Studio has no product-specific declared default outside isolation, so no during-run file watcher is needed. **Verify** against `surface-list.json` | verify |
 | D15 | Document automation v4.0 | The manual generator follows the author's document-automation procedure, also v4.0 since 2026-10-21. Turn 1 lists only the gaps this task touches (run record contract, final-review list, refusal to produce); a wider alignment is a separate task | proposed |
 
+## Decisions after review (2026-10-21)
+
+The review (`PLAN.Testing.UiAutomationV4.Review.md`) re-checked facts 1–7, measured the 40 local videos (all decode to the
+end, hashes match, 141 black frames, all declared privacy masks in the five export clips), queried the Application log
+without elevation, and replayed the three milestones and three editions. Adopted unless marked otherwise.
+
+| # | Decision |
+|---|---|
+| R1 (D3) | **Attribution first.** `diff-classify` first separates harness operations, Studio-attributed effects (product-specific scope, run marker, owned process) and unattributed references. Only unattributed items receive the time-window, A→B, null-window, git-working-tree and filter annotations; an attributed item is judged for containment, the registered child / peer policy or the exact D4 permission. The review's two marker probes (a marked file outside the time window, a marked file changed in both windows, both wrongly `completed`) become negative tests; the existing tests that assert the old results change with the new semantics version. OS-run-record rules may not clear a marker item. Eligibility combines the snapshot verdict with the run manifest's process issues and monitor errors |
+| R2 (D4) | Option (a) as a structured `realWorldEffects` permission (effect E6, approval reference with the author's quote and date, run / batch, target revision and deployment, covered export scenarios and typed names, record families) carried by the approval package, preflight result, scenario manifest and observed context. Blanket E6 `declared` acceptance goes; a matching marked shell record becomes `authorized-real-world-effect` (compatible with `completed`) only under a covering permission; anything else stays `unsafe_effect`. One per-run statement of the author may carry both the desktop go and the named effect. E1 / E3 become shared-location references |
+| R3 (D14) | **Premise wrong**: `surface-list.json` declares Studio's default export names (`gcam-(report\|events)-…`) under Documents, a product-specific default outside isolation. Add a during-run watcher on that declared pattern (create / change / rename / delete, transient items, overflow and errors, resolved root) with a harness positive control; qualification is refused when it cannot cover the root. The declaration stays |
+| R4 (D5) | An independent liveness observer (owned HWND / PID / start time, bounded `SendMessageTimeout(WM_NULL)`, continuous non-response interval), not a catch after a wait times out — a blocked synchronous UIA call never reaches the catch. Provisional limit **10 s** continuous non-response (about twice the largest coarse simple-UI gap, 4.6 s, in 134 passed runs; the records hold no true UI-thread stall data), confirmed in the pilot and reported as a failure, never enlarged, if breached. The intentional close is marked before it is requested; an early exit **with code 0** fails too. Application-log entries (.NET Runtime 1026, Application Error 1000, Application Hang 1002; WER 1001 supplemental) are correlated to the owned instance as diagnostics; their absence clears nothing. Product failures get their own manifest axis (`UiRunManifest.Finalise` accepts only three safety issue types today) |
+| R5 (D6) | Store an independent recording interval (UTC anchor + monotonic) and a step timeline with stable step IDs; fix the caption writer that drops final steps clamped to the media end (nine terminal captions missing today). Checks: decode to EOS with no error, sample count / dimensions / hashes; interval endpoints within 0.2 s; undeclared single-colour frames ≤ 0.2 s continuous and ≤ 1 %; dropped slots ≤ 1 % with no gap > 0.3 s (decoded timestamps, not only the overwrite counter); 100 % of executed step IDs mapped to a timed cue or a declared privacy interval. Criteria frozen in the charter before the pilot and challenged with corrupted, truncated and blank clips |
+| R6 (D6, planner) | **Declared privacy intervals get no share cap** — the review's proposed 25 % would reject all five export clips (40–54 %). The black frames hide the native save dialog, which shows the user's folders and name; the export clips are short, so the share is high by construction, and padding them to pass would be footage made for the rule. Instead: each privacy interval is declared with start / end / reason / step IDs and matches the mask samples exactly, the steps before and after the dialog are visible, and the share is reported. Part of the charter the author approves |
+| R7 (D7, D15) | Generators take an immutable per-attempt qualification record with the checked video's hash, never the mutable latest index; a failed / aborted record stays reportable and is never dropped or turned into a pass. Final-review list against an explicit predecessor milestone / edition. D15 stays narrow (the links this task needs); the full document-automation v4.0 run-record migration is a separate Backlog item, and nothing here claims full document conformance |
+| R8 (D9) | Wording: **no user import slot**; fixed model inputs are read (the deployed ambient JSON, SHA-256 `4d48bc42…`; the embedded readout offer resource) and export rollback reads confirmed destinations. The test-data list pins the deployment file set and rejects unexpected data files; the typed-scene bundle is identified by its generator and scenario, not by an invented file hash. The deployment fingerprint covers DLL / EXE / JSON only: say so or widen it in a new fingerprint version |
+| R9 (D10) | Charter exception kept (no non-elevated per-process block leaves Studio unchanged). Evidence corrected: `SurfaceSurveyTests` checks the Studio shell assembly, not every dependency; default observed runs do not sample sockets (`ProbeChannels.Network` "not applicable"). Because §4.6 needs a live channel for each of file, process and network, add a light owned-instance connection sampler (TCP / UDP tables, no elevation) with a harness positive control to observed runs |
+| R10 (D8, D11–D13) | `PlotViewTests` is outside the app-driving scope (in-process control benchmark), not an isolation exception. One preflight in `OwnedStudioProcess.Start` before `Process.Start` (every failed check leaves the start delegate uncalled), the same parsed policy instance passed on; an unproven Studio instance stops further input. P1 / P4 / HUM-10 leave live emissions; collector modes `normal` / `desktop` stay. D13 verified (harness-owned key, created-new only) |
+| R11 (replay) | New semantics are versioned (run record, video check, classifier, generators); readers enumerate supported versions; committed milestones, editions and observed records replay under their recorded contract and inputs; no live "legacy" bypass; re-judgement is a separate derived record |
+| R12 (split) | Three implementation turns in the same conversation: **A** acts / preflight / manifest and context versions, R1, R2, R3, R8, R9; **B** crash / exit / liveness (R4) and the recording interval, step timeline and decoder checks (R5, R6); **C** production gates, final-review lists, versioned replay and full headless verification (R7, R11). Then the planner's charter rewrite for the author's approval, then the desktop session. No intermediate turn is called v4-qualified |
+
+Cost (review's estimate): 35–45 code / data / test files, 60–90 new or changed headless cases, then the desktop session.
+
+## Resumed: lighter cut and parallel turns (author, 2026-10-22)
+
+The v4.0 core items stay (attribution-first classifier, real-world-effect permission, crash / exit / hang failures, a
+machine-checked video, pre-launch checks with the test-data list, the peer exception, the Documents watcher). Lighter:
+
+| # | Change |
+|---|---|
+| L1 (R4) | No Application-log correlation: liveness, early exit (also with code 0) and abnormal exit only |
+| L2 (R5) | Checks: decode to the end with no error; decoded duration against the recorded interval within 0.2 s; undeclared single-colour frames ≤ 0.2 s continuous and ≤ 1 % of frames; no decoded timestamp gap > 0.3 s; 100 % of executed step IDs mapped to a timed cue or a declared privacy interval (R6 unchanged). The separate overwrite-counter share and extra sample statistics go. Challenged with corrupted, truncated and blank clips |
+| L3 (R7) | Generators read the video status (checked video's SHA-256 and check result) of the exact run record they consume; no separate per-attempt record store. Failed / aborted attempts stay reportable and go to the final-review list |
+| L4 (R11) | One `contract` field (`v4`) on new run records, video status and classification output; a record without it is the old contract and is read and replayed as today. No derived re-judgement records |
+
+**Parallel turns.** A and B run at the same time in separate worktrees and touch disjoint files; C runs after B is merged
+into A's branch.
+
+| Turn | Worktree / conversation | Content | Owns (only these may change) |
+|---|---|---|---|
+| A | `todo54-uia-v4`, the review conversation (resume) | D2 / R10 act names (readers keep HUM-xx), P1 / P4 / HUM-10 out of live emission (D12), D11 / R10 one preflight before `Process.Start` with the five checks and the policy loaded before launch, D9 / R8 test-data list, R9's charter-exception state, R1 attribution-first classifier with the two negative probes, R2 `realWorldEffects` permission, E1 / E3 as references, L4 on run records and classification | `Harness/Isolation/**` (existing files), `Harness/{Scenario,StudioWindow,StudioProcess,ManualObservation,ManualRun,ManualScenario,UiRunManifest,RunRecord,ResultCache}.cs`, the csproj, `samples/evidence/tests/test_stage0_isolation.py`, and their tests |
+| B | `todo54-b` (from A's base), new conversation | New standalone parts with tests, not yet wired: liveness observer (R4 / L1), Documents watcher (R3) with its positive control, owned-instance connection sampler (R9) with its positive control, video checker (L2 / R6); recorder changes: independent recording interval, step timeline with stable step IDs, the dropped-final-caption fix, video status with `contract` | new files under `Harness/Observation/` and `Harness/Video/`; `Harness/{VideoRecorder,VideoTimeline,VideoEntry,VideoCapture,VideoPublisher,VideoCoverage,MediaFoundationWriter,CaptureQuality}.cs`; new test files and the existing video / capture tests |
+| C | A's branch after merging B, A's conversation | Wiring B's parts into the launch, scenario and observed run (product-failure manifest axis, live file / process / network channels), D7 production gates with L3, final-review lists, L4 replay, full headless verification | any |
+
+Heavy commands (build, test) go through one lock shared by both turns
+(`python -B %TEMP%\gcam-todo54\heavy.py -- <command>`: waits for the other turn, runs under memguard, waits and retries when
+memguard refuses for low memory), so only one build or test runs at a time while the CZT batch keeps running.
+
+## STR evidence annex (author, 2026-10-22)
+
+The software test report of the TODO-53 set (`GCAM-SW-STR`, edition `2026-10-20-1`) holds no image: its UI part is case
+names, counts and catalog text, and the 41 recorded videos stay machine-local (`artifacts/` is ignored). A reader cannot
+see from the report that the app was driven. The author chose to add the evidence after this task, from videos that
+passed the v4 check, rather than from today's unchecked videos (known defects: nine terminal captions missing).
+
+| # | Decision |
+|---|---|
+| S1 | The STR gains an annex **UI automation evidence**: per desktop case of the milestone the report selects — run ID, verdict, the checked video's SHA-256 and video status (L3), and 3–5 frames (start, key steps, end), each with its step ID, cue text and media time |
+| S2 | Frames come only from videos whose video status is `passed` under `contract: "v4"`; a case without one is listed with the reason, never illustrated from another attempt. Privacy intervals give no frame |
+| S3 | Frame export is part of the C# video checker (turn B's decoder): it writes the frames and a manifest (video SHA-256, step ID, media time, frame SHA-256); the document generator stays standard-library Python and reads only the manifest and the images, refusing a frame whose video hash differs from the run record |
+| S4 | Frames are committed downscaled (JPEG; the whole annex in the tens of MB at most), under the milestone's record folder; videos stay machine-local. Capture region and paths are checked so no local path or other window appears (verify) |
+| S5 | A new STR edition needs a milestone whose desktop profile ran on the v4 harness (M4, author's go for the desktop collection); the other documents of the set are regenerated unchanged in content |
+
+Heavy steps — frame export over the videos, the desktop collection, document generation (PDF rendering) — run under
+memguard through the shared lock, one at a time, like the builds.
+
 ## Steps
 
 1. **Author:** D4 — decided 2026-10-21, option (a).
@@ -100,22 +229,28 @@ sessions stays as it is.
    folder changes, so a new observed launch-idle-exit run re-establishes G1; the pilot with its broken-verdict and recovery
    runs (G3); the scenarios touched by D5 / D6 with videos, including one export scenario under D4. Record in
    VV.Studio History.
+7. **STR evidence annex** (S1–S5), after the desktop session: frame export and the generator change (Codex turn), the M4
+   desktop collection (author's go), then the new software-set edition with the annex for the author's look.
 
 ## Done when
 
 - AGENTS.UiAutomation reads as the v4.0 charter with gates G0 / G1 / G3 / G4 / G5 and the four people's acts plus the
   desktop-go rule; no HUM-08 path, no profile labels.
-- A crash, an unhandled exception and a hang each fail a scenario with their own issue code (shown by a test, without the
-  desktop where possible).
+- An early exit (also with code 0), an abnormal exit, a hang and a main window that never appears each fail a scenario with
+  their own issue code (shown by a test, without the desktop where possible); an unhandled exception shows as one of these
+  endings (L1, no event-log correlation; corrected 2026-10-22).
 - Every app-driving desktop test's video is machine-checked; a generator refuses a passed result without a passing video
   and writes the final-review list.
 - Pre-launch preflight runs the five checks before launch; test-data list and peer exception exist.
 - All verification commands green; committed milestones and editions replay; one observed run, pilot, broken verdict and
   recovery pass on the new harness.
+- The STR edition after M4 carries the UI automation evidence annex: every desktop case either illustrated from its
+  v4-checked video or listed with the reason it is not.
 
 ## Not here
 
-- A new manual edition, test-record milestone or software-document edition (TODO-53): later, on the author's word.
+- A new manual edition: later, on the author's word. (The M4 milestone and the software-set edition are in scope only for
+  the STR evidence annex, step 7.)
 - Any wording or content of the procedure's source project in this repository (procedure only; it is named "the author's
   UI-automation procedure").
 - A disposable environment (VM or separate account) — recommended by §4.1, not required while the source survey closes the

@@ -46,8 +46,14 @@ def segments(block):
         for i, row in table_rows(block):
             for j, runs in enumerate(row):
                 yield ident + f'r{i}c{j}', plain(runs), runs
+    elif kind == 'image':
+        yield ident, block['caption'], inline_caption(block['caption'])
     elif kind == 'code':
         yield ident, block['text'], [{'text': block['text'], 'styles': ['code']}]
+
+
+def inline_caption(text):
+    return [{"text": text, "styles": []}]
 
 
 def expected(doc):
@@ -84,7 +90,7 @@ def control_rows(key, meta):
     return [('Document', 'GCAM-SW-' + key + ' · ' + TITLES[key]), ('Revision', meta['edition']),
             ('Date', meta['date']), ('Documentation source commit', meta['sourceCommit']),
             ('Source tree', meta['treeStatus']),
-            ('M3 test subject', meta['testSubject']),
+            (meta.get('milestone', 'M3') + ' test subject', meta['testSubject']),
             ('Manual companion deployment', meta['manual']['deploymentSha256']),
             ('Approvals', 'not applicable (demonstration)')]
 
@@ -147,6 +153,10 @@ def render_html(key, doc, meta, diagrams):
                 if i == 0:
                     pieces.append('</thead><tbody>')
             pieces.append('</tbody></table>')
+        elif kind == 'image':
+            pieces.append('<figure data-frame="' + b['asset'] + '" data-sha256="' + b['sha256'] +
+                          '"><img alt="Studio UI evidence" src="data:image/jpeg;base64,' + b['jpeg'] +
+                          '"><figcaption data-text="' + ident + '">' + esc(b['caption']) + '</figcaption></figure>')
         elif kind in ('code', 'diagram'):
             if kind == 'diagram':
                 diagram = diagrams[b['asset']]
@@ -202,6 +212,14 @@ def check_html(text, doc):
         ET.fromstring(svg); privacy(svg)
         require(not re.search(r'<script\b|(?:href|src)="(?:https?:|file:)', svg, re.I), 'html: SVG external content')
     require(len(re.findall(r'src="data:image/svg\+xml;base64,', text)) == len(diagrams), 'html: diagram image count differs')
+    frames = re.findall(r'data-frame="([^"]+)" data-sha256="([^"]+)"[^>]*><img[^>]*src="data:image/jpeg;base64,([^"]+)"', text)
+    expected_frames = {b['asset']: b for b in doc if b['kind'] == 'image'}
+    require(len(re.findall(r'src="data:image/jpeg;base64,', text)) == len(frames), 'html: frame image count differs')
+    require(all(src.startswith(('data:image/jpeg;base64,', 'data:image/svg+xml;base64,'))
+                for src in re.findall(r'<img\b[^>]*src="([^"]+)"', text)), 'html: image is not self-contained')
+    require(len(frames) == len(expected_frames) and {f[0] for f in frames} == set(expected_frames), 'html: frame coverage differs')
+    for asset, digest, encoded in frames:
+        require(digest == expected_frames[asset]['sha256'] == sha(base64.b64decode(encoded, validate=True)), 'html: JPEG hash differs')
     privacy(text)
 
 
@@ -258,16 +276,19 @@ class Word:
         return ''.join(parts)
 
     def image(self, asset, image, source):
-        name = asset + '.png'; rid = 'rImage' + str(len(self.media) + 1)
-        self.media['word/media/' + name] = image['png']
+        jpeg = 'jpeg' in image
+        name = asset + ('.jpg' if jpeg else '.png'); rid = 'rImage' + str(len(self.media) + 1)
+        pixels = base64.b64decode(image['jpeg']) if jpeg else image['png']
+        self.media['word/media/' + name] = pixels
+        description = 'JPEG SHA-256 ' + sha(pixels) if jpeg else 'Mermaid source SHA-256 ' + sha(source.encode())
         self.relationships.append((rid, 'image', 'media/' + name))
-        width, height = struct.unpack('>II', image['png'][16:24])
+        width, height = (image['width'], image['height']) if jpeg else struct.unpack('>II', pixels[16:24])
         scale = min(6120130 / width, 4320000 / height)  # full 170 mm text width; 120 mm height cap
         cx, cy = round(width * scale), round(height * scale)
         return ('<w:p><w:pPr><w:pStyle w:val="Figure"/></w:pPr><w:r><w:drawing>'
                 '<wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="' + str(cx) + '" cy="' + str(cy) +
                 '"/><wp:docPr id="' + str(len(self.media)) + '" name="' + asset +
-                '" descr="Mermaid source SHA-256 ' + sha(source.encode()) + '"/>'
+                '" descr="' + description + '"/>'
                 '<a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">'
                 '<pic:pic><pic:nvPicPr><pic:cNvPr id="0" name="' + name + '"/><pic:cNvPicPr/></pic:nvPicPr>'
                 '<pic:blipFill><a:blip r:embed="' + rid + '"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill>'
@@ -303,6 +324,8 @@ def render_docx(key, doc, meta, diagrams):
                 body.append(w.p(runs, 'Bullet', b['id'] + f'l{i}'))
         elif kind == 'table':
             body.append(w.table(b))
+        elif kind == 'image':
+            body += [w.image(b['asset'], b, ''), w.p(inline_caption(b['caption']), 'Caption', b['id'])]
         elif kind in ('code', 'diagram'):
             if kind == 'diagram':
                 body += [w.image(b['asset'], diagrams[b['asset']], b['text']),
@@ -349,7 +372,7 @@ def render_docx(key, doc, meta, diagrams):
     parts['[Content_Types].xml'] = XML + '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
     # Keep all parts explicitly typed; image compression is the PNG's own stream.
     parts['[Content_Types].xml'] += ('<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
-                                   '<Default Extension="png" ContentType="image/png"/>' + ''.join(
+                                   '<Default Extension="png" ContentType="image/png"/>' + ('<Default Extension="jpg" ContentType="image/jpeg"/>' if any(n.endswith('.jpg') for n in w.media) else '') + ''.join(
                                        '<Override PartName="/' + p + '" ContentType="' + t + '"/>' for p, t in types.items()) + '</Types>')
     output = io.BytesIO()
     with zipfile.ZipFile(output, 'w', compression=zipfile.ZIP_DEFLATED, compresslevel=6) as z:
@@ -437,8 +460,23 @@ def check_docx(data, doc):
         embeds = {n.get('{' + R + '}embed') for n in root.iter() if n.tag.endswith('}blip')}
         require(embeds == image_refs, 'docx: image relationship mismatch')
         diagram_marks = {n.get('name'): n.get('descr') for n in root.iter() if n.tag.endswith('}docPr')}
-        require(diagram_marks == {b['asset']: 'Mermaid source SHA-256 ' + sha(b['text'].encode())
-                                  for b in doc if b['kind'] == 'diagram'}, 'docx: diagram coverage differs')
+        expected_marks = {b['asset']: 'Mermaid source SHA-256 ' + sha(b['text'].encode()) for b in doc if b['kind'] == 'diagram'}
+        expected_marks.update({b['asset']: 'JPEG SHA-256 ' + b['sha256'] for b in doc if b['kind'] == 'image'})
+        require(diagram_marks == expected_marks, 'docx: diagram/frame coverage differs')
+        require(sum(n.tag.endswith('}docPr') for n in root.iter()) == len(expected_marks)
+                and sum(n.tag.endswith('}blip') for n in root.iter()) == len(expected_marks), 'docx: image count differs')
+        image_targets = {r.get('Id'): r.get('Target') for r in parsed['word/_rels/document.xml.rels']}
+        expected_jpegs = {b['asset'] for b in doc if b['kind'] == 'image'}
+        for drawing in (n for n in root.iter() if n.tag.endswith('}inline')):
+            name = next((n.get('name') for n in drawing.iter() if n.tag.endswith('}docPr')), None)
+            if name in expected_jpegs:
+                refs = [n.get('{' + R + '}embed') for n in drawing.iter() if n.tag.endswith('}blip')]
+                require(len(refs) == 1 and image_targets.get(refs[0]) == 'media/' + name + '.jpg', 'docx: frame relationship differs')
+        for block in (b for b in doc if b['kind'] == 'image'):
+            require(sha(z.read('word/media/' + block['asset'] + '.jpg')) == block['sha256'], 'docx: JPEG hash differs')
+        require({n for n in names if n.endswith('.jpg')} == {'word/media/' + b['asset'] + '.jpg' for b in doc if b['kind'] == 'image'}, 'docx: JPEG membership differs')
+        jpeg_types = [n for n in types if n.get('Extension') == 'jpg']
+        require(not any(b['kind'] == 'image' for b in doc) or len(jpeg_types) == 1 and jpeg_types[0].get('ContentType') == 'image/jpeg', 'docx: JPEG content type differs')
         require(BANNER in ''.join(root.itertext()), 'docx: missing banner')
         footer = parsed['word/footer1.xml']
         require({n.get('{' + W + '}instr') for n in footer.iter() if n.tag.endswith('}fldSimple')} == {'PAGE', 'NUMPAGES'},
