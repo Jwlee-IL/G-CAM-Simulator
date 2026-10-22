@@ -210,7 +210,7 @@ def review(edition, out):
     edition, out = edition.resolve(), out.resolve(); out.mkdir(parents=True, exist_ok=True)
     require(out.is_relative_to(Path(__import__('tempfile').gettempdir()).resolve()), 'review: use TEMP/gcam-* output')
     record = check(edition)
-    docs, _, _ = assemble()
+    docs, _, _ = assemble(record['metadata'].get('milestone', 'M3'))
     browser = Edge()
     items = []
     for key, blocks in docs.items():

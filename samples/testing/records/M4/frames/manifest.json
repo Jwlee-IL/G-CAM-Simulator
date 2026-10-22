@@ -2,7 +2,7 @@
   "schema": "gcam.str-frames",
   "schemaVersion": 1,
   "contract": "v4",
-  "selectionRule": "First visible step, up to three visible key steps nearest equally spaced media-time targets, terminal visible step; last non-private non-transition non-neutral decoded sample overlapping each cue. Sparse timelines retain real step IDs and use visible start/midpoint/end samples of their existing cues.",
+  "selectionRule": "Only scenario steps own a frame: non-private steps listed in the run\u0027s executedStepIds (recorder-owned transition steps and privacy steps never do; a cue is illustrated through one of its qualifying step IDs or not at all). First such step, up to three such key steps nearest equally spaced media-time targets, terminal such step; last non-private non-transition non-neutral decoded sample overlapping each cue. Sparse timelines retain real step IDs and use visible start/midpoint/end samples of their existing cues.",
   "maximumWidthPx": 960,
   "jpegQuality": 70,
   "maximumJpegBytes": 163840,
@@ -56,16 +56,6 @@
           "mediaEnd100ns": 56000000,
           "file": "case-001-04.jpg",
           "sha256": "740c0b834ddd8dfefb959750ae943ae715dddf5be795c6e41af7101869090766",
-          "widthPx": 960,
-          "heightPx": 600
-        },
-        {
-          "stepId": "step-0001",
-          "cueText": "Window transition: maximise",
-          "mediaTime100ns": 58000000,
-          "mediaEnd100ns": 59000000,
-          "file": "case-001-05.jpg",
-          "sha256": "52d3cbcc4537f96853602157c3346672a9d64c8eec1ef2c267246319816c6d70",
           "widthPx": 960,
           "heightPx": 600
         }
@@ -1561,12 +1551,12 @@
       "canvasHeightPx": 900,
       "frames": [
         {
-          "stepId": "step-0001",
-          "cueText": "Launch transition: owned window not yet painted",
-          "mediaTime100ns": 4000000,
-          "mediaEnd100ns": 5000000,
+          "stepId": "action-0001",
+          "cueText": "focus preparation last refusal: none",
+          "mediaTime100ns": 8000000,
+          "mediaEnd100ns": 9000000,
           "file": "case-026-01.jpg",
-          "sha256": "b108b56147b5fd773602108226f1d99424bed2c2c7bee032c6c6907916232c19",
+          "sha256": "95683460ced04207bde08331b369c29a74c93bc151a008461f2009315745d537",
           "widthPx": 960,
           "heightPx": 600
         },

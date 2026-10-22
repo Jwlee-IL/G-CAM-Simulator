@@ -78,8 +78,13 @@ with an ID-less UI Automation root) — recorded in VV.Studio.History. **Turn G*
 from capture masks, never pixels) and UI Automation root re-acquisition within a 10 s launch budget; the frame export and
 the annex never pick a transition frame; isolation and deployment fingerprints unchanged. UiTests 256 / 41, solution
 1,328 / 63, Python 285, replays unchanged, catalog 252 units. The §0 Video criteria row changed, so the charter needs the
-author's approval on the new commit. Next: that approval, a short desktop check of the new harness paths, the M4
-collection again, frames, new edition.
+author's approval on the new commit. **M4** collected 2026-10-23 01:38–02:04 on `84c6ee2` after the author's approval and a
+passing desktop check of the new paths (1,771 passed, 0 failed, 53 not executed; every desktop video check passed;
+production eligible), committed with its frames as `6516cb7`. **Turn H** (substitute Claude subagent, headless): the first
+edition generation refused two frames on recorder-owned steps, so the export now picks frames only on non-private executed
+steps and checks every row against the annex's rules before writing; turn H2 replaced the M3-only results-report pin by one
+on the newest archived milestone (older milestones never consult docs). UiTests 257 / 41, solution 1,329 / 63, Python 288
+(one opt-in skip); frames re-exported (182). Next: the new software-set edition from M4, the author's look.
 
 ## Why (2026-10-21)
 

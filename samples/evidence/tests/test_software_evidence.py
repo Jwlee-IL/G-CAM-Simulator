@@ -203,6 +203,7 @@ class SoftwareEvidenceTests(ScratchTestCase):
         for name in ('catalog.md', 'report.md'):
             shutil.copyfile(ROOT / 'samples/testing/records/M3' / name, self.archive / name)
         docs = self.root / 'docs'; docs.mkdir()
+        shutil.copyfile(self.archive / 'report.md', docs / 'VV.Tests.Results.md')  # the report a repo publishing M4 holds
         for name in ('SRS', 'SDS', '', 'Acquisition', 'Imaging', 'Detector', 'Waveform', 'History'):
             filename = 'VV.Studio' + ('.' + name if name else '') + '.md'
             shutil.copyfile(ROOT / 'docs' / filename, docs / filename)

@@ -524,3 +524,8 @@ ID-less root again, re-acquired it and passed; three window transitions were dec
 restore 0.1 s). The STR frames (183 JPEGs from 40 cases, 8.3 MiB, at most 960 px, quality 70) were exported from the exact
 checked videos and committed with their manifest under `samples/testing/records/M4/frames/`; a look over all of them showed
 only Studio's own window (no other window, desktop or native dialog) and no path or account name in the manifest.
+The first software-set generation from these frames was refused ("frames: unknown or private step"): two frames sat on the
+recorder's own launch / window-transition steps, which are not steps the run executed. Turn H (substitute Claude subagent,
+headless) made the export pick frames only on non-private executed steps and check each row against the annex's rules; the
+re-export from the same checked videos replaced the committed frames (182 JPEGs: the `borderless-caption` case keeps 4, one
+report-export frame moved from the launch step to the first action; every other frame byte-identical).

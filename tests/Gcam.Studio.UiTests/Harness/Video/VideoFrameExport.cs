@@ -14,7 +14,7 @@ namespace Gcam.Studio.UiTests.Harness.Video;
 public static class VideoFrameExport
 {
     public const int MaximumWidth = 960, JpegQuality = 70, MaximumJpegBytes = 160 * 1024;
-    public const string SelectionRule = "First visible step, up to three visible key steps nearest equally spaced media-time targets, terminal visible step; last non-private non-transition non-neutral decoded sample overlapping each cue. Sparse timelines retain real step IDs and use visible start/midpoint/end samples of their existing cues.";
+    public const string SelectionRule = "Only scenario steps own a frame: non-private steps listed in the run's executedStepIds (recorder-owned transition steps and privacy steps never do; a cue is illustrated through one of its qualifying step IDs or not at all). First such step, up to three such key steps nearest equally spaced media-time targets, terminal such step; last non-private non-transition non-neutral decoded sample overlapping each cue. Sparse timelines retain real step IDs and use visible start/midpoint/end samples of their existing cues.";
     public sealed record Frame(string StepId, string CueText, long MediaTime100ns, long MediaEnd100ns,
         string File, string Sha256, int WidthPx, int HeightPx);
     public sealed record Case(string CaseId, string? RunId, string Verdict, string? VideoSha256, string? CheckContract,
@@ -44,7 +44,9 @@ public static class VideoFrameExport
             && check.GetProperty("failedCriteria").GetArrayLength() == 0, "video-gate: video check did not pass");
         Require(record.TryGetProperty("executedStepIds", out var executed) && executed.ValueKind == JsonValueKind.Array
             && executed.GetArrayLength() > 0, "video-gate: missing executedStepIds");
-        var ids = status.GetProperty("evidence").GetProperty("steps").EnumerateArray().Select(s => s.GetProperty("id").GetString()).ToHashSet();
+        // As the Python gate: step objects without an ID add none, rather than failing as a missing field.
+        var ids = status.GetProperty("evidence").GetProperty("steps").EnumerateArray()
+            .Where(s => s.ValueKind == JsonValueKind.Object && s.TryGetProperty("id", out _)).Select(s => s.GetProperty("id").GetString()).ToHashSet();
         Require(executed.EnumerateArray().All(s => s.ValueKind == JsonValueKind.String && !string.IsNullOrEmpty(s.GetString()) && ids.Contains(s.GetString())), "video-gate: executed steps missing from recording");
         if (record.TryGetProperty("steps", out var steps) && steps.ValueKind == JsonValueKind.Array)
             foreach (var step in steps.EnumerateArray().Where(s => s.ValueKind == JsonValueKind.Object))
@@ -70,15 +72,24 @@ public static class VideoFrameExport
         var check = VideoChecker.Check(mp4, vtt, evidence);
         Require(check.Passed && check.VideoSha256 == hash && check.CaptionsSha256 == status.GetProperty("check").GetProperty("captionsSha256").GetString(),
             "frames: actual video/captions no longer qualify");
+        if (status.TryGetProperty("canvas", out var recorded) && recorded.ValueKind != JsonValueKind.Null)
+            Require(recorded.GetProperty("widthPx").GetInt32() == canvasWidth && recorded.GetProperty("heightPx").GetInt32() == canvasHeight,
+                "frames: recorded canvas differs");
         var decoded = MediaFoundationDecoder.Decode(mp4);
         Require(decoded.EndOfStream && decoded.Error is null && decoded.Samples.Length > 0
             && decoded.Samples.All(s => s.WidthPx == canvasWidth && s.HeightPx == canvasHeight), "frames: recorded canvas differs");
+        // The annex illustrates scenario steps only: non-private steps the run executed. Recorder-owned steps (the launch
+        // and harness-issued window transitions) are not in executedStepIds, and privacy steps are never shown.
+        var executed = record.GetProperty("executedStepIds").EnumerateArray().Select(s => s.GetString()!).ToHashSet(StringComparer.Ordinal);
         // A window-transition interval is treated like privacy: its samples are never illustrated (old evidence has none).
-        bool Visible(DecodedVideo.Sample s) => !s.SingleColour
+        // A frame's media interval must be non-empty and start at or after zero, as the annex requires.
+        bool Visible(DecodedVideo.Sample s) => s.Time100ns >= 0 && s.Duration100ns > 0 && !s.SingleColour
             && !evidence.PrivacyIntervals.Any(p => p.Start100ns < s.Time100ns + s.Duration100ns && p.End100ns > s.Time100ns)
             && !(evidence.TransitionIntervals ?? []).Any(t => t.Start100ns < s.Time100ns + s.Duration100ns && t.End100ns > s.Time100ns)
             && !evidence.MaskSamples.Any(m => m.Start100ns == s.Time100ns && m.RectsPx.Any(r => r.SequenceEqual(new[] { 0, 0, canvasWidth, canvasHeight })));
-        var visible = evidence.Steps.Where(s => !s.Privacy).Select(step =>
+        // Per step, so a cue that groups a recorder step with a scenario step is reached through the scenario step only,
+        // and a cue whose step IDs none qualify is never illustrated.
+        var visible = evidence.Steps.Where(s => !s.Privacy && executed.Contains(s.Id)).Select(step =>
         {
             var cue = evidence.Cues.FirstOrDefault(c => c.StepIds.Contains(step.Id));
             int sample = cue is null ? -1 : Array.FindLastIndex(decoded.Samples, s =>
@@ -139,7 +150,87 @@ public static class VideoFrameExport
             }
         });
         Require(second.EndOfStream && second.Error is null && frames.Count == count, "frames: export decode incomplete");
-        return new(caseId, run, verdict, hash, "v4", "passed", null, canvasWidth, canvasHeight, frames.ToArray());
+        var result = new Case(caseId, run, verdict, hash, "v4", "passed", null, canvasWidth, canvasHeight, frames.ToArray());
+        RequireAnnexRow(result, record, output);
+        return result;
+    }
+
+    /// <summary>The STR annex's checks on one qualified row (samples/docs/ui_annex.py), against the record whose evidence the
+    /// annex reads, so the exporter never writes a row the annex would refuse. Stricter where the two languages differ.</summary>
+    internal static void RequireAnnexRow(Case row, JsonElement record, string output)
+    {
+        var status = record.GetProperty("videoStatus"); var evidence = status.GetProperty("evidence");
+        Require(row.RunId == record.GetProperty("runId").GetString(), "frames: case/run/verdict differs");
+        Require(row.VideoSha256 == status.GetProperty("videoSha256").GetString(), "frames: video hash differs from selected run");
+        Require(row.Reason is null && row.CheckContract == "v4" && row.VideoStatus == "passed", "frames: unqualified export");
+        if (status.TryGetProperty("canvas", out var canvas) && canvas.ValueKind != JsonValueKind.Null)
+            Require(row.CanvasWidthPx == canvas.GetProperty("widthPx").GetInt32() && row.CanvasHeightPx == canvas.GetProperty("heightPx").GetInt32(),
+                "frames: recorded canvas differs");
+        Require(row.Frames.Length is >= 3 and <= 5 && row.Frames.Select(f => f.File).Distinct(StringComparer.Ordinal).Count() == row.Frames.Length,
+            "frames: frame count or duplicate file");
+        // Any privacy value other than false / null counts as private here (Python's truthiness is the looser of the two).
+        var steps = evidence.GetProperty("steps").EnumerateArray().Where(s => !(s.TryGetProperty("privacy", out var p)
+            && p.ValueKind is not (JsonValueKind.False or JsonValueKind.Null))).Select(s => s.GetProperty("id").GetString()).ToHashSet(StringComparer.Ordinal);
+        var executed = record.GetProperty("executedStepIds").EnumerateArray().Select(s => s.GetString()).ToHashSet(StringComparer.Ordinal);
+        var cues = evidence.GetProperty("cues").EnumerateArray().ToArray();
+        (long Start, long End)[] Intervals(string name) => evidence.TryGetProperty(name, out var list) && list.ValueKind == JsonValueKind.Array
+            ? list.EnumerateArray().Select(i => (i.GetProperty("start100ns").GetInt64(), i.GetProperty("end100ns").GetInt64())).ToArray() : [];
+        var privacy = Intervals("privacyIntervals"); var transitions = Intervals("transitionIntervals");
+        foreach (var frame in row.Frames)
+        {
+            Require(steps.Contains(frame.StepId) && executed.Contains(frame.StepId), "frames: unknown or private step");
+            var cue = cues.Where(c => c.GetProperty("stepIds").EnumerateArray().Any(i => i.GetString() == frame.StepId)
+                && c.GetProperty("text").GetString() == frame.CueText).Select(c => (Found: true, Start: c.GetProperty("start100ns").GetInt64(),
+                End: c.GetProperty("end100ns").GetInt64())).FirstOrDefault();
+            Require(cue.Found, "frames: cue differs");
+            long start = frame.MediaTime100ns, end = frame.MediaEnd100ns;
+            Require(0 <= start && start < end && start < cue.End && end > cue.Start, "frames: time outside cue");
+            Require(!privacy.Any(p => p.Start < end && p.End > start), "frames: private frame");
+            Require(!transitions.Any(t => t.Start < end && t.End > start), "frames: transition frame");
+            Require(Regex.IsMatch(frame.File, @"^[A-Za-z0-9_-]+\.jpg$"), "frames: invalid relative path");
+            byte[] data = System.IO.File.ReadAllBytes(Path.Combine(output, frame.File));
+            Require(IsolationPaths.Hash(data) == frame.Sha256, "frames: JPEG hash differs");
+            var (width, height) = JpegSize(data);
+            Require((width, height) == (frame.WidthPx, frame.HeightPx) && width <= MaximumWidth
+                && width <= row.CanvasWidthPx && height <= row.CanvasHeightPx, "frames: canvas differs");
+            AnnexPrivacy(frame.StepId + " · " + frame.CueText + " · "
+                + (start / 10_000_000.0).ToString("F3", System.Globalization.CultureInfo.InvariantCulture) + " s");
+        }
+    }
+
+    /// <summary>The annex's privacy rule (samples/docs/edge_output.py) on the text it reads: the manifest and each caption.</summary>
+    internal static void AnnexPrivacy(string text)
+    {
+        Require(!Regex.IsMatch(text, @"(?:(?<![\w])[A-Za-z]:[\\/]|file:/|\\\\[^\s\\]+\\|/(?:Users|home)/|~[\\/])", RegexOptions.IgnoreCase),
+            "frames: private path in annex text");
+        string name = Environment.GetEnvironmentVariable("USERNAME") ?? Environment.GetEnvironmentVariable("USER") ?? "";
+        if (name.Length > 0 && !new[] { "user", "runner", "root", "admin", "administrator" }.Contains(name.ToLowerInvariant()))
+            Require(!Regex.IsMatch(text, @"(?<![\w])" + Regex.Escape(name) + @"(?![\w])", RegexOptions.IgnoreCase),
+                "frames: account name in annex text");
+    }
+
+    /// <summary>The annex's SOF canvas reader (ui_annex.jpeg_size), so a frame's dimensions are the ones the annex will read.</summary>
+    internal static (int Width, int Height) JpegSize(byte[] data)
+    {
+        Require(data.Length >= 4 && data[0] == 0xff && data[1] == 0xd8 && data[^2] == 0xff && data[^1] == 0xd9, "frames: invalid JPEG");
+        int offset = 2;
+        while (offset + 4 <= data.Length)
+        {
+            Require(data[offset] == 0xff, "frames: invalid JPEG marker");
+            int marker = data[offset + 1]; offset += 2;
+            int length = data[offset] << 8 | data[offset + 1];
+            Require(length >= 2 && offset + length <= data.Length, "frames: invalid JPEG segment");
+            if (marker is 0xc0 or 0xc1 or 0xc2)
+            {
+                Require(length >= 8, "frames: invalid JPEG dimensions");
+                int height = data[offset + 3] << 8 | data[offset + 4], width = data[offset + 5] << 8 | data[offset + 6];
+                Require(width > 0 && height > 0, "frames: invalid JPEG dimensions");
+                return (width, height);
+            }
+            Require(marker != 0xda, "frames: JPEG lacks canvas");
+            offset += length;
+        }
+        throw new InvalidDataException("frames: JPEG lacks canvas");
     }
 
     internal static byte[] Jpeg(byte[] pixels, int width, int height, int[][] masks)
@@ -264,7 +355,8 @@ public static class VideoFrameExport
             if (record.GetProperty("profile").GetString() != "desktop") continue;
             record.TryGetProperty("desktopEvidence", out var desktop);
             bool hasEvidence = desktop.ValueKind == JsonValueKind.Object && desktop.TryGetProperty(selected.Name, out _);
-            bool listed = record.TryGetProperty("desktopAllCaseIds", out var inventory)
+            // The annex's inventory: desktopAllCaseIds, else desktopCaseIds, else the evidence keys.
+            bool listed = record.TryGetProperty("desktopAllCaseIds", out var inventory) || record.TryGetProperty("desktopCaseIds", out inventory)
                 ? inventory.EnumerateArray().Any(i => i.GetString() == selected.Name) : hasEvidence;
             if (!listed) continue;
             var evidence = hasEvidence ? desktop.GetProperty(selected.Name) : JsonSerializer.SerializeToElement(new { });
@@ -293,15 +385,22 @@ public static class VideoFrameExport
             string mp4 = System.IO.File.Exists(attempt) && IsolationPaths.Hash(System.IO.File.ReadAllBytes(attempt)) == hash
                 ? attempt : published is not null ? IsolationPaths.Inside(videoRoot, published.Video.Path) : throw new InvalidDataException("frames: matching video not found");
             string vtt = mp4 == attempt ? Path.ChangeExtension(attempt, ".vtt") : IsolationPaths.Inside(videoRoot, published!.Captions.Path);
-            int width = published?.WidthPx ?? (status.TryGetProperty("canvas", out var canvas) ? canvas.GetProperty("widthPx").GetInt32() : 0);
-            int height = published?.HeightPx ?? (status.TryGetProperty("canvas", out var size) ? size.GetProperty("heightPx").GetInt32() : 0);
-            rows.Add(ExportCase(selected.Name, verdict, actual.RootElement, mp4, vtt, width, height, output, "case-" + (++number).ToString("D3")));
+            // The selected run's recorded canvas is the one the annex compares; the published entry is the fallback.
+            bool recorded = status.TryGetProperty("canvas", out var canvas) && canvas.ValueKind != JsonValueKind.Null;
+            int width = recorded ? canvas.GetProperty("widthPx").GetInt32() : published?.WidthPx ?? 0;
+            int height = recorded ? canvas.GetProperty("heightPx").GetInt32() : published?.HeightPx ?? 0;
+            var row = ExportCase(selected.Name, verdict, actual.RootElement, mp4, vtt, width, height, output, "case-" + (++number).ToString("D3"));
+            // The annex reads the selected evidence, not the local run record: check the row against it as well.
+            RequireAnnexRow(row, evidence, output);
+            rows.Add(row);
         }
         foreach (var row in rows) { SafeText(row.CaseId); if (row.RunId is not null) SafeText(row.RunId); }
         var manifest = new { schema = "gcam.str-frames", schemaVersion = 1, contract = "v4", selectionRule = SelectionRule,
             maximumWidthPx = MaximumWidth, jpegQuality = JpegQuality, maximumJpegBytes = MaximumJpegBytes,
             captureScope = "recorded owned-window canvas; recorder masks reapplied; no screen access", cases = rows };
+        byte[] text = JsonSerializer.SerializeToUtf8Bytes(manifest, VideoEntry.Json);
+        AnnexPrivacy(Encoding.UTF8.GetString(text)); // the annex checks the manifest's raw text, escapes included
         using var last = new FileStream(Path.Combine(output, "manifest.json"), FileMode.CreateNew);
-        JsonSerializer.Serialize(last, manifest, VideoEntry.Json);
+        last.Write(text);
     }
 }

@@ -23,7 +23,11 @@ public sealed class VideoFrameExportTests
     private sealed record Clip(ObservationFixtures.ScratchFolder Folder, JsonElement Record, string Mp4, string Vtt) : IDisposable
     { public void Dispose() => Folder.Dispose(); }
 
-    private static Clip Make(bool sparse = false, VideoEvidence.TransitionInterval[]? transitions = null)
+    /// <summary>The recorder's own step for a window transition it began (turn G): it has a cue but is not a scenario step,
+    /// so it is not in the run's executedStepIds.</summary>
+    private const string RecorderStep = "step-0001", RecorderCue = "Window transition: maximise";
+
+    private static Clip Make(bool sparse = false, VideoEvidence.TransitionInterval[]? transitions = null, bool recorderStep = false)
     {
         var folder = ObservationFixtures.Scratch(); string root = folder;
         string mp4 = Path.Combine(root, "attempt.mp4"), vtt = Path.Combine(root, "attempt.vtt");
@@ -50,6 +54,12 @@ public sealed class VideoFrameExportTests
             new(16_000_000, "private", "private", true), new(24_000_000, "key two", "two"),
             new(32_000_000, "key three", "three"), new(40_000_000, "terminal", "end")];
         if (sparse) steps = steps.Where(s => s.Id is "start" or "private").ToArray();
+        if (recorderStep)
+        {
+            // A maximise at 2.8 s, its transition over sample 28: the step's cue (2.8-3.2 s) still overlaps samples 29-31.
+            steps = steps.Append(new(28_000_000, RecorderCue, RecorderStep)).OrderBy(s => s.Time100ns).ToArray();
+            transitions = [new(28_000_000, 29_000_000, "maximise", [RecorderStep])];
+        }
         var cues = VideoTimeline.Cues(steps.Where(s => !s.Privacy), 40_000_000);
         File.WriteAllText(vtt, VideoTimeline.Captions(cues));
         var evidence = new VideoEvidence(new(DateTimeOffset.UtcNow, 0, 40_000_000, TimeSpan.TicksPerSecond), steps, cues,
@@ -59,7 +69,7 @@ public sealed class VideoFrameExportTests
         var check = VideoChecker.Check(mp4, vtt, evidence);
         Assert.True(check.Passed, string.Join(",", check.FailedCriteria));
         var record = JsonSerializer.SerializeToElement(new { contract = "v4", runId = "gcam-frame-fixture", result = "passed",
-            executedStepIds = steps.Select(s => s.Id).ToArray(), videoStatus = new { contract = "v4", runId = "gcam-frame-fixture",
+            executedStepIds = steps.Where(s => s.Id != RecorderStep).Select(s => s.Id).ToArray(), videoStatus = new { contract = "v4", runId = "gcam-frame-fixture",
                 testId = "fixture", status = "passed", videoSha256 = check.VideoSha256, check, evidence,
                 canvas = new { widthPx = 64, heightPx = 48 } } }, VideoEntry.Json);
         return new(folder, record, mp4, vtt);
@@ -96,6 +106,27 @@ public sealed class VideoFrameExportTests
     }
 
     [MediaFoundationFact]
+    public void Selection_NeverPutsAFrameOnARecorderStep_TheRunDidNotExecute()
+    {
+        // Without the executed-step rule the 3.0 s target picks the recorder step (it ties with "three" and comes first),
+        // and its last cue sample, 31, is outside the transition: the annex then refuses "unknown or private step".
+        using var clip = Make(recorderStep: true); string root = clip.Folder;
+        var result = VideoFrameExport.ExportCase("fixture", "passed", clip.Record, clip.Mp4, clip.Vtt, 64, 48, root, "case");
+        Assert.Equal(new[] { "start", "one", "two", "three", "end" }, result.Frames.Select(f => f.StepId));
+        Assert.Equal(new long[] { 7_000_000, 15_000_000, 27_000_000, 39_000_000, 39_000_000 }, result.Frames.Select(f => f.MediaTime100ns));
+        Assert.DoesNotContain(result.Frames, f => f.StepId == RecorderStep || f.CueText == RecorderCue);
+        // The annex mirror refuses such a row outright, even on a sample outside the transition.
+        var onRecorder = result with { Frames = result.Frames.Select((f, i) => i != 2 ? f
+            : f with { StepId = RecorderStep, CueText = RecorderCue, MediaTime100ns = 31_000_000, MediaEnd100ns = 32_000_000 }).ToArray() };
+        Assert.Contains("unknown or private step", Assert.Throws<InvalidDataException>(() =>
+            VideoFrameExport.RequireAnnexRow(onRecorder, clip.Record, root)).Message);
+        var shortened = result with { Frames = result.Frames[..2] };
+        Assert.Contains("frame count", Assert.Throws<InvalidDataException>(() => VideoFrameExport.RequireAnnexRow(shortened, clip.Record, root)).Message);
+        // The annex reads the manifest's raw JSON: an escaped character after "a:" reads as a drive path there.
+        Assert.Contains("private path", Assert.Throws<InvalidDataException>(() => VideoFrameExport.AnnexPrivacy(@"{""text"":""a:\u00b7""}")).Message);
+    }
+
+    [MediaFoundationFact]
     public void HashCanvasAndFailedOrMissingStatus_RefuseWithoutAnExportManifest()
     {
         using var clip = Make(); string root = clip.Folder;
@@ -115,7 +146,7 @@ public sealed class VideoFrameExportTests
     [MediaFoundationFact]
     public void Bundle_PinsTheExactRun_WritesItsManifestLast_AndNeverOverwrites()
     {
-        using var clip = Make(); string root = clip.Folder;
+        using var clip = Make(recorderStep: true); string root = clip.Folder;
         string recordPath = Path.Combine(root, "manifest.json"); byte[] raw = JsonSerializer.SerializeToUtf8Bytes(clip.Record);
         File.WriteAllBytes(recordPath, raw);
         var node = JsonNode.Parse(raw)!.AsObject(); node["runRecordSha256"] = IsolationPaths.Hash(raw);
@@ -132,6 +163,8 @@ public sealed class VideoFrameExportTests
         Assert.Equal(5, Directory.GetFiles(output, "*.jpg").Length);
         using var manifest = JsonDocument.Parse(File.ReadAllBytes(Path.Combine(output, "manifest.json")));
         Assert.Equal(5, manifest.RootElement.GetProperty("cases")[0].GetProperty("frames").GetArrayLength());
+        Assert.DoesNotContain(manifest.RootElement.GetProperty("cases")[0].GetProperty("frames").EnumerateArray(),
+            f => f.GetProperty("stepId").GetString() == RecorderStep);
         Assert.All(Directory.GetFiles(output, "*.jpg"), file => Assert.True(File.GetLastWriteTimeUtc(file) <= File.GetLastWriteTimeUtc(Path.Combine(output, "manifest.json"))));
         foreach (string name in new[] { "catalog.md", "report.md", "inventory.md", "trace.md" })
             File.WriteAllText(Path.Combine(bundle, name), "synthetic archive fixture");
@@ -159,6 +192,25 @@ public sealed class VideoFrameExportTests
         var accepted = PythonInterpreter.Execute(python, ["-B", "-c", gate, Path.Combine(RepoPaths.Root(), "samples/docs"), root]);
         Assert.True(accepted.ExitCode == 0, accepted.Error);
         Assert.Contains("accepted 5", accepted.Output);
+        // The same annex refuses a frame on the recorder's step, which the exporter wrote before it checked execution.
+        const string refuse = """
+            import sys,json
+            from pathlib import Path
+            sys.path.insert(0,sys.argv[1])
+            import ui_annex
+            root=Path(sys.argv[2]);ui_annex.ROOT=root
+            record=json.loads((root/'bundle/record.json').read_bytes())
+            selection=json.loads((root/'bundle/selection.json').read_bytes())
+            ui_annex.annex(root,selection,[record],record['cases'])
+            """;
+        string manifestPath = Path.Combine(output, "manifest.json"); byte[] exported = File.ReadAllBytes(manifestPath);
+        var onRecorder = JsonNode.Parse(exported)!; var moved = onRecorder["cases"]![0]!["frames"]![2]!;
+        moved["stepId"] = RecorderStep; moved["cueText"] = RecorderCue;
+        File.WriteAllBytes(manifestPath, JsonSerializer.SerializeToUtf8Bytes(onRecorder));
+        var refused = PythonInterpreter.Execute(python, ["-B", "-c", refuse, Path.Combine(RepoPaths.Root(), "samples/docs"), root]);
+        File.WriteAllBytes(manifestPath, exported);
+        Assert.NotEqual(0, refused.ExitCode);
+        Assert.Contains("frames: unknown or private step", refused.Error);
         string archive = Path.Combine(root, "archive"), archivedOutput = Path.Combine(root, "archive-frames");
         VideoFrameExport.Export(archive, root, root, archivedOutput);
         Assert.Equal(5, Directory.GetFiles(archivedOutput, "*.jpg").Length);

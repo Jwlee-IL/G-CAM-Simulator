@@ -298,6 +298,26 @@ def case_unit(case, units):
     return candidates[0]
 
 
+def newest_milestone(records=None):
+    """The milestone docs/VV.Tests.Results.md publishes: the highest-numbered archived folder (M10 after M9)."""
+    records = records or ROOT / 'samples/testing/records'
+    found = [int(p.name[1:]) for p in records.iterdir() if p.is_dir() and re.fullmatch(r'M[1-9][0-9]*', p.name)]
+    require(found, 'assembly: no archived milestone')
+    return 'M' + str(max(found))
+
+
+def published_report():
+    return (ROOT / 'docs/VV.Tests.Results.md').read_bytes()
+
+
+def require_published_report(milestone, archive_report):
+    """Only the published milestone is compared with docs; an older milestone's archived report is already replayed byte
+    for byte by test_records.py check --archives, and docs has moved on to a newer one."""
+    if milestone == newest_milestone():
+        require(published_report() == archive_report,
+                'assembly: results report no longer equals the archived ' + milestone + ' report')
+
+
 def assemble(milestone="M3"):
     """Return documents, provenance, and all repository-relative semantic input paths."""
     tr = testing_module()
@@ -309,10 +329,9 @@ def assemble(milestone="M3"):
     subject = next(iter(subjects))
     if milestone == 'M3':
         require(subject == M3_SUBJECT, 'assembly: wrong M3 subject')
-    require(all(r['provenance'] == 'formal' for r in records), 'assembly: M3 provenance changed')
+    require(all(r['provenance'] == 'formal' for r in records), 'assembly: ' + milestone + ' provenance changed')
+    require_published_report(milestone, (archive / 'report.md').read_bytes())
     archive_report = (archive / 'report.md').read_text(encoding='utf-8')
-    require(milestone != 'M3' or (ROOT / 'docs/VV.Tests.Results.md').read_text(encoding='utf-8') == archive_report,
-            'assembly: results report no longer equals pinned M3')
     catalog = (archive / 'catalog.md').read_text(encoding='utf-8')
     entries = catalog_sections(catalog); units = {e['id']: e for e, _ in entries}
     require(len(units) == len(entries), 'assembly: duplicate unit')
