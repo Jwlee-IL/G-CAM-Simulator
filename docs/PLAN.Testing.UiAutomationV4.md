@@ -12,7 +12,21 @@ Status: reference plan written 2026-10-21; D4 decided by the author the same day
 wrong, fact 4 corrected); **Decisions after review** below. Parked the same day (TODO-50 first) and **resumed 2026-10-22 by the
 author with the lighter cut and two parallel implementation turns** ("좋아. 셋 다 수용."): see **Resumed: lighter cut and
 parallel turns** below, which supersedes R7, R11 and R12 where they differ. The same day the author added the **STR evidence annex** (below;
-"1번으로 해줘."). Next: turns A and B in parallel, then turn C.
+"1번으로 해줘."). **Turns A and B done 2026-10-22** (started 10:25 on the author's word "그럼 지금 해도 되지 않을까?";
+memguard suspended by the author the same morning): Codex implemented turn A and most of turn B, then its allowance ran out
+(11:19); a substitute Claude implementer finished turn B and the fixes after the planner's audits (A2: seven defects from an
+independent reading — invented legacy act aliases, HUM-07 left on the trace path, owned-instance module read, a rules-file
+switch overridden in code, every manifest claiming the probe charter, unchecked E6 grants, a working-directory fallback; B2:
+ten — reparse folders failing the Documents root, 8.3 TEMP paths in tests, no held handle in the connection sampler,
+continuity split by dropped slots, mid-stream media-type changes, writer colour matrix and key-frame placement, step-ID
+regex, no-op privacy, late steps, test scratch hygiene). Merged (`1eab025`): UiTests 186 passed / 41 skipped, stage0 96 OK,
+3 milestones and 3 editions replay; `check-catalog` waits for the planner's catalog entries (five new test classes). The
+checker on the 40 local videos: all decode to the end with no gap > 0.1 s; none passes as recorded (old records lack the
+interval, step IDs and privacy declarations); the four report-export clips stop recording inside privacy (R6 boundary),
+a scenario fix for turn C. Plan corrections from the turns: the turn-1 decode measurement ignored the H.264 media-type
+change (900 → 912 coded rows; the checker analyses the display aperture); under v4 `allowAppFileWrites` would be true
+(an isolation change, not made); E1 / E3 on the trace path are references although the PID is known — both for the charter.
+Next: turn C.
 
 ## Why (2026-10-21)
 
